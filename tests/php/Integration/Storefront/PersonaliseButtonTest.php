@@ -668,6 +668,36 @@ final class PersonaliseButtonTest extends PersonalisedCartTestCase {
 		$this->assertSame( add_query_arg( PersonalisedDesigns::ARG, (string) $this->kept_key(), $this->product()->get_permalink() ), $back );
 	}
 
+	public function test_the_setting_lands_on_the_designs_line_when_another_extension_adds_an_item_too(): void {
+		$this->plugin->settings()->set( Settings::ADD_AFTER_APPROVE, true );
+		$gift = new WC_Product_Simple();
+		$gift->set_name( 'Gift' );
+		$gift->set_regular_price( '0' );
+		$gift->save();
+		$add_gift = static function () use ( $gift ): void {
+			static $adding = false;
+			if ( ! $adding ) {
+				$adding = true;
+				WC()->cart->add_to_cart( $gift->get_id() );
+			}
+		};
+		$this->start();
+		$this->script_commit();
+		$this->recorder->json( 200, DesignFixture::design() );
+		add_action( 'woocommerce_add_to_cart', $add_gift, self::AFTER_THE_PLUGINS_VALIDATION );
+
+		try {
+			$back = $this->button->finish( $this->product_id, 0, self::TOKEN, $this->trip );
+		} finally {
+			remove_action( 'woocommerce_add_to_cart', $add_gift, self::AFTER_THE_PLUGINS_VALIDATION );
+		}
+
+		$this->assertCount( 2, WC()->cart->get_cart() );
+		$designs = array_filter( WC()->cart->get_cart(), static fn ( array $item ): bool => null !== CartLine::of( $item ) );
+		$this->assertCount( 1, $designs );
+		$this->assertSame( add_query_arg( PersonaliseButton::LINE_ARG, (string) array_key_first( $designs ), $this->product()->get_permalink() ), $back );
+	}
+
 	public function test_the_setting_answers_to_other_extensions_validation(): void {
 		$this->plugin->settings()->set( Settings::ADD_AFTER_APPROVE, true );
 		$this->start();

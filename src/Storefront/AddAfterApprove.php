@@ -40,6 +40,12 @@ final class AddAfterApprove {
 	private const ADDED_ACTION = 'woocommerce_add_to_cart';
 
 	/**
+	 * The arguments the listener takes: the item's key, product id, quantity
+	 * and variation id.
+	 */
+	private const ADDED_ARGS = 4;
+
+	/**
 	 * The key of the cart item added while the handler ran, if any.
 	 *
 	 * @var string|null
@@ -71,14 +77,21 @@ final class AddAfterApprove {
 	 */
 	public function add( WC_Product $product, string $kept_key, int $quantity, array $attributes ): ?string {
 		$this->added_key = null;
-		$listen          = function ( mixed $cart_item_key ): void {
-			$this->added_key = is_string( $cart_item_key ) ? $cart_item_key : null;
+		$parent_id       = $product->get_parent_id();
+		$product_id      = $parent_id > 0 ? $parent_id : $product->get_id();
+		$variation_id    = $parent_id > 0 ? $product->get_id() : 0;
+		// Another extension may add items of its own meanwhile, such as a gift: only the first item of this product is the design's.
+		$listen = function ( mixed $cart_item_key, mixed $added_product_id = 0, mixed $added_quantity = 0, mixed $added_variation_id = 0 ) use ( $product_id, $variation_id ): void {
+			unset( $added_quantity );
+			if ( null === $this->added_key && is_string( $cart_item_key ) && $product_id === (int) $added_product_id && $variation_id === (int) $added_variation_id ) {
+				$this->added_key = $cart_item_key;
+			}
 		};
-		add_action( self::ADDED_ACTION, $listen );
+		add_action( self::ADDED_ACTION, $listen, 10, self::ADDED_ARGS );
 		try {
 			$this->post_to_form_handler( $product, $kept_key, $quantity, $attributes );
 		} finally {
-			remove_action( self::ADDED_ACTION, $listen );
+			remove_action( self::ADDED_ACTION, $listen, 10 );
 		}
 		$cart_key = $this->added_key;
 		return null === $cart_key ? null : CartEdit::line_page( WC()->cart->get_cart_item( $cart_key ), $cart_key );
