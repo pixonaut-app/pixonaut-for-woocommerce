@@ -1,0 +1,86 @@
+/* The Pixonaut settings page: dependent settings indented under the one they
+ * depend on, and required ones marked. */
+
+table.form-table tr.wc-settings-row-pixonaut-dependent > th {
+	padding-left: 16px;
+}
+
+table.form-table tr.wc-settings-row-pixonaut-dependent > td {
+	border-left: 2px solid #dcdcde;
+	padding-left: 16px;
+}
+
+tr.pixonaut-hidden {
+	display: none;
+}
+
+tr:has([data-pixonaut-required]) > th label::after {
+	content: " *";
+	color: #d63638;
+}
+
+/* WooCommerce's colour cell sets its font size to 0. */
+.pixonaut-field-error {
+	display: block;
+	font-size: 13px;
+	line-height: 1.5;
+	color: #d63638;
+}
+
+/* The switch on the connection card: a posting button once connected, a
+ * checkbox in the connect form. */
+.pixonaut-switch-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+}
+
+.pixonaut-switch-row .description {
+	margin-top: 4px;
+}
+
+button.pixonaut-switch,
+input[type="checkbox"].pixonaut-switch {
+	appearance: none;
+	position: relative;
+	flex: none;
+	width: 36px;
+	height: 20px;
+	min-width: 36px;
+	margin: 1px 0 0;
+	padding: 0;
+	border: 0;
+	border-radius: 10px;
+	background: #8c8f94;
+	box-shadow: none;
+	cursor: pointer;
+}
+
+button.pixonaut-switch::before,
+input[type="checkbox"].pixonaut-switch::before {
+	content: "";
+	position: absolute;
+	top: 2px;
+	inset-inline-start: 2px;
+	width: 16px;
+	height: 16px;
+	margin: 0;
+	border-radius: 50%;
+	background: #fff;
+}
+
+button.pixonaut-switch[aria-checked="true"],
+input[type="checkbox"].pixonaut-switch:checked {
+	background: var(--wp-admin-theme-color, #2271b1);
+}
+
+button.pixonaut-switch[aria-checked="true"]::before,
+input[type="checkbox"].pixonaut-switch:checked::before {
+	inset-inline-start: 18px;
+}
+
+button.pixonaut-switch:focus-visible,
+input[type="checkbox"].pixonaut-switch:focus-visible {
+	outline: 2px solid var(--wp-admin-theme-color, #2271b1);
+	outline-offset: 2px;
+}

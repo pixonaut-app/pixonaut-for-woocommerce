@@ -1,0 +1,159 @@
+<?php
+/**
+ * Why a product's Pixonaut configuration cannot be sold.
+ *
+ * @package Pixonaut\WooCommerce
+ */
+
+declare(strict_types=1);
+
+namespace Pixonaut\WooCommerce\Catalogue;
+
+/**
+ * The codes `ProductConfig::$invalid_reason` holds, and what each tells the
+ * store manager. Pixonaut's own verdict reasons (`too_large`, `wrong_ratio`)
+ * are passed through; an unknown code reads as a generic reason.
+ */
+final class InvalidReason {
+
+	public const MISSING_TEMPLATE = 'missing_template';
+
+	public const MISSING_PLACEMENT = 'missing_placement';
+
+	public const UNKNOWN_BLANK = 'unknown_blank';
+
+	/**
+	 * The blank is deleted in Pixonaut, which still reads it until it is restored.
+	 */
+	public const BLANK_DELETED = 'blank_deleted';
+
+	public const UNKNOWN_PLACEMENT = 'unknown_placement';
+
+	public const UNKNOWN_TEMPLATE = 'unknown_template';
+
+	/**
+	 * The template is paused or deleted: Pixonaut opens no designer for it.
+	 */
+	public const TEMPLATE_NOT_LIVE = 'template_not_live';
+
+	public const TOO_MANY_SIDES = 'too_many_sides';
+
+	public const DUPLICATE_PLACEMENT = 'duplicate_placement';
+
+	public const DUPLICATE_SIDE_KEY = 'duplicate_side_key';
+
+	public const INVALID_PRINT_SIZE = 'invalid_print_size';
+
+	public const TOO_MANY_PRINT_SIZES = 'too_many_print_sizes';
+
+	/**
+	 * A side without a blank names no print size: it has no placement to take one from.
+	 */
+	public const MISSING_PRINT_SIZE = 'missing_print_size';
+
+	/**
+	 * Pixonaut: the size exceeds the placement's largest print area.
+	 */
+	public const TOO_LARGE = 'too_large';
+
+	/**
+	 * Pixonaut: the size is outside the template's aspect ratio.
+	 */
+	public const WRONG_RATIO = 'wrong_ratio';
+
+	/**
+	 * Pixonaut could not be asked: not connected, unreachable, or it refused.
+	 */
+	public const CHECK_FAILED = 'check_failed';
+
+	/**
+	 * Pixonaut refused the standing design of a standing side.
+	 */
+	public const STANDING_REFUSED = 'standing_design_refused';
+
+	/**
+	 * Pixonaut refused the standing design: the store's key may not create and approve designs.
+	 */
+	public const STANDING_FORBIDDEN = 'standing_design_forbidden';
+
+	/**
+	 * A standing side on a blank whose print areas change with an option,
+	 * whose template cannot be printed at any of the blank's sizes.
+	 */
+	public const NO_FITTING_SIZE = 'no_fitting_size';
+
+	/**
+	 * Reasons found in what the store manager entered rather than in what
+	 * Pixonaut answered: only saving the product again clears them.
+	 */
+	public const INPUT = array(
+		self::MISSING_TEMPLATE,
+		self::MISSING_PLACEMENT,
+		self::TOO_MANY_SIDES,
+		self::DUPLICATE_PLACEMENT,
+		self::DUPLICATE_SIDE_KEY,
+		self::INVALID_PRINT_SIZE,
+		self::TOO_MANY_PRINT_SIZES,
+		self::MISSING_PRINT_SIZE,
+	);
+
+	/**
+	 * The text a store manager reads for a reason code.
+	 *
+	 * @param string|null $reason A code from this class, from Pixonaut, or `ProductConfig::REASON_NEWER_SCHEMA`.
+	 */
+	public static function message( ?string $reason ): string {
+		switch ( $reason ) {
+			case self::MISSING_TEMPLATE:
+				return __( 'Choose a template.', 'pixonaut-for-woocommerce' );
+			case self::MISSING_PLACEMENT:
+				return __( 'Choose where on the blank the design is printed.', 'pixonaut-for-woocommerce' );
+			case self::UNKNOWN_BLANK:
+				return __( 'The blank no longer exists in Pixonaut.', 'pixonaut-for-woocommerce' );
+			case self::BLANK_DELETED:
+				return __( 'The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or choose another blank.', 'pixonaut-for-woocommerce' );
+			case self::UNKNOWN_PLACEMENT:
+				return __( 'The blank no longer has this placement, or Pixonaut cannot size a print for it.', 'pixonaut-for-woocommerce' );
+			case self::UNKNOWN_TEMPLATE:
+				return __( 'The template no longer exists in Pixonaut.', 'pixonaut-for-woocommerce' );
+			case self::TEMPLATE_NOT_LIVE:
+				return __( 'The template is paused or deleted in Pixonaut. Make it live again, or choose another template.', 'pixonaut-for-woocommerce' );
+			case self::TOO_MANY_SIDES:
+				return sprintf(
+					/* translators: %d: most sides a product can have. */
+					__( 'A product has at most %d sides.', 'pixonaut-for-woocommerce' ),
+					PostedSides::MAX_SIDES
+				);
+			case self::DUPLICATE_PLACEMENT:
+				return __( 'Two sides use the same placement. Each placement can be one side only.', 'pixonaut-for-woocommerce' );
+			case self::DUPLICATE_SIDE_KEY:
+				return __( 'Two sides have the same key. Give each side its own.', 'pixonaut-for-woocommerce' );
+			case self::INVALID_PRINT_SIZE:
+				return __( 'A custom print size needs a width and height in millimetres, both above zero.', 'pixonaut-for-woocommerce' );
+			case self::TOO_MANY_PRINT_SIZES:
+				return sprintf(
+					/* translators: %d: most print sizes one side can offer. */
+					__( 'A side offers at most %d print sizes.', 'pixonaut-for-woocommerce' ),
+					PostedSides::MAX_SIZES
+				);
+			case self::MISSING_PRINT_SIZE:
+				return __( 'Add a print size in millimetres. Without a blank there is no placement to take one from.', 'pixonaut-for-woocommerce' );
+			case self::TOO_LARGE:
+				return __( 'The print size is larger than the placement can print.', 'pixonaut-for-woocommerce' );
+			case self::WRONG_RATIO:
+				return __( "The print size does not match the template's aspect ratio.", 'pixonaut-for-woocommerce' );
+			case self::CHECK_FAILED:
+				return __( 'Pixonaut could not check the configuration. Check the connection, then update the product again.', 'pixonaut-for-woocommerce' );
+			case self::STANDING_REFUSED:
+				return __( "Pixonaut would not make the design of a standing side. Check the side's template, placement and print size, then update the product again.", 'pixonaut-for-woocommerce' );
+			case self::STANDING_FORBIDDEN:
+				return __( 'Pixonaut would not make the design of a standing side: the store may not create and approve designs. Check the connection\'s permissions in the Pixonaut studio, then update the product again.', 'pixonaut-for-woocommerce' );
+			case self::NO_FITTING_SIZE:
+				return __( 'The template of a standing side does not fit the placement at any of the blank\'s sizes, so none of them can be printed. Choose a template that fits.', 'pixonaut-for-woocommerce' );
+			case ProductConfig::REASON_NEWER_SCHEMA:
+				return __( 'The configuration was saved by a newer version of Pixonaut for WooCommerce. Update the plugin.', 'pixonaut-for-woocommerce' );
+			default:
+				return __( 'Pixonaut cannot print this configuration.', 'pixonaut-for-woocommerce' );
+		}
+	}
+}

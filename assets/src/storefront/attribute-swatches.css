@@ -1,0 +1,85 @@
+/* Variation attribute options as swatches (`attribute-swatches.ts`), drawn
+ * as the designer draws its own text choices, its print sizes and variant
+ * options (as `.pixonaut-placeholder__chip` in `form-placeholder.css`). The
+ * designer sets the accent in `--pixonaut-accent` on its form. Each rule is
+ * scoped to the swatches, so a theme's rules for buttons stay out. */
+.pixonaut-swatches {
+	/* The designer's colours (its `theme.ts`). */
+	--pixonaut-swatches-ink: #1c2b5e;
+	--pixonaut-swatches-border: #d6def3;
+	--pixonaut-swatches-card: #fff;
+	--pixonaut-swatches-accent: var(
+		--pixonaut-accent,
+		var(--pixonaut-swatches-ink)
+	);
+
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	padding: 2px;
+}
+
+.pixonaut-swatches .pixonaut-swatches__swatch {
+	display: inline-flex;
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: center;
+	min-width: 44px;
+	height: 36px;
+	padding: 0 14px;
+	border-radius: 8px;
+	background: var(--pixonaut-swatches-card);
+	box-shadow: inset 0 0 0 1px var(--pixonaut-swatches-border);
+	color: var(--pixonaut-swatches-ink);
+	font: 500 13px system-ui;
+	white-space: nowrap;
+	cursor: pointer;
+	user-select: none;
+}
+
+.pixonaut-swatches .pixonaut-swatches__swatch.is-chosen {
+	box-shadow: inset 0 0 0 2px var(--pixonaut-swatches-accent);
+	font-weight: 600;
+}
+
+.pixonaut-swatches .pixonaut-swatches__swatch:focus-visible {
+	outline: 2px solid var(--pixonaut-swatches-accent);
+	outline-offset: 2px;
+}
+
+/* An option the other choices leave no variation for, or out of stock,
+ * faded as the designer fades a choice it cannot take. */
+.pixonaut-swatches .pixonaut-swatches__swatch.is-unavailable {
+	opacity: 0.35;
+	cursor: default;
+}
+
+/* The theme's field the swatches stand in for: it stays in the form and
+ * makes each pick. */
+.pixonaut-swatches__replaced {
+	display: none !important;
+}
+
+/* The swatches the page printed after an attribute's field
+ * (`PrintedSwatches`): shown in its place while the printed form stands in
+ * for the designer's, which draws the live swatches there. Once it does not
+ * (the designer drew its form, a variation is bought without a design,
+ * personalisation is unavailable), the field is the theme's again. */
+.pixonaut-swatches--printed {
+	display: none;
+}
+
+form:has(
+		.pixonaut-form:not([hidden], .is-unavailable) .pixonaut-form__placeholder
+	)
+	.pixonaut-swatches--printed {
+	display: flex;
+}
+
+form:has(
+		.pixonaut-form:not([hidden], .is-unavailable) .pixonaut-form__placeholder
+	)
+	:has(+ .pixonaut-swatches--printed) {
+	display: none !important;
+}

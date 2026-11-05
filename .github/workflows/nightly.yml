@@ -1,0 +1,170 @@
+name: Nightly
+
+# What the local gate (pnpm ci:local) leaves out: integration on WordPress and
+# WooCommerce {latest, latest-1} and on the plugin header's minimums, the full
+# e2e suite with the secondary block pair, PHP unit on the oldest supported and the newest PHP, and the release
+# zip with its allowlist, and the plugin under popular themes and page builders.
+#
+# Scheduled only: pull requests are gated by ci:local and its attested status,
+# not by hosted runs.
+#
+# A scheduled run is skipped when main and the resolved WordPress and
+# WooCommerce releases are all unchanged since the last green run. A manual
+# run always runs.
+on:
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.versions.outputs.matrix }}
+      green-key: ${{ steps.key.outputs.green-key }}
+      skip: ${{ github.event_name == 'schedule' && steps.green.outputs.cache-hit == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: versions
+        run: node bin/nightly-versions.mjs
+      - id: key
+        env:
+          VERSIONS: ${{ steps.versions.outputs.key }}
+        run: echo "green-key=nightly-green-$GITHUB_SHA-$VERSIONS" >> "$GITHUB_OUTPUT"
+      # A cache entry under the key marks a green run (the record job saves
+      # it); only its existence is checked.
+      - id: green
+        uses: actions/cache/restore@v4
+        with:
+          path: .nightly-green
+          key: ${{ steps.key.outputs.green-key }}
+          lookup-only: true
+
+  unit:
+    needs: plan
+    if: needs.plan.outputs.skip != 'true'
+    name: PHP ${{ matrix.php }} unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # The plugin header's Requires PHP, and the newest PHP.
+        php: ['8.1', '8.5']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer
+          coverage: none
+      - run: composer install --no-interaction --no-progress
+      - run: vendor/bin/phpunit
+
+  integration:
+    needs: plan
+    if: needs.plan.outputs.skip != 'true'
+    name: Integration, WP ${{ matrix.wp }}, WC ${{ matrix.wc }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm env:start
+        env:
+          WP_ENV_CORE: ${{ matrix.core }}
+          WP_ENV_WOOCOMMERCE: ${{ matrix.woocommerce }}
+      - run: pnpm test:integration
+
+  e2e:
+    needs: plan
+    if: needs.plan.outputs.skip != 'true'
+    name: e2e, every project, shard ${{ matrix.shard }}/${{ strategy.job-total }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # The suite runs one test at a time against one stateful tests site, and
+    # outgrew the timeout on two shards (378 tests, 8 to 14 s each by the
+    # runner, split unevenly because most of block-primary's are skips). Each
+    # shard gets its own runner and wp-env.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm env:start
+      # Every project, split across the shards by test file; a failure in one
+      # shard does not skip the others.
+      - run: pnpm exec playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+      # The list reporter prints a failure's error only once the run ends, so
+      # these are all a shard stopped at the timeout leaves.
+      - if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 7
+
+  compat:
+    needs: plan
+    if: needs.plan.outputs.skip != 'true'
+    name: e2e, themes and page builders
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      WP_ENV_COMPAT: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm env:start
+      - run: pnpm test:e2e:compat
+      - if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compat-results
+          path: test-results/
+          retention-days: 7
+
+  zip:
+    needs: plan
+    if: needs.plan.outputs.skip != 'true'
+    name: Release zip
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      # Plugin Check runs on the unpacked zip in the tests site.
+      - run: pnpm env:start
+      - run: pnpm release:zip
+
+  record:
+    needs: [plan, unit, integration, e2e, compat, zip]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: mkdir .nightly-green && echo "$GITHUB_SHA" > .nightly-green/sha
+      - uses: actions/cache/save@v4
+        with:
+          path: .nightly-green
+          key: ${{ needs.plan.outputs.green-key }}

@@ -1,0 +1,37 @@
+# Development files Plugin Check skips in the working tree
+# (bin/plugin-check.mjs), so the gate checks what ships. The release zip
+# itself is built from an allowlist (bin/release/allowlist.mjs).
+.distignore
+.git
+.gitattributes
+.github
+.gitignore
+.release-please-manifest.json
+.wp-env-home
+.wp-env.json
+.wp-env.override.json
+README.md
+assets/src
+bin
+biome.json
+blob-report
+contracts
+dist
+docs
+languages/glossary.md
+node_modules
+package.json
+phpcs.xml.dist
+phpstan.neon.dist
+phpunit-integration.xml.dist
+phpunit.xml.dist
+playwright-report
+playwright.config.ts
+pnpm-lock.yaml
+readme.src.txt
+release-please-config.json
+test-results
+tests
+tsconfig.json
+vitest.config.ts
+webpack.config.js

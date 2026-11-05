@@ -1,0 +1,837 @@
+/* The Pixonaut tab's and each variation panel's sides repeater, laid out on WooCommerce's options panel.
+ * By the panel's id, as WooCommerce sizes its fields under `#woocommerce-product-data`. */
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-side-label,
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-side-key {
+	width: 30%;
+	margin-right: 8px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-sizes {
+	margin: 0 0 8px;
+	padding: 0;
+	list-style: none;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size,
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size-custom {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size {
+	margin: 0 0 6px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size select,
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size input,
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size label {
+	float: none;
+	width: auto;
+	margin: 0;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size-start {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size
+	input.short {
+	width: 7em;
+}
+
+/* A menu of one size starts on it; there is nothing to choose. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size:only-child
+	.pixonaut-size-start {
+	display: none;
+}
+
+/* Every row: its label in a column of its own, its value on the label's
+ * line, its help text under the field. WooCommerce floats a row's label into
+ * a left padding it sets with !important; a grid replaces both. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .form-field {
+	display: grid;
+	grid-template-columns: 150px minmax(0, 1fr);
+	gap: 4px 12px;
+	align-items: center;
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce sets this padding with !important. */
+	padding: 5px 20px 5px 12px !important;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .form-field > * {
+	grid-column: 2;
+	float: none;
+	margin: 0;
+}
+
+/* WooCommerce's clearfix would take a cell of the grid. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .form-field::before,
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .form-field::after {
+	display: none;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.form-field
+	> :is(button, .button) {
+	justify-self: start;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.form-field
+	> label:first-child {
+	grid-row: 1;
+	grid-column: 1;
+	width: auto;
+	margin: 0;
+	padding: 0;
+	line-height: inherit;
+}
+
+/* A row whose value is taller than one line: its label by the first line. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	:is(.pixonaut-size-menu, .pixonaut-views__shown)
+	> label:first-child {
+	align-self: start;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size-menu
+	> label:first-child {
+	padding-top: 4px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.form-field
+	> .description:not([hidden]) {
+	display: block;
+}
+
+/* What sits on the label's line: a field with its picture, two fields, or a
+ * value with its link. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-field-control {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 8px;
+	min-width: 0;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-field-control
+	> * {
+	float: none;
+	margin: 0;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .form-field > select {
+	min-width: min(320px, 100%);
+}
+
+/* Beside the chosen picture (30px and the 8px gap), never under it. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-field-control
+	> :is(select, .select2-container) {
+	min-width: min(320px, calc(100% - 38px));
+}
+
+/* Add side and its hints, under the sides. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-sides-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 12px;
+	margin: 12px 12px 0;
+	padding: 0;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-sides-actions
+	.description {
+	margin: 0;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-sides-over-recommended {
+	flex-basis: 100%;
+}
+
+/* A custom size's width, height and label on a line of their own under its
+ * menu, then its limit and what is wrong with it. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size
+	> .pixonaut-size-custom {
+	flex-basis: 100%;
+	order: 1;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size-custom
+	> input.short {
+	width: 9em;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size
+	> :is(.pixonaut-size-limit, .pixonaut-field-error) {
+	flex-basis: 100%;
+	order: 2;
+	margin: 0;
+}
+
+/* A side's Groups setting: the tray of the product's options, the template's
+ * groups as an accordion of their items, and a zone that starts a group. */
+/* Its heading opens and closes it, in the label's place. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-groups
+	> .pixonaut-groups__expand {
+	display: flex;
+	grid-row: 1;
+	grid-column: 1;
+	gap: 4px;
+	align-items: center;
+	align-self: start;
+	justify-self: start;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.pixonaut-groups__arrow {
+	width: 1em;
+	color: #50575e;
+}
+
+.pixonaut-groups__content:not([hidden]) {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.pixonaut-groups__body {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-width: 640px;
+}
+
+.pixonaut-groups__notice {
+	padding: 6px 10px;
+	border-left: 4px solid #dba617;
+	background: #fcf9e8;
+}
+
+.pixonaut-groups__tray {
+	border: 1px dashed #c3c4c7;
+	border-radius: 4px;
+	background: #fff;
+}
+
+.pixonaut-groups__tray:has(.pixonaut-groups__tray-body) .pixonaut-groups__head {
+	border-bottom: 1px dashed #c3c4c7;
+}
+
+.pixonaut-groups__tray-body {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 8px 10px;
+}
+
+.pixonaut-groups__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.pixonaut-groups__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 10px 2px 6px;
+	border: 1px solid #8c8f94;
+	border-radius: 12px;
+	background: #fff;
+	color: #1d2327;
+	font-size: 13px;
+	cursor: grab;
+}
+
+.pixonaut-groups__chip::before {
+	content: "⋮⋮";
+	color: #8c8f94;
+	letter-spacing: -2px;
+}
+
+.pixonaut-groups__groups {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.pixonaut-groups__group {
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+}
+
+.pixonaut-groups__head {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 8px;
+	background: #f6f7f7;
+}
+
+.pixonaut-groups__group:has(.pixonaut-groups__items) .pixonaut-groups__head {
+	border-bottom: 1px solid #dcdcde;
+}
+
+.pixonaut-groups__handle,
+.pixonaut-groups__toggle {
+	padding: 0 4px;
+	border: 0;
+	background: none;
+	color: #50575e;
+	font-size: 13px;
+	cursor: pointer;
+}
+
+.pixonaut-groups__handle {
+	color: #8c8f94;
+	letter-spacing: -2px;
+	cursor: grab;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	input.pixonaut-groups__input {
+	box-sizing: border-box;
+	flex: 1;
+	width: auto;
+	min-width: 0;
+	height: 26px;
+	min-height: 0;
+	margin: 0;
+	padding: 0 8px;
+	font-size: 13px;
+	line-height: 24px;
+}
+
+.pixonaut-groups__tag {
+	padding: 0 6px;
+	border: 1px solid #c3c4c7;
+	border-radius: 2px;
+	background: #fff;
+	color: #50575e;
+	font-size: 12px;
+}
+
+.pixonaut-groups__items {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 0;
+	padding: 4px 8px 8px;
+	list-style: none;
+}
+
+.pixonaut-groups__item {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 0;
+	padding: 4px 6px;
+	border: 1px solid #dcdcde;
+	border-radius: 3px;
+	background: #fff;
+}
+
+.pixonaut-groups__item.is-option {
+	border-color: #c5d9ed;
+	background: #f0f6fc;
+}
+
+.pixonaut-groups__line {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.pixonaut-groups__kind {
+	min-width: 64px;
+	color: #50575e;
+	font-size: 12px;
+}
+
+.pixonaut-groups__name {
+	flex: 1;
+}
+
+.pixonaut-groups__new {
+	padding: 0 6px;
+	border-radius: 2px;
+	background: #2271b1;
+	color: #fff;
+	font-size: 12px;
+}
+
+.pixonaut-groups__words {
+	display: grid;
+	grid-template-columns: 96px minmax(0, 1fr);
+	gap: 6px 8px;
+	align-items: center;
+	padding: 2px 0 4px 26px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-groups__words
+	label {
+	float: none;
+	width: auto;
+	margin: 0;
+	padding: 0;
+	line-height: inherit;
+}
+
+.pixonaut-groups__choices-label {
+	align-self: start;
+	padding-top: 4px;
+}
+
+/* A field offering many values scrolls at a fixed height. */
+.pixonaut-groups__choices {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	max-height: 148px;
+	padding-right: 4px;
+	overflow-y: auto;
+}
+
+.pixonaut-groups__new-group {
+	width: 100%;
+	background: none;
+	font-size: 13px;
+	cursor: pointer;
+	padding: 8px 10px;
+	border: 1px dashed #8c8f94;
+	border-radius: 4px;
+	color: #2271b1;
+	text-align: center;
+}
+
+/* Last, so a hidden row or size field stays hidden over the display above. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel) [hidden] {
+	display: none;
+}
+
+/* The views picker: one list per placement of the blank, under its name. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-views
+	fieldset {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-views legend {
+	float: none;
+	width: auto;
+	margin: 0 0 6px;
+	padding: 0;
+	font-weight: 600;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-views__list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 8px;
+	padding: 0;
+	list-style: none;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-views__placement[hidden] {
+	display: none;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-view label {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	width: auto;
+	margin: 0;
+	float: none;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-view img {
+	width: 64px;
+	height: 64px;
+	object-fit: cover;
+	border: 1px solid #ddd;
+}
+
+/* The product images field: one row per showcase set, its tick, name and drawing. */
+#pixonaut_product_data .pixonaut-showcase-images__list {
+	margin: 0 12px 8px;
+	padding: 0;
+	list-style: none;
+}
+
+#pixonaut_product_data .pixonaut-showcase-images > .description {
+	display: block;
+	margin: 0 12px 8px;
+	padding: 0;
+}
+
+#pixonaut_product_data .pixonaut-showcase-image {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 12px;
+	margin: 0 0 6px;
+}
+
+#pixonaut_product_data .pixonaut-showcase-image label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: auto;
+	min-width: 12em;
+	margin: 0;
+	float: none;
+}
+
+/* How a set is drawn: on the blank's photo or flat, each with its thumbnail. */
+#pixonaut_product_data .pixonaut-showcase-image__kinds {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+#pixonaut_product_data .pixonaut-showcase-image .pixonaut-showcase-kind {
+	align-items: flex-start;
+	gap: 8px;
+	max-width: 20em;
+	padding: 6px 8px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+	cursor: pointer;
+}
+
+#pixonaut_product_data .pixonaut-showcase-kind:has(input:checked) {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+#pixonaut_product_data .pixonaut-showcase-kind input {
+	margin-top: 2px;
+}
+
+#pixonaut_product_data .pixonaut-showcase-kind__thumbnail {
+	flex: none;
+	width: 48px;
+	height: 48px;
+	border: 1px solid #dcdcde;
+	background: #f6f7f7;
+}
+
+#pixonaut_product_data .pixonaut-showcase-kind__thumbnail img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+#pixonaut_product_data .pixonaut-showcase-kind__words {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+#pixonaut_product_data .pixonaut-showcase-kind__name {
+	font-weight: 600;
+}
+
+#pixonaut_product_data .pixonaut-showcase-kind .description {
+	margin: 0;
+	padding: 0;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+#pixonaut_product_data .pixonaut-showcase-image__gone {
+	flex-basis: 100%;
+	color: #b32d2e;
+}
+
+/* A side's mode that does not suit its template, or sizes its template does
+ * not fit: a hint, not a refusal. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+:is(
+	.pixonaut-mode-warning,
+	.pixonaut-misfit-warning,
+	.pixonaut-background-warning
+) {
+	margin: 0 12px 9px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	:is(
+		.pixonaut-mode-warning,
+		.pixonaut-misfit-warning,
+		.pixonaut-background-warning
+	)[hidden] {
+	display: none;
+}
+
+/* Groups: a heading and one line on what the group decides. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-group__title {
+	margin: 12px 12px 2px;
+	font-size: 13px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-group__intro {
+	margin: 0 12px 8px;
+	padding: 0;
+	color: #646970;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-personalised[hidden],
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-unpersonalised-hint[hidden] {
+	display: none;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-unpersonalised-hint {
+	display: block;
+}
+
+/* Each side a card, numbered in its heading. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-sides {
+	counter-reset: pixonaut-side;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin: 0 12px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-side {
+	counter-increment: pixonaut-side;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-side__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 12px;
+	background: #f6f7f7;
+	border-bottom: 1px solid #dcdcde;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-side__number::before {
+	content: counter(pixonaut-side);
+}
+
+/* Required fields and what is missing. */
+.pixonaut-required-mark {
+	color: #d63638;
+}
+
+.pixonaut-field-error {
+	display: block;
+	flex-basis: 100%;
+	margin: 4px 0 0;
+	color: #d63638;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	[aria-invalid="true"]:is(input, select),
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	[aria-invalid="true"]
+	+ .select2
+	.select2-selection {
+	border-color: #d63638;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-template-version__pin,
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size-dimension {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	float: none;
+	width: auto;
+	margin: 0;
+}
+
+/* A picture beside each name in the blank, placement and template pickers;
+ * selectWoo puts its list at the end of the page. */
+.pixonaut-option {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.pixonaut-thumbnail {
+	flex-shrink: 0;
+	box-sizing: border-box;
+	width: 40px;
+	height: 40px;
+	object-fit: contain;
+	background: #fff;
+	border: 1px solid #dcdcde;
+}
+
+.pixonaut-thumbnail--empty {
+	background: #f0f0f1;
+}
+
+/* A template's name over the sizes it cannot be printed at. */
+.pixonaut-option__name {
+	display: flex;
+	flex-direction: column;
+}
+
+.pixonaut-option__note {
+	font-size: 12px;
+	color: #996800;
+}
+
+.select2-results__option--highlighted .pixonaut-option__note {
+	color: inherit;
+}
+
+.select2-selection__rendered .pixonaut-thumbnail {
+	width: 24px;
+	height: 24px;
+}
+
+/* The variation's override box on its label's line. */
+.pixonaut-variation-panel .pixonaut-variation-panel__title {
+	margin: 12px 0 4px;
+	font-size: 13px;
+}
+
+.pixonaut-variation-panel .pixonaut-variation-override__label {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-weight: 600;
+}
+
+.pixonaut-variation-panel .pixonaut-variation-override input.checkbox {
+	float: none;
+	margin: 0;
+}
+
+.pixonaut-variation-panel .pixonaut-variation-fields {
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+}
+
+/* The chosen blank's, placement's or template's picture, before its field. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+.pixonaut-chosen-thumbnail {
+	width: 30px;
+	height: 30px;
+}
+
+.pixonaut-chosen-thumbnail[hidden] {
+	display: none;
+}
+
+/* The line on the Pixonaut picture under a product's or variation's image. */
+.pixonaut-picture {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* A standing side's previews per option: a tile per option, its design on
+ * the blank, its value and the size it prints at. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-standing-options
+	> label:first-child {
+	align-self: start;
+}
+
+.pixonaut-standing-options__pending {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	border: 1px dashed #c3c4c7;
+	border-radius: 4px;
+	color: #646970;
+}
+
+.pixonaut-standing-options__tiles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 0;
+	list-style: none;
+}
+
+.pixonaut-standing-option {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 120px;
+	margin: 0;
+}
+
+.pixonaut-standing-option__image {
+	display: block;
+	box-sizing: border-box;
+	width: 120px;
+	height: 120px;
+	border: 1px solid #dcdcde;
+	background: #fff;
+	object-fit: contain;
+}
+
+.pixonaut-standing-option__image--none {
+	background: #f6f7f7;
+}
+
+.pixonaut-standing-option__value,
+.pixonaut-standing-option__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 8px;
+}
+
+/* An option whose layout was adjusted by hand. */
+.pixonaut-standing-option__adjusted {
+	padding: 0 6px;
+	border-radius: 2px;
+	background: #f0f6fc;
+	color: #135e96;
+	font-size: 12px;
+	line-height: 20px;
+}
+
+.pixonaut-standing-options__more {
+	justify-self: start;
+}

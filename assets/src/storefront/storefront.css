@@ -1,0 +1,781 @@
+/* The inline designer: the preview in the gallery's place, the form at the
+ * top of the add-to-cart form. On a phone a short preview stays in view above
+ * the form while the customer fills it in. */
+
+.pixonaut-preview {
+	box-sizing: border-box;
+	min-width: 0;
+}
+
+.pixonaut-preview__frame {
+	width: 100%;
+}
+
+/* The spinner sits over the preview until the design is drawn. */
+.pixonaut-preview__stage {
+	position: relative;
+}
+
+.pixonaut-preview__side {
+	width: 100%;
+}
+
+/* Printed at the photo's aspect ratio, the size the SDK draws it at, so
+ * nothing moves when it does; what it draws taller grows the box. A theme
+ * that sets `--pixonaut-preview-height` holds the preview at that height
+ * instead: the SDK draws it fitted inside, and never changes the size. */
+.pixonaut-preview__frame .pixonaut-preview__side {
+	height: var(--pixonaut-preview-height, auto);
+	aspect-ratio: var(--pixonaut-preview-ratio, 1);
+}
+
+/* A side on no blank has no photos to switch between, so it keeps the
+ * template's shape: under a theme's `--pixonaut-preview-height`, as wide as
+ * that height takes at the template's ratio, and centred. Without one the
+ * width cannot be worked out, falls back to the full width, and the ratio
+ * gives the height. */
+.pixonaut-preview__frame[data-pixonaut-shape="template"]
+.pixonaut-preview__side {
+	width: min(
+		100%,
+		calc(var(--pixonaut-preview-height) * var(--pixonaut-preview-aspect, 1))
+	);
+	height: auto;
+	margin-inline: auto;
+}
+
+/* One the script adds above the form, where the theme printed no gallery,
+ * holds a place while the SDK loads. */
+.pixonaut-form .pixonaut-preview__side {
+	min-height: 240px;
+}
+
+/* Where the workspace shows it, the SDK draws "Powered by Pixonaut" into
+ * the mark target under the preview, outside anything a theme draws around
+ * the preview: 6px below it, a 16px line with 2px of padding above and
+ * below. The target keeps that room from the first paint, so nothing moves
+ * when the SDK draws it, and the heights below count it in. */
+.pixonaut-preview__frame[data-pixonaut-mark] {
+	--pixonaut-preview-mark: 26px;
+}
+
+.pixonaut-preview__mark {
+	display: flow-root;
+	min-height: var(--pixonaut-preview-mark, 0px);
+}
+
+/* Once drawn, what the SDK draws sizes the box: a view or variant switched
+ * to later may have another ratio than the one the page started on. */
+.pixonaut-preview__frame.is-drawn .pixonaut-preview__side {
+	aspect-ratio: auto;
+}
+
+.pixonaut-spinner {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 2.5rem;
+	height: 2.5rem;
+	margin: -1.25rem 0 0 -1.25rem;
+	pointer-events: none;
+}
+
+.pixonaut-spinner::before,
+.pixonaut-busy::after,
+.pixonaut-proof-dialog__loading::before {
+	content: "";
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	border: 0.1875rem solid currentcolor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	opacity: 0.6;
+	animation: pixonaut-spin 0.8s linear infinite;
+}
+
+.pixonaut-preview__frame.is-drawn .pixonaut-spinner {
+	display: none;
+}
+
+.pixonaut-spinner .screen-reader-text {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+@keyframes pixonaut-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pixonaut-spinner::before,
+	.pixonaut-busy::after,
+	.pixonaut-proof-dialog__loading::before {
+		animation-duration: 2.4s;
+	}
+}
+
+/* The strip of the product's views under the preview, as a product
+ * gallery's thumbnails, held at the size and the gaps the SDK draws its own
+ * at: under a heading counting them, a row of squares that scrolls sideways
+ * once it is full. */
+.pixonaut-views {
+	--pixonaut-views-square: 84px;
+	--pixonaut-views-square-narrow: 64px;
+	/* The widest row that takes the narrow squares. */
+	--pixonaut-views-narrow-row: 520px;
+	/* Large enough that a row wider than the narrow one by a pixel lifts the
+	 * square past its wide edge. */
+	--pixonaut-views-step-gain: 1000;
+}
+
+/* In the theme's line height, as the SDK's. The gap above it is the SDK's
+ * own above the strip it draws in its place. */
+.pixonaut-views__count {
+	display: block;
+	padding-top: var(--pixonaut-views-gap, 12px);
+	margin-bottom: 8px;
+	color: rgb(94 104 132);
+	font-size: 12px;
+	font-weight: 600;
+}
+
+/* Padded so the chosen square's ring is not clipped by the scroll. */
+.pixonaut-views__strip {
+	display: flex;
+	gap: 10px;
+	overflow-x: auto;
+	padding: 3px 3px 6px;
+}
+
+/* The narrow square up to the narrow row's width, the wide one past it, as
+ * the SDK picks it: a flex basis's percentage is of the row's width, and the
+ * gain makes the clamp a step. */
+.pixonaut-views__view {
+	display: flex;
+	flex: 0 0
+		clamp(
+			var(--pixonaut-views-square-narrow),
+			calc(
+				var(--pixonaut-views-square-narrow) +
+				(100% - var(--pixonaut-views-narrow-row)) *
+				var(--pixonaut-views-step-gain)
+			),
+			var(--pixonaut-views-square)
+		);
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.pixonaut-views__photo {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	aspect-ratio: 1;
+	overflow: hidden;
+	border-radius: 10px;
+	background: rgb(246 245 242);
+}
+
+/* Whole in its square, never cropped, as the SDK shows it. */
+.pixonaut-views__photo img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+/* A line tall when empty, as the Design view's is until the SDK names it.
+ * The SDK weights the chosen view's name once it draws the strip. */
+.pixonaut-views__label {
+	min-height: 1.3em;
+	overflow: hidden;
+	color: rgb(94 104 132);
+	font-size: 12px;
+	line-height: 1.3;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* The add-to-cart button while its click is handled: a spinner after its
+ * text, in the text's colour. */
+.pixonaut-busy {
+	cursor: progress;
+}
+
+.pixonaut-busy::after {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	margin-inline-start: 0.5em;
+	vertical-align: -0.125em;
+	opacity: 1;
+}
+
+.pixonaut-form {
+	margin-bottom: 1.5em;
+	width: 100%;
+	flex-basis: 100%;
+}
+
+.pixonaut-form__side {
+	width: 100%;
+}
+
+/* A block theme lays the add-to-cart form out as a grid of columns, and
+ * WooCommerce's clearfix after it is one more cell. Once the designer has
+ * taken the quantity and the button into its form, that cell would open a
+ * column of its own beside the form and narrow it; it spans the row
+ * instead. */
+form.cart:has(> .pixonaut-form)::after {
+	grid-column: 1 / -1;
+}
+
+/* A theme's display rule must not show a side whose tab is not selected,
+ * a side or approval the chosen variation does not have, or the designer of
+ * a variation bought without a design. */
+.pixonaut-form[hidden],
+.pixonaut-preview[hidden],
+.pixonaut-form__side[hidden],
+.pixonaut-preview__side[hidden],
+.pixonaut-tabs[hidden],
+.pixonaut-tabs__tab[hidden],
+.pixonaut-approval[hidden],
+.pixonaut-approval__proof[hidden],
+.pixonaut-proof-dialog__loading[hidden],
+.pixonaut-proof-dialog__image[hidden],
+.pixonaut-approval__error[hidden] {
+	display: none;
+}
+
+.pixonaut-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5em;
+	margin: 0 0 1em;
+}
+
+.pixonaut-tabs__tab[aria-selected="true"] {
+	font-weight: 700;
+	text-decoration: underline;
+	text-decoration-color: var(--wp--preset--color--accent, currentcolor);
+	text-underline-offset: 0.25em;
+}
+
+.pixonaut-form__unavailable,
+.pixonaut-form__error {
+	margin: 0 0 1em;
+}
+
+.pixonaut-form__error,
+.pixonaut-approval__error {
+	color: var(--wp--preset--color--error, #b32d2e);
+}
+
+.pixonaut-preview__note {
+	margin: 0.5em 0 0;
+	font-size: 0.875em;
+	opacity: 0.75;
+}
+
+.pixonaut-approval {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5em 1em;
+	margin: 1em 0 0;
+}
+
+.pixonaut-approval__label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5em;
+}
+
+/* The word in the box's label that opens the proof: a link in the
+ * sentence, whatever a theme draws its buttons as. */
+.pixonaut-approval .pixonaut-approval__proof--link,
+.pixonaut-approval .pixonaut-approval__proof--link:hover,
+.pixonaut-approval .pixonaut-approval__proof--link:focus {
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	box-shadow: none;
+	color: inherit;
+	font: inherit;
+	letter-spacing: inherit;
+	text-transform: none;
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+	cursor: pointer;
+}
+
+.pixonaut-approval .pixonaut-approval__proof--link:focus-visible {
+	outline: 2px solid currentcolor;
+	outline-offset: 2px;
+}
+
+/* Under the box and the proof buttons, on a line of its own. */
+.pixonaut-approval__error {
+	flex-basis: 100%;
+	margin: 0;
+}
+
+.pixonaut-form.is-unavailable .pixonaut-form__side,
+.pixonaut-form.is-unavailable .pixonaut-preview__side,
+.pixonaut-form.is-unavailable .pixonaut-tabs,
+.pixonaut-form.is-closed .pixonaut-approval,
+.pixonaut-form.is-closed + .pixonaut-cart-row .pixonaut-approval {
+	display: none;
+}
+
+/* The add-to-cart form's cart row, gathered for the designer's last step:
+ * laid out as its parts were until the designer draws it there, then as a
+ * block of its own that holds what the theme floats in it. */
+.pixonaut-cart-row {
+	display: contents;
+}
+
+.pixonaut-form .pixonaut-cart-row {
+	display: flow-root;
+}
+
+/* A block theme's presets, where it defines them: the tabs and the approval
+ * box drawn as the theme draws its own choices and checkboxes. The script
+ * lists the presets the theme defines in `data-pixonaut-look`, so a theme
+ * without them draws these as it always has. */
+.pixonaut-form[data-pixonaut-look~="bodyFont"] {
+	font-family: var(--wp--preset--font-family--body);
+}
+
+.pixonaut-form[data-pixonaut-look~="border"] .pixonaut-tabs__tab {
+	min-height: 2.75rem;
+	padding: 0.375rem 0.875rem;
+	border: 1px solid var(--wp--preset--color--border-strong);
+	background: var(--wp--preset--color--base, transparent);
+	color: var(--wp--preset--color--contrast, inherit);
+	font-family: inherit;
+	font-size: inherit;
+	cursor: pointer;
+}
+
+.pixonaut-form[data-pixonaut-look~="radius"] .pixonaut-tabs__tab {
+	border-radius: var(--wp--custom--radius--small);
+}
+
+.pixonaut-form[data-pixonaut-look~="accent"]
+	.pixonaut-tabs__tab[aria-selected="true"] {
+	/* The accent outline marks it instead of the underline. */
+	text-decoration: none;
+	border-color: var(--wp--preset--color--accent);
+	box-shadow: inset 0 0 0 1px var(--wp--preset--color--accent);
+	color: var(--wp--preset--color--accent);
+}
+
+.pixonaut-form[data-pixonaut-look~="accent"] .pixonaut-tabs__tab:focus-visible,
+.pixonaut-form[data-pixonaut-look~="accent"]
+	.pixonaut-approval__box:focus-visible {
+	outline: 2px solid var(--wp--preset--color--accent);
+	outline-offset: 2px;
+}
+
+.pixonaut-form[data-pixonaut-look~="accent"] .pixonaut-approval__box {
+	accent-color: var(--wp--preset--color--accent);
+}
+
+/* The theme's own checkbox: its outline, filled with the accent and ticked
+ * when checked. */
+.pixonaut-form[data-pixonaut-look~="border"][data-pixonaut-look~="accent"]
+.pixonaut-approval__box {
+	appearance: none;
+	display: inline-grid;
+	place-content: center;
+	flex: none;
+	width: 1.375rem;
+	height: 1.375rem;
+	margin: 0;
+	border: 1px solid var(--wp--preset--color--border-strong);
+	border-radius: calc(var(--wp--custom--radius--small, 0.5rem) / 2);
+	background: var(--wp--preset--color--base, transparent);
+	cursor: pointer;
+}
+
+.pixonaut-form[data-pixonaut-look~="border"][data-pixonaut-look~="accent"]
+	.pixonaut-approval__box::before {
+	content: "";
+	width: 0.875rem;
+	height: 0.875rem;
+	/* A tick. */
+	clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
+	background: var(--wp--preset--color--accent-contrast, #fff);
+	transform: scale(0);
+}
+
+.pixonaut-form[data-pixonaut-look~="border"][data-pixonaut-look~="accent"]
+	.pixonaut-approval__box:checked {
+	border-color: var(--wp--preset--color--accent);
+	background: var(--wp--preset--color--accent);
+}
+
+.pixonaut-form[data-pixonaut-look~="border"][data-pixonaut-look~="accent"]
+	.pixonaut-approval__box:checked::before {
+	transform: scale(1);
+}
+
+/* The printed form's step headings, drawn as `storefront/step-numbers.ts`
+ * draws the designer's for a theme that defines the accent: in the accent
+ * and the theme's heading font, the number in a round badge of it. Without
+ * the font presets, the placeholder's own heading font. */
+.pixonaut-form[data-pixonaut-look~="accent"]
+	.pixonaut-form__placeholder
+	.pixonaut-placeholder__step {
+	display: flex;
+	align-items: center;
+	gap: var(--wp--preset--spacing--30, 0.5em);
+	color: var(--pixonaut-step-color, var(--wp--preset--color--accent));
+	font-family: var(--wp--preset--font-family--heading, system-ui);
+	font-size: var(--wp--preset--font-size--large, 16px);
+}
+
+.pixonaut-form[data-pixonaut-look~="accent"]
+	.pixonaut-form__placeholder
+	.pixonaut-placeholder__step::before {
+	content: counter(pixonaut-step);
+	display: inline-grid;
+	place-content: center;
+	flex: none;
+	/* Twice the number's size. */
+	width: 2em;
+	height: 2em;
+	border-radius: 50%;
+	background: var(
+		--pixonaut-step-number-background,
+		var(--wp--preset--color--accent)
+	);
+	color: var(
+		--pixonaut-step-number-color,
+		var(--wp--preset--color--accent-contrast, #fff)
+	);
+	font-size: var(--wp--preset--font-size--medium, 0.75em);
+	line-height: 1;
+}
+
+/* Forced colours replace the fill and the tick's background, which mark a
+ * ticked box: the native checkbox shows it instead. */
+@media (forced-colors: active) {
+	.pixonaut-form[data-pixonaut-look~="border"][data-pixonaut-look~="accent"]
+		.pixonaut-approval__box {
+		appearance: auto;
+	}
+
+	.pixonaut-form[data-pixonaut-look~="border"][data-pixonaut-look~="accent"]
+		.pixonaut-approval__box::before {
+		display: none;
+	}
+}
+
+/* The Personalise button takes the add-to-cart button's place: the product
+ * joins the cart when the customer comes back from the designer. Themes give
+ * the add-to-cart button their own display, so hiding it has to win. A
+ * variation bought without a design hides the Personalise button instead. */
+.pixonaut-personalise:not([hidden])
+~ .single_add_to_cart_button:not(.pixonaut-personalise__button),
+form:has(.pixonaut-personalise:not([hidden]))
+	[type="submit"]:not(.pixonaut-personalise__button) {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's own display for the button must not show it. */
+	display: none !important;
+}
+
+/* The state the button's siblings follow, never drawn: it takes no cell in
+ * the form's row, which lays the button out as its add-to-cart button. */
+.pixonaut-personalise {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's rules for the form's children must not draw it. */
+	display: none !important;
+}
+
+.pixonaut-personalise__unavailable {
+	margin: 0 0 1em;
+}
+
+/* The note has its own row above the quantity and the button, whatever the
+ * theme makes of the form. */
+.pixonaut-personalised {
+	box-sizing: border-box;
+	width: 100%;
+	flex: 0 0 100%;
+	grid-column: 1 / -1;
+	margin-bottom: 1em;
+}
+
+.pixonaut-personalised,
+.pixonaut-in-cart__status {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5em 0.75em;
+}
+
+.pixonaut-personalised__message,
+.pixonaut-in-cart__message {
+	flex: 1 1 auto;
+	font-size: 0.9375em;
+	opacity: 0.85;
+}
+
+/* Quiet on any theme: a block theme draws `.button` as a plain link, and a
+ * classic theme's `a.button` as filled and as tall as Add to cart. */
+.pixonaut-personalised a.pixonaut-personalised__change,
+.pixonaut-in-cart a.pixonaut-personalised__change {
+	padding: 0.4em 0.9em;
+	border: 1px solid #c3c4c7;
+	border-radius: 3px;
+	background: transparent;
+	color: inherit;
+	font-size: 0.875em;
+	font-weight: 400;
+	line-height: 1.5;
+	text-decoration: none;
+}
+
+.pixonaut-personalised a.pixonaut-personalised__change:hover,
+.pixonaut-personalised a.pixonaut-personalised__change:focus,
+.pixonaut-in-cart a.pixonaut-personalised__change:hover,
+.pixonaut-in-cart a.pixonaut-personalised__change:focus {
+	border-color: currentColor;
+	background: transparent;
+	color: inherit;
+}
+
+/* An item in the cart: its page has no add-to-cart form. */
+.pixonaut-in-cart {
+	display: flex;
+	flex-direction: column;
+	gap: 1em;
+	margin-bottom: 1em;
+}
+
+.pixonaut-in-cart__check {
+	margin-right: 0.4em;
+	vertical-align: -1px;
+}
+
+/* The page's primary button, across the column on any theme. */
+.pixonaut-in-cart a.pixonaut-in-cart__view {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	margin: 0;
+	text-align: center;
+	text-decoration: none;
+}
+
+.pixonaut-in-cart__another {
+	align-self: flex-start;
+	font-size: 0.9375em;
+}
+
+/* WooCommerce's block form is a grid that gives Add to cart's column only to
+ * `.single_add_to_cart_button`: beside the Personalise button, the button keeping
+ * a design would take a row of its own above the quantity. All stay in one row. */
+:has(> .pixonaut-personalise__retry:not([hidden])) {
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce's grid for the block form is more specific. */
+	display: flex !important;
+	flex-wrap: wrap;
+	align-items: stretch;
+	gap: 0.5em;
+}
+
+:has(> .pixonaut-personalise__retry:not([hidden]))
+	> .pixonaut-personalise__button {
+	flex: 1 1 auto;
+}
+
+/* WooCommerce's clearfix would be two more flex items, each with a gap beside
+ * it, which would draw the row in from both edges of the column. */
+:has(> .pixonaut-personalise__retry:not([hidden]))::before,
+:has(> .pixonaut-personalise__retry:not([hidden]))::after {
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce's clearfix on the form is more specific. */
+	display: none !important;
+}
+
+/* The row's gap is the only space between its items. */
+:has(> .pixonaut-personalise__retry:not([hidden])) > .quantity {
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce's and a theme's margin on the quantity are more specific. */
+	margin: 0 !important;
+}
+
+/* A see-through background shows the page behind it; a design with no blank stands on white. */
+.pixonaut-design-gallery__paper {
+	background: #fff;
+}
+
+/* A shown design stands in the gallery's place. */
+:is(
+	.images,
+	.wp-block-woocommerce-product-image-gallery,
+	.wp-block-woocommerce-product-gallery
+):not(.pixonaut-design-gallery):has(~ .pixonaut-design-gallery:not([hidden])) {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's own display for the gallery must not show it. */
+	display: none !important;
+}
+
+/* WooCommerce's width for `div.images` is undone only inside its gallery blocks. */
+:is(
+	.wp-block-woocommerce-product-image-gallery,
+	.wp-block-woocommerce-product-gallery
+) ~ .pixonaut-design-gallery {
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce's rule for `div.images` is more specific. */
+	float: none !important;
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce's rule for `div.images` is more specific. */
+	width: 100% !important;
+}
+
+.pixonaut-design-gallery img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.pixonaut-personalised[hidden],
+.pixonaut-design-gallery[hidden],
+.pixonaut-personalise__button[hidden],
+.pixonaut-personalise__unavailable[hidden] {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's own display for the button must not show it. */
+	display: none !important;
+}
+
+@media (min-width: 768px) {
+	.pixonaut-preview__frame {
+		/* The whole picture stays in the window: its width is held to what
+		 * makes it as tall as the window has room for under where it starts
+		 * (`--pixonaut-preview-top`, which the script measures), less a
+		 * margin, at its aspect ratio (the shape the SDK drew, which the
+		 * script follows, else the shape the page printed), with the mark
+		 * under it. Its height is not clipped, which would cut off the bottom
+		 * of what the SDK draws. A window too short for that still gets a
+		 * picture 320px tall. The views strip under it may run below the
+		 * fold. */
+		max-width: calc(
+			(
+				max(320px, 100vh - var(--pixonaut-preview-top, 0px) - 24px) -
+				var(--pixonaut-preview-mark, 0px)
+			) *
+			var(--pixonaut-preview-drawn-aspect, var(--pixonaut-preview-aspect, 1))
+		);
+		margin-inline: auto;
+	}
+}
+
+@media (max-width: 767px) {
+	.pixonaut-preview {
+		width: 100%;
+		float: none;
+		margin-right: 0;
+	}
+
+	/* Stays in view above the form while it scrolls, where the script found
+	 * the preview short enough to leave the form room, an open keyboard
+	 * included. A taller one scrolls away with the page. */
+	.pixonaut-preview[data-pixonaut-pinned] {
+		position: sticky;
+		top: 0;
+		z-index: 1;
+		background: inherit;
+	}
+
+	.pixonaut-preview__frame {
+		/* The design as large as the screen allows: the full width, down to a
+		 * 5:7 portrait on a 375 x 667 phone, with the mark under it. Only a
+		 * taller design narrows: its width is held to what makes it and the
+		 * mark 80vh tall at its aspect ratio, from the first paint, rather
+		 * than its height clipped, which would cut off the bottom of what the
+		 * SDK draws. `vh` does not follow the browser's bars, so the width
+		 * does not change as the page scrolls. */
+		max-width: calc(
+			(80vh - var(--pixonaut-preview-mark, 0px)) *
+			var(--pixonaut-preview-drawn-aspect, var(--pixonaut-preview-aspect, 1))
+		);
+		margin-inline: auto;
+	}
+}
+
+/* The proof of a side's design, over the page: the page's own colours and
+ * type, the proof as large as the screen lets it be, and the close button
+ * drawn as the theme's buttons (a block theme's by its class). A click on
+ * the backdrop, outside the content, closes it. */
+.pixonaut-proof-dialog {
+	box-sizing: border-box;
+	max-width: min(56rem, calc(100vw - 2rem));
+	max-height: calc(100dvh - 2rem);
+	padding: 0;
+	border: 0;
+	border-radius: var(--wp--custom--border-radius, 0.25rem);
+	background: var(--wp--preset--color--base, #fff);
+	color: inherit;
+	font: inherit;
+}
+
+.pixonaut-proof-dialog::backdrop {
+	background: rgb(0 0 0 / 60%);
+}
+
+.pixonaut-proof-dialog__content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1em;
+	padding: 1em;
+}
+
+.pixonaut-proof-dialog__image {
+	display: block;
+	max-width: 100%;
+	/* The content's padding, its gap and the close button under the proof. */
+	max-height: calc(100dvh - 8rem);
+	height: auto;
+	object-fit: contain;
+}
+
+.pixonaut-proof-dialog__loading {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75em;
+	min-width: min(20rem, calc(100vw - 4rem));
+	margin: 2em 0;
+}
+
+.pixonaut-proof-dialog__loading::before {
+	width: 2.5rem;
+	height: 2.5rem;
+}
+
+/* A variable product's price shows once: the script writes the chosen
+ * variation's price in the theme's price target, or in the summary price
+ * (`price.ts`), so the variation price WooCommerce prints in the form, which
+ * the designer draws by its cart row, is left out. A page editing a cart
+ * line writes no price and keeps it. */
+.variations_form:has(
+		.pixonaut-form[data-pixonaut-variations]:not([data-pixonaut-edit])
+	)
+	.single_variation
+	.woocommerce-variation-price {
+	display: none;
+}
+
+/* The same on the Personalise button layout, whose script writes the price. */
+.variations_form:has(.pixonaut-personalise[data-pixonaut-prices])
+	.single_variation
+	.woocommerce-variation-price {
+	display: none;
+}

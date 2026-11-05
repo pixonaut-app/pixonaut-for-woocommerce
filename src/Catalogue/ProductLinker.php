@@ -1,0 +1,749 @@
+<?php
+/**
+ * Links a product to a Pixonaut blank and its sides.
+ *
+ * @package Pixonaut\WooCommerce
+ */
+
+declare(strict_types=1);
+
+namespace Pixonaut\WooCommerce\Catalogue;
+
+use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Api\Catalogue;
+use Pixonaut\WooCommerce\Api\Designs;
+use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Api\Logger;
+
+/**
+ * Turns what the store manager chose into a `ProductConfig`, checked with
+ * Pixonaut. A configuration that fails a check is still returned, marked
+ * invalid with the reason, so the choice is kept and the product cannot be
+ * bought until it is fixed. A side keeps only the print sizes Pixonaut judged
+ * legal; a menu Pixonaut could not judge is kept as entered, unsold, for the
+ * next save to check. A standing side of a sellable configuration is given
+ * the standing design Pixonaut finds or creates for it, approved: one per
+ * row of print areas on a blank whose areas change with an option.
+ */
+final class ProductLinker {
+
+	/**
+	 * Key of a side the store manager named no key or placement for, as the
+	 * one side of a product linked before it could have several.
+	 */
+	public const SINGLE_SIDE_KEY = 'design';
+
+	private const NOT_FOUND_STATUS = 404;
+
+	/**
+	 * Refusals of a standing design that say the store's key may not make one.
+	 */
+	private const STANDING_FORBIDDEN = array( ErrorCodes::FORBIDDEN, ErrorCodes::SECRET_KEY_REQUIRED );
+
+	/**
+	 * Statuses of a standing design refused for what it names: its template
+	 * version, placement or size (`400`, `422`).
+	 */
+	private const DESIGN_REFUSED_STATUSES = array( 400, 422 );
+
+	/**
+	 * Finds a standing side's designs on a blank whose print areas vary.
+	 *
+	 * @var StandingRows
+	 */
+	private readonly StandingRows $rows;
+
+	/**
+	 * The constraints read in this check, by template, blank and placement,
+	 * so a side's default size and its misfit sizes are read once.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private array $constraints = array();
+
+	/**
+	 * @param Catalogue $catalogue Checks blanks, templates and print sizes.
+	 * @param Designs   $designs   Finds standing designs.
+	 * @param Logger    $logger    Logs a standing design Pixonaut would not give, which the notice names by reason alone.
+	 */
+	public function __construct(
+		private readonly Catalogue $catalogue,
+		private readonly Designs $designs,
+		private readonly Logger $logger,
+	) {
+		$this->rows = new StandingRows( $catalogue, $designs, $logger );
+	}
+
+	/**
+	 * @param ProductConfig $current     What the product has now; its overrides are kept.
+	 * @param bool          $personalise Whether customers personalise the product.
+	 * @param string        $blank_id    The blank, or empty for a template-only product.
+	 * @param PostedSides   $posted      The sides as entered. Without a blank only the first counts.
+	 */
+	public function link( ProductConfig $current, bool $personalise, string $blank_id, PostedSides $posted ): ProductConfig {
+		$this->constraints = array();
+		if ( ! $personalise ) {
+			// The link is kept, so switching personalisation back on restores it.
+			return $this->config( $current, false, $current->blank_id, $current->blank_name, $current->sides, null );
+		}
+
+		$posted = self::following( $current, $posted );
+		$linked = '' === $blank_id
+			? $this->template_only( $current, $posted->sides[0] ?? null, $posted->first_problem )
+			: $this->checked( $current, $blank_id, $posted->sides, $posted->problem );
+		return $this->standing( $this->live( self::versioned( $linked, $current, $posted->sides ) ), $current );
+	}
+
+	/**
+	 * The sides as entered, each side that follows its template on the
+	 * latest version the product knows of it: a form opened before a
+	 * re-check moved the side on does not move it back.
+	 *
+	 * @param ProductConfig $current What the product has now.
+	 * @param PostedSides   $posted  The sides as entered.
+	 */
+	private static function following( ProductConfig $current, PostedSides $posted ): PostedSides {
+		$inputs = array();
+		foreach ( $posted->sides as $input ) {
+			$template = TemplateId::parse( $input->template_id );
+			$latest   = null === $template ? null : self::latest_known( $current, $template->base_id );
+			$inputs[] = $input->pinned || null === $template || null === $latest || $latest <= $template->version
+				? $input
+				: $input->with_template_id( (string) new TemplateId( $template->base_id, $latest ) );
+		}
+		return $posted->with_sides( $inputs );
+	}
+
+	/**
+	 * Each side as checked, staying on its version or following the latest
+	 * as entered, and knowing the latest version of its template. A side
+	 * moved off the version it had keeps that one as its previous version,
+	 * so a design made just before is still accepted.
+	 *
+	 * @param ProductConfig $linked  The configuration as checked.
+	 * @param ProductConfig $current What the product had.
+	 * @param SideInput[]   $inputs  The sides as entered, in the order checked.
+	 * @phpstan-param list<SideInput> $inputs
+	 */
+	private static function versioned( ProductConfig $linked, ProductConfig $current, array $inputs ): ProductConfig {
+		if ( ! $linked->personalise ) {
+			return $linked;
+		}
+		$sides = array();
+		foreach ( $linked->sides as $i => $side ) {
+			$before = null;
+			foreach ( $current->sides as $had ) {
+				if ( $had->key === $side->key && $had->template_base_id === $side->template_base_id && '' !== $side->template_base_id ) {
+					$before = $had;
+				}
+			}
+			$previous = $before?->template_version === $side->template_version ? $before?->previous_version : $before?->template_version;
+			$listed   = $inputs[ $i ]->listed_version ?? 0;
+			$latest   = null === $side->template_version ? null : max( $side->template_version, $listed, self::latest_known( $current, $side->template_base_id ) ?? 0 );
+			$sides[]  = $side->with_versions( $inputs[ $i ]->pinned ?? false, $previous, $latest );
+		}
+		return $linked->with_sides( $sides );
+	}
+
+	/**
+	 * The latest version of a template the product's sides know of; null
+	 * when none of them has it.
+	 *
+	 * @param ProductConfig $config  The product's configuration.
+	 * @param string        $base_id The template.
+	 */
+	private static function latest_known( ProductConfig $config, string $base_id ): ?int {
+		$latest = null;
+		foreach ( $config->sides as $side ) {
+			if ( $side->template_base_id === $base_id && null !== $side->known_latest_version() ) {
+				$latest = max( $latest ?? 0, $side->known_latest_version() );
+			}
+		}
+		return $latest;
+	}
+
+	/**
+	 * A sellable configuration whose template is paused cannot be sold:
+	 * Pixonaut opens no designer for it. Each side's template version is
+	 * read (`GET /v1/templates/{id}`), once per version, as the checks
+	 * before say nothing of whether it is live; its `status` is the
+	 * template's, whichever version is read. The read also says whether the
+	 * version offers the customer a field, which each side keeps.
+	 *
+	 * @param ProductConfig $config The configuration as checked.
+	 */
+	private function live( ProductConfig $config ): ProductConfig {
+		if ( ! $config->valid ) {
+			return $config;
+		}
+		$read  = array();
+		$sides = array();
+		foreach ( $config->sides as $side ) {
+			if ( null === $side->template_version ) {
+				$sides[] = $side;
+				continue;
+			}
+			$id = (string) new TemplateId( $side->template_base_id, $side->template_version );
+			try {
+				$read[ $id ] ??= $this->catalogue->template_state( $id );
+			} catch ( ApiError $e ) {
+				return $config->with_validity( false, self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ) );
+			}
+			if ( Catalogue::LIVE !== $read[ $id ]['status'] ) {
+				return $config->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE );
+			}
+			$side = $side->with_offers_properties( $read[ $id ]['offers_properties'] );
+			// A side entered without its template's name (by an ability) takes the one Pixonaut gives.
+			$sides[] = null === $side->template_name ? $side->with_template_name( $read[ $id ]['name'] ) : $side;
+		}
+		return $config->with_sides( $sides );
+	}
+
+	/**
+	 * Gives each standing side of a sellable configuration its standing
+	 * design (`POST /v1/designs/standing`, approved): the one for its
+	 * template version on its blank's placement at the size it starts on,
+	 * which Pixonaut finds again on every save while none of them changed,
+	 * and makes anew once one did. On a blank whose print areas change with
+	 * an option, Pixonaut refuses that with `variant_required`, and the side
+	 * is given a design per row instead (`StandingRows`), but none for a row
+	 * the template cannot be printed at, which it names among its misfit
+	 * sizes; a side the template fits at no row cannot be sold. A refusal
+	 * leaves the configuration unsellable, saying why.
+	 *
+	 * @param ProductConfig      $config The configuration as checked.
+	 * @param ProductConfig|null $before What the product held before, whose sides' row previews are kept for designs found again.
+	 */
+	private function standing( ProductConfig $config, ?ProductConfig $before = null ): ProductConfig {
+		if ( ! $config->valid ) {
+			return self::keeping_adjusted( $config, $before );
+		}
+		if ( array() === $config->standing_sides() ) {
+			return $config;
+		}
+		$sides = array();
+		foreach ( $config->sides as $side ) {
+			if ( ! $side->is_standing() || null === $side->template_version ) {
+				$sides[] = $side;
+				continue;
+			}
+			$template_id = (string) new TemplateId( $side->template_base_id, $side->template_version );
+			try {
+				$sides[] = $this->standing_side( $template_id, $config->blank_id, $side, self::rows_of( $before, $side->key ) );
+			} catch ( ApiError $e ) {
+				$this->logger->warning(
+					sprintf( 'Pixonaut gave no standing design for side "%s": %s', $side->key, $e->getMessage() ),
+					array(
+						'side'        => $side->key,
+						'template_id' => $template_id,
+						'blank_id'    => $config->blank_id,
+						'placement'   => $side->placement_id,
+						'status'      => $e->status,
+						'code'        => $e->error_code,
+					)
+				);
+				return self::keeping_adjusted( $config, $before )->with_validity( false, self::standing_reason( $e ) );
+			}
+		}
+		$standing = $config->with_sides( $sides );
+		foreach ( $sides as $side ) {
+			if ( $side->is_standing() && null === $side->standing_design_id && array() === $side->standing_rows && array() !== $side->misfit_sizes ) {
+				return $standing->with_validity( false, InvalidReason::NO_FITTING_SIZE );
+			}
+		}
+		return $standing;
+	}
+
+	/**
+	 * A configuration that could not be given its standing designs, its
+	 * standing sides holding the rows laid out by hand before that still
+	 * hold for them, so a save or check that fails for now loses none of the
+	 * store manager's adjustments; the next one that succeeds keeps them.
+	 *
+	 * @param ProductConfig      $config The configuration as checked.
+	 * @param ProductConfig|null $before What the product held before.
+	 */
+	private static function keeping_adjusted( ProductConfig $config, ?ProductConfig $before ): ProductConfig {
+		$sides = array();
+		$kept  = false;
+		foreach ( $config->sides as $side ) {
+			$adjusted = array_values(
+				array_filter(
+					self::rows_of( $before, $side->key ),
+					static fn ( StandingRow $row ): bool => null !== $row->adjusted && $row->adjusted->holds( $side->template_base_id, $config->blank_id, $side->placement_id )
+				)
+			);
+			$kept     = $kept || ( $side->is_standing() && array() !== $adjusted );
+			$sides[]  = $side->is_standing() && array() !== $adjusted ? $side->with_standing_rows( $adjusted ) : $side;
+		}
+		return $kept ? $config->with_sides( $sides ) : $config;
+	}
+
+	/**
+	 * A standing side with its design, or its design per row.
+	 *
+	 * @param string        $template_id `<baseId>@<version>`.
+	 * @param string|null   $blank_id    The blank; null for a product without one.
+	 * @param Side          $side        The standing side.
+	 * @param StandingRow[] $known     The rows the side held before.
+	 * @phpstan-param list<StandingRow> $known
+	 *
+	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 */
+	private function standing_side( string $template_id, ?string $blank_id, Side $side, array $known ): Side {
+		try {
+			return $side->with_standing_design( $this->designs->standing( $template_id, $blank_id, $side->placement_id, $side->standing_size() ) );
+		} catch ( ApiError $e ) {
+			if ( ErrorCodes::VARIANT_REQUIRED !== $e->error_code || null === $blank_id ) {
+				throw $e;
+			}
+			$varies_by = array_values( array_filter( is_array( $e->details['areasVaryBy'] ?? null ) ? $e->details['areasVaryBy'] : array(), 'is_string' ) );
+			$found     = $this->rows->designs( $template_id, $blank_id, $side, $varies_by, $known );
+			return $side->with_standing_rows( $found['rows'] )->with_misfit_sizes( $found['misfits'] );
+		}
+	}
+
+	/**
+	 * The rows a side of a configuration held; none without one.
+	 *
+	 * @param ProductConfig|null $config A configuration.
+	 * @param string             $key    The side's key.
+	 * @return list<StandingRow>
+	 */
+	private static function rows_of( ?ProductConfig $config, string $key ): array {
+		foreach ( null === $config ? array() : $config->sides as $side ) {
+			if ( $side->key === $key ) {
+				return array_values( $side->standing_rows );
+			}
+		}
+		return array();
+	}
+
+	/**
+	 * Why a standing design was refused, as the product screen says it.
+	 *
+	 * @param ApiError $error What Pixonaut answered.
+	 */
+	private static function standing_reason( ApiError $error ): string {
+		if ( in_array( $error->error_code, self::STANDING_FORBIDDEN, true ) ) {
+			return InvalidReason::STANDING_FORBIDDEN;
+		}
+		if ( InvalidReason::UNKNOWN_PLACEMENT === $error->error_code ) {
+			return InvalidReason::UNKNOWN_PLACEMENT;
+		}
+		// Anything else that is not a refusal of the design itself is checked again.
+		return in_array( $error->status, self::DESIGN_REFUSED_STATUSES, true ) ? InvalidReason::STANDING_REFUSED : InvalidReason::CHECK_FAILED;
+	}
+
+	/**
+	 * Checks a stored configuration again, as its template or blank changed
+	 * in Pixonaut. Each side follows its template's live version, the one it
+	 * leaves kept as the previous version, unless it is pinned to its own
+	 * version, where it stays; a template no longer live makes
+	 * the configuration unsellable without asking Pixonaut anything more.
+	 * When the check finds a problem, every side keeps its whole menu as
+	 * pending, so the next check, once the problem is gone, sells it again.
+	 * A problem in what the store manager entered (`InvalidReason::INPUT`)
+	 * stays until the product is saved again.
+	 *
+	 * @param ProductConfig     $stored The configuration as stored.
+	 * @param array<string,int> $live   The live templates' versions, by base id.
+	 * @return ProductConfig `invalid_reason` is `check_failed` when Pixonaut could not be asked; nothing else is to be kept then.
+	 */
+	public function recheck( ProductConfig $stored, array $live ): ProductConfig {
+		$this->constraints = array();
+		if ( ! $stored->personalise ) {
+			return $stored;
+		}
+		$sides = array();
+		foreach ( $stored->sides as $side ) {
+			$sides[] = isset( $live[ $side->template_base_id ] ) ? $side->rolled_to( $live[ $side->template_base_id ] ) : $side;
+		}
+		$rolled = $stored->with_sides( $sides );
+		foreach ( $sides as $side ) {
+			if ( '' !== $side->template_base_id && ! isset( $live[ $side->template_base_id ] ) ) {
+				return $rolled->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE );
+			}
+		}
+
+		$inputs  = array();
+		$problem = in_array( $stored->invalid_reason, InvalidReason::INPUT, true ) ? $stored->invalid_reason : null;
+		foreach ( $sides as $side ) {
+			$menu     = $side->menu();
+			$inputs[] = new SideInput( $side->key, $side->label, $side->placement_id ?? '', null === $side->template_version ? '' : (string) new TemplateId( $side->template_base_id, $side->template_version ), $side->template_name ?? '', $menu, $side->start_size, $side->mode, $side->form_groups, $side->pinned, null, $side->draw_at_template_ratio );
+			if ( array() === $menu && null !== $side->placement_id ) {
+				// The side sells nothing and its menu is gone: only the last save can say why,
+				// unless Pixonaut did not answer it, which would keep the product retrying.
+				$saved     = InvalidReason::CHECK_FAILED === $stored->invalid_reason ? null : $stored->invalid_reason;
+				$problem ??= $saved ?? InvalidReason::INVALID_PRINT_SIZE;
+			}
+		}
+		$checked = null === $stored->blank_id
+			? $this->template_only( $rolled, $inputs[0] ?? null, $problem )
+			: $this->checked( $rolled, $stored->blank_id, $inputs, $problem );
+
+		$kept = array();
+		foreach ( $checked->sides as $i => $side ) {
+			$before = $sides[ $i ] ?? null;
+			$menu   = $checked->valid || array() === $inputs[ $i ]->sizes ? null : $inputs[ $i ]->sizes;
+			// What was read of the template version stays while the side keeps it; a version it rolled to is read on the next save.
+			$kept[] = $side->with( $side->template_version, $before?->previous_version, $checked->valid ? $side->print_sizes : array(), $menu, null === $menu ? $side->start_size : $inputs[ $i ]->start )->with_offers_properties( $before?->offers_properties )
+				->with_versions( $before->pinned ?? false, $before?->previous_version, $before?->latest_version );
+		}
+		return $this->standing( $checked->with_sides( $kept ), $stored );
+	}
+
+	/**
+	 * The sides checked against the blank and its placements. A side
+	 * Pixonaut could not check makes the configuration `check_failed`
+	 * whatever else is wrong with it, so it is checked again.
+	 *
+	 * @param ProductConfig $current  What the product has now; its overrides are kept.
+	 * @param string        $blank_id The blank.
+	 * @param SideInput[]   $inputs   The sides to check.
+	 * @param string|null   $problem  Why the sides cannot be sold whatever Pixonaut says, if anything.
+	 * @phpstan-param list<SideInput> $inputs
+	 */
+	private function checked( ProductConfig $current, string $blank_id, array $inputs, ?string $problem ): ProductConfig {
+		try {
+			$blank = $this->catalogue->blank( $blank_id );
+		} catch ( ApiError $e ) {
+			// The choice is kept, unchecked, so updating again once Pixonaut answers retries it.
+			$kept = $current->blank_id === $blank_id ? $current : null;
+			return $this->config( $current, true, $blank_id, $kept?->blank_name, $this->unchecked( $kept, $inputs ), self::reason( $e, InvalidReason::UNKNOWN_BLANK ) );
+		}
+		$blank_name = is_string( $blank['name'] ?? null ) ? $blank['name'] : null;
+		if ( self::is_deleted( $blank ) ) {
+			// Nothing is made on a deleted blank; the choice is kept for when it is restored. A problem
+			// in what was entered is kept over the deletion, which the panel reads from the blank,
+			// so restoring it does not sell what only a save can fix.
+			$kept = $current->blank_id === $blank_id ? $current : null;
+			return $this->config( $current, true, $blank_id, $blank_name, $this->unchecked( $kept, $inputs ), $problem ?? InvalidReason::BLANK_DELETED );
+		}
+
+		$placements = array();
+		foreach ( SearchResults::placements( $blank ) as $placement ) {
+			$placements[ $placement['id'] ] = $placement['text'];
+		}
+
+		// A template can fit a placement at some sizes only where its print area changes with an option.
+		$areas_vary = array() !== ( $blank['areasVaryBy'] ?? array() );
+
+		$sides   = array();
+		$reasons = array();
+		foreach ( $inputs as $input ) {
+			list( $side, $reason ) = $this->side( $current, $blank_id, $placements, $input, $areas_vary );
+			$sides[]               = $side;
+			if ( null !== $reason ) {
+				$reasons[] = $reason;
+			}
+		}
+		if ( array() === $inputs ) {
+			$reasons[] = InvalidReason::MISSING_TEMPLATE;
+		}
+
+		$reason = in_array( InvalidReason::CHECK_FAILED, $reasons, true ) ? InvalidReason::CHECK_FAILED : $problem ?? $reasons[0] ?? null;
+		return $this->config( $current, true, $blank_id, $blank_name, $sides, $reason );
+	}
+
+	/**
+	 * Without a blank there is no placement to size or check a print against:
+	 * one side, its template alone, sold in the sizes the store manager
+	 * entered, each judged against the template's ratio. A size taken from
+	 * the placement means nothing here, so it is dropped; a side left with
+	 * no size cannot be sold, and so cannot one whose entered sizes had a
+	 * problem, which is kept until the product is saved again.
+	 *
+	 * @param ProductConfig  $current What the product has now.
+	 * @param SideInput|null $input   The first side entered.
+	 * @param string|null    $problem Why the side cannot be sold whatever Pixonaut says, if anything.
+	 */
+	private function template_only( ProductConfig $current, ?SideInput $input, ?string $problem ): ProductConfig {
+		$template = null === $input ? null : TemplateId::parse( $input->template_id );
+		if ( null === $input || null === $template ) {
+			return $this->config( $current, true, null, null, array(), InvalidReason::MISSING_TEMPLATE );
+		}
+		$name    = '' === $input->template_name ? null : $input->template_name;
+		$entered = array();
+		// Where each size entered landed in `$entered`, by its index in the menu.
+		$entered_at = array();
+		foreach ( $input->sizes as $index => $size ) {
+			if ( null !== $size ) {
+				$entered_at[ $index ] = count( $entered );
+				$entered[]            = $size;
+			}
+		}
+		$sized = static fn ( array $sizes, ?array $pending, int $start ): Side => new Side( $input->key, self::label( $input, null, $name, $template->base_id ), null, null, $template->base_id, $template->version, null, $name, array_values( $sizes ), null === $pending ? null : array_values( $pending ), $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
+		if ( array() === $entered ) {
+			return $this->config( $current, true, null, null, array( $sized( array(), null, 0 ) ), $problem ?? InvalidReason::MISSING_PRINT_SIZE );
+		}
+
+		try {
+			list( $legal, $legal_at, $reason ) = $this->judged( (string) $template, $entered, null, null );
+		} catch ( ApiError $e ) {
+			// Nothing unchecked is sold; the menu waits for the next save.
+			return $this->config( $current, true, null, null, array( $sized( array(), $entered, $entered_at[ $input->start ] ?? 0 ) ), self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ) );
+		}
+		$side = $sized( $legal, null, $legal_at[ $entered_at[ $input->start ] ?? -1 ] ?? 0 );
+		return $this->config( $current, true, null, null, array( $side ), $problem ?? ( array() === $legal ? $reason ?? InvalidReason::MISSING_PRINT_SIZE : $reason ) );
+	}
+
+	/**
+	 * One side checked with Pixonaut: its sizes judged in one call, the legal
+	 * ones kept. A side that cannot be checked keeps its menu as entered. A
+	 * personalised side on a blank whose print areas change with an option
+	 * also knows the sizes its template cannot be printed at; a standing
+	 * side learns them from its rows' designs (`standing()`). Until a check
+	 * replaces them, a side keeps the misfits it held for the same template
+	 * version on the same placement.
+	 *
+	 * @param ProductConfig         $current    What the product has now.
+	 * @param string                $blank_id   The blank.
+	 * @param array<string, string> $placements The blank's placements, names by id.
+	 * @param SideInput             $input      The side as entered.
+	 * @param bool                  $areas_vary Whether the blank's print areas change with an option.
+	 * @return array{0: Side, 1: string|null} The side and why it cannot be sold, if it cannot.
+	 */
+	private function side( ProductConfig $current, string $blank_id, array $placements, SideInput $input, bool $areas_vary = false ): array {
+		$template       = TemplateId::parse( $input->template_id );
+		$name           = '' === $input->template_name ? null : $input->template_name;
+		$placement_id   = '' === $input->placement_id ? null : $input->placement_id;
+		$placement_name = null === $placement_id ? null : $placements[ $placement_id ] ?? null;
+		$sized          = static fn ( array $sizes, bool $keep_menu = false, int $start = 0 ): Side => new Side( $input->key, self::label( $input, $placement_name, $name, $template?->base_id ), $placement_id, $placement_name, $template->base_id ?? '', $template?->version, null, $name, array_values( $sizes ), $keep_menu ? $input->sizes : null, $keep_menu ? $input->start : $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
+
+		if ( null === $template ) {
+			return array( $sized( array(), true ), InvalidReason::MISSING_TEMPLATE );
+		}
+		if ( null === $placement_id ) {
+			return array( $sized( array(), true ), InvalidReason::MISSING_PLACEMENT );
+		}
+		if ( null === $placement_name ) {
+			return array( $sized( array(), true ), InvalidReason::UNKNOWN_PLACEMENT );
+		}
+		if ( array() === $input->sizes ) {
+			// Every size entered was unusable; PostedSides says why.
+			return array( $sized( array() ), null );
+		}
+
+		$held   = self::held_misfits( $current, $blank_id, $placement_id, $template );
+		$reason = null;
+		try {
+			$sizes = array();
+			// Where each size entered landed in `$sizes`, by its index in the menu.
+			$checked_at = array();
+			foreach ( $input->sizes as $entered => $size ) {
+				$size ??= $this->default_size( (string) $template, $blank_id, $placement_id );
+				if ( null === $size ) {
+					$reason = InvalidReason::UNKNOWN_PLACEMENT;
+					continue;
+				}
+				$checked_at[ $entered ] = count( $sizes );
+				$sizes[]                = $size;
+			}
+			list( $legal, $legal_at, $refused ) = $this->judged( (string) $template, $sizes, $blank_id, $placement_id );
+			$misfits                            = $held;
+			if ( Side::STANDING !== $input->mode ) {
+				$misfits = $areas_vary && array() !== $legal
+					? MisfitSizes::of( self::placement_of( $this->constraints( (string) $template, $blank_id, $placement_id ) )['sizes'] ?? null )
+					: array();
+			}
+		} catch ( ApiError $e ) {
+			// Nothing unchecked is sold; the menu waits for the next save.
+			return array( $sized( array(), true )->with_misfit_sizes( $held ), self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ) );
+		}
+		// A starting size Pixonaut cannot print leaves the first legal one to start on.
+		return array( $sized( $legal, false, $legal_at[ $checked_at[ $input->start ] ?? -1 ] ?? 0 )->with_misfit_sizes( $misfits ), $reason ?? $refused );
+	}
+
+	/**
+	 * Sizes judged by Pixonaut in one call, the legal ones kept in order.
+	 *
+	 * @param string      $template_id  `<baseId>@<version>`.
+	 * @param PrintSize[] $sizes        The sizes to judge.
+	 * @param string|null $blank_id     The blank; null to judge against the template alone.
+	 * @param string|null $placement_id Its placement; null without a blank.
+	 * @phpstan-param list<PrintSize> $sizes
+	 * @return array{0: list<PrintSize>, 1: array<int, int>, 2: string|null} The legal sizes, where each judged size landed among them by its index in `$sizes`, and why the first one refused was.
+	 *
+	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 */
+	private function judged( string $template_id, array $sizes, ?string $blank_id, ?string $placement_id ): array {
+		$verdicts = array() === $sizes ? array() : $this->catalogue->check_print_sizes( $template_id, $sizes, $blank_id, $placement_id );
+		$legal    = array();
+		$legal_at = array();
+		$reason   = null;
+		foreach ( $sizes as $i => $size ) {
+			$verdict = $verdicts[ $i ] ?? array();
+			if ( true === ( $verdict['legal'] ?? null ) ) {
+				$legal_at[ $i ] = count( $legal );
+				$legal[]        = $size;
+				continue;
+			}
+			$reason ??= is_string( $verdict['reason'] ?? null ) ? $verdict['reason'] : InvalidReason::CHECK_FAILED;
+		}
+		return array( $legal, $legal_at, $reason );
+	}
+
+	/**
+	 * The sides as entered, unchecked: no sizes sold, the menu kept as
+	 * entered, for when the blank cannot be read. A side whose placement and
+	 * template are the ones the product already has keeps its cached names
+	 * for display, and the sizes its template was found not to fit.
+	 *
+	 * @param ProductConfig|null $current What the product has now, when it is linked to the same blank.
+	 * @param SideInput[]        $inputs  The sides as entered.
+	 * @phpstan-param list<SideInput> $inputs
+	 * @return list<Side>
+	 */
+	private function unchecked( ?ProductConfig $current, array $inputs ): array {
+		$sides = array();
+		foreach ( $inputs as $input ) {
+			$template     = TemplateId::parse( $input->template_id );
+			$base_id      = $template->base_id ?? '';
+			$version      = $template?->version;
+			$placement_id = '' === $input->placement_id ? null : $input->placement_id;
+			$same         = null;
+			foreach ( null === $current ? array() : $current->sides as $side ) {
+				if ( $side->placement_id === $placement_id && $side->template_base_id === $base_id && $side->template_version === $version ) {
+					$same = $side;
+				}
+			}
+			$name    = '' === $input->template_name ? $same?->template_name : $input->template_name;
+			$sides[] = new Side( $input->key, self::label( $input, $same?->placement_name, $name, $template?->base_id ), $placement_id, $same?->placement_name, $base_id, $version, $same?->previous_version, $name, array(), $input->sizes, $input->start, $input->mode, form_groups: $input->form_groups, misfit_sizes: $same->misfit_sizes ?? array(), draw_at_template_ratio: $input->draw_at_template_ratio );
+		}
+		return $sides;
+	}
+
+	/**
+	 * The size the template prints at on the placement when the customer
+	 * names none: its ratio fitted into the placement's default box.
+	 *
+	 * @param string $template_id  `<baseId>@<version>`.
+	 * @param string $blank_id     The blank.
+	 * @param string $placement_id The placement.
+	 * @return PrintSize|null Null when Pixonaut answered without a usable box.
+	 *
+	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 */
+	private function default_size( string $template_id, string $blank_id, string $placement_id ): ?PrintSize {
+		$placement = self::placement_of( $this->constraints( $template_id, $blank_id, $placement_id ) );
+		$size      = PrintSize::from_array(
+			array(
+				'widthMm'  => $placement['printWidthMm'] ?? null,
+				'heightMm' => $placement['printHeightMm'] ?? null,
+			)
+		);
+		return null === $size ? null : new PrintSize( $size->width_mm, $size->height_mm, PrintSize::label_for( $size->width_mm, $size->height_mm ), true );
+	}
+
+	/**
+	 * The misfit sizes a side of the product held for a template version on
+	 * a blank's placement; none when no side held that one.
+	 *
+	 * @param ProductConfig   $current      What the product has now.
+	 * @param string          $blank_id     The blank.
+	 * @param string|null     $placement_id The placement.
+	 * @param TemplateId|null $template     The template version.
+	 * @return list<string>
+	 */
+	private static function held_misfits( ProductConfig $current, string $blank_id, ?string $placement_id, ?TemplateId $template ): array {
+		if ( null === $template || $current->blank_id !== $blank_id ) {
+			return array();
+		}
+		foreach ( $current->sides as $side ) {
+			if ( $side->placement_id === $placement_id && $side->template_base_id === $template->base_id && $side->template_version === $template->version ) {
+				return $side->misfit_sizes;
+			}
+		}
+		return array();
+	}
+
+	/**
+	 * The template's constraints on a placement, read once per check.
+	 *
+	 * @param string $template_id  `<baseId>@<version>`.
+	 * @param string $blank_id     The blank.
+	 * @param string $placement_id The placement.
+	 * @return array<string, mixed>
+	 *
+	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 */
+	private function constraints( string $template_id, string $blank_id, string $placement_id ): array {
+		return $this->constraints[ (string) wp_json_encode( array( $template_id, $blank_id, $placement_id ) ) ] ??= $this->catalogue->constraints( $template_id, $blank_id, $placement_id );
+	}
+
+	/**
+	 * The `placement` of a constraints answer; empty without one.
+	 *
+	 * @param array<string, mixed> $constraints The answer.
+	 * @return array<mixed>
+	 */
+	private static function placement_of( array $constraints ): array {
+		return is_array( $constraints['placement'] ?? null ) ? $constraints['placement'] : array();
+	}
+
+	/**
+	 * The side's label: the one entered, else the placement's name, else the
+	 * template's, else the side's key.
+	 *
+	 * @param SideInput   $input            The side as entered.
+	 * @param string|null $placement_name   The placement's name.
+	 * @param string|null $template_name    The template's name.
+	 * @param string|null $template_base_id The template; null when none is chosen.
+	 */
+	private static function label( SideInput $input, ?string $placement_name, ?string $template_name, ?string $template_base_id ): string {
+		return '' !== $input->label ? $input->label : $placement_name ?? $template_name ?? $template_base_id ?? $input->key;
+	}
+
+	/**
+	 * Whether Pixonaut answered a blank that is deleted: it still reads one
+	 * by id, with when and by whom it was deleted, until it is restored.
+	 *
+	 * @param array<string, mixed> $blank A `GET /v1/blanks/{id}` answer.
+	 */
+	public static function is_deleted( array $blank ): bool {
+		return null !== ( $blank['deleted'] ?? null );
+	}
+
+	/**
+	 * @param ApiError $error     What Pixonaut answered.
+	 * @param string   $not_found The reason when it answered `404`.
+	 */
+	private static function reason( ApiError $error, string $not_found ): string {
+		if ( self::NOT_FOUND_STATUS === $error->status ) {
+			return $not_found;
+		}
+		return InvalidReason::UNKNOWN_PLACEMENT === $error->error_code ? InvalidReason::UNKNOWN_PLACEMENT : InvalidReason::CHECK_FAILED;
+	}
+
+	/**
+	 * @param ProductConfig $current     Overrides, the printshop and the canvas ratio, and the views and starting view on the same blank, come from here.
+	 * @param bool          $personalise Whether customers personalise the product.
+	 * @param string|null   $blank_id    The blank.
+	 * @param string|null   $blank_name  Its cached name.
+	 * @param Side[]        $sides       The sides.
+	 * @param string|null   $reason      Why it cannot be sold; null when it can.
+	 * @phpstan-param list<Side> $sides
+	 */
+	private function config( ProductConfig $current, bool $personalise, ?string $blank_id, ?string $blank_name, array $sides, ?string $reason ): ProductConfig {
+		return new ProductConfig(
+			$personalise,
+			$current->override,
+			$blank_id,
+			$blank_name,
+			$sides,
+			$current->layout,
+			$current->approval_mode,
+			null === $reason,
+			$reason,
+			// View ids are the blank's own: another blank shows all of its views until some are chosen.
+			$blank_id === $current->blank_id ? $current->views : array(),
+			$current->form_layout,
+			$blank_id === $current->blank_id ? $current->initial_view : null,
+			$current->printshop_id,
+			$current->draw_at_template_ratio,
+			$current->option_groups,
+			$current->group_numbers,
+		);
+	}
+}

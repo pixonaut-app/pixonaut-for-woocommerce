@@ -1,0 +1,14 @@
+/node_modules/
+/vendor/
+/assets/build/
+/.wp-env-home/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/.wp-env.override.json
+/tests/fake-pixonaut/dist/
+/dist/
+/languages/*.mo
+/languages/*.l10n.php
+/.i18n-build/

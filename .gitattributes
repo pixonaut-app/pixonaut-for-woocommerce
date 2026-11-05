@@ -1,0 +1,2 @@
+# Pinned contract files must stay byte-exact: their sha256 is locked.
+/contracts/pixonaut/** -text

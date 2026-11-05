@@ -1,0 +1,33 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"strict": true,
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true,
+		"isolatedModules": true,
+		"verbatimModuleSyntax": true,
+		"skipLibCheck": false,
+		"types": ["node"],
+		"paths": {
+			"@pixonaut/sdk": ["./contracts/pixonaut/sdk/pixonaut.d.ts"]
+		}
+	},
+	"include": [
+		"assets/src",
+		"bin/contracts",
+		"contracts/scenarios",
+		"bin/docs",
+		"bin/docs-generate.mjs",
+		"bin/release",
+		"bin/plugin-header.mjs",
+		"tests/e2e",
+		"tests/fake-pixonaut",
+		"tests/js",
+		"*.config.ts"
+	],
+	"exclude": ["tests/fake-pixonaut/dist"]
+}

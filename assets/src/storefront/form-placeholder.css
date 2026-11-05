@@ -1,0 +1,658 @@
+/* Each side's form as the designer draws it, printed until it does
+ * (`storefront/form-placeholder.php`): the same controls, in the designer's
+ * colours, at the sizes it draws them at, so nothing moves when it takes
+ * over. Every rule is scoped to the printed form, as the designer's inline
+ * styles are, so a theme's rules for inputs and headings stay out. */
+.pixonaut-form__placeholder {
+	/* The designer's colours (its `theme.ts`). */
+	--pixonaut-placeholder-ink: #1c2b5e;
+	--pixonaut-placeholder-muted-text: #5e6884;
+	--pixonaut-placeholder-border: #d6def3;
+	--pixonaut-placeholder-muted: #edf0f9;
+	--pixonaut-placeholder-card: #fff;
+	--pixonaut-placeholder-accent: var(
+		--pixonaut-accent,
+		var(--pixonaut-placeholder-ink)
+	);
+	/* A chosen tile's or swatch's ring: a card-coloured gap, then the accent. */
+	--pixonaut-placeholder-chosen:
+		0 0 0 2px var(--pixonaut-placeholder-card),
+		0 0 0 4px var(--pixonaut-placeholder-accent);
+	--pixonaut-placeholder-resting: inset 0 0 0 1px
+		var(--pixonaut-placeholder-border);
+
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	counter-reset: pixonaut-step;
+}
+
+/* What the printed form draws itself, as opposed to the add-to-cart form's
+ * parts in its slots, which keep the theme's own look. */
+.pixonaut-form__placeholder .pixonaut-placeholder__part {
+	display: contents;
+	color: var(--pixonaut-placeholder-ink);
+	font: 600 13px system-ui;
+}
+
+/* The print size picker's legend takes the page's font, as the designer's
+ * does; only its chips are the designer's own. */
+.pixonaut-form__placeholder
+.pixonaut-placeholder__part:has(> .pixonaut-placeholder__sizes) {
+	font: inherit;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__legend {
+	font-size: 13px;
+	font-weight: 600;
+}
+
+/* A place for a part of the add-to-cart form (`shop-parts.ts`): the part
+ * stands in the printed form as it stands in the designer's, its gap apart.
+ * An empty one takes no gap. */
+.pixonaut-form__placeholder .pixonaut-placeholder__slot {
+	display: contents;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__slot[hidden] {
+	display: none;
+}
+
+/* The designer's cart row on the last step of a form in steps, under Back. */
+.pixonaut-form__placeholder[data-pixonaut-layout]
+> .pixonaut-placeholder__slot[data-pixonaut-slot="cart"]:not([hidden]) {
+	display: block;
+	padding-top: 12px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__step {
+	margin: 8px 0 2px;
+	font: 600 16px system-ui;
+	counter-increment: pixonaut-step;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__step::before {
+	content: counter(pixonaut-step) ". ";
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__divider {
+	margin: 10px 0 0;
+	border-top: 1px solid var(--pixonaut-placeholder-border);
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__field {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+/* A real input's field is a label, which a theme styles: it keeps the look of
+ * the field around it. */
+.pixonaut-form .pixonaut-form__placeholder label.pixonaut-placeholder__field {
+	margin: 0;
+	padding: 0;
+	color: inherit;
+	font: inherit;
+	letter-spacing: normal;
+	text-transform: none;
+}
+
+/* A field with help under it. */
+.pixonaut-form__placeholder .pixonaut-placeholder__described {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__help {
+	color: var(--pixonaut-placeholder-muted-text);
+	font: 400 12px system-ui;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__heading {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__aside {
+	color: var(--pixonaut-placeholder-muted-text);
+	font: 400 12px system-ui;
+	font-variant-numeric: tabular-nums;
+}
+
+/* A text box, holding the field's default text. */
+.pixonaut-form .pixonaut-form__placeholder .pixonaut-placeholder__input {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	height: auto;
+	min-height: 0;
+	max-height: none;
+	margin: 0;
+	padding: 9px 12px;
+	border: 0;
+	border-radius: 8px;
+	outline: 0;
+	background: var(--pixonaut-placeholder-card);
+	box-shadow: var(--pixonaut-placeholder-resting);
+	color: var(--pixonaut-placeholder-ink);
+	font: 400 16px system-ui;
+	letter-spacing: normal;
+	text-transform: none;
+}
+
+.pixonaut-form .pixonaut-form__placeholder .pixonaut-placeholder__select {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: none;
+	height: 40px;
+	min-height: 0;
+	margin: 0;
+	padding: 0 12px;
+	border: 1px solid var(--pixonaut-placeholder-border);
+	border-radius: 8px;
+	background: var(--pixonaut-placeholder-card);
+	box-shadow: none;
+	color: var(--pixonaut-placeholder-ink);
+	font: 400 14px system-ui;
+	appearance: auto;
+}
+
+/* A picture field: the upload button, or its tiles, and the note the
+ * designer keeps under them. */
+.pixonaut-form__placeholder .pixonaut-placeholder__picture {
+	display: block;
+	padding-bottom: 4px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__upload {
+	display: flex;
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	width: 100%;
+	height: 48px;
+	overflow: hidden;
+	padding: 0 12px;
+	border: 1px dashed var(--pixonaut-placeholder-muted-text);
+	border-radius: 8px;
+	font: 600 14px system-ui;
+}
+
+/* Picture tiles and the upload tile beside them, which wraps after them. */
+.pixonaut-form__placeholder .pixonaut-placeholder__picture-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__upload--tile {
+	flex-shrink: 0;
+	width: 48px;
+	padding: 0;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__upload-face {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__upload-text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.pixonaut-form .pixonaut-form__placeholder .pixonaut-placeholder__icon {
+	display: block;
+	flex-shrink: 0;
+	width: 16px;
+	height: 16px;
+	fill: none;
+	stroke: currentcolor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.pixonaut-form
+	.pixonaut-form__placeholder
+	.pixonaut-placeholder__icon--pointer {
+	width: 15px;
+	height: 15px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__tiles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__tile {
+	display: flex;
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: center;
+	min-width: 48px;
+	height: 48px;
+	overflow: hidden;
+	border-radius: 8px;
+	background: var(--pixonaut-placeholder-card);
+	box-shadow: var(--pixonaut-placeholder-resting);
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__tile.is-chosen,
+.pixonaut-form__placeholder .pixonaut-placeholder__swatch.is-chosen {
+	box-shadow: var(--pixonaut-placeholder-chosen);
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__tile-text {
+	padding: 0 6px;
+	color: var(--pixonaut-placeholder-muted-text);
+	font: 400 11px / 1.2 system-ui;
+}
+
+/* A font's tile, its "Aa" in the system's face until the designer loads
+ * the font's. */
+.pixonaut-form__placeholder
+	[data-pixonaut-tiles="font"]
+	.pixonaut-placeholder__tile-text {
+	padding: 0 8px;
+	color: var(--pixonaut-placeholder-ink);
+	font: 400 18px system-ui;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__swatches {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__swatches--palette {
+	gap: 10px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__swatch {
+	display: block;
+	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	overflow: hidden;
+	border-radius: 50%;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__swatch-face {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: 50%;
+	/* The designer's swatch edge: its ink at 55%. */
+	box-shadow: inset 0 0 0 1px rgb(28 43 94 / 55%);
+}
+
+/* A palette that offers any colour: its swatches, then "Custom…", then
+ * the customer's own colour when the default is not the palette's. */
+.pixonaut-form__placeholder .pixonaut-placeholder__palette {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__custom {
+	display: block;
+	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+	box-shadow: var(--pixonaut-placeholder-resting);
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__custom.is-chosen {
+	box-shadow: var(--pixonaut-placeholder-chosen);
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__well {
+	box-shadow: var(--pixonaut-placeholder-resting);
+}
+
+/* A gradient: each of its colours under a heading of its own, lighter
+ * than the field's. */
+.pixonaut-form__placeholder .pixonaut-placeholder__gradient {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__stop {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__heading--stop {
+	font-weight: 400;
+}
+
+/* A picture's crop: the zoom slider and its reading, the buttons under it,
+ * and the empty line the designer keeps for a warning. */
+.pixonaut-form__placeholder .pixonaut-placeholder__crop {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__button {
+	display: block;
+	padding: 6px 10px;
+	border: 1px solid var(--pixonaut-placeholder-border);
+	border-radius: 6px;
+	background: var(--pixonaut-placeholder-card);
+	font: 600 12px system-ui;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__note {
+	display: block;
+}
+
+/* A slider at the field's default, and the row its ends are written in. */
+.pixonaut-form__placeholder .pixonaut-placeholder__slider {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__track {
+	display: block;
+	position: relative;
+	height: 20px;
+}
+
+/* The printed slider's and colour's own inputs, clear over what shows them, as
+ * the designer lays its own. */
+.pixonaut-form .pixonaut-form__placeholder .pixonaut-placeholder__range,
+.pixonaut-form .pixonaut-form__placeholder .pixonaut-placeholder__well-input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.pixonaut-form__placeholder
+	.pixonaut-placeholder__swatch:has(> .pixonaut-placeholder__well-input) {
+	position: relative;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__rail,
+.pixonaut-form__placeholder .pixonaut-placeholder__fill {
+	position: absolute;
+	top: 8px;
+	left: 0;
+	height: 4px;
+	border-radius: 2px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__rail {
+	right: 0;
+	background: var(--pixonaut-placeholder-border);
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__fill {
+	background: var(--pixonaut-placeholder-accent);
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__thumb {
+	position: absolute;
+	top: 1px;
+	width: 18px;
+	height: 18px;
+	margin-left: -9px;
+	border-radius: 50%;
+	background: var(--pixonaut-placeholder-card);
+	box-shadow: 0 0 0 2px var(--pixonaut-placeholder-accent);
+}
+
+/* The ends' line, empty until the designer writes them in its own format
+ * but for a crop's zoom. */
+.pixonaut-form__placeholder .pixonaut-placeholder__bounds {
+	display: flex;
+	justify-content: space-between;
+	height: 13px;
+	color: var(--pixonaut-placeholder-muted-text);
+	font: 400 11px system-ui;
+	font-variant-numeric: tabular-nums;
+}
+
+/* A crop's slider, beside its reading. */
+.pixonaut-form__placeholder
+	.pixonaut-placeholder__row
+	> .pixonaut-placeholder__slider {
+	flex: 1;
+}
+
+/* The hint to drag a layer on the preview. */
+.pixonaut-form__placeholder .pixonaut-placeholder__hint {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 12px;
+	border-radius: 8px;
+	background: var(--pixonaut-placeholder-muted);
+	font: 400 13px system-ui;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__hint-text {
+	flex: 1;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__reset {
+	flex-shrink: 0;
+	color: var(--pixonaut-placeholder-muted-text);
+	font: 400 12px system-ui;
+	text-decoration: underline;
+}
+
+/* The print size picker. */
+.pixonaut-form__placeholder .pixonaut-placeholder__sizes {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-bottom: 14px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__chips {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	padding: 2px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__chip {
+	display: inline-flex;
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: center;
+	min-width: 44px;
+	height: 36px;
+	padding: 0 14px;
+	border-radius: 8px;
+	background: var(--pixonaut-placeholder-card);
+	box-shadow: var(--pixonaut-placeholder-resting);
+	font: 500 13px system-ui;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__chip.is-chosen {
+	box-shadow: inset 0 0 0 2px var(--pixonaut-placeholder-accent);
+	font-weight: 600;
+}
+
+/* The steps layout: the stepper over the first step, Back and Next under
+ * it. */
+.pixonaut-form__placeholder .pixonaut-placeholder__stepper {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	/* Stretched across the form, so its width never depends on what it holds. */
+	container: pixonaut-stepper / inline-size;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__progress {
+	display: flex;
+	gap: 4px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__segment {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__bar {
+	display: block;
+	height: 4px;
+	border-radius: 2px;
+	background: var(--pixonaut-placeholder-border);
+}
+
+.pixonaut-form__placeholder .is-current .pixonaut-placeholder__bar {
+	background: var(--pixonaut-placeholder-ink);
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__segment-name {
+	overflow: hidden;
+	color: var(--pixonaut-placeholder-muted-text);
+	font: 400 11px system-ui;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.pixonaut-form__placeholder .is-current .pixonaut-placeholder__segment-name {
+	color: var(--pixonaut-placeholder-ink);
+	font-weight: 600;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__titles {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__counter {
+	color: var(--pixonaut-placeholder-muted-text);
+	font: 400 12px system-ui;
+}
+
+/* The short counter, "1 of 4", in place of the long one where the stepper
+ * drops its step names. */
+.pixonaut-form__placeholder .pixonaut-placeholder__counter--short {
+	display: none;
+}
+
+/* Narrower than the designer's `NARROW_STEPPER_PX`, its step names would
+ * each be cut to a few letters. */
+@container pixonaut-stepper (width < 320px) {
+	.pixonaut-form__placeholder .pixonaut-placeholder__segment-name,
+	.pixonaut-form__placeholder .pixonaut-placeholder__counter--long {
+		display: none;
+	}
+
+	.pixonaut-form__placeholder .pixonaut-placeholder__counter--short {
+		display: block;
+	}
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__step-title {
+	font: 600 22px system-ui;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__panel {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__nav {
+	display: flex;
+	gap: 8px;
+	padding-top: 16px;
+	box-shadow: 0 -1px 0 var(--pixonaut-placeholder-border);
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__back,
+.pixonaut-form__placeholder .pixonaut-placeholder__next {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	height: 44px;
+	padding: 0 14px;
+	border-radius: 10px;
+	background: var(--pixonaut-placeholder-muted);
+	font: 500 14px system-ui;
+}
+
+/* Back on the first step: still a filled button, only fainter. */
+.pixonaut-form__placeholder .pixonaut-placeholder__back {
+	opacity: 0.45;
+}
+
+.pixonaut-form__placeholder .pixonaut-placeholder__next {
+	flex: 2;
+	background: var(--pixonaut-placeholder-accent);
+	color: var(--pixonaut-on-accent, var(--pixonaut-placeholder-card));
+	font-weight: 600;
+}
+
+/* A form that shows no numbers (`data-pixonaut-group-numbers`), as
+ * `step-numbers.ts` leaves them out of the designer's. */
+.pixonaut-form[data-pixonaut-group-numbers="off"]
+	.pixonaut-form__placeholder
+	.pixonaut-placeholder__step::before {
+	content: none;
+}
+
+.pixonaut-form[data-pixonaut-group-numbers="off"]
+	.pixonaut-form__placeholder
+	.pixonaut-placeholder__counter {
+	display: none;
+}
+
+/* The printed inputs with the keyboard on them. */
+.pixonaut-form
+	.pixonaut-form__placeholder
+	.pixonaut-placeholder__input:focus-visible,
+.pixonaut-form
+	.pixonaut-form__placeholder
+	.pixonaut-placeholder__select:focus-visible,
+.pixonaut-form__placeholder
+	.pixonaut-placeholder__track:has(:focus-visible)
+	.pixonaut-placeholder__thumb,
+.pixonaut-form__placeholder .pixonaut-placeholder__swatch:has(:focus-visible) {
+	outline: 2px solid var(--pixonaut-placeholder-accent);
+	outline-offset: 2px;
+}

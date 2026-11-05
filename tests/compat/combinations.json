@@ -1,0 +1,54 @@
+{
+	"builders": {
+		"elementor": "elementor/elementor.php",
+		"beaver-builder-lite-version": "beaver-builder-lite-version/fl-builder.php",
+		"siteorigin-panels": "siteorigin-panels/siteorigin-panels.php"
+	},
+	"combinations": [
+		{ "id": "kadence", "label": "Kadence", "theme": "kadence" },
+		{ "id": "oceanwp", "label": "OceanWP", "theme": "oceanwp" },
+		{
+			"id": "generatepress",
+			"label": "GeneratePress",
+			"theme": "generatepress"
+		},
+		{ "id": "blocksy", "label": "Blocksy", "theme": "blocksy" },
+		{ "id": "neve", "label": "Neve", "theme": "neve" },
+		{
+			"id": "hello-elementor",
+			"label": "Hello Elementor",
+			"theme": "hello-elementor"
+		},
+		{ "id": "astra", "label": "Astra", "theme": "astra" },
+		{
+			"id": "hello-elementor-with-elementor",
+			"label": "Hello Elementor + Elementor",
+			"theme": "hello-elementor",
+			"builder": "elementor"
+		},
+		{
+			"id": "astra-with-elementor",
+			"label": "Astra + Elementor",
+			"theme": "astra",
+			"builder": "elementor"
+		},
+		{
+			"id": "astra-with-beaver-builder",
+			"label": "Astra + Beaver Builder",
+			"theme": "astra",
+			"builder": "beaver-builder-lite-version"
+		},
+		{
+			"id": "storefront-with-elementor",
+			"label": "Storefront + Elementor",
+			"theme": "storefront",
+			"builder": "elementor"
+		},
+		{
+			"id": "generatepress-with-siteorigin",
+			"label": "GeneratePress + SiteOrigin",
+			"theme": "generatepress",
+			"builder": "siteorigin-panels"
+		}
+	]
+}

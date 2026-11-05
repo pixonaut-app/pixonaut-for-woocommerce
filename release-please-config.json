@@ -1,0 +1,13 @@
+{
+	"$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+	"packages": {
+		".": {
+			"release-type": "node",
+			"package-name": "pixonaut-for-woocommerce",
+			"include-component-in-tag": false,
+			"initial-version": "1.0.0",
+			"changelog-path": "CHANGELOG.md",
+			"extra-files": ["pixonaut-for-woocommerce.php", "src/Plugin.php"]
+		}
+	}
+}

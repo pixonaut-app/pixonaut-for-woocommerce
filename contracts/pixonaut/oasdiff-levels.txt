@@ -1,0 +1,4 @@
+response-body-one-of-added WARN
+response-property-one-of-added WARN
+response-property-enum-value-added WARN
+response-property-any-of-added WARN

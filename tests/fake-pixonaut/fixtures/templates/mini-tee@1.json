@@ -1,0 +1,295 @@
+{
+	"template": {
+		"id": "mini-tee",
+		"version": 1,
+		"tenantId": "tnt_live",
+		"name": "T-shirt med tryck, framsida",
+		"dpi": 300,
+		"layers": [
+			{
+				"id": "motiv",
+				"type": "image",
+				"z": 10,
+				"props": {
+					"fit": {
+						"value": "contain",
+						"editable": false
+					},
+					"src": {
+						"value": null,
+						"editable": true,
+						"label": "Motiv",
+						"constraints": {
+							"allowUpload": true
+						}
+					}
+				},
+				"transform": {
+					"value": {
+						"rotationDeg": 0,
+						"scale": 1
+					},
+					"translate": {
+						"editable": true,
+						"bounds": "safeArea"
+					},
+					"rotate": {
+						"editable": false
+					},
+					"scale": {
+						"editable": true,
+						"min": 0.5,
+						"max": 1.4
+					}
+				},
+				"anchor": "top-left",
+				"offsetFrac": {
+					"x": 0.142857142857,
+					"y": 0.111111111111
+				},
+				"wFrac": 0.714285714286,
+				"hFrac": 0.555555555556
+			},
+			{
+				"id": "slogan",
+				"type": "text",
+				"z": 20,
+				"props": {
+					"content": {
+						"value": "Din text här",
+						"editable": true,
+						"label": "Slogan",
+						"constraints": {
+							"maxLength": 40,
+							"maxLines": 2
+						}
+					},
+					"fontFamily": {
+						"value": "Poppins",
+						"editable": true,
+						"label": "Typsnitt",
+						"constraints": {
+							"oneOf": [
+								"Anton",
+								"Poppins"
+							]
+						}
+					},
+					"fontSizeFrac": {
+						"value": 0.022577777777777776,
+						"editable": true,
+						"label": "Storlek",
+						"constraints": {
+							"min": 0.0127,
+							"max": 0.03386666666666666,
+							"step": 0.001411111111111111
+						}
+					},
+					"fill": {
+						"value": {
+							"cmyk": [
+								0,
+								0,
+								0,
+								100
+							]
+						},
+						"editable": true,
+						"label": "Färg"
+					},
+					"align": {
+						"value": "center",
+						"editable": false
+					}
+				},
+				"transform": {
+					"value": {
+						"rotationDeg": 0,
+						"scale": 1
+					},
+					"translate": {
+						"editable": true,
+						"bounds": "safeArea"
+					},
+					"rotate": {
+						"editable": true,
+						"min": -10,
+						"max": 10,
+						"snapDeg": 5
+					},
+					"scale": {
+						"editable": false
+					}
+				},
+				"anchor": "top-left",
+				"offsetFrac": {
+					"x": 0.071428571429,
+					"y": 0.736111111111
+				},
+				"wFrac": 0.857142857143,
+				"hFrac": 0.138888888889,
+				"textBox": {
+					"mode": "adapt",
+					"shrinkTo": 0.0127,
+					"then": "clamp"
+				}
+			}
+		],
+		"groups": [
+			{
+				"id": "ladda-upp-motiv",
+				"label": "Ladda upp motiv",
+				"order": 0,
+				"layerIds": [
+					"motiv"
+				]
+			},
+			{
+				"id": "text-front",
+				"label": "Text",
+				"order": 1,
+				"layerIds": [
+					"slogan"
+				]
+			}
+		],
+		"ratio": {
+			"w": 280,
+			"h": 360
+		},
+		"ratioTolerance": 0,
+		"fit": "contain",
+		"fonts": {
+			"Anton": [
+				{
+					"weight": 400,
+					"hash": "a4ba3a92350ebb031da0cb47630ac49eb265082ca1bc0450442f4a83ab947cab"
+				}
+			],
+			"Poppins": [
+				{
+					"weight": 400,
+					"hash": "7e65201e9b79159e2300267cc885e16c8dcef2424cdfa09a29bfb0980a94a7ba"
+				}
+			]
+		}
+	},
+	"formSchema": {
+		"steps": [
+			{
+				"index": 0,
+				"groupId": "ladda-upp-motiv",
+				"label": "Ladda upp motiv",
+				"layerIds": [
+					"motiv"
+				],
+				"fields": [
+					{
+						"layerId": "motiv",
+						"prop": "src",
+						"type": "image",
+						"label": "Motiv",
+						"constraints": {
+							"allowUpload": true
+						},
+						"default": null
+					}
+				],
+				"transforms": [
+					{
+						"layerId": "motiv",
+						"transform": {
+							"translate": {
+								"editable": true,
+								"bounds": "safeArea"
+							},
+							"scale": {
+								"editable": true,
+								"min": 0.5,
+								"max": 1.4
+							}
+						}
+					}
+				]
+			},
+			{
+				"index": 1,
+				"groupId": "text-front",
+				"label": "Text",
+				"layerIds": [
+					"slogan"
+				],
+				"fields": [
+					{
+						"layerId": "slogan",
+						"prop": "content",
+						"type": "text",
+						"label": "Slogan",
+						"constraints": {
+							"maxLength": 40,
+							"maxLines": 2
+						},
+						"default": "Din text här"
+					},
+					{
+						"layerId": "slogan",
+						"prop": "fontFamily",
+						"type": "select",
+						"label": "Typsnitt",
+						"constraints": {
+							"oneOf": [
+								"Anton",
+								"Poppins"
+							]
+						},
+						"default": "Poppins"
+					},
+					{
+						"layerId": "slogan",
+						"prop": "fontSizeFrac",
+						"type": "number",
+						"label": "Storlek",
+						"constraints": {
+							"min": 0.0127,
+							"max": 0.03386666666666666,
+							"step": 0.001411111111111111
+						},
+						"default": 0.022577777777777776
+					},
+					{
+						"layerId": "slogan",
+						"prop": "fill",
+						"type": "color",
+						"label": "Färg",
+						"constraints": {},
+						"default": {
+							"cmyk": [
+								0,
+								0,
+								0,
+								100
+							]
+						}
+					}
+				],
+				"transforms": [
+					{
+						"layerId": "slogan",
+						"transform": {
+							"translate": {
+								"editable": true,
+								"bounds": "safeArea"
+							},
+							"rotate": {
+								"editable": true,
+								"min": -10,
+								"max": 10,
+								"snapDeg": 5
+							}
+						}
+					}
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/php/bootstrap-integration.php"
+         colors="true"
+         cacheResult="false"
+         failOnRisky="true"
+         failOnWarning="true">
+    <testsuites>
+        <testsuite name="integration">
+            <directory>tests/php/Integration</directory>
+        </testsuite>
+        <!-- Last: it checks which hooks the suites before it fired. -->
+        <testsuite name="hook-inventory">
+            <directory>tests/php/Inventory</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

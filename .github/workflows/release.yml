@@ -1,0 +1,61 @@
+name: Release
+
+# Started by hand (Actions tab, or `gh workflow run Release`). release-please
+# opens or updates a release pull request from the Conventional Commits on
+# main, which needs the repository to allow GitHub Actions to create pull
+# requests. Dispatched after that pull request is merged, it tags the version
+# and creates the GitHub Release; the zip job then builds, verifies and
+# attaches the zip and its SHA-256 checksum.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  zip:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # No template may be newer than the version released: the release is
+      # left without its zip, which no store is offered, until a fix release.
+      - run: pnpm release:check-templates
+      # Composer's dev packages for the tests site's plugin mount; the zip
+      # gets its own production install.
+      - run: pnpm composer install --no-interaction --no-progress
+      # wp-env's tests site runs Plugin Check on the unpacked zip.
+      - run: pnpm env:start
+      - run: pnpm release:zip
+      - name: Attach the zip and its checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+        run: gh release upload "$TAG" dist/*.zip dist/*.zip.sha256 --clobber

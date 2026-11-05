@@ -1,0 +1,112 @@
+{
+	"background": null,
+	"cutShape": {
+		"d": "M 0 0 L 280 0 L 280 360 L 0 360 Z",
+		"type": "path"
+	},
+	"dpi": 300,
+	"fit": "contain",
+	"fonts": {
+		"Anton": [
+			{
+				"hash": "a4ba3a92350ebb031da0cb47630ac49eb265082ca1bc0450442f4a83ab947cab",
+				"weight": 400
+			}
+		],
+		"Poppins": [
+			{
+				"hash": "7e65201e9b79159e2300267cc885e16c8dcef2424cdfa09a29bfb0980a94a7ba",
+				"weight": 400
+			}
+		]
+	},
+	"groups": [
+		{
+			"id": "ladda-upp-motiv",
+			"label": "Ladda upp motiv",
+			"layerIds": [
+				"motiv"
+			],
+			"order": 0
+		},
+		{
+			"id": "text-front",
+			"label": "Text",
+			"layerIds": [
+				"slogan"
+			],
+			"order": 1
+		}
+	],
+	"layers": [
+		{
+			"id": "motiv",
+			"kind": {
+				"fit": "contain",
+				"src": null,
+				"type": "image"
+			},
+			"sizeMm": {
+				"h": 277.77777777800003,
+				"w": 277.7777777778889
+			},
+			"transform": {
+				"rotationDeg": 0,
+				"scale": 1
+			},
+			"xMm": 194.44444444444446,
+			"yMm": 194.44444444450002,
+			"z": 10
+		},
+		{
+			"id": "slogan",
+			"kind": {
+				"align": "center",
+				"content": "Din text här",
+				"fill": {
+					"cmyk": [
+						0,
+						0,
+						0,
+						100
+					]
+				},
+				"fontFamily": "Poppins",
+				"fontSizeFrac": 0.022577777777777776,
+				"fontWeight": 400,
+				"maxLines": 2,
+				"textBox": {
+					"mode": "adapt",
+					"shrinkTo": 0.0127,
+					"then": "clamp"
+				},
+				"type": "text",
+				"valign": "middle"
+			},
+			"sizeMm": {
+				"h": 69.44444444450001,
+				"w": 333.3333333333889
+			},
+			"transform": {
+				"rotationDeg": 0,
+				"scale": 1
+			},
+			"xMm": 194.4444444446389,
+			"yMm": 402.77777777775003,
+			"z": 20
+		}
+	],
+	"name": "T-shirt med tryck, framsida",
+	"printBox": {
+		"bleedMm": 3,
+		"heightMm": 360,
+		"safeAreaMm": 5,
+		"widthMm": 280
+	},
+	"ratio": {
+		"h": 360,
+		"w": 280
+	},
+	"templateId": "mini-tee@1",
+	"tenantId": "tnt_live"
+}

@@ -1,0 +1,16 @@
+parameters:
+    level: 8
+    phpVersion: 80100
+    tmpDir: /tmp/phpstan-pixonaut-wc
+    paths:
+        - pixonaut-for-woocommerce.php
+        - uninstall.php
+        - src
+        - tests/php
+        - tests/e2e/mu-plugins
+        - tests/compat
+    bootstrapFiles:
+        - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
+        - vendor/php-stubs/woocommerce-stubs/woocommerce-packages-stubs.php
+    scanDirectories:
+        - /wordpress-phpunit/includes

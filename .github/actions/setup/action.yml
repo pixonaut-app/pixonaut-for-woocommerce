@@ -1,0 +1,14 @@
+name: Set up
+description: Node, pnpm and the Node and Composer dependencies; Composer runs in a container, as it does locally.
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+    - run: pnpm composer install --no-interaction --no-progress
+      shell: bash
