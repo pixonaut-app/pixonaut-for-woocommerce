@@ -201,7 +201,8 @@ final class KeptDesignerLinks {
 			$language,
 			$variant,
 			true === $this->settings->get( Settings::PRINT_AREA_FRAME ),
-			FormLayout::resolve( $config, $this->settings )
+			FormLayout::resolve( $config, $this->settings ),
+			true === $this->settings->get( Settings::ADD_AFTER_APPROVE )
 		);
 		// Without a variant of its blank the product cannot be bought, and a link minted now would be replaced once it has one.
 		if ( null === $connection || null === $link || ( null !== $config->blank_id && null === $variant ) ) {
@@ -223,7 +224,7 @@ final class KeptDesignerLinks {
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array<string, mixed> $body    One side's `blankId`, `placementId`, `views` (when the product narrows them), `variants` and `initialVariant` (the variant it sells), `initialView` (the product's starting view), `printSizes`, `selectedPrintSizeIndex` (the size it starts on) at the top level, or 2–10 under `sides` with `key`, `label` and `templateId` when it is not the link's; `returnUrl`, `locale`, `printAreaFrame` (`true`, when the store frames the print area), and `layout` (`page` or `steps`, when the product or store fixes the form's layout).
+		 * @param array<string, mixed> $body    One side's `blankId`, `placementId`, `views` (when the product narrows them), `variants` and `initialVariant` (the variant it sells), `initialView` (the product's starting view), `printSizes`, `selectedPrintSizeIndex` (the size it starts on) at the top level, or 2–10 under `sides` with `key`, `label` and `templateId` when it is not the link's; `returnUrl`, `locale`, `printAreaFrame` (`true`, when the store frames the print area), `layout` (`page` or `steps`, when the product or store fixes the form's layout), and `afterApprove` (`add_to_cart`, when the store adds the design on return).
 		 * @param WC_Product           $product The product or variation.
 		 *
 		 * @example

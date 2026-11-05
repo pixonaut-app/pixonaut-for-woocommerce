@@ -4,6 +4,7 @@ import {
 	expect,
 	type FakePixonaut,
 	restUrl,
+	settingsPath,
 	test,
 	usePlainPermalinks,
 } from '../fixtures';
@@ -375,4 +376,91 @@ test('a return opened in another session waits for its button, and a foreign ret
 		.context()
 		.request.get(restUrl('/wc/store/v1/cart'));
 	expect((await cart.json()).items_count).toBe(0);
+});
+
+test('with the setting on, only the own trip adds: a foreign or reloaded return adds nothing', async ({
+	connectedStore: admin,
+	customer,
+	fake,
+	baseURL,
+	theme,
+	browser,
+}) => {
+	test.slow();
+	const setting = async (on: boolean) => {
+		await admin.goto(settingsPath('storefront'));
+		await admin
+			.getByRole('checkbox', { name: /adds the product to the cart/ })
+			.setChecked(on);
+		await admin.getByRole('button', { name: 'Save changes' }).click();
+		await expect(
+			admin.locator('.notice-success, .updated').first(),
+		).toBeVisible();
+	};
+	const onFake = (url: URL) => url.origin === new URL(fake.baseURL).origin;
+	/** Approves on the hosted page, answering the address it returned to. */
+	const approve = async (page: Page): Promise<string> => {
+		const returned = page.waitForRequest((request) =>
+			request.url().includes('proofToken'),
+		);
+		await page.getByRole('link', { name: 'Approve and add to cart' }).click();
+		const back = (await returned).url();
+		await page.waitForURL((url) => !onFake(url));
+		return back;
+	};
+	const itemsInCart = async (page: Page): Promise<number> => {
+		const cart = await page.context().request.get(restUrl('/wc/store/v1/cart'));
+		return (await cart.json()).items_count;
+	};
+	await usePlainPermalinks(admin, baseURL);
+	await setting(true);
+	try {
+		await publishLinkedProduct(admin, `Own tee ${theme} ${Date.now()}`, '25', {
+			layout: BUTTON_LAYOUT,
+		});
+		const product = await permalinkOf(admin);
+		await customer.goto(product);
+		await personalise(customer).click();
+		await customer.waitForURL(onFake);
+		expect(new URL(customer.url()).searchParams.get('state')).toBeTruthy();
+
+		const stranger = await (await browser.newContext()).newPage();
+		await stranger.goto(product);
+		await personalise(stranger).click();
+		await stranger.waitForURL(onFake);
+		// The stranger's return address, with their trip's state, never opened by them.
+		const href = await stranger
+			.getByRole('link', { name: 'Approve and add to cart' })
+			.getAttribute('href');
+		const approved = await stranger
+			.context()
+			.request.get(new URL(href ?? '', stranger.url()).href, {
+				maxRedirects: 0,
+			});
+		const foreignReturn = approved.headers().location ?? '';
+		expect(new URL(foreignReturn).searchParams.get('state')).toBeTruthy();
+		await stranger.context().close();
+
+		// The customer, with a trip of their own open, opens the stranger's return.
+		await customer.goto(foreignReturn);
+		await customer.waitForURL(/pixonaut_design=/);
+		await expect(designImage(customer)).toBeVisible();
+		await expect(addToCart(customer)).toBeVisible();
+		expect(await itemsInCart(customer)).toBe(0);
+
+		await customer.goto(product);
+		await personalise(customer).click();
+		await customer.waitForURL(onFake);
+		const ownReturn = await approve(customer);
+		await expect(customer).toHaveURL(/pixonaut_line=/);
+		await expect(inCart(customer)).toBeVisible();
+		await expect(customer.getByText(/added to your cart/)).toBeVisible();
+		expect(await itemsInCart(customer)).toBe(1);
+
+		await customer.goto(ownReturn);
+		await customer.waitForURL((url) => !url.href.includes('proofToken'));
+		expect(await itemsInCart(customer)).toBe(1);
+	} finally {
+		await setting(false);
+	}
 });

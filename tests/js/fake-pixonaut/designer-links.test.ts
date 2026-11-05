@@ -399,6 +399,93 @@ describe("a designer link's afterApprove", () => {
 	);
 });
 
+describe("a trip's state on the hosted designer address", () => {
+	const KEPT = {
+		blankId: FIXTURE.blank.tee,
+		placementId: FIXTURE.placement.front,
+		returnUrl: `${RETURN_URL}&pixonaut_product=12`,
+	};
+	/** The longest state the hosted designer echoes. */
+	const MAX_STATE_LENGTH = 200;
+	const TRIP = 'Trip-1._~';
+
+	/** Opens the hosted page with a trip's state and follows its `action` link. */
+	async function travel(
+		path: string,
+		state: string,
+		action: 'approve' | 'cancel',
+	): Promise<URL> {
+		const query = `?${new URLSearchParams({ state })}`;
+		const html = await (await send(fake, `${path}${query}`)).text();
+		const href = html.match(new RegExp(`href="([^"]*/${action}[^"]*)"`))?.[1];
+		expect(href).toBeDefined();
+		const response = await send(fake, href ?? '');
+		expect(response.status).toBe(302);
+		return new URL(response.headers.get('location') ?? '');
+	}
+
+	it.each(['approve', 'cancel'] as const)(
+		'is returned unchanged on %s, keeping the store query',
+		async (action) => {
+			const path = await linkUrl(KEPT);
+
+			const back = await travel(path, TRIP, action);
+
+			expect(back.searchParams.get('state')).toBe(TRIP);
+			expect(back.searchParams.get('pixonaut_product')).toBe('12');
+			expect(back.searchParams.has('proofToken')).toBe(action === 'approve');
+		},
+	);
+
+	it("replaces the link's own state", async () => {
+		const path = await linkUrl({ ...KEPT, state: VISIT });
+
+		expect(
+			(await travel(path, TRIP, 'approve')).searchParams.get('state'),
+		).toBe(TRIP);
+	});
+
+	it.each([
+		['too long', 'a'.repeat(MAX_STATE_LENGTH + 1)],
+		['a reserved character', 'trip/1'],
+		['a space', 'trip 1'],
+	])(
+		"is never echoed when %s: the link's own state or none comes back",
+		async (_, state) => {
+			const bare = await linkUrl(KEPT);
+			const stated = await linkUrl({ ...KEPT, state: VISIT });
+
+			expect(
+				(await travel(bare, state, 'approve')).searchParams.has('state'),
+			).toBe(false);
+			expect(
+				(await travel(stated, state, 'cancel')).searchParams.get('state'),
+			).toBe(VISIT);
+		},
+	);
+
+	it("treats a repeated state as missing: the link's own comes back", async () => {
+		const path = await linkUrl({ ...KEPT, state: VISIT });
+		const page = await send(fake, `${path}?state=trip-a&state=trip-b`);
+
+		expect(await page.text()).not.toContain('trip-a');
+		expect((await act(path, 'approve')).searchParams.get('state')).toBe(VISIT);
+		const back = await send(fake, `${path}/approve?state=trip-a&state=trip-b`);
+		expect(
+			new URL(back.headers.get('location') ?? '').searchParams.get('state'),
+		).toBe(VISIT);
+	});
+
+	it('takes the longest allowed state', async () => {
+		const longest = 'a'.repeat(MAX_STATE_LENGTH);
+		const path = await linkUrl(KEPT);
+
+		expect(
+			(await travel(path, longest, 'approve')).searchParams.get('state'),
+		).toBe(longest);
+	});
+});
+
 describe('the hosted designer address', () => {
 	it(
 		'is on the public origin the fake is given, where the browser reaches it',

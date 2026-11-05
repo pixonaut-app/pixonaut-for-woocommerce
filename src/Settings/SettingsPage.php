@@ -121,6 +121,7 @@ final class SettingsPage {
 				Settings::DESIGNER_ACCENT,
 				Settings::DESIGNER_ACCENT_COLOUR,
 				Settings::PRINT_AREA_FRAME,
+				Settings::ADD_AFTER_APPROVE,
 				Settings::ATTRIBUTE_OPTIONS,
 			),
 			'pixonaut_wc_pictures'     => array(

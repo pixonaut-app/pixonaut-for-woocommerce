@@ -61,8 +61,16 @@ final class PersonaliseButtonTest extends PersonalisedCartTestCase {
 
 	private PersonaliseButton $button;
 
+	/**
+	 * The state of the trip `start()` opened last.
+	 *
+	 * @var string
+	 */
+	private string $trip = '';
+
 	public function tear_down(): void {
 		unset( $_POST[ AddToCart::KEPT_FIELD ] );
+		$this->plugin->settings()->set( Settings::ADD_AFTER_APPROVE, false );
 		$this->button->added();
 		$this->plugin->add_to_cart()->discard_unadded();
 		parent::tear_down();
@@ -250,10 +258,32 @@ final class PersonaliseButtonTest extends PersonalisedCartTestCase {
 	 */
 	private function start(): array {
 		$this->script_link();
-		$this->assertSame( self::LINK_URL, $this->button->start( $this->product_id, 0, self::QUANTITY ) );
-		$sent = end( $this->recorder->requests );
+		$location = $this->button->start( $this->product_id, 0, self::QUANTITY );
+		$this->assertSame( self::LINK_URL, self::link_of( $location ) );
+		$this->trip = self::trip_of( $location );
+		$sent       = end( $this->recorder->requests );
 		$this->assertIsArray( $sent );
 		return json_decode( (string) $sent['body'], true );
+	}
+
+	/**
+	 * The designer link a trip's address opens, without the trip's state.
+	 *
+	 * @param string $location Where `start()` sent the customer.
+	 */
+	private static function link_of( string $location ): string {
+		return remove_query_arg( PersonaliseButton::STATE_ARG, $location );
+	}
+
+	/**
+	 * The state a trip's address carries to the hosted designer.
+	 *
+	 * @param string $location Where `start()` sent the customer.
+	 */
+	private static function trip_of( string $location ): string {
+		parse_str( (string) wp_parse_url( $location, PHP_URL_QUERY ), $query );
+		$state = $query[ PersonaliseButton::STATE_ARG ] ?? '';
+		return is_string( $state ) ? $state : '';
 	}
 
 	private function render(): string {
@@ -324,7 +354,7 @@ final class PersonaliseButtonTest extends PersonalisedCartTestCase {
 	public function test_every_press_reuses_the_link_until_its_body_changes(): void {
 		$this->start();
 
-		$this->assertSame( self::LINK_URL, $this->button->start( $this->product_id, 0, 1 ) );
+		$this->assertSame( self::LINK_URL, self::link_of( $this->button->start( $this->product_id, 0, 1 ) ) );
 		$this->assertCount( 1, $this->recorder->requests );
 
 		add_filter(
@@ -338,13 +368,13 @@ final class PersonaliseButtonTest extends PersonalisedCartTestCase {
 		$this->script_link( 'shl_2', self::OTHER_LINK_URL );
 		$this->recorder->raw( 204, '', 'application/json' );
 
-		$this->assertSame( self::OTHER_LINK_URL, $this->button->start( $this->product_id, 0, 1 ) );
+		$this->assertSame( self::OTHER_LINK_URL, self::link_of( $this->button->start( $this->product_id, 0, 1 ) ) );
 		$this->assertSame(
 			array( 'PATCH /v1/share-links/shl_1', 'POST /designer-links', 'DELETE /v1/share-links/shl_1' ),
 			array_map( static fn ( array $sent ): string => $sent['method'] . ' ' . preg_replace( '#^.*?(/v1/share-links/\w+|/designer-links)$#', '$1', $sent['url'] ), array_slice( $this->recorder->requests, 1 ) )
 		);
 		$this->assertSame( array( 'name' => null ), json_decode( (string) $this->recorder->requests[1]['body'], true ) );
-		$this->assertSame( self::OTHER_LINK_URL, $this->button->start( $this->product_id, 0, 1 ) );
+		$this->assertSame( self::OTHER_LINK_URL, self::link_of( $this->button->start( $this->product_id, 0, 1 ) ) );
 		$this->assertCount( 4, $this->recorder->requests );
 	}
 
@@ -358,7 +388,7 @@ final class PersonaliseButtonTest extends PersonalisedCartTestCase {
 		);
 		$this->script_link();
 
-		$this->assertSame( self::LINK_URL, $this->button->start( $this->product_id, 0, 1 ) );
+		$this->assertSame( self::LINK_URL, self::link_of( $this->button->start( $this->product_id, 0, 1 ) ) );
 
 		$this->assertCount( 2, $this->recorder->requests );
 		$this->assertArrayNotHasKey( 'name', json_decode( (string) $this->recorder->requests[1]['body'], true ) );
@@ -540,8 +570,180 @@ final class PersonaliseButtonTest extends PersonalisedCartTestCase {
 		$this->assertStringContainsString( esc_html( $this->label( Labels::PERSONALISED ) ), $this->notices_html() );
 	}
 
-	public function test_the_link_leaves_the_after_approve_to_pixonauts_default(): void {
+	public function test_each_trip_carries_a_state_of_its_own_on_the_shared_link(): void {
+		$body  = $this->start();
+		$first = $this->trip;
+		$this->start();
+
+		$this->assertArrayNotHasKey( 'state', $body, 'the link stays the same for every customer' );
+		$this->assertMatchesRegularExpression( '/^[A-Za-z0-9._~-]{1,200}$/', $first );
+		$this->assertNotSame( $first, $this->trip );
+		$this->assertCount( 1, $this->recorder->requests, 'one link for both trips' );
+	}
+
+	public function test_the_setting_off_leaves_the_after_approve_out_of_the_link(): void {
 		$this->assertArrayNotHasKey( 'afterApprove', $this->start() );
+	}
+
+	public function test_the_setting_off_adds_nothing_from_an_own_return(): void {
+		$this->start();
+		$this->script_commit();
+
+		$back = $this->button->finish( $this->product_id, 0, self::TOKEN, $this->trip );
+
+		$this->assertTrue( WC()->cart->is_empty() );
+		$this->assertSame( add_query_arg( PersonalisedDesigns::ARG, (string) $this->kept_key(), $this->product()->get_permalink() ), $back );
+	}
+
+	public function test_the_setting_adds_an_own_return_once_and_lands_on_the_lines_page(): void {
+		$this->plugin->settings()->set( Settings::ADD_AFTER_APPROVE, true );
+		$this->assertSame( 'add_to_cart', $this->start()['afterApprove'] ?? null );
+		$this->script_commit();
+		$this->recorder->json( 200, DesignFixture::design() );
+
+		$back = $this->button->finish( $this->product_id, 0, self::TOKEN, $this->trip );
+
+		$key = (string) array_key_first( WC()->cart->get_cart() );
+		$this->assertSame( add_query_arg( PersonaliseButton::LINE_ARG, $key, $this->product()->get_permalink() ), $back );
+		$this->assertSame( self::QUANTITY, WC()->cart->get_cart_item( $key )['quantity'] );
+		$this->assertSame( DesignFixture::ID, CartLine::of( WC()->cart->get_cart_item( $key ) )?->sides[0]->design_id );
+		$this->assert_no_form_post_left();
+		$this->assertCount( 1, wc_get_notices( 'success' ), 'WooCommerce says it was added, once' );
+
+		// Reloading the return address adds nothing more.
+		$this->assertSame( wc_get_page_permalink( 'shop' ), $this->button->finish( $this->product_id, 0, self::TOKEN, $this->trip ) );
+		$this->assertCount( 1, WC()->cart->get_cart() );
+		$this->assertSame( self::QUANTITY, WC()->cart->get_cart_contents_count() );
+	}
+
+	public function test_the_setting_adds_nothing_from_a_foreign_state_in_a_session_with_an_open_trip(): void {
+		$this->plugin->settings()->set( Settings::ADD_AFTER_APPROVE, true );
+		$this->start();
+		$this->script_commit( array( 'externalRef' => self::cart_ref( self::FOREIGN_TOKEN ) ) );
+
+		// Another session's return carries the state of that session's trip.
+		$back = $this->button->finish( $this->product_id, 0, self::FOREIGN_TOKEN, 'another-sessions-trip' );
+
+		$this->assertTrue( WC()->cart->is_empty() );
+		$this->assertSame( add_query_arg( PersonalisedDesigns::ARG, (string) $this->kept_key(), $this->product()->get_permalink() ), $back );
+	}
+
+	public function test_the_setting_adds_nothing_from_a_return_without_a_state(): void {
+		$this->plugin->settings()->set( Settings::ADD_AFTER_APPROVE, true );
+		$this->start();
+		$this->script_commit();
+
+		$back = $this->button->finish( $this->product_id, 0, self::TOKEN );
+
+		$this->assertTrue( WC()->cart->is_empty() );
+		$this->assertSame( add_query_arg( PersonalisedDesigns::ARG, (string) $this->kept_key(), $this->product()->get_permalink() ), $back );
+	}
+
+	public function test_the_setting_adds_nothing_from_a_state_already_used(): void {
+		$this->plugin->settings()->set( Settings::ADD_AFTER_APPROVE, true );
+		$this->start();
+		// Cancelling takes the trip, and its state with it.
+		$this->assertSame( $this->product()->get_permalink(), $this->button->finish( $this->product_id, 0, null, $this->trip ) );
+
+		$back = $this->button->finish( $this->product_id, 0, self::TOKEN, $this->trip );
+
+		$this->assertTrue( WC()->cart->is_empty() );
+		$this->assertSame( $this->product()->get_permalink(), $back );
+		$this->assertSame( array(), self::errors() );
+		$this->assertSame( array(), array_slice( $this->recorder->requests, 1 ), 'nothing committed until the customer uses it' );
+	}
+
+	public function test_the_setting_adds_nothing_from_a_state_kept_for_another_try(): void {
+		$this->plugin->settings()->set( Settings::ADD_AFTER_APPROVE, true );
+		$this->start();
+		$state = DesignerVisits::key( $this->product_id, 0 );
+		$this->recorder->json( 500, array( 'error' => 'db_error' ) );
+		$this->button->finish( $this->product_id, 0, self::TOKEN, $this->trip );
+		wc_clear_notices();
+
+		$this->script_commit();
+		$back = $this->button->retry( $state );
+
+		$this->assertTrue( WC()->cart->is_empty() );
+		$this->assertSame( add_query_arg( PersonalisedDesigns::ARG, (string) $this->kept_key(), $this->product()->get_permalink() ), $back );
+	}
+
+	public function test_the_setting_answers_to_other_extensions_validation(): void {
+		$this->plugin->settings()->set( Settings::ADD_AFTER_APPROVE, true );
+		$this->start();
+		$this->script_commit();
+		$this->recorder->json( 200, DesignFixture::design() );
+		add_filter( 'woocommerce_add_to_cart_validation', '__return_false', self::AFTER_THE_PLUGINS_VALIDATION );
+
+		try {
+			$back = $this->button->finish( $this->product_id, 0, self::TOKEN, $this->trip );
+		} finally {
+			remove_filter( 'woocommerce_add_to_cart_validation', '__return_false', self::AFTER_THE_PLUGINS_VALIDATION );
+		}
+
+		$this->assertTrue( WC()->cart->is_empty() );
+		$this->assertSame( add_query_arg( PersonalisedDesigns::ARG, (string) $this->kept_key(), $this->product()->get_permalink() ), $back );
+		$this->assert_no_form_post_left();
+	}
+
+	public function test_the_setting_stays_off_the_cart_page_on_a_store_set_to_go_there(): void {
+		$this->plugin->settings()->set( Settings::ADD_AFTER_APPROVE, true );
+		update_option( 'woocommerce_cart_redirect_after_add', 'yes' );
+		$this->start();
+		$this->script_commit();
+		$this->recorder->json( 200, DesignFixture::design() );
+
+		$back = $this->button->finish( $this->product_id, 0, self::TOKEN, $this->trip );
+
+		$this->assertStringContainsString( PersonaliseButton::LINE_ARG, $back );
+		$this->assertSame( 'yes', get_option( 'woocommerce_cart_redirect_after_add' ) );
+	}
+
+	public function test_the_setting_adds_a_variation_with_the_customers_choice(): void {
+		$parent    = new WC_Product_Variable();
+		$attribute = new WC_Product_Attribute();
+		$attribute->set_name( 'size' );
+		$attribute->set_options( array( "Kid's", 'Adult' ) );
+		$attribute->set_variation( true );
+		$parent->set_name( 'Personalised hoodie' );
+		$parent->set_attributes( array( $attribute ) );
+		$parent->save();
+		self::config()->with_layout( Layout::BUTTON )->save_to( $parent );
+		$variation = new WC_Product_Variation();
+		$variation->set_parent_id( $parent->get_id() );
+		// Any size.
+		$variation->set_attributes( array( 'size' => '' ) );
+		$variation->set_regular_price( '30' );
+		$variation->save();
+		DesignFixture::sell_variant( $variation );
+		$this->plugin->settings()->set( Settings::ADD_AFTER_APPROVE, true );
+		$this->script_link();
+		$location = $this->button->start( $parent->get_id(), $variation->get_id(), self::QUANTITY, array( 'attribute_size' => "Kid's" ) );
+		$this->assertSame( self::LINK_URL, self::link_of( $location ) );
+		$this->script_commit();
+		$this->recorder->json( 200, DesignFixture::design() );
+
+		$this->button->finish( $parent->get_id(), $variation->get_id(), self::TOKEN, self::trip_of( $location ) );
+
+		$this->assertSame( array(), self::errors() );
+		$item = WC()->cart->get_cart_item( (string) array_key_first( WC()->cart->get_cart() ) );
+		$this->assertSame( $variation->get_id(), $item['variation_id'] );
+		$this->assertSame( "Kid's", $item['variation']['attribute_size'] );
+		$this->assertSame( DesignFixture::ID, CartLine::of( $item )?->sides[0]->design_id );
+		$this->assert_no_form_post_left();
+	}
+
+	/**
+	 * The add through WooCommerce's handler left no form post behind for its
+	 * own handler to add again.
+	 */
+	private function assert_no_form_post_left(): void {
+		// phpcs:disable WordPress.Security.NonceVerification -- only looks whether they are set.
+		$this->assertArrayNotHasKey( 'add-to-cart', $_REQUEST );
+		$this->assertArrayNotHasKey( 'quantity', $_REQUEST );
+		$this->assertArrayNotHasKey( 'variation_id', $_REQUEST );
+		$this->assertArrayNotHasKey( AddToCart::KEPT_FIELD, $_POST );
+		// phpcs:enable WordPress.Security.NonceVerification
 	}
 
 	public function test_a_foreign_return_in_a_session_with_an_open_trip_adds_nothing(): void {
@@ -752,7 +954,7 @@ final class PersonaliseButtonTest extends PersonalisedCartTestCase {
 		self::two_sided()->save_to( $this->product() );
 		DesignFixture::sell_variant( $this->product() );
 		$this->script_link();
-		$this->assertSame( self::LINK_URL, $this->button->start( $this->product_id, 0, 1 ) );
+		$this->assertSame( self::LINK_URL, self::link_of( $this->button->start( $this->product_id, 0, 1 ) ) );
 		$ordered = array(
 			'front' => self::TOKEN,
 			'back'  => self::BACK_TOKEN,
@@ -1231,7 +1433,7 @@ final class PersonaliseButtonTest extends PersonalisedCartTestCase {
 		$this->assertSame( array(), $this->recorder->requests );
 
 		$this->script_link();
-		$this->assertSame( self::LINK_URL, $this->button->start( $parent->get_id(), $variation->get_id(), 1, array( 'attribute_size' => 'M' ) ) );
+		$this->assertSame( self::LINK_URL, self::link_of( $this->button->start( $parent->get_id(), $variation->get_id(), 1, array( 'attribute_size' => 'M' ) ) ) );
 		$this->script_commit();
 		$back = $this->button->finish( $parent->get_id(), $variation->get_id(), self::TOKEN );
 
