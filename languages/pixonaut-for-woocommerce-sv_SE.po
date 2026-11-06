@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-05T23:03:55+00:00\n"
+"POT-Creation-Date: 2026-11-06T17:14:56+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -52,6 +52,11 @@ msgstr ""
 #: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:35
 msgid "Pixonaut"
 msgstr "Pixonaut"
+
+#. Author URI of the plugin
+#: pixonaut-for-woocommerce.php
+msgid "https://pixonaut.app"
+msgstr ""
 
 #: src/Abilities/Abilities.php:64
 msgid ""
@@ -332,7 +337,7 @@ msgstr ""
 "för tryckeriet. Spara beställningen på dess sida, eller kör det här igen, "
 "för att skicka den."
 
-#: src/Abilities/ConnectionAction.php:111
+#: src/Abilities/ConnectionAction.php:112
 msgid ""
 "That brand is not in the Pixonaut workspace, so the store's brand did not "
 "change. Reading the connection lists the brands."
@@ -340,13 +345,13 @@ msgstr ""
 "Det varumärket finns inte i Pixonaut-arbetsytan, så butikens varumärke "
 "ändrades inte. Läs anslutningen för att se varumärkena."
 
-#: src/Abilities/ConnectionAction.php:128
+#: src/Abilities/ConnectionAction.php:129
 msgid "The site is on an IP address, so it has no www. counterpart to allow."
 msgstr ""
 "Webbplatsen ligger på en IP-adress och har därför ingen www.-motsvarighet "
 "att tillåta."
 
-#: src/Abilities/ConnectionAction.php:150
+#: src/Abilities/ConnectionAction.php:151
 msgid ""
 "The connection is not paused for a changed site address, so there is no "
 "copied connection to forget. Disconnecting is done on the connection card."
@@ -355,11 +360,11 @@ msgstr ""
 "finns ingen kopierad anslutning att glömma. Att koppla från görs på "
 "anslutningskortet."
 
-#: src/Abilities/ConnectionAction.php:156
+#: src/Abilities/ConnectionAction.php:157
 msgid "The store could not forget the connection now. Try again."
 msgstr "Butiken kunde inte glömma anslutningen just nu. Försök igen."
 
-#: src/Abilities/ConnectionAction.php:166
+#: src/Abilities/ConnectionAction.php:167
 msgid ""
 "The store is not connected to Pixonaut. Connect it on the Pixonaut settings "
 "page, in a browser."
@@ -367,13 +372,13 @@ msgstr ""
 "Butiken är inte ansluten till Pixonaut. Anslut den i Pixonaut-"
 "inställningarna, i en webbläsare."
 
-#: src/Abilities/ConnectionAction.php:169
+#: src/Abilities/ConnectionAction.php:170
 msgid "The connection to Pixonaut is paused. Reading the connection says why."
 msgstr ""
 "Anslutningen till Pixonaut är pausad. Läs anslutningen för att se varför."
 
 #. translators: %s: the error code Pixonaut answered with, e.g. rate_limited.
-#: src/Abilities/ConnectionAction.php:179
+#: src/Abilities/ConnectionAction.php:180
 #, php-format
 msgid ""
 "Pixonaut did not confirm the change (%s). Reading the connection shows it as "
@@ -383,27 +388,27 @@ msgstr ""
 "ser ut nu."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/ConnectionAction.php:185
+#: src/Abilities/ConnectionAction.php:186
 msgid "Choose the store's Pixonaut brand"
 msgstr "Välj butikens Pixonaut-varumärke"
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store; www. is the start of a web address.
-#: src/Abilities/ConnectionAction.php:187
+#: src/Abilities/ConnectionAction.php:188
 msgid "Allow the site's www. address"
 msgstr "Tillåt webbplatsens www.-adress"
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/ConnectionAction.php:189
+#: src/Abilities/ConnectionAction.php:190
 msgid "Test the Pixonaut webhook"
 msgstr "Testa Pixonaut-webhooken"
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/ConnectionAction.php:191
+#: src/Abilities/ConnectionAction.php:192
 msgid "Forget a copied site's Pixonaut connection"
 msgstr "Glöm Pixonaut-anslutningen på en kopierad webbplats"
 
 #. translators: %s: the name of the ability that reads the connection.
-#: src/Abilities/ConnectionAction.php:199
+#: src/Abilities/ConnectionAction.php:200
 #, php-format
 msgid ""
 "Chooses the workspace brand the store's proofs, corrections and designer "
@@ -415,7 +420,7 @@ msgstr ""
 "varumärkena som %s listar, eller null för att följa arbetsytans "
 "standardvarumärke."
 
-#: src/Abilities/ConnectionAction.php:202
+#: src/Abilities/ConnectionAction.php:203
 msgid ""
 "Lets the store's publishable key take the site's counterpart with or without "
 "www. too, so the designer works on both addresses; `allow` false takes it "
@@ -425,7 +430,7 @@ msgstr ""
 "utan www., så att designverktyget fungerar på båda adresserna; `allow` false "
 "tar bort den igen."
 
-#: src/Abilities/ConnectionAction.php:203
+#: src/Abilities/ConnectionAction.php:204
 msgid ""
 "Has Pixonaut send the store's webhook endpoint a test request, and answers "
 "with how it went under `last_ping`."
@@ -433,7 +438,7 @@ msgstr ""
 "Låter Pixonaut skicka en testförfrågan till butikens webhook-slutpunkt och "
 "svarar med hur det gick under `last_ping`."
 
-#: src/Abilities/ConnectionAction.php:204
+#: src/Abilities/ConnectionAction.php:205
 msgid ""
 "Forgets the connection a copied site was copied with, when the connection is "
 "paused because the site's address changed (`site_changed`). The site it was "
@@ -445,7 +450,7 @@ msgstr ""
 "(`site_changed`). Webbplatsen som den kopierades från förblir ansluten. Den "
 "här webbplatsen ansluts sedan på egen hand, i en webbläsare."
 
-#: src/Abilities/ConnectionAction.php:216
+#: src/Abilities/ConnectionAction.php:217
 msgid "A brand's id; null follows the workspace's default brand."
 msgstr "Ett varumärkes id; null följer arbetsytans standardvarumärke."
 
@@ -2068,16 +2073,16 @@ msgstr ""
 "Produkten visar sin Pixonaut-bild, eller kommer att göra det när den har "
 "ritats: ingen bild från butiksägaren står i dess ställe."
 
-#: src/Admin/CatalogueSearch.php:240 src/Admin/CatalogueSearch.php:318
+#: src/Admin/CatalogueSearch.php:239 src/Admin/CatalogueSearch.php:317
 msgid "Pixonaut could not be searched. Try again in a moment."
 msgstr "Det gick inte att söka i Pixonaut. Försök igen om en stund."
 
 #. translators: Message in the blank search on the product edit page, shown to the merchant.
-#: src/Admin/CatalogueSearch.php:317
+#: src/Admin/CatalogueSearch.php:316
 msgid "Connect the store to Pixonaut to search its catalogue."
 msgstr "Anslut butiken till Pixonaut för att söka i dess katalog."
 
-#: src/Admin/ConnectionScreen.php:422
+#: src/Admin/ConnectionScreen.php:423
 msgid "You are not allowed to change the Pixonaut connection."
 msgstr "Du har inte behörighet att ändra anslutningen till Pixonaut."
 
@@ -2094,7 +2099,7 @@ msgstr ""
 "href=\"%2$s\" target=\"_blank\" rel=\"noopener noreferrer\">Så fungerar "
 "anslutningen</a>"
 
-#: src/Admin/ConnectNotice.php:97 src/Admin/Notices.php:135
+#: src/Admin/ConnectNotice.php:97 src/Admin/Notices.php:137
 msgid "You are not allowed to dismiss this notice."
 msgstr "Du har inte behörighet att avfärda det här meddelandet."
 
@@ -2337,7 +2342,7 @@ msgid "Customers cannot buy %1$s: %2$s"
 msgstr "Kunder kan inte köpa %1$s: %2$s"
 
 #. translators: %s: an option's value, e.g. "XL" or "XL, Tall". Notice after the store manager adjusted a standing side's layout for that option on Pixonaut. Admin product page.
-#: src/Admin/LayoutAdjustments.php:261
+#: src/Admin/LayoutAdjustments.php:265
 #, php-format
 msgid ""
 "The layout of %s is saved. It keeps it when the side changes, until you "
@@ -2347,13 +2352,13 @@ msgstr ""
 "återställer den."
 
 #. translators: %s: an option's value, e.g. "XL". Notice after the store manager reset a standing side's layout for that option. Admin product page.
-#: src/Admin/LayoutAdjustments.php:263
+#: src/Admin/LayoutAdjustments.php:267
 #, php-format
 msgid "%s follows the side again."
 msgstr "%s följer sidan igen."
 
 #. translators: %s: an option's value, e.g. "XL". Notice when Pixonaut could not open, save or reset a standing side's layout for that option. Admin product page.
-#: src/Admin/LayoutAdjustments.php:265
+#: src/Admin/LayoutAdjustments.php:269
 #, php-format
 msgid ""
 "The layout of %s could not be changed in Pixonaut. Try again in a moment."
@@ -2735,20 +2740,20 @@ msgstr ""
 "Pixonaut-fält."
 
 #. translators: 1: product name of the order line, 2: what the customer asked.
-#: src/Approval/ChangesRequested.php:92
+#: src/Approval/ChangesRequested.php:93
 #, php-format
 msgid ""
 "Pixonaut: the customer asked for changes to the design of \"%1$s\": %2$s"
 msgstr "Pixonaut: kunden bad om ändringar av designen för \"%1$s\": %2$s"
 
 #. translators: %s: product name of the order line.
-#: src/Approval/DesignApproved.php:164
+#: src/Approval/DesignApproved.php:165
 #, php-format
 msgid "Pixonaut: the customer approved the design of \"%s\"."
 msgstr "Pixonaut: kunden godkände designen för \"%s\"."
 
 #. translators: %s: product name of the order line.
-#: src/Approval/DesignApproved.php:212
+#: src/Approval/DesignApproved.php:213
 #, php-format
 msgid ""
 "Pixonaut: the customer approved the design of \"%s\" after the order was "
@@ -2759,7 +2764,7 @@ msgstr ""
 "tryckeriet."
 
 #. translators: %s: product name of the order line.
-#: src/Approval/DesignApproved.php:230
+#: src/Approval/DesignApproved.php:231
 #, php-format
 msgid ""
 "Pixonaut: the design of \"%s\" was approved after it was changed, so it was "
@@ -2787,7 +2792,7 @@ msgstr ""
 "tillbaka till kunden manuellt."
 
 #. translators: %s: product name of the order line.
-#: src/Approval/OrderEdit.php:391
+#: src/Approval/OrderEdit.php:395
 #, php-format
 msgid ""
 "Pixonaut: the customer approved a change to the design of \"%s\" after the "
@@ -2798,13 +2803,13 @@ msgstr ""
 "inte till tryckeriet."
 
 #. translators: %s: product name of the order line.
-#: src/Approval/OrderEdit.php:424
+#: src/Approval/OrderEdit.php:428
 #, php-format
 msgid "Pixonaut: the customer changed the design of \"%s\" and approved it."
 msgstr "Pixonaut: kunden ändrade designen för \"%s\" och godkände den."
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofDeadline.php:232
+#: src/Approval/ProofDeadline.php:233
 #, php-format
 msgid ""
 "Pixonaut: the customer did not answer the proof of \"%s\" by the deadline, "
@@ -2814,7 +2819,7 @@ msgstr ""
 "designen godkändes som den visades."
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofDeadline.php:273
+#: src/Approval/ProofDeadline.php:274
 #, php-format
 msgid ""
 "Pixonaut: the customer approved the design of \"%s\" just before its "
@@ -2905,7 +2910,7 @@ msgid "Mark the item as needing attention"
 msgstr "Markera att artikeln behöver åtgärdas"
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofRequest.php:85
+#: src/Approval/ProofRequest.php:90
 #, php-format
 msgid ""
 "Pixonaut: the proof of \"%s\" was not sent. Its design was changed in "
@@ -2915,7 +2920,7 @@ msgstr ""
 "Pixonaut efter köpet."
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofRequest.php:99
+#: src/Approval/ProofRequest.php:104
 #, php-format
 msgid ""
 "Pixonaut: the proof of \"%s\" was not sent. Its design is no longer waiting "
@@ -2925,7 +2930,7 @@ msgstr ""
 "längre på godkännande i Pixonaut."
 
 #. translators: 1: product name of the order line, 2: error code Pixonaut answered.
-#: src/Approval/ProofRequest.php:125
+#: src/Approval/ProofRequest.php:130
 #, php-format
 msgid ""
 "Pixonaut: the proof of \"%1$s\" was not sent. Pixonaut refused its proof "
@@ -2935,7 +2940,7 @@ msgstr ""
 "korrektursida: %2$s."
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofRequest.php:137
+#: src/Approval/ProofRequest.php:142
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" is awaiting design approval. The customer was sent a proof "
@@ -2972,7 +2977,7 @@ msgid "Proof by email after payment"
 msgstr "Korrektur via e-post efter betalning"
 
 #. translators: 1: product name, 2: Pixonaut's refusal code
-#: src/Cart/AddToCart.php:809
+#: src/Cart/AddToCart.php:821
 #, php-format
 msgid ""
 "Customers cannot add \"%1$s\" to the cart: Pixonaut will not route its "
@@ -3028,20 +3033,20 @@ msgid "The placement’s first view"
 msgstr "Placeringens första vy"
 
 #. translators: 1: a custom product attribute's name; 2: a global product attribute's taxonomy, e.g. pa_size.
-#: src/Catalogue/AttributeMove.php:115
+#: src/Catalogue/AttributeMove.php:117
 #, php-format
 msgid "The product has both %1$s and %2$s. Remove one, then move it."
 msgstr ""
 "Produkten har både %1$s och %2$s. Ta bort det ena och flytta den sedan."
 
 #. translators: 1: how many variations the product has; 2: the most a move can write.
-#: src/Catalogue/AttributeMove.php:123
+#: src/Catalogue/AttributeMove.php:125
 #, php-format
 msgid "The product has %1$d variations, and a move can write at most %2$d."
 msgstr "Produkten har %1$d varianter, och en flytt kan skriva högst %2$d."
 
 #. translators: 1: a product variation's id; 2: the value it holds of a custom product attribute; 3: the attribute's name.
-#: src/Catalogue/AttributeMove.php:162
+#: src/Catalogue/AttributeMove.php:164
 #, php-format
 msgid ""
 "Variation %1$d holds %2$s, which %3$s does not offer. Correct the variation, "
@@ -3050,7 +3055,7 @@ msgstr ""
 "Variant %1$d har värdet %2$s, som %3$s inte erbjuder. Rätta varianten och "
 "flytta den sedan."
 
-#: src/Catalogue/AttributeMove.php:269
+#: src/Catalogue/AttributeMove.php:271
 msgid ""
 "The product changed meanwhile and no longer has this attribute. Nothing was "
 "changed."
@@ -3058,18 +3063,18 @@ msgstr ""
 "Produkten ändrades under tiden och har inte längre detta attribut. Ingenting "
 "ändrades."
 
-#: src/Catalogue/AttributeMove.php:405
+#: src/Catalogue/AttributeMove.php:407
 msgid "The product's attribute could not be saved. Nothing was changed."
 msgstr "Produktens attribut kunde inte sparas. Ingenting ändrades."
 
 #. translators: %d: a product variation's id.
-#: src/Catalogue/AttributeMove.php:416
+#: src/Catalogue/AttributeMove.php:418
 #, php-format
 msgid "Variation %d could not be saved. Nothing was changed."
 msgstr "Variant %d kunde inte sparas. Ingenting ändrades."
 
 #. translators: 1, 2: two values of a custom product attribute.
-#: src/Catalogue/AttributeMove.php:570
+#: src/Catalogue/AttributeMove.php:572
 #, php-format
 msgid ""
 "%1$s and %2$s have the same slug, so the move could not tell which a "
@@ -3079,7 +3084,7 @@ msgstr ""
 "har. Byt namn på det ena och flytta sedan."
 
 #. translators: 1: a global product attribute's taxonomy, e.g. pa_size; 2: values of a custom product attribute, separated by commas.
-#: src/Catalogue/AttributeMove.php:592
+#: src/Catalogue/AttributeMove.php:594
 #, php-format
 msgid ""
 "%1$s has no term for: %2$s. Create the terms or name them in term_map, then "
@@ -3089,7 +3094,7 @@ msgstr ""
 "flytta sedan."
 
 #. translators: %s: a global product attribute's taxonomy, e.g. pa_size.
-#: src/Catalogue/AttributeMove.php:600
+#: src/Catalogue/AttributeMove.php:602
 #, php-format
 msgid ""
 "Two of the product's values would become one term of %s, and customers could "
@@ -3099,7 +3104,7 @@ msgstr ""
 "skulle inte längre kunna skilja dess varianter åt."
 
 #. translators: %d: a product or variation's id.
-#: src/Catalogue/AttributeMove.php:631
+#: src/Catalogue/AttributeMove.php:633
 #, php-format
 msgid ""
 "%d is matched to its blank's variant by the attribute's words, which the "
@@ -3110,7 +3115,7 @@ msgstr ""
 "skulle ändra, så den skulle sluta säljas. Välj dess variant med set-product-"
 "setup och flytta sedan."
 
-#: src/Catalogue/AttributeMove.php:673
+#: src/Catalogue/AttributeMove.php:675
 msgid ""
 "The product's Pixonaut setup changed meanwhile. Nothing was changed; try "
 "again."
@@ -3281,7 +3286,7 @@ msgid "%1$s × %2$s mm"
 msgstr "%1$s × %2$s mm"
 
 #. translators: %s: link to the Pixonaut settings.
-#: src/Connection/Connection.php:438
+#: src/Connection/Connection.php:442
 #, php-format
 msgid ""
 "Site URL changed: this site is not the one that connected to Pixonaut, so "
@@ -3296,7 +3301,7 @@ msgstr ""
 "en staging-webbplats."
 
 #. translators: %s: link to the Pixonaut settings.
-#: src/Connection/Connection.php:440
+#: src/Connection/Connection.php:444
 #, php-format
 msgid ""
 "Pixonaut no longer accepts this store's key: the store was disconnected in "
@@ -3684,7 +3689,7 @@ msgstr ""
 "Pixonaut: bara en återbetalning av hela artikeln avbryter den där."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:357
+#: src/Fulfilment/DeliveryChange.php:359
 #, php-format
 msgid ""
 "Pixonaut: the new address of \"%s\" was not sent: the store is not connected "
@@ -3696,7 +3701,7 @@ msgstr ""
 "Uppdatera beställningen när butiken är ansluten för att skicka den."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:376
+#: src/Fulfilment/DeliveryChange.php:378
 #, php-format
 msgid ""
 "Pixonaut: the new address of \"%s\" was not sent to the printshop: it needs "
@@ -3706,7 +3711,7 @@ msgstr ""
 "behöver ett namn, en gatuadress, en ort och ett land."
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered.
-#: src/Fulfilment/DeliveryChange.php:568
+#: src/Fulfilment/DeliveryChange.php:570
 #, php-format
 msgid ""
 "Pixonaut: it is not known whether the new address of \"%1$s\" reached the "
@@ -3716,7 +3721,7 @@ msgstr ""
 "Pixonaut svarade \"%2$s\". Uppdatera beställningen för att skicka den igen."
 
 #. translators: 1: product name of the order line, 2: the printshop's answer.
-#: src/Fulfilment/DeliveryChange.php:710
+#: src/Fulfilment/DeliveryChange.php:712
 #, php-format
 msgid ""
 "Pixonaut: the printshop refused the new address of \"%1$s\": \"%2$s\". It "
@@ -3726,13 +3731,13 @@ msgstr ""
 "skickas till den tidigare adressen."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:714
+#: src/Fulfilment/DeliveryChange.php:716
 #, php-format
 msgid "Pixonaut: the printshop took the new address of \"%s\"."
 msgstr "Pixonaut: tryckeriet tog emot den nya adressen för \"%s\"."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:716
+#: src/Fulfilment/DeliveryChange.php:718
 #, php-format
 msgid ""
 "Pixonaut: the new address of \"%s\" goes to the printshop with the order, "
@@ -3742,7 +3747,7 @@ msgstr ""
 "tryckeriet, eftersom den inte hade skickats än."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:718
+#: src/Fulfilment/DeliveryChange.php:720
 #, php-format
 msgid ""
 "Pixonaut: the printshop refused the new address of \"%s\". It ships to the "
@@ -3752,13 +3757,13 @@ msgstr ""
 "den tidigare adressen."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:720
+#: src/Fulfilment/DeliveryChange.php:722
 #, php-format
 msgid "Pixonaut is telling the printshop the new address of \"%s\"."
 msgstr "Pixonaut meddelar tryckeriet den nya adressen för \"%s\"."
 
 #. translators: 1: product name of the order line, 2: the printshop order's status in Pixonaut.
-#: src/Fulfilment/DeliveryChange.php:736
+#: src/Fulfilment/DeliveryChange.php:738
 #, php-format
 msgid ""
 "Pixonaut: the new address of \"%1$s\" was not sent: its printshop order is "
@@ -3771,7 +3776,7 @@ msgstr ""
 "tryckeriet."
 
 #. translators: 1: product name of the order line, 2: the printshop's name.
-#: src/Fulfilment/DeliveryChange.php:742
+#: src/Fulfilment/DeliveryChange.php:744
 #, php-format
 msgid ""
 "Pixonaut: the new address of \"%1$s\" was not sent: its printshop, %2$s, "
@@ -3783,12 +3788,12 @@ msgstr ""
 "adressen; kontakta tryckeriet."
 
 #. translators: Fallback for a printshop name that is not known, inside an order note: "its printshop, the printshop, takes no address changes". Lower case.
-#: src/Fulfilment/DeliveryChange.php:745
+#: src/Fulfilment/DeliveryChange.php:747
 msgid "the printshop"
 msgstr "tryckeriet"
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:749
+#: src/Fulfilment/DeliveryChange.php:751
 #, php-format
 msgid ""
 "Pixonaut: the new address of \"%s\" was not sent: its printshop needs a "
@@ -3798,7 +3803,7 @@ msgstr ""
 "ett postnummer. Lägg till ett och uppdatera beställningen."
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered.
-#: src/Fulfilment/DeliveryChange.php:754
+#: src/Fulfilment/DeliveryChange.php:756
 #, php-format
 msgid ""
 "Pixonaut: the new address of \"%1$s\" was not sent: Pixonaut answered "
@@ -3808,13 +3813,13 @@ msgstr ""
 "\"%2$s\". Den skickas till den tidigare adressen."
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:158
+#: src/Fulfilment/DesignChanged.php:160
 #, php-format
 msgid "Pixonaut: the design for \"%s\" was deleted in Pixonaut."
 msgstr "Pixonaut: designen för \"%s\" raderades i Pixonaut."
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:163 src/Fulfilment/FulfilmentJobs.php:200
+#: src/Fulfilment/DesignChanged.php:165 src/Fulfilment/FulfilmentJobs.php:199
 #, php-format
 msgid ""
 "Pixonaut: the design for \"%s\" was deleted in Pixonaut, so the item cannot "
@@ -3824,7 +3829,7 @@ msgstr ""
 "tryckas. Stäm av beställningen med kunden."
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:195
+#: src/Fulfilment/DesignChanged.php:197
 #, php-format
 msgid ""
 "Pixonaut: the design for \"%s\" was changed in Pixonaut. The changed design "
@@ -3834,7 +3839,7 @@ msgstr ""
 "skickas för godkännande igen."
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:200 src/Fulfilment/Fulfiller.php:419
+#: src/Fulfilment/DesignChanged.php:202 src/Fulfilment/Fulfiller.php:422
 #, php-format
 msgid ""
 "Pixonaut: the design for \"%s\" was changed in Pixonaut after it was "
@@ -3846,7 +3851,7 @@ msgstr ""
 "den trycks."
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:207
+#: src/Fulfilment/DesignChanged.php:209
 #, php-format
 msgid ""
 "Pixonaut: the design for \"%s\" was changed in Pixonaut after it was "
@@ -3856,13 +3861,13 @@ msgstr ""
 "beställts. Tryckeribeställningen är oförändrad."
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:210
+#: src/Fulfilment/DesignChanged.php:212
 #, php-format
 msgid "Pixonaut: the design for \"%s\" was changed in Pixonaut."
 msgstr "Pixonaut: designen för \"%s\" ändrades i Pixonaut."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:106
+#: src/Fulfilment/Fulfiller.php:107
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" was not sent to the printshop. A plugin or the theme holds "
@@ -3872,7 +3877,7 @@ msgstr ""
 "håller tillbaka den (pixonaut_wc_fulfilment_can_fulfil)."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:115
+#: src/Fulfilment/Fulfiller.php:116
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" was not sent to the printshop. It was ordered under another "
@@ -3882,7 +3887,7 @@ msgstr ""
 "annan Pixonaut-arbetsyta än den som butiken är ansluten till nu."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:156
+#: src/Fulfilment/Fulfiller.php:157
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" was not sent to the printshop. An earlier attempt sent its "
@@ -3894,7 +3899,7 @@ msgstr ""
 "inte avgöra om den lades. Kontrollera beställningen i Pixonaut."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:174
+#: src/Fulfilment/Fulfiller.php:175
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" was not sent to the printshop. The line has no design for "
@@ -3904,7 +3909,7 @@ msgstr ""
 "av sina sidor."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:227
+#: src/Fulfilment/Fulfiller.php:228
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" was not sent to the printshop. The line does not record how "
@@ -3914,7 +3919,7 @@ msgstr ""
 "hur kunden godkände designen."
 
 #. translators: 1: product name of the order line, 2: Pixonaut order id.
-#: src/Fulfilment/Fulfiller.php:373
+#: src/Fulfilment/Fulfiller.php:376
 #, php-format
 msgid ""
 "Pixonaut: a Pixonaut automation already ordered \"%1$s\", as order %2$s. The "
@@ -3925,7 +3930,7 @@ msgstr ""
 "en ny."
 
 #. translators: 1: product name of the order line, 2: the reason Pixonaut gave.
-#: src/Fulfilment/Fulfiller.php:448
+#: src/Fulfilment/Fulfiller.php:451
 #, php-format
 msgid ""
 "Pixonaut: the printshop order for \"%1$s\" failed when it was placed: %2$s"
@@ -3933,12 +3938,12 @@ msgstr ""
 "Pixonaut: tryckeribeställningen för \"%1$s\" misslyckades när den lades: %2$s"
 
 #. translators: Fills in %2$s of an order note when the printshop order failed without a reason. Ends a sentence; lower case.
-#: src/Fulfilment/Fulfiller.php:451 src/Fulfilment/OrderFailed.php:83
+#: src/Fulfilment/Fulfiller.php:454 src/Fulfilment/OrderFailed.php:84
 msgid "no reason given."
 msgstr "inget skäl angavs."
 
 #. translators: 1: product name of the order line, 2: the order status Pixonaut answered.
-#: src/Fulfilment/Fulfiller.php:466
+#: src/Fulfilment/Fulfiller.php:469
 #, php-format
 msgid ""
 "Pixonaut: the printshop order for \"%1$s\" was placed with the status "
@@ -3949,7 +3954,7 @@ msgstr ""
 "som butiken inte kan gå vidare från. Stäm av beställningen med tryckeriet."
 
 #. translators: 1: product name of the order line, 2: number of attempts, 3: the error code Pixonaut answered.
-#: src/Fulfilment/FulfilmentJobs.php:219
+#: src/Fulfilment/FulfilmentJobs.php:218
 #, php-format
 msgid ""
 "Pixonaut: \"%1$s\" was not sent to the printshop after %2$d attempts. "
@@ -3960,7 +3965,7 @@ msgstr ""
 "försök sedan igen."
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered.
-#: src/Fulfilment/FulfilmentJobs.php:317
+#: src/Fulfilment/FulfilmentJobs.php:316
 #, php-format
 msgid ""
 "Pixonaut: \"%1$s\" was not sent to the printshop. Pixonaut answered "
@@ -3970,7 +3975,7 @@ msgstr ""
 "och butiken kunde inte schemalägga ett nytt försök. Försök igen med artikeln."
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered.
-#: src/Fulfilment/FulfilmentJobs.php:347
+#: src/Fulfilment/FulfilmentJobs.php:346
 #, php-format
 msgid ""
 "Pixonaut: \"%1$s\" needs attention. The Pixonaut sandbox no longer knows its "
@@ -3982,7 +3987,7 @@ msgstr ""
 "sandboxens data har återställts. Beställ artikeln igen."
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered, 3: the Pixonaut order the design already has, 4: what the merchant can do.
-#: src/Fulfilment/FulfilmentJobs.php:356
+#: src/Fulfilment/FulfilmentJobs.php:355
 #, php-format
 msgid ""
 "Pixonaut: \"%1$s\" needs attention. Pixonaut refused it with \"%2$s\": its "
@@ -3992,7 +3997,7 @@ msgstr ""
 "dess design har redan Pixonaut-beställningen %3$s. %4$s"
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered, 3: what the merchant can do.
-#: src/Fulfilment/FulfilmentJobs.php:365
+#: src/Fulfilment/FulfilmentJobs.php:364
 #, php-format
 msgid ""
 "Pixonaut: \"%1$s\" needs attention. Pixonaut refused it with \"%2$s\". %3$s"
@@ -4000,7 +4005,7 @@ msgstr ""
 "Pixonaut: \"%1$s\" behöver åtgärdas. Pixonaut avvisade den med \"%2$s\". %3$s"
 
 #. translators: 1: product name of the order line, 2: the order's status in Pixonaut.
-#: src/Fulfilment/LineActions.php:203
+#: src/Fulfilment/LineActions.php:205
 #, php-format
 msgid "Pixonaut: the printshop order for \"%1$s\" is now \"%2$s\" in Pixonaut."
 msgstr ""
@@ -4008,7 +4013,7 @@ msgstr ""
 "Pixonaut."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineActions.php:497
+#: src/Fulfilment/LineActions.php:499
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" could not be sent again: the store could not schedule it. "
@@ -4018,20 +4023,20 @@ msgstr ""
 "det. Försök igen med artikeln."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineActions.php:507
+#: src/Fulfilment/LineActions.php:509
 #, php-format
 msgid "Pixonaut: \"%s\" will be sent to the printshop again."
 msgstr "Pixonaut: \"%s\" skickas till tryckeriet igen."
 
 #. translators: 1: product name of the order line, 2: the new Pixonaut order id.
-#: src/Fulfilment/LineActions.php:595 src/Fulfilment/OrderSubmitted.php:176
+#: src/Fulfilment/LineActions.php:598 src/Fulfilment/OrderSubmitted.php:177
 #, php-format
 msgid "Pixonaut: \"%1$s\" was sent to the printshop again, as order %2$s."
 msgstr ""
 "Pixonaut: \"%1$s\" skickades till tryckeriet igen, som beställning %2$s."
 
 #. translators: 1: product name of the order line, 2: the new Pixonaut order id, 3: its status.
-#: src/Fulfilment/LineActions.php:607
+#: src/Fulfilment/LineActions.php:610
 #, php-format
 msgid ""
 "Pixonaut: \"%1$s\" was sent to the printshop again, as order %2$s, which is "
@@ -4041,37 +4046,37 @@ msgstr ""
 "statusen \"%3$s\"."
 
 #. translators: 1: product name of the order line, 2: what the merchant learned from the printshop.
-#: src/Fulfilment/LineActions.php:637
+#: src/Fulfilment/LineActions.php:640
 #, php-format
 msgid "Pixonaut: the printshop has the order for \"%1$s\". %2$s"
 msgstr "Pixonaut: tryckeriet har beställningen för \"%1$s\". %2$s"
 
 #. translators: 1: product name of the order line, 2: what the merchant learned from the printshop.
-#: src/Fulfilment/LineActions.php:669
+#: src/Fulfilment/LineActions.php:666
 #, php-format
 msgid "Pixonaut: the printshop does not have the order for \"%1$s\". %2$s"
 msgstr "Pixonaut: tryckeriet har inte beställningen för \"%1$s\". %2$s"
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineActions.php:692 src/Fulfilment/LineCancellation.php:376
+#: src/Fulfilment/LineActions.php:689 src/Fulfilment/LineCancellation.php:373
 #: src/Fulfilment/OrderCancelled.php:73
 #, php-format
 msgid "Pixonaut: the printshop order for \"%s\" was cancelled."
 msgstr "Pixonaut: tryckeribeställningen för \"%s\" avbröts."
 
 #. translators: Reason in an order note when a merchant rehearses a failed printshop order in the Pixonaut sandbox.
-#: src/Fulfilment/LineActions.php:712
+#: src/Fulfilment/LineActions.php:709
 msgid "Rehearsed in the Pixonaut sandbox."
 msgstr "Simulerad i Pixonauts sandbox."
 
 #. translators: 1: product name of the order line, 2: why Pixonaut refused, a full sentence or two.
-#: src/Fulfilment/LineActions.php:771
+#: src/Fulfilment/LineActions.php:768
 #, php-format
 msgid "Pixonaut: \"%1$s\" was not sent to the printshop again. %2$s"
 msgstr "Pixonaut: \"%1$s\" skickades inte till tryckeriet igen. %2$s"
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineCancellation.php:170
+#: src/Fulfilment/LineCancellation.php:167
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" is not cancelled yet: the store could not schedule it. It "
@@ -4082,7 +4087,7 @@ msgstr ""
 "att försöka igen."
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered.
-#: src/Fulfilment/LineCancellation.php:266
+#: src/Fulfilment/LineCancellation.php:263
 #, php-format
 msgid ""
 "Pixonaut: a design of \"%1$s\" could not be rejected in Pixonaut, which "
@@ -4092,13 +4097,13 @@ msgstr ""
 "\"%2$s\". Den förblir ej godkänd där, så den trycks inte."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineCancellation.php:275
+#: src/Fulfilment/LineCancellation.php:272
 #, php-format
 msgid "Pixonaut: \"%s\" was cancelled before it was sent to the printshop."
 msgstr "Pixonaut: \"%s\" avbröts innan den skickades till tryckeriet."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineCancellation.php:295
+#: src/Fulfilment/LineCancellation.php:292
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" may have a printshop order, which was not cancelled: the "
@@ -4110,7 +4115,7 @@ msgstr ""
 "Kontrollera beställningen i Pixonaut."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineCancellation.php:362
+#: src/Fulfilment/LineCancellation.php:359
 #, php-format
 msgid ""
 "Pixonaut: the printshop order for \"%s\" was not cancelled: the store is not "
@@ -4122,7 +4127,7 @@ msgstr ""
 "Pixonaut."
 
 #. translators: 1: product name of the order line, 2: why the printshop keeps the order.
-#: src/Fulfilment/LineCancellation.php:393
+#: src/Fulfilment/LineCancellation.php:390
 #, php-format
 msgid ""
 "Pixonaut: the printshop order for \"%1$s\" was not cancelled: %2$s Ask the "
@@ -4132,7 +4137,7 @@ msgstr ""
 "tryckeriet."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineCancellation.php:403
+#: src/Fulfilment/LineCancellation.php:400
 #, php-format
 msgid ""
 "Pixonaut: \"%s\" was cancelled. Its printshop order had failed, so there was "
@@ -4142,7 +4147,7 @@ msgstr ""
 "fanns inget att stoppa hos tryckeriet."
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered, 3: Pixonaut's reason, if it gave one, with a leading space.
-#: src/Fulfilment/LineCancellation.php:416
+#: src/Fulfilment/LineCancellation.php:413
 #, php-format
 msgid ""
 "Pixonaut: the printshop order for \"%1$s\" could not be cancelled: Pixonaut "
@@ -4152,32 +4157,32 @@ msgstr ""
 "svarade \"%2$s\".%3$s Be tryckeriet att stoppa den."
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:532
+#: src/Fulfilment/LineCancellation.php:529
 msgid "the printshop has made it already."
 msgstr "tryckeriet har redan tillverkat den."
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:534
+#: src/Fulfilment/LineCancellation.php:531
 msgid "the printshop has begun it and did not cancel it."
 msgstr "tryckeriet har påbörjat den och avbröt den inte."
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:536
+#: src/Fulfilment/LineCancellation.php:533
 msgid "its printshop cannot stop orders through Pixonaut."
 msgstr "dess tryckeri kan inte stoppa beställningar via Pixonaut."
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:538
+#: src/Fulfilment/LineCancellation.php:535
 msgid "its printshop is no longer connected to Pixonaut."
 msgstr "dess tryckeri är inte längre anslutet till Pixonaut."
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:540
+#: src/Fulfilment/LineCancellation.php:537
 msgid "the printshop cancelled it, but it shipped meanwhile."
 msgstr "tryckeriet avbröt den, men den hade skickats under tiden."
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:542
+#: src/Fulfilment/LineCancellation.php:539
 msgid "the printshop has it."
 msgstr "tryckeriet har den."
 
@@ -4354,7 +4359,7 @@ msgstr ""
 "tryckeriet och reda sedan ut det i Pixonaut-rutan för den här beställningen."
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/OrderDeliveryChanged.php:120
+#: src/Fulfilment/OrderDeliveryChanged.php:121
 #, php-format
 msgid ""
 "Pixonaut: the delivery address of the printshop order for \"%s\" was changed "
@@ -4364,7 +4369,7 @@ msgstr ""
 "Pixonaut. Adressen på den här beställningen ändrades inte."
 
 #. translators: 1: product name of the order line, 2: the reason Pixonaut gave.
-#: src/Fulfilment/OrderFailed.php:80
+#: src/Fulfilment/OrderFailed.php:81
 #, php-format
 msgid "Pixonaut: the printshop order for \"%1$s\" failed: %2$s"
 msgstr "Pixonaut: tryckeribeställningen för \"%1$s\" misslyckades: %2$s"
@@ -4482,7 +4487,7 @@ msgstr ""
 "återställs den %s om den nya månaden har utrymme för den."
 
 #. translators: 1: product name, 2: status Pixonaut reported
-#: src/Fulfilment/OrderStatusChanged.php:175
+#: src/Fulfilment/OrderStatusChanged.php:176
 #, php-format
 msgid ""
 "Pixonaut reported the status \"%2$s\" for \"%1$s\", which this plugin "
@@ -4492,31 +4497,31 @@ msgstr ""
 "av tillägget inte känner till; inget ändrades."
 
 #. translators: %s: product name
-#: src/Fulfilment/OrderStatusChanged.php:283
+#: src/Fulfilment/OrderStatusChanged.php:284
 #, php-format
 msgid "Pixonaut: \"%s\" was printed at the printshop."
 msgstr "Pixonaut: \"%s\" trycktes hos tryckeriet."
 
 #. translators: %s: product name
-#: src/Fulfilment/OrderStatusChanged.php:313
+#: src/Fulfilment/OrderStatusChanged.php:314
 #, php-format
 msgid "Pixonaut: \"%s\" was shipped."
 msgstr "Pixonaut: \"%s\" har skickats."
 
 #. translators: 1: product name, 2: carrier, tracking number and link
-#: src/Fulfilment/OrderStatusChanged.php:316
+#: src/Fulfilment/OrderStatusChanged.php:317
 #, php-format
 msgid "Pixonaut: \"%1$s\" was shipped. Tracking: %2$s"
 msgstr "Pixonaut: \"%1$s\" har skickats. Spårning: %2$s"
 
 #. translators: 1: product name, 2: carrier, tracking number and link. Order note the merchant reads.
-#: src/Fulfilment/OrderTrackingChanged.php:143
+#: src/Fulfilment/OrderTrackingChanged.php:144
 #, php-format
 msgid "Pixonaut: tracking was added for \"%1$s\": %2$s"
 msgstr "Pixonaut: spårning lades till för \"%1$s\": %2$s"
 
 #. translators: 1: product name, 2: new carrier, tracking number and link, 3: the carrier and tracking number before. Order note the merchant reads.
-#: src/Fulfilment/OrderTrackingChanged.php:145
+#: src/Fulfilment/OrderTrackingChanged.php:146
 #, php-format
 msgid "Pixonaut: the tracking of \"%1$s\" was corrected to %2$s. It was %3$s."
 msgstr "Pixonaut: spårningen för \"%1$s\" rättades till %2$s. Tidigare: %3$s."
@@ -5388,11 +5393,11 @@ msgstr ""
 "WooCommerce för att använda det."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:106
+#: src/Settings/Settings.php:108
 msgid "Default layout"
 msgstr "Standardlayout"
 
-#: src/Settings/Settings.php:107
+#: src/Settings/Settings.php:109
 msgid ""
 "How personalised products show the designer, unless a product overrides it."
 msgstr ""
@@ -5400,11 +5405,11 @@ msgstr ""
 "åsidosätter det."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:120
+#: src/Settings/Settings.php:122
 msgid "Designer language"
 msgstr "Designverktygets språk"
 
-#: src/Settings/Settings.php:121
+#: src/Settings/Settings.php:123
 msgid ""
 "The language of the designer on the product page, of Pixonaut’s designer the "
 "Personalise button opens, and of the proof pages customers approve their "
@@ -5420,11 +5425,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
 #. translators: Label of the dropdown choosing how the product page designer lays out its form. Admin product page.
-#: src/Settings/Settings.php:134 templates/admin/product-fields.php:164
+#: src/Settings/Settings.php:136 templates/admin/product-fields.php:164
 msgid "Form layout"
 msgstr "Formulärlayout"
 
-#: src/Settings/Settings.php:135
+#: src/Settings/Settings.php:137
 msgid ""
 "How the designer lays out its form, on the product page and in Pixonaut’s "
 "designer the Personalise button opens, unless a product overrides it: as the "
@@ -5436,11 +5441,11 @@ msgstr ""
 "taget."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: each product option, such as Size or Colour, gets a group of its own in the designer's form.
-#: src/Settings/Settings.php:147
+#: src/Settings/Settings.php:149
 msgid "As its own group"
 msgstr "Som egen grupp"
 
-#: src/Settings/Settings.php:148
+#: src/Settings/Settings.php:150
 msgid ""
 "Puts each of a product's options, such as Size or Colour, in a group of its "
 "own in the designer's form on the product page, named after the option, in "
@@ -5454,11 +5459,11 @@ msgstr ""
 "behåller dem."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the groups of a product's options come before or after the template's groups.
-#: src/Settings/Settings.php:159
+#: src/Settings/Settings.php:161
 msgid "Place of the option groups"
 msgstr "Alternativgruppernas plats"
 
-#: src/Settings/Settings.php:160
+#: src/Settings/Settings.php:162
 msgid ""
 "Whether the groups of a product's options come before or after the "
 "template's groups."
@@ -5468,11 +5473,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the designer's form numbers its groups.
 #. translators: Label of the dropdown choosing whether the designer's form numbers its groups. Admin product page.
-#: src/Settings/Settings.php:172 templates/admin/product-fields.php:183
+#: src/Settings/Settings.php:174 templates/admin/product-fields.php:183
 msgid "Group numbers"
 msgstr "Gruppnummer"
 
-#: src/Settings/Settings.php:173
+#: src/Settings/Settings.php:175
 msgid ""
 "Numbers the groups of the designer's form on the product page: 1 Photo, 2 "
 "Text on one page, Step 1 of 2 in steps. Off shows the group names with no "
@@ -5482,11 +5487,11 @@ msgstr ""
 "Text på en sida, Steg 1 av 2 i steg. Av visar gruppernas namn utan nummer."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:184
+#: src/Settings/Settings.php:186
 msgid "Load other colours and views"
 msgstr "Ladda andra färger och vyer"
 
-#: src/Settings/Settings.php:185
+#: src/Settings/Settings.php:187
 msgid ""
 "Whether the designer loads a product's other colours, views and sides before "
 "the customer picks one, so they show at once. Choose In the background or "
@@ -5497,11 +5502,11 @@ msgstr ""
 "produkter med många stora foton, eller för kunder som mest handlar i mobilen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:198
+#: src/Settings/Settings.php:200
 msgid "Designer accent colour"
 msgstr "Designverktygets accentfärg"
 
-#: src/Settings/Settings.php:199
+#: src/Settings/Settings.php:201
 msgid ""
 "The colour the designer on the product page marks the chosen view, colour "
 "and option in, and draws its Next button in. None takes the accent colour of "
@@ -5514,11 +5519,11 @@ msgstr ""
 "varumärket inte har någon."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:210
+#: src/Settings/Settings.php:212
 msgid "Custom accent colour"
 msgstr "Egen accentfärg"
 
-#: src/Settings/Settings.php:211
+#: src/Settings/Settings.php:213
 msgid ""
 "The accent colour when Designer accent colour is A custom colour, e.g. "
 "#1e73be."
@@ -5526,11 +5531,11 @@ msgstr ""
 "Accentfärgen när Designverktygets accentfärg är En egen färg, t.ex. #1e73be."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:222
+#: src/Settings/Settings.php:224
 msgid "Show the print area's frame"
 msgstr "Visa tryckytans ram"
 
-#: src/Settings/Settings.php:223
+#: src/Settings/Settings.php:225
 msgid ""
 "Draws a thin grey frame on the preview around where the design can go, in "
 "the designer on the product page and in Pixonaut's designer the Personalise "
@@ -5543,12 +5548,12 @@ msgstr ""
 "som den kommer att tryckas."
 
 #. translators: Title of a setting on the settings page, shown to the merchant. "Hosted page" is Pixonaut's designer page the Personalise button opens.
-#: src/Settings/Settings.php:233
+#: src/Settings/Settings.php:235
 msgid "Add to cart after approve in hosted page"
 msgstr "Lägg i varukorgen efter godkännande på Pixonauts sida"
 
 #. translators: Help text of a setting on the settings page. "Approve and add to cart" and "Approve and go back" are the labels of the button on Pixonaut's designer page.
-#: src/Settings/Settings.php:235
+#: src/Settings/Settings.php:237
 msgid ""
 "For the Personalise button layout. Approving adds the product to the cart "
 "and opens its cart item's page, and Pixonaut's designer says Approve and add "
@@ -5561,11 +5566,11 @@ msgstr ""
 "tillbaka till produktsidan, och det säger Godkänn och gå tillbaka."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: how the options of a product option such as a size show in the designer's form.
-#: src/Settings/Settings.php:246
+#: src/Settings/Settings.php:248
 msgid "Product options in the designer"
 msgstr "Produktalternativ i designverktyget"
 
-#: src/Settings/Settings.php:247
+#: src/Settings/Settings.php:249
 msgid ""
 "How the designer on the product page shows the options of a variable "
 "product, such as its sizes, when it draws them in its form. As the theme "
@@ -5582,11 +5587,11 @@ msgstr ""
 "andra valen visas nedtonat."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:259
+#: src/Settings/Settings.php:261
 msgid "Use Pixonaut pictures as product images"
 msgstr "Använd Pixonauts bilder som produktbilder"
 
-#: src/Settings/Settings.php:260
+#: src/Settings/Settings.php:262
 msgid ""
 "Sets each personalised product’s and variation’s image to Pixonaut’s picture "
 "of it, its template on the blank, and draws it again when the product "
@@ -5601,11 +5606,11 @@ msgstr ""
 "behålls. Avstängt får varje produkt tillbaka bilden den hade innan."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the fields are the ones the customer filled in to personalise the item.
-#: src/Settings/Settings.php:270
+#: src/Settings/Settings.php:272
 msgid "List the design's fields"
 msgstr "Lista designens fält"
 
-#: src/Settings/Settings.php:271
+#: src/Settings/Settings.php:273
 msgid ""
 "Lists what the customer filled in under a personalised item in the cart, the "
 "checkout, their orders and the order emails, as the designer showed it. Off, "
@@ -5618,11 +5623,11 @@ msgstr ""
 "Beställningssidan i adminpanelen listar dem alltid."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: which view of the product the picture of a personalised item shows.
-#: src/Settings/Settings.php:282
+#: src/Settings/Settings.php:284
 msgid "Picture shows"
 msgstr "Bilden visar"
 
-#: src/Settings/Settings.php:283
+#: src/Settings/Settings.php:285
 msgid ""
 "A personalised item shows the customer’s design on the product in the cart, "
 "the checkout, their orders and the order emails. This chooses the view of "
@@ -5635,11 +5640,11 @@ msgstr ""
 "eller den första av placeringens vyer som produkten visas i."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:296
+#: src/Settings/Settings.php:298
 msgid "Default approval"
 msgstr "Standardgodkännande"
 
-#: src/Settings/Settings.php:297
+#: src/Settings/Settings.php:299
 msgid ""
 "How customers approve their design before it is printed, unless a product "
 "overrides it."
@@ -5648,11 +5653,11 @@ msgstr ""
 "åsidosätter det."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:311
+#: src/Settings/Settings.php:313
 msgid "Proof approval deadline (days)"
 msgstr "Tidsfrist för godkännande av korrektur (dagar)"
 
-#: src/Settings/Settings.php:312
+#: src/Settings/Settings.php:314
 msgid ""
 "With proof by email, how many days the customer has to approve their proof. "
 "The link in the email works a week longer."
@@ -5661,11 +5666,11 @@ msgstr ""
 "sitt korrektur. Länken i e-postmeddelandet fungerar en vecka längre."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:324
+#: src/Settings/Settings.php:326
 msgid "When no answer by the deadline"
 msgstr "Om inget svar inom tidsfristen"
 
-#: src/Settings/Settings.php:325
+#: src/Settings/Settings.php:327
 msgid ""
 "With proof by email, what happens to a design the customer neither approved "
 "nor rejected by the deadline."
@@ -5674,11 +5679,11 @@ msgstr ""
 "godkänt eller avvisat inom tidsfristen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; what happens to an item whose design the customer rejected.
-#: src/Settings/Settings.php:338
+#: src/Settings/Settings.php:340
 msgid "On deny"
 msgstr "Vid avvisning"
 
-#: src/Settings/Settings.php:339
+#: src/Settings/Settings.php:341
 msgid ""
 "What happens to an item whose design the customer rejected, or which was "
 "denied at the deadline."
@@ -5687,11 +5692,11 @@ msgstr ""
 "avvisades vid tidsfristen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:353
+#: src/Settings/Settings.php:355
 msgid "First proof reminder after (days)"
 msgstr "Första påminnelse om korrektur efter (dagar)"
 
-#: src/Settings/Settings.php:354
+#: src/Settings/Settings.php:356
 msgid ""
 "Days after the proof email that a customer who has not answered is reminded. "
 "Only reminders before the deadline are sent."
@@ -5700,20 +5705,20 @@ msgstr ""
 "har svarat påminns. Endast påminnelser före tidsfristen skickas."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:367
+#: src/Settings/Settings.php:369
 msgid "Then remind every (days)"
 msgstr "Påminn sedan med intervall (dagar)"
 
-#: src/Settings/Settings.php:368
+#: src/Settings/Settings.php:370
 msgid "Days between one proof reminder and the next."
 msgstr "Antal dagar mellan en påminnelse om korrektur och nästa."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of reminders.
-#: src/Settings/Settings.php:381
+#: src/Settings/Settings.php:383
 msgid "Proof reminders at most"
 msgstr "Högsta antal påminnelser om korrektur"
 
-#: src/Settings/Settings.php:382
+#: src/Settings/Settings.php:384
 msgid ""
 "How many reminders a customer gets at most; 0 sends none. The last one says "
 "when the deadline is and what happens then."
@@ -5722,11 +5727,11 @@ msgstr ""
 "när tidsfristen går ut och vad som händer då."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut API.
-#: src/Settings/Settings.php:400
+#: src/Settings/Settings.php:402
 msgid "API base"
 msgstr "API-basadress"
 
-#: src/Settings/Settings.php:401
+#: src/Settings/Settings.php:403
 msgid ""
 "The Pixonaut API as the browser reaches it, e.g. a local Pixonaut. Empty "
 "uses Pixonaut’s own. The store’s key is sent to this address."
@@ -5735,11 +5740,11 @@ msgstr ""
 "använder Pixonauts eget. Butikens nyckel skickas till den här adressen."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL WordPress uses for the Pixonaut API.
-#: src/Settings/Settings.php:410
+#: src/Settings/Settings.php:412
 msgid "Server-to-server API base"
 msgstr "API-basadress server till server"
 
-#: src/Settings/Settings.php:411
+#: src/Settings/Settings.php:413
 msgid ""
 "The Pixonaut API as WordPress itself reaches it, when that differs from the "
 "browser’s address (WordPress inside Docker, say). Empty uses the API base."
@@ -5749,11 +5754,11 @@ msgstr ""
 "basadressen."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut studio.
-#: src/Settings/Settings.php:420
+#: src/Settings/Settings.php:422
 msgid "Studio base"
 msgstr "Studio-basadress"
 
-#: src/Settings/Settings.php:421
+#: src/Settings/Settings.php:423
 msgid ""
 "The Pixonaut studio, where a connect is approved and the admin’s studio "
 "links lead. Empty uses Pixonaut’s own."
@@ -5762,11 +5767,11 @@ msgstr ""
 "studiolänkar leder. Tomt använder Pixonauts egen."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the CDN the designer SDK loads from.
-#: src/Settings/Settings.php:430
+#: src/Settings/Settings.php:432
 msgid "CDN base"
 msgstr "CDN-basadress"
 
-#: src/Settings/Settings.php:431
+#: src/Settings/Settings.php:433
 msgid ""
 "Where the pinned designer SDK release loads from, e.g. Pixonaut’s staging "
 "CDN. The release’s integrity is still checked. Empty uses Pixonaut’s own."
@@ -5777,11 +5782,11 @@ msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the URL of a designer SDK script.
 #. translators: Label of the field for the SDK script's URL, in developer tools.
-#: src/Settings/Settings.php:440 templates/admin/developer-tools.php:111
+#: src/Settings/Settings.php:442 templates/admin/developer-tools.php:111
 msgid "SDK script"
 msgstr "SDK-skript"
 
-#: src/Settings/Settings.php:441
+#: src/Settings/Settings.php:443
 msgid ""
 "Loads the designer SDK from this script, e.g. a local build, instead of the "
 "pinned release from the CDN base. Its integrity is not checked. Empty loads "
@@ -5792,11 +5797,11 @@ msgstr ""
 "integritet kontrolleras inte. Tomt laddar den fastlåsta versionen."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on debug logging of the designer SDK.
-#: src/Settings/Settings.php:450
+#: src/Settings/Settings.php:452
 msgid "SDK debug"
 msgstr "SDK-felsökning"
 
-#: src/Settings/Settings.php:451
+#: src/Settings/Settings.php:453
 msgid ""
 "Logs every designer mount and its failures to the browser console. On the "
 "storefront, only for logged-in store managers."
@@ -5806,11 +5811,11 @@ msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on a log of requests to Pixonaut.
 #. translators: Heading of the table of recent requests to Pixonaut, in developer tools.
-#: src/Settings/Settings.php:460 templates/admin/developer-tools.php:149
+#: src/Settings/Settings.php:462 templates/admin/developer-tools.php:149
 msgid "Request log"
 msgstr "Förfrågningslogg"
 
-#: src/Settings/Settings.php:461
+#: src/Settings/Settings.php:463
 msgid "Records the last 50 requests to Pixonaut, without keys or tokens."
 msgstr ""
 "Sparar de senaste 50 förfrågningarna till Pixonaut, utan nycklar eller token."
@@ -5985,7 +5990,7 @@ msgid "Options"
 msgstr "Alternativ"
 
 #. translators: Why Pixonaut refused a product, filling in %2$s of a message on the admin product page. Ends a sentence; lower case.
-#: src/Storefront/KeptDesignerLinks.php:755
+#: src/Storefront/KeptDesignerLinks.php:757
 msgid ""
 "one of the print sizes it offers does not fit its template or its position "
 "on the blank. Change the sizes in its Pixonaut tab."
@@ -5994,7 +5999,7 @@ msgstr ""
 "placering på grundprodukten. Ändra storlekarna på dess Pixonaut-flik."
 
 #. translators: Why Pixonaut refused a product, filling in %2$s of a message on the admin product page. Ends a sentence; lower case.
-#: src/Storefront/KeptDesignerLinks.php:757
+#: src/Storefront/KeptDesignerLinks.php:759
 msgid ""
 "its blank no longer has a position one of its sides prints on. Pick the "
 "positions again in its Pixonaut tab."
@@ -6003,13 +6008,13 @@ msgstr ""
 "på. Välj placeringarna igen på dess Pixonaut-flik."
 
 #. translators: %s: the error code Pixonaut answered, e.g. `invalid_input`.
-#: src/Storefront/KeptDesignerLinks.php:759
+#: src/Storefront/KeptDesignerLinks.php:761
 #, php-format
 msgid "Pixonaut answered %s."
 msgstr "Pixonaut svarade %s."
 
 #. translators: 1: the product's name, 2: why Pixonaut refused its link.
-#: src/Storefront/KeptDesignerLinks.php:763
+#: src/Storefront/KeptDesignerLinks.php:765
 #, php-format
 msgid "Customers cannot open the designer for %1$s: %2$s"
 msgstr "Kunder kan inte öppna designverktyget för %1$s: %2$s"
@@ -6108,7 +6113,7 @@ msgstr ""
 "innan du uppdaterar."
 
 #. translators: %s: why Pixonaut did not answer, e.g. rate_limited.
-#: src/Webhooks/Endpoint.php:193
+#: src/Webhooks/Endpoint.php:195
 #, php-format
 msgid "Pixonaut did not send the test request (%s)."
 msgstr "Pixonaut skickade inte testförfrågan (%s)."
