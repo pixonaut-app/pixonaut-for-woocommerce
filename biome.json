@@ -10,6 +10,7 @@
 			"**",
 			"!contracts/pixonaut",
 			"!languages",
+			"!.release-please-manifest.json",
 			"!assets/build",
 			"!tests/fake-pixonaut/src/openapi.d.ts",
 			"!tests/fake-pixonaut/fixtures",

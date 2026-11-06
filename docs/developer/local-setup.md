@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-The host needs Node 22 or newer, pnpm and Docker; no PHP. WordPress runs in
+The host needs Node 26 or newer, pnpm and Docker; no PHP. WordPress runs in
 [wp-env](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/),
 Composer runs in a throwaway container, and every PHP tool runs inside wp-env's
 `tests-cli` container.
