@@ -1,0 +1,19 @@
+# Dependencies whose install scripts run (true) or are skipped (false). A
+# dependency with a build script that is not listed here fails the install, so
+# a new one is decided here rather than skipped in silence. Every one below
+# ships a prebuilt binary or needs none, and none was ever built here.
+allowBuilds:
+  # sass's optional file watcher; its prebuilt binaries are optional
+  # dependencies, and the script only builds from source.
+  "@parcel/watcher": false
+  # Their scripts only print a funding message.
+  core-js: false
+  core-js-pure: false
+  # The platform binary comes as an optional dependency; the script only
+  # checks it.
+  esbuild: false
+  # wp-env's PHP runtime; the script loads the prebuilt file-lock binding
+  # it ships and falls back to compiling one with node-gyp.
+  fs-ext-extra-prebuilt: false
+  # eslint's import resolver; the native binding is an optional dependency.
+  unrs-resolver: false
