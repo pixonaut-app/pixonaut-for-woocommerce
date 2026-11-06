@@ -41,8 +41,11 @@ Merge the release pull request, then run the workflow again: that run tags
 the version (`v1.1.0`) and creates the GitHub Release, checks that no
 template's `@version` is newer than the version
 (`pnpm release:check-templates`), then builds the zip
-from that tag, verifies it, and attaches `pixonaut-for-woocommerce-<version>.zip` and its
-`pixonaut-for-woocommerce-<version>.zip.sha256` to the Release.
+from that tag, verifies them, and attaches `pixonaut-for-woocommerce-<version>.zip`,
+the [wordpress.org flavor](#flavors) `pixonaut-for-woocommerce-<version>-wporg.zip`
+and a `.sha256` file for each to the Release. Last, it
+[publishes the release to wordpress.org](#wordpressorg) when the repository
+has the SVN secrets.
 
 ## Following an SDK release
 
@@ -114,6 +117,7 @@ The allowlist is `bin/release/allowlist.mjs`. Every path sits under
 |---|---|
 | `pixonaut-for-woocommerce.php`, `uninstall.php` | required |
 | `readme.txt`, `LICENSE`, `CHANGELOG.md` | required |
+| `composer.json` | required: names the packages in `vendor/` (the staged one, so the wporg flavor's has no update checker) |
 | `src/**.php`, `templates/**.php` | |
 | `assets/build/` | built scripts, styles, `.asset.php`, images and fonts |
 | `languages/` | `.pot`, `.po`, `.mo`, `.json`, `.l10n.php`; each `pixonaut-for-woocommerce-<locale>.po` requires its `.mo` and `.l10n.php` |
@@ -144,11 +148,22 @@ plugin is listed there and wordpress.org delivers its updates:
   installs the other packages as the lock pins them. The
   plugin then has no update channel setting and never contacts GitHub.
 - The `Update URI` header is removed from the main plugin file.
+- The translations' `.po` sources are left out: WordPress loads only the
+  compiled `.mo` and `.l10n.php` files, and without them the zip fits
+  wordpress.org's 10 MB upload limit for a new plugin, which the build
+  enforces.
 - The allowlist check fails if any of them is left, and Plugin Check runs
   without ignoring `plugin_updater_detected`.
+- The build also checks `readme.txt` against wordpress.org's readme rules
+  (both flavors: every header, at most five tags, a short description of at
+  most 150 characters, a Description section) and the
+  [listing assets](#listing-assets) against its Screenshots section.
 
 `pnpm release:check-zip --flavor wporg <zip>` checks a wordpress.org zip's
 listing. The github flavor's zip, in turn, must hold the update checker.
+Building one flavor leaves the other's zip in `dist/`, so the release
+workflow attaches both. `pnpm ci:local` builds both, as its **Release zip**
+and **Release zip (wordpress.org)** steps.
 
 ## Updates
 
@@ -206,3 +221,46 @@ attached.
 
 `readme.src.txt` must not contain the Changelog or Upgrade Notice sections;
 the build refuses it if it does.
+
+## wordpress.org
+
+### Listing assets
+
+The plugin page's banners, icons and screenshots are in `.wordpress-org/`,
+published to the SVN repository's `assets/` directory and never in the zip:
+
+| File | |
+|---|---|
+| `banner-772x250.png`, `banner-1544x500.png` | the page's banner, and its high-DPI copy |
+| `icon-128x128.png`, `icon-256x256.png`, `icon.svg` | the plugin's icon |
+| `screenshot-<n>.png` | caption `<n>.` of the Screenshots section in `readme.src.txt` |
+
+`node bin/release/listing-assets.mjs <readme.txt>` checks that every banner
+and icon is there at its size, and that the screenshots and the captions
+match one to one; the wordpress.org zip build runs it. A new screenshot needs
+its caption in the same change.
+
+### Publishing
+
+`.github/workflows/wporg.yml` publishes a release to
+`https://plugins.svn.wordpress.org/pixonaut-for-woocommerce` with plain `svn`
+commands. It downloads the release's wordpress.org zip and checks its SHA-256
+and its `Stable tag`, syncs the unpacked zip into `trunk/` (files the release
+no longer has are deleted), copies `trunk/` to `tags/<version>`, syncs
+`.wordpress-org/` at that tag into `assets/`, and commits. It refuses a
+pre-release and a version whose tag SVN holds already.
+
+It runs as the last job of the Release workflow, and by hand for a release
+that exists already, such as the first one once wordpress.org has approved
+the plugin:
+
+```sh
+gh workflow run wordpress.org --ref main -f tag=v1.1.0
+```
+
+It needs the repository secrets `WPORG_SVN_USERNAME` and `WPORG_SVN_PASSWORD`
+(**Settings → Secrets and variables → Actions**): the wordpress.org username
+with commit access to the plugin and its SVN password, set under **Account &
+Security** in the wordpress.org profile. Without them the job publishes
+nothing and says so.
+

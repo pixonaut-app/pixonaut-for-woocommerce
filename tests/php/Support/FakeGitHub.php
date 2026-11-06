@@ -71,6 +71,21 @@ final class FakeGitHub {
 	}
 
 	/**
+	 * Attaches the wordpress.org zip and its checksum to the release added
+	 * last, ahead of its other assets.
+	 */
+	public function with_wporg_zip(): self {
+		$index   = count( $this->releases ) - 1;
+		$release = $this->releases[ $index ];
+		$name    = 'pixonaut-for-woocommerce-' . substr( (string) $release['tag_name'], 1 ) . '-wporg.zip';
+		$id      = ( $index + 1 ) * 10;
+		$assets  = is_array( $release['assets'] ) ? $release['assets'] : array();
+
+		$this->releases[ $index ]['assets'] = array( $this->asset( $id + 3, $name ), $this->asset( $id + 4, $name . '.sha256' ), ...$assets );
+		return $this;
+	}
+
+	/**
 	 * The paths requested, without query strings.
 	 *
 	 * @return list<string>
