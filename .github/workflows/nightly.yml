@@ -32,10 +32,10 @@ jobs:
       green-key: ${{ steps.key.outputs.green-key }}
       skip: ${{ github.event_name == 'schedule' && steps.green.outputs.cache-hit == 'true' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
       - id: versions
         run: node bin/nightly-versions.mjs
       - id: key
@@ -45,7 +45,7 @@ jobs:
       # A cache entry under the key marks a green run (the record job saves
       # it); only its existence is checked.
       - id: green
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: .nightly-green
           key: ${{ steps.key.outputs.green-key }}
@@ -63,7 +63,7 @@ jobs:
         # The plugin header's Requires PHP, and the newest PHP.
         php: ['8.1', '8.5']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -83,7 +83,7 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm env:start
         env:
@@ -106,7 +106,7 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
@@ -117,7 +117,7 @@ jobs:
       # The list reporter prints a failure's error only once the run ends, so
       # these are all a shard stopped at the timeout leaves.
       - if: failure() || cancelled()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-results-${{ matrix.shard }}
           path: test-results/
@@ -132,14 +132,14 @@ jobs:
     env:
       WP_ENV_COMPAT: '1'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm env:start
       - run: pnpm test:e2e:compat
       - if: failure() || cancelled()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: compat-results
           path: test-results/
@@ -152,7 +152,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       # Plugin Check runs on the unpacked zip in the tests site.
       - run: pnpm env:start
@@ -164,7 +164,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - run: mkdir .nightly-green && echo "$GITHUB_SHA" > .nightly-green/sha
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         with:
           path: .nightly-green
           key: ${{ needs.plan.outputs.green-key }}

@@ -23,7 +23,7 @@ async function loadScenarios() {
 		bundle: true,
 		platform: 'node',
 		format: 'esm',
-		target: 'node22',
+		target: 'node26',
 		logLevel: 'warning',
 		// Bundled CommonJS dependencies (Ajv) call `require`.
 		banner: {
