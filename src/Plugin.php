@@ -179,7 +179,7 @@ use Pixonaut\WooCommerce\Webhooks\Receiver;
  */
 final class Plugin {
 
-	public const VERSION = '1.0.0'; // phpcs:ignore Squiz.Commenting.InlineComment.InvalidEndChar -- x-release-please-version
+	public const VERSION = '1.1.0'; // phpcs:ignore Squiz.Commenting.InlineComment.InvalidEndChar -- x-release-please-version
 
 	/**
 	 * The plugin's slug: its directory and main file on a store, and its text domain.
