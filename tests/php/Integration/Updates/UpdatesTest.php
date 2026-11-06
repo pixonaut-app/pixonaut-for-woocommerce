@@ -161,6 +161,26 @@ final class UpdatesTest extends WP_UnitTestCase {
 		$this->assertSame( '0.2.0', $update->version );
 	}
 
+	public function test_the_wordpress_org_zip_is_never_the_one_downloaded(): void {
+		$this->github->release( '0.2.0' )->with_wporg_zip();
+
+		$checker = ( new GitHubUpdater( $this->plugin_file(), null, UpdateChannel::STABLE ) )->register();
+		$this->assertNotNull( $checker );
+		$update = $checker->requestUpdate();
+
+		$this->assertNotNull( $update );
+		$this->assertSame( 'https://github.com/' . self::REPOSITORY . '/releases/download/pixonaut-for-woocommerce-0.2.0.zip', $update->download_url );
+	}
+
+	public function test_a_release_with_only_the_wordpress_org_zip_is_skipped(): void {
+		$this->github->release( '0.3.0', false, null, false )->with_wporg_zip()->release( '0.2.0' );
+
+		$update = $this->checker( UpdateChannel::STABLE )->requestUpdate();
+
+		$this->assertNotNull( $update );
+		$this->assertSame( '0.2.0', $update->version );
+	}
+
 	public function test_upgrade_notice_comes_from_the_breaking_changes_in_the_release_notes(): void {
 		$body = implode(
 			"\n",

@@ -5,7 +5,9 @@ name: Release
 # main, which needs the repository to allow GitHub Actions to create pull
 # requests. Dispatched after that pull request is merged, it tags the version
 # and creates the GitHub Release; the zip job then builds, verifies and
-# attaches the zip and its SHA-256 checksum.
+# attaches both zips (the GitHub one and the wordpress.org one) and their
+# SHA-256 checksums, and the wporg job publishes the release to wordpress.org
+# when the repository has its SVN secrets (wporg.yml).
 on:
   workflow_dispatch:
 
@@ -54,8 +56,22 @@ jobs:
       # wp-env's tests site runs Plugin Check on the unpacked zip.
       - run: pnpm env:start
       - run: pnpm release:zip
-      - name: Attach the zip and its checksum
+      # Kept beside the github zip; the update checker never downloads it.
+      - run: pnpm release:zip --flavor wporg
+      - name: Attach the zips and their checksums
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.release-please.outputs.tag_name }}
         run: gh release upload "$TAG" dist/*.zip dist/*.zip.sha256 --clobber
+
+  wporg:
+    needs: [release-please, zip]
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/wporg.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+    secrets:
+      WPORG_SVN_USERNAME: ${{ secrets.WPORG_SVN_USERNAME }}
+      WPORG_SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}

@@ -10,6 +10,7 @@
 .wp-env-home
 .wp-env.json
 .wp-env.override.json
+.wordpress-org
 README.md
 assets/src
 bin

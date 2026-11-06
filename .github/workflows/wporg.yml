@@ -1,0 +1,132 @@
+name: wordpress.org
+
+# Publishes a release to the plugin's wordpress.org SVN repository: the
+# wordpress.org zip attached to the GitHub Release, unpacked into trunk and
+# copied to tags/<version>, and .wordpress-org/ at that tag into assets/.
+# Called by the Release workflow once it has attached the zips, and started by
+# hand (Actions tab, or `gh workflow run wordpress.org -f tag=v1.1.0`) for a
+# release made before the plugin was listed, or to publish one again. Does
+# nothing without the WPORG_SVN_USERNAME and WPORG_SVN_PASSWORD secrets.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: The release's tag, e.g. v1.1.0.
+        required: true
+        type: string
+    secrets:
+      WPORG_SVN_USERNAME:
+        required: false
+      WPORG_SVN_PASSWORD:
+        required: false
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release's tag, e.g. v1.1.0.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wporg
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SVN_URL: https://plugins.svn.wordpress.org/pixonaut-for-woocommerce
+      SLUG: pixonaut-for-woocommerce
+      TAG: ${{ inputs.tag }}
+      SVN_USERNAME: ${{ secrets.WPORG_SVN_USERNAME }}
+      SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}
+    steps:
+      - id: credentials
+        name: Check for SVN credentials
+        run: |
+          if [ -n "$SVN_USERNAME" ] && [ -n "$SVN_PASSWORD" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No WPORG_SVN_USERNAME and WPORG_SVN_PASSWORD secrets: nothing is published to wordpress.org."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.credentials.outputs.present == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+      - if: steps.credentials.outputs.present == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - if: steps.credentials.outputs.present == 'true'
+        name: Download and verify the wordpress.org zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${TAG#v}"
+          case "$version" in
+            *-*)
+              echo "::error::$TAG is a pre-release; wordpress.org gets stable releases only."
+              exit 1
+              ;;
+          esac
+          zip="$SLUG-$version-wporg.zip"
+          mkdir -p "$RUNNER_TEMP/release"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "$zip" --pattern "$zip.sha256" --dir "$RUNNER_TEMP/release"
+          (cd "$RUNNER_TEMP/release" && sha256sum --check "$zip.sha256")
+          unzip -q "$RUNNER_TEMP/release/$zip" -d "$RUNNER_TEMP/unpacked"
+          stable="$(sed -n 's/^Stable tag: *//p' "$RUNNER_TEMP/unpacked/$SLUG/readme.txt")"
+          if [ "$stable" != "$version" ]; then
+            echo "::error::readme.txt's Stable tag is $stable, not $version."
+            exit 1
+          fi
+          node bin/release/listing-assets.mjs "$RUNNER_TEMP/unpacked/$SLUG/readme.txt"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - if: steps.credentials.outputs.present == 'true'
+        name: Install Subversion
+        run: command -v svn || (sudo apt-get update && sudo apt-get install -y subversion)
+      - if: steps.credentials.outputs.present == 'true'
+        name: Check out the SVN repository
+        run: |
+          svn checkout --depth immediates "$SVN_URL" "$RUNNER_TEMP/svn"
+          cd "$RUNNER_TEMP/svn"
+          svn update --set-depth infinity trunk assets
+          if [ -d "tags/$VERSION" ]; then
+            echo "::error::tags/$VERSION is in the SVN repository already; a published tag is never changed."
+            exit 1
+          fi
+      - if: steps.credentials.outputs.present == 'true'
+        name: Sync trunk and assets, and tag the version
+        run: |
+          svn_dir="$RUNNER_TEMP/svn"
+          rsync -rc --delete --exclude .svn "$RUNNER_TEMP/unpacked/$SLUG/" "$svn_dir/trunk/"
+          rsync -rc --delete --exclude .svn .wordpress-org/ "$svn_dir/assets/"
+          cd "$svn_dir"
+          svn add --force --quiet trunk assets
+          # Files gone from the release or the listing are removed from SVN too.
+          svn status | sed -n 's/^! *//p' | while IFS= read -r path; do
+            svn delete --quiet "$path"
+          done
+          # Served with their own types, so browsers show rather than download them.
+          for file in assets/*; do
+            case "$file" in
+              *.png) svn propset --quiet svn:mime-type image/png "$file" ;;
+              *.jpg | *.jpeg) svn propset --quiet svn:mime-type image/jpeg "$file" ;;
+              *.gif) svn propset --quiet svn:mime-type image/gif "$file" ;;
+              *.svg) svn propset --quiet svn:mime-type image/svg+xml "$file" ;;
+            esac
+          done
+          svn copy --quiet trunk "tags/$VERSION"
+          svn status
+      - if: steps.credentials.outputs.present == 'true'
+        name: Commit to wordpress.org
+        run: |
+          cd "$RUNNER_TEMP/svn"
+          svn commit --non-interactive --no-auth-cache \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --message "Release $VERSION"

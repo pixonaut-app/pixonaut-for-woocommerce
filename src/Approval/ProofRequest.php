@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Approval;
 
+// phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
+
 use Closure;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Fulfilment\NeedsAttention;

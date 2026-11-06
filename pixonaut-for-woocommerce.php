@@ -13,6 +13,7 @@
  * WC requires at least: 10.6
  * WC tested up to:      11.2
  * Author:               Pixonaut
+ * Author URI:           https://pixonaut.app
  * License:              GPL-2.0-or-later
  * License URI:          https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:          pixonaut-for-woocommerce

@@ -1,4 +1,5 @@
 === Pixonaut for WooCommerce ===
+Contributors: pixonaut
 Tags: woocommerce, personalization, print on demand, product designer, custom products
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -23,6 +24,12 @@ Documentation:
 * Merchant guide, from connecting the store to shipped orders: https://github.com/pixonaut-app/pixonaut-for-woocommerce/blob/main/docs/merchant/index.md
 * Developer guide, with the hooks, templates and REST routes for extending the plugin: https://github.com/pixonaut-app/pixonaut-for-woocommerce/blob/main/docs/developer/index.md
 
+Source code:
+
+The plugin's source is on GitHub: https://github.com/pixonaut-app/pixonaut-for-woocommerce
+
+The scripts and styles in `assets/build` are built from the TypeScript and CSS in `assets/src` with `@wordpress/scripts` (`pnpm install`, then `pnpm build`). The PHP packages in `vendor` are the ones `composer.json` names, installed with Composer and prefixed under `Pixonaut\WooCommerce\Vendor`.
+
 == Installation ==
 
 1. Install and activate WooCommerce.
@@ -44,6 +51,13 @@ In Pixonaut: each blank has its printshop.
 
 Yes, when the template has showcase sets in Pixonaut: named sets of example values, such as a real name and photo. In the product's Pixonaut tab, under Product images, tick the sets to show. The first is the product image and the others join the product gallery, each on the blank's photo or as the flat design. Customers still start designing from the template's own defaults.
 
+== Screenshots ==
+
+1. Connect the store to your Pixonaut workspace under Pixonaut > Connection.
+2. Link a product to a Pixonaut blank and template in the product's Pixonaut tab.
+3. Customers personalise the product on its page and see the preview as they type.
+4. Personalised lines on the order screen, with their proofs and the printshop order's status.
+
 == External services ==
 
 This plugin relies on two services run by Pixonaut. Neither is contacted until you connect the store to Pixonaut.
@@ -63,6 +77,8 @@ When it is sent:
 
 * From your server: when you connect the store and link products (your store's address, and the templates, blanks and printshops it reads); when a customer adds a personalised product to the cart (the design they made); when an order is paid (the order's personalised lines and the recipient's details above); when proofs are shown (the design they belong to); and when a customer's personal data is erased.
 * From the customer's browser, on personalised products only: the designer reads the template, previews the design, uploads the photos the customer adds and, where the template offers Pixel, sends the customer's Pixel prompt (see below).
+* From your server, in the background while the store is connected: it fetches the events it missed and the product images Pixonaut draws, and sends again the paid lines whose sending failed.
+* From your server, when you disconnect the store or delete the plugin: it revokes the store's connection.
 * To your server: Pixonaut sends webhooks about designs, orders and templates to your store.
 
 Pixonaut terms of service: https://pixonaut.app/terms
@@ -86,6 +102,8 @@ Pixonaut sub-processors: https://pixonaut.app/subprocessors
 = Pixonaut SDK from cdn.pixonaut.app =
 
 The designer on the product page is Pixonaut's SDK, a script and a WebAssembly module loaded from https://cdn.pixonaut.app into the customer's browser, on personalised products only. Loading it sends the customer's IP address and browser details to the CDN, as any download does; nothing else is sent to it.
+
+The designer shows a "Powered by Pixonaut" link to https://pixonaut.app under the preview. The SDK draws it, not this plugin, and whether it shows is set by the store's Pixonaut plan and workspace setting: on the Free and Starter plans it is always shown; on the Pro and Business plans the workspace can turn it off in the Pixonaut studio. The plugin does not add the link or decide whether it shows; it only leaves room for it under the preview.
 
 Pixonaut terms of service: https://pixonaut.app/terms
 Pixonaut privacy policy: https://pixonaut.app/privacy
