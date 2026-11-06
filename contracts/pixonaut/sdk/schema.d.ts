@@ -560,7 +560,7 @@ export interface paths {
         };
         /**
          * Fetch an asset's file
-         * @description The file as stored, at full resolution. An upload in a format the api converts is stored, and so served, as PNG. Not for a publishable key: a storefront only ever shows the preview.
+         * @description The file as stored, at full resolution, which may not be the format uploaded: a WebP is stored as PNG, a HEIC as JPEG or as PNG with transparency, and a large 8-bit PNG with no transparency as JPEG when that more than halves it. Not for a publishable key: a storefront only ever shows the preview.
          */
         get: operations["assets.original.get"];
         put?: never;
@@ -989,7 +989,7 @@ export interface paths {
         };
         /**
          * Read a blank
-         * @description One blank with its placements and variants, and its chosen scenes. Its placements hold every stored view: the ones of `photoSource` show, and the others stay stored. A deleted blank is read too, with when and by whom it was deleted, so an order placed on it can show it.
+         * @description One blank with its placements and variants, its chosen scenes, and its views and scenes as one ordered list (`order`), each with its source. A deleted blank is read too, with when and by whom it was deleted, so an order placed on it can show it.
          */
         get: operations["blanks.get"];
         put?: never;
@@ -2280,7 +2280,7 @@ export interface paths {
         };
         /**
          * List the library's scenes
-         * @description The scenes a blank may show, by stock item, each one's studio scenes first, each with a link to its picture that needs no key, and the stock items a blank may choose: each with a studio scene in the library. A retired scene is not listed.
+         * @description The scenes a blank may show, by stock item, then by setting, person and pose (the selects a stock photo is chosen by), each with a link to its picture and to the passes it is drawn through, all needing no key, and the stock items a blank may choose: each with a scene in the library. A retired scene is not listed.
          */
         get: operations["scenes.list"];
         put?: never;
@@ -29994,8 +29994,22 @@ export interface operations {
                             }[];
                             /** @description When the blank's options were confirmed: the merchant said it has one version, or added its first option. Null until then. A blank imported from a printshop's catalogue arrives confirmed. */
                             optionsConfirmedAt: number | null;
+                            /** @description The blank's stored views and the scenes it shows as one ordered list, each saying its source: `stock` (a scene), `catalogue` (the printshop's photos) or `own` (the merchant's). The first with a photo is the blank's picture. Answered for one blank, never in a list. */
+                            order?: ({
+                                /** @description `catalogue` for the printshop's photos, `own` for the merchant's. */
+                                source: string;
+                                /** @description The stored view's id. */
+                                viewId: string;
+                            } | {
+                                /** @description The scene's id. */
+                                sceneId: string;
+                                /** @description A scene from the library. */
+                                source: string;
+                            })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
+                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: not painted, they show as photographed. */
+                            paintBy: string | null;
                             partnerLocked: boolean;
                             /** @description How much of the blank is photographed. Answered in a list. */
                             photoCoverage?: {
@@ -30004,8 +30018,6 @@ export interface operations {
                                 /** @description The cells with a photo, of their own row or a covering one. */
                                 filled: number;
                             };
-                            /** @description Where the blank's photos come from: scenes it has chosen, its printshop's photos or its own. A new blank starts on `own`. */
-                            photoSource: string;
                             /** @description The options the blank's photos change with, in option order: each photo belongs to one row, its values of these, and shows every variant with them. Empty is All: one photo per view shows every variant. */
                             photosVaryBy: string[];
                             /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
@@ -30166,6 +30178,8 @@ export interface operations {
                                         /** @description The print area's top edge, in pixels from the photo's top. */
                                         y: number;
                                     } | null;
+                                    /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
+                                    position?: number;
                                     /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print is read inside it, at the window's size, and the product shows plain outside it. It lies inside its piece, and needs the piece's size on the view. Absent, the print covers the whole piece. */
                                     printWindowMm?: {
                                         /** @description The window's height, in mm. */
@@ -30179,8 +30193,10 @@ export interface operations {
                                     };
                                     /** @description The scene this view shows. A scene's view is built from the blank's chosen scenes and is read only. */
                                     sceneId?: string;
-                                    /** @description On a scene's view, its place among the blank's chosen scenes. */
+                                    /** @description On a scene's view, its `position`, for a reader that orders scenes by it. */
                                     scenePosition?: number;
+                                    /** @description Where the view's photos come from: `stock` (a scene from the library), `catalogue` (the printshop's) or `own` (the merchant's). Read only. */
+                                    source?: string;
                                     /** @description The piece of the placement's print the region shows, in millimetres from the print's top-left corner, such as a roll's window; clamped to the print when the print is smaller. Absent, the region shows the whole print at the size of the render's variant. */
                                     sourceWindowMm?: {
                                         /** @description The window's height, in mm. */
@@ -30328,17 +30344,6 @@ export interface operations {
                                     };
                                 }[];
                             };
-                            /** @description The scenes the blank has chosen, in order, kept while another source is chosen. Answered for one blank, never in a list. */
-                            scenes?: {
-                                /** @description The colour a scene that takes no dye was photographed in; null when it takes dye. */
-                                colour: string | null;
-                                /** @description The scene's id, as list_scenes returns it. */
-                                id: string;
-                                /** @description For a scene that takes no dye, the option value it shows, by option name, since its base is one colour. Omitted or empty, it shows the blank's colour nearest its own by swatch, or no variant when no swatch is near. On a blank with no colour option it shows every variant. */
-                                rowOptions: {
-                                    [key: string]: string;
-                                };
-                            }[];
                             /** @description The first photo of the blank's first view of several placements that has one, in their order: the view, the photo (a mockup), its asset and the view's photo size. A blank whose views of one placement have no photo is pictured by it. Null for a blank with no such photo. Answered in a list. */
                             sharedViewPhoto?: {
                                 assetId: string;
@@ -30353,7 +30358,7 @@ export interface operations {
                             } | null;
                             /** @description `importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `failed` when that import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise. */
                             status: string;
-                            /** @description The stock item the blank's scenes show, kept while another source is chosen; null for none. */
+                            /** @description The stock item the blank's scenes photograph; null for none. */
                             stockItemKey: string | null;
                             /** @description A link to the blank's picture, opening with no key for an hour or two, so a list shows a picture of each blank: its first photo of a view of one placement, else `sharedViewPhoto`. Null for a blank with no photo. Answered in a list. */
                             thumbnailUrl?: string | null;
@@ -30547,8 +30552,22 @@ export interface operations {
                         }[];
                         /** @description When the blank's options were confirmed: the merchant said it has one version, or added its first option. Null until then. A blank imported from a printshop's catalogue arrives confirmed. */
                         optionsConfirmedAt: number | null;
+                        /** @description The blank's stored views and the scenes it shows as one ordered list, each saying its source: `stock` (a scene), `catalogue` (the printshop's photos) or `own` (the merchant's). The first with a photo is the blank's picture. Answered for one blank, never in a list. */
+                        order?: ({
+                            /** @description `catalogue` for the printshop's photos, `own` for the merchant's. */
+                            source: string;
+                            /** @description The stored view's id. */
+                            viewId: string;
+                        } | {
+                            /** @description The scene's id. */
+                            sceneId: string;
+                            /** @description A scene from the library. */
+                            source: string;
+                        })[];
                         /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                         orderCount?: number;
+                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: not painted, they show as photographed. */
+                        paintBy: string | null;
                         partnerLocked: boolean;
                         /** @description How much of the blank is photographed. Answered in a list. */
                         photoCoverage?: {
@@ -30557,8 +30576,6 @@ export interface operations {
                             /** @description The cells with a photo, of their own row or a covering one. */
                             filled: number;
                         };
-                        /** @description Where the blank's photos come from: scenes it has chosen, its printshop's photos or its own. A new blank starts on `own`. */
-                        photoSource: string;
                         /** @description The options the blank's photos change with, in option order: each photo belongs to one row, its values of these, and shows every variant with them. Empty is All: one photo per view shows every variant. */
                         photosVaryBy: string[];
                         /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
@@ -30719,6 +30736,8 @@ export interface operations {
                                     /** @description The print area's top edge, in pixels from the photo's top. */
                                     y: number;
                                 } | null;
+                                /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
+                                position?: number;
                                 /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print is read inside it, at the window's size, and the product shows plain outside it. It lies inside its piece, and needs the piece's size on the view. Absent, the print covers the whole piece. */
                                 printWindowMm?: {
                                     /** @description The window's height, in mm. */
@@ -30732,8 +30751,10 @@ export interface operations {
                                 };
                                 /** @description The scene this view shows. A scene's view is built from the blank's chosen scenes and is read only. */
                                 sceneId?: string;
-                                /** @description On a scene's view, its place among the blank's chosen scenes. */
+                                /** @description On a scene's view, its `position`, for a reader that orders scenes by it. */
                                 scenePosition?: number;
+                                /** @description Where the view's photos come from: `stock` (a scene from the library), `catalogue` (the printshop's) or `own` (the merchant's). Read only. */
+                                source?: string;
                                 /** @description The piece of the placement's print the region shows, in millimetres from the print's top-left corner, such as a roll's window; clamped to the print when the print is smaller. Absent, the region shows the whole print at the size of the render's variant. */
                                 sourceWindowMm?: {
                                     /** @description The window's height, in mm. */
@@ -30881,17 +30902,6 @@ export interface operations {
                                 };
                             }[];
                         };
-                        /** @description The scenes the blank has chosen, in order, kept while another source is chosen. Answered for one blank, never in a list. */
-                        scenes?: {
-                            /** @description The colour a scene that takes no dye was photographed in; null when it takes dye. */
-                            colour: string | null;
-                            /** @description The scene's id, as list_scenes returns it. */
-                            id: string;
-                            /** @description For a scene that takes no dye, the option value it shows, by option name, since its base is one colour. Omitted or empty, it shows the blank's colour nearest its own by swatch, or no variant when no swatch is near. On a blank with no colour option it shows every variant. */
-                            rowOptions: {
-                                [key: string]: string;
-                            };
-                        }[];
                         /** @description The first photo of the blank's first view of several placements that has one, in their order: the view, the photo (a mockup), its asset and the view's photo size. A blank whose views of one placement have no photo is pictured by it. Null for a blank with no such photo. Answered in a list. */
                         sharedViewPhoto?: {
                             assetId: string;
@@ -30906,7 +30916,7 @@ export interface operations {
                         } | null;
                         /** @description `importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `failed` when that import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise. */
                         status: string;
-                        /** @description The stock item the blank's scenes show, kept while another source is chosen; null for none. */
+                        /** @description The stock item the blank's scenes photograph; null for none. */
                         stockItemKey: string | null;
                         /** @description A link to the blank's picture, opening with no key for an hour or two, so a list shows a picture of each blank: its first photo of a view of one placement, else `sharedViewPhoto`. Null for a blank with no photo. Answered in a list. */
                         thumbnailUrl?: string | null;
@@ -31132,6 +31142,8 @@ export interface operations {
                                     /** @description The print area's top edge, in pixels from the photo's top. */
                                     y: number;
                                 } | null;
+                                /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
+                                position?: number;
                                 /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print is read inside it, at the window's size, and the product shows plain outside it. It lies inside its piece, and needs the piece's size on the view. Absent, the print covers the whole piece. */
                                 printWindowMm?: {
                                     /** @description The window's height, in mm. */
@@ -31145,8 +31157,10 @@ export interface operations {
                                 };
                                 /** @description The scene this view shows. A scene's view is built from the blank's chosen scenes and is read only. */
                                 sceneId?: string;
-                                /** @description On a scene's view, its place among the blank's chosen scenes. */
+                                /** @description On a scene's view, its `position`, for a reader that orders scenes by it. */
                                 scenePosition?: number;
+                                /** @description Where the view's photos come from: `stock` (a scene from the library), `catalogue` (the printshop's) or `own` (the merchant's). Read only. */
+                                source?: string;
                                 /** @description The piece of the placement's print the region shows, in millimetres from the print's top-left corner, such as a roll's window; clamped to the print when the print is smaller. Absent, the region shows the whole print at the size of the render's variant. */
                                 sourceWindowMm?: {
                                     /** @description The window's height, in mm. */
@@ -31233,6 +31247,8 @@ export interface operations {
                                 variantRefs: string[];
                                 width: number;
                             }[];
+                            /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
+                            position?: number;
                             /** @description The view's print regions, in the order they are drawn. */
                             regions: {
                                 /** @description The region's mask, the view's photo size, opened with no key: where it is light the print shows, where it is dark the print is hidden. Absent hides nothing. Valid as long as a photo's `url`. */
@@ -31292,8 +31308,10 @@ export interface operations {
                             }[];
                             /** @description The scene this view shows. A scene's view is built from the blank's chosen scenes and is read only. */
                             sceneId?: string;
-                            /** @description On a scene's view, its place among the blank's chosen scenes. */
+                            /** @description On a scene's view, its `position`, for a reader that orders scenes by it. */
                             scenePosition?: number;
+                            /** @description Where the view's photos come from: `stock` (a scene from the library), `catalogue` (the printshop's) or `own` (the merchant's). Read only. */
+                            source?: string;
                             /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
                             takesDye?: boolean;
                             /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size, opened with no key: a region naming a `piece` is read through them. Absent on a view of photos. Valid as long as a photo's `url`. */
@@ -31713,6 +31731,8 @@ export interface operations {
                             };
                             values: string[];
                         }[];
+                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: not painted, they show as photographed. */
+                        paintBy: string | null;
                         variants: {
                             options: {
                                 [key: string]: string;
@@ -45956,21 +45976,39 @@ export interface operations {
                         scenes: {
                             /** @description The keys of the garment areas the scene shows truthfully. */
                             areas: string[];
-                            /** @description The colour a scene that takes no dye was photographed in; null when it takes dye. */
-                            colour: string | null;
                             /** @description Whether a person is in the scene. */
                             hasPerson: boolean;
                             id: string;
                             label: string;
+                            /** @description The passes the preview picture is drawn through, each its size: where a garment area's print lands, and how a colour paints its grey base. Null when the scene has no preview passes. */
+                            layerUrls: {
+                                /** @description The cut-out of the product: white where it is. */
+                                mask: string;
+                                /** @description The multiply pass: the product's shadows and folds. */
+                                multiply: string;
+                                /** @description The screen pass: the product's highlights. */
+                                screen: string;
+                                /** @description The 16-bit UV pass: for each pixel, its garment area's piece (blue) and where across (red) and down (green) that piece it reads. */
+                                uv: string;
+                            } | null;
+                            /** @description Who is in the scene, or `none`: one of the selects a stock item's scenes are chosen by. */
+                            person: string;
+                            /** @description The preview picture's size, which each of `layerUrls` shares; null when it has none. */
+                            pictureSizePx: {
+                                heightPx: number;
+                                widthPx: number;
+                            } | null;
                             /** @description A link to the scene's picture, opening with no key. */
                             pictureUrl: string | null;
-                            /** @description What print the scene's base suits: a white glaze a logo, a dark gloss an all-over print, and a dyed scene either (`any`). */
-                            printCoverage: string;
+                            /** @description How the product is shown, such as `front` or `back`: one of the selects a stock item's scenes are chosen by. */
+                            pose: string;
+                            /** @description Where the scene is photographed, such as `studio` or `street`: one of the selects a stock item's scenes are chosen by. */
+                            setting: string;
                             /** @description The stock item the scene shows. */
                             stockItem: string;
-                            /** @description Whether this is a studio scene, which comes first and is a product's default picture. */
+                            /** @description Whether this is a studio scene: the product alone, on a plain ground. */
                             studio: boolean;
-                            /** @description Whether a variant's colour recolours the scene. One that does not was photographed in `colour`. */
+                            /** @description Whether a variant's colour paints the scene's grey base. One that does not shows a material that is the point, such as bare metal, on every variant as photographed. */
                             takesDye: boolean;
                         }[];
                         stockItems: {
@@ -49051,7 +49089,7 @@ export interface operations {
                         printAreaFrame: boolean;
                         /** @description The link's token. Shown in this response only. */
                         token: string;
-                        /** @description The hosted designer the link opens, with `?lang=<locale>` when the link names a `locale`. */
+                        /** @description The hosted designer the link opens, with `?lang=<locale>` when the link names a `locale`. A store sending every customer to one link adds `state=<value>` to it for each trip, 1 to 200 characters of `A–Z a–z 0–9 . _ ~ -`: the page returns that value as `state`, on approve and on cancel, in place of the link's own, and ignores one outside that form. */
                         url: string;
                         /** @description What the link was made with that it is not built for, for whoever builds it; the shopper is shown none. `sides_over_recommended`: the link holds more than 4 sides. Each side is one more step on the hosted page, one more designer, canvas and photo set in the shopper's browser, and one more `proofToken[<key>]` on the return address. Absent when there is nothing to warn of. */
                         warnings?: {
