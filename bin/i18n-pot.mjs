@@ -29,8 +29,12 @@ const HEADERS = JSON.stringify({
 });
 const CONTAINER_POT = `/tmp/${SLUG}.pot`;
 const POT_FILE = join(root, 'languages', `${SLUG}.pot`);
-/** Changes on every run, so a freshness check ignores it. */
-const CREATION_DATE_LINE = /^"POT-Creation-Date: .*\n/m;
+/**
+ * Lines a freshness check ignores: the creation date changes on every run, and
+ * the version changes with each release, which bumps the plugin header only.
+ */
+const VOLATILE_HEADER_LINES =
+	/^"(POT-Creation-Date|Project-Id-Version): .*\n/gm;
 
 const makePot = [
 	'wp i18n make-pot .',
@@ -55,9 +59,10 @@ if (result.status !== 0 || !result.stdout.startsWith('#')) {
 }
 
 if (process.argv.includes('--check')) {
-	const withoutDate = (pot) => pot.replace(CREATION_DATE_LINE, '');
+	const withoutVolatile = (pot) => pot.replace(VOLATILE_HEADER_LINES, '');
 	if (
-		withoutDate(readFileSync(POT_FILE, 'utf8')) !== withoutDate(result.stdout)
+		withoutVolatile(readFileSync(POT_FILE, 'utf8')) !==
+		withoutVolatile(result.stdout)
 	) {
 		console.error(
 			`languages/${SLUG}.pot is out of date: run pnpm i18n:pot and commit it.`,
