@@ -7071,7 +7071,7 @@ export interface components {
                     value: number;
                 };
             };
-            /** @description Which of nine points, top-left to bottom-right, a cover crop keeps; read only when fit is cover. Absent is center. */
+            /** @description Which of nine points, top-left to bottom-right, the artwork is held at in a print box of another shape: what a cover crop keeps, or where a contained artwork sits with the spare space opposite it. Not read under fill. Absent is center. */
             coverAlign?: string;
             /** @description The layers a customer may add of their own, per kind: how many, the preset each starts as, and where in the form they show. Added layers paint above the template's layers. */
             customerLayers?: {
@@ -14154,7 +14154,7 @@ export interface components {
                 };
             };
             /**
-             * @description Which of nine points, top-left to bottom-right, a cover crop keeps; read only when fit is cover. Absent is center.
+             * @description Which of nine points, top-left to bottom-right, the artwork is held at in a print box of another shape: what a cover crop keeps, or where a contained artwork sits with the spare space opposite it. Not read under fill. Absent is center.
              * @enum {string}
              */
             coverAlign?: "top-left" | "top-center" | "top-right" | "center-left" | "center" | "center-right" | "bottom-left" | "bottom-center" | "bottom-right";
@@ -38163,7 +38163,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -38235,9 +38235,9 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -38309,6 +38309,13 @@ export interface operations {
                 content: {
                     "application/json": {
                         adapter: string;
+                        /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                        approvalHold: {
+                            /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                            dueAt: number;
+                            /** @description The printshop's own page for the order, to approve it on. */
+                            url: string;
+                        } | null;
                         /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
                         blank: {
                             name: string;
@@ -38356,6 +38363,13 @@ export interface operations {
                         }[];
                         /** @description The design the lead print was made from. */
                         designId: string;
+                        /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                        embroideryFee: {
+                            /** @description The fee in the currency's minor units. */
+                            amountMinor: number;
+                            /** @description The currency's ISO 4217 code. */
+                            currency: string;
+                        } | null;
                         erasable: boolean;
                         externalOrderRef: string | null;
                         externalRef: string | null;
@@ -41904,7 +41918,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -41989,9 +42003,9 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `reroute_blank_not_found`, `reroute_same_blank`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_not_of_blank`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `reroute_blank_not_found`, `reroute_same_blank`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_not_of_blank`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -45284,7 +45298,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -45356,9 +45370,9 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
