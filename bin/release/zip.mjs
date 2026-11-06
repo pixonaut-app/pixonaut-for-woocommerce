@@ -38,11 +38,11 @@ import {
 	DEFAULT_FLAVOR,
 	flavorFromArgs,
 	leftOut,
-	stripUpdateUri,
 	UPDATER_PACKAGE,
 	UPDATER_SOURCES,
 	WPORG_FLAVOR,
 	wporgComposerJson,
+	wporgPluginFile,
 	zipName,
 	zipSizeProblems,
 } from './flavor.mjs';
@@ -141,7 +141,7 @@ if (flavor !== DEFAULT_FLAVOR) {
 	for (const source of UPDATER_SOURCES) {
 		rmSync(join(STAGE, source));
 	}
-	writeFileSync(join(STAGE, MAIN_FILE), stripUpdateUri(plugin));
+	writeFileSync(join(STAGE, MAIN_FILE), wporgPluginFile(plugin));
 	const composer = JSON.parse(
 		readFileSync(join(STAGE, 'composer.json'), 'utf8'),
 	);

@@ -3,7 +3,8 @@
 //   github  (default) updates itself from the repository's GitHub Releases
 //           through plugin-update-checker, prefixed by Strauss.
 //   wporg   for wordpress.org, which updates plugins itself: no update
-//           checker, no `Update URI` header.
+//           checker, no `Update URI` header, and `Tested up to` only in
+//           readme.txt (its scan refuses it in the plugin header).
 import { SLUG } from '../env.mjs';
 
 /** Updated by wordpress.org itself. */
@@ -26,6 +27,13 @@ export const UPDATER_SOURCES = [
 const UPDATER_ENTRY = `vendor/${UPDATER_PACKAGE}/plugin-update-checker.php`;
 
 const UPDATE_URI_LINE = /^[ \t]*\*[ \t]*Update URI:.*\r?\n/m;
+
+/**
+ * wordpress.org's upload scan refuses `Tested up to` in the plugin header
+ * (`plugin_header_tested_up_to_not_allowed`): it belongs in readme.txt only,
+ * which the build fills from this header.
+ */
+const TESTED_UP_TO_LINE = /^[ \t]*\*[ \t]*Tested up to:.*\r?\n/m;
 
 /**
  * A translation's source, which WordPress never loads: it reads the compiled
@@ -101,15 +109,19 @@ export function zipSizeProblems(bytes, flavor) {
 }
 
 /**
- * The main plugin file without its `Update URI` header line.
+ * The main plugin file for the wporg flavor: without its `Update URI` and
+ * `Tested up to` header lines.
  *
  * @param {string} plugin The main plugin file's source.
  */
-export function stripUpdateUri(plugin) {
+export function wporgPluginFile(plugin) {
 	if (!UPDATE_URI_LINE.test(plugin)) {
 		throw new Error('The plugin header has no Update URI line to strip.');
 	}
-	return plugin.replace(UPDATE_URI_LINE, '');
+	if (!TESTED_UP_TO_LINE.test(plugin)) {
+		throw new Error('The plugin header has no Tested up to line to strip.');
+	}
+	return plugin.replace(UPDATE_URI_LINE, '').replace(TESTED_UP_TO_LINE, '');
 }
 
 /**

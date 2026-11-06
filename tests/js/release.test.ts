@@ -11,10 +11,10 @@ import {
 import { makeZip } from '../../bin/release/archive.mjs';
 import {
 	flavorFromArgs,
-	stripUpdateUri,
 	UPDATER_PACKAGE,
 	UPDATER_SOURCES,
 	wporgComposerJson,
+	wporgPluginFile,
 	zipName,
 } from '../../bin/release/flavor.mjs';
 import { buildReadme, parseChangelog } from '../../bin/release/readme.mjs';
@@ -218,20 +218,27 @@ describe('release flavors', () => {
 		);
 	});
 
-	it('strips the Update URI header and nothing else', () => {
+	it('strips the Update URI and Tested up to headers and nothing else', () => {
 		const plugin = readFileSync(
 			join(__dirname, '..', '..', 'pixonaut-for-woocommerce.php'),
 			'utf8',
 		);
 
-		const stripped = stripUpdateUri(plugin);
+		const stripped = wporgPluginFile(plugin);
 
 		expect(plugin).toMatch(/^ \* Update URI: /m);
+		expect(plugin).toMatch(/^ \* Tested up to: /m);
 		expect(stripped).not.toMatch(/Update URI/);
+		expect(stripped).not.toMatch(/Tested up to/);
 		expect(stripped.split('\n')).toEqual(
-			plugin.split('\n').filter((line) => !line.includes('Update URI:')),
+			plugin
+				.split('\n')
+				.filter(
+					(line) =>
+						!line.includes('Update URI:') && !line.includes('Tested up to:'),
+				),
 		);
-		expect(() => stripUpdateUri(stripped)).toThrow('no Update URI line');
+		expect(() => wporgPluginFile(stripped)).toThrow('no Update URI line');
 	});
 
 	it('drops the update checker from composer.json and keeps the bundled packages', () => {
