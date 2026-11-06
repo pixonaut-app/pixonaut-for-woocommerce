@@ -7,8 +7,7 @@
 			"include-component-in-tag": false,
 			"initial-version": "1.0.0",
 			"changelog-path": "CHANGELOG.md",
-			"extra-files": ["pixonaut-for-woocommerce.php", "src/Plugin.php"],
-			"release-as": "1.0.0"
+			"extra-files": ["pixonaut-for-woocommerce.php", "src/Plugin.php"]
 		}
 	}
 }
