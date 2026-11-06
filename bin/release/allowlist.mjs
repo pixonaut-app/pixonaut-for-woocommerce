@@ -36,6 +36,8 @@ export const REQUIRED = [
 	'readme.txt',
 	'LICENSE',
 	'CHANGELOG.md',
+	// Names the bundled packages; Plugin Check warns on a vendor/ without it.
+	'composer.json',
 	'vendor/autoload.php',
 ];
 
@@ -46,6 +48,7 @@ const ALLOWED = [
 	/^readme\.txt$/,
 	/^LICENSE$/,
 	/^CHANGELOG\.md$/,
+	/^composer\.json$/,
 	/^src\/.+\.php$/,
 	/^templates\/.+\.php$/,
 	/^assets\/build\/.+\.(js|css|asset\.php|svg|png|woff2?)$/,

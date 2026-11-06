@@ -25,6 +25,16 @@ const PHP = /\.php$/;
 const PHP_SOURCE =
 	/^(src\/|templates\/|uninstall\.php$|pixonaut-for-woocommerce\.php$)/;
 const PHP_TESTS = /^tests\/php\//;
+/** What the release zip is built from. */
+const RELEASE_ZIP_SOURCES = [
+	PHP_SOURCE,
+	/^assets\//,
+	/^languages\//,
+	/^(LICENSE|CHANGELOG\.md|readme\.src\.txt|webpack\.config\.js)$/,
+	/^bin\/(release\/|plugin-check\.mjs$|plugin-header\.mjs$)/,
+	// The zip carries the compiled translations.
+	/^bin\/i18n(-build\.mjs$|\/(files|po)\.mjs$)/,
+];
 const COMPOSER = /^composer\.(json|lock)$/;
 /** The pinned Pixonaut contract and `consumed.json`. */
 const CONTRACT = /^contracts\/pixonaut\//;
@@ -159,15 +169,14 @@ const STEPS = [
 		name: 'Release zip',
 		command: ['pnpm', 'release:zip'],
 		wpEnv: true,
-		affectedBy: [
-			PHP_SOURCE,
-			/^assets\//,
-			/^languages\//,
-			/^(LICENSE|CHANGELOG\.md|readme\.src\.txt|webpack\.config\.js)$/,
-			/^bin\/(release\/|plugin-check\.mjs$|plugin-header\.mjs$)/,
-			// The zip carries the compiled translations.
-			/^bin\/i18n(-build\.mjs$|\/(files|po)\.mjs$)/,
-		],
+		affectedBy: RELEASE_ZIP_SOURCES,
+	},
+	{
+		// Also checks the wordpress.org listing assets against its readme.
+		name: 'Release zip (wordpress.org)',
+		command: ['pnpm', 'release:zip', '--flavor', 'wporg'],
+		wpEnv: true,
+		affectedBy: [...RELEASE_ZIP_SOURCES, /^\.wordpress-org\//],
 	},
 	{
 		name: 'PHP integration (HPOS off, on)',

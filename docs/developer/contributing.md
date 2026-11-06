@@ -109,6 +109,7 @@ and exits non-zero if any step failed.
 | Plugin Check | `pnpm plugin-check` | yes |
 | e2e, themes and page builders | `pnpm test:e2e:compat`: one project per combination in `tests/compat/combinations.json` ([testing](../testing/#themes-and-page-builders)) |
 | Release zip | `pnpm release:zip` | yes |
+| Release zip (wordpress.org), with its listing assets | `pnpm release:zip --flavor wporg` | yes |
 | PHP integration, HPOS off then on, then the `multisite` group | `pnpm test:integration` | yes |
 | e2e, `classic`, `block-primary` and `astra` | `pnpm test:e2e` | yes |
 
@@ -159,9 +160,12 @@ The `block-secondary` e2e project is not part of the gate; run it with
   checks (enqueued asset size and scope) do not run in wp-env and are left
   out. `plugin_updater_detected` is expected, since releases come from GitHub
   through the `Update URI` header; `no_plugin_readme` is expected, since
-  `readme.txt` is generated into the release zip only; and
-  `WordPress.Security.EscapeOutput.ExceptionNotEscaped` is ignored, as in
-  `phpcs.xml.dist`, since exception messages are not output.
+  `readme.txt` is generated into the release zip only. Nothing else is
+  ignored, since wordpress.org's scan runs every check: phpcs.xml.dist leaves
+  out `WordPress.Security.EscapeOutput.ExceptionNotEscaped`, as exception
+  messages are not output, so a file that throws one with a message built at
+  run time disables that sniff in its code, saying why, and Plugin Check
+  names a new one that does not.
 - **Release zip** builds the release zip and checks it: the allowlist, a PHP
   lint with the minimum PHP version, and Plugin Check on the unpacked zip. See
   [Releasing](../releasing/).

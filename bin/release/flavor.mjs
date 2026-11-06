@@ -6,7 +6,10 @@
 //           checker, no `Update URI` header.
 import { SLUG } from '../env.mjs';
 
-export const FLAVORS = ['github', 'wporg'];
+/** Updated by wordpress.org itself. */
+export const WPORG_FLAVOR = 'wporg';
+
+export const FLAVORS = ['github', WPORG_FLAVOR];
 
 export const DEFAULT_FLAVOR = 'github';
 
@@ -23,6 +26,16 @@ export const UPDATER_SOURCES = [
 const UPDATER_ENTRY = `vendor/${UPDATER_PACKAGE}/plugin-update-checker.php`;
 
 const UPDATE_URI_LINE = /^[ \t]*\*[ \t]*Update URI:.*\r?\n/m;
+
+/**
+ * A translation's source, which WordPress never loads: it reads the compiled
+ * `.mo` and `.l10n.php` files. The wporg flavor leaves them out to stay under
+ * the submission form's upload limit; the repository keeps them.
+ */
+const TRANSLATION_SOURCE = /^languages\/[^/]+\.po$/;
+
+/** The largest zip wordpress.org's plugin submission form takes: 10 MB. */
+export const WPORG_UPLOAD_LIMIT_BYTES = 10 * 1024 * 1024;
 
 /**
  * The flavor named by `--flavor <name>` or `--flavor=<name>`, else the default.
@@ -59,6 +72,32 @@ export function zipName(version, flavor) {
 	return flavor === DEFAULT_FLAVOR
 		? `${SLUG}-${version}.zip`
 		: `${SLUG}-${version}-${flavor}.zip`;
+}
+
+/**
+ * Whether a staged file stays out of a flavor's zip.
+ *
+ * @param {string} path Relative to the plugin directory.
+ * @param {string} flavor
+ */
+export function leftOut(path, flavor) {
+	return flavor === WPORG_FLAVOR && TRANSLATION_SOURCE.test(path);
+}
+
+/**
+ * The problems with a flavor's zip size: the wporg one must fit the
+ * submission form.
+ *
+ * @param {number} bytes
+ * @param {string} flavor
+ * @returns {string[]}
+ */
+export function zipSizeProblems(bytes, flavor) {
+	return flavor === WPORG_FLAVOR && bytes > WPORG_UPLOAD_LIMIT_BYTES
+		? [
+				`the zip is ${bytes} bytes: wordpress.org takes at most ${WPORG_UPLOAD_LIMIT_BYTES}`,
+			]
+		: [];
 }
 
 /**
@@ -130,11 +169,15 @@ export function flavorProblems(files, flavor, rootDir) {
 			.filter((path) => !files.has(path))
 			.map((path) => `${rootDir}${path}: missing`);
 	}
-	return [...files]
-		.filter(
-			(path) =>
-				path.startsWith(`vendor/${UPDATER_PACKAGE}/`) ||
-				UPDATER_SOURCES.includes(path),
-		)
-		.map((path) => `${rootDir}${path}: update checker in the ${flavor} flavor`);
+	return [...files].flatMap((path) => {
+		if (
+			path.startsWith(`vendor/${UPDATER_PACKAGE}/`) ||
+			UPDATER_SOURCES.includes(path)
+		) {
+			return [`${rootDir}${path}: update checker in the ${flavor} flavor`];
+		}
+		return leftOut(path, flavor)
+			? [`${rootDir}${path}: translation source in the ${flavor} flavor`]
+			: [];
+	});
 }

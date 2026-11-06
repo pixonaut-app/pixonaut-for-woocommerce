@@ -20,6 +20,7 @@ const ALL_STEPS = [
 	'Generated docs',
 	'Plugin Check',
 	'Release zip',
+	'Release zip (wordpress.org)',
 	'PHP integration (HPOS off, on)',
 	'e2e (classic, block-primary, astra)',
 ];
@@ -66,6 +67,7 @@ describe('ci:local', () => {
 				'Generated docs',
 				'Plugin Check',
 				'Release zip',
+				'Release zip (wordpress.org)',
 				'PHP integration (HPOS off, on)',
 				'e2e (classic, block-primary, astra)',
 			]);
@@ -115,6 +117,7 @@ describe('ci:local', () => {
 				'Translations',
 				'Plugin Check',
 				'Release zip',
+				'Release zip (wordpress.org)',
 			]);
 		});
 
@@ -126,6 +129,16 @@ describe('ci:local', () => {
 				'Biome',
 				'JS unit',
 				'Release zip',
+				'Release zip (wordpress.org)',
+			]);
+		});
+
+		it('builds the wordpress.org zip when a listing asset changes', () => {
+			const dir = branchChanging({ '.wordpress-org/screenshot-1.png': '' });
+
+			expect(steps(['--affected'], dir)).toEqual([
+				'Conflict markers',
+				'Release zip (wordpress.org)',
 			]);
 		});
 
@@ -159,6 +172,7 @@ describe('ci:local', () => {
 			expect(steps(['--affected'], dir)).toEqual([
 				'Conflict markers',
 				'Release zip',
+				'Release zip (wordpress.org)',
 			]);
 		});
 

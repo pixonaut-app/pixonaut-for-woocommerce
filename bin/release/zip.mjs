@@ -37,13 +37,16 @@ import { makeZip } from './archive.mjs';
 import {
 	DEFAULT_FLAVOR,
 	flavorFromArgs,
+	leftOut,
 	stripUpdateUri,
 	UPDATER_PACKAGE,
 	UPDATER_SOURCES,
+	WPORG_FLAVOR,
 	wporgComposerJson,
 	zipName,
+	zipSizeProblems,
 } from './flavor.mjs';
-import { buildReadme } from './readme.mjs';
+import { buildReadme, readmeProblems } from './readme.mjs';
 
 const DIST = join(root, 'dist');
 /** A path with a dotfile or dot directory in it. */
@@ -53,7 +56,8 @@ const STAGING = join(DIST, 'stage');
 const UNPACKED = join(DIST, 'unpacked');
 const STAGE = join(STAGING, SLUG);
 const MAIN_FILE = `${SLUG}.php`;
-const COMPOSER_FILES = ['composer.json', 'composer.lock'];
+const COMPOSER_LOCK = 'composer.lock';
+const COMPOSER_FILES = ['composer.json', COMPOSER_LOCK];
 /** Where the checkout is mounted while Strauss, from its dev install, runs in the staging directory. */
 const CHECKOUT_MOUNT = '/checkout';
 /** Written by Strauss for development only. */
@@ -116,13 +120,20 @@ step('Compile translations');
 mustRun('node', ['bin/i18n-build.mjs']);
 
 step(`Stage ${relative(root, STAGE)}`);
-rmSync(DIST, { recursive: true, force: true });
+// Only this flavor's files: the other flavor's zip stays, so a release can attach both.
+for (const path of [STAGING, UNPACKED, zipPath, `${zipPath}.sha256`]) {
+	rmSync(path, { recursive: true, force: true });
+}
 mkdirSync(STAGE, { recursive: true });
 for (const source of [...SOURCES, ...COMPOSER_FILES]) {
 	cpSync(join(root, source), join(STAGE, source), {
 		recursive: true,
 		filter: (path) => !NOT_SHIPPED.includes(relative(root, path)),
 	});
+}
+
+for (const file of filesUnder(STAGE).filter((path) => leftOut(path, flavor))) {
+	rmSync(join(STAGE, file));
 }
 
 if (flavor !== DEFAULT_FLAVOR) {
@@ -183,9 +194,8 @@ mustRun('docker', [
 	'--classmap-authoritative',
 	'--no-interaction',
 ]);
-for (const file of COMPOSER_FILES) {
-	rmSync(join(STAGE, file), { force: true });
-}
+// composer.json stays: it names the bundled packages.
+rmSync(join(STAGE, COMPOSER_LOCK), { force: true });
 // A package's own dotfiles (a `.gitkeep` in an empty directory) are never loaded.
 for (const file of filesUnder(join(STAGE, 'vendor'))) {
 	if (DOTFILE.test(file)) {
@@ -203,6 +213,13 @@ writeFileSync(
 	}),
 );
 
+const readmeErrors = readmeProblems(
+	readFileSync(join(STAGE, 'readme.txt'), 'utf8'),
+);
+if (readmeErrors.length > 0) {
+	fail(`readme.txt breaks wordpress.org's rules:\n${readmeErrors.join('\n')}`);
+}
+
 step(`Zip ${relative(root, zipPath)}`);
 const zip = makeZip(
 	Object.fromEntries(
@@ -216,6 +233,10 @@ writeFileSync(zipPath, zip);
 const sha256 = createHash('sha256').update(zip).digest('hex');
 writeFileSync(`${zipPath}.sha256`, `${sha256}  ${zipFile}\n`);
 console.log(`sha256 ${sha256}`);
+const sizeErrors = zipSizeProblems(zip.length, flavor);
+if (sizeErrors.length > 0) {
+	fail(sizeErrors.join('\n'));
+}
 
 step('Allowlist');
 const problems = zipFileProblems(zipPath, join(root, 'composer.lock'), flavor);
@@ -248,6 +269,14 @@ mustRun('docker', [
 	'status=0; for f in $(find . -name "*.php"); do php -l "$f" > /dev/null || status=1; done; exit $status',
 ]);
 console.log('No syntax errors.');
+
+if (flavor === WPORG_FLAVOR) {
+	step('Listing assets');
+	mustRun('node', [
+		'bin/release/listing-assets.mjs',
+		join(unpackedPlugin, 'readme.txt'),
+	]);
+}
 
 step('Plugin Check');
 mustRun('node', [

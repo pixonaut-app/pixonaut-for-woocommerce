@@ -129,6 +129,14 @@ describe('release zip allowlist', () => {
 		]);
 	});
 
+	it('fails without composer.json, which names the bundled packages', () => {
+		const entries = listing().filter(
+			(path) => path !== `${ROOT_DIR}composer.json`,
+		);
+
+		expect(zipProblems(entries)).toEqual([`${ROOT_DIR}composer.json: missing`]);
+	});
+
 	it('passes a translation shipped with its compiled files', () => {
 		const translation = ['po', 'mo', 'l10n.php'].map(
 			(extension) =>

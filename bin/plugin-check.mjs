@@ -35,11 +35,13 @@ const RUNTIME_CHECKS = [
 ];
 
 /**
- * Result codes that are expected for this plugin.
- * - WordPress.Security.EscapeOutput.ExceptionNotEscaped: exception messages
- *   are not output; whoever prints one escapes it (as in phpcs.xml.dist).
+ * Result codes that are expected for this plugin: none. wordpress.org's
+ * scan runs every check, so an exception is made in the code, where a
+ * reviewer reads it: the files that throw exceptions with messages built at
+ * run time disable WordPress.Security.EscapeOutput.ExceptionNotEscaped,
+ * saying why (as phpcs.xml.dist does for the whole plugin).
  */
-const IGNORED_CODES = ['WordPress.Security.EscapeOutput.ExceptionNotEscaped'];
+const IGNORED_CODES = [];
 
 /**
  * The github flavor updates from GitHub: its `Update URI` header and the

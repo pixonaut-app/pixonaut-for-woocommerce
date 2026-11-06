@@ -156,3 +156,81 @@ export function buildReadme({ source, plugin, changelog }) {
 		.join('\n\n')
 		.concat('\n');
 }
+
+/** Headers wordpress.org's readme parser reads; the plugin's page needs each. */
+const REQUIRED_HEADERS = [
+	'Contributors',
+	'Tags',
+	'Requires at least',
+	'Tested up to',
+	'Requires PHP',
+	'Stable tag',
+	'License',
+	'License URI',
+];
+
+/** wordpress.org shows at most this many tags and ignores the rest. */
+const MAX_TAGS = 5;
+
+/** wordpress.org cuts a longer short description. */
+const SHORT_DESCRIPTION_MAX_LENGTH = 150;
+
+/** A wordpress.org username as Contributors names it: its lowercase slug. */
+const USERNAME = /^[a-z0-9][a-z0-9_-]*$/;
+
+/** A WordPress release: `7.1` or `7.1.2`. */
+const WORDPRESS_VERSION = /^\d+\.\d+(\.\d+)?$/;
+
+/**
+ * Where a readme.txt breaks the rules of wordpress.org's readme parser and
+ * validator, one line each; empty when it follows them.
+ *
+ * @param {string} readme
+ * @returns {string[]}
+ */
+export function readmeProblems(readme) {
+	const lines = readme.split('\n');
+	const end = lines.indexOf('', 1);
+	const headerLines = lines.slice(1, end === -1 ? lines.length : end);
+	/** @type {Map<string, string>} */
+	const headers = new Map(
+		headerLines.flatMap((line) => {
+			const match = line.match(/^([^:]+):\s*(.*)$/);
+			return match === null ? [] : [[match[1].trim(), match[2].trim()]];
+		}),
+	);
+	const problems = REQUIRED_HEADERS.filter((name) => !headers.has(name)).map(
+		(name) => `missing the ${name} header`,
+	);
+	const list = (/** @type {string} */ name) =>
+		(headers.get(name) ?? '')
+			.split(',')
+			.map((item) => item.trim())
+			.filter((item) => item !== '');
+	const tags = list('Tags');
+	if (tags.length > MAX_TAGS) {
+		problems.push(`${tags.length} tags: at most ${MAX_TAGS} are shown`);
+	}
+	for (const contributor of list('Contributors')) {
+		if (!USERNAME.test(contributor)) {
+			problems.push(`"${contributor}" is not a wordpress.org username`);
+		}
+	}
+	const tested = headers.get('Tested up to');
+	if (tested !== undefined && !WORDPRESS_VERSION.test(tested)) {
+		problems.push(`Tested up to is "${tested}", not a WordPress version`);
+	}
+	const body = end === -1 ? [] : lines.slice(end);
+	const short = body.find((line) => line.trim() !== '');
+	if (short === undefined || short.startsWith('==')) {
+		problems.push('no short description');
+	} else if (short.length > SHORT_DESCRIPTION_MAX_LENGTH) {
+		problems.push(
+			`the short description is ${short.length} characters: at most ${SHORT_DESCRIPTION_MAX_LENGTH} are shown`,
+		);
+	}
+	if (!/^== Description ==$/m.test(readme)) {
+		problems.push('no Description section');
+	}
+	return problems;
+}

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-06T10:44:17+00:00\n"
+"POT-Creation-Date: 2026-11-06T17:14:56+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -42,6 +42,11 @@ msgstr ""
 #: src/Settings/SettingsPage.php:232
 #: templates/admin/product-variation.php:35
 msgid "Pixonaut"
+msgstr ""
+
+#. Author URI of the plugin
+#: pixonaut-for-woocommerce.php
+msgid "https://pixonaut.app"
 msgstr ""
 
 #: src/Abilities/Abilities.php:64
@@ -1387,7 +1392,7 @@ msgid "Pixonaut for WooCommerce is not connected yet. <a href=\"%1$s\">Connect y
 msgstr ""
 
 #: src/Admin/ConnectNotice.php:97
-#: src/Admin/Notices.php:135
+#: src/Admin/Notices.php:137
 msgid "You are not allowed to dismiss this notice."
 msgstr ""
 
@@ -1981,13 +1986,13 @@ msgid "Pixonaut: a refund of %1$s for \"%2$s\" was recorded, but the payment met
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/OrderEdit.php:393
+#: src/Approval/OrderEdit.php:395
 #, php-format
 msgid "Pixonaut: the customer approved a change to the design of \"%s\" after the order failed or the item was cancelled, so it was not sent to the printshop."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/OrderEdit.php:426
+#: src/Approval/OrderEdit.php:428
 #, php-format
 msgid "Pixonaut: the customer changed the design of \"%s\" and approved it."
 msgstr ""
@@ -2070,25 +2075,25 @@ msgid "Mark the item as needing attention"
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofRequest.php:88
+#: src/Approval/ProofRequest.php:90
 #, php-format
 msgid "Pixonaut: the proof of \"%s\" was not sent. Its design was changed in Pixonaut after it was bought."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofRequest.php:102
+#: src/Approval/ProofRequest.php:104
 #, php-format
 msgid "Pixonaut: the proof of \"%s\" was not sent. Its design is no longer waiting for approval in Pixonaut."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: error code Pixonaut answered.
-#: src/Approval/ProofRequest.php:128
+#: src/Approval/ProofRequest.php:130
 #, php-format
 msgid "Pixonaut: the proof of \"%1$s\" was not sent. Pixonaut refused its proof page: %2$s."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofRequest.php:140
+#: src/Approval/ProofRequest.php:142
 #, php-format
 msgid "Pixonaut: \"%s\" is awaiting design approval. The customer was sent a proof to approve."
 msgstr ""
@@ -2115,7 +2120,7 @@ msgid "Proof by email after payment"
 msgstr ""
 
 #. translators: 1: product name, 2: Pixonaut's refusal code
-#: src/Cart/AddToCart.php:819
+#: src/Cart/AddToCart.php:821
 #, php-format
 msgid "Customers cannot add \"%1$s\" to the cart: Pixonaut will not route its designs to a printshop (%2$s). Check the printshop of the product's blank in the Pixonaut studio."
 msgstr ""
@@ -2143,62 +2148,62 @@ msgid "The placement’s first view"
 msgstr ""
 
 #. translators: 1: a custom product attribute's name; 2: a global product attribute's taxonomy, e.g. pa_size.
-#: src/Catalogue/AttributeMove.php:115
+#: src/Catalogue/AttributeMove.php:117
 #, php-format
 msgid "The product has both %1$s and %2$s. Remove one, then move it."
 msgstr ""
 
 #. translators: 1: how many variations the product has; 2: the most a move can write.
-#: src/Catalogue/AttributeMove.php:123
+#: src/Catalogue/AttributeMove.php:125
 #, php-format
 msgid "The product has %1$d variations, and a move can write at most %2$d."
 msgstr ""
 
 #. translators: 1: a product variation's id; 2: the value it holds of a custom product attribute; 3: the attribute's name.
-#: src/Catalogue/AttributeMove.php:162
+#: src/Catalogue/AttributeMove.php:164
 #, php-format
 msgid "Variation %1$d holds %2$s, which %3$s does not offer. Correct the variation, then move it."
 msgstr ""
 
-#: src/Catalogue/AttributeMove.php:269
+#: src/Catalogue/AttributeMove.php:271
 msgid "The product changed meanwhile and no longer has this attribute. Nothing was changed."
 msgstr ""
 
-#: src/Catalogue/AttributeMove.php:405
+#: src/Catalogue/AttributeMove.php:407
 msgid "The product's attribute could not be saved. Nothing was changed."
 msgstr ""
 
 #. translators: %d: a product variation's id.
-#: src/Catalogue/AttributeMove.php:416
+#: src/Catalogue/AttributeMove.php:418
 #, php-format
 msgid "Variation %d could not be saved. Nothing was changed."
 msgstr ""
 
 #. translators: 1, 2: two values of a custom product attribute.
-#: src/Catalogue/AttributeMove.php:570
+#: src/Catalogue/AttributeMove.php:572
 #, php-format
 msgid "%1$s and %2$s have the same slug, so the move could not tell which a variation holds. Rename one, then move it."
 msgstr ""
 
 #. translators: 1: a global product attribute's taxonomy, e.g. pa_size; 2: values of a custom product attribute, separated by commas.
-#: src/Catalogue/AttributeMove.php:592
+#: src/Catalogue/AttributeMove.php:594
 #, php-format
 msgid "%1$s has no term for: %2$s. Create the terms or name them in term_map, then move it."
 msgstr ""
 
 #. translators: %s: a global product attribute's taxonomy, e.g. pa_size.
-#: src/Catalogue/AttributeMove.php:600
+#: src/Catalogue/AttributeMove.php:602
 #, php-format
 msgid "Two of the product's values would become one term of %s, and customers could no longer tell its variations apart."
 msgstr ""
 
 #. translators: %d: a product or variation's id.
-#: src/Catalogue/AttributeMove.php:631
+#: src/Catalogue/AttributeMove.php:633
 #, php-format
 msgid "%d is matched to its blank's variant by the attribute's words, which the move would change, so it would stop selling. Pick its variant with set-product-setup, then move it."
 msgstr ""
 
-#: src/Catalogue/AttributeMove.php:673
+#: src/Catalogue/AttributeMove.php:675
 msgid "The product's Pixonaut setup changed meanwhile. Nothing was changed; try again."
 msgstr ""
 
@@ -2317,13 +2322,13 @@ msgid "%1$s × %2$s mm"
 msgstr ""
 
 #. translators: %s: link to the Pixonaut settings.
-#: src/Connection/Connection.php:440
+#: src/Connection/Connection.php:442
 #, php-format
 msgid "Site URL changed: this site is not the one that connected to Pixonaut, so Pixonaut is paused here and nothing is sent for the site it was copied from. Personalised products and orders are paused until you <a href=\"%s\">connect this site</a>. For a staging site, pick Sandbox."
 msgstr ""
 
 #. translators: %s: link to the Pixonaut settings.
-#: src/Connection/Connection.php:442
+#: src/Connection/Connection.php:444
 #, php-format
 msgid "Pixonaut no longer accepts this store's key: the store was disconnected in Pixonaut, or its key was revoked. Personalised products and orders are paused until you <a href=\"%s\">connect the store again</a>."
 msgstr ""
@@ -2723,7 +2728,7 @@ msgstr ""
 
 #. translators: %s: product name
 #: src/Fulfilment/DesignChanged.php:202
-#: src/Fulfilment/Fulfiller.php:420
+#: src/Fulfilment/Fulfiller.php:422
 #, php-format
 msgid "Pixonaut: the design for \"%s\" was changed in Pixonaut after it was approved, so it was not sent to the printshop. Check the design before it is printed."
 msgstr ""
@@ -2741,55 +2746,55 @@ msgid "Pixonaut: the design for \"%s\" was changed in Pixonaut."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:105
+#: src/Fulfilment/Fulfiller.php:107
 #, php-format
 msgid "Pixonaut: \"%s\" was not sent to the printshop. A plugin or the theme holds it back (pixonaut_wc_fulfilment_can_fulfil)."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:114
+#: src/Fulfilment/Fulfiller.php:116
 #, php-format
 msgid "Pixonaut: \"%s\" was not sent to the printshop. It was ordered under another Pixonaut workspace than the one the store is connected to now."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:155
+#: src/Fulfilment/Fulfiller.php:157
 #, php-format
 msgid "Pixonaut: \"%s\" was not sent to the printshop. An earlier attempt sent its printshop order under the cart's reference, so the store cannot tell whether it was placed. Check the order in Pixonaut."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:173
+#: src/Fulfilment/Fulfiller.php:175
 #, php-format
 msgid "Pixonaut: \"%s\" was not sent to the printshop. The line has no design for one of its sides."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:226
+#: src/Fulfilment/Fulfiller.php:228
 #, php-format
 msgid "Pixonaut: \"%s\" was not sent to the printshop. The line does not record how the customer approved the design."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: Pixonaut order id.
-#: src/Fulfilment/Fulfiller.php:374
+#: src/Fulfilment/Fulfiller.php:376
 #, php-format
 msgid "Pixonaut: a Pixonaut automation already ordered \"%1$s\", as order %2$s. The store took that order on instead of placing another."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the reason Pixonaut gave.
-#: src/Fulfilment/Fulfiller.php:449
+#: src/Fulfilment/Fulfiller.php:451
 #, php-format
 msgid "Pixonaut: the printshop order for \"%1$s\" failed when it was placed: %2$s"
 msgstr ""
 
 #. translators: Fills in %2$s of an order note when the printshop order failed without a reason. Ends a sentence; lower case.
-#: src/Fulfilment/Fulfiller.php:452
+#: src/Fulfilment/Fulfiller.php:454
 #: src/Fulfilment/OrderFailed.php:84
 msgid "no reason given."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the order status Pixonaut answered.
-#: src/Fulfilment/Fulfiller.php:467
+#: src/Fulfilment/Fulfiller.php:469
 #, php-format
 msgid "Pixonaut: the printshop order for \"%1$s\" was placed with the status \"%2$s\", which the store cannot go on from. Check the order with the printshop."
 msgstr ""
@@ -3811,272 +3816,272 @@ msgid "Pixonaut for WooCommerce needs WooCommerce %1$s or newer. This site runs 
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:106
+#: src/Settings/Settings.php:108
 msgid "Default layout"
 msgstr ""
 
-#: src/Settings/Settings.php:107
+#: src/Settings/Settings.php:109
 msgid "How personalised products show the designer, unless a product overrides it."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:120
+#: src/Settings/Settings.php:122
 msgid "Designer language"
 msgstr ""
 
-#: src/Settings/Settings.php:121
+#: src/Settings/Settings.php:123
 msgid "The language of the designer on the product page, of Pixonaut’s designer the Personalise button opens, and of the proof pages customers approve their designs on. Following the site shows each visitor the site’s language they browse in when Pixonaut has it, and the workspace’s default language when it does not."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
 #. translators: Label of the dropdown choosing how the product page designer lays out its form. Admin product page.
-#: src/Settings/Settings.php:134
+#: src/Settings/Settings.php:136
 #: templates/admin/product-fields.php:164
 msgid "Form layout"
 msgstr ""
 
-#: src/Settings/Settings.php:135
+#: src/Settings/Settings.php:137
 msgid "How the designer lays out its form, on the product page and in Pixonaut’s designer the Personalise button opens, unless a product overrides it: as the template chose, every step on one page, or one step at a time."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: each product option, such as Size or Colour, gets a group of its own in the designer's form.
-#: src/Settings/Settings.php:147
+#: src/Settings/Settings.php:149
 msgid "As its own group"
 msgstr ""
 
-#: src/Settings/Settings.php:148
+#: src/Settings/Settings.php:150
 msgid "Puts each of a product's options, such as Size or Colour, in a group of its own in the designer's form on the product page, named after the option, in the product's attribute order. Off, the options stay on top of the form, unnumbered. A product whose groups were arranged by hand keeps them."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the groups of a product's options come before or after the template's groups.
-#: src/Settings/Settings.php:159
+#: src/Settings/Settings.php:161
 msgid "Place of the option groups"
 msgstr ""
 
-#: src/Settings/Settings.php:160
+#: src/Settings/Settings.php:162
 msgid "Whether the groups of a product's options come before or after the template's groups."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the designer's form numbers its groups.
 #. translators: Label of the dropdown choosing whether the designer's form numbers its groups. Admin product page.
-#: src/Settings/Settings.php:172
+#: src/Settings/Settings.php:174
 #: templates/admin/product-fields.php:183
 msgid "Group numbers"
 msgstr ""
 
-#: src/Settings/Settings.php:173
+#: src/Settings/Settings.php:175
 msgid "Numbers the groups of the designer's form on the product page: 1 Photo, 2 Text on one page, Step 1 of 2 in steps. Off shows the group names with no numbers."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:184
+#: src/Settings/Settings.php:186
 msgid "Load other colours and views"
 msgstr ""
 
-#: src/Settings/Settings.php:185
+#: src/Settings/Settings.php:187
 msgid "Whether the designer loads a product's other colours, views and sides before the customer picks one, so they show at once. Choose In the background or Off for products with many large photos, or for customers mostly on phones."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:198
+#: src/Settings/Settings.php:200
 msgid "Designer accent colour"
 msgstr ""
 
-#: src/Settings/Settings.php:199
+#: src/Settings/Settings.php:201
 msgid "The colour the designer on the product page marks the chosen view, colour and option in, and draws its Next button in. None takes the accent colour of the store's brand in Pixonaut, and keeps the designer's own colours when the brand has none."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:210
+#: src/Settings/Settings.php:212
 msgid "Custom accent colour"
 msgstr ""
 
-#: src/Settings/Settings.php:211
+#: src/Settings/Settings.php:213
 msgid "The accent colour when Designer accent colour is A custom colour, e.g. #1e73be."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:222
+#: src/Settings/Settings.php:224
 msgid "Show the print area's frame"
 msgstr ""
 
-#: src/Settings/Settings.php:223
+#: src/Settings/Settings.php:225
 msgid "Draws a thin grey frame on the preview around where the design can go, in the designer on the product page and in Pixonaut's designer the Personalise button opens. Off, the design sits on the product photo as it will be printed."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant. "Hosted page" is Pixonaut's designer page the Personalise button opens.
-#: src/Settings/Settings.php:233
+#: src/Settings/Settings.php:235
 msgid "Add to cart after approve in hosted page"
 msgstr ""
 
 #. translators: Help text of a setting on the settings page. "Approve and add to cart" and "Approve and go back" are the labels of the button on Pixonaut's designer page.
-#: src/Settings/Settings.php:235
+#: src/Settings/Settings.php:237
 msgid "For the Personalise button layout. Approving adds the product to the cart and opens its cart item's page, and Pixonaut's designer says Approve and add to cart. Off, approving returns to the product page, and it says Approve and go back."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: how the options of a product option such as a size show in the designer's form.
-#: src/Settings/Settings.php:246
+#: src/Settings/Settings.php:248
 msgid "Product options in the designer"
 msgstr ""
 
-#: src/Settings/Settings.php:247
+#: src/Settings/Settings.php:249
 msgid "How the designer on the product page shows the options of a variable product, such as its sizes, when it draws them in its form. As the theme shows them (the default) keeps the theme's own field, and any swatches another plugin draws in it. As swatches shows each option as a button like the designer's own choices, an option that cannot be bought with the other choices greyed out."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:259
+#: src/Settings/Settings.php:261
 msgid "Use Pixonaut pictures as product images"
 msgstr ""
 
-#: src/Settings/Settings.php:260
+#: src/Settings/Settings.php:262
 msgid "Sets each personalised product’s and variation’s image to Pixonaut’s picture of it, its template on the blank, and draws it again when the product changes. A product can show its template’s showcase sets instead, chosen under Product images in its Pixonaut tab. An image you set yourself is kept. Off, each product gets back the image it had before."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the fields are the ones the customer filled in to personalise the item.
-#: src/Settings/Settings.php:270
+#: src/Settings/Settings.php:272
 msgid "List the design's fields"
 msgstr ""
 
-#: src/Settings/Settings.php:271
+#: src/Settings/Settings.php:273
 msgid "Lists what the customer filled in under a personalised item in the cart, the checkout, their orders and the order emails, as the designer showed it. Off, the item shows only its name. The order screen in the admin always lists them."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: which view of the product the picture of a personalised item shows.
-#: src/Settings/Settings.php:282
+#: src/Settings/Settings.php:284
 msgid "Picture shows"
 msgstr ""
 
-#: src/Settings/Settings.php:283
+#: src/Settings/Settings.php:285
 msgid "A personalised item shows the customer’s design on the product in the cart, the checkout, their orders and the order emails. This chooses the view of the product it is drawn in: the one the customer previewed their design in, or the first of the placement’s views the product is shown in."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:296
+#: src/Settings/Settings.php:298
 msgid "Default approval"
 msgstr ""
 
-#: src/Settings/Settings.php:297
+#: src/Settings/Settings.php:299
 msgid "How customers approve their design before it is printed, unless a product overrides it."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:311
+#: src/Settings/Settings.php:313
 msgid "Proof approval deadline (days)"
 msgstr ""
 
-#: src/Settings/Settings.php:312
+#: src/Settings/Settings.php:314
 msgid "With proof by email, how many days the customer has to approve their proof. The link in the email works a week longer."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:324
+#: src/Settings/Settings.php:326
 msgid "When no answer by the deadline"
 msgstr ""
 
-#: src/Settings/Settings.php:325
+#: src/Settings/Settings.php:327
 msgid "With proof by email, what happens to a design the customer neither approved nor rejected by the deadline."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant; what happens to an item whose design the customer rejected.
-#: src/Settings/Settings.php:338
+#: src/Settings/Settings.php:340
 msgid "On deny"
 msgstr ""
 
-#: src/Settings/Settings.php:339
+#: src/Settings/Settings.php:341
 msgid "What happens to an item whose design the customer rejected, or which was denied at the deadline."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:353
+#: src/Settings/Settings.php:355
 msgid "First proof reminder after (days)"
 msgstr ""
 
-#: src/Settings/Settings.php:354
+#: src/Settings/Settings.php:356
 msgid "Days after the proof email that a customer who has not answered is reminded. Only reminders before the deadline are sent."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:367
+#: src/Settings/Settings.php:369
 msgid "Then remind every (days)"
 msgstr ""
 
-#: src/Settings/Settings.php:368
+#: src/Settings/Settings.php:370
 msgid "Days between one proof reminder and the next."
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of reminders.
-#: src/Settings/Settings.php:381
+#: src/Settings/Settings.php:383
 msgid "Proof reminders at most"
 msgstr ""
 
-#: src/Settings/Settings.php:382
+#: src/Settings/Settings.php:384
 msgid "How many reminders a customer gets at most; 0 sends none. The last one says when the deadline is and what happens then."
 msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut API.
-#: src/Settings/Settings.php:400
+#: src/Settings/Settings.php:402
 msgid "API base"
 msgstr ""
 
-#: src/Settings/Settings.php:401
+#: src/Settings/Settings.php:403
 msgid "The Pixonaut API as the browser reaches it, e.g. a local Pixonaut. Empty uses Pixonaut’s own. The store’s key is sent to this address."
 msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL WordPress uses for the Pixonaut API.
-#: src/Settings/Settings.php:410
+#: src/Settings/Settings.php:412
 msgid "Server-to-server API base"
 msgstr ""
 
-#: src/Settings/Settings.php:411
+#: src/Settings/Settings.php:413
 msgid "The Pixonaut API as WordPress itself reaches it, when that differs from the browser’s address (WordPress inside Docker, say). Empty uses the API base."
 msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut studio.
-#: src/Settings/Settings.php:420
+#: src/Settings/Settings.php:422
 msgid "Studio base"
 msgstr ""
 
-#: src/Settings/Settings.php:421
+#: src/Settings/Settings.php:423
 msgid "The Pixonaut studio, where a connect is approved and the admin’s studio links lead. Empty uses Pixonaut’s own."
 msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the CDN the designer SDK loads from.
-#: src/Settings/Settings.php:430
+#: src/Settings/Settings.php:432
 msgid "CDN base"
 msgstr ""
 
-#: src/Settings/Settings.php:431
+#: src/Settings/Settings.php:433
 msgid "Where the pinned designer SDK release loads from, e.g. Pixonaut’s staging CDN. The release’s integrity is still checked. Empty uses Pixonaut’s own."
 msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the URL of a designer SDK script.
 #. translators: Label of the field for the SDK script's URL, in developer tools.
-#: src/Settings/Settings.php:440
+#: src/Settings/Settings.php:442
 #: templates/admin/developer-tools.php:111
 msgid "SDK script"
 msgstr ""
 
-#: src/Settings/Settings.php:441
+#: src/Settings/Settings.php:443
 msgid "Loads the designer SDK from this script, e.g. a local build, instead of the pinned release from the CDN base. Its integrity is not checked. Empty loads the pinned release."
 msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on debug logging of the designer SDK.
-#: src/Settings/Settings.php:450
+#: src/Settings/Settings.php:452
 msgid "SDK debug"
 msgstr ""
 
-#: src/Settings/Settings.php:451
+#: src/Settings/Settings.php:453
 msgid "Logs every designer mount and its failures to the browser console. On the storefront, only for logged-in store managers."
 msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on a log of requests to Pixonaut.
 #. translators: Heading of the table of recent requests to Pixonaut, in developer tools.
-#: src/Settings/Settings.php:460
+#: src/Settings/Settings.php:462
 #: templates/admin/developer-tools.php:149
 msgid "Request log"
 msgstr ""
 
-#: src/Settings/Settings.php:461
+#: src/Settings/Settings.php:463
 msgid "Records the last 50 requests to Pixonaut, without keys or tokens."
 msgstr ""
 
@@ -4220,23 +4225,23 @@ msgid "Options"
 msgstr ""
 
 #. translators: Why Pixonaut refused a product, filling in %2$s of a message on the admin product page. Ends a sentence; lower case.
-#: src/Storefront/KeptDesignerLinks.php:755
+#: src/Storefront/KeptDesignerLinks.php:757
 msgid "one of the print sizes it offers does not fit its template or its position on the blank. Change the sizes in its Pixonaut tab."
 msgstr ""
 
 #. translators: Why Pixonaut refused a product, filling in %2$s of a message on the admin product page. Ends a sentence; lower case.
-#: src/Storefront/KeptDesignerLinks.php:757
+#: src/Storefront/KeptDesignerLinks.php:759
 msgid "its blank no longer has a position one of its sides prints on. Pick the positions again in its Pixonaut tab."
 msgstr ""
 
 #. translators: %s: the error code Pixonaut answered, e.g. `invalid_input`.
-#: src/Storefront/KeptDesignerLinks.php:759
+#: src/Storefront/KeptDesignerLinks.php:761
 #, php-format
 msgid "Pixonaut answered %s."
 msgstr ""
 
 #. translators: 1: the product's name, 2: why Pixonaut refused its link.
-#: src/Storefront/KeptDesignerLinks.php:763
+#: src/Storefront/KeptDesignerLinks.php:765
 #, php-format
 msgid "Customers cannot open the designer for %1$s: %2$s"
 msgstr ""
