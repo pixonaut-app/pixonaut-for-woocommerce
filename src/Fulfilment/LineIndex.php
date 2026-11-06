@@ -37,7 +37,7 @@ final class LineIndex {
 	public static function order_ids( ?string $state, int $before, int $limit ): array {
 		global $wpdb;
 		list( $where, $args ) = self::where( $state );
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- a lookup no API offers; $where holds placeholders only, filled by prepare().
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, PluginCheck.Security.DirectDB.UnescapedDBParameter -- a lookup no API offers; $where holds placeholders only, filled by prepare().
 		$ids = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT DISTINCT items.order_id FROM {$wpdb->prefix}woocommerce_order_items items INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta meta ON meta.order_item_id = items.order_item_id WHERE {$where} AND ( %d = 0 OR items.order_id < %d ) ORDER BY items.order_id DESC LIMIT %d",
@@ -56,7 +56,7 @@ final class LineIndex {
 	public static function count( ?string $state ): int {
 		global $wpdb;
 		list( $where, $args ) = self::where( $state );
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- as in order_ids().
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter -- as in order_ids().
 		$count = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT( DISTINCT items.order_id ) FROM {$wpdb->prefix}woocommerce_order_items items INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta meta ON meta.order_item_id = items.order_item_id WHERE {$where}",

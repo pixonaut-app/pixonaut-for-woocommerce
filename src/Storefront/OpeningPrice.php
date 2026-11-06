@@ -241,8 +241,8 @@ final class OpeningPrice {
 		foreach ( array_keys( $product->get_variation_attributes() ) as $name ) {
 			$field = 'attribute_' . sanitize_title( (string) $name );
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read as WooCommerce reads it to choose the option; nothing is changed.
-			$value = isset( $_REQUEST[ $field ] ) ? wc_clean( wp_unslash( (string) $_REQUEST[ $field ] ) ) : $product->get_variation_default_attribute( (string) $name );
-			if ( ! is_string( $value ) || '' === $value ) {
+			$value = isset( $_REQUEST[ $field ] ) ? sanitize_text_field( wp_unslash( (string) $_REQUEST[ $field ] ) ) : $product->get_variation_default_attribute( (string) $name );
+			if ( '' === $value ) {
 				return null;
 			}
 			$chosen[ $field ] = $value;

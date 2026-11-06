@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
+// phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
+
 use LogicException;
 use Pixonaut\WooCommerce\Cart\FieldValue;
 use Pixonaut\WooCommerce\Cart\StandingSide;

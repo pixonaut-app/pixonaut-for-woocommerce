@@ -66,9 +66,10 @@ final class EventStore {
 		global $wpdb;
 		$table = self::table();
 		// IGNORE skips a duplicate key; the receiver refuses ids and types longer than their columns.
-		$added = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- the plugin's own table.
+		$added = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a write to the plugin's own table: nothing to cache.
 			$wpdb->prepare(
-				"INSERT IGNORE INTO {$table} (event_id, type, body, received_at) VALUES (%s, %s, %s, %d)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the table name.
+				'INSERT IGNORE INTO %i (event_id, type, body, received_at) VALUES (%s, %s, %s, %d)',
+				$table,
 				$event->id,
 				$event->type,
 				$body,
@@ -88,7 +89,7 @@ final class EventStore {
 	 */
 	public function remove( string $id ): void {
 		global $wpdb;
-		$wpdb->delete( self::table(), array( 'event_id' => $id ), array( '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- the plugin's own table.
+		$wpdb->delete( self::table(), array( 'event_id' => $id ), array( '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a write to the plugin's own table: nothing to cache.
 	}
 
 	/**
@@ -101,7 +102,7 @@ final class EventStore {
 		global $wpdb;
 		$table = self::table();
 		$body  = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the plugin's own table, read once per event.
-			$wpdb->prepare( "SELECT body FROM {$table} WHERE event_id = %s", $id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the table name.
+			$wpdb->prepare( 'SELECT body FROM %i WHERE event_id = %s', $table, $id )
 		);
 		return is_string( $body ) ? $body : null;
 	}
@@ -115,11 +116,11 @@ final class EventStore {
 	public function begin_attempt( string $id ): int {
 		global $wpdb;
 		$table = self::table();
-		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- the plugin's own table.
-			$wpdb->prepare( "UPDATE {$table} SET attempts = attempts + 1 WHERE event_id = %s", $id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the table name.
+		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a write to the plugin's own table: nothing to cache.
+			$wpdb->prepare( 'UPDATE %i SET attempts = attempts + 1 WHERE event_id = %s', $table, $id )
 		);
 		$attempts = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the plugin's own table, read right after the write.
-			$wpdb->prepare( "SELECT attempts FROM {$table} WHERE event_id = %s", $id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the table name.
+			$wpdb->prepare( 'SELECT attempts FROM %i WHERE event_id = %s', $table, $id )
 		);
 		return (int) $attempts;
 	}
@@ -138,7 +139,8 @@ final class EventStore {
 		$table = self::table();
 		$ids   = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the plugin's own table, read once a day.
 			$wpdb->prepare(
-				"SELECT event_id FROM {$table} WHERE processed_at IS NULL AND received_at < %d AND attempts < %d ORDER BY received_at LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the table name.
+				'SELECT event_id FROM %i WHERE processed_at IS NULL AND received_at < %d AND attempts < %d ORDER BY received_at LIMIT %d',
+				$table,
 				$before,
 				$max_attempts,
 				$limit
@@ -155,7 +157,7 @@ final class EventStore {
 	 */
 	public function mark_processed( string $id, int $now ): void {
 		global $wpdb;
-		$wpdb->update( self::table(), array( 'processed_at' => $now ), array( 'event_id' => $id ), array( '%d' ), array( '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- the plugin's own table.
+		$wpdb->update( self::table(), array( 'processed_at' => $now ), array( 'event_id' => $id ), array( '%d' ), array( '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a write to the plugin's own table: nothing to cache.
 	}
 
 	/**
@@ -167,7 +169,7 @@ final class EventStore {
 		global $wpdb;
 		$table = self::table();
 		$at    = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the plugin's own table.
-			$wpdb->prepare( "SELECT processed_at FROM {$table} WHERE event_id = %s", $id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the table name.
+			$wpdb->prepare( 'SELECT processed_at FROM %i WHERE event_id = %s', $table, $id )
 		);
 		return null !== $at;
 	}
@@ -181,8 +183,8 @@ final class EventStore {
 	public function prune( int $now ): int {
 		global $wpdb;
 		$table   = self::table();
-		$dropped = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- the plugin's own table.
-			$wpdb->prepare( "DELETE FROM {$table} WHERE received_at < %d", $now - self::RETENTION_SECONDS ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the table name.
+		$dropped = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a write to the plugin's own table: nothing to cache.
+			$wpdb->prepare( 'DELETE FROM %i WHERE received_at < %d', $table, $now - self::RETENTION_SECONDS )
 		);
 		return is_int( $dropped ) ? $dropped : 0;
 	}

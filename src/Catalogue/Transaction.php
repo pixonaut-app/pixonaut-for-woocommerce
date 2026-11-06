@@ -45,7 +45,7 @@ final class Transaction {
 	 */
 	public static function run( callable $work ): mixed {
 		global $wpdb;
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- transaction control, with nothing to cache and no input.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- transaction control, with nothing to cache and no input: the savepoint is a constant and a depth.
 		$savepoint = self::SAVEPOINT . self::$depth;
 		$nested    = self::$depth > 0 || '0' === (string) $wpdb->get_var( 'SELECT @@autocommit' );
 		if ( false === $wpdb->query( $nested ? 'SAVEPOINT ' . $savepoint : 'START TRANSACTION' ) ) {

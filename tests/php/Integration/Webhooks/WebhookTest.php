@@ -538,7 +538,7 @@ final class WebhookTest extends OrderEventsTestCase {
 	public function test_an_event_the_database_refuses_is_retried_by_pixonaut(): void {
 		$item     = $this->pixonaut_line();
 		$envelope = $this->status_event( 'submitted', 'queued' );
-		$refuse   = static fn ( string $query ): string => str_starts_with( $query, 'INSERT IGNORE INTO ' . EventStore::table() ) ? '' : $query;
+		$refuse   = static fn ( string $query ): string => str_starts_with( $query, 'INSERT IGNORE INTO `' . EventStore::table() . '`' ) ? '' : $query;
 		add_filter( 'query', $refuse );
 
 		$refused = $this->deliver( $envelope );
