@@ -1,7 +1,7 @@
 # The fake Pixonaut as a container on wp-env's network. Built from the
 # context `pnpm fake:build` assembles in tests/fake-pixonaut/dist/: the bundled
 # server, its fixtures and the pinned contract with its overlay.
-FROM node:26.11.1-alpine
+FROM node:26.13.0-alpine
 
 WORKDIR /fake
 COPY . .
