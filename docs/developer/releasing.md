@@ -80,11 +80,17 @@ verifies the zip. It needs Docker, and wp-env running for Plugin Check.
    so `vendor/` holds production packages only. On rootful Docker, as on
    GitHub's runners, the container runs as the calling user, so its files
    stay removable.
-3. Prefixes plugin-update-checker with Strauss, run from the checkout's
-   Composer dev install through `bin/strauss.php` (so `pnpm composer install`
-   must have run), drops Strauss's development-only
-   `vendor/composer/autoload_aliases.php`, and writes the production
-   autoloader (`composer dump-autoload --no-dev --classmap-authoritative`).
+3. Prefixes the bundled packages with Strauss (pixonaut-php, `nyholm/psr7`,
+   the PSR interfaces and plugin-update-checker, as
+   `Pixonaut\WooCommerce\Vendor\…`), run from the checkout's Composer dev
+   install through `bin/strauss.php` (so `pnpm composer install` must have
+   run), drops Strauss's development-only
+   `vendor/composer/autoload_aliases.php` and the packages' own dotfiles, and
+   writes the production autoloader
+   (`composer dump-autoload --no-dev --classmap-authoritative`). The
+   checkout is mounted read-only, so `bin/strauss-psr-log.php` hands
+   Strauss's logger the unprefixed `Psr\Log` interfaces from the staging
+   directory.
 4. Generates `readme.txt` (below).
 5. Zips the staging directory under a top-level `pixonaut-for-woocommerce/`,
    in sorted order with a fixed timestamp on every entry, so the same tag
@@ -111,7 +117,7 @@ The allowlist is `bin/release/allowlist.mjs`. Every path sits under
 | `src/**.php`, `templates/**.php` | |
 | `assets/build/` | built scripts, styles, `.asset.php`, images and fonts |
 | `languages/` | `.pot`, `.po`, `.mo`, `.json`, `.l10n.php`; each `pixonaut-for-woocommerce-<locale>.po` requires its `.mo` and `.l10n.php` |
-| `vendor/` | Composer's production install, with plugin-update-checker prefixed; `vendor/autoload.php` required |
+| `vendor/` | Composer's production install, prefixed by Strauss; `vendor/autoload.php` required |
 
 Never, even inside those directories: dotfiles, TypeScript sources and
 declaration files (`.ts`, `.d.ts`), source maps, `tests/` or `test/`
@@ -132,7 +138,10 @@ flavor, `dist/pixonaut-for-woocommerce-<version>-wporg.zip`, for when the
 plugin is listed there and wordpress.org delivers its updates:
 
 - `src/Updates/GitHubUpdater.php`, `src/Updates/GitHubReleases.php` and
-  plugin-update-checker are left out. The
+  plugin-update-checker are left out: the build drops it from the staged
+  `composer.json`, its Strauss settings and `composer.lock`
+  (`composer update yahnis-elsts/plugin-update-checker --no-install`), and
+  installs the other packages as the lock pins them. The
   plugin then has no update channel setting and never contacts GitHub.
 - The `Update URI` header is removed from the main plugin file.
 - The allowlist check fails if any of them is left, and Plugin Check runs

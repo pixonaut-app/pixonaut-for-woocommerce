@@ -29,7 +29,7 @@ if ( false === $original ) {
 	exit( 1 );
 }
 
-passthru( escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( $strauss ), $status );
+passthru( escapeshellarg( PHP_BINARY ) . ' -d auto_prepend_file=' . escapeshellarg( __DIR__ . '/strauss-psr-log.php' ) . ' ' . escapeshellarg( $strauss ), $status );
 
 if ( false === file_put_contents( $installed_versions, $original ) ) {
 	fwrite( STDERR, "strauss.php: cannot restore {$installed_versions}\n" );

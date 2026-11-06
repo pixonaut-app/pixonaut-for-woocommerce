@@ -5,6 +5,8 @@
 	"license": "GPL-2.0-or-later",
 	"require": {
 		"php": ">=8.1",
+		"nyholm/psr7": "^1.8",
+		"pixonaut/pixonaut-php": "^1.0",
 		"yahnis-elsts/plugin-update-checker": "^5.7"
 	},
 	"require-dev": {
@@ -54,7 +56,15 @@
 			"namespace_prefix": "Pixonaut\\WooCommerce\\Vendor\\",
 			"classmap_prefix": "Pixonaut_WC_Vendor_",
 			"constant_prefix": "PIXONAUT_WC_VENDOR_",
-			"packages": ["yahnis-elsts/plugin-update-checker"],
+			"packages": [
+				"nyholm/psr7",
+				"pixonaut/pixonaut-php",
+				"psr/http-client",
+				"psr/http-factory",
+				"psr/http-message",
+				"psr/log",
+				"yahnis-elsts/plugin-update-checker"
+			],
 			"override_autoload": {
 				"yahnis-elsts/plugin-update-checker": {
 					"classmap": ["Puc/", "vendor/"],

@@ -226,17 +226,24 @@ describe('release flavors', () => {
 		expect(() => stripUpdateUri(stripped)).toThrow('no Update URI line');
 	});
 
-	it('drops the update checker from composer.json', () => {
+	it('drops the update checker from composer.json and keeps the bundled packages', () => {
 		const composer = JSON.parse(
 			readFileSync(join(__dirname, '..', '..', 'composer.json'), 'utf8'),
 		);
 
 		const wporg = wporgComposerJson(composer);
+		const { [UPDATER_PACKAGE]: updater, ...others } = composer.require;
 
-		expect(composer.require[UPDATER_PACKAGE]).toBeDefined();
-		expect(wporg.require).toEqual({ php: composer.require.php });
+		expect(updater).toBeDefined();
+		expect(wporg.require).toEqual(others);
 		expect(wporg.autoload).toEqual({ 'psr-4': composer.autoload['psr-4'] });
-		expect(wporg['require-dev']).toBeUndefined();
+		expect(wporg['require-dev']).toEqual(composer['require-dev']);
+		expect(wporg.extra.strauss.packages).toEqual(
+			composer.extra.strauss.packages.filter(
+				(name: string) => name !== UPDATER_PACKAGE,
+			),
+		);
+		expect(wporg.extra.strauss.override_autoload).toEqual({});
 		expect(wporg.name).toBe(composer.name);
 	});
 });

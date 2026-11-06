@@ -38,6 +38,7 @@ import {
 	DEFAULT_FLAVOR,
 	flavorFromArgs,
 	stripUpdateUri,
+	UPDATER_PACKAGE,
 	UPDATER_SOURCES,
 	wporgComposerJson,
 	zipName,
@@ -45,6 +46,8 @@ import {
 import { buildReadme } from './readme.mjs';
 
 const DIST = join(root, 'dist');
+/** A path with a dotfile or dot directory in it. */
+const DOTFILE = /(^|\/)\./;
 /** Working directories, removed once the zip passes; kept for a look when it fails. */
 const STAGING = join(DIST, 'stage');
 const UNPACKED = join(DIST, 'unpacked');
@@ -135,9 +138,16 @@ if (flavor !== DEFAULT_FLAVOR) {
 		join(STAGE, 'composer.json'),
 		`${JSON.stringify(wporgComposerJson(composer), null, '\t')}\n`,
 	);
-	// Without the update checker nothing is left to lock: Composer resolves
-	// the PHP requirement alone.
-	rmSync(join(STAGE, 'composer.lock'));
+	// The other packages stay as the lock pins them.
+	mustRun('docker', [
+		...composerInDocker(STAGE),
+		'update',
+		UPDATER_PACKAGE,
+		'--no-install',
+		'--no-scripts',
+		'--no-interaction',
+		'--no-progress',
+	]);
 }
 
 step('Composer production install');
@@ -154,18 +164,16 @@ mustRun('docker', [
 	'--no-progress',
 ]);
 
-if (flavor === DEFAULT_FLAVOR) {
-	step('Prefix the update checker (Strauss)');
-	// The staging directory's vendor/ holds production packages only, so
-	// Strauss runs from the checkout's dev install, through the same wrapper
-	// Composer runs after every install.
-	mustRun('docker', [
-		...composerInDocker(STAGE, { [CHECKOUT_MOUNT]: root }),
-		'php',
-		`${CHECKOUT_MOUNT}/bin/strauss.php`,
-	]);
-	rmSync(join(STAGE, STRAUSS_ALIASES), { force: true });
-}
+step('Prefix the bundled packages (Strauss)');
+// The staging directory's vendor/ holds production packages only, so
+// Strauss runs from the checkout's dev install, through the same wrapper
+// Composer runs after every install.
+mustRun('docker', [
+	...composerInDocker(STAGE, { [CHECKOUT_MOUNT]: root }),
+	'php',
+	`${CHECKOUT_MOUNT}/bin/strauss.php`,
+]);
+rmSync(join(STAGE, STRAUSS_ALIASES), { force: true });
 
 step('Composer production autoloader');
 mustRun('docker', [
@@ -177,6 +185,12 @@ mustRun('docker', [
 ]);
 for (const file of COMPOSER_FILES) {
 	rmSync(join(STAGE, file), { force: true });
+}
+// A package's own dotfiles (a `.gitkeep` in an empty directory) are never loaded.
+for (const file of filesUnder(join(STAGE, 'vendor'))) {
+	if (DOTFILE.test(file)) {
+		rmSync(join(STAGE, 'vendor', file));
+	}
 }
 
 step('readme.txt');
