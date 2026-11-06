@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.1.0...v1.1.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* leave Tested up to out of the wordpress.org build's plugin header ([#24](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/24)) ([98b4dc3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/98b4dc3cd6b2880c2a3daab1b4be544c27bcb5d7))
+
 ## [1.1.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.0.0...v1.1.0) (2026-11-06)
 
 
