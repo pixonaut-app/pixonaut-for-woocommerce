@@ -299,4 +299,15 @@ final class DesignsTest extends TestCase {
 			$this->assertSame( ApiException::UNEXPECTED_RESPONSE, $error->errorCode );
 		}
 	}
+
+	public function test_an_empty_design_id_is_an_unexpected_answer(): void {
+		try {
+			Designs::id( 'designs.duplicate', '' );
+			$this->fail( 'An empty design id was taken.' );
+		} catch ( ApiException $e ) {
+			$this->assertSame( ApiException::UNEXPECTED_RESPONSE, $e->errorCode );
+			$this->assertSame( 'designs.duplicate', $e->operation );
+		}
+		$this->assertSame( 'des_1', Designs::id( 'designs.duplicate', 'des_1' ) );
+	}
 }

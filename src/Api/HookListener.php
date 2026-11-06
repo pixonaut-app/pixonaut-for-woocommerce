@@ -15,6 +15,8 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\Deprecation;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\Listener;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\PreparedRequest;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\Result;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\NullLogger;
 
 /**
  * Fires the `pixonaut_wc_api_*` hooks around every request the SDK sends,
@@ -25,12 +27,16 @@ final class HookListener extends Listener {
 
 	private readonly Closure $clock;
 
+	private readonly LoggerInterface $logger;
+
 	/**
-	 * @param Deprecations $deprecations Records deprecations for the admin notice.
-	 * @param Closure|null $clock        `fn(): int` Unix time; `time()` when null.
+	 * @param Deprecations         $deprecations Records deprecations for the admin notice.
+	 * @param Closure|null         $clock        `fn(): int` Unix time; `time()` when null.
+	 * @param LoggerInterface|null $logger       Logs a deprecation once, when it is new or changed; nowhere when null.
 	 */
-	public function __construct( private readonly Deprecations $deprecations, ?Closure $clock = null ) {
-		$this->clock = $clock ?? static fn (): int => time();
+	public function __construct( private readonly Deprecations $deprecations, ?Closure $clock = null, ?LoggerInterface $logger = null ) {
+		$this->clock  = $clock ?? static fn (): int => time();
+		$this->logger = $logger ?? new NullLogger();
 	}
 
 	/**
@@ -150,6 +156,16 @@ final class HookListener extends Listener {
 	 * @param Deprecation $deprecation The notice.
 	 */
 	public function deprecated( string $operation, Deprecation $deprecation ): void {
-		$this->deprecations->record( $operation, $deprecation->header, $deprecation->sunsetHeader, ( $this->clock )() );
+		if ( ! $this->deprecations->record( $operation, $deprecation->header, $deprecation->sunsetHeader, ( $this->clock )() ) ) {
+			return;
+		}
+		$this->logger->warning(
+			sprintf( 'Pixonaut deprecated something %s uses (Deprecation: %s, Sunset: %s). Update the plugin before the sunset.', $operation, $deprecation->header, $deprecation->sunsetHeader ?? 'none' ),
+			array(
+				'operation'   => $operation,
+				'deprecation' => $deprecation->header,
+				'sunset'      => $deprecation->sunsetHeader,
+			)
+		);
 	}
 }

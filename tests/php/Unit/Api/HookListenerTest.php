@@ -12,6 +12,7 @@ use Brain\Monkey\Filters;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\HookListener;
 use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
+use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
 use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
 use Pixonaut\WooCommerce\Tests\Unit\FakeOptions;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
@@ -29,6 +30,8 @@ final class HookListenerTest extends TestCase {
 	private const DEPRECATED_AT = '@1798761600';
 
 	private const SUNSET = 'Wed, 01 Jan 2027 00:00:00 GMT';
+
+	private const LATER_SUNSET = 'Fri, 01 Jan 2027 00:00:00 GMT';
 
 	private ScriptedClient $http;
 
@@ -114,5 +117,27 @@ final class HookListenerTest extends TestCase {
 			),
 			( new Deprecations() )->all()
 		);
+	}
+
+	public function test_a_deprecation_is_logged_once_and_again_when_it_changes(): void {
+		$headers = array(
+			'Deprecation' => self::DEPRECATED_AT,
+			'Sunset'      => self::SUNSET,
+		);
+		$this->http->json( 200, ConnectionAnswers::connection( true ), $headers )
+			->json( 200, ConnectionAnswers::connection( true ), $headers )
+			->json( 200, ConnectionAnswers::connection( true ), array( 'Sunset' => self::LATER_SUNSET ) + $headers );
+		$logger   = new RecordingLogger();
+		$listener = new HookListener( new Deprecations(), static fn (): int => self::NOW, $logger );
+		$sdk      = $this->http->pixonaut( null, $logger, $listener )->sdk();
+
+		$sdk->connect()->get();
+		$sdk->connect()->get();
+		$sdk->connect()->get();
+
+		$warnings = array_values( array_filter( $logger->entries, static fn ( array $entry ): bool => 'warning' === $entry['level'] ) );
+		$this->assertCount( 2, $warnings );
+		$this->assertSame( self::SUNSET, $warnings[0]['context']['sunset'] );
+		$this->assertSame( self::LATER_SUNSET, $warnings[1]['context']['sunset'] );
 	}
 }

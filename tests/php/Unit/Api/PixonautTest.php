@@ -144,6 +144,18 @@ final class PixonautTest extends TestCase {
 		$pixonaut->all( array( $commit ) );
 	}
 
+	public function test_all_refuses_a_write_that_takes_no_key(): void {
+		$pixonaut = $this->http->pixonaut();
+		$approve  = $pixonaut->sdk()->prepare( 'designs.approve', array( 'id' => 'des_1' ), body: array( 'expectedRevision' => 2 ) );
+
+		try {
+			$pixonaut->all( array( $approve ) );
+			$this->fail( 'A write was sent in a batch, which sends no body.' );
+		} catch ( InvalidArgumentException $e ) {
+			$this->assertSame( array(), $this->http->sent );
+		}
+	}
+
 	public function test_an_operation_missing_from_consumed_json_fails_the_test(): void {
 		$path    = OpenApiAssert::unconsumed_get_path();
 		$factory = new Psr17Factory();

@@ -542,7 +542,7 @@ final class Plugin {
 	 * Builds the SDK, one client per timeout.
 	 */
 	public function pixonaut(): Pixonaut {
-		$this->pixonaut ??= new Pixonaut( new Credentials( $this->connection_store() ), new WcLogger(), new HookListener( new Deprecations() ) );
+		$this->pixonaut ??= new Pixonaut( new Credentials( $this->connection_store() ), new WcLogger(), new HookListener( new Deprecations(), null, new WcLogger() ) );
 		return $this->pixonaut;
 	}
 

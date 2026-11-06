@@ -242,14 +242,15 @@ final class Designs {
 	}
 
 	/**
-	 * A design id Pixonaut answered, once it is one.
+	 * A design id Pixonaut answered, once it is one: the SDK checks only
+	 * that it is a string.
 	 *
 	 * @param string $operation SDK operation id, for the error.
 	 * @param string $id        The `designId` answered.
 	 *
 	 * @throws ApiException `unexpected_response` when it is empty.
 	 */
-	private static function id( string $operation, string $id ): string {
+	public static function id( string $operation, string $id ): string {
 		if ( '' === $id ) {
 			throw new ApiException( $operation, 200, ApiException::UNEXPECTED_RESPONSE, false );
 		}

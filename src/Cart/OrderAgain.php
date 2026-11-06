@@ -247,7 +247,7 @@ final class OrderAgain {
 	 */
 	private function copy( WC_Product $product, string $design_id ): string {
 		try {
-			return $this->pixonaut->designs()->duplicate( $design_id )->designId;
+			return Designs::id( 'designs.duplicate', $this->pixonaut->designs()->duplicate( $design_id )->designId );
 		} catch ( ApiException $error ) {
 			if ( in_array( $error->errorCode, array( ErrorCode::NOT_FOUND, ErrorCode::DESIGN_ERASED ), true ) ) {
 				$this->logger->warning( sprintf( 'Could not order product %d again: its design %s is %s.', $product->get_id(), $design_id, $error->errorCode ), array( 'code' => $error->errorCode ) );

@@ -422,7 +422,7 @@ final class AddToCart {
 		$sides  = array();
 		try {
 			foreach ( $line->sides as $side ) {
-				$copy                 = $this->pixonaut->designs()->duplicate( $side->design_id )->designId;
+				$copy                 = Designs::id( 'designs.duplicate', $this->pixonaut->designs()->duplicate( $side->design_id )->designId );
 				$copies[ $side->key ] = $copy;
 				$design               = $this->read( $copy );
 				$sides[]              = new CommittedSide(

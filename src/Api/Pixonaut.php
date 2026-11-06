@@ -112,6 +112,11 @@ final class Pixonaut {
 	public const SHORT_TIMEOUT_SECONDS = 5;
 
 	/**
+	 * The only method `all()` sends.
+	 */
+	private const READ = 'GET';
+
+	/**
 	 * Requests `all()` has out at once.
 	 */
 	public const MAX_CONCURRENT = 4;
@@ -177,12 +182,13 @@ final class Pixonaut {
 	 *
 	 * @return list<Result|ApiException> Each request's result, or why Pixonaut refused it or could not be reached, in the order of `$requests`.
 	 *
-	 * @throws InvalidArgumentException When a request does not fit its operation, or takes an `Idempotency-Key`; nothing is sent.
+	 * @throws InvalidArgumentException When a request does not fit its operation, or is not a read (another method, a body, an `Idempotency-Key`); nothing is sent.
 	 */
 	public function all( array $requests ): array {
 		foreach ( $requests as $request ) {
-			if ( null !== $request->idempotencyKey ) {
-				throw new InvalidArgumentException( sprintf( '%s takes an Idempotency-Key; send it on its own.', $request->operation ) );
+			// The batch sends no body: a write sent here would lose it.
+			if ( null !== $request->idempotencyKey || null !== $request->body || self::READ !== self::catalogue()->operation( $request->operation )->method ) {
+				throw new InvalidArgumentException( sprintf( '%s is not a read; send it on its own.', $request->operation ) );
 			}
 		}
 		$client  = $this->client( WpHttpTransport::TIMEOUT_SECONDS );
@@ -258,7 +264,8 @@ final class Pixonaut {
 					$factory,
 					$this->credentials,
 					self::catalogue(),
-					$this->logger,
+					// Deprecations are logged once, by the listener.
+					new SdkLogger( $this->logger ),
 					$this->listener
 				),
 				'http' => $http,

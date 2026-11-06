@@ -62,7 +62,7 @@ final class UninstallRevoke {
 				return false;
 			}
 			$logger = function_exists( 'wc_get_logger' ) ? new WcLogger() : new NullLogger();
-			( new Pixonaut( new Credentials( $store ), $logger, new HookListener( new Deprecations() ) ) )->sdk( $left )->connect()->delete();
+			( new Pixonaut( new Credentials( $store ), $logger, new HookListener( new Deprecations(), null, $logger ) ) )->sdk( $left )->connect()->delete();
 			return true;
 		} catch ( Throwable $e ) {
 			return false;
