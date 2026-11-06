@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.0.0...v1.1.0) (2026-11-06)
+
+
+### Features
+
+* **storefront:** move to Pixonaut SDK 0.26.0, which orders a blank's views and scenes as one list ([#15](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/15)) ([9d9229f](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/9d9229f30e2df07b8c655ba9f3891f79129fc66b))
+
 ## [1.0.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.0.0...v1.0.0) (2026-11-06)
 
 
