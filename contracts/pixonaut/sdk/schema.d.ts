@@ -30001,6 +30001,10 @@ export interface operations {
                                 /** @description The stored view's id. */
                                 viewId: string;
                             } | {
+                                /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
+                                row?: {
+                                    [key: string]: string;
+                                };
                                 /** @description The scene's id. */
                                 sceneId: string;
                                 /** @description A scene from the library. */
@@ -30008,7 +30012,7 @@ export interface operations {
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
-                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: not painted, they show as photographed. */
+                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos are not painted and show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
                             paintBy: string | null;
                             partnerLocked: boolean;
                             /** @description How much of the blank is photographed. Answered in a list. */
@@ -30559,6 +30563,10 @@ export interface operations {
                             /** @description The stored view's id. */
                             viewId: string;
                         } | {
+                            /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
+                            row?: {
+                                [key: string]: string;
+                            };
                             /** @description The scene's id. */
                             sceneId: string;
                             /** @description A scene from the library. */
@@ -30566,7 +30574,7 @@ export interface operations {
                         })[];
                         /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                         orderCount?: number;
-                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: not painted, they show as photographed. */
+                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos are not painted and show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
                         paintBy: string | null;
                         partnerLocked: boolean;
                         /** @description How much of the blank is photographed. Answered in a list. */
@@ -31731,7 +31739,7 @@ export interface operations {
                             };
                             values: string[];
                         }[];
-                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: not painted, they show as photographed. */
+                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos are not painted and show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
                         paintBy: string | null;
                         variants: {
                             options: {
@@ -33232,7 +33240,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: idempotency_key_reused, invalid_idempotency_key, invalid_doc, invalid_fulfilment_payload, payload_too_large, missing_fulfilment_keys, spot_plate_required, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, asset_map_too_large */
+            /** @description Refused: idempotency_key_reused, invalid_idempotency_key, invalid_doc, invalid_fulfilment_payload, payload_too_large, missing_fulfilment_keys, spot_plate_required, design_not_stitchable, design_unreadable, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, asset_map_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -33249,11 +33257,27 @@ export interface operations {
                         /** @description Always sent with `invalid_doc`. */
                         detail?: unknown;
                         error: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                        /** @description The embroidery machine the design goes to. Always sent with `design_not_stitchable`, `design_unreadable`. */
+                        machine?: string;
                         /** @description Always sent with `payload_too_large`, `asset_map_too_large`. */
                         maxBytes?: number;
                         /** @description Always sent with `missing_fulfilment_keys`. */
                         missing?: string[];
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
+                        /** @description Always sent with `design_not_stitchable`, `design_unreadable`, `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -33597,7 +33621,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, spot_plate_required, asset_map_too_large, unknown_layout, empty_layout, invalid_doc, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, spot_plate_required, design_not_stitchable, design_unreadable, asset_map_too_large, unknown_layout, empty_layout, invalid_doc, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -33614,9 +33638,25 @@ export interface operations {
                         /** @description Always sent with `invalid_doc`. */
                         detail?: unknown;
                         error: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                        /** @description The embroidery machine the design goes to. Always sent with `design_not_stitchable`, `design_unreadable`. */
+                        machine?: string;
                         /** @description Always sent with `asset_map_too_large`, `payload_too_large`. */
                         maxBytes?: number;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`, `design_not_stitchable`, `design_unreadable`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -33821,7 +33861,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: spot_plate_required, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, not_a_layout_proof, layout_proof_mismatch, invalid_doc, payload_too_large */
+            /** @description Refused: spot_plate_required, design_not_stitchable, design_unreadable, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, not_a_layout_proof, layout_proof_mismatch, invalid_doc, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -33838,9 +33878,25 @@ export interface operations {
                         /** @description Always sent with `invalid_doc`. */
                         detail?: unknown;
                         error: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                        /** @description The embroidery machine the design goes to. Always sent with `design_not_stitchable`, `design_unreadable`. */
+                        machine?: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
+                        /** @description Always sent with `design_not_stitchable`, `design_unreadable`, `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -38107,7 +38163,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -38128,6 +38184,20 @@ export interface operations {
                         field?: string;
                         /** @description Always sent with `field_value_missing`. */
                         fieldKind?: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`. */
@@ -38135,7 +38205,7 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         machine?: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
@@ -38150,7 +38220,7 @@ export interface operations {
                         missing?: string[];
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
                         /** @description Always sent with `duplicate_placement`. */
                         placementId?: string;
@@ -38165,9 +38235,9 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         printshop?: string;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -41834,7 +41904,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -41860,6 +41930,20 @@ export interface operations {
                         field?: string;
                         /** @description Always sent with `field_value_missing`. */
                         fieldKind?: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`, `print_exceeds_placement`. */
@@ -41867,7 +41951,7 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         machine?: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
@@ -41884,7 +41968,7 @@ export interface operations {
                         named?: string;
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`, and may be sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
                         /** @description Always sent with `duplicate_placement`, `placement_not_of_blank`. */
                         placementId?: string;
@@ -41905,9 +41989,9 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         printshop?: string;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `reroute_blank_not_found`, `reroute_same_blank`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_not_of_blank`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `reroute_blank_not_found`, `reroute_same_blank`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_not_of_blank`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -45200,7 +45284,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -45221,6 +45305,20 @@ export interface operations {
                         field?: string;
                         /** @description Always sent with `field_value_missing`. */
                         fieldKind?: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`. */
@@ -45228,7 +45326,7 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         machine?: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
@@ -45243,7 +45341,7 @@ export interface operations {
                         missing?: string[];
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
                         /** @description Always sent with `duplicate_placement`. */
                         placementId?: string;
@@ -45258,9 +45356,9 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         printshop?: string;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -45344,6 +45442,7 @@ export interface operations {
                             } | null;
                             deliverySteps: boolean;
                             machineProfiles: boolean;
+                            orderUpdates: boolean;
                             partnerPhotos: boolean;
                             placeholders: string[];
                             spotPlates: boolean;
@@ -45379,6 +45478,8 @@ export interface operations {
                                 commitKeys: string[];
                                 needsBlank: boolean;
                             };
+                            /** @description The address to register in the printshop's own dashboard for its order updates, for a printshop whose updates cannot be registered for it; null for any other. It holds a secret: share it only with the printshop. */
+                            callbackUrl: string | null;
                             config?: unknown;
                             /**
                              * Format: email
@@ -49176,7 +49277,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_placement, print_size_illegal, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, share_link_name_too_long, payload_too_large */
+            /** @description Refused: unknown_placement, print_size_illegal, design_not_stitchable, design_unreadable, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, share_link_name_too_long, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -49187,17 +49288,35 @@ export interface operations {
                         /** @description Sent with `payload_too_large`. */
                         bytes?: number;
                         error: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
                         /** @description The size's place in the side's menu. Always sent with `print_size_illegal`. */
                         index?: number;
+                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `design_not_stitchable`, `design_unreadable`. */
+                        machine?: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
                         /** @description The longest name a link may have. Always sent with `share_link_name_too_long`. */
                         maxLength?: number;
                         /** @description Always sent with `placement_unfilled`. */
                         placement?: string;
-                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. Always sent with `print_size_illegal`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`. */
+                        /** @description The size's place in the side's menu; null where it offers none. Always sent with `design_not_stitchable`, `design_unreadable`. */
+                        printSizeIndex?: number | null;
+                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. Always sent with `print_size_illegal`, `design_not_stitchable`, `design_unreadable`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`. */
                         reason?: string;
-                        /** @description The side's key; null on a link with one side. Always sent with `print_size_illegal`. */
+                        /** @description With `print_size_illegal`: The side's key; null on a link with one side. With `design_not_stitchable`: The side, by key; null for a link of one. With `design_unreadable`: The side, by key; null for a link of one. Always sent with `print_size_illegal`, `design_not_stitchable`, `design_unreadable`. */
                         side?: string | null;
                     };
                 };
