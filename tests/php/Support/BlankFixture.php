@@ -78,6 +78,9 @@ final class BlankFixture {
 			'categoryId'         => null,
 			// A blank's printshop is set when it is created.
 			'defaultPrintshopId' => $own ?? $printshop ?? self::PRINTSHOP_ID,
+			// A new blank starts on its own photos.
+			'photoSource'        => 'own',
+			'stockItemKey'       => null,
 			'partnerLocked'      => false,
 			'machineProfileId'   => null,
 			'placements'         => $rows,

@@ -30,6 +30,11 @@ use Pixonaut\WooCommerce\Catalogue\Side;
 final class DesignerLinkBody {
 
 	/**
+	 * The `afterApprove` that words the hosted page's button for adding to the cart.
+	 */
+	private const AFTER_APPROVE_ADD_TO_CART = 'add_to_cart';
+
+	/**
 	 * @param string               $template_base_id The template the link is made for: the first side's.
 	 * @param array<string, mixed> $body             The request body.
 	 */
@@ -48,8 +53,9 @@ final class DesignerLinkBody {
 	 * @param ProductVariant|null $variant    The variant the product or variation sells, on a blank.
 	 * @param bool                $frame      Whether the hosted designer frames the print area; see the `print_area_frame` setting.
 	 * @param string|null         $layout     The form's layout, `page` or `steps`; null follows each side's template. See `FormLayout`.
+	 * @param bool                $add_to_cart Whether the store adds the design to the cart on return, which the hosted page's button then says.
 	 */
-	public static function for_config( ProductConfig $config, string $return_url, ?string $language, ?ProductVariant $variant = null, bool $frame = false, ?string $layout = null ): ?self {
+	public static function for_config( ProductConfig $config, string $return_url, ?string $language, ?ProductVariant $variant = null, bool $frame = false, ?string $layout = null, bool $add_to_cart = false ): ?self {
 		$sides = $config->sides;
 		if ( ! $config->valid || array() === $sides || ( count( $sides ) > 1 && null === $config->blank_id ) ) {
 			return null;
@@ -91,6 +97,10 @@ final class DesignerLinkBody {
 		if ( null !== $layout ) {
 			// Absent, as for a link kept from before, each side's form follows its template.
 			$body['layout'] = $layout;
+		}
+		if ( $add_to_cart ) {
+			// Sent only when on, as Pixonaut's default is the return: a link kept from before still matches.
+			$body['afterApprove'] = self::AFTER_APPROVE_ADD_TO_CART;
 		}
 		return new self( $first->template_base_id, $body );
 	}

@@ -336,7 +336,8 @@ export function pageDeps(send: typeof fetch = vi.fn()) {
 			new CartEdit(settings, send),
 		navigate: vi.fn(),
 		fetchProof: vi.fn((_url: string) =>
-			Promise.resolve(new Response(new Blob(['jpeg']))),
+			// A string body: jsdom's `Blob` has no `stream()`, which Node 22's `Response` needs.
+			Promise.resolve(new Response('jpeg')),
 		),
 	};
 }

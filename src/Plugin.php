@@ -155,6 +155,7 @@ use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Settings\SettingsPage;
 use Pixonaut\WooCommerce\ShopTools\ShopToolRoute;
 use Pixonaut\WooCommerce\ShopTools\ShopTools;
+use Pixonaut\WooCommerce\Storefront\AddAfterApprove;
 use Pixonaut\WooCommerce\Storefront\DesignerLinkChanges;
 use Pixonaut\WooCommerce\Storefront\DesignerLinkWithdrawals;
 use Pixonaut\WooCommerce\Storefront\DesignerVisits;
@@ -940,7 +941,7 @@ final class Plugin {
 	}
 
 	public function personalise_button(): PersonaliseButton {
-		$this->personalise_button ??= new PersonaliseButton( new ButtonProducts( $this->settings() ), $this->connection(), $this->designer_links(), new DesignerVisits(), $this->add_to_cart(), $this->storefront(), $this->templates(), $this->labels(), new WcLogger(), $this->opening_price(), $this->personalised_designs(), $this->proof_urls(), new LinePicture( $this->settings() ), $this->server_reads() );
+		$this->personalise_button ??= new PersonaliseButton( new ButtonProducts( $this->settings() ), $this->connection(), $this->designer_links(), new DesignerVisits(), $this->add_to_cart(), $this->storefront(), $this->templates(), $this->labels(), new WcLogger(), $this->opening_price(), $this->personalised_designs(), $this->proof_urls(), new LinePicture( $this->settings() ), new AddAfterApprove( $this->settings() ), $this->server_reads() );
 		return $this->personalise_button;
 	}
 

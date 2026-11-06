@@ -485,7 +485,7 @@ The link is minted once and kept until the body changes: the filter runs wheneve
 
 | Parameter | Type | Description |
 |---|---|---|
-| `$body` | `array<string, mixed>` | One side's `blankId`, `placementId`, `views` (when the product narrows them), `variants` and `initialVariant` (the variant it sells), `initialView` (the product's starting view), `printSizes`, `selectedPrintSizeIndex` (the size it starts on) at the top level, or 2–10 under `sides` with `key`, `label` and `templateId` when it is not the link's; `returnUrl`, `locale`, `printAreaFrame` (`true`, when the store frames the print area), and `layout` (`page` or `steps`, when the product or store fixes the form's layout). |
+| `$body` | `array<string, mixed>` | One side's `blankId`, `placementId`, `views` (when the product narrows them), `variants` and `initialVariant` (the variant it sells), `initialView` (the product's starting view), `printSizes`, `selectedPrintSizeIndex` (the size it starts on) at the top level, or 2–10 under `sides` with `key`, `label` and `templateId` when it is not the link's; `returnUrl`, `locale`, `printAreaFrame` (`true`, when the store frames the print area), `layout` (`page` or `steps`, when the product or store fixes the form's layout), and `afterApprove` (`add_to_cart`, when the store adds the design on return). |
 | `$product` | `WC_Product` | The product or variation. |
 
 Since 0.1.0. Fired in `src/Storefront/KeptDesignerLinks.php`.

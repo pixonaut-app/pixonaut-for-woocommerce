@@ -134,6 +134,12 @@ Default: empty.
 
 Default: `false`.
 
+### `add_after_approve`
+
+**Add to cart after approve in hosted page** (checkbox). For the Personalise button layout. Approving adds the product to the cart and opens its cart item's page, and Pixonaut's designer says Approve and add to cart. Off, approving returns to the product page, and it says Approve and go back.
+
+Default: `false`.
+
 ### `attribute_options`
 
 **Product options in the designer** (select). How the designer on the product page shows the options of a variable product, such as its sizes, when it draws them in its form. As the theme shows them (the default) keeps the theme's own field, and any swatches another plugin draws in it. As swatches shows each option as a button like the designer's own choices, an option that cannot be bought with the other choices greyed out.

@@ -1203,16 +1203,20 @@ handler, at `wp_loaded`, the plugin:
    blank, but the plugin links such a product to one template only;
 3. keeps the posted `attribute_*` values and the quantity, which the product
    page offers on return, in the customer's WooCommerce session for 24 hours, under the product and variation (a
-   second press for the same product replaces them), and redirects to the
-   link's `url`.
+   second press for the same product replaces them), with a random `state`
+   for this trip (32 letters and digits), and redirects to the link's `url`
+   with `state=<value>` added. The link itself stays the same for every
+   customer; only the address the customer is sent to carries the trip's
+   state, so a cached page never holds it.
 
 Pixonaut sends the customer back to `returnUrl`, keeping its query, with
 `proofToken` (one side) or `proofToken[<side key>]`, or with no token when
-they cancel. The session remembers the latest returns' proof tokens: the
-same return again is refused with the `designer_visit_unknown` label before
-any visit is touched, as is a return carrying a `state` the session never
-opened (a link minted before links were kept per product). The return
-handler then takes the visit of the product and variation the query names
+they cancel, and the trip's `state` unchanged. Pixonaut neither checks nor
+stores the state; matching it to a trip is the plugin's job. The session
+remembers the latest returns' proof tokens: the same return again is refused
+with the `designer_visit_unknown` label before any visit is touched. A
+`state` naming a visit of a link minted before links were kept per product
+takes that visit. The return handler then takes the visit of the product and variation the query names
 out of the session. With none there, in another browser or after a session
 ended, it commits nothing: it keeps the tokens under a visit of the product with
 no attributes chosen, adds the `design_ready` notice and sends the customer to
@@ -1233,10 +1237,23 @@ with its tokens and the button template offers `pixonaut_add_design` to try
 again; a design found not to match the product is deleted and not kept. That
 button shows only beside the Personalise button, never on the `designed` state.
 
-Returning never adds to the cart, whichever session the return address is opened
-in: the link is the same for every customer and its return address carries nothing
-per trip, so a session with a trip open to a product cannot tell its own return
-from someone else's. The customer adds the design with WooCommerce's own button.
+With the `add_after_approve` setting on, the link's body has
+`afterApprove: "add_to_cart"`, which only words the hosted page's button, and a
+return whose `state` is that of the trip it takes adds the line to the cart
+through WooCommerce's own form handler (`WC_Form_Handler::add_to_cart_action()`,
+`Storefront\AddAfterApprove`), so other extensions' validation applies, and
+lands on its page. The state is used once: taking the trip's visit, or keeping
+it for another try, forgets it. Any other return, with no state, another
+session's or one already used, never adds: it lands on the product page showing
+the design, which the customer adds with WooCommerce's button, as with the
+setting off. Pressing `pixonaut_add_design` never adds either. A refused add
+lands on the design's page with the notice saying why.
+
+Stores that had the setting on before it was briefly removed must turn it on
+again: the update that removed it (migration 9, `ForgetAddAfterApprove`)
+deleted the stored value, and it may already have run. The migration stays as
+it is, so every store starts with the setting off whichever update it ran
+first.
 
 While the page shows a design for what the form holds, `.pixonaut-personalise`
 and the button are `hidden`, so WooCommerce's own button shows with its own text.

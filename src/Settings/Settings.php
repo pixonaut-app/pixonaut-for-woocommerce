@@ -52,6 +52,7 @@ final class Settings {
 
 	public const PRINT_AREA_FRAME = 'print_area_frame';
 
+	public const ADD_AFTER_APPROVE = 'add_after_approve';
 
 	public const ATTRIBUTE_OPTIONS = 'attribute_options';
 
@@ -220,6 +221,18 @@ final class Settings {
 					/* translators: Title of a setting on the settings page, shown to the merchant. */
 					'title' => __( 'Show the print area\'s frame', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'Draws a thin grey frame on the preview around where the design can go, in the designer on the product page and in Pixonaut\'s designer the Personalise button opens. Off, the design sits on the product photo as it will be printed.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::checkbox(
+				self::ADD_AFTER_APPROVE,
+				false,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant. "Hosted page" is Pixonaut's designer page the Personalise button opens. */
+					'title' => __( 'Add to cart after approve in hosted page', 'pixonaut-for-woocommerce' ),
+					/* translators: Help text of a setting on the settings page. "Approve and add to cart" and "Approve and go back" are the labels of the button on Pixonaut's designer page. */
+					'desc'  => __( 'For the Personalise button layout. Approving adds the product to the cart and opens its cart item\'s page, and Pixonaut\'s designer says Approve and add to cart. Off, approving returns to the product page, and it says Approve and go back.', 'pixonaut-for-woocommerce' ),
 				)
 			)
 		);

@@ -3,8 +3,11 @@
 // would after filling the form. Approving makes each side's proof and sends
 // the shopper back to the link's `returnUrl`, keeping its query, with the
 // link's `state` if it has one and the proof tokens (`proofToken`, or
-// `proofToken[<key>]` with `sides`); cancelling sends no token. Each side
-// says the variant it starts on, by its options, and the views it is shown in.
+// `proofToken[<key>]` with `sides`); cancelling sends no token. A `state` the
+// store adds to the hosted address for one trip is carried through the page
+// and returned in place of the link's, unchecked and unstored; one outside the
+// allowed form, or given more than once, is ignored. Each side says the variant it starts on, by its
+// options, and the views it is shown in.
 import type { Context, Hono } from 'hono';
 import type { Fake } from './app';
 import {
@@ -27,13 +30,34 @@ function openLink(fake: Fake, token: string): DesignerLink | undefined {
 		: link;
 }
 
-function back(link: DesignerLink): URL {
+/** The query parameter carrying a trip's own `state`, there and back. */
+const TRIP_STATE_PARAM = 'state';
+
+/** The form a trip's `state` takes: 1 to 200 unreserved URL characters. */
+const TRIP_STATE_FORM = /^[A-Za-z0-9._~-]{1,200}$/;
+
+/**
+ * The trip's own `state` on a hosted page request, when it is given once and
+ * well formed; a repeated one counts as missing.
+ */
+function tripState(c: Context): string | undefined {
+	const values = c.req.queries(TRIP_STATE_PARAM) ?? [];
+	const [value] = values;
+	return values.length === 1 &&
+		value !== undefined &&
+		TRIP_STATE_FORM.test(value)
+		? value
+		: undefined;
+}
+
+function back(link: DesignerLink, trip: string | undefined): URL {
 	const url = new URL(link.returnUrl ?? '');
-	// The store's own query stays; `state` is the link's, or none.
-	if (link.state === null) {
-		url.searchParams.delete('state');
+	// The store's own query stays; `state` is the trip's, else the link's, or none.
+	const state = trip ?? link.state;
+	if (state === null) {
+		url.searchParams.delete(TRIP_STATE_PARAM);
 	} else {
-		url.searchParams.set('state', link.state);
+		url.searchParams.set(TRIP_STATE_PARAM, state);
 	}
 	return url;
 }
@@ -61,8 +85,14 @@ function page(
 	token: string,
 	link: DesignerLink,
 	lang: string | undefined,
+	trip: string | undefined,
 ): string {
 	const base = `${DESIGNER_PATH}/${encodeURIComponent(token)}`;
+	// The trip's state holds for the whole visit, so each way back carries it.
+	const query =
+		trip === undefined
+			? ''
+			: `?${new URLSearchParams({ [TRIP_STATE_PARAM]: trip })}`;
 	return `<!doctype html>
 <html lang="${pageLanguage(state, link.tenantId, lang, link.locale)}">
 <head><meta charset="utf-8"><title>Pixonaut designer</title></head>
@@ -70,8 +100,8 @@ function page(
 <h1>Pixonaut designer</h1>
 ${link.sides.map((side) => sideText(state, side)).join('\n')}
 <p>Layout: ${link.layout ?? 'template'}</p>
-<p><a href="${base}/approve">${APPROVE_TEXT[link.afterApprove]}</a></p>
-<p><a href="${base}/cancel">Cancel</a></p>
+<p><a href="${base}/approve${query}">${APPROVE_TEXT[link.afterApprove]}</a></p>
+<p><a href="${base}/cancel${query}">Cancel</a></p>
 </body>
 </html>`;
 }
@@ -91,7 +121,9 @@ export function registerHostedDesigner(app: Hono, fake: Fake): void {
 		const link = openLink(fake, token);
 		return link === undefined
 			? gone(c)
-			: c.html(page(fake.state, token, link, c.req.query('lang')));
+			: c.html(
+					page(fake.state, token, link, c.req.query('lang'), tripState(c)),
+				);
 	});
 
 	app.get(`${DESIGNER_PATH}/:token/cancel`, (c) => {
@@ -101,7 +133,7 @@ export function registerHostedDesigner(app: Hono, fake: Fake): void {
 		}
 		return link.returnUrl === null
 			? c.text('Cancelled.')
-			: c.redirect(back(link).toString(), 302);
+			: c.redirect(back(link, tripState(c)).toString(), 302);
 	});
 
 	app.get(`${DESIGNER_PATH}/:token/approve`, (c) => {
@@ -113,7 +145,7 @@ export function registerHostedDesigner(app: Hono, fake: Fake): void {
 			// Pixonaut commits the design itself then; no store test takes this path.
 			return c.text('Approved.');
 		}
-		const url = back(link);
+		const url = back(link, tripState(c));
 		for (const side of link.sides) {
 			const proof = mintProof(fake.state, fake.clock, {
 				storeId: link.storeId,

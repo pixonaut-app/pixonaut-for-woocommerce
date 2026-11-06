@@ -43,9 +43,14 @@ use WP_Block;
  * a button to change it on Pixonaut's correction page (`HostedCorrection`), and
  * WooCommerce's own Add to cart button, which adds it as a line of its own with
  * the chosen quantity (`AddToCart`) and lands on that line's page. A plain visit
- * to the product is always fresh. No return adds to the cart by itself: only that
- * button does, as a return address carries nothing tying it to one customer's
- * trip. Cancelling sends them back to the product.
+ * to the product is always fresh. Cancelling sends them back to the product.
+ *
+ * Each trip gets a random state, kept with the visit and added to the hosted
+ * designer's address, which Pixonaut carries back. With the "Add to cart after
+ * approve" setting on, a return carrying the state of the trip it takes adds
+ * the design itself (`AddAfterApprove`) and lands on that line's page. Any
+ * other return, with no state, another's or one already used, lands on the
+ * page showing the design, which the customer adds with that button.
  *
  * A return with no trip in this session, in another browser or from an address
  * someone else opened, commits nothing: its tokens are kept
@@ -107,8 +112,9 @@ final class PersonaliseButton {
 	public const VARIATION_ARG = 'pixonaut_variation';
 
 	/**
-	 * Parameters the hosted designer adds to the return address: `state`
-	 * only for a link minted before links were kept per product.
+	 * Parameters the hosted designer adds to the return address. `state` is
+	 * the trip's own, which the store adds to the hosted designer's address;
+	 * a link minted before links were kept per product carries its own.
 	 */
 	public const STATE_ARG = 'state';
 
@@ -188,6 +194,7 @@ final class PersonaliseButton {
 	 * @param PersonalisedDesigns $personalised The designs the customer brought back.
 	 * @param ProofUrls           $proofs     Signs the design's pictures.
 	 * @param LinePicture         $picture    Which picture of a design a product shows.
+	 * @param AddAfterApprove     $after_approve Adds the design of the customer's own return.
 	 * @param ServerReads         $reads      Whether a template's background shows through.
 	 */
 	public function __construct(
@@ -204,6 +211,7 @@ final class PersonaliseButton {
 		private readonly PersonalisedDesigns $personalised,
 		private readonly ProofUrls $proofs,
 		private readonly LinePicture $picture,
+		private readonly AddAfterApprove $after_approve,
 		private readonly ServerReads $reads,
 	) {
 	}
@@ -758,10 +766,12 @@ final class PersonaliseButton {
 			$this->logger->warning( sprintf( 'Could not make a designer link for product %d: %s', $product->get_id(), $error->getMessage() ), array( 'code' => $error->error_code ) );
 			$url = null;
 		}
-		if ( null === $url || null === $this->visits->open( $product_id, $variation_id, max( 1, $quantity ), $attributes ) ) {
+		$state = null === $url ? null : $this->visits->open( $product_id, $variation_id, max( 1, $quantity ), $attributes );
+		if ( null === $url || null === $state ) {
 			return $this->refuse( Labels::PERSONALISATION_UNAVAILABLE, $product, $back );
 		}
-		return $url;
+		// The link stays the same for every customer; only this trip's address carries its state.
+		return add_query_arg( self::STATE_ARG, rawurlencode( $state ), $url );
 	}
 
 	/**
@@ -770,20 +780,18 @@ final class PersonaliseButton {
 	 * @param int    $product_id   The product the link names (the parent of a variation).
 	 * @param int    $variation_id The variation it names, or 0.
 	 * @param mixed  $tokens       The proof token, or tokens by side key; null when the customer cancelled.
-	 * @param string $state        The state a link minted before links were kept per product carried back; empty otherwise.
+	 * @param string $state        The state carried back: the trip's own, or one a link minted before links were kept per product named its visit by; empty when none.
 	 *
 	 * @return string Where to send the customer.
 	 */
 	public function finish( int $product_id, int $variation_id, mixed $tokens, string $state = '' ): string {
-		if ( '' !== $state ) {
-			$key     = $state;
-			$visit   = $this->visits->take( $state );
-			$product = null === $visit ? null : wc_get_product( $visit['variation_id'] > 0 ? $visit['variation_id'] : $visit['product_id'] );
-			$product = $product instanceof WC_Product ? $product : null;
-		} else {
-			return $this->finish_kept( $product_id, $variation_id, $tokens );
+		$visit = '' === $state ? null : $this->visits->take( $state );
+		if ( null === $visit ) {
+			return $this->finish_kept( $product_id, $variation_id, $tokens, $state );
 		}
-		if ( null === $visit || null === $product ) {
+		$key     = $state;
+		$product = wc_get_product( $visit['variation_id'] > 0 ? $visit['variation_id'] : $visit['product_id'] );
+		if ( ! $product instanceof WC_Product ) {
 			return $this->unknown_visit();
 		}
 		if ( null === $tokens ) {
@@ -796,15 +804,17 @@ final class PersonaliseButton {
 	 * Takes the customer back from a product's kept designer link. The same
 	 * return a second time is refused before the visit is taken, so it
 	 * leaves a visit kept for another try, or opened since, as it is. A return
-	 * this session opened no visit for waits for the customer to use it.
+	 * this session opened no visit for waits for the customer to use it. Only
+	 * a return carrying the state of the trip it takes may add to the cart.
 	 *
-	 * @param int   $product_id   The product the link names (the parent of a variation).
-	 * @param int   $variation_id The variation it names, or 0.
-	 * @param mixed $tokens       The proof token, or tokens by side key; null when the customer cancelled.
+	 * @param int    $product_id   The product the link names (the parent of a variation).
+	 * @param int    $variation_id The variation it names, or 0.
+	 * @param mixed  $tokens       The proof token, or tokens by side key; null when the customer cancelled.
+	 * @param string $state        The trip's state the hosted designer carried back; empty when none.
 	 *
 	 * @return string Where to send the customer.
 	 */
-	private function finish_kept( int $product_id, int $variation_id, mixed $tokens ): string {
+	private function finish_kept( int $product_id, int $variation_id, mixed $tokens, string $state ): string {
 		$key     = DesignerVisits::key( $product_id, $variation_id );
 		$product = self::sellable( $product_id, $variation_id );
 		if ( null === $product ) {
@@ -821,7 +831,8 @@ final class PersonaliseButton {
 			return $product->get_permalink();
 		}
 		if ( null !== $visit || array() === $tokens ) {
-			return $this->commit( $key, $visit ?? $this->visits->unopened( $product_id, $variation_id ), $product, $tokens );
+			$own = null !== $visit && DesignerVisits::own_trip( $visit, $state );
+			return $this->commit( $key, $visit ?? $this->visits->unopened( $product_id, $variation_id ), $product, $tokens, $own );
 		}
 		$this->visits->keep( $key, $this->visits->unopened( $product_id, $variation_id ), $tokens );
 		wc_add_notice( $this->labels->get( Labels::DESIGN_READY, array( 'product_id' => $product->get_id() ) ), 'notice' );
@@ -846,17 +857,20 @@ final class PersonaliseButton {
 
 	/**
 	 * Commits the returned designs, which the product page they land on then
-	 * shows; keeps them for another try when the refusal may pass next time.
+	 * shows, or with the setting on and the customer's own trip, adds them to
+	 * the cart and lands on that line's page; keeps them for another try when
+	 * the refusal may pass next time.
 	 *
 	 * @param string                $state   The visit's key.
 	 * @param array<string, mixed>  $visit   The visit, taken out of the session.
 	 * @param WC_Product            $product The product or variation.
 	 * @param array<string, string> $tokens  Proof token by side key.
-	 * @phpstan-param array{product_id: int, variation_id: int, quantity: int, attributes: array<string, string>, tokens: array<string, string>|null, expires: int} $visit
+	 * @param bool                  $own     Whether the return carried the state of the trip it took.
+	 * @phpstan-param array{product_id: int, variation_id: int, quantity: int, attributes: array<string, string>, tokens: array<string, string>|null, state: string|null, expires: int} $visit
 	 *
 	 * @return string Where to send the customer.
 	 */
-	private function commit( string $state, array $visit, WC_Product $product, array $tokens ): string {
+	private function commit( string $state, array $visit, WC_Product $product, array $tokens, bool $own = false ): string {
 		$line = $this->add->commit_designed( $product, $tokens );
 		if ( null === $line ) {
 			if ( $this->add->retryable() ) {
@@ -866,6 +880,13 @@ final class PersonaliseButton {
 		}
 		$attributes = MovedAttributes::translated( $visit['product_id'], $visit['attributes'] );
 		$key        = $this->personalised->keep( $visit['product_id'], $visit['variation_id'], $line, $visit['quantity'], $attributes );
+		if ( null !== $key && $own && $this->after_approve->on() ) {
+			// A refused add lands on the design's page, with the notice saying why.
+			$page = $this->after_approve->add( $product, $key, $visit['quantity'], $attributes );
+			if ( null !== $page ) {
+				return $page;
+			}
+		}
 		return null === $key ? $product->get_permalink() : PersonalisedDesigns::page_url(
 			array(
 				'key'          => $key,

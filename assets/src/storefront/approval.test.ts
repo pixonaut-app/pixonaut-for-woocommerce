@@ -32,9 +32,12 @@ function change(sdk: ReturnType<typeof fakeSdk>): void {
 /** The `blob:` address the proof image is shown from. */
 const BLOB_URL = 'blob:http://localhost/proof-image';
 
-/** What the image a proof link answers, as fetched. */
+/**
+ * What the image a proof link answers, as fetched. The body is a string, not
+ * a `Blob`: jsdom's `Blob` has no `stream()`, which Node 22's `Response` needs.
+ */
 function proofImage(): Response {
-	return new Response(new Blob(['jpeg'], { type: 'image/jpeg' }));
+	return new Response('jpeg', { headers: { 'Content-Type': 'image/jpeg' } });
 }
 
 function start(sdk = fakeSdk(), mounts?: object) {

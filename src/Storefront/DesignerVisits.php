@@ -26,10 +26,17 @@ use WC_Session_Handler;
  * session remembers the proof tokens its latest returns carried: the same
  * return a second time adds nothing.
  *
+ * Each trip also gets a random `state`, which the store adds to the hosted
+ * designer's address when the customer leaves, and Pixonaut echoes on the
+ * way back. A return carrying the state of the trip it takes is the
+ * customer's own; any other return to the product may be someone else's. A
+ * trip's state is used once: taking the visit, or keeping it for another
+ * try, forgets it.
+ *
  * A trip opened before links were kept per product is kept under a random
  * `state` the hosted designer carries back, which is still taken.
  *
- * @phpstan-type Visit array{product_id: int, variation_id: int, quantity: int, attributes: array<string, string>, tokens: array<string, string>|null, expires: int}
+ * @phpstan-type Visit array{product_id: int, variation_id: int, quantity: int, attributes: array<string, string>, tokens: array<string, string>|null, state: string|null, expires: int}
  */
 final class DesignerVisits {
 
@@ -54,6 +61,12 @@ final class DesignerVisits {
 	 */
 	public const MAX_OPEN = 10;
 
+	/**
+	 * Characters in a trip's state: letters and digits, within the 1 to 200
+	 * characters of `A–Z a–z 0–9 . _ ~ -` Pixonaut echoes, and too many to guess.
+	 */
+	private const STATE_LENGTH = 32;
+
 	private readonly Closure $clock;
 
 	/**
@@ -64,14 +77,14 @@ final class DesignerVisits {
 	}
 
 	/**
-	 * Opens a visit in the customer's session.
+	 * Opens a visit in the customer's session, with a new state for the trip.
 	 *
 	 * @param int                   $product_id   The product (the parent of a variation).
 	 * @param int                   $variation_id The variation, or 0.
 	 * @param int                   $quantity     How many the product page offers to add on return.
 	 * @param array<string, string> $attributes   The customer's chosen `attribute_*` values.
 	 *
-	 * @return string|null Its key; null without a session.
+	 * @return string|null The trip's state; null without a session.
 	 */
 	public function open( int $product_id, int $variation_id, int $quantity, array $attributes = array() ): ?string {
 		$session = WC()->session;
@@ -83,12 +96,14 @@ final class DesignerVisits {
 		$key    = self::key( $product_id, $variation_id );
 		$visits = $this->open_visits();
 		unset( $visits[ $key ] );
+		$state          = wp_generate_password( self::STATE_LENGTH, false );
 		$visits[ $key ] = array(
 			'quantity'   => $quantity,
 			'attributes' => $attributes,
+			'state'      => $state,
 		) + $this->unopened( $product_id, $variation_id );
 		$session->set( self::SESSION_KEY, array_slice( $visits, -self::MAX_OPEN, null, true ) );
-		return $key;
+		return $state;
 	}
 
 	/**
@@ -102,9 +117,20 @@ final class DesignerVisits {
 	}
 
 	/**
+	 * Whether a return's state is that of the trip it took.
+	 *
+	 * @param array<string, mixed> $visit The visit as `take()` gave it.
+	 * @param string               $state The state the hosted designer carried back; empty when none.
+	 * @phpstan-param Visit $visit
+	 */
+	public static function own_trip( array $visit, string $state ): bool {
+		return null !== $visit['state'] && '' !== $state && hash_equals( $visit['state'], $state );
+	}
+
+	/**
 	 * The visit of a return this session opened none for, in another
 	 * browser or after the session ended: one of the product, with no
-	 * attributes chosen.
+	 * attributes chosen and no trip's state.
 	 *
 	 * @param int $product_id   The product (the parent of a variation).
 	 * @param int $variation_id The variation, or 0.
@@ -119,13 +145,15 @@ final class DesignerVisits {
 			'quantity'     => 1,
 			'attributes'   => array(),
 			'tokens'       => null,
+			'state'        => null,
 			'expires'      => ( $this->clock )() + self::LIFETIME_SECONDS,
 		);
 	}
 
 	/**
 	 * Puts a taken visit back with the proof tokens it returned, so adding
-	 * them can be tried again until the visit expires.
+	 * them can be tried again until the visit expires. Its trip's state has
+	 * been used, and no later return matches it.
 	 *
 	 * @param string                $key  Its key.
 	 * @param array<string, mixed>  $visit  The visit as `take()` gave it.
@@ -141,6 +169,7 @@ final class DesignerVisits {
 		self::persist( $session );
 		$visits          = $this->open_visits();
 		$visit['tokens'] = $tokens;
+		$visit['state']  = null;
 		$visits[ $key ]  = $visit;
 		$session->set( self::SESSION_KEY, array_slice( $visits, -self::MAX_OPEN, null, true ) );
 	}
@@ -242,6 +271,7 @@ final class DesignerVisits {
 					'quantity'     => max( 1, (int) ( $visit['quantity'] ?? 1 ) ),
 					'attributes'   => self::strings( $visit['attributes'] ?? null ),
 					'tokens'       => is_array( $visit['tokens'] ?? null ) ? self::strings( $visit['tokens'] ) : null,
+					'state'        => is_string( $visit['state'] ?? null ) ? $visit['state'] : null,
 					'expires'      => $visit['expires'],
 				);
 			}

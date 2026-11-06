@@ -316,6 +316,17 @@ Pixonaut's own site, in the designer language (see
   time with the same design adds nothing and asks the customer to personalise the
   product again.
 
+With **Add to cart after approve in hosted page** on (**Pixonaut > Storefront**), the designer's button reads **Approve and add to cart**. Approving
+adds the product to the cart with the quantity chosen before leaving, and the
+customer lands on that cart item's page. Only the customer's own trip adds: each
+trip to the designer carries a code of its own, which comes back on approving.
+A return in another browser or session, or the same return opened again, never
+adds by itself: the customer adds the design with **Add to cart**, or presses
+**Use my design** first.
+
+If you had this setting on in an earlier version, turn it on again: an update
+switched it off when it was briefly removed.
+
 Each product (each variation, on a variable product) has one designer link
 per language, made when the product is saved and kept until the product
 changes in a way the designer shows. In the Pixonaut studio the link is
