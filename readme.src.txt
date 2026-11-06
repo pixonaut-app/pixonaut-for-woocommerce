@@ -103,7 +103,7 @@ Pixonaut sub-processors: https://pixonaut.app/subprocessors
 
 The designer on the product page is Pixonaut's SDK, a script and a WebAssembly module loaded from https://cdn.pixonaut.app into the customer's browser, on personalised products only. Loading it sends the customer's IP address and browser details to the CDN, as any download does; nothing else is sent to it.
 
-Where the shop's Pixonaut workspace shows it, the designer draws a "Powered by Pixonaut" line under the preview, linking to https://pixonaut.app. Whether it shows is set in the Pixonaut workspace, by its plan and its own setting, not by this plugin.
+The designer shows a "Powered by Pixonaut" link to https://pixonaut.app under the preview. The SDK draws it, not this plugin, and whether it shows is set by the store's Pixonaut plan and workspace setting: on the Free and Starter plans it is always shown; on the Pro and Business plans the workspace can turn it off in the Pixonaut studio. The plugin does not add the link or decide whether it shows; it only leaves room for it under the preview.
 
 Pixonaut terms of service: https://pixonaut.app/terms
 Pixonaut privacy policy: https://pixonaut.app/privacy
