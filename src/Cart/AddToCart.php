@@ -11,10 +11,7 @@ namespace Pixonaut\WooCommerce\Cart;
 
 use Closure;
 use Pixonaut\WooCommerce\Admin\Notices;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
@@ -26,6 +23,11 @@ use Pixonaut\WooCommerce\Milliseconds;
 use Pixonaut\WooCommerce\Refs;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\PersonalisedDesigns;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\DesignsExternalRefUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Product;
 
 /**
@@ -45,6 +47,12 @@ use WC_Product;
  * already holds adds a copy of it (`copied()`), so two lines never hold one design.
  */
 final class AddToCart {
+
+	/**
+	 * Refusals that say the design has no printshop to go to: the store
+	 * cannot fix them by retrying, the merchant must in Pixonaut.
+	 */
+	private const ROUTING_REFUSALS = array( ErrorCode::PRINTSHOP_DIFFERS_FROM_BLANK, ErrorCode::PRINTSHOP_DISCONNECTED, ErrorCode::PRINT_NEEDS_PRINTSHOP );
 
 	/**
 	 * The form field holding the proof tokens: `pixonaut_designs[<side key>]`,
@@ -135,10 +143,11 @@ final class AddToCart {
 	/**
 	 * @param Connection               $connection  The store's connection.
 	 * @param Designs                  $designs     Pixonaut's designs.
+	 * @param Sdk                      $pixonaut Reads, copies and re-references designs.
 	 * @param Settings                 $settings    The default approval mode.
 	 * @param Labels                   $labels      Customer-facing text.
 	 * @param Notices                  $notices     Admin notices.
-	 * @param Logger                   $logger      Logs refusals the customer cannot fix.
+	 * @param LoggerInterface          $logger      Logs refusals the customer cannot fix.
 	 * @param OrderAgain               $order_again Makes the line of an order line ordered again.
 	 * @param Closure|null             $clock       `fn(): int` Unix time; `time()` when null.
 	 * @param CommitFailures|null      $failures    Tells the merchant when commits keep failing; null tells nobody.
@@ -147,10 +156,11 @@ final class AddToCart {
 	public function __construct(
 		private readonly Connection $connection,
 		private readonly Designs $designs,
+		private readonly Sdk $pixonaut,
 		private readonly Settings $settings,
 		private readonly Labels $labels,
 		private readonly Notices $notices,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		private readonly OrderAgain $order_again,
 		?Closure $clock = null,
 		private readonly ?CommitFailures $failures = null,
@@ -412,7 +422,7 @@ final class AddToCart {
 		$sides  = array();
 		try {
 			foreach ( $line->sides as $side ) {
-				$copy                 = $this->designs->duplicate( $side->design_id );
+				$copy                 = $this->pixonaut->designs()->duplicate( $side->design_id )->designId;
 				$copies[ $side->key ] = $copy;
 				$design               = $this->read( $copy );
 				$sides[]              = new CommittedSide(
@@ -429,10 +439,10 @@ final class AddToCart {
 			$line_key = Refs::line_key( $copies, self::cart_owner() );
 			$ref      = Refs::cart_ref( $connection->site, $line_key );
 			foreach ( $copies as $copy ) {
-				$this->designs->set_external_ref( $copy, $ref );
+				$this->pixonaut->designs()->updateExternalRef( $copy, new DesignsExternalRefUpdateRequest( externalRef: $ref ) );
 			}
-		} catch ( ApiError $error ) {
-			$this->logger->warning( sprintf( 'Could not copy a design to add it again: %s', $error->getMessage() ), array( 'code' => $error->error_code ) );
+		} catch ( ApiException $error ) {
+			$this->logger->warning( sprintf( 'Could not copy a design to add it again: %s', $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			$this->personalised?->discard_copies( array_values( $copies ), $line->tenant_id );
 			throw new AddRefused( Labels::DESIGN_NOT_SAVED );
 		} catch ( AddRefused $refused ) {
@@ -718,27 +728,27 @@ final class AddToCart {
 	private function commit_side( WC_Product $product, string $proof_token, string $ref, string $commit_key, array $fulfilment_payload, ?bool $preview_opened ): string {
 		try {
 			return $this->designs->commit( $proof_token, $ref, $commit_key, $fulfilment_payload, $preview_opened );
-		} catch ( ApiError $error ) {
-			if ( in_array( $error->error_code, ErrorCodes::ROUTING_REFUSALS, true ) ) {
-				$this->notice_routing( $product, $error->error_code );
+		} catch ( ApiException $error ) {
+			if ( in_array( $error->errorCode, self::ROUTING_REFUSALS, true ) ) {
+				$this->notice_routing( $product, $error->errorCode );
 				throw new AddRefused( Labels::PERSONALISATION_UNAVAILABLE );
 			}
 			// Within a day of the first commit, the same proof sent from another cart reuses its key with another ref.
-			if ( ErrorCodes::IDEMPOTENCY_KEY_REUSED === $error->error_code ) {
+			if ( ErrorCode::IDEMPOTENCY_KEY_REUSED === $error->errorCode ) {
 				throw new AddRefused( Labels::DESIGN_ALREADY_USED );
 			}
-			if ( ErrorCodes::PROOF_EXPIRED === $error->error_code ) {
+			if ( ErrorCode::PROOF_EXPIRED === $error->errorCode ) {
 				throw new AddRefused( Labels::DESIGN_EXPIRED );
 			}
 			// The connection's own notice tells the merchant.
-			if ( in_array( $error->error_code, array( ErrorCodes::NOT_CONNECTED, ErrorCodes::UNAUTHORIZED ), true ) ) {
+			if ( in_array( $error->errorCode, array( ApiException::NOT_CONNECTED, ErrorCode::UNAUTHORIZED ), true ) ) {
 				throw new AddRefused( Labels::PERSONALISATION_UNAVAILABLE );
 			}
 			$this->failures?->failed( $error );
-			if ( ErrorCodes::WORKSPACE_SUSPENDED === $error->error_code ) {
+			if ( ErrorCode::WORKSPACE_SUSPENDED === $error->errorCode ) {
 				throw new AddRefused( Labels::PERSONALISATION_UNAVAILABLE );
 			}
-			$this->logger->warning( sprintf( 'Could not commit a design for product %d: %s', $product->get_id(), $error->getMessage() ), array( 'code' => $error->error_code ) );
+			$this->logger->warning( sprintf( 'Could not commit a design for product %d: %s', $product->get_id(), $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			throw new AddRefused( Labels::DESIGN_NOT_SAVED );
 		}
 	}
@@ -753,9 +763,9 @@ final class AddToCart {
 	 */
 	private function read( string $design_id ): array {
 		try {
-			return $this->designs->get( $design_id );
-		} catch ( ApiError $error ) {
-			$this->logger->warning( sprintf( 'Could not read design %s after committing it: %s', $design_id, $error->getMessage() ), array( 'code' => $error->error_code ) );
+			return $this->pixonaut->designs()->get( $design_id )->raw();
+		} catch ( ApiException $error ) {
+			$this->logger->warning( sprintf( 'Could not read design %s after committing it: %s', $design_id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			throw new AddRefused( Labels::DESIGN_NOT_SAVED );
 		}
 	}
@@ -794,8 +804,8 @@ final class AddToCart {
 		foreach ( $design_ids as $design_id ) {
 			try {
 				$this->designs->delete( $design_id );
-			} catch ( ApiError $error ) {
-				$this->logger->warning( sprintf( 'Could not delete refused design %s: %s', $design_id, $error->getMessage() ), array( 'code' => $error->error_code ) );
+			} catch ( ApiException $error ) {
+				$this->logger->warning( sprintf( 'Could not delete refused design %s: %s', $design_id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			}
 		}
 	}

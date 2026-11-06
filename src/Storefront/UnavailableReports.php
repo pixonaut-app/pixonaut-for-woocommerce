@@ -10,9 +10,9 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Pixonaut\WooCommerce\Admin\Notices;
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
@@ -89,16 +89,16 @@ final class UnavailableReports {
 	private const OUTDATED_NOTICE = 'storefront_sdk_' . self::SDK_OUTDATED;
 
 	/**
-	 * @param InlineProducts $products  Resolves the product's designer.
-	 * @param Catalogue      $catalogue Asks Pixonaut whether a placement resolves.
-	 * @param Notices        $notices   Admin notices.
-	 * @param Logger         $logger    Logs a check that could not be made.
+	 * @param InlineProducts  $products  Resolves the product's designer.
+	 * @param Catalogue       $catalogue Asks Pixonaut whether a placement resolves.
+	 * @param Notices         $notices   Admin notices.
+	 * @param LoggerInterface $logger    Logs a check that could not be made.
 	 */
 	public function __construct(
 		private readonly InlineProducts $products,
 		private readonly Catalogue $catalogue,
 		private readonly Notices $notices,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -228,7 +228,7 @@ final class UnavailableReports {
 			if ( ! $this->invalidate( $designer ) ) {
 				return;
 			}
-		} catch ( ApiError | RuntimeException $e ) {
+		} catch ( ApiException | RuntimeException $e ) {
 			$this->logger->error( 'Could not check a reported placement: ' . $e->getMessage(), array( 'product' => $designer->product->get_id() ) );
 			return;
 		}
@@ -251,13 +251,13 @@ final class UnavailableReports {
 	 * @param string $blank_id     The blank.
 	 * @param string $placement_id The placement on it.
 	 *
-	 * @throws ApiError When Pixonaut refused for another reason or could not be reached.
+	 * @throws ApiException When Pixonaut refused for another reason or could not be reached.
 	 */
 	private function placement_resolves( string $template_id, string $blank_id, string $placement_id ): bool {
 		try {
 			$this->catalogue->constraints( $template_id, $blank_id, $placement_id );
-		} catch ( ApiError $e ) {
-			if ( InvalidReason::UNKNOWN_PLACEMENT === $e->error_code ) {
+		} catch ( ApiException $e ) {
+			if ( InvalidReason::UNKNOWN_PLACEMENT === $e->errorCode ) {
 				return false;
 			}
 			throw $e;

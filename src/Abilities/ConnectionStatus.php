@@ -10,10 +10,10 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Admin\Notices;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Connect;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use Pixonaut\WooCommerce\Webhooks\Endpoint;
 
 /**
@@ -28,12 +28,12 @@ final class ConnectionStatus implements Ability {
 
 	/**
 	 * @param Connection $connection The store's connection.
-	 * @param Connect    $api        `GET /v1/connect`, for the workspace's settings.
+	 * @param Sdk        $api        `GET /v1/connect`, for the workspace's settings.
 	 * @param Endpoint   $endpoint   The store's webhook endpoint.
 	 */
 	public function __construct(
 		private readonly Connection $connection,
-		private readonly Connect $api,
+		private readonly Sdk $api,
 		private readonly Endpoint $endpoint,
 	) {
 	}
@@ -139,8 +139,8 @@ final class ConnectionStatus implements Ability {
 		$live = null;
 		if ( null !== $this->connection->current() && null === $this->connection->paused() ) {
 			try {
-				$live = $this->api->get();
-			} catch ( ApiError $e ) {
+				$live = $this->api->connect()->get()->raw();
+			} catch ( ApiException $e ) {
 				// A 401 has paused the connection by now; either way the workspace's settings cannot be told.
 				$live = null;
 			}

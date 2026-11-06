@@ -7,11 +7,11 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
+use Pixonaut\WooCommerce\Api\Pictures;
+use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Catalogue\PictureQueue;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\SharedPictures;
-use Pixonaut\WooCommerce\Api\Pictures;
-use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
 use WC_Product;
 use WP_UnitTestCase;
@@ -120,7 +120,7 @@ final class SharedPicturesTest extends WP_UnitTestCase {
 		delete_post_meta( $picture, SharedPictures::PICTURE_OF_META );
 		$slept = 0;
 		$jobs  = new ProductPictures(
-			new Pictures( $this->plugin->client() ),
+			new Pictures( $this->plugin->pixonaut() ),
 			$this->plugin->catalogue(),
 			$this->plugin->catalogue_cache(),
 			new WcLogger(),

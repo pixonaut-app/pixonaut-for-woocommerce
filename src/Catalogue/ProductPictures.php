@@ -9,11 +9,11 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Api\WpHttpTransport;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Api\Pictures;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
@@ -71,7 +71,7 @@ final class ProductPictures {
 	 * How long a drawing holds its product's lock before another may take it
 	 * over: each of its requests within the client's timeout.
 	 */
-	public const LOCK_SECONDS = self::MAX_REQUESTS * Client::TIMEOUT_SECONDS;
+	public const LOCK_SECONDS = self::MAX_REQUESTS * WpHttpTransport::TIMEOUT_SECONDS;
 
 	/**
 	 * The picture's long edge in pixels: WordPress draws the smaller sizes from it.
@@ -100,19 +100,19 @@ final class ProductPictures {
 	private array $claims = array();
 
 	/**
-	 * @param Pictures       $pictures  Draws the picture.
-	 * @param Catalogue      $catalogue Reads the blank's views.
-	 * @param CatalogueCache $cache    Keeps the blank's views between jobs.
-	 * @param Logger         $logger    Logs a picture Pixonaut could not draw.
-	 * @param Settings       $settings  Says whether pictures are product images.
-	 * @param \Closure|null  $clock     `fn(): int` Unix time; `time()` when null.
-	 * @param \Closure|null  $sleep     `fn(int $seconds): void`, while another job draws the same source; `sleep()` when null.
+	 * @param Pictures        $pictures  Draws the picture.
+	 * @param Catalogue       $catalogue Reads the blank's views.
+	 * @param CatalogueCache  $cache    Keeps the blank's views between jobs.
+	 * @param LoggerInterface $logger    Logs a picture Pixonaut could not draw.
+	 * @param Settings        $settings  Says whether pictures are product images.
+	 * @param \Closure|null   $clock     `fn(): int` Unix time; `time()` when null.
+	 * @param \Closure|null   $sleep     `fn(int $seconds): void`, while another job draws the same source; `sleep()` when null.
 	 */
 	public function __construct(
 		private readonly Pictures $pictures,
 		Catalogue $catalogue,
 		CatalogueCache $cache,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		private readonly Settings $settings,
 		private readonly ?\Closure $clock = null,
 		private readonly ?\Closure $sleep = null,
@@ -222,13 +222,13 @@ final class ProductPictures {
 				return;
 			}
 			$drawings = $this->drawings( $product, $sources, $stored, $own );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->logger->warning(
 				sprintf( 'Pixonaut could not draw the picture of product #%d: %s', $product->get_id(), $e->getMessage() ),
 				array(
 					'product_id' => $product->get_id(),
 					'status'     => $e->status,
-					'code'       => $e->error_code,
+					'code'       => $e->errorCode,
 				)
 			);
 			$this->failed( $product, $basis, $stored );
@@ -313,7 +313,7 @@ final class ProductPictures {
 	 *
 	 * @return list<array{key: string|null, attachment: int, png: string|null, gone: string|null, shared: bool}>
 	 *
-	 * @throws ApiError When Pixonaut could not draw one.
+	 * @throws ApiException When Pixonaut could not draw one.
 	 */
 	private function drawings( WC_Product $product, array $sources, array $stored, bool $own ): array {
 		$recorded = array_merge(
@@ -369,7 +369,7 @@ final class ProductPictures {
 				$pngs[ $index ] = $png;
 				continue;
 			}
-			if ( null === ( $wanted[ $index ]['showcase'] ?? null ) || ErrorCodes::SHOWCASE_NOT_FOUND !== $png->error_code ) {
+			if ( null === ( $wanted[ $index ]['showcase'] ?? null ) || ErrorCode::SHOWCASE_NOT_FOUND !== $png->errorCode ) {
 				throw $png;
 			}
 			$again[ $index ] = $wanted[ $index ];
@@ -421,7 +421,7 @@ final class ProductPictures {
 	 * @param array<int, array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, showcase?: string}> $sources       What each is drawn from.
 	 * @param bool                                                                                                                             $with_showcase Whether each is drawn with its showcase set; else with the template's defaults.
 	 *
-	 * @return array<int, string|ApiError> Each source's PNG, or why Pixonaut did not draw it, under the source's key.
+	 * @return array<int, string|ApiException> Each source's PNG, or why Pixonaut did not draw it, under the source's key.
 	 */
 	private function pngs( array $sources, bool $with_showcase ): array {
 		if ( array() === $sources ) {
@@ -431,8 +431,8 @@ final class ProductPictures {
 		foreach ( $sources as $source ) {
 			$showcase = $with_showcase ? $source['showcase'] ?? null : null;
 			$calls[]  = isset( $source['blank'], $source['placement'], $source['view'] )
-				? Pictures::mockup_of( $source['template'], $source['blank'], $source['placement'], $source['view'], $source['variant'] ?? null, self::SIZE, $showcase )
-				: Pictures::preview_of( $source['template'], self::SIZE, $showcase );
+				? $this->pictures->mockup_of( $source['template'], $source['blank'], $source['placement'], $source['view'], $source['variant'] ?? null, self::SIZE, $showcase )
+				: $this->pictures->preview_of( $source['template'], self::SIZE, $showcase );
 		}
 		return array_combine( array_keys( $sources ), $this->pictures->all( $calls ) );
 	}

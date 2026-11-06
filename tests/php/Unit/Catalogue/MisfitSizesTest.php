@@ -7,11 +7,10 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Unit\Catalogue;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Operations;
 use Pixonaut\WooCommerce\Catalogue\MisfitSizes;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 
 final class MisfitSizesTest extends TestCase {
 
@@ -48,8 +47,8 @@ final class MisfitSizesTest extends TestCase {
 		$this->assertTrue( MisfitSizes::refused( self::violation( 'wrong_ratio' ) ) );
 		$this->assertTrue( MisfitSizes::refused( self::violation( 'too_large' ) ) );
 		$this->assertFalse( MisfitSizes::refused( self::violation( 'required' ) ) );
-		$this->assertFalse( MisfitSizes::refused( new ApiError( Operations::FIND_OR_CREATE_STANDING_DESIGN, self::UNPROCESSABLE, ErrorCodes::CONSTRAINT_VIOLATION, false ) ) );
-		$this->assertFalse( MisfitSizes::refused( new ApiError( Operations::FIND_OR_CREATE_STANDING_DESIGN, self::UNPROCESSABLE, ErrorCodes::VARIANT_REQUIRED, false, null, array( 'violations' => array( array( 'rule' => 'wrong_ratio' ) ) ) ) ) );
+		$this->assertFalse( MisfitSizes::refused( new ApiException( 'designs.findOrCreateStanding', self::UNPROCESSABLE, ErrorCode::CONSTRAINT_VIOLATION, false ) ) );
+		$this->assertFalse( MisfitSizes::refused( new ApiException( 'designs.findOrCreateStanding', self::UNPROCESSABLE, ErrorCode::VARIANT_REQUIRED, false, null, null, array( 'violations' => array( array( 'rule' => 'wrong_ratio' ) ) ) ) ) );
 	}
 
 	public function test_no_misfit_needs_no_words(): void {
@@ -57,12 +56,13 @@ final class MisfitSizesTest extends TestCase {
 		$this->assertSame( '', MisfitSizes::warning( array() ) );
 	}
 
-	private static function violation( string $rule ): ApiError {
-		return new ApiError(
-			Operations::FIND_OR_CREATE_STANDING_DESIGN,
+	private static function violation( string $rule ): ApiException {
+		return new ApiException(
+			'designs.findOrCreateStanding',
 			self::UNPROCESSABLE,
-			ErrorCodes::CONSTRAINT_VIOLATION,
+			ErrorCode::CONSTRAINT_VIOLATION,
 			false,
+			null,
 			null,
 			array(
 				'violations' => array(

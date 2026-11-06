@@ -11,11 +11,10 @@ namespace Pixonaut\WooCommerce\Fulfilment;
 
 use ActionScheduler_Store;
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Operations;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Factory;
@@ -50,17 +49,17 @@ final class FulfilmentJobs {
 	/**
 	 * Calls on one of the line's designs, which answer `404 not_found` for a deleted one.
 	 */
-	private const DESIGN_OPERATIONS = array( Operations::GET_DESIGN, Operations::SET_DESIGN_EXTERNAL_REF, Operations::APPROVE_DESIGN );
+	private const DESIGN_OPERATIONS = array( 'designs.get', 'designs.externalRef.update', 'designs.approve' );
 
 	/**
-	 * @param Fulfiller $fulfiller  Takes a line on.
-	 * @param Closure   $connection `fn(): ?StoredConnection`, the store's connection; null while there is none.
-	 * @param Logger    $logger     Logs the failures retried and the jobs Action Scheduler refused.
+	 * @param Fulfiller       $fulfiller  Takes a line on.
+	 * @param Closure         $connection `fn(): ?StoredConnection`, the store's connection; null while there is none.
+	 * @param LoggerInterface $logger     Logs the failures retried and the jobs Action Scheduler refused.
 	 */
 	public function __construct(
 		private readonly Fulfiller $fulfiller,
 		private readonly Closure $connection,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -172,7 +171,7 @@ final class FulfilmentJobs {
 		}
 		try {
 			$this->fulfiller->fulfil( $item );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->failed( $item, $e );
 		}
 	}
@@ -181,9 +180,9 @@ final class FulfilmentJobs {
 	 * Retries the line later, or moves it to `needs_attention`.
 	 *
 	 * @param WC_Order_Item_Product $item  The line.
-	 * @param ApiError              $error Why its step failed.
+	 * @param ApiException          $error Why its step failed.
 	 */
-	private function failed( WC_Order_Item_Product $item, ApiError $error ): void {
+	private function failed( WC_Order_Item_Product $item, ApiException $error ): void {
 		$line  = LineState::of( $item );
 		$order = wc_get_order( $item->get_order_id() );
 		if ( ! $order instanceof WC_Order || ! in_array( $line->state(), LineState::FULFILLABLE, true ) ) {
@@ -205,7 +204,7 @@ final class FulfilmentJobs {
 		}
 		$failures = self::failures( $line );
 		if ( RetryPolicy::RETRY === RetryPolicy::decide( $error ) ) {
-			$delay = RetryPolicy::delay( $failures, $error->retry_after );
+			$delay = RetryPolicy::delay( $failures, $error->retryAfter );
 			if ( null !== $delay ) {
 				$this->retry( $line, $failures + 1, $delay, $error );
 				return;
@@ -219,12 +218,12 @@ final class FulfilmentJobs {
 					__( 'Pixonaut: "%1$s" was not sent to the printshop after %2$d attempts. Pixonaut last answered "%3$s". Check the order in Pixonaut, then retry.', 'pixonaut-for-woocommerce' ),
 					$item->get_name(),
 					$failures + 1,
-					$error->error_code
+					$error->errorCode
 				)
 			);
 			return;
 		}
-		NeedsAttention::flag( $line, $order, $error->error_code, $this->refusal_note( $item, $error ) );
+		NeedsAttention::flag( $line, $order, $error->errorCode, $this->refusal_note( $item, $error ) );
 	}
 
 	/**
@@ -232,10 +231,10 @@ final class FulfilmentJobs {
 	 * line's designs: it was deleted after checkout, before the line was
 	 * approved, which the `design.deleted` event may not have said yet.
 	 *
-	 * @param ApiError $error Why the step failed.
+	 * @param ApiException $error Why the step failed.
 	 */
-	private static function design_gone( ApiError $error ): bool {
-		return ErrorCodes::NOT_FOUND === $error->error_code && in_array( $error->operation, self::DESIGN_OPERATIONS, true );
+	private static function design_gone( ApiException $error ): bool {
+		return ErrorCode::NOT_FOUND === $error->errorCode && in_array( $error->operation, self::DESIGN_OPERATIONS, true );
 	}
 
 	/**
@@ -249,12 +248,12 @@ final class FulfilmentJobs {
 	/**
 	 * Stores the failure count and schedules the line's next job.
 	 *
-	 * @param LineState $line     The line.
-	 * @param int       $failures Failures in a row, this one counted.
-	 * @param int       $delay    Seconds to wait.
-	 * @param ApiError  $error    Why the step failed.
+	 * @param LineState    $line     The line.
+	 * @param int          $failures Failures in a row, this one counted.
+	 * @param int          $delay    Seconds to wait.
+	 * @param ApiException $error    Why the step failed.
 	 */
-	private function retry( LineState $line, int $failures, int $delay, ApiError $error ): void {
+	private function retry( LineState $line, int $failures, int $delay, ApiException $error ): void {
 		$line->set_ref(
 			LineState::REF_RETRY,
 			array(
@@ -279,7 +278,7 @@ final class FulfilmentJobs {
 				'item'      => $item->get_id(),
 				'operation' => $error->operation,
 				'status'    => $error->status,
-				'code'      => $error->error_code,
+				'code'      => $error->errorCode,
 				'failures'  => $failures,
 				'delay'     => $delay,
 			)
@@ -290,10 +289,10 @@ final class FulfilmentJobs {
 	 * Moves a line whose next job Action Scheduler would not store to
 	 * `needs_attention`, rather than leave it waiting for a job that never runs.
 	 *
-	 * @param LineState $line  The line.
-	 * @param ApiError  $error Why its step failed.
+	 * @param LineState    $line  The line.
+	 * @param ApiException $error Why its step failed.
 	 */
-	private function retry_not_scheduled( LineState $line, ApiError $error ): void {
+	private function retry_not_scheduled( LineState $line, ApiException $error ): void {
 		$item = $line->item();
 		$this->logger->error(
 			'Fulfilment retry could not be scheduled.',
@@ -301,7 +300,7 @@ final class FulfilmentJobs {
 				'item'      => $item->get_id(),
 				'operation' => $error->operation,
 				'status'    => $error->status,
-				'code'      => $error->error_code,
+				'code'      => $error->errorCode,
 			)
 		);
 		$order = wc_get_order( $item->get_order_id() );
@@ -316,7 +315,7 @@ final class FulfilmentJobs {
 				/* translators: 1: product name of the order line, 2: the error code Pixonaut answered. */
 				__( 'Pixonaut: "%1$s" was not sent to the printshop. Pixonaut answered "%2$s", and the store could not schedule another attempt. Retry the item.', 'pixonaut-for-woocommerce' ),
 				$item->get_name(),
-				$error->error_code
+				$error->errorCode
 			)
 		);
 	}
@@ -338,34 +337,34 @@ final class FulfilmentJobs {
 	 * The order note for a refusal the store cannot cure by retrying.
 	 *
 	 * @param WC_Order_Item_Product $item  The line.
-	 * @param ApiError              $error The refusal.
+	 * @param ApiException          $error The refusal.
 	 */
-	private function refusal_note( WC_Order_Item_Product $item, ApiError $error ): string {
+	private function refusal_note( WC_Order_Item_Product $item, ApiException $error ): string {
 		if ( self::NOT_FOUND_STATUS === $error->status && $this->in_sandbox() ) {
 			return sprintf(
 				/* translators: 1: product name of the order line, 2: the error code Pixonaut answered. */
 				__( 'Pixonaut: "%1$s" needs attention. The Pixonaut sandbox no longer knows its design, print or order ("%2$s"); this happens when the sandbox\'s data was reset. Place the item again.', 'pixonaut-for-woocommerce' ),
 				$item->get_name(),
-				$error->error_code
+				$error->errorCode
 			);
 		}
 		$ordered_as = $error->details['orderId'] ?? null;
-		if ( ErrorCodes::DESIGN_ALREADY_ORDERED === $error->error_code && is_string( $ordered_as ) && '' !== $ordered_as ) {
+		if ( ErrorCode::DESIGN_ALREADY_ORDERED === $error->errorCode && is_string( $ordered_as ) && '' !== $ordered_as ) {
 			return sprintf(
 				/* translators: 1: product name of the order line, 2: the error code Pixonaut answered, 3: the Pixonaut order the design already has, 4: what the merchant can do. */
 				__( 'Pixonaut: "%1$s" needs attention. Pixonaut refused it with "%2$s": its design already has the Pixonaut order %3$s. %4$s', 'pixonaut-for-woocommerce' ),
 				$item->get_name(),
-				$error->error_code,
+				$error->errorCode,
 				$ordered_as,
-				NeedsAttention::explain( $error->error_code )
+				NeedsAttention::explain( $error->errorCode )
 			);
 		}
 		return sprintf(
 			/* translators: 1: product name of the order line, 2: the error code Pixonaut answered, 3: what the merchant can do. */
 			__( 'Pixonaut: "%1$s" needs attention. Pixonaut refused it with "%2$s". %3$s', 'pixonaut-for-woocommerce' ),
 			$item->get_name(),
-			$error->error_code,
-			NeedsAttention::explain( $error->error_code )
+			$error->errorCode,
+			NeedsAttention::explain( $error->errorCode )
 		);
 	}
 }

@@ -8,29 +8,26 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Admin;
 
 use Pixonaut\WooCommerce\Admin\DeveloperTools;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\Connect;
 use Pixonaut\WooCommerce\Api\Deprecations;
+use Pixonaut\WooCommerce\Api\HookListener;
 use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\PreparedRequest;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\RequestLog;
-use Pixonaut\WooCommerce\Api\Response;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\Webhooks;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Migrations\MigrationRunner;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Settings\Settings;
-use Pixonaut\WooCommerce\Storefront\Sdk;
 use Pixonaut\WooCommerce\Storefront\DesignerLinkWithdrawals;
 use Pixonaut\WooCommerce\Storefront\KeptDesignerLinks;
+use Pixonaut\WooCommerce\Storefront\Sdk;
 use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\MemberKeys;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\PreparedRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\Result;
 use Pixonaut\WooCommerce\Webhooks\Endpoint;
 use Pixonaut\WooCommerce\Webhooks\EventsPull;
 use RuntimeException;
@@ -143,8 +140,8 @@ final class DeveloperToolsTest extends WP_UnitTestCase {
 
 		$recorder = ( new HttpRecorder( self::LOCAL_PIXONAUT ) )->start();
 		$recorder->json( 200, $this->connect_answer() );
-		$client = ( new Plugin( $this->plugin->file(), new MigrationRunner( array() ) ) )->client();
-		( new Connect( $client ) )->get();
+		$client = ( new Plugin( $this->plugin->file(), new MigrationRunner( array() ) ) )->sdk();
+		$client->connect()->get();
 		$recorder->stop();
 		$this->assertCount( 1, $recorder->requests );
 		$this->assertStringStartsWith( self::LOCAL_PIXONAUT . '/v1/connect', $recorder->requests[0]['url'] );
@@ -344,8 +341,8 @@ final class DeveloperToolsTest extends WP_UnitTestCase {
 		$this->connect();
 		$recorder = ( new HttpRecorder( self::LOCAL_PIXONAUT ) )->start();
 		$recorder->fail();
-		$client   = new Client( self::LOCAL_PIXONAUT, Operations::plugin(), $this->plugin->connection_store(), new WpHttpTransport(), new WcLogger(), new Deprecations() );
-		$endpoint = new Endpoint( $this->plugin->connection(), new Webhooks( $client ), new WcLogger() );
+		$client   = ( new Pixonaut( $this->plugin->connection_store(), new WcLogger(), new HookListener( new Deprecations() ), null, self::LOCAL_PIXONAUT ) )->sdk();
+		$endpoint = new Endpoint( $this->plugin->connection(), $client, new WcLogger() );
 		$stored   = $this->plugin->connection()->current();
 		$this->assertNotNull( $stored );
 
@@ -353,7 +350,7 @@ final class DeveloperToolsTest extends WP_UnitTestCase {
 			try {
 				$endpoint->health( $stored );
 				$this->fail( 'An unreachable Pixonaut gave a health.' );
-			} catch ( ApiError $e ) {
+			} catch ( ApiException $e ) {
 				$this->assertSame( 0, $e->status, (string) $read );
 			}
 		}
@@ -378,19 +375,19 @@ final class DeveloperToolsTest extends WP_UnitTestCase {
 
 		$recorder = ( new HttpRecorder( self::LOCAL_PIXONAUT ) )->start();
 		$recorder->json( 200, $this->connect_answer(), array( RequestLog::REQUEST_ID_HEADER => 'req_123' ) );
-		$client = ( new Plugin( $this->plugin->file(), new MigrationRunner( array() ) ) )->client();
-		( new Connect( $client ) )->get();
+		$client = ( new Plugin( $this->plugin->file(), new MigrationRunner( array() ) ) )->sdk();
+		$client->connect()->get();
 		$recorder->stop();
 		// A path carrying a link token, as a designer link's would.
-		$request = new PreparedRequest( 'GET /v1/share-links/{id}', '/v1/share-links/link_secret123?token=shl_abc', null, null );
+		$request = new PreparedRequest( 'shareLinks.delete', '/v1/share-links/link_secret123?token=shl_abc', null, null );
 		$this->plugin->request_log()->before( $request );
-		$this->plugin->request_log()->after( $request, new Response( 200, array(), '{}' ) );
+		$this->plugin->request_log()->after( $request, new Result( 'shareLinks.delete', 200, array(), '{}' ) );
 
 		$entries = $this->plugin->request_log()->entries();
 		$this->assertCount( 2, $entries );
 		$this->assertSame( '/v1/share-links/link_[redacted]?token=shl_[redacted]', $entries[0]['path'] );
 		$this->assertSame( 'GET', $entries[1]['method'] );
-		$this->assertSame( 'GET /v1/connect', $entries[1]['operation'] );
+		$this->assertSame( 'connectedStore.get', $entries[1]['operation'] );
 		$this->assertSame( 200, $entries[1]['status'] );
 		$this->assertSame( 'req_123', $entries[1]['request_id'] );
 		$this->assertIsInt( $entries[1]['duration_ms'] );
@@ -402,14 +399,14 @@ final class DeveloperToolsTest extends WP_UnitTestCase {
 
 	public function test_the_request_log_keeps_the_last_entries_only_while_it_is_on(): void {
 		$log     = $this->plugin->request_log();
-		$request = new PreparedRequest( 'GET /v1/connect', '/v1/connect' );
+		$request = new PreparedRequest( 'connectedStore.get', '/v1/connect' );
 		$log->before( $request );
-		$log->after( $request, new Response( 200, array(), '{}' ) );
+		$log->after( $request, new Result( 'connectedStore.get', 200, array(), '{}' ) );
 		$this->assertSame( array(), $log->entries(), 'The log is off by default.' );
 
 		$this->plugin->settings()->set( Settings::REQUEST_LOG, true );
 		for ( $sent = 0; $sent <= RequestLog::MAX_ENTRIES; $sent++ ) {
-			$request = new PreparedRequest( 'GET /v1/connect', '/v1/connect?n=' . $sent );
+			$request = new PreparedRequest( 'connectedStore.get', '/v1/connect?n=' . $sent );
 			$log->before( $request );
 			$log->after( $request, null );
 		}

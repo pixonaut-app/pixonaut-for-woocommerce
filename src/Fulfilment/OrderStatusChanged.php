@@ -10,7 +10,8 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Fulfilment;
 
 use Pixonaut\WooCommerce\Milliseconds;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -61,8 +62,8 @@ final class OrderStatusChanged {
 	 * @throws RuntimeException When a line kept changing while the change was applied; handling the event again retries it.
 	 */
 	public function handle( Event $event ): void {
-		$status = $event->string( 'status' );
-		if ( null === $status || self::VIA_STORE_KEY === $event->string( 'via' ) ) {
+		$status = Payload::string( $event, 'status' );
+		if ( null === $status || self::VIA_STORE_KEY === Payload::string( $event, 'via' ) ) {
 			return;
 		}
 		foreach ( $this->lines->of( $event ) as $line ) {
@@ -80,11 +81,11 @@ final class OrderStatusChanged {
 	 * @throws RuntimeException When the line kept changing for MAX_ATTEMPTS tries.
 	 */
 	public function apply_to( WC_Order_Item_Product $item, Event $event ): void {
-		$status = $event->string( 'status' );
+		$status = Payload::string( $event, 'status' );
 		if ( null === $status ) {
 			return;
 		}
-		$this->apply( $item, $event->string( 'orderId' ), $status, $event->string( 'previousStatus' ) ?? '', Tracking::from_payload( $event->payload['tracking'] ?? null ), $event->created_at, $event );
+		$this->apply( $item, Payload::string( $event, 'orderId' ), $status, Payload::string( $event, 'previousStatus' ) ?? '', Tracking::from_payload( $event->payload['tracking'] ?? null ), $event->createdAt, $event );
 	}
 
 	/**
@@ -253,7 +254,7 @@ final class OrderStatusChanged {
 			if ( null !== $applied && $previous !== $applied ) {
 				return;
 			}
-			$settled_since = null !== $event && LineState::NEEDS_ATTENTION !== $line->state() && $event->created_at < Milliseconds::of( $line->changed_at() );
+			$settled_since = null !== $event && LineState::NEEDS_ATTENTION !== $line->state() && $event->createdAt < Milliseconds::of( $line->changed_at() );
 			if ( $settled_since ) {
 				return;
 			}
@@ -348,6 +349,9 @@ final class OrderStatusChanged {
 		 * Filters the line state each Pixonaut order status puts a line in
 		 * when `order.status_changed` reports it. A status left out changes
 		 * nothing; a line never moves back, whatever the map says.
+		 *
+		 * Since 2.0.0 `$event` is the SDK's
+		 * `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event`.
 		 *
 		 * @since 0.1.0
 		 *

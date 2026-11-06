@@ -11,12 +11,13 @@ namespace Pixonaut\WooCommerce\Connection;
 
 use Closure;
 use Pixonaut\WooCommerce\Admin\Notices;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Connect;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ConnectedStoreExchangeCodeRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ConnectedStoreUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use UnexpectedValueException;
 
@@ -75,9 +76,9 @@ final class Connection {
 	/**
 	 * @param ConnectionStore  $store    The stored connection.
 	 * @param ConnectAttempts  $attempts Connects in progress.
-	 * @param Connect          $api      `/v1/connect` operations.
+	 * @param Sdk              $api      The SDK, for its `/v1/connect` operations.
 	 * @param Notices          $notices  Admin notices.
-	 * @param Logger           $logger   Logs why a connect or a revoke failed; never keys or codes.
+	 * @param LoggerInterface  $logger   Logs why a connect or a revoke failed; never keys or codes.
 	 * @param string           $settings_url The screen with the connection card, for the paused notice.
 	 * @param Closure|null     $clock    `fn(): int` Unix time; `time()` when null.
 	 * @param StoreAccess|null $store_access Turned on when the admin who connects allowed it; null never turns it on.
@@ -85,9 +86,9 @@ final class Connection {
 	public function __construct(
 		private readonly ConnectionStore $store,
 		private readonly ConnectAttempts $attempts,
-		private readonly Connect $api,
+		private readonly Sdk $api,
 		private readonly Notices $notices,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		private readonly string $settings_url,
 		?Closure $clock = null,
 		private readonly ?StoreAccess $store_access = null,
@@ -257,22 +258,23 @@ final class Connection {
 	 */
 	private function exchange( string $code, array $attempt, int $now ): StoredConnection {
 		try {
-			return StoredConnection::from_exchange( $this->api->exchange( $code, $attempt['verifier'], $attempt['redirect_uri'] ), wp_generate_uuid4(), self::site_url(), $now );
-		} catch ( ApiError $e ) {
+			$answer = $this->api->connect()->exchangeCode( new ConnectedStoreExchangeCodeRequest( code: $code, code_verifier: $attempt['verifier'], redirect_uri: $attempt['redirect_uri'] ) );
+			return StoredConnection::from_exchange( $answer->raw(), wp_generate_uuid4(), self::site_url(), $now );
+		} catch ( ApiException $e ) {
 			$this->logger->warning(
 				sprintf( 'Pixonaut did not hand over the store\'s keys: %s.', $e->getMessage() ),
 				array(
 					'operation'  => $e->operation,
 					'status'     => $e->status,
-					'error_code' => $e->error_code,
+					'error_code' => $e->errorCode,
 				)
 			);
-			throw new ConnectFailed( ErrorCodes::PLAN_LIMIT_REACHED === $e->error_code ? ConnectFailed::PLAN_LIMIT_REACHED : ConnectFailed::EXCHANGE_FAILED, $e );
+			throw new ConnectFailed( ErrorCode::PLAN_LIMIT_REACHED === $e->errorCode ? ConnectFailed::PLAN_LIMIT_REACHED : ConnectFailed::EXCHANGE_FAILED, $e );
 		} catch ( UnexpectedValueException $e ) {
 			// The message names the missing field, never a value.
 			$this->logger->warning(
 				sprintf( 'Pixonaut handed over keys the plugin cannot use: %s', $e->getMessage() ),
-				array( 'operation' => Operations::EXCHANGE_CONNECT_CODE )
+				array( 'operation' => 'connectedStore.exchangeCode' )
 			);
 			throw new ConnectFailed( ConnectFailed::EXCHANGE_FAILED, $e );
 		}
@@ -343,11 +345,11 @@ final class Connection {
 	 *
 	 * @return array<string, mixed> The connection as `PATCH /v1/connect` answers it: `allowedOrigins`, the workspace settings, ….
 	 *
-	 * @throws ApiError When Pixonaut refused (`400 invalid_origin`), could not be reached, or the store is not connected.
+	 * @throws ApiException When Pixonaut refused (`400 invalid_origin`), could not be reached, or the store is not connected.
 	 */
 	public function allow_www( bool $allow ): array {
 		$other = self::www_origin();
-		return $this->api->allow_origins( $allow && null !== $other ? array( $other ) : array() );
+		return $this->api->connect()->update( new ConnectedStoreUpdateRequest( additionalOrigins: $allow && null !== $other ? array( $other ) : array() ) )->raw();
 	}
 
 	/**
@@ -362,8 +364,8 @@ final class Connection {
 			return true;
 		}
 		try {
-			$this->api->delete();
-		} catch ( ApiError $e ) {
+			$this->api->connect()->delete();
+		} catch ( ApiException $e ) {
 			// A key Pixonaut refuses is already revoked.
 			if ( 401 === $e->status ) {
 				return true;
@@ -373,7 +375,7 @@ final class Connection {
 				array(
 					'operation'  => $e->operation,
 					'status'     => $e->status,
-					'error_code' => $e->error_code,
+					'error_code' => $e->errorCode,
 				)
 			);
 			return false;

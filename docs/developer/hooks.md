@@ -22,16 +22,18 @@ Filters the body of a request to Pixonaut before it is encoded.
 
 Runs once per request, when it is prepared: a request sent again from its snapshot is not filtered again.
 
+Since 2.0.0 `$operation` is the SDK's operation id, e.g. `designs.commit`, where it was the method and path before.
+
 | Parameter | Type | Description |
 |---|---|---|
 | `$body` | `array<string, mixed>` | Request body. |
-| `$operation` | `string` | Operation id, e.g. `POST /v1/designs`. |
+| `$operation` | `string` | SDK operation id, e.g. `designs.commit`. |
 
-Since 0.1.0. Fired in `src/Api/Client.php`.
+Since 0.1.0. Fired in `src/Api/HookListener.php`.
 
 ```php
 add_filter( 'pixonaut_wc_api_request_body', function ( $body, $operation ) {
-    if ( 'POST /v1/designs' === $operation ) {
+    if ( 'designs.commit' === $operation ) {
         $body['externalRef'] = 'shop-a:' . $body['externalRef'];
     }
     return $body;
@@ -447,10 +449,12 @@ add_filter( 'pixonaut_wc_fulfilment_order_address', function ( $mapped, $order )
 
 Filters the line state each Pixonaut order status puts a line in when `order.status_changed` reports it. A status left out changes nothing; a line never moves back, whatever the map says.
 
+Since 2.0.0 `$event` is the SDK's `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event`.
+
 | Parameter | Type | Description |
 |---|---|---|
 | `$map` | `array<string, string>` | Pixonaut order status => line state. |
-| `$event` | `Pixonaut\WooCommerce\Webhooks\Event\|null` | The event being applied; null when a read of the order applies the status. |
+| `$event` | `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event\|null` | The event being applied; null when a read of the order applies the status. |
 
 Since 0.1.0. Fired in `src/Fulfilment/OrderStatusChanged.php`.
 
@@ -583,10 +587,12 @@ Filters whether the plugin handles a webhook event. Return false to take the eve
 
 Runs in the Action Scheduler job that handles the event, once per event id, after the signature was verified; again only when an earlier attempt threw and the event is tried again.
 
+Since 2.0.0 `$event` is the SDK's `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event`, whose `created_at` is `createdAt`.
+
 | Parameter | Type | Description |
 |---|---|---|
 | `$handle` | `bool` | Whether the plugin handles it. |
-| `$event` | `Pixonaut\WooCommerce\Webhooks\Event` | The event: `id`, `type`, `created_at`, `payload`. |
+| `$event` | `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event` | The event: `id`, `type`, `createdAt`, `payload`. |
 
 Since 0.1.0. Fired in `src/Webhooks/Processor.php`.
 
@@ -620,31 +626,35 @@ add_filter( 'pixonaut_wc_webhooks_event_types', function ( $event_types ) {
 
 Fires after every request to Pixonaut, including each resend.
 
+Since 2.0.0 it receives the SDK's `PreparedRequest`, `Result` and `ApiException`, under `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\`. An answer that is not a success comes as the error, with its `status`, where it came as the response before.
+
 | Parameter | Type | Description |
 |---|---|---|
-| `$request` | `Pixonaut\WooCommerce\Api\PreparedRequest` | The request; it holds no credential. |
-| `$response` | `Pixonaut\WooCommerce\Api\Response\|null` | The response, or null when none arrived. |
-| `$error` | `Pixonaut\WooCommerce\Api\ApiError\|null` | Why no response arrived, or null. |
+| `$request` | `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\PreparedRequest` | The request; it holds no credential. |
+| `$result` | `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\Result\|null` | The successful answer, or null. |
+| `$error` | `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException\|null` | Why it did not succeed (Pixonaut refused it, or it got no answer), or null. |
 
-Since 0.1.0. Fired in `src/Api/Client.php`.
+Since 0.1.0. Fired in `src/Api/HookListener.php`.
 
 ```php
-add_action( 'pixonaut_wc_api_after_request', function ( $request, $response ) {
-    if ( $response && $response->status >= 500 ) {
+add_action( 'pixonaut_wc_api_after_request', function ( $request, $result, $error ) {
+    if ( $error && $error->status >= 500 ) {
         error_log( 'Pixonaut failed: ' . $request->operation );
     }
-}, 10, 2 );
+}, 10, 3 );
 ```
 
 ### `pixonaut_wc_api_before_request`
 
 Fires before every request to Pixonaut, including each resend.
 
+Since 2.0.0 `$request` is the SDK's `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\PreparedRequest`: `operation` is its operation id, e.g. `designs.commit`, and the key is `idempotencyKey`.
+
 | Parameter | Type | Description |
 |---|---|---|
-| `$request` | `Pixonaut\WooCommerce\Api\PreparedRequest` | The request; it holds no credential. |
+| `$request` | `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\PreparedRequest` | The request; it holds no credential. |
 
-Since 0.1.0. Fired in `src/Api/Client.php`.
+Since 0.1.0. Fired in `src/Api/HookListener.php`.
 
 ```php
 add_action( 'pixonaut_wc_api_before_request', function ( $request ) {
@@ -656,12 +666,14 @@ add_action( 'pixonaut_wc_api_before_request', function ( $request ) {
 
 Fires when Pixonaut refused the store's credential: the connection was removed in Pixonaut, or the key revoked.
 
+Since 2.0.0 `$operation` is the SDK's operation id and `$error` the SDK's `ApiException`, under `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\`.
+
 | Parameter | Type | Description |
 |---|---|---|
-| `$operation` | `string` | Operation id. |
-| `$error` | `Pixonaut\WooCommerce\Api\ApiError` | The refusal. |
+| `$operation` | `string` | SDK operation id, e.g. `connectedStore.get`. |
+| `$error` | `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException` | The refusal. |
 
-Since 0.1.0. Fired in `src/Api/Client.php`.
+Since 0.1.0. Fired in `src/Api/HookListener.php`.
 
 ```php
 add_action( 'pixonaut_wc_api_unauthorized', function ( $operation ) {
@@ -870,10 +882,12 @@ add_action( 'pixonaut_wc_fulfilment_shipped', function ( $item ) {
 
 Fires after a webhook event was handled, one hook per event type with its dots as underscores: `pixonaut_wc_webhook_order_status_changed`, `pixonaut_wc_webhook_design_approved` and so on. Fires for every type Pixonaut delivers, also those the plugin does not handle, once per event id; again only when an earlier attempt threw and the event is tried again.
 
+Since 2.0.0 `$event` is the SDK's `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event`, whose `created_at` is `createdAt`.
+
 | Parameter | Type | Description |
 |---|---|---|
 | `$payload` | `array<string, mixed>` | The event's payload. |
-| `$event` | `Pixonaut\WooCommerce\Webhooks\Event` | The event: `id`, `type`, `created_at`, `payload`. |
+| `$event` | `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event` | The event: `id`, `type`, `createdAt`, `payload`. |
 | `$handled` | `bool` | Whether the plugin's own handler ran. |
 
 Since 0.1.0. Fired in `src/Webhooks/Processor.php`.

@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Admin\OrderBox;
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Fulfilment\LineActions;
 use Pixonaut\WooCommerce\Fulfilment\LineIndex;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
@@ -203,7 +203,7 @@ final class PersonalisedOrders implements Ability {
 			if ( $actions ) {
 				try {
 					list( $line, $offered ) = $this->actions->offered( $line );
-				} catch ( ApiError $e ) {
+				} catch ( ApiException $e ) {
 					// Not known while Pixonaut cannot be asked; the line is listed as the store keeps it.
 					$offered = null;
 				}

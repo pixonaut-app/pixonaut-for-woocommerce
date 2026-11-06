@@ -10,17 +10,17 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Privacy;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Orders;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Fulfilment\OrderStatus;
 use Pixonaut\WooCommerce\Fulfilment\RetryPolicy;
 use Pixonaut\WooCommerce\Milliseconds;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Factory;
@@ -71,16 +71,16 @@ final class LineErasure {
 	private const LINE_CHANGED = 'line_changed';
 
 	/**
-	 * @param Designs $designs    Erases designs.
-	 * @param Orders  $orders     Erases printshop orders.
-	 * @param Closure $connection `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
-	 * @param Logger  $logger     Logs erasures Pixonaut refused or the store could not schedule.
+	 * @param Designs         $designs    Erases designs.
+	 * @param Sdk             $pixonaut   Erases printshop orders.
+	 * @param Closure         $connection `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
+	 * @param LoggerInterface $logger     Logs erasures Pixonaut refused or the store could not schedule.
 	 */
 	public function __construct(
 		private readonly Designs $designs,
-		private readonly Orders $orders,
+		private readonly Sdk $pixonaut,
 		private readonly Closure $connection,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -279,7 +279,7 @@ final class LineErasure {
 					return true;
 				}
 			);
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return $this->refused( $item, $e );
 		} catch ( RuntimeException $e ) {
 			if ( $this->again( $item, self::LINE_CHANGED, null ) ) {
@@ -306,16 +306,16 @@ final class LineErasure {
 	 *
 	 * @return list<string>
 	 *
-	 * @throws ApiError When Pixonaut could not be asked.
+	 * @throws ApiException When Pixonaut could not be asked.
 	 */
 	private function orders_of( LineState $line, string $order_id ): array {
 		// Replaced orders are listed too: one the line took on was placed under another ref.
 		$ids = array_merge( array( $order_id ), $line->replaced_order_ids() );
 		$ref = $line->ref( LineState::REF_EXTERNAL_REF );
 		if ( is_string( $ref ) && '' !== $ref ) {
-			foreach ( $this->orders->with_external_ref( $ref ) as $order ) {
-				if ( is_string( $order['id'] ?? null ) && '' !== $order['id'] ) {
-					$ids[] = $order['id'];
+			foreach ( $this->pixonaut->orders()->list( externalRef: $ref )->orders as $order ) {
+				if ( '' !== $order->id ) {
+					$ids[] = $order->id;
 				}
 			}
 		}
@@ -327,18 +327,18 @@ final class LineErasure {
 	 *
 	 * @return int When its personal data was erased, epoch milliseconds; now for an order Pixonaut no longer has.
 	 *
-	 * @throws ApiError When Pixonaut refused otherwise or could not be reached.
+	 * @throws ApiException When Pixonaut refused otherwise or could not be reached.
 	 */
 	private function erase_order( string $order_id ): int {
 		try {
-			$erased = $this->orders->erase_personal_data( $order_id )['personalDataErasedAt'] ?? null;
-		} catch ( ApiError $e ) {
-			if ( ! in_array( $e->error_code, array( ErrorCodes::ORDER_NOT_FOUND, ErrorCodes::NOT_FOUND ), true ) ) {
+			$erased = $this->pixonaut->orders()->erasePersonalData( $order_id )->personalDataErasedAt;
+		} catch ( ApiException $e ) {
+			if ( ! in_array( $e->errorCode, array( ErrorCode::ORDER_NOT_FOUND, ErrorCode::NOT_FOUND ), true ) ) {
 				throw $e;
 			}
 			$erased = null;
 		}
-		return is_int( $erased ) || is_float( $erased ) ? (int) $erased : Milliseconds::of( time() );
+		return null === $erased ? Milliseconds::of( time() ) : (int) $erased;
 	}
 
 	/**
@@ -346,13 +346,13 @@ final class LineErasure {
 	 * the refusal, else given up with a note.
 	 *
 	 * @param WC_Order_Item_Product $item  The line.
-	 * @param ApiError              $error The refusal.
+	 * @param ApiException          $error The refusal.
 	 *
 	 * @return string PENDING or NOT_ERASED.
 	 */
-	private function refused( WC_Order_Item_Product $item, ApiError $error ): string {
-		$retries = ErrorCodes::ORDER_IN_FLIGHT === $error->error_code || RetryPolicy::RETRY === RetryPolicy::decide( $error );
-		if ( $retries && $this->again( $item, $error->error_code, $error->retry_after ) ) {
+	private function refused( WC_Order_Item_Product $item, ApiException $error ): string {
+		$retries = ErrorCode::ORDER_IN_FLIGHT === $error->errorCode || RetryPolicy::RETRY === RetryPolicy::decide( $error );
+		if ( $retries && $this->again( $item, $error->errorCode, $error->retryAfter ) ) {
 			return self::PENDING;
 		}
 		$this->logger->warning(
@@ -361,14 +361,14 @@ final class LineErasure {
 				'item'      => $item->get_id(),
 				'operation' => $error->operation,
 				'status'    => $error->status,
-				'code'      => $error->error_code,
+				'code'      => $error->errorCode,
 			)
 		);
 		return $this->give_up(
 			$item,
 			/* translators: 1: product name of the order line, 2: the error code Pixonaut answered. */
 			__( 'Pixonaut: the customer\'s personal data in "%1$s" could not be erased in Pixonaut, which answered "%2$s". Run the erasure again from Tools > Erase Personal Data.', 'pixonaut-for-woocommerce' ),
-			$error->error_code
+			$error->errorCode
 		);
 	}
 

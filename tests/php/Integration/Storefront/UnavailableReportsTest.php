@@ -9,11 +9,10 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
 use Pixonaut\WooCommerce\Admin\Notices;
 use Pixonaut\WooCommerce\Api\Catalogue;
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
@@ -61,7 +60,7 @@ final class UnavailableReportsTest extends WP_UnitTestCase {
 		$plugin         = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
 		$this->store    = $plugin->connection_store();
 		StorefrontTest::connect( $this->store );
-		$client        = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+		$client        = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		$this->notices = $plugin->notices();
 		$this->reports = new UnavailableReports( $plugin->inline_products(), new Catalogue( $client ), $this->notices, new WcLogger() );
 	}

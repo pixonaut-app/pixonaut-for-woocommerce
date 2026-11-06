@@ -10,8 +10,12 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Api;
 
 use Closure;
+use InvalidArgumentException;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\PreparedRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\Result;
 
 /**
  * While the request log is on, keeps the last requests to Pixonaut, newest
@@ -78,8 +82,8 @@ final class RequestLog {
 
 	/**
 	 * @param mixed $request  The request sent.
-	 * @param mixed $response The response, or null when none arrived.
-	 * @param mixed $error    Why no response arrived, or null.
+	 * @param mixed $response The successful answer, or null.
+	 * @param mixed $error    Why it did not succeed, or null.
 	 */
 	public function after( mixed $request, mixed $response, mixed $error = null ): void {
 		if ( ! $request instanceof PreparedRequest ) {
@@ -91,19 +95,20 @@ final class RequestLog {
 		if ( null === $started || ! $this->enabled() ) {
 			return;
 		}
-		$response = $response instanceof Response ? $response : null;
-		$entry    = array(
+		$result  = $response instanceof Result ? $response : null;
+		$error   = $error instanceof ApiException ? $error : null;
+		$entry   = array(
 			'at'              => time(),
-			'method'          => strtok( $request->operation, ' ' ),
+			'method'          => self::method( $request->operation ),
 			'operation'       => $request->operation,
 			'path'            => self::redact( $request->target ),
-			'status'          => $response->status ?? 0,
-			'error'           => $error instanceof ApiError ? $error->error_code : '',
+			'status'          => $result->status ?? $error->status ?? 0,
+			'error'           => $error->errorCode ?? '',
 			'duration_ms'     => (int) round( ( ( $this->clock )() - $started ) * self::MILLISECONDS_PER_SECOND ),
-			'request_id'      => self::redact( (string) $response?->header( self::REQUEST_ID_HEADER ) ),
-			'idempotency_key' => self::redact( (string) $request->idempotency_key ),
+			'request_id'      => self::redact( (string) ( $result?->requestId() ?? $error?->requestId ) ),
+			'idempotency_key' => self::redact( (string) $request->idempotencyKey ),
 		);
-		$entries  = array_slice( array_merge( array( $entry ), $this->entries() ), 0, self::MAX_ENTRIES );
+		$entries = array_slice( array_merge( array( $entry ), $this->entries() ), 0, self::MAX_ENTRIES );
 		update_option( self::OPTION, $entries, false );
 	}
 
@@ -119,6 +124,19 @@ final class RequestLog {
 
 	public function clear(): void {
 		delete_option( self::OPTION );
+	}
+
+	/**
+	 * The HTTP method of an operation the plugin calls; empty for another.
+	 *
+	 * @param string $operation SDK operation id.
+	 */
+	private static function method( string $operation ): string {
+		try {
+			return Pixonaut::catalogue()->operation( $operation )->method;
+		} catch ( InvalidArgumentException $e ) {
+			return '';
+		}
 	}
 
 	/**

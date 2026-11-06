@@ -8,11 +8,11 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Unit\Fulfilment;
 
 use Brain\Monkey\Functions;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Fulfilment\NeedsAttention;
 use Pixonaut\WooCommerce\Fulfilment\RetryRefusal;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 
 final class RetryRefusalTest extends TestCase {
 
@@ -23,7 +23,7 @@ final class RetryRefusalTest extends TestCase {
 
 	public function test_every_code_the_spec_declares_for_a_retry_has_words(): void {
 		$codes = self::declared_codes();
-		$this->assertContains( ErrorCodes::PRINT_NOT_COMPLETED, $codes );
+		$this->assertContains( ErrorCode::PRINT_NOT_COMPLETED, $codes );
 
 		$unmapped = array_values( array_filter( $codes, static fn ( string $code ): bool => null === RetryRefusal::words( $code ) ) );
 
@@ -31,17 +31,17 @@ final class RetryRefusalTest extends TestCase {
 	}
 
 	public function test_every_code_the_spec_declares_for_a_retry_is_known(): void {
-		$unknown = array_values( array_filter( self::declared_codes(), static fn ( string $code ): bool => ! ErrorCodes::is_known( $code ) ) );
+		$unknown = array_values( array_filter( self::declared_codes(), static fn ( string $code ): bool => ! Pixonaut::catalogue()->isKnownErrorCode( $code ) ) );
 
 		$this->assertSame( array(), $unknown );
 	}
 
 	public function test_a_print_still_being_made_says_to_wait_for_it(): void {
-		$this->assertSame( 'The print is still being made. Try again once it is finished.', RetryRefusal::explain( ErrorCodes::PRINT_NOT_COMPLETED ) );
+		$this->assertSame( 'The print is still being made. Try again once it is finished.', RetryRefusal::explain( ErrorCode::PRINT_NOT_COMPLETED ) );
 	}
 
 	public function test_a_code_shared_with_placing_the_order_reads_as_it_does_there(): void {
-		$this->assertSame( NeedsAttention::explain( ErrorCodes::PRINTSHOP_DISCONNECTED ), RetryRefusal::explain( ErrorCodes::PRINTSHOP_DISCONNECTED ) );
+		$this->assertSame( NeedsAttention::explain( ErrorCode::PRINTSHOP_DISCONNECTED ), RetryRefusal::explain( ErrorCode::PRINTSHOP_DISCONNECTED ) );
 	}
 
 	public function test_an_unknown_code_is_named(): void {
@@ -56,7 +56,8 @@ final class RetryRefusalTest extends TestCase {
 	 */
 	private static function declared_codes(): array {
 		$spec                  = json_decode( (string) file_get_contents( dirname( __DIR__, 4 ) . '/contracts/pixonaut/openapi.json' ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local file.
-		list( $method, $path ) = explode( ' ', Operations::RETRY_ORDER, 2 );
+		$retry                 = Pixonaut::catalogue()->operation( 'orders.retry' );
+		list( $method, $path ) = array( $retry->method, $retry->path );
 		$codes                 = array();
 		foreach ( $spec['paths'][ $path ][ strtolower( $method ) ]['responses'] as $status => $response ) {
 			$error = $response['content']['application/json']['schema']['properties']['error'] ?? array();

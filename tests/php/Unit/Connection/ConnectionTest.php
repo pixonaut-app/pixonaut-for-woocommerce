@@ -10,34 +10,32 @@ namespace Pixonaut\WooCommerce\Tests\Unit\Connection;
 use Brain\Monkey\Actions;
 use Brain\Monkey\Functions;
 use Pixonaut\WooCommerce\Admin\Notices;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\Connect;
-use Pixonaut\WooCommerce\Api\Credential;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Operations;
 use Pixonaut\WooCommerce\Connection\Cipher;
 use Pixonaut\WooCommerce\Connection\ConnectAttempts;
 use Pixonaut\WooCommerce\Connection\ConnectFailed;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
+use Pixonaut\WooCommerce\Connection\Credentials;
 use Pixonaut\WooCommerce\Connection\Pkce;
 use Pixonaut\WooCommerce\Templates;
 use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
 use Pixonaut\WooCommerce\Tests\Support\MemberKeys;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
-use Pixonaut\WooCommerce\Tests\Support\ScriptedTransport;
+use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
 use Pixonaut\WooCommerce\Tests\Unit\FakeOptions;
 use Pixonaut\WooCommerce\Tests\Unit\FakeUserMeta;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
+use Pixonaut\WooCommerce\Vendor\Nyholm\Psr7\Response;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Credentials\Credential;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 
 final class ConnectionTest extends TestCase {
 
 	use FakeOptions;
 	use FakeUserMeta;
 
-	private const BASE_URL = 'http://pixonaut.test';
 
 	private const HOME_URL = 'https://shop.acme.example';
 
@@ -80,7 +78,7 @@ final class ConnectionTest extends TestCase {
 		'reachable'      => true,
 	);
 
-	private ScriptedTransport $transport;
+	private ScriptedClient $transport;
 
 	private ConnectionStore $store;
 
@@ -111,7 +109,7 @@ final class ConnectionTest extends TestCase {
 		parent::setUp();
 		$this->fake_options();
 		$this->fake_user_meta();
-		$this->transport = new ScriptedTransport();
+		$this->transport = new ScriptedClient();
 		$this->store     = new ConnectionStore( new Cipher( 'auth-key-and-salt' ) );
 		$this->logger    = new RecordingLogger();
 		$this->home_url  = self::HOME_URL;
@@ -149,11 +147,11 @@ final class ConnectionTest extends TestCase {
 	}
 
 	private function connection(): Connection {
-		$client = new Client( self::BASE_URL, Operations::plugin(), $this->store, $this->transport, new RecordingLogger(), new Deprecations() );
+		$client = $this->transport->sdk( $this->store, new RecordingLogger() );
 		return new Connection(
 			$this->store,
 			new ConnectAttempts(),
-			new Connect( $client ),
+			$client,
 			new Notices( new Templates( '/nowhere/' ) ),
 			$this->logger,
 			self::SETTINGS_URL,
@@ -230,6 +228,19 @@ final class ConnectionTest extends TestCase {
 		$this->home_url = self::HOME_URL;
 		$this->assertNull( $connection->paused() );
 		$this->assertSame( self::EXCHANGED['integrationKey']['key'], $this->store->secret( Credential::IntegrationKey ) );
+	}
+
+	public function test_the_sdk_gets_the_stores_integration_and_publishable_keys_and_no_other(): void {
+		$connection = $this->connection();
+		$this->transport->json( 201, self::EXCHANGED );
+		$connection->complete( self::ADMIN, $this->approve( $connection ) );
+		$credentials = new Credentials( $this->store );
+
+		$this->assertSame( self::EXCHANGED['integrationKey']['key'], $credentials->secret( Credential::IntegrationKey ) );
+		$this->assertSame( self::EXCHANGED['publishableKey']['key'], $credentials->secret( Credential::PublishableKey ) );
+		$this->assertNull( $credentials->secret( Credential::SecretKey ) );
+		$this->assertNull( $credentials->secret( Credential::MemberKey ) );
+		$this->assertNull( $credentials->secret( Credential::ShareLink ) );
 	}
 
 	public function test_keys_sealed_with_another_sites_salts_pause_the_connection(): void {
@@ -417,9 +428,9 @@ final class ConnectionTest extends TestCase {
 		$connection->complete( self::ADMIN, $this->approve( $connection ) );
 
 		try {
-			( new Connect( new Client( self::BASE_URL, Operations::plugin(), $this->store, $this->transport, new RecordingLogger(), new Deprecations() ) ) )->get();
+			$this->transport->sdk( $this->store, new RecordingLogger() )->connect()->get();
 			$this->fail( 'A revoked key was accepted.' );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->assertSame( 401, $e->status );
 		}
 
@@ -458,7 +469,7 @@ final class ConnectionTest extends TestCase {
 	public function test_disconnect_revokes_and_forgets(): void {
 		Actions\expectDone( 'pixonaut_wc_connection_disconnected' )->once()->with( true );
 		$connection = $this->connection();
-		$this->transport->json( 201, self::EXCHANGED )->respond( new \Pixonaut\WooCommerce\Api\Response( 204, array(), '' ) );
+		$this->transport->json( 201, self::EXCHANGED )->respond( new Response( 204, array(), '' ) );
 		$connection->complete( self::ADMIN, $this->approve( $connection ) );
 
 		$this->assertTrue( $connection->disconnect() );
@@ -514,7 +525,7 @@ final class ConnectionTest extends TestCase {
 	public function test_a_failed_wipe_is_not_reported_as_a_disconnect(): void {
 		Actions\expectDone( 'pixonaut_wc_connection_disconnected' )->never();
 		$connection = $this->connection();
-		$this->transport->json( 201, self::EXCHANGED )->respond( new \Pixonaut\WooCommerce\Api\Response( 204, array(), '' ) );
+		$this->transport->json( 201, self::EXCHANGED )->respond( new Response( 204, array(), '' ) );
 		$connection->complete( self::ADMIN, $this->approve( $connection ) );
 		$this->failing_options[] = ConnectionStore::OPTION;
 

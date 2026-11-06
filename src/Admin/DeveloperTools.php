@@ -11,10 +11,8 @@ namespace Pixonaut\WooCommerce\Admin;
 
 use ActionScheduler_Abstract_Schedule;
 use ActionScheduler_Action;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Api\RequestLog;
-use Pixonaut\WooCommerce\Api\Spec;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -27,6 +25,8 @@ use Pixonaut\WooCommerce\Settings\SettingsPage;
 use Pixonaut\WooCommerce\Storefront\KeptDesignerLinks;
 use Pixonaut\WooCommerce\Storefront\Sdk;
 use Pixonaut\WooCommerce\Templates;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ApiVersion;
 use Pixonaut\WooCommerce\Webhooks\Endpoint;
 use Pixonaut\WooCommerce\Webhooks\EventsPull;
 use WP_Admin_Bar;
@@ -275,7 +275,7 @@ final class DeveloperTools {
 		if ( null === $paused ) {
 			try {
 				$webhook = $this->endpoint->health( $stored );
-			} catch ( ApiError $e ) {
+			} catch ( ApiException $e ) {
 				$webhook = null;
 			}
 		}
@@ -286,7 +286,7 @@ final class DeveloperTools {
 			'paused'      => $paused ?? '',
 			'webhook_url' => $stored->webhook_url,
 			'webhook'     => $webhook,
-			'spec'        => Spec::VERSION,
+			'spec'        => ApiVersion::TARGET,
 			'sdk'         => Sdk::VERSION,
 		);
 	}

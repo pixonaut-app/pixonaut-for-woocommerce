@@ -7,12 +7,11 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Cart;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Operations;
 use Pixonaut\WooCommerce\Cart\CommitFailures;
 use Pixonaut\WooCommerce\Labels;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 
 final class CommitFailuresTest extends PersonalisedCartTestCase {
 
@@ -40,8 +39,8 @@ final class CommitFailuresTest extends PersonalisedCartTestCase {
 		parent::tear_down();
 	}
 
-	private static function error( string $code, int $status = self::SERVER_ERROR ): ApiError {
-		return new ApiError( Operations::COMMIT_DESIGN, $status, $code, false );
+	private static function error( string $code, int $status = self::SERVER_ERROR ): ApiException {
+		return new ApiException( 'designs.commit', $status, $code, false );
 	}
 
 	/**
@@ -53,7 +52,7 @@ final class CommitFailuresTest extends PersonalisedCartTestCase {
 
 	public function test_failures_below_the_threshold_raise_nothing(): void {
 		for ( $i = 1; $i < CommitFailures::THRESHOLD; $i++ ) {
-			$this->failures->failed( self::error( ErrorCodes::DB_ERROR ) );
+			$this->failures->failed( self::error( ErrorCode::DB_ERROR ) );
 		}
 
 		$this->assertFalse( $this->plugin->notices()->has( CommitFailures::NOTICE ) );
@@ -62,7 +61,7 @@ final class CommitFailuresTest extends PersonalisedCartTestCase {
 
 	public function test_the_threshold_within_the_window_raises_one_notice_and_one_log_line(): void {
 		for ( $i = 0; $i < CommitFailures::THRESHOLD * 2; $i++ ) {
-			$this->failures->failed( self::error( ErrorCodes::DB_ERROR ) );
+			$this->failures->failed( self::error( ErrorCode::DB_ERROR ) );
 			++$this->now;
 		}
 
@@ -75,7 +74,7 @@ final class CommitFailuresTest extends PersonalisedCartTestCase {
 
 	public function test_failures_spread_beyond_the_window_raise_nothing(): void {
 		for ( $i = 0; $i < CommitFailures::THRESHOLD * 2; $i++ ) {
-			$this->failures->failed( self::error( ErrorCodes::DB_ERROR ) );
+			$this->failures->failed( self::error( ErrorCode::DB_ERROR ) );
 			$this->now += CommitFailures::WINDOW_SECONDS / ( CommitFailures::THRESHOLD - 1 );
 		}
 
@@ -83,8 +82,8 @@ final class CommitFailuresTest extends PersonalisedCartTestCase {
 	}
 
 	public function test_a_suspended_workspace_raises_the_notice_at_once_and_once(): void {
-		$this->failures->failed( self::error( ErrorCodes::WORKSPACE_SUSPENDED, self::FORBIDDEN ) );
-		$this->failures->failed( self::error( ErrorCodes::WORKSPACE_SUSPENDED, self::FORBIDDEN ) );
+		$this->failures->failed( self::error( ErrorCode::WORKSPACE_SUSPENDED, self::FORBIDDEN ) );
+		$this->failures->failed( self::error( ErrorCode::WORKSPACE_SUSPENDED, self::FORBIDDEN ) );
 
 		$notice = $this->plugin->notices()->all()[ CommitFailures::NOTICE ] ?? null;
 		$this->assertNotNull( $notice );
@@ -93,11 +92,11 @@ final class CommitFailuresTest extends PersonalisedCartTestCase {
 	}
 
 	public function test_commits_failing_after_a_lifted_suspension_replace_its_notice(): void {
-		$this->failures->failed( self::error( ErrorCodes::WORKSPACE_SUSPENDED, self::FORBIDDEN ) );
+		$this->failures->failed( self::error( ErrorCode::WORKSPACE_SUSPENDED, self::FORBIDDEN ) );
 		$this->plugin->notices()->remove( CommitFailures::NOTICE );
 
 		for ( $i = 0; $i < CommitFailures::THRESHOLD; $i++ ) {
-			$this->failures->failed( self::error( ErrorCodes::DB_ERROR ) );
+			$this->failures->failed( self::error( ErrorCode::DB_ERROR ) );
 		}
 
 		$notice = $this->plugin->notices()->all()[ CommitFailures::NOTICE ] ?? null;
@@ -108,32 +107,32 @@ final class CommitFailuresTest extends PersonalisedCartTestCase {
 
 	public function test_a_failure_while_another_request_holds_the_lock_is_not_counted(): void {
 		for ( $i = 1; $i < CommitFailures::THRESHOLD; $i++ ) {
-			$this->failures->failed( self::error( ErrorCodes::DB_ERROR ) );
+			$this->failures->failed( self::error( ErrorCode::DB_ERROR ) );
 		}
 		add_option( CommitFailures::LOCK_OPTION, $this->now );
 
-		$this->failures->failed( self::error( ErrorCodes::DB_ERROR ) );
+		$this->failures->failed( self::error( ErrorCode::DB_ERROR ) );
 		$this->assertFalse( $this->plugin->notices()->has( CommitFailures::NOTICE ) );
 
 		delete_option( CommitFailures::LOCK_OPTION );
-		$this->failures->failed( self::error( ErrorCodes::DB_ERROR ) );
+		$this->failures->failed( self::error( ErrorCode::DB_ERROR ) );
 		$this->assertTrue( $this->plugin->notices()->has( CommitFailures::NOTICE ) );
 	}
 
 	public function test_a_dismissed_notice_stays_away_while_commits_keep_failing(): void {
 		for ( $i = 0; $i < CommitFailures::THRESHOLD; $i++ ) {
-			$this->failures->failed( self::error( ErrorCodes::DB_ERROR ) );
+			$this->failures->failed( self::error( ErrorCode::DB_ERROR ) );
 		}
 		$this->plugin->notices()->remove( CommitFailures::NOTICE );
 
-		$this->failures->failed( self::error( ErrorCodes::DB_ERROR ) );
+		$this->failures->failed( self::error( ErrorCode::DB_ERROR ) );
 
 		$this->assertFalse( $this->plugin->notices()->has( CommitFailures::NOTICE ) );
 		$this->assertCount( 1, $this->errors_logged() );
 	}
 
 	public function test_a_successful_commit_clears_the_notice_and_the_count(): void {
-		$this->failures->failed( self::error( ErrorCodes::WORKSPACE_SUSPENDED, self::FORBIDDEN ) );
+		$this->failures->failed( self::error( ErrorCode::WORKSPACE_SUSPENDED, self::FORBIDDEN ) );
 
 		$this->failures->succeeded();
 
@@ -143,7 +142,7 @@ final class CommitFailuresTest extends PersonalisedCartTestCase {
 
 	public function test_add_to_cart_tells_the_merchant_once_commits_keep_failing_and_clears_on_success(): void {
 		for ( $i = 0; $i < CommitFailures::THRESHOLD; $i++ ) {
-			$this->recorder->json( self::SERVER_ERROR, array( 'error' => ErrorCodes::DB_ERROR ) );
+			$this->recorder->json( self::SERVER_ERROR, array( 'error' => ErrorCode::DB_ERROR ) );
 			$this->assertFalse( $this->post_add_to_cart() );
 		}
 		$this->assertSame( $this->plugin->labels()->get( Labels::DESIGN_NOT_SAVED ), self::errors()[0] );
@@ -156,7 +155,7 @@ final class CommitFailuresTest extends PersonalisedCartTestCase {
 	}
 
 	public function test_add_to_cart_tells_the_merchant_when_the_workspace_is_suspended(): void {
-		$this->recorder->json( self::FORBIDDEN, array( 'error' => ErrorCodes::WORKSPACE_SUSPENDED ) );
+		$this->recorder->json( self::FORBIDDEN, array( 'error' => ErrorCode::WORKSPACE_SUSPENDED ) );
 
 		$this->assertFalse( $this->post_add_to_cart() );
 

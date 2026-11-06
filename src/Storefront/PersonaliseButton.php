@@ -9,8 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Cart\AddToCart;
 use Pixonaut\WooCommerce\Cart\CartEdit;
 use Pixonaut\WooCommerce\Cart\CartLine;
@@ -189,7 +189,7 @@ final class PersonaliseButton {
 	 * @param Storefront          $storefront Loads the storefront styles.
 	 * @param Templates           $templates  Renders the button.
 	 * @param Labels              $labels     Customer-facing text.
-	 * @param Logger              $logger     Logs a link Pixonaut would not mint.
+	 * @param LoggerInterface     $logger     Logs a link Pixonaut would not mint.
 	 * @param OpeningPrice        $opening    The product's own price when the page prints its opening variation's.
 	 * @param PersonalisedDesigns $personalised The designs the customer brought back.
 	 * @param ProofUrls           $proofs     Signs the design's pictures.
@@ -206,7 +206,7 @@ final class PersonaliseButton {
 		private readonly Storefront $storefront,
 		private readonly Templates $templates,
 		private readonly Labels $labels,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		private readonly OpeningPrice $opening,
 		private readonly PersonalisedDesigns $personalised,
 		private readonly ProofUrls $proofs,
@@ -762,8 +762,8 @@ final class PersonaliseButton {
 		}
 		try {
 			$url = $this->available( $config ) ? $this->links->url_for( $product, $config, determine_locale() ) : null;
-		} catch ( ApiError $error ) {
-			$this->logger->warning( sprintf( 'Could not make a designer link for product %d: %s', $product->get_id(), $error->getMessage() ), array( 'code' => $error->error_code ) );
+		} catch ( ApiException $error ) {
+			$this->logger->warning( sprintf( 'Could not make a designer link for product %d: %s', $product->get_id(), $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			$url = null;
 		}
 		$state = null === $url ? null : $this->visits->open( $product_id, $variation_id, max( 1, $quantity ), $attributes );

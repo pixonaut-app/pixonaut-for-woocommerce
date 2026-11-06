@@ -7,15 +7,12 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Fulfilment;
 
-use Pixonaut\WooCommerce\Admin\OrderBox;
 use Pixonaut\WooCommerce\Admin\ConnectionScreen;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\Connect;
+use Pixonaut\WooCommerce\Admin\OrderBox;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Orders;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Connection\ConnectAttempts;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
@@ -238,12 +235,12 @@ final class ErasedLineTest extends FulfilmentTestCase {
 	 * The line actions, reading orders from the recorder.
 	 */
 	private function line_actions(): LineActions {
-		$client     = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+		$client     = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		$store      = $this->store;
-		$connection = new Connection( $store, new ConnectAttempts(), new Connect( $client ), $this->plugin->notices(), new WcLogger(), ConnectionScreen::settings_url() );
+		$connection = new Connection( $store, new ConnectAttempts(), $client, $this->plugin->notices(), new WcLogger(), ConnectionScreen::settings_url() );
 		$lines      = new OrderEventLines( $connection, new WcLogger() );
 		return new LineActions(
-			new Orders( $client ),
+			$client,
 			static fn (): ?StoredConnection => $store->load(),
 			new OrderStatusChanged( $lines, new Shipments() ),
 			new OrderFailed( $lines ),

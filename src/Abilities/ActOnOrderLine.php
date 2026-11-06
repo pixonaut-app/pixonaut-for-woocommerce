@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Admin\OrderBox;
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Fulfilment\LineActionResult;
 use Pixonaut\WooCommerce\Fulfilment\LineActions;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
@@ -134,7 +134,7 @@ final class ActOnOrderLine implements Ability {
 		$offered = null;
 		try {
 			list( $line, $offered ) = $this->actions->offered( $line );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			// The action ran; what the line offers next is read on the next listing.
 			$offered = null;
 		}

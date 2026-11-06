@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Abilities;
 
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Catalogue\AttributeMove;
 use Pixonaut\WooCommerce\Catalogue\AttributeMoveRefused;
 use Throwable;
@@ -73,9 +73,9 @@ final class MoveProductAttribute implements Ability {
 	private const REASON_SAVE_FAILED = 'save_failed';
 
 	/**
-	 * @param Logger $logger Where an unexpected failure is told.
+	 * @param LoggerInterface $logger Where an unexpected failure is told.
 	 */
-	public function __construct( private readonly Logger $logger ) {
+	public function __construct( private readonly LoggerInterface $logger ) {
 	}
 
 	public function name(): string {

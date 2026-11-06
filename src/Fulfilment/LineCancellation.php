@@ -10,12 +10,11 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Fulfilment;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Orders;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Factory;
@@ -77,16 +76,14 @@ final class LineCancellation {
 	private const ORDER_UNRESOLVED = 'order_unresolved';
 
 	/**
-	 * @param Designs $designs    Rejects designs.
-	 * @param Orders  $orders     Cancels printshop orders.
-	 * @param Closure $connection `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
-	 * @param Logger  $logger     Logs the cancellations Pixonaut refused or the store could not schedule.
+	 * @param Sdk             $pixonaut   Rejects designs, cancels printshop orders.
+	 * @param Closure         $connection `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
+	 * @param LoggerInterface $logger     Logs the cancellations Pixonaut refused or the store could not schedule.
 	 */
 	public function __construct(
-		private readonly Designs $designs,
-		private readonly Orders $orders,
+		private readonly Sdk $pixonaut,
 		private readonly Closure $connection,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -246,14 +243,14 @@ final class LineCancellation {
 				}
 				try {
 					$this->reject( $design_id );
-				} catch ( ApiError $e ) {
+				} catch ( ApiException $e ) {
 					// Each side is rejected on its own: one refusal does not keep another side's design open.
 					$refusals[] = $e;
 				}
 			}
 			foreach ( $refusals as $e ) {
 				// A rejection already made answers success again, so the retry sends every side once more.
-				if ( $this->retries( $e ) && $this->again( $line, $e->error_code, $e->retry_after ) ) {
+				if ( $this->retries( $e ) && $this->again( $line, $e->errorCode, $e->retryAfter ) ) {
 					return;
 				}
 			}
@@ -264,7 +261,7 @@ final class LineCancellation {
 					$line->item(),
 					/* translators: 1: product name of the order line, 2: the error code Pixonaut answered. */
 					__( 'Pixonaut: a design of "%1$s" could not be rejected in Pixonaut, which answered "%2$s". It stays unapproved there, so it is not printed.', 'pixonaut-for-woocommerce' ),
-					$e->error_code
+					$e->errorCode
 				);
 			}
 		}
@@ -297,12 +294,12 @@ final class LineCancellation {
 			return;
 		}
 		try {
-			$placed = $this->orders->with_external_ref( (string) $line->ref( LineState::REF_EXTERNAL_REF ) );
-		} catch ( ApiError $e ) {
+			$placed = $this->pixonaut->orders()->list( externalRef: (string) $line->ref( LineState::REF_EXTERNAL_REF ) )->orders;
+		} catch ( ApiException $e ) {
 			$this->refused( $line, $e );
 			return;
 		}
-		$order_id = is_string( $placed[0]['id'] ?? null ) ? $placed[0]['id'] : '';
+		$order_id = $placed[0]->id ?? '';
 		if ( '' !== $order_id ) {
 			$line->set_ref( LineState::REF_ORDER_ID, $order_id );
 			// The request holds the customer's name and address; its outcome is known now.
@@ -334,13 +331,13 @@ final class LineCancellation {
 	/**
 	 * @param string $design_id A design waiting for approval.
 	 *
-	 * @throws ApiError When Pixonaut refused, other than for a design no longer waiting, or could not be reached.
+	 * @throws ApiException When Pixonaut refused, other than for a design no longer waiting, or could not be reached.
 	 */
 	private function reject( string $design_id ): void {
 		try {
-			$this->designs->reject( $design_id );
-		} catch ( ApiError $e ) {
-			if ( ErrorCodes::NOT_COMMITTED !== $e->error_code ) {
+			$this->pixonaut->designs()->reject( $design_id );
+		} catch ( ApiException $e ) {
+			if ( ErrorCode::NOT_COMMITTED !== $e->errorCode ) {
 				throw $e;
 			}
 		}
@@ -364,8 +361,8 @@ final class LineCancellation {
 			return;
 		}
 		try {
-			$answer = $this->orders->cancel( $order_id );
-		} catch ( ApiError $e ) {
+			$answer = $this->pixonaut->orders()->cancel( $order_id )->raw();
+		} catch ( ApiException $e ) {
 			$this->refused( $line, $e );
 			return;
 		}
@@ -380,13 +377,13 @@ final class LineCancellation {
 	/**
 	 * What a refused cancel comes to.
 	 *
-	 * @param LineState $line  The line.
-	 * @param ApiError  $error The refusal.
+	 * @param LineState    $line  The line.
+	 * @param ApiException $error The refusal.
 	 *
 	 * @throws RuntimeException When the line changed meanwhile.
 	 */
-	private function refused( LineState $line, ApiError $error ): void {
-		if ( ErrorCodes::ORDER_AT_PRINTSHOP === $error->error_code ) {
+	private function refused( LineState $line, ApiException $error ): void {
+		if ( ErrorCode::ORDER_AT_PRINTSHOP === $error->errorCode ) {
 			$this->give_up(
 				$line,
 				/* translators: 1: product name of the order line, 2: why the printshop keeps the order. */
@@ -395,7 +392,7 @@ final class LineCancellation {
 			);
 			return;
 		}
-		if ( ErrorCodes::ORDER_STATUS_NOT_ALLOWED === $error->error_code && OrderStatus::FAILED === ( $error->details['from'] ?? null ) ) {
+		if ( ErrorCode::ORDER_STATUS_NOT_ALLOWED === $error->errorCode && OrderStatus::FAILED === ( $error->details['from'] ?? null ) ) {
 			$this->cancelled(
 				$line,
 				OrderStatus::FAILED,
@@ -404,7 +401,7 @@ final class LineCancellation {
 			);
 			return;
 		}
-		if ( $this->retries( $error ) && $this->again( $line, $error->error_code, $error->retry_after ) ) {
+		if ( $this->retries( $error ) && $this->again( $line, $error->errorCode, $error->retryAfter ) ) {
 			return;
 		}
 		$line = LineState::of( $line->item() );
@@ -414,7 +411,7 @@ final class LineCancellation {
 			$line,
 			/* translators: 1: product name of the order line, 2: the error code Pixonaut answered, 3: Pixonaut's reason, if it gave one, with a leading space. */
 			__( 'Pixonaut: the printshop order for "%1$s" could not be cancelled: Pixonaut answered "%2$s".%3$s Ask the printshop to stop it.', 'pixonaut-for-woocommerce' ),
-			$error->error_code,
+			$error->errorCode,
 			'' === $reason ? '' : ' ' . $reason
 		);
 	}
@@ -424,10 +421,10 @@ final class LineCancellation {
 	 * submission is still unanswered, a printshop Pixonaut could not reach
 	 * yet, or a failure the fulfilment policy retries.
 	 *
-	 * @param ApiError $error The refusal.
+	 * @param ApiException $error The refusal.
 	 */
-	private function retries( ApiError $error ): bool {
-		return ErrorCodes::ORDER_IN_FLIGHT === $error->error_code || RetryPolicy::RETRY === RetryPolicy::decide( $error );
+	private function retries( ApiException $error ): bool {
+		return ErrorCode::ORDER_IN_FLIGHT === $error->errorCode || RetryPolicy::RETRY === RetryPolicy::decide( $error );
 	}
 
 	/**
@@ -544,17 +541,17 @@ final class LineCancellation {
 	}
 
 	/**
-	 * @param LineState $line  The line.
-	 * @param ApiError  $error What Pixonaut answered.
+	 * @param LineState    $line  The line.
+	 * @param ApiException $error What Pixonaut answered.
 	 */
-	private function log_refusal( LineState $line, ApiError $error ): void {
+	private function log_refusal( LineState $line, ApiException $error ): void {
 		$this->logger->warning(
 			'Line cancellation refused by Pixonaut.',
 			array(
 				'item'      => $line->item()->get_id(),
 				'operation' => $error->operation,
 				'status'    => $error->status,
-				'code'      => $error->error_code,
+				'code'      => $error->errorCode,
 			)
 		);
 	}

@@ -7,13 +7,12 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
+use MO;
 use Pixonaut\WooCommerce\Api\Catalogue;
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -26,9 +25,8 @@ use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\ServerReads;
 use Pixonaut\WooCommerce\Storefront\Storefront;
-use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
-use MO;
+use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Translation_Entry;
 use WP_UnitTestCase;
 
@@ -68,8 +66,8 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$this->plugin   = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
 		$this->store    = $this->plugin->connection_store();
 		StorefrontTest::connect( $this->store );
-		$client      = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
-		$this->reads = new ServerReads( new Catalogue( $client ), new CatalogueCache( $this->store ), new Designs( $client ) );
+		$client      = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
+		$this->reads = new ServerReads( new Catalogue( $client ), new CatalogueCache( $this->store ), $client );
 		( new CatalogueCache( $this->store ) )->flush();
 		delete_transient( ServerReads::PAUSE_TRANSIENT );
 	}

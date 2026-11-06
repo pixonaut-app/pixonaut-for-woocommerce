@@ -57,11 +57,11 @@ Run one PHP test: `node bin/php.mjs vendor/bin/phpunit --filter <name>`
   pinned SDK path on `cdn.pixonaut.app`.
 - The pinned files in `contracts/pixonaut/` (the spec, vectors, `sdk/` and
   both locks) change only through `pnpm contracts:pin`; never edit them by
-  hand. `consumed.json` is generated from `Operations::plugin()`,
+  hand. `consumed.json` is generated from `Api\Pixonaut::OPERATIONS`,
   `Sdk::OPERATIONS` and `Endpoint::EVENT_TYPES` by `pnpm contracts:consumed`
   (only its `pending` list of planned operations is kept by hand); the change
   that starts calling an operation regenerates it and adds the fake's handler.
-- Only `Api` talks to Pixonaut. Hooks are named `pixonaut_wc_<area>_<name>`
+- Only pixonaut-php, built by `Api\Pixonaut`, talks to Pixonaut. Hooks are named `pixonaut_wc_<area>_<name>`
   and carry a docblock (`@since`, params, example), which the unit suite
   checks; run `pnpm docs:generate` after changing one. Every hook fires in an
   integration test or is listed, with the reason, in `HookInventoryTest`.

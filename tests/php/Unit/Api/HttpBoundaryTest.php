@@ -38,7 +38,7 @@ final class HttpBoundaryTest extends TestCase {
 			}
 		}
 
-		$this->assertSame( array(), $offenders, 'Call Pixonaut through Api\Client, not directly.' );
+		$this->assertSame( array(), $offenders, 'Call Pixonaut through the SDK, not directly.' );
 	}
 
 	/**

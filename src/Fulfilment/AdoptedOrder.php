@@ -9,8 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Cart\StandingSide;
 
 /**
@@ -33,13 +33,13 @@ final class AdoptedOrder {
 	 * The live order a refusal names, when Pixonaut refused an order because
 	 * the design has one.
 	 *
-	 * @param ApiError $error A refusal of `POST /v1/orders` or its retry.
+	 * @param ApiException $error A refusal of `POST /v1/orders` or its retry.
 	 *
 	 * @return string|null The order's id; null for any other refusal.
 	 */
-	public static function named_by( ApiError $error ): ?string {
+	public static function named_by( ApiException $error ): ?string {
 		$order_id = $error->details['orderId'] ?? null;
-		return ErrorCodes::DESIGN_ALREADY_ORDERED === $error->error_code && is_string( $order_id ) && '' !== $order_id ? $order_id : null;
+		return ErrorCode::DESIGN_ALREADY_ORDERED === $error->errorCode && is_string( $order_id ) && '' !== $order_id ? $order_id : null;
 	}
 
 	/**

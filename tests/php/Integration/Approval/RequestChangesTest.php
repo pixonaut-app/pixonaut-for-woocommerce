@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Approval;
 
-use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Approval\ChangesRequested;
 use Pixonaut\WooCommerce\Approval\OrderEdit;
@@ -36,9 +35,9 @@ use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Signature;
 use Pixonaut\WooCommerce\Webhooks\Processor;
-use Pixonaut\WooCommerce\Webhooks\Signature;
 use ReflectionProperty;
 use WC_Emails;
 use WC_Order;
@@ -108,11 +107,10 @@ final class RequestChangesTest extends PersonalisedCartTestCase {
 	}
 
 	private function edit(): OrderEdit {
-		$designs = new Designs( $this->plugin->client() );
 		return new OrderEdit(
 			$this->plugin->proof_state(),
-			$designs,
-			new CorrectionMount( $this->plugin->connection(), $designs, $this->logger, $this->plugin->settings() ),
+			$this->plugin->sdk(),
+			new CorrectionMount( $this->plugin->connection(), $this->plugin->sdk(), $this->logger, $this->plugin->settings() ),
 			$this->plugin->settings(),
 			$this->plugin->labels(),
 			$this->logger,
@@ -344,7 +342,7 @@ final class RequestChangesTest extends PersonalisedCartTestCase {
 		$this->recorder->json( 200, FulfilmentAnswers::approved() );
 		// A change made in the studio reaches the line while Pixonaut approves this one.
 		$newer = function ( $request ): void {
-			if ( str_ends_with( (string) $request->operation, '/approve' ) ) {
+			if ( 'designs.approve' === $request->operation ) {
 				$line = $this->line();
 				$line->set_side_ref( 'front', LineState::SIDE_REVISION, self::CORRECTED_REVISION + 1 );
 				$this->assertTrue( $line->save() );
@@ -460,7 +458,7 @@ final class RequestChangesTest extends PersonalisedCartTestCase {
 
 	public function test_a_request_about_a_design_changed_since_tells_the_store_only(): void {
 		( new ChangesRequested( $this->plugin->connection(), $this->plugin->proof_state() ) )
-			->handle( Event::from_array( $this->changes_requested( self::CORRECTED_REVISION ) ) );
+			->handle( Event::fromArray( $this->changes_requested( self::CORRECTED_REVISION ) ) );
 
 		$this->assertSame( array(), $this->mails( $this->plugin->labels()->get( Labels::CHANGES_LINK_INTRO ) ), 'no link to a design the customer changed already' );
 		$this->assertCount( 1, $this->mails( self::MESSAGE ) );

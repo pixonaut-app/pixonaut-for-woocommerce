@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
 use RuntimeException;
 use WC_Order;
 

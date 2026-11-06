@@ -11,10 +11,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Approval;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Cart\EditRefused;
 use Pixonaut\WooCommerce\Cart\FieldValue;
@@ -27,6 +24,11 @@ use Pixonaut\WooCommerce\Milliseconds;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\CorrectionMount;
 use Pixonaut\WooCommerce\Storefront\HostedCorrection;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\DesignsUpdateRequestOption1;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Order;
 use WC_Order_Factory;
 use WC_Order_Item_Product;
@@ -80,21 +82,21 @@ final class OrderEdit {
 
 	/**
 	 * @param ProofState      $state      Verifies the `state` a proof page carried back.
-	 * @param Designs         $designs    Saves and approves the change.
+	 * @param Sdk             $pixonaut   Saves and approves the change.
 	 * @param CorrectionMount $correction Opens the design for a correction.
 	 * @param Settings        $settings   The default layout and approval mode.
 	 * @param Labels          $labels     Customer-facing text.
-	 * @param Logger          $logger     Logs changes Pixonaut refused.
+	 * @param LoggerInterface $logger     Logs changes Pixonaut refused.
 	 * @param Closure         $schedule   `fn(int $item_id): bool`, queues an approved line's fulfilment job.
 	 * @param Closure|null    $clock      `fn(): int` Unix time; `time()` when null.
 	 */
 	public function __construct(
 		private readonly ProofState $state,
-		private readonly Designs $designs,
+		private readonly Sdk $pixonaut,
 		private readonly CorrectionMount $correction,
 		private readonly Settings $settings,
 		private readonly Labels $labels,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		private readonly Closure $schedule,
 		?Closure $clock = null,
 	) {
@@ -294,11 +296,11 @@ final class OrderEdit {
 			throw new EditRefused( EditRefused::UNAVAILABLE );
 		}
 		try {
-			$corrected = $this->designs->correct( $line->design_id, $proof_token );
-		} catch ( ApiError $error ) {
+			$corrected = $this->pixonaut->designs()->update( $line->design_id, new DesignsUpdateRequestOption1( proofToken: $proof_token ) );
+		} catch ( ApiException $error ) {
 			throw $this->refused( $line, $error );
 		}
-		$this->record( $line, $corrected['revision'], $corrected['proofId'], $fields );
+		$this->record( $line, $corrected->revision, $corrected->proofId, $fields );
 
 		$consent = array(
 			'kind' => self::CONSENT_KIND,
@@ -306,14 +308,14 @@ final class OrderEdit {
 		);
 		$ref     = LineState::of( $line->item )->ref( LineState::REF_EXTERNAL_REF );
 		try {
-			$this->designs->approve( $line->design_id, is_string( $ref ) && '' !== $ref ? $consent + array( 'ref' => $ref ) : $consent, $corrected['revision'] );
-		} catch ( ApiError $error ) {
+			$this->pixonaut->designs()->approve( $line->design_id, Designs::approval( is_string( $ref ) && '' !== $ref ? $consent + array( 'ref' => $ref ) : $consent, $corrected->revision ) );
+		} catch ( ApiException $error ) {
 			// Approved at this revision already, by a repeat of this request: it stands.
-			if ( ErrorCodes::NOT_COMMITTED !== $error->error_code || ! $this->approved_at( $line->design_id, $corrected['revision'] ) ) {
+			if ( ErrorCode::NOT_COMMITTED !== $error->errorCode || ! $this->approved_at( $line->design_id, $corrected->revision ) ) {
 				throw $this->refused( $line, $error );
 			}
 		}
-		$this->approve( $line, $corrected['revision'], $consent );
+		$this->approve( $line, $corrected->revision, $consent );
 		return $line->order->get_checkout_order_received_url();
 	}
 
@@ -435,23 +437,23 @@ final class OrderEdit {
 	 */
 	private function approved_at( string $design_id, int $revision ): bool {
 		try {
-			$design = $this->designs->get( $design_id );
-		} catch ( ApiError ) {
+			$design = $this->pixonaut->designs()->get( $design_id );
+		} catch ( ApiException ) {
 			throw new EditRefused( EditRefused::NOT_SAVED );
 		}
-		return self::DESIGN_APPROVED === ( $design['status'] ?? null ) && ( $design['revision'] ?? null ) === $revision;
+		return self::DESIGN_APPROVED === $design->status && $design->revision === $revision;
 	}
 
 	/**
 	 * The refusal the customer sees for an error Pixonaut answered.
 	 *
 	 * @param OrderEditLine $line  The line.
-	 * @param ApiError      $error The error.
+	 * @param ApiException  $error The error.
 	 */
-	private function refused( OrderEditLine $line, ApiError $error ): EditRefused {
-		$refusal = EditRefused::for_error( $error->error_code );
+	private function refused( OrderEditLine $line, ApiException $error ): EditRefused {
+		$refusal = EditRefused::for_error( $error->errorCode );
 		if ( EditRefused::NOT_SAVED === $refusal->reason ) {
-			$this->logger->warning( sprintf( 'Could not save the change of design %s: %s', $line->design_id, $error->getMessage() ), array( 'code' => $error->error_code ) );
+			$this->logger->warning( sprintf( 'Could not save the change of design %s: %s', $line->design_id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 		}
 		return $refusal;
 	}

@@ -10,7 +10,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Cart;
 
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Labels;
 use RuntimeException;
 
@@ -39,17 +40,17 @@ final class EditRefused extends RuntimeException {
 	/**
 	 * The design was corrected elsewhere since the page loaded: reload.
 	 */
-	public const REVISION_CHANGED = ErrorCodes::REVISION_CHANGED;
+	public const REVISION_CHANGED = ErrorCode::REVISION_CHANGED;
 
 	/**
 	 * The correction's proof expired: approve it again.
 	 */
-	public const PROOF_EXPIRED = ErrorCodes::PROOF_EXPIRED;
+	public const PROOF_EXPIRED = ErrorCode::PROOF_EXPIRED;
 
 	/**
 	 * The design takes no more corrections: editing closes.
 	 */
-	public const NOT_EDITABLE = ErrorCodes::NOT_EDITABLE;
+	public const NOT_EDITABLE = ErrorCode::NOT_EDITABLE;
 
 	/**
 	 * The proof the customer asked to change shows an older revision than
@@ -85,7 +86,7 @@ final class EditRefused extends RuntimeException {
 	/**
 	 * Pixonaut refusals the customer sees as no connection.
 	 */
-	private const UNAVAILABLE_ERRORS = array( ErrorCodes::NOT_CONNECTED, ErrorCodes::UNAUTHORIZED );
+	private const UNAVAILABLE_ERRORS = array( ApiException::NOT_CONNECTED, ErrorCode::UNAUTHORIZED );
 
 	/**
 	 * @param string $reason One of the reason constants.

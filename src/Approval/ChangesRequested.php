@@ -12,7 +12,8 @@ namespace Pixonaut\WooCommerce\Approval;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use WC_Order;
 use WC_Order_Item_Product;
 
@@ -43,12 +44,12 @@ final class ChangesRequested {
 	 * @param Event $event A `design.changes_requested` event.
 	 */
 	public function handle( Event $event ): void {
-		$design_id = $event->string( 'designId' );
+		$design_id = Payload::string( $event, 'designId' );
 		$revision  = $event->payload['revision'] ?? null;
 		if ( null === $design_id || ! is_int( $revision ) ) {
 			return;
 		}
-		$message = $event->string( 'message' ) ?? '';
+		$message = Payload::string( $event, 'message' ) ?? '';
 		foreach ( LineState::for_design_id( $design_id ) as $line ) {
 			$this->apply( $line, $design_id, $revision, $message );
 		}

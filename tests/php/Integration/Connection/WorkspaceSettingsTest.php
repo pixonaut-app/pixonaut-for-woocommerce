@@ -10,12 +10,10 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Connection;
 use Pixonaut\WooCommerce\Admin\ConnectionScreen;
 use Pixonaut\WooCommerce\Admin\Notices;
 use Pixonaut\WooCommerce\Admin\StudioPage;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\Connect;
 use Pixonaut\WooCommerce\Api\Deprecations;
+use Pixonaut\WooCommerce\Api\HookListener;
 use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Connection\Cipher;
 use Pixonaut\WooCommerce\Connection\ConnectAttempts;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -66,8 +64,8 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 		$this->store    = new ConnectionStore( Cipher::for_site() );
 		$this->store->save( self::connection() );
 		$this->plugin     = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
-		$client           = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new RecordingLogger(), new Deprecations() );
-		$this->connection = new Connection( $this->store, new ConnectAttempts(), new Connect( $client ), $this->plugin->notices(), new RecordingLogger(), ConnectionScreen::settings_url() );
+		$client           = ( new Pixonaut( $this->store, new RecordingLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
+		$this->connection = new Connection( $this->store, new ConnectAttempts(), $client, $this->plugin->notices(), new RecordingLogger(), ConnectionScreen::settings_url() );
 		$this->logger     = new RecordingLogger();
 		as_unschedule_all_actions( WorkspaceSettings::REFRESH_ACTION );
 		WorkspaceSettings::forget();
@@ -110,7 +108,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	private function settings( int $now = self::NOW ): WorkspaceSettings {
-		return new WorkspaceSettings( $this->connection, new Connect( new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new RecordingLogger(), new Deprecations() ) ), $this->logger, static fn (): int => $now );
+		return new WorkspaceSettings( $this->connection, ( new Pixonaut( $this->store, new RecordingLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk(), $this->logger, static fn (): int => $now );
 	}
 
 	/**
@@ -184,8 +182,8 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	private function screen(): ConnectionScreen {
-		$client = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new RecordingLogger(), new Deprecations() );
-		return new ConnectionScreen( $this->connection, new Connect( $client ), $this->plugin->webhook_endpoint(), new Deprecations(), $this->plugin->templates(), ConnectionScreen::settings_url(), $this->settings() );
+		$client = ( new Pixonaut( $this->store, new RecordingLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
+		return new ConnectionScreen( $this->connection, $client, $this->plugin->webhook_endpoint(), new Deprecations(), $this->plugin->templates(), ConnectionScreen::settings_url(), $this->settings() );
 	}
 
 	/**
@@ -456,9 +454,9 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 		$this->recorder->json( 200, self::answer( $settings ) );
 		// The endpoint's health: Pixonaut does not answer it here.
 		$this->recorder->json( 500, array( 'error' => 'internal_error' ) );
-		$client = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new RecordingLogger(), new Deprecations() );
+		$client = ( new Pixonaut( $this->store, new RecordingLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 
-		$card = ( new ConnectionScreen( $this->connection, new Connect( $client ), $this->plugin->webhook_endpoint(), new Deprecations(), $this->plugin->templates(), ConnectionScreen::settings_url(), $this->settings() ) )->card();
+		$card = ( new ConnectionScreen( $this->connection, $client, $this->plugin->webhook_endpoint(), new Deprecations(), $this->plugin->templates(), ConnectionScreen::settings_url(), $this->settings() ) )->card();
 
 		$this->assertSame(
 			array(

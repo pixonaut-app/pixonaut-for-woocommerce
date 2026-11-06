@@ -10,12 +10,12 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Proofs;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\PreparedRequest;
-use Pixonaut\WooCommerce\Api\Response;
+use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\PreparedRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\Result;
 
 /**
  * One transient per design, served width and picture (the flat proof, or
@@ -81,12 +81,12 @@ final class ProofCache {
 	 * After this long a lock is taken to belong to a request that died: the
 	 * client's timeout, and as long again for the cache write.
 	 */
-	public const LOCK_SECONDS = 2 * Client::TIMEOUT_SECONDS;
+	public const LOCK_SECONDS = 2 * WpHttpTransport::TIMEOUT_SECONDS;
 
 	/**
 	 * How long a request waits for another's fetch: the client's timeout.
 	 */
-	public const WAIT_SECONDS = Client::TIMEOUT_SECONDS;
+	public const WAIT_SECONDS = WpHttpTransport::TIMEOUT_SECONDS;
 
 	/**
 	 * Between two looks at the cache while waiting: a quarter of a second.
@@ -112,9 +112,13 @@ final class ProofCache {
 	 * gone: `DELETE` deleted it now or before; an erasure erased it, or
 	 * found it deleted.
 	 */
+	private const DELETE_DESIGN = 'designs.delete';
+
+	private const ERASE_DESIGN = 'designs.erasePersonalData';
+
 	private const GONE_STATUSES = array(
-		Operations::DELETE_DESIGN => array( 204, 404 ),
-		Operations::ERASE_DESIGN  => array( 200, 204 ),
+		self::DELETE_DESIGN => array( 204, 404 ),
+		self::ERASE_DESIGN  => array( 200, 204 ),
 	);
 
 	private readonly Closure $sleep;
@@ -133,7 +137,7 @@ final class ProofCache {
 	}
 
 	public function register(): void {
-		add_action( 'pixonaut_wc_api_after_request', array( $this, 'purge_gone' ), 10, 2 );
+		add_action( 'pixonaut_wc_api_after_request', array( $this, 'purge_gone' ), 10, 3 );
 		add_action( 'pixonaut_wc_webhook_design_personal_data_erased', array( $this, 'purge_erased' ) );
 	}
 
@@ -376,12 +380,13 @@ final class ProofCache {
 	 * Purges a design Pixonaut confirmed deleted or erased, whichever code
 	 * asked for it; an erased one is forgotten.
 	 *
-	 * @param mixed $request  The request sent.
-	 * @param mixed $response Its response, or null when none arrived.
+	 * @param mixed $request The request sent.
+	 * @param mixed $result  Its successful answer, or null.
+	 * @param mixed $error   Why it did not succeed, or null.
 	 */
-	public function purge_gone( mixed $request, mixed $response ): void {
-		if ( ! $request instanceof PreparedRequest || ! $response instanceof Response
-			|| ! in_array( $response->status, self::GONE_STATUSES[ $request->operation ] ?? array(), true ) ) {
+	public function purge_gone( mixed $request, mixed $result, mixed $error = null ): void {
+		$status = $result instanceof Result ? $result->status : ( $error instanceof ApiException ? $error->status : null );
+		if ( ! $request instanceof PreparedRequest || ! in_array( $status, self::GONE_STATUSES[ $request->operation ] ?? array(), true ) ) {
 			return;
 		}
 		// The design's id is the path segment after `/v1/designs/`.
@@ -390,7 +395,7 @@ final class ProofCache {
 		if ( '' === $id ) {
 			return;
 		}
-		if ( Operations::ERASE_DESIGN === $request->operation ) {
+		if ( self::ERASE_DESIGN === $request->operation ) {
 			$this->forget( $id );
 			return;
 		}

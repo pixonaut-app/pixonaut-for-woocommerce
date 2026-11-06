@@ -10,14 +10,16 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Fulfilment;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Orders;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Milliseconds;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersRetryRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Order;
 
@@ -108,22 +110,22 @@ final class LineActions {
 	public const NOT_SCHEDULED       = 'not_scheduled';
 
 	/**
-	 * @param Orders             $orders         Reads and moves Pixonaut orders.
+	 * @param Sdk                $pixonaut       Reads and moves Pixonaut orders.
 	 * @param Closure            $connection     `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
 	 * @param OrderStatusChanged $status_changed Applies a status the store moved an order to.
 	 * @param OrderFailed        $failed         Applies a failure the store reported.
 	 * @param Closure            $schedule       `fn(int $item_id): bool`, schedules the line's fulfilment job; false when Action Scheduler refused it.
 	 * @param Closure            $scheduled      `fn(int $item_id): bool`, whether the line's fulfilment job is pending or running.
-	 * @param Logger             $logger         Logs the actions Pixonaut refused or the store could not save.
+	 * @param LoggerInterface    $logger         Logs the actions Pixonaut refused or the store could not save.
 	 */
 	public function __construct(
-		private readonly Orders $orders,
+		private readonly Sdk $pixonaut,
 		private readonly Closure $connection,
 		private readonly OrderStatusChanged $status_changed,
 		private readonly OrderFailed $failed,
 		private readonly Closure $schedule,
 		private readonly Closure $scheduled,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -135,14 +137,14 @@ final class LineActions {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @throws ApiError When Pixonaut could not be reached or refused.
+	 * @throws ApiException When Pixonaut could not be reached or refused.
 	 */
 	public function order_of( LineState $line ): ?array {
 		$order_id = self::order_id( $line );
 		if ( null === $order_id || ! $this->connected() ) {
 			return null;
 		}
-		return $this->orders->get( $order_id );
+		return $this->pixonaut->orders()->get( $order_id )->raw();
 	}
 
 	/**
@@ -154,7 +156,7 @@ final class LineActions {
 	 *
 	 * @return array{0: LineState, 1: array<string, mixed>|null} The line, and its order from order_of().
 	 *
-	 * @throws ApiError When Pixonaut could not be reached or refused.
+	 * @throws ApiException When Pixonaut could not be reached or refused.
 	 */
 	public function current( LineState $line ): array {
 		$order = $this->order_of( $line );
@@ -183,7 +185,7 @@ final class LineActions {
 	 *
 	 * @return LineState The line as it stands now.
 	 *
-	 * @throws ApiError When Pixonaut could not be reached or refused while the replacement was looked for.
+	 * @throws ApiException When Pixonaut could not be reached or refused while the replacement was looked for.
 	 */
 	public function reconcile( LineState $line, array $order ): LineState {
 		$order_id = is_string( $order['id'] ?? null ) ? $order['id'] : '';
@@ -215,7 +217,7 @@ final class LineActions {
 					$this->adopt( $line, $replacement );
 				}
 			}
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			// A replacement that could not be read is the caller's to try again.
 			throw $e;
 		} catch ( RuntimeException $e ) {
@@ -288,7 +290,7 @@ final class LineActions {
 	 *
 	 * @return array{0: LineState, 1: list<string>} The line, and the actions from available().
 	 *
-	 * @throws ApiError When Pixonaut could not be reached or refused.
+	 * @throws ApiException When Pixonaut could not be reached or refused.
 	 */
 	public function offered( LineState $line ): array {
 		$order = null;
@@ -348,7 +350,7 @@ final class LineActions {
 		$ref    = mb_substr( sanitize_text_field( $ref ), 0, self::ORDER_REF_MAX_LENGTH );
 		try {
 			list( $line, $order ) = $this->current( $line );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			// Only read: nothing was sent that changes anything.
 			return self::refused( $e );
 		}
@@ -375,22 +377,22 @@ final class LineActions {
 				return $this->cancel( $line, $order_id );
 			}
 			return $this->rehearse( $line, $order_id, (string) ( $order['status'] ?? '' ), substr( $action, strlen( self::REHEARSE ) ) );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->logger->warning(
 				'Order line action refused by Pixonaut.',
 				array(
 					'action'    => $action,
 					'operation' => $e->operation,
 					'status'    => $e->status,
-					'code'      => $e->error_code,
+					'code'      => $e->errorCode,
 				)
 			);
 			// No answer arrived, so Pixonaut may have acted on it; the next read of the order shows whether.
-			$unanswered = 0 === $e->status && ErrorCodes::TRANSPORT_FAILED === $e->error_code;
+			$unanswered = 0 === $e->status && ApiException::TRANSPORT_FAILED === $e->errorCode;
 			if ( $unanswered ) {
 				return new LineActionResult( self::UNREACHABLE );
 			}
-			return Operations::RETRY_ORDER === $e->operation ? $this->retry_refused( $line, $e ) : self::refused( $e );
+			return 'orders.retry' === $e->operation ? $this->retry_refused( $line, $e ) : self::refused( $e );
 		} catch ( RuntimeException $e ) {
 			$this->log_unsaved( $action, $line, $e );
 			return new LineActionResult( self::LINE_CHANGED );
@@ -414,7 +416,7 @@ final class LineActions {
 			return array();
 		}
 		// A standing design is never refused as ordered, so a line of standing designs alone is never ordered again.
-		$ordered_elsewhere = ErrorCodes::DESIGN_ALREADY_ORDERED === $line->reason() && true !== $line->ref( LineState::REF_REORDER ) && array() !== $line->sides();
+		$ordered_elsewhere = ErrorCode::DESIGN_ALREADY_ORDERED === $line->reason() && true !== $line->ref( LineState::REF_REORDER ) && array() !== $line->sides();
 		return $ordered_elsewhere ? array( self::RETRY, self::REORDER ) : array( self::RETRY );
 	}
 
@@ -530,19 +532,20 @@ final class LineActions {
 	 * @param LineState $line     The line.
 	 * @param string    $order_id Its failed order.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function retry_order( LineState $line, string $order_id ): LineActionResult {
 		$automation = null;
 		try {
-			$placed = $this->orders->retry( $order_id );
-		} catch ( ApiError $e ) {
+			// No reroute: the order goes back to the printshop it went to.
+			$placed = $this->pixonaut->orders()->retry( $order_id, new OrdersRetryRequest() )->raw();
+		} catch ( ApiException $e ) {
 			$automation = AdoptedOrder::named_by( $e );
-			$newer      = ErrorCodes::ORDER_SUPERSEDED === $e->error_code ? ( $e->details['newerOrderId'] ?? null ) : $automation;
+			$newer      = ErrorCode::ORDER_SUPERSEDED === $e->errorCode ? ( $e->details['newerOrderId'] ?? null ) : $automation;
 			if ( ! is_string( $newer ) || '' === $newer ) {
 				throw $e;
 			}
-			$placed = $this->orders->get( $newer );
+			$placed = $this->pixonaut->orders()->get( $newer )->raw();
 			if ( null !== $automation && ! AdoptedOrder::takes( $line, $placed ) ) {
 				// Only an automation's order of the item as bought is taken on; the merchant settles any other.
 				throw $e;
@@ -567,7 +570,7 @@ final class LineActions {
 		$id     = is_string( $placed['id'] ?? null ) ? $placed['id'] : '';
 		$status = is_string( $placed['status'] ?? null ) ? $placed['status'] : '';
 		if ( '' === $id ) {
-			return new LineActionResult( self::REFUSED, ErrorCodes::UNEXPECTED_RESPONSE );
+			return new LineActionResult( self::REFUSED, ApiException::UNEXPECTED_RESPONSE );
 		}
 		$line->replace_order( $id );
 		$address = null;
@@ -619,7 +622,7 @@ final class LineActions {
 	 * @param string    $reason   What the printshop said.
 	 * @param string    $ref      The printshop's own reference; empty for none.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 * @throws RuntimeException When the line kept changing.
 	 */
 	private function settle_submitted( LineState $line, string $order_id, string $reason, string $ref ): LineActionResult {
@@ -630,7 +633,7 @@ final class LineActions {
 		if ( '' !== $ref ) {
 			$body['externalOrderRef'] = $ref;
 		}
-		$settled = $this->orders->update_status( $order_id, $body );
+		$settled = $this->pixonaut->orders()->update( $order_id, OrdersUpdateRequest::fromArray( $body ) )->raw();
 		$this->note(
 			$line,
 			/* translators: 1: product name of the order line, 2: what the merchant learned from the printshop. */
@@ -649,16 +652,10 @@ final class LineActions {
 	 * @param string    $order_id Its order, whose outcome is unknown.
 	 * @param string    $reason   What the printshop said.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached; a refused retry leaves the order failed, to retry.
+	 * @throws ApiException When Pixonaut refused or could not be reached; a refused retry leaves the order failed, to retry.
 	 */
 	private function settle_failed( LineState $line, string $order_id, string $reason ): LineActionResult {
-		$this->orders->update_status(
-			$order_id,
-			array(
-				'status' => OrderStatus::FAILED,
-				'reason' => $reason,
-			)
-		);
+		$this->pixonaut->orders()->update( $order_id, new OrdersUpdateRequest( status: OrderStatus::FAILED, reason: $reason ) );
 		$line->set_ref( LineState::REF_ORDER_STATUS, OrderStatus::FAILED );
 		if ( ! $line->save() ) {
 			return new LineActionResult( self::LINE_CHANGED );
@@ -678,10 +675,10 @@ final class LineActions {
 	 * @param LineState $line     The line.
 	 * @param string    $order_id Its order.
 	 *
-	 * @throws ApiError When the printshop could not stop it, or Pixonaut refused or could not be reached.
+	 * @throws ApiException When the printshop could not stop it, or Pixonaut refused or could not be reached.
 	 */
 	private function cancel( LineState $line, string $order_id ): LineActionResult {
-		$cancelled = $this->orders->cancel( $order_id );
+		$cancelled = $this->pixonaut->orders()->cancel( $order_id )->raw();
 		$line->set_ref( LineState::REF_ORDER_STATUS, is_string( $cancelled['status'] ?? null ) ? $cancelled['status'] : OrderStatus::CANCELLED );
 		if ( ! $line->transition( LineState::CANCELLED ) ) {
 			return new LineActionResult( self::LINE_CHANGED );
@@ -702,11 +699,11 @@ final class LineActions {
 	 * @param string    $from     The order's status now.
 	 * @param string    $to       One of REHEARSALS.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 * @throws RuntimeException When the line kept changing.
 	 */
 	private function rehearse( LineState $line, string $order_id, string $from, string $to ): LineActionResult {
-		$moved = $this->orders->update_status( $order_id, array( 'status' => $to ) );
+		$moved = $this->pixonaut->orders()->update( $order_id, new OrdersUpdateRequest( status: $to ) )->raw();
 		if ( OrderStatus::FAILED === $to ) {
 			/* translators: Reason in an order note when a merchant rehearses a failed printshop order in the Pixonaut sandbox. */
 			$this->failed->apply_to( $line, __( 'Rehearsed in the Pixonaut sandbox.', 'pixonaut-for-woocommerce' ) );
@@ -725,7 +722,7 @@ final class LineActions {
 	 * @param array<string, mixed> $moved    Pixonaut's answer: the order as it is now.
 	 */
 	private function event( string $order_id, string $previous, array $moved ): Event {
-		return new Event(
+		return Payload::event(
 			'store_' . wp_generate_uuid4(),
 			OrderStatusChanged::TYPE,
 			Milliseconds::of( time() ),
@@ -745,14 +742,14 @@ final class LineActions {
 	 * reference another order holds are told apart, so the order screen can
 	 * say what to do.
 	 *
-	 * @param ApiError $error The refusal.
+	 * @param ApiException $error The refusal.
 	 */
-	private static function refused( ApiError $error ): LineActionResult {
-		return match ( $error->error_code ) {
-			ErrorCodes::ORDER_STATUS_NOT_ALLOWED,
-			ErrorCodes::ORDER_NOT_RETRYABLE => new LineActionResult( self::STATUS_NOT_ALLOWED ),
-			ErrorCodes::ORDER_REFERENCE_TAKEN => new LineActionResult( self::REFERENCE_TAKEN ),
-			default => new LineActionResult( self::REFUSED, $error->error_code ),
+	private static function refused( ApiException $error ): LineActionResult {
+		return match ( $error->errorCode ) {
+			ErrorCode::ORDER_STATUS_NOT_ALLOWED,
+			ErrorCode::ORDER_NOT_RETRYABLE => new LineActionResult( self::STATUS_NOT_ALLOWED ),
+			ErrorCode::ORDER_REFERENCE_TAKEN => new LineActionResult( self::REFERENCE_TAKEN ),
+			default => new LineActionResult( self::REFUSED, $error->errorCode ),
 		};
 	}
 
@@ -760,11 +757,11 @@ final class LineActions {
 	 * A refused retry of the line's order: the order screen and an order
 	 * note say why in words, so the merchant knows what to do.
 	 *
-	 * @param LineState $line  The line.
-	 * @param ApiError  $error The refusal.
+	 * @param LineState    $line  The line.
+	 * @param ApiException $error The refusal.
 	 */
-	private function retry_refused( LineState $line, ApiError $error ): LineActionResult {
-		$words = RetryRefusal::explain( $error->error_code );
+	private function retry_refused( LineState $line, ApiException $error ): LineActionResult {
+		$words = RetryRefusal::explain( $error->errorCode );
 		$this->note(
 			$line,
 			/* translators: 1: product name of the order line, 2: why Pixonaut refused, a full sentence or two. */
@@ -849,7 +846,7 @@ final class LineActions {
 	 *
 	 * @return array<string, mixed>|null Null when nothing replaced it.
 	 *
-	 * @throws ApiError When Pixonaut could not be reached or refused.
+	 * @throws ApiException When Pixonaut could not be reached or refused.
 	 */
 	private function replacement( array $order ): ?array {
 		$external_ref = is_string( $order['externalRef'] ?? null ) ? $order['externalRef'] : '';
@@ -863,7 +860,7 @@ final class LineActions {
 			if ( ! is_string( $next_id ) || '' === $next_id ) {
 				break;
 			}
-			$at = $this->orders->get( $next_id );
+			$at = $this->pixonaut->orders()->get( $next_id )->raw();
 			if ( ( $at['externalRef'] ?? null ) !== $external_ref ) {
 				break;
 			}

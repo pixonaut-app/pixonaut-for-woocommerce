@@ -9,8 +9,9 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\IdempotencyBugException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 
 /**
  * A failure that sending the same request again may cure is retried on a
@@ -36,24 +37,25 @@ final class RetryPolicy {
 	 * Codes that are transient whatever else the answer says.
 	 */
 	private const TRANSIENT_CODES = array(
-		ErrorCodes::LOCK_TIMEOUT,
-		ErrorCodes::TRANSPORT_FAILED,
-		ErrorCodes::RATE_LIMITED,
-		ErrorCodes::IDEMPOTENCY_KEY_IN_USE,
+		ErrorCode::LOCK_TIMEOUT,
+		ApiException::TRANSPORT_FAILED,
+		ErrorCode::RATE_LIMITED,
+		ErrorCode::IDEMPOTENCY_KEY_IN_USE,
 	);
 
 	/**
 	 * Whether a failed step is retried or needs the merchant.
 	 *
-	 * @param ApiError $error What Pixonaut answered, or why no answer came.
+	 * @param ApiException $error What Pixonaut answered, or why no answer came.
 	 *
 	 * @return string RETRY or NEEDS_ATTENTION.
 	 */
-	public static function decide( ApiError $error ): string {
-		if ( in_array( $error->error_code, ErrorCodes::IDEMPOTENCY_BUGS, true ) ) {
+	public static function decide( ApiException $error ): string {
+		// The request was built wrong: sending it again never helps.
+		if ( $error instanceof IdempotencyBugException ) {
 			return self::NEEDS_ATTENTION;
 		}
-		return $error->retryable || in_array( $error->error_code, self::TRANSIENT_CODES, true ) ? self::RETRY : self::NEEDS_ATTENTION;
+		return $error->retryable || in_array( $error->errorCode, self::TRANSIENT_CODES, true ) ? self::RETRY : self::NEEDS_ATTENTION;
 	}
 
 	/**

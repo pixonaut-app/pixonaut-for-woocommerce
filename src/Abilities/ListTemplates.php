@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Admin\CatalogueSearch;
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -167,7 +167,7 @@ final class ListTemplates implements Ability {
 		$per_page = min( self::MAX_PER_PAGE, max( 1, Abilities::integer( $input, 'per_page', self::DEFAULT_PER_PAGE ) ) );
 		try {
 			$found = $this->catalogue->templates( is_string( $input['search'] ?? null ) ? $input['search'] : '', $page, $per_page );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return AbilityError::from( $e );
 		}
 		$ratios    = self::ratios( $found['rows'] );

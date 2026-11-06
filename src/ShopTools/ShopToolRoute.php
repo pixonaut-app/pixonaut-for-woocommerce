@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\ShopTools;
 
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Plugin;
 use Throwable;
@@ -78,14 +78,14 @@ final class ShopToolRoute {
 	private const LAST = PHP_INT_MAX;
 
 	/**
-	 * @param StoreAccess $access Knows the credential and the switch.
-	 * @param ShopTools   $tools  What the credential reaches.
-	 * @param Logger      $logger Logs a tool that failed.
+	 * @param StoreAccess     $access Knows the credential and the switch.
+	 * @param ShopTools       $tools  What the credential reaches.
+	 * @param LoggerInterface $logger Logs a tool that failed.
 	 */
 	public function __construct(
 		private readonly StoreAccess $access,
 		private readonly ShopTools $tools,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 

@@ -7,13 +7,11 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Privacy;
 
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Orders;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Cart\FieldValue;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
@@ -34,7 +32,8 @@ use Pixonaut\WooCommerce\Tests\Integration\Fulfilment\FulfilmentTestCase;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use WC_Order;
 use WC_Order_Item_Product;
 
@@ -75,9 +74,9 @@ final class PrivacyTest extends FulfilmentTestCase {
 
 	public function set_up(): void {
 		parent::set_up();
-		$client  = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+		$client  = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		$store   = $this->store;
-		$erasure = new LineErasure( new Designs( $client ), new Orders( $client ), static fn (): ?StoredConnection => $store->load(), new WcLogger() );
+		$erasure = new LineErasure( new Designs( $client ), $client, static fn (): ?StoredConnection => $store->load(), new WcLogger() );
 		// The plugin's own transition hook stays; its job runs against the recorder.
 		remove_all_actions( LineErasure::ACTION );
 		add_action( LineErasure::ACTION, array( $erasure, 'run' ) );
@@ -565,7 +564,7 @@ final class PrivacyTest extends FulfilmentTestCase {
 	 */
 	private function order_failed(): void {
 		$plugin = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
-		$event  = new Event(
+		$event  = Payload::event(
 			'evt_failed',
 			OrderFailed::TYPE,
 			Milliseconds::of( time() ),

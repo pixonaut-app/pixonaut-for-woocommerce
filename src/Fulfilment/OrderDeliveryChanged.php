@@ -9,7 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -59,7 +60,7 @@ final class OrderDeliveryChanged {
 	 * @throws RuntimeException When a line kept changing; handling the event again retries it.
 	 */
 	public function handle( Event $event ): void {
-		$outcome = $event->string( 'outcome' );
+		$outcome = Payload::string( $event, 'outcome' );
 		if ( null === $outcome ) {
 			return;
 		}
@@ -75,9 +76,9 @@ final class OrderDeliveryChanged {
 	 * @throws RuntimeException When the line kept changing for MAX_ATTEMPTS tries.
 	 */
 	private function apply( WC_Order_Item_Product $item, string $outcome, Event $event ): void {
-		$words = $event->string( 'words' );
+		$words = Payload::string( $event, 'words' );
 		$words = null === $words ? null : sanitize_text_field( $words );
-		$ours  = self::BY_STORE === $event->string( 'by' );
+		$ours  = self::BY_STORE === Payload::string( $event, 'by' );
 		for ( $attempt = 0; $attempt < self::MAX_ATTEMPTS; $attempt++ ) {
 			$line = LineState::of( $item );
 			// The erasure dropped the line's fingerprints.
@@ -86,7 +87,7 @@ final class OrderDeliveryChanged {
 			}
 			$delivery = DeliveryChange::of( $line );
 			$at       = $delivery[ DeliveryChange::FIELD_AT ] ?? null;
-			if ( is_int( $at ) && $at > $event->created_at ) {
+			if ( is_int( $at ) && $at > $event->createdAt ) {
 				return;
 			}
 			$news     = ( $delivery[ DeliveryChange::FIELD_STATE ] ?? null ) !== $outcome || ( $delivery[ DeliveryChange::FIELD_WORDS ] ?? null ) !== $words;
@@ -108,7 +109,7 @@ final class OrderDeliveryChanged {
 			}
 			unset( $delivery[ DeliveryChange::FIELD_CODE ] );
 			$delivery[ DeliveryChange::FIELD_STATE ] = $outcome;
-			$delivery[ DeliveryChange::FIELD_AT ]    = $event->created_at;
+			$delivery[ DeliveryChange::FIELD_AT ]    = $event->createdAt;
 			$delivery[ DeliveryChange::FIELD_WORDS ] = $words;
 			$line->set_ref( LineState::REF_DELIVERY, array_filter( $delivery, static fn ( mixed $value ): bool => null !== $value ) );
 			if ( $line->save() ) {

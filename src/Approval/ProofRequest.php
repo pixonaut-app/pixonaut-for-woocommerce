@@ -11,12 +11,12 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Approval;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ShareLinks;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Fulfilment\NeedsAttention;
 use Pixonaut\WooCommerce\Fulfilment\RetryPolicy;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ShareLinksCreateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use WC_Order;
 
 /**
@@ -40,15 +40,18 @@ final class ProofRequest {
 	private const STATUS_COMMITTED = 'committed';
 
 	/**
-	 * @param Designs    $designs     Reads designs.
-	 * @param ShareLinks $share_links Mints proof pages.
+	 * `kind` of a share link that opens a proof page.
+	 */
+	public const KIND_PROOF_PAGE = 'proof-page';
+
+	/**
+	 * @param Sdk        $pixonaut    Reads designs, mints proof pages.
 	 * @param ProofState $state       Signs what each page carries back.
 	 * @param Closure    $deadline    `fn(): int` the approval deadline in days.
 	 * @param Closure    $language    `fn( string $locale ): ?string` the proof page's language for a WordPress locale, null for the workspace's default; see `DesignerLanguage::resolve()`.
 	 */
 	public function __construct(
-		private readonly Designs $designs,
-		private readonly ShareLinks $share_links,
+		private readonly Sdk $pixonaut,
 		private readonly ProofState $state,
 		private readonly Closure $deadline,
 		private readonly Closure $language,
@@ -64,7 +67,7 @@ final class ProofRequest {
 	 *
 	 * @return bool True when the line is `approved` and fulfilment goes on.
 	 *
-	 * @throws ApiError When Pixonaut could not be reached, or refused a read; a mint it refused moves the line to `needs_attention` instead.
+	 * @throws ApiException When Pixonaut could not be reached, or refused a read; a mint it refused moves the line to `needs_attention` instead.
 	 */
 	public function request( LineState $line, WC_Order $order ): bool {
 		$waiting = array();
@@ -74,9 +77,9 @@ final class ProofRequest {
 			if ( ! is_string( $design_id ) || ! is_int( $revision ) ) {
 				return false;
 			}
-			$design = $this->designs->get( $design_id );
-			$status = $design['status'] ?? null;
-			if ( ( $design['revision'] ?? null ) !== $revision ) {
+			$design = $this->pixonaut->designs()->get( $design_id );
+			$status = $design->status;
+			if ( $design->revision !== $revision ) {
 				return $this->attention(
 					$line,
 					$order,
@@ -113,16 +116,16 @@ final class ProofRequest {
 			}
 			try {
 				$link = $this->mint( $line, $order, $side );
-			} catch ( ApiError $error ) {
+			} catch ( ApiException $error ) {
 				if ( RetryPolicy::RETRY === RetryPolicy::decide( $error ) ) {
 					throw $error;
 				}
 				return $this->attention(
 					$line,
 					$order,
-					$error->error_code,
+					$error->errorCode,
 					/* translators: 1: product name of the order line, 2: error code Pixonaut answered. */
-					sprintf( __( 'Pixonaut: the proof of "%1$s" was not sent. Pixonaut refused its proof page: %2$s.', 'pixonaut-for-woocommerce' ), $line->item()->get_name(), $error->error_code )
+					sprintf( __( 'Pixonaut: the proof of "%1$s" was not sent. Pixonaut refused its proof page: %2$s.', 'pixonaut-for-woocommerce' ), $line->item()->get_name(), $error->errorCode )
 				);
 			}
 			$line->set_side_ref( $side, LineState::SIDE_PROOF_URL, $link['url'] );
@@ -149,17 +152,29 @@ final class ProofRequest {
 	 *
 	 * @return array{url: string, expiresAt: int|null}
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function mint( LineState $line, WC_Order $order, string $side ): array {
 		$item      = $line->item();
 		$design_id = (string) $line->side_ref( $side, LineState::SIDE_DESIGN_ID );
-		return $this->share_links->proof_page(
-			$design_id,
-			ProofLink::days( ( $this->deadline )(), $item ),
-			ProofLink::return_url( $item->get_id() ),
-			$this->state->sign( $order->get_id(), $item->get_id(), $design_id, (int) $line->side_ref( $side, LineState::SIDE_REVISION ) ),
-			( $this->language )( ProofLink::locale( $line ) )
+		$link      = $this->pixonaut->shareLinks()->create(
+			new ShareLinksCreateRequest(
+				kind: self::KIND_PROOF_PAGE,
+				subjectId: $design_id,
+				expiresInDays: ProofLink::days( ( $this->deadline )(), $item ),
+				// Absent, the page uses the workspace's default language.
+				locale: ( $this->language )( ProofLink::locale( $line ) ),
+				mayDecide: true,
+				returnUrl: ProofLink::return_url( $item->get_id() ),
+				state: $this->state->sign( $order->get_id(), $item->get_id(), $design_id, (int) $line->side_ref( $side, LineState::SIDE_REVISION ) ),
+			)
+		);
+		if ( '' === $link->url ) {
+			throw new ApiException( 'shareLinks.create', 200, ApiException::UNEXPECTED_RESPONSE, false );
+		}
+		return array(
+			'url'       => $link->url,
+			'expiresAt' => null === $link->expiresAt ? null : (int) $link->expiresAt,
 		);
 	}
 

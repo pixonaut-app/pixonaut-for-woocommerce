@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Cart;
 
-use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Cart\AddToCart;
@@ -268,7 +267,7 @@ final class HostedProductCorrectionTest extends PersonalisedCartTestCase {
 		return new HostedCorrection(
 			$this->plugin->cart_edit(),
 			$this->plugin->order_edit(),
-			new CorrectionMount( $this->plugin->connection(), new Designs( $this->plugin->client() ), new WcLogger(), $this->plugin->settings() ),
+			new CorrectionMount( $this->plugin->connection(), $this->plugin->sdk(), new WcLogger(), $this->plugin->settings() ),
 			new CorrectionTrips( static fn (): int => $now ),
 			$this->plugin->labels(),
 			$this->plugin->personalised_designs()

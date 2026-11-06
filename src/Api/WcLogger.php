@@ -9,18 +9,23 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Api;
 
+use Pixonaut\WooCommerce\Vendor\Psr\Log\AbstractLogger;
+use Stringable;
+
 /**
- * Entries appear under WooCommerce > Status > Logs, source `pixonaut-api`.
+ * A PSR-3 logger, for the SDK and the plugin. Entries appear under
+ * WooCommerce > Status > Logs, source `pixonaut-api`.
  */
-final class WcLogger implements Logger {
+final class WcLogger extends AbstractLogger {
 
 	public const SOURCE = 'pixonaut-api';
 
-	public function warning( string $message, array $context = array() ): void {
-		wc_get_logger()->warning( $message, array( 'source' => self::SOURCE ) + $context );
-	}
-
-	public function error( string $message, array $context = array() ): void {
-		wc_get_logger()->error( $message, array( 'source' => self::SOURCE ) + $context );
+	/**
+	 * @param mixed             $level   A PSR-3 level, which WooCommerce's logger shares.
+	 * @param string|Stringable $message Message.
+	 * @param array<mixed>      $context Context.
+	 */
+	public function log( $level, string|Stringable $message, array $context = array() ): void {
+		wc_get_logger()->log( (string) $level, (string) $message, array( 'source' => self::SOURCE ) + $context );
 	}
 }

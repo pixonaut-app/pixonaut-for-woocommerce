@@ -9,10 +9,11 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 
 /**
  * On a blank whose print areas change with an option (`areasVaryBy`, such as
@@ -44,14 +45,16 @@ use Pixonaut\WooCommerce\Api\Logger;
 final class StandingRows {
 
 	/**
-	 * @param Catalogue $catalogue Reads the blank's variants and print areas.
-	 * @param Designs   $designs   Finds standing designs.
-	 * @param Logger    $logger    Logs a design whose preview could not be read.
+	 * @param Catalogue       $catalogue Reads the blank's variants and print areas.
+	 * @param Designs         $designs   Finds standing designs.
+	 * @param Sdk             $pixonaut Reads a standing design's size and proof.
+	 * @param LoggerInterface $logger    Logs a design whose preview could not be read.
 	 */
 	public function __construct(
 		private readonly Catalogue $catalogue,
 		private readonly Designs $designs,
-		private readonly Logger $logger,
+		private readonly Sdk $pixonaut,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -68,7 +71,7 @@ final class StandingRows {
 	 * @phpstan-param list<StandingRow> $known
 	 * @return array{rows: list<StandingRow>, misfits: list<string>} The rows given a design, and the values of those the template cannot be printed at.
 	 *
-	 * @throws ApiError When Pixonaut could not be read, or refused a row's design for anything but its print size.
+	 * @throws ApiException When Pixonaut could not be read, or refused a row's design for anything but its print size.
 	 */
 	public function designs( string $template_id, string $blank_id, Side $side, array $varies_by, array $known = array() ): array {
 		$blank     = $this->catalogue->blank( $blank_id );
@@ -86,7 +89,7 @@ final class StandingRows {
 			}
 			try {
 				$rows[] = $this->row_design( $template_id, $blank_id, $side, $areas, $found['row'], $found['variants'], $known );
-			} catch ( ApiError $e ) {
+			} catch ( ApiException $e ) {
 				if ( ! MisfitSizes::refused( $e ) ) {
 					throw $e;
 				}
@@ -113,7 +116,7 @@ final class StandingRows {
 	 * @phpstan-param list<string> $variants
 	 * @phpstan-param list<StandingRow> $known
 	 *
-	 * @throws ApiError When Pixonaut refused the row's design or could not be reached.
+	 * @throws ApiException When Pixonaut refused the row's design or could not be reached.
 	 */
 	private function row_design( string $template_id, string $blank_id, Side $side, array $areas, array $values, array $variants, array $known = array() ): StandingRow {
 		$size                       = $side->standing_size();
@@ -168,7 +171,7 @@ final class StandingRows {
 	 * @param LayoutAdjustment $basis       What the adjusted design was asked for by, `basis()`.
 	 * @param string           $proof_token The adjustment's proof.
 	 *
-	 * @throws ApiError When Pixonaut refused (`not_a_layout_proof`, `layout_proof_mismatch`, `unknown_proof`, …) or could not be reached.
+	 * @throws ApiException When Pixonaut refused (`not_a_layout_proof`, `layout_proof_mismatch`, `unknown_proof`, …) or could not be reached.
 	 */
 	public function adjust( Side $side, StandingRow $row, LayoutAdjustment $basis, string $proof_token ): StandingRow {
 		$design_id                  = $this->designs->standing( $basis->template_id, $basis->blank_id, $basis->placement_id, $basis->size, $row->row, $proof_token );
@@ -187,7 +190,7 @@ final class StandingRows {
 	 * @param StandingRow $reset       The row to reset.
 	 * @return list<StandingRow>
 	 *
-	 * @throws ApiError When Pixonaut could not be read, or refused a row's design.
+	 * @throws ApiException When Pixonaut could not be read, or refused a row's design.
 	 */
 	public function reset( string $template_id, string $blank_id, Side $side, StandingRow $reset ): array {
 		$areas = self::areas( $this->catalogue->blank( $blank_id ), $side->placement_id );
@@ -243,15 +246,15 @@ final class StandingRows {
 	 */
 	private function preview( string $design_id, string $side_key ): array {
 		try {
-			$design = $this->designs->get( $design_id );
-		} catch ( ApiError $e ) {
+			$design = $this->pixonaut->designs()->get( $design_id )->raw();
+		} catch ( ApiException $e ) {
 			$this->logger->warning(
 				sprintf( 'Pixonaut gave no preview of the standing design %s of side "%s": %s', $design_id, $side_key, $e->getMessage() ),
 				array(
 					'side'      => $side_key,
 					'design_id' => $design_id,
 					'status'    => $e->status,
-					'code'      => $e->error_code,
+					'code'      => $e->errorCode,
 				)
 			);
 			return array( null, null );

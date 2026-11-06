@@ -11,7 +11,7 @@ namespace Pixonaut\WooCommerce\Catalogue;
 
 use Closure;
 use Pixonaut\WooCommerce\Admin\VariantNotice;
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\DesignerLanguage;
 use WC_Product;
@@ -52,7 +52,7 @@ final class ProductVariants {
 	/**
 	 * Each blank's failed read in this request, by blank id.
 	 *
-	 * @var array<string, ApiError>
+	 * @var array<string, ApiException>
 	 */
 	private array $failed = array();
 
@@ -72,7 +72,7 @@ final class ProductVariants {
 	 *
 	 * @param string $blank_id The blank.
 	 * @return list<BlankVariant>
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	public function variants( string $blank_id ): array {
 		return $this->once( $blank_id, fn (): array => BlankVariant::list_from( $this->catalogue->variants( $blank_id, DesignerLanguage::of_site() ) ) );
@@ -84,7 +84,7 @@ final class ProductVariants {
 	 *
 	 * @param string $blank_id The blank.
 	 * @return list<BlankVariant>
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function with_written( string $blank_id ): array {
 		return $this->once( self::WRITTEN . $blank_id, fn (): array => BlankVariant::with_written( $this->variants( $blank_id ), BlankVariant::list_from( $this->catalogue->variants( $blank_id ) ) ) );
@@ -97,7 +97,7 @@ final class ProductVariants {
 	 * @param Closure $read Reads it.
 	 * @phpstan-param Closure(): list<BlankVariant> $read
 	 * @return list<BlankVariant>
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function once( string $key, Closure $read ): array {
 		if ( isset( $this->failed[ $key ] ) ) {
@@ -105,7 +105,7 @@ final class ProductVariants {
 		}
 		try {
 			return $this->read[ $key ] ??= $read();
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->failed[ $key ] = $e;
 			throw $e;
 		}
@@ -117,7 +117,7 @@ final class ProductVariants {
 	 * One not personalised on a blank has none.
 	 *
 	 * @param WC_Product $product A product or variation.
-	 * @throws ApiError When a blank's variants could not be read; what is stored is kept.
+	 * @throws ApiException When a blank's variants could not be read; what is stored is kept.
 	 */
 	public function refresh( WC_Product $product ): void {
 		// A refresh follows a change in Pixonaut: what an earlier one read, in a queue runner working through several jobs, may be stale.
@@ -143,7 +143,7 @@ final class ProductVariants {
 	 *
 	 * @param WC_Product  $product A product or variation, not a variable product.
 	 * @param string|null $pick    A variant ref of its blank; null to match by options.
-	 * @throws ApiError When the blank's variants could not be read; the pick is stored all the same.
+	 * @throws ApiException When the blank's variants could not be read; the pick is stored all the same.
 	 */
 	public function pick( WC_Product $product, ?string $pick ): void {
 		$config = ProductConfig::config_for( $product );
@@ -174,7 +174,7 @@ final class ProductVariants {
 	 * the stored pick when it is for the same blank.
 	 *
 	 * @param WC_Product $product A product or variation, not a variable product.
-	 * @throws ApiError When the blank's variants could not be read.
+	 * @throws ApiException When the blank's variants could not be read.
 	 */
 	private function resolve( WC_Product $product ): void {
 		$config = ProductConfig::config_for( $product );

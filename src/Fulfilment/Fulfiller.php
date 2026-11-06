@@ -10,17 +10,18 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Fulfilment;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Orders;
-use Pixonaut\WooCommerce\Api\PreparedRequest;
-use Pixonaut\WooCommerce\ApprovalMode;
+use Pixonaut\WooCommerce\Api\StoredRequest;
 use Pixonaut\WooCommerce\Approval\ProofRequest;
+use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Cart\StandingSide;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Refs;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersCreateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersListResponseOrdersItem;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use WC_Order;
 use WC_Order_Item_Product;
 
@@ -45,14 +46,12 @@ final class Fulfiller {
 	private const DESIGN_APPROVED = 'approved';
 
 	/**
-	 * @param Designs      $designs       Approves designs.
-	 * @param Orders       $orders        Places printshop orders.
+	 * @param Sdk          $pixonaut      Approves designs, places printshop orders.
 	 * @param Closure      $connection    `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
 	 * @param ProofRequest $proof_request Asks the customer to approve a proof, for a line whose mode is proof by email.
 	 */
 	public function __construct(
-		private readonly Designs $designs,
-		private readonly Orders $orders,
+		private readonly Sdk $pixonaut,
 		private readonly Closure $connection,
 		private readonly ProofRequest $proof_request,
 	) {
@@ -66,7 +65,7 @@ final class Fulfiller {
 	 *
 	 * @param WC_Order_Item_Product $item A Pixonaut line of a paid order.
 	 *
-	 * @throws ApiError When a call fails; the steps done before it stay stored.
+	 * @throws ApiException When a call fails; the steps done before it stay stored.
 	 */
 	public function fulfil( WC_Order_Item_Product $item ): void {
 		$connection = ( $this->connection )();
@@ -142,7 +141,7 @@ final class Fulfiller {
 	 *
 	 * @return bool False when the line cannot go on: a design is missing, its printshop order was sent under the cart ref, or the line changed elsewhere.
 	 *
-	 * @throws ApiError When a design could not be moved to the order line ref.
+	 * @throws ApiException When a design could not be moved to the order line ref.
 	 */
 	private function store_refs( LineState $line, string $site, WC_Order $order ): bool {
 		$item_id = $line->item()->get_id();
@@ -159,7 +158,7 @@ final class Fulfiller {
 				$line->transition( LineState::NEEDS_ATTENTION, 'The printshop order was sent under the cart ref.' );
 				return false;
 			}
-			OrderLineRef::move( $this->designs, $line, self::order_line_ref( $line, $site, $order ) );
+			OrderLineRef::move( $this->pixonaut, $line, self::order_line_ref( $line, $site, $order ) );
 		}
 		if ( null === $line->ref( LineState::REF_ORDER_KEY ) ) {
 			// A reorder is a new request, so it is sent under a key of its own.
@@ -208,7 +207,7 @@ final class Fulfiller {
 	 * @param LineState $line  A `committed` line.
 	 * @param WC_Order  $order The order.
 	 *
-	 * @throws ApiError When Pixonaut refused an approval or could not be reached.
+	 * @throws ApiException When Pixonaut refused an approval or could not be reached.
 	 */
 	private function approve( LineState $line, WC_Order $order ): bool {
 		if ( array() === $line->sides() ) {
@@ -235,18 +234,20 @@ final class Fulfiller {
 				return false;
 			}
 			try {
-				$this->designs->approve(
+				$this->pixonaut->designs()->approve(
 					$design[0],
-					array(
-						'kind' => $consent['kind'],
-						'at'   => $consent['at'],
-						'ref'  => (string) $line->ref( LineState::REF_EXTERNAL_REF ),
-					),
-					$design[1]
+					Designs::approval(
+						array(
+							'kind' => $consent['kind'],
+							'at'   => $consent['at'],
+							'ref'  => (string) $line->ref( LineState::REF_EXTERNAL_REF ),
+						),
+						$design[1]
+					)
 				);
-			} catch ( ApiError $e ) {
+			} catch ( ApiException $e ) {
 				// Rejected, or approved already: only an approval at the line's revision lets it go on.
-				if ( ErrorCodes::NOT_COMMITTED !== $e->error_code || ! $this->approved_at( $design[0], $design[1] ) ) {
+				if ( ErrorCode::NOT_COMMITTED !== $e->errorCode || ! $this->approved_at( $design[0], $design[1] ) ) {
 					throw $e;
 				}
 			}
@@ -260,11 +261,11 @@ final class Fulfiller {
 	 * @param string $design_id The design.
 	 * @param int    $revision  The revision the line holds.
 	 *
-	 * @throws ApiError When Pixonaut could not be reached.
+	 * @throws ApiException When Pixonaut could not be reached.
 	 */
 	private function approved_at( string $design_id, int $revision ): bool {
-		$design = $this->designs->get( $design_id );
-		return self::DESIGN_APPROVED === ( $design['status'] ?? null ) && ( $design['revision'] ?? null ) === $revision;
+		$design = $this->pixonaut->designs()->get( $design_id );
+		return self::DESIGN_APPROVED === $design->status && $design->revision === $revision;
 	}
 
 	/**
@@ -275,17 +276,17 @@ final class Fulfiller {
 	 * @param LineState $line  An `approved` line, or a `printed` one.
 	 * @param WC_Order  $order The order.
 	 *
-	 * @throws ApiError When Pixonaut refused the order or could not be reached; `409 design_already_ordered` when a design has a live order the line did not place.
+	 * @throws ApiException When Pixonaut refused the order or could not be reached; `409 design_already_ordered` when a design has a live order the line did not place.
 	 */
 	private function place_order( LineState $line, WC_Order $order ): void {
 		$external_ref = (string) $line->ref( LineState::REF_EXTERNAL_REF );
 		$order_id     = null;
 		$answer       = array();
 		$sent         = null;
-		$placed       = $this->orders->with_external_ref( $external_ref );
+		$placed       = array_map( static fn ( OrdersListResponseOrdersItem $placed ): array => $placed->raw(), $this->pixonaut->orders()->list( externalRef: $external_ref )->orders );
 		if ( array() !== $placed ) {
 			// An order under the ref without an id stops the run: reading it as no order would place a second one.
-			$order_id = self::string_field( $placed[0], 'id', Operations::LIST_ORDERS );
+			$order_id = self::string_field( $placed[0], 'id', 'orders.list' );
 			$answer   = $placed[0];
 		}
 
@@ -295,25 +296,25 @@ final class Fulfiller {
 			}
 			$stored = $line->ref( LineState::REF_ORDER_REQUEST );
 			if ( is_array( $stored ) ) {
-				$request = PreparedRequest::from_array( $stored );
+				$request = StoredRequest::restore( $stored );
 			} else {
-				$request = $this->orders->prepare_create( $this->order_body( $line, $order, $external_ref ), (string) $line->ref( LineState::REF_ORDER_KEY ) );
-				$line->set_ref( LineState::REF_ORDER_REQUEST, $request->to_array() );
+				$request = $this->pixonaut->orders()->prepareCreate( OrdersCreateRequest::fromArray( $this->order_body( $line, $order, $external_ref ) ), (string) $line->ref( LineState::REF_ORDER_KEY ) );
+				$line->set_ref( LineState::REF_ORDER_REQUEST, $request->toArray() );
 				if ( ! $line->save() ) {
 					return;
 				}
 			}
 			try {
-				$answer   = $this->orders->create( $request );
-				$order_id = self::string_field( $answer, 'id', Operations::CREATE_ORDER );
-			} catch ( ApiError $e ) {
-				if ( ErrorCodes::DESIGN_ALREADY_ORDERED !== $e->error_code ) {
+				$answer   = $this->pixonaut->orders()->sendCreate( $request )->raw();
+				$order_id = self::string_field( $answer, 'id', 'orders.create' );
+			} catch ( ApiException $e ) {
+				if ( ErrorCode::DESIGN_ALREADY_ORDERED !== $e->errorCode ) {
 					throw $e;
 				}
 				// Nothing was written, so an order again is a new request rather than this one replayed.
 				$line->set_ref( LineState::REF_ORDER_REQUEST, null );
 				$order_id = AdoptedOrder::named_by( $e );
-				$answer   = null === $order_id ? array() : $this->orders->get( $order_id );
+				$answer   = null === $order_id ? array() : $this->pixonaut->orders()->get( $order_id )->raw();
 				if ( null === $order_id || ! AdoptedOrder::takes( $line, $answer ) ) {
 					$line->save();
 					throw $e;
@@ -386,7 +387,7 @@ final class Fulfiller {
 	 */
 	private static function sent_address( LineState $line, WC_Order $order ): string {
 		$stored = $line->ref( LineState::REF_ORDER_REQUEST );
-		$body   = is_array( $stored ) ? json_decode( (string) PreparedRequest::from_array( $stored )->body, true ) : null;
+		$body   = is_array( $stored ) ? json_decode( (string) StoredRequest::restore( $stored )->body, true ) : null;
 		return OrderAddress::fingerprint( is_array( $body ) ? $body : OrderAddress::of( $order, $line->item() ) );
 	}
 
@@ -401,7 +402,7 @@ final class Fulfiller {
 	 * @param LineState $line  An `approved` line.
 	 * @param WC_Order  $order The order.
 	 *
-	 * @throws ApiError When a design could not be read.
+	 * @throws ApiException When a design could not be read.
 	 */
 	private function still_approved( LineState $line, WC_Order $order ): bool {
 		foreach ( $line->sides() as $side ) {
@@ -533,11 +534,11 @@ final class Fulfiller {
 	 * @param string               $field     A field that must be a string.
 	 * @param string               $operation The operation that answered.
 	 *
-	 * @throws ApiError When it is not one.
+	 * @throws ApiException When it is not one.
 	 */
 	private static function string_field( array $answer, string $field, string $operation ): string {
 		if ( ! is_string( $answer[ $field ] ?? null ) || '' === $answer[ $field ] ) {
-			throw new ApiError( $operation, 0, ErrorCodes::UNEXPECTED_RESPONSE, false, null, array( 'missing' => $field ) );
+			throw new ApiException( $operation, 0, ApiException::UNEXPECTED_RESPONSE, false, null, null, array( 'missing' => $field ) );
 		}
 		return $answer[ $field ];
 	}

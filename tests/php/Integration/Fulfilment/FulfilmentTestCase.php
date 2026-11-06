@@ -9,13 +9,10 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Fulfilment;
 
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Orders;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Connection\Cipher;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
@@ -28,7 +25,7 @@ use Pixonaut\WooCommerce\Refs;
 use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
 use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
-use Pixonaut\WooCommerce\Tests\Support\StaticCredentials;
+use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
 use WC_Order;
 use WC_Order_Item_Product;
 use WC_Product_Simple;
@@ -77,10 +74,10 @@ abstract class FulfilmentTestCase extends WP_UnitTestCase {
 		$this->store    = new ConnectionStore( Cipher::for_site() );
 		$this->store->save( self::connection() );
 		ConnectionAnswers::keep_tenant_slug();
-		$client = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+		$client = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		$store  = $this->store;
 		$active = static fn (): ?StoredConnection => $store->load();
-		$jobs   = new FulfilmentJobs( new Fulfiller( new Designs( $client ), new Orders( $client ), $active, Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->proof_request() ), $active, new WcLogger() );
+		$jobs   = new FulfilmentJobs( new Fulfiller( $client, $active, Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->proof_request() ), $active, new WcLogger() );
 		// The plugin's own scheduling stays; its job runs against the recorder.
 		remove_all_actions( FulfilmentJobs::ACTION );
 		add_action( FulfilmentJobs::ACTION, array( $jobs, 'run' ) );
@@ -182,7 +179,7 @@ abstract class FulfilmentTestCase extends WP_UnitTestCase {
 			'Acme',
 			$environment,
 			'sc_1',
-			StaticCredentials::INTEGRATION_KEY,
+			ScriptedClient::INTEGRATION_KEY,
 			'ik_id',
 			'WooCommerce',
 			'pk_test',

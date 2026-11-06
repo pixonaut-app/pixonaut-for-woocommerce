@@ -10,7 +10,8 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Webhooks;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 
 /**
  * Keeps each new event once and queues the job that handles it, whether the
@@ -50,15 +51,15 @@ final class Intake {
 	private readonly Closure $clock;
 
 	/**
-	 * @param EventStore   $events    Events received.
-	 * @param Processor    $processor Queues the job that handles an event.
-	 * @param Logger       $logger    Logs events not taken; never bodies.
-	 * @param Closure|null $clock     `fn(): int` Unix time; `time()` when null.
+	 * @param EventStore      $events    Events received.
+	 * @param Processor       $processor Queues the job that handles an event.
+	 * @param LoggerInterface $logger    Logs events not taken; never bodies.
+	 * @param Closure|null    $clock     `fn(): int` Unix time; `time()` when null.
 	 */
 	public function __construct(
 		private readonly EventStore $events,
 		private readonly Processor $processor,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 	) {
 		$this->clock = $clock ?? static fn (): int => time();

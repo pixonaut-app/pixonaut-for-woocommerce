@@ -10,12 +10,9 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Abilities;
 use Pixonaut\WooCommerce\Abilities\Abilities;
 use Pixonaut\WooCommerce\Abilities\AbilityError;
 use Pixonaut\WooCommerce\Admin\Notices;
-use Pixonaut\WooCommerce\ApprovalMode;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Catalogue;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
 use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -32,6 +29,8 @@ use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\VariantsAnswer;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use ReflectionProperty;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -407,42 +406,42 @@ final class AbilitiesTest extends WP_UnitTestCase {
 
 	public function test_a_template_list_pixonaut_refuses_names_the_cause_and_its_code(): void {
 		wp_set_current_user( $this->user( 'shop_manager' ) );
-		$this->recorder->json( 500, array( 'error' => ErrorCodes::DB_ERROR ) );
+		$this->recorder->json( 500, array( 'error' => ErrorCode::DB_ERROR ) );
 
 		$answer = $this->ability( self::LIST_TEMPLATES )->execute();
 
 		$this->assertInstanceOf( WP_Error::class, $answer );
 		$this->assertSame( 'pixonaut_db_error', $answer->get_error_code() );
-		$this->assertSame( ErrorCodes::DB_ERROR, $answer->get_error_data()['code'] );
+		$this->assertSame( ErrorCode::DB_ERROR, $answer->get_error_data()['code'] );
 		$this->assertSame( 500, $answer->get_error_data()['pixonaut_status'] );
 		$this->assertSame( WP_Http::SERVICE_UNAVAILABLE, $answer->get_error_data()['status'] );
 		$this->assertSame( 'Pixonaut could not answer just now. Try again in a moment. (Pixonaut error code: db_error)', $answer->get_error_message() );
 	}
 
 	/**
-	 * @return iterable<string, array{ApiError, string, int}>
+	 * @return iterable<string, array{ApiException, string, int}>
 	 */
 	public static function failed_calls(): iterable {
-		yield 'a key no longer taken' => array( new ApiError( Operations::SEARCH_TEMPLATES, 401, ErrorCodes::UNAUTHORIZED, false ), 'Pixonaut no longer accepts the store\'s key. Connect the store again on the Pixonaut settings page. (Pixonaut error code: unauthorized)', WP_Http::BAD_GATEWAY );
-		yield 'a quota' => array( new ApiError( Operations::SEARCH_TEMPLATES, 429, ErrorCodes::RATE_LIMITED, true, 30 ), 'The store sent Pixonaut too many requests. Try again in 30 seconds. (Pixonaut error code: rate_limited)', WP_Http::SERVICE_UNAVAILABLE );
-		yield 'an outage' => array( new ApiError( Operations::SEARCH_TEMPLATES, 0, ErrorCodes::TRANSPORT_FAILED, true ), 'Pixonaut could not be reached. Try again in a moment. (Pixonaut error code: transport_failed)', WP_Http::SERVICE_UNAVAILABLE );
-		yield 'a suspended workspace' => array( new ApiError( Operations::SEARCH_TEMPLATES, 403, ErrorCodes::WORKSPACE_SUSPENDED, false ), 'The Pixonaut workspace is suspended. (Pixonaut error code: workspace_suspended)', WP_Http::BAD_GATEWAY );
-		yield 'any other refusal' => array( new ApiError( Operations::SEARCH_TEMPLATES, 422, ErrorCodes::BAD_REQUEST, false ), 'Pixonaut refused the request. (Pixonaut error code: bad_request)', WP_Http::BAD_GATEWAY );
+		yield 'a key no longer taken' => array( new ApiException( 'templates.list', 401, ErrorCode::UNAUTHORIZED, false ), 'Pixonaut no longer accepts the store\'s key. Connect the store again on the Pixonaut settings page. (Pixonaut error code: unauthorized)', WP_Http::BAD_GATEWAY );
+		yield 'a quota' => array( new ApiException( 'templates.list', 429, ErrorCode::RATE_LIMITED, true, 30 ), 'The store sent Pixonaut too many requests. Try again in 30 seconds. (Pixonaut error code: rate_limited)', WP_Http::SERVICE_UNAVAILABLE );
+		yield 'an outage' => array( new ApiException( 'templates.list', 0, ApiException::TRANSPORT_FAILED, true ), 'Pixonaut could not be reached. Try again in a moment. (Pixonaut error code: transport_failed)', WP_Http::SERVICE_UNAVAILABLE );
+		yield 'a suspended workspace' => array( new ApiException( 'templates.list', 403, ErrorCode::WORKSPACE_SUSPENDED, false ), 'The Pixonaut workspace is suspended. (Pixonaut error code: workspace_suspended)', WP_Http::BAD_GATEWAY );
+		yield 'any other refusal' => array( new ApiException( 'templates.list', 422, ErrorCode::BAD_REQUEST, false ), 'Pixonaut refused the request. (Pixonaut error code: bad_request)', WP_Http::BAD_GATEWAY );
 	}
 
 	/**
 	 * @dataProvider failed_calls
 	 *
-	 * @param ApiError $failure Why the call failed.
-	 * @param string   $message What the ability says.
-	 * @param int      $status  The REST status its run route answers with.
+	 * @param ApiException $failure Why the call failed.
+	 * @param string       $message What the ability says.
+	 * @param int          $status  The REST status its run route answers with.
 	 */
-	public function test_a_failed_call_says_its_cause_with_pixonauts_code( ApiError $failure, string $message, int $status ): void {
+	public function test_a_failed_call_says_its_cause_with_pixonauts_code( ApiException $failure, string $message, int $status ): void {
 		$error = AbilityError::from( $failure );
 
-		$this->assertSame( 'pixonaut_' . $failure->error_code, $error->get_error_code() );
+		$this->assertSame( 'pixonaut_' . $failure->errorCode, $error->get_error_code() );
 		$this->assertSame( $message, $error->get_error_message() );
-		$this->assertSame( $failure->error_code, $error->get_error_data()['code'] );
+		$this->assertSame( $failure->errorCode, $error->get_error_data()['code'] );
 		$this->assertSame( $status, $error->get_error_data()['status'] );
 		$this->assertSame( $failure->status, $error->get_error_data()['pixonaut_status'] );
 	}
@@ -477,7 +476,7 @@ final class AbilitiesTest extends WP_UnitTestCase {
 		$this->assertNull( $answer['blank_id'] );
 		$this->assertSame( self::TEMPLATE_ID, $answer['sides'][0]['template_id'] );
 		$this->assertStringEndsWith( '/v1/templates/mini-tee%402/print-size', $this->recorder->requests[0]['url'] );
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'sizes' => array(
 					array(

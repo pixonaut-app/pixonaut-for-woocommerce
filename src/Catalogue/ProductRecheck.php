@@ -12,12 +12,13 @@ namespace Pixonaut\WooCommerce\Catalogue;
 use LogicException;
 use Pixonaut\WooCommerce\Admin\InvalidProductNotice;
 use Pixonaut\WooCommerce\Admin\TrashedProducts;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Catalogue;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Storefront\KeptDesignerLinks;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Product;
 
@@ -119,7 +120,7 @@ final class ProductRecheck {
 	 * @param ProductLinker        $linker  Checks a configuration with Pixonaut.
 	 * @param Catalogue            $catalogue Reads which templates are live.
 	 * @param InvalidProductNotice $notice  Raises or clears a product's notice.
-	 * @param Logger               $logger  Logs a re-check that failed and a job that could not be queued.
+	 * @param LoggerInterface      $logger  Logs a re-check that failed and a job that could not be queued.
 	 * @param ProductVariants      $variants Resolves each variation's blank variant again.
 	 * @param KeptDesignerLinks    $links   Forgets the designer links Pixonaut no longer lists.
 	 */
@@ -127,7 +128,7 @@ final class ProductRecheck {
 		private readonly ProductLinker $linker,
 		private readonly Catalogue $catalogue,
 		private readonly InvalidProductNotice $notice,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		private readonly ProductVariants $variants,
 		private readonly KeptDesignerLinks $links,
 	) {
@@ -173,7 +174,7 @@ final class ProductRecheck {
 	 * @throws RuntimeException When the job could not be queued; the event is handled again later.
 	 */
 	public function handle( Event $event ): void {
-		$blank_id = $event->string( 'blankId' );
+		$blank_id = Payload::string( $event, 'blankId' );
 		// A blank's photos and print areas can change under the same ids.
 		if ( null !== $blank_id && in_array( $event->type, array( self::BLANK_UPDATED, self::BLANK_RESTORED ), true ) ) {
 			ProductPictures::redraw_all();
@@ -182,8 +183,8 @@ final class ProductRecheck {
 			$this->queue_first( self::BY_BLANK, $blank_id );
 			return;
 		}
-		$base_id   = $event->string( 'baseId' );
-		$published = $event->string( 'templateId' );
+		$base_id   = Payload::string( $event, 'baseId' );
+		$published = Payload::string( $event, 'templateId' );
 		if ( null === $base_id && null !== $published ) {
 			// `template.published` names the version it published; the index holds base ids.
 			$base_id = TemplateId::parse( $published )->base_id ?? $published;
@@ -257,14 +258,14 @@ final class ProductRecheck {
 	 *
 	 * @param array<int|string> $product_ids Products and variations.
 	 * @param int|string        $attempt     Which attempt this is, from 1.
-	 * @throws ApiError When Pixonaut could not list the live templates; the batch is tried again later.
+	 * @throws ApiException When Pixonaut could not list the live templates; the batch is tried again later.
 	 */
 	public function recheck( array $product_ids, int|string $attempt = 1 ): void {
 		$product_ids = array_values( array_map( 'intval', $product_ids ) );
 		$attempt     = max( 1, (int) $attempt );
 		try {
 			$live = $this->catalogue->live_versions();
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->failed( $product_ids, $attempt, $e->getMessage() );
 			throw $e;
 		}
@@ -332,7 +333,7 @@ final class ProductRecheck {
 	private function refresh_variants( WC_Product $product ): bool {
 		try {
 			$this->variants->refresh( $product );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return false;
 		}
 		return true;

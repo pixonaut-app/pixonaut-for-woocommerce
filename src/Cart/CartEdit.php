@@ -10,9 +10,6 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Cart;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -22,6 +19,10 @@ use Pixonaut\WooCommerce\Milliseconds;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\CorrectionMount;
 use Pixonaut\WooCommerce\Storefront\PersonaliseButton;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\DesignsUpdateRequestOption1;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Product;
 use WC_Product_Variation;
 
@@ -66,23 +67,23 @@ final class CartEdit {
 	private ?string $added = null;
 
 	/**
-	 * @param Connection   $connection The store's connection.
-	 * @param Designs      $designs    Pixonaut's designs.
-	 * @param Settings     $settings   The default layout and the designer's language.
-	 * @param Labels       $labels     Customer-facing text.
-	 * @param Logger       $logger     Logs links and updates Pixonaut refused.
-	 * @param Closure|null $clock      `fn(): int` Unix time; `time()` when null.
+	 * @param Connection      $connection The store's connection.
+	 * @param Sdk             $pixonaut   Pixonaut's designs.
+	 * @param Settings        $settings   The default layout and the designer's language.
+	 * @param Labels          $labels     Customer-facing text.
+	 * @param LoggerInterface $logger     Logs links and updates Pixonaut refused.
+	 * @param Closure|null    $clock      `fn(): int` Unix time; `time()` when null.
 	 */
 	public function __construct(
 		Connection $connection,
-		private readonly Designs $designs,
+		private readonly Sdk $pixonaut,
 		private readonly Settings $settings,
 		private readonly Labels $labels,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 	) {
 		$this->clock      = $clock ?? static fn (): int => time();
-		$this->correction = new CorrectionMount( $connection, $designs, $logger, $settings );
+		$this->correction = new CorrectionMount( $connection, $pixonaut, $logger, $settings );
 	}
 
 	public function register(): void {
@@ -321,16 +322,16 @@ final class CartEdit {
 			throw new EditRefused( EditRefused::UNAVAILABLE );
 		}
 		try {
-			$corrected = $this->designs->correct( $side->design_id, $proof_token );
-		} catch ( ApiError $error ) {
-			$refusal = EditRefused::for_error( $error->error_code );
+			$corrected = $this->pixonaut->designs()->update( $side->design_id, new DesignsUpdateRequestOption1( proofToken: $proof_token ) );
+		} catch ( ApiException $error ) {
+			$refusal = EditRefused::for_error( $error->errorCode );
 			if ( EditRefused::NOT_SAVED === $refusal->reason ) {
-				$this->logger->warning( sprintf( 'Could not save the correction of design %s: %s', $side->design_id, $error->getMessage() ), array( 'code' => $error->error_code ) );
+				$this->logger->warning( sprintf( 'Could not save the correction of design %s: %s', $side->design_id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			}
 			throw $refusal;
 		}
 		return $line->with_side(
-			$side->corrected( $corrected['revision'], $corrected['proofId'], $fields ),
+			$side->corrected( $corrected->revision, $corrected->proofId, $fields ),
 			ApprovalMode::consent_in_cart( $line->approval_mode, Milliseconds::of( ( $this->clock )() ) )
 		);
 	}

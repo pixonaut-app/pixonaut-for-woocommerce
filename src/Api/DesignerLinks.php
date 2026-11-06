@@ -9,6 +9,17 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Api;
 
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ShareLinksUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesDesignerLinksCreateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+
+/**
+ * The store's designer links: made with their warnings logged, the working
+ * ones found again across pages, and withdrawn once.
+ */
 final class DesignerLinks {
 
 	/**
@@ -32,12 +43,12 @@ final class DesignerLinks {
 	private const CREATED_BY_CALLER = 'me';
 
 	/**
-	 * @param Client $client Calls Pixonaut.
-	 * @param Logger $logger Logs what Pixonaut warns of in a link it made.
+	 * @param Sdk             $pixonaut Calls Pixonaut.
+	 * @param LoggerInterface $logger   Logs what Pixonaut warns of in a link it made.
 	 */
 	public function __construct(
-		private readonly Client $client,
-		private readonly Logger $logger,
+		private readonly Sdk $pixonaut,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -52,24 +63,22 @@ final class DesignerLinks {
 	 *
 	 * @return array{id: string, url: string} The link's id and the hosted designer's address.
 	 *
-	 * @throws ApiError When Pixonaut refused (`print_size_illegal`, `share_link_name_taken`, …) or could not be reached.
+	 * @throws ApiException When Pixonaut refused (`print_size_illegal`, `share_link_name_taken`, …) or could not be reached.
 	 */
 	public function create( string $template_base_id, array $body ): array {
-		$response = $this->client->call( Operations::CREATE_DESIGNER_LINK, array( 'id' => $template_base_id ), array(), $body );
-		$answer   = $this->client->json( Operations::CREATE_DESIGNER_LINK, $response );
-		$url      = $answer['url'] ?? null;
-		$id       = $answer['id'] ?? null;
-		if ( ! is_string( $url ) || '' === $url || ! is_string( $id ) || '' === $id ) {
-			throw ApiError::unexpected( Operations::CREATE_DESIGNER_LINK, $response );
+		$link = $this->pixonaut->designerLinks()->create( $template_base_id, TemplatesDesignerLinksCreateRequest::fromArray( $body ) );
+		if ( '' === $link->url || '' === $link->id ) {
+			throw new ApiException( 'templates.designerLinks.create', 200, ApiException::UNEXPECTED_RESPONSE, false );
 		}
-		foreach ( is_array( $answer['warnings'] ?? null ) ? $answer['warnings'] : array() as $warning ) {
+		$warnings = $link->raw()['warnings'] ?? null;
+		foreach ( is_array( $warnings ) ? $warnings : array() as $warning ) {
 			if ( is_array( $warning ) ) {
 				$this->warn( $template_base_id, $warning );
 			}
 		}
 		return array(
-			'id'  => $id,
-			'url' => $url,
+			'id'  => $link->id,
+			'url' => $link->url,
 		);
 	}
 
@@ -81,13 +90,13 @@ final class DesignerLinks {
 	 *
 	 * @return list<string>
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	public function working( string $template_base_id ): array {
 		$ids = array();
 		$this->each(
 			$template_base_id,
-			array(),
+			null,
 			static function ( array $link ) use ( &$ids ): bool {
 				if ( is_string( $link['id'] ?? null ) ) {
 					$ids[] = $link['id'];
@@ -109,13 +118,13 @@ final class DesignerLinks {
 	 *
 	 * @return string|null Null when the link no longer works, or Pixonaut lists it without an address.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	public function address( string $template_base_id, string $id ): ?string {
 		$url = null;
 		$this->each(
 			$template_base_id,
-			array( 'q' => $id ),
+			$id,
 			static function ( array $link ) use ( $id, &$url ): bool {
 				if ( ( $link['id'] ?? null ) !== $id ) {
 					return true;
@@ -132,28 +141,25 @@ final class DesignerLinks {
 	 * links for a template to `$visit`, a page at a time, until it answers
 	 * false or the pages end.
 	 *
-	 * @param string                $template_base_id The template the links were made for.
-	 * @param array<string, string> $narrow           More query parameters, such as `q`.
-	 * @param callable              $visit            Given each link; answers whether to read on.
+	 * @param string      $template_base_id The template the links were made for.
+	 * @param string|null $query            Narrows the links to those holding it, such as an id; null for all.
+	 * @param callable    $visit            Given each link; answers whether to read on.
 	 * @phpstan-param callable(array<string, mixed>): bool $visit
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
-	private function each( string $template_base_id, array $narrow, callable $visit ): void {
+	private function each( string $template_base_id, ?string $query, callable $visit ): void {
 		$page = 1;
 		do {
-			$response = $this->client->call(
-				Operations::LIST_SHARE_LINKS,
-				array(),
-				array(
-					'kind'      => self::KIND,
-					'subjectId' => $template_base_id,
-					'createdBy' => self::CREATED_BY_CALLER,
-					'page'      => $page,
-					'pageSize'  => self::PAGE_SIZE,
-				) + $narrow
-			);
-			$links    = $this->client->items( Operations::LIST_SHARE_LINKS, $response, 'links' );
+			$answer = $this->pixonaut->shareLinks()->list(
+				page: $page,
+				pageSize: self::PAGE_SIZE,
+				subjectId: $template_base_id,
+				kind: self::KIND,
+				createdBy: self::CREATED_BY_CALLER,
+				q: $query,
+			)->raw();
+			$links  = array_values( array_filter( is_array( $answer['links'] ?? null ) ? $answer['links'] : array(), 'is_array' ) );
 			foreach ( $links as $link ) {
 				if ( ! $visit( $link ) ) {
 					return;
@@ -170,10 +176,10 @@ final class DesignerLinks {
 	 * @param string      $id   The link.
 	 * @param string|null $name Its new name; null for none.
 	 *
-	 * @throws ApiError When Pixonaut refused (`share_link_name_taken`, `not_found` for one no longer working) or could not be reached.
+	 * @throws ApiException When Pixonaut refused (`share_link_name_taken`, `not_found` for one no longer working) or could not be reached.
 	 */
 	public function rename( string $id, ?string $name ): void {
-		$this->client->call( Operations::UPDATE_SHARE_LINK, array( 'id' => $id ), array(), array( 'name' => $name ) );
+		$this->pixonaut->shareLinks()->update( $id, new ShareLinksUpdateRequest( name: $name ) );
 	}
 
 	/**
@@ -182,13 +188,13 @@ final class DesignerLinks {
 	 *
 	 * @param string $id The link.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	public function withdraw( string $id ): void {
 		try {
-			$this->client->call( Operations::DELETE_SHARE_LINK, array( 'id' => $id ) );
-		} catch ( ApiError $error ) {
-			if ( ErrorCodes::NOT_FOUND !== $error->error_code ) {
+			$this->pixonaut->shareLinks()->delete( $id );
+		} catch ( ApiException $error ) {
+			if ( ErrorCode::NOT_FOUND !== $error->errorCode ) {
 				throw $error;
 			}
 		}
@@ -205,7 +211,7 @@ final class DesignerLinks {
 				? sprintf( 'Pixonaut made a designer link for template %s with %d sides; its designer is built for at most %d. Give the product fewer sides.', $template_base_id, $warning['sides'], $warning['recommended'] )
 				: sprintf( 'Pixonaut made a designer link for template %s with a warning: %s.', $template_base_id, $code ),
 			array(
-				'operation' => Operations::CREATE_DESIGNER_LINK,
+				'operation' => 'templates.designerLinks.create',
 				'template'  => $template_base_id,
 				'warning'   => $warning,
 			)

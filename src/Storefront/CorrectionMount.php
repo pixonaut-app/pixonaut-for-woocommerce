@@ -9,10 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\Cart\DesignCheck;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
@@ -21,6 +19,10 @@ use Pixonaut\WooCommerce\DesignerLanguage;
 use Pixonaut\WooCommerce\FormLayout;
 use Pixonaut\WooCommerce\OptionGroups;
 use Pixonaut\WooCommerce\Settings\Settings;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\DesignsCorrectionLinksCreateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Product;
 
 /**
@@ -34,15 +36,15 @@ use WC_Product;
 final class CorrectionMount {
 
 	/**
-	 * @param Connection $connection The store's connection.
-	 * @param Designs    $designs    Reads designs and mints correction links.
-	 * @param Logger     $logger     Logs links and designs Pixonaut refused.
-	 * @param Settings   $settings   The designer's language, form layout and preloading.
+	 * @param Connection      $connection The store's connection.
+	 * @param Sdk             $pixonaut   Reads designs and mints correction links.
+	 * @param LoggerInterface $logger     Logs links and designs Pixonaut refused.
+	 * @param Settings        $settings   The designer's language, form layout and preloading.
 	 */
 	public function __construct(
 		private readonly Connection $connection,
-		private readonly Designs $designs,
-		private readonly Logger $logger,
+		private readonly Sdk $pixonaut,
+		private readonly LoggerInterface $logger,
 		private readonly Settings $settings,
 	) {
 	}
@@ -148,9 +150,9 @@ final class CorrectionMount {
 			return array();
 		}
 		try {
-			$design = $this->designs->get( $design_id );
-		} catch ( ApiError $error ) {
-			$this->logger->warning( sprintf( 'Could not read design %s to open it on its product: %s', $design_id, $error->getMessage() ), array( 'code' => $error->error_code ) );
+			$design = $this->pixonaut->designs()->get( $design_id )->raw();
+		} catch ( ApiException $error ) {
+			$this->logger->warning( sprintf( 'Could not read design %s to open it on its product: %s', $design_id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			return array();
 		}
 		$size = DesignCheck::size_index( $design[ Designs::PRINT_SIZE ] ?? null, $side->print_sizes );
@@ -196,9 +198,14 @@ final class CorrectionMount {
 	 */
 	private function link( string $design_id, ?string $return_url = null, ?string $state = null ): ?array {
 		try {
-			return $this->designs->correction_link( $design_id, $return_url, $state );
-		} catch ( ApiError $error ) {
-			$this->logger->warning( sprintf( 'Could not open design %s for editing: %s', $design_id, $error->getMessage() ), array( 'code' => $error->error_code ) );
+			$link = $this->pixonaut->designs()->createCorrectionLink( $design_id, new DesignsCorrectionLinksCreateRequest( returnUrl: $return_url, state: null === $return_url ? null : $state ) );
+			return array(
+				'token'     => $link->token,
+				'expiresAt' => (int) $link->expiresAt,
+				'url'       => $link->url,
+			);
+		} catch ( ApiException $error ) {
+			$this->logger->warning( sprintf( 'Could not open design %s for editing: %s', $design_id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			return null;
 		}
 	}

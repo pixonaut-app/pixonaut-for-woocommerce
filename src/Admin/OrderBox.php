@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Admin;
 
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Fulfilment\AdoptedOrder;
 use Pixonaut\WooCommerce\Fulfilment\DeliveryChange;
 use Pixonaut\WooCommerce\Fulfilment\LineActionResult;
@@ -184,10 +184,10 @@ final class OrderBox {
 			} else {
 				try {
 					list( $line, $order ) = $this->actions->current( $line );
-				} catch ( ApiError $e ) {
-					$unreadable = $e->error_code;
+				} catch ( ApiException $e ) {
+					$unreadable = $e->errorCode;
 					if ( 0 === $e->status || $e->retryable ) {
-						$this->outage = $e->error_code;
+						$this->outage = $e->errorCode;
 					}
 				}
 			}
@@ -195,10 +195,10 @@ final class OrderBox {
 			try {
 				$read = $this->actions->order_of( $line );
 				$line = null === $read ? $line : $this->actions->keep_erasure( $line, $read );
-			} catch ( ApiError $e ) {
+			} catch ( ApiException $e ) {
 				// Nothing is done on a finished line: the erasure is asked about again on the next view.
 				if ( 0 === $e->status || $e->retryable ) {
-					$this->outage = $e->error_code;
+					$this->outage = $e->errorCode;
 				}
 			}
 		}

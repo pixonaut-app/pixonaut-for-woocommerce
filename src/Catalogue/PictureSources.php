@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use WC_Product;
 
@@ -42,7 +42,7 @@ final class PictureSources {
 	 *
 	 * @return list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, showcase?: string}>
 	 *
-	 * @throws ApiError When the blank's views cannot be read.
+	 * @throws ApiException When the blank's views cannot be read.
 	 */
 	public function of( WC_Product $product ): array {
 		$images = ShowcaseImages::on( $product );
@@ -74,7 +74,7 @@ final class PictureSources {
 	 *
 	 * @return array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null}|null
 	 *
-	 * @throws ApiError When the blank's views cannot be read.
+	 * @throws ApiException When the blank's views cannot be read.
 	 */
 	private function source( WC_Product $product, bool $on_photo ): ?array {
 		$config = ProductConfig::config_for( $product );
@@ -109,7 +109,7 @@ final class PictureSources {
 	 *
 	 * @return list<string>
 	 *
-	 * @throws ApiError When the blank's views cannot be read.
+	 * @throws ApiException When the blank's views cannot be read.
 	 */
 	private function photographed_views( string $blank_id, string $placement_id ): array {
 		$placements = $this->cache->remember( 'blank-mockups', array( 'blank' => $blank_id ), fn (): array => $this->catalogue->mockups( $blank_id ) );

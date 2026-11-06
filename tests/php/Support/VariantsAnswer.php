@@ -109,7 +109,7 @@ final class VariantsAnswer {
 			return $this->error;
 		}
 		$body = (string) wp_json_encode( null === $language ? $this->answer : ( $this->in_language[ $language ] ?? $this->answer ) );
-		OpenApiAssert::response( 'GET', ScriptedTransport::target( $url ), 200, $body, 'application/json' );
+		OpenApiAssert::response( 'GET', ScriptedClient::target( $url ), 200, $body, 'application/json' );
 		return array(
 			'headers'  => array( 'content-type' => 'application/json' ),
 			'body'     => $body,

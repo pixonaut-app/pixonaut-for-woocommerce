@@ -10,9 +10,8 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Admin;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\SearchResults;
 use Pixonaut\WooCommerce\Catalogue\TemplateForm;
@@ -268,7 +267,7 @@ final class CatalogueSearch {
 					);
 				}
 			);
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return self::failed( $e );
 		}
 		return new WP_REST_Response(
@@ -300,7 +299,7 @@ final class CatalogueSearch {
 				array( 'id' => $id ),
 				fn (): array => array( 'groups' => TemplateForm::groups( json_decode( $this->catalogue->template_answer( $id ), true ) ) )
 			);
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return self::failed( $e );
 		}
 		return new WP_REST_Response( array( 'groups' => is_array( $answer['groups'] ?? null ) ? $answer['groups'] : array() ) );
@@ -309,10 +308,10 @@ final class CatalogueSearch {
 	/**
 	 * What a search answers when Pixonaut could not be asked.
 	 *
-	 * @param ApiError $error Why.
+	 * @param ApiException $error Why.
 	 */
-	private static function failed( ApiError $error ): WP_Error {
-		$message = ErrorCodes::NOT_CONNECTED === $error->error_code
+	private static function failed( ApiException $error ): WP_Error {
+		$message = ApiException::NOT_CONNECTED === $error->errorCode
 			/* translators: Message in the blank search on the product edit page, shown to the merchant. */
 			? __( 'Connect the store to Pixonaut to search its catalogue.', 'pixonaut-for-woocommerce' )
 			: __( 'Pixonaut could not be searched. Try again in a moment.', 'pixonaut-for-woocommerce' );
@@ -356,7 +355,7 @@ final class CatalogueSearch {
 	private function answer( string $what, array $args, Closure $load ): WP_REST_Response|WP_Error {
 		try {
 			$answer = $this->cache->remember( $what, $args, $load );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return self::failed( $e );
 		}
 

@@ -9,7 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -42,7 +43,7 @@ final class OrderHeld {
 	 */
 	public function handle( Event $event ): void {
 		foreach ( $this->lines->of( $event ) as $line ) {
-			$this->apply_to( $line->item(), (string) $event->string( 'orderId' ), $event->payload );
+			$this->apply_to( $line->item(), (string) Payload::string( $event, 'orderId' ), $event->payload );
 		}
 	}
 

@@ -9,13 +9,10 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Webhooks;
 
 use Pixonaut\WooCommerce\Admin\ConnectionScreen;
 use Pixonaut\WooCommerce\Admin\Notices;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\Connect;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\Webhooks;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Connection\Cipher;
 use Pixonaut\WooCommerce\Connection\ConnectAttempts;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -80,9 +77,9 @@ final class EndpointTest extends WP_UnitTestCase {
 		remove_action( 'pixonaut_wc_connection_connected', array( $plugin->webhook_endpoint(), 'on_connected' ), 10 );
 		$this->recorder   = ( new HttpRecorder( self::BASE_URL ) )->start();
 		$this->store      = new ConnectionStore( Cipher::for_site() );
-		$client           = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
-		$this->connection = new Connection( $this->store, new ConnectAttempts(), new Connect( $client ), $plugin->notices(), new WcLogger(), ConnectionScreen::settings_url() );
-		$this->endpoint   = new Endpoint( $this->connection, new Webhooks( $client ), new WcLogger() );
+		$client           = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
+		$this->connection = new Connection( $this->store, new ConnectAttempts(), $client, $plugin->notices(), new WcLogger(), ConnectionScreen::settings_url() );
+		$this->endpoint   = new Endpoint( $this->connection, $client, new WcLogger() );
 		$this->endpoint->register();
 		$admin       = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		$this->admin = is_int( $admin ) ? $admin : 0;

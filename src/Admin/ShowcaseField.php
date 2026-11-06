@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Admin;
 
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -82,7 +82,7 @@ final class ShowcaseField {
 			$listed  = $this->listed( $template );
 			$sets    = ShowcaseImages::sets( $listed['showcases'] ?? array() );
 			$preview = is_string( $listed['preview_url'] ?? null ) ? $listed['preview_url'] : '';
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$sets = null;
 		}
 		if ( array() === $chosen && ( null === $sets || array() === $sets ) ) {
@@ -128,7 +128,7 @@ final class ShowcaseField {
 	 * @param string $template The template version.
 	 * @return array<mixed> As `Catalogue::template_showcases()`.
 	 *
-	 * @throws ApiError When Pixonaut could not be asked.
+	 * @throws ApiException When Pixonaut could not be asked.
 	 */
 	public function listed( string $template ): array {
 		return $this->cache->remember( 'template-showcases', array( 'id' => $template ), fn (): array => $this->catalogue->template_showcases( $template ) );

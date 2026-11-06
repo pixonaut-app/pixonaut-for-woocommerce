@@ -12,13 +12,15 @@ namespace Pixonaut\WooCommerce\Fulfilment;
 use ActionScheduler_Store;
 use Closure;
 use InvalidArgumentException;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Orders;
-use Pixonaut\WooCommerce\Api\PreparedRequest;
+use Pixonaut\WooCommerce\Api\StoredRequest;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Refs;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersDeliveryUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\PreparedRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Factory;
@@ -115,14 +117,14 @@ final class DeliveryChange {
 	private array $changed = array();
 
 	/**
-	 * @param Orders  $orders     Sends the change.
-	 * @param Closure $connection `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
-	 * @param Logger  $logger     Logs the changes Pixonaut refused or the store could not schedule.
+	 * @param Sdk             $pixonaut   Sends the change.
+	 * @param Closure         $connection `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
+	 * @param LoggerInterface $logger     Logs the changes Pixonaut refused or the store could not schedule.
 	 */
 	public function __construct(
-		private readonly Orders $orders,
+		private readonly Sdk $pixonaut,
 		private readonly Closure $connection,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -364,7 +366,7 @@ final class DeliveryChange {
 				is_string( $sending ) ? $sending : null,
 				null,
 				array(
-					self::FIELD_CODE    => ErrorCodes::BAD_REQUEST,
+					self::FIELD_CODE    => ErrorCode::BAD_REQUEST,
 					self::FIELD_AT      => time() * self::MS_PER_SECOND,
 					self::FIELD_REFUSED => $fingerprint,
 				)
@@ -394,8 +396,8 @@ final class DeliveryChange {
 			}
 		}
 		try {
-			$answer = $this->orders->send_change_delivery( $request );
-		} catch ( ApiError $e ) {
+			$answer = $this->pixonaut->orders()->sendUpdateDelivery( $request )->raw();
+		} catch ( ApiException $e ) {
 			$this->refused( $item, $fingerprint, $e );
 			return;
 		}
@@ -433,7 +435,7 @@ final class DeliveryChange {
 					self::FIELD_CHANGE   => $change,
 					self::FIELD_SENDING  => $fingerprint,
 					self::FIELD_KEY      => $key,
-					self::FIELD_REQUEST  => $this->orders->prepare_change_delivery( $order_id, $body, $key )->to_array(),
+					self::FIELD_REQUEST  => $this->pixonaut->orders()->prepareUpdateDelivery( $order_id, OrdersDeliveryUpdateRequest::fromArray( $body ), $key )->toArray(),
 					self::FIELD_FAILURES => 0,
 				) + $delivery;
 			}
@@ -452,7 +454,7 @@ final class DeliveryChange {
 			return null;
 		}
 		try {
-			return PreparedRequest::from_array( $stored );
+			return StoredRequest::restore( $stored );
 		} catch ( InvalidArgumentException ) {
 			return null;
 		}
@@ -500,14 +502,14 @@ final class DeliveryChange {
 	 *
 	 * @param WC_Order_Item_Product $item        The line.
 	 * @param string                $fingerprint The address sent.
-	 * @param ApiError              $error       What Pixonaut answered, or why no answer came.
+	 * @param ApiException          $error       What Pixonaut answered, or why no answer came.
 	 *
 	 * @throws RuntimeException When the line kept changing.
 	 */
-	private function refused( WC_Order_Item_Product $item, string $fingerprint, ApiError $error ): void {
+	private function refused( WC_Order_Item_Product $item, string $fingerprint, ApiException $error ): void {
 		// `address_change_unavailable` says by `retryable` whether asking again may work.
 		if ( RetryPolicy::RETRY === RetryPolicy::decide( $error ) ) {
-			if ( ! $this->again( $item, $error->error_code, $error->retry_after ) ) {
+			if ( ! $this->again( $item, $error->errorCode, $error->retryAfter ) ) {
 				$this->unknown( $item, $fingerprint, $error );
 			}
 			return;
@@ -518,7 +520,7 @@ final class DeliveryChange {
 				'item'      => $item->get_id(),
 				'operation' => $error->operation,
 				'status'    => $error->status,
-				'code'      => $error->error_code,
+				'code'      => $error->errorCode,
 			)
 		);
 		$written = $this->settle(
@@ -526,7 +528,7 @@ final class DeliveryChange {
 			$fingerprint,
 			null,
 			array(
-				self::FIELD_CODE    => $error->error_code,
+				self::FIELD_CODE    => $error->errorCode,
 				self::FIELD_AT      => time() * self::MS_PER_SECOND,
 				self::FIELD_REFUSED => $fingerprint,
 			)
@@ -544,18 +546,18 @@ final class DeliveryChange {
 	 *
 	 * @param WC_Order_Item_Product $item        The line.
 	 * @param string                $fingerprint The address sent.
-	 * @param ApiError              $error       The last failure.
+	 * @param ApiException          $error       The last failure.
 	 *
 	 * @throws RuntimeException When the line kept changing.
 	 */
-	private function unknown( WC_Order_Item_Product $item, string $fingerprint, ApiError $error ): void {
+	private function unknown( WC_Order_Item_Product $item, string $fingerprint, ApiException $error ): void {
 		$marked = false;
 		$this->update(
 			$item,
 			static function ( array $delivery ) use ( $fingerprint, $error, &$marked ): array {
 				$marked = ( $delivery[ self::FIELD_SENDING ] ?? null ) === $fingerprint;
 				if ( $marked ) {
-					$delivery[ self::FIELD_CODE ] = $error->error_code;
+					$delivery[ self::FIELD_CODE ] = $error->errorCode;
 				}
 				return $delivery;
 			}
@@ -567,7 +569,7 @@ final class DeliveryChange {
 					/* translators: 1: product name of the order line, 2: the error code Pixonaut answered. */
 					__( 'Pixonaut: it is not known whether the new address of "%1$s" reached the printshop: Pixonaut answered "%2$s". Update the order to send it again.', 'pixonaut-for-woocommerce' ),
 					$item->get_name(),
-					$error->error_code
+					$error->errorCode
 				)
 			);
 		}
@@ -725,26 +727,26 @@ final class DeliveryChange {
 	/**
 	 * Why Pixonaut refused a change, as an order note.
 	 *
-	 * @param ApiError $error The refusal.
-	 * @param string   $name  Product name of the order line.
+	 * @param ApiException $error The refusal.
+	 * @param string       $name  Product name of the order line.
 	 */
-	private static function explain_refusal( ApiError $error, string $name ): string {
+	private static function explain_refusal( ApiException $error, string $name ): string {
 		$detail = static fn ( string $field ): string => is_string( $error->details[ $field ] ?? null ) ? sanitize_text_field( $error->details[ $field ] ) : '';
-		return match ( $error->error_code ) {
-			ErrorCodes::ORDER_PAST_ADDRESS_CHANGE => sprintf(
+		return match ( $error->errorCode ) {
+			ErrorCode::ORDER_PAST_ADDRESS_CHANGE => sprintf(
 				/* translators: 1: product name of the order line, 2: the printshop order's status in Pixonaut. */
 				__( 'Pixonaut: the new address of "%1$s" was not sent: its printshop order is past changing its address ("%2$s" in Pixonaut). It ships to the address it had; ask the printshop.', 'pixonaut-for-woocommerce' ),
 				$name,
 				$detail( 'status' )
 			),
-			ErrorCodes::ADDRESS_CHANGE_NOT_ACCEPTED => sprintf(
+			ErrorCode::ADDRESS_CHANGE_NOT_ACCEPTED => sprintf(
 				/* translators: 1: product name of the order line, 2: the printshop's name. */
 				__( 'Pixonaut: the new address of "%1$s" was not sent: its printshop, %2$s, takes no address changes through Pixonaut. It ships to the address it had; ask the printshop.', 'pixonaut-for-woocommerce' ),
 				$name,
 				/* translators: Fallback for a printshop name that is not known, inside an order note: "its printshop, the printshop, takes no address changes". Lower case. */
 				'' === $detail( 'printshop' ) ? __( 'the printshop', 'pixonaut-for-woocommerce' ) : $detail( 'printshop' )
 			),
-			ErrorCodes::POSTAL_CODE_REQUIRED => sprintf(
+			ErrorCode::POSTAL_CODE_REQUIRED => sprintf(
 				/* translators: %s: product name of the order line. */
 				__( 'Pixonaut: the new address of "%s" was not sent: its printshop needs a postcode. Add one and update the order.', 'pixonaut-for-woocommerce' ),
 				$name
@@ -753,7 +755,7 @@ final class DeliveryChange {
 				/* translators: 1: product name of the order line, 2: the error code Pixonaut answered. */
 				__( 'Pixonaut: the new address of "%1$s" was not sent: Pixonaut answered "%2$s". It ships to the address it had.', 'pixonaut-for-woocommerce' ),
 				$name,
-				$error->error_code
+				$error->errorCode
 			),
 		};
 	}

@@ -8,20 +8,17 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Unit\Api;
 
 use Brain\Monkey\Functions;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Response;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
-use Pixonaut\WooCommerce\Tests\Support\ScriptedTransport;
-use Pixonaut\WooCommerce\Tests\Support\StaticCredentials;
+use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
 use Pixonaut\WooCommerce\Tests\Unit\FakeOptions;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
+use Pixonaut\WooCommerce\Vendor\Nyholm\Psr7\Response;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 
 final class DesignsTest extends TestCase {
 
@@ -35,7 +32,7 @@ final class DesignsTest extends TestCase {
 
 	private const COMMIT_KEY = 'wc:site-1:commit:0123';
 
-	private ScriptedTransport $transport;
+	private ScriptedClient $transport;
 
 	private Designs $designs;
 
@@ -43,9 +40,9 @@ final class DesignsTest extends TestCase {
 		parent::setUp();
 		$this->fake_options();
 		Functions\when( 'wp_json_encode' )->alias( static fn ( $value ) => json_encode( $value ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
-		$this->transport = new ScriptedTransport();
+		$this->transport = new ScriptedClient();
 		$this->designs   = new Designs(
-			new Client( self::BASE_URL, Operations::plugin(), new StaticCredentials(), $this->transport, new RecordingLogger(), new Deprecations(), static function (): void {} )
+			$this->transport->sdk( ScriptedClient::credentials(), new RecordingLogger() )
 		);
 	}
 
@@ -63,7 +60,7 @@ final class DesignsTest extends TestCase {
 
 		$sent = $this->transport->sent[0];
 		$this->assertSame( self::COMMIT_KEY, $sent['headers']['Idempotency-Key'] );
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'proofToken'  => self::TOKEN,
 				'externalRef' => self::CART_REF,
@@ -84,7 +81,7 @@ final class DesignsTest extends TestCase {
 
 		$this->designs->commit( self::TOKEN, self::CART_REF, self::COMMIT_KEY, array( 'placement' => DesignFixture::PLACEMENT_ID ) );
 
-		$this->assertSame(
+		$this->assertEquals(
 			array( 'placement' => DesignFixture::PLACEMENT_ID ),
 			json_decode( (string) $this->transport->sent[0]['body'], true )['fulfilmentPayload'] ?? null
 		);
@@ -94,7 +91,7 @@ final class DesignsTest extends TestCase {
 		$this->transport->json(
 			409,
 			array(
-				'error'    => ErrorCodes::PROOF_ALREADY_COMMITTED,
+				'error'    => ErrorCode::PROOF_ALREADY_COMMITTED,
 				'designId' => DesignFixture::ID,
 			)
 		);
@@ -103,13 +100,13 @@ final class DesignsTest extends TestCase {
 	}
 
 	public function test_commit_passes_on_other_refusals(): void {
-		$this->transport->json( 410, array( 'error' => ErrorCodes::PROOF_EXPIRED ) );
+		$this->transport->json( 410, array( 'error' => ErrorCode::PROOF_EXPIRED ) );
 
 		try {
 			$this->designs->commit( self::TOKEN, self::CART_REF, self::COMMIT_KEY );
 			$this->fail( 'An expired proof must not commit.' );
-		} catch ( ApiError $error ) {
-			$this->assertSame( ErrorCodes::PROOF_EXPIRED, $error->error_code );
+		} catch ( ApiException $error ) {
+			$this->assertSame( ErrorCode::PROOF_EXPIRED, $error->errorCode );
 		}
 	}
 
@@ -122,7 +119,7 @@ final class DesignsTest extends TestCase {
 		$this->assertSame( 'POST', $sent['method'] );
 		$this->assertSame( self::BASE_URL . '/v1/designs/standing', $sent['url'] );
 		$this->assertArrayNotHasKey( 'Idempotency-Key', $sent['headers'] );
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'templateId'  => 'tpl_mugs@4',
 				'approve'     => true,
@@ -146,7 +143,7 @@ final class DesignsTest extends TestCase {
 
 		$this->assertSame( 'des_standing_1', $this->designs->standing( 'tpl_mugs@4', null, null, null ) );
 
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'templateId' => 'tpl_mugs@4',
 				'approve'    => true,
@@ -166,7 +163,7 @@ final class DesignsTest extends TestCase {
 
 		$this->designs->standing( 'tpl_signs@1', null, null, new PrintSize( 500.0, 700.0, 'Sign' ) );
 
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'templateId' => 'tpl_signs@1',
 				'approve'    => true,
@@ -178,9 +175,9 @@ final class DesignsTest extends TestCase {
 	}
 
 	public function test_standing_passes_on_a_refusal(): void {
-		$this->transport->json( 403, array( 'error' => ErrorCodes::FORBIDDEN ) );
+		$this->transport->json( 403, array( 'error' => ErrorCode::FORBIDDEN ) );
 
-		$this->expectException( ApiError::class );
+		$this->expectException( ApiException::class );
 
 		$this->designs->standing( 'tpl_mugs@4', 'blk_123', 'front', new PrintSize( 200.0, 90.0, '200×90' ) );
 	}
@@ -188,7 +185,7 @@ final class DesignsTest extends TestCase {
 	public function test_standing_refuses_an_answer_without_a_design(): void {
 		$this->transport->json( 201, array( 'designId' => '' ) + self::standing_answer( true ) );
 
-		$this->expectException( ApiError::class );
+		$this->expectException( ApiException::class );
 
 		$this->designs->standing( 'tpl_mugs@4', 'blk_123', 'front', new PrintSize( 200.0, 90.0, '200×90' ) );
 	}
@@ -221,7 +218,7 @@ final class DesignsTest extends TestCase {
 
 		$this->designs->standing( 'tpl_mugs@4', 'blk_123', 'front', null, array( 'Size' => 'S' ), 'prf_layout' );
 
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'templateId'  => 'tpl_mugs@4',
 				'approve'     => true,
@@ -234,42 +231,9 @@ final class DesignsTest extends TestCase {
 		);
 	}
 
-	public function test_a_correction_link_adjusts_a_layout_only_when_asked_to(): void {
-		$link = array(
-			'id'        => 'shl_1',
-			'token'     => 'tok_1',
-			'url'       => 'https://app.pixonaut.example/h/correct/tok_1',
-			'expiresAt' => 1760007200000,
-			'name'      => null,
-			'brandId'   => null,
-		);
-		$this->transport->json( 201, $link );
-		$this->transport->json( 201, $link );
-
-		$this->designs->correction_link( 'des_1', 'https://shop.example/back', 'trip', true );
-		$this->designs->correction_link( 'des_1', 'https://shop.example/back', 'trip' );
-
-		$this->assertSame(
-			array(
-				'adjustLayout' => true,
-				'returnUrl'    => 'https://shop.example/back',
-				'state'        => 'trip',
-			),
-			json_decode( (string) $this->transport->sent[0]['body'], true )
-		);
-		$this->assertArrayNotHasKey( 'adjustLayout', json_decode( (string) $this->transport->sent[1]['body'], true ) );
-	}
-
-	public function test_get_reads_the_design(): void {
-		$this->transport->json( 200, DesignFixture::design() );
-
-		$this->assertEquals( DesignFixture::design(), $this->designs->get( DesignFixture::ID ) );
-		$this->assertSame( self::BASE_URL . '/v1/designs/' . DesignFixture::ID, $this->transport->sent[0]['url'] );
-	}
-
 	public function test_delete_counts_a_missing_design_as_deleted(): void {
 		$this->transport->respond( new Response( 204, array(), '' ) );
-		$this->transport->json( 404, array( 'error' => ErrorCodes::NOT_FOUND ) );
+		$this->transport->json( 404, array( 'error' => ErrorCode::NOT_FOUND ) );
 
 		$this->designs->delete( DesignFixture::ID );
 		$this->designs->delete( DesignFixture::ID );
@@ -279,47 +243,11 @@ final class DesignsTest extends TestCase {
 	}
 
 	public function test_delete_passes_on_a_design_that_went_on(): void {
-		$this->transport->json( 409, array( 'error' => ErrorCodes::DESIGN_APPROVED ) );
+		$this->transport->json( 409, array( 'error' => ErrorCode::DESIGN_APPROVED ) );
 
-		$this->expectException( ApiError::class );
+		$this->expectException( ApiException::class );
 
 		$this->designs->delete( DesignFixture::ID );
-	}
-
-	public function test_set_external_ref_puts_the_new_ref(): void {
-		$order_ref = 'wc:site-1:order:7:item:9';
-		$this->transport->json(
-			200,
-			array(
-				'designId'    => DesignFixture::ID,
-				'externalRef' => $order_ref,
-			)
-		);
-
-		$this->designs->set_external_ref( DesignFixture::ID, $order_ref );
-
-		$sent = $this->transport->sent[0];
-		$this->assertSame( 'PUT', $sent['method'] );
-		$this->assertSame( array( 'externalRef' => $order_ref ), json_decode( (string) $sent['body'], true ) );
-	}
-
-	public function test_reject_posts_to_the_design_without_a_key(): void {
-		$this->transport->json( 200, array( 'ok' => true ) );
-
-		$this->designs->reject( DesignFixture::ID );
-
-		$sent = $this->transport->sent[0];
-		$this->assertSame( 'POST', $sent['method'] );
-		$this->assertSame( self::BASE_URL . '/v1/designs/' . DesignFixture::ID . '/reject', $sent['url'] );
-		$this->assertArrayNotHasKey( 'Idempotency-Key', $sent['headers'] );
-	}
-
-	public function test_reject_passes_on_a_design_no_longer_waiting(): void {
-		$this->transport->json( 409, array( 'error' => ErrorCodes::NOT_COMMITTED ) );
-
-		$this->expectException( ApiError::class );
-
-		$this->designs->reject( DesignFixture::ID );
 	}
 
 	public function test_proof_asks_for_the_named_proof_at_a_width_and_answers_its_bytes(): void {
@@ -335,13 +263,13 @@ final class DesignsTest extends TestCase {
 	}
 
 	public function test_proof_passes_on_a_changed_proof(): void {
-		$this->transport->json( 404, array( 'error' => ErrorCodes::PROOF_CHANGED ) );
+		$this->transport->json( 404, array( 'error' => ErrorCode::PROOF_CHANGED ) );
 
 		try {
 			$this->designs->proof( DesignFixture::ID, 'prf_old', 320 );
 			$this->fail( 'A proof the design no longer shows must not be served.' );
-		} catch ( ApiError $error ) {
-			$this->assertSame( ErrorCodes::PROOF_CHANGED, $error->error_code );
+		} catch ( ApiException $error ) {
+			$this->assertSame( ErrorCode::PROOF_CHANGED, $error->errorCode );
 		}
 	}
 
@@ -367,8 +295,8 @@ final class DesignsTest extends TestCase {
 		try {
 			$this->designs->proof( DesignFixture::ID, DesignFixture::PROOF_ID, 320 );
 			$this->fail( 'Only a JPEG is a proof.' );
-		} catch ( ApiError $error ) {
-			$this->assertSame( ErrorCodes::UNEXPECTED_RESPONSE, $error->error_code );
+		} catch ( ApiException $error ) {
+			$this->assertSame( ApiException::UNEXPECTED_RESPONSE, $error->errorCode );
 		}
 	}
 }

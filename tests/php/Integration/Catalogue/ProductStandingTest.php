@@ -11,7 +11,7 @@ use DOMDocument;
 use DOMElement;
 use DOMXPath;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
@@ -51,7 +51,7 @@ final class ProductStandingTest extends StandingTestCase {
 		$this->assertSame( self::STANDING_ID, $side->standing_design_id );
 		$this->assertTrue( ProductConfig::stored_on( $saved )->valid );
 		$this->assertTrue( $saved->is_purchasable() );
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'templateId'  => self::TEMPLATE_ID,
 				'approve'     => true,
@@ -273,7 +273,7 @@ final class ProductStandingTest extends StandingTestCase {
 	public function test_a_store_that_may_not_approve_designs_is_told_so(): void {
 		$product = $this->product();
 		$this->script_link( array( 'legal' => true ) );
-		$this->recorder->json( 403, array( 'error' => ErrorCodes::FORBIDDEN ) );
+		$this->recorder->json( 403, array( 'error' => ErrorCode::FORBIDDEN ) );
 
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
 

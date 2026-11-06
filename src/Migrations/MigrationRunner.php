@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Migrations;
 
 use LogicException;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Schema;
 use RuntimeException;
@@ -43,14 +43,14 @@ final class MigrationRunner {
 	private readonly array $migrations;
 
 	/**
-	 * @param Migration[] $migrations
-	 * @param Logger      $logger     Logs a postponed migration.
+	 * @param Migration[]     $migrations
+	 * @param LoggerInterface $logger     Logs a postponed migration.
 	 * @phpstan-param list<Migration> $migrations
 	 * @throws LogicException When a version is below 1 or two migrations share one.
 	 */
 	public function __construct(
 		array $migrations,
-		private readonly Logger $logger = new WcLogger(),
+		private readonly LoggerInterface $logger = new WcLogger(),
 	) {
 		usort( $migrations, static fn ( Migration $a, Migration $b ): int => $a->version() <=> $b->version() );
 		$seen = array();

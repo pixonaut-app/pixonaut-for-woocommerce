@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Fulfilment;
 
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Cart\StandingSide;
 use Pixonaut\WooCommerce\Fulfilment\AdoptedOrder;
 use Pixonaut\WooCommerce\Fulfilment\DeliveryChange;
@@ -131,7 +131,7 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 
 		$line = $this->line();
 		$this->assertSame( LineState::NEEDS_ATTENTION, $line->state() );
-		$this->assertSame( ErrorCodes::DESIGN_ALREADY_ORDERED, $line->reason() );
+		$this->assertSame( ErrorCode::DESIGN_ALREADY_ORDERED, $line->reason() );
 		$this->assertNull( $line->ref( LineState::REF_ORDER_ID ) );
 		$this->assertNull( $line->ref( LineState::REF_ORDER_AUTOMATION ) );
 		$this->assertStringContainsString( self::AUTOMATION_ORDER, $this->notes() );
@@ -148,7 +148,7 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 
 		$line = $this->line();
 		$this->assertSame( LineState::NEEDS_ATTENTION, $line->state() );
-		$this->assertSame( ErrorCodes::DESIGN_ALREADY_ORDERED, $line->reason() );
+		$this->assertSame( ErrorCode::DESIGN_ALREADY_ORDERED, $line->reason() );
 		$this->assertNull( $line->ref( LineState::REF_ORDER_ID ) );
 	}
 
@@ -175,7 +175,7 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 
 		$line = $this->line();
 		$this->assertSame( LineState::NEEDS_ATTENTION, $line->state() );
-		$this->assertSame( ErrorCodes::DESIGN_ALREADY_ORDERED, $line->reason() );
+		$this->assertSame( ErrorCode::DESIGN_ALREADY_ORDERED, $line->reason() );
 		$this->assertNull( $line->ref( LineState::REF_ORDER_ID ) );
 	}
 
@@ -239,7 +239,7 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 			->json(
 				409,
 				array(
-					'error'    => ErrorCodes::DESIGN_ALREADY_ORDERED,
+					'error'    => ErrorCode::DESIGN_ALREADY_ORDERED,
 					'designId' => self::DESIGN,
 					'orderId'  => self::AUTOMATION_ORDER,
 				)

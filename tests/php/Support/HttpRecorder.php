@@ -128,7 +128,7 @@ final class HttpRecorder {
 			'httpversion' => isset( $args['httpversion'] ) ? (string) $args['httpversion'] : null,
 			'timeout'     => is_numeric( $args['timeout'] ?? null ) ? (float) $args['timeout'] : null,
 		);
-		$target           = ScriptedTransport::target( $url );
+		$target           = ScriptedClient::target( $url );
 		OpenApiAssert::request( $method, $target, $headers, $body );
 
 		$next = array_shift( $this->script );

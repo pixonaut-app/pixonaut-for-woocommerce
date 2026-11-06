@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Admin;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\ProductLinker;
@@ -40,7 +40,7 @@ final class LinkedBlank {
 	 * failure is not cached, and a page of variations asks for the same blank
 	 * once per variation, so each lookup fails once rather than once per row.
 	 *
-	 * @var array<string, ApiError>
+	 * @var array<string, ApiException>
 	 */
 	private array $failed = array();
 
@@ -83,7 +83,7 @@ final class LinkedBlank {
 					);
 				}
 			);
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return null;
 		}
 		$placements = array();
@@ -123,7 +123,7 @@ final class LinkedBlank {
 		$args     = array( 'blank' => $blank_id ) + ( null === $language ? array() : array( 'lang' => $language ) );
 		try {
 			$placements = $this->remember( 'blank-mockups', $args, fn (): array => $this->catalogue->mockups( $blank_id, $language ) );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return null;
 		}
 		$listed = array();
@@ -169,7 +169,7 @@ final class LinkedBlank {
 		$args     = array( 'blank' => $blank_id ) + ( null === $language ? array() : array( 'lang' => $language ) );
 		try {
 			$placements = $this->remember( 'blank-mockups', $args, fn (): array => $this->catalogue->mockups( $blank_id, $language ) );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return null;
 		}
 		foreach ( $placements as $placement ) {
@@ -266,7 +266,7 @@ final class LinkedBlank {
 	public function printshops(): ?array {
 		try {
 			$connections = $this->remember( 'printshop-connections', array(), fn (): array => $this->catalogue->printshop_connections() );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return null;
 		}
 		$printshops = array();
@@ -304,7 +304,7 @@ final class LinkedBlank {
 	 * @param Closure               $load Asks Pixonaut.
 	 * @return array<mixed>
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached, now or earlier in this request.
+	 * @throws ApiException When Pixonaut refused or could not be reached, now or earlier in this request.
 	 */
 	private function remember( string $what, array $args, Closure $load ): array {
 		$key = $what . ':' . wp_json_encode( $args );
@@ -313,7 +313,7 @@ final class LinkedBlank {
 		}
 		try {
 			return $this->cache->remember( $what, $args, $load );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->failed[ $key ] = $e;
 			throw $e;
 		}

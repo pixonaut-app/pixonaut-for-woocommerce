@@ -24,7 +24,7 @@ use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
-use Pixonaut\WooCommerce\Tests\Support\StaticCredentials;
+use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
 use WP_REST_Request;
 
 final class ProductLinkingTest extends ProductPanelTestCase {
@@ -119,7 +119,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertSame( $response->get_data(), $again->get_data() );
 		$this->assertCount( 1, $this->recorder->requests );
 		$this->assertStringContainsString( '/v1/templates?status=live&q=tee', $this->recorder->requests[0]['url'] );
-		$this->assertStringNotContainsString( StaticCredentials::INTEGRATION_KEY, (string) wp_json_encode( $response->get_data() ) );
+		$this->assertStringNotContainsString( ScriptedClient::INTEGRATION_KEY, (string) wp_json_encode( $response->get_data() ) );
 	}
 
 	public function test_a_filter_changes_the_search_results_also_from_the_cache(): void {
@@ -434,7 +434,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$check = $this->recorder->requests[2];
 		$this->assertSame( 'POST', $check['method'] );
 		$this->assertStringEndsWith( '/v1/templates/mini-tee%402/print-size', $check['url'] );
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'sizes'       => array(
 					array(

@@ -9,11 +9,12 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 
 /**
  * Turns what the store manager chose into a `ProductConfig`, checked with
@@ -38,7 +39,7 @@ final class ProductLinker {
 	/**
 	 * Refusals of a standing design that say the store's key may not make one.
 	 */
-	private const STANDING_FORBIDDEN = array( ErrorCodes::FORBIDDEN, ErrorCodes::SECRET_KEY_REQUIRED );
+	private const STANDING_FORBIDDEN = array( ErrorCode::FORBIDDEN, ErrorCode::SECRET_KEY_REQUIRED );
 
 	/**
 	 * Statuses of a standing design refused for what it names: its template
@@ -62,16 +63,18 @@ final class ProductLinker {
 	private array $constraints = array();
 
 	/**
-	 * @param Catalogue $catalogue Checks blanks, templates and print sizes.
-	 * @param Designs   $designs   Finds standing designs.
-	 * @param Logger    $logger    Logs a standing design Pixonaut would not give, which the notice names by reason alone.
+	 * @param Catalogue       $catalogue Checks blanks, templates and print sizes.
+	 * @param Designs         $designs   Finds standing designs.
+	 * @param Sdk             $pixonaut  Reads standing designs.
+	 * @param LoggerInterface $logger    Logs a standing design Pixonaut would not give, which the notice names by reason alone.
 	 */
 	public function __construct(
 		private readonly Catalogue $catalogue,
 		private readonly Designs $designs,
-		private readonly Logger $logger,
+		Sdk $pixonaut,
+		private readonly LoggerInterface $logger,
 	) {
-		$this->rows = new StandingRows( $catalogue, $designs, $logger );
+		$this->rows = new StandingRows( $catalogue, $designs, $pixonaut, $logger );
 	}
 
 	/**
@@ -186,7 +189,7 @@ final class ProductLinker {
 			$id = (string) new TemplateId( $side->template_base_id, $side->template_version );
 			try {
 				$read[ $id ] ??= $this->catalogue->template_state( $id );
-			} catch ( ApiError $e ) {
+			} catch ( ApiException $e ) {
 				return $config->with_validity( false, self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ) );
 			}
 			if ( Catalogue::LIVE !== $read[ $id ]['status'] ) {
@@ -230,7 +233,7 @@ final class ProductLinker {
 			$template_id = (string) new TemplateId( $side->template_base_id, $side->template_version );
 			try {
 				$sides[] = $this->standing_side( $template_id, $config->blank_id, $side, self::rows_of( $before, $side->key ) );
-			} catch ( ApiError $e ) {
+			} catch ( ApiException $e ) {
 				$this->logger->warning(
 					sprintf( 'Pixonaut gave no standing design for side "%s": %s', $side->key, $e->getMessage() ),
 					array(
@@ -239,7 +242,7 @@ final class ProductLinker {
 						'blank_id'    => $config->blank_id,
 						'placement'   => $side->placement_id,
 						'status'      => $e->status,
-						'code'        => $e->error_code,
+						'code'        => $e->errorCode,
 					)
 				);
 				return self::keeping_adjusted( $config, $before )->with_validity( false, self::standing_reason( $e ) );
@@ -288,13 +291,13 @@ final class ProductLinker {
 	 * @param StandingRow[] $known     The rows the side held before.
 	 * @phpstan-param list<StandingRow> $known
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function standing_side( string $template_id, ?string $blank_id, Side $side, array $known ): Side {
 		try {
 			return $side->with_standing_design( $this->designs->standing( $template_id, $blank_id, $side->placement_id, $side->standing_size() ) );
-		} catch ( ApiError $e ) {
-			if ( ErrorCodes::VARIANT_REQUIRED !== $e->error_code || null === $blank_id ) {
+		} catch ( ApiException $e ) {
+			if ( ErrorCode::VARIANT_REQUIRED !== $e->errorCode || null === $blank_id ) {
 				throw $e;
 			}
 			$varies_by = array_values( array_filter( is_array( $e->details['areasVaryBy'] ?? null ) ? $e->details['areasVaryBy'] : array(), 'is_string' ) );
@@ -322,13 +325,13 @@ final class ProductLinker {
 	/**
 	 * Why a standing design was refused, as the product screen says it.
 	 *
-	 * @param ApiError $error What Pixonaut answered.
+	 * @param ApiException $error What Pixonaut answered.
 	 */
-	private static function standing_reason( ApiError $error ): string {
-		if ( in_array( $error->error_code, self::STANDING_FORBIDDEN, true ) ) {
+	private static function standing_reason( ApiException $error ): string {
+		if ( in_array( $error->errorCode, self::STANDING_FORBIDDEN, true ) ) {
 			return InvalidReason::STANDING_FORBIDDEN;
 		}
-		if ( InvalidReason::UNKNOWN_PLACEMENT === $error->error_code ) {
+		if ( InvalidReason::UNKNOWN_PLACEMENT === $error->errorCode ) {
 			return InvalidReason::UNKNOWN_PLACEMENT;
 		}
 		// Anything else that is not a refusal of the design itself is checked again.
@@ -407,7 +410,7 @@ final class ProductLinker {
 	private function checked( ProductConfig $current, string $blank_id, array $inputs, ?string $problem ): ProductConfig {
 		try {
 			$blank = $this->catalogue->blank( $blank_id );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			// The choice is kept, unchecked, so updating again once Pixonaut answers retries it.
 			$kept = $current->blank_id === $blank_id ? $current : null;
 			return $this->config( $current, true, $blank_id, $kept?->blank_name, $this->unchecked( $kept, $inputs ), self::reason( $e, InvalidReason::UNKNOWN_BLANK ) );
@@ -480,7 +483,7 @@ final class ProductLinker {
 
 		try {
 			list( $legal, $legal_at, $reason ) = $this->judged( (string) $template, $entered, null, null );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			// Nothing unchecked is sold; the menu waits for the next save.
 			return $this->config( $current, true, null, null, array( $sized( array(), $entered, $entered_at[ $input->start ] ?? 0 ) ), self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ) );
 		}
@@ -547,7 +550,7 @@ final class ProductLinker {
 					? MisfitSizes::of( self::placement_of( $this->constraints( (string) $template, $blank_id, $placement_id ) )['sizes'] ?? null )
 					: array();
 			}
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			// Nothing unchecked is sold; the menu waits for the next save.
 			return array( $sized( array(), true )->with_misfit_sizes( $held ), self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ) );
 		}
@@ -565,7 +568,7 @@ final class ProductLinker {
 	 * @phpstan-param list<PrintSize> $sizes
 	 * @return array{0: list<PrintSize>, 1: array<int, int>, 2: string|null} The legal sizes, where each judged size landed among them by its index in `$sizes`, and why the first one refused was.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function judged( string $template_id, array $sizes, ?string $blank_id, ?string $placement_id ): array {
 		$verdicts = array() === $sizes ? array() : $this->catalogue->check_print_sizes( $template_id, $sizes, $blank_id, $placement_id );
@@ -623,7 +626,7 @@ final class ProductLinker {
 	 * @param string $placement_id The placement.
 	 * @return PrintSize|null Null when Pixonaut answered without a usable box.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function default_size( string $template_id, string $blank_id, string $placement_id ): ?PrintSize {
 		$placement = self::placement_of( $this->constraints( $template_id, $blank_id, $placement_id ) );
@@ -666,7 +669,7 @@ final class ProductLinker {
 	 * @param string $placement_id The placement.
 	 * @return array<string, mixed>
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function constraints( string $template_id, string $blank_id, string $placement_id ): array {
 		return $this->constraints[ (string) wp_json_encode( array( $template_id, $blank_id, $placement_id ) ) ] ??= $this->catalogue->constraints( $template_id, $blank_id, $placement_id );
@@ -706,14 +709,14 @@ final class ProductLinker {
 	}
 
 	/**
-	 * @param ApiError $error     What Pixonaut answered.
-	 * @param string   $not_found The reason when it answered `404`.
+	 * @param ApiException $error     What Pixonaut answered.
+	 * @param string       $not_found The reason when it answered `404`.
 	 */
-	private static function reason( ApiError $error, string $not_found ): string {
+	private static function reason( ApiException $error, string $not_found ): string {
 		if ( self::NOT_FOUND_STATUS === $error->status ) {
 			return $not_found;
 		}
-		return InvalidReason::UNKNOWN_PLACEMENT === $error->error_code ? InvalidReason::UNKNOWN_PLACEMENT : InvalidReason::CHECK_FAILED;
+		return InvalidReason::UNKNOWN_PLACEMENT === $error->errorCode ? InvalidReason::UNKNOWN_PLACEMENT : InvalidReason::CHECK_FAILED;
 	}
 
 	/**

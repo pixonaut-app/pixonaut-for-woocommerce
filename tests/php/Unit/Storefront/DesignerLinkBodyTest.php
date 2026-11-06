@@ -8,10 +8,8 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Unit\Storefront;
 
 use Brain\Monkey\Functions;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\DesignerLinks;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\Api\DesignerLinks;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -20,8 +18,7 @@ use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\FormLayout;
 use Pixonaut\WooCommerce\Storefront\DesignerLinkBody;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
-use Pixonaut\WooCommerce\Tests\Support\ScriptedTransport;
-use Pixonaut\WooCommerce\Tests\Support\StaticCredentials;
+use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
 use Pixonaut\WooCommerce\Tests\Unit\FakeOptions;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
 
@@ -37,7 +34,6 @@ final class DesignerLinkBodyTest extends TestCase {
 
 	private const LINK_URL = 'http://pixonaut.test/designer/dl_1';
 
-	private const BASE_URL = 'http://pixonaut.test';
 
 	public function test_one_side_goes_at_the_top_level(): void {
 		$link = DesignerLinkBody::for_config( self::config( array( self::front() ) ), self::RETURN_URL, 'en' );
@@ -230,8 +226,8 @@ final class DesignerLinkBodyTest extends TestCase {
 	public function test_the_link_is_minted_for_the_first_sides_template_and_its_url_answered(): void {
 		$this->fake_options();
 		Functions\when( 'wp_json_encode' )->alias( static fn ( $value ) => json_encode( $value ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
-		$transport = new ScriptedTransport();
-		$links     = new DesignerLinks( new Client( self::BASE_URL, Operations::plugin(), new StaticCredentials(), $transport, new RecordingLogger(), new Deprecations(), static function (): void {} ), new RecordingLogger() );
+		$transport = new ScriptedClient();
+		$links     = new DesignerLinks( $transport->sdk( ScriptedClient::credentials(), new RecordingLogger() ), new RecordingLogger() );
 		$transport->json(
 			201,
 			array(
@@ -261,9 +257,9 @@ final class DesignerLinkBodyTest extends TestCase {
 	public function test_every_side_up_to_ten_is_sent_and_a_warning_on_the_link_is_logged(): void {
 		$this->fake_options();
 		Functions\when( 'wp_json_encode' )->alias( static fn ( $value ) => json_encode( $value ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
-		$transport = new ScriptedTransport();
+		$transport = new ScriptedClient();
 		$logger    = new RecordingLogger();
-		$links     = new DesignerLinks( new Client( self::BASE_URL, Operations::plugin(), new StaticCredentials(), $transport, new RecordingLogger(), new Deprecations(), static function (): void {} ), $logger );
+		$links     = new DesignerLinks( $transport->sdk( ScriptedClient::credentials(), new RecordingLogger() ), $logger );
 		$transport->json(
 			201,
 			array(

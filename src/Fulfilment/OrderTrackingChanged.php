@@ -10,7 +10,8 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Fulfilment;
 
 use Pixonaut\WooCommerce\Emails\TrackingChangedEmail;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -45,7 +46,7 @@ final class OrderTrackingChanged {
 	 */
 	public function handle( Event $event ): void {
 		$tracking = Tracking::from_payload( $event->payload['tracking'] ?? null );
-		$order_id = $event->string( 'orderId' );
+		$order_id = Payload::string( $event, 'orderId' );
 		if ( null === $tracking || null === $order_id ) {
 			return;
 		}
@@ -79,14 +80,14 @@ final class OrderTrackingChanged {
 	private function apply( WC_Order_Item_Product $item, string $order_id, array $tracking, Event $event ): ?WC_Order_Item_Product {
 		for ( $attempt = 0; $attempt < OrderStatusChanged::MAX_ATTEMPTS; $attempt++ ) {
 			$line = LineState::of( $item );
-			if ( $line->ref( LineState::REF_ORDER_ID ) !== $order_id || ! Tracking::may_set( $line, $event->created_at ) ) {
+			if ( $line->ref( LineState::REF_ORDER_ID ) !== $order_id || ! Tracking::may_set( $line, $event->createdAt ) ) {
 				return null;
 			}
 			$previous = Tracking::of( $line );
 			if ( $previous === $tracking ) {
 				// Nothing to tell, but a later older event must not replace it.
-				if ( $line->ref( LineState::REF_TRACKING_AT ) !== $event->created_at ) {
-					$line->set_ref( LineState::REF_TRACKING_AT, $event->created_at );
+				if ( $line->ref( LineState::REF_TRACKING_AT ) !== $event->createdAt ) {
+					$line->set_ref( LineState::REF_TRACKING_AT, $event->createdAt );
 					if ( ! $line->save() ) {
 						continue;
 					}
@@ -94,7 +95,7 @@ final class OrderTrackingChanged {
 				return true === $line->ref( LineState::REF_TRACKING_NOTICE ) ? $item : null;
 			}
 			$shipped = LineState::SHIPPED === $line->state();
-			Tracking::set( $line, $tracking, $event->created_at );
+			Tracking::set( $line, $tracking, $event->createdAt );
 			$line->set_ref( LineState::REF_TRACKING_NOTICE, $shipped ? true : null );
 			if ( ! $line->save() ) {
 				continue;

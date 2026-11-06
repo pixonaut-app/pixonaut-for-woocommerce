@@ -9,12 +9,13 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Cart;
 
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Labels;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Cart;
 use WC_Product;
 use WP_Error;
@@ -65,9 +66,9 @@ final class CheckoutCheck {
 
 	public function __construct(
 		private readonly Connection $connection,
-		private readonly Designs $designs,
+		private readonly Sdk $pixonaut,
 		private readonly Labels $labels,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -158,14 +159,14 @@ final class CheckoutCheck {
 	 */
 	private function gone( string $design_id ): ?bool {
 		try {
-			$design = $this->designs->get( $design_id );
-		} catch ( ApiError $error ) {
-			if ( ErrorCodes::NOT_FOUND === $error->error_code ) {
+			$design = $this->pixonaut->designs()->get( $design_id )->raw();
+		} catch ( ApiException $error ) {
+			if ( ErrorCode::NOT_FOUND === $error->errorCode ) {
 				return true;
 			}
 			$this->logger->warning(
 				sprintf( 'Could not check design %s at checkout: %s', $design_id, $error->getMessage() ),
-				array( 'code' => $error->error_code )
+				array( 'code' => $error->errorCode )
 			);
 			return null;
 		}

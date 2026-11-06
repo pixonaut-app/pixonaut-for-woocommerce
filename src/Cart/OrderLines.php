@@ -9,15 +9,15 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Cart;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Fulfilment\OrderLineRef;
 use Pixonaut\WooCommerce\Refs;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Order;
 use WC_Order_Item_Product;
 use WC_Product;
@@ -38,8 +38,8 @@ final class OrderLines {
 
 	public function __construct(
 		private readonly Connection $connection,
-		private readonly Designs $designs,
-		private readonly Logger $logger,
+		private readonly Sdk $pixonaut,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -138,13 +138,13 @@ final class OrderLines {
 			}
 			$ref = Refs::order_item_ref( $connection->site, $order->get_id(), $item->get_id() );
 			try {
-				OrderLineRef::move( $this->designs, $state, $ref );
-			} catch ( ApiError $error ) {
+				OrderLineRef::move( $this->pixonaut, $state, $ref );
+			} catch ( ApiException $error ) {
 				$this->logger->warning(
 					sprintf( 'Could not move the designs of order item %d to %s: %s', $item->get_id(), $ref, $error->getMessage() ),
 					array(
 						'order_item_id' => $item->get_id(),
-						'code'          => $error->error_code,
+						'code'          => $error->errorCode,
 					)
 				);
 				continue;
