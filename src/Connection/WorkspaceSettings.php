@@ -10,11 +10,11 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Connection;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Connect;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\DesignerLanguage;
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 
 /**
  * `GET /v1/connect` answers the workspace settings that shape
@@ -54,15 +54,15 @@ final class WorkspaceSettings {
 	private readonly Closure $clock;
 
 	/**
-	 * @param Connection   $connection The connection, its origins and whether it is paused.
-	 * @param Connect      $api        `/v1/connect` operations.
-	 * @param Logger       $logger     Logs a read or an origin change Pixonaut refused.
-	 * @param Closure|null $clock      `fn(): int` Unix time; `time()` when null.
+	 * @param Connection      $connection The connection, its origins and whether it is paused.
+	 * @param Sdk             $api        The SDK, for `GET /v1/connect`.
+	 * @param LoggerInterface $logger     Logs a read or an origin change Pixonaut refused.
+	 * @param Closure|null    $clock      `fn(): int` Unix time; `time()` when null.
 	 */
 	public function __construct(
 		private readonly Connection $connection,
-		private readonly Connect $api,
-		private readonly Logger $logger,
+		private readonly Sdk $api,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 	) {
 		$this->clock = $clock ?? static fn (): int => time();
@@ -92,8 +92,8 @@ final class WorkspaceSettings {
 		}
 		try {
 			$this->remember( $this->connection->allow_www( true ) );
-		} catch ( ApiError $e ) {
-			$this->logger->warning( sprintf( 'Pixonaut did not add the site\'s own addresses to the store\'s key: %s', $e->getMessage() ), array( 'code' => $e->error_code ) );
+		} catch ( ApiException $e ) {
+			$this->logger->warning( sprintf( 'Pixonaut did not add the site\'s own addresses to the store\'s key: %s', $e->getMessage() ), array( 'code' => $e->errorCode ) );
 		}
 	}
 
@@ -106,9 +106,9 @@ final class WorkspaceSettings {
 			return;
 		}
 		try {
-			$this->remember( $this->api->get() );
-		} catch ( ApiError $e ) {
-			$this->logger->warning( sprintf( 'Could not read the workspace settings: %s', $e->getMessage() ), array( 'code' => $e->error_code ) );
+			$this->remember( $this->api->connect()->get()->raw() );
+		} catch ( ApiException $e ) {
+			$this->logger->warning( sprintf( 'Could not read the workspace settings: %s', $e->getMessage() ), array( 'code' => $e->errorCode ) );
 			// Another request may have disconnected or connected again while this one waited for Pixonaut.
 			if ( ! $this->still_connected( array( 'connectionId' => $current->connection_id ) ) ) {
 				return;

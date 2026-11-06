@@ -9,10 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Admin;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Connect;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
 use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Connection\ConnectFailed;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -21,6 +18,10 @@ use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
 use Pixonaut\WooCommerce\Settings\SettingsPage;
 use Pixonaut\WooCommerce\Templates;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ConnectedStoreUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use Pixonaut\WooCommerce\Webhooks\Endpoint;
 use RuntimeException;
 
@@ -147,7 +148,7 @@ final class ConnectionScreen {
 
 	/**
 	 * @param Connection             $connection   The connection.
-	 * @param Connect                $api          `GET /v1/connect`, for the card.
+	 * @param Sdk                    $api          `GET /v1/connect`, for the card.
 	 * @param Endpoint               $endpoint     The store's webhook endpoint.
 	 * @param Deprecations           $deprecations Deprecations Pixonaut announced.
 	 * @param Templates              $templates    Renders the card.
@@ -157,7 +158,7 @@ final class ConnectionScreen {
 	 */
 	public function __construct(
 		private readonly Connection $connection,
-		private readonly Connect $api,
+		private readonly Sdk $api,
 		private readonly Endpoint $endpoint,
 		private readonly Deprecations $deprecations,
 		private readonly Templates $templates,
@@ -215,9 +216,9 @@ final class ConnectionScreen {
 		$webhook = null;
 		if ( null !== $stored && null === $paused ) {
 			try {
-				$live = $this->api->get();
+				$live = $this->api->connect()->get()->raw();
 				$this->workspace?->remember( $live );
-			} catch ( ApiError $e ) {
+			} catch ( ApiException $e ) {
 				// A 401 has paused the connection by now; anything else leaves it as it was.
 				$state = 'unreachable';
 			}
@@ -287,7 +288,7 @@ final class ConnectionScreen {
 	private function webhook_health( StoredConnection $stored ): ?array {
 		try {
 			return $this->endpoint->health( $stored );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return null;
 		}
 	}
@@ -346,7 +347,7 @@ final class ConnectionScreen {
 		$allow = isset( $_GET[ self::ALLOW_ARG ] ) && '1' === sanitize_key( wp_unslash( $_GET[ self::ALLOW_ARG ] ) );
 		try {
 			$this->connection->allow_www( $allow );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->back( self::WWW_FAILED );
 		}
 		$this->back( $allow ? self::WWW_ALLOWED : self::WWW_REMOVED );
@@ -365,9 +366,9 @@ final class ConnectionScreen {
 		}
 		$brand = isset( $_POST[ self::BRAND_ARG ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::BRAND_ARG ] ) ) : '';
 		try {
-			$answer = $this->api->choose_brand( '' === $brand ? null : $brand );
-		} catch ( ApiError $e ) {
-			$this->back( ErrorCodes::BRAND_NOT_FOUND === $e->error_code ? self::BRAND_NOT_FOUND : self::BRAND_FAILED );
+			$answer = $this->api->connect()->update( new ConnectedStoreUpdateRequest( brandId: '' === $brand ? null : $brand ) )->raw();
+		} catch ( ApiException $e ) {
+			$this->back( ErrorCode::BRAND_NOT_FOUND === $e->errorCode ? self::BRAND_NOT_FOUND : self::BRAND_FAILED );
 		}
 		$this->workspace?->remember( $answer );
 		$this->back( self::BRAND_CHOSEN );

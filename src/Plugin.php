@@ -71,23 +71,15 @@ use Pixonaut\WooCommerce\Approval\ProofRequest;
 use Pixonaut\WooCommerce\Approval\ProofReturn;
 use Pixonaut\WooCommerce\Approval\ProofState;
 use Pixonaut\WooCommerce\Approval\ProofTimers;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Catalogue;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\Connect;
 use Pixonaut\WooCommerce\Api\Deprecations;
+use Pixonaut\WooCommerce\Api\HookListener;
 use Pixonaut\WooCommerce\Api\DesignerLinks;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Events;
-use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Orders;
 use Pixonaut\WooCommerce\Api\Pictures;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\RequestLog;
-use Pixonaut\WooCommerce\Api\ShareLinks;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\Webhooks;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\ProductLinker;
 use Pixonaut\WooCommerce\Catalogue\PictureQueue;
@@ -172,6 +164,7 @@ use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
 use Pixonaut\WooCommerce\Storefront\ServerReads;
 use Pixonaut\WooCommerce\Storefront\Storefront;
 use Pixonaut\WooCommerce\Storefront\UnavailableReports;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use Pixonaut\WooCommerce\Updates\Updates;
 use Pixonaut\WooCommerce\Updates\UpgradeNotice;
 use Pixonaut\WooCommerce\Webhooks\Endpoint;
@@ -219,7 +212,7 @@ final class Plugin {
 
 	private ?DeliveryChange $delivery_change = null;
 
-	private ?Client $client = null;
+	private ?Pixonaut $pixonaut = null;
 
 	private ?Connection $connection = null;
 
@@ -382,27 +375,27 @@ final class Plugin {
 		( new PersonalDataEraser( $erasure ) )->register();
 		( new PersonalDataExporter( $this->labels() ) )->register();
 		( new PolicyText() )->register();
-		( new LineReader( new Orders( $this->client() ), new Designs( $this->client() ), $this->order_status_changed(), $this->design_changed(), new WcLogger() ) )->register();
+		( new LineReader( $this->sdk(), $this->order_status_changed(), $this->design_changed(), new WcLogger() ) )->register();
 		( new AttentionAlerts( $this->notices() ) )->register();
 		( new ProofReturn( $this->order_edit() ) )->register();
 		( new ProofTimers( $this->settings(), new WcLogger() ) )->register();
-		( new ProofDeadline( new Designs( $this->client() ), $this->active_connection(), $this->settings(), $this->proof_denial(), new WcLogger(), static fn (): int => time() ) )->register();
+		( new ProofDeadline( $this->sdk(), $this->active_connection(), $this->settings(), $this->proof_denial(), new WcLogger(), static fn (): int => time() ) )->register();
 		$this->order_edit()->register();
 		( new OrderEditRoute( $this->order_edit(), $this->labels() ) )->register();
 		( new Emails( $this->templates(), $this->labels() ) )->register();
 		( new LineDisplay( $this->labels(), $this->settings(), $this->templates() ) )->register();
 		( new LinePictures( $this->proof_urls(), new LinePicture( $this->settings() ), $this->templates(), $this->labels() ) )->register();
-		( new ConnectionScreen( $this->connection(), new Connect( $this->client() ), $this->webhook_endpoint(), new Deprecations(), $this->templates(), ConnectionScreen::settings_url(), $this->workspace_settings(), $this->store_access() ) )->register();
+		( new ConnectionScreen( $this->connection(), $this->sdk(), $this->webhook_endpoint(), new Deprecations(), $this->templates(), ConnectionScreen::settings_url(), $this->workspace_settings(), $this->store_access() ) )->register();
 		( new SettingsPage( $this->settings(), $this->file ) )->register();
 		( new ConnectNotice( $this->connection(), $this->templates(), ConnectionScreen::settings_url() ) )->register();
 		( new DeveloperTools( $this->settings(), $this->connection(), $this->webhook_endpoint(), $this->events_pull(), $this->product_recheck(), $this->catalogue_cache(), $this->designer_links(), $this->request_log(), $this->templates(), $this->file ) )->register();
 		( new UpgradeNotice( plugin_basename( $this->file ), self::VERSION, $this->templates() ) )->register();
 		( new PluginLinks( plugin_basename( $this->file ), ConnectionScreen::settings_url() ) )->register();
-		$designs = new Designs( $this->client() );
+		$designs = new Designs( $this->sdk() );
 		$this->add_to_cart()->register();
 		$this->order_again()->register();
-		( new CheckoutCheck( $this->connection(), $designs, $this->labels(), new WcLogger() ) )->register();
-		( new OrderLines( $this->connection(), $designs, new WcLogger() ) )->register();
+		( new CheckoutCheck( $this->connection(), $this->sdk(), $this->labels(), new WcLogger() ) )->register();
+		( new OrderLines( $this->connection(), $this->sdk(), new WcLogger() ) )->register();
 		$this->cart_cleanup()->register();
 		( new DesignBasis() )->register();
 		$this->proof_cache()->register();
@@ -431,7 +424,7 @@ final class Plugin {
 		if ( is_admin() ) {
 			$product_panel = $this->product_panel();
 			$product_panel->register();
-			( new LayoutAdjustments( $designs, new StandingRows( $this->catalogue(), $designs, new WcLogger() ), new WcLogger() ) )->register();
+			( new LayoutAdjustments( $this->sdk(), new StandingRows( $this->catalogue(), $designs, $this->sdk(), new WcLogger() ), new WcLogger() ) )->register();
 			( new VariationPanel( $product_panel, $this->templates(), $this->variant_field() ) )->register();
 			( new PictureFields( $this->templates(), $this->settings() ) )->register();
 			$this->showcase_field()->register();
@@ -460,9 +453,9 @@ final class Plugin {
 				$setup   = new ProductSetup( $this->settings() );
 				$links   = $this->product_links();
 				$fields  = new SetupFields( fn (): array => $this->catalogue()->live_versions() );
-				$designs = new Designs( $this->client() );
+				$designs = new Designs( $this->sdk() );
 				$lines   = new LineView( $this->proof_urls() );
-				$connect = new Connect( $this->client() );
+				$connect = $this->sdk();
 				$status  = new ConnectionStatus( $this->connection(), $connect, $this->webhook_endpoint() );
 				return array(
 					new ListTemplates( $this->catalogue() ),
@@ -474,7 +467,7 @@ final class Plugin {
 					new MoveProductTemplate( $links, $fields ),
 					new MoveProductAttribute( new WcLogger() ),
 					new UseProductPicture( $links, $this->settings() ),
-					new ResetStandingLayout( $links, new LayoutAdjustments( $designs, new StandingRows( $this->catalogue(), $designs, new WcLogger() ), new WcLogger() ) ),
+					new ResetStandingLayout( $links, new LayoutAdjustments( $this->sdk(), new StandingRows( $this->catalogue(), $designs, $this->sdk(), new WcLogger() ), new WcLogger() ) ),
 					new PersonalisedOrders( $lines, $this->line_actions() ),
 					new ActOnOrderLine( $this->line_actions(), $lines ),
 					new ChangeDeliveryAddress( $this->delivery_change(), $lines ),
@@ -499,7 +492,7 @@ final class Plugin {
 	}
 
 	public function store_access(): StoreAccess {
-		$this->store_access ??= new StoreAccess( $this->connection_store(), new Connect( $this->client() ), new WcLogger() );
+		$this->store_access ??= new StoreAccess( $this->connection_store(), $this->pixonaut(), new WcLogger() );
 		return $this->store_access;
 	}
 
@@ -545,23 +538,26 @@ final class Plugin {
 		return new Status( $this->connection() );
 	}
 
-	public function client(): Client {
-		$this->client ??= new Client(
-			Hosts::server_api(),
-			Operations::plugin(),
-			new Credentials( $this->connection_store() ),
-			new WpHttpTransport(),
-			new WcLogger(),
-			new Deprecations()
-		);
-		return $this->client;
+	/**
+	 * Builds the SDK, one client per timeout.
+	 */
+	public function pixonaut(): Pixonaut {
+		$this->pixonaut ??= new Pixonaut( new Credentials( $this->connection_store() ), new WcLogger(), new HookListener( new Deprecations(), null, new WcLogger() ) );
+		return $this->pixonaut;
+	}
+
+	/**
+	 * The SDK, with the usual timeout.
+	 */
+	public function sdk(): Sdk {
+		return $this->pixonaut()->sdk();
 	}
 
 	/**
 	 * The workspace settings Pixonaut shows the store.
 	 */
 	public function workspace_settings(): WorkspaceSettings {
-		$this->workspace_settings ??= new WorkspaceSettings( $this->connection(), new Connect( $this->client() ), new WcLogger() );
+		$this->workspace_settings ??= new WorkspaceSettings( $this->connection(), $this->sdk(), new WcLogger() );
 		return $this->workspace_settings;
 	}
 
@@ -569,7 +565,7 @@ final class Plugin {
 		$this->connection ??= new Connection(
 			$this->connection_store(),
 			new ConnectAttempts(),
-			new Connect( $this->client() ),
+			$this->sdk(),
 			$this->notices(),
 			new WcLogger(),
 			ConnectionScreen::settings_url(),
@@ -583,7 +579,7 @@ final class Plugin {
 	 * The store's webhook endpoint in Pixonaut.
 	 */
 	public function webhook_endpoint(): Endpoint {
-		$this->webhook_endpoint ??= new Endpoint( $this->connection(), new Webhooks( $this->client() ), new WcLogger() );
+		$this->webhook_endpoint ??= new Endpoint( $this->connection(), $this->sdk(), new WcLogger() );
 		return $this->webhook_endpoint;
 	}
 
@@ -599,7 +595,7 @@ final class Plugin {
 	 * Pulls the event stream, for events a webhook did not deliver.
 	 */
 	public function events_pull(): EventsPull {
-		$this->events_pull ??= new EventsPull( $this->connection_store(), new Events( $this->client() ), new Webhooks( $this->client() ), new Connect( $this->client() ), $this->intake(), new WcLogger() );
+		$this->events_pull ??= new EventsPull( $this->connection_store(), $this->sdk(), $this->intake(), new WcLogger() );
 		return $this->events_pull;
 	}
 
@@ -617,7 +613,7 @@ final class Plugin {
 	}
 
 	public function catalogue(): Catalogue {
-		$this->catalogue ??= new Catalogue( $this->client() );
+		$this->catalogue ??= new Catalogue( $this->sdk() );
 		return $this->catalogue;
 	}
 
@@ -638,7 +634,7 @@ final class Plugin {
 	 * Re-checks products when their templates or blanks change.
 	 */
 	public function product_recheck(): ProductRecheck {
-		$this->product_recheck ??= new ProductRecheck( new ProductLinker( $this->catalogue(), new Designs( $this->client() ), new WcLogger() ), $this->catalogue(), new InvalidProductNotice( $this->notices() ), new WcLogger(), $this->product_variants(), $this->designer_links() );
+		$this->product_recheck ??= new ProductRecheck( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), $this->catalogue(), new InvalidProductNotice( $this->notices() ), new WcLogger(), $this->product_variants(), $this->designer_links() );
 		return $this->product_recheck;
 	}
 
@@ -658,14 +654,14 @@ final class Plugin {
 	}
 
 	public function product_panel(): ProductPanel {
-		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->client() ), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection() );
+		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection() );
 	}
 
 	/**
 	 * Draws the products' Pixonaut pictures.
 	 */
 	public function product_pictures(): ProductPictures {
-		$this->product_pictures ??= new ProductPictures( new Pictures( $this->client() ), $this->catalogue(), $this->catalogue_cache(), new WcLogger(), $this->settings() );
+		$this->product_pictures ??= new ProductPictures( new Pictures( $this->pixonaut() ), $this->catalogue(), $this->catalogue_cache(), new WcLogger(), $this->settings() );
 		return $this->product_pictures;
 	}
 
@@ -727,11 +723,11 @@ final class Plugin {
 				DesignChanged::EDITED         => array( $this->design_changed(), 'handle' ),
 				DesignChanged::DELETED        => array( $this->design_changed(), 'handle' ),
 				DesignChanged::ERASED         => array( $this->design_changed(), 'handle' ),
-				DesignApproved::TYPE          => array( new DesignApproved( $this->connection(), new Designs( $this->client() ), new WcLogger() ), 'handle' ),
+				DesignApproved::TYPE          => array( new DesignApproved( $this->connection(), $this->sdk(), new WcLogger() ), 'handle' ),
 				ChangesRequested::TYPE        => array( new ChangesRequested( $this->connection(), $this->proof_state() ), 'handle' ),
-				DesignRejected::TYPE          => array( new DesignRejected( $this->connection(), new Designs( $this->client() ), $this->proof_denial(), new WcLogger() ), 'handle' ),
+				DesignRejected::TYPE          => array( new DesignRejected( $this->connection(), $this->sdk(), $this->proof_denial(), new WcLogger() ), 'handle' ),
 			) + $this->product_recheck()->handlers()
-				+ ( new DesignerLinkChanges( $this->designer_links(), new DesignerLinks( $this->client(), new WcLogger() ), new WcLogger() ) )->handlers()
+				+ ( new DesignerLinkChanges( $this->designer_links(), new DesignerLinks( $this->sdk(), new WcLogger() ), new WcLogger() ) )->handlers()
 				+ $this->store_access()->handlers(),
 			new WcLogger(),
 			null,
@@ -752,7 +748,7 @@ final class Plugin {
 
 	public function design_changed(): DesignChanged {
 		$jobs                   = $this->fulfilment_jobs();
-		$this->design_changed ??= new DesignChanged( $this->connection(), new Designs( $this->client() ), $jobs->schedule_again( ... ), new WcLogger() );
+		$this->design_changed ??= new DesignChanged( $this->connection(), $this->sdk(), $jobs->schedule_again( ... ), new WcLogger() );
 		return $this->design_changed;
 	}
 
@@ -765,14 +761,14 @@ final class Plugin {
 	 * Cancels lines whose order was cancelled or refunded.
 	 */
 	public function line_cancellation(): LineCancellation {
-		return new LineCancellation( new Designs( $this->client() ), new Orders( $this->client() ), $this->active_connection(), new WcLogger() );
+		return new LineCancellation( $this->sdk(), $this->active_connection(), new WcLogger() );
 	}
 
 	/**
 	 * Erases a line's personal data in Pixonaut.
 	 */
 	public function line_erasure(): LineErasure {
-		return new LineErasure( new Designs( $this->client() ), new Orders( $this->client() ), $this->active_connection(), new WcLogger() );
+		return new LineErasure( new Designs( $this->sdk() ), $this->sdk(), $this->active_connection(), new WcLogger() );
 	}
 
 	/**
@@ -786,7 +782,7 @@ final class Plugin {
 	 * Sends a changed shipping address to each line's printshop order.
 	 */
 	public function delivery_change(): DeliveryChange {
-		$this->delivery_change ??= new DeliveryChange( new Orders( $this->client() ), $this->active_connection(), new WcLogger() );
+		$this->delivery_change ??= new DeliveryChange( $this->sdk(), $this->active_connection(), new WcLogger() );
 		return $this->delivery_change;
 	}
 
@@ -795,7 +791,7 @@ final class Plugin {
 	 */
 	public function line_actions(): LineActions {
 		return new LineActions(
-			new Orders( $this->client() ),
+			$this->sdk(),
 			$this->active_connection(),
 			$this->order_status_changed(),
 			new OrderFailed( $this->order_event_lines() ),
@@ -807,8 +803,7 @@ final class Plugin {
 
 	public function fulfiller(): Fulfiller {
 		return new Fulfiller(
-			new Designs( $this->client() ),
-			new Orders( $this->client() ),
+			$this->sdk(),
 			$this->active_connection(),
 			$this->proof_request()
 		);
@@ -828,8 +823,7 @@ final class Plugin {
 	public function proof_request(): ProofRequest {
 		$settings = $this->settings();
 		return new ProofRequest(
-			new Designs( $this->client() ),
-			new ShareLinks( $this->client() ),
+			$this->sdk(),
 			$this->proof_state(),
 			static fn (): int => (int) $settings->get( Settings::PROOF_DEADLINE_DAYS ),
 			static fn ( string $locale ): ?string => DesignerLanguage::resolve( $settings, $locale )
@@ -853,7 +847,7 @@ final class Plugin {
 	 * Edits a cart line's design on its product page.
 	 */
 	public function cart_edit(): CartEdit {
-		$this->cart_edit ??= new CartEdit( $this->connection(), new Designs( $this->client() ), $this->settings(), $this->labels(), new WcLogger() );
+		$this->cart_edit ??= new CartEdit( $this->connection(), $this->sdk(), $this->settings(), $this->labels(), new WcLogger() );
 		return $this->cart_edit;
 	}
 
@@ -861,11 +855,10 @@ final class Plugin {
 	 * Edits an order line's design after the customer asked for changes to its proof.
 	 */
 	public function order_edit(): OrderEdit {
-		$designs            = new Designs( $this->client() );
 		$this->order_edit ??= new OrderEdit(
 			$this->proof_state(),
-			$designs,
-			new CorrectionMount( $this->connection(), $designs, new WcLogger(), $this->settings() ),
+			$this->sdk(),
+			new CorrectionMount( $this->connection(), $this->sdk(), new WcLogger(), $this->settings() ),
 			$this->settings(),
 			$this->labels(),
 			new WcLogger(),
@@ -881,7 +874,7 @@ final class Plugin {
 		return new HostedCorrection(
 			$this->cart_edit(),
 			$this->order_edit(),
-			new CorrectionMount( $this->connection(), new Designs( $this->client() ), new WcLogger(), $this->settings() ),
+			new CorrectionMount( $this->connection(), $this->sdk(), new WcLogger(), $this->settings() ),
 			new CorrectionTrips(),
 			$this->labels(),
 			$this->personalised_designs()
@@ -894,7 +887,7 @@ final class Plugin {
 	}
 
 	public function server_reads(): ServerReads {
-		$this->server_reads ??= new ServerReads( $this->catalogue(), $this->catalogue_cache(), new Designs( $this->client() ) );
+		$this->server_reads ??= new ServerReads( $this->catalogue(), $this->catalogue_cache(), $this->sdk() );
 		return $this->server_reads;
 	}
 
@@ -920,7 +913,7 @@ final class Plugin {
 	 * The guard on every add of a personalised product to the cart.
 	 */
 	public function add_to_cart(): AddToCart {
-		$this->add_to_cart ??= new AddToCart( $this->connection(), new Designs( $this->client() ), $this->settings(), $this->labels(), $this->notices(), new WcLogger(), $this->order_again(), null, new CommitFailures( $this->notices(), new WcLogger() ), $this->personalised_designs() );
+		$this->add_to_cart ??= new AddToCart( $this->connection(), new Designs( $this->sdk() ), $this->sdk(), $this->settings(), $this->labels(), $this->notices(), new WcLogger(), $this->order_again(), null, new CommitFailures( $this->notices(), new WcLogger() ), $this->personalised_designs() );
 		return $this->add_to_cart;
 	}
 
@@ -928,7 +921,7 @@ final class Plugin {
 	 * Deletes the designs of cart lines that will never be ordered.
 	 */
 	public function cart_cleanup(): CartCleanup {
-		$this->cart_cleanup ??= new CartCleanup( $this->connection(), new Designs( $this->client() ), new WcLogger() );
+		$this->cart_cleanup ??= new CartCleanup( $this->connection(), new Designs( $this->sdk() ), new WcLogger() );
 		return $this->cart_cleanup;
 	}
 
@@ -936,7 +929,7 @@ final class Plugin {
 	 * Copies an order line's designs when the customer orders it again.
 	 */
 	public function order_again(): OrderAgain {
-		$this->order_again ??= new OrderAgain( new Designs( $this->client() ), $this->cart_cleanup(), new WcLogger() );
+		$this->order_again ??= new OrderAgain( $this->sdk(), $this->cart_cleanup(), new WcLogger() );
 		return $this->order_again;
 	}
 
@@ -957,7 +950,7 @@ final class Plugin {
 	 * Each product's kept designer link.
 	 */
 	public function designer_links(): KeptDesignerLinks {
-		$this->designer_links ??= new KeptDesignerLinks( new DesignerLinks( $this->client(), new WcLogger() ), $this->designer_link_withdrawals(), $this->connection(), $this->settings(), $this->notices(), new WcLogger() );
+		$this->designer_links ??= new KeptDesignerLinks( new DesignerLinks( $this->sdk(), new WcLogger() ), $this->designer_link_withdrawals(), $this->connection(), $this->settings(), $this->notices(), new WcLogger() );
 		return $this->designer_links;
 	}
 
@@ -965,7 +958,7 @@ final class Plugin {
 	 * The designer links waiting to be withdrawn.
 	 */
 	public function designer_link_withdrawals(): DesignerLinkWithdrawals {
-		$this->designer_link_withdrawals ??= new DesignerLinkWithdrawals( new DesignerLinks( $this->client(), new WcLogger() ), $this->connection(), new WcLogger() );
+		$this->designer_link_withdrawals ??= new DesignerLinkWithdrawals( new DesignerLinks( $this->sdk(), new WcLogger() ), $this->connection(), new WcLogger() );
 		return $this->designer_link_withdrawals;
 	}
 

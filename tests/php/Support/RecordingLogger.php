@@ -9,27 +9,25 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Support;
 
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\AbstractLogger;
+use Stringable;
 
-final class RecordingLogger implements Logger {
+final class RecordingLogger extends AbstractLogger {
 
 	/**
-	 * @var list<array{level: string, message: string, context: array<string, mixed>}>
+	 * @var list<array{level: string, message: string, context: array<mixed>}>
 	 */
 	public array $entries = array();
 
-	public function warning( string $message, array $context = array() ): void {
+	/**
+	 * @param mixed             $level   A PSR-3 level.
+	 * @param string|Stringable $message Message.
+	 * @param array<mixed>      $context Context.
+	 */
+	public function log( $level, string|Stringable $message, array $context = array() ): void {
 		$this->entries[] = array(
-			'level'   => 'warning',
-			'message' => $message,
-			'context' => $context,
-		);
-	}
-
-	public function error( string $message, array $context = array() ): void {
-		$this->entries[] = array(
-			'level'   => 'error',
-			'message' => $message,
+			'level'   => (string) $level,
+			'message' => (string) $message,
 			'context' => $context,
 		);
 	}

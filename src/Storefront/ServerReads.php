@@ -10,14 +10,14 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Catalogue;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Catalogue\TemplateForm;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
+use Pixonaut\WooCommerce\Catalogue\TemplateForm;
 use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
 use Pixonaut\WooCommerce\DesignerLanguage;
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 
 /**
  * Reads what each side's designer opens with — its template, the placement's
@@ -45,12 +45,12 @@ final class ServerReads {
 	/**
 	 * @param Catalogue      $catalogue Reads Pixonaut.
 	 * @param CatalogueCache $cache     Keeps the answers for a few minutes.
-	 * @param Designs        $designs   Reads the designs a correction opens.
+	 * @param Sdk            $pixonaut  Reads the designs a correction opens.
 	 */
 	public function __construct(
 		private readonly Catalogue $catalogue,
 		private readonly CatalogueCache $cache,
-		private readonly Designs $designs,
+		private readonly Sdk $pixonaut,
 	) {
 	}
 
@@ -74,7 +74,7 @@ final class ServerReads {
 			}
 			try {
 				$reads[ (string) $side ] = $this->side( $template_id, $options['blankId'] ?? null, $options['placementId'] ?? null, $options['locale'] ?? null );
-			} catch ( ApiError ) {
+			} catch ( ApiException ) {
 				set_transient( self::PAUSE_TRANSIENT, 1, self::PAUSE_SECONDS );
 			}
 		}
@@ -96,7 +96,7 @@ final class ServerReads {
 		}
 		try {
 			$template = json_decode( $this->template( $template_id, self::supported( $locale ) ), true );
-		} catch ( ApiError ) {
+		} catch ( ApiException ) {
 			set_transient( self::PAUSE_TRANSIENT, 1, self::PAUSE_SECONDS );
 			return null;
 		}
@@ -115,7 +115,7 @@ final class ServerReads {
 		}
 		try {
 			$template = json_decode( $this->template( $template_id, null ), true );
-		} catch ( ApiError ) {
+		} catch ( ApiException ) {
 			set_transient( self::PAUSE_TRANSIENT, 1, self::PAUSE_SECONDS );
 			return null;
 		}
@@ -129,7 +129,7 @@ final class ServerReads {
 	 * @param string      $template_id `<baseId>@<version>`.
 	 * @param string|null $language    The language to read it in; null for the workspace's default.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function template( string $template_id, ?string $language ): string {
 		return $this->remember(
@@ -146,7 +146,7 @@ final class ServerReads {
 	 * @param mixed  $locale       The mount's `locale`, when it names one.
 	 * @return array<string, mixed>
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function side( string $template_id, mixed $blank_id, mixed $placement_id, mixed $locale ): array {
 		// Without a `locale` the designer speaks the workspace's default language, which the template is read in without `lang`.
@@ -196,7 +196,7 @@ final class ServerReads {
 				if ( is_string( $blank_id ) && is_string( $options['placementId'] ?? null ) ) {
 					$reads[ (string) $side ]['blank'] = $this->blank( $blank_id, self::language( $options['locale'] ?? null ) );
 				}
-			} catch ( ApiError ) {
+			} catch ( ApiException ) {
 				// The print size read before a blank read failed still shapes the frame.
 				set_transient( self::PAUSE_TRANSIENT, 1, self::PAUSE_SECONDS );
 			}
@@ -211,18 +211,18 @@ final class ServerReads {
 	 *
 	 * @param string $design_id The design.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function print_size( string $design_id ): string {
 		return $this->remember(
 			'storefront-design-size',
 			array( 'id' => $design_id ),
 			function () use ( $design_id ): string {
-				$size = $this->designs->get( $design_id )[ Designs::PRINT_SIZE ] ?? null;
+				$size = $this->pixonaut->designs()->get( $design_id )->printSize;
 				return (string) wp_json_encode(
-					is_array( $size ) ? array(
-						'w' => $size['widthMm'] ?? null,
-						'h' => $size['heightMm'] ?? null,
+					null !== $size ? array(
+						'w' => $size->widthMm,
+						'h' => $size->heightMm,
 					) : (object) array()
 				);
 			}
@@ -259,7 +259,7 @@ final class ServerReads {
 	 * @param string|null $language The language to name its options and views in; null for their names as written.
 	 * @return array{mockups: string, variants: string}
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function blank( string $blank_id, ?string $language ): array {
 		$args  = array( 'id' => $blank_id ) + ( null === $language ? array() : array( 'lang' => $language ) );
@@ -278,7 +278,7 @@ final class ServerReads {
 	 * @param Closure               $load Asks Pixonaut.
 	 * @phpstan-param Closure(): string $load
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function remember( string $what, array $args, Closure $load ): string {
 		$answer = $this->cache->remember( $what, $args, static fn (): array => array( 'json' => $load() ) );

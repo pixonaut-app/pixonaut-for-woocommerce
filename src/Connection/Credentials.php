@@ -1,6 +1,6 @@
 <?php
 /**
- * The credentials the API client sends.
+ * The credentials the SDK sends.
  *
  * @package Pixonaut\WooCommerce
  */
@@ -9,8 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Connection;
 
-use Pixonaut\WooCommerce\Api\Credential;
-use Pixonaut\WooCommerce\Api\CredentialProvider;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Credentials\Credential;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Credentials\CredentialProvider;
 
 /**
  * The store's keys from its connection.

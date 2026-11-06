@@ -19,9 +19,9 @@ use Pixonaut\WooCommerce\Fulfilment\NeedsAttention;
 use Pixonaut\WooCommerce\Milliseconds;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Tests\Support\SentMail;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Signature;
 use Pixonaut\WooCommerce\Webhooks\EventStore;
 use Pixonaut\WooCommerce\Webhooks\Processor;
-use Pixonaut\WooCommerce\Webhooks\Signature;
 use RuntimeException;
 use WC_Order_Item_Product;
 

@@ -11,11 +11,11 @@ namespace Pixonaut\WooCommerce\Storefront;
 
 use Closure;
 use Pixonaut\WooCommerce\Admin\Notices;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Client;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Api\DesignerLinks;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -83,7 +83,7 @@ final class KeptDesignerLinks {
 	 * After this long a lock is taken to belong to a request that died:
 	 * each of a mint's requests timing out.
 	 */
-	public const LOCK_SECONDS = self::REQUESTS_PER_MINT * Client::TIMEOUT_SECONDS;
+	public const LOCK_SECONDS = self::REQUESTS_PER_MINT * WpHttpTransport::TIMEOUT_SECONDS;
 
 	/**
 	 * How long a request waits for another's mint of the same product's link
@@ -108,7 +108,7 @@ final class KeptDesignerLinks {
 	 * @param Connection              $connection  The connection links are minted under.
 	 * @param Settings                $settings    The default layout, the designer's language, its print-area frame and its form layout.
 	 * @param Notices                 $notices     Says on the product's screen why Pixonaut refused its link.
-	 * @param Logger                  $logger      Logs a link that could not be renamed or checked.
+	 * @param LoggerInterface         $logger      Logs a link that could not be renamed or checked.
 	 * @param Closure|null            $sleep       `fn( int $microseconds ): void`; `usleep()` when null.
 	 * @param Closure|null            $clock       `fn(): int` Unix time; `time()` when null.
 	 */
@@ -118,7 +118,7 @@ final class KeptDesignerLinks {
 		private readonly Connection $connection,
 		private readonly Settings $settings,
 		private readonly Notices $notices,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		?Closure $sleep = null,
 		?Closure $clock = null,
 	) {
@@ -174,7 +174,7 @@ final class KeptDesignerLinks {
 	 *
 	 * @return string|null Null when the store is not connected, the product sells no variant of its blank, or its sides cannot be sent.
 	 *
-	 * @throws ApiError When Pixonaut would not mint the link, or could not be reached.
+	 * @throws ApiException When Pixonaut would not mint the link, or could not be reached.
 	 */
 	public function url_for( WC_Product $product, ProductConfig $config, string $locale ): ?string {
 		return $this->kept_for( $product, $config, $locale )['url'] ?? null;
@@ -188,7 +188,7 @@ final class KeptDesignerLinks {
 	 * @return array<string, string>|null
 	 * @phpstan-return Kept|null
 	 *
-	 * @throws ApiError When Pixonaut would not mint the link, or could not be reached.
+	 * @throws ApiException When Pixonaut would not mint the link, or could not be reached.
 	 */
 	private function kept_for( WC_Product $product, ProductConfig $config, string $locale ): ?array {
 		$connection = $this->connection_id();
@@ -338,7 +338,7 @@ final class KeptDesignerLinks {
 	 * @return array<string, string>
 	 * @phpstan-return Kept
 	 *
-	 * @throws ApiError When Pixonaut would not mint it, or could not be reached.
+	 * @throws ApiException When Pixonaut would not mint it, or could not be reached.
 	 */
 	private function mint( WC_Product $product, string $language, string $template, array $body, string $hash, string $connection, ?array $replaced ): array {
 		$name = self::name( $product, $language );
@@ -347,8 +347,8 @@ final class KeptDesignerLinks {
 		}
 		try {
 			$made = $this->api->create( $template, array( 'name' => $name ) + $body );
-		} catch ( ApiError $error ) {
-			if ( ErrorCodes::SHARE_LINK_NAME_TAKEN !== $error->error_code ) {
+		} catch ( ApiException $error ) {
+			if ( ErrorCode::SHARE_LINK_NAME_TAKEN !== $error->errorCode ) {
 				throw $error;
 			}
 			// A request that minted without the lock may have kept the same link a moment ago.
@@ -417,11 +417,11 @@ final class KeptDesignerLinks {
 		}
 		try {
 			$kept = $this->kept_for( $product, $config, get_locale() );
-		} catch ( ApiError $error ) {
+		} catch ( ApiException $error ) {
 			if ( ! $error->retryable ) {
 				$this->notices->add( self::notice_key( $product->get_id() ), self::refusal( $product, $error ), 'error', false );
 			}
-			$this->logger->warning( sprintf( 'Pixonaut did not mint the designer link of product %d: %s', $product->get_id(), $error->getMessage() ), array( 'code' => $error->error_code ) );
+			$this->logger->warning( sprintf( 'Pixonaut did not mint the designer link of product %d: %s', $product->get_id(), $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			return;
 		}
 		$this->notices->remove( self::notice_key( $product->get_id() ) );
@@ -533,8 +533,8 @@ final class KeptDesignerLinks {
 			foreach ( $kept as $language => $link ) {
 				try {
 					$working[ $link['template'] ] ??= $this->api->working( $link['template'] );
-				} catch ( ApiError $error ) {
-					$this->logger->warning( sprintf( 'Could not check the designer links of product %d: %s', $id, $error->getMessage() ), array( 'code' => $error->error_code ) );
+				} catch ( ApiException $error ) {
+					$this->logger->warning( sprintf( 'Could not check the designer links of product %d: %s', $id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 					return;
 				}
 				if ( ! in_array( $link['id'], $working[ $link['template'] ], true ) ) {
@@ -658,8 +658,8 @@ final class KeptDesignerLinks {
 		try {
 			$this->api->rename( $id, $name );
 			return true;
-		} catch ( ApiError $error ) {
-			$this->logger->warning( sprintf( 'Could not rename designer link %s: %s', $id, $error->getMessage() ), array( 'code' => $error->error_code ) );
+		} catch ( ApiException $error ) {
+			$this->logger->warning( sprintf( 'Could not rename designer link %s: %s', $id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			return false;
 		}
 	}
@@ -746,17 +746,17 @@ final class KeptDesignerLinks {
 	/**
 	 * What the product's screen says when Pixonaut refused its link.
 	 *
-	 * @param WC_Product $product The product or variation.
-	 * @param ApiError   $error   The refusal.
+	 * @param WC_Product   $product The product or variation.
+	 * @param ApiException $error   The refusal.
 	 */
-	private static function refusal( WC_Product $product, ApiError $error ): string {
-		$why = match ( $error->error_code ) {
+	private static function refusal( WC_Product $product, ApiException $error ): string {
+		$why = match ( $error->errorCode ) {
 			/* translators: Why Pixonaut refused a product, filling in %2$s of a message on the admin product page. Ends a sentence; lower case. */
-			ErrorCodes::PRINT_SIZE_ILLEGAL => __( 'one of the print sizes it offers does not fit its template or its position on the blank. Change the sizes in its Pixonaut tab.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::PRINT_SIZE_ILLEGAL => __( 'one of the print sizes it offers does not fit its template or its position on the blank. Change the sizes in its Pixonaut tab.', 'pixonaut-for-woocommerce' ),
 			/* translators: Why Pixonaut refused a product, filling in %2$s of a message on the admin product page. Ends a sentence; lower case. */
-			ErrorCodes::UNKNOWN_PLACEMENT  => __( 'its blank no longer has a position one of its sides prints on. Pick the positions again in its Pixonaut tab.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::UNKNOWN_PLACEMENT  => __( 'its blank no longer has a position one of its sides prints on. Pick the positions again in its Pixonaut tab.', 'pixonaut-for-woocommerce' ),
 			/* translators: %s: the error code Pixonaut answered, e.g. `invalid_input`. */
-			default                        => sprintf( __( 'Pixonaut answered %s.', 'pixonaut-for-woocommerce' ), $error->error_code ),
+			default                        => sprintf( __( 'Pixonaut answered %s.', 'pixonaut-for-woocommerce' ), $error->errorCode ),
 		};
 		return sprintf(
 			/* translators: 1: the product's name, 2: why Pixonaut refused its link. */

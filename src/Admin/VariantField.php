@@ -9,8 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Admin;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Catalogue\BlankVariant;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
@@ -37,13 +37,13 @@ final class VariantField {
 	 * @param ProductVariants $variants  Lists a blank's variants and stores a product's.
 	 * @param ProductRecheck  $recheck   Resolves a variant later when Pixonaut could not be asked.
 	 * @param Templates       $templates Renders the field.
-	 * @param Logger          $logger    Where a variant that could not be resolved is reported.
+	 * @param LoggerInterface $logger    Where a variant that could not be resolved is reported.
 	 */
 	public function __construct(
 		private readonly ProductVariants $variants,
 		private readonly ProductRecheck $recheck,
 		private readonly Templates $templates,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -67,7 +67,7 @@ final class VariantField {
 			foreach ( $this->variants->variants( $config->blank_id ) as $variant ) {
 				$choices[ $variant->ref ] = self::choice( $variant );
 			}
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$warnings[] = __( 'Pixonaut could not be reached to list the blank’s variants. Try again later.', 'pixonaut-for-woocommerce' );
 		}
 		if ( null !== $stored?->pick && ! isset( $choices[ $stored->pick ] ) ) {
@@ -106,7 +106,7 @@ final class VariantField {
 		$pick = is_string( $posted ) ? sanitize_text_field( $posted ) : self::MATCH_BY_OPTIONS;
 		try {
 			$this->variants->pick( $product, self::MATCH_BY_OPTIONS === $pick ? null : $pick );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->unresolved( $product, $e );
 		}
 		if ( ! $product->is_type( 'variation' ) ) {
@@ -132,7 +132,7 @@ final class VariantField {
 	public function refresh( WC_Product $product ): void {
 		try {
 			$this->variants->refresh( $product );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->unresolved( $product, $e );
 		}
 	}
@@ -141,15 +141,15 @@ final class VariantField {
 	 * Reports a variant that could not be resolved, and resolves it in a job
 	 * instead; until then the product keeps the variant it had.
 	 *
-	 * @param WC_Product $product The product or variation.
-	 * @param ApiError   $error   Why Pixonaut could not be asked.
+	 * @param WC_Product   $product The product or variation.
+	 * @param ApiException $error   Why Pixonaut could not be asked.
 	 */
-	private function unresolved( WC_Product $product, ApiError $error ): void {
+	private function unresolved( WC_Product $product, ApiException $error ): void {
 		$this->logger->warning(
 			sprintf( 'Could not read the blank variants for product %d: %s', $product->get_id(), $error->getMessage() ),
 			array(
 				'product_id' => $product->get_id(),
-				'code'       => $error->error_code,
+				'code'       => $error->errorCode,
 			)
 		);
 		$this->recheck->queue( array( $product->get_id() ) );

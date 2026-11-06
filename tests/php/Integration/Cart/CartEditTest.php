@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Cart;
 
-use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Cart\AddToCart;
@@ -63,7 +62,7 @@ final class CartEditTest extends PersonalisedCartTestCase {
 	private function edit(): CartEdit {
 		return new CartEdit(
 			$this->plugin->connection(),
-			new Designs( $this->plugin->client() ),
+			$this->plugin->sdk(),
 			$this->plugin->settings(),
 			$this->plugin->labels(),
 			$this->logger,

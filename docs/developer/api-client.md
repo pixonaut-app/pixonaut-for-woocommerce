@@ -1,65 +1,92 @@
 ---
 title: API client
-description: How the plugin talks to Pixonaut — operations, errors, idempotency, request snapshots, hooks and contract checks in tests.
+description: How the plugin talks to Pixonaut through the pixonaut-php SDK — the factory, operations, errors, idempotency, request snapshots, hooks and contract checks in tests.
 sidebar:
   order: 3
 ---
 
-`Pixonaut\WooCommerce\Api\Client` is the only code that talks to Pixonaut.
-It sends requests through the WordPress HTTP API
-(`Api\WpHttpTransport`, the plugin's only `wp_remote_*` caller; a unit test
-fails if any other file in `src/` makes an HTTP request).
+The plugin talks to Pixonaut through [pixonaut-php](https://github.com/pixonaut-app/pixonaut-php),
+Pixonaut's PHP SDK, bundled in `vendor/` and prefixed with Strauss: it loads
+as `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\…`, with its PSR interfaces and
+`nyholm/psr7` under the same prefix, so another plugin's copy of any of them
+never clashes with it.
 
-`Client::call_all()` sends several reads at once, at most
-`Client::MAX_CONCURRENT` at a time, and returns each one's `Response` or
-`ApiError` in order; the product pictures' job draws a product's image and
-gallery pictures with it (`Api\Pictures::all()`). WordPress's HTTP API sends
-one request at a time, so the transport sends these through the Requests
-library it is built on, firing `http_request_args`, `pre_http_request`,
-`http_request_reject_unsafe_urls`, `https_ssl_verify`, `http_api_curl`, the
-`requests-*` actions, `http_api_debug` and `http_response` for each as
-`wp_remote_request()` would, through WordPress's proxy settings: a filter
-that answers or blocks requests sees these too. An operation that takes an `Idempotency-Key` is never sent this
-way.
+No plugin code builds a Pixonaut URL or sends a request itself. The SDK sends
+over the WordPress HTTP API through `Api\WpHttpTransport`, a PSR-18 client and
+the plugin's only `wp_remote_*` caller (a unit test fails if any other file in
+`src/` makes an HTTP request). It keeps WordPress's URL checks, blocked hosts,
+proxy and `http_api_debug`, never follows a redirect, and gives up after the
+timeout it was built with.
+
+## The factory
+
+`Api\Pixonaut` builds the SDK, and is the only place that does:
+
+```php
+$pixonaut = $plugin->pixonaut();              // Api\Pixonaut
+$sdk      = $pixonaut->sdk();                 // the SDK, 15 second timeout
+$pixonaut->sdk( Pixonaut::SHORT_TIMEOUT_SECONDS )->connect()->cutAccess(); // 5 seconds
+```
+
+It keeps one SDK client per timeout, each with:
+
+| Part | Plugin class |
+|---|---|
+| Base URL | `Api\Hosts::server_api()` |
+| PSR-18 client | `Api\WpHttpTransport` |
+| PSR-17 factories | `nyholm/psr7` |
+| Credentials | `Connection\Credentials`, the SDK's `CredentialProvider` over `Connection\ConnectionStore` |
+| `Origin` sent with the publishable key | the site's origin (`Connection::origin( Connection::site_url() )`) |
+| `User-Agent` product | `pixonaut-for-woocommerce/<version>` |
+| Logger | `Api\WcLogger`, PSR-3, under WooCommerce > Status > Logs, source `pixonaut-api` |
+| Listener | `Api\HookListener`: the plugin's hooks, and deprecations for the admin notice |
+
+`Pixonaut::all()` sends several reads at once, at most
+`Pixonaut::MAX_CONCURRENT` at a time, and returns each one's `Result` or
+`ApiException` in order; the product pictures' job draws a product's image
+and gallery pictures with it (`Api\Pictures::all()`). Each request is built
+with the SDK's `prepare()` and `toPsrRequest()`, and each answer read with its
+`handle()`. WordPress's HTTP API sends one request at a time, so the transport
+sends these through the Requests library it is built on, firing
+`http_request_args`, `pre_http_request`, `http_request_reject_unsafe_urls`,
+`https_ssl_verify`, `http_api_curl`, the `requests-*` actions,
+`http_api_debug` and `http_response` for each as `wp_remote_request()` would,
+through WordPress's proxy settings: a filter that answers or blocks requests
+sees these too. An operation that takes an `Idempotency-Key` is never sent
+this way.
 
 ## Operations
 
-Each operation the plugin calls is described once in `Api\Operations`:
-method, path template, credential, and whether it takes an
-`Idempotency-Key`. The client refuses any operation not registered there,
-and `contracts/pixonaut/consumed.json` is written from the registry
-(`pnpm contracts:consumed`, see [Pixonaut contract](../contract/)). Adding
-an operation means, in one pull request: the descriptor, the area class that
-calls it, the fake's handler, and `consumed.json` regenerated (which moves
-the operation out of `pending` if it was planned there). An operation the
-SDK also calls with another credential gets a list under `keys`.
+`Api\Pixonaut::OPERATIONS` lists, by the SDK's operation id
+(`designs.commit`, `orders.get`, …), every operation the plugin calls. The
+SDK refuses any other before sending it, and
+`contracts/pixonaut/consumed.json` is written from the list
+(`pnpm contracts:consumed`, see [Pixonaut contract](../contract/)). Calling
+another operation means, in one pull request: its id in the list, the code
+that calls it, the fake's handler, and `consumed.json` regenerated (which
+moves the operation out of `pending` if it was planned there).
 
-Area classes wrap the client per part of the API (`Api\Connect`,
-`Api\Catalogue`, `Api\Designs`, `Api\DesignerLinks`, `Api\Prints`,
-`Api\Orders`, `Api\ShareLinks`, `Api\Webhooks`, `Api\Events`):
+Callers use the SDK's resources, typed request models and answers:
 
 ```php
-$connect = new Api\Connect( $client );
-$connect->get();                                        // GET /v1/connect
-$connect->exchange( $code, $verifier, $redirect_uri ); // POST /v1/connect/token
-$connect->allow_origins( $origins );                    // PATCH /v1/connect
-$connect->delete();                                     // DELETE /v1/connect
+$sdk->connect()->get();                                                     // GET /v1/connect
+$sdk->designs()->get( $design_id )->status;                                 // GET /v1/designs/{id}
+$sdk->designs()->approve( $design_id, Api\Designs::approval( $consent, $revision ) );
+$sdk->orders()->list( externalRef: $ref )->orders;                          // GET /v1/orders?externalRef=
 ```
 
-```php
-$designs = new Api\Designs( $client );
-$designs->commit( $proof_token, $external_ref, $key, $payload ); // POST /v1/designs; adopts proof_already_committed
-$designs->get( $design_id );                           // GET /v1/designs/{id}
-$designs->proof( $design_id, $proof_id, $width );     // GET /v1/designs/{id}/proof?v&width; the JPEG's bytes
-$designs->set_external_ref( $design_id, $ref );        // PUT /v1/designs/{id}/external-ref
-$designs->delete( $design_id );                        // DELETE /v1/designs/{id}; a 404 counts as deleted
-$designs->approve( $design_id, $consent, $revision );  // POST /v1/designs/{id}/approve
+An answer the plugin keeps or caches as it came (a blank, a connection's
+workspace settings, an order passed through fulfilment) is read with the
+model's `raw()`, which holds every field Pixonaut sent.
 
-$request = $orders->prepare_create( $body, $key );      // POST /v1/orders, kept as a snapshot
-$orders->create( $request );
-$orders->with_external_ref( $ref );                     // GET /v1/orders?externalRef=
-$orders->get( $order_id );                              // GET /v1/orders/{id}
-```
+A few classes add what the store needs on top of the SDK:
+
+| Class | Adds |
+|---|---|
+| `Api\Catalogue` | template and blank search pages, every live template's latest version, the answers handed to the storefront as Pixonaut sent them |
+| `Api\Designs` | a commit that adopts `proof_already_committed`, the standing design for a side, a delete where a `404` counts as deleted, the erasure's time, proof and mockup images checked to be what they claim |
+| `Api\DesignerLinks` | designer links with their warnings logged, the working ones found across pages, a withdrawal where a gone link counts as withdrawn |
+| `Api\Pictures` | template pictures checked to be PNGs, drawn several at once |
 
 Refs and keys are built by `Refs`, and always start `wc:<site>:`:
 
@@ -70,10 +97,6 @@ Refs and keys are built by `Refs`, and always start `wc:<site>:`:
 | `Refs::order_item_ref()` | `wc:<site>:order:<order id>:item:<item id>` | `externalRef` once the line is in a placed order, of its printshop order, and the approval's consent `ref` |
 | `Refs::print_key()` | `wc:<site>:print:<design id>:<revision>` | `Idempotency-Key` of a design's print, one per revision |
 | `Refs::order_key()` | `wc:<site>:item:<item id>` | `Idempotency-Key` of a line's printshop order |
-
-`prepare_create()` returns the request without sending it, so fulfilment
-stores its snapshot in the line before the first send (see *Idempotency and
-snapshots* below).
 
 ## Hosts
 
@@ -95,11 +118,11 @@ integrity.
 
 ## Credentials
 
-The client reads its keys from its `CredentialProvider` at every send:
-`Connection\Credentials`, which answers the store's keys from
-`Connection\ConnectionStore`, and none of them
-while the store is not connected or its connection is paused. An operation
-that needs a key then fails with `not_connected` before anything is sent.
+The SDK reads the store's keys from `Connection\Credentials` at every send:
+the integration key, and the publishable key for the template pictures that
+take only it; none while the store is not connected or its connection is
+paused. An operation that needs a key then fails with `not_connected` before
+anything is sent.
 
 A `401` on the store's keys fires `pixonaut_wc_api_unauthorized`, on which
 `Connection\Connection` pauses the connection, unless the store has
@@ -107,51 +130,47 @@ connected again since the refused key was sent.
 
 ## Errors
 
-A call that does not succeed throws `Api\ApiError`:
+A call that does not succeed throws the SDK's `ApiException`:
 
 | Property | Meaning |
 |---|---|
 | `status` | HTTP status; `0` when no response arrived |
-| `error_code` | Pixonaut's `error`, or the client's own `not_connected` (no key, or the connection is paused), `transport_failed`, `unexpected_response` |
+| `errorCode` | Pixonaut's `error` (the SDK's `Generated\ErrorCode`), or the SDK's own `not_connected` (no key, or the connection is paused), `transport_failed`, `unexpected_response` |
 | `retryable` | Whether sending the same request again may succeed: 5xx, 408, 429, `idempotency_key_in_use`, no response, or the body's own `retryable` when it has one |
-| `retry_after` | Seconds from `Retry-After`, when sent |
-| `details` | The rest of the error body; only `redacted: true` for an operation whose answers carry keys (`POST /v1/connect/token`), so none reach an error or the log |
+| `retryAfter` | Seconds from `Retry-After`, when sent |
+| `requestId` | Pixonaut's `X-Request-Id`, when a response arrived |
+| `details` | The rest of the error body; only `redacted: true` for an operation whose answers carry keys (`connectedStore.exchangeCode`), so none reach an error or the log |
 
-Codes and statuses are open sets: one the plugin does not know (a code not
-in `Api\ErrorCodes`, a status the pinned spec does not declare) is kept as
-it came, and logged under WooCommerce > Status > Logs, source
-`pixonaut-api`. So is an answer that is not a JSON object.
+Codes and statuses are open sets: one the pinned spec does not declare is
+kept as it came, and logged under WooCommerce > Status > Logs, source
+`pixonaut-api`.
 
 `422 idempotency_key_reused` and `422 invalid_idempotency_key` throw
-`Api\IdempotencyBug`, a subclass, always with `retryable` false: the
+`IdempotencyBugException`, a subclass, always with `retryable` false: the
 plugin built the request wrong, and sending it again never helps.
 
 ## Idempotency and snapshots
 
 Every operation that takes an `Idempotency-Key` gets one: the caller's own
 (`wc:<site>:commit:<hash>` and the like), or a UUID. A `409
-idempotency_key_in_use` is waited out (its `Retry-After`, at most 5
-seconds) and sent again, up to 3 times, before the error reaches the
-caller.
+idempotency_key_in_use` is waited out (its `Retry-After`, at most 5 seconds)
+and sent again, up to 3 times, before the error reaches the caller.
 
-`Client::prepare()` returns an `Api\PreparedRequest`: the path, the encoded
-body and the key, fixed at that moment. A caller that must be able to send
-the same request again later — after a timeout, from a scheduled retry —
-stores `$request->to_array()` and later calls
-`$client->send( PreparedRequest::from_array( $stored ) )`. The resend
-carries the same bytes and the same key, so Pixonaut answers it as a repeat
-rather than doing the work twice. The credential is not in the snapshot; it
-is added at every send.
-
-`from_array()` refuses a snapshot with a field missing, and `send()` sends
-nothing for a request whose target is not its operation's path, or an
-idempotent request without a valid key (1 to 255 printable ASCII
-characters): either would turn a repeat into a second write.
+A resource's `prepare…()` method returns the SDK's `PreparedRequest`: the
+path, the encoded body and the key, fixed at that moment. A caller that must
+be able to send the same request again later — after a timeout, from a
+scheduled retry — stores `$request->toArray()` and later sends
+`Api\StoredRequest::restore( $stored )` with the matching `send…()` method.
+The resend carries the same bytes and the same key, so Pixonaut answers it as
+a repeat rather than doing the work twice. The credential is not in the
+snapshot; it is added at every send. `StoredRequest::restore()` also reads a
+snapshot plugin 1.0 stored, whose operation was its method and path, so a
+line placed before an update sends its order again under its first key.
 
 ## Deprecations
 
-When a response carries `Deprecation` and `Sunset` headers, the client logs
-a warning once per change and records it, per operation, in the
+When a response carries `Deprecation` and `Sunset` headers, the SDK logs a
+warning, and `Api\HookListener` records it, per operation id, in the
 `pixonaut_wc_api_deprecations` option (`Api\Deprecations::all()`), for the
 admin notice that asks the merchant to update the plugin.
 
@@ -159,14 +178,21 @@ admin notice that asks the merchant to update the plugin.
 
 | Hook | Type | Arguments |
 |---|---|---|
-| `pixonaut_wc_api_request_body` | filter | `array $body`, `string $operation` — runs once, when the request is prepared; a resend from a snapshot is not filtered again |
+| `pixonaut_wc_api_request_body` | filter | `array $body`, `string $operation` (the SDK's operation id) — runs once, when the request is prepared; a resend from a snapshot is not filtered again |
 | `pixonaut_wc_api_before_request` | action | `PreparedRequest $request` — before every send, resends included |
-| `pixonaut_wc_api_after_request` | action | `PreparedRequest $request`, `?Response $response`, `?ApiError $error` (set when no response arrived) |
-| `pixonaut_wc_api_unauthorized` | action | `string $operation`, `ApiError $error` — Pixonaut refused the store's key: the connection was removed or the key revoked |
+| `pixonaut_wc_api_after_request` | action | `PreparedRequest $request`, `?Result $result`, `?ApiException $error` — the answer when it was a success, else why not (a refusal, or no answer) |
+| `pixonaut_wc_api_unauthorized` | action | `string $operation`, `ApiException $error` — Pixonaut refused the store's key: the connection was removed or the key revoked |
+
+`PreparedRequest`, `Result` and `ApiException` are the SDK's, under
+`Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\`. Before 2.0 these hooks passed
+the plugin's own `Api\PreparedRequest`, `Api\Response` and `Api\ApiError`,
+and named an operation by its method and path (`POST /v1/designs`); a refused
+request came to `pixonaut_wc_api_after_request` as its response, where it now
+comes as the error.
 
 ```php
 add_filter( 'pixonaut_wc_api_request_body', function ( $body, $operation ) {
-	if ( 'POST /v1/designs' === $operation ) {
+	if ( 'designs.commit' === $operation ) {
 		$body['externalRef'] = 'shop-a:' . $body['externalRef'];
 	}
 	return $body;
@@ -187,8 +213,14 @@ JSON Schema 2020-12, each schema addressed by JSON Pointer):
 - `webhook( $type, $body )` — the payload matches the event's schema;
 - `assert_pointer( $label, $data, $segments )` — any schema in the spec.
 
-Unit tests use `Tests\Support\ScriptedTransport`, which checks every request
-and scripted response that way (`off_spec()` queues one the spec does not
-declare, such as a proxy's HTML 502). Integration tests use
-`Tests\Support\HttpRecorder`, which answers the real transport through
-`pre_http_request` with the same checks.
+Unit tests use `Tests\Support\ScriptedClient`, a scripted PSR-18 client that
+checks every request and scripted response that way (`off_spec()` queues one
+the spec does not declare, such as a proxy's HTML 502); its `sdk()` and
+`pixonaut()` build the plugin's SDK over it with the SDK's
+`StaticCredentials`. Integration tests use `Tests\Support\HttpRecorder`,
+which answers the real transport through `pre_http_request` with the same
+checks.
+
+`Tests\Unit\Api\ApiVersionTest` holds the SDK's `ApiVersion::TARGET` and its
+spec's sha256 to `contracts/pixonaut/spec.lock.json`, so the plugin never
+ships an SDK built for another API release than the one it pins.

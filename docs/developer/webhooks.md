@@ -45,9 +45,9 @@ connection paused as `unauthorized` still receives.
    HMAC-SHA256, keyed with the connection's webhook secret, of the
    `x-pixonaut-timestamp` value, a `.`, and the raw body. The timestamp must
    be within 300 seconds of the site's clock, either way. Anything else, or a
-   store that is not connected, is answered `401`. The verifier
-   (`Webhooks\Signature`) is tested against Pixonaut's signature vectors in
-   `contracts/pixonaut/webhook-signature-vectors.json`.
+   store that is not connected, is answered `401`. The verifier is
+   pixonaut-php's `Webhooks\Signature`, tested against Pixonaut's signature
+   vectors in the SDK's own suite.
 2. **Read.** The body must be an envelope `{id, type, createdAt, payload}`;
    otherwise `400`. A `webhook.ping` is answered `200` and goes no further.
 3. **Dedupe.** The event is added to the table `{prefix}pixonaut_webhook_events`
@@ -571,6 +571,11 @@ event is handled again later.
 | `pixonaut_wc_fulfilment_order_status_map` | filter | The line state each Pixonaut order status puts a line in |
 | `pixonaut_wc_fulfilment_complete_order` | filter | Whether a shipped line completes an order whose every line is a Pixonaut line |
 | `pixonaut_wc_events_baseline_set` | action | Once per connection, after the event stream's first cursor was set: read the store's state afresh |
+
+The `$event` these hooks pass is pixonaut-php's `Webhooks\Event` (under
+`Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\`), with `id`, `type`,
+`createdAt` and `payload`. Before 2.0 it was the plugin's own
+`Webhooks\Event`, whose time was `created_at`.
 
 Each hook's parameters and an example are in the [hooks reference](../hooks/).
 

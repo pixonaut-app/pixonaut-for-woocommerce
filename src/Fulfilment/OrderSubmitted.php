@@ -9,7 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -56,11 +57,11 @@ final class OrderSubmitted {
 
 	/**
 	 * @param Event $event An `order.submitted` event.
-	 * @throws RuntimeException When a line kept changing, or ApiError when the new order could not be read; handling the event again retries it.
+	 * @throws RuntimeException When a line kept changing, or ApiException when the new order could not be read; handling the event again retries it.
 	 */
 	public function handle( Event $event ): void {
-		$order_id = $event->string( 'orderId' );
-		$replaces = $event->string( 'replacesOrderId' );
+		$order_id = Payload::string( $event, 'orderId' );
+		$replaces = Payload::string( $event, 'replacesOrderId' );
 		if ( null === $order_id ) {
 			return;
 		}
@@ -95,7 +96,7 @@ final class OrderSubmitted {
 	 *
 	 * @param string $order_id The order handed to the printshop.
 	 * @param Event  $event    The `order.submitted` event.
-	 * @throws RuntimeException When a line kept changing, or ApiError when the order could not be read.
+	 * @throws RuntimeException When a line kept changing, or ApiException when the order could not be read.
 	 */
 	private function handed_on( string $order_id, Event $event ): void {
 		foreach ( $this->lines->holding( $order_id, $event ) as $line ) {
@@ -113,7 +114,7 @@ final class OrderSubmitted {
 	 * @param string                $replaces The order it held.
 	 * @param string                $order_id The order that replaced it.
 	 * @param Event                 $event    The `order.submitted` event.
-	 * @throws RuntimeException When the line kept changing for MAX_ATTEMPTS tries, or ApiError when the new order could not be read.
+	 * @throws RuntimeException When the line kept changing for MAX_ATTEMPTS tries, or ApiException when the new order could not be read.
 	 */
 	private function follow( WC_Order_Item_Product $item, string $replaces, string $order_id, Event $event ): void {
 		for ( $attempt = 0; $attempt < self::MAX_ATTEMPTS; $attempt++ ) {
@@ -150,13 +151,13 @@ final class OrderSubmitted {
 	 * @param Event  $event    The `order.submitted` event.
 	 */
 	private static function submitted( string $order_id, Event $event ): Event {
-		return new Event(
+		return Payload::event(
 			$event->id,
 			OrderStatusChanged::TYPE,
-			$event->created_at,
+			$event->createdAt,
 			array(
 				'orderId'        => $order_id,
-				'externalRef'    => $event->string( 'externalRef' ),
+				'externalRef'    => Payload::string( $event, 'externalRef' ),
 				'previousStatus' => '',
 				'status'         => OrderStatus::SUBMITTED,
 			)

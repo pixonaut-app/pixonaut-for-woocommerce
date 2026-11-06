@@ -10,9 +10,9 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\DesignerLinks;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Schema;
 
@@ -50,15 +50,15 @@ final class DesignerLinkWithdrawals {
 	private readonly Closure $clock;
 
 	/**
-	 * @param DesignerLinks $api        Withdraws designer links.
-	 * @param Connection    $connection Whether the store is connected, and not paused.
-	 * @param Logger        $logger     Logs a link that could not be withdrawn, or a job that could not be queued.
-	 * @param Closure|null  $clock      `fn(): int` Unix time; `time()` when null.
+	 * @param DesignerLinks   $api        Withdraws designer links.
+	 * @param Connection      $connection Whether the store is connected, and not paused.
+	 * @param LoggerInterface $logger     Logs a link that could not be withdrawn, or a job that could not be queued.
+	 * @param Closure|null    $clock      `fn(): int` Unix time; `time()` when null.
 	 */
 	public function __construct(
 		private readonly DesignerLinks $api,
 		private readonly Connection $connection,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 	) {
 		$this->clock = $clock ?? static fn (): int => time();
@@ -163,8 +163,8 @@ final class DesignerLinkWithdrawals {
 		try {
 			$this->api->withdraw( $id );
 			return true;
-		} catch ( ApiError $error ) {
-			$this->logger->warning( sprintf( 'Could not withdraw designer link %s: %s', $id, $error->getMessage() ), array( 'code' => $error->error_code ) );
+		} catch ( ApiException $error ) {
+			$this->logger->warning( sprintf( 'Could not withdraw designer link %s: %s', $id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			return false;
 		}
 	}

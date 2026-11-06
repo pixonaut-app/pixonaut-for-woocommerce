@@ -24,9 +24,10 @@ against the pinned files rather than a running Pixonaut.
 The pin is a release version plus a sha256. A unit test
 recomputes every checksum, so a hand edit to a pinned file fails
 `pnpm test:js`. Change them only with `pnpm contracts:pin`.
-`Api\Spec::VERSION` and the `Storefront\Sdk` constants mirror the two locks
-for the developer tools and the storefront; unit tests hold them to the
-pin, and `contracts:pin` says when they must change.
+The bundled pixonaut-php's `ApiVersion::TARGET` and the `Storefront\Sdk`
+constants mirror the two locks for the server and the storefront; unit tests
+hold them to the pin, and `contracts:pin` says when they must change: a new
+API release needs the pixonaut-php release built for it.
 
 ## The consumed list
 
@@ -63,8 +64,9 @@ so the same file can be sent to Pixonaut:
 `operations`, `webhooks` and `keys` equal what the code calls and handles.
 `pnpm contracts:consumed` writes them from:
 
-- `Api\Operations::plugin()`, the client's registry: every operation the
-  plugin's server calls, with its credential;
+- `Api\Pixonaut::OPERATIONS`: every operation the plugin's server calls
+  through pixonaut-php, by the SDK's operation id, with the key the SDK
+  sends for it;
 - `Storefront\Sdk::OPERATIONS`: what the pinned SDK calls from the
   customer's browser as the storefront mounts it, with the key kinds it
   sends;

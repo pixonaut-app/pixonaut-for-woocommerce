@@ -12,7 +12,7 @@ namespace Pixonaut\WooCommerce\Fulfilment;
 use ActionScheduler;
 use ActionScheduler_Store;
 use Closure;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -64,16 +64,16 @@ final class FulfilmentSweep {
 	private readonly Closure $clock;
 
 	/**
-	 * @param Closure      $schedule   `fn(int $item_id): bool`, schedules the line's job unless it has one; false when Action Scheduler refused it.
-	 * @param Closure      $connection `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
-	 * @param Logger       $logger     Logs the jobs Action Scheduler refused.
-	 * @param Closure|null $clock      `fn(): int` Unix time; `time()` when null.
-	 * @param int          $batch      Orders per page.
+	 * @param Closure         $schedule   `fn(int $item_id): bool`, schedules the line's job unless it has one; false when Action Scheduler refused it.
+	 * @param Closure         $connection `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
+	 * @param LoggerInterface $logger     Logs the jobs Action Scheduler refused.
+	 * @param Closure|null    $clock      `fn(): int` Unix time; `time()` when null.
+	 * @param int             $batch      Orders per page.
 	 */
 	public function __construct(
 		private readonly Closure $schedule,
 		private readonly Closure $connection,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 		private readonly int $batch = self::BATCH,
 	) {

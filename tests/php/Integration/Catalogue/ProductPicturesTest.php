@@ -17,7 +17,8 @@ use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Simple;
@@ -268,7 +269,7 @@ final class ProductPicturesTest extends WP_UnitTestCase {
 	public function test_a_blank_update_redraws_every_picture(): void {
 		$picture = $this->drawn( $this->product( self::config() ) );
 
-		$this->plugin->product_recheck()->handle( new Event( 'evt_1', ProductRecheck::BLANK_UPDATED, 0, array( 'blankId' => DesignFixture::BLANK_ID ) ) );
+		$this->plugin->product_recheck()->handle( Payload::event( 'evt_1', ProductRecheck::BLANK_UPDATED, 0, array( 'blankId' => DesignFixture::BLANK_ID ) ) );
 
 		ActionSchedulerRunner::run_pending( PictureQueue::QUEUE_ACTION );
 		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductPictures::ACTION ) );

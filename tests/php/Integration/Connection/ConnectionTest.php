@@ -9,16 +9,11 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Connection;
 
 use Pixonaut\WooCommerce\Admin\ConnectionScreen;
 use Pixonaut\WooCommerce\Admin\Notices;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\Connect;
-use Pixonaut\WooCommerce\Api\Credential;
 use Pixonaut\WooCommerce\Api\Deprecations;
+use Pixonaut\WooCommerce\Api\HookListener;
 use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Webhooks;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Connection\Cipher;
 use Pixonaut\WooCommerce\Connection\ConnectAttempts;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -31,6 +26,8 @@ use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\MemberKeys;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Credentials\Credential;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Webhooks\Endpoint;
 use WP_UnitTestCase;
 
@@ -82,12 +79,12 @@ final class ConnectionTest extends WP_UnitTestCase {
 		add_filter( 'pre_option_permalink_structure', static fn (): string => '/%postname%/', PHP_INT_MAX );
 		$this->recorder = ( new HttpRecorder( self::BASE_URL ) )->start();
 		$this->store    = new ConnectionStore( Cipher::for_site() );
-		$client         = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+		$client         = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		$plugin         = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
 		// The plugin's own endpoint would call the real API host after a connect.
 		remove_action( 'pixonaut_wc_connection_connected', array( $plugin->webhook_endpoint(), 'on_connected' ), 10 );
 		// Not registered: the plugin's own connection already pauses on the same option.
-		$this->connection = new Connection( $this->store, new ConnectAttempts(), new Connect( $client ), $plugin->notices(), new WcLogger(), ConnectionScreen::settings_url() );
+		$this->connection = new Connection( $this->store, new ConnectAttempts(), $client, $plugin->notices(), new WcLogger(), ConnectionScreen::settings_url() );
 		$admin            = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		$this->admin      = is_int( $admin ) ? $admin : 0;
 	}
@@ -117,9 +114,9 @@ final class ConnectionTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_connect_with_the_switch_on_hands_over_the_credential_once_connected(): void {
-		$client     = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
-		$access     = new StoreAccess( $this->store, new Connect( $client ), new WcLogger() );
-		$connection = new Connection( $this->store, new ConnectAttempts(), new Connect( $client ), Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->notices(), new WcLogger(), ConnectionScreen::settings_url(), null, $access );
+		$pixonaut   = new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL );
+		$access     = new StoreAccess( $this->store, $pixonaut, new WcLogger() );
+		$connection = new Connection( $this->store, new ConnectAttempts(), $pixonaut->sdk(), Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->notices(), new WcLogger(), ConnectionScreen::settings_url(), null, $access );
 		parse_str( (string) wp_parse_url( $connection->start( $this->admin, '', true ), PHP_URL_QUERY ), $sent );
 		$this->assertIsString( $sent['state'] );
 		$this->recorder->json( 201, self::EXCHANGED )->raw( 204, '', 'application/json' );
@@ -138,9 +135,9 @@ final class ConnectionTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_connect_with_the_switch_off_leaves_it_off(): void {
-		$client     = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
-		$access     = new StoreAccess( $this->store, new Connect( $client ), new WcLogger() );
-		$connection = new Connection( $this->store, new ConnectAttempts(), new Connect( $client ), Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->notices(), new WcLogger(), ConnectionScreen::settings_url(), null, $access );
+		$pixonaut   = new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL );
+		$access     = new StoreAccess( $this->store, $pixonaut, new WcLogger() );
+		$connection = new Connection( $this->store, new ConnectAttempts(), $pixonaut->sdk(), Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->notices(), new WcLogger(), ConnectionScreen::settings_url(), null, $access );
 		parse_str( (string) wp_parse_url( $connection->start( $this->admin ), PHP_URL_QUERY ), $sent );
 		$this->assertIsString( $sent['state'] );
 		$this->recorder->json( 201, self::EXCHANGED );
@@ -206,12 +203,12 @@ final class ConnectionTest extends WP_UnitTestCase {
 		$this->recorder->json( 401, array( 'error' => 'unauthorized' ) );
 		// The plugin's store hands out the key, as in production: its connection pauses the one whose key was refused.
 		$plugin_store = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->connection_store();
-		$client       = new Client( self::BASE_URL, Operations::plugin(), $plugin_store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+		$client       = ( new Pixonaut( $plugin_store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 
 		try {
-			( new Connect( $client ) )->get();
+			$client->connect()->get();
 			$this->fail( 'A revoked key was accepted.' );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->assertSame( 401, $e->status );
 		}
 
@@ -221,9 +218,9 @@ final class ConnectionTest extends WP_UnitTestCase {
 
 		// Paused: nothing more reaches Pixonaut.
 		try {
-			( new Connect( $client ) )->get();
+			$client->connect()->get();
 			$this->fail( 'A paused connection sent a request.' );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->assertSame( 0, $e->status );
 		}
 		$this->assertCount( 2, $this->recorder->requests );
@@ -235,15 +232,15 @@ final class ConnectionTest extends WP_UnitTestCase {
 		$plugin = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
 		// A clone of the database, served from another address.
 		add_filter( 'home_url', static fn ( string $url ): string => (string) preg_replace( '#^https?://[^/]+#', 'https://staging.example.test', $url ) );
-		$client = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+		$client = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 
 		try {
-			( new Connect( $client ) )->get();
+			$client->connect()->get();
 			$this->fail( 'A copied site sent a request.' );
-		} catch ( ApiError $e ) {
-			$this->assertSame( 'not_connected', $e->error_code );
+		} catch ( ApiException $e ) {
+			$this->assertSame( 'not_connected', $e->errorCode );
 		}
-		$card = ( new ConnectionScreen( $this->connection, new Connect( $client ), $plugin->webhook_endpoint(), new Deprecations(), $plugin->templates(), ConnectionScreen::settings_url() ) )->card();
+		$card = ( new ConnectionScreen( $this->connection, $client, $plugin->webhook_endpoint(), new Deprecations(), $plugin->templates(), ConnectionScreen::settings_url() ) )->card();
 		$this->assertSame( 'paused', $card['state'] );
 		$this->assertSame( Connection::PAUSED_SITE_CHANGED, $card['paused_reason'] );
 		// Any request reading the option finds it paused, as the fulfiller and the storefront do.
@@ -327,8 +324,8 @@ final class ConnectionTest extends WP_UnitTestCase {
 			)
 		);
 		$plugin = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
-		$client = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
-		$screen = new ConnectionScreen( $this->connection, new Connect( $client ), new Endpoint( $this->connection, new Webhooks( $client ), new WcLogger() ), new Deprecations(), $plugin->templates(), ConnectionScreen::settings_url() );
+		$client = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
+		$screen = new ConnectionScreen( $this->connection, $client, new Endpoint( $this->connection, $client, new WcLogger() ), new Deprecations(), $plugin->templates(), ConnectionScreen::settings_url() );
 		return $screen->card();
 	}
 
@@ -364,12 +361,12 @@ final class ConnectionTest extends WP_UnitTestCase {
 		$plugin = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
 		// A store that hands out the key and a connection that pauses on its refusal, as the plugin's own do.
 		$store      = new ConnectionStore( Cipher::for_site() );
-		$client     = new Client( self::BASE_URL, Operations::plugin(), $store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
-		$connection = new Connection( $store, new ConnectAttempts(), new Connect( $client ), $plugin->notices(), new WcLogger(), ConnectionScreen::settings_url() );
+		$client     = ( new Pixonaut( $store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
+		$connection = new Connection( $store, new ConnectAttempts(), $client, $plugin->notices(), new WcLogger(), ConnectionScreen::settings_url() );
 		add_action( 'pixonaut_wc_api_unauthorized', array( $connection, 'on_unauthorized' ), 10, 0 );
-		$endpoint = new Endpoint( $connection, new Webhooks( $client ), new WcLogger() );
+		$endpoint = new Endpoint( $connection, $client, new WcLogger() );
 
-		$card = ( new ConnectionScreen( $connection, new Connect( $client ), $endpoint, new Deprecations(), $plugin->templates(), ConnectionScreen::settings_url() ) )->card();
+		$card = ( new ConnectionScreen( $connection, $client, $endpoint, new Deprecations(), $plugin->templates(), ConnectionScreen::settings_url() ) )->card();
 
 		$this->assertCount( 3, $this->recorder->requests );
 		$this->assertSame( 'paused', $card['state'] );

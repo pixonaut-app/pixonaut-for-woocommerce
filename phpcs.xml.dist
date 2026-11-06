@@ -54,6 +54,11 @@
         </properties>
     </rule>
 
+    <!-- The bundled Pixonaut SDK's models, exceptions and requests name their properties in camelCase, as the API does. -->
+    <rule ref="WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase">
+        <severity>0</severity>
+    </rule>
+
     <!-- Tests fire WordPress's own hooks and define its constants. -->
     <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
         <exclude-pattern>tests/php/*</exclude-pattern>

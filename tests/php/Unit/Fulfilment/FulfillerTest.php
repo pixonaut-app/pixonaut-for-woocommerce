@@ -10,19 +10,11 @@ namespace Pixonaut\WooCommerce\Tests\Unit\Fulfilment;
 use Brain\Monkey\Functions;
 use Mockery;
 use Mockery\MockInterface;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Orders;
-use Pixonaut\WooCommerce\Api\Response;
-use Pixonaut\WooCommerce\Api\ShareLinks;
-use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Approval\ProofLink;
 use Pixonaut\WooCommerce\Approval\ProofRequest;
 use Pixonaut\WooCommerce\Approval\ProofState;
+use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\DesignerLanguage;
 use Pixonaut\WooCommerce\Fulfilment\Fulfiller;
@@ -31,10 +23,12 @@ use Pixonaut\WooCommerce\Fulfilment\NeedsAttention;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
-use Pixonaut\WooCommerce\Tests\Support\ScriptedTransport;
-use Pixonaut\WooCommerce\Tests\Support\StaticCredentials;
+use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
 use Pixonaut\WooCommerce\Tests\Unit\FakeOptions;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
+use Pixonaut\WooCommerce\Vendor\Nyholm\Psr7\Response;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use WC_Order;
 use WC_Order_Item_Product;
 
@@ -42,7 +36,6 @@ final class FulfillerTest extends TestCase {
 
 	use FakeOptions;
 
-	private const BASE_URL = 'http://pixonaut.test';
 
 	private const SITE = '8e1f3c2a-5b4d-4e6f-9a0b-1c2d3e4f5a6b';
 
@@ -97,7 +90,7 @@ final class FulfillerTest extends TestCase {
 		'phone'      => '',
 	);
 
-	private ScriptedTransport $transport;
+	private ScriptedClient $transport;
 
 	/**
 	 * Order item meta in the database, by key.
@@ -123,7 +116,7 @@ final class FulfillerTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		$this->fake_options();
-		$this->transport  = new ScriptedTransport();
+		$this->transport  = new ScriptedClient();
 		$this->connection = self::connection( self::SITE, FulfilmentAnswers::TENANT_ID );
 		Functions\stubTranslationFunctions();
 		Functions\when( 'wp_json_encode' )->alias( static fn ( $value ) => json_encode( $value ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
@@ -195,14 +188,14 @@ final class FulfillerTest extends TestCase {
 			),
 			$this->sent()
 		);
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'consent'          => self::CONSENT + array( 'ref' => self::EXTERNAL_REF ),
 				'expectedRevision' => self::REVISION,
 			),
 			$this->body( 0 )
 		);
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				// Pixonaut renders the print and holds the order until it is done.
 				'designs'         => array( array( 'designId' => self::DESIGN ) ),
@@ -283,7 +276,7 @@ final class FulfillerTest extends TestCase {
 			->json(
 				422,
 				array(
-					'error'   => ErrorCodes::VARIANT_RETIRED,
+					'error'   => ErrorCode::VARIANT_RETIRED,
 					'variant' => 'v_tee_red_m',
 					'reason'  => 'The variant is retired.',
 				)
@@ -292,10 +285,10 @@ final class FulfillerTest extends TestCase {
 		try {
 			$this->fulfiller()->fulfil( $this->item() );
 			$this->fail( 'The refusal reaches the job, which flags the line.' );
-		} catch ( ApiError $error ) {
-			$this->assertSame( array( ErrorCodes::VARIANT_RETIRED, false ), array( $error->error_code, $error->retryable ) );
+		} catch ( ApiException $error ) {
+			$this->assertSame( array( ErrorCode::VARIANT_RETIRED, false ), array( $error->errorCode, $error->retryable ) );
 		}
-		$this->assertStringContainsString( 'retired', NeedsAttention::explain( ErrorCodes::VARIANT_RETIRED ) );
+		$this->assertStringContainsString( 'retired', NeedsAttention::explain( ErrorCode::VARIANT_RETIRED ) );
 	}
 
 	public function test_an_approved_line_goes_on_from_its_order(): void {
@@ -315,7 +308,7 @@ final class FulfillerTest extends TestCase {
 		$this->store_line(
 			LineState::APPROVED,
 			order_request: array(
-				'operation'       => Operations::CREATE_ORDER,
+				'operation'       => 'orders.create',
 				'target'          => '/v1/orders',
 				'body'            => (string) json_encode( array( 'externalRef' => self::EXTERNAL_REF ) ), // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
 				'idempotency_key' => 'wc:' . self::SITE . ':item:42',
@@ -358,7 +351,7 @@ final class FulfillerTest extends TestCase {
 			->json(
 				409,
 				array(
-					'error'    => ErrorCodes::DESIGN_ALREADY_ORDERED,
+					'error'    => ErrorCode::DESIGN_ALREADY_ORDERED,
 					'designId' => self::DESIGN,
 					'orderId'  => 'o_studio',
 				)
@@ -368,14 +361,14 @@ final class FulfillerTest extends TestCase {
 		try {
 			$this->fulfiller()->fulfil( $this->item() );
 			$this->fail( 'The refusal reaches the job, which flags the line.' );
-		} catch ( ApiError $error ) {
-			$this->assertSame( array( ErrorCodes::DESIGN_ALREADY_ORDERED, false ), array( $error->error_code, $error->retryable ) );
+		} catch ( ApiException $error ) {
+			$this->assertSame( array( ErrorCode::DESIGN_ALREADY_ORDERED, false ), array( $error->errorCode, $error->retryable ) );
 			$this->assertSame( 'o_studio', $error->details['orderId'] ?? null );
 		}
 		$line = $this->line();
 		$this->assertSame( LineState::APPROVED, $line->state() );
 		$this->assertNull( $line->ref( LineState::REF_ORDER_REQUEST ), 'Nothing was written, so an order again is a new request.' );
-		$this->assertStringContainsString( 'Order again anyway', NeedsAttention::explain( ErrorCodes::DESIGN_ALREADY_ORDERED ) );
+		$this->assertStringContainsString( 'Order again anyway', NeedsAttention::explain( ErrorCode::DESIGN_ALREADY_ORDERED ) );
 	}
 
 	public function test_a_line_the_merchant_reorders_sends_reorder_under_a_key_of_its_own(): void {
@@ -433,8 +426,8 @@ final class FulfillerTest extends TestCase {
 		try {
 			$this->fulfiller()->fulfil( $this->item() );
 			$this->fail( 'The unreadable lookup read as no order.' );
-		} catch ( ApiError $e ) {
-			$this->assertSame( ErrorCodes::UNEXPECTED_RESPONSE, $e->error_code );
+		} catch ( ApiException $e ) {
+			$this->assertSame( ApiException::UNEXPECTED_RESPONSE, $e->errorCode );
 		}
 
 		$this->assertSame( array( 'GET /v1/orders?externalRef=' . rawurlencode( self::EXTERNAL_REF ) ), $this->sent() );
@@ -509,8 +502,8 @@ final class FulfillerTest extends TestCase {
 		try {
 			$this->fulfiller()->fulfil( $this->item() );
 			$this->fail( 'The line went on under its cart ref.' );
-		} catch ( ApiError $e ) {
-			$this->assertSame( 'db_error', $e->error_code );
+		} catch ( ApiException $e ) {
+			$this->assertSame( 'db_error', $e->errorCode );
 		}
 
 		$this->assertSame( array( 'PUT /v1/designs/' . self::DESIGN . '/external-ref' ), $this->sent() );
@@ -559,7 +552,7 @@ final class FulfillerTest extends TestCase {
 			external_ref: self::CART_REF,
 			moved: false,
 			order_request: array(
-				'operation'       => Operations::CREATE_ORDER,
+				'operation'       => 'orders.create',
 				'target'          => '/v1/orders',
 				'body'            => (string) json_encode( array( 'externalRef' => self::CART_REF ) ), // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
 				'idempotency_key' => 'wc:' . self::SITE . ':item:42',
@@ -593,8 +586,8 @@ final class FulfillerTest extends TestCase {
 		try {
 			$this->fulfiller()->fulfil( $this->item() );
 			$this->fail( 'The order went through.' );
-		} catch ( ApiError $e ) {
-			$this->assertSame( 'transport_failed', $e->error_code );
+		} catch ( ApiException $e ) {
+			$this->assertSame( 'transport_failed', $e->errorCode );
 		}
 		$first_order = $this->transport->sent[2];
 
@@ -732,7 +725,7 @@ final class FulfillerTest extends TestCase {
 		try {
 			$this->fulfiller()->fulfil( $this->item() );
 			$this->fail( 'A proof page Pixonaut could not mint must fail the run.' );
-		} catch ( ApiError $error ) {
+		} catch ( ApiException $error ) {
 			$this->assertTrue( $error->retryable );
 		}
 		$this->transport->sent = array();
@@ -806,8 +799,8 @@ final class FulfillerTest extends TestCase {
 		try {
 			$this->fulfiller()->fulfil( $this->item() );
 			$this->fail( 'The line went on.' );
-		} catch ( ApiError $e ) {
-			$this->assertSame( ErrorCodes::NOT_COMMITTED, $e->error_code );
+		} catch ( ApiException $e ) {
+			$this->assertSame( ErrorCode::NOT_COMMITTED, $e->errorCode );
 		}
 		$this->assertCount( 2, $this->transport->sent );
 		$this->assertSame( LineState::COMMITTED, $this->line()->state() );
@@ -886,12 +879,11 @@ final class FulfillerTest extends TestCase {
 	}
 
 	private function fulfiller(): Fulfiller {
-		$client = new Client( self::BASE_URL, Operations::plugin(), new StaticCredentials(), $this->transport, new RecordingLogger(), new Deprecations() );
+		$client = $this->transport->sdk( ScriptedClient::credentials(), new RecordingLogger() );
 		return new Fulfiller(
-			new Designs( $client ),
-			new Orders( $client ),
+			$client,
 			fn (): ?StoredConnection => $this->connection,
-			new ProofRequest( new Designs( $client ), new ShareLinks( $client ), new ProofState( self::STATE_KEY ), static fn (): int => self::DEADLINE_DAYS, static fn ( string $locale ): ?string => DesignerLanguage::for_locale( $locale ) )
+			new ProofRequest( $client, new ProofState( self::STATE_KEY ), static fn (): int => self::DEADLINE_DAYS, static fn ( string $locale ): ?string => DesignerLanguage::for_locale( $locale ) )
 		);
 	}
 
@@ -975,7 +967,7 @@ final class FulfillerTest extends TestCase {
 	 */
 	private function sent(): array {
 		return array_map(
-			static fn ( array $sent ): string => $sent['method'] . ' ' . ScriptedTransport::target( $sent['url'] ),
+			static fn ( array $sent ): string => $sent['method'] . ' ' . ScriptedClient::target( $sent['url'] ),
 			$this->transport->sent
 		);
 	}
@@ -1057,7 +1049,7 @@ final class FulfillerTest extends TestCase {
 			'Acme',
 			StoredConnection::LIVE,
 			'sc_1',
-			StaticCredentials::INTEGRATION_KEY,
+			ScriptedClient::INTEGRATION_KEY,
 			'ik_id',
 			'WooCommerce',
 			'pk_test',

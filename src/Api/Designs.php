@@ -1,6 +1,6 @@
 <?php
 /**
- * The store's designs in Pixonaut.
+ * The store's designs in Pixonaut: what the plugin adds to the SDK's calls.
  *
  * @package Pixonaut\WooCommerce
  */
@@ -10,7 +10,21 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Api;
 
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\DesignsApproveRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\DesignsApproveRequestConsent;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\DesignsCommitRequestOption1;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\DesignsFindOrCreateStandingRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\Binary;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Model\Omitted;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 
+/**
+ * Committing, deleting and erasing a design the way the store needs it, and
+ * its proof and mockup images, checked before they are kept. Everything else
+ * about a design is the SDK's `designs()`.
+ */
 final class Designs {
 
 	/**
@@ -24,13 +38,12 @@ final class Designs {
 	 */
 	private const PNG_SIGNATURE = "\x89PNG\r\n\x1a\n";
 
-	/**
-	 * What an erasure of a deleted design answers.
-	 */
-	private const NO_CONTENT = 204;
+	private const JPEG = 'image/jpeg';
+
+	private const PNG = 'image/png';
 
 	/*
-	 * The fields of a design (`GET /v1/designs/{id}`, and the erasure's answer) the store reads.
+	 * The fields of a design (`GET /v1/designs/{id}`, as its model's `raw()`) the store reads.
 	 */
 	public const TEMPLATE_BASE_ID        = 'templateBaseId';
 	public const TEMPLATE_VERSION        = 'templateVersion';
@@ -41,7 +54,7 @@ final class Designs {
 	public const PRINT_SIZE              = 'printSize';
 	public const PERSONAL_DATA_ERASED_AT = 'personalDataErasedAt';
 
-	public function __construct( private readonly Client $client ) {
+	public function __construct( private readonly Sdk $pixonaut ) {
 	}
 
 	/**
@@ -59,33 +72,25 @@ final class Designs {
 	 *
 	 * @return string The design's id.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	public function commit( string $proof_token, string $external_ref, string $idempotency_key, array $fulfilment_payload = array(), ?bool $preview_opened = null ): string {
-		$body = array(
-			'proofToken'  => $proof_token,
-			'externalRef' => $external_ref,
+		$body = new DesignsCommitRequestOption1(
+			proofToken: $proof_token,
+			fulfilmentPayload: array() === $fulfilment_payload ? Omitted::Field : $fulfilment_payload,
+			externalRef: $external_ref,
+			previewOpened: $preview_opened,
 		);
-		if ( array() !== $fulfilment_payload ) {
-			$body['fulfilmentPayload'] = $fulfilment_payload;
-		}
-		if ( null !== $preview_opened ) {
-			$body['previewOpened'] = $preview_opened;
-		}
 		try {
-			$response = $this->client->call( Operations::COMMIT_DESIGN, array(), array(), $body, $idempotency_key );
-		} catch ( ApiError $error ) {
+			$id = $this->pixonaut->designs()->commit( $body, idempotencyKey: $idempotency_key )->designId;
+		} catch ( ApiException $error ) {
 			$adopted = $error->details['designId'] ?? null;
-			if ( ErrorCodes::PROOF_ALREADY_COMMITTED === $error->error_code && is_string( $adopted ) && '' !== $adopted ) {
+			if ( ErrorCode::PROOF_ALREADY_COMMITTED === $error->errorCode && is_string( $adopted ) && '' !== $adopted ) {
 				return $adopted;
 			}
 			throw $error;
 		}
-		$id = $this->client->json( Operations::COMMIT_DESIGN, $response )['designId'] ?? null;
-		if ( ! is_string( $id ) || '' === $id ) {
-			throw ApiError::unexpected( Operations::COMMIT_DESIGN, $response );
-		}
-		return $id;
+		return self::id( 'designs.commit', $id );
 	}
 
 	/**
@@ -114,50 +119,21 @@ final class Designs {
 	 *
 	 * @return string The design's id.
 	 *
-	 * @throws ApiError When Pixonaut refused (`forbidden`, `constraint_violation`, `unknown_placement`, `variant_required`, `not_a_layout_proof`, `layout_proof_mismatch`, `unknown_proof`, …) or could not be reached.
+	 * @throws ApiException When Pixonaut refused (`forbidden`, `constraint_violation`, `unknown_placement`, `variant_required`, `not_a_layout_proof`, `layout_proof_mismatch`, `unknown_proof`, …) or could not be reached.
 	 */
 	public function standing( string $template_id, ?string $blank_id, ?string $placement_id, ?PrintSize $size, ?array $variant_row = null, ?string $proof_token = null ): string {
-		$body = array(
-			'templateId' => $template_id,
-			'approve'    => true,
+		$on_blank = null !== $blank_id && null !== $placement_id;
+		$body     = new DesignsFindOrCreateStandingRequest(
+			templateId: $template_id,
+			approve: true,
+			blankId: $on_blank ? $blank_id : null,
+			heightMm: $size?->height_mm,
+			placementId: $on_blank ? $placement_id : null,
+			proofToken: $proof_token,
+			variantRow: $variant_row,
+			widthMm: $size?->width_mm,
 		);
-		if ( null !== $blank_id && null !== $placement_id ) {
-			$body += array(
-				'blankId'     => $blank_id,
-				'placementId' => $placement_id,
-			);
-		}
-		if ( null !== $size ) {
-			$body += array(
-				'widthMm'  => $size->width_mm,
-				'heightMm' => $size->height_mm,
-			);
-		}
-		if ( null !== $variant_row ) {
-			$body['variantRow'] = $variant_row;
-		}
-		if ( null !== $proof_token ) {
-			$body['proofToken'] = $proof_token;
-		}
-		$response = $this->client->call( Operations::FIND_OR_CREATE_STANDING_DESIGN, array(), array(), $body );
-		$id       = $this->client->json( Operations::FIND_OR_CREATE_STANDING_DESIGN, $response )['designId'] ?? null;
-		if ( ! is_string( $id ) || '' === $id ) {
-			throw ApiError::unexpected( Operations::FIND_OR_CREATE_STANDING_DESIGN, $response );
-		}
-		return $id;
-	}
-
-	/**
-	 * `GET /v1/designs/{id}`.
-	 *
-	 * @param string $id Design id.
-	 *
-	 * @return array<string, mixed> The design: `printSize`, `templateBaseId`, `templateVersion`, `blankId`, `placementId`, `revision`, `status`, `externalRef`, ….
-	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
-	 */
-	public function get( string $id ): array {
-		return $this->client->json( Operations::GET_DESIGN, $this->client->call( Operations::GET_DESIGN, array( 'id' => $id ) ) );
+		return self::id( 'designs.findOrCreateStanding', $this->pixonaut->designs()->findOrCreateStanding( $body )->designId );
 	}
 
 	/**
@@ -170,23 +146,12 @@ final class Designs {
 	 *
 	 * @return string The JPEG's bytes.
 	 *
-	 * @throws ApiError When Pixonaut refused (`proof_changed`, `proof_not_found`, `not_found`, …) or could not be reached.
+	 * @throws ApiException When Pixonaut refused (`proof_changed`, `proof_not_found`, `not_found`, …) or could not be reached.
 	 */
 	public function proof( string $id, string $proof_id, int $width ): string {
-		$response = $this->client->call(
-			Operations::GET_DESIGN_PROOF,
-			array( 'id' => $id ),
-			array(
-				'v'     => $proof_id,
-				'width' => $width,
-			)
-		);
+		$proof = $this->pixonaut->designs()->getProof( $id, $proof_id, (string) $width );
 		// A proxy's error page answered 200 must not be kept and served as the proof.
-		$media = strtolower( trim( explode( ';', (string) $response->header( 'Content-Type' ) )[0] ) );
-		if ( Operation::JPEG !== $media || ! str_starts_with( $response->body, self::JPEG_START ) ) {
-			throw ApiError::unexpected( Operations::GET_DESIGN_PROOF, $response );
-		}
-		return $response->body;
+		return self::image( 'designs.proof.get', $proof, self::JPEG, self::JPEG_START );
 	}
 
 	/**
@@ -203,25 +168,12 @@ final class Designs {
 	 *
 	 * @return string The PNG's bytes.
 	 *
-	 * @throws ApiError When Pixonaut refused (`proof_changed`, `proof_not_found`, `not_found`, …) or could not be reached.
+	 * @throws ApiException When Pixonaut refused (`proof_changed`, `proof_not_found`, `not_found`, …) or could not be reached.
 	 */
 	public function mockup( string $id, string $proof_id, ?string $view_id, int $size, ?string $variant = null ): string {
-		$response = $this->client->call(
-			Operations::DESIGN_MOCKUP,
-			array( 'id' => $id ),
-			array(
-				'v'       => $proof_id,
-				'viewId'  => $view_id,
-				'size'    => $size,
-				'variant' => $variant,
-			)
-		);
+		$mockup = $this->pixonaut->designs()->getMockup( $id, viewId: $view_id, variant: $variant, size: (string) $size, v: $proof_id );
 		// A proxy's error page answered 200 must not be kept and served as the picture.
-		$media = strtolower( trim( explode( ';', (string) $response->header( 'Content-Type' ) )[0] ) );
-		if ( Operation::PNG !== $media || ! str_starts_with( $response->body, self::PNG_SIGNATURE ) ) {
-			throw ApiError::unexpected( Operations::DESIGN_MOCKUP, $response );
-		}
-		return $response->body;
+		return self::image( 'designs.mockup.get', $mockup, self::PNG, self::PNG_SIGNATURE );
 	}
 
 	/**
@@ -229,13 +181,13 @@ final class Designs {
 	 *
 	 * @param string $id Design id.
 	 *
-	 * @throws ApiError When Pixonaut refused (`design_approved`, `design_printed`, …) or could not be reached.
+	 * @throws ApiException When Pixonaut refused (`design_approved`, `design_printed`, …) or could not be reached.
 	 */
 	public function delete( string $id ): void {
 		try {
-			$this->client->call( Operations::DELETE_DESIGN, array( 'id' => $id ) );
-		} catch ( ApiError $error ) {
-			if ( ErrorCodes::NOT_FOUND !== $error->error_code ) {
+			$this->pixonaut->designs()->delete( $id );
+		} catch ( ApiException $error ) {
+			if ( ErrorCode::NOT_FOUND !== $error->errorCode ) {
 				throw $error;
 			}
 		}
@@ -250,160 +202,76 @@ final class Designs {
 	 *
 	 * @return int|null When its personal data was erased, epoch milliseconds; null when the design is deleted, or unknown to Pixonaut.
 	 *
-	 * @throws ApiError When Pixonaut refused (`lock_timeout`, …) or could not be reached.
+	 * @throws ApiException When Pixonaut refused (`lock_timeout`, …) or could not be reached.
 	 */
 	public function erase_personal_data( string $id ): ?int {
 		try {
-			$response = $this->client->call( Operations::ERASE_DESIGN, array( 'id' => $id ) );
-		} catch ( ApiError $error ) {
-			if ( ErrorCodes::NOT_FOUND === $error->error_code ) {
+			$design = $this->pixonaut->designs()->erasePersonalData( $id );
+		} catch ( ApiException $error ) {
+			if ( ErrorCode::NOT_FOUND === $error->errorCode ) {
 				return null;
 			}
 			throw $error;
 		}
-		if ( self::NO_CONTENT === $response->status ) {
+		if ( null === $design ) {
 			return null;
 		}
-		$erased = $this->client->json( Operations::ERASE_DESIGN, $response )[ self::PERSONAL_DATA_ERASED_AT ] ?? null;
-		if ( ! is_int( $erased ) && ! is_float( $erased ) ) {
-			throw ApiError::unexpected( Operations::ERASE_DESIGN, $response );
+		if ( null === $design->personalDataErasedAt ) {
+			throw new ApiException( 'designs.erasePersonalData', 200, ApiException::UNEXPECTED_RESPONSE, false );
 		}
-		return (int) $erased;
+		return (int) $design->personalDataErasedAt;
 	}
 
 	/**
-	 * `PUT /v1/designs/{id}/external-ref`: replaces the store's reference.
+	 * The body of `POST /v1/designs/{id}/approve` for a customer's approval
+	 * of a design at a revision. Approving it again at the same revision
+	 * answers `200` again; another revision is refused.
 	 *
-	 * @param string $id           Design id.
-	 * @param string $external_ref The new reference.
-	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
-	 */
-	public function set_external_ref( string $id, string $external_ref ): void {
-		$this->client->call( Operations::SET_DESIGN_EXTERNAL_REF, array( 'id' => $id ), array(), array( 'externalRef' => $external_ref ) );
-	}
-
-	/**
-	 * `POST /v1/designs/{id}/approve`: approves a committed design for print.
-	 * Approving it again at the same revision answers `200` again.
-	 *
-	 * @param string                                     $design_id         The design.
 	 * @param array{kind: string, at: int, ref?: string} $consent           How and when the customer agreed (`at` in epoch milliseconds), and the store's reference for it.
-	 * @param int                                        $expected_revision The revision the customer approved; another one is refused.
-	 *
-	 * @return array<string, mixed> `status`: `approved`, or `scheduled` for a deferred approval; an open set.
-	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @param int                                        $expected_revision The revision the customer approved.
 	 */
-	public function approve( string $design_id, array $consent, int $expected_revision ): array {
-		$response = $this->client->call(
-			Operations::APPROVE_DESIGN,
-			array( 'id' => $design_id ),
-			array(),
-			array(
-				'consent'          => $consent,
-				'expectedRevision' => $expected_revision,
-			)
-		);
-		return $this->client->json( Operations::APPROVE_DESIGN, $response );
-	}
-
-	/**
-	 * `POST /v1/designs/{id}/correction-links`: a link that lets the
-	 * customer's browser reopen this one design in the designer, for 2 hours.
-	 * With a `returnUrl` it also opens Pixonaut's hosted correction page,
-	 * which sends the customer back there with `state`, and the correction's
-	 * `proofToken` once they approve it. With `$adjust_layout`, the link opens
-	 * a standing design for its layout alone (`adjustLayout`): its printed
-	 * layers moved and scaled, nothing else; its proof makes a standing
-	 * design of its own (`standing()`), never a correction.
-	 *
-	 * @param string      $design_id     The design.
-	 * @param string|null $return_url    Where the hosted correction page returns to; null for the SDK's credential only.
-	 * @param string|null $state         Carried back to `$return_url` untouched; only with it.
-	 * @param bool        $adjust_layout Whether the link adjusts a standing design's layout rather than correcting the design.
-	 *
-	 * @return array{token: string, expiresAt: int, url: string|null} The SDK's `correctionLink`, when it stops working in epoch milliseconds, and the hosted page when a return address was given.
-	 *
-	 * @throws ApiError When Pixonaut refused (`not_editable`, `not_standing`, `return_url_off_store`, …) or could not be reached.
-	 */
-	public function correction_link( string $design_id, ?string $return_url = null, ?string $state = null, bool $adjust_layout = false ): array {
-		$body = $adjust_layout ? array( 'adjustLayout' => true ) : array();
-		if ( null !== $return_url ) {
-			$body['returnUrl'] = $return_url;
-			if ( null !== $state ) {
-				$body['state'] = $state;
-			}
-		}
-		$response = $this->client->call( Operations::CREATE_CORRECTION_LINK, array( 'id' => $design_id ), array(), $body );
-		$link     = $this->client->json( Operations::CREATE_CORRECTION_LINK, $response );
-		$url      = $link['url'] ?? null;
-		if ( ! is_string( $link['token'] ?? null ) || '' === $link['token'] || ! is_numeric( $link['expiresAt'] ?? null ) || ! ( null === $url || is_string( $url ) ) || ( null !== $return_url && ! is_string( $url ) ) ) {
-			throw ApiError::unexpected( Operations::CREATE_CORRECTION_LINK, $response );
-		}
-		return array(
-			'token'     => $link['token'],
-			'expiresAt' => (int) $link['expiresAt'],
-			'url'       => $url,
+	public static function approval( array $consent, int $expected_revision ): DesignsApproveRequest {
+		return new DesignsApproveRequest(
+			consent: new DesignsApproveRequestConsent(
+				at: $consent['at'],
+				kind: $consent['kind'],
+				ref: $consent['ref'] ?? Omitted::Field,
+			),
+			expectedRevision: $expected_revision,
 		);
 	}
 
 	/**
-	 * `PATCH /v1/designs/{id}` with a correction's proof token: makes the
-	 * correction the design's next revision, which clears any approval.
+	 * A design id Pixonaut answered, once it is one: the SDK checks only
+	 * that it is a string.
 	 *
-	 * @param string $design_id   The design.
-	 * @param string $proof_token The token the correction mount's `approve()` resolved.
+	 * @param string $operation SDK operation id, for the error.
+	 * @param string $id        The `designId` answered.
 	 *
-	 * @return array{revision: int, edited: bool, proofId: string|null} The design's revision and proof now; `edited` is false when the correction changed nothing.
-	 *
-	 * @throws ApiError When Pixonaut refused (`revision_changed`, `proof_expired`, `not_editable`, …) or could not be reached.
+	 * @throws ApiException `unexpected_response` when it is empty.
 	 */
-	public function correct( string $design_id, string $proof_token ): array {
-		$response = $this->client->call( Operations::CORRECT_DESIGN, array( 'id' => $design_id ), array(), array( 'proofToken' => $proof_token ) );
-		$answer   = $this->client->json( Operations::CORRECT_DESIGN, $response );
-		$proof_id = $answer['proofId'] ?? null;
-		if ( ! is_int( $answer['revision'] ?? null ) || ! is_bool( $answer['edited'] ?? null ) || ! ( null === $proof_id || is_string( $proof_id ) ) ) {
-			throw ApiError::unexpected( Operations::CORRECT_DESIGN, $response );
-		}
-		return array(
-			'revision' => $answer['revision'],
-			'edited'   => $answer['edited'],
-			'proofId'  => $proof_id,
-		);
-	}
-
-	/**
-	 * `POST /v1/designs/{id}/reject`: rejects a committed design, which then
-	 * takes no correction and is never printed. Rejecting it again answers
-	 * `200` again; one approved meanwhile is refused `not_committed`.
-	 *
-	 * @param string $design_id The design.
-	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
-	 */
-	public function reject( string $design_id ): void {
-		$this->client->call( Operations::REJECT_DESIGN, array( 'id' => $design_id ) );
-	}
-
-	/**
-	 * `POST /v1/designs/{id}/duplicate`: a new design from this one, awaiting
-	 * approval on its own, with the same template version, document, blank
-	 * and fulfilment payload, and no `externalRef`. The source is left as it
-	 * was.
-	 *
-	 * @param string $design_id The design to copy.
-	 *
-	 * @return string The new design's id.
-	 *
-	 * @throws ApiError When Pixonaut refused (`not_found`, `design_erased`, …) or could not be reached.
-	 */
-	public function duplicate( string $design_id ): string {
-		$response = $this->client->call( Operations::DUPLICATE_DESIGN, array( 'id' => $design_id ) );
-		$id       = $this->client->json( Operations::DUPLICATE_DESIGN, $response )['designId'] ?? null;
-		if ( ! is_string( $id ) || '' === $id ) {
-			throw ApiError::unexpected( Operations::DUPLICATE_DESIGN, $response );
+	public static function id( string $operation, string $id ): string {
+		if ( '' === $id ) {
+			throw new ApiException( $operation, 200, ApiException::UNEXPECTED_RESPONSE, false );
 		}
 		return $id;
+	}
+
+	/**
+	 * An image Pixonaut answered, once it is what the operation draws.
+	 *
+	 * @param string $operation SDK operation id, for the error.
+	 * @param Binary $image     The answer.
+	 * @param string $media     The media type it must be.
+	 * @param string $signature The bytes it must start with.
+	 *
+	 * @throws ApiException `unexpected_response` when it is not.
+	 */
+	private static function image( string $operation, Binary $image, string $media, string $signature ): string {
+		$type = strtolower( trim( explode( ';', $image->contentType )[0] ) );
+		if ( $media !== $type || ! str_starts_with( $image->bytes, $signature ) ) {
+			throw new ApiException( $operation, 200, ApiException::UNEXPECTED_RESPONSE, false, null, $image->requestId );
+		}
+		return $image->bytes;
 	}
 }

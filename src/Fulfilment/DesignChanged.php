@@ -10,12 +10,14 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Fulfilment;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\Connection\Connection;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Order;
 
@@ -68,25 +70,25 @@ final class DesignChanged {
 	private const MAX_ATTEMPTS = 3;
 
 	/**
-	 * @param Connection $connection The store's connection; a line of another workspace is never acted on.
-	 * @param Designs    $designs    Reads a design afresh.
-	 * @param Closure    $schedule   `fn(int $item_id): bool`, queues a line's fulfilment job again; false when it could not be queued.
-	 * @param Logger     $logger     Logs a fulfilment job that could not be queued.
+	 * @param Connection      $connection The store's connection; a line of another workspace is never acted on.
+	 * @param Sdk             $pixonaut   Reads a design afresh.
+	 * @param Closure         $schedule   `fn(int $item_id): bool`, queues a line's fulfilment job again; false when it could not be queued.
+	 * @param LoggerInterface $logger     Logs a fulfilment job that could not be queued.
 	 */
 	public function __construct(
 		private readonly Connection $connection,
-		private readonly Designs $designs,
+		private readonly Sdk $pixonaut,
 		private readonly Closure $schedule,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
 	/**
 	 * @param Event $event `design.edited`, `design.deleted` or `design.personal_data_erased`.
-	 * @throws ApiError When the design could not be read again. A RuntimeException when a line kept changing while the change was applied; handling the event again retries either.
+	 * @throws ApiException When the design could not be read again. A RuntimeException when a line kept changing while the change was applied; handling the event again retries either.
 	 */
 	public function handle( Event $event ): void {
-		$design_id = $event->string( 'designId' );
+		$design_id = Payload::string( $event, 'designId' );
 		if ( null === $design_id ) {
 			return;
 		}
@@ -95,21 +97,21 @@ final class DesignChanged {
 			return;
 		}
 		if ( self::ERASED === $event->type ) {
-			$this->erased( $lines, $design_id, $event->created_at );
+			$this->erased( $lines, $design_id, $event->createdAt );
 			return;
 		}
 		if ( self::DELETED === $event->type ) {
-			$this->deleted( $lines, $design_id, $event->created_at );
+			$this->deleted( $lines, $design_id, $event->createdAt );
 			return;
 		}
 		// The event may be older than the design: what counts is its revision now.
 		try {
-			$design = $this->designs->get( $design_id );
-		} catch ( ApiError $e ) {
-			if ( ErrorCodes::NOT_FOUND !== $e->error_code ) {
+			$design = $this->pixonaut->designs()->get( $design_id )->raw();
+		} catch ( ApiException $e ) {
+			if ( ErrorCode::NOT_FOUND !== $e->errorCode ) {
 				throw $e;
 			}
-			$this->deleted( $lines, $design_id, $event->created_at );
+			$this->deleted( $lines, $design_id, $event->createdAt );
 			return;
 		}
 		$this->apply_read( $lines, $design_id, $design );

@@ -9,15 +9,16 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Approval;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Fulfilment\NeedsAttention;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -59,24 +60,24 @@ final class DesignApproved {
 	private const STOPPED_ORDER_STATUSES = array( 'failed' );
 
 	/**
-	 * @param Connection $connection The store's connection; a line of another workspace is never acted on.
-	 * @param Designs    $designs    Reads a design whose approval names another revision.
-	 * @param Logger     $logger     Logs approvals ignored.
+	 * @param Connection      $connection The store's connection; a line of another workspace is never acted on.
+	 * @param Sdk             $pixonaut   Reads a design whose approval names another revision.
+	 * @param LoggerInterface $logger     Logs approvals ignored.
 	 */
 	public function __construct(
 		private readonly Connection $connection,
-		private readonly Designs $designs,
-		private readonly Logger $logger,
+		private readonly Sdk $pixonaut,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
 	/**
 	 * @param Event $event A `design.approved` event.
 	 * @throws RuntimeException When a line kept changing while the approval was applied, was not waiting for the customer yet, or its fulfilment job could not be scheduled; handling the event again retries it.
-	 * @throws ApiError When the design had to be read again and could not be.
+	 * @throws ApiException When the design had to be read again and could not be.
 	 */
 	public function handle( Event $event ): void {
-		$design_id = $event->string( 'designId' );
+		$design_id = Payload::string( $event, 'designId' );
 		if ( null === $design_id ) {
 			return;
 		}
@@ -102,7 +103,7 @@ final class DesignApproved {
 	 * @param string                $design_id The design approved.
 	 * @param int|null              $revision  The revision the event names; null when it names none.
 	 *
-	 * @throws RuntimeException When the line kept changing for MAX_ATTEMPTS tries, was not waiting for the customer yet, or its job could not be scheduled; an ApiError when the design could not be read.
+	 * @throws RuntimeException When the line kept changing for MAX_ATTEMPTS tries, was not waiting for the customer yet, or its job could not be scheduled; an ApiException when the design could not be read.
 	 */
 	private function apply( WC_Order_Item_Product $item, string $design_id, ?int $revision ): void {
 		$order = wc_get_order( $item->get_order_id() );
@@ -137,11 +138,11 @@ final class DesignApproved {
 			}
 			$line_revision = $line->side_ref( $side, LineState::SIDE_REVISION );
 			if ( $revision !== $line_revision && ! $verified ) {
-				$design = $this->designs->get( $design_id );
-				if ( self::STATUS_APPROVED !== ( $design['status'] ?? null ) ) {
+				$design = $this->pixonaut->designs()->get( $design_id );
+				if ( self::STATUS_APPROVED !== $design->status ) {
 					return;
 				}
-				if ( ( $design['revision'] ?? null ) !== $line_revision ) {
+				if ( $design->revision !== $line_revision ) {
 					if ( $this->attention( $line, $order ) ) {
 						return;
 					}

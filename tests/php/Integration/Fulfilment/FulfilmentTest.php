@@ -7,8 +7,6 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Fulfilment;
 
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\PreparedRequest;
 use Pixonaut\WooCommerce\Fulfilment\DeliveryChange;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
@@ -17,6 +15,7 @@ use Pixonaut\WooCommerce\Fulfilment\RetryPolicy;
 use Pixonaut\WooCommerce\Refs;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
 use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\PreparedRequest;
 use WC_Order;
 use WC_Order_Item_Product;
 
@@ -75,7 +74,7 @@ final class FulfilmentTest extends FulfilmentTestCase {
 		add_action(
 			'pixonaut_wc_api_before_request',
 			static function ( PreparedRequest $request ) use ( $order_id ): void {
-				if ( Operations::CREATE_ORDER !== $request->operation ) {
+				if ( 'orders.create' !== $request->operation ) {
 					return;
 				}
 				$elsewhere = wc_get_order( $order_id );

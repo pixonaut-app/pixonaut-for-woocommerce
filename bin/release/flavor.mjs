@@ -74,27 +74,44 @@ export function stripUpdateUri(plugin) {
 }
 
 /**
- * composer.json for the wporg flavor: without the update checker and the
- * autoload entries into it, and without development packages, so with no
- * lock file Composer has nothing to resolve. (The build installs with
- * `--no-scripts`, so Strauss does not run.)
+ * composer.json for the wporg flavor: without the update checker, the
+ * autoload entries into it and its Strauss settings. Its packages stay as
+ * composer.lock pins them: the build drops the update checker from the lock
+ * (`composer update <it> --no-install`) before it installs, and Strauss
+ * prefixes the rest as it does for the github flavor.
  *
  * @param {Record<string, any>} composer The parsed composer.json.
  * @returns {Record<string, any>}
  */
 export function wporgComposerJson(composer) {
-	const { 'require-dev': _dev, ...production } = composer;
 	const { [UPDATER_PACKAGE]: _updater, ...require } = composer.require ?? {};
 	const { classmap = [], ...autoload } = composer.autoload ?? {};
 	const kept = classmap.filter(
 		(/** @type {string} */ path) =>
 			!path.startsWith(`vendor/${UPDATER_PACKAGE}/`),
 	);
-	return {
-		...production,
+	/** @type {Record<string, any>} */
+	const wporg = {
+		...composer,
 		require,
 		autoload: kept.length > 0 ? { ...autoload, classmap: kept } : autoload,
 	};
+	const strauss = composer.extra?.strauss;
+	if (strauss !== undefined) {
+		const { [UPDATER_PACKAGE]: _override, ...overrides } =
+			strauss.override_autoload ?? {};
+		wporg.extra = {
+			...composer.extra,
+			strauss: {
+				...strauss,
+				packages: (strauss.packages ?? []).filter(
+					(/** @type {string} */ name) => name !== UPDATER_PACKAGE,
+				),
+				override_autoload: overrides,
+			},
+		};
+	}
+	return wporg;
 }
 
 /**

@@ -10,15 +10,11 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Fulfilment;
 use Pixonaut\WooCommerce\Admin\ConnectionScreen;
 use Pixonaut\WooCommerce\Admin\Notices;
 use Pixonaut\WooCommerce\Admin\OrderBox;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\Connect;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Cart\StandingSide;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Orders;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
+use Pixonaut\WooCommerce\Cart\StandingSide;
 use Pixonaut\WooCommerce\Connection\ConnectAttempts;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
@@ -41,6 +37,8 @@ use Pixonaut\WooCommerce\Templates;
 use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
 use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use WC_Order;
 use WC_Order_Item_Product;
 
@@ -127,7 +125,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 
 	public function test_a_failed_print_is_offered_retry_only_while_pixonaut_allows_it(): void {
 		$line   = $this->flagged( 'failed', NeedsAttention::ORDER_FAILED );
-		$failed = array( 'failureKind' => ErrorCodes::PRINT_FAILED );
+		$failed = array( 'failureKind' => 'print_failed' );
 
 		$this->assertSame( array( LineActions::RETRY ), $this->actions->available( $line, $this->read( 'failed', $failed + array( 'canRetry' => true ) ) ) );
 		$this->assertSame( array(), $this->actions->available( $line, $this->read( 'failed', $failed + array( 'canRetry' => false ) ) ) );
@@ -143,7 +141,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 					'failed',
 					array(
 						'canRetry'    => true,
-						'failureKind' => ErrorCodes::PRINT_FAILED,
+						'failureKind' => 'print_failed',
 					)
 				)
 			)
@@ -175,7 +173,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 			->json(
 				409,
 				array(
-					'error'  => ErrorCodes::PRINT_NOT_COMPLETED,
+					'error'  => ErrorCode::PRINT_NOT_COMPLETED,
 					'status' => 'created',
 				)
 			)
@@ -213,7 +211,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 			->json(
 				409,
 				array(
-					'error'  => ErrorCodes::ORDER_NOT_RETRYABLE,
+					'error'  => ErrorCode::ORDER_NOT_RETRYABLE,
 					'status' => OrderStatus::SUBMITTED,
 				)
 			);
@@ -435,7 +433,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$result = $this->actions->run( $line, LineActions::SETTLE_SUBMITTED, 'Printful has it.', 'PF-889123' );
 
 		$this->assertSame( LineActions::DONE, $result->code );
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'status'           => 'submitted',
 				'reason'           => 'Printful has it.',
@@ -580,7 +578,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$line = $this->line();
 		$this->assertTrue( $line->transition( LineState::APPROVED ) );
 		$line->set_ref( LineState::REF_ORDER_KEY, 'wc:site:item:1' );
-		$this->assertTrue( NeedsAttention::flag( $line, $this->order, ErrorCodes::DESIGN_ALREADY_ORDERED, 'Ordered elsewhere.' ) );
+		$this->assertTrue( NeedsAttention::flag( $line, $this->order, ErrorCode::DESIGN_ALREADY_ORDERED, 'Ordered elsewhere.' ) );
 		$line = $this->line();
 		$this->assertSame( array( LineActions::RETRY, LineActions::REORDER ), $this->actions->available( $line, null ) );
 
@@ -594,7 +592,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$this->assertSame( array(), $this->recorder->requests );
 
 		// A line that reorders already offers no second reorder.
-		$this->assertTrue( NeedsAttention::flag( $line, $this->order, ErrorCodes::DESIGN_ALREADY_ORDERED, 'Ordered elsewhere.' ) );
+		$this->assertTrue( NeedsAttention::flag( $line, $this->order, ErrorCode::DESIGN_ALREADY_ORDERED, 'Ordered elsewhere.' ) );
 		$this->assertSame( array( LineActions::RETRY ), $this->actions->available( $this->line(), null ) );
 	}
 
@@ -605,7 +603,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$line = LineState::of( $item );
 		$line->set_ref( LineState::REF_STANDING, array( ( new StandingSide( 'front', 'des_standing_1', 0 ) )->to_array() ) );
 		$this->assertTrue( $line->transition( LineState::APPROVED ) );
-		$this->assertTrue( NeedsAttention::flag( $line, $order, ErrorCodes::DESIGN_ALREADY_ORDERED, 'Ordered elsewhere.' ) );
+		$this->assertTrue( NeedsAttention::flag( $line, $order, ErrorCode::DESIGN_ALREADY_ORDERED, 'Ordered elsewhere.' ) );
 
 		$this->assertSame( array( LineActions::RETRY ), $this->actions->available( LineState::of( new WC_Order_Item_Product( $item->get_id() ) ), null ) );
 	}
@@ -866,7 +864,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 
 		$this->box()->handle( $this->order->get_id() );
 
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'status'           => 'submitted',
 				'reason'           => 'They have it.',
@@ -1015,7 +1013,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 	private function line_actions(): LineActions {
 		$store = $this->store;
 		return new LineActions(
-			new Orders( $this->client() ),
+			$this->client(),
 			static fn (): ?StoredConnection => $store->load(),
 			$this->status_changed(),
 			new OrderFailed( $this->event_lines() ),
@@ -1028,12 +1026,12 @@ final class LineActionsTest extends FulfilmentTestCase {
 		);
 	}
 
-	private function client(): Client {
-		return new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+	private function client(): Sdk {
+		return ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 	}
 
 	private function event_lines(): OrderEventLines {
-		$connection = new Connection( $this->store, new ConnectAttempts(), new Connect( $this->client() ), new Notices( Templates::for_plugin( self::plugin_file() ) ), new WcLogger(), ConnectionScreen::settings_url() );
+		$connection = new Connection( $this->store, new ConnectAttempts(), $this->client(), new Notices( Templates::for_plugin( self::plugin_file() ) ), new WcLogger(), ConnectionScreen::settings_url() );
 		return new OrderEventLines( $connection, new WcLogger() );
 	}
 

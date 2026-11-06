@@ -9,7 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -52,18 +53,18 @@ final class OrderReleased {
 	 * @throws RuntimeException When a line kept changing; handling the event again retries it.
 	 */
 	public function handle( Event $event ): void {
-		$status   = $event->string( 'status' );
-		$order_id = $event->string( 'orderId' );
+		$status   = Payload::string( $event, 'status' );
+		$order_id = Payload::string( $event, 'orderId' );
 		if ( null === $status || null === $order_id ) {
 			return;
 		}
-		$change  = new Event(
+		$change  = Payload::event(
 			$event->id,
 			OrderStatusChanged::TYPE,
-			$event->created_at,
+			$event->createdAt,
 			array(
 				'orderId'        => $order_id,
-				'externalRef'    => $event->string( 'externalRef' ),
+				'externalRef'    => Payload::string( $event, 'externalRef' ),
 				'previousStatus' => OrderStatus::HELD,
 				'status'         => $status,
 			)
@@ -71,7 +72,7 @@ final class OrderReleased {
 		$goes_on = ! in_array( $status, array( OrderStatus::FAILED, OrderStatus::CANCELLED ), true );
 		foreach ( $this->lines->of( $event ) as $line ) {
 			$this->apply_to( $line, $status, $change );
-			$this->record( $line->item(), $order_id, $event->string( 'releasedBy' ) ?? '', $goes_on );
+			$this->record( $line->item(), $order_id, Payload::string( $event, 'releasedBy' ) ?? '', $goes_on );
 		}
 	}
 

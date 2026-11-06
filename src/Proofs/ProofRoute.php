@@ -9,10 +9,10 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Proofs;
 
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Plugin;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -51,14 +51,14 @@ final class ProofRoute {
 	/**
 	 * Pixonaut's answers that say the image is not there to serve.
 	 */
-	private const GONE = array( ErrorCodes::NOT_FOUND, ErrorCodes::PROOF_NOT_FOUND, ErrorCodes::PROOF_CHANGED );
+	private const GONE = array( ErrorCode::NOT_FOUND, ErrorCode::PROOF_NOT_FOUND, ErrorCode::PROOF_CHANGED );
 
 	/**
 	 * Pixonaut's answers that say the proof a picture on the blank draws is
 	 * not there; any other refusal is about the photo, view or drawing, and
 	 * the flat proof still stands in for it.
 	 */
-	private const PROOF_GONE = array( ErrorCodes::PROOF_NOT_FOUND, ErrorCodes::PROOF_CHANGED );
+	private const PROOF_GONE = array( ErrorCode::PROOF_NOT_FOUND, ErrorCode::PROOF_CHANGED );
 
 	private const STATUS_FORBIDDEN = 403;
 
@@ -67,16 +67,16 @@ final class ProofRoute {
 	private const STATUS_BAD_GATEWAY = 502;
 
 	/**
-	 * @param ProofUrls  $urls    Checks the request's signature.
-	 * @param ProofCache $cache   The store's copies.
-	 * @param Designs    $designs Fetches an image the cache lacks.
-	 * @param Logger     $logger  Logs an image Pixonaut could not give.
+	 * @param ProofUrls       $urls    Checks the request's signature.
+	 * @param ProofCache      $cache   The store's copies.
+	 * @param Designs         $designs Fetches an image the cache lacks.
+	 * @param LoggerInterface $logger  Logs an image Pixonaut could not give.
 	 */
 	public function __construct(
 		private readonly ProofUrls $urls,
 		private readonly ProofCache $cache,
 		private readonly Designs $designs,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -141,8 +141,8 @@ final class ProofRoute {
 		}
 		try {
 			$image = $this->image_of( $design_id, $proof_id, $width, $picture );
-		} catch ( ApiError $error ) {
-			if ( in_array( $error->error_code, $picture->on_blank ? self::PROOF_GONE : self::GONE, true ) ) {
+		} catch ( ApiException $error ) {
+			if ( in_array( $error->errorCode, $picture->on_blank ? self::PROOF_GONE : self::GONE, true ) ) {
 				return self::not_found();
 			}
 			$this->log( $design_id, $picture, $error );
@@ -171,8 +171,8 @@ final class ProofRoute {
 		$flat = ProofPicture::flat();
 		try {
 			$image = $this->image_of( $design_id, $proof_id, $width, $flat );
-		} catch ( ApiError $error ) {
-			if ( in_array( $error->error_code, self::GONE, true ) ) {
+		} catch ( ApiException $error ) {
+			if ( in_array( $error->errorCode, self::GONE, true ) ) {
 				return self::not_found();
 			}
 			$this->log( $design_id, $flat, $error );
@@ -191,7 +191,7 @@ final class ProofRoute {
 	 *
 	 * @return string|null Null when another request was fetching it and it did not land in time.
 	 *
-	 * @throws ApiError When Pixonaut could not give it.
+	 * @throws ApiException When Pixonaut could not give it.
 	 */
 	private function image_of( string $design_id, string $proof_id, int $width, ProofPicture $picture ): ?string {
 		$image = $this->cache->get( $design_id, $proof_id, $width, $picture );
@@ -225,7 +225,7 @@ final class ProofRoute {
 	 * @param int          $width     Served width.
 	 * @param ProofPicture $picture   The picture.
 	 *
-	 * @throws ApiError When Pixonaut could not give it.
+	 * @throws ApiException When Pixonaut could not give it.
 	 */
 	private function fetch( string $design_id, string $proof_id, int $width, ProofPicture $picture ): string {
 		if ( ! $picture->on_blank ) {
@@ -233,8 +233,8 @@ final class ProofRoute {
 		}
 		try {
 			return $this->designs->mockup( $design_id, $proof_id, $picture->view_id, $width, $picture->variant );
-		} catch ( ApiError $error ) {
-			$refusal = in_array( $error->error_code, self::PROOF_GONE, true ) ? ProofCache::GONE : ProofCache::STAND_IN;
+		} catch ( ApiException $error ) {
+			$refusal = in_array( $error->errorCode, self::PROOF_GONE, true ) ? ProofCache::GONE : ProofCache::STAND_IN;
 			$this->cache->refuse( $design_id, $proof_id, $width, $picture, $refusal );
 			throw $error;
 		}
@@ -243,14 +243,14 @@ final class ProofRoute {
 	/**
 	 * @param string       $design_id The design.
 	 * @param ProofPicture $picture   The picture asked for.
-	 * @param ApiError     $error     Why Pixonaut did not give it.
+	 * @param ApiException $error     Why Pixonaut did not give it.
 	 */
-	private function log( string $design_id, ProofPicture $picture, ApiError $error ): void {
+	private function log( string $design_id, ProofPicture $picture, ApiException $error ): void {
 		$this->logger->warning(
 			sprintf( $picture->on_blank ? 'Could not fetch design %s on its blank: %s' : 'Could not fetch the proof of design %s: %s', $design_id, $error->getMessage() ),
 			array(
 				'design_id' => $design_id,
-				'code'      => $error->error_code,
+				'code'      => $error->errorCode,
 			)
 		);
 	}

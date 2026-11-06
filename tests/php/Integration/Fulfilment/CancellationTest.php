@@ -7,13 +7,10 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Fulfilment;
 
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Orders;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
@@ -41,9 +38,9 @@ final class CancellationTest extends FulfilmentTestCase {
 
 	public function set_up(): void {
 		parent::set_up();
-		$client = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+		$client = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		$store  = $this->store;
-		$cancel = new LineCancellation( new Designs( $client ), new Orders( $client ), static fn (): ?StoredConnection => $store->load(), new WcLogger() );
+		$cancel = new LineCancellation( $client, static fn (): ?StoredConnection => $store->load(), new WcLogger() );
 		// The plugin's own triggers stay; its job runs against the recorder.
 		remove_all_actions( LineCancellation::ACTION );
 		add_action( LineCancellation::ACTION, array( $cancel, 'run' ) );

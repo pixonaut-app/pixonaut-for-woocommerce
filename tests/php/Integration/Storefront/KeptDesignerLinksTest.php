@@ -23,7 +23,8 @@ use Pixonaut\WooCommerce\Tests\Integration\Cart\PersonalisedCartTestCase;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variable;
@@ -313,7 +314,7 @@ final class KeptDesignerLinksTest extends PersonalisedCartTestCase {
 		$product_id = $this->product_id;
 		$naps       = 0;
 		$waiting    = new KeptDesignerLinks(
-			new DesignerLinks( $this->plugin->client(), new WcLogger() ),
+			new DesignerLinks( $this->plugin->sdk(), new WcLogger() ),
 			$this->plugin->designer_link_withdrawals(),
 			$this->plugin->connection(),
 			$this->plugin->settings(),
@@ -533,11 +534,11 @@ final class KeptDesignerLinksTest extends PersonalisedCartTestCase {
 	}
 
 	private function changes(): DesignerLinkChanges {
-		return new DesignerLinkChanges( $this->links, new DesignerLinks( $this->plugin->client(), new WcLogger() ), new WcLogger() );
+		return new DesignerLinkChanges( $this->links, new DesignerLinks( $this->plugin->sdk(), new WcLogger() ), new WcLogger() );
 	}
 
 	private static function link_event( string $type, string $link_id, string $kind = DesignerLinks::KIND ): Event {
-		return new Event(
+		return Payload::event(
 			'evt_link',
 			$type,
 			Milliseconds::of( time() ),

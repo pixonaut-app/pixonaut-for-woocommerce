@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Approval;
 
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
@@ -46,12 +46,12 @@ final class ProofTimers {
 	private const MAX_ATTEMPTS = 3;
 
 	/**
-	 * @param Settings $settings Holds the deadline and reminder settings.
-	 * @param Logger   $logger   Logs jobs Action Scheduler would not store.
+	 * @param Settings        $settings Holds the deadline and reminder settings.
+	 * @param LoggerInterface $logger   Logs jobs Action Scheduler would not store.
 	 */
 	public function __construct(
 		private readonly Settings $settings,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 

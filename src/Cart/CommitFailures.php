@@ -12,10 +12,10 @@ namespace Pixonaut\WooCommerce\Cart;
 use Closure;
 use Pixonaut\WooCommerce\Admin\HelpLinks;
 use Pixonaut\WooCommerce\Admin\Notices;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Logger;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Schema;
 
 /**
@@ -69,13 +69,13 @@ final class CommitFailures {
 	private readonly Closure $clock;
 
 	/**
-	 * @param Notices      $notices Admin notices.
-	 * @param Logger       $logger  Logs the cause once.
-	 * @param Closure|null $clock   `fn(): int` Unix time; `time()` when null.
+	 * @param Notices         $notices Admin notices.
+	 * @param LoggerInterface $logger  Logs the cause once.
+	 * @param Closure|null    $clock   `fn(): int` Unix time; `time()` when null.
 	 */
 	public function __construct(
 		private readonly Notices $notices,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 	) {
 		$this->clock = $clock ?? static fn (): int => time();
@@ -84,9 +84,9 @@ final class CommitFailures {
 	/**
 	 * Counts a commit Pixonaut refused or did not answer.
 	 *
-	 * @param ApiError $error Why it failed.
+	 * @param ApiException $error Why it failed.
 	 */
-	public function failed( ApiError $error ): void {
+	public function failed( ApiException $error ): void {
 		// Best effort: while another request holds the lock, this failure goes uncounted.
 		if ( ! $this->lock() ) {
 			return;
@@ -94,7 +94,7 @@ final class CommitFailures {
 		try {
 			$state = $this->state();
 			$now   = ( $this->clock )();
-			if ( ErrorCodes::WORKSPACE_SUSPENDED === $error->error_code ) {
+			if ( ErrorCode::WORKSPACE_SUSPENDED === $error->errorCode ) {
 				if ( self::SUSPENDED !== $state['raised'] ) {
 					$state['raised'] = self::SUSPENDED;
 					$this->raise( self::SUSPENDED, $error );
@@ -158,10 +158,10 @@ final class CommitFailures {
 	}
 
 	/**
-	 * @param string   $cause FAILING or SUSPENDED.
-	 * @param ApiError $error The failure that raised it.
+	 * @param string       $cause FAILING or SUSPENDED.
+	 * @param ApiException $error The failure that raised it.
 	 */
-	private function raise( string $cause, ApiError $error ): void {
+	private function raise( string $cause, ApiException $error ): void {
 		$message = self::SUSPENDED === $cause
 			/* translators: 1: link to the Pixonaut studio, 2: link to the troubleshooting guide. */
 			? __( 'Customers cannot add personalised products to the cart: Pixonaut suspended the workspace, so it saves no designs. Check the workspace\'s plan and billing in the <a href="%1$s" target="_blank" rel="noopener noreferrer">Pixonaut studio</a>. <a href="%2$s" target="_blank" rel="noopener noreferrer">Troubleshooting</a>', 'pixonaut-for-woocommerce' )
@@ -175,7 +175,7 @@ final class CommitFailures {
 			array(
 				'operation'  => $error->operation,
 				'status'     => $error->status,
-				'error_code' => $error->error_code,
+				'error_code' => $error->errorCode,
 			)
 		);
 	}

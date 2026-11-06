@@ -10,12 +10,13 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Webhooks;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Webhooks;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\WebhookEndpointsUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 
 /**
  * Pixonaut registers the endpoint when the store connects, subscribed to
@@ -74,20 +75,20 @@ final class Endpoint {
 	/**
 	 * Why the health could not be read in this request, by endpoint id.
 	 *
-	 * @var array<string, ApiError>
+	 * @var array<string, ApiException>
 	 */
 	private array $health_failures = array();
 
 	/**
-	 * @param Connection   $connection The connection whose endpoint it is.
-	 * @param Webhooks     $api        `/v1/webhooks` operations.
-	 * @param Logger       $logger     Logs why the endpoint could not be narrowed.
-	 * @param Closure|null $clock      `fn(): int` Unix time; `time()` when null.
+	 * @param Connection      $connection The connection whose endpoint it is.
+	 * @param Sdk             $api        The SDK, for its `/v1/webhooks` operations.
+	 * @param LoggerInterface $logger     Logs why the endpoint could not be narrowed.
+	 * @param Closure|null    $clock      `fn(): int` Unix time; `time()` when null.
 	 */
 	public function __construct(
 		private readonly Connection $connection,
-		private readonly Webhooks $api,
-		private readonly Logger $logger,
+		private readonly Sdk $api,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 	) {
 		$this->clock = $clock ?? static fn (): int => time();
@@ -158,15 +159,15 @@ final class Endpoint {
 	private function subscribe( StoredConnection $connection ): void {
 		$event_types = self::event_types();
 		try {
-			$this->api->subscribe( $connection->webhook_id, $event_types );
+			$this->api->webhooks()->update( $connection->webhook_id, new WebhookEndpointsUpdateRequest( eventTypes: $event_types ) );
 			update_option( self::EVENT_TYPES_OPTION, $event_types, false );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->logger->warning(
 				sprintf( 'The store\'s webhook endpoint still receives every event type: %s.', $e->getMessage() ),
 				array(
 					'operation'  => $e->operation,
 					'status'     => $e->status,
-					'error_code' => $e->error_code,
+					'error_code' => $e->errorCode,
 				)
 			);
 		}
@@ -181,16 +182,17 @@ final class Endpoint {
 	 */
 	public function ping( StoredConnection $connection ): array {
 		try {
-			$answer = $this->api->ping( $connection->webhook_id );
-			$result = array(
-				'delivered' => $answer['delivered'],
-				'error'     => $answer['error'] ?? '',
+			$answer    = $this->api->webhooks()->ping( $connection->webhook_id )->raw();
+			$delivered = true === ( $answer['delivered'] ?? null );
+			$result    = array(
+				'delivered' => $delivered,
+				'error'     => ! $delivered && is_string( $answer['error'] ?? null ) ? $answer['error'] : '',
 			);
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$result = array(
 				'delivered' => false,
 				/* translators: %s: why Pixonaut did not answer, e.g. rate_limited. */
-				'error'     => sprintf( __( 'Pixonaut did not send the test request (%s).', 'pixonaut-for-woocommerce' ), $e->error_code ),
+				'error'     => sprintf( __( 'Pixonaut did not send the test request (%s).', 'pixonaut-for-woocommerce' ), $e->errorCode ),
 			);
 		}
 		$result['at'] = ( $this->clock )();
@@ -227,7 +229,7 @@ final class Endpoint {
 	 *
 	 * @return array{active: bool, failing: bool, failed_count: int, url: string}|null Null when Pixonaut lists no such endpoint.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	public function health( StoredConnection $connection ): ?array {
 		// The settings tab shows it twice, on the connection card and in the developer tools.
@@ -239,8 +241,13 @@ final class Endpoint {
 			return $this->health[ $id ];
 		}
 		try {
-			$endpoint = $this->api->find( $id );
-		} catch ( ApiError $e ) {
+			$endpoint = null;
+			foreach ( $this->api->webhooks()->list() as $listed ) {
+				if ( $listed->id === $id ) {
+					$endpoint = $listed->raw();
+				}
+			}
+		} catch ( ApiException $e ) {
 			// A second read would wait for the same timeout.
 			$this->health_failures[ $id ] = $e;
 			throw $e;

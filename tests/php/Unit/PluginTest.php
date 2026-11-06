@@ -48,6 +48,9 @@ final class PluginTest extends TestCase {
 		Functions\when( 'add_query_arg' )->returnArg( 2 );
 		Functions\when( 'plugin_basename' )->justReturn( 'pixonaut-for-woocommerce/pixonaut-for-woocommerce.php' );
 		Functions\when( 'is_admin' )->justReturn( true );
+		Functions\when( 'home_url' )->justReturn( 'https://shop.test/' );
+		Functions\when( 'untrailingslashit' )->alias( static fn ( string $value ): string => rtrim( $value, '/\\' ) );
+		Functions\when( 'wp_parse_url' )->alias( static fn ( string $url, int $component = -1 ) => parse_url( $url, $component ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url
 		$plugin = new Plugin( self::FILE, new MigrationRunner( array( new RecordingMigration( 1, $log ) ) ), Requirements::MIN_WOOCOMMERCE . '.0' );
 
 		do_action( 'woocommerce_loaded' );

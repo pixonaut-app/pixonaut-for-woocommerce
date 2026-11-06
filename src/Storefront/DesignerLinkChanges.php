@@ -9,10 +9,11 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\DesignerLinks;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 
 /**
@@ -35,12 +36,12 @@ final class DesignerLinkChanges {
 	/**
 	 * @param KeptDesignerLinks $links  The links kept for each product.
 	 * @param DesignerLinks     $api    Lists the store's working designer links.
-	 * @param Logger            $logger Logs a regenerated link whose address could not be read.
+	 * @param LoggerInterface   $logger Logs a regenerated link whose address could not be read.
 	 */
 	public function __construct(
 		private readonly KeptDesignerLinks $links,
 		private readonly DesignerLinks $api,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -59,9 +60,9 @@ final class DesignerLinkChanges {
 	 * @throws RuntimeException When another request is minting a product's links; the event is handled again later.
 	 */
 	public function handle( Event $event ): void {
-		$id      = $event->string( 'linkId' );
-		$subject = $event->string( 'subjectId' );
-		if ( null === $id || null === $subject || DesignerLinks::KIND !== $event->string( 'kind' ) || array() === $this->links->holders( $id ) ) {
+		$id      = Payload::string( $event, 'linkId' );
+		$subject = Payload::string( $event, 'subjectId' );
+		if ( null === $id || null === $subject || DesignerLinks::KIND !== Payload::string( $event, 'kind' ) || array() === $this->links->holders( $id ) ) {
 			return;
 		}
 		if ( self::REVOKED === $event->type ) {
@@ -70,8 +71,8 @@ final class DesignerLinkChanges {
 		}
 		try {
 			$url = $this->api->address( $subject, $id );
-		} catch ( ApiError $error ) {
-			$this->logger->warning( sprintf( 'Could not read the new address of designer link %s, so it is withdrawn and minted again: %s', $id, $error->getMessage() ), array( 'code' => $error->error_code ) );
+		} catch ( ApiException $error ) {
+			$this->logger->warning( sprintf( 'Could not read the new address of designer link %s, so it is withdrawn and minted again: %s', $id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			$this->links->retire( $id );
 			return;
 		}

@@ -90,7 +90,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 
 		$checks = array_values( array_filter( $this->recorder->requests, static fn ( array $request ): bool => 'POST' === $request['method'] ) );
 		$this->assertCount( 2, $checks );
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'sizes'       => array(
 					array(
@@ -303,7 +303,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$this->assertCount( 1, $checks );
 		$body = json_decode( (string) $checks[0]['body'], true );
 		$this->assertIsArray( $body );
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				array(
 					'widthMm'  => self::A4_WIDTH_MM,

@@ -10,9 +10,9 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Connection;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\Credential;
-use Pixonaut\WooCommerce\Api\CredentialProvider;
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Credentials\Credential;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Credentials\CredentialProvider;
 use RuntimeException;
 use UnexpectedValueException;
 
@@ -242,7 +242,7 @@ final class ConnectionStore implements CredentialProvider {
 	}
 
 	public function secret( Credential $credential ): ?string {
-		if ( Credential::None === $credential || null !== $this->paused() ) {
+		if ( ( Credential::IntegrationKey !== $credential && Credential::PublishableKey !== $credential ) || null !== $this->paused() ) {
 			return null;
 		}
 		$connection            = $this->load();

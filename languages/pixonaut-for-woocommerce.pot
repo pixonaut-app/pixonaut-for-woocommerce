@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
+"Project-Id-Version: Pixonaut for WooCommerce 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-05T23:03:55+00:00\n"
+"POT-Creation-Date: 2026-11-06T10:44:17+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -216,75 +216,75 @@ msgstr ""
 msgid "The new address was saved on the order, but it could not be scheduled for the printshop. Save the order on its screen, or run this again, to send it."
 msgstr ""
 
-#: src/Abilities/ConnectionAction.php:111
+#: src/Abilities/ConnectionAction.php:112
 msgid "That brand is not in the Pixonaut workspace, so the store's brand did not change. Reading the connection lists the brands."
 msgstr ""
 
-#: src/Abilities/ConnectionAction.php:128
+#: src/Abilities/ConnectionAction.php:129
 msgid "The site is on an IP address, so it has no www. counterpart to allow."
 msgstr ""
 
-#: src/Abilities/ConnectionAction.php:150
+#: src/Abilities/ConnectionAction.php:151
 msgid "The connection is not paused for a changed site address, so there is no copied connection to forget. Disconnecting is done on the connection card."
 msgstr ""
 
-#: src/Abilities/ConnectionAction.php:156
+#: src/Abilities/ConnectionAction.php:157
 msgid "The store could not forget the connection now. Try again."
 msgstr ""
 
-#: src/Abilities/ConnectionAction.php:166
+#: src/Abilities/ConnectionAction.php:167
 msgid "The store is not connected to Pixonaut. Connect it on the Pixonaut settings page, in a browser."
 msgstr ""
 
-#: src/Abilities/ConnectionAction.php:169
+#: src/Abilities/ConnectionAction.php:170
 msgid "The connection to Pixonaut is paused. Reading the connection says why."
 msgstr ""
 
 #. translators: %s: the error code Pixonaut answered with, e.g. rate_limited.
-#: src/Abilities/ConnectionAction.php:179
+#: src/Abilities/ConnectionAction.php:180
 #, php-format
 msgid "Pixonaut did not confirm the change (%s). Reading the connection shows it as it is."
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/ConnectionAction.php:185
+#: src/Abilities/ConnectionAction.php:186
 msgid "Choose the store's Pixonaut brand"
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store; www. is the start of a web address.
-#: src/Abilities/ConnectionAction.php:187
+#: src/Abilities/ConnectionAction.php:188
 msgid "Allow the site's www. address"
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/ConnectionAction.php:189
+#: src/Abilities/ConnectionAction.php:190
 msgid "Test the Pixonaut webhook"
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/ConnectionAction.php:191
+#: src/Abilities/ConnectionAction.php:192
 msgid "Forget a copied site's Pixonaut connection"
 msgstr ""
 
 #. translators: %s: the name of the ability that reads the connection.
-#: src/Abilities/ConnectionAction.php:199
+#: src/Abilities/ConnectionAction.php:200
 #, php-format
 msgid "Chooses the workspace brand the store's proofs, corrections and designer links are drawn in, as the connection card does: `brand_id`, one of the brands %s lists, or null to follow the workspace's default."
 msgstr ""
 
-#: src/Abilities/ConnectionAction.php:202
+#: src/Abilities/ConnectionAction.php:203
 msgid "Lets the store's publishable key take the site's counterpart with or without www. too, so the designer works on both addresses; `allow` false takes it away."
 msgstr ""
 
-#: src/Abilities/ConnectionAction.php:203
+#: src/Abilities/ConnectionAction.php:204
 msgid "Has Pixonaut send the store's webhook endpoint a test request, and answers with how it went under `last_ping`."
 msgstr ""
 
-#: src/Abilities/ConnectionAction.php:204
+#: src/Abilities/ConnectionAction.php:205
 msgid "Forgets the connection a copied site was copied with, when the connection is paused because the site's address changed (`site_changed`). The site it was copied from stays connected. This site then connects on its own, in a browser."
 msgstr ""
 
-#: src/Abilities/ConnectionAction.php:216
+#: src/Abilities/ConnectionAction.php:217
 msgid "A brand's id; null follows the workspace's default brand."
 msgstr ""
 
@@ -1366,17 +1366,17 @@ msgstr ""
 msgid "The product shows its Pixonaut picture, or will once it is drawn: no image of the store manager's is in its place."
 msgstr ""
 
-#: src/Admin/CatalogueSearch.php:240
-#: src/Admin/CatalogueSearch.php:318
+#: src/Admin/CatalogueSearch.php:239
+#: src/Admin/CatalogueSearch.php:317
 msgid "Pixonaut could not be searched. Try again in a moment."
 msgstr ""
 
 #. translators: Message in the blank search on the product edit page, shown to the merchant.
-#: src/Admin/CatalogueSearch.php:317
+#: src/Admin/CatalogueSearch.php:316
 msgid "Connect the store to Pixonaut to search its catalogue."
 msgstr ""
 
-#: src/Admin/ConnectionScreen.php:422
+#: src/Admin/ConnectionScreen.php:423
 msgid "You are not allowed to change the Pixonaut connection."
 msgstr ""
 
@@ -1612,19 +1612,19 @@ msgid "Customers cannot buy %1$s: %2$s"
 msgstr ""
 
 #. translators: %s: an option's value, e.g. "XL" or "XL, Tall". Notice after the store manager adjusted a standing side's layout for that option on Pixonaut. Admin product page.
-#: src/Admin/LayoutAdjustments.php:261
+#: src/Admin/LayoutAdjustments.php:265
 #, php-format
 msgid "The layout of %s is saved. It keeps it when the side changes, until you reset it."
 msgstr ""
 
 #. translators: %s: an option's value, e.g. "XL". Notice after the store manager reset a standing side's layout for that option. Admin product page.
-#: src/Admin/LayoutAdjustments.php:263
+#: src/Admin/LayoutAdjustments.php:267
 #, php-format
 msgid "%s follows the side again."
 msgstr ""
 
 #. translators: %s: an option's value, e.g. "XL". Notice when Pixonaut could not open, save or reset a standing side's layout for that option. Admin product page.
-#: src/Admin/LayoutAdjustments.php:265
+#: src/Admin/LayoutAdjustments.php:269
 #, php-format
 msgid "The layout of %s could not be changed in Pixonaut. Try again in a moment."
 msgstr ""
@@ -1945,25 +1945,25 @@ msgid "Customers cannot buy all of %1$s: %2$s. Pick the variant in its Pixonaut 
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: what the customer asked.
-#: src/Approval/ChangesRequested.php:92
+#: src/Approval/ChangesRequested.php:93
 #, php-format
 msgid "Pixonaut: the customer asked for changes to the design of \"%1$s\": %2$s"
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/DesignApproved.php:164
+#: src/Approval/DesignApproved.php:165
 #, php-format
 msgid "Pixonaut: the customer approved the design of \"%s\"."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/DesignApproved.php:212
+#: src/Approval/DesignApproved.php:213
 #, php-format
 msgid "Pixonaut: the customer approved the design of \"%s\" after the order was cancelled, refunded or failed, so it was not sent to the printshop."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/DesignApproved.php:230
+#: src/Approval/DesignApproved.php:231
 #, php-format
 msgid "Pixonaut: the design of \"%s\" was approved after it was changed, so it was not sent to the printshop. Check the design in Pixonaut."
 msgstr ""
@@ -1981,25 +1981,25 @@ msgid "Pixonaut: a refund of %1$s for \"%2$s\" was recorded, but the payment met
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/OrderEdit.php:391
+#: src/Approval/OrderEdit.php:393
 #, php-format
 msgid "Pixonaut: the customer approved a change to the design of \"%s\" after the order failed or the item was cancelled, so it was not sent to the printshop."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/OrderEdit.php:424
+#: src/Approval/OrderEdit.php:426
 #, php-format
 msgid "Pixonaut: the customer changed the design of \"%s\" and approved it."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofDeadline.php:232
+#: src/Approval/ProofDeadline.php:233
 #, php-format
 msgid "Pixonaut: the customer did not answer the proof of \"%s\" by the deadline, so its design was approved as shown."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofDeadline.php:273
+#: src/Approval/ProofDeadline.php:274
 #, php-format
 msgid "Pixonaut: the customer approved the design of \"%s\" just before its deadline."
 msgstr ""
@@ -2070,25 +2070,25 @@ msgid "Mark the item as needing attention"
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofRequest.php:85
+#: src/Approval/ProofRequest.php:88
 #, php-format
 msgid "Pixonaut: the proof of \"%s\" was not sent. Its design was changed in Pixonaut after it was bought."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofRequest.php:99
+#: src/Approval/ProofRequest.php:102
 #, php-format
 msgid "Pixonaut: the proof of \"%s\" was not sent. Its design is no longer waiting for approval in Pixonaut."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: error code Pixonaut answered.
-#: src/Approval/ProofRequest.php:125
+#: src/Approval/ProofRequest.php:128
 #, php-format
 msgid "Pixonaut: the proof of \"%1$s\" was not sent. Pixonaut refused its proof page: %2$s."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Approval/ProofRequest.php:137
+#: src/Approval/ProofRequest.php:140
 #, php-format
 msgid "Pixonaut: \"%s\" is awaiting design approval. The customer was sent a proof to approve."
 msgstr ""
@@ -2115,7 +2115,7 @@ msgid "Proof by email after payment"
 msgstr ""
 
 #. translators: 1: product name, 2: Pixonaut's refusal code
-#: src/Cart/AddToCart.php:809
+#: src/Cart/AddToCart.php:819
 #, php-format
 msgid "Customers cannot add \"%1$s\" to the cart: Pixonaut will not route its designs to a printshop (%2$s). Check the printshop of the product's blank in the Pixonaut studio."
 msgstr ""
@@ -2317,13 +2317,13 @@ msgid "%1$s × %2$s mm"
 msgstr ""
 
 #. translators: %s: link to the Pixonaut settings.
-#: src/Connection/Connection.php:438
+#: src/Connection/Connection.php:440
 #, php-format
 msgid "Site URL changed: this site is not the one that connected to Pixonaut, so Pixonaut is paused here and nothing is sent for the site it was copied from. Personalised products and orders are paused until you <a href=\"%s\">connect this site</a>. For a staging site, pick Sandbox."
 msgstr ""
 
 #. translators: %s: link to the Pixonaut settings.
-#: src/Connection/Connection.php:440
+#: src/Connection/Connection.php:442
 #, php-format
 msgid "Pixonaut no longer accepts this store's key: the store was disconnected in Pixonaut, or its key was revoked. Personalised products and orders are paused until you <a href=\"%s\">connect the store again</a>."
 msgstr ""
@@ -2626,341 +2626,341 @@ msgid "Pixonaut: %1$d of %2$d of \"%3$s\" refunded. Nothing was changed in Pixon
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:357
+#: src/Fulfilment/DeliveryChange.php:359
 #, php-format
 msgid "Pixonaut: the new address of \"%s\" was not sent: the store is not connected to the Pixonaut workspace the order was placed under. Update the order once it is connected to send it."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:376
+#: src/Fulfilment/DeliveryChange.php:378
 #, php-format
 msgid "Pixonaut: the new address of \"%s\" was not sent to the printshop: it needs a name, a street, a city and a country."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered.
-#: src/Fulfilment/DeliveryChange.php:568
+#: src/Fulfilment/DeliveryChange.php:570
 #, php-format
 msgid "Pixonaut: it is not known whether the new address of \"%1$s\" reached the printshop: Pixonaut answered \"%2$s\". Update the order to send it again."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the printshop's answer.
-#: src/Fulfilment/DeliveryChange.php:710
+#: src/Fulfilment/DeliveryChange.php:712
 #, php-format
 msgid "Pixonaut: the printshop refused the new address of \"%1$s\": \"%2$s\". It ships to the address it had."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:714
+#: src/Fulfilment/DeliveryChange.php:716
 #, php-format
 msgid "Pixonaut: the printshop took the new address of \"%s\"."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:716
+#: src/Fulfilment/DeliveryChange.php:718
 #, php-format
 msgid "Pixonaut: the new address of \"%s\" goes to the printshop with the order, which it had not been sent yet."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:718
+#: src/Fulfilment/DeliveryChange.php:720
 #, php-format
 msgid "Pixonaut: the printshop refused the new address of \"%s\". It ships to the address it had."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:720
+#: src/Fulfilment/DeliveryChange.php:722
 #, php-format
 msgid "Pixonaut is telling the printshop the new address of \"%s\"."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the printshop order's status in Pixonaut.
-#: src/Fulfilment/DeliveryChange.php:736
+#: src/Fulfilment/DeliveryChange.php:738
 #, php-format
 msgid "Pixonaut: the new address of \"%1$s\" was not sent: its printshop order is past changing its address (\"%2$s\" in Pixonaut). It ships to the address it had; ask the printshop."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the printshop's name.
-#: src/Fulfilment/DeliveryChange.php:742
+#: src/Fulfilment/DeliveryChange.php:744
 #, php-format
 msgid "Pixonaut: the new address of \"%1$s\" was not sent: its printshop, %2$s, takes no address changes through Pixonaut. It ships to the address it had; ask the printshop."
 msgstr ""
 
 #. translators: Fallback for a printshop name that is not known, inside an order note: "its printshop, the printshop, takes no address changes". Lower case.
-#: src/Fulfilment/DeliveryChange.php:745
+#: src/Fulfilment/DeliveryChange.php:747
 msgid "the printshop"
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/DeliveryChange.php:749
+#: src/Fulfilment/DeliveryChange.php:751
 #, php-format
 msgid "Pixonaut: the new address of \"%s\" was not sent: its printshop needs a postcode. Add one and update the order."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered.
-#: src/Fulfilment/DeliveryChange.php:754
+#: src/Fulfilment/DeliveryChange.php:756
 #, php-format
 msgid "Pixonaut: the new address of \"%1$s\" was not sent: Pixonaut answered \"%2$s\". It ships to the address it had."
 msgstr ""
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:158
+#: src/Fulfilment/DesignChanged.php:160
 #, php-format
 msgid "Pixonaut: the design for \"%s\" was deleted in Pixonaut."
 msgstr ""
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:163
-#: src/Fulfilment/FulfilmentJobs.php:200
+#: src/Fulfilment/DesignChanged.php:165
+#: src/Fulfilment/FulfilmentJobs.php:199
 #, php-format
 msgid "Pixonaut: the design for \"%s\" was deleted in Pixonaut, so the item cannot be printed. Check the order with the customer."
 msgstr ""
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:195
+#: src/Fulfilment/DesignChanged.php:197
 #, php-format
 msgid "Pixonaut: the design for \"%s\" was changed in Pixonaut. The changed design goes to approval again."
 msgstr ""
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:200
-#: src/Fulfilment/Fulfiller.php:419
+#: src/Fulfilment/DesignChanged.php:202
+#: src/Fulfilment/Fulfiller.php:420
 #, php-format
 msgid "Pixonaut: the design for \"%s\" was changed in Pixonaut after it was approved, so it was not sent to the printshop. Check the design before it is printed."
 msgstr ""
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:207
+#: src/Fulfilment/DesignChanged.php:209
 #, php-format
 msgid "Pixonaut: the design for \"%s\" was changed in Pixonaut after it was ordered. The printshop order is unchanged."
 msgstr ""
 
 #. translators: %s: product name
-#: src/Fulfilment/DesignChanged.php:210
+#: src/Fulfilment/DesignChanged.php:212
 #, php-format
 msgid "Pixonaut: the design for \"%s\" was changed in Pixonaut."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:106
+#: src/Fulfilment/Fulfiller.php:105
 #, php-format
 msgid "Pixonaut: \"%s\" was not sent to the printshop. A plugin or the theme holds it back (pixonaut_wc_fulfilment_can_fulfil)."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:115
+#: src/Fulfilment/Fulfiller.php:114
 #, php-format
 msgid "Pixonaut: \"%s\" was not sent to the printshop. It was ordered under another Pixonaut workspace than the one the store is connected to now."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:156
+#: src/Fulfilment/Fulfiller.php:155
 #, php-format
 msgid "Pixonaut: \"%s\" was not sent to the printshop. An earlier attempt sent its printshop order under the cart's reference, so the store cannot tell whether it was placed. Check the order in Pixonaut."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:174
+#: src/Fulfilment/Fulfiller.php:173
 #, php-format
 msgid "Pixonaut: \"%s\" was not sent to the printshop. The line has no design for one of its sides."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/Fulfiller.php:227
+#: src/Fulfilment/Fulfiller.php:226
 #, php-format
 msgid "Pixonaut: \"%s\" was not sent to the printshop. The line does not record how the customer approved the design."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: Pixonaut order id.
-#: src/Fulfilment/Fulfiller.php:373
+#: src/Fulfilment/Fulfiller.php:374
 #, php-format
 msgid "Pixonaut: a Pixonaut automation already ordered \"%1$s\", as order %2$s. The store took that order on instead of placing another."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the reason Pixonaut gave.
-#: src/Fulfilment/Fulfiller.php:448
+#: src/Fulfilment/Fulfiller.php:449
 #, php-format
 msgid "Pixonaut: the printshop order for \"%1$s\" failed when it was placed: %2$s"
 msgstr ""
 
 #. translators: Fills in %2$s of an order note when the printshop order failed without a reason. Ends a sentence; lower case.
-#: src/Fulfilment/Fulfiller.php:451
-#: src/Fulfilment/OrderFailed.php:83
+#: src/Fulfilment/Fulfiller.php:452
+#: src/Fulfilment/OrderFailed.php:84
 msgid "no reason given."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the order status Pixonaut answered.
-#: src/Fulfilment/Fulfiller.php:466
+#: src/Fulfilment/Fulfiller.php:467
 #, php-format
 msgid "Pixonaut: the printshop order for \"%1$s\" was placed with the status \"%2$s\", which the store cannot go on from. Check the order with the printshop."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: number of attempts, 3: the error code Pixonaut answered.
-#: src/Fulfilment/FulfilmentJobs.php:219
+#: src/Fulfilment/FulfilmentJobs.php:218
 #, php-format
 msgid "Pixonaut: \"%1$s\" was not sent to the printshop after %2$d attempts. Pixonaut last answered \"%3$s\". Check the order in Pixonaut, then retry."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered.
-#: src/Fulfilment/FulfilmentJobs.php:317
+#: src/Fulfilment/FulfilmentJobs.php:316
 #, php-format
 msgid "Pixonaut: \"%1$s\" was not sent to the printshop. Pixonaut answered \"%2$s\", and the store could not schedule another attempt. Retry the item."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered.
-#: src/Fulfilment/FulfilmentJobs.php:347
+#: src/Fulfilment/FulfilmentJobs.php:346
 #, php-format
 msgid "Pixonaut: \"%1$s\" needs attention. The Pixonaut sandbox no longer knows its design, print or order (\"%2$s\"); this happens when the sandbox's data was reset. Place the item again."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered, 3: the Pixonaut order the design already has, 4: what the merchant can do.
-#: src/Fulfilment/FulfilmentJobs.php:356
+#: src/Fulfilment/FulfilmentJobs.php:355
 #, php-format
 msgid "Pixonaut: \"%1$s\" needs attention. Pixonaut refused it with \"%2$s\": its design already has the Pixonaut order %3$s. %4$s"
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered, 3: what the merchant can do.
-#: src/Fulfilment/FulfilmentJobs.php:365
+#: src/Fulfilment/FulfilmentJobs.php:364
 #, php-format
 msgid "Pixonaut: \"%1$s\" needs attention. Pixonaut refused it with \"%2$s\". %3$s"
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the order's status in Pixonaut.
-#: src/Fulfilment/LineActions.php:203
+#: src/Fulfilment/LineActions.php:205
 #, php-format
 msgid "Pixonaut: the printshop order for \"%1$s\" is now \"%2$s\" in Pixonaut."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineActions.php:497
+#: src/Fulfilment/LineActions.php:499
 #, php-format
 msgid "Pixonaut: \"%s\" could not be sent again: the store could not schedule it. Retry the item."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineActions.php:507
+#: src/Fulfilment/LineActions.php:509
 #, php-format
 msgid "Pixonaut: \"%s\" will be sent to the printshop again."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the new Pixonaut order id.
-#: src/Fulfilment/LineActions.php:595
-#: src/Fulfilment/OrderSubmitted.php:176
+#: src/Fulfilment/LineActions.php:598
+#: src/Fulfilment/OrderSubmitted.php:177
 #, php-format
 msgid "Pixonaut: \"%1$s\" was sent to the printshop again, as order %2$s."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the new Pixonaut order id, 3: its status.
-#: src/Fulfilment/LineActions.php:607
+#: src/Fulfilment/LineActions.php:610
 #, php-format
 msgid "Pixonaut: \"%1$s\" was sent to the printshop again, as order %2$s, which is \"%3$s\"."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: what the merchant learned from the printshop.
-#: src/Fulfilment/LineActions.php:637
+#: src/Fulfilment/LineActions.php:640
 #, php-format
 msgid "Pixonaut: the printshop has the order for \"%1$s\". %2$s"
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: what the merchant learned from the printshop.
-#: src/Fulfilment/LineActions.php:669
+#: src/Fulfilment/LineActions.php:666
 #, php-format
 msgid "Pixonaut: the printshop does not have the order for \"%1$s\". %2$s"
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineActions.php:692
-#: src/Fulfilment/LineCancellation.php:376
+#: src/Fulfilment/LineActions.php:689
+#: src/Fulfilment/LineCancellation.php:373
 #: src/Fulfilment/OrderCancelled.php:73
 #, php-format
 msgid "Pixonaut: the printshop order for \"%s\" was cancelled."
 msgstr ""
 
 #. translators: Reason in an order note when a merchant rehearses a failed printshop order in the Pixonaut sandbox.
-#: src/Fulfilment/LineActions.php:712
+#: src/Fulfilment/LineActions.php:709
 msgid "Rehearsed in the Pixonaut sandbox."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: why Pixonaut refused, a full sentence or two.
-#: src/Fulfilment/LineActions.php:771
+#: src/Fulfilment/LineActions.php:768
 #, php-format
 msgid "Pixonaut: \"%1$s\" was not sent to the printshop again. %2$s"
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineCancellation.php:170
+#: src/Fulfilment/LineCancellation.php:167
 #, php-format
 msgid "Pixonaut: \"%s\" is not cancelled yet: the store could not schedule it. It is not sent to the printshop meanwhile. Update the order to try again."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered.
-#: src/Fulfilment/LineCancellation.php:266
+#: src/Fulfilment/LineCancellation.php:263
 #, php-format
 msgid "Pixonaut: a design of \"%1$s\" could not be rejected in Pixonaut, which answered \"%2$s\". It stays unapproved there, so it is not printed."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineCancellation.php:275
+#: src/Fulfilment/LineCancellation.php:272
 #, php-format
 msgid "Pixonaut: \"%s\" was cancelled before it was sent to the printshop."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineCancellation.php:295
+#: src/Fulfilment/LineCancellation.php:292
 #, php-format
 msgid "Pixonaut: \"%s\" may have a printshop order, which was not cancelled: the store is not connected to the Pixonaut workspace it was ordered under. Check the order in Pixonaut."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineCancellation.php:362
+#: src/Fulfilment/LineCancellation.php:359
 #, php-format
 msgid "Pixonaut: the printshop order for \"%s\" was not cancelled: the store is not connected to the Pixonaut workspace it was ordered under. Cancel it in Pixonaut."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: why the printshop keeps the order.
-#: src/Fulfilment/LineCancellation.php:393
+#: src/Fulfilment/LineCancellation.php:390
 #, php-format
 msgid "Pixonaut: the printshop order for \"%1$s\" was not cancelled: %2$s Ask the printshop."
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/LineCancellation.php:403
+#: src/Fulfilment/LineCancellation.php:400
 #, php-format
 msgid "Pixonaut: \"%s\" was cancelled. Its printshop order had failed, so there was nothing to stop at the printshop."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the error code Pixonaut answered, 3: Pixonaut's reason, if it gave one, with a leading space.
-#: src/Fulfilment/LineCancellation.php:416
+#: src/Fulfilment/LineCancellation.php:413
 #, php-format
 msgid "Pixonaut: the printshop order for \"%1$s\" could not be cancelled: Pixonaut answered \"%2$s\".%3$s Ask the printshop to stop it."
 msgstr ""
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:532
+#: src/Fulfilment/LineCancellation.php:529
 msgid "the printshop has made it already."
 msgstr ""
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:534
+#: src/Fulfilment/LineCancellation.php:531
 msgid "the printshop has begun it and did not cancel it."
 msgstr ""
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:536
+#: src/Fulfilment/LineCancellation.php:533
 msgid "its printshop cannot stop orders through Pixonaut."
 msgstr ""
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:538
+#: src/Fulfilment/LineCancellation.php:535
 msgid "its printshop is no longer connected to Pixonaut."
 msgstr ""
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:540
+#: src/Fulfilment/LineCancellation.php:537
 msgid "the printshop cancelled it, but it shipped meanwhile."
 msgstr ""
 
 #. translators: Why the printshop did not cancel an order, filling in %2$s of an order note. Ends a sentence; lower case.
-#: src/Fulfilment/LineCancellation.php:542
+#: src/Fulfilment/LineCancellation.php:539
 msgid "the printshop has it."
 msgstr ""
 
@@ -3055,13 +3055,13 @@ msgid "Pixonaut: the printshop order for \"%s\" was sent, but its answer was los
 msgstr ""
 
 #. translators: %s: product name of the order line.
-#: src/Fulfilment/OrderDeliveryChanged.php:120
+#: src/Fulfilment/OrderDeliveryChanged.php:121
 #, php-format
 msgid "Pixonaut: the delivery address of the printshop order for \"%s\" was changed in Pixonaut. The address of this order was not changed."
 msgstr ""
 
 #. translators: 1: product name of the order line, 2: the reason Pixonaut gave.
-#: src/Fulfilment/OrderFailed.php:80
+#: src/Fulfilment/OrderFailed.php:81
 #, php-format
 msgid "Pixonaut: the printshop order for \"%1$s\" failed: %2$s"
 msgstr ""
@@ -3139,37 +3139,37 @@ msgid "It goes to the printshop when the workspace upgrades, or when the month r
 msgstr ""
 
 #. translators: 1: product name, 2: status Pixonaut reported
-#: src/Fulfilment/OrderStatusChanged.php:175
+#: src/Fulfilment/OrderStatusChanged.php:176
 #, php-format
 msgid "Pixonaut reported the status \"%2$s\" for \"%1$s\", which this plugin version does not know; nothing was changed."
 msgstr ""
 
 #. translators: %s: product name
-#: src/Fulfilment/OrderStatusChanged.php:283
+#: src/Fulfilment/OrderStatusChanged.php:284
 #, php-format
 msgid "Pixonaut: \"%s\" was printed at the printshop."
 msgstr ""
 
 #. translators: %s: product name
-#: src/Fulfilment/OrderStatusChanged.php:313
+#: src/Fulfilment/OrderStatusChanged.php:314
 #, php-format
 msgid "Pixonaut: \"%s\" was shipped."
 msgstr ""
 
 #. translators: 1: product name, 2: carrier, tracking number and link
-#: src/Fulfilment/OrderStatusChanged.php:316
+#: src/Fulfilment/OrderStatusChanged.php:317
 #, php-format
 msgid "Pixonaut: \"%1$s\" was shipped. Tracking: %2$s"
 msgstr ""
 
 #. translators: 1: product name, 2: carrier, tracking number and link. Order note the merchant reads.
-#: src/Fulfilment/OrderTrackingChanged.php:143
+#: src/Fulfilment/OrderTrackingChanged.php:144
 #, php-format
 msgid "Pixonaut: tracking was added for \"%1$s\": %2$s"
 msgstr ""
 
 #. translators: 1: product name, 2: new carrier, tracking number and link, 3: the carrier and tracking number before. Order note the merchant reads.
-#: src/Fulfilment/OrderTrackingChanged.php:145
+#: src/Fulfilment/OrderTrackingChanged.php:146
 #, php-format
 msgid "Pixonaut: the tracking of \"%1$s\" was corrected to %2$s. It was %3$s."
 msgstr ""
@@ -4308,7 +4308,7 @@ msgid "Version %s is a major update and may hold breaking changes. Read its chan
 msgstr ""
 
 #. translators: %s: why Pixonaut did not answer, e.g. rate_limited.
-#: src/Webhooks/Endpoint.php:193
+#: src/Webhooks/Endpoint.php:195
 #, php-format
 msgid "Pixonaut did not send the test request (%s)."
 msgstr ""

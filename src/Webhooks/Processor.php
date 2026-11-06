@@ -10,8 +10,9 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Webhooks;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Throwable;
 use UnexpectedValueException;
 
@@ -64,14 +65,14 @@ final class Processor {
 	/**
 	 * @param EventStore                           $events   Events received.
 	 * @param array<string, callable(Event): void> $handlers Handler per event type.
-	 * @param Logger                               $logger   Logs events that cannot be read.
+	 * @param LoggerInterface                      $logger   Logs events that cannot be read.
 	 * @param Closure|null                         $clock    `fn(): int` Unix time; `time()` when null.
 	 * @param Closure|null                         $held     `fn(): bool` true while events must wait; never when null.
 	 */
 	public function __construct(
 		private readonly EventStore $events,
 		private readonly array $handlers,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 		?Closure $held = null,
 	) {
@@ -124,7 +125,7 @@ final class Processor {
 		}
 		$attempt = $this->events->begin_attempt( $event_id );
 		try {
-			$event = Event::from_json( $body );
+			$event = Event::fromJson( $body );
 		} catch ( UnexpectedValueException $e ) {
 			$this->logger->error( 'Kept webhook event cannot be read: ' . $e->getMessage(), array( 'event' => $event_id ) );
 			return;
@@ -185,10 +186,14 @@ final class Processor {
 		 * event id, after the signature was verified; again only when an
 		 * earlier attempt threw and the event is tried again.
 		 *
+		 * Since 2.0.0 `$event` is the SDK's
+		 * `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event`, whose
+		 * `created_at` is `createdAt`.
+		 *
 		 * @since 0.1.0
 		 *
 		 * @param bool  $handle Whether the plugin handles it.
-		 * @param Event $event  The event: `id`, `type`, `created_at`, `payload`.
+		 * @param Event $event  The event: `id`, `type`, `createdAt`, `payload`.
 		 *
 		 * @example
 		 * add_filter( 'pixonaut_wc_webhook_handle', function ( $handle, $event ) {
@@ -201,7 +206,8 @@ final class Processor {
 			$handler( $event );
 		}
 
-		$type = $event->hook_name();
+		// `order.status_changed` is `order_status_changed` in hook names.
+		$type = str_replace( '.', '_', $event->type );
 
 		/**
 		 * Fires after a webhook event was handled, one hook per event type
@@ -211,10 +217,14 @@ final class Processor {
 		 * once per event id; again only when an earlier attempt threw and
 		 * the event is tried again.
 		 *
+		 * Since 2.0.0 `$event` is the SDK's
+		 * `Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event`, whose
+		 * `created_at` is `createdAt`.
+		 *
 		 * @since 0.1.0
 		 *
 		 * @param array<string, mixed> $payload The event's payload.
-		 * @param Event                $event   The event: `id`, `type`, `created_at`, `payload`.
+		 * @param Event                $event   The event: `id`, `type`, `createdAt`, `payload`.
 		 * @param bool                 $handled Whether the plugin's own handler ran.
 		 *
 		 * @example

@@ -10,15 +10,16 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Admin;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\Catalogue\LayoutAdjustment;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\StandingRow;
 use Pixonaut\WooCommerce\Catalogue\StandingRows;
 use Pixonaut\WooCommerce\Catalogue\TemplateId;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\DesignsCorrectionLinksCreateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Product;
 
 /**
@@ -94,15 +95,15 @@ final class LayoutAdjustments {
 	private const TRIP_PREFIX = 'pixonaut_layout_trip_';
 
 	/**
-	 * @param Designs                     $designs Mints the correction link.
+	 * @param Sdk                         $pixonaut Mints the correction link.
 	 * @param StandingRows                $rows    Makes and resets the option's design.
-	 * @param Logger                      $logger  Logs what Pixonaut refused.
+	 * @param LoggerInterface             $logger  Logs what Pixonaut refused.
 	 * @param Closure(string): never|null $go      `fn(string $location)` sends the browser on and ends the request; null to redirect and exit.
 	 */
 	public function __construct(
-		private readonly Designs $designs,
+		private readonly Sdk $pixonaut,
 		private readonly StandingRows $rows,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		private readonly ?Closure $go = null,
 	) {
 	}
@@ -151,8 +152,11 @@ final class LayoutAdjustments {
 		$url                          = null;
 		if ( null !== $basis ) {
 			try {
-				$url = $this->designs->correction_link( $row->design_id, admin_url( 'admin-post.php?action=' . self::RETURN_ACTION ), $state, true )['url'];
-			} catch ( ApiError $e ) {
+				$url = $this->pixonaut->designs()->createCorrectionLink(
+					$row->design_id,
+					new DesignsCorrectionLinksCreateRequest( adjustLayout: true, returnUrl: admin_url( 'admin-post.php?action=' . self::RETURN_ACTION ), state: $state )
+				)->url;
+			} catch ( ApiException $e ) {
 				$this->refused( $e, 'open', $product, $side, $row );
 			}
 		}
@@ -200,7 +204,7 @@ final class LayoutAdjustments {
 		}
 		try {
 			$adjusted = $this->rows->adjust( $side, $row, $trip['basis'], $token );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->refused( $e, 'save', $product, $side, $row );
 			$this->go( self::back( $product, self::FAILED, $row ) );
 		}
@@ -240,7 +244,7 @@ final class LayoutAdjustments {
 		}
 		try {
 			$rows = $this->rows->reset( (string) new TemplateId( $side->template_base_id, $side->template_version ), $blank_id, $side, $row );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->refused( $e, 'reset', $product, $side, $row );
 			return self::FAILED;
 		}
@@ -365,13 +369,13 @@ final class LayoutAdjustments {
 	/**
 	 * Logs what Pixonaut refused.
 	 *
-	 * @param ApiError    $error   What Pixonaut answered.
-	 * @param string      $doing   `open`, `save` or `reset`.
-	 * @param WC_Product  $product The product.
-	 * @param Side        $side    The side.
-	 * @param StandingRow $row     The option.
+	 * @param ApiException $error   What Pixonaut answered.
+	 * @param string       $doing   `open`, `save` or `reset`.
+	 * @param WC_Product   $product The product.
+	 * @param Side         $side    The side.
+	 * @param StandingRow  $row     The option.
 	 */
-	private function refused( ApiError $error, string $doing, WC_Product $product, Side $side, StandingRow $row ): void {
+	private function refused( ApiException $error, string $doing, WC_Product $product, Side $side, StandingRow $row ): void {
 		$this->logger->warning(
 			sprintf( 'Pixonaut would not %s the layout of option "%s" of side "%s" of product %d: %s', $doing, $row->label(), $side->key, $product->get_id(), $error->getMessage() ),
 			array(
@@ -379,7 +383,7 @@ final class LayoutAdjustments {
 				'side'      => $side->key,
 				'design_id' => $row->design_id,
 				'status'    => $error->status,
-				'code'      => $error->error_code,
+				'code'      => $error->errorCode,
 			)
 		);
 	}

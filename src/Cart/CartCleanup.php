@@ -12,15 +12,15 @@ namespace Pixonaut\WooCommerce\Cart;
 use ActionScheduler;
 use ActionScheduler_Action;
 use ActionScheduler_Store;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Fulfilment\RetryPolicy;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Storefront\PersonalisedDesigns;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Cart;
 use WC_Order;
 
@@ -85,12 +85,12 @@ final class CartCleanup {
 	/**
 	 * Refusals that say the design is past deleting: the job is done.
 	 */
-	private const DONE_CODES = array( ErrorCodes::DESIGN_APPROVED, ErrorCodes::DESIGN_PRINTED );
+	private const DONE_CODES = array( ErrorCode::DESIGN_APPROVED, ErrorCode::DESIGN_PRINTED );
 
 	public function __construct(
 		private readonly Connection $connection,
 		private readonly Designs $designs,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -312,8 +312,8 @@ final class CartCleanup {
 		}
 		try {
 			$this->designs->delete( $design_id );
-		} catch ( ApiError $error ) {
-			if ( in_array( $error->error_code, self::DONE_CODES, true ) ) {
+		} catch ( ApiException $error ) {
+			if ( in_array( $error->errorCode, self::DONE_CODES, true ) ) {
 				return;
 			}
 			if ( RetryPolicy::RETRY === RetryPolicy::decide( $error ) ) {
@@ -322,27 +322,27 @@ final class CartCleanup {
 			}
 			$this->logger->warning(
 				sprintf( 'Could not delete design %s of a cart line: %s', $design_id, $error->getMessage() ),
-				array( 'code' => $error->error_code )
+				array( 'code' => $error->errorCode )
 			);
 		}
 	}
 
 	/**
-	 * @param string        $design_id The design.
-	 * @param string        $tenant_id Its workspace.
-	 * @param int           $failures  Failures in a row before this one.
-	 * @param ApiError|null $error     Why this run failed; null while the connection is paused.
+	 * @param string            $design_id The design.
+	 * @param string            $tenant_id Its workspace.
+	 * @param int               $failures  Failures in a row before this one.
+	 * @param ApiException|null $error     Why this run failed; null while the connection is paused.
 	 */
-	private function retry( string $design_id, string $tenant_id, int $failures, ?ApiError $error ): void {
+	private function retry( string $design_id, string $tenant_id, int $failures, ?ApiException $error ): void {
 		$delay = RetryPolicy::SCHEDULE[ $failures ] ?? null;
 		if ( null === $delay ) {
 			$this->logger->warning(
 				sprintf( 'Gave up deleting design %s of a cart line after %d attempts.', $design_id, $failures + 1 ),
-				array( 'code' => $error?->error_code )
+				array( 'code' => $error?->errorCode )
 			);
 			return;
 		}
-		as_schedule_single_action( time() + max( $delay, $error->retry_after ?? 0 ), self::ACTION, self::args( $design_id, $tenant_id, $failures + 1 ), self::GROUP );
+		as_schedule_single_action( time() + max( $delay, $error->retryAfter ?? 0 ), self::ACTION, self::args( $design_id, $tenant_id, $failures + 1 ), self::GROUP );
 	}
 
 	/**

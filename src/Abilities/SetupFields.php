@@ -12,7 +12,7 @@ namespace Pixonaut\WooCommerce\Abilities;
 use Closure;
 use Pixonaut\WooCommerce\Admin\PanelFields;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Catalogue\CanvasRatio;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
@@ -52,7 +52,7 @@ final class SetupFields {
 	private ?array $live = null;
 
 	/**
-	 * @param Closure $live_versions Every live template's latest version, by base id; throws `ApiError` when Pixonaut cannot be asked.
+	 * @param Closure $live_versions Every live template's latest version, by base id; throws `ApiException` when Pixonaut cannot be asked.
 	 * @phpstan-param Closure(): array<string, int> $live_versions
 	 */
 	public function __construct( private readonly Closure $live_versions ) {
@@ -264,7 +264,7 @@ final class SetupFields {
 			if ( '' !== $template && null === TemplateId::parse( $template ) ) {
 				try {
 					$this->live ??= ( $this->live_versions )();
-				} catch ( ApiError $e ) {
+				} catch ( ApiException $e ) {
 					return new WP_Error( 'pixonaut_wc_ability_pixonaut_unreachable', __( 'Pixonaut could not be asked for the template\'s live version. Give the version, as the template list gives it, or try again later.', 'pixonaut-for-woocommerce' ) );
 				}
 				if ( ! isset( $this->live[ $template ] ) ) {

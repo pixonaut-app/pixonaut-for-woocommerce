@@ -17,7 +17,7 @@ use Pixonaut\WooCommerce\Fulfilment\OrderFailed;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
 use WC_Order_Item_Product;
 
 /**
@@ -356,7 +356,7 @@ final class OrderSubmittedTest extends OrderEventsTestCase {
 
 		$plugin = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
 		( new OrderFailed( new OrderEventLines( $plugin->connection(), new WcLogger() ) ) )->apply_to( $stale, 'late' );
-		$plugin->order_status_changed()->apply_to( $item, Event::from_array( $this->status_event( 'printed', 'shipped', self::TRACKING ) ) );
+		$plugin->order_status_changed()->apply_to( $item, Event::fromArray( $this->status_event( 'printed', 'shipped', self::TRACKING ) ) );
 
 		$line = LineState::of( $item );
 		$this->assertSame( LineState::ORDERED, $line->state() );

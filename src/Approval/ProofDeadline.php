@@ -10,10 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Approval;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
@@ -22,6 +19,10 @@ use Pixonaut\WooCommerce\Fulfilment\NeedsAttention;
 use Pixonaut\WooCommerce\Fulfilment\RetryPolicy;
 use Pixonaut\WooCommerce\Milliseconds;
 use Pixonaut\WooCommerce\Settings\Settings;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Order;
 use WC_Order_Factory;
 use WC_Order_Item_Product;
@@ -71,19 +72,19 @@ final class ProofDeadline {
 	private const LINE_CHANGED = 'line_changed';
 
 	/**
-	 * @param Designs     $designs    Approves, rejects and reads designs.
-	 * @param Closure     $connection `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
-	 * @param Settings    $settings   Holds what the deadline does.
-	 * @param ProofDenial $denial     Applies "On deny".
-	 * @param Logger      $logger     Logs retries.
-	 * @param Closure     $clock      `fn(): int` Unix time.
+	 * @param Sdk             $pixonaut   Approves, rejects and reads designs.
+	 * @param Closure         $connection `fn(): ?StoredConnection`, the connection to act for; null while there is none or it is paused.
+	 * @param Settings        $settings   Holds what the deadline does.
+	 * @param ProofDenial     $denial     Applies "On deny".
+	 * @param LoggerInterface $logger     Logs retries.
+	 * @param Closure         $clock      `fn(): int` Unix time.
 	 */
 	public function __construct(
-		private readonly Designs $designs,
+		private readonly Sdk $pixonaut,
 		private readonly Closure $connection,
 		private readonly Settings $settings,
 		private readonly ProofDenial $denial,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		private readonly Closure $clock,
 	) {
 	}
@@ -131,12 +132,12 @@ final class ProofDeadline {
 		$outcome = apply_filters( 'pixonaut_wc_approval_deadline_outcome', $this->settings->get( Settings::PROOF_NO_ANSWER ), $item, $line );
 		try {
 			$done = ProofOutcome::APPROVE === $outcome ? $this->approve( $line, $order ) : $this->deny( $line, $order );
-		} catch ( ApiError $error ) {
+		} catch ( ApiException $error ) {
 			if ( RetryPolicy::RETRY === RetryPolicy::decide( $error ) ) {
-				$this->again( $line, $order, $error->error_code, $error->retry_after );
+				$this->again( $line, $order, $error->errorCode, $error->retryAfter );
 				return;
 			}
-			$done = $this->attention( LineState::of( $item ), $order, $error->error_code );
+			$done = $this->attention( LineState::of( $item ), $order, $error->errorCode );
 		}
 		if ( null === $done ) {
 			$line = LineState::of( $item );
@@ -185,7 +186,7 @@ final class ProofDeadline {
 	 *
 	 * @return string|null What became of the line; null when it changed elsewhere meanwhile.
 	 *
-	 * @throws ApiError When Pixonaut refused, other than for a decision the customer made first, or could not be reached.
+	 * @throws ApiException When Pixonaut refused, other than for a decision the customer made first, or could not be reached.
 	 */
 	private function approve( LineState $line, WC_Order $order ): ?string {
 		$consent = array(
@@ -201,12 +202,12 @@ final class ProofDeadline {
 			$design_id = (string) $line->side_ref( $side, LineState::SIDE_DESIGN_ID );
 			$revision  = (int) $line->side_ref( $side, LineState::SIDE_REVISION );
 			try {
-				$this->designs->approve( $design_id, $consent, $revision );
-			} catch ( ApiError $error ) {
-				if ( ErrorCodes::REVISION_CHANGED === $error->error_code ) {
+				$this->pixonaut->designs()->approve( $design_id, Designs::approval( $consent, $revision ) );
+			} catch ( ApiException $error ) {
+				if ( ErrorCode::REVISION_CHANGED === $error->errorCode ) {
 					return $this->attention( $line, $order, NeedsAttention::DESIGN_CHANGED );
 				}
-				if ( ErrorCodes::NOT_COMMITTED !== $error->error_code ) {
+				if ( ErrorCode::NOT_COMMITTED !== $error->errorCode ) {
 					throw $error;
 				}
 				$status = $this->decided( $design_id, $revision );
@@ -243,7 +244,7 @@ final class ProofDeadline {
 	 *
 	 * @return string|null What became of the line; null when it changed elsewhere meanwhile.
 	 *
-	 * @throws ApiError When Pixonaut refused, other than for a decision the customer made first, or could not be reached.
+	 * @throws ApiException When Pixonaut refused, other than for a decision the customer made first, or could not be reached.
 	 */
 	private function deny( LineState $line, WC_Order $order ): ?string {
 		$open = $this->open_sides( $line );
@@ -251,9 +252,9 @@ final class ProofDeadline {
 			$design_id = (string) $line->side_ref( $side, LineState::SIDE_DESIGN_ID );
 			$revision  = (int) $line->side_ref( $side, LineState::SIDE_REVISION );
 			try {
-				$this->designs->reject( $design_id );
-			} catch ( ApiError $error ) {
-				if ( ErrorCodes::NOT_COMMITTED !== $error->error_code ) {
+				$this->pixonaut->designs()->reject( $design_id );
+			} catch ( ApiException $error ) {
+				if ( ErrorCode::NOT_COMMITTED !== $error->errorCode ) {
 					throw $error;
 				}
 				$status = $this->decided( $design_id, $revision );
@@ -287,15 +288,14 @@ final class ProofDeadline {
 	 *
 	 * @return string|null `approved` or `rejected`; null for any other status, or another revision.
 	 *
-	 * @throws ApiError When the design could not be read.
+	 * @throws ApiException When the design could not be read.
 	 */
 	private function decided( string $design_id, int $revision ): ?string {
-		$design = $this->designs->get( $design_id );
-		$status = $design['status'] ?? null;
-		if ( self::STATUS_REJECTED === $status ) {
+		$design = $this->pixonaut->designs()->get( $design_id );
+		if ( self::STATUS_REJECTED === $design->status ) {
 			return self::STATUS_REJECTED;
 		}
-		return self::STATUS_APPROVED === $status && ( $design['revision'] ?? null ) === $revision ? self::STATUS_APPROVED : null;
+		return self::STATUS_APPROVED === $design->status && $design->revision === $revision ? self::STATUS_APPROVED : null;
 	}
 
 	/**

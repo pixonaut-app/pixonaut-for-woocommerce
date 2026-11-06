@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Admin\ShowcaseField;
-use Pixonaut\WooCommerce\Api\ApiError;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use WC_Product;
@@ -114,7 +114,7 @@ final class SetProductShowcase implements Ability {
 		}
 		try {
 			$sets = ShowcaseImages::sets( $this->showcases->listed( $template )['showcases'] ?? array() );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return new WP_Error( 'pixonaut_wc_ability_pixonaut_unreachable', __( 'Pixonaut could not be asked for the template\'s showcase sets. Try again later.', 'pixonaut-for-woocommerce' ) );
 		}
 		$by_id   = array_column( $sets, null, 'id' );

@@ -10,7 +10,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 
@@ -51,7 +51,7 @@ abstract class StandingTestCase extends ProductPanelTestCase {
 			$this->recorder->json(
 				422,
 				array(
-					'error'       => ErrorCodes::VARIANT_REQUIRED,
+					'error'       => ErrorCode::VARIANT_REQUIRED,
 					'reason'      => 'The blank\'s print areas change with Size.',
 					'areasVaryBy' => array( self::AREAS_VARY_BY ),
 				)

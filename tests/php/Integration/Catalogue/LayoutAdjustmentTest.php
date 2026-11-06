@@ -8,20 +8,19 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
 use Pixonaut\WooCommerce\Admin\LayoutAdjustments;
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\StandingRow;
 use Pixonaut\WooCommerce\Catalogue\StandingRows;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
-use Pixonaut\WooCommerce\Tests\Support\StaticCredentials;
+use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use RuntimeException;
 use WC_Product_Simple;
 
@@ -49,10 +48,10 @@ final class LayoutAdjustmentTest extends StandingTestCase {
 
 	public function set_up(): void {
 		parent::set_up();
-		$designs           = new Designs( new Client( self::BASE_URL, Operations::plugin(), new StaticCredentials(), new WpHttpTransport(), new WcLogger(), new Deprecations() ) );
+		$sdk               = ( new Pixonaut( ScriptedClient::credentials(), new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		$this->adjustments = new LayoutAdjustments(
-			$designs,
-			new StandingRows( $this->catalogue, $designs, $this->logger ),
+			$sdk,
+			new StandingRows( $this->catalogue, new Designs( $sdk ), $sdk, $this->logger ),
 			$this->logger,
 			static function ( string $location ): never {
 				throw new RuntimeException( $location );
@@ -84,7 +83,7 @@ final class LayoutAdjustmentTest extends StandingTestCase {
 		$back = $this->adjust( $product, 'S' );
 
 		$this->assertStringContainsString( LayoutAdjustments::DONE_ARG . '=' . LayoutAdjustments::ADJUSTED, $back );
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'templateId'  => self::TEMPLATE_ID,
 				'approve'     => true,
@@ -224,12 +223,12 @@ final class LayoutAdjustmentTest extends StandingTestCase {
 	public function test_a_refused_adjustment_is_logged_and_said(): void {
 		$product = $this->standing_product();
 		$state   = $this->started( $product, 'S' );
-		$this->recorder->json( 422, array( 'error' => ErrorCodes::LAYOUT_PROOF_MISMATCH ) );
+		$this->recorder->json( 422, array( 'error' => ErrorCode::LAYOUT_PROOF_MISMATCH ) );
 
 		$back = $this->follow( 'finish', '?' . LayoutAdjustments::STATE_ARG . '=' . $state . '&' . LayoutAdjustments::TOKEN_ARG . '=' . self::PROOF_TOKEN );
 
 		$this->assertStringContainsString( LayoutAdjustments::DONE_ARG . '=' . LayoutAdjustments::FAILED, $back );
-		$this->assertSame( ErrorCodes::LAYOUT_PROOF_MISMATCH, $this->logger->entries[0]['context']['code'] ?? null );
+		$this->assertSame( ErrorCode::LAYOUT_PROOF_MISMATCH, $this->logger->entries[0]['context']['code'] ?? null );
 		$this->assertNull( $this->rows( $product->get_id() )[0]->adjusted );
 	}
 

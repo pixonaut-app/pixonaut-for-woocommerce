@@ -9,8 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 
 /**
  * On a placement whose print area changes with an option (a cut-and-sewn
@@ -60,10 +60,10 @@ final class MisfitSizes {
 	 * size it is printed at (`422 constraint_violation` with a `wrong_ratio`
 	 * or `too_large` violation).
 	 *
-	 * @param ApiError $error What Pixonaut answered.
+	 * @param ApiException $error What Pixonaut answered.
 	 */
-	public static function refused( ApiError $error ): bool {
-		if ( ErrorCodes::CONSTRAINT_VIOLATION !== $error->error_code ) {
+	public static function refused( ApiException $error ): bool {
+		if ( ErrorCode::CONSTRAINT_VIOLATION !== $error->errorCode ) {
 			return false;
 		}
 		foreach ( is_array( $error->details['violations'] ?? null ) ? $error->details['violations'] : array() as $violation ) {

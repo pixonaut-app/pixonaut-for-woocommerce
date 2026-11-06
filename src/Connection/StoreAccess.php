@@ -10,13 +10,14 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Connection;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Connect;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Schema;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ConnectedStoreHoldAccessRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 
 /**
@@ -58,12 +59,6 @@ final class StoreAccess {
 	 */
 	private const SECRET_BYTES = 32;
 
-	/**
-	 * Gives up telling Pixonaut about a turned off switch after this long: the
-	 * credential is revoked already, and an admin is waiting.
-	 */
-	private const TELL_TIMEOUT_SECONDS = 5;
-
 	private const MILLISECONDS_PER_SECOND = 1000;
 
 	/**
@@ -88,14 +83,14 @@ final class StoreAccess {
 
 	/**
 	 * @param ConnectionStore $store  The stored connection the credential belongs to.
-	 * @param Connect         $api    Hands the credential to Pixonaut, or takes it back.
-	 * @param Logger          $logger Logs what Pixonaut did not take; never the credential.
+	 * @param Pixonaut        $api    Hands the credential to Pixonaut, or takes it back.
+	 * @param LoggerInterface $logger Logs what Pixonaut did not take; never the credential.
 	 * @param Closure|null    $clock  `fn(): int` Unix time; `time()` when null.
 	 */
 	public function __construct(
 		private readonly ConnectionStore $store,
-		private readonly Connect $api,
-		private readonly Logger $logger,
+		private readonly Pixonaut $api,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 	) {
 		$this->clock = $clock ?? static fn (): int => time();
@@ -156,9 +151,9 @@ final class StoreAccess {
 	public function turn_on(): bool {
 		try {
 			$this->issue( fn ( array $kept, string $hash ): array => $this->on_state( $hash, $this->now() ) );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->failed = true;
-			$this->log_refusal( 'Pixonaut did not take the store\'s access for Pixel: %s.', Operations::SET_STORE_ACCESS, $e );
+			$this->log_refusal( 'Pixonaut did not take the store\'s access for Pixel: %s.', 'connectedStore.holdAccess', $e );
 			return false;
 		} catch ( RuntimeException $e ) {
 			$this->failed = true;
@@ -207,9 +202,10 @@ final class StoreAccess {
 			return false;
 		}
 		try {
-			$this->api->delete_store_access( self::TELL_TIMEOUT_SECONDS );
-		} catch ( ApiError $e ) {
-			$this->log_refusal( 'Pixonaut was not told that Pixel lost the store\'s access: %s.', Operations::DELETE_STORE_ACCESS, $e );
+			// The credential is revoked already, and an admin is waiting.
+			$this->api->sdk( Pixonaut::SHORT_TIMEOUT_SECONDS )->connect()->cutAccess();
+		} catch ( ApiException $e ) {
+			$this->log_refusal( 'Pixonaut was not told that Pixel lost the store\'s access: %s.', 'connectedStore.cutAccess', $e );
 			return false;
 		}
 		return true;
@@ -226,7 +222,7 @@ final class StoreAccess {
 		$this->transition(
 			fn ( array $kept ): ?array => self::is_older_than_the_last_change( $event, $kept )
 				? null
-				: $this->off_state( true === ( $kept['cut'] ?? false ), $event->created_at )
+				: $this->off_state( true === ( $kept['cut'] ?? false ), $event->createdAt )
 		);
 	}
 
@@ -243,10 +239,10 @@ final class StoreAccess {
 	 *
 	 * @param Event $event `store_access.requested`.
 	 *
-	 * @throws ApiError When Pixonaut did not take the credential, and may yet.
+	 * @throws ApiException When Pixonaut did not take the credential, and may yet.
 	 */
 	public function on_studio_requested( Event $event ): void {
-		$request_id = $event->string( self::REQUEST_ID );
+		$request_id = Payload::string( $event, self::REQUEST_ID );
 		if ( null === $request_id ) {
 			$this->logger->warning( 'A request from the studio for the store\'s access named no requestId, and was dropped.', array( 'event' => $event->id ) );
 			return;
@@ -258,11 +254,11 @@ final class StoreAccess {
 			$this->issue(
 				fn ( array $kept, string $hash ): ?array => true === ( $kept['cut'] ?? false ) || self::is_older_than_the_last_change( $event, $kept )
 					? null
-					: $this->on_state( $hash, $event->created_at ),
+					: $this->on_state( $hash, $event->createdAt ),
 				$request_id
 			);
-		} catch ( ApiError $e ) {
-			if ( ErrorCodes::STORE_ACCESS_REQUEST_STALE !== $e->error_code ) {
+		} catch ( ApiException $e ) {
+			if ( ErrorCode::STORE_ACCESS_REQUEST_STALE !== $e->errorCode ) {
 				throw $e;
 			}
 		}
@@ -310,8 +306,8 @@ final class StoreAccess {
 	 * @param Closure     $next       `fn(array<string, mixed> $kept, string $hash): ?array` what to keep with this hash; null issues nothing.
 	 * @param string|null $request_id The studio's request this answers; null for an opt-in in WordPress.
 	 *
-	 * @throws ApiError When Pixonaut did not take it, or the store is not connected.
-	 * @phpstan-throws ApiError|RuntimeException A `RuntimeException` when the hash could not be saved.
+	 * @throws ApiException When Pixonaut did not take it, or the store is not connected.
+	 * @phpstan-throws ApiException|RuntimeException A `RuntimeException` when the hash could not be saved.
 	 */
 	private function issue( Closure $next, ?string $request_id = null ): void {
 		$secret = bin2hex( random_bytes( self::SECRET_BYTES ) );
@@ -327,8 +323,8 @@ final class StoreAccess {
 			return;
 		}
 		try {
-			$this->api->set_store_access( $secret, $request_id );
-		} catch ( ApiError $e ) {
+			$this->api->sdk()->connect()->holdAccess( new ConnectedStoreHoldAccessRequest( credential: $secret, requestId: $request_id ) );
+		} catch ( ApiException $e ) {
 			$this->take_back( $hash, $before );
 			throw $e;
 		}
@@ -486,7 +482,7 @@ final class StoreAccess {
 	 */
 	private static function is_older_than_the_last_change( Event $event, array $kept ): bool {
 		$changed_at = $kept['changed_at'] ?? null;
-		return is_int( $changed_at ) && $event->created_at < $changed_at;
+		return is_int( $changed_at ) && $event->createdAt < $changed_at;
 	}
 
 	private function stored_hash(): ?string {
@@ -523,17 +519,17 @@ final class StoreAccess {
 	}
 
 	/**
-	 * @param string   $message   What did not happen, with a `%s` for the reason.
-	 * @param string   $operation The operation.
-	 * @param ApiError $error     Why.
+	 * @param string       $message   What did not happen, with a `%s` for the reason.
+	 * @param string       $operation The operation.
+	 * @param ApiException $error     Why.
 	 */
-	private function log_refusal( string $message, string $operation, ApiError $error ): void {
+	private function log_refusal( string $message, string $operation, ApiException $error ): void {
 		$this->logger->warning(
 			sprintf( $message, $error->getMessage() ),
 			array(
 				'operation'  => $operation,
 				'status'     => $error->status,
-				'error_code' => $error->error_code,
+				'error_code' => $error->errorCode,
 			)
 		);
 	}

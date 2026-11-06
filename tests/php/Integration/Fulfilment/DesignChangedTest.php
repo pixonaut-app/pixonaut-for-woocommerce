@@ -7,13 +7,10 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Fulfilment;
 
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Cart\FieldValue;
 use Pixonaut\WooCommerce\Connection\Cipher;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -29,7 +26,9 @@ use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Order;
 use WC_Order_Item_Product;
 use WP_UnitTestCase;
@@ -62,7 +61,7 @@ final class DesignChangedTest extends WP_UnitTestCase {
 
 	private DesignChanged $handler;
 
-	private Client $client;
+	private Sdk $client;
 
 	private Plugin $plugin;
 
@@ -80,13 +79,13 @@ final class DesignChangedTest extends WP_UnitTestCase {
 		$this->recorder = ( new HttpRecorder( self::BASE_URL ) )->start();
 		$this->store    = new ConnectionStore( Cipher::for_site() );
 		$this->store->save( self::connection() );
-		$client        = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+		$client        = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		$plugin        = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
 		$this->client  = $client;
 		$this->plugin  = $plugin;
 		$this->handler = new DesignChanged(
 			$plugin->connection(),
-			new Designs( $client ),
+			$client,
 			function ( int $item_id ): bool {
 				$this->scheduled[] = $item_id;
 				return true;
@@ -326,7 +325,7 @@ final class DesignChangedTest extends WP_UnitTestCase {
 			)
 		);
 		OpenApiAssert::webhook( $type, $body );
-		return Event::from_json( $body );
+		return Event::fromJson( $body );
 	}
 
 	/**
@@ -342,11 +341,11 @@ final class DesignChangedTest extends WP_UnitTestCase {
 	/**
 	 * The handler with another way of queueing the line's job.
 	 *
-	 * @param \Closure $schedule `fn(int $item_id): bool`.
-	 * @param Logger   $logger   Where a job not queued is logged.
+	 * @param \Closure        $schedule `fn(int $item_id): bool`.
+	 * @param LoggerInterface $logger   Where a job not queued is logged.
 	 */
-	private function handler_with( \Closure $schedule, Logger $logger ): DesignChanged {
-		return new DesignChanged( $this->plugin->connection(), new Designs( $this->client ), $schedule, $logger );
+	private function handler_with( \Closure $schedule, LoggerInterface $logger ): DesignChanged {
+		return new DesignChanged( $this->plugin->connection(), $this->client, $schedule, $logger );
 	}
 
 	private static function connection(): StoredConnection {

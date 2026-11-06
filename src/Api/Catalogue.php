@@ -10,7 +10,17 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Api;
 
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesPrintSizeValidateRequestOption2;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesPrintSizeValidateRequestOption2SizesItem;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Model\Model;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 
+/**
+ * Search paging, live versions and the rows the store keeps, on top of the
+ * SDK's `templates()`, `blanks()` and `printshops()`. Answers are kept as
+ * Pixonaut sent them, as arrays, since they are cached and stored that way.
+ */
 final class Catalogue {
 
 	/**
@@ -42,7 +52,7 @@ final class Catalogue {
 	 */
 	private const LANGUAGE = 'lang';
 
-	public function __construct( private readonly Client $client ) {
+	public function __construct( private readonly Sdk $pixonaut ) {
 	}
 
 	/**
@@ -54,20 +64,11 @@ final class Catalogue {
 	 *
 	 * @return array{rows: list<array<string, mixed>>, more: bool, total: int|null} `items` (`baseId`, `name`, `latestVersion`, `ratio`, `ratioTolerance`, `previewUrl`), whether a later page has more, and how many there are in all when Pixonaut said.
 	 *
-	 * @throws ApiError When Pixonaut refused, could not be reached, or answered without the list, as it answers a studio member (`templates`, `counts`).
+	 * @throws ApiException When Pixonaut refused, could not be reached, or answered without the list, as it answers a studio member (`templates`, `counts`).
 	 */
 	public function templates( string $query, int $page = 1, int $page_size = self::SEARCH_PAGE_SIZE ): array {
-		return $this->search(
-			Operations::SEARCH_TEMPLATES,
-			'items',
-			array(),
-			array(
-				'status' => self::LIVE,
-				'q'      => self::query( $query ),
-			),
-			$page,
-			$page_size
-		);
+		$page = max( 1, $page );
+		return self::page( 'templates.list', $this->pixonaut->templates()->list( status: self::LIVE, q: self::query( $query ), page: $page, pageSize: $page_size ), 'items', $page, $page_size );
 	}
 
 	/**
@@ -76,13 +77,13 @@ final class Catalogue {
 	 *
 	 * @return array<string, int>
 	 *
-	 * @throws ApiError When Pixonaut refused, could not be reached, or answered without the list.
+	 * @throws ApiException When Pixonaut refused, could not be reached, or answered without the list.
 	 */
 	public function live_versions(): array {
 		$versions = array();
 		$page     = 1;
 		do {
-			$read = $this->search( Operations::SEARCH_TEMPLATES, 'items', array(), array( 'status' => self::LIVE ), $page++, self::LIST_PAGE_SIZE );
+			$read = self::page( 'templates.list', $this->pixonaut->templates()->list( status: self::LIVE, page: $page, pageSize: self::LIST_PAGE_SIZE ), 'items', $page++, self::LIST_PAGE_SIZE );
 			foreach ( $read['rows'] as $row ) {
 				if ( is_string( $row['baseId'] ?? null ) && is_numeric( $row['latestVersion'] ?? null ) ) {
 					$versions[ $row['baseId'] ] = (int) $row['latestVersion'];
@@ -100,19 +101,11 @@ final class Catalogue {
 	 *
 	 * @return array{rows: list<array<string, mixed>>, more: bool, total: int|null} `blanks` (`id`, `name`, `placements` with `id`, `name`, `shopName`, sizes), and whether a later page has more.
 	 *
-	 * @throws ApiError When Pixonaut refused, could not be reached, or answered without the list.
+	 * @throws ApiException When Pixonaut refused, could not be reached, or answered without the list.
 	 */
 	public function blanks( string $query, int $page = 1 ): array {
-		return $this->search(
-			Operations::SEARCH_BLANKS,
-			'blanks',
-			array(),
-			array(
-				'hasPlacements' => 'true',
-				'q'             => self::query( $query ),
-			),
-			$page
-		);
+		$page = max( 1, $page );
+		return self::page( 'blanks.list', $this->pixonaut->blanks()->list( page: $page, pageSize: self::SEARCH_PAGE_SIZE, q: self::query( $query ), hasPlacements: 'true' ), 'blanks', $page, self::SEARCH_PAGE_SIZE );
 	}
 
 	/**
@@ -125,14 +118,14 @@ final class Catalogue {
 	 *
 	 * @return array{status: string, offers_properties: bool|null, background_see_through: bool|null, preview_url: string|null, name: string|null} `status` is `live`, `paused`, or another state Pixonaut adds; `offers_properties` and `background_see_through` are null when Pixonaut does not say; `preview_url` works for an hour or two; `name` is null when Pixonaut sent none.
 	 *
-	 * @throws ApiError When Pixonaut refused (`404` for an unknown template), could not be reached, or answered without a status.
+	 * @throws ApiException When Pixonaut refused (`404` for an unknown template), could not be reached, or answered without a status.
 	 */
 	public function template_state( string $template_id ): array {
-		$response = $this->client->call( Operations::GET_TEMPLATE, array( 'id' => $template_id ) );
-		$template = $this->client->json( Operations::GET_TEMPLATE, $response );
+		// Read as sent: a Pixonaut that predates a field the spec now requires still answers the store.
+		$template = $this->pixonaut->call( 'templates.get', array( 'id' => $template_id ) )->object();
 		$status   = $template['status'] ?? null;
 		if ( ! is_string( $status ) ) {
-			throw ApiError::unexpected( Operations::GET_TEMPLATE, $response );
+			throw self::unexpected( 'templates.get' );
 		}
 		$offers     = $template['offersProperties'] ?? null;
 		$background = $template['backgroundSeeThrough'] ?? null;
@@ -157,11 +150,10 @@ final class Catalogue {
 	 *
 	 * @return array{showcases: list<array{id: string, name: string}>, preview_url: string|null} `preview_url` works for an hour or two; null when Pixonaut sent none.
 	 *
-	 * @throws ApiError When Pixonaut refused (`404` for an unknown template), could not be reached, or answered with something else than a JSON object.
+	 * @throws ApiException When Pixonaut refused (`404` for an unknown template), could not be reached, or answered with something else than a JSON object.
 	 */
 	public function template_showcases( string $template_id ): array {
-		$response  = $this->client->call( Operations::GET_TEMPLATE, array( 'id' => $template_id ) );
-		$template  = $this->client->json( Operations::GET_TEMPLATE, $response );
+		$template  = $this->pixonaut->call( 'templates.get', array( 'id' => $template_id ) )->object();
 		$showcases = array();
 		foreach ( is_array( $template['showcases'] ?? null ) ? $template['showcases'] : array() as $showcase ) {
 			$id = is_array( $showcase ) ? ( $showcase['id'] ?? null ) : null;
@@ -191,10 +183,10 @@ final class Catalogue {
 	 *
 	 * @return string A JSON object: `template`, `formSchema`, `status`, `language`, ….
 	 *
-	 * @throws ApiError When Pixonaut refused (`404` for an unknown template), could not be reached, or answered with something else than a JSON object.
+	 * @throws ApiException When Pixonaut refused (`404` for an unknown template), could not be reached, or answered with something else than a JSON object.
 	 */
 	public function template_answer( string $template_id, ?string $language = null ): string {
-		return $this->answer( Operations::GET_TEMPLATE, array( 'id' => $template_id ), array( self::LANGUAGE => $language ) );
+		return $this->answer( 'templates.get', array( 'id' => $template_id ), array( self::LANGUAGE => $language ) );
 	}
 
 	/**
@@ -207,11 +199,11 @@ final class Catalogue {
 	 *
 	 * @return string A JSON object.
 	 *
-	 * @throws ApiError When Pixonaut refused (`422 unknown_placement`, `404`), could not be reached, or answered with something else than a JSON object.
+	 * @throws ApiException When Pixonaut refused (`422 unknown_placement`, `404`), could not be reached, or answered with something else than a JSON object.
 	 */
 	public function constraints_answer( string $template_id, string $blank_id, string $placement_id ): string {
 		return $this->answer(
-			Operations::GET_TEMPLATE_CONSTRAINTS,
+			'templates.constraints.get',
 			array( 'id' => $template_id ),
 			array(
 				'blankId'     => $blank_id,
@@ -230,12 +222,12 @@ final class Catalogue {
 	 *
 	 * @return array{mockups: string, variants: string} JSON objects.
 	 *
-	 * @throws ApiError When Pixonaut refused (`404` for an unknown blank), could not be reached, or answered with something else than a JSON object.
+	 * @throws ApiException When Pixonaut refused (`404` for an unknown blank), could not be reached, or answered with something else than a JSON object.
 	 */
 	public function blank_views_answers( string $blank_id, ?string $language = null ): array {
 		return array(
-			'mockups'  => $this->answer( Operations::BLANK_MOCKUPS, array( 'id' => $blank_id ), array( self::LANGUAGE => $language ) ),
-			'variants' => $this->answer( Operations::BLANK_VARIANTS, array( 'id' => $blank_id ), array( self::LANGUAGE => $language ) ),
+			'mockups'  => $this->answer( 'blanks.mockups.list', array( 'id' => $blank_id ), array( self::LANGUAGE => $language ) ),
+			'variants' => $this->answer( 'blanks.variants.list', array( 'id' => $blank_id ), array( self::LANGUAGE => $language ) ),
 		);
 	}
 
@@ -246,10 +238,10 @@ final class Catalogue {
 	 *
 	 * @return array<string, mixed> `id`, `name`, `placements`, `defaultPrintshopId`, ….
 	 *
-	 * @throws ApiError When Pixonaut refused (`404` for an unknown blank) or could not be reached.
+	 * @throws ApiException When Pixonaut refused (`404` for an unknown blank) or could not be reached.
 	 */
 	public function blank( string $blank_id ): array {
-		return $this->get( Operations::GET_BLANK, array( 'id' => $blank_id ) );
+		return $this->pixonaut->blanks()->get( $blank_id )->raw();
 	}
 
 	/**
@@ -263,11 +255,10 @@ final class Catalogue {
 	 *
 	 * @return list<array<string, mixed>> `placements`: `id`, `name`, `views` (`id`, `label`, `photos`: `id`, `thumbnailUrl`, `mount`), ….
 	 *
-	 * @throws ApiError When Pixonaut refused (`404` for an unknown blank), could not be reached, or answered without the list.
+	 * @throws ApiException When Pixonaut refused (`404` for an unknown blank), could not be reached, or answered without the list.
 	 */
 	public function mockups( string $blank_id, ?string $language = null ): array {
-		$response = $this->client->call( Operations::BLANK_MOCKUPS, array( 'id' => $blank_id ), array( self::LANGUAGE => $language ) );
-		return self::rows( Operations::BLANK_MOCKUPS, $response, $this->client->json( Operations::BLANK_MOCKUPS, $response ), 'placements' );
+		return self::rows( 'blanks.mockups.list', $this->pixonaut->blanks()->listMockups( $blank_id, $language )->raw(), 'placements' );
 	}
 
 	/**
@@ -280,11 +271,10 @@ final class Catalogue {
 	 *
 	 * @return list<array<string, mixed>> `variants`: `ref`, `options`, `retired`, `views` (`placementId`, `viewId`, `label`).
 	 *
-	 * @throws ApiError When Pixonaut refused (`404` for an unknown blank), could not be reached, or answered without the list.
+	 * @throws ApiException When Pixonaut refused (`404` for an unknown blank), could not be reached, or answered without the list.
 	 */
 	public function variants( string $blank_id, ?string $language = null ): array {
-		$response = $this->client->call( Operations::BLANK_VARIANTS, array( 'id' => $blank_id ), array( self::LANGUAGE => $language ) );
-		return self::rows( Operations::BLANK_VARIANTS, $response, $this->client->json( Operations::BLANK_VARIANTS, $response ), 'variants' );
+		return self::rows( 'blanks.variants.list', $this->pixonaut->blanks()->listVariants( $blank_id, $language )->raw(), 'variants' );
 	}
 
 	/**
@@ -298,21 +288,16 @@ final class Catalogue {
 	 *
 	 * @return array{rows: list<array<string, mixed>>, more: bool, total: int|null} `items` (`templateId` as `<baseId>@<version>`, `name`, `printWidthMm`, `printHeightMm`, `verdict`, …), and whether a later page has more.
 	 *
-	 * @throws ApiError When Pixonaut refused, could not be reached, or answered without the list.
+	 * @throws ApiException When Pixonaut refused, could not be reached, or answered without the list.
 	 */
 	public function fitting_templates( string $blank_id, string $placement_id, string $query, int $page = 1 ): array {
-		return $this->search(
-			Operations::FITTING_TEMPLATES,
+		$page = max( 1, $page );
+		return self::page(
+			'blanks.placements.fittingTemplates.list',
+			$this->pixonaut->blanks()->listPlacementFittingTemplates( $blank_id, $placement_id, $page, self::SEARCH_PAGE_SIZE, self::LIVE, self::query( $query ) ),
 			'items',
-			array(
-				'id'          => $blank_id,
-				'placementId' => $placement_id,
-			),
-			array(
-				'status' => self::LIVE,
-				'q'      => self::query( $query ),
-			),
-			$page
+			$page,
+			self::SEARCH_PAGE_SIZE
 		);
 	}
 
@@ -327,17 +312,10 @@ final class Catalogue {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @throws ApiError When Pixonaut refused (`422 unknown_placement`, `404`) or could not be reached.
+	 * @throws ApiException When Pixonaut refused (`422 unknown_placement`, `404`) or could not be reached.
 	 */
 	public function constraints( string $template_id, string $blank_id, string $placement_id ): array {
-		return $this->get(
-			Operations::GET_TEMPLATE_CONSTRAINTS,
-			array( 'id' => $template_id ),
-			array(
-				'blankId'     => $blank_id,
-				'placementId' => $placement_id,
-			)
-		);
+		return $this->pixonaut->templates()->getConstraints( $template_id, $blank_id, $placement_id )->raw();
 	}
 
 	/**
@@ -353,28 +331,21 @@ final class Catalogue {
 	 *
 	 * @return list<array<string, mixed>> One verdict per size, in order: `{legal: true}` or `{legal: false, reason}`.
 	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
+	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	public function check_print_sizes( string $template_id, array $sizes, ?string $blank_id, ?string $placement_id ): array {
-		$body = array(
-			'sizes' => array_map(
-				static fn ( PrintSize $size ): array => array(
-					'widthMm'  => $size->width_mm,
-					'heightMm' => $size->height_mm,
-				),
+		$on_blank = null !== $blank_id && null !== $placement_id;
+		$body     = new TemplatesPrintSizeValidateRequestOption2(
+			sizes: array_map(
+				static fn ( PrintSize $size ): TemplatesPrintSizeValidateRequestOption2SizesItem => new TemplatesPrintSizeValidateRequestOption2SizesItem( heightMm: $size->height_mm, widthMm: $size->width_mm ),
 				$sizes
 			),
+			blankId: $on_blank ? $blank_id : null,
+			placementId: $on_blank ? $placement_id : null,
 		);
-		if ( null !== $blank_id && null !== $placement_id ) {
-			$body += array(
-				'blankId'     => $blank_id,
-				'placementId' => $placement_id,
-			);
-		}
-		$response = $this->client->call( Operations::CHECK_PRINT_SIZES, array( 'id' => $template_id ), array(), $body );
-		$verdicts = self::rows( Operations::CHECK_PRINT_SIZES, $response, $this->client->json( Operations::CHECK_PRINT_SIZES, $response ), 'verdicts' );
+		$verdicts = self::rows( 'templates.printSize.validate', $this->pixonaut->templates()->validatePrintSize( $template_id, $body )->raw(), 'verdicts' );
 		if ( count( $verdicts ) !== count( $sizes ) ) {
-			throw ApiError::unexpected( Operations::CHECK_PRINT_SIZES, $response );
+			throw self::unexpected( 'templates.printSize.validate' );
 		}
 		return $verdicts;
 	}
@@ -385,69 +356,45 @@ final class Catalogue {
 	 *
 	 * @return list<array<string, mixed>> `id`, `name`, `adapter`, `active`, `isDefault`.
 	 *
-	 * @throws ApiError When Pixonaut refused, could not be reached, or answered without the list.
+	 * @throws ApiException When Pixonaut refused, could not be reached, or answered without the list.
 	 */
 	public function printshop_connections(): array {
-		$response = $this->client->call( Operations::LIST_PRINTSHOP_CONNECTIONS );
-		return self::rows( Operations::LIST_PRINTSHOP_CONNECTIONS, $response, $this->client->json( Operations::LIST_PRINTSHOP_CONNECTIONS, $response ), 'connections' );
-	}
-
-	/**
-	 * @param string                     $operation Operation id.
-	 * @param array<string, string>      $path      Path values.
-	 * @param array<string, scalar|null> $query     Query parameters.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @throws ApiError When Pixonaut refused or could not be reached.
-	 */
-	private function get( string $operation, array $path = array(), array $query = array() ): array {
-		return $this->client->json( $operation, $this->client->call( $operation, $path, $query ) );
+		return self::rows( 'printshopConnections.list', $this->pixonaut->printshops()->listConnections()->raw(), 'connections' );
 	}
 
 	/**
 	 * A successful answer's body, checked to be a JSON object.
 	 *
-	 * @param string                     $operation Operation id.
+	 * @param string                     $operation SDK operation id.
 	 * @param array<string, string>      $path      Path values.
 	 * @param array<string, scalar|null> $query     Query parameters.
 	 *
-	 * @throws ApiError When Pixonaut refused, could not be reached, or answered with something else than a JSON object.
+	 * @throws ApiException When Pixonaut refused, could not be reached, or answered with something else than a JSON object.
 	 */
 	private function answer( string $operation, array $path = array(), array $query = array() ): string {
-		$response = $this->client->call( $operation, $path, $query );
-		$this->client->json( $operation, $response );
-		return $response->body;
+		$result = $this->pixonaut->call( $operation, $path, $query );
+		$result->object();
+		return $result->body;
 	}
 
 	/**
 	 * One page of a catalogue list.
 	 *
-	 * @param string                     $operation Operation id.
-	 * @param string                     $field     The answer's list field.
-	 * @param array<string, string>      $path      Path values.
-	 * @param array<string, scalar|null> $query     Query parameters, paging aside.
-	 * @param int                        $page      Page, from 1.
-	 * @param int                        $page_size Results per page.
+	 * @param string $operation SDK operation id, for the error.
+	 * @param Model  $answer    The page Pixonaut answered.
+	 * @param string $field     The answer's list field.
+	 * @param int    $page      Page, from 1.
+	 * @param int    $page_size Results per page.
 	 *
 	 * @return array{rows: list<array<string, mixed>>, more: bool, total: int|null} The rows, whether a later page has more, and how many there are in all when Pixonaut said.
 	 *
-	 * @throws ApiError When Pixonaut refused, could not be reached, or answered without the list.
+	 * @throws ApiException When the answer has no such list.
 	 */
-	private function search( string $operation, string $field, array $path, array $query, int $page, int $page_size = self::SEARCH_PAGE_SIZE ): array {
-		$page     = max( 1, $page );
-		$response = $this->client->call(
-			$operation,
-			$path,
-			$query + array(
-				'page'     => $page,
-				'pageSize' => $page_size,
-			)
-		);
-		$answer   = $this->client->json( $operation, $response );
-		$total    = $answer['total'] ?? null;
+	private static function page( string $operation, Model $answer, string $field, int $page, int $page_size ): array {
+		$raw   = $answer->raw();
+		$total = $raw['total'] ?? null;
 		return array(
-			'rows'  => self::rows( $operation, $response, $answer, $field ),
+			'rows'  => self::rows( $operation, $raw, $field ),
 			'more'  => is_numeric( $total ) && $page * $page_size < (int) $total,
 			'total' => is_numeric( $total ) ? (int) $total : null,
 		);
@@ -467,19 +414,18 @@ final class Catalogue {
 	 * The objects in one of the answer's lists. An answer without the list
 	 * is an error, not an empty result, so it is never cached as one.
 	 *
-	 * @param string               $operation Operation id.
-	 * @param Response             $response  The successful response.
-	 * @param array<string, mixed> $answer    Its decoded body.
+	 * @param string               $operation SDK operation id, for the error.
+	 * @param array<string, mixed> $answer    The answer, as Pixonaut sent it.
 	 * @param string               $field     The list's field.
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @throws ApiError When the answer has no such list.
+	 * @throws ApiException When the answer has no such list.
 	 */
-	private static function rows( string $operation, Response $response, array $answer, string $field ): array {
+	private static function rows( string $operation, array $answer, string $field ): array {
 		$list = $answer[ $field ] ?? null;
 		if ( ! is_array( $list ) || ! array_is_list( $list ) ) {
-			throw ApiError::unexpected( $operation, $response );
+			throw self::unexpected( $operation );
 		}
 		$rows = array();
 		foreach ( $list as $row ) {
@@ -488,5 +434,14 @@ final class Catalogue {
 			}
 		}
 		return $rows;
+	}
+
+	/**
+	 * An answer that lacks what the store reads from it.
+	 *
+	 * @param string $operation SDK operation id.
+	 */
+	private static function unexpected( string $operation ): ApiException {
+		return new ApiException( $operation, 200, ApiException::UNEXPECTED_RESPONSE, false );
 	}
 }

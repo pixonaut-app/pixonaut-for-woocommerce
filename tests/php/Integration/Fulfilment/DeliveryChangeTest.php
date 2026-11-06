@@ -9,13 +9,10 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Fulfilment;
 
 use Closure;
 use Pixonaut\WooCommerce\Admin\OrderBox;
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Orders;
-use Pixonaut\WooCommerce\Api\PreparedRequest;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Fulfilment\DeliveryChange;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
@@ -27,7 +24,9 @@ use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Refs;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
 use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\PreparedRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use WC_Order;
 use WC_Order_Item_Product;
 
@@ -69,9 +68,9 @@ final class DeliveryChangeTest extends FulfilmentTestCase {
 
 	public function set_up(): void {
 		parent::set_up();
-		$client = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+		$client = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		$store  = $this->store;
-		$change = new DeliveryChange( new Orders( $client ), static fn (): ?StoredConnection => $store->load(), new WcLogger() );
+		$change = new DeliveryChange( $client, static fn (): ?StoredConnection => $store->load(), new WcLogger() );
 		// The plugin's own triggers stay; its job runs against the recorder.
 		remove_all_actions( DeliveryChange::ACTION );
 		add_action( DeliveryChange::ACTION, array( $change, 'run' ) );
@@ -336,7 +335,7 @@ final class DeliveryChangeTest extends FulfilmentTestCase {
 		add_filter(
 			'pixonaut_wc_api_request_body',
 			static function ( array $body, string $operation ) use ( &$prepared ): array {
-				if ( Operations::CHANGE_ORDER_DELIVERY === $operation ) {
+				if ( 'orders.delivery.update' === $operation ) {
 					++$prepared;
 					$body['recipient']['phone'] = self::PHONE_PREFIX . $prepared;
 				}
@@ -379,7 +378,7 @@ final class DeliveryChangeTest extends FulfilmentTestCase {
 		$this->ordered();
 		$this->recorder->json( 200, $this->answer( DeliveryChange::ACCEPTED ) );
 		$plugin = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
-		$event  = new Event(
+		$event  = Payload::event(
 			'evt_1',
 			OrderDeliveryChanged::TYPE,
 			time() * self::MS_PER_SECOND,
@@ -462,7 +461,7 @@ final class DeliveryChangeTest extends FulfilmentTestCase {
 		add_action(
 			'pixonaut_wc_api_before_request',
 			static function ( PreparedRequest $request ) use ( $item_id, $change, &$done ): void {
-				if ( $done || Operations::CHANGE_ORDER_DELIVERY !== $request->operation ) {
+				if ( $done || 'orders.delivery.update' !== $request->operation ) {
 					return;
 				}
 				$done = true;

@@ -10,9 +10,12 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Webhooks;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\EventType;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Signature;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use UnexpectedValueException;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -46,15 +49,15 @@ final class Receiver {
 	private readonly Closure $clock;
 
 	/**
-	 * @param Connection   $connection Holds the signing secret.
-	 * @param Intake       $intake     Keeps each new event and queues its job.
-	 * @param Logger       $logger     Logs refused deliveries; never secrets or bodies.
-	 * @param Closure|null $clock      `fn(): int` Unix time; `time()` when null.
+	 * @param Connection      $connection Holds the signing secret.
+	 * @param Intake          $intake     Keeps each new event and queues its job.
+	 * @param LoggerInterface $logger     Logs refused deliveries; never secrets or bodies.
+	 * @param Closure|null    $clock      `fn(): int` Unix time; `time()` when null.
 	 */
 	public function __construct(
 		private readonly Connection $connection,
 		private readonly Intake $intake,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 	) {
 		$this->clock = $clock ?? static fn (): int => time();
@@ -100,12 +103,12 @@ final class Receiver {
 			return self::answer( self::UNAUTHORIZED, 'invalid_signature' );
 		}
 		try {
-			$event = Event::from_json( $body );
+			$event = Event::fromJson( $body );
 		} catch ( UnexpectedValueException $e ) {
 			$this->logger->warning( 'Webhook refused: ' . $e->getMessage() );
 			return self::answer( self::BAD_REQUEST, 'invalid_event' );
 		}
-		if ( Event::PING === $event->type ) {
+		if ( EventType::WEBHOOK_PING === $event->type ) {
 			return self::answer( self::OK, 'received' );
 		}
 		$taken = $this->intake->take( $event, $body );

@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use WC_Order;
 use WC_Order_Item_Product;
 
@@ -112,22 +112,22 @@ final class NeedsAttention {
 	 */
 	public static function explain( string $code ): string {
 		return match ( $code ) {
-			ErrorCodes::PRINTSHOP_DIFFERS_FROM_BLANK => __( 'Pixonaut refused the printshop the item was sent to: only the printshop of the product\'s blank can make it. Check the blank in Pixonaut, then retry.', 'pixonaut-for-woocommerce' ),
-			ErrorCodes::PRINTSHOP_DISCONNECTED  => __( 'The printshop that makes the item is disconnected in Pixonaut. Reconnect it in Pixonaut, then retry.', 'pixonaut-for-woocommerce' ),
-			ErrorCodes::PRINT_NEEDS_PRINTSHOP   => __( 'Pixonaut has no printshop to make the item: its design is on no blank, and the workspace has no default printshop. Set one in Pixonaut, then retry.', 'pixonaut-for-woocommerce' ),
-			ErrorCodes::VARIANT_RETIRED         => __( 'The blank variant the item was bought as is retired in Pixonaut, so the printshop cannot make it. Refund or cancel the item.', 'pixonaut-for-woocommerce' ),
-			ErrorCodes::VARIANT_NOT_OF_BLANK,
-			ErrorCodes::VARIANT_REQUIRED        => __( 'Pixonaut could not tell which variant of the blank the item is: the product sells no variant of its blank. Pick its variant on the product, then refund or cancel the item.', 'pixonaut-for-woocommerce' ),
-			ErrorCodes::PRINT_NOT_POSITION_SIZE,
-			ErrorCodes::PRINT_EXCEEDS_MACHINE   => __( 'The item\'s print is at a size its position on the blank does not print, or larger than the printshop\'s machine takes. Check the blank\'s positions and the printshop\'s machine in Pixonaut, then have the customer personalise the item again at a size it prints.', 'pixonaut-for-woocommerce' ),
-			ErrorCodes::FIELD_VALUE_MISSING     => __( 'The printshop needs a value the blank\'s variant or placement does not have. Fill it in for the blank in Pixonaut, then retry.', 'pixonaut-for-woocommerce' ),
-			ErrorCodes::DESIGN_ALREADY_ORDERED  => __( 'The design already has a printshop order in Pixonaut that this item did not place, for example one placed in the studio. Check that order; if the item is to be made as well, choose Order again anyway.', 'pixonaut-for-woocommerce' ),
-			ErrorCodes::DESIGN_ERASED           => __( 'The design\'s personal data was erased in Pixonaut, so it can no longer be printed.', 'pixonaut-for-woocommerce' ),
-			ErrorCodes::REVISION_CHANGED,
-			ErrorCodes::NOT_COMMITTED           => __( 'The design changed in Pixonaut since the customer approved it.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::PRINTSHOP_DIFFERS_FROM_BLANK => __( 'Pixonaut refused the printshop the item was sent to: only the printshop of the product\'s blank can make it. Check the blank in Pixonaut, then retry.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::PRINTSHOP_DISCONNECTED  => __( 'The printshop that makes the item is disconnected in Pixonaut. Reconnect it in Pixonaut, then retry.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::PRINT_NEEDS_PRINTSHOP   => __( 'Pixonaut has no printshop to make the item: its design is on no blank, and the workspace has no default printshop. Set one in Pixonaut, then retry.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::VARIANT_RETIRED         => __( 'The blank variant the item was bought as is retired in Pixonaut, so the printshop cannot make it. Refund or cancel the item.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::VARIANT_NOT_OF_BLANK,
+			ErrorCode::VARIANT_REQUIRED        => __( 'Pixonaut could not tell which variant of the blank the item is: the product sells no variant of its blank. Pick its variant on the product, then refund or cancel the item.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::PRINT_NOT_POSITION_SIZE,
+			ErrorCode::PRINT_EXCEEDS_MACHINE   => __( 'The item\'s print is at a size its position on the blank does not print, or larger than the printshop\'s machine takes. Check the blank\'s positions and the printshop\'s machine in Pixonaut, then have the customer personalise the item again at a size it prints.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::FIELD_VALUE_MISSING     => __( 'The printshop needs a value the blank\'s variant or placement does not have. Fill it in for the blank in Pixonaut, then retry.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::DESIGN_ALREADY_ORDERED  => __( 'The design already has a printshop order in Pixonaut that this item did not place, for example one placed in the studio. Check that order; if the item is to be made as well, choose Order again anyway.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::DESIGN_ERASED           => __( 'The design\'s personal data was erased in Pixonaut, so it can no longer be printed.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::REVISION_CHANGED,
+			ErrorCode::NOT_COMMITTED           => __( 'The design changed in Pixonaut since the customer approved it.', 'pixonaut-for-woocommerce' ),
 			self::DESIGN_DELETED                => __( 'The design was deleted in Pixonaut, so it can no longer be printed. Check the order with the customer.', 'pixonaut-for-woocommerce' ),
 			self::DESIGN_EDITED                 => __( 'The design was changed in Pixonaut after it was approved, so it was not sent to the printshop. Check the design before it is printed.', 'pixonaut-for-woocommerce' ),
-			ErrorCodes::UNAUTHORIZED            => __( 'Pixonaut no longer accepts the store\'s key. Reconnect the store.', 'pixonaut-for-woocommerce' ),
+			ErrorCode::UNAUTHORIZED            => __( 'Pixonaut no longer accepts the store\'s key. Reconnect the store.', 'pixonaut-for-woocommerce' ),
 			self::DESIGN_CHANGED                => __( 'The design was changed in Pixonaut after the customer bought it, so their proof no longer shows it. Check the design with the customer.', 'pixonaut-for-woocommerce' ),
 			self::DESIGN_NOT_WAITING            => __( 'The design was no longer waiting for the customer\'s approval when the order was paid, for example because it was rejected in Pixonaut.', 'pixonaut-for-woocommerce' ),
 			self::PROOF_EXPIRED                 => __( 'The customer did not approve the design by the deadline, so it was rejected and will not be printed. Refund or cancel the item.', 'pixonaut-for-woocommerce' ),

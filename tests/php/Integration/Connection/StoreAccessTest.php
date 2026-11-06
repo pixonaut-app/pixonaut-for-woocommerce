@@ -10,13 +10,10 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Connection;
 
 use Pixonaut\WooCommerce\Admin\Notices;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\Connect;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Connection\Cipher;
 use Pixonaut\WooCommerce\Connection\ConnectAttempts;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -24,7 +21,9 @@ use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WP_UnitTestCase;
 
@@ -49,8 +48,7 @@ final class StoreAccessTest extends WP_UnitTestCase {
 		parent::set_up();
 		$this->recorder = ( new HttpRecorder( self::BASE_URL ) )->start();
 		$this->store    = new ConnectionStore( Cipher::for_site() );
-		$client         = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
-		$this->access   = new StoreAccess( $this->store, new Connect( $client ), new WcLogger(), static fn (): int => self::NOW );
+		$this->access   = new StoreAccess( $this->store, new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ), new WcLogger(), static fn (): int => self::NOW );
 		$this->connect();
 	}
 
@@ -110,7 +108,7 @@ final class StoreAccessTest extends WP_UnitTestCase {
 	 * @param int    $after_seconds How long after the clock's now it was made.
 	 */
 	private static function event( string $type, int $after_seconds = 1 ): Event {
-		return new Event( 'evt_' . $type, $type, ( self::NOW + $after_seconds ) * self::MILLISECONDS, array( 'requestId' => 'req_1' ) );
+		return Payload::event( 'evt_' . $type, $type, ( self::NOW + $after_seconds ) * self::MILLISECONDS, array( 'requestId' => 'req_1' ) );
 	}
 
 	public function test_it_is_off_until_turned_on_also_for_a_connection_made_before_the_switch(): void {
@@ -211,14 +209,14 @@ final class StoreAccessTest extends WP_UnitTestCase {
 		try {
 			$this->access->on_studio_requested( self::event( StoreAccess::EVENT_REQUESTED ) );
 			$this->fail( 'The job must fail, so it runs again.' );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->assertFalse( $this->access->is_on() );
 		}
 	}
 
 	public function test_answering_the_studio_echoes_its_request_and_an_opt_in_sends_none(): void {
 		$this->recorder->raw( 204, '', 'application/json' );
-		$this->access->on_studio_requested( new Event( 'evt_1', StoreAccess::EVENT_REQUESTED, ( self::NOW + 1 ) * self::MILLISECONDS, array( 'requestId' => 'req_1' ) ) );
+		$this->access->on_studio_requested( Payload::event( 'evt_1', StoreAccess::EVENT_REQUESTED, ( self::NOW + 1 ) * self::MILLISECONDS, array( 'requestId' => 'req_1' ) ) );
 
 		$this->assertSame( 'req_1', json_decode( (string) $this->recorder->requests[0]['body'], true )['requestId'] ?? null );
 
@@ -230,7 +228,7 @@ final class StoreAccessTest extends WP_UnitTestCase {
 	public function test_a_stale_request_is_not_tried_again_and_revokes_what_it_issued(): void {
 		$this->recorder->json( 409, array( 'error' => 'store_access_request_stale' ) );
 
-		$this->access->on_studio_requested( new Event( 'evt_1', StoreAccess::EVENT_REQUESTED, ( self::NOW + 1 ) * self::MILLISECONDS, array( 'requestId' => 'req_old' ) ) );
+		$this->access->on_studio_requested( Payload::event( 'evt_1', StoreAccess::EVENT_REQUESTED, ( self::NOW + 1 ) * self::MILLISECONDS, array( 'requestId' => 'req_old' ) ) );
 
 		$this->assertFalse( $this->access->is_on() );
 		$this->assertFalse( $this->access->is_cut() );
@@ -244,7 +242,7 @@ final class StoreAccessTest extends WP_UnitTestCase {
 		$held = $this->turn_on();
 		$this->recorder->json( 409, array( 'error' => 'store_access_request_stale' ) );
 
-		$this->access->on_studio_requested( new Event( 'evt_1', StoreAccess::EVENT_REQUESTED, ( self::NOW + 1 ) * self::MILLISECONDS, array( 'requestId' => 'req_old' ) ) );
+		$this->access->on_studio_requested( Payload::event( 'evt_1', StoreAccess::EVENT_REQUESTED, ( self::NOW + 1 ) * self::MILLISECONDS, array( 'requestId' => 'req_old' ) ) );
 
 		$this->assertTrue( $this->access->accepts( $held ) );
 	}
@@ -292,7 +290,7 @@ final class StoreAccessTest extends WP_UnitTestCase {
 			);
 			if ( 'stale' === $outcome ) {
 				$this->recorder->json( 409, array( 'error' => 'store_access_request_stale' ) );
-				$this->access->on_studio_requested( new Event( 'evt_1', StoreAccess::EVENT_REQUESTED, ( self::NOW + 1 ) * self::MILLISECONDS, array( 'requestId' => 'req_old' ) ) );
+				$this->access->on_studio_requested( Payload::event( 'evt_1', StoreAccess::EVENT_REQUESTED, ( self::NOW + 1 ) * self::MILLISECONDS, array( 'requestId' => 'req_old' ) ) );
 			} else {
 				$this->recorder->fail();
 				$this->assertFalse( $this->access->turn_on() );
@@ -457,7 +455,7 @@ final class StoreAccessTest extends WP_UnitTestCase {
 	private function assert_not_saved( callable $call ): void {
 		try {
 			$call();
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->fail( 'Pixonaut\'s answer is not what failed: ' . $e->getMessage() );
 		} catch ( RuntimeException $e ) {
 			$this->assertStringContainsString( 'could not be saved', $e->getMessage() );
@@ -483,7 +481,7 @@ final class StoreAccessTest extends WP_UnitTestCase {
 			'not string' => array( 'requestId' => 42 ),
 		);
 		foreach ( $payloads as $case => $payload ) {
-			$this->access->on_studio_requested( new Event( 'evt_1', StoreAccess::EVENT_REQUESTED, ( self::NOW + 1 ) * self::MILLISECONDS, $payload ) );
+			$this->access->on_studio_requested( Payload::event( 'evt_1', StoreAccess::EVENT_REQUESTED, ( self::NOW + 1 ) * self::MILLISECONDS, $payload ) );
 
 			$this->assertSame( array(), $this->recorder->requests, $case );
 			$this->assertFalse( $this->access->is_on(), $case );
@@ -561,7 +559,7 @@ final class StoreAccessTest extends WP_UnitTestCase {
 
 		$fresh = new ConnectionStore( Cipher::for_site(), static fn (): string => 'https://staging.example.org' );
 		$this->assertSame( ConnectionStore::PAUSED_SITE_CHANGED, $fresh->paused() );
-		$copied = new StoreAccess( $fresh, new Connect( new Client( self::BASE_URL, Operations::plugin(), $fresh, new WpHttpTransport(), new WcLogger(), new Deprecations() ) ), new WcLogger() );
+		$copied = new StoreAccess( $fresh, new Pixonaut( $fresh, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ), new WcLogger() );
 
 		$this->assertFalse( $copied->is_on() );
 		$this->assertFalse( $copied->accepts( $credential ) );

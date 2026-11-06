@@ -8,11 +8,11 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Unit\Fulfilment;
 
 use Brain\Monkey\Filters;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Response;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Fulfilment\RetryPolicy;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\ErrorMapper;
 
 final class RetryPolicyTest extends TestCase {
 
@@ -34,9 +34,9 @@ final class RetryPolicyTest extends TestCase {
 	public static function failures(): iterable {
 		$retry     = RetryPolicy::RETRY;
 		$attention = RetryPolicy::NEEDS_ATTENTION;
-		yield 'lock_timeout' => array( Operations::CREATE_ORDER, 503, array( 'error' => 'lock_timeout' ), $retry );
+		yield 'lock_timeout' => array( 'orders.create', 503, array( 'error' => 'lock_timeout' ), $retry );
 		yield 'lock_timeout said not retryable' => array(
-			Operations::CREATE_ORDER,
+			'orders.create',
 			503,
 			array(
 				'error'     => 'lock_timeout',
@@ -44,21 +44,21 @@ final class RetryPolicyTest extends TestCase {
 			),
 			$retry,
 		);
-		yield 'db_error' => array( Operations::CREATE_ORDER, 500, array( 'error' => 'db_error' ), $retry );
-		yield 'a failure answered as text' => array( Operations::CREATE_ORDER, 502, null, $retry );
-		yield 'rate_limited' => array( Operations::APPROVE_DESIGN, 429, array( 'error' => 'rate_limited' ), $retry );
-		yield 'idempotency_key_in_use after the inline resends' => array( Operations::CREATE_ORDER, 409, array( 'error' => 'idempotency_key_in_use' ), $retry );
-		yield 'revision_changed' => array( Operations::APPROVE_DESIGN, 409, array( 'error' => 'revision_changed' ), $attention );
-		yield 'not_committed at another revision' => array( Operations::APPROVE_DESIGN, 409, array( 'error' => 'not_committed' ), $attention );
-		yield 'design_erased' => array( Operations::CREATE_ORDER, 409, array( 'error' => 'design_erased' ), $attention );
-		yield 'design_already_ordered' => array( Operations::CREATE_ORDER, 409, array( 'error' => 'design_already_ordered' ), $attention );
-		yield 'printshop_differs_from_blank' => array( Operations::CREATE_ORDER, 422, array( 'error' => 'printshop_differs_from_blank' ), $attention );
-		yield 'printshop_disconnected' => array( Operations::CREATE_ORDER, 422, array( 'error' => 'printshop_disconnected' ), $attention );
-		yield 'print_needs_printshop' => array( Operations::CREATE_ORDER, 409, array( 'error' => 'print_needs_printshop' ), $attention );
-		yield 'postal_code_required' => array( Operations::CREATE_ORDER, 422, array( 'error' => 'postal_code_required' ), $attention );
-		yield 'idempotency_key_reused' => array( Operations::CREATE_ORDER, 422, array( 'error' => 'idempotency_key_reused' ), $attention );
+		yield 'db_error' => array( 'orders.create', 500, array( 'error' => 'db_error' ), $retry );
+		yield 'a failure answered as text' => array( 'orders.create', 502, null, $retry );
+		yield 'rate_limited' => array( 'designs.approve', 429, array( 'error' => 'rate_limited' ), $retry );
+		yield 'idempotency_key_in_use after the inline resends' => array( 'orders.create', 409, array( 'error' => 'idempotency_key_in_use' ), $retry );
+		yield 'revision_changed' => array( 'designs.approve', 409, array( 'error' => 'revision_changed' ), $attention );
+		yield 'not_committed at another revision' => array( 'designs.approve', 409, array( 'error' => 'not_committed' ), $attention );
+		yield 'design_erased' => array( 'orders.create', 409, array( 'error' => 'design_erased' ), $attention );
+		yield 'design_already_ordered' => array( 'orders.create', 409, array( 'error' => 'design_already_ordered' ), $attention );
+		yield 'printshop_differs_from_blank' => array( 'orders.create', 422, array( 'error' => 'printshop_differs_from_blank' ), $attention );
+		yield 'printshop_disconnected' => array( 'orders.create', 422, array( 'error' => 'printshop_disconnected' ), $attention );
+		yield 'print_needs_printshop' => array( 'orders.create', 409, array( 'error' => 'print_needs_printshop' ), $attention );
+		yield 'postal_code_required' => array( 'orders.create', 422, array( 'error' => 'postal_code_required' ), $attention );
+		yield 'idempotency_key_reused' => array( 'orders.create', 422, array( 'error' => 'idempotency_key_reused' ), $attention );
 		yield 'idempotency_key_reused said retryable' => array(
-			Operations::CREATE_ORDER,
+			'orders.create',
 			422,
 			array(
 				'error'     => 'idempotency_key_reused',
@@ -66,9 +66,9 @@ final class RetryPolicyTest extends TestCase {
 			),
 			$attention,
 		);
-		yield 'a sandbox design gone' => array( Operations::CREATE_ORDER, 404, array( 'error' => 'design_not_found' ), $attention );
-		yield 'unauthorized' => array( Operations::CREATE_ORDER, 401, array( 'error' => 'unauthorized' ), $attention );
-		yield 'a code and status this version does not know' => array( Operations::CREATE_ORDER, 418, array( 'error' => 'teapot' ), $attention );
+		yield 'a sandbox design gone' => array( 'orders.create', 404, array( 'error' => 'design_not_found' ), $attention );
+		yield 'unauthorized' => array( 'orders.create', 401, array( 'error' => 'unauthorized' ), $attention );
+		yield 'a code and status this version does not know' => array( 'orders.create', 418, array( 'error' => 'teapot' ), $attention );
 	}
 
 	/**
@@ -80,13 +80,13 @@ final class RetryPolicyTest extends TestCase {
 	 * @param string                    $decision  What the policy does.
 	 */
 	public function test_decides( string $operation, int $status, ?array $body, string $decision ): void {
-		$response = new Response( $status, array( 'content-type' => 'application/json' ), null === $body ? 'Bad gateway' : (string) json_encode( $body ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+		$error = ErrorMapper::fromResponse( Pixonaut::catalogue()->operation( $operation ), $status, array( 'content-type' => 'application/json' ), null === $body ? 'Bad gateway' : (string) json_encode( $body ), self::NOW ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
 
-		$this->assertSame( $decision, RetryPolicy::decide( ApiError::from_response( $operation, $response, self::NOW ) ) );
+		$this->assertSame( $decision, RetryPolicy::decide( $error ) );
 	}
 
 	public function test_a_failure_with_no_answer_is_retried(): void {
-		$this->assertSame( RetryPolicy::RETRY, RetryPolicy::decide( new ApiError( Operations::CREATE_ORDER, 0, 'transport_failed', true ) ) );
+		$this->assertSame( RetryPolicy::RETRY, RetryPolicy::decide( new ApiException( 'orders.create', 0, 'transport_failed', true ) ) );
 	}
 
 	public function test_waits_one_minute_five_minutes_half_an_hour_two_hours_and_twelve_hours_then_stops(): void {

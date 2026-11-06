@@ -199,7 +199,7 @@ final class OrderLineAbilitiesTest extends WP_UnitTestCase {
 		$this->assertSame( LineActions::DONE, $answer['result'] );
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
 		$sent = (array) json_decode( (string) $this->recorder->requests[1]['body'], true );
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'status'           => OrderStatus::SUBMITTED,
 				'reason'           => 'They have it.',

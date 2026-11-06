@@ -9,8 +9,9 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Designs;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\DesignsExternalRefUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 
 /**
  * A design's `externalRef` is the cart ref until its line is in an order,
@@ -25,17 +26,17 @@ final class OrderLineRef {
 	 * Moves every design of the line to $ref, then records $ref and the move
 	 * in the line's refs. Saved with save().
 	 *
-	 * @param Designs   $designs Sends the moves.
+	 * @param Sdk       $pixonaut Sends the moves.
 	 * @param LineState $line    The line.
 	 * @param string    $ref     The order line ref, from `Refs::order_item_ref()`.
 	 *
-	 * @throws ApiError When a design could not be moved; the line's refs are left as they were.
+	 * @throws ApiException When a design could not be moved; the line's refs are left as they were.
 	 */
-	public static function move( Designs $designs, LineState $line, string $ref ): void {
+	public static function move( Sdk $pixonaut, LineState $line, string $ref ): void {
 		foreach ( $line->sides() as $side ) {
 			$design_id = $line->side_ref( $side, LineState::SIDE_DESIGN_ID );
 			if ( is_string( $design_id ) ) {
-				$designs->set_external_ref( $design_id, $ref );
+				$pixonaut->designs()->updateExternalRef( $design_id, new DesignsExternalRefUpdateRequest( externalRef: $ref ) );
 			}
 		}
 		$line->set_ref( LineState::REF_EXTERNAL_REF, $ref );

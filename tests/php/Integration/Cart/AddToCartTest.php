@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Cart;
 
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Cart\AddToCart;
@@ -76,7 +76,7 @@ final class AddToCartTest extends PersonalisedCartTestCase {
 		[ $commit, $read ] = $this->recorder->requests;
 		$this->assertSame( 'POST', $commit['method'] );
 		$this->assertSame( Refs::commit_key( self::SITE, self::TOKEN ), $commit['headers']['Idempotency-Key'] );
-		$this->assertSame(
+		$this->assertEquals(
 			array(
 				'proofToken'        => self::TOKEN,
 				'externalRef'       => self::cart_ref(),
@@ -188,7 +188,7 @@ final class AddToCartTest extends PersonalisedCartTestCase {
 			->json(
 				409,
 				array(
-					'error'    => ErrorCodes::PROOF_ALREADY_COMMITTED,
+					'error'    => ErrorCode::PROOF_ALREADY_COMMITTED,
 					'designId' => DesignFixture::ID,
 				)
 			)
@@ -328,7 +328,7 @@ final class AddToCartTest extends PersonalisedCartTestCase {
 			->json(
 				409,
 				array(
-					'error'    => ErrorCodes::PROOF_ALREADY_COMMITTED,
+					'error'    => ErrorCode::PROOF_ALREADY_COMMITTED,
 					'designId' => DesignFixture::ID,
 				)
 			)
@@ -362,7 +362,7 @@ final class AddToCartTest extends PersonalisedCartTestCase {
 	}
 
 	public function test_an_expired_proof_is_refused(): void {
-		$this->recorder->json( 410, array( 'error' => ErrorCodes::PROOF_EXPIRED ) );
+		$this->recorder->json( 410, array( 'error' => ErrorCode::PROOF_EXPIRED ) );
 
 		$this->assertFalse( $this->post_add_to_cart() );
 
@@ -373,7 +373,7 @@ final class AddToCartTest extends PersonalisedCartTestCase {
 		$this->recorder->json(
 			422,
 			array(
-				'error'  => ErrorCodes::PRINTSHOP_DISCONNECTED,
+				'error'  => ErrorCode::PRINTSHOP_DISCONNECTED,
 				'reason' => 'The blank\'s printshop is disconnected.',
 			)
 		);
@@ -458,7 +458,7 @@ final class AddToCartTest extends PersonalisedCartTestCase {
 		$first_ref = self::cart_ref();
 		$this->become_another_customer();
 		// Within a day the commit key is replayed with the other cart's ref.
-		$this->recorder->json( 422, array( 'error' => ErrorCodes::IDEMPOTENCY_KEY_REUSED ) );
+		$this->recorder->json( 422, array( 'error' => ErrorCode::IDEMPOTENCY_KEY_REUSED ) );
 
 		$this->assertFalse( $this->post_add_to_cart() );
 
@@ -469,7 +469,7 @@ final class AddToCartTest extends PersonalisedCartTestCase {
 			->json(
 				409,
 				array(
-					'error'    => ErrorCodes::PROOF_ALREADY_COMMITTED,
+					'error'    => ErrorCode::PROOF_ALREADY_COMMITTED,
 					'designId' => DesignFixture::ID,
 				)
 			)

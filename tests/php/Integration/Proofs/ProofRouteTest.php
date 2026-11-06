@@ -8,16 +8,16 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Proofs;
 
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Proofs\ProofCache;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Proofs\ProofCache;
 use Pixonaut\WooCommerce\Proofs\ProofPicture;
 use Pixonaut\WooCommerce\Proofs\ProofRoute;
 use Pixonaut\WooCommerce\Proofs\ProofUrls;
 use Pixonaut\WooCommerce\Tests\Integration\Cart\PersonalisedCartTestCase;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -85,7 +85,7 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 		$this->assertSame( ProofRoute::ON_BLANK_CONTENT_TYPE, $response->get_headers()['Content-Type'] );
 		$this->assertSame( ProofRoute::CACHE_CONTROL, $response->get_headers()['Cache-Control'] );
 		[ $fetch ] = $this->recorder->requests;
-		$this->assertStringEndsWith( '/v1/designs/' . DesignFixture::ID . '/mockup.png?v=' . DesignFixture::PROOF_ID . '&size=' . self::WIDTH, $fetch['url'] );
+		$this->assertStringEndsWith( '/v1/designs/' . DesignFixture::ID . '/mockup.png?size=' . self::WIDTH . '&v=' . DesignFixture::PROOF_ID, $fetch['url'] );
 		$this->assertSame( 'Bearer ' . self::connection()->integration_key, $fetch['headers']['Authorization'] );
 	}
 
@@ -157,7 +157,7 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 		$this->assertSame( ProofCache::STAND_IN, $cache->refusal( DesignFixture::ID, DesignFixture::PROOF_ID, self::WIDTH, ProofPicture::on_blank() ) );
 		$this->recorder->raw( 204, '', '' );
 
-		( new Designs( $this->plugin->client() ) )->delete( DesignFixture::ID );
+		( new Designs( $this->plugin->sdk() ) )->delete( DesignFixture::ID );
 
 		$this->assertNull( $cache->refusal( DesignFixture::ID, DesignFixture::PROOF_ID, self::WIDTH, ProofPicture::on_blank() ) );
 	}
@@ -175,7 +175,7 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 		$this->assertCount( 2, $this->recorder->requests );
 
 		$this->recorder->raw( 204, '', '' );
-		( new Designs( $this->plugin->client() ) )->delete( DesignFixture::ID );
+		( new Designs( $this->plugin->sdk() ) )->delete( DesignFixture::ID );
 
 		$cache = $this->plugin->proof_cache();
 		$this->assertNull( $cache->get( DesignFixture::ID, DesignFixture::PROOF_ID, self::WIDTH, $previewed ) );
@@ -183,7 +183,7 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 	}
 
 	public function test_a_picture_whose_proof_is_gone_is_not_found_without_the_flat_proof(): void {
-		$this->recorder->json( 404, array( 'error' => ErrorCodes::PROOF_NOT_FOUND ) );
+		$this->recorder->json( 404, array( 'error' => ErrorCode::PROOF_NOT_FOUND ) );
 
 		$this->assertSame( 404, rest_do_request( $this->minted( array(), ProofPicture::on_blank() ) )->get_status() );
 		$this->assertCount( 1, $this->recorder->requests );
@@ -194,7 +194,7 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 		rest_do_request( $this->minted( array(), ProofPicture::on_blank() ) );
 		$this->recorder->raw( 204, '', '' );
 
-		( new Designs( $this->plugin->client() ) )->delete( DesignFixture::ID );
+		( new Designs( $this->plugin->sdk() ) )->delete( DesignFixture::ID );
 
 		$this->assertNull( $this->plugin->proof_cache()->get( DesignFixture::ID, DesignFixture::PROOF_ID, self::WIDTH, ProofPicture::on_blank() ) );
 	}
@@ -236,7 +236,7 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 	}
 
 	public function test_a_proof_the_design_no_longer_shows_is_not_found_and_not_cached(): void {
-		$this->recorder->json( 404, array( 'error' => ErrorCodes::PROOF_CHANGED ) );
+		$this->recorder->json( 404, array( 'error' => ErrorCode::PROOF_CHANGED ) );
 		$this->script_image();
 
 		$this->assertSame( 404, rest_do_request( $this->minted() )->get_status() );
@@ -255,7 +255,7 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 	}
 
 	public function test_pixonaut_out_of_reach_is_a_bad_gateway(): void {
-		$this->recorder->json( 429, array( 'error' => ErrorCodes::RATE_LIMITED ), array( 'retry-after' => '30' ) );
+		$this->recorder->json( 429, array( 'error' => ErrorCode::RATE_LIMITED ), array( 'retry-after' => '30' ) );
 
 		$response = rest_do_request( $this->minted() );
 
@@ -269,7 +269,7 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 		$this->assertNotNull( $this->plugin->proof_cache()->get( DesignFixture::ID, DesignFixture::PROOF_ID, self::WIDTH ) );
 		$this->recorder->raw( 204, '', '' );
 
-		( new Designs( $this->plugin->client() ) )->delete( DesignFixture::ID );
+		( new Designs( $this->plugin->sdk() ) )->delete( DesignFixture::ID );
 
 		$this->assertNull( $this->plugin->proof_cache()->get( DesignFixture::ID, DesignFixture::PROOF_ID, self::WIDTH ) );
 	}
@@ -279,7 +279,7 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 		rest_do_request( $this->minted() );
 		$this->recorder->raw( 204, '', '' );
 
-		( new Designs( $this->plugin->client() ) )->delete( 'another-design' );
+		( new Designs( $this->plugin->sdk() ) )->delete( 'another-design' );
 
 		$this->assertNotNull( $this->plugin->proof_cache()->get( DesignFixture::ID, DesignFixture::PROOF_ID, self::WIDTH ) );
 	}
@@ -316,7 +316,7 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 	}
 
 	private function route_with( ProofCache $cache ): ProofRoute {
-		return new ProofRoute( $this->plugin->proof_urls(), $cache, new Designs( $this->plugin->client() ), new WcLogger() );
+		return new ProofRoute( $this->plugin->proof_urls(), $cache, new Designs( $this->plugin->sdk() ), new WcLogger() );
 	}
 
 	/**
@@ -395,7 +395,7 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 	}
 
 	public function test_the_lock_is_released_after_a_failed_fetch(): void {
-		$this->recorder->json( 429, array( 'error' => ErrorCodes::RATE_LIMITED ), array( 'retry-after' => '30' ) );
+		$this->recorder->json( 429, array( 'error' => ErrorCode::RATE_LIMITED ), array( 'retry-after' => '30' ) );
 
 		rest_do_request( $this->minted() );
 

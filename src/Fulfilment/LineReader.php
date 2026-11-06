@@ -9,13 +9,12 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Orders;
 use Pixonaut\WooCommerce\Milliseconds;
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 use WC_Order_Factory;
@@ -64,18 +63,16 @@ final class LineReader {
 	public const QUEUE_BATCH = 100;
 
 	/**
-	 * @param Orders             $orders       Reads a line's printshop order.
-	 * @param Designs            $designs      Reads a line's designs.
+	 * @param Sdk                $pixonaut     Reads a line's printshop order and designs.
 	 * @param OrderStatusChanged $order_status Applies an order's status.
 	 * @param DesignChanged      $design       Applies a design's revision, deletion and erasure.
-	 * @param Logger             $logger       Logs a read that failed and a job that could not be queued.
+	 * @param LoggerInterface    $logger       Logs a read that failed and a job that could not be queued.
 	 */
 	public function __construct(
-		private readonly Orders $orders,
-		private readonly Designs $designs,
+		private readonly Sdk $pixonaut,
 		private readonly OrderStatusChanged $order_status,
 		private readonly DesignChanged $design,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -130,7 +127,7 @@ final class LineReader {
 	 *
 	 * @param int|string $item_id The order item.
 	 * @param int|string $attempt Which attempt this is, from 1.
-	 * @throws Throwable What the read threw: ApiError when Pixonaut could not be reached, RuntimeException when the line kept changing while a change was applied.
+	 * @throws Throwable What the read threw: ApiException when Pixonaut could not be reached, RuntimeException when the line kept changing while a change was applied.
 	 */
 	public function read( int|string $item_id, int|string $attempt = 1 ): void {
 		$item_id = (int) $item_id;
@@ -161,7 +158,7 @@ final class LineReader {
 	 *                     line; a later one finishes its design reads, since
 	 *                     the attempt before may have moved the line to final
 	 *                     itself before they failed.
-	 * @throws ApiError When Pixonaut could not be reached.
+	 * @throws ApiException When Pixonaut could not be reached.
 	 * @throws RuntimeException When the line kept changing.
 	 */
 	private function read_line( int $item_id, int $attempt ): void {
@@ -175,7 +172,7 @@ final class LineReader {
 		}
 		$order_id = $line->ref( LineState::REF_ORDER_ID );
 		if ( is_string( $order_id ) && '' !== $order_id ) {
-			$order = $this->found( fn (): array => $this->orders->get( $order_id ) );
+			$order = $this->found( fn (): array => $this->pixonaut->orders()->get( $order_id )->raw() );
 			if ( null !== $order ) {
 				$this->order_status->apply_read( $line, $order );
 			}
@@ -211,7 +208,7 @@ final class LineReader {
 	/**
 	 * @param WC_Order_Item_Product $item The line.
 	 * @param string                $side A side key.
-	 * @throws ApiError When Pixonaut could not be reached.
+	 * @throws ApiException When Pixonaut could not be reached.
 	 * @throws RuntimeException When the line kept changing.
 	 */
 	private function read_design( WC_Order_Item_Product $item, string $side ): void {
@@ -220,7 +217,7 @@ final class LineReader {
 		if ( ! is_string( $design_id ) || '' === $design_id ) {
 			return;
 		}
-		$design = $this->found( fn (): array => $this->designs->get( $design_id ) );
+		$design = $this->found( fn (): array => $this->pixonaut->designs()->get( $design_id )->raw() );
 		if ( null === $design ) {
 			// Gone from Pixonaut; when is not known, so now stands for it.
 			$this->design->deleted( array( $line ), $design_id, Milliseconds::of( time() ) );
@@ -233,13 +230,13 @@ final class LineReader {
 	 * @param callable $read A read of one record.
 	 * @phpstan-param callable(): array<string, mixed> $read
 	 * @return array<string, mixed>|null Null when Pixonaut answered that it has no such record.
-	 * @throws ApiError When Pixonaut refused otherwise or could not be reached.
+	 * @throws ApiException When Pixonaut refused otherwise or could not be reached.
 	 */
 	private function found( callable $read ): ?array {
 		try {
 			return $read();
-		} catch ( ApiError $e ) {
-			if ( in_array( $e->error_code, array( ErrorCodes::NOT_FOUND, ErrorCodes::ORDER_NOT_FOUND ), true ) ) {
+		} catch ( ApiException $e ) {
+			if ( in_array( $e->errorCode, array( ErrorCode::NOT_FOUND, ErrorCode::ORDER_NOT_FOUND ), true ) ) {
 				return null;
 			}
 			throw $e;

@@ -9,8 +9,13 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Api;
 
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\PreparedRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Http\Result;
+
 /**
- * @phpstan-type PictureCall array{0: string, 1: array<string, string>, 2: array<string, scalar|null>}
+ * Template pictures, checked to be PNGs before the store keeps them, and
+ * drawn several at once.
  */
 final class Pictures {
 
@@ -19,7 +24,12 @@ final class Pictures {
 	 */
 	private const PNG_SIGNATURE = "\x89PNG\r\n\x1a\n";
 
-	public function __construct( private readonly Client $client ) {
+	private const PNG = 'image/png';
+
+	/**
+	 * @param Pixonaut $pixonaut The SDK, and its batched reads.
+	 */
+	public function __construct( private readonly Pixonaut $pixonaut ) {
 	}
 
 	/**
@@ -37,10 +47,10 @@ final class Pictures {
 	 *
 	 * @return string The PNG's bytes.
 	 *
-	 * @throws ApiError When Pixonaut refused (`404` for any unknown id, `showcase_not_found` for an unknown set), could not be reached, or answered with no PNG.
+	 * @throws ApiException When Pixonaut refused (`404` for any unknown id, `showcase_not_found` for an unknown set), could not be reached, or answered with no PNG.
 	 */
 	public function mockup( string $template_id, string $blank_id, string $placement_id, string $view_id, ?string $variant, int $size, ?string $showcase = null ): string {
-		return $this->one( self::mockup_of( $template_id, $blank_id, $placement_id, $view_id, $variant, $size, $showcase ) );
+		return $this->one( $this->mockup_of( $template_id, $blank_id, $placement_id, $view_id, $variant, $size, $showcase ) );
 	}
 
 	/**
@@ -53,12 +63,10 @@ final class Pictures {
 	 * @param string|null $variant      A variant ref of the blank; null for the view's default photo.
 	 * @param int         $size         The long edge in pixels.
 	 * @param string|null $showcase     One of the template's showcase sets to draw it with; null for its default values.
-	 *
-	 * @phpstan-return PictureCall
 	 */
-	public static function mockup_of( string $template_id, string $blank_id, string $placement_id, string $view_id, ?string $variant, int $size, ?string $showcase = null ): array {
-		return array(
-			Operations::TEMPLATE_MOCKUP,
+	public function mockup_of( string $template_id, string $blank_id, string $placement_id, string $view_id, ?string $variant, int $size, ?string $showcase = null ): PreparedRequest {
+		return $this->pixonaut->sdk()->prepare(
+			'templates.mockup.get',
 			array( 'id' => $template_id ),
 			array(
 				'blankId'     => $blank_id,
@@ -67,7 +75,7 @@ final class Pictures {
 				'variant'     => $variant,
 				'size'        => $size,
 				'showcase'    => $showcase,
-			),
+			)
 		);
 	}
 
@@ -81,10 +89,10 @@ final class Pictures {
 	 *
 	 * @return string The PNG's bytes.
 	 *
-	 * @throws ApiError When Pixonaut refused (`404` for an unknown template, `showcase_not_found` for an unknown set), could not be reached, or answered with no PNG.
+	 * @throws ApiException When Pixonaut refused (`404` for an unknown template, `showcase_not_found` for an unknown set), could not be reached, or answered with no PNG.
 	 */
 	public function preview( string $template_id, int $size, ?string $showcase = null ): string {
-		return $this->one( self::preview_of( $template_id, $size, $showcase ) );
+		return $this->one( $this->preview_of( $template_id, $size, $showcase ) );
 	}
 
 	/**
@@ -93,45 +101,41 @@ final class Pictures {
 	 * @param string      $template_id `<baseId>@<version>`.
 	 * @param int         $size        The long edge in pixels.
 	 * @param string|null $showcase    One of the template's showcase sets to draw it with; null for its default values.
-	 *
-	 * @phpstan-return PictureCall
 	 */
-	public static function preview_of( string $template_id, int $size, ?string $showcase = null ): array {
-		return array(
-			Operations::TEMPLATE_PREVIEW,
+	public function preview_of( string $template_id, int $size, ?string $showcase = null ): PreparedRequest {
+		return $this->pixonaut->sdk()->prepare(
+			'templates.preview.get',
 			array( 'id' => $template_id ),
 			array(
 				'size'     => $size,
 				'showcase' => $showcase,
-			),
+			)
 		);
 	}
 
 	/**
-	 * Draws several pictures at once (`Client::call_all()`).
+	 * Draws several pictures at once (`Pixonaut::all()`).
 	 *
-	 * @param list<array> $calls From `mockup_of()` and `preview_of()`.
-	 * @phpstan-param list<PictureCall> $calls
+	 * @param PreparedRequest[] $calls From `mockup_of()` and `preview_of()`.
+	 * @phpstan-param list<PreparedRequest> $calls
 	 *
-	 * @return list<string|ApiError> Each picture's PNG bytes, or why Pixonaut did not draw it, in the order of `$calls`.
+	 * @return list<string|ApiException> Each picture's PNG bytes, or why Pixonaut did not draw it, in the order of `$calls`.
 	 */
 	public function all( array $calls ): array {
-		$pngs = array();
-		foreach ( $this->client->call_all( $calls ) as $index => $answer ) {
-			$pngs[] = $answer instanceof ApiError ? $answer : $this->png( $calls[ $index ][0], $answer );
-		}
-		return $pngs;
+		return array_map(
+			static fn ( Result|ApiException $answer ): string|ApiException => $answer instanceof ApiException ? $answer : self::png( $answer ),
+			$this->pixonaut->all( $calls )
+		);
 	}
 
 	/**
-	 * @param array $call From `mockup_of()` or `preview_of()`.
-	 * @phpstan-param PictureCall $call
+	 * @param PreparedRequest $call From `mockup_of()` or `preview_of()`.
 	 *
-	 * @throws ApiError When Pixonaut refused, could not be reached, or answered with no PNG.
+	 * @throws ApiException When Pixonaut refused, could not be reached, or answered with no PNG.
 	 */
-	private function one( array $call ): string {
-		$png = $this->png( $call[0], $this->client->call( $call[0], $call[1], $call[2] ) );
-		if ( $png instanceof ApiError ) {
+	private function one( PreparedRequest $call ): string {
+		$png = self::png( $this->pixonaut->sdk()->send( $call ) );
+		if ( $png instanceof ApiException ) {
 			throw $png;
 		}
 		return $png;
@@ -140,15 +144,14 @@ final class Pictures {
 	/**
 	 * The PNG's bytes, or why the answer holds none.
 	 *
-	 * @param string   $operation Operation id.
-	 * @param Response $response  Pixonaut's successful answer.
+	 * @param Result $result Pixonaut's successful answer.
 	 */
-	private function png( string $operation, Response $response ): string|ApiError {
+	private static function png( Result $result ): string|ApiException {
 		// A proxy's error page answered 200 must not become the product's picture.
-		$media = strtolower( trim( explode( ';', (string) $response->header( 'Content-Type' ) )[0] ) );
-		if ( Operation::PNG !== $media || ! str_starts_with( $response->body, self::PNG_SIGNATURE ) ) {
-			return ApiError::unexpected( $operation, $response );
+		$media = strtolower( trim( explode( ';', (string) $result->header( 'Content-Type' ) )[0] ) );
+		if ( self::PNG !== $media || ! str_starts_with( $result->body, self::PNG_SIGNATURE ) ) {
+			return $result->unexpected();
 		}
-		return $response->body;
+		return $result->body;
 	}
 }

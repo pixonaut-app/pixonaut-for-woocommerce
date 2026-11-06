@@ -7,19 +7,11 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Webhooks;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Connect;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Events;
+use Pixonaut\WooCommerce\Api\HookListener;
 use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Operations;
-use Pixonaut\WooCommerce\Api\Orders;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\Webhooks;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
 use Pixonaut\WooCommerce\Connection\Cipher;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
@@ -31,18 +23,20 @@ use Pixonaut\WooCommerce\Fulfilment\OrderEventLines;
 use Pixonaut\WooCommerce\Fulfilment\OrderStatusChanged;
 use Pixonaut\WooCommerce\Fulfilment\Shipments;
 use Pixonaut\WooCommerce\Plugin;
-use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
+use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Signature;
 use Pixonaut\WooCommerce\Webhooks\Endpoint;
 use Pixonaut\WooCommerce\Webhooks\EventsPull;
 use Pixonaut\WooCommerce\Webhooks\EventStore;
 use Pixonaut\WooCommerce\Webhooks\Intake;
 use Pixonaut\WooCommerce\Webhooks\Processor;
-use Pixonaut\WooCommerce\Webhooks\Signature;
 use WC_Order;
 use WC_Order_Item_Product;
 use WP_REST_Request;
@@ -108,18 +102,17 @@ final class EventsPullTest extends WP_UnitTestCase {
 		delete_option( EventsPull::CURSOR_OPTION );
 		delete_option( EventsPull::BASELINE_OPTION );
 
-		$plugin  = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
-		$client  = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
-		$designs = new Designs( $client );
+		$plugin = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
+		$client = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		// The plugin's own jobs stay scheduled as in production; they run against the recorder.
 		foreach ( array( EventsPull::PULL_HOOK, EventsPull::BASELINE_HOOK, LineReader::ACTION, LineReader::QUEUE_ACTION, 'pixonaut_wc_events_baseline_set', 'pixonaut_wc_connection_connected', 'pixonaut_wc_connection_disconnected' ) as $hook ) {
 			remove_all_actions( $hook );
 		}
 		$intake = new Intake( new EventStore(), $plugin->webhook_processor(), new WcLogger() );
-		( new EventsPull( $this->store, new Events( $client ), new Webhooks( $client ), new Connect( $client ), $intake, new WcLogger() ) )->register();
-		$design       = new DesignChanged( $plugin->connection(), $designs, static fn (): bool => true, new WcLogger() );
+		( new EventsPull( $this->store, $client, $intake, new WcLogger() ) )->register();
+		$design       = new DesignChanged( $plugin->connection(), $client, static fn (): bool => true, new WcLogger() );
 		$this->logger = new RecordingLogger();
-		( new LineReader( new Orders( $client ), $designs, new OrderStatusChanged( new OrderEventLines( $plugin->connection(), new WcLogger() ), new Shipments() ), $design, $this->logger ) )->register();
+		( new LineReader( $client, new OrderStatusChanged( new OrderEventLines( $plugin->connection(), new WcLogger() ), new Shipments() ), $design, $this->logger ) )->register();
 	}
 
 	public function tear_down(): void {
@@ -205,7 +198,7 @@ final class EventsPullTest extends WP_UnitTestCase {
 		try {
 			do_action( LineReader::ACTION, $item->get_id() );
 			$this->fail( 'A failed read is rethrown, so Action Scheduler records it.' );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			$this->assertSame( 500, $e->status );
 		}
 
@@ -391,7 +384,7 @@ final class EventsPullTest extends WP_UnitTestCase {
 	}
 
 	public function test_an_address_that_stopped_answering_after_the_read_logs_nothing(): void {
-		$this->assertSame( array(), $this->logged_after_a_redeliver_refused( ErrorCodes::ENDPOINT_UNREACHABLE ) );
+		$this->assertSame( array(), $this->logged_after_a_redeliver_refused( ErrorCode::ENDPOINT_UNREACHABLE ) );
 	}
 
 	public function test_another_refused_redelivery_is_logged(): void {
@@ -414,11 +407,11 @@ final class EventsPullTest extends WP_UnitTestCase {
 			->json( 200, array( self::endpoint( self::FAILED_DELIVERIES ) ) )
 			->json( 200, ConnectionAnswers::connection( true ) )
 			->json( 409, array( 'error' => $code ) );
-		$client = new Client( self::BASE_URL, Operations::plugin(), $this->store, new WpHttpTransport(), new WcLogger(), new Deprecations() );
+		$client = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		$logger = new RecordingLogger();
 		$intake = new Intake( new EventStore(), Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->webhook_processor(), new WcLogger() );
 
-		( new EventsPull( $this->store, new Events( $client ), new Webhooks( $client ), new Connect( $client ), $intake, $logger ) )->pull();
+		( new EventsPull( $this->store, $client, $intake, $logger ) )->pull();
 
 		$this->assertCount( 4, $this->recorder->requests );
 		return $logger->entries;

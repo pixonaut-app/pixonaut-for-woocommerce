@@ -94,8 +94,8 @@ plugin's own logging around it.
 requests to Pixonaut in the `pixonaut_wc_request_log` option, newest first:
 when, method, operation, path, status (or the error code when no response
 arrived), duration, the `X-Request-Id` Pixonaut answered with, and the
-idempotency key. It is fed by the client's `pixonaut_wc_api_before_request`
-and `pixonaut_wc_api_after_request` actions, which never see the
+idempotency key. It is fed by the `pixonaut_wc_api_before_request` and
+`pixonaut_wc_api_after_request` actions the SDK's listener fires, which never see the
 credential, and keeps no body. Anything in a path that looks like a key or
 token (`ik_`, `pk_`, `sk_`, `whsec_`, `link_`, `shl_`) is replaced with
 `[redacted]`. Turning the log on starts a new one.
@@ -104,7 +104,7 @@ token (`ik_`, `pk_`, `sk_`, `whsec_`, `link_`, `shl_`) is replaced with
 
 The workspace, the first 12 characters of the integration key, the mode
 (`live` or `sandbox`), the webhook endpoint's URL and its health as
-Pixonaut reports it, and the pinned API release (`Api\Spec::VERSION`)
+Pixonaut reports it, and the pinned API release (pixonaut-php's `ApiVersion::TARGET`)
 and SDK version (`Storefront\Sdk::VERSION`).
 
 ## Actions

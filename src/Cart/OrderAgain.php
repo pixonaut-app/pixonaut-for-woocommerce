@@ -10,10 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Cart;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
 use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
@@ -21,6 +18,11 @@ use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Labels;
 use Pixonaut\WooCommerce\Milliseconds;
 use Pixonaut\WooCommerce\Refs;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\DesignsExternalRefUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Order_Factory;
 use WC_Order_Item_Product;
 use WC_Product;
@@ -60,15 +62,15 @@ final class OrderAgain {
 	private array $pending = array();
 
 	/**
-	 * @param Designs      $designs Pixonaut's designs.
-	 * @param CartCleanup  $cleanup Deletes the copies made for a line that does not join the cart.
-	 * @param Logger       $logger  Logs copies that could not be made or were refused.
-	 * @param Closure|null $clock   `fn(): int` Unix time; `time()` when null.
+	 * @param Sdk             $pixonaut Pixonaut's designs.
+	 * @param CartCleanup     $cleanup Deletes the copies made for a line that does not join the cart.
+	 * @param LoggerInterface $logger  Logs copies that could not be made or were refused.
+	 * @param Closure|null    $clock   `fn(): int` Unix time; `time()` when null.
 	 */
 	public function __construct(
-		private readonly Designs $designs,
+		private readonly Sdk $pixonaut,
 		private readonly CartCleanup $cleanup,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 	) {
 		$this->clock = $clock ?? static fn (): int => time();
@@ -148,7 +150,7 @@ final class OrderAgain {
 			foreach ( $config->personalised_sides() as $side ) {
 				$copy                 = $this->copy( $product, $sources[ $side->key ] );
 				$copies[ $side->key ] = $copy;
-				$design               = $this->designs->get( $copy );
+				$design               = $this->pixonaut->designs()->get( $copy )->raw();
 				$mismatch             = DesignCheck::mismatch( $design, $side, $config->blank_id );
 				if ( null !== $mismatch ) {
 					$this->logger->warning(
@@ -177,10 +179,10 @@ final class OrderAgain {
 			$line_key = Refs::line_key( $copies, $owner );
 			$ref      = Refs::cart_ref( $connection->site, $line_key );
 			foreach ( $copies as $copy ) {
-				$this->designs->set_external_ref( $copy, $ref );
+				$this->pixonaut->designs()->updateExternalRef( $copy, new DesignsExternalRefUpdateRequest( externalRef: $ref ) );
 			}
-		} catch ( ApiError $error ) {
-			$this->logger->warning( sprintf( 'Could not copy the designs of order item %d to order it again: %s', $item->get_id(), $error->getMessage() ), array( 'code' => $error->error_code ) );
+		} catch ( ApiException $error ) {
+			$this->logger->warning( sprintf( 'Could not copy the designs of order item %d to order it again: %s', $item->get_id(), $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			$this->discard( $copies, $connection->tenant_id );
 			throw new AddRefused( Labels::DESIGN_NOT_SAVED );
 		} catch ( AddRefused $refused ) {
@@ -241,14 +243,14 @@ final class OrderAgain {
 	 * @param string     $design_id The order line's design.
 	 *
 	 * @throws AddRefused When the design is gone or erased, so there is nothing to copy.
-	 * @throws ApiError When Pixonaut could not be reached, or refused otherwise.
+	 * @throws ApiException When Pixonaut could not be reached, or refused otherwise.
 	 */
 	private function copy( WC_Product $product, string $design_id ): string {
 		try {
-			return $this->designs->duplicate( $design_id );
-		} catch ( ApiError $error ) {
-			if ( in_array( $error->error_code, array( ErrorCodes::NOT_FOUND, ErrorCodes::DESIGN_ERASED ), true ) ) {
-				$this->logger->warning( sprintf( 'Could not order product %d again: its design %s is %s.', $product->get_id(), $design_id, $error->error_code ), array( 'code' => $error->error_code ) );
+			return Designs::id( 'designs.duplicate', $this->pixonaut->designs()->duplicate( $design_id )->designId );
+		} catch ( ApiException $error ) {
+			if ( in_array( $error->errorCode, array( ErrorCode::NOT_FOUND, ErrorCode::DESIGN_ERASED ), true ) ) {
+				$this->logger->warning( sprintf( 'Could not order product %d again: its design %s is %s.', $product->get_id(), $design_id, $error->errorCode ), array( 'code' => $error->errorCode ) );
 				throw new AddRefused( Labels::DESIGN_REQUIRED );
 			}
 			throw $error;

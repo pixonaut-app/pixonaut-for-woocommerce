@@ -9,14 +9,15 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Approval;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Designs;
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Order;
 
@@ -40,26 +41,26 @@ final class DesignRejected {
 	private const STATUS_REJECTED = 'rejected';
 
 	/**
-	 * @param Connection  $connection The store's connection; a line of another workspace is never acted on.
-	 * @param Designs     $designs    Reads a design whose rejection names another revision.
-	 * @param ProofDenial $denial     Applies "On deny".
-	 * @param Logger      $logger     Logs rejections ignored.
+	 * @param Connection      $connection The store's connection; a line of another workspace is never acted on.
+	 * @param Sdk             $pixonaut   Reads a design whose rejection names another revision.
+	 * @param ProofDenial     $denial     Applies "On deny".
+	 * @param LoggerInterface $logger     Logs rejections ignored.
 	 */
 	public function __construct(
 		private readonly Connection $connection,
-		private readonly Designs $designs,
+		private readonly Sdk $pixonaut,
 		private readonly ProofDenial $denial,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
 	/**
 	 * @param Event $event A `design.rejected` event.
 	 * @throws RuntimeException When a line was not waiting for the customer yet, or changed while it was denied; handling the event again retries it.
-	 * @throws ApiError When the design had to be read again and could not be.
+	 * @throws ApiException When the design had to be read again and could not be.
 	 */
 	public function handle( Event $event ): void {
-		$design_id = $event->string( 'designId' );
+		$design_id = Payload::string( $event, 'designId' );
 		if ( null === $design_id ) {
 			return;
 		}
@@ -74,7 +75,7 @@ final class DesignRejected {
 	 * @param string    $design_id The design rejected.
 	 * @param int|null  $revision  The revision the event names; null when it names none.
 	 *
-	 * @throws RuntimeException When the line was not waiting yet, or changed meanwhile; an ApiError when the design could not be read.
+	 * @throws RuntimeException When the line was not waiting yet, or changed meanwhile; an ApiException when the design could not be read.
 	 */
 	private function apply( LineState $line, string $design_id, ?int $revision ): void {
 		$item       = $line->item();
@@ -100,7 +101,7 @@ final class DesignRejected {
 			// Past the deadline the deadline's job decides, following a rejection it finds; this may be its own.
 			return;
 		}
-		if ( $revision !== $line->side_ref( $side, LineState::SIDE_REVISION ) && self::STATUS_REJECTED !== ( $this->designs->get( $design_id )['status'] ?? null ) ) {
+		if ( $revision !== $line->side_ref( $side, LineState::SIDE_REVISION ) && self::STATUS_REJECTED !== $this->pixonaut->designs()->get( $design_id )->status ) {
 			return;
 		}
 		if ( null === $this->denial->deny( $line, $order, ProofDenial::CUSTOMER ) ) {

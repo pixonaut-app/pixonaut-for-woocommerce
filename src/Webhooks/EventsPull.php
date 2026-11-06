@@ -10,15 +10,14 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Webhooks;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Connect;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Events;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Webhooks;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use UnexpectedValueException;
 
@@ -70,20 +69,16 @@ final class EventsPull {
 
 	/**
 	 * @param ConnectionStore $store     The stored connection, and whether it is paused.
-	 * @param Events          $events    Reads the event stream.
-	 * @param Webhooks        $endpoints Reads the endpoint's failed deliveries and sends them again.
-	 * @param Connect         $connect   Reads whether Pixonaut can reach the store.
+	 * @param Sdk             $api       Reads the event stream, the endpoint's failed deliveries and whether Pixonaut can reach the store, and sends the deliveries again.
 	 * @param Intake          $intake    Keeps and queues each event pulled.
-	 * @param Logger          $logger    Logs what could not be pulled.
+	 * @param LoggerInterface $logger    Logs what could not be pulled.
 	 * @param Closure|null    $clock     `fn(): int` Unix time; `time()` when null.
 	 */
 	public function __construct(
 		private readonly ConnectionStore $store,
-		private readonly Events $events,
-		private readonly Webhooks $endpoints,
-		private readonly Connect $connect,
+		private readonly Sdk $api,
 		private readonly Intake $intake,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
 	) {
 		$this->clock = $clock ?? static fn (): int => time();
@@ -143,22 +138,22 @@ final class EventsPull {
 		$after       = $after_start;
 		try {
 			for ( $page = 0; $page < self::MAX_PAGES_PER_JOB; $page++ ) {
-				$read  = $this->events->page( $after, Endpoint::EVENT_TYPES );
+				$read  = $this->page( $after );
 				$after = self::moved_on( $after, $read );
 				if ( null === $read['next_cursor'] ) {
 					$this->baseline_set( $after, $connection );
 					return;
 				}
 			}
-		} catch ( ApiError $e ) {
-			if ( ErrorCodes::UNKNOWN_EVENT === $e->error_code && null !== $after_start && $this->is_current( $connection ) ) {
+		} catch ( ApiException $e ) {
+			if ( ErrorCode::UNKNOWN_EVENT === $e->errorCode && null !== $after_start && $this->is_current( $connection ) ) {
 				// Pixonaut no longer keeps the event paging stopped at: page again from the stream's start.
 				$this->logger->warning( 'The first event cursor was paging from an event Pixonaut no longer keeps; starting over.' );
 				delete_option( self::BASELINE_OPTION );
 				as_enqueue_async_action( self::BASELINE_HOOK, array(), self::GROUP );
 				return;
 			}
-			$this->logger->error( 'The first event cursor could not be set: ' . $e->getMessage(), array( 'code' => $e->error_code ) );
+			$this->logger->error( 'The first event cursor could not be set: ' . $e->getMessage(), array( 'code' => $e->errorCode ) );
 			// The next pull queues this job again.
 			return;
 		}
@@ -201,14 +196,14 @@ final class EventsPull {
 			if ( ! $this->pull_from( $after['after'], $connection ) ) {
 				return false;
 			}
-		} catch ( ApiError $e ) {
-			if ( ErrorCodes::UNKNOWN_EVENT === $e->error_code ) {
+		} catch ( ApiException $e ) {
+			if ( ErrorCode::UNKNOWN_EVENT === $e->errorCode ) {
 				// Pixonaut no longer keeps the cursor's event: start over from the stream's end.
 				$this->logger->warning( 'The event cursor is no event Pixonaut keeps; setting a new one.' );
 				$this->start_baseline();
 				return false;
 			}
-			$this->logger->error( 'Events not pulled: ' . $e->getMessage(), array( 'code' => $e->error_code ) );
+			$this->logger->error( 'Events not pulled: ' . $e->getMessage(), array( 'code' => $e->errorCode ) );
 			return false;
 		} catch ( RuntimeException $e ) {
 			$this->logger->error( $e->getMessage() );
@@ -223,12 +218,12 @@ final class EventsPull {
 	 * @param StoredConnection $connection The connection the cursor belongs to.
 	 * @return bool False when the connection changed meanwhile, and the pull stopped.
 	 *
-	 * @throws ApiError When a page could not be read.
+	 * @throws ApiException When a page could not be read.
 	 * @throws RuntimeException When an event could not be taken.
 	 */
 	private function pull_from( ?string $after, StoredConnection $connection ): bool {
 		for ( $page = 0; $page < self::MAX_PAGES_PER_JOB; $page++ ) {
-			$read = $this->events->page( $after, Endpoint::EVENT_TYPES );
+			$read = $this->page( $after );
 			foreach ( $read['events'] as $envelope ) {
 				if ( ! $this->is_current( $connection ) ) {
 					return false;
@@ -257,7 +252,7 @@ final class EventsPull {
 	 */
 	private function take( array $envelope ): void {
 		try {
-			$event = Event::from_array( $envelope );
+			$event = Event::fromArray( $envelope );
 		} catch ( UnexpectedValueException $e ) {
 			$this->logger->warning( 'Pulled event skipped: ' . $e->getMessage() );
 			return;
@@ -283,15 +278,20 @@ final class EventsPull {
 	 */
 	private function redeliver_failed( StoredConnection $connection ): void {
 		try {
-			$endpoint = $this->endpoints->find( $connection->webhook_id );
-			if ( null !== $endpoint && self::has_failed( $endpoint ) && false !== ( $this->connect->get()['reachable'] ?? null ) ) {
-				$this->endpoints->redeliver_failed( $connection->webhook_id );
+			$endpoint = null;
+			foreach ( $this->api->webhooks()->list() as $listed ) {
+				if ( $listed->id === $connection->webhook_id ) {
+					$endpoint = $listed->raw();
+				}
 			}
-		} catch ( ApiError $e ) {
-			if ( ErrorCodes::ENDPOINT_UNREACHABLE === $e->error_code ) {
+			if ( null !== $endpoint && self::has_failed( $endpoint ) && false !== ( $this->api->connect()->get()->raw()['reachable'] ?? null ) ) {
+				$this->api->webhooks()->redeliverFailed( $connection->webhook_id );
+			}
+		} catch ( ApiException $e ) {
+			if ( ErrorCode::ENDPOINT_UNREACHABLE === $e->errorCode ) {
 				return;
 			}
-			$this->logger->warning( 'Failed webhook deliveries not sent again: ' . $e->getMessage(), array( 'code' => $e->error_code ) );
+			$this->logger->warning( 'Failed webhook deliveries not sent again: ' . $e->getMessage(), array( 'code' => $e->errorCode ) );
 		}
 	}
 
@@ -338,6 +338,27 @@ final class EventsPull {
 		 * } );
 		 */
 		do_action( 'pixonaut_wc_events_baseline_set', $connection->summary() );
+	}
+
+	/**
+	 * `GET /v1/events?after=&types=`: one page of the events recorded after
+	 * an event, in the order they were recorded, each in the envelope a
+	 * webhook delivery carries.
+	 *
+	 * @param string|null $after The id of the last event looked at; from the stream's start when null.
+	 *
+	 * @return array{events: list<array<string, mixed>>, next_cursor: string|null} `next_cursor` is the `after` of the next page; null when nothing more is available yet.
+	 *
+	 * @throws ApiException When Pixonaut refused (`unknown_event` for an `after` it does not know) or could not be reached.
+	 */
+	private function page( ?string $after ): array {
+		$page   = $this->api->events()->list( $after, implode( ',', Endpoint::EVENT_TYPES ) )->raw();
+		$cursor = $page['nextCursor'] ?? null;
+		$events = is_array( $page['events'] ?? null ) ? $page['events'] : array();
+		return array(
+			'events'      => array_values( array_filter( $events, 'is_array' ) ),
+			'next_cursor' => is_string( $cursor ) && '' !== $cursor ? $cursor : null,
+		);
 	}
 
 	/**

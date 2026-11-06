@@ -9,9 +9,10 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Api\Logger;
 use Pixonaut\WooCommerce\Connection\Connection;
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 
 /**
  * Finds a Pixonaut order's lines by the order id they stored, keeping only
@@ -21,12 +22,12 @@ use Pixonaut\WooCommerce\Webhooks\Event;
 final class OrderEventLines {
 
 	/**
-	 * @param Connection $connection The store's connection; a line of another workspace is never acted on.
-	 * @param Logger     $logger     Logs lines left out.
+	 * @param Connection      $connection The store's connection; a line of another workspace is never acted on.
+	 * @param LoggerInterface $logger     Logs lines left out.
 	 */
 	public function __construct(
 		private readonly Connection $connection,
-		private readonly Logger $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -36,7 +37,7 @@ final class OrderEventLines {
 	 * @return list<LineState> None when the event carries no `orderId` or the store is not connected.
 	 */
 	public function of( Event $event ): array {
-		$order_id = $event->string( 'orderId' );
+		$order_id = Payload::string( $event, 'orderId' );
 		return null === $order_id ? array() : $this->holding( $order_id, $event );
 	}
 
@@ -73,7 +74,7 @@ final class OrderEventLines {
 	 * @return list<LineState> Those the event may change.
 	 */
 	private function kept( array $lines, Event $event ): array {
-		return array_values( array_filter( $lines, fn ( LineState $line ): bool => $this->holds( $line, $event->string( 'externalRef' ), $event->type ) ) );
+		return array_values( array_filter( $lines, fn ( LineState $line ): bool => $this->holds( $line, Payload::string( $event, 'externalRef' ), $event->type ) ) );
 	}
 
 	/**

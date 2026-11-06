@@ -9,7 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Webhooks\Event;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
+use Pixonaut\WooCommerce\Webhooks\Payload;
 use RuntimeException;
 use WC_Order;
 
@@ -40,7 +41,7 @@ final class OrderFailed {
 	 * @throws RuntimeException When a line kept changing; handling the event again retries it.
 	 */
 	public function handle( Event $event ): void {
-		$reason = $event->string( 'reason' ) ?? '';
+		$reason = Payload::string( $event, 'reason' ) ?? '';
 		foreach ( $this->lines->of( $event ) as $line ) {
 			$this->apply_to( $line, $reason );
 		}

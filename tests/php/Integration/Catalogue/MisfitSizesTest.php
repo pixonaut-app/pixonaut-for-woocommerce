@@ -11,7 +11,7 @@ use DOMDocument;
 use DOMXPath;
 use Pixonaut\WooCommerce\Admin\CatalogueSearch;
 use Pixonaut\WooCommerce\Api\Catalogue;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
@@ -30,7 +30,7 @@ final class MisfitSizesTest extends StandingTestCase {
 	 * Pixonaut's refusal of a design whose print does not fit the row's panel.
 	 */
 	private const MISFIT_REFUSAL = array(
-		'error'      => ErrorCodes::CONSTRAINT_VIOLATION,
+		'error'      => ErrorCode::CONSTRAINT_VIOLATION,
 		'violations' => array(
 			array(
 				'layerId'  => '',
@@ -111,11 +111,11 @@ final class MisfitSizesTest extends StandingTestCase {
 		$blank                = $this->blank();
 		$blank['areasVaryBy'] = array( self::AREAS_VARY_BY );
 		$this->recorder->json( 200, $blank );
-		$this->recorder->json( 500, array( 'error' => ErrorCodes::DB_ERROR ) );
+		$this->recorder->json( 500, array( 'error' => ErrorCode::DB_ERROR ) );
 		$this->save( $product->get_id() );
 		$after_check = ProductConfig::stored_on( $this->reload( $product->get_id() ) );
 
-		$this->recorder->json( 500, array( 'error' => ErrorCodes::DB_ERROR ) );
+		$this->recorder->json( 500, array( 'error' => ErrorCode::DB_ERROR ) );
 		$this->save( $product->get_id() );
 		$after_blank = ProductConfig::stored_on( $this->reload( $product->get_id() ) );
 
@@ -133,7 +133,7 @@ final class MisfitSizesTest extends StandingTestCase {
 		$blank                = $this->blank();
 		$blank['areasVaryBy'] = array( self::AREAS_VARY_BY );
 		$this->recorder->json( 200, $blank );
-		$this->recorder->json( 500, array( 'error' => ErrorCodes::DB_ERROR ) );
+		$this->recorder->json( 500, array( 'error' => ErrorCode::DB_ERROR ) );
 		$this->save( $product->get_id(), array(), array( 'template' => 'mini-tee@3' ) );
 
 		$this->assertSame( array(), ProductConfig::stored_on( $this->reload( $product->get_id() ) )->sides[0]->misfit_sizes );

@@ -9,12 +9,13 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Abilities;
 
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Connect;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
 use Pixonaut\WooCommerce\Connection\ConnectFailed;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ConnectedStoreUpdateRequest;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use Pixonaut\WooCommerce\Webhooks\Endpoint;
 use WP_Error;
 
@@ -41,7 +42,7 @@ final class ConnectionAction implements Ability {
 	/**
 	 * @param string            $action    One of ACTIONS.
 	 * @param Connection        $connection The store's connection.
-	 * @param Connect           $api       `PATCH /v1/connect`, for the brand.
+	 * @param Sdk               $api       `PATCH /v1/connect`, for the brand.
 	 * @param Endpoint          $endpoint  The store's webhook endpoint.
 	 * @param WorkspaceSettings $workspace Keeps the brand chosen and its accent colour.
 	 * @param ConnectionStatus  $status    What each answers with.
@@ -49,7 +50,7 @@ final class ConnectionAction implements Ability {
 	public function __construct(
 		private readonly string $action,
 		private readonly Connection $connection,
-		private readonly Connect $api,
+		private readonly Sdk $api,
 		private readonly Endpoint $endpoint,
 		private readonly WorkspaceSettings $workspace,
 		private readonly ConnectionStatus $status,
@@ -105,9 +106,9 @@ final class ConnectionAction implements Ability {
 			return $working;
 		}
 		try {
-			$answer = $this->api->choose_brand( is_string( $brand ) && '' !== $brand ? $brand : null );
-		} catch ( ApiError $e ) {
-			return ErrorCodes::BRAND_NOT_FOUND === $e->error_code
+			$answer = $this->api->connect()->update( new ConnectedStoreUpdateRequest( brandId: is_string( $brand ) && '' !== $brand ? $brand : null ) )->raw();
+		} catch ( ApiException $e ) {
+			return ErrorCode::BRAND_NOT_FOUND === $e->errorCode
 				? new WP_Error( 'pixonaut_wc_ability_brand_not_found', __( 'That brand is not in the Pixonaut workspace, so the store\'s brand did not change. Reading the connection lists the brands.', 'pixonaut-for-woocommerce' ) )
 				: self::failed( $e );
 		}
@@ -129,7 +130,7 @@ final class ConnectionAction implements Ability {
 		}
 		try {
 			return $this->connection->allow_www( $allow );
-		} catch ( ApiError $e ) {
+		} catch ( ApiException $e ) {
 			return self::failed( $e );
 		}
 	}
@@ -172,11 +173,11 @@ final class ConnectionAction implements Ability {
 	}
 
 	/**
-	 * @param ApiError $e Why Pixonaut did not make the change.
+	 * @param ApiException $e Why Pixonaut did not make the change.
 	 */
-	private static function failed( ApiError $e ): WP_Error {
+	private static function failed( ApiException $e ): WP_Error {
 		/* translators: %s: the error code Pixonaut answered with, e.g. rate_limited. */
-		return new WP_Error( 'pixonaut_wc_ability_connection_failed', sprintf( __( 'Pixonaut did not confirm the change (%s). Reading the connection shows it as it is.', 'pixonaut-for-woocommerce' ), $e->error_code ) );
+		return new WP_Error( 'pixonaut_wc_ability_connection_failed', sprintf( __( 'Pixonaut did not confirm the change (%s). Reading the connection shows it as it is.', 'pixonaut-for-woocommerce' ), $e->errorCode ) );
 	}
 
 	private function label(): string {

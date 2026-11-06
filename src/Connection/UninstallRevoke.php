@@ -9,14 +9,11 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Connection;
 
-use Pixonaut\WooCommerce\Api\Client;
-use Pixonaut\WooCommerce\Api\Connect;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\Hosts;
-use Pixonaut\WooCommerce\Api\Logger;
-use Pixonaut\WooCommerce\Api\Operations;
+use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
-use Pixonaut\WooCommerce\Api\WpHttpTransport;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\NullLogger;
 use Throwable;
 
 /**
@@ -29,7 +26,7 @@ final class UninstallRevoke {
 	/**
 	 * Short, so an unreachable Pixonaut holds up the Delete click briefly.
 	 */
-	public const TIMEOUT_SECONDS = 5;
+	public const TIMEOUT_SECONDS = Pixonaut::SHORT_TIMEOUT_SECONDS;
 
 	/**
 	 * The longest all sites of a network wait on Pixonaut together; the
@@ -64,25 +61,11 @@ final class UninstallRevoke {
 			if ( null === $store->load() || null !== $store->paused() ) {
 				return false;
 			}
-			$logger = function_exists( 'wc_get_logger' ) ? new WcLogger() : self::silent();
-			$client = new Client( Hosts::server_api(), Operations::plugin(), $store, new WpHttpTransport(), $logger, new Deprecations() );
-			( new Connect( $client ) )->delete( $left );
+			$logger = function_exists( 'wc_get_logger' ) ? new WcLogger() : new NullLogger();
+			( new Pixonaut( new Credentials( $store ), $logger, new HookListener( new Deprecations(), null, $logger ) ) )->sdk( $left )->connect()->delete();
 			return true;
 		} catch ( Throwable $e ) {
 			return false;
 		}
-	}
-
-	/**
-	 * A logger for a site whose WooCommerce is inactive.
-	 */
-	private static function silent(): Logger {
-		return new class() implements Logger {
-			public function warning( string $message, array $context = array() ): void {
-			}
-
-			public function error( string $message, array $context = array() ): void {
-			}
-		};
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Transport over the WordPress HTTP API.
+ * The SDK's PSR-18 client, over the WordPress HTTP API.
  *
  * @package Pixonaut\WooCommerce
  */
@@ -9,6 +9,10 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Api;
 
+use Pixonaut\WooCommerce\Vendor\Nyholm\Psr7\Response;
+use Pixonaut\WooCommerce\Vendor\Psr\Http\Client\ClientExceptionInterface;
+use Pixonaut\WooCommerce\Vendor\Psr\Http\Message\RequestInterface;
+use Pixonaut\WooCommerce\Vendor\Psr\Http\Message\ResponseInterface;
 use WP_Error;
 use WP_Http;
 use WP_HTTP_Proxy;
@@ -21,9 +25,12 @@ use WpOrg\Requests\Response as RequestsResponse;
 
 /**
  * The plugin's only caller of `wp_remote_*` for Pixonaut; a unit test keeps
- * it that way.
+ * it that way. Each instance gives up on a request after the timeout it was
+ * built with.
  */
-final class WpHttpTransport implements Transport {
+final class WpHttpTransport implements BatchClient {
+
+	public const TIMEOUT_SECONDS = 15;
 
 	/**
 	 * WordPress's certificate bundle, under `ABSPATH`, which `WP_Http` verifies hosts against.
@@ -35,8 +42,35 @@ final class WpHttpTransport implements Transport {
 	 */
 	private const PROTOCOLS = array( 'http', 'https', 'ssl' );
 
-	public function send( string $method, string $url, array $headers, ?string $body, int $timeout_seconds ): Response {
-		return $this->request( $method, $url, $headers, $body, $timeout_seconds );
+	/**
+	 * @param int $timeout_seconds Give up on each request after this long.
+	 */
+	public function __construct( private readonly int $timeout_seconds = self::TIMEOUT_SECONDS ) {
+	}
+
+	/**
+	 * @param RequestInterface $request The request.
+	 *
+	 * @throws NetworkFailure When no response arrived.
+	 */
+	public function sendRequest( RequestInterface $request ): ResponseInterface {
+		$args = array(
+			'method'      => $request->getMethod(),
+			'headers'     => self::headers( $request ),
+			'timeout'     => $this->timeout_seconds,
+			// Pixonaut never redirects an API call; following one would resend the credential elsewhere.
+			'redirection' => 0,
+		);
+		$body = (string) $request->getBody();
+		if ( '' !== $body ) {
+			$args['body'] = $body;
+		}
+
+		$response = $this->result( $request, wp_remote_request( (string) $request->getUri(), $args ) );
+		if ( $response instanceof NetworkFailure ) {
+			throw $response;
+		}
+		return $response;
 	}
 
 	// phpcs:disable WooCommerce.Commenting.CommentHooks, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress's HTTP API hooks, fired as WP_Http::request() fires them.
@@ -49,32 +83,33 @@ final class WpHttpTransport implements Transport {
 	 * the external-request block, the proxy, `https_ssl_verify`, `http_api_curl`,
 	 * the `requests-*` actions, `http_api_debug` and `http_response`.
 	 *
-	 * @param list<array{method: string, url: string, headers: array<string, string>}> $requests        Requests without a body.
-	 * @param int                                                                      $timeout_seconds Give up on each after this long.
+	 * @param RequestInterface[] $requests Requests without a body.
+	 * @phpstan-param list<RequestInterface> $requests
 	 *
-	 * @return list<Response|TransportFailure>
+	 * @return list<ResponseInterface|ClientExceptionInterface>
 	 */
-	public function send_all( array $requests, int $timeout_seconds ): array {
+	public function send_all( array $requests ): array {
 		$results = array();
 		$batch   = array();
 		$parsed  = array();
 		foreach ( $requests as $index => $request ) {
-			$url  = $request['url'];
-			$args = $this->args( $request['method'], $url, $request['headers'], $timeout_seconds );
+			$url  = (string) $request->getUri();
+			$args = $this->args( $request->getMethod(), $url, self::headers( $request ) );
 			$pre  = apply_filters( 'pre_http_request', false, $args, $url );
 			if ( false !== $pre ) {
-				$results[ $index ] = $this->result( $pre );
+				$results[ $index ] = $this->result( $request, $pre );
 				continue;
 			}
-			$url = $this->safe_url( $url, $args );
-			if ( null === $url ) {
-				$results[ $index ] = new TransportFailure( sprintf( 'Requests to %s are not a valid URL.', $request['url'] ) );
+			$safe = $this->safe_url( $url, $args );
+			if ( null === $safe ) {
+				$results[ $index ] = new NetworkFailure( $request, sprintf( 'Requests to %s are not a valid URL.', $url ) );
 				continue;
 			}
-			if ( ( new WP_Http() )->block_request( $url ) ) {
-				$results[ $index ] = new TransportFailure( sprintf( 'Requests to %s are blocked.', $url ) );
+			if ( ( new WP_Http() )->block_request( $safe ) ) {
+				$results[ $index ] = new NetworkFailure( $request, sprintf( 'Requests to %s are blocked.', $safe ) );
 				continue;
 			}
+			$url              = $safe;
 			$parsed[ $index ] = $args;
 			$batch[ $index ]  = array(
 				'url'     => $url,
@@ -103,7 +138,7 @@ final class WpHttpTransport implements Transport {
 				if ( ! is_wp_error( $response ) ) {
 					$response = apply_filters( 'http_response', $response, $parsed[ $index ], $url );
 				}
-				$results[ $index ] = $this->result( $response );
+				$results[ $index ] = $this->result( $requests[ $index ], $response );
 			}
 		}
 		ksort( $results );
@@ -111,51 +146,22 @@ final class WpHttpTransport implements Transport {
 	}
 
 	/**
-	 * @param string                $method          HTTP method.
-	 * @param string                $url             Absolute URL.
-	 * @param array<string, string> $headers         Request headers.
-	 * @param string|null           $body            Request body, or null for none.
-	 * @param int                   $timeout_seconds Give up after this long.
-	 *
-	 * @throws TransportFailure When no response arrived.
-	 */
-	private function request( string $method, string $url, array $headers, ?string $body, int $timeout_seconds ): Response {
-		$args = array(
-			'method'      => $method,
-			'headers'     => $headers,
-			'timeout'     => $timeout_seconds,
-			// Pixonaut never redirects an API call; following one would resend the credential elsewhere.
-			'redirection' => 0,
-		);
-		if ( null !== $body ) {
-			$args['body'] = $body;
-		}
-
-		$response = $this->result( wp_remote_request( $url, $args ) );
-		if ( $response instanceof TransportFailure ) {
-			throw $response;
-		}
-		return $response;
-	}
-
-	/**
 	 * The arguments WordPress fills in for a GET from `send_all()`, filtered as
 	 * `WP_Http::request()` filters them.
 	 *
-	 * @param string                $method          HTTP method.
-	 * @param string                $url             Absolute URL.
-	 * @param array<string, string> $headers         Request headers.
-	 * @param int                   $timeout_seconds Give up after this long.
+	 * @param string                $method  HTTP method.
+	 * @param string                $url     Absolute URL.
+	 * @param array<string, string> $headers Request headers.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function args( string $method, string $url, array $headers, int $timeout_seconds ): array {
+	private function args( string $method, string $url, array $headers ): array {
 		$user_agent             = apply_filters( 'http_headers_useragent', 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ), $url );
 		$args                   = (array) apply_filters(
 			'http_request_args',
 			array(
 				'method'              => $method,
-				'timeout'             => $timeout_seconds,
+				'timeout'             => $this->timeout_seconds,
 				'redirection'         => 0,
 				'httpversion'         => '1.0',
 				'user-agent'          => $user_agent,
@@ -282,16 +288,32 @@ final class WpHttpTransport implements Transport {
 	// phpcs:enable
 
 	/**
+	 * A request's headers as the WordPress HTTP API takes them.
+	 *
+	 * @param RequestInterface $request The request.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function headers( RequestInterface $request ): array {
+		$headers = array();
+		foreach ( array_keys( $request->getHeaders() ) as $name ) {
+			$headers[ (string) $name ] = $request->getHeaderLine( (string) $name );
+		}
+		return $headers;
+	}
+
+	/**
 	 * The response WordPress answered, or why none arrived.
 	 *
-	 * @param mixed $response What `wp_remote_request()` or a `pre_http_request` filter returned.
+	 * @param RequestInterface $request  The request it answers.
+	 * @param mixed            $response What `wp_remote_request()` or a `pre_http_request` filter returned.
 	 */
-	private function result( mixed $response ): Response|TransportFailure {
+	private function result( RequestInterface $request, mixed $response ): ResponseInterface|NetworkFailure {
 		if ( is_wp_error( $response ) ) {
-			return new TransportFailure( $response->get_error_message() );
+			return new NetworkFailure( $request, $response->get_error_message() );
 		}
 		if ( ! is_array( $response ) ) {
-			return new TransportFailure( 'No response.' );
+			return new NetworkFailure( $request, 'No response.' );
 		}
 
 		$headers = array();

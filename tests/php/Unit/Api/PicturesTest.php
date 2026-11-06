@@ -8,18 +8,17 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Unit\Api;
 
 use Brain\Monkey\Functions;
-use Pixonaut\WooCommerce\Api\ApiError;
-use Pixonaut\WooCommerce\Api\Client;
 use Pixonaut\WooCommerce\Api\Deprecations;
-use Pixonaut\WooCommerce\Api\ErrorCodes;
-use Pixonaut\WooCommerce\Api\Operations;
 use Pixonaut\WooCommerce\Api\Pictures;
-use Pixonaut\WooCommerce\Api\Response;
+use Pixonaut\WooCommerce\Api\Pixonaut;
+use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
-use Pixonaut\WooCommerce\Tests\Support\ScriptedTransport;
-use Pixonaut\WooCommerce\Tests\Support\StaticCredentials;
+use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
 use Pixonaut\WooCommerce\Tests\Unit\FakeOptions;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
+use Pixonaut\WooCommerce\Vendor\Nyholm\Psr7\Response;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 
 final class PicturesTest extends TestCase {
 
@@ -31,7 +30,7 @@ final class PicturesTest extends TestCase {
 
 	private const PNG = "\x89PNG\r\n\x1a\nbytes";
 
-	private ScriptedTransport $transport;
+	private ScriptedClient $transport;
 
 	private Pictures $pictures;
 
@@ -42,9 +41,9 @@ final class PicturesTest extends TestCase {
 		Functions\when( 'home_url' )->justReturn( self::SITE );
 		Functions\when( 'untrailingslashit' )->alias( static fn ( string $value ): string => rtrim( $value, '/\\' ) );
 		Functions\when( 'wp_parse_url' )->alias( static fn ( string $url, int $component = -1 ) => parse_url( $url, $component ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url
-		$this->transport = new ScriptedTransport();
+		$this->transport = new ScriptedClient();
 		$this->pictures  = new Pictures(
-			new Client( self::BASE_URL, Operations::plugin(), new StaticCredentials(), $this->transport, new RecordingLogger(), new Deprecations(), static function (): void {} )
+			$this->transport->pixonaut( ScriptedClient::credentials(), new RecordingLogger(), null, static fn (): string => Connection::origin( Connection::site_url() ) )
 		);
 	}
 
@@ -56,27 +55,27 @@ final class PicturesTest extends TestCase {
 		$sent = $this->transport->sent[0];
 		$this->assertSame( 'GET', $sent['method'] );
 		$this->assertSame( self::BASE_URL . '/t/mini-tee%402/mockup.png?blankId=blk_1&placementId=front&viewId=flat&variant=tee-red-m&size=1200', $sent['url'] );
-		$this->assertSame( 'Bearer ' . StaticCredentials::PUBLISHABLE_KEY, $sent['headers']['Authorization'] );
+		$this->assertSame( 'Bearer ' . ScriptedClient::PUBLISHABLE_KEY, $sent['headers']['Authorization'] );
 		$this->assertSame( 'https://shop.example:8443', $sent['headers']['Origin'] );
 		$this->assertSame( 'image/png', $sent['headers']['Accept'] );
 	}
 
 	public function test_all_draws_the_pictures_together_a_bounded_number_at_once_in_order(): void {
-		$count = Client::MAX_CONCURRENT + 1;
+		$count = Pixonaut::MAX_CONCURRENT + 1;
 		for ( $index = 0; $index < $count; ++$index ) {
 			$this->transport->respond( new Response( 200, array( 'content-type' => 'image/png' ), self::PNG . $index ) );
 		}
 		$calls = array();
 		for ( $index = 0; $index < $count; ++$index ) {
-			$calls[] = Pictures::preview_of( 'mini-tee@2', 1200, 'showcase-' . $index );
+			$calls[] = $this->pictures->preview_of( 'mini-tee@2', 1200, 'showcase-' . $index );
 		}
 
 		$pngs = $this->pictures->all( $calls );
 
 		$this->assertSame( array_map( static fn ( int $index ): string => self::PNG . $index, range( 0, $count - 1 ) ), $pngs );
-		$this->assertSame( array( Client::MAX_CONCURRENT, 1 ), array_map( 'count', $this->transport->batches ) );
+		$this->assertSame( array( Pixonaut::MAX_CONCURRENT, 1 ), array_map( 'count', $this->transport->batches ) );
 		$this->assertSame( self::BASE_URL . '/t/mini-tee%402/preview.png?size=1200&showcase=showcase-0', $this->transport->batches[0][0] );
-		$this->assertSame( 'Bearer ' . StaticCredentials::PUBLISHABLE_KEY, $this->transport->sent[0]['headers']['Authorization'] );
+		$this->assertSame( 'Bearer ' . ScriptedClient::PUBLISHABLE_KEY, $this->transport->sent[0]['headers']['Authorization'] );
 	}
 
 	public function test_all_says_why_each_picture_it_could_not_draw_was_not_drawn(): void {
@@ -87,20 +86,20 @@ final class PicturesTest extends TestCase {
 
 		$pngs = $this->pictures->all(
 			array(
-				Pictures::mockup_of( 'mini-tee@2', 'blk_1', 'front', 'flat', null, 1200 ),
-				Pictures::preview_of( 'mini-tee@2', 1200, 'showcase-gone' ),
-				Pictures::preview_of( 'mini-tee@2', 1200 ),
-				Pictures::preview_of( 'mini-tee@2', 1200, 'showcase-anna' ),
+				$this->pictures->mockup_of( 'mini-tee@2', 'blk_1', 'front', 'flat', null, 1200 ),
+				$this->pictures->preview_of( 'mini-tee@2', 1200, 'showcase-gone' ),
+				$this->pictures->preview_of( 'mini-tee@2', 1200 ),
+				$this->pictures->preview_of( 'mini-tee@2', 1200, 'showcase-anna' ),
 			)
 		);
 
 		$this->assertSame( self::PNG, $pngs[0] );
-		$this->assertInstanceOf( ApiError::class, $pngs[1] );
-		$this->assertSame( ErrorCodes::SHOWCASE_NOT_FOUND, $pngs[1]->error_code );
-		$this->assertInstanceOf( ApiError::class, $pngs[2] );
-		$this->assertSame( ErrorCodes::TRANSPORT_FAILED, $pngs[2]->error_code );
-		$this->assertInstanceOf( ApiError::class, $pngs[3] );
-		$this->assertSame( ErrorCodes::UNEXPECTED_RESPONSE, $pngs[3]->error_code );
+		$this->assertInstanceOf( ApiException::class, $pngs[1] );
+		$this->assertSame( ErrorCode::SHOWCASE_NOT_FOUND, $pngs[1]->errorCode );
+		$this->assertInstanceOf( ApiException::class, $pngs[2] );
+		$this->assertSame( ApiException::TRANSPORT_FAILED, $pngs[2]->errorCode );
+		$this->assertInstanceOf( ApiException::class, $pngs[3] );
+		$this->assertSame( ApiException::UNEXPECTED_RESPONSE, $pngs[3]->errorCode );
 	}
 
 	public function test_mockup_without_a_variant_leaves_it_out(): void {
@@ -127,10 +126,10 @@ final class PicturesTest extends TestCase {
 
 		try {
 			$this->pictures->preview( 'mini-tee@2', 1200, 'gone' );
-			$this->fail( 'Expected an ApiError.' );
-		} catch ( ApiError $e ) {
+			$this->fail( 'Expected an ApiException.' );
+		} catch ( ApiException $e ) {
 			$this->assertSame( 404, $e->status );
-			$this->assertSame( ErrorCodes::SHOWCASE_NOT_FOUND, $e->error_code );
+			$this->assertSame( ErrorCode::SHOWCASE_NOT_FOUND, $e->errorCode );
 		}
 	}
 
@@ -164,8 +163,8 @@ final class PicturesTest extends TestCase {
 		try {
 			$this->pictures->preview( 'mini-tee@2', 1200 );
 			$this->fail( 'Only a PNG is a picture.' );
-		} catch ( ApiError $error ) {
-			$this->assertSame( ErrorCodes::UNEXPECTED_RESPONSE, $error->error_code );
+		} catch ( ApiException $error ) {
+			$this->assertSame( ApiException::UNEXPECTED_RESPONSE, $error->errorCode );
 		}
 	}
 }
