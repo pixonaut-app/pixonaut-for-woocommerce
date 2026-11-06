@@ -147,7 +147,10 @@ plugin is listed there and wordpress.org delivers its updates:
   (`composer update yahnis-elsts/plugin-update-checker --no-install`), and
   installs the other packages as the lock pins them. The
   plugin then has no update channel setting and never contacts GitHub.
-- The `Update URI` header is removed from the main plugin file.
+- The `Update URI` and `Tested up to` headers are removed from the main
+  plugin file. wordpress.org's upload scan refuses `Tested up to` there
+  (`plugin_header_tested_up_to_not_allowed`); `readme.txt` still carries it,
+  read from the header in the repository.
 - The translations' `.po` sources are left out: WordPress loads only the
   compiled `.mo` and `.l10n.php` files, and without them the zip fits
   wordpress.org's 10 MB upload limit for a new plugin, which the build
