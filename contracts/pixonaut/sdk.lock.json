@@ -1,12 +1,12 @@
 {
-	"version": "0.28.0",
-	"release": "sdk-v0.28.0",
+	"version": "0.29.0",
+	"release": "sdk-v0.29.0",
 	"released": "2026-11-07",
-	"baseUrl": "https://cdn.pixonaut.app/sdk/0.28.0/",
+	"baseUrl": "https://cdn.pixonaut.app/sdk/0.29.0/",
 	"script": "pixonaut.iife.js",
-	"integrity": "sha384-fO5DVwkZHKhBRzMPyULaUW8p4SDk4zevtabPM9LW7RGjyJuHgo6zoBLD3lm4psY7",
+	"integrity": "sha384-UaLnkkxvNeurGH2H3zUTCHC622G8vucALSNU84X/AT39FsNglrQ5+qoHQ3vRPwzT",
 	"types": {
-		"pixonaut.d.ts": "sha384-LxYwe356nfg1UjM+mAPygO84pAK4WCOAmKv4pqWJ+lYZFEHZRuwPZbK2mfkBetKU",
+		"pixonaut.d.ts": "sha384-NSUcSPCOIL3v4nC/9mmmFrq7PjeB8mjJTsQ8L0ucS/fomU22NZjFxAwRukaj/B2C",
 		"schema.d.ts": "sha384-/vR/LXo024KFfWipaNVcLTOPlpM3caW8WUqWlAPdi3xOPfLEuXWMpvicNarMnBPh",
 		"LICENSE-MIT": "sha384-GfDAhGWC7TWUdEi3V+S/ssif42F4il3RjyDHMVf9SUI377mMrcZUwUu5N1m1IJrx"
 	}

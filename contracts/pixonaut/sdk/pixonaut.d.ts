@@ -411,11 +411,6 @@ export declare class DesignerProduct {
      *  photo of it (`hasPhoto: false`) is hidden, and `setView()` refuses
      *  it. The Design view (`kind: "design"`), the artwork alone, follows. */
     getViews(): ProductView[];
-    /** What a view that says `estimated` is told with, in the designer's language:
-     *  the picture is an estimate, with its numbers. The default views draw it; a
-     *  host with `showViews: false` shows it in its own markup. Empty until the
-     *  designer has opened a template. */
-    getEstimateNote(): string;
     /** The view shown; undefined when the product has none with a photo. */
     getView(): string | undefined;
     /** The preview's shape now, width over height: the photo shown, else the
@@ -850,11 +845,6 @@ export declare interface FormMountOptions {
      *  `TypeError`. Works in both layouts; omitted, the template's groups are
      *  shown as they are. */
     formGroups?: FormGroups;
-    /** `false` draws no note under the views saying a scene's picture is an
-     *  estimate, for a host that says so in its own words or not at all.
-     *  Omitted, the note shows while a view that says `estimated` is shown;
-     *  with `showViews: false` it is never drawn, whatever this says */
-    showEstimateNote?: boolean;
 }
 
 /** The generated form: its steps, and its author's layout when they chose
@@ -2716,9 +2706,9 @@ export declare interface ProductView {
      *  is the artwork on a transparent ground. */
     kind: "photo" | "design";
     /** Whether it is a stock scene, whose print is an estimate: never true to exact
-     *  placement or size. `getEstimateNote()` is the words for it. False for a
-     *  printshop's or the merchant's own photo, and for the Design view. A host with
-     *  `showViews: false` shows those words itself. */
+     *  placement or size. The designer says nothing about it; telling shoppers is
+     *  the host's to do, or not. False for a printshop's or the merchant's own
+     *  photo, and for the Design view. */
     estimated: boolean;
 }
 
@@ -3738,9 +3728,6 @@ export declare interface ViewMessages {
     "views.count": string;
     /** The Design view's label (#1537): the artwork alone, with no photo. */
     "views.design": string;
-    /** Under the views while a scene is shown: the picture is an estimate;
-     *  interpolates {size} and {position}, written from `SCENE_ESTIMATE`. */
-    "views.estimate-note": string;
     /** Under the views while an embroidered side is shown: the threads are
      *  shown flat and the stitched result varies (ADR 419). */
     "views.thread-note": string;
