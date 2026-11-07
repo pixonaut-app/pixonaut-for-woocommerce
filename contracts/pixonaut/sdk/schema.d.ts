@@ -591,6 +591,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/assets/{id}/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Draw a picture in an embroidery machine's threads
+         * @description Reads a picture for embroidery and, where it is a few flat colours, no more than `maxThreads`, makes a copy of it drawn in the nearest of `threads`, every pixel a thread and its ground clear, to put in its place on an embroidered print: the design then draws the copy, and its preview and print alike show the threads that are stitched. Answers what the picture is, the copy, and each of its colours with its thread. A photo, a picture of more colours, one too large or one that cannot be read has no copy, and its design is refused `design_not_stitchable` with `stitch_picture` and the reason. A picture drawn in the threads already is its own copy. Asked again for the same picture and threads, answers the same copy (200). A customer's upload is copied for its own session only. Only while the workspace's embroidery feature is on.
+         */
+        post: operations["assets.threadCopy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/assets/{id}/usage": {
         parameters: {
             query?: never;
@@ -25492,6 +25512,318 @@ export interface operations {
             };
         };
     };
+    "assets.threadCopy": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The designer's browser session, which the SDK sends so one visitor's uploads and proofs are told apart from another's on the same key: 6 to 64 letters, digits, `_` or `-`. Any other value is ignored. */
+                "x-pixonaut-session"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The most threads the machine stitches in one design. */
+                    maxThreads: number;
+                    /** @description The machine's threads, as its stitch block lists them (the preview profile's `stitch`). */
+                    threads: {
+                        /** @description The CMYK a design stores the thread as, converted once from its hex. */
+                        cmyk: [
+                            number,
+                            number,
+                            number,
+                            number
+                        ];
+                        hex: string;
+                        id: string;
+                        name: string;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description The picture's copy, made before, or none to make */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description What the picture is, read for embroidery. */
+                        colours: {
+                            colours: {
+                                hex: string;
+                                share: number;
+                            }[];
+                            exact: boolean;
+                            /** @enum {string} */
+                            kind: "flat";
+                        } | {
+                            count: number;
+                            /** @enum {string} */
+                            kind: "manyColours";
+                        } | {
+                            /** @enum {string} */
+                            kind: "photo";
+                        } | {
+                            heightPx: number;
+                            /** @enum {string} */
+                            kind: "tooLarge";
+                            widthPx: number;
+                        } | {
+                            /** @enum {string} */
+                            kind: "unreadable";
+                        };
+                        /** @description The picture drawn in the threads, to put in its place; the picture itself where it is drawn in them already. Null where it cannot be: a photo, more colours than the machine stitches, too large, or unreadable. */
+                        copy: {
+                            assetId: string;
+                            /** @description What the copy is, read for embroidery: exactly its threads. */
+                            colours: {
+                                colours: {
+                                    hex: string;
+                                    share: number;
+                                }[];
+                                exact: boolean;
+                                /** @enum {string} */
+                                kind: "flat";
+                            } | {
+                                count: number;
+                                /** @enum {string} */
+                                kind: "manyColours";
+                            } | {
+                                /** @enum {string} */
+                                kind: "photo";
+                            } | {
+                                heightPx: number;
+                                /** @enum {string} */
+                                kind: "tooLarge";
+                                widthPx: number;
+                            } | {
+                                /** @enum {string} */
+                                kind: "unreadable";
+                            };
+                            contentKey: string;
+                            heightPx: number;
+                            widthPx: number;
+                        } | null;
+                        /** @description Each of the picture's colours and its thread; empty with no copy. */
+                        threads: {
+                            /** @description One of the picture's colours. */
+                            hex: string;
+                            /** @description The thread the copy draws it in. */
+                            thread: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                    };
+                };
+            };
+            /** @description The picture's copy, made now */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description What the picture is, read for embroidery. */
+                        colours: {
+                            colours: {
+                                hex: string;
+                                share: number;
+                            }[];
+                            exact: boolean;
+                            /** @enum {string} */
+                            kind: "flat";
+                        } | {
+                            count: number;
+                            /** @enum {string} */
+                            kind: "manyColours";
+                        } | {
+                            /** @enum {string} */
+                            kind: "photo";
+                        } | {
+                            heightPx: number;
+                            /** @enum {string} */
+                            kind: "tooLarge";
+                            widthPx: number;
+                        } | {
+                            /** @enum {string} */
+                            kind: "unreadable";
+                        };
+                        /** @description The picture drawn in the threads, to put in its place; the picture itself where it is drawn in them already. Null where it cannot be: a photo, more colours than the machine stitches, too large, or unreadable. */
+                        copy: {
+                            assetId: string;
+                            /** @description What the copy is, read for embroidery: exactly its threads. */
+                            colours: {
+                                colours: {
+                                    hex: string;
+                                    share: number;
+                                }[];
+                                exact: boolean;
+                                /** @enum {string} */
+                                kind: "flat";
+                            } | {
+                                count: number;
+                                /** @enum {string} */
+                                kind: "manyColours";
+                            } | {
+                                /** @enum {string} */
+                                kind: "photo";
+                            } | {
+                                heightPx: number;
+                                /** @enum {string} */
+                                kind: "tooLarge";
+                                widthPx: number;
+                            } | {
+                                /** @enum {string} */
+                                kind: "unreadable";
+                            };
+                            contentKey: string;
+                            heightPx: number;
+                            widthPx: number;
+                        } | null;
+                        /** @description Each of the picture's colours and its thread; empty with no copy. */
+                        threads: {
+                            /** @description One of the picture's colours. */
+                            hex: string;
+                            /** @description The thread the copy draws it in. */
+                            thread: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                    };
+                };
+            };
+            /** @description Refused: invalid_input */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: copy_in_progress */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                    };
+                };
+            };
+            /** @description Refused: rate_limited */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: storage_quota_exceeded. The tenant's storage quota would be exceeded. `usedBytes` and `quotaBytes` are left out for a publishable key. */
+            507: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `storage_quota_exceeded`. */
+                        quotaBytes?: number;
+                        /** @description Always sent with `storage_quota_exceeded`. */
+                        usedBytes?: number;
+                    };
+                };
+            };
+        };
+    };
     "assets.usage.get": {
         parameters: {
             query?: never;
@@ -30059,17 +30391,19 @@ export interface operations {
                                 dpi?: number;
                                 /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                                 fillColour?: string | null;
-                                /** @description Where the placement sits on the product, once for every scene: a garment area of the blank's stock item, and the print's top left and width on it in millimetres. Omitted on a placement with no scenes to draw on. Refused with `placement_garment_area_unknown` when the stock item lacks the area, and `placement_garment_outside_area` when it reaches past it. */
-                                garment?: {
-                                    /** @description The key of a garment area of the blank's stock item. */
+                                /** @description Where the placement sits on each product the blank's stock photos show, one record per stock item for every scene of it: the stock item, a garment area of it, and the print's top left and width on it in millimetres. A placement with no record on a scene's stock item draws nothing on that scene. Refused with `placement_garment_area_unknown` when the stock item or the area is unknown, and `placement_garment_outside_area` when it reaches past the area. */
+                                garments?: {
+                                    /** @description The key of a garment area of the record's stock item. */
                                     area: string;
+                                    /** @description The stock item the record is on, by its key. */
+                                    stockItem: string;
                                     /** @description The print's width on the product, in mm. Its height follows from the placement's print area ratio. */
                                     widthMm: number;
                                     /** @description The print's left edge, in mm from the area's left. */
                                     xMm: number;
                                     /** @description The print's top edge, in mm from the area's top. */
                                     yMm: number;
-                                };
+                                }[];
                                 /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                                 id: string;
                                 /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design then drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none. A placement linked with one no longer on the blank is linked with none. */
@@ -30621,17 +30955,19 @@ export interface operations {
                             dpi?: number;
                             /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                             fillColour?: string | null;
-                            /** @description Where the placement sits on the product, once for every scene: a garment area of the blank's stock item, and the print's top left and width on it in millimetres. Omitted on a placement with no scenes to draw on. Refused with `placement_garment_area_unknown` when the stock item lacks the area, and `placement_garment_outside_area` when it reaches past it. */
-                            garment?: {
-                                /** @description The key of a garment area of the blank's stock item. */
+                            /** @description Where the placement sits on each product the blank's stock photos show, one record per stock item for every scene of it: the stock item, a garment area of it, and the print's top left and width on it in millimetres. A placement with no record on a scene's stock item draws nothing on that scene. Refused with `placement_garment_area_unknown` when the stock item or the area is unknown, and `placement_garment_outside_area` when it reaches past the area. */
+                            garments?: {
+                                /** @description The key of a garment area of the record's stock item. */
                                 area: string;
+                                /** @description The stock item the record is on, by its key. */
+                                stockItem: string;
                                 /** @description The print's width on the product, in mm. Its height follows from the placement's print area ratio. */
                                 widthMm: number;
                                 /** @description The print's left edge, in mm from the area's left. */
                                 xMm: number;
                                 /** @description The print's top edge, in mm from the area's top. */
                                 yMm: number;
-                            };
+                            }[];
                             /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                             id: string;
                             /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design then drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none. A placement linked with one no longer on the blank is linked with none. */
@@ -33263,6 +33599,8 @@ export interface operations {
                             given: unknown;
                             layerId: string;
                             prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
                             rule: string;
                             /** @description The nearest thread, for a colour off the machine's list. */
                             thread?: {
@@ -33644,6 +33982,8 @@ export interface operations {
                             given: unknown;
                             layerId: string;
                             prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
                             rule: string;
                             /** @description The nearest thread, for a colour off the machine's list. */
                             thread?: {
@@ -33884,6 +34224,8 @@ export interface operations {
                             given: unknown;
                             layerId: string;
                             prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
                             rule: string;
                             /** @description The nearest thread, for a colour off the machine's list. */
                             thread?: {
@@ -38190,6 +38532,8 @@ export interface operations {
                             given: unknown;
                             layerId: string;
                             prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
                             rule: string;
                             /** @description The nearest thread, for a colour off the machine's list. */
                             thread?: {
@@ -41950,6 +42294,8 @@ export interface operations {
                             given: unknown;
                             layerId: string;
                             prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
                             rule: string;
                             /** @description The nearest thread, for a colour off the machine's list. */
                             thread?: {
@@ -45325,6 +45671,8 @@ export interface operations {
                             given: unknown;
                             layerId: string;
                             prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
                             rule: string;
                             /** @description The nearest thread, for a colour off the machine's list. */
                             thread?: {
@@ -48728,6 +49076,27 @@ export interface operations {
                                 /** @description The sizes the template can't print at here: a design at one is refused when committed. */
                                 misfits: string[];
                             };
+                            /** @description The stitch block a design on the placement is held to, on an embroidery placement while the workspace's stitch rules are on: the threads the machine stitches with, the most one design may use, and the least text height and line. A client judges a design against it as it is made; the commit refuses `design_not_stitchable` by the same rule. */
+                            stitch?: {
+                                /** @description The most distinct threads one design may use. */
+                                maxThreads: number;
+                                /** @description The thinnest line the machine stitches, in printed millimetres. */
+                                minLineMm: number;
+                                /** @description The smallest text the machine stitches, in printed millimetres: the size the text is set at. */
+                                minTextHeightMm: number;
+                                threads: {
+                                    /** @description The CMYK a design stores the thread as, converted once from its hex. */
+                                    cmyk: [
+                                        number,
+                                        number,
+                                        number,
+                                        number
+                                    ];
+                                    hex: string;
+                                    id: string;
+                                    name: string;
+                                }[];
+                            };
                         };
                         ratio: {
                             /** @description The ratio's height part. Positive. */
@@ -49308,6 +49677,8 @@ export interface operations {
                             given: unknown;
                             layerId: string;
                             prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
                             rule: string;
                             /** @description The nearest thread, for a colour off the machine's list. */
                             thread?: {

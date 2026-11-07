@@ -20,14 +20,14 @@ use Pixonaut\WooCommerce\Settings\Settings;
  */
 final class Sdk {
 
-	public const VERSION = '0.27.1';
+	public const VERSION = '0.28.0';
 
 	/**
 	 * The script's path on a CDN, with no query string: a query would split
 	 * the browser's cache key, and the SDK resolves its wasm beside the
 	 * script under the same query.
 	 */
-	public const SCRIPT_PATH = '/sdk/0.27.1/pixonaut.iife.js';
+	public const SCRIPT_PATH = '/sdk/0.28.0/pixonaut.iife.js';
 
 	/**
 	 * The script on Pixonaut's own CDN.
@@ -38,7 +38,7 @@ final class Sdk {
 	 * Subresource Integrity of the script. The script checks the wasm it
 	 * boots against hashes of its own.
 	 */
-	public const INTEGRITY = 'sha384-+5U5MkLMi0HRtCJQTkRyszkd7dLojqbiBAw05XAjgCBP4KympgZccZHCH/CvADRa';
+	public const INTEGRITY = 'sha384-fO5DVwkZHKhBRzMPyULaUW8p4SDk4zevtabPM9LW7RGjyJuHgo6zoBLD3lm4psY7';
 
 	/**
 	 * The Pixonaut operations the SDK calls from the customer's browser as
@@ -72,6 +72,8 @@ final class Sdk {
 		'POST /v1/assets'                         => array( 'publishableKey', 'shareLink' ),
 		'POST /v1/assets/{id}/cut-out'            => array( 'publishableKey', 'shareLink' ),
 		'POST /v1/assets/{id}/improve-resolution' => array( 'publishableKey', 'shareLink' ),
+		// A picture on an embroidered side, drawn in the machine's threads.
+		'POST /v1/assets/{id}/threads'            => array( 'publishableKey', 'shareLink' ),
 		'POST /v1/designs/{id}/correction-proofs' => array( 'shareLink' ),
 		// The designer's Create with AI control, where the template read offers it (`pixel`); never on a correction link.
 		'POST /v1/pixel/designer'                 => array( 'publishableKey' ),

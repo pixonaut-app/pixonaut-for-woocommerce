@@ -9,6 +9,7 @@ import {
 	improveAssetResolution,
 	readAssetContent,
 	readAssetCutOut,
+	threadCopyAsset,
 	uploadAssetBytes,
 } from './assets';
 import {
@@ -139,6 +140,7 @@ export const HANDLERS: Partial<Record<OperationKey, Handler>> = {
 	'POST /v1/assets/{id}/improve-resolution': improveAssetResolution,
 	'POST /v1/assets/{id}/cut-out': cutOutAsset,
 	'GET /v1/assets/{id}/cut-out': readAssetCutOut,
+	'POST /v1/assets/{id}/threads': threadCopyAsset,
 	'DELETE /v1/sessions/{id}': deleteSession,
 	'GET /v1/events': listEvents,
 	'GET /v1/webhooks': listWebhooks,

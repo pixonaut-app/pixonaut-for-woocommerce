@@ -213,6 +213,16 @@ set in the store:
 
 Both are paid from your workspace's Pixonaut credits.
 
+### Embroidered sides
+
+On a side your printshop embroiders, the designer tells customers at each
+field what the machine cannot stitch: a colour no thread matches (with the
+nearest thread), text or a line too small, or a picture that cannot be
+stitched and why. A note under the views says the threads are shown flat and
+the stitched result varies. A picture of a few flat colours that a customer
+uploads is redrawn in the machine's threads, and its field names the threads
+it will be embroidered in.
+
 ### Loading other colours and views
 
 Once the designer shows, it loads the product's other colours, views and
