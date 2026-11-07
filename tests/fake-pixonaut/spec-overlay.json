@@ -1,3 +1,1051 @@
 {
-	"entries": []
+	"entries": [
+		{
+			"pointer": "/paths/~1v1~1assets~1{id}~1threads",
+			"awaits": "pixonaut-app/pixonaut#3257",
+			"value": {
+				"post": {
+					"description": "Reads a picture for embroidery and, where it is a few flat colours, no more than `maxThreads`, makes a copy of it drawn in the nearest of `threads`, every pixel a thread and its ground clear, to put in its place on an embroidered print: the design then draws the copy, and its preview and print alike show the threads that are stitched. Answers what the picture is, the copy, and each of its colours with its thread. A photo, a picture of more colours, one too large or one that cannot be read has no copy, and its design is refused `design_not_stitchable` with `stitch_picture` and the reason. A picture drawn in the threads already is its own copy. Asked again for the same picture and threads, answers the same copy (200). A customer's upload is copied for its own session only. Only while the workspace's embroidery feature is on.",
+					"operationId": "assets.threadCopy",
+					"parameters": [
+						{
+							"in": "path",
+							"name": "id",
+							"required": true,
+							"schema": {
+								"type": "string"
+							}
+						},
+						{
+							"description": "The designer's browser session, which the SDK sends so one visitor's uploads and proofs are told apart from another's on the same key: 6 to 64 letters, digits, `_` or `-`. Any other value is ignored.",
+							"in": "header",
+							"name": "x-pixonaut-session",
+							"required": false,
+							"schema": {
+								"description": "The designer's browser session, which the SDK sends so one visitor's uploads and proofs are told apart from another's on the same key: 6 to 64 letters, digits, `_` or `-`. Any other value is ignored.",
+								"type": "string"
+							}
+						}
+					],
+					"requestBody": {
+						"content": {
+							"application/json": {
+								"examples": {
+									"example": {
+										"summary": "Example",
+										"value": {
+											"maxThreads": 6,
+											"threads": [
+												{
+													"cmyk": [0, 0, 0, 0],
+													"hex": "#FFFFFF",
+													"id": "1801",
+													"name": "1801 White"
+												},
+												{
+													"cmyk": [0, 95, 75, 20],
+													"hex": "#BA0C2F",
+													"id": "1839",
+													"name": "1839 Red"
+												},
+												{
+													"cmyk": [100, 85, 25, 40],
+													"hex": "#1F2A5C",
+													"id": "1966",
+													"name": "1966 Navy"
+												}
+											]
+										}
+									}
+								},
+								"schema": {
+									"additionalProperties": false,
+									"properties": {
+										"maxThreads": {
+											"description": "The most threads the machine stitches in one design.",
+											"exclusiveMinimum": 0,
+											"type": "integer"
+										},
+										"threads": {
+											"description": "The machine's threads, as its stitch block lists them (the preview profile's `stitch`).",
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"cmyk": {
+														"description": "The CMYK a design stores the thread as, converted once from its hex.",
+														"items": false,
+														"maxItems": 4,
+														"minItems": 4,
+														"prefixItems": [
+															{
+																"maximum": 100,
+																"minimum": 0,
+																"type": "number"
+															},
+															{
+																"maximum": 100,
+																"minimum": 0,
+																"type": "number"
+															},
+															{
+																"maximum": 100,
+																"minimum": 0,
+																"type": "number"
+															},
+															{
+																"maximum": 100,
+																"minimum": 0,
+																"type": "number"
+															}
+														],
+														"type": "array"
+													},
+													"hex": {
+														"type": "string"
+													},
+													"id": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													}
+												},
+												"required": ["id", "name", "hex", "cmyk"],
+												"type": "object"
+											},
+											"maxItems": 64,
+											"minItems": 1,
+											"type": "array"
+										}
+									},
+									"required": ["threads", "maxThreads"],
+									"type": "object"
+								}
+							}
+						},
+						"required": true
+					},
+					"responses": {
+						"200": {
+							"content": {
+								"application/json": {
+									"examples": {
+										"example": {
+											"summary": "Example",
+											"value": {
+												"colours": {
+													"kind": "photo"
+												},
+												"copy": null,
+												"threads": []
+											}
+										}
+									},
+									"schema": {
+										"properties": {
+											"colours": {
+												"description": "What the picture is, read for embroidery.",
+												"oneOf": [
+													{
+														"additionalProperties": false,
+														"properties": {
+															"colours": {
+																"items": {
+																	"additionalProperties": false,
+																	"properties": {
+																		"hex": {
+																			"pattern": "^#[0-9a-fA-F]{6}$",
+																			"type": "string"
+																		},
+																		"share": {
+																			"type": "number"
+																		}
+																	},
+																	"required": ["hex", "share"],
+																	"type": "object"
+																},
+																"type": "array"
+															},
+															"exact": {
+																"type": "boolean"
+															},
+															"kind": {
+																"enum": ["flat"],
+																"type": "string"
+															}
+														},
+														"required": ["kind", "colours", "exact"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": false,
+														"properties": {
+															"count": {
+																"type": "integer"
+															},
+															"kind": {
+																"enum": ["manyColours"],
+																"type": "string"
+															}
+														},
+														"required": ["kind", "count"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": false,
+														"properties": {
+															"kind": {
+																"enum": ["photo"],
+																"type": "string"
+															}
+														},
+														"required": ["kind"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": false,
+														"properties": {
+															"heightPx": {
+																"type": "integer"
+															},
+															"kind": {
+																"enum": ["tooLarge"],
+																"type": "string"
+															},
+															"widthPx": {
+																"type": "integer"
+															}
+														},
+														"required": ["kind", "widthPx", "heightPx"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": false,
+														"properties": {
+															"kind": {
+																"enum": ["unreadable"],
+																"type": "string"
+															}
+														},
+														"required": ["kind"],
+														"type": "object"
+													}
+												]
+											},
+											"copy": {
+												"description": "The picture drawn in the threads, to put in its place; the picture itself where it is drawn in them already. Null where it cannot be: a photo, more colours than the machine stitches, too large, or unreadable.",
+												"properties": {
+													"assetId": {
+														"type": "string"
+													},
+													"colours": {
+														"description": "What the copy is, read for embroidery: exactly its threads.",
+														"oneOf": [
+															{
+																"additionalProperties": false,
+																"properties": {
+																	"colours": {
+																		"items": {
+																			"additionalProperties": false,
+																			"properties": {
+																				"hex": {
+																					"pattern": "^#[0-9a-fA-F]{6}$",
+																					"type": "string"
+																				},
+																				"share": {
+																					"type": "number"
+																				}
+																			},
+																			"required": ["hex", "share"],
+																			"type": "object"
+																		},
+																		"type": "array"
+																	},
+																	"exact": {
+																		"type": "boolean"
+																	},
+																	"kind": {
+																		"enum": ["flat"],
+																		"type": "string"
+																	}
+																},
+																"required": ["kind", "colours", "exact"],
+																"type": "object"
+															},
+															{
+																"additionalProperties": false,
+																"properties": {
+																	"count": {
+																		"type": "integer"
+																	},
+																	"kind": {
+																		"enum": ["manyColours"],
+																		"type": "string"
+																	}
+																},
+																"required": ["kind", "count"],
+																"type": "object"
+															},
+															{
+																"additionalProperties": false,
+																"properties": {
+																	"kind": {
+																		"enum": ["photo"],
+																		"type": "string"
+																	}
+																},
+																"required": ["kind"],
+																"type": "object"
+															},
+															{
+																"additionalProperties": false,
+																"properties": {
+																	"heightPx": {
+																		"type": "integer"
+																	},
+																	"kind": {
+																		"enum": ["tooLarge"],
+																		"type": "string"
+																	},
+																	"widthPx": {
+																		"type": "integer"
+																	}
+																},
+																"required": ["kind", "widthPx", "heightPx"],
+																"type": "object"
+															},
+															{
+																"additionalProperties": false,
+																"properties": {
+																	"kind": {
+																		"enum": ["unreadable"],
+																		"type": "string"
+																	}
+																},
+																"required": ["kind"],
+																"type": "object"
+															}
+														]
+													},
+													"contentKey": {
+														"type": "string"
+													},
+													"heightPx": {
+														"type": "number"
+													},
+													"widthPx": {
+														"type": "number"
+													}
+												},
+												"required": [
+													"assetId",
+													"contentKey",
+													"widthPx",
+													"heightPx",
+													"colours"
+												],
+												"type": ["object", "null"]
+											},
+											"threads": {
+												"description": "Each of the picture's colours and its thread; empty with no copy.",
+												"items": {
+													"properties": {
+														"hex": {
+															"description": "One of the picture's colours.",
+															"type": "string"
+														},
+														"thread": {
+															"description": "The thread the copy draws it in.",
+															"properties": {
+																"hex": {
+																	"type": "string"
+																},
+																"id": {
+																	"type": "string"
+																},
+																"name": {
+																	"type": "string"
+																}
+															},
+															"required": ["id", "name", "hex"],
+															"type": "object"
+														}
+													},
+													"required": ["hex", "thread"],
+													"type": "object"
+												},
+												"type": "array"
+											}
+										},
+										"required": ["colours", "copy", "threads"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "The picture's copy, made before, or none to make",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"201": {
+							"content": {
+								"application/json": {
+									"examples": {
+										"example": {
+											"summary": "Example",
+											"value": {
+												"colours": {
+													"colours": [
+														{
+															"hex": "#c0122e",
+															"share": 0.62
+														},
+														{
+															"hex": "#fdfdfd",
+															"share": 0.38
+														}
+													],
+													"exact": false,
+													"kind": "flat"
+												},
+												"copy": {
+													"assetId": "c41d0e2f-8b7a-4c6d-9e1f-2a3b4c5d6e7f",
+													"colours": {
+														"colours": [
+															{
+																"hex": "#ba0c2f",
+																"share": 0.62
+															},
+															{
+																"hex": "#ffffff",
+																"share": 0.38
+															}
+														],
+														"exact": true,
+														"kind": "flat"
+													},
+													"contentKey": "ck_9b2e4d6f1a3c",
+													"heightPx": 900,
+													"widthPx": 1200
+												},
+												"threads": [
+													{
+														"hex": "#c0122e",
+														"thread": {
+															"hex": "#BA0C2F",
+															"id": "1839",
+															"name": "1839 Red"
+														}
+													},
+													{
+														"hex": "#fdfdfd",
+														"thread": {
+															"hex": "#FFFFFF",
+															"id": "1801",
+															"name": "1801 White"
+														}
+													}
+												]
+											}
+										}
+									},
+									"schema": {
+										"properties": {
+											"colours": {
+												"description": "What the picture is, read for embroidery.",
+												"oneOf": [
+													{
+														"additionalProperties": false,
+														"properties": {
+															"colours": {
+																"items": {
+																	"additionalProperties": false,
+																	"properties": {
+																		"hex": {
+																			"pattern": "^#[0-9a-fA-F]{6}$",
+																			"type": "string"
+																		},
+																		"share": {
+																			"type": "number"
+																		}
+																	},
+																	"required": ["hex", "share"],
+																	"type": "object"
+																},
+																"type": "array"
+															},
+															"exact": {
+																"type": "boolean"
+															},
+															"kind": {
+																"enum": ["flat"],
+																"type": "string"
+															}
+														},
+														"required": ["kind", "colours", "exact"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": false,
+														"properties": {
+															"count": {
+																"type": "integer"
+															},
+															"kind": {
+																"enum": ["manyColours"],
+																"type": "string"
+															}
+														},
+														"required": ["kind", "count"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": false,
+														"properties": {
+															"kind": {
+																"enum": ["photo"],
+																"type": "string"
+															}
+														},
+														"required": ["kind"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": false,
+														"properties": {
+															"heightPx": {
+																"type": "integer"
+															},
+															"kind": {
+																"enum": ["tooLarge"],
+																"type": "string"
+															},
+															"widthPx": {
+																"type": "integer"
+															}
+														},
+														"required": ["kind", "widthPx", "heightPx"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": false,
+														"properties": {
+															"kind": {
+																"enum": ["unreadable"],
+																"type": "string"
+															}
+														},
+														"required": ["kind"],
+														"type": "object"
+													}
+												]
+											},
+											"copy": {
+												"description": "The picture drawn in the threads, to put in its place; the picture itself where it is drawn in them already. Null where it cannot be: a photo, more colours than the machine stitches, too large, or unreadable.",
+												"properties": {
+													"assetId": {
+														"type": "string"
+													},
+													"colours": {
+														"description": "What the copy is, read for embroidery: exactly its threads.",
+														"oneOf": [
+															{
+																"additionalProperties": false,
+																"properties": {
+																	"colours": {
+																		"items": {
+																			"additionalProperties": false,
+																			"properties": {
+																				"hex": {
+																					"pattern": "^#[0-9a-fA-F]{6}$",
+																					"type": "string"
+																				},
+																				"share": {
+																					"type": "number"
+																				}
+																			},
+																			"required": ["hex", "share"],
+																			"type": "object"
+																		},
+																		"type": "array"
+																	},
+																	"exact": {
+																		"type": "boolean"
+																	},
+																	"kind": {
+																		"enum": ["flat"],
+																		"type": "string"
+																	}
+																},
+																"required": ["kind", "colours", "exact"],
+																"type": "object"
+															},
+															{
+																"additionalProperties": false,
+																"properties": {
+																	"count": {
+																		"type": "integer"
+																	},
+																	"kind": {
+																		"enum": ["manyColours"],
+																		"type": "string"
+																	}
+																},
+																"required": ["kind", "count"],
+																"type": "object"
+															},
+															{
+																"additionalProperties": false,
+																"properties": {
+																	"kind": {
+																		"enum": ["photo"],
+																		"type": "string"
+																	}
+																},
+																"required": ["kind"],
+																"type": "object"
+															},
+															{
+																"additionalProperties": false,
+																"properties": {
+																	"heightPx": {
+																		"type": "integer"
+																	},
+																	"kind": {
+																		"enum": ["tooLarge"],
+																		"type": "string"
+																	},
+																	"widthPx": {
+																		"type": "integer"
+																	}
+																},
+																"required": ["kind", "widthPx", "heightPx"],
+																"type": "object"
+															},
+															{
+																"additionalProperties": false,
+																"properties": {
+																	"kind": {
+																		"enum": ["unreadable"],
+																		"type": "string"
+																	}
+																},
+																"required": ["kind"],
+																"type": "object"
+															}
+														]
+													},
+													"contentKey": {
+														"type": "string"
+													},
+													"heightPx": {
+														"type": "number"
+													},
+													"widthPx": {
+														"type": "number"
+													}
+												},
+												"required": [
+													"assetId",
+													"contentKey",
+													"widthPx",
+													"heightPx",
+													"colours"
+												],
+												"type": ["object", "null"]
+											},
+											"threads": {
+												"description": "Each of the picture's colours and its thread; empty with no copy.",
+												"items": {
+													"properties": {
+														"hex": {
+															"description": "One of the picture's colours.",
+															"type": "string"
+														},
+														"thread": {
+															"description": "The thread the copy draws it in.",
+															"properties": {
+																"hex": {
+																	"type": "string"
+																},
+																"id": {
+																	"type": "string"
+																},
+																"name": {
+																	"type": "string"
+																}
+															},
+															"required": ["id", "name", "hex"],
+															"type": "object"
+														}
+													},
+													"required": ["hex", "thread"],
+													"type": "object"
+												},
+												"type": "array"
+											}
+										},
+										"required": ["colours", "copy", "threads"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "The picture's copy, made now",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"400": {
+							"content": {
+								"application/json": {
+									"examples": {
+										"invalid_input": {
+											"summary": "invalid_input",
+											"value": {
+												"error": "invalid_input"
+											}
+										}
+									},
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["invalid_input"]
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: invalid_input",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"401": {
+							"content": {
+								"application/json": {
+									"examples": {
+										"unauthorized": {
+											"summary": "unauthorized",
+											"value": {
+												"error": "unauthorized"
+											}
+										}
+									},
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["unauthorized"]
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: unauthorized",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"403": {
+							"content": {
+								"application/json": {
+									"examples": {
+										"feature_disabled": {
+											"summary": "feature_disabled",
+											"value": {
+												"error": "feature_disabled",
+												"feature": "api"
+											}
+										},
+										"forbidden": {
+											"summary": "forbidden",
+											"value": {
+												"error": "forbidden"
+											}
+										},
+										"origin_forbidden": {
+											"summary": "origin_forbidden",
+											"value": {
+												"error": "origin_forbidden"
+											}
+										},
+										"workspace_suspended": {
+											"summary": "workspace_suspended",
+											"value": {
+												"error": "workspace_suspended"
+											}
+										}
+									},
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": [
+													"origin_forbidden",
+													"forbidden",
+													"feature_disabled",
+													"workspace_suspended"
+												]
+											},
+											"feature": {
+												"description": "The feature the tenant does not have. Always sent with `feature_disabled`.",
+												"type": "string",
+												"x-extensible-enum": [
+													"api",
+													"automations",
+													"embroidery",
+													"mcp"
+												]
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"404": {
+							"content": {
+								"application/json": {
+									"examples": {
+										"not_found": {
+											"summary": "not_found",
+											"value": {
+												"error": "not_found"
+											}
+										}
+									},
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["not_found"]
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: not_found",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"409": {
+							"content": {
+								"application/json": {
+									"examples": {
+										"copy_in_progress": {
+											"summary": "copy_in_progress",
+											"value": {
+												"error": "copy_in_progress"
+											}
+										}
+									},
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["copy_in_progress"]
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: copy_in_progress",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"422": {
+							"content": {
+								"application/json": {
+									"examples": {
+										"payload_too_large": {
+											"summary": "payload_too_large",
+											"value": {
+												"error": "payload_too_large",
+												"maxBytes": 0
+											}
+										}
+									},
+									"schema": {
+										"properties": {
+											"bytes": {
+												"type": "number"
+											},
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["payload_too_large"]
+											},
+											"maxBytes": {
+												"description": "Always sent with `payload_too_large`.",
+												"type": "number"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: payload_too_large",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"429": {
+							"content": {
+								"application/json": {
+									"examples": {
+										"rate_limited": {
+											"summary": "rate_limited",
+											"value": {
+												"error": "rate_limited"
+											}
+										}
+									},
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["rate_limited"]
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: rate_limited",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"500": {
+							"content": {
+								"application/json": {
+									"examples": {
+										"db_error": {
+											"summary": "db_error",
+											"value": {
+												"error": "db_error"
+											}
+										}
+									},
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["db_error"]
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								},
+								"text/plain": {
+									"schema": {
+										"const": "Internal Server Error",
+										"type": "string"
+									}
+								}
+							},
+							"description": "Refused: db_error. A request that failed unexpectedly answers as text instead.",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"507": {
+							"content": {
+								"application/json": {
+									"examples": {
+										"storage_quota_exceeded": {
+											"summary": "storage_quota_exceeded",
+											"value": {
+												"error": "storage_quota_exceeded"
+											}
+										},
+										"storage_quota_exceeded (usedBytes, quotaBytes)": {
+											"summary": "storage_quota_exceeded (usedBytes, quotaBytes)",
+											"value": {
+												"error": "storage_quota_exceeded",
+												"quotaBytes": 0,
+												"usedBytes": 0
+											}
+										}
+									},
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["storage_quota_exceeded"]
+											},
+											"quotaBytes": {
+												"description": "Always sent with `storage_quota_exceeded`.",
+												"type": "number"
+											},
+											"usedBytes": {
+												"description": "Always sent with `storage_quota_exceeded`.",
+												"type": "number"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: storage_quota_exceeded. The tenant's storage quota would be exceeded. `usedBytes` and `quotaBytes` are left out for a publishable key.",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						}
+					},
+					"security": [
+						{
+							"publishableKey": []
+						},
+						{
+							"shareLink": []
+						}
+					],
+					"summary": "Draw a picture in an embroidery machine's threads",
+					"tags": ["Assets"]
+				}
+			}
+		}
+	]
 }

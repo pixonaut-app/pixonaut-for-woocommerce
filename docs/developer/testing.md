@@ -90,7 +90,8 @@ read, its constraints and print-size check, the blank's views and variants
 photos (`GET /i/{token}`), fonts, `POST /v1/proofs`, the upload routes
 (`POST /v1/assets`, `GET /v1/assets/{id}/content`,
 `POST /v1/assets/{id}/improve-resolution`,
-`POST /v1/assets/{id}/cut-out` and its `GET`), `POST /v1/pixel/designer`
+`POST /v1/assets/{id}/cut-out` and its `GET`,
+`POST /v1/assets/{id}/threads`), `POST /v1/pixel/designer`
 and `DELETE /v1/sessions/{id}`, and, with a correction link,
 `GET /v1/designs/{id}/designer` and `POST /v1/designs/{id}/correction-proofs` (`Storefront\Sdk::OPERATIONS`
 lists them all).
@@ -99,6 +100,8 @@ lists them all).
   caller's session, whether or not the picture's constraints offer it; a
   cut-out only of an upload made for a picture (`layerId`). A cut-out keeps
   the upload's bytes and is done on its first attempt.
+- The fake reads no picture's colours: asked for a thread copy, it reads
+  any upload in the caller's session as a photo, of which no copy is made.
 - A template read offers no Pixel in the designer (`pixel: false`), and
   `POST /v1/pixel/designer` answers `503 pixel_unavailable` to every request
   it can read, until `POST /__fake/templates/:id/pixel` turns it on for that

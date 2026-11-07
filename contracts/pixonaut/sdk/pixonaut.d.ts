@@ -139,6 +139,11 @@ declare interface CmykPreviewTableFile {
     text: string;
 }
 
+/** The four CMYK channels, in plate order (C, M, Y, K), as percentages 0-100.
+ *  Named once: a colour's cmyk arm and an ink's recipe are the same four
+ *  numbers, and every form that edits either passes them around. */
+declare type CmykTuple = [number, number, number, number];
+
 /** A template color: RGB, CMYK, or a spot color with an RGB/CMYK fallback. */
 declare interface ColorValue {
     rgb?: [number, number, number];
@@ -2433,6 +2438,10 @@ declare interface PlacementBox extends PrintMargins {
      *  option value (`"XL"`): a size whose panel is another shape. Absent
      *  for none, and from an api that names none. */
     misfitSizes?: readonly string[];
+    /** The stitch block a design on an embroidery placement is held to
+     *  (ADR 419): what the designer judges it by as it is made, by the rule
+     *  its commit is refused by. Absent where none holds it. */
+    stitch?: StitchBlock;
 }
 
 /** What `approve()` rejects with when `setPlacement()` switched the pair
@@ -2913,6 +2922,7 @@ export declare interface SdkMessages extends OptionMessages, ViewMessages, Pixel
     "upload.improve": string;
     "upload.improving": string;
     "upload.improved": string;
+    "upload.threads": string;
     "upload.improve-error": string;
     "upload.cutting-out": string;
     "upload.cut-out": string;
@@ -3258,8 +3268,22 @@ export declare type SplitMountOptions = MountOptions & {
     fill?: never;
 };
 
+/** Why a picture is refused `stitch_picture`, as the render core names it:
+ *  shades no thread can lay, more flat colours than the machine allows, more
+ *  pixels than a picture is read at, a picture that cannot be read, or one
+ *  whose tone is adjusted, so it draws other colours than its own. */
+declare const STITCH_PICTURE_REASONS: readonly ["photo", "too_many_colours", "too_large", "unreadable", "adjusted"];
+
 /** Every rule the stitch check refuses by, as the render core names it. */
 declare const STITCH_RULES: readonly ["stitch_colour_off_list", "stitch_too_many_threads", "stitch_gradient", "stitch_picture", "stitch_opacity", "stitch_blend", "stitch_text_too_small", "stitch_line_too_thin"];
+
+/** A stitch block as a machine keeps it. */
+export declare interface StitchBlock {
+    threads: StitchThread[];
+    maxThreads: number;
+    minTextHeightMm: number;
+    minLineMm: number;
+}
 
 /** One part of a design a machine cannot stitch, as the rule finds it and a
  *  `design_not_stitchable` refusal lists it: the layer and prop, the rule,
@@ -3272,9 +3296,23 @@ export declare interface StitchFinding {
     given: unknown;
     allowed: unknown;
     thread?: StitchThreadRef;
+    /** Why a picture is refused, for `stitch_picture`. */
+    reason?: StitchPictureReason;
 }
 
+declare type StitchPictureReason = (typeof STITCH_PICTURE_REASONS)[number];
+
 export declare type StitchRule = (typeof STITCH_RULES)[number];
+
+/** One thread as a stitch block keeps it: `id` is the vendor's identifier
+ *  for it (Printful's is the hex it takes in `thread_colors`), `cmyk` the
+ *  colour a design stores it as, converted once from `hex`. */
+export declare interface StitchThread {
+    id: string;
+    name: string;
+    hex: string;
+    cmyk: CmykTuple;
+}
 
 /** The thread a finding points at: the nearest to an off-list colour. */
 export declare interface StitchThreadRef {
@@ -3534,6 +3572,16 @@ export declare class TemplateRenderError extends Error {
     constructor(message: string);
 }
 
+/** One of a picture's colours and the thread its copy draws it in. */
+declare interface ThreadOfColour {
+    hex: string;
+    thread: {
+        id: string;
+        name: string;
+        hex: string;
+    };
+}
+
 /** An editable/animatable axis flag on a layer transform, with its bounds. */
 declare interface TransformAxis {
     editable?: boolean;
@@ -3632,6 +3680,10 @@ export declare interface UploadResult {
         widthPx: number;
         heightPx: number;
     };
+    /** Set when the picture is on an embroidered side and was drawn in the
+     *  machine's threads: `assetId` is then the copy, and these each of the
+     *  picture's colours with its thread (`thread-copy.ts`). */
+    threads?: readonly ThreadOfColour[];
 }
 
 /** Params interpolated into a localized asset-upload warning (see SdkMessages).
@@ -3689,6 +3741,9 @@ export declare interface ViewMessages {
     /** Under the views while a scene is shown: the picture is an estimate;
      *  interpolates {size} and {position}, written from `SCENE_ESTIMATE`. */
     "views.estimate-note": string;
+    /** Under the views while an embroidered side is shown: the threads are
+     *  shown flat and the stitched result varies (ADR 419). */
+    "views.thread-note": string;
     /** Once above the colour swatches (#1522).
      *  @deprecated The picker names each row by its option (#1548), as the
      *  blank names it; this key is no longer drawn. */

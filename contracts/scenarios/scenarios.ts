@@ -53,6 +53,16 @@ const CUT_OUT = [202, 200];
 const CUT_OUT_REFUSED = [404, 422];
 /** A cut-out read back: how it stands, or none was made. */
 const CUT_OUT_READ = [200, 404];
+/** A picture's copy in threads: made before or none to make, made now, or
+ *  refused where the workspace has no embroidery. */
+const THREAD_COPY = [200, 201, 403];
+/** A machine's threads, as a placement's stitch block lists them. */
+const THREADS = {
+	maxThreads: 6,
+	threads: [
+		{ id: '1801', name: '1801 White', hex: '#FFFFFF', cmyk: [0, 0, 0, 0] },
+	],
+};
 /** Answers of the order screen's moves: done, placed again, refused for the
  *  order's status, or its printshop out of reach. */
 const OK = 200;
@@ -542,6 +552,14 @@ export const SCENARIOS: Scenario[] = [
 				params: { id: declared.assetId },
 				sdkSession,
 				expect: CUT_OUT_READ,
+			});
+			// A picture on an embroidered side is asked for its copy in the
+			// machine's threads; a workspace without embroidery refuses it.
+			await session.call('POST /v1/assets/{id}/threads', {
+				params: { id: declared.assetId },
+				json: THREADS,
+				sdkSession,
+				expect: THREAD_COPY,
 			});
 			// Pixel answers the designer's customer only on a template that
 			// offers it, and every other refusal as unavailable.

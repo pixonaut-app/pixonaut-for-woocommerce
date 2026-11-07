@@ -2,7 +2,8 @@
 // `uploadUrl` it answers) takes its bytes, `GET /v1/assets/{id}/content`
 // serves them, `POST /v1/assets/{id}/improve-resolution` upscales it, and
 // `POST /v1/assets/{id}/cut-out` cuts it out of its background, which
-// `GET /v1/assets/{id}/cut-out` reads back.
+// `GET /v1/assets/{id}/cut-out` reads back, and
+// `POST /v1/assets/{id}/threads` reads it for embroidery.
 import { createHash, randomBytes } from 'node:crypto';
 import { allOwned, findOwned, putOwned, type State } from '../state';
 import { IMMUTABLE } from './fonts';
@@ -427,4 +428,17 @@ export const readAssetCutOut: Handler = (context) => {
 		return refusal(404, 'not_found');
 	}
 	return { status: 200, body: cutOutBody(cut) };
+};
+
+/** `POST /v1/assets/{id}/threads`. The fake reads no picture's colours, so
+ *  every upload reads as a photo: Pixonaut makes no thread copy of one, and
+ *  the designer keeps the picture as it was uploaded. */
+export const threadCopyAsset: Handler = (context) => {
+	if (ownUpload(context) === undefined) {
+		return refusal(404, 'not_found');
+	}
+	return {
+		status: 200,
+		body: { colours: { kind: 'photo' }, copy: null, threads: [] },
+	};
 };

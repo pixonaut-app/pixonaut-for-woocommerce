@@ -40,6 +40,7 @@
 		"POST /v1/assets",
 		"POST /v1/assets/{id}/cut-out",
 		"POST /v1/assets/{id}/improve-resolution",
+		"POST /v1/assets/{id}/threads",
 		"POST /v1/connect/token",
 		"POST /v1/designs",
 		"POST /v1/designs/standing",
@@ -130,6 +131,7 @@
 		"POST /v1/assets": ["publishableKey", "shareLink"],
 		"POST /v1/assets/{id}/cut-out": ["publishableKey", "shareLink"],
 		"POST /v1/assets/{id}/improve-resolution": ["publishableKey", "shareLink"],
+		"POST /v1/assets/{id}/threads": ["publishableKey", "shareLink"],
 		"POST /v1/designs": "integrationKey",
 		"POST /v1/designs/standing": "integrationKey",
 		"POST /v1/designs/{id}/approve": "integrationKey",
@@ -152,5 +154,7 @@
 		"PUT /v1/connect/store-access": "integrationKey",
 		"PUT /v1/designs/{id}/external-ref": "integrationKey"
 	},
-	"pending": []
+	"pending": [
+		{ "op": "POST /v1/assets/{id}/threads", "requirement": "pixonaut-app/pixonaut#3257" }
+	]
 }
