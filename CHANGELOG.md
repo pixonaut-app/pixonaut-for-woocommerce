@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.1.1...v1.1.2) (2026-11-07)
+
+
+### Bug Fixes
+
+* **sdk:** move to Pixonaut SDK 0.27.1, which draws stock scenes as signed off ([#23](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/23)) ([0106967](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/0106967fb9257b3f8ade41f852c7c4f08eb9ffee))
+
 ## [1.1.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.1.0...v1.1.1) (2026-11-06)
 
 
