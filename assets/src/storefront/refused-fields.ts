@@ -18,14 +18,20 @@ function isViolation(value: unknown): value is Violation {
 
 /** The fields a design was refused for: a refusal carrying `violations`,
  *  whether the SDK found them before sending or Pixonaut answered 422
- *  `constraint_violation`. Empty for any other failure; an entry naming no
- *  field is left out. */
+ *  `constraint_violation`, or `stitchFindings`, the parts an embroidery
+ *  machine cannot stitch (`design_not_stitchable`). Empty for any other
+ *  failure; an entry naming no field is left out. */
 function violationsOf(error: unknown): Violation[] {
 	if (typeof error !== 'object' || error === null) {
 		return [];
 	}
-	const violations = (error as { violations?: unknown }).violations;
-	return Array.isArray(violations) ? violations.filter(isViolation) : [];
+	const { violations, stitchFindings } = error as {
+		violations?: unknown;
+		stitchFindings?: unknown;
+	};
+	return [violations, stitchFindings].flatMap((list) =>
+		Array.isArray(list) ? list.filter(isViolation) : [],
+	);
 }
 
 /**

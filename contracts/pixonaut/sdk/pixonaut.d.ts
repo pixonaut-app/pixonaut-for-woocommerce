@@ -845,6 +845,11 @@ export declare interface FormMountOptions {
      *  `TypeError`. Works in both layouts; omitted, the template's groups are
      *  shown as they are. */
     formGroups?: FormGroups;
+    /** `false` draws no note under the views saying a scene's picture is an
+     *  estimate, for a host that says so in its own words or not at all.
+     *  Omitted, the note shows while a view that says `estimated` is shown;
+     *  with `showViews: false` it is never drawn, whatever this says */
+    showEstimateNote?: boolean;
 }
 
 /** The generated form: its steps, and its author's layout when they chose
@@ -1185,8 +1190,12 @@ export declare type LinkPreset = (typeof LINK_PRESETS)[number];
  *
  * Order and labels are passed through untouched, for the reason on
  * {@link PrintSizeOption}.
+ *
+ * A design that `repeats` lays its tile across whatever size it prints at,
+ * so no size is held to the template's shape: the api judges a repeated
+ * design's size by its placement alone (`printSizeIllegalReason`).
  */
-export declare function markPrintSizes(template: SizeConstrainedTemplate, options: readonly PrintSizeOption[], selectedIndex: number): PrintSizeChoice[];
+export declare function markPrintSizes(template: SizeConstrainedTemplate, options: readonly PrintSizeOption[], selectedIndex: number, repeats?: boolean): PrintSizeChoice[];
 
 /** One of the consumer's own product photos, shown as a view.
  *
@@ -2105,12 +2114,17 @@ export declare class PixonautApiError extends Error {
     /** On an `sdk_outdated` refusal: the first SDK release that draws the
      *  template, or null when no released SDK does yet. */
     readonly minimumSdkVersion?: string | null;
+    /** On a `design_not_stitchable` refusal: each part of the design the
+     *  embroidery machine cannot stitch, an off-list colour with the nearest
+     *  thread by name. */
+    readonly stitchFindings?: StitchFinding[];
     constructor(message: string, status: number, detail?: {
         code?: string;
         violations?: RemoteViolation[];
         requestId?: string;
         reopensAt?: number | null;
         minimumSdkVersion?: string | null;
+        stitchFindings?: StitchFinding[];
     });
 }
 
@@ -3243,6 +3257,31 @@ export declare type SplitMountOptions = MountOptions & {
     viewsTarget?: MountTarget;
     fill?: never;
 };
+
+/** Every rule the stitch check refuses by, as the render core names it. */
+declare const STITCH_RULES: readonly ["stitch_colour_off_list", "stitch_too_many_threads", "stitch_gradient", "stitch_picture", "stitch_opacity", "stitch_blend", "stitch_text_too_small", "stitch_line_too_thin"];
+
+/** One part of a design a machine cannot stitch, as the rule finds it and a
+ *  `design_not_stitchable` refusal lists it: the layer and prop, the rule,
+ *  what the design gives and what the machine allows, and for an off-list
+ *  colour the nearest thread. */
+export declare interface StitchFinding {
+    layerId: string;
+    prop: string;
+    rule: StitchRule;
+    given: unknown;
+    allowed: unknown;
+    thread?: StitchThreadRef;
+}
+
+export declare type StitchRule = (typeof STITCH_RULES)[number];
+
+/** The thread a finding points at: the nearest to an off-list colour. */
+export declare interface StitchThreadRef {
+    id: string;
+    name: string;
+    hex: string;
+}
 
 /** A stored design opened to correct it (#583). Every value is applied over
  *  its resolved document with the core's revise, as the api applies a

@@ -43,6 +43,24 @@ describe('refusedFieldLabels', () => {
 		).toEqual(['Name', 'Photo']);
 	});
 
+	it('names the fields an embroidery machine cannot stitch', () => {
+		const notStitchable = Object.assign(
+			requestError(422, 'design_not_stitchable'),
+			{
+				stitchFindings: [
+					{
+						layerId: 'class',
+						prop: 'content',
+						rule: 'stitch_text_too_small',
+						given: 6,
+						allowed: 8,
+					},
+				],
+			},
+		);
+		expect(refusedFieldLabels(notStitchable, FORM)).toEqual(['Class']);
+	});
+
 	it('names a field refused twice once, whatever the rule', () => {
 		expect(
 			refusedFieldLabels(

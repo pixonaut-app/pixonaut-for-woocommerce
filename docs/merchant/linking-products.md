@@ -326,7 +326,9 @@ those views in the designer.
 **Shown in**, at the end of **On the product page**, lists the blank's views
 by placement, each with a thumbnail of its first photo. Tick the ones
 customers see; with none ticked, they see every view. A view without a photo
-of the colour being bought is not shown for it.
+of the colour being bought is not shown for it, and neither is a view the
+studio limits to some option values, such as some colours, for a variant
+without them.
 
 After the blank's views, **Design** is the design alone, without the
 product, on a checked background, the same in every colour. Tick it to offer
