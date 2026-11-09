@@ -350,6 +350,24 @@ form.cart:has(> .pixonaut-form)::after {
 	display: flow-root;
 }
 
+/* An attribute in a step of its own, printed or drawn: the step's heading
+ * names it, so WooCommerce's label of its field is kept for assistive
+ * technology alone. The Clear link stays. Back in the variations table,
+ * outside the form container, the label shows again. */
+.pixonaut-form [data-pixonaut-own-step] th.label,
+.pixonaut-form
+	[data-pixonaut-own-step]
+	.wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute-name {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
 /* A block theme's presets, where it defines them: the tabs and the approval
  * box drawn as the theme draws its own choices and checkboxes. The script
  * lists the presets the theme defines in `data-pixonaut-look`, so a theme

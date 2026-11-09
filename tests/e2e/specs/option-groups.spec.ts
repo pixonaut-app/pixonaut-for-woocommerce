@@ -201,6 +201,58 @@ for (const viewport of [DESKTOP, PHONE]) {
 	});
 }
 
+/** WooCommerce's own label of an attribute's field, classic or block. */
+const LABEL_OF_FIELD =
+	':is(th.label, .wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute-name)';
+
+/** Most a label kept for assistive technology alone takes, each way. */
+const HIDDEN_LABEL_PX = 1;
+
+async function labelHidden(page: Page, form: string): Promise<void> {
+	const label = page.locator(`${form} ${LABEL_OF_FIELD}`).first();
+	await expect(label).toHaveCount(1);
+	const box = await label.boundingBox();
+	expect(box?.height ?? 0).toBeLessThanOrEqual(HIDDEN_LABEL_PX);
+	expect(box?.width ?? 0).toBeLessThanOrEqual(HIDDEN_LABEL_PX);
+}
+
+test('an option in its own group shows no label above its field, printed or drawn, and its Clear link works', async ({
+	connectedStore: page,
+	request,
+	baseURL,
+}) => {
+	const { permalink, field } = await storlekProduct(
+		page,
+		request,
+		'Own label',
+		{},
+	);
+	await storeSettings(page.context(), baseURL ?? '', 'as_groups=yes');
+	const release = await holdSdk(page);
+	await page.goto(permalink, { waitUntil: 'domcontentloaded' });
+
+	await expect(page.locator(PRINTED_HEADINGS).first()).toHaveText('Storlek');
+	await labelHidden(page, PRINTED_FORM);
+
+	release();
+	await expect(page.locator(`${DESIGNER_FORM} > h3`).first()).toHaveText(
+		'1. Storlek',
+	);
+	await labelHidden(page, DESIGNER_FORM);
+	// The label still names the field.
+	const select = page.locator(`${DESIGNER_FORM} select[name="${field}"]`);
+	if ((await select.count()) > 0) {
+		await expect(page.getByRole('combobox', { name: 'Storlek' })).toHaveCount(
+			1,
+		);
+		await select.selectOption({ index: 1 });
+		const clear = page.locator(`${DESIGNER_FORM} a.reset_variations`);
+		await expect(clear).toBeVisible();
+		await clear.click();
+		await expect(select).toHaveValue('');
+	}
+});
+
 test('with numbers off a form in steps has no counter, printed or drawn', async ({
 	connectedStore: page,
 	request,

@@ -24,11 +24,14 @@
  * own parts, named in `data-pixonaut-slot`: `options` for its option fields,
  * `cart` for its cart row, `attribute_<slug>` for an attribute's field a
  * side's groups place. They are moved in as the page is read, and work there.
+ * An attribute's slot in a step of its own carries `data-pixonaut-own-step`:
+ * the step's heading names the attribute, so its field shows without
+ * WooCommerce's label.
  * A copy of this template without them leaves the parts where the theme put
  * them until the designer draws them.
  *
  * @package Pixonaut\WooCommerce
- * @version 0.1.0
+ * @version 1.2.1
  *
  * @var \Pixonaut\WooCommerce\Storefront\SideLayout $layout The side's layout.
  */
@@ -227,11 +230,12 @@ $pixonaut_option_word = static function ( string $prop, string $option ): string
 /**
  * Prints a place for a part of the add-to-cart form.
  *
- * @param string $name   The part's name.
- * @param bool   $hidden Whether the designer does not show it yet.
+ * @param string $name     The part's name.
+ * @param bool   $hidden   Whether the designer does not show it yet.
+ * @param bool   $own_step Whether it is an attribute's field in a step of its own.
  */
-$pixonaut_slot = static function ( string $name, bool $hidden = false ): void {
-	echo '<div class="pixonaut-placeholder__slot" data-pixonaut-slot="' . esc_attr( $name ) . '"' . ( $hidden ? ' hidden' : '' ) . '></div>';
+$pixonaut_slot = static function ( string $name, bool $hidden = false, bool $own_step = false ): void {
+	echo '<div class="pixonaut-placeholder__slot" data-pixonaut-slot="' . esc_attr( $name ) . '"' . ( $own_step ? ' data-pixonaut-own-step' : '' ) . ( $hidden ? ' hidden' : '' ) . '></div>';
 };
 
 /**
@@ -246,7 +250,7 @@ $pixonaut_field = static function ( array $field ) use ( $pixonaut_slot, $pixona
 	$tag  = $live ? 'label' : 'span';
 	$word = static fn ( string $option ): string => $field['words'][ $option ] ?? $pixonaut_option_word( (string) $field['kind'], $option );
 	if ( FormControl::HOST === $type ) {
-		$pixonaut_slot( (string) $field['host'] );
+		$pixonaut_slot( (string) $field['host'], false, true === $field['own_step'] );
 		return;
 	}
 	$label = (string) $field['label'];

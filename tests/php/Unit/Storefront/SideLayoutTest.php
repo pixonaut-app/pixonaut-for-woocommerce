@@ -287,6 +287,7 @@ final class SideLayoutTest extends TestCase {
 		$fields = $layout->steps[0]['fields'];
 		$this->assertSame( 'host', $fields[0]['type'] );
 		$this->assertSame( 'attribute_size', $fields[0]['host'] );
+		$this->assertFalse( $fields[0]['own_step'] );
 		$this->assertSame( 'Name on the back', $fields[1]['label'] );
 		$this->assertSame( 'Back of the shirt', $fields[1]['help'] );
 		$this->assertSame( 'Your name', $fields[1]['placeholder'] );
@@ -353,6 +354,7 @@ final class SideLayoutTest extends TestCase {
 		$this->assertCount( 3, $layout->steps );
 		$this->assertSame( 'Storlek', $layout->steps[2]['label'] );
 		$this->assertSame( 'attribute_storlek', $layout->steps[2]['fields'][0]['host'] );
+		$this->assertTrue( $layout->steps[2]['fields'][0]['own_step'] );
 
 		$in_steps = SideLayout::of( array( 'layout' => 'steps' ) + $options, self::arranged_reads(), null, true, true );
 		$this->assertSame( array( 'attribute_storlek' ), $in_steps->later_hosts );
