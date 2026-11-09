@@ -32,7 +32,7 @@ defined( 'ABSPATH' ) || exit;
 	<?php if ( '' !== $view_html ) : ?>
 		<div class="pixonaut-picture-view">
 			<input type="hidden" name="<?php echo esc_attr( $view_listed ); ?>" value="1" />
-			<p class="pixonaut-picture-view__intro"><?php esc_html_e( 'What the product image is drawn on while no showcase set is ticked: the photo the product page starts on, another photo of the blank, such as a scene, or the design alone.', 'pixonaut-for-woocommerce' ); ?></p>
+			<p class="pixonaut-picture-view__intro"><?php esc_html_e( 'While no showcase set is ticked, the product image is the template with its own defaults. Choose what it is drawn on: the photo the product page starts on, any photo of the blank, such as a scene, even of a view customers are not shown, or the design alone. The designer still starts on its own starting view.', 'pixonaut-for-woocommerce' ); ?></p>
 			<?php echo $view_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in admin/picture-view-choices.php. ?>
 		</div>
 	<?php endif; ?>

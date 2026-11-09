@@ -10,6 +10,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Catalogue\PictureImage;
 use Pixonaut\WooCommerce\Catalogue\PictureView;
+use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
@@ -53,6 +54,21 @@ final class PictureViewsTest extends WP_UnitTestCase {
 		$this->assertSame( self::mockup_url( 'mockupId=' . self::PHOTO ), $this->last_url() );
 		$product = $this->reload( $product );
 		$this->assertTrue( PictureImage::is_picture( (int) $product->get_image_id(), $product ) );
+	}
+
+	public function test_a_chosen_photo_need_not_be_shown_to_customers_and_leaves_the_designers_views_alone(): void {
+		$config  = self::config()->with_views( array( BlankFixture::VIEW_ID ), BlankFixture::VIEW_ID );
+		$product = $this->product( $config );
+		PictureView::save( $product, self::photo() );
+		$this->answer_mockups();
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+
+		$this->assertSame( self::mockup_url( 'mockupId=' . self::PHOTO ), $this->last_url() );
+		$stored = ProductConfig::stored_on( $this->reload( $product ) );
+		$this->assertSame( array( BlankFixture::VIEW_ID ), $stored->views );
+		$this->assertSame( BlankFixture::VIEW_ID, $stored->initial_view );
 	}
 
 	public function test_a_chosen_view_draws_its_photo_of_the_variant_sold(): void {
