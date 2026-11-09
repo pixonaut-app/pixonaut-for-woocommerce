@@ -12,6 +12,7 @@ use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Admin\VariationPanel;
 use Pixonaut\WooCommerce\Catalogue\CanvasRatio;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
+use Pixonaut\WooCommerce\Catalogue\PictureView;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use WC_Product;
@@ -209,6 +210,29 @@ final class VariationPanelTest extends ProductPanelTestCase {
 		$this->save_variation( $small, 0, $this->a4_side(), array( PanelFields::NONCE => 'forged' ) );
 
 		$this->assertFalse( ProductConfig::is_stored_on( $this->reload_any( $small->get_id() ) ) );
+	}
+
+	public function test_a_variation_saves_the_photo_its_image_is_drawn_on_only_while_it_was_listed(): void {
+		list( , $small ) = $this->linked_variable_product();
+		$photo           = array(
+			'kind'  => PictureView::MOCKUP,
+			'view'  => 'view-front',
+			'photo' => 'mock-front',
+		);
+
+		$this->save_variation( $small, 0, null, array( PanelFields::PICTURE_VIEW => PictureView::field_value( $photo ) ) );
+		$this->assertNull( PictureView::on( $this->reload_any( $small->get_id() ) ), 'not listed' );
+
+		$this->save_variation(
+			$small,
+			0,
+			null,
+			array(
+				PanelFields::PICTURE_VIEW        => PictureView::field_value( $photo ),
+				PanelFields::PICTURE_VIEW_LISTED => '1',
+			)
+		);
+		$this->assertSame( $photo, PictureView::on( $this->reload_any( $small->get_id() ) ) );
 	}
 
 	public function test_an_inheriting_variation_shows_its_product_configuration_under_its_own_names(): void {

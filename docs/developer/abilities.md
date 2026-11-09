@@ -22,6 +22,8 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/unlink-product` | Turns personalisation off for a product, keeping its link | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-product-setup` | Sets up a simple or variable product, or a variation, as its Pixonaut tab does: blank, sides, settings, views, printshop and blank variant | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/set-product-showcase` | Sets which of its template's showcase sets a product's images are drawn with | `edit_product` on that product |
+| `pixonaut-for-woocommerce/get-product-picture-views` | What a product's or variation's images are drawn on, and the views and photos of its side's placement | `edit_product` on that product (and on a variation's product) |
+| `pixonaut-for-woocommerce/set-product-picture-view` | Sets the view and photo one image of a product or variation is drawn on, or flat | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/move-product-template` | Moves a product and its variations' own setups to another template version, keeping their sides | `edit_product` on that product |
 | `pixonaut-for-woocommerce/use-product-picture` | Puts the Pixonaut picture back in place of the store manager's own image | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/reset-standing-layout` | Undoes the layout adjusted by hand for one option of a standing side | `edit_product` on that product (and on a variation's product) |
@@ -305,6 +307,24 @@ photo or `preview` as the flat design; only `preview` without a blank),
 up to 10, replacing the ones it has. It refuses a set the template does not
 offer and lists the ones it does; the answer gives them in
 `available_showcases`. The pictures are drawn again once the choice is saved.
+A set still drawn on the photo keeps the view and photo chosen for it.
+
+`get-product-picture-views` reads what a product's or variation's images are
+drawn on: `picture_view`, the image drawn while no set is chosen (on a
+variation, its own choice; null for none), and `showcase_images`, each set
+chosen, each with `kind`, `view`, `photo` and `gone` (the blank no longer
+has the view or photo, so the image is drawn as without a choice); and
+`views`, the views of the first side's placement with their photos (`id`,
+`thumbnail_url`, `variant_refs`), scene photos included, or null when
+Pixonaut could not be asked. `set-product-picture-view` sets one of them:
+`showcase` names a set chosen on a product (left out, the image without a
+set), `view` and `photo` one of those listed (a photo's view is found when
+left out; neither is the photo the product page starts on), or `kind`
+`preview` the flat design. On a variation it sets the variation's own view
+and photo, neither making it follow its product again; a variation is not
+drawn flat. It refuses a view or photo the blank does not have, naming
+those it has, and answers as `get-product-picture-views`. The pictures are
+drawn again once the choice is saved.
 
 `use-product-picture` puts the drawn Pixonaut picture back as the image of
 a product or variation whose own image the store manager set in place of

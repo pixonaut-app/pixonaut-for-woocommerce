@@ -503,7 +503,7 @@
 	margin: 0 0 6px;
 }
 
-#pixonaut_product_data .pixonaut-showcase-image label {
+#pixonaut_product_data .pixonaut-showcase-image > label {
 	display: flex;
 	align-items: center;
 	gap: 6px;
@@ -513,34 +513,49 @@
 	float: none;
 }
 
-/* How a set is drawn: on the blank's photo or flat, each with its thumbnail. */
-#pixonaut_product_data .pixonaut-showcase-image__kinds {
+/* What a picture is drawn on: the photo the product page starts on, each photo of the blank, or flat, each with its thumbnail. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+.pixonaut-showcase-image__kinds {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
 }
 
-#pixonaut_product_data .pixonaut-showcase-image .pixonaut-showcase-kind {
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-showcase-kind {
+	display: flex;
 	align-items: flex-start;
 	gap: 8px;
+	width: auto;
 	max-width: 20em;
+	margin: 0;
 	padding: 6px 8px;
+	float: none;
 	border: 1px solid #dcdcde;
 	border-radius: 4px;
 	background: #fff;
 	cursor: pointer;
 }
 
-#pixonaut_product_data .pixonaut-showcase-kind:has(input:checked) {
+/* A photo of the blank: its thumbnail and its view's name only. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+.pixonaut-showcase-kind--photo {
+	max-width: 12em;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind:has(input:checked) {
 	border-color: #2271b1;
 	box-shadow: 0 0 0 1px #2271b1;
 }
 
-#pixonaut_product_data .pixonaut-showcase-kind input {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind
+	input {
 	margin-top: 2px;
 }
 
-#pixonaut_product_data .pixonaut-showcase-kind__thumbnail {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind__thumbnail {
 	flex: none;
 	width: 48px;
 	height: 48px;
@@ -548,28 +563,59 @@
 	background: #f6f7f7;
 }
 
-#pixonaut_product_data .pixonaut-showcase-kind__thumbnail img {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind__thumbnail
+	img {
 	display: block;
 	width: 100%;
 	height: 100%;
 	object-fit: contain;
 }
 
-#pixonaut_product_data .pixonaut-showcase-kind__words {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind__words {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 }
 
-#pixonaut_product_data .pixonaut-showcase-kind__name {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind__name {
 	font-weight: 600;
 }
 
-#pixonaut_product_data .pixonaut-showcase-kind .description {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind
+	.description {
 	margin: 0;
 	padding: 0;
 	font-size: 12px;
 	line-height: 1.4;
+}
+
+/* A variation's choice, below its variant; the image drawn without a set, above the sets. */
+.pixonaut-variation-panel .pixonaut-picture-view {
+	margin: 8px 0 0;
+}
+
+#pixonaut_product_data .pixonaut-picture-view {
+	margin: 0 12px 12px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-picture-view__intro,
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-picture-view__label {
+	margin: 0 0 8px;
+	padding: 0;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-picture-view__gone {
+	display: block;
+	flex-basis: 100%;
+	margin: 4px 0 0;
+	color: #b32d2e;
 }
 
 #pixonaut_product_data .pixonaut-showcase-image__gone {

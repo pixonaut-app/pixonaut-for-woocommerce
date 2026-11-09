@@ -19,6 +19,10 @@ use WC_Product;
  * the template's own preview when it has no blank. With showcase sets chosen
  * (`ShowcaseImages`), there is one picture per set, each drawn with its set,
  * on the photo or flat as chosen; a variation has one, with the first set.
+ * The store manager may choose the view and photo of each, or of the picture
+ * drawn without a set (`PictureView`); a variation may choose its own, else
+ * it follows its product's for its image. A choice the blank no longer has
+ * is drawn as without one.
  */
 final class PictureSources {
 
@@ -34,35 +38,99 @@ final class PictureSources {
 
 	/**
 	 * What each of the product's pictures is drawn from, its image's first:
-	 * the template, with the blank, placement, view and variant when it is
-	 * drawn on a photo, and the showcase set it is drawn with. Empty when
-	 * the product shows none.
+	 * the template, with the blank, placement, view, variant and the photo
+	 * chosen when it is drawn on a photo, and the showcase set it is drawn
+	 * with. Empty when the product shows none.
 	 *
 	 * @param WC_Product $product A product or variation.
 	 *
-	 * @return list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, showcase?: string}>
+	 * @return list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string}>
 	 *
 	 * @throws ApiException When the blank's views cannot be read.
 	 */
 	public function of( WC_Product $product ): array {
 		$images = ShowcaseImages::on( $product );
 		// A variation has one image, and no gallery.
-		$images = $product->is_type( 'variation' ) ? array_slice( $images, 0, 1 ) : $images;
-		// Flat sets alone need nothing of the blank, so its views are not read for them.
-		$on_photo = array() === $images || in_array( ShowcaseImages::MOCKUP, array_column( $images, 'kind' ), true );
+		$images  = $product->is_type( 'variation' ) ? array_slice( $images, 0, 1 ) : $images;
+		$own     = $product->is_type( 'variation' ) ? PictureView::on( $product ) : null;
+		$choices = array() === $images ? array( self::followed( $product ) ?? array( 'kind' => PictureView::MOCKUP ) ) : $images;
+		// Flat pictures alone need nothing of the blank, so its views are not read for them.
+		$on_photo = null !== $own || in_array( PictureView::MOCKUP, array_column( $choices, 'kind' ), true );
 		$source   = $this->source( $product, $on_photo );
 		if ( null === $source ) {
 			return array();
 		}
-		if ( array() === $images ) {
-			return array( $source );
-		}
 		$sources = array();
-		foreach ( $images as $image ) {
-			$drawn     = ShowcaseImages::PREVIEW === $image['kind'] ? array( 'template' => $source['template'] ) : $source;
-			$sources[] = $drawn + array( 'showcase' => $image['id'] );
+		foreach ( $choices as $choice ) {
+			$drawn     = $this->chosen( $product, $source, $own ?? $choice, null !== $own || ! $product->is_type( 'variation' ) );
+			$sources[] = $drawn + ( isset( $choice['id'] ) ? array( 'showcase' => $choice['id'] ) : array() );
 		}
 		return $sources;
+	}
+
+	/**
+	 * The choice a picture drawn without a showcase set follows: the
+	 * product's, a variation's product's; null for none.
+	 *
+	 * @param WC_Product $product A product or variation.
+	 *
+	 * @return array{kind: string, view?: string, photo?: string}|null
+	 */
+	private static function followed( WC_Product $product ): ?array {
+		$owner = $product->is_type( 'variation' ) ? wc_get_product( $product->get_parent_id() ) : $product;
+		return $owner instanceof WC_Product ? PictureView::on( $owner ) : null;
+	}
+
+	/**
+	 * What a picture is drawn from under a choice: flat, on the view and
+	 * photo it names while the blank has them, else as without a choice.
+	 *
+	 * @param WC_Product                                                                                        $product A product or variation.
+	 * @param array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null} $source  What it is drawn from without a choice.
+	 * @param array{kind: string, view?: string, photo?: string}                                                $choice  The choice.
+	 * @param bool                                                                                              $own     Whether the choice is the picture's own, rather than one it follows.
+	 *
+	 * @return array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string}
+	 *
+	 * @throws ApiException When the blank's views cannot be read.
+	 */
+	private function chosen( WC_Product $product, array $source, array $choice, bool $own ): array {
+		$flat = array( 'template' => $source['template'] );
+		if ( PictureView::PREVIEW === $choice['kind'] ) {
+			return $flat;
+		}
+		if ( ! isset( $choice['view'] ) ) {
+			return $source;
+		}
+		$config = ProductConfig::config_for( $product );
+		$side   = $config->sides[0] ?? null;
+		if ( null === $config->blank_id || null === $side?->placement_id ) {
+			return $source;
+		}
+		$variant = $product->is_type( 'variable' ) ? null : ProductVariant::sold_on( $product, $config )?->ref;
+		$where   = PictureView::resolve( PictureView::views_of( $this->mockups( $config->blank_id ), $side->placement_id ), $choice, $variant, $own );
+		if ( null === $where ) {
+			return $source;
+		}
+		return $flat + array(
+			'blank'     => $config->blank_id,
+			'placement' => $side->placement_id,
+			'view'      => $where['view'],
+			'variant'   => $variant,
+		) + ( null === $where['photo'] ? array() : array( 'photo' => $where['photo'] ) );
+	}
+
+	/**
+	 * The blank's placements with their views and photos, as Pixonaut lists them.
+	 *
+	 * @param string $blank_id The blank.
+	 *
+	 * @return array<mixed>
+	 *
+	 * @throws ApiException When the blank's views cannot be read.
+	 */
+	private function mockups( string $blank_id ): array {
+		return $this->cache->remember( 'blank-mockups', array( 'blank' => $blank_id ), fn (): array => $this->catalogue->mockups( $blank_id ) );
 	}
 
 	/**
@@ -112,7 +180,7 @@ final class PictureSources {
 	 * @throws ApiException When the blank's views cannot be read.
 	 */
 	private function photographed_views( string $blank_id, string $placement_id ): array {
-		$placements = $this->cache->remember( 'blank-mockups', array( 'blank' => $blank_id ), fn (): array => $this->catalogue->mockups( $blank_id ) );
+		$placements = $this->mockups( $blank_id );
 		$views      = array();
 		foreach ( $placements as $placement ) {
 			$id = $placement['id'] ?? null;

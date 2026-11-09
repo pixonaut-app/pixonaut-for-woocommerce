@@ -6,7 +6,7 @@
  * Field names, classes and the `data-` attributes are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 0.1.0
+ * @version 1.2.0
  *
  * @var string                $nonce_name     Name of the panel's nonce field.
  * @var string                $nonce          The nonce.
@@ -19,6 +19,9 @@
  * @var string                $rest_nonce     Nonce for the REST routes.
  * @var string                $variant_html   The blank variant field, rendered from `admin/product-variant.php`; empty
  *                                            for a variation not personalised on a blank.
+ * @var string                $picture_html   What the variation's image is drawn on, rendered from
+ *                                            `admin/variation-picture-view.php`; empty for a variation
+ *                                            not personalised on a blank with photos.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -47,4 +50,5 @@ defined( 'ABSPATH' ) || exit;
 	<div class="woocommerce_options_panel pixonaut-variation-variant">
 		<?php echo $variant_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in admin/product-variant.php. ?>
 	</div>
+	<?php echo $picture_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in admin/variation-picture-view.php. ?>
 </div>

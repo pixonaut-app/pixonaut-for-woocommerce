@@ -19,6 +19,7 @@ use Pixonaut\WooCommerce\Abilities\ConnectionAction;
 use Pixonaut\WooCommerce\Abilities\ConnectionStatus;
 use Pixonaut\WooCommerce\Bridge\Discovery;
 use Pixonaut\WooCommerce\Bridge\Status;
+use Pixonaut\WooCommerce\Abilities\GetProductPictureViews;
 use Pixonaut\WooCommerce\Abilities\LinkProduct;
 use Pixonaut\WooCommerce\Abilities\ListProducts;
 use Pixonaut\WooCommerce\Abilities\LineView;
@@ -33,6 +34,7 @@ use Pixonaut\WooCommerce\Abilities\RecheckProducts;
 use Pixonaut\WooCommerce\Abilities\RegenerateProductPictures;
 use Pixonaut\WooCommerce\Abilities\ResetStandingLayout;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
+use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
 use Pixonaut\WooCommerce\Abilities\SetupFields;
 use Pixonaut\WooCommerce\Abilities\Store\StoreResources;
@@ -425,7 +427,7 @@ final class Plugin {
 			$product_panel = $this->product_panel();
 			$product_panel->register();
 			( new LayoutAdjustments( $this->sdk(), new StandingRows( $this->catalogue(), $designs, $this->sdk(), new WcLogger() ), new WcLogger() ) )->register();
-			( new VariationPanel( $product_panel, $this->templates(), $this->variant_field() ) )->register();
+			( new VariationPanel( $product_panel, $this->templates(), $this->variant_field(), $this->showcase_field() ) )->register();
 			( new PictureFields( $this->templates(), $this->settings() ) )->register();
 			$this->showcase_field()->register();
 			( new StatusReport( $this->templates() ) )->register();
@@ -456,6 +458,7 @@ final class Plugin {
 				$designs = new Designs( $this->sdk() );
 				$lines   = new LineView( $this->proof_urls() );
 				$connect = $this->sdk();
+				$views   = new GetProductPictureViews( new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ) );
 				$status  = new ConnectionStatus( $this->connection(), $connect, $this->webhook_endpoint() );
 				return array(
 					new ListTemplates( $this->catalogue() ),
@@ -464,6 +467,8 @@ final class Plugin {
 					new UnlinkProduct( $links ),
 					new SetProductSetup( $links, $fields ),
 					new SetProductShowcase( $links, $this->showcase_field() ),
+					$views,
+					new SetProductPictureView( $views ),
 					new MoveProductTemplate( $links, $fields ),
 					new MoveProductAttribute( new WcLogger() ),
 					new UseProductPicture( $links, $this->settings() ),

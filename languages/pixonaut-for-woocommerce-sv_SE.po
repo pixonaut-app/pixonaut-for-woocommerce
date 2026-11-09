@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-06T17:14:56+00:00\n"
+"POT-Creation-Date: 2026-11-09T10:44:41+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -49,14 +49,14 @@ msgstr ""
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
 #: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:174
-#: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:35
+#: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:38
 msgid "Pixonaut"
 msgstr "Pixonaut"
 
 #. Author URI of the plugin
 #: pixonaut-for-woocommerce.php
 msgid "https://pixonaut.app"
-msgstr ""
+msgstr "https://pixonaut.app"
 
 #: src/Abilities/Abilities.php:64
 msgid ""
@@ -525,6 +525,73 @@ msgstr ""
 "vattenstämpeln på korrektur, vart beställningar skickas, lägsta "
 "tryckupplösning och standardspråket. Null medan anslutningen är pausad eller "
 "Pixonaut inte gick att nå."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetProductPictureViews.php:40
+msgid "Read what a product's images are drawn on"
+msgstr "Läs vad en produkts bilder ritas på"
+
+#: src/Abilities/GetProductPictureViews.php:41
+msgid ""
+"Reads what a personalised product's or variation's Pixonaut images are drawn "
+"on: the image drawn without a showcase set (a variation: its own choice), "
+"and each showcase set chosen, each on the photo the product page starts on, "
+"on a view and photo of the blank, or flat; and the views of its side's "
+"placement with their photos, scenes included. Set them with `set-product-"
+"picture-view`."
+msgstr "Läser vad Pixonaut-bilderna för en personaliserad produkt eller variant ritas på: bilden som ritas utan exempelset (för en variant: dess eget val) och varje valt exempelset, var och en på fotot som produktsidan visar först, på en vy och ett foto av grundprodukten, eller platt; samt vyerna för sidans placering med deras foton, scener inräknade. Ange dem med `set-product-picture-view`."
+
+#: src/Abilities/GetProductPictureViews.php:47
+#: src/Abilities/SetProductPictureView.php:47
+#: src/Abilities/SetProductSetup.php:60 src/Abilities/UseProductPicture.php:47
+msgid "A simple or variable product, or a variation."
+msgstr "En enkel eller variabel produkt, eller en variant."
+
+#: src/Abilities/GetProductPictureViews.php:155
+msgid "`mockup` on the blank's photo, `preview` the flat design."
+msgstr "`mockup` på grundproduktens foto, `preview` den platta designen."
+
+#: src/Abilities/GetProductPictureViews.php:159
+msgid "The view chosen; null for the one the product page starts on."
+msgstr "Den valda vyn; null för den som produktsidan visar först."
+
+#: src/Abilities/GetProductPictureViews.php:163
+msgid "The view's photo chosen; null for its photo of the variant sold."
+msgstr "Det valda fotot av vyn; null för vyns foto av grundproduktvarianten som säljs."
+
+#: src/Abilities/GetProductPictureViews.php:167
+msgid ""
+"True when the blank no longer has the view or photo: the image is drawn on "
+"the photo the product page starts on until another is chosen."
+msgstr "True när grundprodukten inte längre har vyn eller fotot: bilden ritas på fotot som produktsidan visar först tills något annat väljs."
+
+#: src/Abilities/GetProductPictureViews.php:176
+msgid ""
+"On a product, what its image is drawn on while no showcase set is chosen; on "
+"a variation, its own choice. Null for none: the photo the product page "
+"starts on, a variation's product's choice."
+msgstr "För en produkt: vad dess bild ritas på så länge inget exempelset är valt; för en variant: dess eget val. Null om inget är valt: fotot som produktsidan visar först, respektive produktens val för en variant."
+
+#: src/Abilities/GetProductPictureViews.php:181
+msgid ""
+"The showcase sets chosen as the product's images, the first its image; empty "
+"on a variation."
+msgstr "Exempelseten som valts som produktens bilder, det första som dess produktbild; tom för en variant."
+
+#: src/Abilities/GetProductPictureViews.php:192
+msgid ""
+"The views of the side's placement with the photos an image can be drawn on, "
+"in the blank's order; empty without a blank; null when Pixonaut could not be "
+"asked."
+msgstr "Vyerna för sidans placering med de foton som en bild kan ritas på, i grundproduktens ordning; tom utan grundprodukt; null när det inte gick att fråga Pixonaut."
+
+#: src/Abilities/GetProductPictureViews.php:206
+msgid "A link to the photo that opens for an hour or two."
+msgstr "En länk till fotot som fungerar i en eller ett par timmar."
+
+#: src/Abilities/GetProductPictureViews.php:211
+msgid "The blank variants the photo shows; empty for every one."
+msgstr "Grundproduktvarianterna som fotot visar; tom om det gäller alla."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -1102,13 +1169,13 @@ msgstr ""
 msgid ""
 "Where it overrides the store on its options in the form: `on_top`, `first` "
 "or `last`; null for the store's."
-msgstr ""
+msgstr "Om den åsidosätter butikens inställning för var dess alternativ står i formuläret: `on_top`, `first` eller `last`; null för butikens."
 
 #: src/Abilities/ProductSetup.php:166
 msgid ""
 "Whether it overrides the store on numbering the form's groups: `on` or "
 "`off`; null for the store's."
-msgstr ""
+msgstr "Om den åsidosätter butikens inställning för numrering av formulärets grupper: `on` eller `off`; null för butikens."
 
 #: src/Abilities/ProductSetup.php:170
 msgid "The proof approval it overrides the store's with; null for the store's."
@@ -1145,14 +1212,25 @@ msgstr ""
 "Mallens exempelset som produktbilderna ritas med, valda med `set-product-"
 "showcase`; en variant anger produktens."
 
-#: src/Abilities/ProductSetup.php:208
+#: src/Abilities/ProductSetup.php:200
+msgid ""
+"The view of the blank it is drawn on, set with `set-product-picture-view`; "
+"absent for the one the product page starts on."
+msgstr "Vyn av grundprodukten som den ritas på, angiven med `set-product-picture-view`; saknas för den som produktsidan visar först."
+
+#: src/Abilities/ProductSetup.php:204
+msgid ""
+"The view's photo it is drawn on; absent for its photo of the variant sold."
+msgstr "Fotot av vyn som den ritas på; saknas för vyns foto av grundproduktvarianten som säljs."
+
+#: src/Abilities/ProductSetup.php:216
 msgid ""
 "The template version it is linked to, e.g. `mini-tee@2`; null without a "
 "template."
 msgstr ""
 "Mallversionen som den är kopplad till, t.ex. `mini-tee@2`; null utan mall."
 
-#: src/Abilities/ProductSetup.php:212
+#: src/Abilities/ProductSetup.php:220
 msgid ""
 "True when the side stays on its template version; false when it follows the "
 "template's latest published version."
@@ -1160,11 +1238,11 @@ msgstr ""
 "True när sidan stannar på sin mallversion; false när den följer mallens "
 "senast publicerade version."
 
-#: src/Abilities/ProductSetup.php:216
+#: src/Abilities/ProductSetup.php:224
 msgid "Where on the blank it is printed; null without a blank."
 msgstr "Var på grundprodukten den trycks; null utan grundprodukt."
 
-#: src/Abilities/ProductSetup.php:222
+#: src/Abilities/ProductSetup.php:230
 msgid ""
 "A standing side on a blank whose print areas change with an option: the "
 "design each option is printed from, and whether its layout was adjusted by "
@@ -1175,11 +1253,11 @@ msgstr ""
 "har justerats för hand, vilket `reset-standing-layout` ångrar. Tom för alla "
 "andra sidor."
 
-#: src/Abilities/ProductSetup.php:229
+#: src/Abilities/ProductSetup.php:237
 msgid "The option's values, e.g. \"XL\"."
 msgstr "Alternativets värden, t.ex. \"XL\"."
 
-#: src/Abilities/ProductSetup.php:241
+#: src/Abilities/ProductSetup.php:249
 msgid ""
 "Where its Pixonaut picture, shown as its image, stands: `drawn`, `pending` "
 "to be drawn, `failed` and to be tried again, `own_image` when the store "
@@ -1326,6 +1404,86 @@ msgstr ""
 "Pixonaut kunde inte återställa alternativets layout. Försök igen om en stund."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetProductPictureView.php:40
+msgid "Set what a product image is drawn on"
+msgstr "Ange vad en produktbild ritas på"
+
+#: src/Abilities/SetProductPictureView.php:41
+msgid ""
+"Sets what one Pixonaut image of a personalised product or variation is drawn "
+"on: a view of the blank and, of that view, a photo (a scene photo too), as "
+"`get-product-picture-views` lists them; neither for the photo the product "
+"page starts on; or `kind` `preview` for the flat design. On a product, "
+"`showcase` names one of the showcase sets chosen with `set-product-"
+"showcase`; without it, the image drawn while no set is chosen. On a "
+"variation, it sets the variation's own image, and neither view nor photo "
+"makes it follow its product again; a variation is not drawn flat. The "
+"pictures are drawn again. The answer is `get-product-picture-views`'."
+msgstr "Anger vad en Pixonaut-bild för en personaliserad produkt eller variant ritas på: en vy av grundprodukten och, av den vyn, ett foto (även ett scenfoto), så som `get-product-picture-views` listar dem; ingetdera för fotot som produktsidan visar först; eller `kind` `preview` för den platta designen. För en produkt anger `showcase` ett av exempelseten som valts med `set-product-showcase`; utan det gäller valet bilden som ritas så länge inget set är valt. För en variant anger den variantens egen bild, och varken vy eller foto gör att den åter följer sin produkt; en variant ritas inte platt. Bilderna ritas om. Svaret är detsamma som från `get-product-picture-views`."
+
+#: src/Abilities/SetProductPictureView.php:52
+msgid ""
+"On a product, one of the showcase sets chosen as its images, by id; left out "
+"for the image drawn without a set."
+msgstr "För en produkt: ett av exempelseten som valts som dess bilder, angivet med id; utelämnas för bilden som ritas utan set."
+
+#: src/Abilities/SetProductPictureView.php:61
+msgid ""
+"One of the views `get-product-picture-views` lists; with no photo, its photo "
+"of the variant sold."
+msgstr "En av vyerna som `get-product-picture-views` listar; utan foto används vyns foto av grundproduktvarianten som säljs."
+
+#: src/Abilities/SetProductPictureView.php:65
+msgid ""
+"One of the photos `get-product-picture-views` lists; its view is found when "
+"left out."
+msgstr "Ett av fotona som `get-product-picture-views` listar; dess vy tas fram när den utelämnas."
+
+#: src/Abilities/SetProductPictureView.php:95
+msgid ""
+"The product is not personalised, so it has no Pixonaut images. Set it up "
+"first."
+msgstr "Produkten är inte personaliserad, så den har inga Pixonaut-bilder. Ställ in den först."
+
+#: src/Abilities/SetProductPictureView.php:101
+msgid ""
+"A variation chooses only the view and photo of its own image, or neither to "
+"follow its product."
+msgstr "En variant väljer bara vy och foto för sin egen bild, eller ingetdera för att följa sin produkt."
+
+#. translators: 1: a showcase set's id; 2: the ids chosen as the product's images, e.g. "graduate, wedding".
+#: src/Abilities/SetProductPictureView.php:122
+#, php-format
+msgid ""
+"The product shows no showcase set \"%1$s\": choose it with set-product-"
+"showcase first. It shows: %2$s."
+msgstr "Produkten visar inget exempelset \"%1$s\": välj det först med set-product-showcase. Den visar: %2$s."
+
+#: src/Abilities/SetProductPictureView.php:124
+msgctxt "showcase sets a product shows"
+msgid "none"
+msgstr "inga"
+
+#: src/Abilities/SetProductPictureView.php:149
+msgid ""
+"Pixonaut could not be asked for the blank's views and photos. Try again "
+"later."
+msgstr "Det gick inte att hämta grundproduktens vyer och foton från Pixonaut. Försök igen senare."
+
+#: src/Abilities/SetProductPictureView.php:168
+msgid ""
+"The product is not on a blank with photos for its side, so its images can "
+"only be drawn as the product page shows them, or flat."
+msgstr "Produkten ligger inte på en grundprodukt med foton för sin sida, så dess bilder kan bara ritas så som produktsidan visar dem, eller platt."
+
+#. translators: 1: the views of the blank with their photos, e.g. "front (mock-1, mock-2), back (mock-3)".
+#: src/Abilities/SetProductPictureView.php:171
+#, php-format
+msgid ""
+"The blank has no such view or photo for the product's side. It has: %1$s."
+msgstr "Grundprodukten har ingen sådan vy eller sådant foto för produktens sida. Den har: %1$s."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductSetup.php:53
 msgid "Set up a product for Pixonaut"
 msgstr "Ställ in en produkt för Pixonaut"
@@ -1352,10 +1510,6 @@ msgstr ""
 "`own_setup` false gör att den åter följer produktens. Pixonaut kontrollerar "
 "inställningarna; en produkt som inte klarar en kontroll sparas men går inte "
 "att köpa, och svaret anger varför."
-
-#: src/Abilities/SetProductSetup.php:60 src/Abilities/UseProductPicture.php:47
-msgid "A simple or variable product, or a variation."
-msgstr "En enkel eller variabel produkt, eller en variant."
 
 #: src/Abilities/SetProductSetup.php:65
 msgid ""
@@ -1403,13 +1557,13 @@ msgid ""
 "not arranged by hand: `on_top`, unnumbered, or each in a group of its own, "
 "`first` or `last`; empty for the store's. A product's only: a variation "
 "follows its product."
-msgstr ""
+msgstr "Var produktens alternativ står i formuläret, på en sida vars grupper inte har ordnats för hand: `on_top`, överst och onumrerade, eller vart och ett i en egen grupp, `first` eller `last`; tom för butikens. Gäller bara produkter: en variant följer sin produkt."
 
 #: src/Abilities/SetProductSetup.php:85
 msgid ""
 "Whether the form numbers its groups; empty for the store's. A product's "
 "only: a variation follows its product."
-msgstr ""
+msgstr "Om formuläret numrerar sina grupper; tom för butikens. Gäller bara produkter: en variant följer sin produkt."
 
 #: src/Abilities/SetProductSetup.php:94
 msgid "The view the designer starts on, one of `views`; empty for the first."
@@ -1436,19 +1590,19 @@ msgstr ""
 msgid ""
 "A variation follows its product for option_groups and group_numbers: set "
 "them on the product."
-msgstr ""
+msgstr "En variant följer sin produkt för option_groups och group_numbers: ange dem på produkten."
 
-#: src/Abilities/SetProductShowcase.php:43
+#: src/Abilities/SetProductShowcase.php:45
 msgid "The sets the product's template offers, by id and name."
 msgstr "Seten som produktens mall erbjuder, med id och namn."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductShowcase.php:54
+#: src/Abilities/SetProductShowcase.php:56
 msgid "Set a product's showcase pictures"
 msgstr "Välj en produkts exempelbilder"
 
 #. translators: %d: how many showcase pictures a product shows at most, e.g. 10.
-#: src/Abilities/SetProductShowcase.php:57
+#: src/Abilities/SetProductShowcase.php:59
 #, php-format
 msgid ""
 "Sets which of its template's showcase sets a personalised simple or variable "
@@ -1465,11 +1619,11 @@ msgstr ""
 "grundprodukt har bara den platta designen. Bilderna ritas om. Svaret listar "
 "seten som mallen erbjuder."
 
-#: src/Abilities/SetProductShowcase.php:75
+#: src/Abilities/SetProductShowcase.php:77
 msgid "One of the template's showcase sets, by id."
 msgstr "Ett av mallens exempelset, angivet med id."
 
-#: src/Abilities/SetProductShowcase.php:113
+#: src/Abilities/SetProductShowcase.php:115
 msgid ""
 "The product is not personalised with a template, so it has no showcase sets. "
 "Set it up first."
@@ -1477,7 +1631,7 @@ msgstr ""
 "Produkten är inte personaliserad med en mall, så den har inga exempelset. "
 "Ställ in den först."
 
-#: src/Abilities/SetProductShowcase.php:118
+#: src/Abilities/SetProductShowcase.php:120
 msgid ""
 "Pixonaut could not be asked for the template's showcase sets. Try again "
 "later."
@@ -1485,12 +1639,12 @@ msgstr ""
 "Det gick inte att hämta mallens exempelset från Pixonaut. Försök igen senare."
 
 #. translators: 1: a showcase set's id; 2: the ids the template offers, e.g. "graduate, wedding".
-#: src/Abilities/SetProductShowcase.php:131
+#: src/Abilities/SetProductShowcase.php:134
 #, php-format
 msgid "The template has no showcase set \"%1$s\". It has: %2$s."
 msgstr "Mallen har inget exempelset \"%1$s\". Den har: %2$s."
 
-#: src/Abilities/SetProductShowcase.php:133
+#: src/Abilities/SetProductShowcase.php:136
 msgctxt "showcase sets a template offers"
 msgid "none"
 msgstr "inga"
@@ -2364,7 +2518,7 @@ msgid ""
 "The layout of %s could not be changed in Pixonaut. Try again in a moment."
 msgstr "Layouten för %s kunde inte ändras i Pixonaut. Försök igen om en stund."
 
-#: src/Admin/LinkedBlank.php:229
+#: src/Admin/LinkedBlank.php:250
 msgid ""
 "None set: Pixonaut cannot route this blank’s orders until a printshop is "
 "chosen."
@@ -2374,27 +2528,27 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:247 src/Admin/ProductPanel.php:564
+#: src/Admin/LinkedBlank.php:268 src/Admin/ProductPanel.php:564
 msgid "Workspace default"
 msgstr "Arbetsytans standard"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:249 src/Admin/ProductPanel.php:566
+#: src/Admin/LinkedBlank.php:270 src/Admin/ProductPanel.php:566
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Arbetsytans standard (%s)"
 
-#: src/Admin/LinkedBlank.php:252 src/Admin/ProductPanel.php:571
+#: src/Admin/LinkedBlank.php:273 src/Admin/ProductPanel.php:571
 msgid "A printshop no longer connected to the workspace"
 msgstr "Ett tryckeri som inte längre är anslutet till arbetsytan"
 
 #. translators: %s: the printshop the blank's category names.
-#: src/Admin/LinkedBlank.php:256
+#: src/Admin/LinkedBlank.php:277
 #, php-format
 msgid "%s (from the blank’s category)"
 msgstr "%s (från grundproduktens kategori)"
 
-#: src/Admin/LinkedBlank.php:286
+#: src/Admin/LinkedBlank.php:307
 msgid "Pixonaut could not be asked which printshop this is."
 msgstr "Det gick inte att fråga Pixonaut vilket tryckeri detta är."
 
@@ -2616,27 +2770,79 @@ msgstr ""
 "Pixonaut kunde inte rita bilderna för %s. De behåller de bilder de har, och "
 "ett nytt försök görs senare."
 
-#. translators: Option of how a showcase product image is drawn: the design on the blank product's photo. Admin product page.
-#: src/Admin/ShowcaseField.php:97
+#. translators: Option of how a product image is drawn: the design on the blank product's photo, the one the product page starts on. Admin product page.
+#: src/Admin/ShowcaseField.php:114
 msgid "On the product photo"
 msgstr "På produktfotot"
 
-#: src/Admin/ShowcaseField.php:98
+#: src/Admin/ShowcaseField.php:115
 msgid ""
-"The set drawn into the print area of the blank’s product photo, as customers "
-"see the product."
-msgstr ""
-"Setet ritat i tryckytan på grundproduktens produktfoto, så som kunderna ser "
-"produkten."
+"Drawn into the print area of the blank’s photo the product page starts on."
+msgstr "Ritas in i tryckytan på det foto av grundprodukten som produktsidan visar först."
 
 #. translators: Option of how a showcase product image is drawn: the design alone, flat. Admin product page.
-#: src/Admin/ShowcaseField.php:103
+#: src/Admin/ShowcaseField.php:120
 msgid "Flat design"
 msgstr "Platt design"
 
-#: src/Admin/ShowcaseField.php:104
-msgid "The design alone, filled in with the set, without the product."
-msgstr "Designen ensam, ifylld med setet, utan produkten."
+#: src/Admin/ShowcaseField.php:121
+msgid "The design alone, without the product."
+msgstr "Designen ensam, utan produkten."
+
+#. translators: %s: name of a showcase set of the template. Admin product page.
+#: src/Admin/ShowcaseField.php:135
+#, php-format
+msgid "How %s is drawn"
+msgstr "Hur %s ritas"
+
+#. translators: Accessible name of the choices of how the product image is drawn while no showcase set is ticked. Admin product page.
+#: src/Admin/ShowcaseField.php:158
+msgid "How the product image is drawn without a showcase set"
+msgstr "Hur produktbilden ritas utan exempelset"
+
+#: src/Admin/ShowcaseField.php:194
+msgid ""
+"The blank no longer has this view or photo, so the image is drawn on the "
+"photo the product page starts on until another is chosen."
+msgstr "Grundprodukten har inte längre den här vyn eller det här fotot, så bilden ritas på fotot som produktsidan visar först tills något annat väljs."
+
+#. translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page.
+#: src/Admin/ShowcaseField.php:212
+#, php-format
+msgid "%s, on the photo of the variant sold"
+msgstr "%s, på fotot av grundproduktvarianten som säljs"
+
+#. translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page.
+#: src/Admin/ShowcaseField.php:216
+msgid "No longer on the blank"
+msgstr "Finns inte längre på grundprodukten"
+
+#. translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page.
+#: src/Admin/ShowcaseField.php:218
+msgid "The photo chosen before"
+msgstr "Det tidigare valda fotot"
+
+#. translators: A choice of what a variation's image is drawn on: whatever its product's image is drawn on. Admin product page, variation options.
+#: src/Admin/ShowcaseField.php:243
+msgid "As the product image"
+msgstr "Som produktbilden"
+
+#: src/Admin/ShowcaseField.php:244
+msgid ""
+"The view and photo the product image is drawn on, in this variation’s colour "
+"where the view has it."
+msgstr "Vyn och fotot som produktbilden ritas på, i den här variantens färg där vyn har den."
+
+#. translators: Accessible name of the choices of what a variation's image is drawn on. Admin product page, variation options.
+#: src/Admin/ShowcaseField.php:259
+msgid "What the variation image is drawn on"
+msgstr "Vad variantbilden ritas på"
+
+#. translators: 1: a view of the blank product, e.g. "Front"; 2: which of its photos, e.g. 2. Admin product page.
+#: src/Admin/ShowcaseField.php:315
+#, php-format
+msgid "%1$s, photo %2$d"
+msgstr "%1$s, foto %2$d"
 
 #: src/Admin/VariantField.php:71
 msgid ""
@@ -5880,7 +6086,7 @@ msgstr ""
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the images of personalised products.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's images drawn by Pixonaut.
 #: src/Settings/SettingsPage.php:565
-#: templates/admin/product-showcase-images.php:25
+#: templates/admin/product-showcase-images.php:28
 msgid "Product images"
 msgstr "Produktbilder"
 
@@ -7529,8 +7735,32 @@ msgstr ""
 "utifrån den mallversion och de inställningar de använder nu: i "
 "bakgrundsjobb, eller direkt medan den här sidan är öppen."
 
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's images drawn by Pixonaut.
-#: templates/admin/product-showcase-images.php:26
+#: templates/admin/product-showcase-images.php:30
+msgid ""
+"Pixonaut pictures are not used as product images: turn on Use Pixonaut "
+"pictures as product images in the Pixonaut settings for these to show."
+msgstr ""
+"Pixonauts bilder används inte som produktbilder: aktivera Använd Pixonauts "
+"bilder som produktbilder i Pixonaut-inställningarna för att de ska visas."
+
+#: templates/admin/product-showcase-images.php:35
+msgid ""
+"While no showcase set is ticked, the product image is the template with its "
+"own defaults. Choose what it is drawn on: the photo the product page starts "
+"on, any photo of the blank, such as a scene, even of a view customers are "
+"not shown, or the design alone. The designer still starts on its own "
+"starting view."
+msgstr "Så länge inget exempelset är markerat är produktbilden mallen med sina egna standardvärden. Välj vad den ritas på: fotot som produktsidan visar först, valfritt foto av grundprodukten, till exempel en scen, även av en vy som inte visas för kunderna, eller designen ensam. Designverktyget öppnas ändå på sin egen startvy."
+
+#: templates/admin/product-showcase-images.php:40
+msgid ""
+"Pixonaut could not be reached to list the template’s showcase sets. The sets "
+"chosen before are kept."
+msgstr ""
+"Pixonaut kunde inte nås för att lista mallens exempelset. De set som valts "
+"tidigare behålls."
+
+#: templates/admin/product-showcase-images.php:42
 msgid ""
 "Show the template filled in with one of its showcase sets, example values "
 "such as a real name or photo, instead of its placeholders. The first set "
@@ -7542,29 +7772,7 @@ msgstr ""
 "blir produktbilden och de övriga läggs till i produktgalleriet. Kunderna "
 "börjar ändå designa utifrån mallens egna standardvärden."
 
-#: templates/admin/product-showcase-images.php:28
-msgid ""
-"Pixonaut pictures are not used as product images: turn on Use Pixonaut "
-"pictures as product images in the Pixonaut settings for these to show."
-msgstr ""
-"Pixonauts bilder används inte som produktbilder: aktivera Använd Pixonauts "
-"bilder som produktbilder i Pixonaut-inställningarna för att de ska visas."
-
-#: templates/admin/product-showcase-images.php:31
-msgid ""
-"Pixonaut could not be reached to list the template’s showcase sets. The sets "
-"chosen before are kept."
-msgstr ""
-"Pixonaut kunde inte nås för att lista mallens exempelset. De set som valts "
-"tidigare behålls."
-
-#. translators: %s: name of a showcase set of the template. Admin product page.
-#: templates/admin/product-showcase-images.php:47
-#, php-format
-msgid "How %s is drawn"
-msgstr "Hur %s ritas"
-
-#: templates/admin/product-showcase-images.php:65
+#: templates/admin/product-showcase-images.php:60
 msgid ""
 "This set is no longer in the template, so its image shows the template’s own "
 "defaults. Untick it, or choose another set."
@@ -7572,7 +7780,7 @@ msgstr ""
 "Det här setet finns inte längre i mallen, så dess bild visar mallens egna "
 "standardvärden. Avmarkera det eller välj ett annat set."
 
-#: templates/admin/product-showcase-images.php:73
+#: templates/admin/product-showcase-images.php:68
 msgid ""
 "The blank has no product photo for this side, so each set is drawn as the "
 "design alone."
@@ -7580,12 +7788,12 @@ msgstr ""
 "Grundprodukten har inget produktfoto för den här sidan, så varje set ritas "
 "som designen ensam."
 
-#: templates/admin/product-showcase-images.php:75
+#: templates/admin/product-showcase-images.php:70
 msgid "The product has no blank, so each set is drawn as the design alone."
 msgstr ""
 "Produkten har ingen grundprodukt, så varje set ritas som designen ensam."
 
-#: templates/admin/product-showcase-images.php:80
+#: templates/admin/product-showcase-images.php:75
 msgid ""
 "Listed for the template the first side was saved with. The images are drawn "
 "again when the template is republished."
@@ -7594,7 +7802,7 @@ msgstr ""
 "när mallen publiceras på nytt."
 
 #. translators: %d: most showcase sets a product shows as its images. Admin product page.
-#: templates/admin/product-showcase-images.php:81
+#: templates/admin/product-showcase-images.php:76
 #, php-format
 msgid "Up to %d sets are shown; those ticked after them are left out."
 msgstr "Högst %d set visas; set som markerats efter dem tas inte med."
@@ -7977,11 +8185,11 @@ msgid "Blank variant"
 msgstr "Grundproduktvariant"
 
 #. translators: Checkbox label on a variable product's variation panel: this variation uses its own personalisation settings. Admin product page.
-#: templates/admin/product-variation.php:39
+#: templates/admin/product-variation.php:42
 msgid "Override for this variation"
 msgstr "Åsidosätt för den här varianten"
 
-#: templates/admin/product-variation.php:42
+#: templates/admin/product-variation.php:45
 msgid ""
 "This variation is personalised as the product’s Pixonaut tab says. Tick to "
 "give it its own blank, sides, templates and settings."
@@ -7990,7 +8198,7 @@ msgstr ""
 "rutan för att ge den en egen grundprodukt och egna sidor, mallar och "
 "inställningar."
 
-#: templates/admin/product-variation.php:43
+#: templates/admin/product-variation.php:46
 msgid ""
 "This variation uses its own configuration below, not the product’s Pixonaut "
 "tab."
@@ -8127,6 +8335,11 @@ msgid ""
 msgstr ""
 "Jämför varje föråldrad kopia med tilläggets mall, för över dess ändringar "
 "och kopiera dess @version-huvud."
+
+#. translators: Label of the choices of what a variation's Pixonaut image is drawn on. Admin product page, variation options.
+#: templates/admin/variation-picture-view.php:20
+msgid "Variation image drawn on"
+msgstr "Variantbilden ritas på"
 
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Email to the merchant.
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Plain text email to the merchant.
@@ -8440,6 +8653,9 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s vy"
 msgstr[1] "%s vyer"
+
+#~ msgid "The design alone, filled in with the set, without the product."
+#~ msgstr "Designen ensam, ifylld med setet, utan produkten."
 
 #~ msgid ""
 #~ "Gives every setting on the Pixonaut settings page, by its key: the "
@@ -8811,9 +9027,6 @@ msgstr[1] "%s vyer"
 #, php-format
 #~ msgid "Read how “%s” is set up for Pixonaut"
 #~ msgstr "Läste hur ”%s” är inställd för Pixonaut"
-
-#~ msgid "Read how products are set up for Pixonaut"
-#~ msgstr "Läste hur produkter är inställda för Pixonaut"
 
 #, php-format
 #~ msgid "Read how %d product is set up for Pixonaut"

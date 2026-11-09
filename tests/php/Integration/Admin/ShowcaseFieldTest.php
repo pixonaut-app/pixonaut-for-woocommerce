@@ -120,11 +120,11 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 		$html = $this->field->html( $this->reload( $product ) );
 
 		$this->assertStringContainsString( '/v1/blanks/' . self::BLANK_ID . '/mockups', $this->recorder->requests[1]['url'] );
-		$this->assertSame( 2, substr_count( $html, 'role="radiogroup"' ) );
+		$this->assertSame( 3, substr_count( $html, 'role="radiogroup"' ), 'the image without a set, and each set' );
 		$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[0\]\[kind\]" value="mockup"\s+checked#', $html );
 		$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[1\]\[kind\]" value="preview"\s+checked#', $html );
 		$this->assertStringContainsString( 'On the product photo', $html );
-		$this->assertStringContainsString( 'The design alone, filled in with the set, without the product.', $html );
+		$this->assertStringContainsString( 'The design alone, without the product.', $html );
 		$this->assertStringContainsString( 'src="' . self::PHOTO_URL . '"', $html );
 		$this->assertStringContainsString( 'src="' . self::PREVIEW_URL . '"', $html );
 		$this->assertStringNotContainsString( 'pixonaut-showcase-images__flat', $html );
@@ -168,20 +168,21 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 
 		$html = $this->field->html( $this->reload( $product ) );
 
-		$this->assertStringContainsString( 'src="' . self::WHITE_PHOTO_URL . '"', $html );
-		$this->assertStringNotContainsString( self::BLACK_PHOTO_URL, $html );
+		$automatic = (string) preg_replace( '#^.*?value="mockup"(.*?)</label>.*$#s', '$1', $html );
+		$this->assertStringContainsString( 'src="' . self::WHITE_PHOTO_URL . '"', $automatic );
+		$this->assertStringNotContainsString( self::BLACK_PHOTO_URL, $automatic );
 	}
 
-	public function test_a_variant_without_a_photo_for_the_side_has_every_set_flat(): void {
+	public function test_a_variant_without_a_photo_for_the_side_can_still_choose_one_of_the_placements_photos(): void {
 		$product = $this->product( self::BLANK_ID );
 		( new ProductVariant( self::BLANK_ID, self::WHITE, self::WHITE, 'White', null, array( self::view( 'view-back-flat', 'back' ) ) ) )->save_to( $product );
 		$this->answer_sets( self::SETS );
+		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/blanks/{id}/mockups', 200 ), 'application/json' );
 
 		$html = $this->field->html( $this->reload( $product ) );
 
-		$this->assertCount( 1, $this->recorder->requests, 'the blank\'s photos are not read' );
-		$this->assertStringNotContainsString( 'type="radio"', $html );
-		$this->assertStringContainsString( 'The blank has no product photo for this side', $html );
+		$this->assertStringContainsString( 'Front, flat lay', $html );
+		$this->assertStringNotContainsString( 'The blank has no product photo for this side', $html );
 	}
 
 	public function test_without_a_blank_every_set_is_flat(): void {

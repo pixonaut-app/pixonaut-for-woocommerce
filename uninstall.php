@@ -146,6 +146,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_PICTURE_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_PICTURE_GENERATION_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_SHOWCASE_IMAGES_META );
+		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PICTURE_VIEW_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_KEEPS_IMAGE_META );
 		// Pixonaut withdrew the links when the store disconnected, or does when it is removed in the studio.
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::DESIGNER_LINKS_META );

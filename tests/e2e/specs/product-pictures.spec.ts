@@ -119,9 +119,14 @@ test('the product images show the template’s showcase sets the merchant ticks'
 	const teamPhoto = images.getByRole('radiogroup', {
 		name: 'How Team photo is drawn',
 	});
-	// Each way it can be drawn shows a thumbnail of what it is drawn from.
-	await expect(teamPhoto.locator('img')).toHaveCount(2);
+	// Each way it can be drawn shows a thumbnail of what it is drawn from:
+	// the photo the product page starts on, each photo of the front, flat.
+	await expect(teamPhoto.locator('img')).toHaveCount(4);
 	await teamPhoto.getByRole('radio', { name: /Flat design/ }).check();
+	const annaPhoto = images.getByRole('radiogroup', {
+		name: 'How Anna, class of 2026 is drawn',
+	});
+	await annaPhoto.getByRole('radio', { name: 'Front, dark' }).check();
 	await publish(page);
 	await runJobs(request, { hook: PICTURE_HOOK });
 
@@ -136,6 +141,9 @@ test('the product images show the template’s showcase sets the merchant ticks'
 	).toBeChecked();
 	await expect(
 		teamPhoto.getByRole('radio', { name: /Flat design/ }),
+	).toBeChecked();
+	await expect(
+		annaPhoto.getByRole('radio', { name: 'Front, dark' }),
 	).toBeChecked();
 });
 

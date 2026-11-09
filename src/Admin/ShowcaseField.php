@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Admin;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
+use Pixonaut\WooCommerce\Catalogue\PictureView;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
@@ -46,6 +47,16 @@ final class ShowcaseField {
 	public const LISTED_FIELD = self::FIELD . '_listed';
 
 	/**
+	 * The posted view and photo of the image drawn without a set.
+	 */
+	public const VIEW_FIELD = PanelFields::PRODUCT_PREFIX . PanelFields::PICTURE_VIEW;
+
+	/**
+	 * Posted while the views were listed, so a form without them keeps the choice.
+	 */
+	public const VIEW_LISTED_FIELD = PanelFields::PRODUCT_PREFIX . PanelFields::PICTURE_VIEW_LISTED;
+
+	/**
 	 * @param Catalogue      $catalogue Lists the template's showcase sets.
 	 * @param CatalogueCache $cache     Keeps the list for a few minutes.
 	 * @param Templates      $templates Renders the field.
@@ -63,11 +74,12 @@ final class ShowcaseField {
 
 	public function register(): void {
 		add_action( 'woocommerce_process_product_meta', array( $this, 'save' ) );
+		add_action( 'woocommerce_process_product_meta', array( $this, 'save_view' ) );
 	}
 
 	/**
 	 * The field for a product; empty while it has no template to list, or
-	 * neither the template nor the product has a set.
+	 * neither a set to list nor a photo to choose.
 	 *
 	 * @param WC_Product $product A simple or variable product.
 	 */
@@ -85,39 +97,250 @@ final class ShowcaseField {
 		} catch ( ApiException $e ) {
 			$sets = null;
 		}
-		if ( array() === $chosen && ( null === $sets || array() === $sets ) ) {
-			return '';
-		}
 		$config = ProductConfig::stored_on( $product );
 		$photo  = $this->photo( $product, $config );
-		$kinds  = null === $photo || '' !== $photo
+		// Every photo of the placement can be chosen, whether or not the product page starts on one.
+		$views    = $this->views( $config );
+		$own_view = PictureView::on( $product );
+		$viewed   = null !== $own_view || array() !== array_filter( array_column( $chosen, 'view' ) );
+		if ( array() === $chosen && null === $own_view && ( null === $sets || array() === $sets ) && ( null === $views || array() === $views ) ) {
+			return '';
+		}
+		// A choice made before keeps its controls, so it can be seen and changed.
+		$kinds = null === $photo || '' !== $photo || null === $views || array() !== $views || $viewed
 			? array(
 				ShowcaseImages::MOCKUP  => array(
-					/* translators: Option of how a showcase product image is drawn: the design on the blank product's photo. Admin product page. */
+					/* translators: Option of how a product image is drawn: the design on the blank product's photo, the one the product page starts on. Admin product page. */
 					'name'        => __( 'On the product photo', 'pixonaut-for-woocommerce' ),
-					'description' => __( 'The set drawn into the print area of the blank’s product photo, as customers see the product.', 'pixonaut-for-woocommerce' ),
+					'description' => __( 'Drawn into the print area of the blank’s photo the product page starts on.', 'pixonaut-for-woocommerce' ),
 					'thumbnail'   => $photo ?? '',
 				),
 				ShowcaseImages::PREVIEW => array(
 					/* translators: Option of how a showcase product image is drawn: the design alone, flat. Admin product page. */
 					'name'        => __( 'Flat design', 'pixonaut-for-woocommerce' ),
-					'description' => __( 'The design alone, filled in with the set, without the product.', 'pixonaut-for-woocommerce' ),
+					'description' => __( 'The design alone, without the product.', 'pixonaut-for-woocommerce' ),
 					'thumbnail'   => $preview,
 				),
 			)
 			: array();
+		$tiles = array() === $kinds ? array() : array_merge( array( $kinds[ ShowcaseImages::MOCKUP ] + array( 'value' => ShowcaseImages::MOCKUP ) ), self::photo_choices( $views ?? array() ), array( $kinds[ ShowcaseImages::PREVIEW ] + array( 'value' => ShowcaseImages::PREVIEW ) ) );
+		$rows  = array();
+		foreach ( null === $sets ? array() : self::rows( $sets, $chosen, ProductPictures::stored( $product )['gone'], array() !== $kinds, $views ) as $index => $row ) {
+			$rows[] = $row + array(
+				'choices_html' => array() === $tiles ? '' : $this->choices_html(
+					self::FIELD . '[' . $index . '][kind]',
+					$row,
+					$tiles,
+					/* translators: %s: name of a showcase set of the template. Admin product page. */
+					sprintf( __( 'How %s is drawn', 'pixonaut-for-woocommerce' ), $row['name'] ),
+					null !== $views
+				),
+			);
+		}
+		$own_view = self::choice( $own_view ?? array( 'kind' => PictureView::MOCKUP ), $views );
 		return $this->templates->html(
 			'admin/product-showcase-images.php',
 			array(
 				'field'        => self::FIELD,
 				'listed_field' => self::LISTED_FIELD,
-				'rows'         => null === $sets ? array() : self::rows( $sets, $chosen, ProductPictures::stored( $product )['gone'], array() !== $kinds ),
+				'rows'         => $rows,
 				'listed'       => null !== $sets,
 				'pictures_on'  => ProductPictures::enabled( $this->settings ),
 				'max_images'   => ShowcaseImages::MAX_IMAGES,
-				'kinds'        => $kinds,
+				'on_photo'     => array() !== $kinds,
 				'has_blank'    => null !== $config->blank_id,
+				'view_listed'  => self::VIEW_LISTED_FIELD,
+				'view_html'    => array() === $tiles ? '' : $this->choices_html(
+					self::VIEW_FIELD,
+					$own_view,
+					$tiles,
+					/* translators: Accessible name of the choices of how the product image is drawn while no showcase set is ticked. Admin product page. */
+					__( 'How the product image is drawn without a showcase set', 'pixonaut-for-woocommerce' ),
+					null !== $views
+				),
 			)
+		);
+	}
+
+	/**
+	 * The choices of what a picture is drawn on, the one shown checked. A
+	 * choice the tiles do not offer is added: named as no longer on the
+	 * blank when Pixonaut listed its views, as chosen before when it could
+	 * not.
+	 *
+	 * @param string                                                                           $name   The radio buttons' posted name.
+	 * @param array{value: string, gone?: bool, view_gone?: bool, view_label?: string}         $shown  The choice as `choice()` or `rows()` shows it.
+	 * @param list<array{value: string, name: string, description: string, thumbnail: string}> $tiles  The choices offered.
+	 * @param string                                                                           $label  What the group chooses, for screen readers.
+	 * @param bool                                                                             $listed Whether Pixonaut listed the blank's views.
+	 */
+	private function choices_html( string $name, array $shown, array $tiles, string $label, bool $listed ): string {
+		$gone = true === ( $shown['view_gone'] ?? $shown['gone'] ?? false );
+		if ( ! in_array( $shown['value'], array_column( $tiles, 'value' ), true ) ) {
+			$tiles[] = array(
+				'value'       => $shown['value'],
+				'name'        => self::missing_name( $shown, $gone, $listed ),
+				'description' => '',
+				'thumbnail'   => '',
+			);
+		}
+		return $this->templates->html(
+			'admin/picture-view-choices.php',
+			array(
+				'name'    => $name,
+				'value'   => $shown['value'],
+				'label'   => $label,
+				'choices' => $tiles,
+				'note'    => $gone ? __( 'The blank no longer has this view or photo, so the image is drawn on the photo the product page starts on until another is chosen.', 'pixonaut-for-woocommerce' ) : '',
+			)
+		);
+	}
+
+	/**
+	 * The name of a choice the tiles do not offer: a view chosen without a
+	 * photo, one the blank no longer has, or one Pixonaut could not be
+	 * asked about.
+	 *
+	 * @param array{value: string, view_label?: string} $shown  The choice as `choice()` or `rows()` shows it.
+	 * @param bool                                      $gone   Whether the blank no longer has it.
+	 * @param bool                                      $listed Whether Pixonaut listed the blank's views.
+	 */
+	private static function missing_name( array $shown, bool $gone, bool $listed ): string {
+		$view = $shown['view_label'] ?? '';
+		if ( ! $gone && '' !== $view ) {
+			/* translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page. */
+			return sprintf( __( '%s, on the photo of the variant sold', 'pixonaut-for-woocommerce' ), $view );
+		}
+		return $listed || $gone
+			/* translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page. */
+			? __( 'No longer on the blank', 'pixonaut-for-woocommerce' )
+			/* translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page. */
+			: __( 'The photo chosen before', 'pixonaut-for-woocommerce' );
+	}
+
+	/**
+	 * The variation's field choosing the view and photo of its image; empty
+	 * when it is not personalised on a blank with photos for its side.
+	 *
+	 * @param WC_Product  $variation A variation.
+	 * @param PanelFields $fields    The variation's field names.
+	 */
+	public function variation_html( WC_Product $variation, PanelFields $fields ): string {
+		$config = ProductConfig::config_for( $variation );
+		if ( ! $config->personalise || null === $config->blank_id ) {
+			return '';
+		}
+		$views = $this->views( $config );
+		$own   = PictureView::on( $variation );
+		if ( null === $own && ( null === $views || array() === $views ) ) {
+			return '';
+		}
+		$tiles = array_merge(
+			array(
+				array(
+					'value'       => PictureView::MOCKUP,
+					/* translators: A choice of what a variation's image is drawn on: whatever its product's image is drawn on. Admin product page, variation options. */
+					'name'        => __( 'As the product image', 'pixonaut-for-woocommerce' ),
+					'description' => __( 'The view and photo the product image is drawn on, in this variation’s colour where the view has it.', 'pixonaut-for-woocommerce' ),
+					'thumbnail'   => '',
+				),
+			),
+			self::photo_choices( $views ?? array() )
+		);
+		return $this->templates->html(
+			'admin/variation-picture-view.php',
+			array(
+				'listed_name'  => $fields->name( PanelFields::PICTURE_VIEW_LISTED ),
+				'choices_html' => $this->choices_html(
+					$fields->name( PanelFields::PICTURE_VIEW ),
+					self::choice( $own ?? array( 'kind' => PictureView::MOCKUP ), $views ),
+					$tiles,
+					/* translators: Accessible name of the choices of what a variation's image is drawn on. Admin product page, variation options. */
+					__( 'What the variation image is drawn on', 'pixonaut-for-woocommerce' ),
+					null !== $views
+				),
+			)
+		);
+	}
+
+	/**
+	 * Saves a variation's choice of view and photo, as its field posted it.
+	 *
+	 * @param WC_Product $variation A variation.
+	 * @param mixed      $posted    The posted value, unslashed; null when the field was not listed.
+	 */
+	public static function save_variation( WC_Product $variation, mixed $posted ): void {
+		if ( ! is_string( $posted ) ) {
+			return;
+		}
+		PictureView::save( $variation, PictureView::from_field( $posted ) );
+	}
+
+	/**
+	 * The views and photos of the side's placement a picture can be drawn
+	 * on: empty without a blank or placement, null when Pixonaut cannot say.
+	 *
+	 * @param ProductConfig $config A configuration.
+	 *
+	 * @return list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null
+	 */
+	private function views( ProductConfig $config ): ?array {
+		$placement_id = $config->sides[0]->placement_id ?? null;
+		return null === $config->blank_id || null === $placement_id ? array() : $this->blank->placement_photos( $config->blank_id, $placement_id );
+	}
+
+	/**
+	 * Each photo a picture can be drawn on, as a choice: its posted value,
+	 * its view's label (numbered when the view has several) and thumbnail.
+	 *
+	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}> $views The placement's views.
+	 *
+	 * @return list<array{value: string, name: string, description: string, thumbnail: string}>
+	 */
+	private static function photo_choices( array $views ): array {
+		$choices = array();
+		foreach ( $views as $view ) {
+			$several = count( $view['photos'] ) > 1;
+			foreach ( $view['photos'] as $index => $photo ) {
+				$choices[] = array(
+					'value'       => PictureView::field_value(
+						array(
+							'kind'  => PictureView::MOCKUP,
+							'view'  => $view['id'],
+							'photo' => $photo['id'],
+						)
+					),
+					'name'        => $several
+						/* translators: 1: a view of the blank product, e.g. "Front"; 2: which of its photos, e.g. 2. Admin product page. */
+						? sprintf( __( '%1$s, photo %2$d', 'pixonaut-for-woocommerce' ), $view['label'], $index + 1 )
+						: $view['label'],
+					'description' => '',
+					'thumbnail'   => $photo['thumbnail'],
+				);
+			}
+		}
+		return $choices;
+	}
+
+	/**
+	 * A choice as a field shows it: the value checked, and whether it names
+	 * a view or photo the blank no longer has.
+	 *
+	 * @param array{kind: string, view?: string, photo?: string}                                                                      $choice The choice.
+	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null $views  The placement's views; null when Pixonaut cannot say.
+	 *
+	 * @return array{value: string, gone: bool, view_label: string} `view_label` names the view of a choice naming no photo; empty otherwise.
+	 */
+	private static function choice( array $choice, ?array $views ): array {
+		$label  = '';
+		$chosen = isset( $choice['photo'] ) ? null : $choice['view'] ?? null;
+		foreach ( null === $chosen ? array() : $views ?? array() as $view ) {
+			$label = $chosen === $view['id'] ? $view['label'] : $label;
+		}
+		return array(
+			'value'      => PictureView::field_value( $choice ),
+			'gone'       => isset( $choice['view'] ) && null !== $views && null === PictureView::resolve( $views, $choice, null, true ),
+			'view_label' => $label,
 		);
 	}
 
@@ -193,47 +416,84 @@ final class ShowcaseField {
 			$images[] = array(
 				'id'   => sanitize_text_field( (string) ( $row['id'] ?? '' ) ),
 				'name' => sanitize_text_field( (string) ( $row['name'] ?? '' ) ),
-				'kind' => sanitize_key( (string) ( $row['kind'] ?? '' ) ),
-			);
+			) + PictureView::from_field( (string) ( $row['kind'] ?? '' ) );
 		}
 		ShowcaseImages::save( $product, $images );
 	}
 
 	/**
-	 * Each set the field lists: the template's, then the chosen ones it no
-	 * longer has, or Pixonaut drew without them.
+	 * Saves the view and photo of the image drawn without a set.
 	 *
-	 * @param list<array{id: string, name: string, kind: string}> $sets     The template's sets.
-	 * @param list<array{id: string, name: string, kind: string}> $chosen   The product's choices.
-	 * @param string[]                                            $gone     Sets Pixonaut answered it does not have.
-	 * @param bool                                                $on_photo Whether a set can be drawn on the photo; when not, every set is flat.
+	 * @param int $product_id The product.
+	 */
+	public function save_view( int $product_id ): void {
+		if ( ! isset( $_POST[ ProductPanel::NONCE_FIELD ], $_POST[ self::VIEW_LISTED_FIELD ], $_POST[ self::VIEW_FIELD ] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST[ ProductPanel::NONCE_FIELD ] ) ), ProductPanel::NONCE_ACTION ) ) {
+			return;
+		}
+		$product = wc_get_product( $product_id );
+		if ( ! $product instanceof WC_Product || ! $product->is_type( array( 'simple', 'variable' ) ) ) {
+			return;
+		}
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- PictureView::from_field() sanitises each part.
+		PictureView::save( $product, PictureView::from_field( is_string( $_POST[ self::VIEW_FIELD ] ) ? wp_unslash( $_POST[ self::VIEW_FIELD ] ) : '' ) );
+	}
+
+	/**
+	 * Each set the field lists: the template's, then the chosen ones it no
+	 * longer has, or Pixonaut drew without them; each with the value of
+	 * how it is drawn, and whether that names a view or photo the blank no
+	 * longer has.
+	 *
+	 * @param list<array{id: string, name: string, kind: string, view?: string, photo?: string}>                                      $sets     The template's sets.
+	 * @param list<array{id: string, name: string, kind: string, view?: string, photo?: string}>                                      $chosen   The product's choices.
+	 * @param string[]                                                                                                                $gone     Sets Pixonaut answered it does not have.
+	 * @param bool                                                                                                                    $on_photo Whether a set can be drawn on the photo; when not, every set is flat.
+	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null $views    The placement's views; null when Pixonaut cannot say.
 	 * @phpstan-param list<string> $gone
 	 *
-	 * @return list<array{id: string, name: string, kind: string, chosen: bool, gone: bool}>
+	 * @return list<array{id: string, name: string, kind: string, value: string, chosen: bool, gone: bool, view_gone: bool, view_label: string}>
 	 */
-	private static function rows( array $sets, array $chosen, array $gone, bool $on_photo ): array {
+	private static function rows( array $sets, array $chosen, array $gone, bool $on_photo, ?array $views ): array {
 		$by_id = array_column( $chosen, null, 'id' );
-		$kind  = $on_photo ? null : ShowcaseImages::PREVIEW;
 		$rows  = array();
 		foreach ( $sets as $set ) {
 			$choice = $by_id[ $set['id'] ] ?? null;
 			unset( $by_id[ $set['id'] ] );
-			$rows[] = array(
-				'id'     => $set['id'],
-				'name'   => $set['name'],
-				'kind'   => $kind ?? $choice['kind'] ?? ShowcaseImages::MOCKUP,
+			$rows[] = self::row( $set, $choice ?? array( 'kind' => ShowcaseImages::MOCKUP ), $on_photo, $views ) + array(
 				'chosen' => null !== $choice,
 				'gone'   => null !== $choice && in_array( $set['id'], $gone, true ),
 			);
 		}
 		foreach ( $by_id as $kept ) {
-			$rows[] = array(
-				'kind'   => $kind ?? $kept['kind'],
+			$rows[] = self::row( $kept, $kept, $on_photo, $views ) + array(
 				'chosen' => true,
 				'gone'   => true,
-			) + $kept;
+			);
 		}
 		return $rows;
+	}
+
+	/**
+	 * A set's row, drawn as chosen.
+	 *
+	 * @param array{id: string, name: string}                                                                                         $set      The set.
+	 * @param array{kind: string, view?: string, photo?: string}                                                                      $choice   How it is drawn.
+	 * @param bool                                                                                                                    $on_photo Whether it can be drawn on the photo; when not, it is flat.
+	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null $views    The placement's views; null when Pixonaut cannot say.
+	 *
+	 * @return array{id: string, name: string, kind: string, value: string, view_gone: bool, view_label: string}
+	 */
+	private static function row( array $set, array $choice, bool $on_photo, ?array $views ): array {
+		$choice = $on_photo ? $choice : array( 'kind' => ShowcaseImages::PREVIEW );
+		$shown  = self::choice( $choice, $views );
+		return array(
+			'id'         => $set['id'],
+			'name'       => $set['name'],
+			'kind'       => $choice['kind'],
+			'value'      => $shown['value'],
+			'view_gone'  => $shown['gone'],
+			'view_label' => $shown['view_label'],
+		);
 	}
 
 	/**
