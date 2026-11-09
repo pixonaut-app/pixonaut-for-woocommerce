@@ -20,6 +20,7 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/list-products` | Lists simple and variable products, in id order, with their Pixonaut setup and each enabled variation's; by `product_id`, `template_id`, `linked_only`, `page`, `per_page` and `variations_page` | `edit_products` |
 | `pixonaut-for-woocommerce/link-product` | Links a simple or variable product to one template, optionally on a blank's placement | `edit_product` on that product |
 | `pixonaut-for-woocommerce/unlink-product` | Turns personalisation off for a product, keeping its link | `edit_product` on that product |
+| `pixonaut-for-woocommerce/set-variation-variants` | Sets which variant of its blank each listed variation of a variable product is printed as, by the variant's options | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-product-setup` | Sets up a simple or variable product, or a variation, as its Pixonaut tab does: blank, sides, settings, views, printshop and blank variant | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/set-product-showcase` | Sets which of its template's showcase sets a product's images are drawn with | `edit_product` on that product |
 | `pixonaut-for-woocommerce/get-product-picture-views` | What a product's or variation's images are drawn on, and the views and photos of its side's placement | `edit_product` on that product (and on a variation's product) |
@@ -90,7 +91,12 @@ as, `pixonaut-for-woocommerce-describe-store-resource`
 (`Abilities::tool()`).
 
 Each declares an output schema: a list's `{items, total, pages}`, or the
-route's answer. Dates in an answer are RFC 3339 with their offset: a field
+route's answer. `list-product-variations` and `get-product-variation` add
+`pixonaut_variant` to each variation, the variant of its blank it is printed
+as, read from what is stored without asking Pixonaut: `ref`, `label`,
+`problem` and `picked` as `list-products` gives a variation's `variant`
+(`ref` null and `problem` `unmapped` when it sells none), or null when the
+variation is not personalised on a blank. Dates in an answer are RFC 3339 with their offset: a field
 ending in `_gmt` in UTC, any other in the site's timezone, where the route
 answers them without one.
 
@@ -292,6 +298,22 @@ A variation given any setup field gets a setup of its own, starting from its
 product's; `own_setup` false makes it follow its product again, keeping its
 own unused. Its `variant` can be set either way; left out, a variant picked on a blank
 it is no longer on is matched by options again.
+
+`set-variation-variants` sets the variant of several variations of one
+variable product at once, by the variant's options rather than its ref:
+`variations`, 1 to 100 entries of `variation_id` and `options`, the variant's
+option values by axis as Pixonaut writes them or as the variation's Pixonaut
+panel shows them in the site's language, every axis of the variant and no
+other, case and spacing aside (`{}` for a blank without options). Each is the
+pick the variation's panel saves, on the blank the variation is sold on (its
+own setup's, or else its product's), and the product's variant notice is
+noted again. Every variation is checked before any is saved: one that is not
+the product's, is not personalised on a blank, names no variant, several, or
+a retired one, or is listed twice refuses the whole call, naming it, and so
+does a blank whose variants Pixonaut could not give. The answer gives
+`purchasable` and `variant_issue` as `link-product` does, and `variations`,
+every variation of the product with its `variant` as `pixonaut_variant`
+gives it.
 
 `move-product-template` moves every side on `template_id` (any version), on
 the product and on each variation with a setup of its own, when it is

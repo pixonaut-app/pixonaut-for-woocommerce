@@ -100,6 +100,19 @@ final class BlankVariant {
 	}
 
 	/**
+	 * Whether options by axis name this variant: every axis it has and no
+	 * other, each with its label, case and spacing aside, as read or as
+	 * written in Pixonaut. No options name a variant without any.
+	 *
+	 * @param array<string, string> $options Labels by axis.
+	 */
+	public function is_named_by( array $options ): bool {
+		$named = ProductVariant::normalised( $options );
+		return ProductVariant::normalised( $this->options ) === $named
+			|| ( array() !== $this->written && ProductVariant::normalised( $this->written ) === $named );
+	}
+
+	/**
 	 * The variant's options as the store manager reads them, `Color: Red, Size: M`;
 	 * its ref on a blank without options.
 	 */

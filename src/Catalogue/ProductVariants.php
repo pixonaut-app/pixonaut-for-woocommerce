@@ -80,6 +80,19 @@ final class ProductVariants {
 
 	/**
 	 * The blank's variants as `variants()` names them, each with its
+	 * options as written in Pixonaut too when the site's language is not
+	 * the one they are written in: either names a variant.
+	 *
+	 * @param string $blank_id The blank.
+	 * @return list<BlankVariant>
+	 * @throws ApiException When Pixonaut refused or could not be reached.
+	 */
+	public function named( string $blank_id ): array {
+		return null === DesignerLanguage::of_site() ? $this->variants( $blank_id ) : $this->with_written( $blank_id );
+	}
+
+	/**
+	 * The blank's variants as `variants()` names them, each with its
 	 * options as written in Pixonaut too.
 	 *
 	 * @param string $blank_id The blank.

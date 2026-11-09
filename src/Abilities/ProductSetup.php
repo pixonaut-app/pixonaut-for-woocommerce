@@ -133,22 +133,7 @@ final class ProductSetup {
 				'description' => __( 'The blank it is printed on; null for a template-only product.', 'pixonaut-for-woocommerce' ),
 			),
 			'blank_name'      => $text_or_null,
-			'variant'         => array(
-				'type'        => array( 'object', 'null' ),
-				'description' => __( 'The blank\'s variant it sells: `ref` null and `problem` `unmapped` when none matches, `retired` when the blank no longer sells it. Null without a blank, and for a variable product, whose variations each give theirs.', 'pixonaut-for-woocommerce' ),
-				'properties'  => array(
-					'ref'     => $text_or_null,
-					'label'   => array( 'type' => 'string' ),
-					'picked'  => array(
-						'type'        => 'boolean',
-						'description' => __( 'Whether the store manager picked it rather than it being matched on the product\'s attributes.', 'pixonaut-for-woocommerce' ),
-					),
-					'problem' => array(
-						'type' => array( 'string', 'null' ),
-						'enum' => array( ProductVariant::UNMAPPED, ProductVariant::RETIRED, null ),
-					),
-				),
-			),
+			'variant'         => self::variant_schema( __( 'The blank\'s variant it sells: `ref` null and `problem` `unmapped` when none matches, `retired` when the blank no longer sells it. Null without a blank, and for a variable product, whose variations each give theirs.', 'pixonaut-for-woocommerce' ) ),
 			'layout'          => array(
 				'type'        => array( 'string', 'null' ),
 				'description' => __( 'The product page layout it overrides the store\'s with; null for the store\'s.', 'pixonaut-for-woocommerce' ),
@@ -253,9 +238,49 @@ final class ProductSetup {
 	}
 
 	/**
+	 * The schema of a blank variant as `variant()` gives it.
+	 *
+	 * @param string $description What the field is.
+	 * @return array<string, mixed>
+	 */
+	public static function variant_schema( string $description ): array {
+		$text_or_null = array( 'type' => array( 'string', 'null' ) );
+		return array(
+			'type'        => array( 'object', 'null' ),
+			'description' => $description,
+			'properties'  => array(
+				'ref'     => $text_or_null,
+				'label'   => array( 'type' => 'string' ),
+				'picked'  => array(
+					'type'        => 'boolean',
+					'description' => __( 'Whether the store manager picked it rather than it being matched on the product\'s attributes.', 'pixonaut-for-woocommerce' ),
+				),
+				'problem' => array(
+					'type' => array( 'string', 'null' ),
+					'enum' => array( ProductVariant::UNMAPPED, ProductVariant::RETIRED, null ),
+				),
+			),
+		);
+	}
+
+	/**
+	 * The blank variant a variation sells, as `variant()` gives it under
+	 * the configuration it is sold under; null when it is not personalised
+	 * on a blank. Read from what is stored, without asking Pixonaut.
+	 *
+	 * @param WC_Product $variation A variation.
+	 * @return array{ref: string|null, label: string, picked: bool, problem: string|null}|null
+	 */
+	public static function variation_variant( WC_Product $variation ): ?array {
+		$config = ProductConfig::config_for( $variation );
+		return $config->personalise ? self::variant( $variation, $config ) : null;
+	}
+
+	/**
 	 * The blank variant a product or variation sells under its
 	 * configuration: none matched when the one stored is of another blank,
-	 * or was matched on attributes it no longer has. Null without a blank,
+	 * was matched on attributes it no longer has, or is a pick the blank no
+	 * longer has. Null without a blank,
 	 * and for a variable product, whose variations each sell their own.
 	 *
 	 * @param WC_Product    $product A product or variation.
@@ -267,7 +292,7 @@ final class ProductSetup {
 			return null;
 		}
 		$stored = ProductVariant::stored_on( $product );
-		if ( null === $stored || $stored->blank_id !== $config->blank_id || ! $stored->is_current( $product ) ) {
+		if ( null === $stored || null === $stored->ref || $stored->blank_id !== $config->blank_id || ! $stored->is_current( $product ) ) {
 			return array(
 				'ref'     => null,
 				'label'   => '',

@@ -11,6 +11,8 @@ namespace Pixonaut\WooCommerce\Abilities\Store;
 
 use Pixonaut\WooCommerce\Abilities\Abilities;
 use Pixonaut\WooCommerce\Abilities\Ability;
+use Pixonaut\WooCommerce\Abilities\ProductSetup;
+use WC_Product;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -33,6 +35,16 @@ final class ResourceAbility implements Ability {
 	);
 
 	private const MEDIA = 'media';
+
+	/**
+	 * The resource whose reads give each variation's blank variant.
+	 */
+	private const VARIATION = 'product-variation';
+
+	/**
+	 * The field a variation read gives its blank variant in.
+	 */
+	public const VARIANT_FIELD = 'pixonaut_variant';
 
 	/**
 	 * The field of a media file's create that names where to download it from.
@@ -256,6 +268,9 @@ final class ResourceAbility implements Ability {
 		if ( StoreResource::CREATE === $this->operation && self::MEDIA === $resource->key ) {
 			$description .= ' ' . __( 'The store downloads the file from `fields.source_url`, a public URL.', 'pixonaut-for-woocommerce' );
 		}
+		if ( self::VARIATION === $resource->key && ( StoreResource::LIST === $this->operation || StoreResource::GET === $this->operation ) ) {
+			$description .= ' ' . __( 'Each variation also gives `pixonaut_variant`, the variant of its blank it is printed as: `ref` null and `problem` `unmapped` when it sells none, `retired` when the blank no longer sells it, `picked` when the store manager picked it rather than it being matched on the variation\'s attributes; null when it is not personalised on a blank.', 'pixonaut-for-woocommerce' );
+		}
 		return $description;
 	}
 
@@ -360,15 +375,39 @@ final class ResourceAbility implements Ability {
 			return self::refusal( $response );
 		}
 		$data = self::data( $response );
+		if ( StoreResource::GET === $this->operation ) {
+			return $this->with_variant( $data );
+		}
 		if ( StoreResource::LIST !== $this->operation ) {
 			return $data;
 		}
+		$data    = is_array( $data ) ? array_map( array( $this, 'with_variant' ), $data ) : $data;
 		$headers = $response->get_headers();
 		return array(
 			'items' => is_array( $data ) ? $data : array(),
 			'total' => isset( $headers[ self::TOTAL_HEADER ] ) ? (int) $headers[ self::TOTAL_HEADER ] : null,
 			'pages' => isset( $headers[ self::PAGES_HEADER ] ) ? (int) $headers[ self::PAGES_HEADER ] : null,
 		);
+	}
+
+	/**
+	 * A variation as read, with the blank variant it sells, from what is
+	 * stored, as `ProductSetup` gives a variation's: null when it is not
+	 * personalised on a blank. Any other resource as read.
+	 *
+	 * @param mixed $item One item a read answered.
+	 * @return mixed
+	 */
+	private function with_variant( mixed $item ): mixed {
+		if ( self::VARIATION !== $this->kind->key || ! is_array( $item ) || ! is_int( $item['id'] ?? null ) ) {
+			return $item;
+		}
+		$variation = wc_get_product( $item['id'] );
+		if ( ! $variation instanceof WC_Product || ! $variation->is_type( 'variation' ) ) {
+			return $item;
+		}
+		$item[ self::VARIANT_FIELD ] = ProductSetup::variation_variant( $variation );
+		return $item;
 	}
 
 	/**

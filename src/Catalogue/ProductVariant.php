@@ -387,7 +387,7 @@ final class ProductVariant {
 	 * @param array<string, string> $attributes Attribute labels by attribute name.
 	 * @return array<string, string>
 	 */
-	private static function normalised( array $attributes ): array {
+	public static function normalised( array $attributes ): array {
 		$normalised = array();
 		foreach ( $attributes as $name => $value ) {
 			$normalised[ self::normalise( $name ) ] = self::normalise( $value );

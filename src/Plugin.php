@@ -36,6 +36,7 @@ use Pixonaut\WooCommerce\Abilities\ResetStandingLayout;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
+use Pixonaut\WooCommerce\Abilities\SetVariationVariants;
 use Pixonaut\WooCommerce\Abilities\SetupFields;
 use Pixonaut\WooCommerce\Abilities\Store\StoreResources;
 use Pixonaut\WooCommerce\Abilities\UnlinkProduct;
@@ -361,7 +362,7 @@ final class Plugin {
 		$this->notices()->register();
 		$this->connection()->register();
 		$this->store_access()->register();
-		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links() ), new WcLogger() ) )->register();
+		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants() ), new WcLogger() ) )->register();
 		$this->workspace_settings()->register();
 		$this->webhook_processor()->register();
 		( new Receiver( $this->connection(), $this->intake(), new WcLogger() ) )->register();
@@ -465,6 +466,7 @@ final class Plugin {
 					new ListProducts( $setup ),
 					new LinkProduct( $links ),
 					new UnlinkProduct( $links ),
+					new SetVariationVariants( $links, $this->product_variants() ),
 					new SetProductSetup( $links, $fields ),
 					new SetProductShowcase( $links, $this->showcase_field() ),
 					$views,
