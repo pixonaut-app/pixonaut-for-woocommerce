@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.1.3...v1.2.0) (2026-11-09)
+
+
+### Features
+
+* choose the view and photo each product image is drawn on ([#31](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/31)) ([6fef7d2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/6fef7d26809575f032f048d7ffdb2be8a38cb90f))
+
+
+### Bug Fixes
+
+* **sdk:** move to Pixonaut SDK 0.30.0, which draws a canvas's fold lines ([#34](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/34)) ([6947047](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/69470479f14a2f3f70926e207d38edb2bef02585))
+
 ## [1.1.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.1.2...v1.1.3) (2026-11-09)
 
 
