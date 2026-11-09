@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Connection;
 
 // phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
 
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStoreExchange;
 use UnexpectedValueException;
 
 /**
@@ -68,35 +69,32 @@ final class StoredConnection {
 	/**
 	 * From the `POST /v1/connect/token` answer.
 	 *
-	 * @param array<string, mixed> $answer       The `201` body.
-	 * @param string               $site         The `<site>` id minted for this connect.
-	 * @param string               $home_url     `home_url()` now.
-	 * @param int                  $connected_at Unix time.
+	 * @param ConnectedStoreExchange $answer       The `201` answer.
+	 * @param string                 $site         The `<site>` id minted for this connect.
+	 * @param string                 $home_url     `home_url()` now.
+	 * @param int                    $connected_at Unix time.
 	 *
-	 * @throws UnexpectedValueException When a field is missing or not a string.
+	 * @throws UnexpectedValueException When a key or id is empty.
 	 */
-	public static function from_exchange( array $answer, string $site, string $home_url, int $connected_at ): self {
-		$integration = self::object( $answer, 'integrationKey' );
-		$publishable = self::object( $answer, 'publishableKey' );
-		$webhook     = self::object( $answer, 'webhook' );
+	public static function from_exchange( ConnectedStoreExchange $answer, string $site, string $home_url, int $connected_at ): self {
 		return new self(
 			$site,
 			$home_url,
 			$connected_at,
-			self::string( $answer, 'tenantId' ),
-			self::string( $answer, 'tenantName' ),
-			self::string( $answer, 'environment' ),
-			self::string( $answer, 'connectionId' ),
-			self::string( $integration, 'key' ),
-			self::string( $integration, 'id' ),
-			self::string( $integration, 'label' ),
-			self::string( $publishable, 'key' ),
-			self::string( $publishable, 'id' ),
-			self::strings( $publishable, 'allowedOrigins' ),
-			self::string( $webhook, 'id' ),
-			self::string( $webhook, 'url' ),
-			self::string( $webhook, 'secret' ),
-			self::optional_string( $answer, 'tenantSlug' ),
+			self::filled( $answer->tenant_id, 'tenantId' ),
+			self::filled( $answer->tenant_name, 'tenantName' ),
+			self::filled( $answer->environment, 'environment' ),
+			self::filled( $answer->connection_id, 'connectionId' ),
+			self::filled( $answer->integration_key->key, 'key' ),
+			self::filled( $answer->integration_key->id, 'id' ),
+			self::filled( $answer->integration_key->label, 'label' ),
+			self::filled( $answer->publishable_key->key, 'key' ),
+			self::filled( $answer->publishable_key->id, 'id' ),
+			$answer->publishable_key->allowed_origins,
+			self::filled( $answer->webhook->id, 'id' ),
+			self::filled( $answer->webhook->url, 'url' ),
+			self::filled( $answer->webhook->secret, 'secret' ),
+			'' === $answer->tenant_slug ? null : $answer->tenant_slug,
 		);
 	}
 
@@ -168,6 +166,18 @@ final class StoredConnection {
 	}
 
 	/**
+	 * @param string $value A field of the connect answer.
+	 * @param string $name  Its name.
+	 * @throws UnexpectedValueException When it is empty.
+	 */
+	private static function filled( string $value, string $name ): string {
+		if ( '' === $value ) {
+			throw new UnexpectedValueException( sprintf( 'The connection has no %s.', $name ) );
+		}
+		return $value;
+	}
+
+	/**
 	 * @param array<string, mixed> $from Where to read.
 	 * @param string               $name Field.
 	 * @return string|null Its value; null when it is missing, empty or not a string.
@@ -187,20 +197,6 @@ final class StoredConnection {
 		$value = $from[ $name ] ?? null;
 		if ( ! is_array( $value ) || ! array_is_list( $value ) || array() !== array_filter( $value, static fn ( $item ): bool => ! is_string( $item ) ) ) {
 			throw new UnexpectedValueException( sprintf( 'The connection has no list %s.', $name ) );
-		}
-		return $value;
-	}
-
-	/**
-	 * @param array<string, mixed> $from Where to read.
-	 * @param string               $name Field.
-	 * @return array<string, mixed>
-	 * @throws UnexpectedValueException When it is not an object.
-	 */
-	private static function object( array $from, string $name ): array {
-		$value = $from[ $name ] ?? null;
-		if ( ! is_array( $value ) ) {
-			throw new UnexpectedValueException( sprintf( 'The connection has no %s.', $name ) );
 		}
 		return $value;
 	}

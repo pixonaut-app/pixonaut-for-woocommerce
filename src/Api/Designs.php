@@ -44,18 +44,6 @@ final class Designs {
 
 	private const PNG = 'image/png';
 
-	/*
-	 * The fields of a design (`GET /v1/designs/{id}`, as its model's `raw()`) the store reads.
-	 */
-	public const TEMPLATE_BASE_ID        = 'templateBaseId';
-	public const TEMPLATE_VERSION        = 'templateVersion';
-	public const PROOF_ID                = 'proofId';
-	public const EXTERNAL_REF            = 'externalRef';
-	public const BLANK_ID                = 'blankId';
-	public const PLACEMENT_ID            = 'placementId';
-	public const PRINT_SIZE              = 'printSize';
-	public const PERSONAL_DATA_ERASED_AT = 'personalDataErasedAt';
-
 	public function __construct( private readonly Sdk $pixonaut ) {
 	}
 

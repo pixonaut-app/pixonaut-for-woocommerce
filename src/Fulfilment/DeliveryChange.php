@@ -12,6 +12,8 @@ namespace Pixonaut\WooCommerce\Fulfilment;
 use ActionScheduler_Store;
 use Closure;
 use InvalidArgumentException;
+use Pixonaut\WooCommerce\Api\Answers\Order;
+use Pixonaut\WooCommerce\Api\Answers\OrderDelivery;
 use Pixonaut\WooCommerce\Api\StoredRequest;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Refs;
@@ -396,12 +398,12 @@ final class DeliveryChange {
 			}
 		}
 		try {
-			$answer = $this->pixonaut->orders()->sendUpdateDelivery( $request )->raw();
+			$answer = Order::update_delivery( $this->pixonaut, $request );
 		} catch ( ApiException $e ) {
 			$this->refused( $item, $fingerprint, $e );
 			return;
 		}
-		$this->answered( $item, $fingerprint, $answer );
+		$this->answered( $item, $fingerprint, $answer->delivery );
 		// The address changed again while this one was sent.
 		$saved = wc_get_order( $order->get_id() );
 		if ( $saved instanceof WC_Order && OrderAddress::fingerprint( OrderAddress::of( $saved, $item ) ) !== $fingerprint ) {
@@ -467,31 +469,44 @@ final class DeliveryChange {
 	 *
 	 * @param WC_Order_Item_Product $item        The line.
 	 * @param string                $fingerprint The address sent.
-	 * @param array<string, mixed>  $answer      The order as Pixonaut answered it.
+	 * @param OrderDelivery|null    $delivery    The order's `delivery` as Pixonaut answered it.
 	 *
 	 * @throws RuntimeException When the line kept changing.
 	 */
-	private function answered( WC_Order_Item_Product $item, string $fingerprint, array $answer ): void {
-		$delivery = is_array( $answer['delivery'] ?? null ) ? $answer['delivery'] : array();
-		$state    = is_string( $delivery['state'] ?? null ) ? $delivery['state'] : self::SENDING;
-		$words    = is_string( $delivery['words'] ?? null ) ? sanitize_text_field( $delivery['words'] ) : null;
-		$at       = is_numeric( $delivery['at'] ?? null ) ? (int) $delivery['at'] : time() * self::MS_PER_SECOND;
-		$written  = $this->settle(
+	private function answered( WC_Order_Item_Product $item, string $fingerprint, ?OrderDelivery $delivery ): void {
+		$outcome = self::outcome( $delivery, $fingerprint );
+		$state   = $outcome[ self::FIELD_STATE ];
+		$written = $this->settle(
 			$item,
 			$fingerprint,
 			// A refused change leaves the printshop order with the address it had.
 			in_array( $state, array( self::REFUSED, self::SENDING ), true ) ? null : $fingerprint,
-			array(
-				self::FIELD_STATE    => $state,
-				self::FIELD_WORDS    => $words,
-				self::FIELD_AT       => $at,
-				self::FIELD_REFUSED  => self::REFUSED === $state ? $fingerprint : null,
-				self::FIELD_AWAITING => self::SENDING === $state ? $fingerprint : null,
-			)
+			$outcome
 		);
 		if ( $written ) {
-			$this->add_note( $item, self::explain( $state, $words, $item->get_name() ) );
+			$this->add_note( $item, self::explain( $state, $outcome[ self::FIELD_WORDS ], $item->get_name() ) );
 		}
+	}
+
+	/**
+	 * What the line's `delivery` ref keeps of Pixonaut's answer to a change:
+	 * the state, the printshop's words and when, and the address as refused
+	 * or awaited. An answer without a `delivery` is still being sent.
+	 *
+	 * @param OrderDelivery|null $delivery    The order's `delivery` as Pixonaut answered it.
+	 * @param string             $fingerprint The address sent.
+	 *
+	 * @return array{state: string, words: string|null, at: int, refused: string|null, awaiting: string|null}
+	 */
+	public static function outcome( ?OrderDelivery $delivery, string $fingerprint ): array {
+		$state = $delivery->state ?? self::SENDING;
+		return array(
+			self::FIELD_STATE    => $state,
+			self::FIELD_WORDS    => null === $delivery?->words ? null : sanitize_text_field( $delivery->words ),
+			self::FIELD_AT       => null === $delivery ? time() * self::MS_PER_SECOND : (int) $delivery->at,
+			self::FIELD_REFUSED  => self::REFUSED === $state ? $fingerprint : null,
+			self::FIELD_AWAITING => self::SENDING === $state ? $fingerprint : null,
+		);
 	}
 
 	/**

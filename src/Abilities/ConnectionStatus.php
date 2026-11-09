@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Admin\Notices;
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStore;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
@@ -139,7 +140,7 @@ final class ConnectionStatus implements Ability {
 		$live = null;
 		if ( null !== $this->connection->current() && null === $this->connection->paused() ) {
 			try {
-				$live = $this->api->connect()->get()->raw();
+				$live = ConnectedStore::get( $this->api );
 			} catch ( ApiException $e ) {
 				// A 401 has paused the connection by now; either way the workspace's settings cannot be told.
 				$live = null;
@@ -151,13 +152,13 @@ final class ConnectionStatus implements Ability {
 	/**
 	 * The connection, with what Pixonaut last answered of it.
 	 *
-	 * @param array<string, mixed>|null $live The connection as `GET` or `PATCH /v1/connect` answered it; null when it could not be read.
+	 * @param ConnectedStore|null $live The connection as `GET` or `PATCH /v1/connect` answered it; null when it could not be read.
 	 * @return array<string, mixed>
 	 */
-	public function of( ?array $live ): array {
+	public function of( ?ConnectedStore $live ): array {
 		$stored  = $this->connection->current();
 		$summary = $stored?->summary();
-		$origins = is_array( $live['allowedOrigins'] ?? null ) ? array_values( array_filter( $live['allowedOrigins'], 'is_string' ) ) : ( $stored->allowed_origins ?? array() );
+		$origins = null !== $live ? $live->allowed_origins : ( $stored->allowed_origins ?? array() );
 		$www     = null === $stored ? null : Connection::www_origin();
 		$ping    = null === $stored ? null : $this->endpoint->last_ping();
 		return array(

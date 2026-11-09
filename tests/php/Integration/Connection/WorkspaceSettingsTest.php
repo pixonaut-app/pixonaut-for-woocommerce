@@ -10,6 +10,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Connection;
 use Pixonaut\WooCommerce\Admin\ConnectionScreen;
 use Pixonaut\WooCommerce\Admin\Notices;
 use Pixonaut\WooCommerce\Admin\StudioPage;
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStore;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\HookListener;
 use Pixonaut\WooCommerce\Api\Hosts;
@@ -260,7 +261,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_choosing_a_brand_sets_it_and_the_designer_takes_its_accent(): void {
-		$this->settings()->remember( self::answer( self::two_brands( null ) ) );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer( self::two_brands( null ) ) ) );
 		$this->recorder->json( 200, self::answer( self::two_brands( self::PETS_BRAND ) ) );
 
 		$back = $this->choose_brand( self::PETS_BRAND );
@@ -273,7 +274,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_choosing_the_workspace_default_follows_it(): void {
-		$this->settings()->remember( self::answer( self::two_brands( self::PETS_BRAND ) ) );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer( self::two_brands( self::PETS_BRAND ) ) ) );
 		$this->recorder->json( 200, self::answer( self::two_brands( null ) ) );
 
 		$this->choose_brand( '' );
@@ -284,7 +285,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_refused_brand_is_reported_and_the_kept_brand_stays(): void {
-		$this->settings()->remember( self::answer( self::two_brands( null ) ) );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer( self::two_brands( null ) ) ) );
 		$this->recorder->json( 404, array( 'error' => 'brand_not_found' ) );
 
 		$back = $this->choose_brand( 'br_gone' );
@@ -297,7 +298,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_connecting_adds_the_www_counterpart_and_keeps_the_new_workspaces_accent(): void {
-		$this->settings()->remember( self::answer() );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer() ) );
 		$www = (string) Connection::www_origin();
 		$this->recorder->json( 200, self::answer( self::branded(), array( Connection::origin( Connection::site_url() ), $www ) ) );
 
@@ -309,7 +310,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_refused_origin_is_logged_and_the_last_workspaces_accent_forgotten(): void {
-		$this->settings()->remember( self::answer( self::branded() ) );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer( self::branded() ) ) );
 		$this->recorder->json(
 			400,
 			array(
@@ -326,7 +327,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_an_accent_read_more_than_a_day_ago_is_read_again(): void {
-		$this->settings()->remember( self::answer( self::branded() ) );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer( self::branded() ) ) );
 
 		$this->assertSame( self::ACCENT, WorkspaceSettings::accent( self::NOW + WorkspaceSettings::STALE_SECONDS ) );
 		$this->assertFalse( as_has_scheduled_action( WorkspaceSettings::REFRESH_ACTION ), 'a day old is still fresh' );
@@ -342,7 +343,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_failed_read_keeps_the_accent_and_waits_another_day(): void {
-		$this->settings()->remember( self::answer( self::branded() ) );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer( self::branded() ) ) );
 		$later = self::NOW + WorkspaceSettings::STALE_SECONDS + 1;
 		$this->recorder->json( 500, array( 'error' => 'internal_error' ) );
 
@@ -353,12 +354,12 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_an_answer_about_a_connection_no_longer_stored_is_not_kept(): void {
-		$this->settings()->remember( array( 'connectionId' => 'sc_gone' ) + self::answer( self::branded() ) );
+		$this->settings()->remember( ConnectedStore::from_answer( array( 'connectionId' => 'sc_gone' ) + self::answer( self::branded() ) ) );
 
 		$this->assertFalse( get_option( WorkspaceSettings::OPTION ) );
 
 		$this->store->clear();
-		$this->settings()->remember( self::answer( self::branded() ) );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer( self::branded() ) ) );
 
 		$this->assertFalse( get_option( WorkspaceSettings::OPTION ), 'nor one read while the store disconnected' );
 	}
@@ -394,7 +395,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_failed_read_keeps_the_known_slug(): void {
-		$this->settings()->remember( self::answer() );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer() ) );
 
 		$this->recorder->json( 500, array( 'error' => 'internal_error' ) );
 		$this->settings( self::NOW + WorkspaceSettings::STALE_SECONDS + 1 )->refresh();
@@ -414,7 +415,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_failed_read_does_not_restore_the_slug_of_a_connection_replaced_meanwhile(): void {
-		$this->settings()->remember( self::answer() );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer() ) );
 		$store = $this->store;
 		// The store disconnects in another request while this one waits for Pixonaut.
 		add_filter(
@@ -435,7 +436,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_disconnecting_forgets_the_workspace_settings(): void {
-		$this->settings()->remember( self::answer( self::branded() ) );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer( self::branded() ) ) );
 
 		do_action( 'pixonaut_wc_connection_disconnected', true );
 
@@ -484,14 +485,14 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_language_pixonaut_does_not_list_is_not_kept(): void {
-		$this->settings()->remember( self::answer( self::branded() + array( 'defaultLanguage' => 'pl' ) ) );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer( self::branded() + array( 'defaultLanguage' => 'pl' ) ) ) );
 
 		$this->assertNull( WorkspaceSettings::default_language() );
 		$this->assertSame( 'Pixonaut workspace default', DesignerLanguage::names()[ DesignerLanguage::WORKSPACE_DEFAULT ] );
 	}
 
 	public function test_the_designer_takes_the_workspace_accent_only_when_the_store_chose_none(): void {
-		$this->settings()->remember( self::answer( self::branded() ) );
+		$this->settings()->remember( ConnectedStore::from_answer( self::answer( self::branded() ) ) );
 		$settings = $this->plugin->settings();
 
 		$this->assertSame( self::ACCENT, DesignerLook::mount_options( $settings )['accent'] );

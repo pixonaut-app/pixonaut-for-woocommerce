@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Unit\Cart;
 
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Cart\DesignCheck;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\Side;
@@ -39,7 +40,7 @@ final class DesignCheckTest extends TestCase {
 	 * @param Side|null            $side      The side; the default one when null.
 	 */
 	private static function mismatch( array $overrides, ?Side $side = null ): ?string {
-		return DesignCheck::mismatch( DesignFixture::design( $overrides ), $side ?? self::side(), DesignFixture::BLANK_ID );
+		return DesignCheck::mismatch( Design::from_answer( DesignFixture::design( $overrides ) ), $side ?? self::side(), DesignFixture::BLANK_ID );
 	}
 
 	public function test_accepts_a_design_made_for_the_side(): void {
@@ -126,14 +127,16 @@ final class DesignCheckTest extends TestCase {
 
 	public function test_a_template_only_product_wants_neither_blank_nor_placement(): void {
 		$side   = new Side( 'design', 'Design', null, null, DesignFixture::TEMPLATE_BASE_ID, DesignFixture::LIVE_VERSION, null, null, self::side()->print_sizes );
-		$design = DesignFixture::design(
-			array(
-				'blankId'     => null,
-				'placementId' => null,
+		$design = Design::from_answer(
+			DesignFixture::design(
+				array(
+					'blankId'     => null,
+					'placementId' => null,
+				)
 			)
 		);
 
 		$this->assertNull( DesignCheck::mismatch( $design, $side, null ) );
-		$this->assertSame( DesignCheck::BLANK, DesignCheck::mismatch( DesignFixture::design(), $side, null ) );
+		$this->assertSame( DesignCheck::BLANK, DesignCheck::mismatch( Design::from_answer( DesignFixture::design() ), $side, null ) );
 	}
 }

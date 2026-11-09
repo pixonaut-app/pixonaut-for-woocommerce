@@ -88,8 +88,6 @@ final class BlankFixture {
 			'categoryId'         => null,
 			// A blank's printshop is set when it is created.
 			'defaultPrintshopId' => $own ?? $printshop ?? self::PRINTSHOP_ID,
-			// A new blank starts on its own photos.
-			'photoSource'        => 'own',
 			'stockItemKey'       => null,
 			'partnerLocked'      => false,
 			'machineProfileId'   => null,
@@ -110,6 +108,8 @@ final class BlankFixture {
 			'options'            => array(),
 			'optionsConfirmedAt' => null,
 			'photosVaryBy'       => array(),
+			// A new blank starts on its own photos, which are not painted.
+			'paintBy'            => null,
 			'areasVaryBy'        => array(),
 			'referenceRow'       => null,
 			'status'             => Catalogue::BLANK_READY,
@@ -118,18 +118,15 @@ final class BlankFixture {
 	}
 
 	/**
-	 * `$blank` as Pixonaut answers a blank today, ahead of the pinned spec:
-	 * no blank-wide `photoSource` or `scenes`, each view saying its own
-	 * `source` and `position`, one blank's `order` listing its stored views
-	 * and scenes together, `paintBy`, and placements that fold. Scripted with
-	 * `off_spec()`, since the pinned spec still requires `photoSource`.
+	 * `$blank` with the fields the spec answers beside its views: each view
+	 * saying its own `source` and `position`, one blank's `order` listing its
+	 * stored views and scenes together, and placements that fold.
 	 *
 	 * @param array<string, mixed> $blank A `GET /v1/blanks/{id}` answer, or one blank of a list.
 	 * @param bool                 $one   Whether it answers for one blank, which alone carries `order`.
 	 * @return array<string, mixed>
 	 */
-	public static function as_answered_today( array $blank, bool $one = true ): array {
-		unset( $blank['photoSource'], $blank['scenes'] );
+	public static function with_ordered_views( array $blank, bool $one = true ): array {
 		$order    = array();
 		$position = 0;
 		foreach ( is_array( $blank['placements'] ?? null ) ? $blank['placements'] : array() as $index => $placement ) {
@@ -142,7 +139,6 @@ final class BlankFixture {
 				);
 			}
 		}
-		$blank['paintBy'] = null;
 		if ( $one ) {
 			// A scene the blank shows, after its stored views.
 			$order[]        = array(
@@ -155,13 +151,13 @@ final class BlankFixture {
 	}
 
 	/**
-	 * A `GET /v1/blanks/{id}/mockups` answer as Pixonaut answers it today:
-	 * each view says its `source` and `position`, and placements fold.
+	 * A `GET /v1/blanks/{id}/mockups` answer whose views each say their
+	 * `source` and `position`, and whose placements fold.
 	 *
 	 * @param array<string, mixed> $mockups A `mockups()` answer.
 	 * @return array<string, mixed>
 	 */
-	public static function mockups_as_answered_today( array $mockups ): array {
+	public static function mockups_with_ordered_views( array $mockups ): array {
 		$position = 0;
 		foreach ( is_array( $mockups['placements'] ?? null ) ? $mockups['placements'] : array() as $index => $placement ) {
 			$mockups['placements'][ $index ]['foldMm'] = self::FOLD_MM;
@@ -238,6 +234,8 @@ final class BlankFixture {
 			'axes'        => $axes,
 			'options'     => $options,
 			'areasVaryBy' => array(),
+			// The blank's own photos, which are not painted.
+			'paintBy'     => null,
 			'variants'    => array_map(
 				static fn ( array $variant ): array => array_merge(
 					array(

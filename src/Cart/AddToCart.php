@@ -13,6 +13,7 @@ namespace Pixonaut\WooCommerce\Cart;
 
 use Closure;
 use Pixonaut\WooCommerce\Admin\Notices;
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -430,11 +431,11 @@ final class AddToCart {
 				$sides[]              = new CommittedSide(
 					$side->key,
 					$copy,
-					is_int( $design['revision'] ?? null ) ? $design['revision'] : 0,
+					$design->revision,
 					$side->template_base_id,
 					$side->template_version,
 					$side->commit_key,
-					is_string( $design[ Designs::PROOF_ID ] ?? null ) && '' !== $design[ Designs::PROOF_ID ] ? $design[ Designs::PROOF_ID ] : null,
+					'' !== $design->proof_id ? $design->proof_id : null,
 					$side->fields
 				);
 			}
@@ -680,11 +681,11 @@ final class AddToCart {
 				$sides[] = new CommittedSide(
 					$side->key,
 					$design_id,
-					is_int( $design['revision'] ?? null ) ? $design['revision'] : 0,
+					$design->revision,
 					$side->template_base_id,
-					(int) $design[ Designs::TEMPLATE_VERSION ],
+					$design->template_version ?? 0,
 					$commit_key,
-					is_string( $design[ Designs::PROOF_ID ] ?? null ) && '' !== $design[ Designs::PROOF_ID ] ? $design[ Designs::PROOF_ID ] : null,
+					'' !== $design->proof_id ? $design->proof_id : null,
 					$fields[ $side->key ] ?? array()
 				);
 			}
@@ -758,14 +759,12 @@ final class AddToCart {
 	/**
 	 * @param string $design_id Design id.
 	 *
-	 * @return array<string, mixed>
-	 *
 	 * @throws AddRefused When the design cannot be read; it is left alone, as
 	 *                    nothing says whose it is.
 	 */
-	private function read( string $design_id ): array {
+	private function read( string $design_id ): Design {
 		try {
-			return $this->pixonaut->designs()->get( $design_id )->raw();
+			return Design::get( $this->pixonaut, $design_id );
 		} catch ( ApiException $error ) {
 			$this->logger->warning( sprintf( 'Could not read design %s after committing it: %s', $design_id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			throw new AddRefused( Labels::DESIGN_NOT_SAVED );
@@ -777,13 +776,13 @@ final class AddToCart {
 	 * ref it carries (another cart, or an order). Such a design is never
 	 * deleted here.
 	 *
-	 * @param string               $design_id Design id.
-	 * @param array<string, mixed> $design    The design.
-	 * @param string               $ref       This line's cart ref.
+	 * @param string $design_id Design id.
+	 * @param Design $design    The design.
+	 * @param string $ref       This line's cart ref.
 	 */
-	private function held_elsewhere( string $design_id, array $design, string $ref ): bool {
-		$held_ref = $design[ Designs::EXTERNAL_REF ] ?? null;
-		if ( ( is_string( $held_ref ) && $held_ref !== $ref ) || self::STATUS_COMMITTED !== ( $design['status'] ?? null ) ) {
+	private function held_elsewhere( string $design_id, Design $design, string $ref ): bool {
+		$held_ref = $design->external_ref;
+		if ( ( null !== $held_ref && $held_ref !== $ref ) || self::STATUS_COMMITTED !== $design->status ) {
 			return true;
 		}
 		$cart = WC()->cart;

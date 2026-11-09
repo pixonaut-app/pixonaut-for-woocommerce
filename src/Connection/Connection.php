@@ -13,6 +13,8 @@ namespace Pixonaut\WooCommerce\Connection;
 
 use Closure;
 use Pixonaut\WooCommerce\Admin\Notices;
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStore;
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStoreExchange;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ConnectedStoreExchangeCodeRequest;
@@ -260,8 +262,8 @@ final class Connection {
 	 */
 	private function exchange( string $code, array $attempt, int $now ): StoredConnection {
 		try {
-			$answer = $this->api->connect()->exchangeCode( new ConnectedStoreExchangeCodeRequest( code: $code, code_verifier: $attempt['verifier'], redirect_uri: $attempt['redirect_uri'] ) );
-			return StoredConnection::from_exchange( $answer->raw(), wp_generate_uuid4(), self::site_url(), $now );
+			$answer = ConnectedStoreExchange::exchange( $this->api, new ConnectedStoreExchangeCodeRequest( code: $code, code_verifier: $attempt['verifier'], redirect_uri: $attempt['redirect_uri'] ) );
+			return StoredConnection::from_exchange( $answer, wp_generate_uuid4(), self::site_url(), $now );
 		} catch ( ApiException $e ) {
 			$this->logger->warning(
 				sprintf( 'Pixonaut did not hand over the store\'s keys: %s.', $e->getMessage() ),
@@ -345,13 +347,13 @@ final class Connection {
 	 *
 	 * @param bool $allow Whether to allow it.
 	 *
-	 * @return array<string, mixed> The connection as `PATCH /v1/connect` answers it: `allowedOrigins`, the workspace settings, ….
+	 * @return ConnectedStore The connection as `PATCH /v1/connect` answers it: its origins, the workspace settings, ….
 	 *
-	 * @throws ApiException When Pixonaut refused (`400 invalid_origin`), could not be reached, or the store is not connected.
+	 * @throws ApiException When Pixonaut refused (`400 invalid_origin`), could not be reached, the store is not connected, or the answer lacks a field the store reads.
 	 */
-	public function allow_www( bool $allow ): array {
+	public function allow_www( bool $allow ): ConnectedStore {
 		$other = self::www_origin();
-		return $this->api->connect()->update( new ConnectedStoreUpdateRequest( additionalOrigins: $allow && null !== $other ? array( $other ) : array() ) )->raw();
+		return ConnectedStore::update( $this->api, new ConnectedStoreUpdateRequest( additionalOrigins: $allow && null !== $other ? array( $other ) : array() ) );
 	}
 
 	/**

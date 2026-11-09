@@ -66,25 +66,43 @@ another operation means, in one pull request: its id in the list, the code
 that calls it, the fake's handler, and `consumed.json` regenerated (which
 moves the operation out of `pending` if it was planned there).
 
-Callers use the SDK's resources, typed request models and answers:
+Requests are built with the SDK's typed request models. Answers are read
+through the plugin's answer models in `Api\Answers`, which hold only the
+fields the plugin reads, each typed as the SDK's own model types it:
 
 ```php
-$sdk->connect()->get();                                                     // GET /v1/connect
-$sdk->designs()->get( $design_id )->status;                                 // GET /v1/designs/{id}
+Answers\Design::get( $sdk, $design_id )->status;                            // GET /v1/designs/{id}
+Answers\ConnectedStore::get( $sdk )->allowed_origins;                       // GET /v1/connect
 $sdk->designs()->approve( $design_id, Api\Designs::approval( $consent, $revision ) );
-$sdk->orders()->list( externalRef: $ref )->orders;                          // GET /v1/orders?externalRef=
 ```
 
-An answer the plugin keeps or caches as it came (a connection's workspace
-settings, a design) is read with the model's `raw()`, which holds every field
-Pixonaut sent.
+The SDK's generated models check every field their release requires, read
+or not, so reading an answer through one fails when Pixonaut stops sending a
+field the plugin never uses, or has not sent one yet. An answer model reads
+the untyped answer (`call()` or `send()`, then `Answers\Read::answer()`) and
+checks only its own fields: a field it reads that is missing, or of another
+type, is an `unexpected_response` naming the field's JSON path, as the SDK's
+model would throw; any other field may be missing. Callers read its
+properties, so PHPStan checks every field they use. The answers of the
+plugin's own design writes, read for an id, a revision or a proof id (a
+commit's `designId`, an update's `revision`), are read from the SDK's model.
 
-Templates, blanks, their views, variants and constraints, printshop
-connections and orders are read untyped, with `call()` and the result's
-`object()`, since the plugin keeps them as arrays. The SDK's models check
-every field their release requires, so a typed read fails when Pixonaut stops
-sending a field the plugin never uses, or has not sent one yet; an untyped
-read fails only on what the plugin reads itself:
+Each answer model's fields are matched with the SDK's model of the same
+answer by `AnswerModelsMatchSdkTest`: same name, same type, same nullability,
+nested models and lists included. Moving to a pixonaut-php release that
+renames or retypes a field the plugin reads fails that test. A new answer
+model is listed there with the SDK models of the answers it reads; the test
+fails on one that is not. No code reads an SDK model's `raw()` array
+(`NoRawReadsTest`).
+
+An answer stays an array only where the plugin keeps or hands it on as
+Pixonaut sent it: templates, blanks, their views, variants and constraints,
+and printshop connections, cached and handed to the storefront
+(`call()` and `object()`, as `Api\Catalogue` reads them); webhook event
+envelopes stored for processing; and the order handed to the
+`pixonaut_wc_fulfilment_line_actions` filter (`Answers\Order::$as_sent`).
+What the plugin stores from any other answer (the connection, workspace
+settings, a line's order refs) is built from the answer model's properties.
 
 ```php
 $sdk->call( 'blanks.get', array( 'id' => $blank_id ) )->object();          // GET /v1/blanks/{id}

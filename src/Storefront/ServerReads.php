@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Closure;
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\TemplateForm;
@@ -218,11 +219,11 @@ final class ServerReads {
 			'storefront-design-size',
 			array( 'id' => $design_id ),
 			function () use ( $design_id ): string {
-				$size = $this->pixonaut->designs()->get( $design_id )->printSize;
+				$size = Design::get( $this->pixonaut, $design_id )->print_size;
 				return (string) wp_json_encode(
 					null !== $size ? array(
-						'w' => $size->widthMm,
-						'h' => $size->heightMm,
+						'w' => $size->width_mm,
+						'h' => $size->height_mm,
 					) : (object) array()
 				);
 			}

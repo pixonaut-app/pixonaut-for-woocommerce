@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Fulfilment;
 
 use Closure;
+use Pixonaut\WooCommerce\Api\Answers\Order;
+use Pixonaut\WooCommerce\Api\Answers\OrderList;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
@@ -294,7 +296,7 @@ final class LineCancellation {
 			return;
 		}
 		try {
-			$placed = $this->pixonaut->orders()->list( externalRef: (string) $line->ref( LineState::REF_EXTERNAL_REF ) )->orders;
+			$placed = OrderList::under( $this->pixonaut, (string) $line->ref( LineState::REF_EXTERNAL_REF ) )->orders;
 		} catch ( ApiException $e ) {
 			$this->refused( $line, $e );
 			return;
@@ -361,14 +363,14 @@ final class LineCancellation {
 			return;
 		}
 		try {
-			$answer = $this->pixonaut->orders()->cancel( $order_id )->raw();
+			$status = Order::cancel( $this->pixonaut, $order_id )->status;
 		} catch ( ApiException $e ) {
 			$this->refused( $line, $e );
 			return;
 		}
 		$this->cancelled(
 			$line,
-			is_string( $answer['status'] ?? null ) ? $answer['status'] : OrderStatus::CANCELLED,
+			$status,
 			/* translators: %s: product name of the order line. */
 			__( 'Pixonaut: the printshop order for "%s" was cancelled.', 'pixonaut-for-woocommerce' )
 		);

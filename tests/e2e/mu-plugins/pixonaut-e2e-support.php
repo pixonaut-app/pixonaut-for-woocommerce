@@ -385,9 +385,10 @@ add_action(
 					'permission_callback' => '__return_true',
 					'callback'            => static function ( WP_REST_Request $request ) {
 						pixonaut_e2e_forget_catalogue();
-						$answer = $request->get_json_params();
+						// No slug unless the test names one: the store is one connected before Pixonaut answered one.
+						$answer = $request->get_json_params() + array( 'tenantSlug' => '' );
 						$store  = new \Pixonaut\WooCommerce\Connection\ConnectionStore( \Pixonaut\WooCommerce\Connection\Cipher::for_site() );
-						$store->save( \Pixonaut\WooCommerce\Connection\StoredConnection::from_exchange( $answer, wp_generate_uuid4(), untrailingslashit( home_url() ), time() ) );
+						$store->save( \Pixonaut\WooCommerce\Connection\StoredConnection::from_exchange( \Pixonaut\WooCommerce\Api\Answers\ConnectedStoreExchange::from_answer( $answer ), wp_generate_uuid4(), untrailingslashit( home_url() ), time() ) );
 						return new WP_REST_Response( null, 204 );
 					},
 				),

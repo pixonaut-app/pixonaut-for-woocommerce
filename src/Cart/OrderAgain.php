@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Cart;
 // phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
 
 use Closure;
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -152,7 +153,7 @@ final class OrderAgain {
 			foreach ( $config->personalised_sides() as $side ) {
 				$copy                 = $this->copy( $product, $sources[ $side->key ] );
 				$copies[ $side->key ] = $copy;
-				$design               = $this->pixonaut->designs()->get( $copy )->raw();
+				$design               = Design::get( $this->pixonaut, $copy );
 				$mismatch             = DesignCheck::mismatch( $design, $side, $config->blank_id );
 				if ( null !== $mismatch ) {
 					$this->logger->warning(
@@ -169,12 +170,12 @@ final class OrderAgain {
 				$sides[]    = new CommittedSide(
 					$side->key,
 					$copy,
-					is_int( $design['revision'] ?? null ) ? $design['revision'] : 0,
+					$design->revision,
 					$side->template_base_id,
-					(int) $design[ Designs::TEMPLATE_VERSION ],
+					$design->template_version ?? 0,
 					// The copy was made by no commit: the line keeps the key that committed its source.
 					is_string( $commit_key ) && '' !== $commit_key ? $commit_key : Refs::commit_key( $connection->site, $copy ),
-					is_string( $design[ Designs::PROOF_ID ] ?? null ) && '' !== $design[ Designs::PROOF_ID ] ? $design[ Designs::PROOF_ID ] : null,
+					'' !== $design->proof_id ? $design->proof_id : null,
 					$state->side_fields( $side->key )
 				);
 			}

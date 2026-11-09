@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Approval;
 
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
@@ -101,7 +102,7 @@ final class DesignRejected {
 			// Past the deadline the deadline's job decides, following a rejection it finds; this may be its own.
 			return;
 		}
-		if ( $revision !== $line->side_ref( $side, LineState::SIDE_REVISION ) && self::STATUS_REJECTED !== $this->pixonaut->designs()->get( $design_id )->status ) {
+		if ( $revision !== $line->side_ref( $side, LineState::SIDE_REVISION ) && self::STATUS_REJECTED !== Design::get( $this->pixonaut, $design_id )->status ) {
 			return;
 		}
 		if ( null === $this->denial->deny( $line, $order, ProofDenial::CUSTOMER ) ) {

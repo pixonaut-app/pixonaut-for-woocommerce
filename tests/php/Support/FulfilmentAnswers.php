@@ -159,6 +159,8 @@ final class FulfilmentAnswers {
 			'reroutes'              => array(),
 			'deliveryChanges'       => array(),
 			'deliveryChangeRefusal' => null,
+			'approvalHold'          => null,
+			'embroideryFee'         => null,
 		) + self::order( $order_id, array( $print_id ), $external_ref );
 	}
 
@@ -210,6 +212,8 @@ final class FulfilmentAnswers {
 			'reroutes'              => array(),
 			'deliveryChanges'       => array(),
 			'deliveryChangeRefusal' => null,
+			'approvalHold'          => null,
+			'embroideryFee'         => null,
 		);
 	}
 

@@ -792,6 +792,7 @@ describe('GET /v1/blanks/{id}/variants', () => {
 			axes: [],
 			options: [],
 			areasVaryBy: [],
+			paintBy: null,
 			variants: [
 				{ ref: FIXTURE.variant.tote, options: {}, retired: null, views: [] },
 			],

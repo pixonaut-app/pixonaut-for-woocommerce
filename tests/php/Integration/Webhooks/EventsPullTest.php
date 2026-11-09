@@ -351,6 +351,35 @@ final class EventsPullTest extends WP_UnitTestCase {
 		$this->assertSame( self::cursor( 'evt_kept' ), get_option( EventsPull::CURSOR_OPTION ) );
 	}
 
+	public function test_a_page_with_an_event_that_is_no_envelope_keeps_the_cursor_until_it_is_sent_whole(): void {
+		$item = $this->line( LineState::ORDERED );
+		update_option( EventsPull::CURSOR_OPTION, self::cursor( 'evt_kept' ) );
+		$printed   = $this->status_event( 'ordered', 'printed' );
+		$shipped   = $this->status_event( 'printed', 'shipped', self::TRACKING );
+		$malformed = $shipped;
+		unset( $malformed['createdAt'] );
+		$this->recorder->off_spec( 200, self::page( array( $printed, $malformed ), null ) );
+
+		do_action( EventsPull::PULL_HOOK );
+		ActionSchedulerRunner::run_pending( Processor::PROCESS_HOOK );
+
+		$this->assertSame( self::cursor( 'evt_kept' ), get_option( EventsPull::CURSOR_OPTION ) );
+		$this->assertNull( ( new EventStore() )->body( $printed['id'] ) );
+		$this->assertNull( ( new EventStore() )->body( $shipped['id'] ) );
+		$this->assertSame( LineState::ORDERED, LineState::of( $item )->state() );
+
+		$this->recorder
+			->json( 200, self::page( array( $printed, $shipped ), null ) )
+			->json( 200, array( self::endpoint( 0 ) ) );
+
+		do_action( EventsPull::PULL_HOOK );
+		ActionSchedulerRunner::run_pending( Processor::PROCESS_HOOK );
+
+		$this->assertStringContainsString( 'after=evt_kept', $this->recorder->requests[1]['url'] );
+		$this->assertSame( self::cursor( $shipped['id'] ), get_option( EventsPull::CURSOR_OPTION ) );
+		$this->assertSame( LineState::SHIPPED, LineState::of( $item )->state() );
+	}
+
 	public function test_failed_deliveries_are_asked_for_again(): void {
 		update_option( EventsPull::CURSOR_OPTION, self::cursor( null ) );
 		$this->recorder

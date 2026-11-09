@@ -13,6 +13,7 @@ namespace Pixonaut\WooCommerce\Approval;
 // phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
 
 use Closure;
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Fulfilment\NeedsAttention;
 use Pixonaut\WooCommerce\Fulfilment\RetryPolicy;
@@ -79,7 +80,7 @@ final class ProofRequest {
 			if ( ! is_string( $design_id ) || ! is_int( $revision ) ) {
 				return false;
 			}
-			$design = $this->pixonaut->designs()->get( $design_id );
+			$design = Design::get( $this->pixonaut, $design_id );
 			$status = $design->status;
 			if ( $design->revision !== $revision ) {
 				return $this->attention(

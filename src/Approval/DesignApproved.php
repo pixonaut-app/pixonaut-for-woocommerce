@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Approval;
 
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
@@ -138,7 +139,7 @@ final class DesignApproved {
 			}
 			$line_revision = $line->side_ref( $side, LineState::SIDE_REVISION );
 			if ( $revision !== $line_revision && ! $verified ) {
-				$design = $this->pixonaut->designs()->get( $design_id );
+				$design = Design::get( $this->pixonaut, $design_id );
 				if ( self::STATUS_APPROVED !== $design->status ) {
 					return;
 				}

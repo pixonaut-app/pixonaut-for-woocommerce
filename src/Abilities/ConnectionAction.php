@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Abilities;
 
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStore;
 use Pixonaut\WooCommerce\Connection\ConnectFailed;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
@@ -93,20 +94,20 @@ final class ConnectionAction implements Ability {
 			return $done;
 		}
 		// A change Pixonaut confirmed is answered as it confirmed it, not read again.
-		return is_array( $done ) ? $this->status->of( $done ) : $this->status->execute();
+		return $done instanceof ConnectedStore ? $this->status->of( $done ) : $this->status->execute();
 	}
 
 	/**
 	 * @param mixed $brand A brand's id, or null for the workspace's default.
-	 * @return array<string, mixed>|WP_Error The connection as Pixonaut answered the change.
+	 * @return ConnectedStore|WP_Error The connection as Pixonaut answered the change.
 	 */
-	private function choose_brand( mixed $brand ): array|WP_Error {
+	private function choose_brand( mixed $brand ): ConnectedStore|WP_Error {
 		$working = $this->working();
 		if ( null !== $working ) {
 			return $working;
 		}
 		try {
-			$answer = $this->api->connect()->update( new ConnectedStoreUpdateRequest( brandId: is_string( $brand ) && '' !== $brand ? $brand : null ) )->raw();
+			$answer = ConnectedStore::update( $this->api, new ConnectedStoreUpdateRequest( brandId: is_string( $brand ) && '' !== $brand ? $brand : null ) );
 		} catch ( ApiException $e ) {
 			return ErrorCode::BRAND_NOT_FOUND === $e->errorCode
 				? new WP_Error( 'pixonaut_wc_ability_brand_not_found', __( 'That brand is not in the Pixonaut workspace, so the store\'s brand did not change. Reading the connection lists the brands.', 'pixonaut-for-woocommerce' ) )
@@ -118,9 +119,9 @@ final class ConnectionAction implements Ability {
 
 	/**
 	 * @param bool $allow Whether to allow the `www.` counterpart, or take it away.
-	 * @return array<string, mixed>|WP_Error The connection as Pixonaut answered the change.
+	 * @return ConnectedStore|WP_Error The connection as Pixonaut answered the change.
 	 */
-	private function allow_www( bool $allow ): array|WP_Error {
+	private function allow_www( bool $allow ): ConnectedStore|WP_Error {
 		$working = $this->working();
 		if ( null !== $working ) {
 			return $working;
