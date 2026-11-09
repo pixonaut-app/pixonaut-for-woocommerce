@@ -70,6 +70,7 @@ offered to a user:
 | Tags | `list-product-tags`, `get-product-tag`, `create-product-tag`, `update-product-tag`, `delete-product-tag` |
 | Linking a template | `link-product` |
 | Blank variants of variations | `set-variation-variants` |
+| Showcase pictures | `set-product-showcase`, `get-product-picture-views` |
 | Orders, read only | `list-orders`, `get-order` |
 
 Pixonaut asks for changes to the switch with the webhook events
