@@ -19,7 +19,7 @@ use WC_Product;
 /**
  * Queues `ProductPictures`' job for a product or variation whose picture
  * depends on something that changed: its configuration, its variant, its
- * image, its showcase sets or its generation (each a post meta, written through the meta API or directly, which
+ * image, its showcase sets, the view and photo chosen or its generation (each a post meta, written through the meta API or directly, which
  * clears the post's cache), its picture deleted from the media library, and
  * every configured product when the setting is turned on or off, when every
  * picture is drawn again, and after the upgrade that made pictures product
@@ -53,9 +53,10 @@ final class PictureQueue {
 
 	/**
 	 * The post meta a product's picture depends on: its configuration, its
-	 * variant, its image, its showcase sets and its generation.
+	 * variant, its image, its showcase sets, the view and photo chosen and
+	 * its generation.
 	 */
-	private const WATCHED_META = array( ProductConfig::META_KEY, ProductVariant::META_KEY, PictureImage::THUMBNAIL_META, ShowcaseImages::META_KEY, ProductPictures::PRODUCT_GENERATION_META );
+	private const WATCHED_META = array( ProductConfig::META_KEY, ProductVariant::META_KEY, PictureImage::THUMBNAIL_META, ShowcaseImages::META_KEY, PictureView::META_KEY, ProductPictures::PRODUCT_GENERATION_META );
 
 	/**
 	 * The arguments the post meta actions pass.

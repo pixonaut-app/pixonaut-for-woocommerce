@@ -145,9 +145,16 @@ final class Schema {
 	/**
 	 * Product meta listing the template's showcase sets the store manager
 	 * chose as its images, each with how it is drawn: JSON, a list of
-	 * `{id, name, kind}`.
+	 * `{id, name, kind, view?, photo?}`.
 	 */
 	const PRODUCT_SHOWCASE_IMAGES_META = '_pixonaut_showcase_images';
+
+	/**
+	 * Product and variation meta choosing what a picture is drawn on: on a
+	 * product, the picture drawn without a showcase set; on a variation, its
+	 * picture in place of its product's choice. JSON, `{kind, view?, photo?}`.
+	 */
+	const PICTURE_VIEW_META = '_pixonaut_picture_view';
 
 	/**
 	 * Product and variation meta, `yes` when it showed its own image rather

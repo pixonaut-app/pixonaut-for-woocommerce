@@ -17,7 +17,8 @@ use WC_Product;
  * a real name and photo, that its pictures are drawn with instead of its
  * defaults. The store manager chooses, for a product, which of its first
  * side's template's sets are product images, and whether each is drawn on
- * the blank's photo (`MOCKUP`) or flat (`PREVIEW`). The first is the
+ * the blank's photo (`MOCKUP`), on a view and photo of it the store
+ * manager names (`PictureView`), or flat (`PREVIEW`). The first is the
  * product's image, the others are its gallery; a variation's image is drawn
  * with its product's first. The designer never sees them: a customer always
  * starts from the template's own defaults.
@@ -32,12 +33,12 @@ final class ShowcaseImages {
 	/**
 	 * Drawn into the print area of the blank's photo, as the product's picture is.
 	 */
-	public const MOCKUP = 'mockup';
+	public const MOCKUP = PictureView::MOCKUP;
 
 	/**
 	 * Drawn flat, the template alone.
 	 */
-	public const PREVIEW = 'preview';
+	public const PREVIEW = PictureView::PREVIEW;
 
 	/**
 	 * Most sets a product shows: a gallery's worth.
@@ -50,7 +51,7 @@ final class ShowcaseImages {
 	 *
 	 * @param WC_Product $product A product or variation.
 	 *
-	 * @return list<array{id: string, name: string, kind: string}>
+	 * @return list<array{id: string, name: string, kind: string, view?: string, photo?: string}>
 	 */
 	public static function on( WC_Product $product ): array {
 		$owner = self::owner( $product );
@@ -72,7 +73,7 @@ final class ShowcaseImages {
 	 * Stores the product's choices, or forgets them when there are none.
 	 *
 	 * @param WC_Product $product A simple or variable product.
-	 * @param mixed      $images  A list of `{id, name, kind}`; what is not one is dropped.
+	 * @param mixed      $images  A list of `{id, name, kind, view?, photo?}`; what is not one is dropped.
 	 */
 	public static function save( WC_Product $product, mixed $images ): void {
 		$images = self::parse( $images );
@@ -89,7 +90,7 @@ final class ShowcaseImages {
 	 *
 	 * @param mixed $value JSON text, or a list.
 	 *
-	 * @return list<array{id: string, name: string, kind: string}>
+	 * @return list<array{id: string, name: string, kind: string, view?: string, photo?: string}>
 	 */
 	public static function parse( mixed $value ): array {
 		return array_slice( self::each_once( $value ), 0, self::MAX_IMAGES );
@@ -100,7 +101,7 @@ final class ShowcaseImages {
 	 *
 	 * @param mixed $value A list of `{id, name}`.
 	 *
-	 * @return list<array{id: string, name: string, kind: string}> Each drawn on the photo until chosen otherwise.
+	 * @return list<array{id: string, name: string, kind: string, view?: string, photo?: string}> Each drawn on the photo until chosen otherwise.
 	 */
 	public static function sets( mixed $value ): array {
 		return self::each_once( $value );
@@ -109,7 +110,7 @@ final class ShowcaseImages {
 	/**
 	 * @param mixed $value JSON text, or a list.
 	 *
-	 * @return list<array{id: string, name: string, kind: string}>
+	 * @return list<array{id: string, name: string, kind: string, view?: string, photo?: string}>
 	 */
 	private static function each_once( mixed $value ): array {
 		$list   = is_string( $value ) ? json_decode( $value, true ) : $value;
@@ -123,8 +124,7 @@ final class ShowcaseImages {
 			$images[ $id ] = array(
 				'id'   => $id,
 				'name' => is_string( $name ) && '' !== $name ? $name : $id,
-				'kind' => self::PREVIEW === ( $image['kind'] ?? null ) ? self::PREVIEW : self::MOCKUP,
-			);
+			) + ( PictureView::parse( $image ) ?? array( 'kind' => self::MOCKUP ) );
 		}
 		return array_values( $images );
 	}

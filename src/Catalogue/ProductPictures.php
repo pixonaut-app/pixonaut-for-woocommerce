@@ -307,7 +307,7 @@ final class ProductPictures {
 	 * template's defaults instead, and named in `gone`.
 	 *
 	 * @param WC_Product                                                                                                                                                           $product A product or variation.
-	 * @param list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, showcase?: string}>                                           $sources What each is drawn from, its image's first.
+	 * @param list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string}>                                           $sources What each is drawn from, its image's first.
 	 * @param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $stored  Its recorded pictures.
 	 * @param bool                                                                                                                                                                 $own     Whether its image is the store manager's own, which is kept.
 	 *
@@ -418,7 +418,7 @@ final class ProductPictures {
 	/**
 	 * Pixonaut's PNGs of the sources, drawn at once.
 	 *
-	 * @param array<int, array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, showcase?: string}> $sources       What each is drawn from.
+	 * @param array<int, array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string}> $sources       What each is drawn from.
 	 * @param bool                                                                                                                             $with_showcase Whether each is drawn with its showcase set; else with the template's defaults.
 	 *
 	 * @return array<int, string|ApiException> Each source's PNG, or why Pixonaut did not draw it, under the source's key.
@@ -431,7 +431,7 @@ final class ProductPictures {
 		foreach ( $sources as $source ) {
 			$showcase = $with_showcase ? $source['showcase'] ?? null : null;
 			$calls[]  = isset( $source['blank'], $source['placement'], $source['view'] )
-				? $this->pictures->mockup_of( $source['template'], $source['blank'], $source['placement'], $source['view'], $source['variant'] ?? null, self::SIZE, $showcase )
+				? $this->pictures->mockup_of( $source['template'], $source['blank'], $source['placement'], $source['view'], $source['variant'] ?? null, self::SIZE, $showcase, $source['photo'] ?? null )
 				: $this->pictures->preview_of( $source['template'], self::SIZE, $showcase );
 		}
 		return array_combine( array_keys( $sources ), $this->pictures->all( $calls ) );
@@ -533,7 +533,7 @@ final class ProductPictures {
 	 * What the picture depends on, as stored: the configuration of the
 	 * product (and of a variation's product), which holds each side's
 	 * template version, its variant, the showcase sets chosen when there are
-	 * any, the generation `redraw_all()` moves, and the product's own that
+	 * any, the view and photo chosen when there is one, the generation `redraw_all()` moves, and the product's own that
 	 * `regenerate()` moves. Null when neither is configured.
 	 *
 	 * @param WC_Product $product A product or variation.
@@ -550,6 +550,16 @@ final class ProductPictures {
 		if ( null !== $showcase ) {
 			// Only when set, so a product without showcase sets depends on what it did before them.
 			$parts[] = $showcase;
+		}
+		$views = array_filter(
+			array(
+				'own'    => PictureView::document_on( $product ),
+				'parent' => $parent instanceof WC_Product ? PictureView::document_on( $parent ) : null,
+			)
+		);
+		if ( array() !== $views ) {
+			// Likewise only when chosen.
+			$parts[] = array( 'picture_view' => $views );
 		}
 		return md5( (string) wp_json_encode( self::drawn_under( $product, $parts ) ) );
 	}
