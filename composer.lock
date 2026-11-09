@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "acd30a91170dcc97569537fab8b5ac48",
+    "content-hash": "4242eeb320138aafa385ca4fb1f5f281",
     "packages": [
         {
             "name": "nyholm/psr7",
@@ -86,16 +86,16 @@
         },
         {
             "name": "pixonaut/pixonaut-php",
-            "version": "v1.0.0",
+            "version": "v2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/pixonaut-app/pixonaut-php.git",
-                "reference": "066b8583cb54407559c0cfff0138502ab7a85100"
+                "reference": "0278873f45e3e9fde1280603f09d313b78b14dc4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pixonaut-app/pixonaut-php/zipball/066b8583cb54407559c0cfff0138502ab7a85100",
-                "reference": "066b8583cb54407559c0cfff0138502ab7a85100",
+                "url": "https://api.github.com/repos/pixonaut-app/pixonaut-php/zipball/0278873f45e3e9fde1280603f09d313b78b14dc4",
+                "reference": "0278873f45e3e9fde1280603f09d313b78b14dc4",
                 "shasum": ""
             },
             "require": {
@@ -128,7 +128,59 @@
                     "Pixonaut\\Sdk\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Pixonaut\\Sdk\\Tests\\": "tests/",
+                    "Pixonaut\\Sdk\\Generator\\": "generator/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "test:unit": [
+                    "phpunit --testsuite unit"
+                ],
+                "test:contract": [
+                    "phpunit --testsuite contract"
+                ],
+                "test:live": [
+                    "phpunit --testsuite live --display-skipped"
+                ],
+                "analyse": [
+                    "phpstan analyse --no-progress --memory-limit=1G"
+                ],
+                "lint": [
+                    "php-cs-fixer check --diff"
+                ],
+                "format": [
+                    "php-cs-fixer fix"
+                ],
+                "spec:check": [
+                    "@php generator/spec.php check"
+                ],
+                "generate": [
+                    "@php generator/generate.php"
+                ],
+                "generate:check": [
+                    "@php generator/generate.php --check"
+                ],
+                "surface": [
+                    "@php generator/surface.php"
+                ],
+                "surface:check": [
+                    "@php generator/surface.php --check"
+                ],
+                "check": [
+                    "@composer validate --strict",
+                    "@spec:check",
+                    "@generate:check",
+                    "@surface:check",
+                    "@lint",
+                    "@analyse",
+                    "@test"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -144,7 +196,7 @@
                 "issues": "https://github.com/pixonaut-app/pixonaut-php/issues",
                 "source": "https://github.com/pixonaut-app/pixonaut-php"
             },
-            "time": "2026-11-06T08:33:22+00:00"
+            "time": "2026-11-09T10:25:58+00:00"
         },
         {
             "name": "psr/http-client",

@@ -75,9 +75,20 @@ $sdk->designs()->approve( $design_id, Api\Designs::approval( $consent, $revision
 $sdk->orders()->list( externalRef: $ref )->orders;                          // GET /v1/orders?externalRef=
 ```
 
-An answer the plugin keeps or caches as it came (a blank, a connection's
-workspace settings, an order passed through fulfilment) is read with the
-model's `raw()`, which holds every field Pixonaut sent.
+An answer the plugin keeps or caches as it came (a connection's workspace
+settings, a design) is read with the model's `raw()`, which holds every field
+Pixonaut sent.
+
+Templates, blanks, their views, variants and constraints, printshop
+connections and orders are read untyped, with `call()` and the result's
+`object()`, since the plugin keeps them as arrays. The SDK's models check
+every field their release requires, so a typed read fails when Pixonaut stops
+sending a field the plugin never uses, or has not sent one yet; an untyped
+read fails only on what the plugin reads itself:
+
+```php
+$sdk->call( 'blanks.get', array( 'id' => $blank_id ) )->object();          // GET /v1/blanks/{id}
+```
 
 A few classes add what the store needs on top of the SDK:
 

@@ -172,7 +172,7 @@ final class LineReader {
 		}
 		$order_id = $line->ref( LineState::REF_ORDER_ID );
 		if ( is_string( $order_id ) && '' !== $order_id ) {
-			$order = $this->found( fn (): array => $this->pixonaut->orders()->get( $order_id )->raw() );
+			$order = $this->found( fn (): array => $this->pixonaut->call( 'orders.get', array( 'id' => $order_id ) )->object() );
 			if ( null !== $order ) {
 				$this->order_status->apply_read( $line, $order );
 			}

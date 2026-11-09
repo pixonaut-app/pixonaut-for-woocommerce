@@ -75,6 +75,14 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 	protected VariantsAnswer $variants;
 
 	/**
+	 * Whether `script_blank()` answers a blank as Pixonaut answers it today
+	 * rather than as the pinned spec declares it.
+	 *
+	 * @var bool
+	 */
+	protected bool $blank_answered_today = false;
+
+	/**
 	 * Checks configurations against the recorder, as the panel does.
 	 *
 	 * @var ProductLinker
@@ -129,11 +137,26 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 	 * @param array<string, mixed> $verdict The verdict for the default size.
 	 */
 	protected function script_link( array $verdict ): void {
-		$this->recorder->json( 200, $this->blank() );
+		$this->script_blank( $this->blank() );
 		$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
 		$this->recorder->json( 200, array( 'verdicts' => array( $verdict ) ) );
 		if ( true === ( $verdict['legal'] ?? null ) ) {
 			$this->script_template();
+		}
+	}
+
+	/**
+	 * Scripts a `GET /v1/blanks/{id}` answer: as the pinned spec declares it,
+	 * or, when the test sets `$blank_answered_today`, as Pixonaut answers it
+	 * today (`BlankFixture::as_answered_today()`).
+	 *
+	 * @param array<string, mixed> $blank The answer in the pinned spec's shape.
+	 */
+	protected function script_blank( array $blank ): void {
+		if ( $this->blank_answered_today ) {
+			$this->recorder->off_spec( 200, BlankFixture::as_answered_today( $blank ) );
+		} else {
+			$this->recorder->json( 200, $blank );
 		}
 	}
 
