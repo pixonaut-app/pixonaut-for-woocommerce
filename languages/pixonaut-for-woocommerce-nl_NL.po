@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-09T18:18:09+00:00\n"
+"POT-Creation-Date: 2026-11-09T19:37:25+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -534,50 +534,64 @@ msgstr ""
 "bereikbaar was."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/GetProductPictureViews.php:40
+#: src/Abilities/GetProductPictureViews.php:42
 msgid "Read what a product's images are drawn on"
 msgstr "Opvragen waarop de afbeeldingen van een product worden aangemaakt"
 
-#: src/Abilities/GetProductPictureViews.php:41
+#: src/Abilities/GetProductPictureViews.php:43
 msgid ""
 "Reads what a personalised product's or variation's Pixonaut images are drawn "
 "on: the image drawn without a showcase set (a variation: its own choice), "
 "and each showcase set chosen, each on the photo the product page starts on, "
-"on a view and photo of the blank, or flat; and the views of its side's "
-"placement with their photos, scenes included. Set them with `set-product-"
-"picture-view`."
+"on a view and photo of the blank, or flat; the views of its side's placement "
+"with their photos, scenes included; and, of a product, the showcase sets its "
+"template offers, the ids `set-product-showcase` takes. Set them with `set-"
+"product-picture-view`."
 msgstr ""
 "Leest waarop de Pixonaut-afbeeldingen van een gepersonaliseerd product of "
 "een variatie worden aangemaakt: de afbeelding die zonder voorbeeldset wordt "
 "aangemaakt (bij een variatie: haar eigen keuze) en elke gekozen "
 "voorbeeldset, elk op de foto waarmee de productpagina opent, op een aanzicht "
-"en foto van het blanco product, of plat; en de aanzichten van de drukpositie "
-"van de zijde met hun foto's, scènes inbegrepen. Stel ze in met `set-product-"
-"picture-view`."
+"en foto van het blanco product, of plat; de aanzichten van de drukpositie "
+"van de zijde met hun foto's, scènes inbegrepen; en, bij een product, de "
+"voorbeeldsets die het sjabloon biedt, de ID's die `set-product-showcase` "
+"aanneemt. Stel ze in met `set-product-picture-view`."
 
-#: src/Abilities/GetProductPictureViews.php:47
+#: src/Abilities/GetProductPictureViews.php:49
 #: src/Abilities/SetProductPictureView.php:47
 #: src/Abilities/SetProductSetup.php:60 src/Abilities/UseProductPicture.php:47
 msgid "A simple or variable product, or a variation."
 msgstr "Een simpel of variabel product, of een variatie."
 
-#: src/Abilities/GetProductPictureViews.php:155
+#: src/Abilities/GetProductPictureViews.php:160
+msgid ""
+"The showcase sets the product's template offers, by id and name: those of "
+"the template version it is linked to, the ids `set-product-showcase` takes. "
+"Empty without a template and on a variation; null when Pixonaut could not be "
+"asked."
+msgstr ""
+"De voorbeeldsets die het sjabloon van het product biedt, met ID en naam: die "
+"van de sjabloonversie waaraan het is gekoppeld, de ID's die `set-product-"
+"showcase` aanneemt. Leeg zonder sjabloon en bij een variatie; null als ze "
+"niet bij Pixonaut konden worden opgevraagd."
+
+#: src/Abilities/GetProductPictureViews.php:175
 msgid "`mockup` on the blank's photo, `preview` the flat design."
 msgstr ""
 "`mockup` op de foto van het blanco product, `preview` het platte ontwerp."
 
-#: src/Abilities/GetProductPictureViews.php:159
+#: src/Abilities/GetProductPictureViews.php:179
 msgid "The view chosen; null for the one the product page starts on."
 msgstr ""
 "Het gekozen aanzicht; null voor het aanzicht waarmee de productpagina opent."
 
-#: src/Abilities/GetProductPictureViews.php:163
+#: src/Abilities/GetProductPictureViews.php:183
 msgid "The view's photo chosen; null for its photo of the variant sold."
 msgstr ""
 "De gekozen foto van het aanzicht; null voor de foto ervan in de verkochte "
 "variant."
 
-#: src/Abilities/GetProductPictureViews.php:167
+#: src/Abilities/GetProductPictureViews.php:187
 msgid ""
 "True when the blank no longer has the view or photo: the image is drawn on "
 "the photo the product page starts on until another is chosen."
@@ -586,7 +600,7 @@ msgstr ""
 "afbeelding wordt dan aangemaakt op de foto waarmee de productpagina opent, "
 "tot er een andere is gekozen."
 
-#: src/Abilities/GetProductPictureViews.php:176
+#: src/Abilities/GetProductPictureViews.php:196
 msgid ""
 "On a product, what its image is drawn on while no showcase set is chosen; on "
 "a variation, its own choice. Null for none: the photo the product page "
@@ -597,7 +611,7 @@ msgstr ""
 "keuze: de foto waarmee de productpagina opent, bij een variatie de keuze van "
 "haar product."
 
-#: src/Abilities/GetProductPictureViews.php:181
+#: src/Abilities/GetProductPictureViews.php:201
 msgid ""
 "The showcase sets chosen as the product's images, the first its image; empty "
 "on a variation."
@@ -605,7 +619,7 @@ msgstr ""
 "De voorbeeldsets die als afbeeldingen van het product zijn gekozen, de "
 "eerste als productafbeelding; leeg bij een variatie."
 
-#: src/Abilities/GetProductPictureViews.php:192
+#: src/Abilities/GetProductPictureViews.php:212
 msgid ""
 "The views of the side's placement with the photos an image can be drawn on, "
 "in the blank's order; empty without a blank; null when Pixonaut could not be "
@@ -616,11 +630,11 @@ msgstr ""
 "leeg zonder blanco product; null als ze niet bij Pixonaut konden worden "
 "opgevraagd."
 
-#: src/Abilities/GetProductPictureViews.php:206
+#: src/Abilities/GetProductPictureViews.php:226
 msgid "A link to the photo that opens for an hour or two."
 msgstr "Een link naar de foto die een uur of twee geldig is."
 
-#: src/Abilities/GetProductPictureViews.php:211
+#: src/Abilities/GetProductPictureViews.php:231
 msgid "The blank variants the photo shows; empty for every one."
 msgstr ""
 "De varianten van het blanco product die de foto toont; leeg voor alle "
@@ -1707,17 +1721,17 @@ msgstr ""
 "Een variatie volgt haar product voor option_groups en group_numbers: stel ze "
 "in op het product."
 
-#: src/Abilities/SetProductShowcase.php:45
+#: src/Abilities/SetProductShowcase.php:44
 msgid "The sets the product's template offers, by id and name."
 msgstr "De sets die het sjabloon van het product biedt, met ID en naam."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductShowcase.php:56
+#: src/Abilities/SetProductShowcase.php:47
 msgid "Set a product's showcase pictures"
 msgstr "De voorbeeldafbeeldingen van een product instellen"
 
 #. translators: %d: how many showcase pictures a product shows at most, e.g. 10.
-#: src/Abilities/SetProductShowcase.php:59
+#: src/Abilities/SetProductShowcase.php:50
 #, php-format
 msgid ""
 "Sets which of its template's showcase sets a personalised simple or variable "
@@ -1735,11 +1749,11 @@ msgstr ""
 "ontwerp. De afbeeldingen worden opnieuw aangemaakt. Het antwoord geeft de "
 "sets die het sjabloon biedt."
 
-#: src/Abilities/SetProductShowcase.php:77
+#: src/Abilities/SetProductShowcase.php:68
 msgid "One of the template's showcase sets, by id."
 msgstr "Een van de voorbeeldsets van het sjabloon, op ID."
 
-#: src/Abilities/SetProductShowcase.php:115
+#: src/Abilities/SetProductShowcase.php:106
 msgid ""
 "The product is not personalised with a template, so it has no showcase sets. "
 "Set it up first."
@@ -1747,7 +1761,7 @@ msgstr ""
 "Het product is niet gepersonaliseerd met een sjabloon en heeft dus geen "
 "voorbeeldsets. Stel het eerst in."
 
-#: src/Abilities/SetProductShowcase.php:120
+#: src/Abilities/SetProductShowcase.php:111
 msgid ""
 "Pixonaut could not be asked for the template's showcase sets. Try again "
 "later."
@@ -1756,12 +1770,12 @@ msgstr ""
 "opgevraagd. Probeer het later opnieuw."
 
 #. translators: 1: a showcase set's id; 2: the ids the template offers, e.g. "graduate, wedding".
-#: src/Abilities/SetProductShowcase.php:134
+#: src/Abilities/SetProductShowcase.php:125
 #, php-format
 msgid "The template has no showcase set \"%1$s\". It has: %2$s."
 msgstr "Het sjabloon heeft geen voorbeeldset “%1$s”. Het heeft: %2$s."
 
-#: src/Abilities/SetProductShowcase.php:136
+#: src/Abilities/SetProductShowcase.php:127
 msgctxt "showcase sets a template offers"
 msgid "none"
 msgstr "geen"
@@ -9841,6 +9855,14 @@ msgstr[1] "%s weergaven"
 #~ msgstr ""
 #~ "Waarom het product niet kan worden gekocht, in woorden; null als het wel "
 #~ "kan."
+
+#~ msgid ""
+#~ "Which of the product's variations sell no variant of the blank, in words; "
+#~ "null when each does. Pick the variant on the product screen."
+#~ msgstr ""
+#~ "Welke variaties van het product geen variant van het blanco product "
+#~ "verkopen, in woorden; null als elke variatie er een verkoopt. Kies de "
+#~ "variant op het bewerkscherm van het product."
 
 #~ msgid ""
 #~ "`personalised` when the customer fills in the template, `standing` when "

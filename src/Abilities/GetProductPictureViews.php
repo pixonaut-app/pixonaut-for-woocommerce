@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Admin\LinkedBlank;
+use Pixonaut\WooCommerce\Admin\ShowcaseField;
 use Pixonaut\WooCommerce\Catalogue\PictureView;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
@@ -19,15 +20,16 @@ use WP_Error;
 /**
  * Reads, for a personalised product or variation, what each of its images
  * is drawn on, as the product images field and a variation's options show
- * it, and the views and photos of its side's placement it can be drawn on.
- * Whoever may edit the product may read it.
+ * it, and the views and photos of its side's placement it can be drawn on;
+ * of a product, also the showcase sets it can show. Whoever may edit the product may read it.
  */
 final class GetProductPictureViews implements Ability {
 
 	/**
-	 * @param LinkedBlank $blank Reads the blank's views and photos.
+	 * @param LinkedBlank   $blank     Reads the blank's views and photos.
+	 * @param ShowcaseField $showcases Lists the template's sets.
 	 */
-	public function __construct( private readonly LinkedBlank $blank ) {
+	public function __construct( private readonly LinkedBlank $blank, private readonly ShowcaseField $showcases ) {
 	}
 
 	public function name(): string {
@@ -38,7 +40,7 @@ final class GetProductPictureViews implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Read what a product\'s images are drawn on', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Reads what a personalised product\'s or variation\'s Pixonaut images are drawn on: the image drawn without a showcase set (a variation: its own choice), and each showcase set chosen, each on the photo the product page starts on, on a view and photo of the blank, or flat; and the views of its side\'s placement with their photos, scenes included. Set them with `set-product-picture-view`.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Reads what a personalised product\'s or variation\'s Pixonaut images are drawn on: the image drawn without a showcase set (a variation: its own choice), and each showcase set chosen, each on the photo the product page starts on, on a view and photo of the blank, or flat; the views of its side\'s placement with their photos, scenes included; and, of a product, the showcase sets its template offers, the ids `set-product-showcase` takes. Set them with `set-product-picture-view`.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -51,7 +53,7 @@ final class GetProductPictureViews implements Ability {
 				'required'             => array( 'product_id' ),
 				'additionalProperties' => false,
 			),
-			'output_schema'       => self::output_schema(),
+			'output_schema'       => self::output_schema_with_sets(),
 			'execute_callback'    => array( $this, 'execute' ),
 			'permission_callback' => array( ProductLinks::class, 'can_edit' ),
 			'annotations'         => array(
@@ -71,7 +73,9 @@ final class GetProductPictureViews implements Ability {
 		if ( ! $product instanceof WC_Product ) {
 			return $product;
 		}
-		return $this->answer( $product );
+		return $this->answer( $product ) + array(
+			'available_showcases' => $product->is_type( 'variation' ) ? array() : $this->showcases->offered_on( $product ),
+		);
 	}
 
 	/**
@@ -145,6 +149,22 @@ final class GetProductPictureViews implements Ability {
 	}
 
 	/**
+	 * The answer's schema: `output_schema()` and the sets the template offers.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function output_schema_with_sets(): array {
+		$schema                                      = self::output_schema();
+		$schema['properties']['available_showcases'] = SetProductShowcase::available_schema(
+			array( 'array', 'null' ),
+			__( 'The showcase sets the product\'s template offers, by id and name: those of the template version it is linked to, the ids `set-product-showcase` takes. Empty without a template and on a variation; null when Pixonaut could not be asked.', 'pixonaut-for-woocommerce' )
+		);
+		return $schema;
+	}
+
+	/**
+	 * What the answer of this ability and `set-product-picture-view` holds.
+	 *
 	 * @return array<string, mixed>
 	 */
 	public static function output_schema(): array {

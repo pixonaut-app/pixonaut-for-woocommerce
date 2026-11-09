@@ -362,7 +362,7 @@ final class Plugin {
 		$this->notices()->register();
 		$this->connection()->register();
 		$this->store_access()->register();
-		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants() ), new WcLogger() ) )->register();
+		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views() ), new WcLogger() ) )->register();
 		$this->workspace_settings()->register();
 		$this->webhook_processor()->register();
 		( new Receiver( $this->connection(), $this->intake(), new WcLogger() ) )->register();
@@ -459,7 +459,7 @@ final class Plugin {
 				$designs = new Designs( $this->sdk() );
 				$lines   = new LineView( $this->proof_urls() );
 				$connect = $this->sdk();
-				$views   = new GetProductPictureViews( new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ) );
+				$views   = $this->picture_views();
 				$status  = new ConnectionStatus( $this->connection(), $connect, $this->webhook_endpoint() );
 				return array(
 					new ListTemplates( $this->catalogue() ),
@@ -491,6 +491,10 @@ final class Plugin {
 				);
 			}
 		);
+	}
+
+	private function picture_views(): GetProductPictureViews {
+		return new GetProductPictureViews( new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->showcase_field() );
 	}
 
 	private function product_links(): ProductLinks {

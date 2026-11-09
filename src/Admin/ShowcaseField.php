@@ -358,6 +358,44 @@ final class ShowcaseField {
 	}
 
 	/**
+	 * The sets a product of the template can show, by id and name: those
+	 * of the template version the product is linked to.
+	 *
+	 * @param string $template The template version.
+	 * @return list<array{id: string, name: string}>
+	 *
+	 * @throws ApiException When Pixonaut could not be asked.
+	 */
+	public function offered( string $template ): array {
+		return array_map(
+			static fn ( array $set ): array => array(
+				'id'   => $set['id'],
+				'name' => $set['name'],
+			),
+			ShowcaseImages::sets( $this->listed( $template )['showcases'] ?? array() )
+		);
+	}
+
+	/**
+	 * The sets a product can show, by id and name: none without a template,
+	 * null when Pixonaut cannot be asked.
+	 *
+	 * @param WC_Product $product A simple or variable product.
+	 * @return list<array{id: string, name: string}>|null
+	 */
+	public function offered_on( WC_Product $product ): ?array {
+		$template = self::template( $product );
+		if ( null === $template ) {
+			return array();
+		}
+		try {
+			return $this->offered( $template );
+		} catch ( ApiException $e ) {
+			return null;
+		}
+	}
+
+	/**
 	 * The thumbnail of the photo the first side's sets are drawn on, as
 	 * `PictureSources` picks it: the first view of its placement the product
 	 * is shown in with a photo of the variant it sells, or, selling none or

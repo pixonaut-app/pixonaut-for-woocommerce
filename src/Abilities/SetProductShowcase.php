@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use WC_Product;
 use WP_Error;
+use WP_Http;
 
 /**
  * Sets the showcase sets a personalised product's images are drawn with,
@@ -40,17 +41,7 @@ final class SetProductShowcase implements Ability {
 
 	public function definition(): array {
 		$schema                                      = ProductLinks::output_schema();
-		$schema['properties']['available_showcases'] = array(
-			'type'        => 'array',
-			'description' => __( 'The sets the product\'s template offers, by id and name.', 'pixonaut-for-woocommerce' ),
-			'items'       => array(
-				'type'       => 'object',
-				'properties' => array(
-					'id'   => array( 'type' => 'string' ),
-					'name' => array( 'type' => 'string' ),
-				),
-			),
-		);
+		$schema['properties']['available_showcases'] = self::available_schema( 'array', __( 'The sets the product\'s template offers, by id and name.', 'pixonaut-for-woocommerce' ) );
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Set a product\'s showcase pictures', 'pixonaut-for-woocommerce' ),
@@ -115,9 +106,9 @@ final class SetProductShowcase implements Ability {
 			return new WP_Error( 'pixonaut_wc_ability_not_linked', __( 'The product is not personalised with a template, so it has no showcase sets. Set it up first.', 'pixonaut-for-woocommerce' ) );
 		}
 		try {
-			$sets = ShowcaseImages::sets( $this->showcases->listed( $template )['showcases'] ?? array() );
+			$sets = $this->showcases->offered( $template );
 		} catch ( ApiException $e ) {
-			return new WP_Error( 'pixonaut_wc_ability_pixonaut_unreachable', __( 'Pixonaut could not be asked for the template\'s showcase sets. Try again later.', 'pixonaut-for-woocommerce' ) );
+			return new WP_Error( 'pixonaut_wc_ability_pixonaut_unreachable', __( 'Pixonaut could not be asked for the template\'s showcase sets. Try again later.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::BAD_GATEWAY ) );
 		}
 		$by_id   = array_column( $sets, null, 'id' );
 		$on_flat = null === ProductConfig::stored_on( $product )->blank_id;
@@ -145,13 +136,28 @@ final class SetProductShowcase implements Ability {
 			) + ( $earlier['kind'] === $kind ? array_intersect_key( $earlier, array_flip( array( 'kind', 'view', 'photo' ) ) ) : array( 'kind' => $kind ) );
 		}
 		ShowcaseImages::save( $product, $images );
-		return $this->links->summary( $product ) + array(
-			'available_showcases' => array_map(
-				static fn ( array $set ): array => array(
-					'id'   => $set['id'],
-					'name' => $set['name'],
+		return $this->links->summary( $product ) + array( 'available_showcases' => $sets );
+	}
+
+	/**
+	 * The schema of the sets a product's template offers, as this ability
+	 * and `get-product-picture-views` answer them.
+	 *
+	 * @param string|list<string> $type        `array`, or with `null` when the sets may be unknown.
+	 * @param string              $description What the list is.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function available_schema( string|array $type, string $description ): array {
+		return array(
+			'type'        => $type,
+			'description' => $description,
+			'items'       => array(
+				'type'       => 'object',
+				'properties' => array(
+					'id'   => array( 'type' => 'string' ),
+					'name' => array( 'type' => 'string' ),
 				),
-				$sets
 			),
 		);
 	}

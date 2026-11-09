@@ -84,10 +84,20 @@ final class PictureViewAbilitiesTest extends WP_UnitTestCase {
 		$product = $this->product();
 		ShowcaseImages::save( $product, array( self::ANNA + array( 'view' => self::VIEW ) ) );
 		$this->answer_mockups();
+		$this->recorder->raw( 200, self::template_with( array( self::ANNA ) ), 'application/json' );
 
 		$answer = $this->succeed( self::GET, array( 'product_id' => $product->get_id() ) );
 
 		$this->assertNull( $answer['picture_view'] );
+		$this->assertSame(
+			array(
+				array(
+					'id'   => self::ANNA['id'],
+					'name' => self::ANNA['name'],
+				),
+			),
+			$answer['available_showcases']
+		);
 		$this->assertSame(
 			array(
 				array(
