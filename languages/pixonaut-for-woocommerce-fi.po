@@ -57,7 +57,7 @@ msgstr "Pixonaut"
 #. Author URI of the plugin
 #: pixonaut-for-woocommerce.php
 msgid "https://pixonaut.app"
-msgstr ""
+msgstr "https://pixonaut.app"
 
 #: src/Abilities/Abilities.php:64
 msgid ""
@@ -529,7 +529,7 @@ msgstr ""
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductPictureViews.php:40
 msgid "Read what a product's images are drawn on"
-msgstr ""
+msgstr "Lue, mihin tuotteen kuvat luodaan"
 
 #: src/Abilities/GetProductPictureViews.php:41
 msgid ""
@@ -539,7 +539,7 @@ msgid ""
 "on a view and photo of the blank, or flat; and the views of its side's "
 "placement with their photos, scenes included. Set them with `set-product-"
 "picture-view`."
-msgstr ""
+msgstr "Lukee, mihin personoidun tuotteen tai muunnelman Pixonautin kuvat luodaan: kuva, joka luodaan ilman esimerkkisarjaa (muunnelmalla sen oma valinta), ja jokainen valittu esimerkkisarja, kukin kuvaan, johon tuotesivu avautuu, pohjatuotteen näkymän kuvaan tai pelkkänä suunnitelmana; sekä sen puolen painokohdan näkymät kuvineen, miljöökuvat mukaan lukien. Aseta ne kyvyllä `set-product-picture-view`."
 
 #: src/Abilities/GetProductPictureViews.php:47
 #: src/Abilities/SetProductPictureView.php:47
@@ -549,49 +549,49 @@ msgstr "Yksinkertainen tuote, muunnelmatuote tai muunnelma."
 
 #: src/Abilities/GetProductPictureViews.php:155
 msgid "`mockup` on the blank's photo, `preview` the flat design."
-msgstr ""
+msgstr "`mockup` pohjatuotteen kuvaan, `preview` pelkkänä suunnitelmana."
 
 #: src/Abilities/GetProductPictureViews.php:159
 msgid "The view chosen; null for the one the product page starts on."
-msgstr ""
+msgstr "Valittu näkymä; null sille näkymälle, johon tuotesivu avautuu."
 
 #: src/Abilities/GetProductPictureViews.php:163
 msgid "The view's photo chosen; null for its photo of the variant sold."
-msgstr ""
+msgstr "Valittu näkymän kuva; null näkymän kuvalle myytävästä versiosta."
 
 #: src/Abilities/GetProductPictureViews.php:167
 msgid ""
 "True when the blank no longer has the view or photo: the image is drawn on "
 "the photo the product page starts on until another is chosen."
-msgstr ""
+msgstr "True, kun pohjatuotteella ei enää ole näkymää tai kuvaa: tuotekuva luodaan kuvaan, johon tuotesivu avautuu, kunnes toinen valitaan."
 
 #: src/Abilities/GetProductPictureViews.php:176
 msgid ""
 "On a product, what its image is drawn on while no showcase set is chosen; on "
 "a variation, its own choice. Null for none: the photo the product page "
 "starts on, a variation's product's choice."
-msgstr ""
+msgstr "Tuotteella se, mihin sen kuva luodaan, kun yhtään esimerkkisarjaa ei ole valittu; muunnelmalla sen oma valinta. Null, kun valintaa ei ole: kuva, johon tuotesivu avautuu, tai muunnelman tuotteen valinta."
 
 #: src/Abilities/GetProductPictureViews.php:181
 msgid ""
 "The showcase sets chosen as the product's images, the first its image; empty "
 "on a variation."
-msgstr ""
+msgstr "Tuotteen kuviksi valitut esimerkkisarjat, ensimmäinen sen tuotekuvana; tyhjä muunnelmalla."
 
 #: src/Abilities/GetProductPictureViews.php:192
 msgid ""
 "The views of the side's placement with the photos an image can be drawn on, "
 "in the blank's order; empty without a blank; null when Pixonaut could not be "
 "asked."
-msgstr ""
+msgstr "Puolen painokohdan näkymät ja kuvat, joihin tuotekuva voidaan luoda, pohjatuotteen järjestyksessä; tyhjä ilman pohjatuotetta; null, kun Pixonautilta ei voitu kysyä."
 
 #: src/Abilities/GetProductPictureViews.php:206
 msgid "A link to the photo that opens for an hour or two."
-msgstr ""
+msgstr "Linkki kuvaan, joka toimii tunnin tai kaksi."
 
 #: src/Abilities/GetProductPictureViews.php:211
 msgid "The blank variants the photo shows; empty for every one."
-msgstr ""
+msgstr "Pohjatuotteen versiot, joita kuva esittää; tyhjä, kun se esittää kaikkia."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -1184,13 +1184,13 @@ msgstr ""
 msgid ""
 "Where it overrides the store on its options in the form: `on_top`, `first` "
 "or `last`; null for the store's."
-msgstr ""
+msgstr "Vaihtoehtojen paikka lomakkeessa, jolla se korvaa kaupan asetuksen: `on_top`, `first` tai `last`; null, kun käytetään kaupan asetusta."
 
 #: src/Abilities/ProductSetup.php:166
 msgid ""
 "Whether it overrides the store on numbering the form's groups: `on` or "
 "`off`; null for the store's."
-msgstr ""
+msgstr "Lomakkeen ryhmien numerointi, jolla se korvaa kaupan asetuksen: `on` tai `off`; null, kun käytetään kaupan asetusta."
 
 #: src/Abilities/ProductSetup.php:170
 msgid "The proof approval it overrides the store's with; null for the store's."
@@ -1232,12 +1232,12 @@ msgstr ""
 msgid ""
 "The view of the blank it is drawn on, set with `set-product-picture-view`; "
 "absent for the one the product page starts on."
-msgstr ""
+msgstr "Pohjatuotteen näkymä, johon se luodaan, asetettu kyvyllä `set-product-picture-view`; puuttuu, kun kyseessä on näkymä, johon tuotesivu avautuu."
 
 #: src/Abilities/ProductSetup.php:204
 msgid ""
 "The view's photo it is drawn on; absent for its photo of the variant sold."
-msgstr ""
+msgstr "Näkymän kuva, johon se luodaan; puuttuu, kun kyseessä on näkymän kuva myytävästä versiosta."
 
 #: src/Abilities/ProductSetup.php:216
 msgid ""
@@ -1429,7 +1429,7 @@ msgstr ""
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductPictureView.php:40
 msgid "Set what a product image is drawn on"
-msgstr ""
+msgstr "Aseta, mihin tuotekuva luodaan"
 
 #: src/Abilities/SetProductPictureView.php:41
 msgid ""
@@ -1442,37 +1442,37 @@ msgid ""
 "variation, it sets the variation's own image, and neither view nor photo "
 "makes it follow its product again; a variation is not drawn flat. The "
 "pictures are drawn again. The answer is `get-product-picture-views`'."
-msgstr ""
+msgstr "Asettaa, mihin personoidun tuotteen tai muunnelman yksi Pixonautin kuva luodaan: pohjatuotteen näkymään ja sen näkymän kuvaan (myös miljöökuvaan) siinä muodossa kuin `get-product-picture-views` ne listaa; ei kumpaakaan, kun kuva luodaan kuvaan, johon tuotesivu avautuu; tai `kind` `preview`, kun kuva on pelkkä suunnitelma. Tuotteella `showcase` nimeää yhden kyvyllä `set-product-showcase` valituista esimerkkisarjoista; ilman sitä asetetaan kuva, joka luodaan, kun yhtään sarjaa ei ole valittu. Muunnelmalla asetetaan muunnelman oma kuva, ja kun näkymää ja kuvaa ei anneta, muunnelma noudattaa taas tuotettaan; muunnelmaa ei luoda pelkkänä suunnitelmana. Kuvat luodaan uudelleen. Vastaus on sama kuin kyvyn `get-product-picture-views`."
 
 #: src/Abilities/SetProductPictureView.php:52
 msgid ""
 "On a product, one of the showcase sets chosen as its images, by id; left out "
 "for the image drawn without a set."
-msgstr ""
+msgstr "Tuotteella yksi sen kuviksi valituista esimerkkisarjoista id:n mukaan; jätetään pois, kun kyseessä on ilman sarjaa luotava kuva."
 
 #: src/Abilities/SetProductPictureView.php:61
 msgid ""
 "One of the views `get-product-picture-views` lists; with no photo, its photo "
 "of the variant sold."
-msgstr ""
+msgstr "Yksi kyvyn `get-product-picture-views` listaamista näkymistä; ilman kuvaa sen kuva myytävästä versiosta."
 
 #: src/Abilities/SetProductPictureView.php:65
 msgid ""
 "One of the photos `get-product-picture-views` lists; its view is found when "
 "left out."
-msgstr ""
+msgstr "Yksi kyvyn `get-product-picture-views` listaamista kuvista; sen näkymä päätellään, jos se jätetään pois."
 
 #: src/Abilities/SetProductPictureView.php:95
 msgid ""
 "The product is not personalised, so it has no Pixonaut images. Set it up "
 "first."
-msgstr ""
+msgstr "Tuotetta ei ole personoitu, joten sillä ei ole Pixonautin kuvia. Määritä sen asetukset ensin."
 
 #: src/Abilities/SetProductPictureView.php:101
 msgid ""
 "A variation chooses only the view and photo of its own image, or neither to "
 "follow its product."
-msgstr ""
+msgstr "Muunnelmalle valitaan vain sen oman kuvan näkymä ja kuva, tai ei kumpaakaan, jolloin se noudattaa tuotettaan."
 
 #. translators: 1: a showcase set's id; 2: the ids chosen as the product's images, e.g. "graduate, wedding".
 #: src/Abilities/SetProductPictureView.php:122
@@ -1480,31 +1480,31 @@ msgstr ""
 msgid ""
 "The product shows no showcase set \"%1$s\": choose it with set-product-"
 "showcase first. It shows: %2$s."
-msgstr ""
+msgstr "Tuote ei näytä esimerkkisarjaa ”%1$s”: valitse se ensin kyvyllä set-product-showcase. Se näyttää: %2$s."
 
 #: src/Abilities/SetProductPictureView.php:124
 msgctxt "showcase sets a product shows"
 msgid "none"
-msgstr ""
+msgstr "ei yhtään"
 
 #: src/Abilities/SetProductPictureView.php:149
 msgid ""
 "Pixonaut could not be asked for the blank's views and photos. Try again "
 "later."
-msgstr ""
+msgstr "Pohjatuotteen näkymiä ja kuvia ei voitu kysyä Pixonautilta. Yritä myöhemmin uudelleen."
 
 #: src/Abilities/SetProductPictureView.php:168
 msgid ""
 "The product is not on a blank with photos for its side, so its images can "
 "only be drawn as the product page shows them, or flat."
-msgstr ""
+msgstr "Tuotteella ei ole pohjatuotetta, jolla olisi kuvia sen puolelle, joten sen kuvat voidaan luoda vain sellaisina kuin tuotesivu ne näyttää tai pelkkänä suunnitelmana."
 
 #. translators: 1: the views of the blank with their photos, e.g. "front (mock-1, mock-2), back (mock-3)".
 #: src/Abilities/SetProductPictureView.php:171
 #, php-format
 msgid ""
 "The blank has no such view or photo for the product's side. It has: %1$s."
-msgstr ""
+msgstr "Pohjatuotteella ei ole tällaista näkymää tai kuvaa tuotteen puolelle. Sillä on: %1$s."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductSetup.php:53
@@ -1581,13 +1581,13 @@ msgid ""
 "not arranged by hand: `on_top`, unnumbered, or each in a group of its own, "
 "`first` or `last`; empty for the store's. A product's only: a variation "
 "follows its product."
-msgstr ""
+msgstr "Missä tuotteen vaihtoehdot ovat lomakkeessa puolella, jonka ryhmiä ei ole järjestetty käsin: `on_top` ylimpänä ilman numeroa tai kukin omassa ryhmässään, `first` ensin tai `last` viimeisenä; tyhjä kaupan asetukselle. Vain tuotteelle: muunnelma noudattaa tuotettaan."
 
 #: src/Abilities/SetProductSetup.php:85
 msgid ""
 "Whether the form numbers its groups; empty for the store's. A product's "
 "only: a variation follows its product."
-msgstr ""
+msgstr "Numeroiko lomake ryhmänsä; tyhjä kaupan asetukselle. Vain tuotteelle: muunnelma noudattaa tuotettaan."
 
 #: src/Abilities/SetProductSetup.php:94
 msgid "The view the designer starts on, one of `views`; empty for the first."
@@ -1616,7 +1616,7 @@ msgstr ""
 msgid ""
 "A variation follows its product for option_groups and group_numbers: set "
 "them on the product."
-msgstr ""
+msgstr "Muunnelma noudattaa tuotettaan kentissä option_groups ja group_numbers: aseta ne tuotteelle."
 
 #: src/Abilities/SetProductShowcase.php:45
 msgid "The sets the product's template offers, by id and name."
@@ -2813,7 +2813,7 @@ msgstr "Tuotekuvassa"
 #: src/Admin/ShowcaseField.php:115
 msgid ""
 "Drawn into the print area of the blank’s photo the product page starts on."
-msgstr ""
+msgstr "Luodaan painoalueelle siinä pohjatuotteen kuvassa, johon tuotesivu avautuu."
 
 #. translators: Option of how a showcase product image is drawn: the design alone, flat. Admin product page.
 #: src/Admin/ShowcaseField.php:120
@@ -2822,7 +2822,7 @@ msgstr "Pelkkä suunnitelma"
 
 #: src/Admin/ShowcaseField.php:121
 msgid "The design alone, without the product."
-msgstr ""
+msgstr "Pelkkä suunnitelma ilman tuotetta."
 
 #. translators: %s: name of a showcase set of the template. Admin product page.
 #: src/Admin/ShowcaseField.php:135
@@ -2833,51 +2833,51 @@ msgstr "Esitystapa: %s"
 #. translators: Accessible name of the choices of how the product image is drawn while no showcase set is ticked. Admin product page.
 #: src/Admin/ShowcaseField.php:158
 msgid "How the product image is drawn without a showcase set"
-msgstr ""
+msgstr "Miten tuotekuva luodaan ilman esimerkkisarjaa"
 
 #: src/Admin/ShowcaseField.php:194
 msgid ""
 "The blank no longer has this view or photo, so the image is drawn on the "
 "photo the product page starts on until another is chosen."
-msgstr ""
+msgstr "Pohjatuotteella ei enää ole tätä näkymää tai kuvaa, joten tuotekuva luodaan kuvaan, johon tuotesivu avautuu, kunnes toinen valitaan."
 
 #. translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page.
 #: src/Admin/ShowcaseField.php:212
 #, php-format
 msgid "%s, on the photo of the variant sold"
-msgstr ""
+msgstr "%s, myytävän version kuvassa"
 
 #. translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page.
 #: src/Admin/ShowcaseField.php:216
 msgid "No longer on the blank"
-msgstr ""
+msgstr "Ei enää pohjatuotteella"
 
 #. translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page.
 #: src/Admin/ShowcaseField.php:218
 msgid "The photo chosen before"
-msgstr ""
+msgstr "Aiemmin valittu kuva"
 
 #. translators: A choice of what a variation's image is drawn on: whatever its product's image is drawn on. Admin product page, variation options.
 #: src/Admin/ShowcaseField.php:243
 msgid "As the product image"
-msgstr ""
+msgstr "Kuten tuotekuvassa"
 
 #: src/Admin/ShowcaseField.php:244
 msgid ""
 "The view and photo the product image is drawn on, in this variation’s colour "
 "where the view has it."
-msgstr ""
+msgstr "Näkymä ja kuva, joihin tuotekuva luodaan, tämän muunnelman värissä, jos näkymässä on se."
 
 #. translators: Accessible name of the choices of what a variation's image is drawn on. Admin product page, variation options.
 #: src/Admin/ShowcaseField.php:259
 msgid "What the variation image is drawn on"
-msgstr ""
+msgstr "Mihin muunnelman kuva luodaan"
 
 #. translators: 1: a view of the blank product, e.g. "Front"; 2: which of its photos, e.g. 2. Admin product page.
 #: src/Admin/ShowcaseField.php:315
 #, php-format
 msgid "%1$s, photo %2$d"
-msgstr ""
+msgstr "%1$s, kuva %2$d"
 
 #: src/Admin/VariantField.php:71
 msgid ""
@@ -7788,7 +7788,7 @@ msgid ""
 "on, any photo of the blank, such as a scene, even of a view customers are "
 "not shown, or the design alone. The designer still starts on its own "
 "starting view."
-msgstr ""
+msgstr "Kun yhtään esimerkkisarjaa ei ole valittu, tuotekuva on mallipohja omine oletusarvoineen. Valitse, mihin se luodaan: kuvaan, johon tuotesivu avautuu, mihin tahansa pohjatuotteen kuvaan, kuten miljöökuvaan, myös näkymästä, jota asiakkaille ei näytetä, tai pelkkänä suunnitelmana. Suunnittelutyökalu avautuu silti omaan aloitusnäkymäänsä."
 
 #: templates/admin/product-showcase-images.php:40
 msgid ""
@@ -8385,7 +8385,7 @@ msgstr ""
 #. translators: Label of the choices of what a variation's Pixonaut image is drawn on. Admin product page, variation options.
 #: templates/admin/variation-picture-view.php:20
 msgid "Variation image drawn on"
-msgstr ""
+msgstr "Muunnelman kuvan taustakuva"
 
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Email to the merchant.
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Plain text email to the merchant.

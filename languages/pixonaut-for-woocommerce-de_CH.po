@@ -55,7 +55,7 @@ msgstr "Pixonaut"
 #. Author URI of the plugin
 #: pixonaut-for-woocommerce.php
 msgid "https://pixonaut.app"
-msgstr ""
+msgstr "https://pixonaut.app"
 
 #: src/Abilities/Abilities.php:64
 msgid ""
@@ -546,7 +546,7 @@ msgstr ""
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductPictureViews.php:40
 msgid "Read what a product's images are drawn on"
-msgstr ""
+msgstr "Abrufen, worauf die Bilder eines Produkts erstellt werden"
 
 #: src/Abilities/GetProductPictureViews.php:41
 msgid ""
@@ -556,7 +556,7 @@ msgid ""
 "on a view and photo of the blank, or flat; and the views of its side's "
 "placement with their photos, scenes included. Set them with `set-product-"
 "picture-view`."
-msgstr ""
+msgstr "Ruft ab, worauf die Pixonaut-Bilder eines personalisierten Produkts oder einer Variante erstellt werden: das Bild, das ohne Beispielset erstellt wird (bei einer Variante: ihre eigene Wahl), und jedes gewählte Beispielset, jeweils auf dem Foto, mit dem die Produktseite öffnet, auf einer Ansicht und einem Foto des Rohlings oder flach; dazu die Ansichten der Druckposition seiner Seite mit ihren Fotos, Szenen eingeschlossen. Festgelegt werden sie mit `set-product-picture-view`."
 
 #: src/Abilities/GetProductPictureViews.php:47
 #: src/Abilities/SetProductPictureView.php:47
@@ -566,49 +566,49 @@ msgstr "Ein einfaches oder variables Produkt oder eine Variante."
 
 #: src/Abilities/GetProductPictureViews.php:155
 msgid "`mockup` on the blank's photo, `preview` the flat design."
-msgstr ""
+msgstr "`mockup` auf dem Foto des Rohlings, `preview` das flache Design."
 
 #: src/Abilities/GetProductPictureViews.php:159
 msgid "The view chosen; null for the one the product page starts on."
-msgstr ""
+msgstr "Die gewählte Ansicht; null für die, mit der die Produktseite öffnet."
 
 #: src/Abilities/GetProductPictureViews.php:163
 msgid "The view's photo chosen; null for its photo of the variant sold."
-msgstr ""
+msgstr "Das gewählte Foto der Ansicht; null für ihr Foto der verkauften Rohling-Variante."
 
 #: src/Abilities/GetProductPictureViews.php:167
 msgid ""
 "True when the blank no longer has the view or photo: the image is drawn on "
 "the photo the product page starts on until another is chosen."
-msgstr ""
+msgstr "True, wenn der Rohling die Ansicht oder das Foto nicht mehr hat: Das Bild wird auf dem Foto erstellt, mit dem die Produktseite öffnet, bis ein anderes gewählt wird."
 
 #: src/Abilities/GetProductPictureViews.php:176
 msgid ""
 "On a product, what its image is drawn on while no showcase set is chosen; on "
 "a variation, its own choice. Null for none: the photo the product page "
 "starts on, a variation's product's choice."
-msgstr ""
+msgstr "Bei einem Produkt, worauf sein Bild erstellt wird, solange kein Beispielset gewählt ist; bei einer Variante ihre eigene Wahl. Null für keine: das Foto, mit dem die Produktseite öffnet, bzw. bei einer Variante die Wahl ihres Produkts."
 
 #: src/Abilities/GetProductPictureViews.php:181
 msgid ""
 "The showcase sets chosen as the product's images, the first its image; empty "
 "on a variation."
-msgstr ""
+msgstr "Die als Bilder des Produkts gewählten Beispielsets, das erste ist das Produktbild; leer bei einer Variante."
 
 #: src/Abilities/GetProductPictureViews.php:192
 msgid ""
 "The views of the side's placement with the photos an image can be drawn on, "
 "in the blank's order; empty without a blank; null when Pixonaut could not be "
 "asked."
-msgstr ""
+msgstr "Die Ansichten der Druckposition der Seite mit den Fotos, auf denen ein Bild erstellt werden kann, in der Reihenfolge des Rohlings; leer ohne Rohling; null, wenn Pixonaut nicht abgefragt werden konnte."
 
 #: src/Abilities/GetProductPictureViews.php:206
 msgid "A link to the photo that opens for an hour or two."
-msgstr ""
+msgstr "Ein Link zum Foto, der sich ein bis zwei Stunden lang öffnen lässt."
 
 #: src/Abilities/GetProductPictureViews.php:211
 msgid "The blank variants the photo shows; empty for every one."
-msgstr ""
+msgstr "Die Rohling-Varianten, die das Foto zeigt; leer für alle."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -1209,13 +1209,13 @@ msgstr ""
 msgid ""
 "Where it overrides the store on its options in the form: `on_top`, `first` "
 "or `last`; null for the store's."
-msgstr ""
+msgstr "Wo es seine Optionen im Formular abweichend vom Shop platziert: `on_top`, `first` oder `last`; null für die Einstellung des Shops."
 
 #: src/Abilities/ProductSetup.php:166
 msgid ""
 "Whether it overrides the store on numbering the form's groups: `on` or "
 "`off`; null for the store's."
-msgstr ""
+msgstr "Ob es die Gruppen des Formulars abweichend vom Shop nummeriert: `on` oder `off`; null für die Einstellung des Shops."
 
 #: src/Abilities/ProductSetup.php:170
 msgid "The proof approval it overrides the store's with; null for the store's."
@@ -1257,12 +1257,12 @@ msgstr ""
 msgid ""
 "The view of the blank it is drawn on, set with `set-product-picture-view`; "
 "absent for the one the product page starts on."
-msgstr ""
+msgstr "Die Ansicht des Rohlings, auf der es erstellt wird, festgelegt mit `set-product-picture-view`; fehlt bei der, mit der die Produktseite öffnet."
 
 #: src/Abilities/ProductSetup.php:204
 msgid ""
 "The view's photo it is drawn on; absent for its photo of the variant sold."
-msgstr ""
+msgstr "Das Foto der Ansicht, auf dem es erstellt wird; fehlt bei ihrem Foto der verkauften Rohling-Variante."
 
 #: src/Abilities/ProductSetup.php:216
 msgid ""
@@ -1454,7 +1454,7 @@ msgstr ""
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductPictureView.php:40
 msgid "Set what a product image is drawn on"
-msgstr ""
+msgstr "Festlegen, worauf ein Produktbild erstellt wird"
 
 #: src/Abilities/SetProductPictureView.php:41
 msgid ""
@@ -1467,37 +1467,37 @@ msgid ""
 "variation, it sets the variation's own image, and neither view nor photo "
 "makes it follow its product again; a variation is not drawn flat. The "
 "pictures are drawn again. The answer is `get-product-picture-views`'."
-msgstr ""
+msgstr "Legt fest, worauf ein Pixonaut-Bild eines personalisierten Produkts oder einer Variante erstellt wird: eine Ansicht des Rohlings und von dieser Ansicht ein Foto (auch ein Szenenfoto), wie `get-product-picture-views` sie auflistet; keines von beiden für das Foto, mit dem die Produktseite öffnet; oder `kind` `preview` für das flache Design. Bei einem Produkt nennt `showcase` eines der mit `set-product-showcase` gewählten Beispielsets; ohne `showcase` gilt es für das Bild, das erstellt wird, solange kein Set gewählt ist. Bei einer Variante legt es das eigene Bild der Variante fest, und ohne Ansicht und Foto folgt sie wieder ihrem Produkt; eine Variante wird nicht flach erstellt. Die Bilder werden neu erstellt. Die Antwort ist die von `get-product-picture-views`."
 
 #: src/Abilities/SetProductPictureView.php:52
 msgid ""
 "On a product, one of the showcase sets chosen as its images, by id; left out "
 "for the image drawn without a set."
-msgstr ""
+msgstr "Bei einem Produkt eines der als seine Bilder gewählten Beispielsets, nach ID; weggelassen für das Bild, das ohne Set erstellt wird."
 
 #: src/Abilities/SetProductPictureView.php:61
 msgid ""
 "One of the views `get-product-picture-views` lists; with no photo, its photo "
 "of the variant sold."
-msgstr ""
+msgstr "Eine der Ansichten, die `get-product-picture-views` auflistet; ohne Foto ihr Foto der verkauften Rohling-Variante."
 
 #: src/Abilities/SetProductPictureView.php:65
 msgid ""
 "One of the photos `get-product-picture-views` lists; its view is found when "
 "left out."
-msgstr ""
+msgstr "Eines der Fotos, die `get-product-picture-views` auflistet; seine Ansicht wird ermittelt, wenn sie weggelassen wird."
 
 #: src/Abilities/SetProductPictureView.php:95
 msgid ""
 "The product is not personalised, so it has no Pixonaut images. Set it up "
 "first."
-msgstr ""
+msgstr "Das Produkt ist nicht personalisiert und hat daher keine Pixonaut-Bilder. Richten Sie es zuerst ein."
 
 #: src/Abilities/SetProductPictureView.php:101
 msgid ""
 "A variation chooses only the view and photo of its own image, or neither to "
 "follow its product."
-msgstr ""
+msgstr "Eine Variante wählt nur Ansicht und Foto ihres eigenen Bildes, oder keines von beiden, um ihrem Produkt zu folgen."
 
 #. translators: 1: a showcase set's id; 2: the ids chosen as the product's images, e.g. "graduate, wedding".
 #: src/Abilities/SetProductPictureView.php:122
@@ -1505,31 +1505,31 @@ msgstr ""
 msgid ""
 "The product shows no showcase set \"%1$s\": choose it with set-product-"
 "showcase first. It shows: %2$s."
-msgstr ""
+msgstr "Das Produkt zeigt kein Beispielset «%1$s»: Wählen Sie es zuerst mit set-product-showcase. Es zeigt: %2$s."
 
 #: src/Abilities/SetProductPictureView.php:124
 msgctxt "showcase sets a product shows"
 msgid "none"
-msgstr ""
+msgstr "keine"
 
 #: src/Abilities/SetProductPictureView.php:149
 msgid ""
 "Pixonaut could not be asked for the blank's views and photos. Try again "
 "later."
-msgstr ""
+msgstr "Die Ansichten und Fotos des Rohlings konnten nicht von Pixonaut abgefragt werden. Versuchen Sie es später noch einmal."
 
 #: src/Abilities/SetProductPictureView.php:168
 msgid ""
 "The product is not on a blank with photos for its side, so its images can "
 "only be drawn as the product page shows them, or flat."
-msgstr ""
+msgstr "Das Produkt hat keinen Rohling mit Fotos für seine Seite, daher können seine Bilder nur so erstellt werden, wie die Produktseite sie zeigt, oder flach."
 
 #. translators: 1: the views of the blank with their photos, e.g. "front (mock-1, mock-2), back (mock-3)".
 #: src/Abilities/SetProductPictureView.php:171
 #, php-format
 msgid ""
 "The blank has no such view or photo for the product's side. It has: %1$s."
-msgstr ""
+msgstr "Der Rohling hat keine solche Ansicht und kein solches Foto für die Seite des Produkts. Er hat: %1$s."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductSetup.php:53
@@ -1608,13 +1608,13 @@ msgid ""
 "not arranged by hand: `on_top`, unnumbered, or each in a group of its own, "
 "`first` or `last`; empty for the store's. A product's only: a variation "
 "follows its product."
-msgstr ""
+msgstr "Wo die Optionen des Produkts im Formular stehen, auf einer Seite, deren Gruppen nicht von Hand angeordnet wurden: `on_top`, ohne Nummer, oder jeweils in einer eigenen Gruppe, `first` oder `last`; leer für die Einstellung des Shops. Nur für ein Produkt: Eine Variante folgt ihrem Produkt."
 
 #: src/Abilities/SetProductSetup.php:85
 msgid ""
 "Whether the form numbers its groups; empty for the store's. A product's "
 "only: a variation follows its product."
-msgstr ""
+msgstr "Ob das Formular seine Gruppen nummeriert; leer für die Einstellung des Shops. Nur für ein Produkt: Eine Variante folgt ihrem Produkt."
 
 #: src/Abilities/SetProductSetup.php:94
 msgid "The view the designer starts on, one of `views`; empty for the first."
@@ -1643,7 +1643,7 @@ msgstr ""
 msgid ""
 "A variation follows its product for option_groups and group_numbers: set "
 "them on the product."
-msgstr ""
+msgstr "Eine Variante folgt bei option_groups und group_numbers ihrem Produkt: Legen Sie sie am Produkt fest."
 
 #: src/Abilities/SetProductShowcase.php:45
 msgid "The sets the product's template offers, by id and name."
@@ -2855,7 +2855,7 @@ msgstr "Auf dem Produktfoto"
 #: src/Admin/ShowcaseField.php:115
 msgid ""
 "Drawn into the print area of the blank’s photo the product page starts on."
-msgstr ""
+msgstr "Im Druckbereich des Rohling-Fotos, mit dem die Produktseite öffnet."
 
 #. translators: Option of how a showcase product image is drawn: the design alone, flat. Admin product page.
 #: src/Admin/ShowcaseField.php:120
@@ -2864,7 +2864,7 @@ msgstr "Flaches Design"
 
 #: src/Admin/ShowcaseField.php:121
 msgid "The design alone, without the product."
-msgstr ""
+msgstr "Nur das Design, ohne das Produkt."
 
 #. translators: %s: name of a showcase set of the template. Admin product page.
 #: src/Admin/ShowcaseField.php:135
@@ -2875,51 +2875,51 @@ msgstr "Darstellung von %s"
 #. translators: Accessible name of the choices of how the product image is drawn while no showcase set is ticked. Admin product page.
 #: src/Admin/ShowcaseField.php:158
 msgid "How the product image is drawn without a showcase set"
-msgstr ""
+msgstr "Darstellung des Produktbilds ohne Beispielset"
 
 #: src/Admin/ShowcaseField.php:194
 msgid ""
 "The blank no longer has this view or photo, so the image is drawn on the "
 "photo the product page starts on until another is chosen."
-msgstr ""
+msgstr "Der Rohling hat diese Ansicht oder dieses Foto nicht mehr, daher wird das Bild auf dem Foto erstellt, mit dem die Produktseite öffnet, bis ein anderes gewählt wird."
 
 #. translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page.
 #: src/Admin/ShowcaseField.php:212
 #, php-format
 msgid "%s, on the photo of the variant sold"
-msgstr ""
+msgstr "%s, auf dem Foto der verkauften Rohling-Variante"
 
 #. translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page.
 #: src/Admin/ShowcaseField.php:216
 msgid "No longer on the blank"
-msgstr ""
+msgstr "Nicht mehr am Rohling vorhanden"
 
 #. translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page.
 #: src/Admin/ShowcaseField.php:218
 msgid "The photo chosen before"
-msgstr ""
+msgstr "Das zuvor gewählte Foto"
 
 #. translators: A choice of what a variation's image is drawn on: whatever its product's image is drawn on. Admin product page, variation options.
 #: src/Admin/ShowcaseField.php:243
 msgid "As the product image"
-msgstr ""
+msgstr "Wie das Produktbild"
 
 #: src/Admin/ShowcaseField.php:244
 msgid ""
 "The view and photo the product image is drawn on, in this variation’s colour "
 "where the view has it."
-msgstr ""
+msgstr "Die Ansicht und das Foto, auf denen das Produktbild erstellt wird, in der Farbe dieser Variante, sofern die Ansicht sie hat."
 
 #. translators: Accessible name of the choices of what a variation's image is drawn on. Admin product page, variation options.
 #: src/Admin/ShowcaseField.php:259
 msgid "What the variation image is drawn on"
-msgstr ""
+msgstr "Worauf das Variantenbild erstellt wird"
 
 #. translators: 1: a view of the blank product, e.g. "Front"; 2: which of its photos, e.g. 2. Admin product page.
 #: src/Admin/ShowcaseField.php:315
 #, php-format
 msgid "%1$s, photo %2$d"
-msgstr ""
+msgstr "%1$s, Foto %2$d"
 
 #: src/Admin/VariantField.php:71
 msgid ""
@@ -7959,7 +7959,7 @@ msgid ""
 "on, any photo of the blank, such as a scene, even of a view customers are "
 "not shown, or the design alone. The designer still starts on its own "
 "starting view."
-msgstr ""
+msgstr "Solange kein Beispielset angehakt ist, ist das Produktbild die Vorlage mit ihren eigenen Standardwerten. Wählen Sie, worauf es erstellt wird: das Foto, mit dem die Produktseite öffnet, ein beliebiges Foto des Rohlings, etwa eine Szene, auch aus einer Ansicht, die Kunden nicht gezeigt wird, oder nur das Design. Der Designer öffnet weiterhin mit seiner eigenen Startansicht."
 
 #: templates/admin/product-showcase-images.php:40
 msgid ""
@@ -8567,7 +8567,7 @@ msgstr ""
 #. translators: Label of the choices of what a variation's Pixonaut image is drawn on. Admin product page, variation options.
 #: templates/admin/variation-picture-view.php:20
 msgid "Variation image drawn on"
-msgstr ""
+msgstr "Variantenbild erstellt auf"
 
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Email to the merchant.
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Plain text email to the merchant.
