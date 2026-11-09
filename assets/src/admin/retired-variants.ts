@@ -50,5 +50,8 @@ function initField(field: HTMLElement): void {
 		event.stopPropagation();
 		show();
 	});
+	// A retired variant listed only because it was chosen goes once another
+	// is; the change still bubbles up, so WooCommerce saves the new choice.
+	select.addEventListener('change', show);
 	show();
 }

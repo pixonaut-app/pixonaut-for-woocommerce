@@ -69,6 +69,23 @@ describe('initRetiredVariants', () => {
 		expect(select?.value).toBe('v_a3');
 	});
 
+	it('drops a retired variant once another is chosen in its place', () => {
+		const element = field('v_a5');
+		const select = element.querySelector('select');
+		let changes = 0;
+		element.addEventListener('change', () => {
+			changes++;
+		});
+		if (select) {
+			select.value = 'v_a4';
+			select.dispatchEvent(new Event('change', { bubbles: true }));
+		}
+
+		expect(listed(element)).toEqual(['', 'v_a4']);
+		expect(select?.value).toBe('v_a4');
+		expect(changes).toBe(1);
+	});
+
 	it('does not tell WooCommerce the variation changed', () => {
 		const element = field();
 		let changes = 0;
