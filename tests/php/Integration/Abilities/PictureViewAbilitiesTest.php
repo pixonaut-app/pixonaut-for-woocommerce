@@ -35,9 +35,9 @@ use WP_UnitTestCase;
  */
 final class PictureViewAbilitiesTest extends WP_UnitTestCase {
 
-	private const GET = Abilities::NAMESPACE . '/get-product-picture-views';
+	public const GET = Abilities::NAMESPACE . '/get-product-picture-views';
 
-	private const SET = Abilities::NAMESPACE . '/set-product-picture-view';
+	public const SET = Abilities::NAMESPACE . '/set-product-picture-view';
 
 	private const BLANK_ID = 'blank_tee';
 
