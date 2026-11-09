@@ -13,9 +13,11 @@ use Closure;
 use Pixonaut\WooCommerce\Abilities\Ability;
 use Pixonaut\WooCommerce\Abilities\LinkProduct;
 use Pixonaut\WooCommerce\Abilities\ProductLinks;
+use Pixonaut\WooCommerce\Abilities\SetVariationVariants;
 use Pixonaut\WooCommerce\Abilities\Store\ResourceAbility;
 use Pixonaut\WooCommerce\Abilities\Store\StoreResource;
 use Pixonaut\WooCommerce\Abilities\Store\StoreResources;
+use Pixonaut\WooCommerce\Catalogue\ProductVariants;
 
 /**
  * The tools Pixonaut may call with the store's credential, and nothing else:
@@ -39,10 +41,15 @@ final class ShopTools {
 	);
 
 	/**
-	 * @param Closure $links Makes what links a template to a product, once a call needs it.
+	 * @param Closure $links    Makes what links a template to a product, once a call needs it.
+	 * @param Closure $variants Gives what reads a blank's variants and stores a variation's, once a call needs it.
 	 * @phpstan-param Closure(): ProductLinks $links
+	 * @phpstan-param Closure(): ProductVariants $variants
 	 */
-	public function __construct( private readonly Closure $links ) {
+	public function __construct(
+		private readonly Closure $links,
+		private readonly Closure $variants,
+	) {
 	}
 
 	/**
@@ -58,8 +65,10 @@ final class ShopTools {
 				$tools[ $tool->name() ] = $tool;
 			}
 		}
-		$link                   = new LinkProduct( ( $this->links )() );
-		$tools[ $link->name() ] = $link;
+		$links = ( $this->links )();
+		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ) ) as $tool ) {
+			$tools[ $tool->name() ] = $tool;
+		}
 		return $tools;
 	}
 }

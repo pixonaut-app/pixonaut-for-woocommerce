@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-09T17:41:13+00:00\n"
+"POT-Creation-Date: 2026-11-09T18:18:09+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -711,86 +711,86 @@ msgstr ""
 msgid "The blank it is printed on; null for a template-only product."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:138
+#: src/Abilities/ProductSetup.php:136
 msgid "The blank's variant it sells: `ref` null and `problem` `unmapped` when none matches, `retired` when the blank no longer sells it. Null without a blank, and for a variable product, whose variations each give theirs."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:144
-msgid "Whether the store manager picked it rather than it being matched on the product's attributes."
-msgstr ""
-
-#: src/Abilities/ProductSetup.php:154
+#: src/Abilities/ProductSetup.php:139
 msgid "The product page layout it overrides the store's with; null for the store's."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:158
+#: src/Abilities/ProductSetup.php:143
 msgid "The form layout it overrides the store's with; null for the store's."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:162
+#: src/Abilities/ProductSetup.php:147
 msgid "Where it overrides the store on its options in the form: `on_top`, `first` or `last`; null for the store's."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:166
+#: src/Abilities/ProductSetup.php:151
 msgid "Whether it overrides the store on numbering the form's groups: `on` or `off`; null for the store's."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:170
+#: src/Abilities/ProductSetup.php:155
 msgid "The proof approval it overrides the store's with; null for the store's."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:174
+#: src/Abilities/ProductSetup.php:159
 #: src/Abilities/SetProductSetup.php:89
 msgid "The blank's views the designer shows, by id; empty for all."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:179
+#: src/Abilities/ProductSetup.php:164
 msgid "The view the designer starts on; null for the first."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:183
+#: src/Abilities/ProductSetup.php:168
 msgid "The printshop a product without a blank sends its orders to; null for the workspace's default."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:185
+#: src/Abilities/ProductSetup.php:170
 #: src/Abilities/SetProductSetup.php:86
 msgid "empty for the template's own setting"
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:188
+#: src/Abilities/ProductSetup.php:173
 msgid "The template's showcase sets its product images are drawn with, set with `set-product-showcase`; a variation gives its product's."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:200
+#: src/Abilities/ProductSetup.php:185
 msgid "The view of the blank it is drawn on, set with `set-product-picture-view`; absent for the one the product page starts on."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:204
+#: src/Abilities/ProductSetup.php:189
 msgid "The view's photo it is drawn on; absent for its photo of the variant sold."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:216
+#: src/Abilities/ProductSetup.php:201
 msgid "The template version it is linked to, e.g. `mini-tee@2`; null without a template."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:220
+#: src/Abilities/ProductSetup.php:205
 msgid "True when the side stays on its template version; false when it follows the template's latest published version."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:224
+#: src/Abilities/ProductSetup.php:209
 msgid "Where on the blank it is printed; null without a blank."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:230
+#: src/Abilities/ProductSetup.php:215
 msgid "A standing side on a blank whose print areas change with an option: the design each option is printed from, and whether its layout was adjusted by hand, which `reset-standing-layout` undoes. Empty for any other side."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:237
+#: src/Abilities/ProductSetup.php:222
 msgid "The option's values, e.g. \"XL\"."
 msgstr ""
 
-#: src/Abilities/ProductSetup.php:249
+#: src/Abilities/ProductSetup.php:234
 msgid "Where its Pixonaut picture, shown as its image, stands: `drawn`, `pending` to be drawn, `failed` and to be tried again, `own_image` when the store manager's image is kept, `none` with nothing to draw it from, or `off` when the store does not use the pictures or it is not personalised."
+msgstr ""
+
+#: src/Abilities/ProductSetup.php:256
+msgid "Whether the store manager picked it rather than it being matched on the product's attributes."
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
@@ -1085,6 +1085,75 @@ msgid "No live template has the id \"%s\"."
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetVariationVariants.php:56
+msgid "Set the blank variant of variations"
+msgstr ""
+
+#: src/Abilities/SetVariationVariants.php:57
+msgid "Sets which variant of its blank each listed variation of a variable product is printed as, by the variant's options, as picking it in the variation's Pixonaut panel does. Nothing is saved unless every variation listed names exactly one variant that is still sold. The answer gives every variation of the product with the variant it sells now."
+msgstr ""
+
+#: src/Abilities/SetVariationVariants.php:78
+msgid "The variant's option values by axis, e.g. `{\"Size\": \"M\"}`, as Pixonaut writes them or as the variation's Pixonaut panel shows them; every axis of the variant and no other. Empty for a blank without options."
+msgstr ""
+
+#: src/Abilities/SetVariationVariants.php:96
+msgid "Whether customers can buy the product now, its blank variants and WooCommerce's own checks included."
+msgstr ""
+
+#: src/Abilities/SetVariationVariants.php:100
+msgid "Which of the product's variations sell no variant of the blank, in words; null when each does."
+msgstr ""
+
+#: src/Abilities/SetVariationVariants.php:108
+msgid "The blank's variant the variation sells; null when it is not personalised on a blank."
+msgstr ""
+
+#: src/Abilities/SetVariationVariants.php:131
+msgid "No variable product has this id."
+msgstr ""
+
+#. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:166
+#, php-format
+msgid "Variation %d is listed twice."
+msgstr ""
+
+#. translators: 1: a variation's id; 2: a product's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:172
+#, php-format
+msgid "Variation %1$d is not a variation of product %2$d."
+msgstr ""
+
+#. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:177
+#, php-format
+msgid "Variation %d is not personalised on a blank."
+msgstr ""
+
+#. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:208
+#, php-format
+msgid "The options of variation %d name no variant of its blank."
+msgstr ""
+
+#. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:212
+#, php-format
+msgid "The options of variation %d name several variants of its blank."
+msgstr ""
+
+#. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:216
+#, php-format
+msgid "The options of variation %d name a variant of its blank that is retired."
+msgstr ""
+
+#: src/Abilities/SetVariationVariants.php:267
+msgid "Pixonaut could not be reached to read the blank's variants."
+msgstr ""
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/Store/DescribeResource.php:56
 msgid "Describe a kind of thing in the store"
 msgstr ""
@@ -1106,133 +1175,137 @@ msgid "The store has no such kind of thing."
 msgstr ""
 
 #. translators: %s: the input fields a store ability needs, e.g. "product_id, id".
-#: src/Abilities/Store/ResourceAbility.php:132
+#: src/Abilities/Store/ResourceAbility.php:144
 #, php-format
 msgid "Name %s."
 msgstr ""
 
 #. translators: %s: a kind of thing in the store, plural, e.g. "product categories". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:220
+#: src/Abilities/Store/ResourceAbility.php:232
 #, php-format
 msgid "List %s"
 msgstr ""
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:222
+#: src/Abilities/Store/ResourceAbility.php:234
 #, php-format
 msgid "Read %s"
 msgstr ""
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:224
+#: src/Abilities/Store/ResourceAbility.php:236
 #, php-format
 msgid "Create %s"
 msgstr ""
 
 #. translators: %s: a kind of thing in the store, e.g. "product category", or several, e.g. "shipping zone locations". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:226
+#: src/Abilities/Store/ResourceAbility.php:238
 #, php-format
 msgid "Update %s"
 msgstr ""
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:228
+#: src/Abilities/Store/ResourceAbility.php:240
 #, php-format
 msgid "Delete %s"
 msgstr ""
 
 #. translators: 1: a few field names, e.g. "name, slug, parent"; 2: the name of the ability that describes every field.
-#: src/Abilities/Store/ResourceAbility.php:237
+#: src/Abilities/Store/ResourceAbility.php:249
 #, php-format
 msgid "Fields include %1$s; %2$s gives every field."
 msgstr ""
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:243
+#: src/Abilities/Store/ResourceAbility.php:255
 #, php-format
 msgid "Lists the store's %1$s through the REST route %2$s. `query` takes the route's query parameters, e.g. search, page, per_page, and _fields to read only some fields."
 msgstr ""
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:245
+#: src/Abilities/Store/ResourceAbility.php:257
 #, php-format
 msgid "Reads one of the store's %1$s by its id through the REST route %2$s."
 msgstr ""
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:247
+#: src/Abilities/Store/ResourceAbility.php:259
 #, php-format
 msgid "Creates one of the store's %1$s through the REST route %2$s, with `fields` as the route takes them."
 msgstr ""
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "shipping zone locations"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:250
+#: src/Abilities/Store/ResourceAbility.php:262
 #, php-format
 msgid "Replaces the %1$s through the REST route %2$s with `items`, the whole new list: what it leaves out is removed."
 msgstr ""
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:252
+#: src/Abilities/Store/ResourceAbility.php:264
 #, php-format
 msgid "Changes one of the store's %1$s through the REST route %2$s, with only the `fields` to change."
 msgstr ""
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:254
+#: src/Abilities/Store/ResourceAbility.php:266
 #, php-format
 msgid "Deletes one of the store's %1$s through the REST route %2$s. With `force` it is deleted for good where the route would otherwise move it to the trash."
 msgstr ""
 
-#: src/Abilities/Store/ResourceAbility.php:257
+#: src/Abilities/Store/ResourceAbility.php:269
 msgid "The store downloads the file from `fields.source_url`, a public URL."
 msgstr ""
 
-#: src/Abilities/Store/ResourceAbility.php:275
+#: src/Abilities/Store/ResourceAbility.php:272
+msgid "Each variation also gives `pixonaut_variant`, the variant of its blank it is printed as: `ref` null and `problem` `unmapped` when it sells none, `retired` when the blank no longer sells it, `picked` when the store manager picked it rather than it being matched on the variation's attributes; null when it is not personalised on a blank."
+msgstr ""
+
+#: src/Abilities/Store/ResourceAbility.php:290
 msgid "The route's query parameters, e.g. search, page and per_page."
 msgstr ""
 
-#: src/Abilities/Store/ResourceAbility.php:284
+#: src/Abilities/Store/ResourceAbility.php:299
 msgid "The whole new list."
 msgstr ""
 
-#: src/Abilities/Store/ResourceAbility.php:296
+#: src/Abilities/Store/ResourceAbility.php:311
 msgid "The fields as the route takes them."
 msgstr ""
 
-#: src/Abilities/Store/ResourceAbility.php:297
+#: src/Abilities/Store/ResourceAbility.php:312
 msgid "Only the fields to change, as the route takes them."
 msgstr ""
 
-#: src/Abilities/Store/ResourceAbility.php:305
+#: src/Abilities/Store/ResourceAbility.php:320
 msgid "Delete it for good rather than move it to the trash."
 msgstr ""
 
-#: src/Abilities/Store/ResourceAbility.php:326
+#: src/Abilities/Store/ResourceAbility.php:341
 msgid "Dates and times are RFC 3339, with their offset."
 msgstr ""
 
 #. translators: 1: a REST API route; 2: a sentence on how dates are written.
-#: src/Abilities/Store/ResourceAbility.php:331
+#: src/Abilities/Store/ResourceAbility.php:346
 #, php-format
 msgid "What the REST route %1$s answers, without its links. %2$s"
 msgstr ""
 
-#: src/Abilities/Store/ResourceAbility.php:405
+#: src/Abilities/Store/ResourceAbility.php:444
 msgid "The store refused it."
 msgstr ""
 
-#: src/Abilities/Store/ResourceAbility.php:421
+#: src/Abilities/Store/ResourceAbility.php:460
 msgid "Give the file's public URL as fields.source_url."
 msgstr ""
 
 #. translators: %s: the largest file the store takes, e.g. "64 MB".
-#: src/Abilities/Store/ResourceAbility.php:432
+#: src/Abilities/Store/ResourceAbility.php:471
 #, php-format
 msgid "The file is larger than the store takes, at most %s."
 msgstr ""
 
 #. translators: %d: the HTTP status the file's URL answered with.
-#: src/Abilities/Store/ResourceAbility.php:468
+#: src/Abilities/Store/ResourceAbility.php:507
 #, php-format
 msgid "The file could not be downloaded: its URL answered %d."
 msgstr ""

@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-09T10:44:41+00:00\n"
+"POT-Creation-Date: 2026-11-09T18:18:09+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -556,7 +556,14 @@ msgid ""
 "on a view and photo of the blank, or flat; and the views of its side's "
 "placement with their photos, scenes included. Set them with `set-product-"
 "picture-view`."
-msgstr "Ruft ab, worauf die Pixonaut-Bilder eines personalisierten Produkts oder einer Variante erstellt werden: das Bild, das ohne Beispielset erstellt wird (bei einer Variante: ihre eigene Wahl), und jedes gewählte Beispielset, jeweils auf dem Foto, mit dem die Produktseite öffnet, auf einer Ansicht und einem Foto des Rohlings oder flach; dazu die Ansichten der Druckposition seiner Seite mit ihren Fotos, Szenen eingeschlossen. Festgelegt werden sie mit `set-product-picture-view`."
+msgstr ""
+"Ruft ab, worauf die Pixonaut-Bilder eines personalisierten Produkts oder "
+"einer Variante erstellt werden: das Bild, das ohne Beispielset erstellt wird "
+"(bei einer Variante: ihre eigene Wahl), und jedes gewählte Beispielset, "
+"jeweils auf dem Foto, mit dem die Produktseite öffnet, auf einer Ansicht und "
+"einem Foto des Rohlings oder flach; dazu die Ansichten der Druckposition "
+"seiner Seite mit ihren Fotos, Szenen eingeschlossen. Festgelegt werden sie "
+"mit `set-product-picture-view`."
 
 #: src/Abilities/GetProductPictureViews.php:47
 #: src/Abilities/SetProductPictureView.php:47
@@ -574,33 +581,47 @@ msgstr "Die gewählte Ansicht; null für die, mit der die Produktseite öffnet."
 
 #: src/Abilities/GetProductPictureViews.php:163
 msgid "The view's photo chosen; null for its photo of the variant sold."
-msgstr "Das gewählte Foto der Ansicht; null für ihr Foto der verkauften Rohling-Variante."
+msgstr ""
+"Das gewählte Foto der Ansicht; null für ihr Foto der verkauften Rohling-"
+"Variante."
 
 #: src/Abilities/GetProductPictureViews.php:167
 msgid ""
 "True when the blank no longer has the view or photo: the image is drawn on "
 "the photo the product page starts on until another is chosen."
-msgstr "True, wenn der Rohling die Ansicht oder das Foto nicht mehr hat: Das Bild wird auf dem Foto erstellt, mit dem die Produktseite öffnet, bis ein anderes gewählt wird."
+msgstr ""
+"True, wenn der Rohling die Ansicht oder das Foto nicht mehr hat: Das Bild "
+"wird auf dem Foto erstellt, mit dem die Produktseite öffnet, bis ein anderes "
+"gewählt wird."
 
 #: src/Abilities/GetProductPictureViews.php:176
 msgid ""
 "On a product, what its image is drawn on while no showcase set is chosen; on "
 "a variation, its own choice. Null for none: the photo the product page "
 "starts on, a variation's product's choice."
-msgstr "Bei einem Produkt, worauf sein Bild erstellt wird, solange kein Beispielset gewählt ist; bei einer Variante ihre eigene Wahl. Null für keine: das Foto, mit dem die Produktseite öffnet, bzw. bei einer Variante die Wahl ihres Produkts."
+msgstr ""
+"Bei einem Produkt, worauf sein Bild erstellt wird, solange kein Beispielset "
+"gewählt ist; bei einer Variante ihre eigene Wahl. Null für keine: das Foto, "
+"mit dem die Produktseite öffnet, bzw. bei einer Variante die Wahl ihres "
+"Produkts."
 
 #: src/Abilities/GetProductPictureViews.php:181
 msgid ""
 "The showcase sets chosen as the product's images, the first its image; empty "
 "on a variation."
-msgstr "Die als Bilder des Produkts gewählten Beispielsets, das erste ist das Produktbild; leer bei einer Variante."
+msgstr ""
+"Die als Bilder des Produkts gewählten Beispielsets, das erste ist das "
+"Produktbild; leer bei einer Variante."
 
 #: src/Abilities/GetProductPictureViews.php:192
 msgid ""
 "The views of the side's placement with the photos an image can be drawn on, "
 "in the blank's order; empty without a blank; null when Pixonaut could not be "
 "asked."
-msgstr "Die Ansichten der Druckposition der Seite mit den Fotos, auf denen ein Bild erstellt werden kann, in der Reihenfolge des Rohlings; leer ohne Rohling; null, wenn Pixonaut nicht abgefragt werden konnte."
+msgstr ""
+"Die Ansichten der Druckposition der Seite mit den Fotos, auf denen ein Bild "
+"erstellt werden kann, in der Reihenfolge des Rohlings; leer ohne Rohling; "
+"null, wenn Pixonaut nicht abgefragt werden konnte."
 
 #: src/Abilities/GetProductPictureViews.php:206
 msgid "A link to the photo that opens for an hour or two."
@@ -1173,7 +1194,7 @@ msgstr ""
 "Der Rohling, auf den es gedruckt wird; null bei einem Produkt nur mit "
 "Vorlage."
 
-#: src/Abilities/ProductSetup.php:138
+#: src/Abilities/ProductSetup.php:136
 msgid ""
 "The blank's variant it sells: `ref` null and `problem` `unmapped` when none "
 "matches, `retired` when the blank no longer sells it. Null without a blank, "
@@ -1184,55 +1205,51 @@ msgstr ""
 "ohne Rohling und bei einem variablen Produkt, dessen Varianten jeweils ihre "
 "eigene nennen."
 
-#: src/Abilities/ProductSetup.php:144
-msgid ""
-"Whether the store manager picked it rather than it being matched on the "
-"product's attributes."
-msgstr ""
-"Ob der Shop-Manager sie ausgewählt hat, statt dass sie anhand der Attribute "
-"des Produkts zugeordnet wurde."
-
-#: src/Abilities/ProductSetup.php:154
+#: src/Abilities/ProductSetup.php:139
 msgid ""
 "The product page layout it overrides the store's with; null for the store's."
 msgstr ""
 "Das Layout der Produktseite, mit dem es das des Shops überschreibt; null für "
 "das des Shops."
 
-#: src/Abilities/ProductSetup.php:158
+#: src/Abilities/ProductSetup.php:143
 msgid "The form layout it overrides the store's with; null for the store's."
 msgstr ""
 "Das Formular-Layout, mit dem es das des Shops überschreibt; null für das des "
 "Shops."
 
-#: src/Abilities/ProductSetup.php:162
+#: src/Abilities/ProductSetup.php:147
 msgid ""
 "Where it overrides the store on its options in the form: `on_top`, `first` "
 "or `last`; null for the store's."
-msgstr "Wo es seine Optionen im Formular abweichend vom Shop platziert: `on_top`, `first` oder `last`; null für die Einstellung des Shops."
+msgstr ""
+"Wo es seine Optionen im Formular abweichend vom Shop platziert: `on_top`, "
+"`first` oder `last`; null für die Einstellung des Shops."
 
-#: src/Abilities/ProductSetup.php:166
+#: src/Abilities/ProductSetup.php:151
 msgid ""
 "Whether it overrides the store on numbering the form's groups: `on` or "
 "`off`; null for the store's."
-msgstr "Ob es die Gruppen des Formulars abweichend vom Shop nummeriert: `on` oder `off`; null für die Einstellung des Shops."
+msgstr ""
+"Ob es die Gruppen des Formulars abweichend vom Shop nummeriert: `on` oder "
+"`off`; null für die Einstellung des Shops."
 
-#: src/Abilities/ProductSetup.php:170
+#: src/Abilities/ProductSetup.php:155
 msgid "The proof approval it overrides the store's with; null for the store's."
 msgstr ""
 "Die Freigabeart des Korrekturabzugs, mit der es die des Shops überschreibt; "
 "null für die des Shops."
 
-#: src/Abilities/ProductSetup.php:174 src/Abilities/SetProductSetup.php:89
+#: src/Abilities/ProductSetup.php:159 src/Abilities/SetProductSetup.php:89
 msgid "The blank's views the designer shows, by id; empty for all."
 msgstr ""
 "Die Ansichten des Rohlings, die der Designer zeigt, nach ID; leer für alle."
 
-#: src/Abilities/ProductSetup.php:179
+#: src/Abilities/ProductSetup.php:164
 msgid "The view the designer starts on; null for the first."
 msgstr "Die Ansicht, mit der der Designer öffnet; null für die erste."
 
-#: src/Abilities/ProductSetup.php:183
+#: src/Abilities/ProductSetup.php:168
 msgid ""
 "The printshop a product without a blank sends its orders to; null for the "
 "workspace's default."
@@ -1240,11 +1257,11 @@ msgstr ""
 "Die Druckerei, an die ein Produkt ohne Rohling seine Bestellungen sendet; "
 "null für die Standarddruckerei des Arbeitsbereichs."
 
-#: src/Abilities/ProductSetup.php:185 src/Abilities/SetProductSetup.php:86
+#: src/Abilities/ProductSetup.php:170 src/Abilities/SetProductSetup.php:86
 msgid "empty for the template's own setting"
 msgstr "leer für die eigene Einstellung der Vorlage"
 
-#: src/Abilities/ProductSetup.php:188
+#: src/Abilities/ProductSetup.php:173
 msgid ""
 "The template's showcase sets its product images are drawn with, set with "
 "`set-product-showcase`; a variation gives its product's."
@@ -1253,18 +1270,22 @@ msgstr ""
 "festgelegt mit `set-product-showcase`; eine Variante nennt die ihres "
 "Produkts."
 
-#: src/Abilities/ProductSetup.php:200
+#: src/Abilities/ProductSetup.php:185
 msgid ""
 "The view of the blank it is drawn on, set with `set-product-picture-view`; "
 "absent for the one the product page starts on."
-msgstr "Die Ansicht des Rohlings, auf der es erstellt wird, festgelegt mit `set-product-picture-view`; fehlt bei der, mit der die Produktseite öffnet."
+msgstr ""
+"Die Ansicht des Rohlings, auf der es erstellt wird, festgelegt mit `set-"
+"product-picture-view`; fehlt bei der, mit der die Produktseite öffnet."
 
-#: src/Abilities/ProductSetup.php:204
+#: src/Abilities/ProductSetup.php:189
 msgid ""
 "The view's photo it is drawn on; absent for its photo of the variant sold."
-msgstr "Das Foto der Ansicht, auf dem es erstellt wird; fehlt bei ihrem Foto der verkauften Rohling-Variante."
+msgstr ""
+"Das Foto der Ansicht, auf dem es erstellt wird; fehlt bei ihrem Foto der "
+"verkauften Rohling-Variante."
 
-#: src/Abilities/ProductSetup.php:216
+#: src/Abilities/ProductSetup.php:201
 msgid ""
 "The template version it is linked to, e.g. `mini-tee@2`; null without a "
 "template."
@@ -1272,7 +1293,7 @@ msgstr ""
 "Die Vorlagenversion, mit der es verknüpft ist, z. B. `mini-tee@2`; null ohne "
 "Vorlage."
 
-#: src/Abilities/ProductSetup.php:220
+#: src/Abilities/ProductSetup.php:205
 msgid ""
 "True when the side stays on its template version; false when it follows the "
 "template's latest published version."
@@ -1280,11 +1301,11 @@ msgstr ""
 "True, wenn die Seite bei ihrer Vorlagenversion bleibt; false, wenn sie der "
 "zuletzt veröffentlichten Version der Vorlage folgt."
 
-#: src/Abilities/ProductSetup.php:224
+#: src/Abilities/ProductSetup.php:209
 msgid "Where on the blank it is printed; null without a blank."
 msgstr "Wo auf dem Rohling es gedruckt wird; null ohne Rohling."
 
-#: src/Abilities/ProductSetup.php:230
+#: src/Abilities/ProductSetup.php:215
 msgid ""
 "A standing side on a blank whose print areas change with an option: the "
 "design each option is printed from, and whether its layout was adjusted by "
@@ -1295,11 +1316,11 @@ msgstr ""
 "ihr Layout von Hand angepasst wurde, was `reset-standing-layout` rückgängig "
 "macht. Leer bei jeder anderen Seite."
 
-#: src/Abilities/ProductSetup.php:237
+#: src/Abilities/ProductSetup.php:222
 msgid "The option's values, e.g. \"XL\"."
 msgstr "Die Werte der Option, z. B. «XL»."
 
-#: src/Abilities/ProductSetup.php:249
+#: src/Abilities/ProductSetup.php:234
 msgid ""
 "Where its Pixonaut picture, shown as its image, stands: `drawn`, `pending` "
 "to be drawn, `failed` and to be tried again, `own_image` when the store "
@@ -1312,6 +1333,14 @@ msgstr ""
 "Bild des Shop-Managers erhalten bleibt, `none`, wenn nichts da ist, woraus "
 "es erstellt werden kann, oder `off`, wenn der Shop die Bilder nicht "
 "verwendet oder es nicht personalisiert ist."
+
+#: src/Abilities/ProductSetup.php:256
+msgid ""
+"Whether the store manager picked it rather than it being matched on the "
+"product's attributes."
+msgstr ""
+"Ob der Shop-Manager sie ausgewählt hat, statt dass sie anhand der Attribute "
+"des Produkts zugeordnet wurde."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/ReadPluginSettings.php:39
@@ -1467,37 +1496,58 @@ msgid ""
 "variation, it sets the variation's own image, and neither view nor photo "
 "makes it follow its product again; a variation is not drawn flat. The "
 "pictures are drawn again. The answer is `get-product-picture-views`'."
-msgstr "Legt fest, worauf ein Pixonaut-Bild eines personalisierten Produkts oder einer Variante erstellt wird: eine Ansicht des Rohlings und von dieser Ansicht ein Foto (auch ein Szenenfoto), wie `get-product-picture-views` sie auflistet; keines von beiden für das Foto, mit dem die Produktseite öffnet; oder `kind` `preview` für das flache Design. Bei einem Produkt nennt `showcase` eines der mit `set-product-showcase` gewählten Beispielsets; ohne `showcase` gilt es für das Bild, das erstellt wird, solange kein Set gewählt ist. Bei einer Variante legt es das eigene Bild der Variante fest, und ohne Ansicht und Foto folgt sie wieder ihrem Produkt; eine Variante wird nicht flach erstellt. Die Bilder werden neu erstellt. Die Antwort ist die von `get-product-picture-views`."
+msgstr ""
+"Legt fest, worauf ein Pixonaut-Bild eines personalisierten Produkts oder "
+"einer Variante erstellt wird: eine Ansicht des Rohlings und von dieser "
+"Ansicht ein Foto (auch ein Szenenfoto), wie `get-product-picture-views` sie "
+"auflistet; keines von beiden für das Foto, mit dem die Produktseite öffnet; "
+"oder `kind` `preview` für das flache Design. Bei einem Produkt nennt "
+"`showcase` eines der mit `set-product-showcase` gewählten Beispielsets; ohne "
+"`showcase` gilt es für das Bild, das erstellt wird, solange kein Set gewählt "
+"ist. Bei einer Variante legt es das eigene Bild der Variante fest, und ohne "
+"Ansicht und Foto folgt sie wieder ihrem Produkt; eine Variante wird nicht "
+"flach erstellt. Die Bilder werden neu erstellt. Die Antwort ist die von `get-"
+"product-picture-views`."
 
 #: src/Abilities/SetProductPictureView.php:52
 msgid ""
 "On a product, one of the showcase sets chosen as its images, by id; left out "
 "for the image drawn without a set."
-msgstr "Bei einem Produkt eines der als seine Bilder gewählten Beispielsets, nach ID; weggelassen für das Bild, das ohne Set erstellt wird."
+msgstr ""
+"Bei einem Produkt eines der als seine Bilder gewählten Beispielsets, nach "
+"ID; weggelassen für das Bild, das ohne Set erstellt wird."
 
 #: src/Abilities/SetProductPictureView.php:61
 msgid ""
 "One of the views `get-product-picture-views` lists; with no photo, its photo "
 "of the variant sold."
-msgstr "Eine der Ansichten, die `get-product-picture-views` auflistet; ohne Foto ihr Foto der verkauften Rohling-Variante."
+msgstr ""
+"Eine der Ansichten, die `get-product-picture-views` auflistet; ohne Foto ihr "
+"Foto der verkauften Rohling-Variante."
 
 #: src/Abilities/SetProductPictureView.php:65
 msgid ""
 "One of the photos `get-product-picture-views` lists; its view is found when "
 "left out."
-msgstr "Eines der Fotos, die `get-product-picture-views` auflistet; seine Ansicht wird ermittelt, wenn sie weggelassen wird."
+msgstr ""
+"Eines der Fotos, die `get-product-picture-views` auflistet; seine Ansicht "
+"wird ermittelt, wenn sie weggelassen wird."
 
 #: src/Abilities/SetProductPictureView.php:95
 msgid ""
 "The product is not personalised, so it has no Pixonaut images. Set it up "
 "first."
-msgstr "Das Produkt ist nicht personalisiert und hat daher keine Pixonaut-Bilder. Richten Sie es zuerst ein."
+msgstr ""
+"Das Produkt ist nicht personalisiert und hat daher keine Pixonaut-Bilder. "
+"Richten Sie es zuerst ein."
 
 #: src/Abilities/SetProductPictureView.php:101
 msgid ""
 "A variation chooses only the view and photo of its own image, or neither to "
 "follow its product."
-msgstr "Eine Variante wählt nur Ansicht und Foto ihres eigenen Bildes, oder keines von beiden, um ihrem Produkt zu folgen."
+msgstr ""
+"Eine Variante wählt nur Ansicht und Foto ihres eigenen Bildes, oder keines "
+"von beiden, um ihrem Produkt zu folgen."
 
 #. translators: 1: a showcase set's id; 2: the ids chosen as the product's images, e.g. "graduate, wedding".
 #: src/Abilities/SetProductPictureView.php:122
@@ -1505,7 +1555,9 @@ msgstr "Eine Variante wählt nur Ansicht und Foto ihres eigenen Bildes, oder kei
 msgid ""
 "The product shows no showcase set \"%1$s\": choose it with set-product-"
 "showcase first. It shows: %2$s."
-msgstr "Das Produkt zeigt kein Beispielset «%1$s»: Wählen Sie es zuerst mit set-product-showcase. Es zeigt: %2$s."
+msgstr ""
+"Das Produkt zeigt kein Beispielset «%1$s»: Wählen Sie es zuerst mit set-"
+"product-showcase. Es zeigt: %2$s."
 
 #: src/Abilities/SetProductPictureView.php:124
 msgctxt "showcase sets a product shows"
@@ -1516,20 +1568,26 @@ msgstr "keine"
 msgid ""
 "Pixonaut could not be asked for the blank's views and photos. Try again "
 "later."
-msgstr "Die Ansichten und Fotos des Rohlings konnten nicht von Pixonaut abgefragt werden. Versuchen Sie es später noch einmal."
+msgstr ""
+"Die Ansichten und Fotos des Rohlings konnten nicht von Pixonaut abgefragt "
+"werden. Versuchen Sie es später noch einmal."
 
 #: src/Abilities/SetProductPictureView.php:168
 msgid ""
 "The product is not on a blank with photos for its side, so its images can "
 "only be drawn as the product page shows them, or flat."
-msgstr "Das Produkt hat keinen Rohling mit Fotos für seine Seite, daher können seine Bilder nur so erstellt werden, wie die Produktseite sie zeigt, oder flach."
+msgstr ""
+"Das Produkt hat keinen Rohling mit Fotos für seine Seite, daher können seine "
+"Bilder nur so erstellt werden, wie die Produktseite sie zeigt, oder flach."
 
 #. translators: 1: the views of the blank with their photos, e.g. "front (mock-1, mock-2), back (mock-3)".
 #: src/Abilities/SetProductPictureView.php:171
 #, php-format
 msgid ""
 "The blank has no such view or photo for the product's side. It has: %1$s."
-msgstr "Der Rohling hat keine solche Ansicht und kein solches Foto für die Seite des Produkts. Er hat: %1$s."
+msgstr ""
+"Der Rohling hat keine solche Ansicht und kein solches Foto für die Seite des "
+"Produkts. Er hat: %1$s."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductSetup.php:53
@@ -1608,13 +1666,20 @@ msgid ""
 "not arranged by hand: `on_top`, unnumbered, or each in a group of its own, "
 "`first` or `last`; empty for the store's. A product's only: a variation "
 "follows its product."
-msgstr "Wo die Optionen des Produkts im Formular stehen, auf einer Seite, deren Gruppen nicht von Hand angeordnet wurden: `on_top`, ohne Nummer, oder jeweils in einer eigenen Gruppe, `first` oder `last`; leer für die Einstellung des Shops. Nur für ein Produkt: Eine Variante folgt ihrem Produkt."
+msgstr ""
+"Wo die Optionen des Produkts im Formular stehen, auf einer Seite, deren "
+"Gruppen nicht von Hand angeordnet wurden: `on_top`, ohne Nummer, oder "
+"jeweils in einer eigenen Gruppe, `first` oder `last`; leer für die "
+"Einstellung des Shops. Nur für ein Produkt: Eine Variante folgt ihrem "
+"Produkt."
 
 #: src/Abilities/SetProductSetup.php:85
 msgid ""
 "Whether the form numbers its groups; empty for the store's. A product's "
 "only: a variation follows its product."
-msgstr "Ob das Formular seine Gruppen nummeriert; leer für die Einstellung des Shops. Nur für ein Produkt: Eine Variante folgt ihrem Produkt."
+msgstr ""
+"Ob das Formular seine Gruppen nummeriert; leer für die Einstellung des "
+"Shops. Nur für ein Produkt: Eine Variante folgt ihrem Produkt."
 
 #: src/Abilities/SetProductSetup.php:94
 msgid "The view the designer starts on, one of `views`; empty for the first."
@@ -1643,7 +1708,9 @@ msgstr ""
 msgid ""
 "A variation follows its product for option_groups and group_numbers: set "
 "them on the product."
-msgstr "Eine Variante folgt bei option_groups und group_numbers ihrem Produkt: Legen Sie sie am Produkt fest."
+msgstr ""
+"Eine Variante folgt bei option_groups und group_numbers ihrem Produkt: Legen "
+"Sie sie am Produkt fest."
 
 #: src/Abilities/SetProductShowcase.php:45
 msgid "The sets the product's template offers, by id and name."
@@ -1835,6 +1902,108 @@ msgid "No live template has the id \"%s\"."
 msgstr "Keine veröffentlichte Vorlage hat die ID «%s»."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetVariationVariants.php:56
+msgid "Set the blank variant of variations"
+msgstr "Rohling-Variante von Varianten festlegen"
+
+#: src/Abilities/SetVariationVariants.php:57
+msgid ""
+"Sets which variant of its blank each listed variation of a variable product "
+"is printed as, by the variant's options, as picking it in the variation's "
+"Pixonaut panel does. Nothing is saved unless every variation listed names "
+"exactly one variant that is still sold. The answer gives every variation of "
+"the product with the variant it sells now."
+msgstr ""
+"Legt fest, als welche Rohling-Variante jede aufgeführte Variante eines "
+"variablen Produkts gedruckt wird, anhand der Optionen der Rohling-Variante, "
+"so wie die Auswahl im Pixonaut-Bereich der Variante. Es wird nichts "
+"gespeichert, wenn nicht jede aufgeführte Variante genau eine Rohling-"
+"Variante nennt, die noch verkauft wird. Die Antwort nennt jede Variante des "
+"Produkts mit der Rohling-Variante, die sie jetzt verkauft."
+
+#: src/Abilities/SetVariationVariants.php:78
+msgid ""
+"The variant's option values by axis, e.g. `{\"Size\": \"M\"}`, as Pixonaut "
+"writes them or as the variation's Pixonaut panel shows them; every axis of "
+"the variant and no other. Empty for a blank without options."
+msgstr ""
+"Die Optionswerte der Rohling-Variante je Dimension, z. B. `{\"Size\": \"M\"}"
+"`, so wie Pixonaut sie schreibt oder der Pixonaut-Bereich der Variante sie "
+"anzeigt; jede Dimension der Rohling-Variante und keine andere. Leer bei "
+"einem Rohling ohne Optionen."
+
+#: src/Abilities/SetVariationVariants.php:96
+msgid ""
+"Whether customers can buy the product now, its blank variants and "
+"WooCommerce's own checks included."
+msgstr ""
+"Ob Kunden das Produkt jetzt kaufen können, einschliesslich seiner Rohling-"
+"Varianten und der eigenen Prüfungen von WooCommerce."
+
+#: src/Abilities/SetVariationVariants.php:100
+msgid ""
+"Which of the product's variations sell no variant of the blank, in words; "
+"null when each does."
+msgstr ""
+"Welche Varianten des Produkts keine Rohling-Variante verkaufen, in Worten; "
+"null, wenn jede eine verkauft."
+
+#: src/Abilities/SetVariationVariants.php:108
+msgid ""
+"The blank's variant the variation sells; null when it is not personalised on "
+"a blank."
+msgstr ""
+"Die Rohling-Variante, die die Variante verkauft; null, wenn sie nicht auf "
+"einem Rohling personalisiert ist."
+
+#: src/Abilities/SetVariationVariants.php:131
+msgid "No variable product has this id."
+msgstr "Kein variables Produkt hat diese ID."
+
+#. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:166
+#, php-format
+msgid "Variation %d is listed twice."
+msgstr "Variante %d ist doppelt aufgeführt."
+
+#. translators: 1: a variation's id; 2: a product's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:172
+#, php-format
+msgid "Variation %1$d is not a variation of product %2$d."
+msgstr "Variante %1$d ist keine Variante von Produkt %2$d."
+
+#. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:177
+#, php-format
+msgid "Variation %d is not personalised on a blank."
+msgstr "Variante %d ist nicht auf einem Rohling personalisiert."
+
+#. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:208
+#, php-format
+msgid "The options of variation %d name no variant of its blank."
+msgstr "Die Optionen von Variante %d passen zu keiner Rohling-Variante."
+
+#. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:212
+#, php-format
+msgid "The options of variation %d name several variants of its blank."
+msgstr "Die Optionen von Variante %d passen zu mehreren Rohling-Varianten."
+
+#. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetVariationVariants.php:216
+#, php-format
+msgid ""
+"The options of variation %d name a variant of its blank that is retired."
+msgstr ""
+"Die Optionen von Variante %d passen zu einer Rohling-Variante, die "
+"eingestellt ist."
+
+#: src/Abilities/SetVariationVariants.php:267
+msgid "Pixonaut could not be reached to read the blank's variants."
+msgstr "Pixonaut war nicht erreichbar, um die Varianten des Rohlings zu lesen."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/Store/DescribeResource.php:56
 msgid "Describe a kind of thing in the store"
 msgstr "Eine Objektart im Shop beschreiben"
@@ -1864,49 +2033,49 @@ msgid "The store has no such kind of thing."
 msgstr "Der Shop hat keine solche Objektart."
 
 #. translators: %s: the input fields a store ability needs, e.g. "product_id, id".
-#: src/Abilities/Store/ResourceAbility.php:132
+#: src/Abilities/Store/ResourceAbility.php:144
 #, php-format
 msgid "Name %s."
 msgstr "Geben Sie %s an."
 
 #. translators: %s: a kind of thing in the store, plural, e.g. "product categories". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:220
+#: src/Abilities/Store/ResourceAbility.php:232
 #, php-format
 msgid "List %s"
 msgstr "%s auflisten"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:222
+#: src/Abilities/Store/ResourceAbility.php:234
 #, php-format
 msgid "Read %s"
 msgstr "%s abrufen"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:224
+#: src/Abilities/Store/ResourceAbility.php:236
 #, php-format
 msgid "Create %s"
 msgstr "%s erstellen"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category", or several, e.g. "shipping zone locations". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:226
+#: src/Abilities/Store/ResourceAbility.php:238
 #, php-format
 msgid "Update %s"
 msgstr "%s aktualisieren"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:228
+#: src/Abilities/Store/ResourceAbility.php:240
 #, php-format
 msgid "Delete %s"
 msgstr "%s löschen"
 
 #. translators: 1: a few field names, e.g. "name, slug, parent"; 2: the name of the ability that describes every field.
-#: src/Abilities/Store/ResourceAbility.php:237
+#: src/Abilities/Store/ResourceAbility.php:249
 #, php-format
 msgid "Fields include %1$s; %2$s gives every field."
 msgstr "Zu den Feldern gehören %1$s; %2$s nennt alle Felder."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:243
+#: src/Abilities/Store/ResourceAbility.php:255
 #, php-format
 msgid ""
 "Lists the store's %1$s through the REST route %2$s. `query` takes the "
@@ -1918,7 +2087,7 @@ msgstr ""
 "nur einige Felder zu lesen."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:245
+#: src/Abilities/Store/ResourceAbility.php:257
 #, php-format
 msgid "Reads one of the store's %1$s by its id through the REST route %2$s."
 msgstr ""
@@ -1926,7 +2095,7 @@ msgstr ""
 "%2$s."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:247
+#: src/Abilities/Store/ResourceAbility.php:259
 #, php-format
 msgid ""
 "Creates one of the store's %1$s through the REST route %2$s, with `fields` "
@@ -1936,7 +2105,7 @@ msgstr ""
 "mit `fields`, wie die Route sie erwartet."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "shipping zone locations"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:250
+#: src/Abilities/Store/ResourceAbility.php:262
 #, php-format
 msgid ""
 "Replaces the %1$s through the REST route %2$s with `items`, the whole new "
@@ -1946,7 +2115,7 @@ msgstr ""
 "Liste: Was darin fehlt, wird entfernt."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:252
+#: src/Abilities/Store/ResourceAbility.php:264
 #, php-format
 msgid ""
 "Changes one of the store's %1$s through the REST route %2$s, with only the "
@@ -1956,7 +2125,7 @@ msgstr ""
 "den zu ändernden `fields`."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:254
+#: src/Abilities/Store/ResourceAbility.php:266
 #, php-format
 msgid ""
 "Deletes one of the store's %1$s through the REST route %2$s. With `force` it "
@@ -1966,59 +2135,74 @@ msgstr ""
 "`force` wird er endgültig gelöscht, wo die Route ihn sonst in den Papierkorb "
 "legen würde."
 
-#: src/Abilities/Store/ResourceAbility.php:257
+#: src/Abilities/Store/ResourceAbility.php:269
 msgid "The store downloads the file from `fields.source_url`, a public URL."
 msgstr ""
 "Der Shop lädt die Datei von `fields.source_url` herunter, einer öffentlichen "
 "URL."
 
-#: src/Abilities/Store/ResourceAbility.php:275
+#: src/Abilities/Store/ResourceAbility.php:272
+msgid ""
+"Each variation also gives `pixonaut_variant`, the variant of its blank it is "
+"printed as: `ref` null and `problem` `unmapped` when it sells none, "
+"`retired` when the blank no longer sells it, `picked` when the store manager "
+"picked it rather than it being matched on the variation's attributes; null "
+"when it is not personalised on a blank."
+msgstr ""
+"Jede Variante nennt ausserdem `pixonaut_variant`, die Rohling-Variante, als "
+"die sie gedruckt wird: `ref` null und `problem` `unmapped`, wenn sie keine "
+"verkauft, `retired`, wenn der Rohling sie nicht mehr verkauft, `picked`, "
+"wenn der Shop-Manager sie gewählt hat, statt dass sie anhand der Attribute "
+"der Variante zugeordnet wurde; null, wenn sie nicht auf einem Rohling "
+"personalisiert ist."
+
+#: src/Abilities/Store/ResourceAbility.php:290
 msgid "The route's query parameters, e.g. search, page and per_page."
 msgstr "Die Abfrageparameter der Route, z. B. search, page und per_page."
 
-#: src/Abilities/Store/ResourceAbility.php:284
+#: src/Abilities/Store/ResourceAbility.php:299
 msgid "The whole new list."
 msgstr "Die gesamte neue Liste."
 
-#: src/Abilities/Store/ResourceAbility.php:296
+#: src/Abilities/Store/ResourceAbility.php:311
 msgid "The fields as the route takes them."
 msgstr "Die Felder, wie die Route sie erwartet."
 
-#: src/Abilities/Store/ResourceAbility.php:297
+#: src/Abilities/Store/ResourceAbility.php:312
 msgid "Only the fields to change, as the route takes them."
 msgstr "Nur die zu ändernden Felder, wie die Route sie erwartet."
 
-#: src/Abilities/Store/ResourceAbility.php:305
+#: src/Abilities/Store/ResourceAbility.php:320
 msgid "Delete it for good rather than move it to the trash."
 msgstr "Endgültig löschen, statt in den Papierkorb zu legen."
 
-#: src/Abilities/Store/ResourceAbility.php:326
+#: src/Abilities/Store/ResourceAbility.php:341
 msgid "Dates and times are RFC 3339, with their offset."
 msgstr ""
 "Datums- und Zeitangaben sind im Format RFC 3339, mit ihrem Zeitzonenversatz."
 
 #. translators: 1: a REST API route; 2: a sentence on how dates are written.
-#: src/Abilities/Store/ResourceAbility.php:331
+#: src/Abilities/Store/ResourceAbility.php:346
 #, php-format
 msgid "What the REST route %1$s answers, without its links. %2$s"
 msgstr "Was die REST-Route %1$s zurückgibt, ohne ihre Links. %2$s"
 
-#: src/Abilities/Store/ResourceAbility.php:405
+#: src/Abilities/Store/ResourceAbility.php:444
 msgid "The store refused it."
 msgstr "Der Shop hat es abgelehnt."
 
-#: src/Abilities/Store/ResourceAbility.php:421
+#: src/Abilities/Store/ResourceAbility.php:460
 msgid "Give the file's public URL as fields.source_url."
 msgstr "Geben Sie die öffentliche URL der Datei als fields.source_url an."
 
 #. translators: %s: the largest file the store takes, e.g. "64 MB".
-#: src/Abilities/Store/ResourceAbility.php:432
+#: src/Abilities/Store/ResourceAbility.php:471
 #, php-format
 msgid "The file is larger than the store takes, at most %s."
 msgstr "Die Datei ist grösser, als der Shop annimmt, höchstens %s."
 
 #. translators: %d: the HTTP status the file's URL answered with.
-#: src/Abilities/Store/ResourceAbility.php:468
+#: src/Abilities/Store/ResourceAbility.php:507
 #, php-format
 msgid "The file could not be downloaded: its URL answered %d."
 msgstr ""
@@ -2881,7 +3065,10 @@ msgstr "Darstellung des Produktbilds ohne Beispielset"
 msgid ""
 "The blank no longer has this view or photo, so the image is drawn on the "
 "photo the product page starts on until another is chosen."
-msgstr "Der Rohling hat diese Ansicht oder dieses Foto nicht mehr, daher wird das Bild auf dem Foto erstellt, mit dem die Produktseite öffnet, bis ein anderes gewählt wird."
+msgstr ""
+"Der Rohling hat diese Ansicht oder dieses Foto nicht mehr, daher wird das "
+"Bild auf dem Foto erstellt, mit dem die Produktseite öffnet, bis ein anderes "
+"gewählt wird."
 
 #. translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page.
 #: src/Admin/ShowcaseField.php:212
@@ -2908,7 +3095,9 @@ msgstr "Wie das Produktbild"
 msgid ""
 "The view and photo the product image is drawn on, in this variation’s colour "
 "where the view has it."
-msgstr "Die Ansicht und das Foto, auf denen das Produktbild erstellt wird, in der Farbe dieser Variante, sofern die Ansicht sie hat."
+msgstr ""
+"Die Ansicht und das Foto, auf denen das Produktbild erstellt wird, in der "
+"Farbe dieser Variante, sofern die Ansicht sie hat."
 
 #. translators: Accessible name of the choices of what a variation's image is drawn on. Admin product page, variation options.
 #: src/Admin/ShowcaseField.php:259
@@ -7959,7 +8148,12 @@ msgid ""
 "on, any photo of the blank, such as a scene, even of a view customers are "
 "not shown, or the design alone. The designer still starts on its own "
 "starting view."
-msgstr "Solange kein Beispielset angehakt ist, ist das Produktbild die Vorlage mit ihren eigenen Standardwerten. Wählen Sie, worauf es erstellt wird: das Foto, mit dem die Produktseite öffnet, ein beliebiges Foto des Rohlings, etwa eine Szene, auch aus einer Ansicht, die Kunden nicht gezeigt wird, oder nur das Design. Der Designer öffnet weiterhin mit seiner eigenen Startansicht."
+msgstr ""
+"Solange kein Beispielset angehakt ist, ist das Produktbild die Vorlage mit "
+"ihren eigenen Standardwerten. Wählen Sie, worauf es erstellt wird: das Foto, "
+"mit dem die Produktseite öffnet, ein beliebiges Foto des Rohlings, etwa eine "
+"Szene, auch aus einer Ansicht, die Kunden nicht gezeigt wird, oder nur das "
+"Design. Der Designer öffnet weiterhin mit seiner eigenen Startansicht."
 
 #: templates/admin/product-showcase-images.php:40
 msgid ""
@@ -8021,7 +8215,7 @@ msgstr ""
 #. translators: Screen reader label of the dropdown that picks a print size for a side, on the admin product page, read by the merchant.
 #. translators: Heading of the print size picker in the product page's designer, as Pixonaut's designer words it.
 #: templates/admin/product-side.php:41
-#: templates/storefront/form-placeholder.php:376
+#: templates/storefront/form-placeholder.php:380
 msgid "Print size"
 msgstr "Druckgrösse"
 
@@ -8632,170 +8826,170 @@ msgstr ""
 "Öffnen Sie die Bestellung; in den Bestellhinweisen steht, was passiert ist."
 
 #. translators: %s: how far a picture is zoomed in, e.g. 1.5 for one and a half times. Beside the zoom slider of a picture in the product page's designer.
-#: templates/storefront/form-placeholder.php:87
+#: templates/storefront/form-placeholder.php:90
 #, php-format
 msgctxt "designer crop zoom"
 msgid "%s×"
 msgstr "%s×"
 
 #. translators: Beside a colour field's heading in the product page's designer, when the customer's colour is one of their own rather than the palette's, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:99
+#: templates/storefront/form-placeholder.php:102
 msgctxt "designer colour"
 msgid "Custom"
 msgstr "Eigene"
 
 #. translators: Tile of a shape field in the product page's designer that leaves the shape out, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:149
+#: templates/storefront/form-placeholder.php:152
 msgctxt "designer shape"
 msgid "None"
 msgstr "Keine"
 
 #. translators: A way to fit a picture in its frame, on a tile in the product page's designer: the whole picture shows, leaving space around it.
-#: templates/storefront/form-placeholder.php:153
+#: templates/storefront/form-placeholder.php:156
 msgctxt "designer picture fit"
 msgid "Show whole picture"
 msgstr "Ganzes Bild zeigen"
 
 #. translators: A way to fit a picture in its frame, on a tile in the product page's designer: the picture covers the frame, cut at its edges.
-#: templates/storefront/form-placeholder.php:155
+#: templates/storefront/form-placeholder.php:158
 msgctxt "designer picture fit"
 msgid "Fill the frame"
 msgstr "Rahmen füllen"
 
 #. translators: A way to fit a picture in its frame, on a tile in the product page's designer: the picture is stretched to the frame's shape.
-#: templates/storefront/form-placeholder.php:157
+#: templates/storefront/form-placeholder.php:160
 msgctxt "designer picture fit"
 msgid "Stretch to fit"
 msgstr "Strecken"
 
 #. translators: A way to fit a picture in its frame, on a tile in the product page's designer: the picture repeats across the frame.
-#: templates/storefront/form-placeholder.php:159
+#: templates/storefront/form-placeholder.php:162
 msgctxt "designer picture fit"
 msgid "Repeat as pattern"
 msgstr "Als Muster wiederholen"
 
 #. translators: A text's alignment, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:175
+#: templates/storefront/form-placeholder.php:178
 msgctxt "designer text alignment"
 msgid "Left"
 msgstr "Links"
 
 #. translators: A text's alignment, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:177
+#: templates/storefront/form-placeholder.php:180
 msgctxt "designer text alignment"
 msgid "Center"
 msgstr "Zentriert"
 
 #. translators: A text's alignment, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:179
+#: templates/storefront/form-placeholder.php:182
 msgctxt "designer text alignment"
 msgid "Right"
 msgstr "Rechts"
 
 #. translators: Where a text sits from top to bottom of its box, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:183
+#: templates/storefront/form-placeholder.php:186
 msgctxt "designer text position"
 msgid "Top"
 msgstr "Oben"
 
 #. translators: Where a text sits from top to bottom of its box, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:185
+#: templates/storefront/form-placeholder.php:188
 msgctxt "designer text position"
 msgid "Middle"
 msgstr "Mitte"
 
 #. translators: Where a text sits from top to bottom of its box, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:187
+#: templates/storefront/form-placeholder.php:190
 msgctxt "designer text position"
 msgid "Bottom"
 msgstr "Unten"
 
 #. translators: A text's case, in a menu in the product page's designer: the text as the customer wrote it.
-#: templates/storefront/form-placeholder.php:191
+#: templates/storefront/form-placeholder.php:194
 msgctxt "designer text case"
 msgid "As typed"
 msgstr "Wie eingegeben"
 
 #. translators: A text's case, in a menu in the product page's designer. Written in that case.
-#: templates/storefront/form-placeholder.php:193
+#: templates/storefront/form-placeholder.php:196
 msgctxt "designer text case"
 msgid "UPPERCASE"
 msgstr "GROSSBUCHSTABEN"
 
 #. translators: A text's case, in a menu in the product page's designer. Written in that case.
-#: templates/storefront/form-placeholder.php:195
+#: templates/storefront/form-placeholder.php:198
 msgctxt "designer text case"
 msgid "lowercase"
 msgstr "kleinbuchstaben"
 
 #. translators: A text's case, in a menu in the product page's designer: each word starts with a capital. Written in that case.
-#: templates/storefront/form-placeholder.php:197
+#: templates/storefront/form-placeholder.php:200
 msgctxt "designer text case"
 msgid "Title Case"
 msgstr "Jedes Wort Groß"
 
 #. translators: A photo's tone, in a menu in the product page's designer: the photo as it is.
-#: templates/storefront/form-placeholder.php:201
+#: templates/storefront/form-placeholder.php:204
 msgctxt "designer photo tone"
 msgid "Original"
 msgstr "Original"
 
 #. translators: A photo's tone, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:203
+#: templates/storefront/form-placeholder.php:206
 msgctxt "designer photo tone"
 msgid "Black and white"
 msgstr "Schwarzweiß"
 
 #. translators: A photo's tone, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:205
+#: templates/storefront/form-placeholder.php:208
 msgctxt "designer photo tone"
 msgid "Sepia"
 msgstr "Sepia"
 
 #. translators: A photo's tone, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:207
+#: templates/storefront/form-placeholder.php:210
 msgctxt "designer photo tone"
 msgid "Duotone"
 msgstr "Duoton"
 
 #. translators: A photo's tone, in a menu in the product page's designer: the photo in one colour.
-#: templates/storefront/form-placeholder.php:209
+#: templates/storefront/form-placeholder.php:212
 msgctxt "designer photo tone"
 msgid "Recolour"
 msgstr "Umfärben"
 
 #. translators: A photo's tone, in a menu in the product page's designer: its colours reversed.
-#: templates/storefront/form-placeholder.php:211
+#: templates/storefront/form-placeholder.php:214
 msgctxt "designer photo tone"
 msgid "Invert"
 msgstr "Invertieren"
 
 #. translators: A font's weight, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:215
+#: templates/storefront/form-placeholder.php:218
 msgctxt "designer font weight"
 msgid "Regular"
 msgstr "Normal"
 
 #. translators: A font's weight, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:217
+#: templates/storefront/form-placeholder.php:220
 msgctxt "designer font weight"
 msgid "Bold"
 msgstr "Fett"
 
 #. translators: %s: a font's weight as a number, e.g. 500. In a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:222
+#: templates/storefront/form-placeholder.php:225
 #, php-format
 msgid "Weight %s"
 msgstr "Stärke %s"
 
 #. translators: Label of the slider that sizes a picture or text in the product page's designer, as Pixonaut's designer names it.
-#: templates/storefront/form-placeholder.php:257
+#: templates/storefront/form-placeholder.php:261
 msgctxt "designer scale slider"
 msgid "Size"
 msgstr "Grösse"
 
 #. translators: %d: the most characters a text field takes. Help under a text field in the product page's designer.
-#: templates/storefront/form-placeholder.php:261
+#: templates/storefront/form-placeholder.php:265
 #, php-format
 msgid "Up to %d character"
 msgid_plural "Up to %d characters"
@@ -8803,74 +8997,74 @@ msgstr[0] "Bis zu %d Zeichen"
 msgstr[1] "Bis zu %d Zeichen"
 
 #. translators: Hint in the product page's designer, under the fields of pictures or texts the customer can move.
-#: templates/storefront/form-placeholder.php:267
+#: templates/storefront/form-placeholder.php:271
 msgid "Drag them on the preview to place them"
 msgstr "Zieh sie in der Vorschau an die gewünschte Stelle"
 
 #. translators: Hint in the product page's designer, under the fields of a picture or text the customer can move.
-#: templates/storefront/form-placeholder.php:269
+#: templates/storefront/form-placeholder.php:273
 msgid "Drag it on the preview to place it"
 msgstr "Zieh es in der Vorschau an die gewünschte Stelle"
 
 #. translators: Link beside the hint to drag a picture or text on the product page's designer preview: puts it back where it started.
-#: templates/storefront/form-placeholder.php:281
+#: templates/storefront/form-placeholder.php:285
 msgctxt "designer placement"
 msgid "Reset"
 msgstr "Zurücksetzen"
 
 #. translators: Button of a picture field in the product page's designer, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:289
+#: templates/storefront/form-placeholder.php:293
 msgid "Upload an image"
 msgstr "Bild hochladen"
 
 #. translators: Tile of a picture field in the product page's designer that leaves the picture out.
-#: templates/storefront/form-placeholder.php:299
+#: templates/storefront/form-placeholder.php:303
 msgid "No picture"
 msgstr "Kein Bild"
 
 #. translators: Button under a picture's zoom slider in the product page's designer: drag the picture in its frame on the preview, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:316
+#: templates/storefront/form-placeholder.php:320
 msgid "Move picture"
 msgstr "Bild verschieben"
 
 #. translators: Button under a picture's zoom slider in the product page's designer: puts the picture back as the template frames it.
-#: templates/storefront/form-placeholder.php:317
+#: templates/storefront/form-placeholder.php:321
 msgctxt "designer crop"
 msgid "Reset"
 msgstr "Zurücksetzen"
 
 #. translators: %d: the colour's place along a gradient, from 1. Heading of one of a gradient's colours in the product page's designer, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:343
+#: templates/storefront/form-placeholder.php:347
 #, php-format
 msgid "Colour %d"
 msgstr "Farbe %d"
 
 #. translators: Name of the first step of the product page's designer, where the customer picks the product's options, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:389
+#: templates/storefront/form-placeholder.php:393
 msgctxt "designer step"
 msgid "Options"
 msgstr "Optionen"
 
 #. translators: 1: the step shown, 2: how many steps there are. Above a step's title in the product page's designer.
-#: templates/storefront/form-placeholder.php:431
+#: templates/storefront/form-placeholder.php:435
 #, php-format
 msgid "Step %1$d of %2$d"
 msgstr "Schritt %1$d von %2$d"
 
 #. translators: 1: the step shown, 2: how many steps there are. Above a step's title in the product page's designer, in place of "Step 1 of 2" where the designer is narrow.
-#: templates/storefront/form-placeholder.php:432
+#: templates/storefront/form-placeholder.php:436
 #, php-format
 msgid "%1$d of %2$d"
 msgstr "%1$d von %2$d"
 
 #. translators: Button in the product page's designer that goes back a step.
-#: templates/storefront/form-placeholder.php:457
+#: templates/storefront/form-placeholder.php:461
 msgctxt "designer step"
 msgid "Back"
 msgstr "Zurück"
 
 #. translators: %s: the next step's name. Button in the product page's designer that moves on a step.
-#: templates/storefront/form-placeholder.php:459
+#: templates/storefront/form-placeholder.php:463
 #, php-format
 msgid "Next: %s"
 msgstr "Weiter: %s"
@@ -9699,21 +9893,6 @@ msgstr[1] "%s Ansichten"
 #~ msgstr ""
 #~ "Warum das Produkt nicht gekauft werden kann, in Worten; null, wenn es "
 #~ "gekauft werden kann."
-
-#~ msgid ""
-#~ "Whether customers can buy the product now, its blank variants and "
-#~ "WooCommerce's own checks included."
-#~ msgstr ""
-#~ "Ob Kunden das Produkt jetzt kaufen können, einschliesslich seiner Rohling-"
-#~ "Varianten und der eigenen Prüfungen von WooCommerce."
-
-#~ msgid ""
-#~ "Which of the product's variations sell no variant of the blank, in words; "
-#~ "null when each does. Pick the variant on the product screen."
-#~ msgstr ""
-#~ "Welche Varianten des Produkts keine Rohling-Variante verkaufen, in "
-#~ "Worten; null, wenn jede eine verkauft. Wählen Sie die Rohling-Variante "
-#~ "auf der Bearbeitungsseite des Produkts."
 
 #~ msgid ""
 #~ "`personalised` when the customer fills in the template, `standing` when "

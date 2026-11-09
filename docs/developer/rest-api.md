@@ -55,7 +55,7 @@ and a call answers `200 {"result": ...}`. Otherwise `{"code", "message"}`:
 | 403 | `store_access_off` | The switch is off |
 | 404 | `unknown_tool` | Not one of the tools below |
 | 422 | `invalid_input` | The body is not JSON, does not fit the tool's schema, or names what is not there |
-| 502 | `store_error` | The shop itself failed |
+| 502 | `store_error` | The shop itself failed, or Pixonaut could not give what a tool needed from it |
 
 `ShopTools\ShopTools` is the closed list of tools, separate from the abilities
 offered to a user:
@@ -69,6 +69,7 @@ offered to a user:
 | Categories | `list-product-categories`, `get-product-category`, `create-product-category`, `update-product-category`, `delete-product-category` |
 | Tags | `list-product-tags`, `get-product-tag`, `create-product-tag`, `update-product-tag`, `delete-product-tag` |
 | Linking a template | `link-product` |
+| Blank variants of variations | `set-variation-variants` |
 | Orders, read only | `list-orders`, `get-order` |
 
 Pixonaut asks for changes to the switch with the webhook events
