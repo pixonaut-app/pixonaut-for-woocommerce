@@ -15,18 +15,18 @@ use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use WP_REST_Request;
 
 /**
- * Every path of the product screen that reads a blank, with the blank as
- * Pixonaut answers it today: no blank-wide `photoSource`, each view with its
- * own `source` and `position`, the blank's `order`, folding placements.
+ * Every path of the product screen that reads a blank, with the blank
+ * answering what it may beside its views: each view with its own `source`
+ * and `position`, the blank's `order` with a scene, folding placements.
  */
-final class BlankAnsweredTodayTest extends ProductPanelTestCase {
+final class BlankOrderedViewsTest extends ProductPanelTestCase {
 
-	public function test_the_blank_search_lists_a_blank_without_a_photo_source(): void {
+	public function test_the_blank_search_lists_a_blank_with_ordered_views(): void {
 		wp_set_current_user( $this->user( 'shop_manager' ) );
-		$this->recorder->off_spec(
+		$this->recorder->json(
 			200,
 			array(
-				'blanks'       => array( BlankFixture::as_answered_today( $this->blank(), false ) ),
+				'blanks'       => array( BlankFixture::with_ordered_views( $this->blank(), false ) ),
 				'total'        => 1,
 				'page'         => 1,
 				'pageSize'     => Catalogue::SEARCH_PAGE_SIZE,
@@ -41,10 +41,10 @@ final class BlankAnsweredTodayTest extends ProductPanelTestCase {
 		$this->assertSame( self::PLACEMENT_ID, $response->get_data()['results'][0]['placements'][0]['id'] );
 	}
 
-	public function test_the_placements_route_lists_the_placements_of_a_blank_without_a_photo_source(): void {
+	public function test_the_placements_route_lists_the_placements_of_a_blank_with_ordered_views(): void {
 		wp_set_current_user( $this->user( 'shop_manager' ) );
-		$this->recorder->off_spec( 200, BlankFixture::as_answered_today( $this->blank() ) );
-		$this->recorder->off_spec( 200, BlankFixture::mockups_as_answered_today( $this->mockups() ) );
+		$this->recorder->json( 200, BlankFixture::with_ordered_views( $this->blank() ) );
+		$this->recorder->json( 200, BlankFixture::mockups_with_ordered_views( $this->mockups() ) );
 
 		$response = $this->get( CatalogueSearch::PLACEMENTS_ROUTE, array( 'blank' => self::BLANK_ID ) );
 
@@ -53,9 +53,9 @@ final class BlankAnsweredTodayTest extends ProductPanelTestCase {
 		$this->assertSame( self::BASE_URL . '/i/thumb-front', $response->get_data()['results'][0]['thumbnail'] );
 	}
 
-	public function test_a_product_links_to_a_blank_without_a_photo_source_and_sells(): void {
+	public function test_a_product_links_to_a_blank_with_ordered_views_and_sells(): void {
 		$product = $this->product();
-		$this->recorder->off_spec( 200, BlankFixture::as_answered_today( $this->blank() ) );
+		$this->recorder->json( 200, BlankFixture::with_ordered_views( $this->blank() ) );
 		$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
 		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
 		$this->script_template();
@@ -70,14 +70,14 @@ final class BlankAnsweredTodayTest extends ProductPanelTestCase {
 		$this->assertTrue( $this->reload( $product->get_id() )->is_purchasable() );
 	}
 
-	public function test_the_panel_shows_a_linked_blank_without_a_photo_source(): void {
+	public function test_the_panel_shows_a_linked_blank_with_ordered_views(): void {
 		$product = $this->product();
 		$this->script_link( array( 'legal' => true ) );
 		$this->save( $product->get_id() );
 		// The panel reads the blank afresh, not what the save kept.
 		$this->cache->flush();
-		$this->recorder->off_spec( 200, BlankFixture::as_answered_today( $this->blank() ) );
-		$this->recorder->off_spec( 200, BlankFixture::mockups_as_answered_today( $this->mockups() ) );
+		$this->recorder->json( 200, BlankFixture::with_ordered_views( $this->blank() ) );
+		$this->recorder->json( 200, BlankFixture::mockups_with_ordered_views( $this->mockups() ) );
 		$this->recorder->json( 200, self::printshops() );
 
 		$panel = $this->panel->panel( $this->reload( $product->get_id() ) );

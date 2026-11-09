@@ -90,6 +90,7 @@ abstract class StandingTestCase extends ProductPanelTestCase {
 			'axes'        => array( 'Color', self::AREAS_VARY_BY ),
 			'options'     => array(),
 			'areasVaryBy' => array( self::AREAS_VARY_BY ),
+			'paintBy'     => null,
 			'variants'    => array(
 				$variant( 'v_white_s', 'White', 'S' ),
 				$variant( 'v_black_s', 'Black', 'S' ),

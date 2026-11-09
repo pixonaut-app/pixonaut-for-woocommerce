@@ -1009,6 +1009,10 @@ export const readOrder: Handler = (context) => {
 			reroutes: [],
 			deliveryChanges: order.deliveryChanges.map((change) => ({ ...change })),
 			deliveryChangeRefusal: deliveryChangeRefusal(context.state, order),
+			// The fake's printshops stitch nothing: none charges an embroidery
+			// set-up fee or holds an order for its merchant to approve a change.
+			embroideryFee: null,
+			approvalHold: null,
 		},
 	};
 };

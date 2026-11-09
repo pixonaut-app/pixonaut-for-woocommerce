@@ -13,17 +13,17 @@ use Pixonaut\WooCommerce\Catalogue\StandingRow;
 
 /**
  * A standing side on a blank whose print areas change with Size, the blank
- * answered as Pixonaut answers it today: the side reads the blank's areas
- * for each row from a blank without a `photoSource`.
+ * answered with its ordered views (`BlankFixture::with_ordered_views()`):
+ * the side reads the blank's areas for each row all the same.
  */
-final class StandingBlankAnsweredTodayTest extends StandingTestCase {
+final class StandingBlankOrderedViewsTest extends StandingTestCase {
 
 	public function set_up(): void {
 		parent::set_up();
-		$this->blank_answered_today = true;
+		$this->blank_with_ordered_views = true;
 	}
 
-	public function test_a_standing_side_gets_a_design_per_row_of_a_blank_without_a_photo_source(): void {
+	public function test_a_standing_side_gets_a_design_per_row_of_a_blank_with_ordered_views(): void {
 		$product = $this->product();
 		$this->script_link( array( 'legal' => true ) );
 		$this->script_rows( array( 'des_row_s', 'des_row_m' ) );

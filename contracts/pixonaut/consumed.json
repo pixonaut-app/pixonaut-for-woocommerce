@@ -154,7 +154,5 @@
 		"PUT /v1/connect/store-access": "integrationKey",
 		"PUT /v1/designs/{id}/external-ref": "integrationKey"
 	},
-	"pending": [
-		{ "op": "POST /v1/assets/{id}/threads", "requirement": "pixonaut-app/pixonaut#3257" }
-	]
+	"pending": []
 }

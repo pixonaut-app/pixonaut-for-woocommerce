@@ -590,6 +590,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/assets/{id}/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Draw a picture in an embroidery machine's threads
+         * @description Reads a picture for embroidery and, where it is a few flat colours, no more than `maxThreads`, makes a copy of it drawn in the nearest of `threads`, every pixel a thread and its ground clear, to put in its place on an embroidered print: the design then draws the copy, and its preview and print alike show the threads that are stitched. Answers what the picture is, the copy, and each of its colours with its thread. A photo, a picture of more colours, one too large or one that cannot be read has no copy, and its design is refused `design_not_stitchable` with `stitch_picture` and the reason. A picture drawn in the threads already is its own copy. Asked again for the same picture and threads, answers the same copy (200). A customer's upload is copied for its own session only. Only while the workspace's embroidery feature is on.
+         */
+        post: operations["assets.threadCopy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/assets/{id}/usage": {
         parameters: {
             query?: never;
@@ -988,7 +1008,7 @@ export interface paths {
         };
         /**
          * Read a blank
-         * @description One blank with its placements and variants, and its chosen scenes. Its placements hold every stored view: the ones of `photoSource` show, and the others stay stored. A deleted blank is read too, with when and by whom it was deleted, so an order placed on it can show it.
+         * @description One blank with its placements and variants, its chosen scenes, and its views and scenes as one ordered list (`order`), each with its source. A deleted blank is read too, with when and by whom it was deleted, so an order placed on it can show it.
          */
         get: operations["blanks.get"];
         put?: never;
@@ -2279,7 +2299,7 @@ export interface paths {
         };
         /**
          * List the library's scenes
-         * @description The scenes a blank may show, by stock item, each one's studio scenes first, each with a link to its picture that needs no key, and the stock items a blank may choose: each with a studio scene in the library. A retired scene is not listed.
+         * @description The scenes a blank may show, by stock item, then by setting, person and pose (the selects a stock photo is chosen by), each with a link to its picture and to the passes it is drawn through, all needing no key, and the stock items a blank may choose: each with a scene in the library. A retired scene is not listed.
          */
         get: operations["scenes.list"];
         put?: never;
@@ -7070,7 +7090,7 @@ export interface components {
                     value: number;
                 };
             };
-            /** @description Which of nine points, top-left to bottom-right, a cover crop keeps; read only when fit is cover. Absent is center. */
+            /** @description Which of nine points, top-left to bottom-right, the artwork is held at in a print box of another shape: what a cover crop keeps, or where a contained artwork sits with the spare space opposite it. Not read under fill. Absent is center. */
             coverAlign?: string;
             /** @description The layers a customer may add of their own, per kind: how many, the preset each starts as, and where in the form they show. Added layers paint above the template's layers. */
             customerLayers?: {
@@ -14153,7 +14173,7 @@ export interface components {
                 };
             };
             /**
-             * @description Which of nine points, top-left to bottom-right, a cover crop keeps; read only when fit is cover. Absent is center.
+             * @description Which of nine points, top-left to bottom-right, the artwork is held at in a print box of another shape: what a cover crop keeps, or where a contained artwork sits with the spare space opposite it. Not read under fill. Absent is center.
              * @enum {string}
              */
             coverAlign?: "top-left" | "top-center" | "top-right" | "center-left" | "center" | "center-right" | "bottom-left" | "bottom-center" | "bottom-right";
@@ -25491,6 +25511,318 @@ export interface operations {
             };
         };
     };
+    "assets.threadCopy": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The designer's browser session, which the SDK sends so one visitor's uploads and proofs are told apart from another's on the same key: 6 to 64 letters, digits, `_` or `-`. Any other value is ignored. */
+                "x-pixonaut-session"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The most threads the machine stitches in one design. */
+                    maxThreads: number;
+                    /** @description The machine's threads, as its stitch block lists them (the preview profile's `stitch`). */
+                    threads: {
+                        /** @description The CMYK a design stores the thread as, converted once from its hex. */
+                        cmyk: [
+                            number,
+                            number,
+                            number,
+                            number
+                        ];
+                        hex: string;
+                        id: string;
+                        name: string;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description The picture's copy, made before, or none to make */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description What the picture is, read for embroidery. */
+                        colours: {
+                            colours: {
+                                hex: string;
+                                share: number;
+                            }[];
+                            exact: boolean;
+                            /** @enum {string} */
+                            kind: "flat";
+                        } | {
+                            count: number;
+                            /** @enum {string} */
+                            kind: "manyColours";
+                        } | {
+                            /** @enum {string} */
+                            kind: "photo";
+                        } | {
+                            heightPx: number;
+                            /** @enum {string} */
+                            kind: "tooLarge";
+                            widthPx: number;
+                        } | {
+                            /** @enum {string} */
+                            kind: "unreadable";
+                        };
+                        /** @description The picture drawn in the threads, to put in its place; the picture itself where it is drawn in them already. Null where it cannot be: a photo, more colours than the machine stitches, too large, or unreadable. */
+                        copy: {
+                            assetId: string;
+                            /** @description What the copy is, read for embroidery: exactly its threads. */
+                            colours: {
+                                colours: {
+                                    hex: string;
+                                    share: number;
+                                }[];
+                                exact: boolean;
+                                /** @enum {string} */
+                                kind: "flat";
+                            } | {
+                                count: number;
+                                /** @enum {string} */
+                                kind: "manyColours";
+                            } | {
+                                /** @enum {string} */
+                                kind: "photo";
+                            } | {
+                                heightPx: number;
+                                /** @enum {string} */
+                                kind: "tooLarge";
+                                widthPx: number;
+                            } | {
+                                /** @enum {string} */
+                                kind: "unreadable";
+                            };
+                            contentKey: string;
+                            heightPx: number;
+                            widthPx: number;
+                        } | null;
+                        /** @description Each of the picture's colours and its thread; empty with no copy. */
+                        threads: {
+                            /** @description One of the picture's colours. */
+                            hex: string;
+                            /** @description The thread the copy draws it in. */
+                            thread: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                    };
+                };
+            };
+            /** @description The picture's copy, made now */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description What the picture is, read for embroidery. */
+                        colours: {
+                            colours: {
+                                hex: string;
+                                share: number;
+                            }[];
+                            exact: boolean;
+                            /** @enum {string} */
+                            kind: "flat";
+                        } | {
+                            count: number;
+                            /** @enum {string} */
+                            kind: "manyColours";
+                        } | {
+                            /** @enum {string} */
+                            kind: "photo";
+                        } | {
+                            heightPx: number;
+                            /** @enum {string} */
+                            kind: "tooLarge";
+                            widthPx: number;
+                        } | {
+                            /** @enum {string} */
+                            kind: "unreadable";
+                        };
+                        /** @description The picture drawn in the threads, to put in its place; the picture itself where it is drawn in them already. Null where it cannot be: a photo, more colours than the machine stitches, too large, or unreadable. */
+                        copy: {
+                            assetId: string;
+                            /** @description What the copy is, read for embroidery: exactly its threads. */
+                            colours: {
+                                colours: {
+                                    hex: string;
+                                    share: number;
+                                }[];
+                                exact: boolean;
+                                /** @enum {string} */
+                                kind: "flat";
+                            } | {
+                                count: number;
+                                /** @enum {string} */
+                                kind: "manyColours";
+                            } | {
+                                /** @enum {string} */
+                                kind: "photo";
+                            } | {
+                                heightPx: number;
+                                /** @enum {string} */
+                                kind: "tooLarge";
+                                widthPx: number;
+                            } | {
+                                /** @enum {string} */
+                                kind: "unreadable";
+                            };
+                            contentKey: string;
+                            heightPx: number;
+                            widthPx: number;
+                        } | null;
+                        /** @description Each of the picture's colours and its thread; empty with no copy. */
+                        threads: {
+                            /** @description One of the picture's colours. */
+                            hex: string;
+                            /** @description The thread the copy draws it in. */
+                            thread: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                    };
+                };
+            };
+            /** @description Refused: invalid_input */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: copy_in_progress */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                    };
+                };
+            };
+            /** @description Refused: rate_limited */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: storage_quota_exceeded. The tenant's storage quota would be exceeded. `usedBytes` and `quotaBytes` are left out for a publishable key. */
+            507: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `storage_quota_exceeded`. */
+                        quotaBytes?: number;
+                        /** @description Always sent with `storage_quota_exceeded`. */
+                        usedBytes?: number;
+                    };
+                };
+            };
+        };
+    };
     "assets.usage.get": {
         parameters: {
             query?: never;
@@ -29993,8 +30325,26 @@ export interface operations {
                             }[];
                             /** @description When the blank's options were confirmed: the merchant said it has one version, or added its first option. Null until then. A blank imported from a printshop's catalogue arrives confirmed. */
                             optionsConfirmedAt: number | null;
+                            /** @description The blank's stored views and the scenes it shows as one ordered list, each saying its source: `stock` (a scene), `catalogue` (the printshop's photos) or `own` (the merchant's). The first with a photo is the blank's picture. Answered for one blank, never in a list. */
+                            order?: ({
+                                /** @description `catalogue` for the printshop's photos, `own` for the merchant's. */
+                                source: string;
+                                /** @description The stored view's id. */
+                                viewId: string;
+                            } | {
+                                /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
+                                row?: {
+                                    [key: string]: string;
+                                };
+                                /** @description The scene's id. */
+                                sceneId: string;
+                                /** @description A scene from the library. */
+                                source: string;
+                            })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
+                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos are not painted and show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                            paintBy: string | null;
                             partnerLocked: boolean;
                             /** @description How much of the blank is photographed. Answered in a list. */
                             photoCoverage?: {
@@ -30003,8 +30353,6 @@ export interface operations {
                                 /** @description The cells with a photo, of their own row or a covering one. */
                                 filled: number;
                             };
-                            /** @description Where the blank's photos come from: scenes it has chosen, its printshop's photos or its own. A new blank starts on `own`. */
-                            photoSource: string;
                             /** @description The options the blank's photos change with, in option order: each photo belongs to one row, its values of these, and shows every variant with them. Empty is All: one photo per view shows every variant. */
                             photosVaryBy: string[];
                             /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
@@ -30015,6 +30363,8 @@ export interface operations {
                                     bleedMm?: number;
                                     /** @description Print resolution on the row in dots per inch. Omitted, the placement's. */
                                     dpi?: number;
+                                    /** @description How far in from the trim the product folds on the row, in millimetres. Omitted, the placement's. */
+                                    foldMm?: number;
                                     /** @description The tallest print the row takes, in millimetres. */
                                     heightMm: number;
                                     /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
@@ -30042,17 +30392,21 @@ export interface operations {
                                 dpi?: number;
                                 /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                                 fillColour?: string | null;
-                                /** @description Where the placement sits on the product, once for every scene: a garment area of the blank's stock item, and the print's top left and width on it in millimetres. Omitted on a placement with no scenes to draw on. Refused with `placement_garment_area_unknown` when the stock item lacks the area, and `placement_garment_outside_area` when it reaches past it. */
-                                garment?: {
-                                    /** @description The key of a garment area of the blank's stock item. */
+                                /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
+                                foldMm?: number;
+                                /** @description Where the placement sits on each product the blank's stock photos show, one record per stock item for every scene of it: the stock item, a garment area of it, and the print's top left and width on it in millimetres. A placement with no record on a scene's stock item draws nothing on that scene. Refused with `placement_garment_area_unknown` when the stock item or the area is unknown, and `placement_garment_outside_area` when it reaches past the area. */
+                                garments?: {
+                                    /** @description The key of a garment area of the record's stock item. */
                                     area: string;
+                                    /** @description The stock item the record is on, by its key. */
+                                    stockItem: string;
                                     /** @description The print's width on the product, in mm. Its height follows from the placement's print area ratio. */
                                     widthMm: number;
                                     /** @description The print's left edge, in mm from the area's left. */
                                     xMm: number;
                                     /** @description The print's top edge, in mm from the area's top. */
                                     yMm: number;
-                                };
+                                }[];
                                 /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                                 id: string;
                                 /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design then drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none. A placement linked with one no longer on the blank is linked with none. */
@@ -30074,7 +30428,7 @@ export interface operations {
                                 required?: boolean;
                                 /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 safeAreaMm?: number;
-                                /** @description Where on the product a print may go when that is not the whole rectangle: `dFrac`, SVG path data in fractions of the print area (curves, no arcs), its first subpath the outline and every further one a cut-out, filled even-odd, each subpath closed. Nothing is printed outside the outline or in a cut-out. `cutByPrintShop` true adds the outline and the cut-outs to the print file as its cut line; omitted, the product already has the shape. Null or omitted, the whole rectangle. */
+                                /** @description Where on the product a print may go when that is not the whole rectangle: nothing is printed outside the outline or in a cut-out. Null or omitted, the whole rectangle. */
                                 shape?: {
                                     /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                     cutByPrintShop?: boolean;
@@ -30165,6 +30519,8 @@ export interface operations {
                                         /** @description The print area's top edge, in pixels from the photo's top. */
                                         y: number;
                                     } | null;
+                                    /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
+                                    position?: number;
                                     /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print is read inside it, at the window's size, and the product shows plain outside it. It lies inside its piece, and needs the piece's size on the view. Absent, the print covers the whole piece. */
                                     printWindowMm?: {
                                         /** @description The window's height, in mm. */
@@ -30178,8 +30534,10 @@ export interface operations {
                                     };
                                     /** @description The scene this view shows. A scene's view is built from the blank's chosen scenes and is read only. */
                                     sceneId?: string;
-                                    /** @description On a scene's view, its place among the blank's chosen scenes. */
+                                    /** @description On a scene's view, its `position`, for a reader that orders scenes by it. */
                                     scenePosition?: number;
+                                    /** @description Where the view's photos come from: `stock` (a scene from the library), `catalogue` (the printshop's) or `own` (the merchant's). Read only. */
+                                    source?: string;
                                     /** @description The piece of the placement's print the region shows, in millimetres from the print's top-left corner, such as a roll's window; clamped to the print when the print is smaller. Absent, the region shows the whole print at the size of the render's variant. */
                                     sourceWindowMm?: {
                                         /** @description The window's height, in mm. */
@@ -30327,17 +30685,6 @@ export interface operations {
                                     };
                                 }[];
                             };
-                            /** @description The scenes the blank has chosen, in order, kept while another source is chosen. Answered for one blank, never in a list. */
-                            scenes?: {
-                                /** @description The colour a scene that takes no dye was photographed in; null when it takes dye. */
-                                colour: string | null;
-                                /** @description The scene's id, as list_scenes returns it. */
-                                id: string;
-                                /** @description For a scene that takes no dye, the option value it shows, by option name, since its base is one colour. Omitted or empty, it shows the blank's colour nearest its own by swatch, or no variant when no swatch is near. On a blank with no colour option it shows every variant. */
-                                rowOptions: {
-                                    [key: string]: string;
-                                };
-                            }[];
                             /** @description The first photo of the blank's first view of several placements that has one, in their order: the view, the photo (a mockup), its asset and the view's photo size. A blank whose views of one placement have no photo is pictured by it. Null for a blank with no such photo. Answered in a list. */
                             sharedViewPhoto?: {
                                 assetId: string;
@@ -30352,7 +30699,7 @@ export interface operations {
                             } | null;
                             /** @description `importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `failed` when that import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise. */
                             status: string;
-                            /** @description The stock item the blank's scenes show, kept while another source is chosen; null for none. */
+                            /** @description The stock item the blank's scenes photograph; null for none. */
                             stockItemKey: string | null;
                             /** @description A link to the blank's picture, opening with no key for an hour or two, so a list shows a picture of each blank: its first photo of a view of one placement, else `sharedViewPhoto`. Null for a blank with no photo. Answered in a list. */
                             thumbnailUrl?: string | null;
@@ -30546,8 +30893,26 @@ export interface operations {
                         }[];
                         /** @description When the blank's options were confirmed: the merchant said it has one version, or added its first option. Null until then. A blank imported from a printshop's catalogue arrives confirmed. */
                         optionsConfirmedAt: number | null;
+                        /** @description The blank's stored views and the scenes it shows as one ordered list, each saying its source: `stock` (a scene), `catalogue` (the printshop's photos) or `own` (the merchant's). The first with a photo is the blank's picture. Answered for one blank, never in a list. */
+                        order?: ({
+                            /** @description `catalogue` for the printshop's photos, `own` for the merchant's. */
+                            source: string;
+                            /** @description The stored view's id. */
+                            viewId: string;
+                        } | {
+                            /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
+                            row?: {
+                                [key: string]: string;
+                            };
+                            /** @description The scene's id. */
+                            sceneId: string;
+                            /** @description A scene from the library. */
+                            source: string;
+                        })[];
                         /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                         orderCount?: number;
+                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos are not painted and show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                        paintBy: string | null;
                         partnerLocked: boolean;
                         /** @description How much of the blank is photographed. Answered in a list. */
                         photoCoverage?: {
@@ -30556,8 +30921,6 @@ export interface operations {
                             /** @description The cells with a photo, of their own row or a covering one. */
                             filled: number;
                         };
-                        /** @description Where the blank's photos come from: scenes it has chosen, its printshop's photos or its own. A new blank starts on `own`. */
-                        photoSource: string;
                         /** @description The options the blank's photos change with, in option order: each photo belongs to one row, its values of these, and shows every variant with them. Empty is All: one photo per view shows every variant. */
                         photosVaryBy: string[];
                         /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
@@ -30568,6 +30931,8 @@ export interface operations {
                                 bleedMm?: number;
                                 /** @description Print resolution on the row in dots per inch. Omitted, the placement's. */
                                 dpi?: number;
+                                /** @description How far in from the trim the product folds on the row, in millimetres. Omitted, the placement's. */
+                                foldMm?: number;
                                 /** @description The tallest print the row takes, in millimetres. */
                                 heightMm: number;
                                 /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
@@ -30595,17 +30960,21 @@ export interface operations {
                             dpi?: number;
                             /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                             fillColour?: string | null;
-                            /** @description Where the placement sits on the product, once for every scene: a garment area of the blank's stock item, and the print's top left and width on it in millimetres. Omitted on a placement with no scenes to draw on. Refused with `placement_garment_area_unknown` when the stock item lacks the area, and `placement_garment_outside_area` when it reaches past it. */
-                            garment?: {
-                                /** @description The key of a garment area of the blank's stock item. */
+                            /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
+                            foldMm?: number;
+                            /** @description Where the placement sits on each product the blank's stock photos show, one record per stock item for every scene of it: the stock item, a garment area of it, and the print's top left and width on it in millimetres. A placement with no record on a scene's stock item draws nothing on that scene. Refused with `placement_garment_area_unknown` when the stock item or the area is unknown, and `placement_garment_outside_area` when it reaches past the area. */
+                            garments?: {
+                                /** @description The key of a garment area of the record's stock item. */
                                 area: string;
+                                /** @description The stock item the record is on, by its key. */
+                                stockItem: string;
                                 /** @description The print's width on the product, in mm. Its height follows from the placement's print area ratio. */
                                 widthMm: number;
                                 /** @description The print's left edge, in mm from the area's left. */
                                 xMm: number;
                                 /** @description The print's top edge, in mm from the area's top. */
                                 yMm: number;
-                            };
+                            }[];
                             /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                             id: string;
                             /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design then drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none. A placement linked with one no longer on the blank is linked with none. */
@@ -30627,7 +30996,7 @@ export interface operations {
                             required?: boolean;
                             /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                             safeAreaMm?: number;
-                            /** @description Where on the product a print may go when that is not the whole rectangle: `dFrac`, SVG path data in fractions of the print area (curves, no arcs), its first subpath the outline and every further one a cut-out, filled even-odd, each subpath closed. Nothing is printed outside the outline or in a cut-out. `cutByPrintShop` true adds the outline and the cut-outs to the print file as its cut line; omitted, the product already has the shape. Null or omitted, the whole rectangle. */
+                            /** @description Where on the product a print may go when that is not the whole rectangle: nothing is printed outside the outline or in a cut-out. Null or omitted, the whole rectangle. */
                             shape?: {
                                 /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                 cutByPrintShop?: boolean;
@@ -30718,6 +31087,8 @@ export interface operations {
                                     /** @description The print area's top edge, in pixels from the photo's top. */
                                     y: number;
                                 } | null;
+                                /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
+                                position?: number;
                                 /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print is read inside it, at the window's size, and the product shows plain outside it. It lies inside its piece, and needs the piece's size on the view. Absent, the print covers the whole piece. */
                                 printWindowMm?: {
                                     /** @description The window's height, in mm. */
@@ -30731,8 +31102,10 @@ export interface operations {
                                 };
                                 /** @description The scene this view shows. A scene's view is built from the blank's chosen scenes and is read only. */
                                 sceneId?: string;
-                                /** @description On a scene's view, its place among the blank's chosen scenes. */
+                                /** @description On a scene's view, its `position`, for a reader that orders scenes by it. */
                                 scenePosition?: number;
+                                /** @description Where the view's photos come from: `stock` (a scene from the library), `catalogue` (the printshop's) or `own` (the merchant's). Read only. */
+                                source?: string;
                                 /** @description The piece of the placement's print the region shows, in millimetres from the print's top-left corner, such as a roll's window; clamped to the print when the print is smaller. Absent, the region shows the whole print at the size of the render's variant. */
                                 sourceWindowMm?: {
                                     /** @description The window's height, in mm. */
@@ -30880,17 +31253,6 @@ export interface operations {
                                 };
                             }[];
                         };
-                        /** @description The scenes the blank has chosen, in order, kept while another source is chosen. Answered for one blank, never in a list. */
-                        scenes?: {
-                            /** @description The colour a scene that takes no dye was photographed in; null when it takes dye. */
-                            colour: string | null;
-                            /** @description The scene's id, as list_scenes returns it. */
-                            id: string;
-                            /** @description For a scene that takes no dye, the option value it shows, by option name, since its base is one colour. Omitted or empty, it shows the blank's colour nearest its own by swatch, or no variant when no swatch is near. On a blank with no colour option it shows every variant. */
-                            rowOptions: {
-                                [key: string]: string;
-                            };
-                        }[];
                         /** @description The first photo of the blank's first view of several placements that has one, in their order: the view, the photo (a mockup), its asset and the view's photo size. A blank whose views of one placement have no photo is pictured by it. Null for a blank with no such photo. Answered in a list. */
                         sharedViewPhoto?: {
                             assetId: string;
@@ -30905,7 +31267,7 @@ export interface operations {
                         } | null;
                         /** @description `importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `failed` when that import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise. */
                         status: string;
-                        /** @description The stock item the blank's scenes show, kept while another source is chosen; null for none. */
+                        /** @description The stock item the blank's scenes photograph; null for none. */
                         stockItemKey: string | null;
                         /** @description A link to the blank's picture, opening with no key for an hour or two, so a list shows a picture of each blank: its first photo of a view of one placement, else `sharedViewPhoto`. Null for a blank with no photo. Answered in a list. */
                         thumbnailUrl?: string | null;
@@ -31131,6 +31493,8 @@ export interface operations {
                                     /** @description The print area's top edge, in pixels from the photo's top. */
                                     y: number;
                                 } | null;
+                                /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
+                                position?: number;
                                 /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print is read inside it, at the window's size, and the product shows plain outside it. It lies inside its piece, and needs the piece's size on the view. Absent, the print covers the whole piece. */
                                 printWindowMm?: {
                                     /** @description The window's height, in mm. */
@@ -31144,8 +31508,10 @@ export interface operations {
                                 };
                                 /** @description The scene this view shows. A scene's view is built from the blank's chosen scenes and is read only. */
                                 sceneId?: string;
-                                /** @description On a scene's view, its place among the blank's chosen scenes. */
+                                /** @description On a scene's view, its `position`, for a reader that orders scenes by it. */
                                 scenePosition?: number;
+                                /** @description Where the view's photos come from: `stock` (a scene from the library), `catalogue` (the printshop's) or `own` (the merchant's). Read only. */
+                                source?: string;
                                 /** @description The piece of the placement's print the region shows, in millimetres from the print's top-left corner, such as a roll's window; clamped to the print when the print is smaller. Absent, the region shows the whole print at the size of the render's variant. */
                                 sourceWindowMm?: {
                                     /** @description The window's height, in mm. */
@@ -31232,6 +31598,8 @@ export interface operations {
                                 variantRefs: string[];
                                 width: number;
                             }[];
+                            /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
+                            position?: number;
                             /** @description The view's print regions, in the order they are drawn. */
                             regions: {
                                 /** @description The region's mask, the view's photo size, opened with no key: where it is light the print shows, where it is dark the print is hidden. Absent hides nothing. Valid as long as a photo's `url`. */
@@ -31291,8 +31659,10 @@ export interface operations {
                             }[];
                             /** @description The scene this view shows. A scene's view is built from the blank's chosen scenes and is read only. */
                             sceneId?: string;
-                            /** @description On a scene's view, its place among the blank's chosen scenes. */
+                            /** @description On a scene's view, its `position`, for a reader that orders scenes by it. */
                             scenePosition?: number;
+                            /** @description Where the view's photos come from: `stock` (a scene from the library), `catalogue` (the printshop's) or `own` (the merchant's). Read only. */
+                            source?: string;
                             /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
                             takesDye?: boolean;
                             /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size, opened with no key: a region naming a `piece` is read through them. Absent on a view of photos. Valid as long as a photo's `url`. */
@@ -31712,6 +32082,8 @@ export interface operations {
                             };
                             values: string[];
                         }[];
+                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos are not painted and show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                        paintBy: string | null;
                         variants: {
                             options: {
                                 [key: string]: string;
@@ -33211,7 +33583,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: idempotency_key_reused, invalid_idempotency_key, invalid_doc, invalid_fulfilment_payload, payload_too_large, missing_fulfilment_keys, spot_plate_required, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, asset_map_too_large */
+            /** @description Refused: idempotency_key_reused, invalid_idempotency_key, invalid_doc, invalid_fulfilment_payload, payload_too_large, missing_fulfilment_keys, spot_plate_required, design_not_stitchable, design_unreadable, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, asset_map_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -33228,11 +33600,29 @@ export interface operations {
                         /** @description Always sent with `invalid_doc`. */
                         detail?: unknown;
                         error: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                        /** @description The embroidery machine the design goes to. Always sent with `design_not_stitchable`, `design_unreadable`. */
+                        machine?: string;
                         /** @description Always sent with `payload_too_large`, `asset_map_too_large`. */
                         maxBytes?: number;
                         /** @description Always sent with `missing_fulfilment_keys`. */
                         missing?: string[];
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
+                        /** @description Always sent with `design_not_stitchable`, `design_unreadable`, `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -33576,7 +33966,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, spot_plate_required, asset_map_too_large, unknown_layout, empty_layout, invalid_doc, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, spot_plate_required, design_not_stitchable, design_unreadable, asset_map_too_large, unknown_layout, empty_layout, invalid_doc, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -33593,9 +33983,27 @@ export interface operations {
                         /** @description Always sent with `invalid_doc`. */
                         detail?: unknown;
                         error: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                        /** @description The embroidery machine the design goes to. Always sent with `design_not_stitchable`, `design_unreadable`. */
+                        machine?: string;
                         /** @description Always sent with `asset_map_too_large`, `payload_too_large`. */
                         maxBytes?: number;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`, `design_not_stitchable`, `design_unreadable`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -33800,7 +34208,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: spot_plate_required, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, not_a_layout_proof, layout_proof_mismatch, invalid_doc, payload_too_large */
+            /** @description Refused: spot_plate_required, design_not_stitchable, design_unreadable, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, not_a_layout_proof, layout_proof_mismatch, invalid_doc, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -33817,9 +34225,27 @@ export interface operations {
                         /** @description Always sent with `invalid_doc`. */
                         detail?: unknown;
                         error: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                        /** @description The embroidery machine the design goes to. Always sent with `design_not_stitchable`, `design_unreadable`. */
+                        machine?: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
+                        /** @description Always sent with `design_not_stitchable`, `design_unreadable`, `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -38086,7 +38512,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -38107,6 +38533,22 @@ export interface operations {
                         field?: string;
                         /** @description Always sent with `field_value_missing`. */
                         fieldKind?: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`. */
@@ -38114,7 +38556,7 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         machine?: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
@@ -38129,7 +38571,7 @@ export interface operations {
                         missing?: string[];
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
                         /** @description Always sent with `duplicate_placement`. */
                         placementId?: string;
@@ -38144,9 +38586,9 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -38218,6 +38660,13 @@ export interface operations {
                 content: {
                     "application/json": {
                         adapter: string;
+                        /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                        approvalHold: {
+                            /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                            dueAt: number;
+                            /** @description The printshop's own page for the order, to approve it on. */
+                            url: string;
+                        } | null;
                         /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
                         blank: {
                             name: string;
@@ -38265,6 +38714,13 @@ export interface operations {
                         }[];
                         /** @description The design the lead print was made from. */
                         designId: string;
+                        /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                        embroideryFee: {
+                            /** @description The fee in the currency's minor units. */
+                            amountMinor: number;
+                            /** @description The currency's ISO 4217 code. */
+                            currency: string;
+                        } | null;
                         erasable: boolean;
                         externalOrderRef: string | null;
                         externalRef: string | null;
@@ -41813,7 +42269,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -41839,6 +42295,22 @@ export interface operations {
                         field?: string;
                         /** @description Always sent with `field_value_missing`. */
                         fieldKind?: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`, `print_exceeds_placement`. */
@@ -41846,7 +42318,7 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         machine?: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
@@ -41863,7 +42335,7 @@ export interface operations {
                         named?: string;
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`, and may be sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
                         /** @description Always sent with `duplicate_placement`, `placement_not_of_blank`. */
                         placementId?: string;
@@ -41884,9 +42356,9 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `reroute_blank_not_found`, `reroute_same_blank`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_not_of_blank`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `reroute_blank_not_found`, `reroute_same_blank`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_not_of_blank`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -45179,7 +45651,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -45200,6 +45672,22 @@ export interface operations {
                         field?: string;
                         /** @description Always sent with `field_value_missing`. */
                         fieldKind?: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`. */
@@ -45207,7 +45695,7 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         machine?: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
@@ -45222,7 +45710,7 @@ export interface operations {
                         missing?: string[];
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
                         /** @description Always sent with `duplicate_placement`. */
                         placementId?: string;
@@ -45237,9 +45725,9 @@ export interface operations {
                             heightMm: number;
                             widthMm: number;
                         };
-                        /** @description Always sent with `print_exceeds_machine`, `print_raster_too_large`. */
+                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
@@ -45323,6 +45811,7 @@ export interface operations {
                             } | null;
                             deliverySteps: boolean;
                             machineProfiles: boolean;
+                            orderUpdates: boolean;
                             partnerPhotos: boolean;
                             placeholders: string[];
                             spotPlates: boolean;
@@ -45358,6 +45847,8 @@ export interface operations {
                                 commitKeys: string[];
                                 needsBlank: boolean;
                             };
+                            /** @description The address to register in the printshop's own dashboard for its order updates, for a printshop whose updates cannot be registered for it; null for any other. It holds a secret: share it only with the printshop. */
+                            callbackUrl: string | null;
                             config?: unknown;
                             /**
                              * Format: email
@@ -45955,21 +46446,39 @@ export interface operations {
                         scenes: {
                             /** @description The keys of the garment areas the scene shows truthfully. */
                             areas: string[];
-                            /** @description The colour a scene that takes no dye was photographed in; null when it takes dye. */
-                            colour: string | null;
                             /** @description Whether a person is in the scene. */
                             hasPerson: boolean;
                             id: string;
                             label: string;
+                            /** @description The passes the preview picture is drawn through, each its size: where a garment area's print lands, and how a colour paints its grey base. Null when the scene has no preview passes. */
+                            layerUrls: {
+                                /** @description The cut-out of the product: white where it is. */
+                                mask: string;
+                                /** @description The multiply pass: the product's shadows and folds. */
+                                multiply: string;
+                                /** @description The screen pass: the product's highlights. */
+                                screen: string;
+                                /** @description The 16-bit UV pass: for each pixel, its garment area's piece (blue) and where across (red) and down (green) that piece it reads. */
+                                uv: string;
+                            } | null;
+                            /** @description Who is in the scene, or `none`: one of the selects a stock item's scenes are chosen by. */
+                            person: string;
+                            /** @description The preview picture's size, which each of `layerUrls` shares; null when it has none. */
+                            pictureSizePx: {
+                                heightPx: number;
+                                widthPx: number;
+                            } | null;
                             /** @description A link to the scene's picture, opening with no key. */
                             pictureUrl: string | null;
-                            /** @description What print the scene's base suits: a white glaze a logo, a dark gloss an all-over print, and a dyed scene either (`any`). */
-                            printCoverage: string;
+                            /** @description How the product is shown, such as `front` or `back`: one of the selects a stock item's scenes are chosen by. */
+                            pose: string;
+                            /** @description Where the scene is photographed, such as `studio` or `street`: one of the selects a stock item's scenes are chosen by. */
+                            setting: string;
                             /** @description The stock item the scene shows. */
                             stockItem: string;
-                            /** @description Whether this is a studio scene, which comes first and is a product's default picture. */
+                            /** @description Whether this is a studio scene: the product alone, on a plain ground. */
                             studio: boolean;
-                            /** @description Whether a variant's colour recolours the scene. One that does not was photographed in `colour`. */
+                            /** @description Whether a variant's colour paints the scene's grey base. One that does not shows a material that is the point, such as bare metal, on every variant as photographed. */
                             takesDye: boolean;
                         }[];
                         stockItems: {
@@ -48554,6 +49063,8 @@ export interface operations {
                             coverage: string;
                             defaultHeightMm: number;
                             defaultWidthMm: number;
+                            /** @description How far in from the print's edge the product folds on every side, in millimetres, on a placement that folds, such as a canvas round its frame: a live preview draws the fold lines there, the product's front inside them. Absent when it does not fold. */
+                            foldMm?: number;
                             maxHeightMm: number;
                             maxWidthMm: number;
                             placementId: string;
@@ -48573,6 +49084,27 @@ export interface operations {
                                 fits: string[];
                                 /** @description The sizes the template can't print at here: a design at one is refused when committed. */
                                 misfits: string[];
+                            };
+                            /** @description The stitch block a design on the placement is held to, on an embroidery placement while the workspace's stitch rules are on: the threads the machine stitches with, the most one design may use, and the least text height and line. A client judges a design against it as it is made; the commit refuses `design_not_stitchable` by the same rule. */
+                            stitch?: {
+                                /** @description The most distinct threads one design may use. */
+                                maxThreads: number;
+                                /** @description The thinnest line the machine stitches, in printed millimetres. */
+                                minLineMm: number;
+                                /** @description The smallest text the machine stitches, in printed millimetres: the size the text is set at. */
+                                minTextHeightMm: number;
+                                threads: {
+                                    /** @description The CMYK a design stores the thread as, converted once from its hex. */
+                                    cmyk: [
+                                        number,
+                                        number,
+                                        number,
+                                        number
+                                    ];
+                                    hex: string;
+                                    id: string;
+                                    name: string;
+                                }[];
                             };
                         };
                         ratio: {
@@ -49050,7 +49582,7 @@ export interface operations {
                         printAreaFrame: boolean;
                         /** @description The link's token. Shown in this response only. */
                         token: string;
-                        /** @description The hosted designer the link opens, with `?lang=<locale>` when the link names a `locale`. */
+                        /** @description The hosted designer the link opens, with `?lang=<locale>` when the link names a `locale`. A store sending every customer to one link adds `state=<value>` to it for each trip, 1 to 200 characters of `A–Z a–z 0–9 . _ ~ -`: the page returns that value as `state`, on approve and on cancel, in place of the link's own, and ignores one outside that form. */
                         url: string;
                         /** @description What the link was made with that it is not built for, for whoever builds it; the shopper is shown none. `sides_over_recommended`: the link holds more than 4 sides. Each side is one more step on the hosted page, one more designer, canvas and photo set in the shopper's browser, and one more `proofToken[<key>]` on the return address. Absent when there is nothing to warn of. */
                         warnings?: {
@@ -49137,7 +49669,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_placement, print_size_illegal, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, share_link_name_too_long, payload_too_large */
+            /** @description Refused: unknown_placement, print_size_illegal, design_not_stitchable, design_unreadable, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, share_link_name_too_long, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -49148,17 +49680,37 @@ export interface operations {
                         /** @description Sent with `payload_too_large`. */
                         bytes?: number;
                         error: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
                         /** @description The size's place in the side's menu. Always sent with `print_size_illegal`. */
                         index?: number;
+                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `design_not_stitchable`, `design_unreadable`. */
+                        machine?: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
                         /** @description The longest name a link may have. Always sent with `share_link_name_too_long`. */
                         maxLength?: number;
                         /** @description Always sent with `placement_unfilled`. */
                         placement?: string;
-                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. Always sent with `print_size_illegal`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`. */
+                        /** @description The size's place in the side's menu; null where it offers none. Always sent with `design_not_stitchable`, `design_unreadable`. */
+                        printSizeIndex?: number | null;
+                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. Always sent with `print_size_illegal`, `design_not_stitchable`, `design_unreadable`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`. */
                         reason?: string;
-                        /** @description The side's key; null on a link with one side. Always sent with `print_size_illegal`. */
+                        /** @description With `print_size_illegal`: The side's key; null on a link with one side. With `design_not_stitchable`: The side, by key; null for a link of one. With `design_unreadable`: The side, by key; null for a link of one. Always sent with `print_size_illegal`, `design_not_stitchable`, `design_unreadable`. */
                         side?: string | null;
                     };
                 };

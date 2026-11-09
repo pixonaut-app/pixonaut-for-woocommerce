@@ -310,6 +310,10 @@ function optionsOf(
 	});
 }
 
+/** The option a blank's photos are painted in: none, as the fake holds only
+ *  a blank's own photos, which show as photographed. */
+const PAINT_BY = null;
+
 /** A blank as the authoring reads answer it: every name as written. */
 function blankBody(blank: Blank): Record<string, unknown> {
 	return {
@@ -320,8 +324,7 @@ function blankBody(blank: Blank): Record<string, unknown> {
 		axes: [...blank.axes],
 		copiedFrom: null,
 		defaultPrintshopId: blank.defaultPrintshopId,
-		// The fake holds only a blank's own photos: no scenes, no stock item.
-		photoSource: 'own',
+		// The fake holds no stock item.
 		stockItemKey: null,
 		partnerLocked: blank.partnerLocked,
 		machineProfileId: blank.machineProfileId,
@@ -335,6 +338,7 @@ function blankBody(blank: Blank): Record<string, unknown> {
 		optionsConfirmedAt: null,
 		// The fake keeps one photo set for every variant.
 		photosVaryBy: [],
+		paintBy: PAINT_BY,
 		areasVaryBy: [...(blank.areasVaryBy ?? [])],
 		referenceRow: null,
 		// The fake imports nothing: every blank is whole.
@@ -543,6 +547,7 @@ export const listBlankVariants: Handler = (context) => {
 			axes: blank.axes.map((axis) => names.axis(axis)),
 			options: optionsOf(blank, names),
 			areasVaryBy: (blank.areasVaryBy ?? []).map((axis) => names.axis(axis)),
+			paintBy: PAINT_BY,
 			variants,
 		},
 	};

@@ -3,16 +3,10 @@
 	"description": "Connects a WooCommerce store to Pixonaut: personalised products, proofs and printshop orders.",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",
-	"repositories": [
-		{
-			"type": "vcs",
-			"url": "https://github.com/pixonaut-app/pixonaut-php"
-		}
-	],
 	"require": {
 		"php": ">=8.1",
 		"nyholm/psr7": "^1.8",
-		"pixonaut/pixonaut-php": "^2.0",
+		"pixonaut/pixonaut-php": "^2.0.1",
 		"yahnis-elsts/plugin-update-checker": "^5.7"
 	},
 	"require-dev": {

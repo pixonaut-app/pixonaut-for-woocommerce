@@ -75,12 +75,12 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 	protected VariantsAnswer $variants;
 
 	/**
-	 * Whether `script_blank()` answers a blank as Pixonaut answers it today
-	 * rather than as the pinned spec declares it.
+	 * Whether `script_blank()` answers a blank with its views' sources and
+	 * order, which the spec lets a blank leave out.
 	 *
 	 * @var bool
 	 */
-	protected bool $blank_answered_today = false;
+	protected bool $blank_with_ordered_views = false;
 
 	/**
 	 * Checks configurations against the recorder, as the panel does.
@@ -146,18 +146,14 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Scripts a `GET /v1/blanks/{id}` answer: as the pinned spec declares it,
-	 * or, when the test sets `$blank_answered_today`, as Pixonaut answers it
-	 * today (`BlankFixture::as_answered_today()`).
+	 * Scripts a `GET /v1/blanks/{id}` answer: as given or, when the test sets
+	 * `$blank_with_ordered_views`, with its views' sources and order
+	 * (`BlankFixture::with_ordered_views()`).
 	 *
-	 * @param array<string, mixed> $blank The answer in the pinned spec's shape.
+	 * @param array<string, mixed> $blank The answer.
 	 */
 	protected function script_blank( array $blank ): void {
-		if ( $this->blank_answered_today ) {
-			$this->recorder->off_spec( 200, BlankFixture::as_answered_today( $blank ) );
-		} else {
-			$this->recorder->json( 200, $blank );
-		}
+		$this->recorder->json( 200, $this->blank_with_ordered_views ? BlankFixture::with_ordered_views( $blank ) : $blank );
 	}
 
 	/**
