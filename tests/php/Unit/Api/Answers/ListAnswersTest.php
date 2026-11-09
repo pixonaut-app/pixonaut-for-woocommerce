@@ -22,6 +22,11 @@ use Pixonaut\WooCommerce\Webhooks\EventsPull;
 
 final class ListAnswersTest extends TestCase {
 
+	/**
+	 * When the listed events happened, in milliseconds since the Unix epoch.
+	 */
+	private const CREATED_AT = 1_800_000_000_000;
+
 	private ScriptedClient $transport;
 
 	private Sdk $sdk;
@@ -35,14 +40,16 @@ final class ListAnswersTest extends TestCase {
 	public function test_an_events_page_keeps_each_envelope_as_sent(): void {
 		$events = array(
 			array(
-				'id'      => 'evt_1',
-				'type'    => 'design.approved',
-				'payload' => array( 'designId' => 'd1' ),
-				'future'  => true,
+				'id'        => 'evt_1',
+				'type'      => 'design.approved',
+				'createdAt' => self::CREATED_AT,
+				'payload'   => array( 'designId' => 'd1' ),
+				'future'    => true,
 			),
 			array(
-				'id'   => 'evt_2',
-				'type' => 'design.rejected',
+				'id'        => 'evt_2',
+				'type'      => 'automation.webhook',
+				'createdAt' => self::CREATED_AT,
 			),
 		);
 		$body   = array(
@@ -68,6 +75,30 @@ final class ListAnswersTest extends TestCase {
 
 		$this->expectException( ApiException::class );
 		EventsPage::get( $this->sdk, null, 'design.approved' );
+	}
+
+	public function test_an_events_page_with_an_event_that_is_no_envelope_is_unexpected(): void {
+		$body = array(
+			'events'     => array(
+				array(
+					'id'      => 'evt_1',
+					'type'    => 'design.approved',
+					'payload' => array( 'designId' => 'd1' ),
+				),
+			),
+			'nextCursor' => null,
+		);
+		$this->transport->off_spec( self::answer( $body ) );
+
+		try {
+			EventsPage::get( $this->sdk, null, 'design.approved' );
+			$this->fail( 'An event without its createdAt was read.' );
+		} catch ( ApiException $e ) {
+			$this->assertSame( 'unexpected_response', $e->errorCode );
+			$previous = $e->getPrevious();
+			$this->assertInstanceOf( UnexpectedResponse::class, $previous );
+			$this->assertSame( '$.events[0]: missing required field "createdAt"', $previous->getMessage() );
+		}
 	}
 
 	public function test_a_designer_link_reads_its_warnings(): void {
