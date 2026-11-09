@@ -99,11 +99,15 @@ final class ShowcaseField {
 		}
 		$config = ProductConfig::stored_on( $product );
 		$photo  = $this->photo( $product, $config );
-		$views  = '' === $photo ? array() : $this->views( $config );
-		if ( array() === $chosen && ( null === $sets || array() === $sets ) && ( null === $views || array() === $views ) ) {
+		// Every photo of the placement can be chosen, whether or not the product page starts on one.
+		$views    = $this->views( $config );
+		$own_view = PictureView::on( $product );
+		$viewed   = null !== $own_view || array() !== array_filter( array_column( $chosen, 'view' ) );
+		if ( array() === $chosen && null === $own_view && ( null === $sets || array() === $sets ) && ( null === $views || array() === $views ) ) {
 			return '';
 		}
-		$kinds = null === $photo || '' !== $photo
+		// A choice made before keeps its controls, so it can be seen and changed.
+		$kinds = null === $photo || '' !== $photo || null === $views || array() !== $views || $viewed
 			? array(
 				ShowcaseImages::MOCKUP  => array(
 					/* translators: Option of how a product image is drawn: the design on the blank product's photo, the one the product page starts on. Admin product page. */
@@ -133,7 +137,7 @@ final class ShowcaseField {
 				),
 			);
 		}
-		$own_view = self::choice( PictureView::on( $product ) ?? array( 'kind' => PictureView::MOCKUP ), $views );
+		$own_view = self::choice( $own_view ?? array( 'kind' => PictureView::MOCKUP ), $views );
 		return $this->templates->html(
 			'admin/product-showcase-images.php',
 			array(
@@ -165,7 +169,7 @@ final class ShowcaseField {
 	 * not.
 	 *
 	 * @param string                                                                           $name   The radio buttons' posted name.
-	 * @param array{value: string, gone?: bool, view_gone?: bool}                              $shown  The choice as `choice()` or `rows()` shows it.
+	 * @param array{value: string, gone?: bool, view_gone?: bool, view_label?: string}         $shown  The choice as `choice()` or `rows()` shows it.
 	 * @param list<array{value: string, name: string, description: string, thumbnail: string}> $tiles  The choices offered.
 	 * @param string                                                                           $label  What the group chooses, for screen readers.
 	 * @param bool                                                                             $listed Whether Pixonaut listed the blank's views.
@@ -175,11 +179,7 @@ final class ShowcaseField {
 		if ( ! in_array( $shown['value'], array_column( $tiles, 'value' ), true ) ) {
 			$tiles[] = array(
 				'value'       => $shown['value'],
-				'name'        => $listed
-					/* translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page. */
-					? __( 'No longer on the blank', 'pixonaut-for-woocommerce' )
-					/* translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page. */
-					: __( 'The photo chosen before', 'pixonaut-for-woocommerce' ),
+				'name'        => self::missing_name( $shown, $gone, $listed ),
 				'description' => '',
 				'thumbnail'   => '',
 			);
@@ -194,6 +194,28 @@ final class ShowcaseField {
 				'note'    => $gone ? __( 'The blank no longer has this view or photo, so the image is drawn on the photo the product page starts on until another is chosen.', 'pixonaut-for-woocommerce' ) : '',
 			)
 		);
+	}
+
+	/**
+	 * The name of a choice the tiles do not offer: a view chosen without a
+	 * photo, one the blank no longer has, or one Pixonaut could not be
+	 * asked about.
+	 *
+	 * @param array{value: string, view_label?: string} $shown  The choice as `choice()` or `rows()` shows it.
+	 * @param bool                                      $gone   Whether the blank no longer has it.
+	 * @param bool                                      $listed Whether Pixonaut listed the blank's views.
+	 */
+	private static function missing_name( array $shown, bool $gone, bool $listed ): string {
+		$view = $shown['view_label'] ?? '';
+		if ( ! $gone && '' !== $view ) {
+			/* translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page. */
+			return sprintf( __( '%s, on the photo of the variant sold', 'pixonaut-for-woocommerce' ), $view );
+		}
+		return $listed || $gone
+			/* translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page. */
+			? __( 'No longer on the blank', 'pixonaut-for-woocommerce' )
+			/* translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page. */
+			: __( 'The photo chosen before', 'pixonaut-for-woocommerce' );
 	}
 
 	/**
@@ -307,12 +329,18 @@ final class ShowcaseField {
 	 * @param array{kind: string, view?: string, photo?: string}                                                                      $choice The choice.
 	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null $views  The placement's views; null when Pixonaut cannot say.
 	 *
-	 * @return array{value: string, gone: bool}
+	 * @return array{value: string, gone: bool, view_label: string} `view_label` names the view of a choice naming no photo; empty otherwise.
 	 */
 	private static function choice( array $choice, ?array $views ): array {
+		$label  = '';
+		$chosen = isset( $choice['photo'] ) ? null : $choice['view'] ?? null;
+		foreach ( null === $chosen ? array() : $views ?? array() as $view ) {
+			$label = $chosen === $view['id'] ? $view['label'] : $label;
+		}
 		return array(
-			'value' => PictureView::field_value( $choice ),
-			'gone'  => isset( $choice['view'] ) && null !== $views && null === PictureView::resolve( $views, $choice, null, true ),
+			'value'      => PictureView::field_value( $choice ),
+			'gone'       => isset( $choice['view'] ) && null !== $views && null === PictureView::resolve( $views, $choice, null, true ),
+			'view_label' => $label,
 		);
 	}
 
@@ -423,7 +451,7 @@ final class ShowcaseField {
 	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null $views    The placement's views; null when Pixonaut cannot say.
 	 * @phpstan-param list<string> $gone
 	 *
-	 * @return list<array{id: string, name: string, kind: string, value: string, chosen: bool, gone: bool, view_gone: bool}>
+	 * @return list<array{id: string, name: string, kind: string, value: string, chosen: bool, gone: bool, view_gone: bool, view_label: string}>
 	 */
 	private static function rows( array $sets, array $chosen, array $gone, bool $on_photo, ?array $views ): array {
 		$by_id = array_column( $chosen, null, 'id' );
@@ -453,17 +481,18 @@ final class ShowcaseField {
 	 * @param bool                                                                                                                    $on_photo Whether it can be drawn on the photo; when not, it is flat.
 	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null $views    The placement's views; null when Pixonaut cannot say.
 	 *
-	 * @return array{id: string, name: string, kind: string, value: string, view_gone: bool}
+	 * @return array{id: string, name: string, kind: string, value: string, view_gone: bool, view_label: string}
 	 */
 	private static function row( array $set, array $choice, bool $on_photo, ?array $views ): array {
 		$choice = $on_photo ? $choice : array( 'kind' => ShowcaseImages::PREVIEW );
 		$shown  = self::choice( $choice, $views );
 		return array(
-			'id'        => $set['id'],
-			'name'      => $set['name'],
-			'kind'      => $choice['kind'],
-			'value'     => $shown['value'],
-			'view_gone' => $shown['gone'],
+			'id'         => $set['id'],
+			'name'       => $set['name'],
+			'kind'       => $choice['kind'],
+			'value'      => $shown['value'],
+			'view_gone'  => $shown['gone'],
+			'view_label' => $shown['view_label'],
 		);
 	}
 

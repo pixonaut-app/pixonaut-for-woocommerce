@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-09T10:38:33+00:00\n"
+"POT-Creation-Date: 2026-11-09T10:44:41+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -1971,64 +1971,70 @@ msgid "Pixonaut could not draw the pictures of %s. They keep the images they hav
 msgstr ""
 
 #. translators: Option of how a product image is drawn: the design on the blank product's photo, the one the product page starts on. Admin product page.
-#: src/Admin/ShowcaseField.php:110
+#: src/Admin/ShowcaseField.php:114
 msgid "On the product photo"
 msgstr ""
 
-#: src/Admin/ShowcaseField.php:111
+#: src/Admin/ShowcaseField.php:115
 msgid "Drawn into the print area of the blank’s photo the product page starts on."
 msgstr ""
 
 #. translators: Option of how a showcase product image is drawn: the design alone, flat. Admin product page.
-#: src/Admin/ShowcaseField.php:116
+#: src/Admin/ShowcaseField.php:120
 msgid "Flat design"
 msgstr ""
 
-#: src/Admin/ShowcaseField.php:117
+#: src/Admin/ShowcaseField.php:121
 msgid "The design alone, without the product."
 msgstr ""
 
 #. translators: %s: name of a showcase set of the template. Admin product page.
-#: src/Admin/ShowcaseField.php:131
+#: src/Admin/ShowcaseField.php:135
 #, php-format
 msgid "How %s is drawn"
 msgstr ""
 
 #. translators: Accessible name of the choices of how the product image is drawn while no showcase set is ticked. Admin product page.
-#: src/Admin/ShowcaseField.php:154
+#: src/Admin/ShowcaseField.php:158
 msgid "How the product image is drawn without a showcase set"
-msgstr ""
-
-#. translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page.
-#: src/Admin/ShowcaseField.php:180
-msgid "No longer on the blank"
-msgstr ""
-
-#. translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page.
-#: src/Admin/ShowcaseField.php:182
-msgid "The photo chosen before"
 msgstr ""
 
 #: src/Admin/ShowcaseField.php:194
 msgid "The blank no longer has this view or photo, so the image is drawn on the photo the product page starts on until another is chosen."
 msgstr ""
 
+#. translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page.
+#: src/Admin/ShowcaseField.php:212
+#, php-format
+msgid "%s, on the photo of the variant sold"
+msgstr ""
+
+#. translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page.
+#: src/Admin/ShowcaseField.php:216
+msgid "No longer on the blank"
+msgstr ""
+
+#. translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page.
+#: src/Admin/ShowcaseField.php:218
+msgid "The photo chosen before"
+msgstr ""
+
 #. translators: A choice of what a variation's image is drawn on: whatever its product's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:221
+#: src/Admin/ShowcaseField.php:243
 msgid "As the product image"
 msgstr ""
 
-#: src/Admin/ShowcaseField.php:222
+#: src/Admin/ShowcaseField.php:244
 msgid "The view and photo the product image is drawn on, in this variation’s colour where the view has it."
 msgstr ""
 
 #. translators: Accessible name of the choices of what a variation's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:237
+#: src/Admin/ShowcaseField.php:259
 msgid "What the variation image is drawn on"
 msgstr ""
 
 #. translators: 1: a view of the blank product, e.g. "Front"; 2: which of its photos, e.g. 2. Admin product page.
-#: src/Admin/ShowcaseField.php:293
+#: src/Admin/ShowcaseField.php:315
 #, php-format
 msgid "%1$s, photo %2$d"
 msgstr ""

@@ -125,6 +125,51 @@ final class PictureViewFieldTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'pixonaut-picture-view__gone', $html );
 	}
 
+	public function test_photos_of_a_view_customers_are_not_shown_can_be_chosen(): void {
+		$product = $this->product( self::config()->with_views( array( 'view-back-flat' ) ) );
+		ShowcaseImages::save( $product, array( self::set() + self::choice( self::SCENE_PHOTO ) ) );
+		$this->answer_sets( array( self::set() ) );
+		$this->answer_mockups();
+
+		$html = $this->field->html( $this->reload( $product ) );
+
+		$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[0\]\[kind\]" value="' . preg_quote( esc_attr( self::value( self::SCENE_PHOTO ) ), '#' ) . '"\s+checked#', $html );
+		$this->assertStringContainsString( 'name="' . ShowcaseField::VIEW_FIELD . '"', $html );
+	}
+
+	public function test_a_view_chosen_without_a_photo_is_named_after_its_view(): void {
+		$product = $this->product();
+		PictureView::save(
+			$product,
+			array(
+				'kind' => PictureView::MOCKUP,
+				'view' => self::VIEW,
+			)
+		);
+		$this->answer_sets( array() );
+		$this->answer_mockups();
+
+		$html = $this->field->html( $this->reload( $product ) );
+
+		$this->assertStringContainsString( 'Front, flat lay, on the photo of the variant sold', $html );
+		$this->assertStringNotContainsString( 'No longer on the blank', $html );
+	}
+
+	public function test_a_choice_stays_listed_after_the_blank_lost_every_photo(): void {
+		$product = $this->product();
+		PictureView::save( $product, self::choice( self::PHOTO ) );
+		$this->answer_sets( array() );
+		$mockups = json_decode( OpenApiAssert::example( 'GET', '/v1/blanks/{id}/mockups', 200 ), true );
+		$this->assertIsArray( $mockups );
+		$mockups['placements'][0]['views'][0]['photos'] = array();
+		$this->recorder->raw( 200, (string) wp_json_encode( $mockups ), 'application/json' );
+
+		$html = $this->field->html( $this->reload( $product ) );
+
+		$this->assertStringContainsString( 'No longer on the blank', $html );
+		$this->assertStringContainsString( 'value="preview"', $html, 'it can be changed' );
+	}
+
 	public function test_saving_keeps_the_photo_chosen_for_the_image_and_for_each_set(): void {
 		$product = $this->product();
 
@@ -290,12 +335,14 @@ final class PictureViewFieldTest extends WP_UnitTestCase {
 
 	/**
 	 * A product personalised on the mini tee template, printed on the blank's front.
+	 *
+	 * @param ProductConfig|null $config Its configuration; null for `config()`.
 	 */
-	private function product(): WC_Product_Simple {
+	private function product( ?ProductConfig $config = null ): WC_Product_Simple {
 		$product = new WC_Product_Simple();
 		$product->set_name( 'Student tee' );
 		$product->save();
-		self::config()->save_to( $product );
+		( $config ?? self::config() )->save_to( $product );
 		$read = $this->reload( $product );
 		$this->assertInstanceOf( WC_Product_Simple::class, $read );
 		return $read;
