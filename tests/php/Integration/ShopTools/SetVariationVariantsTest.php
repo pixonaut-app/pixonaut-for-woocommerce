@@ -214,6 +214,34 @@ final class SetVariationVariantsTest extends WP_UnitTestCase {
 		$this->assertSame( 'v_large', ProductVariant::stored_on( $this->reload( $large ) )?->pick );
 	}
 
+	public function test_options_naming_a_retired_variant_and_one_on_sale_pick_the_one_on_sale(): void {
+		$this->variants->answer = BlankFixture::variants(
+			array(
+				array(
+					'ref'     => 'v_small_old',
+					'options' => array( 'Size' => self::SMALL ),
+					'retired' => array( 'reason' => 'no_longer_sold' ),
+				),
+				array(
+					'ref'     => 'v_small',
+					'options' => array( 'Size' => self::SMALL ),
+				),
+			),
+			array( 'Size' )
+		);
+		$product                = $this->poster();
+		$small                  = $this->variation( $product, 'Small' );
+
+		$this->succeed(
+			array(
+				'product_id' => $product->get_id(),
+				'variations' => array( self::row( $small, array( 'Size' => self::SMALL ) ) ),
+			)
+		);
+
+		$this->assertSame( 'v_small', ProductVariant::stored_on( $this->reload( $small ) )?->pick );
+	}
+
 	/**
 	 * @return array<string, array{0: string, 1: string}>
 	 */

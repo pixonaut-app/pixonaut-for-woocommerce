@@ -25,6 +25,8 @@ use WC_Product;
  * variants: the one its options match, or the one the store manager picks
  * here. The field says which, and warns when there is none, when it is
  * retired, and when no view the product is shown in has a photo of it.
+ * It lists the variants on sale, and the retired ones too once the store
+ * manager asks; a retired variant picked is listed either way.
  */
 final class VariantField {
 
@@ -62,10 +64,14 @@ final class VariantField {
 		$stored   = ProductVariant::stored_on( $product );
 		$stored   = null !== $stored && $stored->blank_id === $config->blank_id ? $stored : null;
 		$choices  = array();
+		$retired  = array();
 		$warnings = array();
 		try {
 			foreach ( $this->variants->variants( $config->blank_id ) as $variant ) {
 				$choices[ $variant->ref ] = self::choice( $variant );
+				if ( null !== $variant->retired ) {
+					$retired[] = $variant->ref;
+				}
 			}
 		} catch ( ApiException $e ) {
 			$warnings[] = __( 'Pixonaut could not be reached to list the blank’s variants. Try again later.', 'pixonaut-for-woocommerce' );
@@ -86,6 +92,7 @@ final class VariantField {
 					/* translators: Option in the blank variant picker on the product edit page, shown to the merchant: match the variant by the product's options. */
 					: __( 'Match by options', 'pixonaut-for-woocommerce' ),
 				'choices'   => $choices,
+				'retired'   => $retired,
 				'warnings'  => array_merge( $warnings, self::warnings( $stored, $config ) ),
 				'explained' => $product->is_type( 'variation' )
 					? __( 'Match by options finds the blank variant with the same option values as this variation’s attributes. When none matches, the variation cannot be bought until you pick its variant here; it does not fall back to the product’s.', 'pixonaut-for-woocommerce' )

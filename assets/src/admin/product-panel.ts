@@ -23,6 +23,7 @@ import {
 	showSizeLimit,
 } from './print-size-limit';
 import { initRegeneratePictures } from './regenerate-pictures';
+import { initRetiredVariants } from './retired-variants';
 import { initSideGroups } from './side-groups';
 import {
 	CUSTOM_SIZE,
@@ -880,6 +881,7 @@ function initVariations(): void {
 	for (const panel of newPanels(document)) {
 		initOverride(panel);
 		initPanel(panel);
+		initRetiredVariants(panel);
 	}
 }
 
@@ -888,6 +890,7 @@ domReady(() => {
 	const panel = document.querySelector<HTMLElement>('.pixonaut-product-panel');
 	if (panel) {
 		initPanel(panel);
+		initRetiredVariants(panel);
 		initRegeneratePictures(panel, { nonce: panel.dataset.restNonce ?? '' });
 	}
 	// WooCommerce loads the variations, a page at a time, after the screen.

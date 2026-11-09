@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-09T19:37:25+00:00\n"
+"POT-Creation-Date: 2026-11-09T20:56:49+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1987,14 +1987,14 @@ msgid "Variation %d is not personalised on a blank."
 msgstr "Variatie %d is niet op een blanco product gepersonaliseerd."
 
 #. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetVariationVariants.php:208
+#: src/Abilities/SetVariationVariants.php:211
 #, php-format
 msgid "The options of variation %d name no variant of its blank."
 msgstr ""
 "De opties van variatie %d duiden geen variant van het blanco product aan."
 
 #. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetVariationVariants.php:212
+#: src/Abilities/SetVariationVariants.php:215
 #, php-format
 msgid "The options of variation %d name several variants of its blank."
 msgstr ""
@@ -2002,7 +2002,7 @@ msgstr ""
 "aan."
 
 #. translators: %d: a variation's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetVariationVariants.php:216
+#: src/Abilities/SetVariationVariants.php:219
 #, php-format
 msgid ""
 "The options of variation %d name a variant of its blank that is retired."
@@ -2010,7 +2010,7 @@ msgstr ""
 "De opties van variatie %d duiden een variant van het blanco product aan die "
 "niet meer leverbaar is."
 
-#: src/Abilities/SetVariationVariants.php:267
+#: src/Abilities/SetVariationVariants.php:270
 msgid "Pixonaut could not be reached to read the blank's variants."
 msgstr ""
 "Pixonaut was niet bereikbaar om de varianten van het blanco product te lezen."
@@ -3119,7 +3119,7 @@ msgstr "Waarop de variatieafbeelding wordt aangemaakt"
 msgid "%1$s, photo %2$d"
 msgstr "%1$s, foto %2$d"
 
-#: src/Admin/VariantField.php:71
+#: src/Admin/VariantField.php:77
 msgid ""
 "Pixonaut could not be reached to list the blank’s variants. Try again later."
 msgstr ""
@@ -3127,17 +3127,17 @@ msgstr ""
 "halen. Probeer het later opnieuw."
 
 #. translators: %s: the matched variant's options, e.g. "Color: Red, Size: M". Option in the blank variant picker on the product edit page, shown to the merchant.
-#: src/Admin/VariantField.php:85
+#: src/Admin/VariantField.php:91
 #, php-format
 msgid "Match by options (now: %s)"
 msgstr "Koppelen op opties (nu: %s)"
 
 #. translators: Option in the blank variant picker on the product edit page, shown to the merchant: match the variant by the product's options.
-#: src/Admin/VariantField.php:87
+#: src/Admin/VariantField.php:93
 msgid "Match by options"
 msgstr "Koppelen op opties"
 
-#: src/Admin/VariantField.php:91
+#: src/Admin/VariantField.php:98
 msgid ""
 "Match by options finds the blank variant with the same option values as this "
 "variation’s attributes. When none matches, the variation cannot be bought "
@@ -3148,7 +3148,7 @@ msgstr ""
 "kan de variatie pas worden gekocht als je hier de variant kiest; er wordt "
 "niet teruggevallen op die van het product."
 
-#: src/Admin/VariantField.php:92
+#: src/Admin/VariantField.php:99
 msgid ""
 "Match by options finds the blank variant with the same option values as this "
 "product’s attributes. When none matches, the product cannot be bought until "
@@ -3159,12 +3159,12 @@ msgstr ""
 "het product pas worden gekocht als je hier de variant kiest."
 
 #. translators: %s: the variant's options, e.g. "Color: Red, Size: M".
-#: src/Admin/VariantField.php:167
+#: src/Admin/VariantField.php:174
 #, php-format
 msgid "%s (retired)"
 msgstr "%s (niet meer leverbaar)"
 
-#: src/Admin/VariantField.php:180
+#: src/Admin/VariantField.php:187
 msgid ""
 "No variant of the blank matches, so customers cannot buy this. Pick the "
 "variant it is."
@@ -3172,7 +3172,7 @@ msgstr ""
 "Geen enkele variant van het blanco product komt overeen, dus klanten kunnen "
 "dit niet kopen. Kies de juiste variant."
 
-#: src/Admin/VariantField.php:183
+#: src/Admin/VariantField.php:190
 msgid ""
 "This variant is retired, so customers cannot buy this. Pick another variant."
 msgstr ""
@@ -3180,7 +3180,7 @@ msgstr ""
 "een andere variant."
 
 #. translators: %l: the sides with no photo, e.g. "Front and Back".
-#: src/Admin/VariantField.php:192
+#: src/Admin/VariantField.php:199
 msgid ""
 "No view the product is shown in has a photo of this variant on %l, so "
 "customers cannot design it."
@@ -8563,9 +8563,14 @@ msgstr ""
 "verhoudingen van een drukformaat niet die van het sjabloon zijn."
 
 #. translators: Label of the dropdown choosing which variant of the Pixonaut blank this product is printed on. Admin product page.
-#: templates/admin/product-variant.php:23
+#: templates/admin/product-variant.php:26
 msgid "Blank variant"
 msgstr "Variant van het blanco product"
+
+#. translators: Checkbox beside the blank variant dropdown on the product edit page: also list the variants the blank no longer sells.
+#: templates/admin/product-variant.php:36
+msgid "Show retired variants"
+msgstr "Niet meer leverbare varianten tonen"
 
 #. translators: Checkbox label on a variable product's variation panel: this variation uses its own personalisation settings. Admin product page.
 #: templates/admin/product-variation.php:42
@@ -9046,6 +9051,22 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s weergave"
 msgstr[1] "%s weergaven"
+
+#~ msgid ""
+#~ "Reads what a personalised product's or variation's Pixonaut images are "
+#~ "drawn on: the image drawn without a showcase set (a variation: its own "
+#~ "choice), and each showcase set chosen, each on the photo the product page "
+#~ "starts on, on a view and photo of the blank, or flat; and the views of "
+#~ "its side's placement with their photos, scenes included. Set them with "
+#~ "`set-product-picture-view`."
+#~ msgstr ""
+#~ "Leest waarop de Pixonaut-afbeeldingen van een gepersonaliseerd product of "
+#~ "een variatie worden aangemaakt: de afbeelding die zonder voorbeeldset "
+#~ "wordt aangemaakt (bij een variatie: haar eigen keuze) en elke gekozen "
+#~ "voorbeeldset, elk op de foto waarmee de productpagina opent, op een "
+#~ "aanzicht en foto van het blanco product, of plat; en de aanzichten van de "
+#~ "drukpositie van de zijde met hun foto's, scènes inbegrepen. Stel ze in "
+#~ "met `set-product-picture-view`."
 
 #~ msgid "The design alone, filled in with the set, without the product."
 #~ msgstr "Alleen het ontwerp, ingevuld met de set, zonder het product."
@@ -9855,14 +9876,6 @@ msgstr[1] "%s weergaven"
 #~ msgstr ""
 #~ "Waarom het product niet kan worden gekocht, in woorden; null als het wel "
 #~ "kan."
-
-#~ msgid ""
-#~ "Which of the product's variations sell no variant of the blank, in words; "
-#~ "null when each does. Pick the variant on the product screen."
-#~ msgstr ""
-#~ "Welke variaties van het product geen variant van het blanco product "
-#~ "verkopen, in woorden; null als elke variatie er een verkoopt. Kies de "
-#~ "variant op het bewerkscherm van het product."
 
 #~ msgid ""
 #~ "`personalised` when the customer fills in the template, `standing` when "

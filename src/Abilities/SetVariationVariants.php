@@ -203,6 +203,9 @@ final class SetVariationVariants implements Ability {
 	 */
 	private static function named( int $id, array $options, array $variants ): string|WP_Error {
 		$named = array_values( array_filter( $variants, static fn ( BlankVariant $variant ): bool => $variant->is_named_by( $options ) ) );
+		// A retired variant named alike stands aside for the one on sale.
+		$on_sale = array_values( array_filter( $named, static fn ( BlankVariant $variant ): bool => null === $variant->retired ) );
+		$named   = array() === $on_sale ? $named : $on_sale;
 		if ( array() === $named ) {
 			/* translators: %d: a variation's id. Why an AI assistant's change to the store was refused. */
 			return new WP_Error( 'pixonaut_wc_ability_no_variant', sprintf( __( 'The options of variation %d name no variant of its blank.', 'pixonaut-for-woocommerce' ), $id ) );
