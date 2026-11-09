@@ -41,6 +41,7 @@ namespace Pixonaut\WooCommerce\Storefront;
  *     bounds: list<string>,
  *     stops: list<array<string, mixed>>,
  *     host: string,
+ *     own_step: bool,
  *     placeholder: string,
  *     words: array<string, string>
  * }
@@ -321,12 +322,14 @@ final class FormControl {
 	 * A place in the form for one of the add-to-cart form's own fields, which
 	 * is put there rather than drawn: its field's name.
 	 *
-	 * @param string $name The attribute field's name.
+	 * @param string $name     The attribute field's name.
+	 * @param bool   $own_step Whether it stands in a step of its own, whose heading names it.
 	 * @return Control
 	 */
-	public static function host( string $name ): array {
-		$control         = self::control( '', self::HOST );
-		$control['host'] = $name;
+	public static function host( string $name, bool $own_step = false ): array {
+		$control             = self::control( '', self::HOST );
+		$control['host']     = $name;
+		$control['own_step'] = $own_step;
 		return $control;
 	}
 
@@ -579,6 +582,7 @@ final class FormControl {
 			'bounds'      => array(),
 			'stops'       => array(),
 			'host'        => '',
+			'own_step'    => false,
 			'placeholder' => '',
 			'words'       => array(),
 		);

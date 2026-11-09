@@ -19,6 +19,15 @@ export type ArrangedGroups = {
 /** Put before the id of a group of the product's own (`FormGroups::OWN_GROUP_PREFIX`). */
 const OWN_GROUP_PREFIX = 'wc-';
 
+/** Put before an attribute's slug for the id of the group holding that
+ *  attribute alone, named after it (`FormGroupsMount::OPTION_GROUP_PREFIX`). */
+const OPTION_GROUP_PREFIX = `${OWN_GROUP_PREFIX}option-`;
+
+/** Set on an attribute's part lent to a group of its own, whose heading
+ *  names it: the stylesheet hides WooCommerce's label of its field there,
+ *  as the printed form does on the slot it stands in. */
+export const OWN_STEP_ATTRIBUTE = 'data-pixonaut-own-step';
+
 /** The add-to-cart form names an attribute's field `attribute_<slug>`. */
 const ATTRIBUTE_FIELD_PREFIX = 'attribute_';
 
@@ -36,7 +45,8 @@ const isAttribute = (item: ArrangedItem): item is { attribute: string } =>
  * `arranged` as the designer takes it. With `form`, each attribute item is
  * that attribute's part of the form, moved into the group; without it, or
  * for an attribute the form has no field of, the item is left out, with a
- * group of the product's own that it leaves empty.
+ * group of the product's own that it leaves empty. An attribute in a group
+ * of its own is marked so (`OWN_STEP_ATTRIBUTE`).
  */
 export function hostGroups(
 	arranged: ArrangedGroups,
@@ -46,6 +56,7 @@ export function hostGroups(
 	const groups: FormGroup[] = [];
 	for (const group of arranged.groups) {
 		const items: FormGroupItem[] = [];
+		const ownStep = group.id.startsWith(OPTION_GROUP_PREFIX);
 		for (const item of group.items) {
 			if (!isAttribute(item)) {
 				items.push(item);
@@ -54,6 +65,7 @@ export function hostGroups(
 			const name = ATTRIBUTE_FIELD_PREFIX + item.attribute;
 			const element = form === null ? null : attributePart(form, name);
 			if (element !== null) {
+				element.toggleAttribute(OWN_STEP_ATTRIBUTE, ownStep);
 				items.push({ host: name, element });
 				hosts.push(name);
 			}

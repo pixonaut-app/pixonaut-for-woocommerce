@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Pixonaut for WooCommerce 1.1.2\n"
+"Project-Id-Version: Pixonaut for WooCommerce 1.2.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-09T10:44:41+00:00\n"
+"POT-Creation-Date: 2026-11-09T17:41:13+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -5603,7 +5603,7 @@ msgstr ""
 #. translators: Screen reader label of the dropdown that picks a print size for a side, on the admin product page, read by the merchant.
 #. translators: Heading of the print size picker in the product page's designer, as Pixonaut's designer words it.
 #: templates/admin/product-side.php:41
-#: templates/storefront/form-placeholder.php:376
+#: templates/storefront/form-placeholder.php:380
 msgid "Print size"
 msgstr ""
 
@@ -6084,170 +6084,170 @@ msgid "Open the order; its notes say what happened."
 msgstr ""
 
 #. translators: %s: how far a picture is zoomed in, e.g. 1.5 for one and a half times. Beside the zoom slider of a picture in the product page's designer.
-#: templates/storefront/form-placeholder.php:87
+#: templates/storefront/form-placeholder.php:90
 #, php-format
 msgctxt "designer crop zoom"
 msgid "%s×"
 msgstr ""
 
 #. translators: Beside a colour field's heading in the product page's designer, when the customer's colour is one of their own rather than the palette's, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:99
+#: templates/storefront/form-placeholder.php:102
 msgctxt "designer colour"
 msgid "Custom"
 msgstr ""
 
 #. translators: Tile of a shape field in the product page's designer that leaves the shape out, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:149
+#: templates/storefront/form-placeholder.php:152
 msgctxt "designer shape"
 msgid "None"
 msgstr ""
 
 #. translators: A way to fit a picture in its frame, on a tile in the product page's designer: the whole picture shows, leaving space around it.
-#: templates/storefront/form-placeholder.php:153
+#: templates/storefront/form-placeholder.php:156
 msgctxt "designer picture fit"
 msgid "Show whole picture"
 msgstr ""
 
 #. translators: A way to fit a picture in its frame, on a tile in the product page's designer: the picture covers the frame, cut at its edges.
-#: templates/storefront/form-placeholder.php:155
+#: templates/storefront/form-placeholder.php:158
 msgctxt "designer picture fit"
 msgid "Fill the frame"
 msgstr ""
 
 #. translators: A way to fit a picture in its frame, on a tile in the product page's designer: the picture is stretched to the frame's shape.
-#: templates/storefront/form-placeholder.php:157
+#: templates/storefront/form-placeholder.php:160
 msgctxt "designer picture fit"
 msgid "Stretch to fit"
 msgstr ""
 
 #. translators: A way to fit a picture in its frame, on a tile in the product page's designer: the picture repeats across the frame.
-#: templates/storefront/form-placeholder.php:159
+#: templates/storefront/form-placeholder.php:162
 msgctxt "designer picture fit"
 msgid "Repeat as pattern"
 msgstr ""
 
 #. translators: A text's alignment, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:175
+#: templates/storefront/form-placeholder.php:178
 msgctxt "designer text alignment"
 msgid "Left"
 msgstr ""
 
 #. translators: A text's alignment, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:177
+#: templates/storefront/form-placeholder.php:180
 msgctxt "designer text alignment"
 msgid "Center"
 msgstr ""
 
 #. translators: A text's alignment, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:179
+#: templates/storefront/form-placeholder.php:182
 msgctxt "designer text alignment"
 msgid "Right"
 msgstr ""
 
 #. translators: Where a text sits from top to bottom of its box, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:183
+#: templates/storefront/form-placeholder.php:186
 msgctxt "designer text position"
 msgid "Top"
 msgstr ""
 
 #. translators: Where a text sits from top to bottom of its box, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:185
+#: templates/storefront/form-placeholder.php:188
 msgctxt "designer text position"
 msgid "Middle"
 msgstr ""
 
 #. translators: Where a text sits from top to bottom of its box, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:187
+#: templates/storefront/form-placeholder.php:190
 msgctxt "designer text position"
 msgid "Bottom"
 msgstr ""
 
 #. translators: A text's case, in a menu in the product page's designer: the text as the customer wrote it.
-#: templates/storefront/form-placeholder.php:191
+#: templates/storefront/form-placeholder.php:194
 msgctxt "designer text case"
 msgid "As typed"
 msgstr ""
 
 #. translators: A text's case, in a menu in the product page's designer. Written in that case.
-#: templates/storefront/form-placeholder.php:193
+#: templates/storefront/form-placeholder.php:196
 msgctxt "designer text case"
 msgid "UPPERCASE"
 msgstr ""
 
 #. translators: A text's case, in a menu in the product page's designer. Written in that case.
-#: templates/storefront/form-placeholder.php:195
+#: templates/storefront/form-placeholder.php:198
 msgctxt "designer text case"
 msgid "lowercase"
 msgstr ""
 
 #. translators: A text's case, in a menu in the product page's designer: each word starts with a capital. Written in that case.
-#: templates/storefront/form-placeholder.php:197
+#: templates/storefront/form-placeholder.php:200
 msgctxt "designer text case"
 msgid "Title Case"
 msgstr ""
 
 #. translators: A photo's tone, in a menu in the product page's designer: the photo as it is.
-#: templates/storefront/form-placeholder.php:201
+#: templates/storefront/form-placeholder.php:204
 msgctxt "designer photo tone"
 msgid "Original"
 msgstr ""
 
 #. translators: A photo's tone, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:203
+#: templates/storefront/form-placeholder.php:206
 msgctxt "designer photo tone"
 msgid "Black and white"
 msgstr ""
 
 #. translators: A photo's tone, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:205
+#: templates/storefront/form-placeholder.php:208
 msgctxt "designer photo tone"
 msgid "Sepia"
 msgstr ""
 
 #. translators: A photo's tone, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:207
+#: templates/storefront/form-placeholder.php:210
 msgctxt "designer photo tone"
 msgid "Duotone"
 msgstr ""
 
 #. translators: A photo's tone, in a menu in the product page's designer: the photo in one colour.
-#: templates/storefront/form-placeholder.php:209
+#: templates/storefront/form-placeholder.php:212
 msgctxt "designer photo tone"
 msgid "Recolour"
 msgstr ""
 
 #. translators: A photo's tone, in a menu in the product page's designer: its colours reversed.
-#: templates/storefront/form-placeholder.php:211
+#: templates/storefront/form-placeholder.php:214
 msgctxt "designer photo tone"
 msgid "Invert"
 msgstr ""
 
 #. translators: A font's weight, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:215
+#: templates/storefront/form-placeholder.php:218
 msgctxt "designer font weight"
 msgid "Regular"
 msgstr ""
 
 #. translators: A font's weight, in a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:217
+#: templates/storefront/form-placeholder.php:220
 msgctxt "designer font weight"
 msgid "Bold"
 msgstr ""
 
 #. translators: %s: a font's weight as a number, e.g. 500. In a menu in the product page's designer.
-#: templates/storefront/form-placeholder.php:222
+#: templates/storefront/form-placeholder.php:225
 #, php-format
 msgid "Weight %s"
 msgstr ""
 
 #. translators: Label of the slider that sizes a picture or text in the product page's designer, as Pixonaut's designer names it.
-#: templates/storefront/form-placeholder.php:257
+#: templates/storefront/form-placeholder.php:261
 msgctxt "designer scale slider"
 msgid "Size"
 msgstr ""
 
 #. translators: %d: the most characters a text field takes. Help under a text field in the product page's designer.
-#: templates/storefront/form-placeholder.php:261
+#: templates/storefront/form-placeholder.php:265
 #, php-format
 msgid "Up to %d character"
 msgid_plural "Up to %d characters"
@@ -6255,74 +6255,74 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: Hint in the product page's designer, under the fields of pictures or texts the customer can move.
-#: templates/storefront/form-placeholder.php:267
+#: templates/storefront/form-placeholder.php:271
 msgid "Drag them on the preview to place them"
 msgstr ""
 
 #. translators: Hint in the product page's designer, under the fields of a picture or text the customer can move.
-#: templates/storefront/form-placeholder.php:269
+#: templates/storefront/form-placeholder.php:273
 msgid "Drag it on the preview to place it"
 msgstr ""
 
 #. translators: Link beside the hint to drag a picture or text on the product page's designer preview: puts it back where it started.
-#: templates/storefront/form-placeholder.php:281
+#: templates/storefront/form-placeholder.php:285
 msgctxt "designer placement"
 msgid "Reset"
 msgstr ""
 
 #. translators: Button of a picture field in the product page's designer, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:289
+#: templates/storefront/form-placeholder.php:293
 msgid "Upload an image"
 msgstr ""
 
 #. translators: Tile of a picture field in the product page's designer that leaves the picture out.
-#: templates/storefront/form-placeholder.php:299
+#: templates/storefront/form-placeholder.php:303
 msgid "No picture"
 msgstr ""
 
 #. translators: Button under a picture's zoom slider in the product page's designer: drag the picture in its frame on the preview, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:316
+#: templates/storefront/form-placeholder.php:320
 msgid "Move picture"
 msgstr ""
 
 #. translators: Button under a picture's zoom slider in the product page's designer: puts the picture back as the template frames it.
-#: templates/storefront/form-placeholder.php:317
+#: templates/storefront/form-placeholder.php:321
 msgctxt "designer crop"
 msgid "Reset"
 msgstr ""
 
 #. translators: %d: the colour's place along a gradient, from 1. Heading of one of a gradient's colours in the product page's designer, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:343
+#: templates/storefront/form-placeholder.php:347
 #, php-format
 msgid "Colour %d"
 msgstr ""
 
 #. translators: Name of the first step of the product page's designer, where the customer picks the product's options, as Pixonaut's designer words it.
-#: templates/storefront/form-placeholder.php:389
+#: templates/storefront/form-placeholder.php:393
 msgctxt "designer step"
 msgid "Options"
 msgstr ""
 
 #. translators: 1: the step shown, 2: how many steps there are. Above a step's title in the product page's designer.
-#: templates/storefront/form-placeholder.php:431
+#: templates/storefront/form-placeholder.php:435
 #, php-format
 msgid "Step %1$d of %2$d"
 msgstr ""
 
 #. translators: 1: the step shown, 2: how many steps there are. Above a step's title in the product page's designer, in place of "Step 1 of 2" where the designer is narrow.
-#: templates/storefront/form-placeholder.php:432
+#: templates/storefront/form-placeholder.php:436
 #, php-format
 msgid "%1$d of %2$d"
 msgstr ""
 
 #. translators: Button in the product page's designer that goes back a step.
-#: templates/storefront/form-placeholder.php:457
+#: templates/storefront/form-placeholder.php:461
 msgctxt "designer step"
 msgid "Back"
 msgstr ""
 
 #. translators: %s: the next step's name. Button in the product page's designer that moves on a step.
-#: templates/storefront/form-placeholder.php:459
+#: templates/storefront/form-placeholder.php:463
 #, php-format
 msgid "Next: %s"
 msgstr ""

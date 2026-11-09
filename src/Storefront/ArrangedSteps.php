@@ -58,7 +58,10 @@ final class ArrangedSteps {
 			foreach ( self::rows( $group['items'] ?? null ) as $item ) {
 				if ( is_string( $item['attribute'] ?? null ) ) {
 					if ( $lending ) {
-						$items[] = array( 'host' => self::ATTRIBUTE_FIELD_PREFIX . $item['attribute'] );
+						$items[] = array(
+							'host'     => self::ATTRIBUTE_FIELD_PREFIX . $item['attribute'],
+							'own_step' => str_starts_with( $id, FormGroupsMount::OPTION_GROUP_PREFIX ),
+						);
 					}
 					continue;
 				}
@@ -126,7 +129,7 @@ final class ArrangedSteps {
 		$last_of = array();
 		foreach ( $items as $item ) {
 			if ( isset( $item['host'] ) ) {
-				$fields[] = FormControl::host( (string) $item['host'] );
+				$fields[] = FormControl::host( (string) $item['host'], ! empty( $item['own_step'] ) );
 				continue;
 			}
 			$field    = is_array( $item['field'] ?? null ) ? $item['field'] : array();

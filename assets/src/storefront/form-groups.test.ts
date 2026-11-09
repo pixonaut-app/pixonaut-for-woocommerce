@@ -5,6 +5,7 @@ import {
 	hostComplete,
 	hostGroups,
 	lentElements,
+	OWN_STEP_ATTRIBUTE,
 } from './form-groups';
 import { ATTRIBUTE_TABLE_CLASS } from './shop-parts';
 
@@ -84,6 +85,30 @@ describe('hostGroups', () => {
 		expect(element?.className).toBe(
 			'wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute',
 		);
+	});
+
+	it('marks an attribute lent to a group of its own, and only there', () => {
+		const form = classicForm();
+		const own: ArrangedGroups = {
+			groups: [
+				{
+					id: 'wc-option-colour',
+					title: 'Colour',
+					items: [{ attribute: 'colour' }],
+				},
+				{ id: 'wc-options', title: 'Options', items: [{ attribute: 'size' }] },
+			],
+		};
+
+		const [colour, size] = lentElements(hostGroups(own, form));
+
+		expect(colour?.hasAttribute(OWN_STEP_ATTRIBUTE)).toBe(true);
+		expect(size?.hasAttribute(OWN_STEP_ATTRIBUTE)).toBe(false);
+
+		// Lent again to a group it shares, it shows its label again.
+		const [again] = lentElements(hostGroups(ARRANGED, form));
+		expect(again).toBe(colour);
+		expect(again?.hasAttribute(OWN_STEP_ATTRIBUTE)).toBe(false);
 	});
 
 	it('leaves the attributes out without a form, and the product’s own group they leave empty', () => {
