@@ -881,3 +881,19 @@
 .pixonaut-standing-options__more {
 	justify-self: start;
 }
+
+/* "Show retired variants", on a line of its own under the variant menu. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+.pixonaut-variant-show-retired-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	justify-self: start;
+	width: auto;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-variant-show-retired {
+	float: none;
+	margin: 0;
+}

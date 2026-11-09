@@ -80,9 +80,29 @@ test('a variation without a blank variant, or with a retired one, cannot be boug
 	await expect(variant.locator('option:checked')).toHaveText(
 		'Color: White, Size: S',
 	);
+	// The variants the tee no longer sells are listed only on request.
+	const retiredOption = variant.locator(
+		`option[value="${FIXTURE.variant.teeRedM}"]`,
+	);
+	await expect(retiredOption).toHaveCount(0);
+	await small.getByLabel('Show retired variants').check();
+	await expect(retiredOption).toHaveText('Color: Red, Size: M (retired)');
+
+	// A variation set to a retired variant shows it while the others are hidden.
+	const retired = admin.locator('.woocommerce_variation', {
+		has: admin.locator(
+			'select[name^="attribute_size"] option[value="Retired"]:checked',
+		),
+	});
+	await retired.locator('h3 strong').first().click();
+	const retiredVariant = retired.getByLabel('Blank variant');
+	await expect(retiredVariant.locator('option:checked')).toHaveText(
+		'Color: Red, Size: M (retired)',
+	);
 	await expect(
-		variant.locator(`option[value="${FIXTURE.variant.teeRedM}"]`),
-	).toHaveText('Color: Red, Size: M (retired)');
+		retiredVariant.locator(`option[value="${FIXTURE.variant.teeRedS}"]`),
+	).toHaveCount(0);
+	await expect(retired.getByLabel('Show retired variants')).not.toBeChecked();
 
 	const heather = admin.locator('.woocommerce_variation', {
 		has: admin.locator(

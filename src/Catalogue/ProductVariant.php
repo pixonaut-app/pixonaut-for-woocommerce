@@ -75,10 +75,13 @@ final class ProductVariant {
 
 	/**
 	 * The variant of `$variants` a product or variation is: `$pick` when the
-	 * blank has it, else, without a pick, the one variant whose every option
-	 * matches one of its attributes by label, case and spacing aside.
-	 * Several matches are no match. A picked variant the blank no longer has
-	 * is no variant, rather than a guess.
+	 * blank has it, retired or not, else, without a pick, the one variant
+	 * whose every option matches one of its attributes by label, case and
+	 * spacing aside. Only the variants on sale are matched while one of them
+	 * matches: a printshop's retired sizes often share the labels of those on
+	 * sale. A retired one matched alone is kept, so it reads as retired
+	 * rather than as no variant. Several matches are no match. A picked
+	 * variant the blank no longer has is no variant, rather than a guess.
 	 *
 	 * @param string                $blank_id   The blank.
 	 * @param string|null           $pick       The store manager's pick.
@@ -97,6 +100,8 @@ final class ProductVariant {
 			}
 		} else {
 			$matches = array_values( array_filter( $variants, static fn ( BlankVariant $variant ): bool => self::matches( $variant, $attributes ) ) );
+			$on_sale = array_values( array_filter( $matches, static fn ( BlankVariant $variant ): bool => null === $variant->retired ) );
+			$matches = array() === $on_sale ? $matches : $on_sale;
 			$found   = 1 === count( $matches ) ? $matches[0] : null;
 		}
 		return null === $found

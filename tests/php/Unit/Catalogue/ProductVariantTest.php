@@ -175,6 +175,28 @@ final class ProductVariantTest extends TestCase {
 		$this->assertSame( array( 'v_red_s', $reason, ProductVariant::RETIRED ), array( $variant->ref, $variant->retired, $variant->problem() ) );
 	}
 
+	public function test_matching_by_options_prefers_the_variants_on_sale(): void {
+		$variant  = static fn ( string $ref, string $size, ?string $retired ): array => array(
+			'ref'     => $ref,
+			'options' => array( 'Size' => $size ),
+			'retired' => null === $retired ? null : array( 'reason' => $retired ),
+			'views'   => array(),
+		);
+		$variants = BlankVariant::list_from(
+			array(
+				$variant( 'v_a4_old', 'A4', 'no_longer_sold' ),
+				$variant( 'v_a4', 'A4', null ),
+				$variant( 'v_a3_old', 'A3', 'no_longer_sold' ),
+			)
+		);
+
+		$on_sale = ProductVariant::resolve( self::BLANK_ID, null, array( 'Size' => 'A4' ), $variants );
+		$retired = ProductVariant::resolve( self::BLANK_ID, null, array( 'Size' => 'A3' ), $variants );
+
+		$this->assertSame( array( 'v_a4', null ), array( $on_sale->ref, $on_sale->problem() ) );
+		$this->assertSame( array( 'v_a3_old', ProductVariant::RETIRED ), array( $retired->ref, $retired->problem() ), 'a retired variant matched alone reads as retired' );
+	}
+
 	/**
 	 * @return array<string, array{string}>
 	 */

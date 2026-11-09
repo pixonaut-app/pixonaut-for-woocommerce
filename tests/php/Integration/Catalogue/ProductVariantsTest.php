@@ -43,10 +43,10 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 		parent::tear_down();
 	}
 
-	public function test_variations_are_matched_by_option_labels_and_one_unmatched_or_retired_cannot_be_bought(): void {
+	public function test_variations_are_matched_by_option_labels_among_the_variants_on_sale(): void {
 		$variations = $this->linked_variable_product();
 
-		$this->assertSame( 'v_red', ProductVariant::stored_on( $this->reload_any( $variations['Red']->get_id() ) )?->ref );
+		$this->assertSame( 'v_red', ProductVariant::stored_on( $this->reload_any( $variations['Red']->get_id() ) )?->ref, 'the red no longer sold is passed over' );
 		$this->assertTrue( $this->reload_any( $variations['Red']->get_id() )->is_purchasable() );
 		$this->assertTrue( $this->reload_any( $variations['White']->get_id() )->is_purchasable(), 'a variant without a photo is still sold' );
 		$this->assertFalse( $this->reload_any( $variations['Forest']->get_id() )->is_purchasable(), 'its variant is retired' );
@@ -135,8 +135,39 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 		$this->assertStringContainsString( 'name="pixonaut_variation[3][variant]"', $html );
 		$this->assertStringContainsString( 'Match by options (now: Colour: White)', $html );
 		$this->assertStringContainsString( 'When none matches, the variation cannot be bought until you pick its variant here; it does not fall back to the product’s.', $html );
-		$this->assertStringContainsString( '<option value="v_forest" >Colour: Forest (retired)</option>', $html );
+		$this->assertStringContainsString( '<option value="v_red" >Colour: Red</option>', $html );
+		$this->assertStringContainsString( '<option value="v_forest" data-retired >Colour: Forest (retired)</option>', $html );
+		$this->assertStringContainsString( 'class="pixonaut-variant-show-retired"', $html );
 		$this->assertStringContainsString( 'No view the product is shown in has a photo of this variant on Front', $html );
+	}
+
+	public function test_the_variant_field_of_a_variation_matched_among_the_variants_on_sale_warns_of_nothing(): void {
+		$variations = $this->linked_variable_product();
+		$this->recorder->json( 200, $this->blank() );
+		$this->recorder->json( 200, $this->mockups() );
+		$this->recorder->json( 200, self::printshops() );
+
+		ob_start();
+		$this->variations->render( 0, array(), get_post( $variations['Red']->get_id() ) );
+		$html = (string) ob_get_clean();
+
+		$this->assertStringContainsString( 'Match by options (now: Colour: Red)', $html );
+		$this->assertStringNotContainsString( 'pixonaut-variant-warning', $html );
+	}
+
+	public function test_the_variant_field_of_a_variation_set_to_a_retired_variant_shows_it_marked(): void {
+		$variations = $this->linked_variable_product();
+		$this->save_variation( $variations['Blue'], 2, 'v_navy' );
+		$this->recorder->json( 200, $this->blank() );
+		$this->recorder->json( 200, $this->mockups() );
+		$this->recorder->json( 200, self::printshops() );
+
+		ob_start();
+		$this->variations->render( 2, array(), get_post( $variations['Blue']->get_id() ) );
+		$html = (string) ob_get_clean();
+
+		$this->assertStringContainsString( "<option value=\"v_navy\" data-retired  selected='selected'>Colour: Navy (retired)</option>", $html );
+		$this->assertStringContainsString( 'This variant is retired', $html );
 	}
 
 	public function test_the_variant_field_warns_about_a_variant_with_no_photo_in_the_views_the_product_is_shown_in(): void {
@@ -194,7 +225,8 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 
 	/**
 	 * The blank's variants: red, white with no photo, forest retired by the
-	 * merchant, navy no longer sold.
+	 * merchant, navy no longer sold, and a red no longer sold that shares the
+	 * red's options.
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -217,6 +249,7 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 				$variant( 'White', null, false ),
 				$variant( 'Forest', 'retired' ),
 				$variant( 'Navy', 'no_longer_sold' ),
+				array( 'ref' => 'v_red_old' ) + $variant( 'Red', 'no_longer_sold' ),
 			),
 			array( self::AXIS )
 		);
