@@ -64,6 +64,27 @@ final class BlankVariantTest extends TestCase {
 		);
 	}
 
+	public function test_options_naming_an_axis_twice_or_a_numeric_one_name_none(): void {
+		$variant = new BlankVariant( 'v_m', array( 'Size' => 'M' ) );
+
+		$this->assertFalse(
+			$variant->is_named_by(
+				array(
+					'Size'   => 'L',
+					' size ' => 'M',
+				)
+			)
+		);
+		$this->assertFalse(
+			$variant->is_named_by(
+				array(
+					'Size' => 'M',
+					'0'    => 'extra',
+				)
+			)
+		);
+	}
+
 	public function test_no_options_name_a_variant_without_any(): void {
 		$this->assertTrue( ( new BlankVariant( 'v_one' ) )->is_named_by( array() ) );
 		$this->assertFalse( ( new BlankVariant( 'v_one' ) )->is_named_by( array( 'Size' => 'M' ) ) );

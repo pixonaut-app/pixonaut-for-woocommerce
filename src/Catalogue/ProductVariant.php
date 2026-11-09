@@ -384,13 +384,14 @@ final class ProductVariant {
 	/**
 	 * Attribute labels compared case, spacing and order aside.
 	 *
-	 * @param array<string, string> $attributes Attribute labels by attribute name.
+	 * @param array<array-key, string> $attributes Attribute labels by attribute name.
 	 * @return array<string, string>
 	 */
 	public static function normalised( array $attributes ): array {
 		$normalised = array();
 		foreach ( $attributes as $name => $value ) {
-			$normalised[ self::normalise( $name ) ] = self::normalise( $value );
+			// PHP keeps a numeric name, `0` or `12`, as an integer key.
+			$normalised[ self::normalise( (string) $name ) ] = self::normalise( $value );
 		}
 		ksort( $normalised );
 		return $normalised;

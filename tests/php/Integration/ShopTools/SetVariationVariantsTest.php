@@ -225,6 +225,8 @@ final class SetVariationVariantsTest extends WP_UnitTestCase {
 			'options naming none'      => array( 'none', 'name no variant' ),
 			'an axis left out'         => array( 'missing_axis', 'name no variant' ),
 			'an axis too many'         => array( 'extra_axis', 'name no variant' ),
+			'an axis named twice'      => array( 'axis_twice', 'name no variant' ),
+			'a numeric axis'           => array( 'numeric_axis', 'name no variant' ),
 			'options naming several'   => array( 'several', 'name several variants' ),
 			'a retired variant'        => array( 'retired', 'that is retired' ),
 			'a variation listed twice' => array( 'twice', 'is listed twice' ),
@@ -273,6 +275,14 @@ final class SetVariationVariantsTest extends WP_UnitTestCase {
 			'extra_axis'   => array(
 				'Size'   => self::SMALL,
 				'Colour' => 'White',
+			),
+			'axis_twice'   => array(
+				'Size'   => 'A0',
+				' size ' => self::SMALL,
+			),
+			'numeric_axis' => array(
+				'Size' => self::SMALL,
+				'12'   => 'extra',
 			),
 			'several'      => array( 'Size' => self::LARGE ),
 			'retired'      => array( 'Size' => self::HUGE ),
@@ -460,8 +470,8 @@ final class SetVariationVariantsTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * @param WC_Product            $variation The variation.
-	 * @param array<string, string> $options  The variant's options.
+	 * @param WC_Product               $variation The variation.
+	 * @param array<array-key, string> $options The variant's options.
 	 * @return array<string, mixed>
 	 */
 	private static function row( WC_Product $variation, array $options ): array {

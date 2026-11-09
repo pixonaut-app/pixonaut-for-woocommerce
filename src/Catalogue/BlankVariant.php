@@ -102,12 +102,16 @@ final class BlankVariant {
 	/**
 	 * Whether options by axis name this variant: every axis it has and no
 	 * other, each with its label, case and spacing aside, as read or as
-	 * written in Pixonaut. No options name a variant without any.
+	 * written in Pixonaut. No options name a variant without any; options
+	 * naming one axis twice, case and spacing aside, name none.
 	 *
-	 * @param array<string, string> $options Labels by axis.
+	 * @param array<array-key, string> $options Labels by axis; PHP keeps a numeric axis as an integer key.
 	 */
 	public function is_named_by( array $options ): bool {
 		$named = ProductVariant::normalised( $options );
+		if ( count( $named ) !== count( $options ) ) {
+			return false;
+		}
 		return ProductVariant::normalised( $this->options ) === $named
 			|| ( array() !== $this->written && ProductVariant::normalised( $this->written ) === $named );
 	}

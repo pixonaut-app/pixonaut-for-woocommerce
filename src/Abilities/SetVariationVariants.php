@@ -196,9 +196,9 @@ final class SetVariationVariants implements Ability {
 	/**
 	 * The ref of the one variant the options name, still sold.
 	 *
-	 * @param int                   $id       The variation's id, for the refusal.
-	 * @param array<string, string> $options  The options given.
-	 * @param BlankVariant[]        $variants The blank's variants.
+	 * @param int                      $id       The variation's id, for the refusal.
+	 * @param array<array-key, string> $options The options given.
+	 * @param BlankVariant[]           $variants The blank's variants.
 	 * @phpstan-param list<BlankVariant> $variants
 	 */
 	private static function named( int $id, array $options, array $variants ): string|WP_Error {
@@ -219,16 +219,16 @@ final class SetVariationVariants implements Ability {
 	}
 
 	/**
-	 * A row's options, labels by axis.
+	 * A row's options, labels by axis; a numeric axis stays an integer key.
 	 *
 	 * @param mixed $row One of the input's `variations`.
-	 * @return array<string, string>
+	 * @return array<array-key, string>
 	 */
 	private static function options( mixed $row ): array {
 		$options = array();
 		foreach ( is_array( $row ) && is_array( $row['options'] ?? null ) ? $row['options'] : array() as $axis => $label ) {
 			if ( is_string( $label ) ) {
-				$options[ (string) $axis ] = $label;
+				$options[ $axis ] = $label;
 			}
 		}
 		return $options;
