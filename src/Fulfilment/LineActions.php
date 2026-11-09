@@ -144,7 +144,7 @@ final class LineActions {
 		if ( null === $order_id || ! $this->connected() ) {
 			return null;
 		}
-		return $this->pixonaut->orders()->get( $order_id )->raw();
+		return $this->pixonaut->call( 'orders.get', array( 'id' => $order_id ) )->object();
 	}
 
 	/**
@@ -545,7 +545,7 @@ final class LineActions {
 			if ( ! is_string( $newer ) || '' === $newer ) {
 				throw $e;
 			}
-			$placed = $this->pixonaut->orders()->get( $newer )->raw();
+			$placed = $this->pixonaut->call( 'orders.get', array( 'id' => $newer ) )->object();
 			if ( null !== $automation && ! AdoptedOrder::takes( $line, $placed ) ) {
 				// Only an automation's order of the item as bought is taken on; the merchant settles any other.
 				throw $e;
@@ -860,7 +860,7 @@ final class LineActions {
 			if ( ! is_string( $next_id ) || '' === $next_id ) {
 				break;
 			}
-			$at = $this->pixonaut->orders()->get( $next_id )->raw();
+			$at = $this->pixonaut->call( 'orders.get', array( 'id' => $next_id ) )->object();
 			if ( ( $at['externalRef'] ?? null ) !== $external_ref ) {
 				break;
 			}

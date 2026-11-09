@@ -316,7 +316,7 @@ final class Fulfiller {
 				// Nothing was written, so an order again is a new request rather than this one replayed.
 				$line->set_ref( LineState::REF_ORDER_REQUEST, null );
 				$order_id = AdoptedOrder::named_by( $e );
-				$answer   = null === $order_id ? array() : $this->pixonaut->orders()->get( $order_id )->raw();
+				$answer   = null === $order_id ? array() : $this->pixonaut->call( 'orders.get', array( 'id' => $order_id ) )->object();
 				if ( null === $order_id || ! AdoptedOrder::takes( $line, $answer ) ) {
 					$line->save();
 					throw $e;

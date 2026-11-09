@@ -41,6 +41,16 @@ final class BlankFixture {
 	public const VIEW_ID = 'view_front';
 
 	/**
+	 * How far in a placement folds, as a canvas round its frame does.
+	 */
+	private const FOLD_MM = 20;
+
+	/**
+	 * A view's `source` for the merchant's own photos.
+	 */
+	private const OWN = 'own';
+
+	/**
 	 * A `GET /v1/blanks/{id}` answer.
 	 *
 	 * @param array<string, string> $placements Placement names customers see, by id.
@@ -105,6 +115,79 @@ final class BlankFixture {
 			'status'             => Catalogue::BLANK_READY,
 			'importFailure'      => null,
 		);
+	}
+
+	/**
+	 * `$blank` as Pixonaut answers a blank today, ahead of the pinned spec:
+	 * no blank-wide `photoSource` or `scenes`, each view saying its own
+	 * `source` and `position`, one blank's `order` listing its stored views
+	 * and scenes together, `paintBy`, and placements that fold. Scripted with
+	 * `off_spec()`, since the pinned spec still requires `photoSource`.
+	 *
+	 * @param array<string, mixed> $blank A `GET /v1/blanks/{id}` answer, or one blank of a list.
+	 * @param bool                 $one   Whether it answers for one blank, which alone carries `order`.
+	 * @return array<string, mixed>
+	 */
+	public static function as_answered_today( array $blank, bool $one = true ): array {
+		unset( $blank['photoSource'], $blank['scenes'] );
+		$order    = array();
+		$position = 0;
+		foreach ( is_array( $blank['placements'] ?? null ) ? $blank['placements'] : array() as $index => $placement ) {
+			$blank['placements'][ $index ]['foldMm'] = self::FOLD_MM;
+			$blank['placements'][ $index ]['views']  = self::views_with_sources( is_array( $placement['views'] ?? null ) ? $placement['views'] : array(), $position );
+			foreach ( $blank['placements'][ $index ]['views'] as $view ) {
+				$order[] = array(
+					'source' => self::OWN,
+					'viewId' => $view['id'],
+				);
+			}
+		}
+		$blank['paintBy'] = null;
+		if ( $one ) {
+			// A scene the blank shows, after its stored views.
+			$order[]        = array(
+				'source'  => 'stock',
+				'sceneId' => 'scene_kitchen',
+			);
+			$blank['order'] = $order;
+		}
+		return $blank;
+	}
+
+	/**
+	 * A `GET /v1/blanks/{id}/mockups` answer as Pixonaut answers it today:
+	 * each view says its `source` and `position`, and placements fold.
+	 *
+	 * @param array<string, mixed> $mockups A `mockups()` answer.
+	 * @return array<string, mixed>
+	 */
+	public static function mockups_as_answered_today( array $mockups ): array {
+		$position = 0;
+		foreach ( is_array( $mockups['placements'] ?? null ) ? $mockups['placements'] : array() as $index => $placement ) {
+			$mockups['placements'][ $index ]['foldMm'] = self::FOLD_MM;
+			$mockups['placements'][ $index ]['views']  = self::views_with_sources( is_array( $placement['views'] ?? null ) ? $placement['views'] : array(), $position );
+		}
+		return $mockups;
+	}
+
+	/**
+	 * `$views`, each with its `source` and its place in the blank's one list.
+	 *
+	 * @param array<int, mixed> $views    Views of one placement.
+	 * @param int               $position The next place in the list, moved past these views.
+	 * @return list<array<string, mixed>>
+	 */
+	private static function views_with_sources( array $views, int &$position ): array {
+		$sourced = array();
+		foreach ( $views as $view ) {
+			if ( is_array( $view ) ) {
+				$sourced[] = $view + array(
+					'source'   => self::OWN,
+					'position' => $position++,
+				);
+			}
+		}
+		return $sourced;
 	}
 
 	/**

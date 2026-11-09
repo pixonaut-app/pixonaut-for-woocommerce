@@ -75,7 +75,7 @@ abstract class StandingTestCase extends ProductPanelTestCase {
 				'usualHeightMm' => 360,
 			),
 		);
-		$this->recorder->json( 200, $blank );
+		$this->script_blank( $blank );
 		$variant = static fn ( string $ref, string $color, string $size, ?array $retired = null ): array => array(
 			'ref'     => $ref,
 			'options' => array(
