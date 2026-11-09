@@ -514,7 +514,8 @@
 }
 
 /* What a picture is drawn on: the photo the product page starts on, each photo of the blank, or flat, each with its thumbnail. */
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-showcase-image__kinds {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+.pixonaut-showcase-image__kinds {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
@@ -536,20 +537,25 @@
 }
 
 /* A photo of the blank: its thumbnail and its view's name only. */
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-showcase-kind--photo {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+.pixonaut-showcase-kind--photo {
 	max-width: 12em;
 }
 
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-showcase-kind:has(input:checked) {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind:has(input:checked) {
 	border-color: #2271b1;
 	box-shadow: 0 0 0 1px #2271b1;
 }
 
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-showcase-kind input {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind
+	input {
 	margin-top: 2px;
 }
 
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-showcase-kind__thumbnail {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind__thumbnail {
 	flex: none;
 	width: 48px;
 	height: 48px;
@@ -557,46 +563,55 @@
 	background: #f6f7f7;
 }
 
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-showcase-kind__thumbnail img {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind__thumbnail
+	img {
 	display: block;
 	width: 100%;
 	height: 100%;
 	object-fit: contain;
 }
 
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-showcase-kind__words {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind__words {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 }
 
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-showcase-kind__name {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind__name {
 	font-weight: 600;
 }
 
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-showcase-kind .description {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-showcase-kind
+	.description {
 	margin: 0;
 	padding: 0;
 	font-size: 12px;
 	line-height: 1.4;
 }
 
-/* The image drawn without a set, above the sets; a variation's, below its variant. */
-#pixonaut_product_data .pixonaut-picture-view {
-	margin: 0 12px 12px;
-}
-
+/* A variation's choice, below its variant; the image drawn without a set, above the sets. */
 .pixonaut-variation-panel .pixonaut-picture-view {
 	margin: 8px 0 0;
 }
 
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-picture-view__intro,
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-picture-view__label {
+#pixonaut_product_data .pixonaut-picture-view {
+	margin: 0 12px 12px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-picture-view__intro,
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-picture-view__label {
 	margin: 0 0 8px;
 	padding: 0;
 }
 
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-picture-view__gone {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-picture-view__gone {
 	display: block;
 	flex-basis: 100%;
 	margin: 4px 0 0;

@@ -119,8 +119,8 @@ final class ShowcaseField {
 				),
 			)
 			: array();
-		$tiles    = array() === $kinds ? array() : array_merge( array( $kinds[ ShowcaseImages::MOCKUP ] + array( 'value' => ShowcaseImages::MOCKUP ) ), self::photo_choices( $views ?? array() ), array( $kinds[ ShowcaseImages::PREVIEW ] + array( 'value' => ShowcaseImages::PREVIEW ) ) );
-		$rows     = array();
+		$tiles = array() === $kinds ? array() : array_merge( array( $kinds[ ShowcaseImages::MOCKUP ] + array( 'value' => ShowcaseImages::MOCKUP ) ), self::photo_choices( $views ?? array() ), array( $kinds[ ShowcaseImages::PREVIEW ] + array( 'value' => ShowcaseImages::PREVIEW ) ) );
+		$rows  = array();
 		foreach ( null === $sets ? array() : self::rows( $sets, $chosen, ProductPictures::stored( $product )['gone'], array() !== $kinds, $views ) as $index => $row ) {
 			$rows[] = $row + array(
 				'choices_html' => array() === $tiles ? '' : $this->choices_html(
@@ -164,11 +164,11 @@ final class ShowcaseField {
 	 * blank when Pixonaut listed its views, as chosen before when it could
 	 * not.
 	 *
-	 * @param string                                                                         $name   The radio buttons' posted name.
-	 * @param array{value: string, gone?: bool, view_gone?: bool}                            $shown  The choice as `choice()` or `rows()` shows it.
+	 * @param string                                                                           $name   The radio buttons' posted name.
+	 * @param array{value: string, gone?: bool, view_gone?: bool}                              $shown  The choice as `choice()` or `rows()` shows it.
 	 * @param list<array{value: string, name: string, description: string, thumbnail: string}> $tiles  The choices offered.
-	 * @param string                                                                         $label  What the group chooses, for screen readers.
-	 * @param bool                                                                           $listed Whether Pixonaut listed the blank's views.
+	 * @param string                                                                           $label  What the group chooses, for screen readers.
+	 * @param bool                                                                             $listed Whether Pixonaut listed the blank's views.
 	 */
 	private function choices_html( string $name, array $shown, array $tiles, string $label, bool $listed ): string {
 		$gone = true === ( $shown['view_gone'] ?? $shown['gone'] ?? false );
@@ -304,7 +304,7 @@ final class ShowcaseField {
 	 * A choice as a field shows it: the value checked, and whether it names
 	 * a view or photo the blank no longer has.
 	 *
-	 * @param array{kind: string, view?: string, photo?: string}                                                                       $choice The choice.
+	 * @param array{kind: string, view?: string, photo?: string}                                                                      $choice The choice.
 	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null $views  The placement's views; null when Pixonaut cannot say.
 	 *
 	 * @return array{value: string, gone: bool}
@@ -416,10 +416,10 @@ final class ShowcaseField {
 	 * how it is drawn, and whether that names a view or photo the blank no
 	 * longer has.
 	 *
-	 * @param list<array{id: string, name: string, kind: string, view?: string, photo?: string}>                                       $sets     The template's sets.
-	 * @param list<array{id: string, name: string, kind: string, view?: string, photo?: string}>                                       $chosen   The product's choices.
-	 * @param string[]                                                                                                                 $gone     Sets Pixonaut answered it does not have.
-	 * @param bool                                                                                                                     $on_photo Whether a set can be drawn on the photo; when not, every set is flat.
+	 * @param list<array{id: string, name: string, kind: string, view?: string, photo?: string}>                                      $sets     The template's sets.
+	 * @param list<array{id: string, name: string, kind: string, view?: string, photo?: string}>                                      $chosen   The product's choices.
+	 * @param string[]                                                                                                                $gone     Sets Pixonaut answered it does not have.
+	 * @param bool                                                                                                                    $on_photo Whether a set can be drawn on the photo; when not, every set is flat.
 	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null $views    The placement's views; null when Pixonaut cannot say.
 	 * @phpstan-param list<string> $gone
 	 *
@@ -448,9 +448,9 @@ final class ShowcaseField {
 	/**
 	 * A set's row, drawn as chosen.
 	 *
-	 * @param array{id: string, name: string}                                                                                          $set      The set.
-	 * @param array{kind: string, view?: string, photo?: string}                                                                       $choice   How it is drawn.
-	 * @param bool                                                                                                                     $on_photo Whether it can be drawn on the photo; when not, it is flat.
+	 * @param array{id: string, name: string}                                                                                         $set      The set.
+	 * @param array{kind: string, view?: string, photo?: string}                                                                      $choice   How it is drawn.
+	 * @param bool                                                                                                                    $on_photo Whether it can be drawn on the photo; when not, it is flat.
 	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null $views    The placement's views; null when Pixonaut cannot say.
 	 *
 	 * @return array{id: string, name: string, kind: string, value: string, view_gone: bool}

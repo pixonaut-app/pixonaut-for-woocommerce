@@ -130,7 +130,9 @@ final class PictureViewsTest extends WP_UnitTestCase {
 
 	public function test_a_variation_follows_its_products_photo_only_when_it_shows_its_variant(): void {
 		$variation = $this->variation();
-		PictureView::save( wc_get_product( $variation->get_parent_id() ), self::photo() );
+		$parent    = wc_get_product( $variation->get_parent_id() );
+		$this->assertInstanceOf( WC_Product::class, $parent );
+		PictureView::save( $parent, self::photo() );
 		$this->answer_mockups( array( 'v_other' ) );
 		$this->recorder->raw( 200, self::png(), 'image/png' );
 		$this->recorder->raw( 200, self::png(), 'image/png' );
@@ -179,7 +181,8 @@ final class PictureViewsTest extends WP_UnitTestCase {
 	/**
 	 * Answers the blank's mockups read, its photo showing the variants given.
 	 *
-	 * @param list<string> $variants The photo's variant refs; empty for every variant.
+	 * @param string[] $variants The photo's variant refs; empty for every variant.
+	 * @phpstan-param list<string> $variants
 	 */
 	private function answer_mockups( array $variants = array() ): void {
 		$mockups = BlankFixture::mockups( Hosts::server_api() );

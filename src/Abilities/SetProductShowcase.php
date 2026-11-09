@@ -19,8 +19,10 @@ use WP_Error;
 /**
  * Sets the showcase sets a personalised product's images are drawn with,
  * as the product images field of its Pixonaut tab does: each one of its
- * template's sets, drawn on the blank's photo or as the flat design. The
- * pictures are drawn again once the choice is saved. Whoever may edit the
+ * template's sets, drawn on the blank's photo or as the flat design; a set
+ * still drawn on the photo keeps the view and photo chosen for it
+ * (`SetProductPictureView`). The pictures are drawn again once the choice
+ * is saved. Whoever may edit the
  * product may set them.
  */
 final class SetProductShowcase implements Ability {
@@ -119,6 +121,7 @@ final class SetProductShowcase implements Ability {
 		}
 		$by_id   = array_column( $sets, null, 'id' );
 		$on_flat = null === ProductConfig::stored_on( $product )->blank_id;
+		$before  = array_column( ShowcaseImages::on( $product ), null, 'id' );
 		$images  = array();
 		foreach ( is_array( $input['images'] ?? null ) ? $input['images'] : array() as $image ) {
 			$id  = is_array( $image ) && is_string( $image['id'] ?? null ) ? $image['id'] : '';
@@ -134,11 +137,12 @@ final class SetProductShowcase implements Ability {
 					)
 				);
 			}
+			$kind     = $on_flat || ShowcaseImages::PREVIEW === ( $image['kind'] ?? null ) ? ShowcaseImages::PREVIEW : ShowcaseImages::MOCKUP;
+			$earlier  = $before[ $set['id'] ] ?? array( 'kind' => $kind );
 			$images[] = array(
 				'id'   => $set['id'],
 				'name' => $set['name'],
-				'kind' => $on_flat || ShowcaseImages::PREVIEW === ( $image['kind'] ?? null ) ? ShowcaseImages::PREVIEW : ShowcaseImages::MOCKUP,
-			);
+			) + ( $earlier['kind'] === $kind ? array_intersect_key( $earlier, array_flip( array( 'kind', 'view', 'photo' ) ) ) : array( 'kind' => $kind ) );
 		}
 		ShowcaseImages::save( $product, $images );
 		return $this->links->summary( $product ) + array(

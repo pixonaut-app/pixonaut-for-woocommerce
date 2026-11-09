@@ -85,10 +85,10 @@ final class PictureSources {
 	 * What a picture is drawn from under a choice: flat, on the view and
 	 * photo it names while the blank has them, else as without a choice.
 	 *
-	 * @param WC_Product                                                                                $product A product or variation.
+	 * @param WC_Product                                                                                        $product A product or variation.
 	 * @param array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null} $source  What it is drawn from without a choice.
-	 * @param array{kind: string, view?: string, photo?: string}                                        $choice  The choice.
-	 * @param bool                                                                                      $own     Whether the choice is the picture's own, rather than one it follows.
+	 * @param array{kind: string, view?: string, photo?: string}                                                $choice  The choice.
+	 * @param bool                                                                                              $own     Whether the choice is the picture's own, rather than one it follows.
 	 *
 	 * @return array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string}
 	 *

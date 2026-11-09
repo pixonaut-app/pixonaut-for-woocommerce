@@ -44,8 +44,8 @@ final class VariationPanel {
 	private const SAVE_ARGS = 2;
 
 	/**
-	 * @param ProductPanel $panel     Renders and saves the fields the product and its variations share.
-	 * @param Templates    $templates Renders the panel.
+	 * @param ProductPanel       $panel     Renders and saves the fields the product and its variations share.
+	 * @param Templates          $templates Renders the panel.
 	 * @param VariantField       $variant   Renders and saves the variation's blank variant.
 	 * @param ShowcaseField|null $picture   Renders the choice of what the variation's image is drawn on; null for none.
 	 */

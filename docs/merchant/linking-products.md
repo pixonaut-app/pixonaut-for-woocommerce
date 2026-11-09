@@ -497,9 +497,10 @@ results, the cart, order emails, the admin, and anything else that reads the
 image, such as product feeds and the picture search engines and social
 networks show for the product's page. The picture is the product's first
 side's template on the first view of its placement that the product is
-shown in. A variation's picture is on the photo of its own blank variant, so
-each colour shows its own, and becomes the variation's image. A product
-without a blank shows the template's own picture.
+shown in, unless you choose another view or photo (below). A variation's
+picture is on the photo of its own blank variant, so each colour shows its
+own, and becomes the variation's image. A product without a blank shows the
+template's own picture.
 
 The pictures are saved in the media library, named `pixonaut-<product id>-…`,
 and are made a few moments after the product is personalised, then again
@@ -568,6 +569,36 @@ personalised variation's options say the same beside its image.
   before its first picture, the same way, deletes the pictures, and draws no
   more. Turning it on again draws them anew.
 
+### Choosing the view and photo
+
+When the product is on a blank with photos for its first side's placement,
+**Product images** in the Pixonaut tab lets you choose what the product image
+is drawn on, each choice with a thumbnail:
+
+- **On the product photo**, the default: the first view the product is shown
+  in, on the photo of the blank variant it sells.
+- **One of the blank's photos** for that placement: every photo of every
+  view, scene photos included, named after its view. Choose one to show the
+  product on it, for example a lifestyle scene, without hiding other views
+  from customers.
+- **Flat design**: the design alone, without the product.
+
+Update the product, and its pictures are drawn again a few moments later.
+This choice is used while no showcase set is ticked; each ticked set has its
+own (below).
+
+A photo shows the colour it was taken in. A variation's image follows the
+product's choice: on the photo chosen when that photo shows the variation's
+colour, else on the same view in the variation's colour. To choose one for a
+variation alone, use **Variation image drawn on** in its options: **As the
+product image**, or one of the blank's photos. Save the variations to draw
+it again.
+
+When the blank no longer has the view or photo chosen, for example after the
+photo is removed in Pixonaut, the choice is marked **No longer on the
+blank**, and the image is drawn on the photo the product page starts on until
+you choose another.
+
 ### Showcase sets
 
 A template's placeholders, such as *Your name here* or an empty photo frame,
@@ -582,18 +613,19 @@ images**:
 1. Tick each set the product's images show. The first set ticked, in the
    order listed, is the product image; the others are added to the product
    gallery, before the gallery's own images.
-2. For each set, choose **On the product photo**, the set drawn into the
-   print area of the blank's product photo like the picture without a set,
-   or **Flat design**, the design alone without the product. Each choice
-   shows a thumbnail: the blank's photo, or the template's preview. When the
+2. For each set, choose what it is drawn on, as for the image without a set
+   (above): **On the product photo**, one of the blank's photos, or **Flat
+   design**, the design alone without the product. Each choice shows a
+   thumbnail: the blank's photo, or the template's preview. When the
    product has no blank, or the blank has no photo for the first side's
    placement, there is nothing to choose: every set is the flat design.
 3. Update the product. The images are drawn a few moments later.
 
-A variation's image shows the product's first set, on the photo of its own
-blank variant when that is chosen. With no set ticked, or a template without
-sets, the images show the template's own defaults, as before; for a template
-without sets, the tab has no **Product images** section.
+A variation's image shows the product's first set, on the view and photo
+chosen for it as above. With no set ticked, or a template without sets, the
+images show the template's own defaults, as before; for a template without
+sets and a product without a blank photo to choose, the tab has no
+**Product images** section.
 
 Showcase sets only change the product's images. Customers still start
 designing from the template's own defaults, and their designs, proofs and

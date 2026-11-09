@@ -189,11 +189,19 @@ final class ProductSetup {
 				'items'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'id'   => array( 'type' => 'string' ),
-						'name' => array( 'type' => 'string' ),
-						'kind' => array(
+						'id'    => array( 'type' => 'string' ),
+						'name'  => array( 'type' => 'string' ),
+						'kind'  => array(
 							'type' => 'string',
 							'enum' => array( ShowcaseImages::MOCKUP, ShowcaseImages::PREVIEW ),
+						),
+						'view'  => array(
+							'type'        => 'string',
+							'description' => __( 'The view of the blank it is drawn on, set with `set-product-picture-view`; absent for the one the product page starts on.', 'pixonaut-for-woocommerce' ),
+						),
+						'photo' => array(
+							'type'        => 'string',
+							'description' => __( 'The view\'s photo it is drawn on; absent for its photo of the variant sold.', 'pixonaut-for-woocommerce' ),
 						),
 					),
 				),

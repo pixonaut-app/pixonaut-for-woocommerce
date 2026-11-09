@@ -307,7 +307,7 @@ final class ProductPictures {
 	 * template's defaults instead, and named in `gone`.
 	 *
 	 * @param WC_Product                                                                                                                                                           $product A product or variation.
-	 * @param list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string}>                                           $sources What each is drawn from, its image's first.
+	 * @param list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string}>                           $sources What each is drawn from, its image's first.
 	 * @param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $stored  Its recorded pictures.
 	 * @param bool                                                                                                                                                                 $own     Whether its image is the store manager's own, which is kept.
 	 *
@@ -419,7 +419,7 @@ final class ProductPictures {
 	 * Pixonaut's PNGs of the sources, drawn at once.
 	 *
 	 * @param array<int, array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string}> $sources       What each is drawn from.
-	 * @param bool                                                                                                                             $with_showcase Whether each is drawn with its showcase set; else with the template's defaults.
+	 * @param bool                                                                                                                                             $with_showcase Whether each is drawn with its showcase set; else with the template's defaults.
 	 *
 	 * @return array<int, string|ApiException> Each source's PNG, or why Pixonaut did not draw it, under the source's key.
 	 */

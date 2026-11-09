@@ -198,15 +198,16 @@ final class PictureView {
 	 * drawn instead. Null when the blank no longer has the view or photo.
 	 *
 	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}> $views   The placement's views, as `views_of()` lists them.
-	 * @param array{kind: string, view?: string, photo?: string}                                                                  $choice  A choice naming a view.
-	 * @param string|null                                                                                                         $variant The variant the picture shows; null for any.
-	 * @param bool                                                                                                                $own     Whether the choice is the picture's own.
+	 * @param array{kind: string, view?: string, photo?: string}                                                                 $choice  A choice naming a view.
+	 * @param string|null                                                                                                        $variant The variant the picture shows; null for any.
+	 * @param bool                                                                                                               $own     Whether the choice is the picture's own.
 	 *
 	 * @return array{view: string, photo: string|null}|null
 	 */
 	public static function resolve( array $views, array $choice, ?string $variant, bool $own ): ?array {
+		$chosen = $choice['view'] ?? null;
 		foreach ( $views as $view ) {
-			if ( $view['id'] !== ( $choice['view'] ?? null ) ) {
+			if ( $chosen !== $view['id'] ) {
 				continue;
 			}
 			if ( ! isset( $choice['photo'] ) ) {

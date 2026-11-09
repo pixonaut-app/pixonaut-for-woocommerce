@@ -232,7 +232,7 @@ set.
 
 A product can show its template's showcase sets instead of its defaults:
 `_pixonaut_showcase_images` on the product (JSON, a list of `{id, name,
-kind}`, `kind` `mockup` or `preview`), written by the Pixonaut tab's
+kind, view?, photo?}`, `kind` `mockup` or `preview`), written by the Pixonaut tab's
 **Product images** field from the sets `GET /v1/templates/{id}` lists as
 `showcases`. Each set is one picture, drawn with `showcase=<id>`: the first
 is the product's image, the others lead its gallery
@@ -242,8 +242,20 @@ which are kept; a variation's image is drawn with the product's first set. A
 is recorded as gone in `_pixonaut_picture` for the field to say so. The
 designer never receives a showcase set.
 
+What a picture is drawn on can be chosen: a set's `view` and `photo`, and
+`_pixonaut_picture_view` (JSON, `{kind, view?, photo?}`) on the product for
+the picture drawn without a set and on a variation for its own, written by
+the **Product images** field, a variation's **Variation image drawn on** and
+`set-product-picture-view`. The ids are a view and a photo of the first
+side's placement as `GET /v1/blanks/{id}/mockups` lists them. A chosen photo
+is drawn with `mockupId` (no `viewId` or `variant`); a chosen view alone
+with `viewId` and the variant sold. A variation without its own choice
+follows its product's: the photo when its `variantRefs` are empty or name
+the variation's variant, else the same view with its variant. A view or
+photo the blank no longer lists draws the picture as without a choice.
+
 A product is queued when its configuration (`_pixonaut_config`), its variant,
-its image or its showcase sets change, whether through the meta API or a direct write that
+its image, its showcase sets or the view and photo chosen change, whether through the meta API or a direct write that
 clears the post's cache, when its picture is deleted from the media library
 (a configured variable product's variations, which share its configuration,
 are checked in a `pixonaut_wc_catalogue_pictures_variations` job), and,
