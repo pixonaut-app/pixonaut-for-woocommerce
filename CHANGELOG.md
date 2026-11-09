@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.1.2...v1.1.3) (2026-11-09)
+
+
+### Bug Fixes
+
+* **catalogue:** read blanks Pixonaut answers without a photo source ([#32](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/32)) ([db74a23](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/db74a238841a8f46065fa9acb892aa82448ad738))
+* **sdk:** move to Pixonaut SDK 0.28.0, which tells what an embroidery machine cannot stitch ([#27](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/27)) ([23f00d8](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/23f00d8c9d9e7f7991f86dec3a33d405d0db8a62))
+* **sdk:** move to Pixonaut SDK 0.29.0, which no longer draws an estimate note under a scene ([#28](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/28)) ([b7f0709](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/b7f0709fc58f2d56689908ca6e9d01edb8aafe4d))
+* **sdk:** move to Pixonaut SDK 0.29.1, which shows a drawn view again at once when switching back ([#29](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/29)) ([5b31ce6](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/5b31ce6bbf20972d297e34fb4756468b9e2a5ae3))
+
 ## [1.1.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.1.1...v1.1.2) (2026-11-07)
 
 
