@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-09T18:18:09+00:00\n"
+"POT-Creation-Date: 2026-11-09T19:37:25+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: da_DK\n"
@@ -526,47 +526,61 @@ msgstr ""
 "ikke kunne nås."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/GetProductPictureViews.php:40
+#: src/Abilities/GetProductPictureViews.php:42
 msgid "Read what a product's images are drawn on"
 msgstr "Vis, hvad en vares billeder laves på"
 
-#: src/Abilities/GetProductPictureViews.php:41
+#: src/Abilities/GetProductPictureViews.php:43
 msgid ""
 "Reads what a personalised product's or variation's Pixonaut images are drawn "
 "on: the image drawn without a showcase set (a variation: its own choice), "
 "and each showcase set chosen, each on the photo the product page starts on, "
-"on a view and photo of the blank, or flat; and the views of its side's "
-"placement with their photos, scenes included. Set them with `set-product-"
-"picture-view`."
+"on a view and photo of the blank, or flat; the views of its side's placement "
+"with their photos, scenes included; and, of a product, the showcase sets its "
+"template offers, the ids `set-product-showcase` takes. Set them with `set-"
+"product-picture-view`."
 msgstr ""
 "Viser, hvad Pixonaut-billederne af en personaliseret vare eller variant "
 "laves på: det billede, der laves uden eksempelsæt (for en variant: dens eget "
 "valg), og hvert valgt eksempelsæt, hver især på det foto, varesiden viser "
-"først, på en visning og et foto af basisproduktet eller fladt; samt "
-"visningerne af sidens placering med deres fotos, scener medregnet. Vælg dem "
-"med `set-product-picture-view`."
+"først, på en visning og et foto af basisproduktet eller fladt; visningerne "
+"af sidens placering med deres fotos, scener medregnet; og, for en vare, de "
+"eksempelsæt, dens skabelon tilbyder, dvs. de id'er, `set-product-showcase` "
+"tager imod. Vælg dem med `set-product-picture-view`."
 
-#: src/Abilities/GetProductPictureViews.php:47
+#: src/Abilities/GetProductPictureViews.php:49
 #: src/Abilities/SetProductPictureView.php:47
 #: src/Abilities/SetProductSetup.php:60 src/Abilities/UseProductPicture.php:47
 msgid "A simple or variable product, or a variation."
 msgstr "En simpel vare eller varevariant eller en variant."
 
-#: src/Abilities/GetProductPictureViews.php:155
+#: src/Abilities/GetProductPictureViews.php:160
+msgid ""
+"The showcase sets the product's template offers, by id and name: those of "
+"the template version it is linked to, the ids `set-product-showcase` takes. "
+"Empty without a template and on a variation; null when Pixonaut could not be "
+"asked."
+msgstr ""
+"De eksempelsæt, varens skabelon tilbyder, med id og navn: dem i den "
+"skabelonversion, den er tilknyttet, dvs. de id'er, `set-product-showcase` "
+"tager imod. Tom uden skabelon og for en variant; null, når Pixonaut ikke "
+"kunne spørges."
+
+#: src/Abilities/GetProductPictureViews.php:175
 msgid "`mockup` on the blank's photo, `preview` the flat design."
 msgstr "`mockup` på basisproduktets foto, `preview` det flade design."
 
-#: src/Abilities/GetProductPictureViews.php:159
+#: src/Abilities/GetProductPictureViews.php:179
 msgid "The view chosen; null for the one the product page starts on."
 msgstr "Den valgte visning; null for den, varesiden viser først."
 
-#: src/Abilities/GetProductPictureViews.php:163
+#: src/Abilities/GetProductPictureViews.php:183
 msgid "The view's photo chosen; null for its photo of the variant sold."
 msgstr ""
 "Det valgte foto af visningen; null for visningens foto af den "
 "basisproduktvariant, der sælges."
 
-#: src/Abilities/GetProductPictureViews.php:167
+#: src/Abilities/GetProductPictureViews.php:187
 msgid ""
 "True when the blank no longer has the view or photo: the image is drawn on "
 "the photo the product page starts on until another is chosen."
@@ -574,7 +588,7 @@ msgstr ""
 "True, når basisproduktet ikke længere har visningen eller fotoet: billedet "
 "laves på det foto, varesiden viser først, indtil et andet vælges."
 
-#: src/Abilities/GetProductPictureViews.php:176
+#: src/Abilities/GetProductPictureViews.php:196
 msgid ""
 "On a product, what its image is drawn on while no showcase set is chosen; on "
 "a variation, its own choice. Null for none: the photo the product page "
@@ -584,7 +598,7 @@ msgstr ""
 "valgt; for en variant: dens eget valg. Null, når intet er valgt: det foto, "
 "varesiden viser først, og for en variant varens valg."
 
-#: src/Abilities/GetProductPictureViews.php:181
+#: src/Abilities/GetProductPictureViews.php:201
 msgid ""
 "The showcase sets chosen as the product's images, the first its image; empty "
 "on a variation."
@@ -592,7 +606,7 @@ msgstr ""
 "De eksempelsæt, der er valgt som varens billeder, det første som dens "
 "varebillede; tom for en variant."
 
-#: src/Abilities/GetProductPictureViews.php:192
+#: src/Abilities/GetProductPictureViews.php:212
 msgid ""
 "The views of the side's placement with the photos an image can be drawn on, "
 "in the blank's order; empty without a blank; null when Pixonaut could not be "
@@ -602,11 +616,11 @@ msgstr ""
 "basisproduktets rækkefølge; tom uden basisprodukt; null, når Pixonaut ikke "
 "kunne spørges."
 
-#: src/Abilities/GetProductPictureViews.php:206
+#: src/Abilities/GetProductPictureViews.php:226
 msgid "A link to the photo that opens for an hour or two."
 msgstr "Et link til fotoet, der virker i en time eller to."
 
-#: src/Abilities/GetProductPictureViews.php:211
+#: src/Abilities/GetProductPictureViews.php:231
 msgid "The blank variants the photo shows; empty for every one."
 msgstr "De basisproduktvarianter, fotoet viser; tom, når det gælder dem alle."
 
@@ -1658,17 +1672,17 @@ msgstr ""
 "En variant følger sin vare for option_groups og group_numbers: angiv dem på "
 "varen."
 
-#: src/Abilities/SetProductShowcase.php:45
+#: src/Abilities/SetProductShowcase.php:44
 msgid "The sets the product's template offers, by id and name."
 msgstr "De sæt, varens skabelon tilbyder, med id og navn."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductShowcase.php:56
+#: src/Abilities/SetProductShowcase.php:47
 msgid "Set a product's showcase pictures"
 msgstr "Vælg en vares eksempelbilleder"
 
 #. translators: %d: how many showcase pictures a product shows at most, e.g. 10.
-#: src/Abilities/SetProductShowcase.php:59
+#: src/Abilities/SetProductShowcase.php:50
 #, php-format
 msgid ""
 "Sets which of its template's showcase sets a personalised simple or variable "
@@ -1685,11 +1699,11 @@ msgstr ""
 "uden basisprodukt har kun det flade design. Billederne laves igen. Svaret "
 "viser de sæt, skabelonen tilbyder."
 
-#: src/Abilities/SetProductShowcase.php:77
+#: src/Abilities/SetProductShowcase.php:68
 msgid "One of the template's showcase sets, by id."
 msgstr "Et af skabelonens eksempelsæt, angivet med id."
 
-#: src/Abilities/SetProductShowcase.php:115
+#: src/Abilities/SetProductShowcase.php:106
 msgid ""
 "The product is not personalised with a template, so it has no showcase sets. "
 "Set it up first."
@@ -1697,7 +1711,7 @@ msgstr ""
 "Varen er ikke personaliseret med en skabelon, så den har ingen eksempelsæt. "
 "Sæt den op først."
 
-#: src/Abilities/SetProductShowcase.php:120
+#: src/Abilities/SetProductShowcase.php:111
 msgid ""
 "Pixonaut could not be asked for the template's showcase sets. Try again "
 "later."
@@ -1705,12 +1719,12 @@ msgstr ""
 "Skabelonens eksempelsæt kunne ikke hentes fra Pixonaut. Prøv igen senere."
 
 #. translators: 1: a showcase set's id; 2: the ids the template offers, e.g. "graduate, wedding".
-#: src/Abilities/SetProductShowcase.php:134
+#: src/Abilities/SetProductShowcase.php:125
 #, php-format
 msgid "The template has no showcase set \"%1$s\". It has: %2$s."
 msgstr "Skabelonen har intet eksempelsæt \"%1$s\". Den har: %2$s."
 
-#: src/Abilities/SetProductShowcase.php:136
+#: src/Abilities/SetProductShowcase.php:127
 msgctxt "showcase sets a template offers"
 msgid "none"
 msgstr "ingen"
@@ -9610,6 +9624,14 @@ msgstr[1] "%s visninger"
 
 #~ msgid "Why the product cannot be bought, in words; null when it can."
 #~ msgstr "Hvorfor varen ikke kan købes, i ord; null, når den kan købes."
+
+#~ msgid ""
+#~ "Which of the product's variations sell no variant of the blank, in words; "
+#~ "null when each does. Pick the variant on the product screen."
+#~ msgstr ""
+#~ "Hvilke af varens varianter der ikke sælger nogen basisproduktvariant, i "
+#~ "ord; null, når de alle gør. Vælg basisproduktvarianten på varens "
+#~ "redigeringsside."
 
 #~ msgid ""
 #~ "`personalised` when the customer fills in the template, `standing` when "
