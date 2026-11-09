@@ -42,6 +42,8 @@ final class ShowcaseShopToolsTest extends WP_UnitTestCase {
 
 	private const UNPROCESSABLE = 422;
 
+	private const STORE_FAILED = 502;
+
 	/**
 	 * When the fixture's connection was made, as Unix time.
 	 */
@@ -169,6 +171,25 @@ final class ShowcaseShopToolsTest extends WP_UnitTestCase {
 
 		$this->assertSame( array(), $read['available_showcases'] );
 		$this->assertSame( array(), $this->recorder->requests );
+	}
+
+	public function test_setting_sets_while_pixonaut_cannot_be_asked_is_a_store_error_and_changes_nothing(): void {
+		$product = $this->product();
+		$chosen  = array( self::GRADUATE + array( 'kind' => ShowcaseImages::PREVIEW ) );
+		ShowcaseImages::save( $product, $chosen );
+		$this->recorder->fail();
+
+		$answer = $this->call(
+			self::SET,
+			array(
+				'product_id' => $product->get_id(),
+				'images'     => array( array( 'id' => self::WEDDING['id'] ) ),
+			)
+		);
+
+		$this->assertSame( self::STORE_FAILED, $answer->get_status() );
+		$this->assertSame( 'store_error', $answer->get_data()['code'] );
+		$this->assertSame( $chosen, ShowcaseImages::on( $this->reload( $product ) ) );
 	}
 
 	public function test_a_set_the_template_does_not_offer_is_invalid_input(): void {

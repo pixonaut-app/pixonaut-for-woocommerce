@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use WC_Product;
 use WP_Error;
+use WP_Http;
 
 /**
  * Sets the showcase sets a personalised product's images are drawn with,
@@ -107,7 +108,7 @@ final class SetProductShowcase implements Ability {
 		try {
 			$sets = $this->showcases->offered( $template );
 		} catch ( ApiException $e ) {
-			return new WP_Error( 'pixonaut_wc_ability_pixonaut_unreachable', __( 'Pixonaut could not be asked for the template\'s showcase sets. Try again later.', 'pixonaut-for-woocommerce' ) );
+			return new WP_Error( 'pixonaut_wc_ability_pixonaut_unreachable', __( 'Pixonaut could not be asked for the template\'s showcase sets. Try again later.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::BAD_GATEWAY ) );
 		}
 		$by_id   = array_column( $sets, null, 'id' );
 		$on_flat = null === ProductConfig::stored_on( $product )->blank_id;
