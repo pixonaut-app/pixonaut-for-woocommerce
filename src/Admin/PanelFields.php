@@ -71,6 +71,14 @@ final class PanelFields {
 
 	public const VARIANT = 'variant';
 
+	/**
+	 * The view and photo a picture is drawn on (`PictureView`), and its
+	 * marker, posted while the views were listed.
+	 */
+	public const PICTURE_VIEW = 'picture_view';
+
+	public const PICTURE_VIEW_LISTED = 'picture_view_listed';
+
 	public const NONCE = 'nonce';
 
 	/**

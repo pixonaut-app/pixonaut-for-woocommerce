@@ -13,6 +13,7 @@ use Closure;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
+use Pixonaut\WooCommerce\Catalogue\PictureView;
 use Pixonaut\WooCommerce\Catalogue\ProductLinker;
 use Pixonaut\WooCommerce\Catalogue\SearchResults;
 use Pixonaut\WooCommerce\DesignerLanguage;
@@ -151,6 +152,26 @@ final class LinkedBlank {
 			);
 		}
 		return $listed;
+	}
+
+	/**
+	 * A placement's views with the photos a picture can be drawn on
+	 * (`PictureView::views_of()`), labels in the site's language where the
+	 * blank has them in it.
+	 *
+	 * @param string $blank_id     The blank.
+	 * @param string $placement_id One of its placements.
+	 * @return list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null Null when Pixonaut cannot be asked.
+	 */
+	public function placement_photos( string $blank_id, string $placement_id ): ?array {
+		$language = DesignerLanguage::of_site();
+		$args     = array( 'blank' => $blank_id ) + ( null === $language ? array() : array( 'lang' => $language ) );
+		try {
+			$placements = $this->remember( 'blank-mockups', $args, fn (): array => $this->catalogue->mockups( $blank_id, $language ) );
+		} catch ( ApiException $e ) {
+			return null;
+		}
+		return PictureView::views_of( $placements, $placement_id );
 	}
 
 	/**

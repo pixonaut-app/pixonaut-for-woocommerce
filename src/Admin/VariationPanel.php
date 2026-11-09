@@ -21,7 +21,8 @@ use WP_Post;
  * checked with Pixonaut and saved on it. Unticking keeps the variation's link,
  * unchecked and unused, so ticking again restores it. A variation
  * personalised on a blank also says which of the blank's variants it is
- * (`VariantField`), whether it overrides or not.
+ * (`VariantField`), whether it overrides or not, and what its image is
+ * drawn on (`ShowcaseField`).
  */
 final class VariationPanel {
 
@@ -45,12 +46,14 @@ final class VariationPanel {
 	/**
 	 * @param ProductPanel $panel     Renders and saves the fields the product and its variations share.
 	 * @param Templates    $templates Renders the panel.
-	 * @param VariantField $variant   Renders and saves the variation's blank variant.
+	 * @param VariantField       $variant   Renders and saves the variation's blank variant.
+	 * @param ShowcaseField|null $picture   Renders the choice of what the variation's image is drawn on; null for none.
 	 */
 	public function __construct(
 		private readonly ProductPanel $panel,
 		private readonly Templates $templates,
 		private readonly VariantField $variant,
+		private readonly ?ShowcaseField $picture = null,
 	) {
 	}
 
@@ -91,6 +94,7 @@ final class VariationPanel {
 				'search_urls'   => ProductPanel::search_urls(),
 				'rest_nonce'    => wp_create_nonce( 'wp_rest' ),
 				'variant_html'  => $this->variant->html( $product, $fields ),
+				'picture_html'  => null === $this->picture ? '' : $this->picture->variation_html( $product, $fields ),
 			)
 		);
 	}
@@ -116,6 +120,7 @@ final class VariationPanel {
 
 		$this->apply( $variation, isset( $posted[ PanelFields::OVERRIDE ] ) ? $posted : null );
 		$this->variant->save( $variation, $posted[ PanelFields::VARIANT ] ?? null );
+		ShowcaseField::save_variation( $variation, isset( $posted[ PanelFields::PICTURE_VIEW_LISTED ] ) ? $posted[ PanelFields::PICTURE_VIEW ] ?? null : null );
 	}
 
 	/**

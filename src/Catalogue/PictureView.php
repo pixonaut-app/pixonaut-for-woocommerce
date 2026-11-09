@@ -119,6 +119,7 @@ final class PictureView {
 	 * @param array{kind: string, view?: string, photo?: string} $choice A choice.
 	 */
 	public static function field_value( array $choice ): string {
+		$choice = self::parse( $choice ) ?? array( 'kind' => self::MOCKUP );
 		return isset( $choice['view'] ) ? (string) wp_json_encode( $choice ) : $choice['kind'];
 	}
 
