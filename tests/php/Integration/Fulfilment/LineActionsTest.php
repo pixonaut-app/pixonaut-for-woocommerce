@@ -10,6 +10,8 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Fulfilment;
 use Pixonaut\WooCommerce\Admin\ConnectionScreen;
 use Pixonaut\WooCommerce\Admin\Notices;
 use Pixonaut\WooCommerce\Admin\OrderBox;
+use Pixonaut\WooCommerce\Api\Answers\Order;
+use Pixonaut\WooCommerce\Api\Answers\OrderDetail;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\HookListener;
 use Pixonaut\WooCommerce\Api\Pixonaut;
@@ -98,8 +100,8 @@ final class LineActionsTest extends FulfilmentTestCase {
 	public function test_a_failed_order_offers_retry_only_while_pixonaut_allows_it(): void {
 		$line = $this->flagged( 'failed', NeedsAttention::ORDER_FAILED );
 
-		$this->assertSame( array( LineActions::RETRY ), $this->actions->available( $line, $this->read( 'failed', array( 'canRetry' => true ) ) ) );
-		$this->assertSame( array(), $this->actions->available( $line, $this->read( 'failed' ) ) );
+		$this->assertSame( array( LineActions::RETRY ), $this->actions->available( $line, $this->detail( 'failed', array( 'canRetry' => true ) ) ) );
+		$this->assertSame( array(), $this->actions->available( $line, $this->detail( 'failed' ) ) );
 	}
 
 	public function test_retry_places_the_order_again_and_the_line_goes_on(): void {
@@ -127,8 +129,8 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$line   = $this->flagged( 'failed', NeedsAttention::ORDER_FAILED );
 		$failed = array( 'failureKind' => 'print_failed' );
 
-		$this->assertSame( array( LineActions::RETRY ), $this->actions->available( $line, $this->read( 'failed', $failed + array( 'canRetry' => true ) ) ) );
-		$this->assertSame( array(), $this->actions->available( $line, $this->read( 'failed', $failed + array( 'canRetry' => false ) ) ) );
+		$this->assertSame( array( LineActions::RETRY ), $this->actions->available( $line, $this->detail( 'failed', $failed + array( 'canRetry' => true ) ) ) );
+		$this->assertSame( array(), $this->actions->available( $line, $this->detail( 'failed', $failed + array( 'canRetry' => false ) ) ) );
 	}
 
 	public function test_a_retry_of_a_failed_print_takes_on_the_order_waiting_for_it(): void {
@@ -279,7 +281,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 
 		$this->assertSame( LineActions::DONE, $this->actions->run( $this->line(), LineActions::RETRY )->code );
 
-		$this->assertSame( AdoptedOrder::address( $automation ), DeliveryChange::of( $this->line() )[ DeliveryChange::FIELD_ADDRESS ] );
+		$this->assertSame( AdoptedOrder::address( Order::from_answer( $automation ) ), DeliveryChange::of( $this->line() )[ DeliveryChange::FIELD_ADDRESS ] );
 		$this->assertTrue( as_has_scheduled_action( DeliveryChange::ACTION, array( 'item_id' => $this->item->get_id() ) ) );
 	}
 
@@ -368,7 +370,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$line = $this->line();
 		$line->set_ref( LineState::REF_ORDER_ID, self::ORDER_ID );
 		$this->assertTrue( $line->save() );
-		$held = $this->read( OrderStatus::HELD, array( 'hold' => self::HOLD ) );
+		$held = $this->detail( OrderStatus::HELD, array( 'hold' => self::HOLD ) );
 
 		$this->status_changed()->apply_read( $this->line(), $held );
 		$this->status_changed()->apply_read( $this->line(), $held );
@@ -382,7 +384,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 
 	public function test_a_read_of_a_line_shown_as_held_without_its_hold_keeps_the_hold_with_one_note(): void {
 		$line = $this->ordered( OrderStatus::HELD );
-		$held = $this->read( OrderStatus::HELD, array( 'hold' => self::HOLD ) );
+		$held = $this->detail( OrderStatus::HELD, array( 'hold' => self::HOLD ) );
 
 		$this->actions->reconcile( $line, $held );
 		$this->actions->reconcile( $this->line(), $held );
@@ -398,7 +400,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$line->set_ref( LineState::REF_RELEASED_BY, OrderHold::RELEASED_BY_UPGRADE );
 		$this->assertTrue( $line->save() );
 
-		$this->actions->reconcile( $this->line(), $this->read( OrderStatus::HELD, array( 'hold' => self::HOLD ) ) );
+		$this->actions->reconcile( $this->line(), $this->detail( OrderStatus::HELD, array( 'hold' => self::HOLD ) ) );
 
 		$this->assertNull( $this->line()->ref( LineState::REF_HOLD ) );
 		$this->assertStringNotContainsString( 'is held', $this->notes() );
@@ -409,9 +411,9 @@ final class LineActionsTest extends FulfilmentTestCase {
 
 		$this->assertSame(
 			array( LineActions::SETTLE_SUBMITTED, LineActions::SETTLE_FAILED, LineActions::CANCEL ),
-			$this->actions->available( $line, $this->read( 'outcome_unknown', array( 'statusMoves' => array( 'submitted', 'failed' ) ) ) )
+			$this->actions->available( $line, $this->detail( 'outcome_unknown', array( 'statusMoves' => array( 'submitted', 'failed' ) ) ) )
 		);
-		$this->assertSame( array( LineActions::CANCEL ), $this->actions->available( $line, $this->read( 'outcome_unknown' ) ) );
+		$this->assertSame( array( LineActions::CANCEL ), $this->actions->available( $line, $this->detail( 'outcome_unknown' ) ) );
 	}
 
 	public function test_settling_needs_a_reason_and_sends_nothing_without_one(): void {
@@ -528,7 +530,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$this->assertTrue( $this->actions->reads_order( $line ) );
 		$this->assertSame(
 			array( 'rehearse_queued', 'rehearse_printed', 'rehearse_shipped', 'rehearse_failed' ),
-			$this->actions->available( $line, $order )
+			$this->actions->available( $line, OrderDetail::from_answer( $order ) )
 		);
 		$this->recorder
 			->json( 200, $order )
@@ -557,7 +559,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$line = $this->ordered();
 
 		$this->assertFalse( $this->actions->reads_order( $line ) );
-		$this->assertSame( array(), $this->actions->available( $line, $this->read( 'submitted', array( 'statusMoves' => array( 'shipped' ) ) ) ) );
+		$this->assertSame( array(), $this->actions->available( $line, $this->detail( 'submitted', array( 'statusMoves' => array( 'shipped' ) ) ) ) );
 	}
 
 	public function test_a_line_stopped_before_its_order_is_retried_by_the_store(): void {
@@ -764,14 +766,14 @@ final class LineActionsTest extends FulfilmentTestCase {
 		$line = $this->flagged( 'failed', NeedsAttention::ORDER_FAILED );
 		$this->store->clear();
 
-		$this->assertSame( array(), $this->actions->available( $line, $this->read( 'failed', array( 'canRetry' => true ) ) ) );
+		$this->assertSame( array(), $this->actions->available( $line, $this->detail( 'failed', array( 'canRetry' => true ) ) ) );
 	}
 
 	public function test_the_actions_are_filterable(): void {
 		$line = $this->flagged( 'outcome_unknown', NeedsAttention::OUTCOME_UNKNOWN );
 		add_filter( 'pixonaut_wc_fulfilment_line_actions', static fn ( array $actions ): array => array_values( array_diff( $actions, array( LineActions::CANCEL ) ) ) );
 
-		$this->assertSame( array(), $this->actions->available( $line, $this->read( 'outcome_unknown' ) ) );
+		$this->assertSame( array(), $this->actions->available( $line, $this->detail( 'outcome_unknown' ) ) );
 	}
 
 	public function test_the_box_shows_only_the_actions_pixonaut_allows(): void {
@@ -960,6 +962,16 @@ final class LineActionsTest extends FulfilmentTestCase {
 	 */
 	private function read( string $status, array $overrides = array() ): array {
 		return FulfilmentAnswers::read_order( self::ORDER_ID, $this->external_ref(), array( 'status' => $status ) + $overrides );
+	}
+
+	/**
+	 * The line's order as read(), as the store reads it.
+	 *
+	 * @param string               $status    The order's status.
+	 * @param array<string, mixed> $overrides Further fields.
+	 */
+	private function detail( string $status, array $overrides = array() ): OrderDetail {
+		return OrderDetail::from_answer( $this->read( $status, $overrides ) );
 	}
 
 	/**

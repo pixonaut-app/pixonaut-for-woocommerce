@@ -12,6 +12,9 @@ namespace Pixonaut\WooCommerce\Webhooks;
 // phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
 
 use Closure;
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStore;
+use Pixonaut\WooCommerce\Api\Answers\EventsPage;
+use Pixonaut\WooCommerce\Api\Answers\WebhookEndpoint;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Schema;
@@ -281,12 +284,12 @@ final class EventsPull {
 	private function redeliver_failed( StoredConnection $connection ): void {
 		try {
 			$endpoint = null;
-			foreach ( $this->api->webhooks()->list() as $listed ) {
+			foreach ( WebhookEndpoint::all( $this->api ) as $listed ) {
 				if ( $listed->id === $connection->webhook_id ) {
-					$endpoint = $listed->raw();
+					$endpoint = $listed;
 				}
 			}
-			if ( null !== $endpoint && self::has_failed( $endpoint ) && false !== ( $this->api->connect()->get()->raw()['reachable'] ?? null ) ) {
+			if ( null !== $endpoint && $endpoint->has_failed() && ConnectedStore::get( $this->api )->reachable ) {
 				$this->api->webhooks()->redeliverFailed( $connection->webhook_id );
 			}
 		} catch ( ApiException $e ) {
@@ -295,19 +298,6 @@ final class EventsPull {
 			}
 			$this->logger->warning( 'Failed webhook deliveries not sent again: ' . $e->getMessage(), array( 'code' => $e->errorCode ) );
 		}
-	}
-
-	/**
-	 * Whether the endpoint is active and has deliveries that failed for good.
-	 *
-	 * @param array<string, mixed> $endpoint The store's endpoint, as `GET /v1/webhooks` lists it.
-	 */
-	private static function has_failed( array $endpoint ): bool {
-		$failed = $endpoint['failedCount'] ?? null;
-		if ( true !== ( $endpoint['active'] ?? null ) ) {
-			return false;
-		}
-		return ( is_int( $failed ) || is_float( $failed ) ) && 0 < $failed;
 	}
 
 	/**
@@ -354,12 +344,10 @@ final class EventsPull {
 	 * @throws ApiException When Pixonaut refused (`unknown_event` for an `after` it does not know) or could not be reached.
 	 */
 	private function page( ?string $after ): array {
-		$page   = $this->api->events()->list( $after, implode( ',', Endpoint::EVENT_TYPES ) )->raw();
-		$cursor = $page['nextCursor'] ?? null;
-		$events = is_array( $page['events'] ?? null ) ? $page['events'] : array();
+		$page = EventsPage::get( $this->api, $after, implode( ',', Endpoint::EVENT_TYPES ) );
 		return array(
-			'events'      => array_values( array_filter( $events, 'is_array' ) ),
-			'next_cursor' => is_string( $cursor ) && '' !== $cursor ? $cursor : null,
+			'events'      => $page->events,
+			'next_cursor' => '' !== $page->next_cursor ? $page->next_cursor : null,
 		);
 	}
 

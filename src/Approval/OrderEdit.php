@@ -13,6 +13,7 @@ namespace Pixonaut\WooCommerce\Approval;
 // phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
 
 use Closure;
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Cart\EditRefused;
@@ -439,7 +440,7 @@ final class OrderEdit {
 	 */
 	private function approved_at( string $design_id, int $revision ): bool {
 		try {
-			$design = $this->pixonaut->designs()->get( $design_id );
+			$design = Design::get( $this->pixonaut, $design_id );
 		} catch ( ApiException ) {
 			throw new EditRefused( EditRefused::NOT_SAVED );
 		}

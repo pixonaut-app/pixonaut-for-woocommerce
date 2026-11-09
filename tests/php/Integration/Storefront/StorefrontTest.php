@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStoreExchange;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Cart\AddToCart;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
@@ -93,7 +94,7 @@ final class StorefrontTest extends WP_UnitTestCase {
 	}
 
 	public static function connect( ConnectionStore $store ): void {
-		$store->save( StoredConnection::from_exchange( self::EXCHANGED, wp_generate_uuid4(), home_url(), time() ) );
+		$store->save( StoredConnection::from_exchange( ConnectedStoreExchange::from_answer( self::EXCHANGED ), wp_generate_uuid4(), home_url(), time() ) );
 	}
 
 	/**

@@ -7,11 +7,13 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Webhooks;
 
+use Pixonaut\WooCommerce\Api\Answers\OrderDetail;
 use Pixonaut\WooCommerce\Emails\TrackingChangedEmail;
 use Pixonaut\WooCommerce\Fulfilment\LineDisplay;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Fulfilment\Tracking;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Tests\Support\FulfilmentAnswers;
 use Pixonaut\WooCommerce\Tests\Support\SentMail;
 use WC_Order_Item_Product;
 
@@ -274,24 +276,30 @@ final class OrderTrackingChangedTest extends OrderEventsTestCase {
 	 * @param int                   $set_at   When its history says the tracking was last set, epoch milliseconds.
 	 */
 	private function apply_read( WC_Order_Item_Product $item, array $tracking, int $set_at ): void {
+		$entry = array(
+			'seq'        => 1,
+			'reason'     => null,
+			'via'        => null,
+			'automation' => null,
+			'releasedBy' => null,
+		);
 		$order = array(
-			'status'      => 'shipped',
-			'externalRef' => self::EXTERNAL_REF,
-			'tracking'    => $tracking,
-			'history'     => array(
+			'status'   => 'shipped',
+			'tracking' => $tracking,
+			'history'  => array(
 				array(
 					'type'   => 'order.status_changed',
 					'status' => 'printed',
 					'at'     => $set_at - 1,
-				),
+				) + $entry,
 				array(
 					'type'   => 'order.tracking_changed',
 					'status' => 'shipped',
 					'at'     => $set_at,
-				),
+				) + $entry,
 			),
-		);
-		Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->order_status_changed()->apply_read( LineState::of( $item ), $order );
+		) + FulfilmentAnswers::read_order( self::ORDER_ID, self::EXTERNAL_REF );
+		Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->order_status_changed()->apply_read( LineState::of( $item ), OrderDetail::from_answer( $order ) );
 	}
 
 	/**

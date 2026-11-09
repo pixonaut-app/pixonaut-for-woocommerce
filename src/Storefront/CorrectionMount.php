@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
-use Pixonaut\WooCommerce\Api\Designs;
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Cart\DesignCheck;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -150,12 +150,12 @@ final class CorrectionMount {
 			return array();
 		}
 		try {
-			$design = $this->pixonaut->designs()->get( $design_id )->raw();
+			$design = Design::get( $this->pixonaut, $design_id );
 		} catch ( ApiException $error ) {
 			$this->logger->warning( sprintf( 'Could not read design %s to open it on its product: %s', $design_id, $error->getMessage() ), array( 'code' => $error->errorCode ) );
 			return array();
 		}
-		$size = DesignCheck::size_index( $design[ Designs::PRINT_SIZE ] ?? null, $side->print_sizes );
+		$size = DesignCheck::size_index( $design->print_size, $side->print_sizes );
 		if ( null === $size || null !== DesignCheck::mismatch( $design, $side, $config->blank_id ) ) {
 			return array();
 		}

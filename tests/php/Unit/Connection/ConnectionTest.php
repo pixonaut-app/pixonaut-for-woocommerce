@@ -19,6 +19,7 @@ use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Connection\Credentials;
 use Pixonaut\WooCommerce\Connection\Pkce;
+use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
 use Pixonaut\WooCommerce\Templates;
 use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
 use Pixonaut\WooCommerce\Tests\Support\MemberKeys;
@@ -328,6 +329,104 @@ final class ConnectionTest extends TestCase {
 		$this->assertSame( self::EXCHANGED['integrationKey']['key'], $this->store->secret( Credential::IntegrationKey ) );
 	}
 
+	public function test_a_connection_made_from_an_exchange_is_stored_in_the_shape_it_always_had(): void {
+		$connection = $this->connection();
+		$this->transport->json( 201, self::EXCHANGED );
+		$connection->complete( self::ADMIN, $this->approve( $connection ) );
+
+		$this->assertSame(
+			array(
+				'site'                  => self::SITES[0],
+				'home_url'              => self::HOME_URL,
+				'connected_at'          => self::NOW,
+				'tenant_id'             => self::EXCHANGED['tenantId'],
+				'tenant_name'           => 'Acme',
+				'environment'           => 'sandbox',
+				'connection_id'         => self::EXCHANGED['connectionId'],
+				'integration_key'       => self::EXCHANGED['integrationKey']['key'],
+				'integration_key_id'    => self::EXCHANGED['integrationKey']['id'],
+				'integration_key_label' => self::EXCHANGED['integrationKey']['label'],
+				'publishable_key'       => self::EXCHANGED['publishableKey']['key'],
+				'publishable_key_id'    => self::EXCHANGED['publishableKey']['id'],
+				'allowed_origins'       => array( self::HOME_URL ),
+				'webhook_id'            => self::EXCHANGED['webhook']['id'],
+				'webhook_url'           => self::EXCHANGED['webhook']['url'],
+				'webhook_secret'        => self::EXCHANGED['webhook']['secret'],
+				'tenant_slug'           => ConnectionAnswers::TENANT_SLUG,
+			),
+			$this->store->load()?->to_array()
+		);
+	}
+
+	public function test_an_exchange_without_a_field_the_store_does_not_read_still_connects(): void {
+		$connection = $this->connection();
+		$answer     = self::EXCHANGED;
+		unset( $answer['memberKey'], $answer['reachable'] );
+		$this->transport->off_spec( self::exchanged( $answer ) );
+
+		$stored = $connection->complete( self::ADMIN, $this->approve( $connection ) );
+
+		$this->assertSame( self::EXCHANGED['connectionId'], $stored->connection_id );
+		$this->assertSame( self::EXCHANGED['integrationKey']['key'], $this->store->secret( Credential::IntegrationKey ) );
+	}
+
+	public function test_an_exchange_without_a_key_the_store_reads_fails_the_connect_and_keeps_the_connection_there_was(): void {
+		$connection = $this->connection();
+		$answer     = self::EXCHANGED;
+		unset( $answer['webhook']['secret'] );
+		$this->transport->json( 201, self::EXCHANGED )->off_spec( self::exchanged( $answer ) );
+		$connection->complete( self::ADMIN, $this->approve( $connection ) );
+
+		$this->assertConnectFails( ConnectFailed::EXCHANGE_FAILED, $connection, $this->approve( $connection ) );
+
+		$this->assertSame( self::SITES[0], $this->store->load()?->site );
+		$this->assertSame( 'unexpected_response', $this->logger->entries[0]['context']['error_code'] );
+		$this->assertStringNotContainsString( 'ik_test_', (string) json_encode( $this->logger->entries ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+	}
+
+	public function test_an_exchange_with_an_empty_key_fails_the_connect(): void {
+		$connection                        = $this->connection();
+		$answer                            = self::EXCHANGED;
+		$answer['integrationKey']['label'] = '';
+		$this->transport->off_spec( self::exchanged( $answer ) );
+
+		$this->assertConnectFails( ConnectFailed::EXCHANGE_FAILED, $connection, $this->approve( $connection ) );
+
+		$this->assertNull( $this->store->load() );
+		$this->assertStringContainsString( 'The connection has no label.', $this->logger->entries[0]['message'] );
+	}
+
+	public function test_connecting_keeps_the_workspace_settings_in_the_shape_they_always_had(): void {
+		$connection = $this->connection();
+		$this->transport->json( 201, self::EXCHANGED );
+		$connection->complete( self::ADMIN, $this->approve( $connection ) );
+		$this->transport->json(
+			200,
+			array(
+				'branding'        => array(
+					'logoUrl'     => null,
+					'accentColor' => '#FF6600',
+					'brandId'     => '0b1c2d3e-4f50-4a6b-8c7d-0000000000b1',
+				),
+				'defaultLanguage' => 'de',
+			) + ConnectionAnswers::connection( true )
+		);
+
+		( new WorkspaceSettings( $connection, $this->transport->sdk( $this->store, new RecordingLogger() ), $this->logger, static fn (): int => self::NOW ) )->connected();
+
+		$this->assertSame( 'PATCH', $this->transport->sent[1]['method'] );
+		$this->assertSame(
+			array(
+				'brand_id'         => '0b1c2d3e-4f50-4a6b-8c7d-0000000000b1',
+				'accent'           => '#ff6600',
+				'default_language' => 'de',
+				'tenant_slug'      => ConnectionAnswers::TENANT_SLUG,
+				'read_at'          => self::NOW,
+			),
+			$this->options[ WorkspaceSettings::OPTION ]
+		);
+	}
+
 	public function test_a_reconnect_mints_a_new_site(): void {
 		$connection = $this->connection();
 		$this->transport->json( 201, self::EXCHANGED )->json( 201, self::EXCHANGED );
@@ -572,6 +671,13 @@ final class ConnectionTest extends TestCase {
 		$connection->complete( self::ADMIN, $this->approve( $connection ) );
 
 		$this->assertArrayNotHasKey( ConnectionStore::LOCK_OPTION, $this->options );
+	}
+
+	/**
+	 * @param array<string, mixed> $body The `201` body.
+	 */
+	private static function exchanged( array $body ): Response {
+		return new Response( 201, array( 'content-type' => 'application/json' ), (string) json_encode( $body ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- no WordPress in the unit suite.
 	}
 
 	/**

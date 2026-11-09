@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Approval;
 
 use Closure;
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
@@ -291,7 +292,7 @@ final class ProofDeadline {
 	 * @throws ApiException When the design could not be read.
 	 */
 	private function decided( string $design_id, int $revision ): ?string {
-		$design = $this->pixonaut->designs()->get( $design_id );
+		$design = Design::get( $this->pixonaut, $design_id );
 		if ( self::STATUS_REJECTED === $design->status ) {
 			return self::STATUS_REJECTED;
 		}

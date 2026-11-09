@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Privacy;
 
 use Closure;
+use Pixonaut\WooCommerce\Api\Answers\OrderList;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Fulfilment\FulfilmentJobs;
@@ -313,7 +314,7 @@ final class LineErasure {
 		$ids = array_merge( array( $order_id ), $line->replaced_order_ids() );
 		$ref = $line->ref( LineState::REF_EXTERNAL_REF );
 		if ( is_string( $ref ) && '' !== $ref ) {
-			foreach ( $this->pixonaut->orders()->list( externalRef: $ref )->orders as $order ) {
+			foreach ( OrderList::under( $this->pixonaut, $ref )->orders as $order ) {
 				if ( '' !== $order->id ) {
 					$ids[] = $order->id;
 				}

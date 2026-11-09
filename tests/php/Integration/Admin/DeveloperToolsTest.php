@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Admin;
 
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStoreExchange;
 use Pixonaut\WooCommerce\Admin\DeveloperTools;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\HookListener;
@@ -464,7 +465,7 @@ final class DeveloperToolsTest extends WP_UnitTestCase {
 	}
 
 	private function connect(): void {
-		$this->plugin->connection_store()->save( StoredConnection::from_exchange( self::CONNECTED, '0b1c2d3e-4f50-4a6b-8c7d-0000000000aa', untrailingslashit( home_url() ), time() ) );
+		$this->plugin->connection_store()->save( StoredConnection::from_exchange( ConnectedStoreExchange::from_answer( self::CONNECTED ), '0b1c2d3e-4f50-4a6b-8c7d-0000000000aa', untrailingslashit( home_url() ), time() ) );
 	}
 
 	/**

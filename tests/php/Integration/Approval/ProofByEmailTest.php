@@ -128,6 +128,18 @@ final class ProofByEmailTest extends WP_UnitTestCase {
 		$this->assertSame( array(), $this->mails( self::APPROVED_INTRO ), 'the "design approved" email is off' );
 	}
 
+	public function test_a_design_answered_without_a_field_the_store_does_not_read_still_gets_its_proof_sent(): void {
+		$this->recorder
+			->off_spec( 200, DesignFixture::as_answered_without_unread_fields( array( 'id' => self::DESIGN ) ) )
+			->json( 201, self::proof_page() );
+
+		$this->pay();
+
+		$this->assertSame( LineState::AWAITING_CUSTOMER, $this->line()->state() );
+		$this->assertSame( self::PROOF_URL, $this->line()->side_ref( 'front', LineState::SIDE_PROOF_URL ) );
+		$this->assertCount( 1, $this->mails( self::PROOF_URL ) );
+	}
+
 	public function test_the_proof_page_is_in_the_language_the_customer_bought_in(): void {
 		$line = $this->line();
 		$line->set_ref( LineState::REF_LOCALE, 'de_CH' );
@@ -255,6 +267,27 @@ final class ProofByEmailTest extends WP_UnitTestCase {
 
 		// Approved at the line's revision after all: the event's revision is not the line's.
 		$this->recorder->json( 200, self::design( 'approved' ) );
+		$this->deliver( $this->approved_event( self::REVISION + 1 ) );
+		$this->run_webhook_jobs();
+
+		$this->assertSame( LineState::APPROVED, $this->line()->state() );
+	}
+
+	public function test_an_approved_design_answered_without_a_field_the_store_does_not_read_still_counts(): void {
+		$this->recorder
+			->json( 200, self::design() )
+			->json( 201, self::proof_page() );
+		$this->pay();
+
+		$this->recorder->off_spec(
+			200,
+			DesignFixture::as_answered_without_unread_fields(
+				array(
+					'id'     => self::DESIGN,
+					'status' => 'approved',
+				)
+			)
+		);
 		$this->deliver( $this->approved_event( self::REVISION + 1 ) );
 		$this->run_webhook_jobs();
 

@@ -260,6 +260,51 @@ final class ProofDeadlineTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( self::REFUNDED, (string) $expired[0]['body'] );
 	}
 
+	public function test_a_design_answered_without_a_field_the_store_does_not_read_still_decides_the_deadline(): void {
+		$this->settings( Settings::PROOF_NO_ANSWER, ProofOutcome::APPROVE );
+		$this->pay();
+		$this->recorder
+			->json( 409, array( 'error' => 'not_committed' ) )
+			->off_spec(
+				200,
+				DesignFixture::as_answered_without_unread_fields(
+					array(
+						'id'     => self::DESIGN,
+						'status' => 'rejected',
+					)
+				)
+			);
+
+		$this->run_deadline();
+
+		$line = $this->line();
+		$this->assertSame( LineState::NEEDS_ATTENTION, $line->state() );
+		$this->assertSame( NeedsAttention::PROOF_REJECTED, $line->reason() );
+		$this->assertStringContainsString( 'the customer rejected the proof', $this->notes() );
+	}
+
+	public function test_a_rejection_of_another_revision_is_followed_when_the_design_answers_without_a_field_the_store_does_not_read(): void {
+		$this->settings( Settings::PROOF_ON_DENY, ProofOutcome::CANCEL );
+		$this->pay();
+
+		$this->deliver( $this->event( 'design.rejected', self::REVISION + 1 ) );
+		$this->recorder
+			->off_spec(
+				200,
+				DesignFixture::as_answered_without_unread_fields(
+					array(
+						'id'     => self::DESIGN,
+						'status' => 'rejected',
+					)
+				)
+			)
+			->json( 200, array( 'ok' => true ) );
+		$this->run_webhook_jobs();
+		ActionSchedulerRunner::run_pending( LineCancellation::ACTION );
+
+		$this->assertSame( LineState::CANCELLED, $this->line()->state() );
+	}
+
 	public function test_a_customer_who_approved_just_before_a_denying_deadline_is_followed(): void {
 		$this->pay();
 		$this->recorder
@@ -446,15 +491,16 @@ final class ProofDeadlineTest extends WP_UnitTestCase {
 	/**
 	 * A proof page's decision about the line's design, as Pixonaut delivers it.
 	 *
-	 * @param string $type `design.approved` or `design.rejected`.
+	 * @param string $type     `design.approved` or `design.rejected`.
+	 * @param int    $revision The revision the decision names.
 	 * @return array<string, mixed>
 	 */
-	private function event( string $type ): array {
+	private function event( string $type, int $revision = self::REVISION ): array {
 		++$this->sequence;
 		$created = time() * 1000 + $this->sequence;
 		$payload = array(
 			'designId' => self::DESIGN,
-			'revision' => self::REVISION,
+			'revision' => $revision,
 		);
 		if ( 'design.approved' === $type ) {
 			$payload += array(

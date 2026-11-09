@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
+use Pixonaut\WooCommerce\Api\Answers\Design;
+use Pixonaut\WooCommerce\Api\Answers\OrderDetail;
 use Pixonaut\WooCommerce\Milliseconds;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
@@ -172,7 +174,7 @@ final class LineReader {
 		}
 		$order_id = $line->ref( LineState::REF_ORDER_ID );
 		if ( is_string( $order_id ) && '' !== $order_id ) {
-			$order = $this->found( fn (): array => $this->pixonaut->call( 'orders.get', array( 'id' => $order_id ) )->object() );
+			$order = $this->found( fn (): OrderDetail => OrderDetail::get( $this->pixonaut, $order_id ) );
 			if ( null !== $order ) {
 				$this->order_status->apply_read( $line, $order );
 			}
@@ -217,7 +219,7 @@ final class LineReader {
 		if ( ! is_string( $design_id ) || '' === $design_id ) {
 			return;
 		}
-		$design = $this->found( fn (): array => $this->pixonaut->designs()->get( $design_id )->raw() );
+		$design = $this->found( fn (): Design => Design::get( $this->pixonaut, $design_id ) );
 		if ( null === $design ) {
 			// Gone from Pixonaut; when is not known, so now stands for it.
 			$this->design->deleted( array( $line ), $design_id, Milliseconds::of( time() ) );
@@ -227,12 +229,13 @@ final class LineReader {
 	}
 
 	/**
+	 * @template T of object|array<string, mixed>
 	 * @param callable $read A read of one record.
-	 * @phpstan-param callable(): array<string, mixed> $read
-	 * @return array<string, mixed>|null Null when Pixonaut answered that it has no such record.
+	 * @phpstan-param callable(): T $read
+	 * @return T|null Null when Pixonaut answered that it has no such record.
 	 * @throws ApiException When Pixonaut refused otherwise or could not be reached.
 	 */
-	private function found( callable $read ): ?array {
+	private function found( callable $read ): object|array|null {
 		try {
 			return $read();
 		} catch ( ApiException $e ) {

@@ -103,6 +103,21 @@ final class DesignFixture {
 	}
 
 	/**
+	 * A design as Pixonaut answers it without the fields the plugin does not
+	 * read (`garmentTone`, `canDecide`), so the pinned spec refuses it. Queue
+	 * it with `HttpRecorder::off_spec()`.
+	 *
+	 * @param array<string, mixed> $overrides Fields to replace.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function as_answered_without_unread_fields( array $overrides = array() ): array {
+		$design = self::design( $overrides );
+		unset( $design['garmentTone'], $design['canDecide'] );
+		return $design;
+	}
+
+	/**
 	 * Stores the variant of its blank a product, or each variation of a
 	 * variable product, sells, as resolving it against
 	 * `BlankFixture::variants()` would.

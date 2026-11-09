@@ -301,7 +301,7 @@ final class OrderSubmittedTest extends OrderEventsTestCase {
 		$this->assertSame( self::RETRY_ID, $line->ref( LineState::REF_ORDER_ID ) );
 		$this->assertSame( array( self::ORDER_ID ), $line->replaced_order_ids() );
 		$this->assertSame( 'queued', $line->ref( LineState::REF_ORDER_STATUS ) );
-		$this->assertSame( self::RETRY_ID, $order['id'] ?? null );
+		$this->assertSame( self::RETRY_ID, $order?->order->id );
 		$this->assertStringContainsString( 'again, as order ' . self::RETRY_ID, $this->notes( $item ) );
 
 		$this->deliver( $this->status_event( 'queued', 'printed', null, array( 'orderId' => self::RETRY_ID ) ) );

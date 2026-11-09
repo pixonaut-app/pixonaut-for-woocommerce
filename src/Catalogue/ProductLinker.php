@@ -576,13 +576,13 @@ final class ProductLinker {
 		$legal_at = array();
 		$reason   = null;
 		foreach ( $sizes as $i => $size ) {
-			$verdict = $verdicts[ $i ] ?? array();
-			if ( true === ( $verdict['legal'] ?? null ) ) {
+			$verdict = $verdicts[ $i ];
+			if ( $verdict->legal ) {
 				$legal_at[ $i ] = count( $legal );
 				$legal[]        = $size;
 				continue;
 			}
-			$reason ??= is_string( $verdict['reason'] ?? null ) ? $verdict['reason'] : InvalidReason::CHECK_FAILED;
+			$reason ??= $verdict->reason ?? InvalidReason::CHECK_FAILED;
 		}
 		return array( $legal, $legal_at, $reason );
 	}

@@ -158,6 +158,27 @@ final class HostedOrderCorrectionTest extends PersonalisedCartTestCase {
 		$this->assertSame( array(), self::error_notices() );
 	}
 
+	public function test_a_repeated_return_goes_on_when_the_design_answers_without_a_field_the_store_does_not_read(): void {
+		$this->script_corrected();
+		$this->recorder
+			->json( 409, array( 'error' => 'not_committed' ) )
+			->off_spec(
+				200,
+				DesignFixture::as_answered_without_unread_fields(
+					array(
+						'status'   => 'approved',
+						'revision' => self::CORRECTED_REVISION,
+					)
+				)
+			);
+
+		$this->assertSame( $this->order->get_checkout_order_received_url(), $this->hosted->finish_order( $this->state(), self::CORRECTION_TOKEN ) );
+
+		$this->assertSame( LineState::APPROVED, $this->line()->state() );
+		$this->assertSame( self::CORRECTED_REVISION, $this->line()->side_ref( 'front', LineState::SIDE_REVISION ) );
+		$this->assertSame( array(), self::error_notices() );
+	}
+
 	public function test_the_hosted_approval_stands_in_for_the_approval_box(): void {
 		$base = self::config();
 		( new ProductConfig( personalise: true, blank_id: $base->blank_id, blank_name: $base->blank_name, sides: $base->sides, approval_mode: ApprovalMode::CHECKBOX, layout: Layout::BUTTON ) )

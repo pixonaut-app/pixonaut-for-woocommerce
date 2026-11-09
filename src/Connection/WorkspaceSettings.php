@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Connection;
 
 use Closure;
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStore;
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStoreBrand;
 use Pixonaut\WooCommerce\DesignerLanguage;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
@@ -106,11 +108,11 @@ final class WorkspaceSettings {
 			return;
 		}
 		try {
-			$this->remember( $this->api->connect()->get()->raw() );
+			$this->remember( ConnectedStore::get( $this->api ) );
 		} catch ( ApiException $e ) {
 			$this->logger->warning( sprintf( 'Could not read the workspace settings: %s', $e->getMessage() ), array( 'code' => $e->errorCode ) );
 			// Another request may have disconnected or connected again while this one waited for Pixonaut.
-			if ( ! $this->still_connected( array( 'connectionId' => $current->connection_id ) ) ) {
+			if ( ! $this->still_connected( $current->connection_id ) ) {
 				return;
 			}
 			wp_cache_delete( self::OPTION, 'options' );
@@ -125,15 +127,15 @@ final class WorkspaceSettings {
 	 * workspace's slug of a `GET` or `PATCH /v1/connect` answer about the
 	 * connection stored now. An answer without a slug keeps the one known.
 	 *
-	 * @param array<string, mixed> $answer The connection as Pixonaut answered it.
+	 * @param ConnectedStore $answer The connection as Pixonaut answered it.
 	 */
-	public function remember( array $answer ): void {
-		if ( ! $this->still_connected( $answer ) ) {
+	public function remember( ConnectedStore $answer ): void {
+		if ( ! $this->still_connected( $answer->connection_id ) ) {
 			return;
 		}
 		$shown = self::shown( $answer );
-		$slug  = $answer['tenantSlug'] ?? null;
-		$this->keep( $shown['brand_id'], $shown['accent'], self::language_of( $answer ), is_string( $slug ) && '' !== $slug ? $slug : self::kept_slug() );
+		$slug  = $answer->tenant_slug;
+		$this->keep( $shown['brand_id'], $shown['accent'], self::language_of( $answer ), '' !== $slug ? $slug : self::kept_slug() );
 	}
 
 	/**
@@ -141,13 +143,13 @@ final class WorkspaceSettings {
 	 * the store disconnected or connected again, in another request, is
 	 * about one that is gone, and is not kept.
 	 *
-	 * @param array<string, mixed> $answer The connection as Pixonaut answered it.
+	 * @param string $connection_id The connection Pixonaut answered about.
 	 */
-	private function still_connected( array $answer ): bool {
+	private function still_connected( string $connection_id ): bool {
 		// Another request may have changed the connection while this one waited for Pixonaut.
 		wp_cache_delete( Schema::CONNECTION_OPTION, 'options' );
 		$current = $this->connection->current()?->connection_id;
-		return null !== $current && ( $answer['connectionId'] ?? null ) === $current;
+		return null !== $current && $connection_id === $current;
 	}
 
 	/**
@@ -259,10 +261,10 @@ final class WorkspaceSettings {
 	/**
 	 * The default language a `GET` or `PATCH /v1/connect` answer names.
 	 *
-	 * @param array<string, mixed> $answer The connection as Pixonaut answered it.
+	 * @param ConnectedStore $answer The connection as Pixonaut answered it.
 	 */
-	private static function language_of( array $answer ): ?string {
-		return self::known_language( $answer['defaultLanguage'] ?? null );
+	private static function language_of( ConnectedStore $answer ): ?string {
+		return self::known_language( $answer->default_language );
 	}
 
 	/**
@@ -274,51 +276,32 @@ final class WorkspaceSettings {
 	}
 
 	/**
-	 * What the settings tab shows of a `GET /v1/connect` answer; null for
-	 * each one Pixonaut did not answer.
+	 * What the settings tab shows of a `GET` or `PATCH /v1/connect` answer.
 	 *
-	 * @param array<string, mixed> $answer The connection as Pixonaut answered it.
+	 * @param ConnectedStore $answer The connection as Pixonaut answered it.
 	 *
-	 * @return array{brand_id: string|null, chosen_brand_id: string|null, brands: list<array{id: string, name: string, is_default: bool}>, logo_url: string|null, accent: string|null, watermark: bool|null, deliver_to: string|null, min_print_dpi: float|null, default_language: string|null}
-	 *         `brand_id` is the brand the store's hosted pages are drawn in, its own or else the workspace's default, and `logo_url` and `accent` are that brand's; `chosen_brand_id` is the store's own, null while it follows the workspace's default. `brands` are the workspace's brands the store may choose from, the default first. `default_language` is the workspace's default language, named in that language (`Deutsch`). `deliver_to` is the name of the address every order ships to, null when orders ship to their customer.
+	 * @return array{brand_id: string|null, chosen_brand_id: string|null, brands: list<array{id: string, name: string, is_default: bool}>, logo_url: string|null, accent: string|null, watermark: bool, deliver_to: string|null, min_print_dpi: float, default_language: string|null}
+	 *         `brand_id` is the brand the store's hosted pages are drawn in, its own or else the workspace's default, null while the workspace has none, and `logo_url` and `accent` are that brand's; `chosen_brand_id` is the store's own, null while it follows the workspace's default. `brands` are the workspace's brands the store may choose from, the default first. `default_language` is the workspace's default language, named in that language (`Deutsch`), null for one the plugin does not know. `deliver_to` is the name of the address every order ships to, null when orders ship to their customer.
 	 */
-	public static function shown( array $answer ): array {
-		$branding = is_array( $answer['branding'] ?? null ) ? $answer['branding'] : array();
-		$deliver  = is_array( $answer['deliverOrdersTo'] ?? null ) ? $answer['deliverOrdersTo'] : array();
-		$printing = is_array( $answer['printing'] ?? null ) ? $answer['printing'] : array();
-		$accent   = $branding['accentColor'] ?? null;
-		$dpi      = $printing['minPrintDpi'] ?? null;
+	public static function shown( ConnectedStore $answer ): array {
+		$accent = $answer->branding->accent_color;
 		return array(
-			'brand_id'         => is_string( $branding['brandId'] ?? null ) ? $branding['brandId'] : null,
-			'chosen_brand_id'  => is_string( $answer['brandId'] ?? null ) ? $answer['brandId'] : null,
-			'brands'           => self::brands_of( $answer ),
-			'logo_url'         => is_string( $branding['logoUrl'] ?? null ) ? $branding['logoUrl'] : null,
-			'accent'           => is_string( $accent ) && 1 === preg_match( '/^#[0-9a-f]{6}$/i', $accent ) ? strtolower( $accent ) : null,
-			'watermark'        => is_bool( $answer['proofWatermark'] ?? null ) ? $answer['proofWatermark'] : null,
-			'deliver_to'       => is_string( $deliver['name'] ?? null ) ? $deliver['name'] : null,
-			'min_print_dpi'    => is_int( $dpi ) || is_float( $dpi ) ? (float) $dpi : null,
+			'brand_id'         => $answer->branding->brand_id,
+			'chosen_brand_id'  => $answer->brand_id,
+			'brands'           => array_map(
+				static fn ( ConnectedStoreBrand $brand ): array => array(
+					'id'         => $brand->id,
+					'name'       => $brand->name,
+					'is_default' => $brand->is_default,
+				),
+				$answer->brands
+			),
+			'logo_url'         => $answer->branding->logo_url,
+			'accent'           => null !== $accent && 1 === preg_match( '/^#[0-9a-f]{6}$/i', $accent ) ? strtolower( $accent ) : null,
+			'watermark'        => $answer->proof_watermark,
+			'deliver_to'       => $answer->deliver_orders_to?->name,
+			'min_print_dpi'    => $answer->printing->min_print_dpi,
 			'default_language' => DesignerLanguage::name( self::language_of( $answer ) ),
 		);
-	}
-
-	/**
-	 * The workspace's brands a `GET` or `PATCH /v1/connect` answer lists,
-	 * in its order, leaving out any without an id or a name.
-	 *
-	 * @param array<string, mixed> $answer The connection as Pixonaut answered it.
-	 * @return list<array{id: string, name: string, is_default: bool}>
-	 */
-	private static function brands_of( array $answer ): array {
-		$brands = array();
-		foreach ( is_array( $answer['brands'] ?? null ) ? $answer['brands'] : array() as $brand ) {
-			if ( is_array( $brand ) && is_string( $brand['id'] ?? null ) && is_string( $brand['name'] ?? null ) ) {
-				$brands[] = array(
-					'id'         => $brand['id'],
-					'name'       => $brand['name'],
-					'is_default' => true === ( $brand['isDefault'] ?? null ),
-				);
-			}
-		}
-		return $brands;
 	}
 }

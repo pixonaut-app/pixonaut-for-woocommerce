@@ -9,6 +9,9 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
+use Pixonaut\WooCommerce\Api\Answers\Order;
+use Pixonaut\WooCommerce\Api\Answers\OrderDetail;
+use Pixonaut\WooCommerce\Api\Answers\OrderHistoryEntry;
 use Pixonaut\WooCommerce\Milliseconds;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
 use Pixonaut\WooCommerce\Webhooks\Payload;
@@ -95,38 +98,56 @@ final class OrderStatusChanged {
 	 * applied too, in case the store stopped before applying it itself. A
 	 * held order's hold is kept, once, as `order.held` would keep it.
 	 *
-	 * @param LineState            $line  A line holding the order's id.
-	 * @param array<string, mixed> $order `GET /v1/orders/{id}`'s answer.
+	 * @param LineState   $line A line holding the order's id.
+	 * @param OrderDetail $read `GET /v1/orders/{id}`'s answer.
 	 * @throws RuntimeException When the line kept changing while the status was applied.
 	 */
-	public function apply_read( LineState $line, array $order ): void {
-		$status = is_string( $order['status'] ?? null ) && '' !== $order['status'] ? $order['status'] : null;
-		$ref    = is_string( $order['externalRef'] ?? null ) ? $order['externalRef'] : null;
-		if ( null === $status || ! $this->lines->holds( $line, $ref, self::READ_OPERATION ) ) {
+	public function apply_read( LineState $line, OrderDetail $read ): void {
+		$order = $read->order;
+		if ( '' === $order->status || ! $this->lines->holds( $line, $order->external_ref, self::READ_OPERATION ) ) {
 			return;
 		}
 		$order_id = $line->ref( LineState::REF_ORDER_ID );
-		$this->apply( $line->item(), is_string( $order_id ) ? $order_id : null, $status, self::previous_in( $order ), Tracking::from_payload( $order['tracking'] ?? null ), self::tracking_at_in( $order ), null );
-		if ( OrderStatus::HELD === $status && is_string( $order_id ) ) {
-			OrderHold::keep( $line->item(), $order_id, $order['hold'] ?? null );
+		$this->apply( $line->item(), is_string( $order_id ) ? $order_id : null, $order->status, self::previous_in( $read->history ), Tracking::from_answer( $order->tracking ), self::tracking_at_in( $read->history ), null );
+		if ( OrderStatus::HELD === $order->status && is_string( $order_id ) ) {
+			OrderHold::keep( $line->item(), $order_id, $order->hold );
 		}
+	}
+
+	/**
+	 * The `order.status_changed` event Pixonaut sends for a move the store
+	 * made with its own key, built from its answer to the move.
+	 *
+	 * @param string $order_id The order.
+	 * @param string $previous Its status before the move.
+	 * @param Order  $moved    Pixonaut's answer: the order as it is now.
+	 */
+	public static function store_move( string $order_id, string $previous, Order $moved ): Event {
+		return Payload::event(
+			'store_' . wp_generate_uuid4(),
+			self::TYPE,
+			Milliseconds::of( time() ),
+			array(
+				'orderId'        => $order_id,
+				'externalRef'    => $moved->external_ref,
+				'previousStatus' => $previous,
+				'status'         => $moved->status,
+				'tracking'       => Tracking::as_sent( $moved->tracking ),
+				'via'            => self::VIA_STORE_KEY,
+			)
+		);
 	}
 
 	/**
 	 * The status before the order's current one, from its history.
 	 *
-	 * @param array<string, mixed> $order `GET /v1/orders/{id}`'s answer.
+	 * @param OrderHistoryEntry[] $history `GET /v1/orders/{id}`'s `history`.
+	 * @phpstan-param list<OrderHistoryEntry> $history
 	 */
-	private static function previous_in( array $order ): string {
-		$statuses = array();
-		foreach ( is_array( $order['history'] ?? null ) ? $order['history'] : array() as $entry ) {
-			if ( is_array( $entry ) && is_string( $entry['status'] ?? null ) ) {
-				$statuses[] = $entry['status'];
-			}
-		}
+	private static function previous_in( array $history ): string {
 		// The last entry is the current status; the one before it led there.
-		$count = count( $statuses );
-		return $count > 1 ? $statuses[ $count - 2 ] : '';
+		$count = count( $history );
+		return $count > 1 ? $history[ $count - 2 ]->status : '';
 	}
 
 	/**
@@ -134,19 +155,16 @@ final class OrderStatusChanged {
 	 * its history that set it: the move to `shipped`, or a tracking added or
 	 * corrected since.
 	 *
-	 * @param array<string, mixed> $order `GET /v1/orders/{id}`'s answer.
+	 * @param OrderHistoryEntry[] $history `GET /v1/orders/{id}`'s `history`.
+	 * @phpstan-param list<OrderHistoryEntry> $history
 	 * @return int|null Epoch milliseconds; null when the history names no such entry.
 	 */
-	private static function tracking_at_in( array $order ): ?int {
+	private static function tracking_at_in( array $history ): ?int {
 		$at = null;
-		foreach ( is_array( $order['history'] ?? null ) ? $order['history'] : array() as $entry ) {
-			if ( ! is_array( $entry ) || ! is_numeric( $entry['at'] ?? null ) ) {
-				continue;
-			}
-			$type     = $entry['type'] ?? null;
-			$shipment = self::TYPE === $type && OrderStatus::SHIPPED === ( $entry['status'] ?? null );
-			if ( $shipment || OrderTrackingChanged::ADDED === $type || OrderTrackingChanged::CHANGED === $type ) {
-				$at = max( $at ?? 0, (int) $entry['at'] );
+		foreach ( $history as $entry ) {
+			$shipment = self::TYPE === $entry->type && OrderStatus::SHIPPED === $entry->status;
+			if ( $shipment || OrderTrackingChanged::ADDED === $entry->type || OrderTrackingChanged::CHANGED === $entry->type ) {
+				$at = max( $at ?? 0, (int) $entry->at );
 			}
 		}
 		return $at;

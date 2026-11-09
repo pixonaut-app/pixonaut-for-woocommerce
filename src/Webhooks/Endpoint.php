@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Webhooks;
 
 use Closure;
+use Pixonaut\WooCommerce\Api\Answers\WebhookEndpoint;
+use Pixonaut\WooCommerce\Api\Answers\WebhookPing;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Schema;
@@ -182,11 +184,10 @@ final class Endpoint {
 	 */
 	public function ping( StoredConnection $connection ): array {
 		try {
-			$answer    = $this->api->webhooks()->ping( $connection->webhook_id )->raw();
-			$delivered = true === ( $answer['delivered'] ?? null );
-			$result    = array(
-				'delivered' => $delivered,
-				'error'     => ! $delivered && is_string( $answer['error'] ?? null ) ? $answer['error'] : '',
+			$answer = WebhookPing::send( $this->api, $connection->webhook_id );
+			$result = array(
+				'delivered' => $answer->delivered,
+				'error'     => $answer->error ?? '',
 			);
 		} catch ( ApiException $e ) {
 			$result = array(
@@ -242,9 +243,9 @@ final class Endpoint {
 		}
 		try {
 			$endpoint = null;
-			foreach ( $this->api->webhooks()->list() as $listed ) {
+			foreach ( WebhookEndpoint::all( $this->api ) as $listed ) {
 				if ( $listed->id === $id ) {
-					$endpoint = $listed->raw();
+					$endpoint = $listed;
 				}
 			}
 		} catch ( ApiException $e ) {
@@ -253,10 +254,10 @@ final class Endpoint {
 			throw $e;
 		}
 		$this->health[ $id ] = null === $endpoint ? null : array(
-			'active'       => true === ( $endpoint['active'] ?? null ),
-			'failing'      => true === ( $endpoint['failing'] ?? null ),
-			'failed_count' => is_numeric( $endpoint['failedCount'] ?? null ) ? (int) $endpoint['failedCount'] : 0,
-			'url'          => is_string( $endpoint['url'] ?? null ) ? $endpoint['url'] : '',
+			'active'       => $endpoint->active,
+			'failing'      => $endpoint->failing,
+			'failed_count' => (int) $endpoint->failed_count,
+			'url'          => $endpoint->url,
 		);
 		return $this->health[ $id ];
 	}

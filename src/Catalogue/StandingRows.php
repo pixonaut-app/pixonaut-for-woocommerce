@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
@@ -246,7 +247,7 @@ final class StandingRows {
 	 */
 	private function preview( string $design_id, string $side_key ): array {
 		try {
-			$design = $this->pixonaut->designs()->get( $design_id )->raw();
+			$design = Design::get( $this->pixonaut, $design_id );
 		} catch ( ApiException $e ) {
 			$this->logger->warning(
 				sprintf( 'Pixonaut gave no preview of the standing design %s of side "%s": %s', $design_id, $side_key, $e->getMessage() ),
@@ -259,11 +260,11 @@ final class StandingRows {
 			);
 			return array( null, null );
 		}
-		$size     = PrintSize::from_array( $design[ Designs::PRINT_SIZE ] ?? null );
-		$proof_id = $design[ Designs::PROOF_ID ] ?? null;
+		$size     = $design->print_size;
+		$proof_id = $design->proof_id;
 		return array(
-			null === $size ? null : new PrintSize( $size->width_mm, $size->height_mm, PrintSize::label_for( $size->width_mm, $size->height_mm ) ),
-			is_string( $proof_id ) && '' !== $proof_id ? $proof_id : null,
+			null === $size || ! PrintSize::fits( $size->width_mm, $size->height_mm ) ? null : new PrintSize( $size->width_mm, $size->height_mm, PrintSize::label_for( $size->width_mm, $size->height_mm ) ),
+			'' !== $proof_id ? $proof_id : null,
 		);
 	}
 

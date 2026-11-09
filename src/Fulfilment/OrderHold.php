@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
+use Pixonaut\WooCommerce\Api\Answers\OrderHoldTerms;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -47,11 +48,18 @@ final class OrderHold {
 	 * `order.held` or the hold the line stored: the reason only when this
 	 * version knows it, the month's end as a Unix time.
 	 *
-	 * @param mixed $hold `{reason, limit, periodEnd}`, or anything else when the order carries none.
+	 * @param mixed $hold `{reason, limit, periodEnd}`, as an answer or a payload carries it, or anything else when the order carries none.
 	 *
 	 * @return array{reason: string|null, limit: int|null, periodEnd: int|null}
 	 */
 	public static function of( mixed $hold ): array {
+		if ( $hold instanceof OrderHoldTerms ) {
+			$hold = array(
+				'reason'    => $hold->reason,
+				'limit'     => $hold->limit,
+				'periodEnd' => $hold->period_end,
+			);
+		}
 		$hold   = is_array( $hold ) ? $hold : array();
 		$reason = $hold['reason'] ?? null;
 		$end    = $hold['periodEnd'] ?? null;
@@ -101,10 +109,10 @@ final class OrderHold {
 	 *
 	 * @param WC_Order_Item_Product $item     The line.
 	 * @param string                $order_id The held order; a line holding another order since is left alone.
-	 * @param mixed                 $hold     The order's `hold`.
+	 * @param OrderHoldTerms|null   $hold     The order's `hold`.
 	 * @throws RuntimeException When the line kept changing for MAX_ATTEMPTS tries.
 	 */
-	public static function keep( WC_Order_Item_Product $item, string $order_id, mixed $hold ): void {
+	public static function keep( WC_Order_Item_Product $item, string $order_id, ?OrderHoldTerms $hold ): void {
 		for ( $attempt = 0; $attempt < self::MAX_ATTEMPTS; $attempt++ ) {
 			$line = LineState::of( $item );
 			if ( $line->ref( LineState::REF_ORDER_ID ) !== $order_id || OrderStatus::HELD !== $line->ref( LineState::REF_ORDER_STATUS ) || ! self::store( $line, $hold ) ) {

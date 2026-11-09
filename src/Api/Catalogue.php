@@ -11,6 +11,9 @@ namespace Pixonaut\WooCommerce\Api;
 
 // phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
 
+use Pixonaut\WooCommerce\Api\Answers\PrintSizeVerdict;
+use Pixonaut\WooCommerce\Api\Answers\PrintSizeVerdicts;
+use Pixonaut\WooCommerce\Api\Answers\Read;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesPrintSizeValidateRequestOption2;
@@ -365,7 +368,7 @@ final class Catalogue {
 	 * @param string|null $placement_id One of its placements; null without a blank.
 	 * @phpstan-param non-empty-list<PrintSize> $sizes
 	 *
-	 * @return list<array<string, mixed>> One verdict per size, in order: `{legal: true}` or `{legal: false, reason}`.
+	 * @return list<PrintSizeVerdict> One verdict per size, in order.
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
@@ -379,7 +382,7 @@ final class Catalogue {
 			blankId: $on_blank ? $blank_id : null,
 			placementId: $on_blank ? $placement_id : null,
 		);
-		$verdicts = self::rows( 'templates.printSize.validate', $this->pixonaut->templates()->validatePrintSize( $template_id, $body )->raw(), 'verdicts' );
+		$verdicts = Read::answer( $this->pixonaut->call( 'templates.printSize.validate', array( 'id' => $template_id ), body: $body->toArray() ), PrintSizeVerdicts::from_answer( ... ) )->verdicts;
 		if ( count( $verdicts ) !== count( $sizes ) ) {
 			throw self::unexpected( 'templates.printSize.validate' );
 		}

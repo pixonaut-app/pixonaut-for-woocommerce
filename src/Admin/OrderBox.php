@@ -213,7 +213,7 @@ final class OrderBox {
 			'sides'        => $this->sides( $line ),
 			'order_id'     => is_string( $order_id ) ? $order_id : '',
 			'order_url'    => is_string( $order_id ) && '' !== $order_id ? StudioPage::url( StudioPage::ORDERS, $order_id ) : '',
-			'order_status' => is_string( $order['status'] ?? null ) ? $order['status'] : '',
+			'order_status' => $order?->order->status ?? '',
 			'made_by'      => AdoptedOrder::label( $line ),
 			'delivery'     => self::delivery_label( $line ),
 			// The order's recipient was erased in Pixonaut: after the retention period, or on a request.

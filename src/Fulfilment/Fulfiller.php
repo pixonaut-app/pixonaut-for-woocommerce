@@ -12,6 +12,10 @@ namespace Pixonaut\WooCommerce\Fulfilment;
 // phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
 
 use Closure;
+use Pixonaut\WooCommerce\Api\Answers\Design;
+use Pixonaut\WooCommerce\Api\Answers\Order;
+use Pixonaut\WooCommerce\Api\Answers\OrderDetail;
+use Pixonaut\WooCommerce\Api\Answers\OrderList;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\Api\StoredRequest;
 use Pixonaut\WooCommerce\Approval\ProofRequest;
@@ -22,7 +26,6 @@ use Pixonaut\WooCommerce\Refs;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersCreateRequest;
-use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersListResponseOrdersItem;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -263,10 +266,10 @@ final class Fulfiller {
 	 * @param string $design_id The design.
 	 * @param int    $revision  The revision the line holds.
 	 *
-	 * @throws ApiException When Pixonaut could not be reached.
+	 * @throws ApiException When Pixonaut could not be reached, or answered without a field the store reads.
 	 */
 	private function approved_at( string $design_id, int $revision ): bool {
-		$design = $this->pixonaut->designs()->get( $design_id );
+		$design = Design::get( $this->pixonaut, $design_id );
 		return self::DESIGN_APPROVED === $design->status && $design->revision === $revision;
 	}
 
@@ -282,17 +285,12 @@ final class Fulfiller {
 	 */
 	private function place_order( LineState $line, WC_Order $order ): void {
 		$external_ref = (string) $line->ref( LineState::REF_EXTERNAL_REF );
-		$order_id     = null;
-		$answer       = array();
 		$sent         = null;
-		$placed       = array_map( static fn ( OrdersListResponseOrdersItem $placed ): array => $placed->raw(), $this->pixonaut->orders()->list( externalRef: $external_ref )->orders );
-		if ( array() !== $placed ) {
-			// An order under the ref without an id stops the run: reading it as no order would place a second one.
-			$order_id = self::string_field( $placed[0], 'id', 'orders.list' );
-			$answer   = $placed[0];
-		}
+		$answer       = OrderList::under( $this->pixonaut, $external_ref )->orders[0] ?? null;
+		// An order under the ref without an id stops the run: reading it as no order would place a second one.
+		$order_id = null === $answer ? null : self::id_of( $answer, 'orders.list' );
 
-		if ( null === $order_id ) {
+		if ( null === $answer ) {
 			if ( LineState::APPROVED === $line->state() && ! $this->still_approved( $line, $order ) ) {
 				return;
 			}
@@ -307,8 +305,8 @@ final class Fulfiller {
 				}
 			}
 			try {
-				$answer   = $this->pixonaut->orders()->sendCreate( $request )->raw();
-				$order_id = self::string_field( $answer, 'id', 'orders.create' );
+				$answer   = Order::create( $this->pixonaut, $request );
+				$order_id = self::id_of( $answer, 'orders.create' );
 			} catch ( ApiException $e ) {
 				if ( ErrorCode::DESIGN_ALREADY_ORDERED !== $e->errorCode ) {
 					throw $e;
@@ -316,18 +314,19 @@ final class Fulfiller {
 				// Nothing was written, so an order again is a new request rather than this one replayed.
 				$line->set_ref( LineState::REF_ORDER_REQUEST, null );
 				$order_id = AdoptedOrder::named_by( $e );
-				$answer   = null === $order_id ? array() : $this->pixonaut->call( 'orders.get', array( 'id' => $order_id ) )->object();
-				if ( null === $order_id || ! AdoptedOrder::takes( $line, $answer ) ) {
+				$adopted  = null === $order_id ? null : OrderDetail::get( $this->pixonaut, $order_id );
+				if ( null === $order_id || null === $adopted || ! AdoptedOrder::takes( $line, $adopted ) ) {
 					$line->save();
 					throw $e;
 				}
-				AdoptedOrder::record( $line, $answer );
+				AdoptedOrder::record( $line, $adopted );
 				$this->adopted_note( $line, $order, $order_id );
+				$answer = $adopted->order;
 				// The refused request sent nothing: the address is the one the automation placed the order with.
 				$sent = AdoptedOrder::address( $answer );
 			}
 		}
-		$status = is_string( $answer['status'] ?? null ) ? $answer['status'] : '';
+		$status = $answer->status;
 		$sent ??= self::sent_address( $line, $order );
 
 		$line->set_ref( LineState::REF_ORDER_ID, $order_id );
@@ -340,7 +339,7 @@ final class Fulfiller {
 			$line->set_ref( LineState::REF_ORDER_STATUS, $status );
 		}
 		// A free workspace past its monthly orders: taken, and sent on once Pixonaut releases it.
-		$held = OrderStatus::HELD === $status && OrderHold::store( $line, $answer['hold'] ?? null );
+		$held = OrderStatus::HELD === $status && OrderHold::store( $line, $answer->hold );
 		if ( ! isset( OrderStatus::LINE_STATES[ $status ] ) ) {
 			$line->set_ref( LineState::REF_ORDER_STATUS, $status );
 			$this->order_not_placed( $line, $order, $status, $answer );
@@ -434,14 +433,14 @@ final class Fulfiller {
 	 * keeps the order id and needs the merchant. A held order is not one of
 	 * these: it is ordered, and goes on once Pixonaut releases it.
 	 *
-	 * @param LineState            $line   An `approved` or `printed` line holding the order id.
-	 * @param WC_Order             $order  The order.
-	 * @param string               $status The order's status.
-	 * @param array<string, mixed> $placed The placed order.
+	 * @param LineState $line   An `approved` or `printed` line holding the order id.
+	 * @param WC_Order  $order  The order.
+	 * @param string    $status The order's status.
+	 * @param Order     $placed The placed order.
 	 */
-	private function order_not_placed( LineState $line, WC_Order $order, string $status, array $placed ): void {
+	private function order_not_placed( LineState $line, WC_Order $order, string $status, Order $placed ): void {
 		if ( OrderStatus::FAILED === $status ) {
-			$error = is_string( $placed['lastError'] ?? null ) ? $placed['lastError'] : '';
+			$error = $placed->last_error ?? '';
 			NeedsAttention::flag(
 				$line,
 				$order,
@@ -532,17 +531,16 @@ final class Fulfiller {
 	}
 
 	/**
-	 * @param array<string, mixed> $answer    A decoded answer.
-	 * @param string               $field     A field that must be a string.
-	 * @param string               $operation The operation that answered.
+	 * @param Order  $answer    An order Pixonaut answered.
+	 * @param string $operation The operation that answered.
 	 *
-	 * @throws ApiException When it is not one.
+	 * @throws ApiException When its id is empty.
 	 */
-	private static function string_field( array $answer, string $field, string $operation ): string {
-		if ( ! is_string( $answer[ $field ] ?? null ) || '' === $answer[ $field ] ) {
-			throw new ApiException( $operation, 0, ApiException::UNEXPECTED_RESPONSE, false, null, null, array( 'missing' => $field ) );
+	private static function id_of( Order $answer, string $operation ): string {
+		if ( '' === $answer->id ) {
+			throw new ApiException( $operation, 0, ApiException::UNEXPECTED_RESPONSE, false, null, null, array( 'missing' => 'id' ) );
 		}
-		return $answer[ $field ];
+		return $answer->id;
 	}
 
 	/**

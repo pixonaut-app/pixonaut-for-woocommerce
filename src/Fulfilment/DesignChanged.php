@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Fulfilment;
 
 use Closure;
-use Pixonaut\WooCommerce\Api\Designs;
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
@@ -106,7 +106,7 @@ final class DesignChanged {
 		}
 		// The event may be older than the design: what counts is its revision now.
 		try {
-			$design = $this->pixonaut->designs()->get( $design_id )->raw();
+			$design = Design::get( $this->pixonaut, $design_id );
 		} catch ( ApiException $e ) {
 			if ( ErrorCode::NOT_FOUND !== $e->errorCode ) {
 				throw $e;
@@ -120,20 +120,16 @@ final class DesignChanged {
 	/**
 	 * Applies what a read of the design answered.
 	 *
-	 * @param LineState[]          $lines     Lines holding the design.
-	 * @param string               $design_id The design.
-	 * @param array<string, mixed> $design    `GET /v1/designs/{id}`'s answer.
+	 * @param LineState[] $lines     Lines holding the design.
+	 * @param string      $design_id The design.
+	 * @param Design      $design    What a read of it answered.
 	 * @phpstan-param list<LineState> $lines
 	 * @throws RuntimeException When a line kept changing.
 	 */
-	public function apply_read( array $lines, string $design_id, array $design ): void {
-		$revision = $design['revision'] ?? null;
-		if ( is_int( $revision ) ) {
-			$this->edited( $lines, $design_id, $revision );
-		}
-		$erased = $design[ Designs::PERSONAL_DATA_ERASED_AT ] ?? null;
-		if ( is_int( $erased ) || is_float( $erased ) ) {
-			$this->erased( $lines, $design_id, (int) $erased );
+	public function apply_read( array $lines, string $design_id, Design $design ): void {
+		$this->edited( $lines, $design_id, $design->revision );
+		if ( null !== $design->personal_data_erased_at ) {
+			$this->erased( $lines, $design_id, (int) $design->personal_data_erased_at );
 		}
 	}
 

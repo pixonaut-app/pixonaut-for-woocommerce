@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
+use Pixonaut\WooCommerce\Api\Answers\OrderTracking;
+
 /**
  * The tracking `order.status_changed` carries when an order ships, and
  * `order.tracking_added` or `order.tracking_changed` when it comes later, as a
@@ -36,6 +38,37 @@ final class Tracking {
 			$kept['url'] = esc_url_raw( $tracking['url'], array( 'http', 'https' ) );
 		}
 		return $kept;
+	}
+
+	/**
+	 * The tracking of an order Pixonaut answered, sanitised for storing.
+	 *
+	 * @param OrderTracking|null $tracking The order's `tracking`.
+	 * @return array{carrier?: string, number: string, url?: string}|null Null when it carries no number.
+	 */
+	public static function from_answer( ?OrderTracking $tracking ): ?array {
+		return self::from_payload( self::as_sent( $tracking ) );
+	}
+
+	/**
+	 * An order's tracking in the shape Pixonaut sends it, as an event's
+	 * payload carries it: a carrier or link it does not know left out.
+	 *
+	 * @param OrderTracking|null $tracking The order's `tracking`.
+	 * @return array{carrier?: string, number: string, url?: string}|null
+	 */
+	public static function as_sent( ?OrderTracking $tracking ): ?array {
+		if ( null === $tracking ) {
+			return null;
+		}
+		$sent = array( 'number' => $tracking->number );
+		if ( null !== $tracking->carrier ) {
+			$sent['carrier'] = $tracking->carrier;
+		}
+		if ( null !== $tracking->url ) {
+			$sent['url'] = $tracking->url;
+		}
+		return $sent;
 	}
 
 	/**

@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Cart;
 
-use Pixonaut\WooCommerce\Api\Designs;
+use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Labels;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
@@ -159,7 +159,7 @@ final class CheckoutCheck {
 	 */
 	private function gone( string $design_id ): ?bool {
 		try {
-			$design = $this->pixonaut->designs()->get( $design_id )->raw();
+			$design = Design::get( $this->pixonaut, $design_id );
 		} catch ( ApiException $error ) {
 			if ( ErrorCode::NOT_FOUND === $error->errorCode ) {
 				return true;
@@ -170,6 +170,6 @@ final class CheckoutCheck {
 			);
 			return null;
 		}
-		return self::STATUS_REJECTED === ( $design['status'] ?? null ) || null !== ( $design[ Designs::PERSONAL_DATA_ERASED_AT ] ?? null );
+		return self::STATUS_REJECTED === $design->status || null !== $design->personal_data_erased_at;
 	}
 }

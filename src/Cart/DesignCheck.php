@@ -9,7 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Cart;
 
-use Pixonaut\WooCommerce\Api\Designs;
+use Pixonaut\WooCommerce\Api\Answers\Design;
+use Pixonaut\WooCommerce\Api\Answers\DesignPrintSize;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\Side;
 
@@ -46,27 +47,26 @@ final class DesignCheck {
 	/**
 	 * What does not match, or null when the design is what the side sells.
 	 *
-	 * @param array<string, mixed> $design   `GET /v1/designs/{id}` answer, as `Designs::get()` reads it.
-	 * @param Side                 $side     The side the design was made for.
-	 * @param string|null          $blank_id The product's blank; null for a template-only product.
+	 * @param Design      $design   The design, as Pixonaut answered it.
+	 * @param Side        $side     The side the design was made for.
+	 * @param string|null $blank_id The product's blank; null for a template-only product.
 	 *
 	 * @return string|null One of the class constants, or null.
 	 */
-	public static function mismatch( array $design, Side $side, ?string $blank_id ): ?string {
-		if ( ( $design[ Designs::TEMPLATE_BASE_ID ] ?? null ) !== $side->template_base_id ) {
+	public static function mismatch( Design $design, Side $side, ?string $blank_id ): ?string {
+		if ( $design->template_base_id !== $side->template_base_id ) {
 			return self::TEMPLATE;
 		}
-		$version = $design[ Designs::TEMPLATE_VERSION ] ?? null;
-		if ( ! is_int( $version ) || ! self::version_accepted( $version, $side ) ) {
+		if ( null === $design->template_version || ! self::version_accepted( $design->template_version, $side ) ) {
 			return self::TEMPLATE_OUTDATED;
 		}
-		if ( ( $design[ Designs::BLANK_ID ] ?? null ) !== $blank_id ) {
+		if ( $design->blank_id !== $blank_id ) {
 			return self::BLANK;
 		}
-		if ( ( $design[ Designs::PLACEMENT_ID ] ?? null ) !== $side->placement_id ) {
+		if ( $design->placement_id !== $side->placement_id ) {
 			return self::PLACEMENT;
 		}
-		if ( ! self::size_on_menu( $design[ Designs::PRINT_SIZE ] ?? null, $side->print_sizes ) ) {
+		if ( ! self::size_on_menu( $design->print_size, $side->print_sizes ) ) {
 			return self::PRINT_SIZE;
 		}
 		return null;
@@ -88,28 +88,26 @@ final class DesignCheck {
 	 * is not, and neither is any size when the menu is empty: a side is saved
 	 * with at least the placement's default size.
 	 *
-	 * @param mixed       $print_size `{widthMm, heightMm}` or null.
-	 * @param PrintSize[] $menu       The sizes the side is sold in.
+	 * @param DesignPrintSize|null $print_size The design's size; null for none.
+	 * @param PrintSize[]          $menu       The sizes the side is sold in.
 	 */
-	public static function size_on_menu( mixed $print_size, array $menu ): bool {
+	public static function size_on_menu( ?DesignPrintSize $print_size, array $menu ): bool {
 		return null !== self::size_index( $print_size, $menu );
 	}
 
 	/**
 	 * Where a printed size is on the side's menu, or null when it is not on it.
 	 *
-	 * @param mixed       $print_size `{widthMm, heightMm}` or null.
-	 * @param PrintSize[] $menu       The sizes the side is sold in.
+	 * @param DesignPrintSize|null $print_size The design's size; null for none.
+	 * @param PrintSize[]          $menu       The sizes the side is sold in.
 	 */
-	public static function size_index( mixed $print_size, array $menu ): ?int {
-		if ( ! is_array( $print_size ) || ! is_numeric( $print_size['widthMm'] ?? null ) || ! is_numeric( $print_size['heightMm'] ?? null ) ) {
+	public static function size_index( ?DesignPrintSize $print_size, array $menu ): ?int {
+		if ( null === $print_size ) {
 			return null;
 		}
-		$width     = (float) $print_size['widthMm'];
-		$height    = (float) $print_size['heightMm'];
 		$tolerance = self::SIZE_TOLERANCE_MM + self::FLOAT_SLACK_MM;
 		foreach ( array_values( $menu ) as $index => $size ) {
-			if ( abs( $size->width_mm - $width ) <= $tolerance && abs( $size->height_mm - $height ) <= $tolerance ) {
+			if ( abs( $size->width_mm - $print_size->width_mm ) <= $tolerance && abs( $size->height_mm - $print_size->height_mm ) <= $tolerance ) {
 				return $index;
 			}
 		}

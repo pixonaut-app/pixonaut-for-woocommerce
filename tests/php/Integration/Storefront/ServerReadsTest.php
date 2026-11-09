@@ -241,6 +241,18 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		);
 	}
 
+	public function test_a_design_answered_without_a_field_the_store_does_not_read_still_gives_its_print_size(): void {
+		$design = self::example( '/v1/designs/{id}' );
+		unset( $design['garmentTone'], $design['canDecide'] );
+		$this->recorder->off_spec( 200, $design );
+
+		$views = $this->reads->correction_views( array( 'front' => array( 'design' => 'des_1' ) ) );
+
+		$this->assertSame( array( 'printSize' ), array_keys( $views['front'] ) );
+		$this->assertSame( 'array', gettype( json_decode( $views['front']['printSize'], true ) ) );
+		$this->assertNotSame( '{}', $views['front']['printSize'] );
+	}
+
 	public function test_a_correction_keeps_its_print_size_when_the_blanks_views_fail(): void {
 		$this->recorder->raw( 200, self::example_json( '/v1/designs/{id}' ), self::JSON );
 		$this->recorder->fail();

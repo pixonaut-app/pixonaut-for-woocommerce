@@ -11,6 +11,10 @@ namespace Pixonaut\WooCommerce\Api;
 
 // phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
 
+use Pixonaut\WooCommerce\Api\Answers\DesignerLink;
+use Pixonaut\WooCommerce\Api\Answers\DesignerLinkWarning;
+use Pixonaut\WooCommerce\Api\Answers\ShareLink;
+use Pixonaut\WooCommerce\Api\Answers\ShareLinkPage;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ShareLinksUpdateRequest;
@@ -68,15 +72,12 @@ final class DesignerLinks {
 	 * @throws ApiException When Pixonaut refused (`print_size_illegal`, `share_link_name_taken`, …) or could not be reached.
 	 */
 	public function create( string $template_base_id, array $body ): array {
-		$link = $this->pixonaut->designerLinks()->create( $template_base_id, TemplatesDesignerLinksCreateRequest::fromArray( $body ) );
+		$link = DesignerLink::create( $this->pixonaut, $template_base_id, TemplatesDesignerLinksCreateRequest::fromArray( $body )->toArray() );
 		if ( '' === $link->url || '' === $link->id ) {
 			throw new ApiException( 'templates.designerLinks.create', 200, ApiException::UNEXPECTED_RESPONSE, false );
 		}
-		$warnings = $link->raw()['warnings'] ?? null;
-		foreach ( is_array( $warnings ) ? $warnings : array() as $warning ) {
-			if ( is_array( $warning ) ) {
-				$this->warn( $template_base_id, $warning );
-			}
+		foreach ( $link->warnings ?? array() as $warning ) {
+			$this->warn( $template_base_id, $warning );
 		}
 		return array(
 			'id'  => $link->id,
@@ -99,10 +100,8 @@ final class DesignerLinks {
 		$this->each(
 			$template_base_id,
 			null,
-			static function ( array $link ) use ( &$ids ): bool {
-				if ( is_string( $link['id'] ?? null ) ) {
-					$ids[] = $link['id'];
-				}
+			static function ( ShareLink $link ) use ( &$ids ): bool {
+				$ids[] = $link->id;
 				return true;
 			}
 		);
@@ -127,11 +126,11 @@ final class DesignerLinks {
 		$this->each(
 			$template_base_id,
 			$id,
-			static function ( array $link ) use ( $id, &$url ): bool {
-				if ( ( $link['id'] ?? null ) !== $id ) {
+			static function ( ShareLink $link ) use ( $id, &$url ): bool {
+				if ( $link->id !== $id ) {
 					return true;
 				}
-				$url = is_string( $link['url'] ?? null ) && '' !== $link['url'] ? $link['url'] : null;
+				$url = '' === $link->url ? null : $link->url;
 				return false;
 			}
 		);
@@ -146,22 +145,24 @@ final class DesignerLinks {
 	 * @param string      $template_base_id The template the links were made for.
 	 * @param string|null $query            Narrows the links to those holding it, such as an id; null for all.
 	 * @param callable    $visit            Given each link; answers whether to read on.
-	 * @phpstan-param callable(array<string, mixed>): bool $visit
+	 * @phpstan-param callable(ShareLink): bool $visit
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function each( string $template_base_id, ?string $query, callable $visit ): void {
 		$page = 1;
 		do {
-			$answer = $this->pixonaut->shareLinks()->list(
-				page: $page,
-				pageSize: self::PAGE_SIZE,
-				subjectId: $template_base_id,
-				kind: self::KIND,
-				createdBy: self::CREATED_BY_CALLER,
-				q: $query,
-			)->raw();
-			$links  = array_values( array_filter( is_array( $answer['links'] ?? null ) ? $answer['links'] : array(), 'is_array' ) );
+			$links = ShareLinkPage::get(
+				$this->pixonaut,
+				array(
+					'page'      => $page,
+					'pageSize'  => self::PAGE_SIZE,
+					'subjectId' => $template_base_id,
+					'kind'      => self::KIND,
+					'createdBy' => self::CREATED_BY_CALLER,
+					'q'         => $query,
+				)
+			)->links;
 			foreach ( $links as $link ) {
 				if ( ! $visit( $link ) ) {
 					return;
@@ -203,19 +204,22 @@ final class DesignerLinks {
 	}
 
 	/**
-	 * @param string       $template_base_id The template the link was made for.
-	 * @param array<mixed> $warning          One of the answer's `warnings`: `code`, and for `sides_over_recommended`, `sides` and `recommended`.
+	 * @param string              $template_base_id The template the link was made for.
+	 * @param DesignerLinkWarning $warning          One of the answer's `warnings`.
 	 */
-	private function warn( string $template_base_id, array $warning ): void {
-		$code = is_string( $warning['code'] ?? null ) ? $warning['code'] : 'unknown';
+	private function warn( string $template_base_id, DesignerLinkWarning $warning ): void {
 		$this->logger->warning(
-			self::SIDES_OVER_RECOMMENDED === $code && is_int( $warning['sides'] ?? null ) && is_int( $warning['recommended'] ?? null )
-				? sprintf( 'Pixonaut made a designer link for template %s with %d sides; its designer is built for at most %d. Give the product fewer sides.', $template_base_id, $warning['sides'], $warning['recommended'] )
-				: sprintf( 'Pixonaut made a designer link for template %s with a warning: %s.', $template_base_id, $code ),
+			self::SIDES_OVER_RECOMMENDED === $warning->code
+				? sprintf( 'Pixonaut made a designer link for template %s with %d sides; its designer is built for at most %d. Give the product fewer sides.', $template_base_id, $warning->sides, $warning->recommended )
+				: sprintf( 'Pixonaut made a designer link for template %s with a warning: %s.', $template_base_id, $warning->code ),
 			array(
 				'operation' => 'templates.designerLinks.create',
 				'template'  => $template_base_id,
-				'warning'   => $warning,
+				'warning'   => array(
+					'code'        => $warning->code,
+					'sides'       => $warning->sides,
+					'recommended' => $warning->recommended,
+				),
 			)
 		);
 	}

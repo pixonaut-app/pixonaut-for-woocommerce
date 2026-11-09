@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Admin;
 
+use Pixonaut\WooCommerce\Api\Answers\ConnectedStore;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Connection\ConnectFailed;
@@ -216,7 +217,7 @@ final class ConnectionScreen {
 		$webhook = null;
 		if ( null !== $stored && null === $paused ) {
 			try {
-				$live = $this->api->connect()->get()->raw();
+				$live = ConnectedStore::get( $this->api );
 				$this->workspace?->remember( $live );
 			} catch ( ApiException $e ) {
 				// A 401 has paused the connection by now; anything else leaves it as it was.
@@ -232,18 +233,18 @@ final class ConnectionScreen {
 			$state   = 'paused';
 			$webhook = null;
 		}
-		$origins   = is_array( $live['allowedOrigins'] ?? null ) ? $live['allowedOrigins'] : ( $stored->allowed_origins ?? array() );
+		$origins   = null !== $live ? $live->allowed_origins : ( $stored->allowed_origins ?? array() );
 		$www       = Connection::www_origin();
 		$connected = 'connected' === $state;
 
 		return array(
 			'state'              => $state,
 			'paused_reason'      => $paused ?? '',
-			'name'               => is_string( $live['name'] ?? null ) ? $live['name'] : ( $stored->integration_key_label ?? '' ),
-			'workspace'          => is_string( $live['tenantName'] ?? null ) ? $live['tenantName'] : ( $stored->tenant_name ?? '' ),
-			'environment'        => is_string( $live['environment'] ?? null ) ? $live['environment'] : ( $stored->environment ?? '' ),
-			'site_url'           => is_string( $live['siteUrl'] ?? null ) ? $live['siteUrl'] : ( $stored->home_url ?? '' ),
-			'origins'            => array_values( array_filter( $origins, 'is_string' ) ),
+			'name'               => $live->name ?? $stored->integration_key_label ?? '',
+			'workspace'          => $live->tenant_name ?? $stored->tenant_name ?? '',
+			'environment'        => $live->environment ?? $stored->environment ?? '',
+			'site_url'           => $live->site_url ?? $stored->home_url ?? '',
+			'origins'            => $origins,
 			'www_origin'         => $connected && null !== $www ? $www : '',
 			'www_allowed'        => null !== $www && in_array( $www, $origins, true ),
 			'www_url'            => $this->action_url( self::ALLOW_WWW_ACTION ),
@@ -255,7 +256,7 @@ final class ConnectionScreen {
 				'url' => $connected || 'unreachable' === $state ? $this->action_url( self::STORE_ACCESS_ACTION ) : '',
 			),
 			'webhook'            => $connected ? $webhook : null,
-			'webhook_reachable'  => ! $connected || false !== ( $live['reachable'] ?? null ),
+			'webhook_reachable'  => ! $connected || false !== $live?->reachable,
 			'last_ping'          => null === $stored || null !== $paused ? null : $this->endpoint->last_ping(),
 			'ping_url'           => $connected ? $this->action_url( self::PING_ACTION ) : '',
 			'can_connect'        => $this->connection->can_connect(),
@@ -366,7 +367,7 @@ final class ConnectionScreen {
 		}
 		$brand = isset( $_POST[ self::BRAND_ARG ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::BRAND_ARG ] ) ) : '';
 		try {
-			$answer = $this->api->connect()->update( new ConnectedStoreUpdateRequest( brandId: '' === $brand ? null : $brand ) )->raw();
+			$answer = ConnectedStore::update( $this->api, new ConnectedStoreUpdateRequest( brandId: '' === $brand ? null : $brand ) );
 		} catch ( ApiException $e ) {
 			$this->back( ErrorCode::BRAND_NOT_FOUND === $e->errorCode ? self::BRAND_NOT_FOUND : self::BRAND_FAILED );
 		}

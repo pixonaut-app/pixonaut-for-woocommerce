@@ -77,6 +77,13 @@ final class FulfillerTest extends TestCase {
 
 	private const CART_REF = 'wc:' . self::SITE . ':cart:4b2e';
 
+	/**
+	 * A free plan's orders a month.
+	 */
+	private const MONTHLY_LIMIT = 25;
+
+	private const PERIOD_END = '2027-01-01T00:00:00Z';
+
 	private const SHIPPING = array(
 		'first_name' => 'Ada',
 		'last_name'  => 'Lovelace',
@@ -878,6 +885,141 @@ final class FulfillerTest extends TestCase {
 		$this->assertSame( 'o_placed', $this->line()->ref( LineState::REF_ORDER_ID ) );
 	}
 
+	public function test_an_order_listed_without_a_field_the_store_does_not_read_is_adopted(): void {
+		$this->store_line( LineState::PRINTED, print_ids: array( self::FRONT => 'p_front' ) );
+		$placed = FulfilmentAnswers::order( 'o_placed', array( 'p_front' ), self::EXTERNAL_REF );
+		unset( $placed['adapter'], $placed['printshopAsPlaced'], $placed['submittedAt'] );
+		$this->transport->off_spec( self::answer( FulfilmentAnswers::orders( array( $placed ) ) ) );
+
+		$this->fulfiller()->fulfil( $this->item() );
+
+		$this->assertSame( 'o_placed', $this->line()->ref( LineState::REF_ORDER_ID ) );
+		$this->assertSame( LineState::ORDERED, $this->line()->state() );
+	}
+
+	public function test_a_design_read_without_a_field_the_store_does_not_read_still_tells_the_approval(): void {
+		$this->store_line( LineState::COMMITTED );
+		$design = self::design( 'approved', self::REVISION );
+		unset( $design['garmentTone'], $design['canDecide'] );
+		$this->transport
+			->json( 409, array( 'error' => 'not_committed' ) )
+			->off_spec( self::answer( $design ) )
+			->json( 200, FulfilmentAnswers::orders( array() ) )
+			->off_spec( self::answer( $design ) )
+			->json( 201, FulfilmentAnswers::order( 'o_1', array( 'p_front' ), self::EXTERNAL_REF ) );
+
+		$this->fulfiller()->fulfil( $this->item() );
+
+		$this->assertSame( LineState::ORDERED, $this->line()->state() );
+	}
+
+	public function test_a_held_order_stores_its_hold_as_before(): void {
+		Functions\when( 'wp_date' )->justReturn( '1 January 2027' );
+		Functions\when( '_n' )->alias( static fn ( string $single, string $plural, int $count ): string => 1 === $count ? $single : $plural );
+		$this->store_line( LineState::PRINTED, print_ids: array( self::FRONT => 'p_front' ) );
+		$this->transport
+			->json( 200, FulfilmentAnswers::orders( array() ) )
+			->json(
+				201,
+				FulfilmentAnswers::order(
+					'o_held',
+					array( 'p_front' ),
+					self::EXTERNAL_REF,
+					array(
+						'status' => 'held',
+						'hold'   => array(
+							'reason'    => 'monthly_order_limit',
+							'limit'     => self::MONTHLY_LIMIT,
+							'periodEnd' => self::PERIOD_END,
+						),
+					)
+				)
+			);
+
+		$this->fulfiller()->fulfil( $this->item() );
+
+		$line = $this->line();
+		$this->assertSame( LineState::ORDERED, $line->state() );
+		$this->assertSame( 'held', $line->ref( LineState::REF_ORDER_STATUS ) );
+		$this->assertSame(
+			array(
+				'reason'    => 'monthly_order_limit',
+				'limit'     => self::MONTHLY_LIMIT,
+				'periodEnd' => strtotime( self::PERIOD_END ),
+			),
+			$line->ref( LineState::REF_HOLD )
+		);
+		$this->assertStringContainsString( 'is held', $this->notes[0] );
+	}
+
+	public function test_an_order_an_automation_placed_is_taken_on_with_its_automation_ref_and_address(): void {
+		$this->store_line( LineState::APPROVED );
+		$recipient = array(
+			'name'  => 'Ada Lovelace',
+			'email' => 'ada@example.org',
+			'phone' => '+46 70 123 45 67',
+		);
+		$address   = array(
+			'company'    => 'Analytical Engines',
+			'line1'      => 'Storgatan 1',
+			'postalCode' => '111 22',
+			'city'       => 'Stockholm',
+			'country'    => 'SE',
+		);
+		$print     = FulfilmentAnswers::order( 'o_auto', array( 'p_front' ), 'automation-ref' )['prints'][0];
+		$read      = FulfilmentAnswers::read_order(
+			'o_auto',
+			'automation-ref',
+			array(
+				'quantity'        => self::QUANTITY,
+				'prints'          => array(
+					array(
+						'designId'       => self::DESIGN,
+						'designRevision' => self::REVISION,
+					) + $print,
+				),
+				'recipient'       => $recipient,
+				'shippingAddress' => $address,
+			)
+		);
+		$this->transport
+			->json( 200, FulfilmentAnswers::orders( array() ) )
+			->json( 200, self::design( 'approved', self::REVISION ) )
+			->json(
+				409,
+				array(
+					'error'    => ErrorCode::DESIGN_ALREADY_ORDERED,
+					'designId' => self::DESIGN,
+					'orderId'  => 'o_auto',
+				)
+			)
+			->json(
+				200,
+				FulfilmentAnswers::placed_by(
+					$read,
+					'automation',
+					array(
+						'id'   => 'au_1',
+						'name' => 'Order approved designs',
+					)
+				)
+			);
+
+		$this->fulfiller()->fulfil( $this->item() );
+
+		$line = $this->line();
+		$this->assertSame( LineState::ORDERED, $line->state() );
+		$this->assertSame( 'o_auto', $line->ref( LineState::REF_ORDER_ID ) );
+		$this->assertSame( 'Order approved designs', $line->ref( LineState::REF_ORDER_AUTOMATION ) );
+		$this->assertSame( 'automation-ref', $line->ref( LineState::REF_ORDER_EXTERNAL_REF ) );
+		$sent = array(
+			'recipient'       => self::sorted( $recipient ),
+			'shippingAddress' => self::sorted( $address ),
+		);
+		$this->assertSame( array( 'address' => hash( 'sha256', (string) json_encode( $sent ) ) ), $line->ref( LineState::REF_DELIVERY ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+		$this->assertStringContainsString( 'as order o_auto', $this->notes[0] );
+	}
+
 	private function fulfiller(): Fulfiller {
 		$client = $this->transport->sdk( ScriptedClient::credentials(), new RecordingLogger() );
 		return new Fulfiller(
@@ -980,6 +1122,22 @@ final class FulfillerTest extends TestCase {
 		$body = json_decode( (string) $this->transport->sent[ $index ]['body'], true );
 		$this->assertIsArray( $body );
 		return $body;
+	}
+
+	/**
+	 * @param array<string, mixed> $body An answer the spec may not declare.
+	 */
+	private static function answer( array $body ): Response {
+		return new Response( 200, array( 'content-type' => 'application/json' ), (string) json_encode( $body ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+	}
+
+	/**
+	 * @param array<string, string> $fields An address part as sent.
+	 * @return array<string, string> Sorted by key, as fingerprints are taken.
+	 */
+	private static function sorted( array $fields ): array {
+		ksort( $fields );
+		return $fields;
 	}
 
 	/**
