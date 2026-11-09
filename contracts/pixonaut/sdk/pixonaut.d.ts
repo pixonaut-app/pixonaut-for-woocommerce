@@ -2424,6 +2424,9 @@ declare interface PlacementBox extends PrintMargins {
     /** Where on the product a print may go, when not the whole rectangle: the
      *  preview is cut to it and draws it as a guide. */
     shape?: PrintAreaShape;
+    /** How far in from the print's edge the product folds, on one that folds
+     *  (a canvas round its frame): drawn over the preview as a guide. */
+    foldMm?: number;
     /** The blank's sizes the template can't be printed at on the pair, by
      *  option value (`"XL"`): a size whose panel is another shape. Absent
      *  for none, and from an api that names none. */

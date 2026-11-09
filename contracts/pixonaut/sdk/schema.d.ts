@@ -30364,6 +30364,8 @@ export interface operations {
                                     bleedMm?: number;
                                     /** @description Print resolution on the row in dots per inch. Omitted, the placement's. */
                                     dpi?: number;
+                                    /** @description How far in from the trim the product folds on the row, in millimetres. Omitted, the placement's. */
+                                    foldMm?: number;
                                     /** @description The tallest print the row takes, in millimetres. */
                                     heightMm: number;
                                     /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
@@ -30391,6 +30393,8 @@ export interface operations {
                                 dpi?: number;
                                 /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                                 fillColour?: string | null;
+                                /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
+                                foldMm?: number;
                                 /** @description Where the placement sits on each product the blank's stock photos show, one record per stock item for every scene of it: the stock item, a garment area of it, and the print's top left and width on it in millimetres. A placement with no record on a scene's stock item draws nothing on that scene. Refused with `placement_garment_area_unknown` when the stock item or the area is unknown, and `placement_garment_outside_area` when it reaches past the area. */
                                 garments?: {
                                     /** @description The key of a garment area of the record's stock item. */
@@ -30425,7 +30429,7 @@ export interface operations {
                                 required?: boolean;
                                 /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 safeAreaMm?: number;
-                                /** @description Where on the product a print may go when that is not the whole rectangle: `dFrac`, SVG path data in fractions of the print area (curves, no arcs), its first subpath the outline and every further one a cut-out, filled even-odd, each subpath closed. Nothing is printed outside the outline or in a cut-out. `cutByPrintShop` true adds the outline and the cut-outs to the print file as its cut line; omitted, the product already has the shape. Null or omitted, the whole rectangle. */
+                                /** @description Where on the product a print may go when that is not the whole rectangle: nothing is printed outside the outline or in a cut-out. Null or omitted, the whole rectangle. */
                                 shape?: {
                                     /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                     cutByPrintShop?: boolean;
@@ -30928,6 +30932,8 @@ export interface operations {
                                 bleedMm?: number;
                                 /** @description Print resolution on the row in dots per inch. Omitted, the placement's. */
                                 dpi?: number;
+                                /** @description How far in from the trim the product folds on the row, in millimetres. Omitted, the placement's. */
+                                foldMm?: number;
                                 /** @description The tallest print the row takes, in millimetres. */
                                 heightMm: number;
                                 /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
@@ -30955,6 +30961,8 @@ export interface operations {
                             dpi?: number;
                             /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                             fillColour?: string | null;
+                            /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
+                            foldMm?: number;
                             /** @description Where the placement sits on each product the blank's stock photos show, one record per stock item for every scene of it: the stock item, a garment area of it, and the print's top left and width on it in millimetres. A placement with no record on a scene's stock item draws nothing on that scene. Refused with `placement_garment_area_unknown` when the stock item or the area is unknown, and `placement_garment_outside_area` when it reaches past the area. */
                             garments?: {
                                 /** @description The key of a garment area of the record's stock item. */
@@ -30989,7 +30997,7 @@ export interface operations {
                             required?: boolean;
                             /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                             safeAreaMm?: number;
-                            /** @description Where on the product a print may go when that is not the whole rectangle: `dFrac`, SVG path data in fractions of the print area (curves, no arcs), its first subpath the outline and every further one a cut-out, filled even-odd, each subpath closed. Nothing is printed outside the outline or in a cut-out. `cutByPrintShop` true adds the outline and the cut-outs to the print file as its cut line; omitted, the product already has the shape. Null or omitted, the whole rectangle. */
+                            /** @description Where on the product a print may go when that is not the whole rectangle: nothing is printed outside the outline or in a cut-out. Null or omitted, the whole rectangle. */
                             shape?: {
                                 /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                 cutByPrintShop?: boolean;
@@ -49056,6 +49064,8 @@ export interface operations {
                             coverage: string;
                             defaultHeightMm: number;
                             defaultWidthMm: number;
+                            /** @description How far in from the print's edge the product folds on every side, in millimetres, on a placement that folds, such as a canvas round its frame: a live preview draws the fold lines there, the product's front inside them. Absent when it does not fold. */
+                            foldMm?: number;
                             maxHeightMm: number;
                             maxWidthMm: number;
                             placementId: string;
