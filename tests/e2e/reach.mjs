@@ -305,6 +305,7 @@ export const REACH = {
 		'src/Connection/ConnectionStore.php',
 		'src/Connection/Pkce.php',
 		'src/Connection/WorkspaceSettings.php',
+		'src/Connection/PrintFileForm.php',
 		'src/Webhooks/Endpoint.php',
 	],
 	'designer-pixel.spec.ts': [
@@ -316,6 +317,13 @@ export const REACH = {
 		'templates/storefront/form.php',
 		'assets/src/storefront/shop-parts.ts',
 		'assets/src/storefront/lent-parts.ts',
+	],
+	'designer-unavailable.spec.ts': [
+		'src/Storefront/Storefront.php',
+		'templates/storefront/preview.php',
+		'assets/src/storefront/designer.ts',
+		'assets/src/storefront/shop-parts.ts',
+		'assets/src/storefront/storefront.css',
 	],
 	'developer-tools.spec.ts': [
 		'src/Admin/DeveloperTools.php',
@@ -644,6 +652,11 @@ export const REACH = {
 		'src/Admin/InvalidProductNotice.php',
 		'src/Cart/CartCleanup.php',
 		'src/Cart/DesignBasis.php',
+		'src/Cart/CartTemplateRenames.php',
+		'src/Catalogue/TemplateRename.php',
+		'src/Catalogue/TemplateRenames.php',
+		'src/Catalogue/NotLiveProducts.php',
+		'src/Storefront/UnavailableProduct.php',
 	],
 	'template-only.spec.ts': [
 		'src/Catalogue/PrintSize.php',
@@ -667,6 +680,12 @@ export const REACH = {
 		'templates/storefront/preview.php',
 		'assets/src/storefront/storefront.css',
 		'assets/src/storefront/theme-look.ts',
+	],
+	'value-sizes.spec.ts': [
+		'src/Catalogue/ValueSizes.php',
+		'src/Catalogue/VariationSizes.php',
+		'templates/admin/product-side.php',
+		'assets/src/admin/value-sizes.ts',
 	],
 	'variation-override.spec.ts': [
 		'src/Admin/VariationPanel.php',
