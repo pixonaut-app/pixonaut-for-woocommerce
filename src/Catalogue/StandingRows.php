@@ -78,11 +78,11 @@ final class StandingRows {
 		$blank     = $this->catalogue->blank( $blank_id );
 		$named     = self::strings( $blank['areasVaryBy'] ?? null );
 		$varies_by = array() === $named ? $varies_by : $named;
-		$areas     = self::areas( $blank, $side->placement_id );
+		$areas     = PrintAreas::areas( $blank, $side->placement_id );
 
 		$rows    = array();
 		$misfits = array();
-		foreach ( self::rows( $this->catalogue->variants( $blank_id ), $varies_by ) as $found ) {
+		foreach ( PrintAreas::rows( $this->catalogue->variants( $blank_id ), $varies_by ) as $found ) {
 			$adjusted = self::adjusted( $known, $found['row'], $blank_id, $side );
 			if ( null !== $adjusted ) {
 				$rows[] = $this->with_preview( $adjusted->with_variants( $found['variants'] ), $side );
@@ -121,7 +121,7 @@ final class StandingRows {
 	 */
 	private function row_design( string $template_id, string $blank_id, Side $side, array $areas, array $values, array $variants, array $known = array() ): StandingRow {
 		$size                       = $side->standing_size();
-		$sized                      = null !== $size && self::fits( $size, self::area_of( $areas, $values ) ) ? $size : null;
+		$sized                      = null !== $size && PrintAreas::fits( $size, PrintAreas::area_of( $areas, $values ) ) ? $size : null;
 		$design_id                  = $this->designs->standing( $template_id, $blank_id, $side->placement_id, $sized, $values );
 		list( $printed, $proof_id ) = self::known_preview( $known, $design_id ) ?? $this->preview( $design_id, $side->key );
 		return new StandingRow( $values, $design_id, $variants, null === $sized && null !== $size, $printed, $proof_id );
@@ -194,7 +194,7 @@ final class StandingRows {
 	 * @throws ApiException When Pixonaut could not be read, or refused a row's design.
 	 */
 	public function reset( string $template_id, string $blank_id, Side $side, StandingRow $reset ): array {
-		$areas = self::areas( $this->catalogue->blank( $blank_id ), $side->placement_id );
+		$areas = PrintAreas::areas( $this->catalogue->blank( $blank_id ), $side->placement_id );
 		$rows  = array();
 		foreach ( $side->standing_rows as $row ) {
 			$rows[] = $row->design_id === $reset->design_id ? $this->row_design( $template_id, $blank_id, $side, $areas, $row->row, $row->variants ) : $row;
@@ -266,101 +266,6 @@ final class StandingRows {
 			null === $size || ! PrintSize::fits( $size->width_mm, $size->height_mm ) ? null : new PrintSize( $size->width_mm, $size->height_mm, PrintSize::label_for( $size->width_mm, $size->height_mm ) ),
 			'' !== $proof_id ? $proof_id : null,
 		);
-	}
-
-	/**
-	 * The rows the blank sells: each distinct set of values the variants
-	 * still sold have for the options the print areas change with, with the
-	 * refs of those variants. A variant lacking one of the options is in no
-	 * row.
-	 *
-	 * @param array[]  $variants  `GET /v1/blanks/{id}/variants` as written.
-	 * @param string[] $varies_by The options the print areas change with.
-	 * @phpstan-param list<array<string, mixed>> $variants
-	 * @phpstan-param list<string> $varies_by
-	 * @return list<array{row: array<string, string>, variants: list<string>}>
-	 */
-	private static function rows( array $variants, array $varies_by ): array {
-		$rows = array();
-		foreach ( $variants as $variant ) {
-			$ref     = $variant['ref'] ?? null;
-			$options = is_array( $variant['options'] ?? null ) ? $variant['options'] : array();
-			if ( ! is_string( $ref ) || '' === $ref || null !== ( $variant['retired'] ?? null ) ) {
-				continue;
-			}
-			$row = array();
-			foreach ( $varies_by as $option ) {
-				if ( ! is_string( $options[ $option ] ?? null ) ) {
-					continue 2;
-				}
-				$row[ $option ] = $options[ $option ];
-			}
-			$key = (string) wp_json_encode( $row );
-			if ( ! isset( $rows[ $key ] ) ) {
-				$rows[ $key ] = array(
-					'row'      => $row,
-					'variants' => array(),
-				);
-			}
-			$rows[ $key ]['variants'][] = $ref;
-		}
-		return array_values( $rows );
-	}
-
-	/**
-	 * The placement's print area per row, from `GET /v1/blanks/{id}`.
-	 *
-	 * @param array<string, mixed> $blank        The blank.
-	 * @param string|null          $placement_id The side's placement.
-	 * @return list<array<string, mixed>>
-	 */
-	private static function areas( array $blank, ?string $placement_id ): array {
-		foreach ( is_array( $blank['placements'] ?? null ) ? $blank['placements'] : array() as $placement ) {
-			if ( is_array( $placement ) && ( $placement['id'] ?? null ) === $placement_id && is_array( $placement['areas'] ?? null ) ) {
-				return array_values( array_filter( $placement['areas'], 'is_array' ) );
-			}
-		}
-		return array();
-	}
-
-	/**
-	 * The print area of a row; null when the placement names none for it.
-	 *
-	 * @param list<array<string, mixed>> $areas The placement's areas.
-	 * @param array<string, string>      $row   The row.
-	 * @return array<string, mixed>|null
-	 */
-	private static function area_of( array $areas, array $row ): ?array {
-		foreach ( $areas as $area ) {
-			$named = is_array( $area['row'] ?? null ) ? $area['row'] : array();
-			ksort( $named );
-			$wanted = $row;
-			ksort( $wanted );
-			if ( $named === $wanted ) {
-				return $area;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Whether a size fits inside a row's print area. Without an area of its
-	 * own the row takes the placement's, which the side's sizes were checked
-	 * against.
-	 *
-	 * @param PrintSize                 $size The side's size.
-	 * @param array<string, mixed>|null $area The row's print area.
-	 */
-	private static function fits( PrintSize $size, ?array $area ): bool {
-		if ( null === $area ) {
-			return true;
-		}
-		$width  = $area['widthMm'] ?? null;
-		$height = $area['heightMm'] ?? null;
-		if ( ! is_numeric( $width ) || ! is_numeric( $height ) ) {
-			return true;
-		}
-		return $size->width_mm <= (float) $width && $size->height_mm <= (float) $height;
 	}
 
 	/**

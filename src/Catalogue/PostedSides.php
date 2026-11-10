@@ -231,7 +231,7 @@ final class PostedSides {
 	 *
 	 * @param array<mixed> $row `width`, `height` (millimetres, `.` or `,` as the decimal mark) and `label`.
 	 */
-	private static function custom_size( array $row ): ?PrintSize {
+	public static function custom_size( array $row ): ?PrintSize {
 		$width  = self::millimetres( self::text( $row, 'width' ) );
 		$height = self::millimetres( self::text( $row, 'height' ) );
 		if ( null === $width || null === $height || ! PrintSize::fits( $width, $height ) ) {

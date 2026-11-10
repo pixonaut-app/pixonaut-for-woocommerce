@@ -78,6 +78,14 @@ final class PanelFields {
 	public const VARIANT_BLANK = 'variant_blank';
 
 	/**
+	 * A variation's own print size per side (`VariationSizeField`), and its
+	 * marker, posted while the sides were listed.
+	 */
+	public const PRINT_SIZE = 'print_size';
+
+	public const PRINT_SIZE_LISTED = 'print_size_listed';
+
+	/**
 	 * The view and photo a picture is drawn on (`PictureView`), and its
 	 * marker, posted while the views were listed.
 	 */

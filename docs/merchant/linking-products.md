@@ -186,9 +186,9 @@ Products linked before this choice existed start on their first size.
 
 Pixonaut checks every size of a side when you update the product. A size it
 cannot print, because it is larger than the print position or does not match the
-template's shape, is removed from the menu, and the product cannot be bought
-until you update it again; the notice says why. The sizes Pixonaut accepted
-are kept.
+template's shape, stays in the menu as you entered it, and the product cannot
+be bought until you change it and update the product again; the notice says
+why.
 
 When Pixonaut cannot be reached, the product is saved without sizes and
 cannot be bought, but the tab keeps the menu as you entered it, so updating
@@ -323,9 +323,17 @@ size of the blank against the template.
   their variants cannot be bought; the sizes the template fits still sell.
   Stop selling the misfit sizes, for example by removing those variations,
   or choose a template that fits them.
-- On a personalised side, customers' designs at those sizes cannot be
-  printed: choose a template that fits every size, or stop selling those
-  sizes.
+- On a personalised side, the variations of those sizes cannot be bought;
+  the sizes the template fits still sell. Choose a template that fits every
+  size, or stop selling those sizes.
+
+On such a blank, a personalised side sold in the **Placement default** prints
+each variation at its own blank variant's print area: the template's shape
+fitted into the area's usual size, or, where the print covers the whole area
+(a poster printed edge to edge, say), exactly that area. Nothing needs to be
+typed per size: a 30×40 poster prints at 300 × 400 mm and a 50×70 one at
+508 × 711.2 mm. A variation's **Print size** field (see
+[Variations](#variations)) shows the size it prints at.
 
 ### Views
 
@@ -509,6 +517,28 @@ product can be bought while at least one of its variations can.
 Untick the override and save to make the variation follow the product
 again. Its own link is kept, unused and unchecked, so ticking the override
 again restores it, checked again on the next save.
+
+### A variation's own print size
+
+A variation that follows the product can still be printed at a size of its
+own, without overriding the rest of its setup. Under its **Pixonaut**
+section, each personalised side has a **Print size** field:
+
+- *As the product* prints the side as the product's **Pixonaut** tab says,
+  and names the size: on a blank whose print area changes with the size,
+  the variation's blank variant's area.
+- *Custom size for this variation* takes a width and a height in
+  millimetres, and the label customers see. Only that size is sold for the
+  variation; its blank, sides, templates and settings follow the product.
+
+Click **Save changes** (or update the product). Pixonaut checks the size
+against the variation's blank variant: a size larger than the variant's
+print area, other than the whole area where the print covers it, or off the
+template's shape, stays in the field as you entered it, with why under it,
+and the variation cannot be bought until you change it. Updating the
+product, or picking another blank variant, checks the size again. A
+variation that overrides its whole setup sets its sizes in its own fields
+instead, and its own size is dropped.
 
 ## Product images
 

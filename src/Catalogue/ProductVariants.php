@@ -64,7 +64,15 @@ final class ProductVariants {
 		private readonly Catalogue $catalogue,
 		private readonly VariantNotice $notice,
 	) {
+		$this->sizes = new VariationSizes( $catalogue );
 	}
+
+	/**
+	 * Judges the sizes variations have of their own again once their variant is resolved.
+	 *
+	 * @var VariationSizes
+	 */
+	private readonly VariationSizes $sizes;
 
 	/**
 	 * The blank's variants, retired ones included, named in the site's
@@ -127,7 +135,8 @@ final class ProductVariants {
 	/**
 	 * Resolves the variant of a product, of each variation of a variable
 	 * product, or of one variation, as stored now, and notes the product.
-	 * One not personalised on a blank has none.
+	 * One not personalised on a blank has none. A variation's own print
+	 * sizes are judged again for what it now sells.
 	 *
 	 * @param WC_Product $product A product or variation.
 	 * @throws ApiException When a blank's variants could not be read; what is stored is kept.
@@ -142,6 +151,8 @@ final class ProductVariants {
 		try {
 			foreach ( $sold as $one ) {
 				$this->resolve( $one );
+				// Its variant, or what its product sells, may have changed what an own size is judged for.
+				$this->sizes->rejudge( $one );
 			}
 		} finally {
 			$this->note( $product );
@@ -166,6 +177,7 @@ final class ProductVariants {
 			( new ProductVariant( $config->blank_id, $pick ) )->save_to( $product );
 		}
 		$this->resolve( $product );
+		$this->sizes->rejudge( $product );
 	}
 
 	/**
