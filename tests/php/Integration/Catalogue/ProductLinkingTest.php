@@ -941,7 +941,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$response = $this->get(
 			BlankFields::ROUTE,
 			array(
-				'product' => $product->get_id(),
+				'product' => (string) $product->get_id(),
 				'blank'   => self::BLANK_ID,
 			)
 		);
@@ -962,7 +962,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$response = $this->get(
 			BlankFields::ROUTE,
 			array(
-				'product' => $product->get_id(),
+				'product' => (string) $product->get_id(),
 				'blank'   => self::BLANK_ID,
 			)
 		);
