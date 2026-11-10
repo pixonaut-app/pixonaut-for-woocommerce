@@ -50,6 +50,16 @@
 	min-width: 0;
 }
 
+/* The theme's menu, which a theme may hold to part of its cell. */
+.pixonaut-form table.pixonaut-attribute td > select {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's width for the menu must not keep it off the whole row. */
+	width: 100% !important;
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's width for the menu must not keep it off the whole row. */
+	max-width: none !important;
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's width for the menu must not keep it off the whole row. */
+	margin-inline: 0 !important;
+}
+
 .pixonaut-form table.pixonaut-attribute td > .reset_variations {
 	/* biome-ignore lint/complexity/noImportantStyles: a theme's table layout must not move the row's parts. */
 	grid-area: 1 / 2 !important;

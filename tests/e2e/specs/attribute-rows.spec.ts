@@ -187,6 +187,11 @@ for (const viewport of [DESKTOP, PHONE]) {
 		const all = await box(row);
 		const field = await box(select);
 		expect(Math.abs(field.y - all.y)).toBeLessThanOrEqual(SAME_PLACE_PX);
+		// The menu takes the whole row, whatever width the theme gives it.
+		expect(Math.abs(field.x - all.x)).toBeLessThanOrEqual(SAME_PLACE_PX);
+		expect(
+			Math.abs(field.x + field.width - (all.x + all.width)),
+		).toBeLessThanOrEqual(SAME_PLACE_PX);
 		expect(
 			Math.abs(field.y + field.height - (all.y + all.height)),
 		).toBeLessThanOrEqual(SAME_PLACE_PX);
