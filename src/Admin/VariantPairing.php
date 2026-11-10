@@ -86,9 +86,9 @@ final class VariantPairing {
 		$choices = array();
 		foreach ( $variants as $variant ) {
 			$choices[ $variant->ref ] = null === $variant->retired
-				? $variant->label()
+				? self::label( $variant )
 				/* translators: %s: the variant's options, e.g. "Color: Red, Size: M". */
-				: sprintf( __( '%s (retired)', 'pixonaut-for-woocommerce' ), $variant->label() );
+				: sprintf( __( '%s (retired)', 'pixonaut-for-woocommerce' ), self::label( $variant ) );
 		}
 		$placement = $config->sides[0]->placement_id ?? null;
 		$areas     = null === $placement ? array() : $this->blank->variant_areas( $blank_id, $placement, $variants );
@@ -146,6 +146,16 @@ final class VariantPairing {
 	}
 
 	/**
+	 * A variant as a row lists it: under a column naming whose variants
+	 * they are, a variant of one option is its value alone, `28x40" / 70x100cm`.
+	 *
+	 * @param BlankVariant $variant The variant.
+	 */
+	private static function label( BlankVariant $variant ): string {
+		return 1 === count( $variant->options ) ? implode( '', $variant->options ) : $variant->label();
+	}
+
+	/**
 	 * One variation's row.
 	 *
 	 * @param WC_Product_Variation                              $variation   The variation.
@@ -168,11 +178,12 @@ final class VariantPairing {
 		$area = null === $stored->ref ? null : ( $areas[ $stored->ref ] ?? null );
 		return array(
 			'id'       => $variation->get_id(),
-			'name'     => wc_get_formatted_variation( $variation, true, false, false ),
+			'name'     => wc_get_formatted_variation( $variation, true, true, false ),
 			'url'      => '#variable_product_options',
 			'picked'   => $stored->pick ?? VariantField::MATCH_BY_OPTIONS,
 			'matched'  => null === $stored->pick && null !== $stored->ref
-				? VariantField::found_label( $integration, $stored->label )
+				/* translators: %s: the variant found from the variation's attributes, such as "28x40\" / 70x100cm". Option in the variant pairing table of the product edit page. */
+				? sprintf( __( '%s (found automatically)', 'pixonaut-for-woocommerce' ), $choices[ $stored->ref ] ?? $stored->label )
 				: __( 'Find automatically', 'pixonaut-for-woocommerce' ),
 			'choices'  => $choices,
 			'unpaired' => null === $stored->ref,

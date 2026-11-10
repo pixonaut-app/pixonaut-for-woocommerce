@@ -200,8 +200,8 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 
 		$this->assertStringContainsString( '2 of 3 variations are paired with a Gelato variant.', $html );
 		$this->assertMatchesRegularExpression( '/is-unpaired" data-variation="' . $by['A2'] . '".*No Gelato variant found: pick one\..*None until paired/s', $html, 'listed first, saying so' );
-		$this->assertMatchesRegularExpression( '/<option value="v_30x40"\s*>Size: 30x40cm \/ 12x16&quot;<\/option>/', $html, 'offering the variants' );
-		$this->assertStringContainsString( 'Gelato variant: Size: 28x40&quot; / 70x100cm (found automatically)', $html );
+		$this->assertMatchesRegularExpression( '/<option value="v_30x40"\s*>30x40cm \/ 12x16&quot;<\/option>/', $html, 'offering the variants' );
+		$this->assertStringContainsString( '28x40&quot; / 70x100cm (found automatically)', $html );
 		$this->assertStringContainsString( '700 × 1000 mm', $html, 'each at its variant\'s print area' );
 		$this->assertStringContainsString( '500 × 700 mm', $html );
 
