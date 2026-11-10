@@ -66,10 +66,42 @@ export function readSwatchLooks(container: HTMLElement): SwatchLooks {
 	}
 }
 
+/** The pictures that failed to load on this page, by link: a value whose
+ *  picture is one of them is drawn as its name. */
+const failedPictures = new Set<string>();
+
+/** A value's look in `looks`, by the value its field posts; undefined for a
+ *  value with none, or with anything but a look. Only the attribute's own
+ *  entries count: a value such as `constructor` is not the prototype's. */
+export function lookOf(
+	looks: AttributeLooks | undefined,
+	value: string,
+): SwatchLook | undefined {
+	if (looks === undefined || !Object.hasOwn(looks.looks, value)) {
+		return undefined;
+	}
+	const look: unknown = looks.looks[value];
+	if (typeof look !== 'object' || look === null) {
+		return undefined;
+	}
+	const { kind } = look as { kind?: unknown };
+	if (kind === 'image' && typeof (look as { url?: unknown }).url === 'string') {
+		return look as SwatchLook;
+	}
+	if (
+		kind === 'fill' &&
+		Array.isArray((look as { colours?: unknown }).colours)
+	) {
+		return look as SwatchLook;
+	}
+	return undefined;
+}
+
 /**
  * Fills `swatch` with a value's words, and its look when it has one: the
  * look before the name, or the look alone with the name as its accessible
- * name and tooltip.
+ * name and tooltip. A picture that fails to load gives way to the name, on
+ * this redraw and every later one.
  */
 export function drawSwatchFace(
 	swatch: HTMLElement,
@@ -78,6 +110,13 @@ export function drawSwatchFace(
 	names: boolean,
 ): void {
 	const face = look === undefined ? null : lookPart(swatch, look);
+	const image = face?.querySelector('img');
+	if (image != null && look?.kind === 'image') {
+		image.onerror = () => {
+			failedPictures.add(image.src);
+			drawSwatchFace(swatch, label, look, names);
+		};
+	}
 	const bare = face !== null && !names;
 	swatch.classList.toggle(LOOK_CLASS, face !== null);
 	swatch.classList.toggle(BARE_CLASS, bare);
@@ -110,7 +149,7 @@ function lookPart(swatch: HTMLElement, look: SwatchLook): HTMLElement | null {
 	const kept = swatch.querySelector<HTMLElement>(`.${LOOK_PART_CLASS}`);
 	if (look.kind === 'image') {
 		const url = safeUrl(look.url, document.baseURI);
-		if (url === null) {
+		if (url === null || failedPictures.has(url)) {
 			return null;
 		}
 		if (kept?.querySelector('img')?.getAttribute('src') === url) {

@@ -139,6 +139,37 @@ describe('swatches drawn in their values’ looks', () => {
 		expect(swatchOf('wooden').textContent).toBe('Wooden');
 	});
 
+	it('draws as its name a value named like an object’s own members', () => {
+		const form = frameForm();
+		const option = form.querySelector(
+			'option[value="none"]',
+		) as HTMLOptionElement;
+		option.value = 'constructor';
+
+		drawAttributeSwatches(
+			form,
+			JSON.parse(JSON.stringify(looks(false))) as SwatchLooks,
+		);
+
+		expect(swatchOf('constructor').textContent).toBe('No frame');
+		expect(lookOf('wooden')).not.toBeNull();
+		swatchOf('constructor').click();
+		expect(swatchOf('constructor').getAttribute('aria-checked')).toBe('true');
+	});
+
+	it('draws a value as its name once its picture fails to load, and keeps it so', () => {
+		drawAttributeSwatches(frameForm(), looks(false));
+
+		lookOf('oak')?.querySelector('img')?.dispatchEvent(new Event('error'));
+
+		expect(lookOf('oak')).toBeNull();
+		expect(swatchOf('oak').textContent).toBe('Oak');
+		expect(swatchOf('oak').classList).not.toContain('is-bare');
+		swatchOf('white').click();
+		expect(swatchOf('oak').textContent).toBe('Oak');
+		expect(lookOf('wooden')).not.toBeNull();
+	});
+
 	it('finds a block field’s looks by the attribute it posts', () => {
 		document.body.innerHTML = `
 			<form>

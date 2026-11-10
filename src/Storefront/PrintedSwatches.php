@@ -102,7 +102,7 @@ final class PrintedSwatches {
 			if ( is_array( $item ) && is_scalar( $item['value'] ?? null ) && is_string( $item['label'] ?? null ) ) {
 				$choices[ (string) $item['value'] ] = $item['label'];
 				$chosen                             = true === ( $item['selected'] ?? null ) ? (string) $item['value'] : $chosen;
-				$ids[]                              = is_string( $item['id'] ?? null ) ? $item['id'] : '';
+				$ids[ (string) $item['value'] ]     = is_string( $item['id'] ?? null ) ? $item['id'] : '';
 			}
 		}
 		return $content . self::swatches( $choices, $chosen, self::block_looks( $this->looks->of( $designer ), $ids ) );
@@ -168,19 +168,26 @@ final class PrintedSwatches {
 
 	/**
 	 * The looks of the attribute a block field's items are of: the block
-	 * form names each item `<field slug>-<value slug>`.
+	 * form names each item `<field slug>-<value slug>`. Every item's id must
+	 * be the field's, as one field's name can begin another's (`frame` and
+	 * `frame-colour`).
 	 *
 	 * @param array<string, AttributeLooks> $looks The product's looks, by field.
-	 * @param string[]                      $ids   The items' ids.
-	 * @phpstan-param list<string> $ids
+	 * @param array<string, string>         $ids   The items' ids, by value.
 	 * @return AttributeLooks|null
 	 */
 	private static function block_looks( array $looks, array $ids ): ?array {
+		if ( array() === $ids ) {
+			return null;
+		}
 		foreach ( $looks as $field => $attribute ) {
 			$prefix = sanitize_title( $field ) . '-';
-			if ( array() !== $ids && array() === array_filter( $ids, static fn ( string $id ): bool => ! str_starts_with( $id, $prefix ) ) ) {
-				return $attribute;
+			foreach ( $ids as $value => $id ) {
+				if ( $prefix . sanitize_title( (string) $value ) !== $id ) {
+					continue 2;
+				}
 			}
+			return $attribute;
 		}
 		return null;
 	}

@@ -15,6 +15,7 @@
 import {
 	type AttributeLooks,
 	drawSwatchFace,
+	lookOf,
 	type SwatchLooks,
 	showChosenName,
 } from './swatch-looks';
@@ -399,7 +400,7 @@ function drawSwatches(
 		drawSwatchFace(
 			swatch,
 			choice.label,
-			looks?.looks[choice.value],
+			lookOf(looks, choice.value),
 			looks?.names ?? true,
 		);
 		if (choice.available) {

@@ -9,6 +9,8 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
 use Pixonaut\WooCommerce\Admin\SwatchNamesField;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
+use ReflectionMethod;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\SwatchLooks;
 use Pixonaut\WooCommerce\Storefront\SwatchNames;
@@ -36,7 +38,7 @@ final class SwatchLooksTest extends WP_UnitTestCase {
 		$frame          = wc_create_attribute( array( 'name' => self::FRAME ) );
 		$this->assertIsInt( $frame );
 		$this->frame = $frame;
-		$taxonomy = wc_attribute_taxonomy_name( self::FRAME );
+		$taxonomy    = wc_attribute_taxonomy_name( self::FRAME );
 		register_taxonomy( $taxonomy, array( 'product', 'product_variation' ) );
 		// What WooCommerce holds for an attribute from `init` on.
 		$GLOBALS['wc_product_attributes'][ $taxonomy ] = current( wp_list_filter( wc_get_attribute_taxonomies(), array( 'attribute_id' => $this->frame ) ) );
@@ -187,6 +189,27 @@ final class SwatchLooksTest extends WP_UnitTestCase {
 		SwatchNames::set_choice( $this->frame, SwatchNames::SHOW );
 		wc_delete_attribute( $this->frame );
 		$this->assertFalse( get_option( SwatchNames::OPTION ) );
+	}
+
+	public function test_a_block_field_takes_the_looks_of_its_own_attribute_not_one_its_name_begins_with(): void {
+		$frame  = array(
+			'names' => true,
+			'looks' => array(),
+		);
+		$colour = array(
+			'names' => false,
+			'looks' => array(),
+		);
+		$looks  = new ReflectionMethod( PrintedSwatches::class, 'block_looks' );
+		$looks->setAccessible( true );
+		$by_field = array(
+			'attribute_pa_frame'        => $frame,
+			'attribute_pa_frame-colour' => $colour,
+		);
+
+		$this->assertSame( $colour, $looks->invoke( null, $by_field, array( 'black' => 'attribute_pa_frame-colour-black' ) ) );
+		$this->assertSame( $frame, $looks->invoke( null, $by_field, array( 'colour-black' => 'attribute_pa_frame-colour-black' ) ) );
+		$this->assertNull( $looks->invoke( null, $by_field, array( 'oak' => 'attribute_pa_size-oak' ) ) );
 	}
 
 	/**
