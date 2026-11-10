@@ -11,10 +11,19 @@ use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Cart\DesignCheck;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\TemplateRenames;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
+use Pixonaut\WooCommerce\Tests\Unit\FakeOptions;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
 
 final class DesignCheckTest extends TestCase {
+
+	use FakeOptions;
+
+	protected function setUp(): void {
+		parent::setUp();
+		$this->fake_options();
+	}
 
 	private const PREVIOUS_VERSION = 1;
 
@@ -116,6 +125,17 @@ final class DesignCheckTest extends TestCase {
 	}
 
 	public function test_refuses_another_template(): void {
+		$this->assertSame( DesignCheck::TEMPLATE, self::mismatch( array( 'templateBaseId' => 'mug' ) ) );
+	}
+
+	public function test_accepts_a_design_on_the_template_s_new_id_once_the_rename_is_known(): void {
+		$moved = array( 'templateBaseId' => 'mini-tee-pandas' );
+		$this->assertSame( DesignCheck::TEMPLATE, self::mismatch( $moved ) );
+
+		TemplateRenames::record( DesignFixture::TEMPLATE_BASE_ID, 'mini-tee-pandas' );
+
+		$this->assertNull( self::mismatch( $moved ) );
+		$this->assertNull( self::mismatch( array() ), 'A design still naming the old id is the same template.' );
 		$this->assertSame( DesignCheck::TEMPLATE, self::mismatch( array( 'templateBaseId' => 'mug' ) ) );
 	}
 

@@ -13,6 +13,7 @@ use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Answers\DesignPrintSize;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\TemplateRenames;
 
 /**
  * The proof is made in the customer's browser, so its design is checked
@@ -54,7 +55,8 @@ final class DesignCheck {
 	 * @return string|null One of the class constants, or null.
 	 */
 	public static function mismatch( Design $design, Side $side, ?string $blank_id ): ?string {
-		if ( $design->template_base_id !== $side->template_base_id ) {
+		// Pixonaut moves a design to its template's new id; the side may hold the old one until `template.renamed` is handled.
+		if ( ! TemplateRenames::same( $design->template_base_id, $side->template_base_id ) ) {
 			return self::TEMPLATE;
 		}
 		if ( null === $design->template_version || ! self::version_accepted( $design->template_version, $side ) ) {

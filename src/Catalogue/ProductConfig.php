@@ -349,6 +349,18 @@ final class ProductConfig {
 	}
 
 	/**
+	 * A copy whose sides on template `$from` are on `$to`, as Pixonaut
+	 * changed the template's id; this very configuration when none is.
+	 *
+	 * @param string $from The template's old base id.
+	 * @param string $to   Its new base id.
+	 */
+	public function with_template_renamed( string $from, string $to ): self {
+		$sides = array_map( static fn ( Side $side ): Side => $side->with_template_renamed( $from, $to ), $this->sides );
+		return $sides === $this->sides ? $this : $this->with_sides( $sides );
+	}
+
+	/**
 	 * A copy whose form arrangements name an attribute by another slug; this
 	 * very configuration when none names it.
 	 *

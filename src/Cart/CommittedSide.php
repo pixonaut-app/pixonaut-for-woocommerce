@@ -57,6 +57,15 @@ final class CommittedSide {
 	}
 
 	/**
+	 * The side naming its template by another id, as Pixonaut changed it.
+	 *
+	 * @param string $base_id The template's base id now.
+	 */
+	public function on_template( string $base_id ): self {
+		return new self( $this->key, $this->design_id, $this->revision, $base_id, $this->template_version, $this->commit_key, $this->proof_id, $this->fields );
+	}
+
+	/**
 	 * @return array{key: string, designId: string, revision: int, templateBaseId: string, templateVersion: int, commitKey: string, proofId: string|null, fields: list<array{label: string, type: string, value: string}>}
 	 */
 	public function to_array(): array {

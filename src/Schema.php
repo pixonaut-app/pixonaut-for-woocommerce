@@ -343,6 +343,12 @@ final class Schema {
 	const EVENTS_BASELINE_OPTION = 'pixonaut_wc_events_baseline';
 
 	/**
+	 * Option holding the template ids Pixonaut changed, each old base id
+	 * mapped to the one it became (`template.renamed`).
+	 */
+	const TEMPLATE_RENAMES_OPTION = 'pixonaut_wc_template_renames';
+
+	/**
 	 * Action Scheduler group of the plugin's jobs.
 	 */
 	const ACTION_GROUP = 'pixonaut-for-woocommerce';

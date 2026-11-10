@@ -64,6 +64,21 @@ final class StandingRow {
 	}
 
 	/**
+	 * A copy whose adjustment is on template `$to` when it was on `$from`;
+	 * this very row otherwise.
+	 *
+	 * @param string $from The template's old base id.
+	 * @param string $to   Its new base id.
+	 */
+	public function with_template_renamed( string $from, string $to ): self {
+		$adjusted = $this->adjusted?->with_template_renamed( $from, $to );
+		if ( $adjusted === $this->adjusted ) {
+			return $this;
+		}
+		return new self( $this->row, $this->design_id, $this->variants, $this->usual, $this->size, $this->proof_id, $adjusted );
+	}
+
+	/**
 	 * The row's values as the store manager reads them, `XL` or `XL, Tall`.
 	 */
 	public function label(): string {

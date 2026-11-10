@@ -8,6 +8,7 @@ import {
 	WEBHOOK_ROUTE,
 } from '../fixtures';
 import { linkProduct, personaliseIntoCart, runJobs, statuses } from '../orders';
+import { openPixonautTab } from '../products';
 
 /** The template the linked product uses. */
 const TEMPLATE = 'mini-tee';
@@ -183,4 +184,47 @@ test('a paused template takes the product out of the shop; resuming it brings it
 	expect(await storeApiNames(request, name)).toEqual([name]);
 	await expect(customer.locator('.pixonaut-unavailable')).toHaveCount(0);
 	await expect(addToCart(customer)).toBeVisible();
+});
+
+test("a template's changed id moves the product, and the cart line made before still buys", async ({
+	connectedStore: admin,
+	customer,
+	fake,
+	request,
+	baseURL,
+	theme,
+}) => {
+	test.slow();
+	const name = `Renamed tee ${theme} ${Date.now()}`;
+	const newId = `${TEMPLATE}-pandas`;
+	await forgetOtherProducts(request);
+	const permalink = await linkProduct(admin, baseURL, name);
+	const edit = admin.url();
+	await receiveWebhooks(fake);
+	await settle(request);
+	await personaliseIntoCart(customer, permalink);
+
+	await change(fake, 'templates/rename', { template: TEMPLATE, newId });
+	await settle(request);
+
+	const carts = await request.post(restUrl('/pixonaut-e2e/v1/cart'));
+	expect(carts.ok(), 'the tests site has a classic cart').toBe(true);
+	const cart = (await carts.json()).classic as string;
+	await customer.goto(cart);
+	await expect(
+		customer.locator('.woocommerce-cart-form .cart_item', { hasText: name }),
+	).toHaveCount(1);
+
+	// A design made now names the new id, and is added beside it.
+	await personaliseIntoCart(customer, permalink);
+	await customer.goto(cart);
+	await expect(
+		customer.locator('.woocommerce-cart-form .cart_item', { hasText: name }),
+	).toHaveCount(2);
+
+	await admin.goto(edit);
+	await openPixonautTab(admin);
+	await expect(
+		admin.locator('.pixonaut-side .pixonaut-template-studio').first(),
+	).toHaveAttribute('href', new RegExp(`/templates/${newId}$`));
 });

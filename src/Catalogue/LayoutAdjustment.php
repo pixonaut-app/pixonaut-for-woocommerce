@@ -50,6 +50,21 @@ final class LayoutAdjustment {
 	}
 
 	/**
+	 * A copy on template `$to` when it is on `$from`, in the same version;
+	 * this very adjustment otherwise.
+	 *
+	 * @param string $from The template's old base id.
+	 * @param string $to   Its new base id.
+	 */
+	public function with_template_renamed( string $from, string $to ): self {
+		$template = TemplateId::parse( $this->template_id );
+		if ( null === $template || $template->base_id !== $from ) {
+			return $this;
+		}
+		return new self( (string) new TemplateId( $to, $template->version ), $this->blank_id, $this->placement_id, $this->size );
+	}
+
+	/**
 	 * @param mixed $data Stored shape, see to_array().
 	 * @return self|null Null when the data names no template, blank or placement.
 	 */

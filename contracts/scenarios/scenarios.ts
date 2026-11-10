@@ -32,6 +32,17 @@ function eventTypes(session: Session): string[] {
 	);
 }
 
+/** The types among them Pixonaut only delivers to the endpoint, which the
+ *  event stream refuses to be asked for (`Endpoint::WEBHOOK_ONLY_TYPES`). */
+const WEBHOOK_ONLY_TYPES: readonly string[] = ['template.renamed'];
+
+/** The event types the store pulls from the stream (`EventsPull`). */
+function pulledEventTypes(session: Session): string[] {
+	return eventTypes(session).filter(
+		(type) => !WEBHOOK_ONLY_TYPES.includes(type),
+	);
+}
+
 /** Where the studio sends the member back with the code, as the plugin
  *  asks it to. */
 function redirectUriOf(siteUrl: string): string {
@@ -918,7 +929,7 @@ export const SCENARIOS: Scenario[] = [
 		name: 'read the event stream',
 		async run(session) {
 			await session.call('GET /v1/events', {
-				query: { types: eventTypes(session).join(',') },
+				query: { types: pulledEventTypes(session).join(',') },
 			});
 		},
 	},
