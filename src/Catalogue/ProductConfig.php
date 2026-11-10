@@ -907,8 +907,8 @@ final class ProductConfig {
 			'drawAtTemplateRatio' => $this->draw_at_template_ratio,
 			'optionGroups'        => $this->option_groups,
 			'groupNumbers'        => $this->group_numbers,
-			// An object even when empty, so its keys stay attribute ids.
-			'splitListing'        => (object) $this->split_listing,
+			// Encoded as an object, its keys attribute ids; as an empty list when there are none.
+			'splitListing'        => $this->split_listing,
 		);
 	}
 
