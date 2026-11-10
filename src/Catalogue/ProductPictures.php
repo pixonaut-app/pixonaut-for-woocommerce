@@ -185,7 +185,12 @@ final class ProductPictures {
 		$held = $this->lock( $product->get_id() );
 		if ( null === $held ) {
 			// Another job is drawing it from what the product was before; this one runs after it.
+			// That job moves it up once it is done; `LOCK_SECONDS` is for one that never is.
 			PictureQueue::schedule( $product->get_id(), $this->now() + self::LOCK_SECONDS );
+			// It may have been done before this one was scheduled.
+			if ( ! self::locked( $product->get_id() ) ) {
+				PictureQueue::resume( $product->get_id(), $this->now() );
+			}
 			return;
 		}
 		try {
@@ -196,6 +201,7 @@ final class ProductPictures {
 			}
 			$this->claims = array();
 			self::unlock( $product->get_id(), $held );
+			PictureQueue::resume( $product->get_id(), $this->now() );
 		}
 	}
 
@@ -719,6 +725,17 @@ final class ProductPictures {
 		if ( get_option( $option ) === $held ) {
 			delete_option( $option );
 		}
+	}
+
+	/**
+	 * Whether a job holds the product's lock, as stored now.
+	 *
+	 * @param int $product_id The product or variation.
+	 */
+	private static function locked( int $product_id ): bool {
+		$option = self::LOCK_OPTION_PREFIX . $product_id;
+		wp_cache_delete( $option, 'options' );
+		return false !== get_option( $option );
 	}
 
 	public static function generation(): int {

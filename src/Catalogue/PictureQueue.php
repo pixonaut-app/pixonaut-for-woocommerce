@@ -219,6 +219,34 @@ final class PictureQueue {
 	}
 
 	/**
+	 * Moves a drawing of the product that waits for a time, as one does
+	 * while another holds its lock, to start at once: the drawing that held
+	 * the lock is done, and the product may have changed after it read it.
+	 *
+	 * @param int $product_id A product or variation.
+	 * @param int $now        The time, as Unix time.
+	 */
+	public static function resume( int $product_id, int $now ): void {
+		$later = as_get_scheduled_actions(
+			array(
+				'hook'         => ProductPictures::ACTION,
+				'args'         => array( $product_id ),
+				'group'        => ProductPictures::GROUP,
+				'status'       => ActionScheduler_Store::STATUS_PENDING,
+				'date'         => gmdate( 'Y-m-d H:i:s', $now ),
+				'date_compare' => '>',
+				'per_page'     => 1,
+			),
+			'ids'
+		);
+		if ( array() === $later ) {
+			return;
+		}
+		as_unschedule_all_actions( ProductPictures::ACTION, array( $product_id ), ProductPictures::GROUP );
+		self::schedule( $product_id );
+	}
+
+	/**
 	 * Queues each product and variation whose picture is being deleted from
 	 * the media library, so it is drawn again.
 	 *
