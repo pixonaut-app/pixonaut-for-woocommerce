@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-10T19:15:59+00:00\n"
+"POT-Creation-Date: 2026-11-10T21:02:11+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -2132,37 +2132,37 @@ msgid "The blank no longer has this view or photo, so the image is drawn on the 
 msgstr ""
 
 #. translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page.
-#: src/Admin/ShowcaseField.php:270
+#: src/Admin/ShowcaseField.php:271
 #, php-format
 msgid "%s, on the photo of the variant sold"
 msgstr ""
 
 #. translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page.
-#: src/Admin/ShowcaseField.php:274
+#: src/Admin/ShowcaseField.php:275
 msgid "No longer on the blank"
 msgstr ""
 
 #. translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page.
-#: src/Admin/ShowcaseField.php:276
+#: src/Admin/ShowcaseField.php:277
 msgid "The photo chosen before"
 msgstr ""
 
 #. translators: A choice of what a variation's image is drawn on: whatever its product's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:301
+#: src/Admin/ShowcaseField.php:302
 msgid "As the product image"
 msgstr ""
 
-#: src/Admin/ShowcaseField.php:302
+#: src/Admin/ShowcaseField.php:303
 msgid "The view and photo the product image is drawn on, in this variation’s colour where the view has it."
 msgstr ""
 
 #. translators: Accessible name of the choices of what a variation's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:317
+#: src/Admin/ShowcaseField.php:318
 msgid "What the variation image is drawn on"
 msgstr ""
 
 #. translators: 1: a view of the blank product, e.g. "Front"; 2: which of its photos, e.g. 2. Admin product page.
-#: src/Admin/ShowcaseField.php:373
+#: src/Admin/ShowcaseField.php:374
 #, php-format
 msgid "%1$s, photo %2$d"
 msgstr ""
