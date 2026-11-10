@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-10T21:20:12+00:00\n"
+"POT-Creation-Date: 2026-11-10T22:41:00+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -4576,7 +4576,7 @@ msgid "As swatches, like the designer's own choices"
 msgstr ""
 
 #. translators: Heading of the designer's group holding the product's options, such as Size or Colour, on the product page.
-#: src/Storefront/FormGroupsMount.php:199
+#: src/Storefront/FormGroupsMount.php:271
 msgctxt "designer group of the product options"
 msgid "Options"
 msgstr ""
