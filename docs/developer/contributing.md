@@ -182,7 +182,31 @@ TypeScript ones, a change to `package.json`, `composer.json`, their lock files,
 `.wp-env.json` or the wrappers most steps run through (`bin/env.mjs`,
 `bin/php.mjs`, `bin/wp-env*.mjs`, `bin/ci-local.mjs`) runs everything. The conflict marker check runs for any change. Set `CI_LOCAL_BASE` to compare with another
 ref. Use it while working; it never attests. `--dry-run` prints the steps
-either mode would run and runs none.
+either mode would run, and under the e2e step the specs it would run, and
+runs none.
+
+The release zips run for a change to the plugin headers, the readme, the
+translations or the release tooling, and when a shipped file is added,
+removed or renamed; an edit to shipped code alone does not build them, since
+PHPCS and PHPStan already check it against the minimum PHP.
+
+The e2e step runs only the specs the change reaches (`bin/ci-local-e2e.mjs`):
+
+- a spec that changed;
+- every spec that imports a changed e2e helper, directly or through another
+  helper (a change to `tests/e2e/fixtures.ts` runs them all);
+- every spec that `tests/e2e/reach.mjs` lists for a changed source under
+  `src/`, `templates/` or `assets/src/`. The map names, per spec, the sources
+  its assertions are about, not the ones it only passes through; wiring
+  every flow passes through (`Plugin.php`, the API client, the storefront
+  entry) is in its `NO_SPEC` list and selects none;
+- every spec when the change touches `playwright.config.ts`, the e2e
+  mu-plugins or the pinned SDK, or a source the map does not place.
+
+A new source file goes into `tests/e2e/reach.mjs` with the change that adds
+it: the JS unit suite fails while a shipped source is missing from it, and
+until then `--affected` runs every spec for it. The full gate runs every spec
+whatever the map says.
 
 ## Attestation
 

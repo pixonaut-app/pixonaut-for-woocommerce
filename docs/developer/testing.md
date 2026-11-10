@@ -176,6 +176,12 @@ for a personalised product. `POST pixonaut-e2e/v1/customers` creates a
 customer account and answers its `{username, password}`, for `signIn()` in
 `tests/e2e/fixtures.ts`.
 
+Link a product on the product screen (`publishLinkedProduct()` in
+`tests/e2e/products.ts`) only in a test about linking it. A test about what
+happens after, such as the order specs, makes it with
+`createLinkedProduct()` in `tests/e2e/orders.ts`, which stores what the
+screen would: wp-admin's two publishes cost a test about ten seconds.
+
 The tests site keeps every product earlier tests and runs created. A test
 whose work grows with the store's linked products, such as one firing a
 catalogue event that re-checks them, first calls
