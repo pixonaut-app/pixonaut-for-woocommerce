@@ -17,6 +17,10 @@ export function showValueSizes(side: HTMLElement): void {
 		'.pixonaut-value-size-table',
 	)) {
 		table.hidden = table.dataset.attribute !== chosen;
+		// Only the attribute chosen is posted: a form posting every value of every attribute can pass PHP's max_input_vars.
+		for (const input of table.querySelectorAll('input')) {
+			input.disabled = table.hidden;
+		}
 	}
 }
 

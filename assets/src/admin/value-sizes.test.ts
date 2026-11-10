@@ -13,8 +13,8 @@ function side(personalised = true): HTMLElement {
 				<option value="pa_size" selected>Size</option>
 				<option value="colour">Colour</option>
 			</select>
-			<table class="pixonaut-value-size-table" data-attribute="pa_size"></table>
-			<table class="pixonaut-value-size-table" data-attribute="colour" hidden></table>
+			<table class="pixonaut-value-size-table" data-attribute="pa_size"><tbody><tr><td><input name="size" /></td></tr></tbody></table>
+			<table class="pixonaut-value-size-table" data-attribute="colour" hidden><tbody><tr><td><input name="colour" disabled /></td></tr></tbody></table>
 		</div>`;
 	return element;
 }
@@ -37,6 +37,12 @@ describe('value sizes', () => {
 
 		expect(table(element, 'colour')?.hidden).toBe(false);
 		expect(table(element, 'pa_size')?.hidden).toBe(true);
+		expect(table(element, 'colour')?.querySelector('input')?.disabled).toBe(
+			false,
+		);
+		expect(table(element, 'pa_size')?.querySelector('input')?.disabled).toBe(
+			true,
+		);
 	});
 
 	it('shows no values with no attribute chosen', () => {
