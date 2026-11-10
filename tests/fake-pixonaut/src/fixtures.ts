@@ -7,6 +7,7 @@ import { FIXTURE } from './fixture-ids';
 import {
 	type Blank,
 	type BlankNames,
+	CUSTOM_ADAPTER,
 	emptyState,
 	type Photo,
 	type State,
@@ -342,16 +343,18 @@ function defaultSet({
 		state.templates.set(templateId(t.baseId, t.version), t);
 	}
 
-	// The default printshop takes address changes after an order is sent; the other does not.
-	for (const [id, name, isDefault] of [
-		[FIXTURE.printshop.main, 'Fixture Print AB', true],
-		[FIXTURE.printshop.other, 'Other Print AB', false],
+	// The default printshop takes address changes after an order is sent; the
+	// others do not. The integrated one prints only on a blank.
+	for (const [id, name, adapter, isDefault] of [
+		[FIXTURE.printshop.main, 'Fixture Print AB', CUSTOM_ADAPTER, true],
+		[FIXTURE.printshop.other, 'Other Print AB', CUSTOM_ADAPTER, false],
+		[FIXTURE.printshop.integrated, 'Gelato', 'gelato', false],
 	] as const) {
 		state.printshops.set(id, {
 			id,
 			tenantId: tenant.live,
 			name,
-			adapter: 'custom',
+			adapter,
 			active: true,
 			isDefault,
 			acceptsAddressUpdates: isDefault,

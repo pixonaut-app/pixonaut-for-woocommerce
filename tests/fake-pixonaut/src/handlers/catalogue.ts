@@ -4,7 +4,14 @@
 // as Pixonaut answers them. A correction link reads the blank its design was
 // made on, as the designer correcting it draws the design there.
 import { fieldKeysOf, offersProperties } from '../field-keys';
-import type { Blank, Placement, State, TemplateVersion, View } from '../state';
+import {
+	type Blank,
+	CUSTOM_ADAPTER,
+	type Placement,
+	type State,
+	type TemplateVersion,
+	type View,
+} from '../state';
 import { AS_WRITTEN, type BlankNamer, namerFor } from './blank-names';
 import { findDesign } from './designs-store';
 import { imageUrl } from './images';
@@ -664,6 +671,10 @@ export const listPrintshopConnections: Handler = (context) => {
 			adapter: p.adapter,
 			active: p.active,
 			isDefault: p.isDefault,
+			asksOfDesigns: {
+				commitKeys: [],
+				needsBlank: p.adapter !== CUSTOM_ADAPTER,
+			},
 		}));
 	return { status: 200, body: { connections } };
 };

@@ -463,6 +463,15 @@ describe('GET /v1/printshop-connections', () => {
 					adapter: 'custom',
 					active: true,
 					isDefault: true,
+					asksOfDesigns: { commitKeys: [], needsBlank: false },
+				},
+				{
+					id: FIXTURE.printshop.integrated,
+					name: 'Gelato',
+					adapter: 'gelato',
+					active: true,
+					isDefault: false,
+					asksOfDesigns: { commitKeys: [], needsBlank: true },
 				},
 				{
 					id: FIXTURE.printshop.other,
@@ -470,6 +479,7 @@ describe('GET /v1/printshop-connections', () => {
 					adapter: 'custom',
 					active: true,
 					isDefault: false,
+					asksOfDesigns: { commitKeys: [], needsBlank: false },
 				},
 			],
 		});

@@ -57,7 +57,7 @@ export const FIXTURE = {
 		/** No placements yet: nothing to print on. */
 		bare: 'blank_tote',
 	},
-	printshop: { main: 'ps_main', other: 'ps_other' },
+	printshop: { main: 'ps_main', other: 'ps_other', integrated: 'ps_gelato' },
 	placement: { front: 'front', back: 'back' },
 	mockup: {
 		/** The front placement's photo, on every blank with placements. */
