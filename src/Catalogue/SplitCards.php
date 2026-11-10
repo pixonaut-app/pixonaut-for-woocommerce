@@ -70,6 +70,20 @@ final class SplitCards {
 	 */
 	private static array $variations = array();
 
+	/**
+	 * Products' offers, by product id, read once a request.
+	 *
+	 * @var array<int, list<array{attributes: array<string, string>, offered: bool, live: bool}>>
+	 */
+	private static array $offers = array();
+
+	/**
+	 * Cards' link values, by product id and term id, read once a request.
+	 *
+	 * @var array<int, array<int, array<string, string>>>
+	 */
+	private static array $links = array();
+
 	public static function register(): void {
 		add_action( 'woocommerce_after_product_object_save', array( self::class, 'product_saved' ) );
 		add_action( 'trashed_post', array( self::class, 'post_changed' ) );
@@ -136,8 +150,15 @@ final class SplitCards {
 	 * @param mixed $meta_key The meta key.
 	 */
 	public static function config_written( mixed $meta_id, mixed $post_id, mixed $meta_key ): void {
-		if ( ProductConfig::META_KEY === $meta_key && 'product' === get_post_type( (int) $post_id ) ) {
+		if ( ProductConfig::META_KEY !== $meta_key ) {
+			return;
+		}
+		$post_type = get_post_type( (int) $post_id );
+		if ( 'product' === $post_type ) {
 			self::write( (int) $post_id );
+		} elseif ( 'product_variation' === $post_type ) {
+			// Its template decides whether its cards are shown, read once a request.
+			self::forget( (int) wp_get_post_parent_id( (int) $post_id ) );
 		}
 	}
 
@@ -190,7 +211,7 @@ final class SplitCards {
 			return;
 		}
 		try {
-			unset( self::$variations[ $product_id ] );
+			self::forget( $product_id );
 			$product = $product_id > 0 ? wc_get_product( $product_id ) : null;
 			$values  = $product instanceof WC_Product ? self::values( $product ) : array();
 			$stored  = array_map( 'intval', get_post_meta( $product_id, self::META, false ) );
@@ -205,6 +226,15 @@ final class SplitCards {
 			$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock ) );
 		}
 		// phpcs:enable
+	}
+
+	/**
+	 * Forgets what was read of a product's variations this request.
+	 *
+	 * @param int $product_id A product.
+	 */
+	private static function forget( int $product_id ): void {
+		unset( self::$variations[ $product_id ], self::$offers[ $product_id ], self::$links[ $product_id ] );
 	}
 
 	/**
@@ -246,6 +276,18 @@ final class SplitCards {
 	 * @return array<string, string> Values by `attribute_<name>` field.
 	 */
 	public static function link_values( WC_Product $product, int $term_id ): array {
+		self::$links[ $product->get_id() ][ $term_id ] ??= self::read_link_values( $product, $term_id );
+		return self::$links[ $product->get_id() ][ $term_id ];
+	}
+
+	/**
+	 * Works out `link_values()`.
+	 *
+	 * @param WC_Product $product A product.
+	 * @param int        $term_id The card's value.
+	 * @return array<string, string> Values by `attribute_<name>` field.
+	 */
+	private static function read_link_values( WC_Product $product, int $term_id ): array {
 		$attribute = SplitListing::attribute_of( $product );
 		$term      = null === $attribute ? null : get_term( $term_id, $attribute->get_name() );
 		if ( null === $attribute || ! $term instanceof \WP_Term ) {
@@ -309,6 +351,9 @@ final class SplitCards {
 	 * @return list<array{attributes: array<string, string>, offered: bool, live: bool}>
 	 */
 	private static function offers( WC_Product $product ): array {
+		if ( isset( self::$offers[ $product->get_id() ] ) ) {
+			return self::$offers[ $product->get_id() ];
+		}
 		$offers = array();
 		foreach ( ProductConfig::sold_variations( $product ) as list( $variation, $config ) ) {
 			if ( ! $variation instanceof WC_Product_Variation ) {
@@ -320,6 +365,7 @@ final class SplitCards {
 				'live'       => ! NotLiveProducts::not_live( $config ),
 			);
 		}
+		self::$offers[ $product->get_id() ] = $offers;
 		return $offers;
 	}
 
