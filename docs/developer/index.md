@@ -101,6 +101,7 @@ not recorded and it runs again. What it throws decides what the store sees:
 | User meta | `_pixonaut_wc_connect_attempt` | An administrator's connect in progress: the hash of its `state`, its PKCE verifier, its `redirect_uri`, its expiry |
 | Product and variation meta | `_pixonaut_config` | The product's Pixonaut configuration, versioned JSON |
 | Product and variation meta | `_pixonaut_template`, `_pixonaut_blank` | Indexes of the templates (by base id, one row each) and the blank the configuration uses, written with it (`Catalogue\ProductIndex`) |
+| Product meta | `_pixonaut_split_card` | The values a split product is listed by, one row per term id in the product's order of values, which the shop's listings join to show a card each (`Catalogue\SplitCards`, [Listing each value as its own product](../merchant/split-listings/#in-the-shop)) |
 | Product and variation meta | `_pixonaut_variant` | The blank variant it sells: the store manager's pick, the ref resolved, the attribute labels a match was made from, and what Pixonaut last said of it (options, retirement, views with a photo), versioned JSON |
 | Order item meta | `_pixonaut_line` | The line's fulfilment state, the Pixonaut ids, refs and keys it used, and the requests it may send again, versioned JSON |
 | Order item meta | `_pixonaut_order_id` | The line's Pixonaut order id, kept in step with `_pixonaut_line` |
@@ -122,7 +123,11 @@ reads or writes `_pixonaut_line` and its two indexes. A variation uses the produ
 configuration unless its own has "override" set. Its `splitListing` holds the product's own On or Off for listing each value
 of a global attribute as its own product, by attribute id; an attribute it
 does not name follows the attribute's setting, and `Catalogue\SplitListing`
-resolves the one attribute a product is listed by. A configuration written by
+resolves the one attribute a product is listed by. `Catalogue\SplitCards`
+writes the product's `_pixonaut_split_card` rows from it whenever the product,
+a variation, its configuration or the attribute's setting changes, and
+`Storefront\SplitCardListings` joins them to the shop's main product query,
+so the count, pages and sort take each card as a product. A configuration written by
 a newer plugin version reads as invalid, so the product cannot be bought,
 and is never overwritten; on a variation it applies even without "override".
 A line state written by a newer plugin version reads as `needs_attention` and
