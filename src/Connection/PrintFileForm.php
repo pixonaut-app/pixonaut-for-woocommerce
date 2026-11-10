@@ -55,14 +55,10 @@ final class PrintFileForm {
 	);
 
 	/**
-	 * The finest step of a tolerance: hundredths of a millimetre.
+	 * The most decimals a tolerance is shown with: Pixonaut takes any
+	 * number in the limits, and a finer one prints no differently.
 	 */
-	public const TOLERANCE_STEP = 0.01;
-
-	/**
-	 * Decimals of the finest step, for showing a tolerance.
-	 */
-	private const TOLERANCE_DECIMALS = 2;
+	private const MOST_DECIMALS = 6;
 
 	/**
 	 * The forms the store may choose, by value, named for the merchant.
@@ -95,13 +91,22 @@ final class PrintFileForm {
 	 * @param ConnectedStoreTextTolerance $tolerance The tolerance.
 	 */
 	public static function tolerance_name( ConnectedStoreTextTolerance $tolerance ): string {
-		$decimals = self::TOLERANCE_DECIMALS;
-		// Trailing zeros of the finest step say nothing: 1 px, 0.5 mm.
-		while ( $decimals > 0 && round( $tolerance->value, $decimals - 1 ) === round( $tolerance->value, $decimals ) ) {
+		/* translators: 1: a number, 2: its unit, px or mm. A live text tolerance on the connection card, e.g. 0.5 mm. */
+		return sprintf( __( '%1$s %2$s', 'pixonaut-for-woocommerce' ), self::number( $tolerance->value ), $tolerance->unit );
+	}
+
+	/**
+	 * A number with as many decimals as it has, up to MOST_DECIMALS, so a
+	 * tolerance is never shown tighter than it is: 1, 0.5, 0.014.
+	 *
+	 * @param float $number The number.
+	 */
+	private static function number( float $number ): string {
+		$decimals = self::MOST_DECIMALS;
+		while ( $decimals > 0 && round( $number, $decimals - 1 ) === round( $number, $decimals ) ) {
 			--$decimals;
 		}
-		/* translators: 1: a number, 2: its unit, px or mm. A live text tolerance on the connection card, e.g. 0.5 mm. */
-		return sprintf( __( '%1$s %2$s', 'pixonaut-for-woocommerce' ), number_format_i18n( $tolerance->value, $decimals ), $tolerance->unit );
+		return number_format_i18n( $number, $decimals );
 	}
 
 	/**
@@ -111,10 +116,10 @@ final class PrintFileForm {
 		return sprintf(
 			/* translators: 1: least and 2: most device pixels, 3: least and 4: most millimetres a live text tolerance may be. Shown on the connection card. */
 			__( '%1$s to %2$s px, or %3$s to %4$s mm', 'pixonaut-for-woocommerce' ),
-			number_format_i18n( self::TOLERANCE_LIMITS[ self::PX ]['min'] ),
-			number_format_i18n( self::TOLERANCE_LIMITS[ self::PX ]['max'] ),
-			number_format_i18n( self::TOLERANCE_LIMITS[ self::MM ]['min'], self::TOLERANCE_DECIMALS ),
-			number_format_i18n( self::TOLERANCE_LIMITS[ self::MM ]['max'] )
+			self::number( self::TOLERANCE_LIMITS[ self::PX ]['min'] ),
+			self::number( self::TOLERANCE_LIMITS[ self::PX ]['max'] ),
+			self::number( self::TOLERANCE_LIMITS[ self::MM ]['min'] ),
+			self::number( self::TOLERANCE_LIMITS[ self::MM ]['max'] )
 		);
 	}
 
@@ -122,17 +127,21 @@ final class PrintFileForm {
 	 * The change `PATCH /v1/connect` makes for the form posted: a form, or
 	 * empty to follow the workspace's. A tolerance goes with live text
 	 * only; an empty one follows the workspace's, as does any with another
-	 * form, which has no live text.
+	 * form, which has no live text. A form this release does not know is
+	 * one Pixonaut answered as the store's, offered as it is: saving it
+	 * changes nothing, so there is nothing to send.
 	 *
 	 * @param string $form  The form posted.
 	 * @param string $value The tolerance posted, a number or empty.
 	 * @param string $unit  Its unit, `px` or `mm`.
 	 *
-	 * @throws InvalidArgumentException When the form is not one the store may choose, or the tolerance is not a number in its unit's limits.
+	 * @return ConnectedStoreUpdateRequest|null Null when nothing changes.
+	 *
+	 * @throws InvalidArgumentException When the tolerance is not a number in its unit's limits.
 	 */
-	public static function request( string $form, string $value, string $unit ): ConnectedStoreUpdateRequest {
+	public static function request( string $form, string $value, string $unit ): ?ConnectedStoreUpdateRequest {
 		if ( '' !== $form && ! array_key_exists( $form, self::forms() ) ) {
-			throw new InvalidArgumentException( 'Not a print file form.' );
+			return null;
 		}
 		$tolerance = self::LAYERED_LIVE_TEXT === $form ? self::tolerance( $value, $unit ) : null;
 		return new ConnectedStoreUpdateRequest(

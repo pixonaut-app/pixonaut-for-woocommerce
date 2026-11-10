@@ -147,6 +147,7 @@ final class PrintFileFormTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Empty follows the workspace: 1 px.', $html );
 		$this->assertMatchesRegularExpression( '/<tr class="pixonaut-hidden">\s*<th scope="row"><label for="pixonaut-print-file-tolerance">/', $html );
 		$this->assertStringContainsString( 'Save print files', $html );
+		$this->assertMatchesRegularExpression( '/name="print_file_tolerance"[^>]*step="any"/', $html );
 	}
 
 	public function test_the_stores_own_live_text_shows_with_its_tolerance(): void {
@@ -228,6 +229,13 @@ final class PrintFileFormTest extends WP_UnitTestCase {
 		);
 
 		$this->assertStringContainsString( ConnectionScreen::RESULT_ARG . '=' . ConnectionScreen::PRINT_FILE_INVALID, $back );
+		$this->assertSame( array(), $this->recorder->requests );
+	}
+
+	public function test_saving_a_form_this_release_does_not_know_keeps_it_and_sends_nothing(): void {
+		$back = $this->save( array( ConnectionScreen::PRINT_FILE_FORM_ARG => 'engraved' ) );
+
+		$this->assertStringContainsString( ConnectionScreen::RESULT_ARG . '=' . ConnectionScreen::PRINT_FILE_SAVED, $back );
 		$this->assertSame( array(), $this->recorder->requests );
 	}
 

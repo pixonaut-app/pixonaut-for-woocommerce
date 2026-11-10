@@ -169,7 +169,7 @@ final class ConnectionScreen {
 	public const PRINT_FILE_SAVED = 'print_file_saved';
 
 	/**
-	 * The form or the tolerance posted is not one Pixonaut takes, so nothing was sent.
+	 * The tolerance posted is not one Pixonaut takes, so nothing was sent.
 	 */
 	public const PRINT_FILE_INVALID = 'print_file_invalid';
 
@@ -424,6 +424,10 @@ final class ConnectionScreen {
 			$request = PrintFileForm::request( $this->posted( self::PRINT_FILE_FORM_ARG ), $this->posted( self::TOLERANCE_ARG ), $this->posted( self::TOLERANCE_UNIT_ARG ) );
 		} catch ( InvalidArgumentException $e ) {
 			$this->back( self::PRINT_FILE_INVALID );
+		}
+		if ( null === $request ) {
+			// The form Pixonaut answered, which this release does not know, kept as it is.
+			$this->back( self::PRINT_FILE_SAVED );
 		}
 		try {
 			$answer = ConnectedStore::update( $this->api, $request );

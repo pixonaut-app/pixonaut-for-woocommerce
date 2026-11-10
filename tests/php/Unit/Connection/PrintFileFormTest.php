@@ -27,21 +27,21 @@ final class PrintFileFormTest extends TestCase {
 				'printFileForm'          => 'flat',
 				'printFileTextTolerance' => null,
 			),
-			PrintFileForm::request( 'flat', '', 'px' )->toArray()
+			PrintFileForm::request( 'flat', '', 'px' )?->toArray()
 		);
 		$this->assertSame(
 			array(
 				'printFileForm'          => 'layered',
 				'printFileTextTolerance' => null,
 			),
-			PrintFileForm::request( 'layered', '', 'px' )->toArray()
+			PrintFileForm::request( 'layered', '', 'px' )?->toArray()
 		);
 		$this->assertSame(
 			array(
 				'printFileForm'          => null,
 				'printFileTextTolerance' => null,
 			),
-			PrintFileForm::request( '', '', 'px' )->toArray()
+			PrintFileForm::request( '', '', 'px' )?->toArray()
 		);
 	}
 
@@ -54,20 +54,28 @@ final class PrintFileFormTest extends TestCase {
 					'value' => 2.0,
 				),
 			),
-			PrintFileForm::request( 'layered_live_text', '2', 'px' )->toArray()
+			PrintFileForm::request( 'layered_live_text', '2', 'px' )?->toArray()
 		);
 		$this->assertSame(
 			array(
 				'unit'  => 'mm',
 				'value' => 0.25,
 			),
-			PrintFileForm::request( 'layered_live_text', '0,25', 'mm' )->toArray()['printFileTextTolerance']
+			PrintFileForm::request( 'layered_live_text', '0,25', 'mm' )?->toArray()['printFileTextTolerance']
 		);
-		$this->assertNull( PrintFileForm::request( 'layered_live_text', '', 'mm' )->toArray()['printFileTextTolerance'] );
+		$this->assertNull( PrintFileForm::request( 'layered_live_text', '', 'mm' )?->toArray()['printFileTextTolerance'] );
+	}
+
+	public function test_a_finer_tolerance_is_sent_as_it_is(): void {
+		$this->assertSame( 0.015, PrintFileForm::request( 'layered_live_text', '0.015', 'mm' )?->toArray()['printFileTextTolerance']['value'] );
+	}
+
+	public function test_a_form_this_release_does_not_know_changes_nothing(): void {
+		$this->assertNull( PrintFileForm::request( 'engraved', '', 'px' ) );
 	}
 
 	public function test_a_tolerance_goes_with_live_text_only(): void {
-		$this->assertNull( PrintFileForm::request( 'layered', '5', 'px' )->toArray()['printFileTextTolerance'] );
+		$this->assertNull( PrintFileForm::request( 'layered', '5', 'px' )?->toArray()['printFileTextTolerance'] );
 	}
 
 	/**
@@ -75,7 +83,6 @@ final class PrintFileFormTest extends TestCase {
 	 */
 	public static function refused(): array {
 		return array(
-			'unknown form'      => array( 'vector', '', 'px' ),
 			'under a pixel'     => array( 'layered_live_text', '0.5', 'px' ),
 			'over 100 pixels'   => array( 'layered_live_text', '101', 'px' ),
 			'under the mm step' => array( 'layered_live_text', '0.001', 'mm' ),
@@ -104,6 +111,7 @@ final class PrintFileFormTest extends TestCase {
 		$this->assertSame( '1 px', PrintFileForm::tolerance_name( new ConnectedStoreTextTolerance( 'px', 1.0 ) ) );
 		$this->assertSame( '0.5 mm', PrintFileForm::tolerance_name( new ConnectedStoreTextTolerance( 'mm', 0.5 ) ) );
 		$this->assertSame( '0.25 mm', PrintFileForm::tolerance_name( new ConnectedStoreTextTolerance( 'mm', 0.25 ) ) );
+		$this->assertSame( '0.014 mm', PrintFileForm::tolerance_name( new ConnectedStoreTextTolerance( 'mm', 0.014 ) ) );
 		$this->assertSame( '1 to 100 px, or 0.01 to 5 mm', PrintFileForm::tolerance_limits() );
 	}
 }
