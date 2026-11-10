@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\TemplateForm;
 use Pixonaut\WooCommerce\DesignerLanguage;
 
 /**
@@ -72,7 +73,7 @@ final class SideLayout {
 	 * @param bool                 $lending     Whether the add-to-cart form lends the designer its option fields and cart row: a product with one side.
 	 */
 	public static function of( array $options, array $reads, ?string $variant, bool $has_options = false, bool $lending = false ): self {
-		$template  = self::map( $reads['template'] ?? null );
+		$template  = TemplateForm::with_layer_names( self::map( $reads['template'] ?? null ) );
 		$doc_ratio = self::ratio( self::map( $template['template'] ?? null )['ratio'] ?? null ) ?? self::ratio( $reads['printSize'] ?? null );
 		$placement = is_string( $options['placementId'] ?? null ) ? $options['placementId'] : null;
 		$mockups   = self::map( self::map( $reads['blank'] ?? null )['mockups'] ?? null );
