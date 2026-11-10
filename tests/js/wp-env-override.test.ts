@@ -2,7 +2,10 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { overrideConfig } from '../../bin/wp-env-override.mjs';
+import {
+	COMPAT_MEMORY_LIMIT,
+	overrideConfig,
+} from '../../bin/wp-env-override.mjs';
 import { BIN } from './support/scripts';
 
 /** What `fakeConstants` returns, as far as the override is concerned. */
@@ -42,5 +45,16 @@ describe('overrideConfig', () => {
 			'https://downloads.wordpress.org/theme/kadence.zip',
 		);
 		expect(new Set(override.themes).size).toBe(override.themes?.length);
+	});
+
+	it('raises the memory limit with the builders installed, and only then', () => {
+		expect(COMPAT_MEMORY_LIMIT).toMatch(/^\d+M$/);
+		expect(overrideConfig(CONSTANTS, '', '1').config).toStrictEqual({
+			...CONSTANTS,
+			WP_MEMORY_LIMIT: COMPAT_MEMORY_LIMIT,
+		});
+		expect(overrideConfig(CONSTANTS, PINNED, '').config).toStrictEqual(
+			CONSTANTS,
+		);
 	});
 });

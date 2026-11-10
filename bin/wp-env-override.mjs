@@ -3,11 +3,20 @@
 // WooCommerce release to install in place of the latest. WP_ENV_WOOCOMMERCE
 // takes a wp-env source, as wp-env's own WP_ENV_CORE does for WordPress; the
 // nightly workflow sets both (bin/nightly-versions.mjs). WP_ENV_COMPAT installs
-// the compatibility tests' themes and page builders too.
+// the compatibility tests' themes and page builders too, and raises the
+// memory limit they need.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { builderSources, themeSources } from './compat-sources.mjs';
 import { root } from './env.mjs';
+
+/**
+ * PHP's memory limit with the page builders installed. WooCommerce, Elementor
+ * and Beaver Builder together need about 170 MB in a WP-CLI request, over the
+ * containers' 128M; WordPress raises PHP's limit to `WP_MEMORY_LIMIT` before
+ * it loads plugins. 256M is what WooCommerce recommends to stores.
+ */
+export const COMPAT_MEMORY_LIMIT = '256M';
 
 /** WooCommerce's entry in .wp-env.json's `plugins`, at any version. */
 const WOOCOMMERCE_PLUGIN = /\/woocommerce(\.[^/]*)?\.zip$/;
@@ -46,7 +55,7 @@ export function overrideConfig(
 		: plugins;
 	return compat
 		? {
-				...override,
+				config: { ...config, WP_MEMORY_LIMIT: COMPAT_MEMORY_LIMIT },
 				plugins: [...pinned, ...builderSources()],
 				themes: [...new Set([...themes, ...themeSources()])],
 			}
