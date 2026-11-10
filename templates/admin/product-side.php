@@ -17,15 +17,18 @@
  * @var list<array{id: string, text: string, thumbnail: string, maxWidthMm?: float, maxHeightMm?: float}> $placements The blank's placements, each with its first view's photo (empty without one) and the largest print it takes, when Pixonaut said.
  * @var list<string>                                                              $open       The disclosures open when the product was last updated; `side-<index>` opens this side's.
  * @var array{url: string, attributes: list<array{slug: string, label: string}>}|null $groups The Groups setting's template groups route and the product's attributes used for variations; null where the form is not arranged (a variation's own sides).
+ * @var string                                                                    $studio     The Pixonaut studio's templates page, a template's own page being under it by its base id; empty while the workspace is not known, which shows no link.
  */
 
 use Pixonaut\WooCommerce\Catalogue\CanvasRatio;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\TemplateId;
 
 defined( 'ABSPATH' ) || exit;
 
 $pixonaut_name = static fn ( string $sub ): string => $field . '[' . $index . ']' . $sub;
+$pixonaut_base = TemplateId::parse( $side['template_id'] )?->base_id ?? '';
 $pixonaut_id   = static fn ( string $sub ): string => $id_prefix . 'side_' . $index . '_' . $sub;
 
 /**
@@ -113,6 +116,9 @@ $pixonaut_stays = __( 'stays on version %d', 'pixonaut-for-woocommerce' );
 				<?php endif; ?>
 			</select>
 		</span>
+		<?php if ( '' !== $studio ) : ?>
+			<a class="pixonaut-template-studio" href="<?php echo esc_url( '' === $pixonaut_base ? $studio : $studio . '/' . rawurlencode( $pixonaut_base ) ); ?>" data-studio="<?php echo esc_url( $studio ); ?>" target="_blank" rel="noopener noreferrer" <?php echo '' === $pixonaut_base ? 'hidden' : ''; ?>><?php /* translators: Link beside a product side's template picker to that template's page in the Pixonaut studio. Admin product page. */ esc_html_e( 'Open in Pixonaut', 'pixonaut-for-woocommerce' ); ?></a>
+		<?php endif; ?>
 		<input type="hidden" class="pixonaut-side-template-name" name="<?php echo esc_attr( $pixonaut_name( '[template_name]' ) ); ?>" value="<?php echo esc_attr( $side['template_name'] ); ?>" />
 	</p>
 	<div class="inline notice notice-warning pixonaut-background-warning" hidden>

@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Cart;
 
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\TemplateRenames;
 use WC_Product;
 
 /**
@@ -114,7 +115,8 @@ final class DesignBasis {
 		$data[ self::KEY ] = array(
 			'blank' => $config->blank_id,
 			'sides' => array_map(
-				static fn ( Side $side ): array => array( $side->key, $side->mode, $side->placement_id, $side->template_base_id ),
+				// By the template's first id here, so Pixonaut changing its id does not drop the lines made from it.
+				static fn ( Side $side ): array => array( $side->key, $side->mode, $side->placement_id, TemplateRenames::first( $side->template_base_id ) ),
 				$config->sides
 			),
 		);

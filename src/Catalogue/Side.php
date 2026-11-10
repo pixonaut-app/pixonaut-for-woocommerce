@@ -283,6 +283,22 @@ final class Side {
 	}
 
 	/**
+	 * A copy on template `$to`, keeping its versions, when it is on `$from`,
+	 * its rows' layout adjustments too; this very side otherwise.
+	 *
+	 * @param string $from The template's old base id.
+	 * @param string $to   Its new base id.
+	 */
+	public function with_template_renamed( string $from, string $to ): self {
+		$rows    = array_map( static fn ( StandingRow $row ): StandingRow => $row->with_template_renamed( $from, $to ), $this->standing_rows );
+		$changes = $rows === $this->standing_rows ? array() : array( 'standing_rows' => $rows );
+		if ( $this->template_base_id === $from ) {
+			$changes['template_base_id'] = $to;
+		}
+		return array() === $changes ? $this : $this->copy( $changes );
+	}
+
+	/**
 	 * @param mixed $data Stored shape, see to_array().
 	 * @return self|null Null when the data lacks a key.
 	 */

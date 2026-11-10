@@ -90,6 +90,7 @@ not recorded and it runs again. What it throws decides what the store sees:
 | Option | `pixonaut_wc_variants_backfill` | Set by the upgrade that added blank variants until the re-check of every product, which resolves them, is queued |
 | Option | `pixonaut_wc_webhook_ping` | The outcome of the last test request to the webhook endpoint, `{delivered, error, at}` ([Webhooks](./webhooks/#the-endpoint)) |
 | Option | `pixonaut_wc_events_cursor`, `pixonaut_wc_events_baseline` | The event stream's cursor, and how far setting the first one has paged ([Webhooks](./webhooks/)) |
+| Option | `pixonaut_wc_template_renames` | Each template id Pixonaut changed, mapped to the one it became ([Webhooks](./webhooks/#a-templates-id-changed-in-pixonaut)) |
 | Option | `pixonaut_wc_request_log` | The developer tools' request log, the last 50 requests newest first ([Developer tools](./developer-tools/#request-log)) |
 | Option | `pixonaut_wc_split_attributes` | The ids of the global attributes whose values are listed as their own products by default ([Listing each value as its own product](../merchant/split-listings/)) |
 | Option | `pixonaut_wc_catalogue_generation` | The generation every cached catalogue answer's key carries; raising it drops them all |

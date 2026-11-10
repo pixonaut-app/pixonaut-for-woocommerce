@@ -255,6 +255,7 @@ final class ProductPanel {
 				'placements' => $panel['placements'],
 				'groups'     => $panel['groups'] ?? null,
 				'open'       => $panel['open'],
+				'studio'     => StudioPage::section( StudioPage::TEMPLATES ),
 			)
 		);
 

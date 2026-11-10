@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T22:53:41+00:00\n"
+"POT-Creation-Date: 2026-11-10T22:57:46+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -2739,7 +2739,7 @@ msgstr "Groupe ajouté"
 
 #. translators: Button that removes a group the merchant added. Admin product page.
 #. translators: Button that removes one print size row from a side. Admin product page.
-#: src/Admin/GroupsStrings.php:49 templates/admin/product-side.php:63
+#: src/Admin/GroupsStrings.php:49 templates/admin/product-side.php:66
 msgid "Remove"
 msgstr "Retirer"
 
@@ -2904,17 +2904,17 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:284 src/Admin/ProductPanel.php:727
+#: src/Admin/LinkedBlank.php:284 src/Admin/ProductPanel.php:728
 msgid "Workspace default"
 msgstr "Valeur par défaut de l'espace de travail"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:286 src/Admin/ProductPanel.php:730
+#: src/Admin/LinkedBlank.php:286 src/Admin/ProductPanel.php:731
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Valeur par défaut de l'espace de travail (%s)"
 
-#: src/Admin/LinkedBlank.php:289 src/Admin/ProductPanel.php:742
+#: src/Admin/LinkedBlank.php:289 src/Admin/ProductPanel.php:743
 msgid "A printshop no longer connected to the workspace"
 msgstr "Un imprimeur qui n'est plus connecté à l'espace de travail"
 
@@ -3062,59 +3062,59 @@ msgstr "Documentation"
 msgid "Support"
 msgstr "Assistance"
 
-#: src/Admin/ProductPanel.php:380
+#: src/Admin/ProductPanel.php:381
 msgid ""
 "This variation cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Cette variation ne peut pas être achetée tant que sa configuration Pixonaut "
 "n'est pas corrigée :"
 
-#: src/Admin/ProductPanel.php:381
+#: src/Admin/ProductPanel.php:382
 msgid ""
 "This product cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Ce produit ne peut pas être acheté tant que sa configuration Pixonaut n'est "
 "pas corrigée :"
 
-#: src/Admin/ProductPanel.php:386
+#: src/Admin/ProductPanel.php:387
 msgid "Customers design this variation with a Pixonaut template."
 msgstr "Les clients personnalisent cette variation avec un modèle Pixonaut."
 
-#: src/Admin/ProductPanel.php:387
+#: src/Admin/ProductPanel.php:388
 msgid "Customers design this product with a Pixonaut template."
 msgstr "Les clients personnalisent ce produit avec un modèle Pixonaut."
 
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:422 src/Admin/ProductPanel.php:643
+#: src/Admin/ProductPanel.php:423 src/Admin/ProductPanel.php:644
 msgid "As the product says"
 msgstr "Selon le produit"
 
 #. translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page.
-#: src/Admin/ProductPanel.php:424
+#: src/Admin/ProductPanel.php:425
 msgid "As the template says"
 msgstr "Selon le modèle"
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:660
+#: src/Admin/ProductPanel.php:661
 #, php-format
 msgid "Store setting: %s"
 msgstr "Réglage de la boutique : %s"
 
 #. translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page.
-#: src/Admin/ProductPanel.php:734
+#: src/Admin/ProductPanel.php:735
 #, php-format
 msgid "Workspace default (%s): prints only on a blank"
 msgstr ""
 "Valeur par défaut de l'espace de travail (%s) : imprime uniquement sur un "
 "produit vierge"
 
-#: src/Admin/ProductPanel.php:739
+#: src/Admin/ProductPanel.php:740
 msgid "The printshop chosen before"
 msgstr "L'imprimeur choisi auparavant"
 
 #. translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page.
-#: src/Admin/ProductPanel.php:741
+#: src/Admin/ProductPanel.php:742
 #, php-format
 msgid "%s (prints only on a blank)"
 msgstr "%s (imprime uniquement sur un produit vierge)"
@@ -6951,7 +6951,7 @@ msgstr ""
 "avant de mettre à jour."
 
 #. translators: %s: why Pixonaut did not answer, e.g. rate_limited.
-#: src/Webhooks/Endpoint.php:196
+#: src/Webhooks/Endpoint.php:203
 #, php-format
 msgid "Pixonaut did not send the test request (%s)."
 msgstr "Pixonaut n'a pas envoyé la requête de test (%s)."
@@ -7775,7 +7775,7 @@ msgstr ""
 #. translators: Button in developer tools that restores a field's default value; here Reset is a verb.
 #. translators: Link that puts an option whose layout was adjusted by hand back on the side's own layout. Admin product page.
 #: templates/admin/developer-tools.php:91
-#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:227
+#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:233
 msgid "Reset"
 msgstr "Réinitialiser"
 
@@ -8118,7 +8118,8 @@ msgid "Printshop order %1$s, \"%2$s\" in Pixonaut"
 msgstr "Commande d'impression %1$s, « %2$s » dans Pixonaut"
 
 #. translators: Link on the order screen to the item's printshop order in the Pixonaut studio.
-#: templates/admin/order-box.php:98
+#. translators: Link beside a product side's template picker to that template's page in the Pixonaut studio. Admin product page.
+#: templates/admin/order-box.php:98 templates/admin/product-side.php:120
 msgid "Open in Pixonaut"
 msgstr "Ouvrir dans Pixonaut"
 
@@ -8289,7 +8290,7 @@ msgid "Options in the form"
 msgstr "Options dans le formulaire"
 
 #. translators: Label of the dropdown choosing whether the designer's canvas keeps the template's proportions or takes the chosen print size's, asked as a question. Admin product page.
-#: templates/admin/product-fields.php:223 templates/admin/product-side.php:292
+#: templates/admin/product-fields.php:223 templates/admin/product-side.php:298
 msgid "When a print size has other proportions"
 msgstr "Quand une taille d'impression a d'autres proportions"
 
@@ -8495,117 +8496,117 @@ msgid "Without a blank, each picture is the design alone."
 msgstr "Sans produit vierge, chaque image est la création seule."
 
 #. translators: Radio button on a print size: this size is chosen when the designer opens. Admin product page.
-#: templates/admin/product-side.php:45
+#: templates/admin/product-side.php:48
 msgid "Selected when the designer opens"
 msgstr "Sélectionnée à l'ouverture de l'outil de personnalisation"
 
 #. translators: A print size row: the size the print position (placement) itself defines. Admin product page.
-#: templates/admin/product-side.php:49
+#: templates/admin/product-side.php:52
 msgid "The print position’s size"
 msgstr "Taille de l'emplacement d'impression"
 
 #. translators: Placeholder of the field naming a print size, which customers see. Admin product page.
-#: templates/admin/product-side.php:55
+#: templates/admin/product-side.php:58
 msgid "Name, e.g. A3"
 msgstr "Nom, par ex. A3"
 
 #. translators: Screen reader label of the field naming a print size. Admin product page.
-#: templates/admin/product-side.php:55
+#: templates/admin/product-side.php:58
 #: templates/admin/variation-print-size.php:54
 msgid "Label customers see"
 msgstr "Libellé visible par les clients"
 
 #. translators: Screen reader label of the custom print size's width field. Admin product page.
-#: templates/admin/product-side.php:56
+#: templates/admin/product-side.php:59
 #: templates/admin/variation-print-size.php:47
 msgid "Width in millimetres"
 msgstr "Largeur en millimètres"
 
 #. translators: Screen reader label of the custom print size's height field. Admin product page.
-#: templates/admin/product-side.php:58
+#: templates/admin/product-side.php:61
 #: templates/admin/variation-print-size.php:51
 msgid "Height in millimetres"
 msgstr "Hauteur en millimètres"
 
 #. translators: Unit after a custom print size's width and height: millimetres. Admin product page.
-#: templates/admin/product-side.php:59
+#: templates/admin/product-side.php:62
 #: templates/admin/variation-print-size.php:53
 msgid "mm"
 msgstr "mm"
 
-#: templates/admin/product-side.php:72
+#: templates/admin/product-side.php:75
 msgid "Customers fill in"
 msgstr "Les clients remplissent"
 
-#: templates/admin/product-side.php:73
+#: templates/admin/product-side.php:76
 msgid "Fixed design"
 msgstr "Création fixe"
 
-#: templates/admin/product-side.php:74
+#: templates/admin/product-side.php:77
 msgid "follows new template versions"
 msgstr "suit les nouvelles versions du modèle"
 
 #. translators: %d: the template version a product side stays on, e.g. 2. Summary of a side's settings. Admin product page.
-#: templates/admin/product-side.php:76
+#: templates/admin/product-side.php:79
 #, php-format
 msgid "stays on version %d"
 msgstr "reste sur la version %d"
 
-#: templates/admin/product-side.php:79
+#: templates/admin/product-side.php:82
 msgid "Choose a template for this side."
 msgstr "Choisissez un modèle pour cette face."
 
-#: templates/admin/product-side.php:80
+#: templates/admin/product-side.php:83
 msgid "Choose where on the blank this side is printed."
 msgstr "Choisissez l'endroit du produit vierge où cette face est imprimée."
 
-#: templates/admin/product-side.php:81
+#: templates/admin/product-side.php:84
 msgid "Enter the width and height in millimetres."
 msgstr "Saisissez la largeur et la hauteur en millimètres."
 
 #. translators: Shown under a custom print size's width and height. %1$s: the largest width, %2$s: the largest height the side's print position prints, both in millimetres. Admin product page.
-#: templates/admin/product-side.php:82
+#: templates/admin/product-side.php:85
 #, php-format
 msgid "Up to %1$s × %2$s mm"
 msgstr "Jusqu'à %1$s × %2$s mm"
 
 #. translators: Error under a custom print size larger than the print position prints. %1$s: the largest width, %2$s: the largest height, both in millimetres. Admin product page.
-#: templates/admin/product-side.php:83
+#: templates/admin/product-side.php:86
 #, php-format
 msgid "This print position prints at most %1$s × %2$s mm."
 msgstr "Cet emplacement d'impression accepte au maximum %1$s × %2$s mm."
 
-#: templates/admin/product-side.php:87
+#: templates/admin/product-side.php:90
 msgctxt "product side such as front or back"
 msgid "Side"
 msgstr "Face"
 
 #. translators: Button that removes a whole side from the product. Admin product page.
-#: templates/admin/product-side.php:89
+#: templates/admin/product-side.php:92
 msgid "Remove side"
 msgstr "Retirer la face"
 
 #. translators: Label of the dropdown that picks the spot on the blank (placement) a side is printed on, such as chest or back. Admin product page.
-#: templates/admin/product-side.php:92
+#: templates/admin/product-side.php:95
 msgid "Print position"
 msgstr "Emplacement d'impression"
 
 #. translators: First option of the print position dropdown, nothing chosen yet. Admin product page.
-#: templates/admin/product-side.php:95
+#: templates/admin/product-side.php:98
 msgid "Choose a print position"
 msgstr "Choisissez un emplacement d'impression"
 
-#: templates/admin/product-side.php:107
+#: templates/admin/product-side.php:110
 msgctxt "Pixonaut template that customers fill in"
 msgid "Template"
 msgstr "Modèle"
 
 #. translators: Placeholder of the template search dropdown. Admin product page.
-#: templates/admin/product-side.php:109
+#: templates/admin/product-side.php:112
 msgid "Search for a template"
 msgstr "Rechercher un modèle"
 
-#: templates/admin/product-side.php:119
+#: templates/admin/product-side.php:125
 msgid ""
 "This template’s background shows through, and this product has no blank: "
 "customers see the design on white paper in the designer, and it prints on "
@@ -8621,56 +8622,56 @@ msgstr ""
 "même acheter le produit."
 
 #. translators: Label of the list of print sizes customers choose from for a side. Admin product page.
-#: templates/admin/product-side.php:125
+#: templates/admin/product-side.php:131
 msgid "Print sizes"
 msgstr "Tailles d'impression"
 
 #. translators: Column heading over the radio buttons marking the print size chosen when the designer opens. Short. Admin product page.
-#: templates/admin/product-side.php:128
+#: templates/admin/product-side.php:134
 msgid "Start"
 msgstr "Départ"
 
 #. translators: Column heading over a side's print sizes. Admin product page.
-#: templates/admin/product-side.php:129
+#: templates/admin/product-side.php:135
 msgid "Size customers choose"
 msgstr "Taille au choix des clients"
 
 #. translators: Button that adds the print position's own size to a side's print sizes. Admin product page.
-#: templates/admin/product-side.php:141
+#: templates/admin/product-side.php:147
 msgid "Add the print position’s size"
 msgstr "Ajouter la taille de l'emplacement d'impression"
 
 #. translators: Button that adds a print size entered in millimetres to a side. Admin product page.
-#: templates/admin/product-side.php:142
+#: templates/admin/product-side.php:148
 msgid "Add a size in mm"
 msgstr "Ajouter une taille en mm"
 
 #. translators: A closed section of a product side holding its less used settings. Admin product page.
-#: templates/admin/product-side.php:147
+#: templates/admin/product-side.php:153
 msgid "More for this side"
 msgstr "Autres réglages de cette face"
 
 #. translators: Label of the fields naming a product side and its key. Admin product page.
-#: templates/admin/product-side.php:153
+#: templates/admin/product-side.php:159
 msgid "Name"
 msgstr "Nom"
 
 #. translators: Placeholder of the field naming a product side, which customers see. Admin product page.
-#: templates/admin/product-side.php:155
+#: templates/admin/product-side.php:161
 msgid "Name customers see, e.g. Front"
 msgstr "Nom visible par les clients, par ex. Recto"
 
 #. translators: Placeholder of the field for a side's key, a short lowercase identifier. Admin product page.
-#: templates/admin/product-side.php:156
+#: templates/admin/product-side.php:162
 msgid "Key, e.g. front"
 msgstr "Clé, par ex. front"
 
 #. translators: Screen reader label of the field for a side's key. Admin product page.
-#: templates/admin/product-side.php:156
+#: templates/admin/product-side.php:162
 msgid "Side key"
 msgstr "Clé de la face"
 
-#: templates/admin/product-side.php:158
+#: templates/admin/product-side.php:164
 msgid ""
 "Shown on the side’s tab in the designer. Empty, both follow the print "
 "position."
@@ -8679,11 +8680,11 @@ msgstr ""
 "deux suivent l'emplacement d'impression."
 
 #. translators: Checkbox on a product side; unticked, the side is a fixed design printed as the template is. Admin product page.
-#: templates/admin/product-side.php:165
+#: templates/admin/product-side.php:171
 msgid "Customers fill in the template"
 msgstr "Les clients remplissent le modèle"
 
-#: templates/admin/product-side.php:168
+#: templates/admin/product-side.php:174
 msgid ""
 "Unticked, it is a fixed design: printed as the template is, made when you "
 "update the product."
@@ -8691,7 +8692,7 @@ msgstr ""
 "Décochée, c'est une création fixe : imprimée telle que le modèle la "
 "présente, et générée lorsque vous mettez à jour le produit."
 
-#: templates/admin/product-side.php:171
+#: templates/admin/product-side.php:177
 msgid ""
 "This template offers fields to fill in. On a standing side customers do not "
 "get to fill them in: it is printed as the template is."
@@ -8699,7 +8700,7 @@ msgstr ""
 "Ce modèle propose des champs à remplir. Sur une face fixe, les clients ne "
 "peuvent pas les remplir : elle est imprimée telle que le modèle la présente."
 
-#: templates/admin/product-side.php:174
+#: templates/admin/product-side.php:180
 msgid ""
 "This template offers nothing to fill in, so customers have nothing to "
 "personalise. Make the side standing to sell it as the template is."
@@ -8709,13 +8710,13 @@ msgstr ""
 "présente."
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Label of a standing side's previews, one per value of that option. Admin product page.
-#: templates/admin/product-side.php:186
+#: templates/admin/product-side.php:192
 #, php-format
 msgid "Per %s"
 msgstr "Par %s"
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Admin product page.
-#: templates/admin/product-side.php:192
+#: templates/admin/product-side.php:198
 #, php-format
 msgid ""
 "The print area changes with %s, so each of its values is printed from its "
@@ -8730,7 +8731,7 @@ msgstr ""
 "sa mise en page lorsque la face change, jusqu'à ce que vous la "
 "réinitialisiez."
 
-#: templates/admin/product-side.php:195
+#: templates/admin/product-side.php:201
 msgid ""
 "The previews appear when you update the product. An adjusted value keeps its "
 "layout."
@@ -8739,28 +8740,28 @@ msgstr ""
 "ajustée conserve sa mise en page."
 
 #. translators: 1: the option, e.g. "Size"; 2: its value, e.g. "XL". Alt text of a standing side's preview for one option. Admin product page.
-#: templates/admin/product-side.php:202
+#: templates/admin/product-side.php:208
 #, php-format
 msgid "%1$s %2$s: the design on the blank"
 msgstr "%1$s %2$s : la création sur le produit vierge"
 
 #. translators: Badge beside an option's value whose layout the store manager adjusted by hand on a standing side. Admin product page.
-#: templates/admin/product-side.php:211
+#: templates/admin/product-side.php:217
 msgid "Adjusted"
 msgstr "Ajustée"
 
 #. translators: Under a standing side's preview for one option value: the side's print size does not fit that value's print area, so the design prints at the value's usual size. Admin product page.
-#: templates/admin/product-side.php:218
+#: templates/admin/product-side.php:224
 msgid "Usual size: the side's is too big"
 msgstr "Taille habituelle : celle de la face est trop grande"
 
 #. translators: Link that opens an option's adjusted layout on Pixonaut again, to adjust it once more. Admin product page.
-#: templates/admin/product-side.php:222
+#: templates/admin/product-side.php:228
 msgid "Adjust again"
 msgstr "Ajuster à nouveau"
 
 #. translators: %s: an option's value, e.g. "XL". Confirmation before the store manager resets the layout they adjusted by hand for that option. Admin product page.
-#: templates/admin/product-side.php:225
+#: templates/admin/product-side.php:231
 #, php-format
 msgid ""
 "Reset the layout of %s? It then follows the side again, and the layout you "
@@ -8770,12 +8771,12 @@ msgstr ""
 "face, et la mise en page que vous avez ajustée n'est pas conservée."
 
 #. translators: Link that opens one option's design of a standing side on Pixonaut, to move and scale its artwork by hand. Admin product page.
-#: templates/admin/product-side.php:229
+#: templates/admin/product-side.php:235
 msgid "Adjust layout"
 msgstr "Ajuster la mise en page"
 
 #. translators: %d: how many options a standing side has a preview of. Button that shows them all. Admin product page.
-#: templates/admin/product-side.php:238
+#: templates/admin/product-side.php:244
 #, php-format
 msgid "Show all %d"
 msgid_plural "Show all %d"
@@ -8783,43 +8784,43 @@ msgstr[0] "Tout afficher (%d)"
 msgstr[1] "Tout afficher (%d)"
 
 #. translators: Button that shows only the first of a standing side's option previews again. Admin product page.
-#: templates/admin/product-side.php:240
+#: templates/admin/product-side.php:246
 msgid "Show fewer"
 msgstr "Afficher moins"
 
 #. translators: Label of the setting that keeps a product side on one version of its template. Admin product page.
-#: templates/admin/product-side.php:245
+#: templates/admin/product-side.php:251
 msgid "Template version"
 msgstr "Version du modèle"
 
 #. translators: Checkbox on a product side: keep the side on the template version picked beside it instead of moving to each new version published. Admin product page.
-#: templates/admin/product-side.php:249
+#: templates/admin/product-side.php:255
 msgid "Stay on one version"
 msgstr "Rester sur une version"
 
 #. translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page.
-#: templates/admin/product-side.php:252 templates/admin/product-side.php:263
+#: templates/admin/product-side.php:258 templates/admin/product-side.php:269
 #, php-format
 msgid "Version %d (current)"
 msgstr "Version %d (actuelle)"
 
 #. translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page.
-#: templates/admin/product-side.php:253 templates/admin/product-side.php:265
+#: templates/admin/product-side.php:259 templates/admin/product-side.php:271
 #, php-format
 msgid "Version %d"
 msgstr "Version %d"
 
-#: templates/admin/product-side.php:274
+#: templates/admin/product-side.php:280
 msgid "Unticked, the side follows each new version of the template."
 msgstr "Décochée, la face suit chaque nouvelle version du modèle."
 
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:282
+#: templates/admin/product-side.php:288
 msgid "Groups"
 msgstr "Groupes"
 
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:283
+#: templates/admin/product-side.php:289
 msgid ""
 "The order and names of the groups customers see in the designer. Open to "
 "arrange them."
@@ -8827,7 +8828,7 @@ msgstr ""
 "L'ordre et les noms des groupes que les clients voient dans l'outil de "
 "personnalisation. Ouvrez ce réglage pour les organiser."
 
-#: templates/admin/product-side.php:286
+#: templates/admin/product-side.php:292
 msgid ""
 "The order and names customers see in the designer on this product’s page. "
 "Drag groups and their fields to reorder them. A name changed here is this "
@@ -8841,7 +8842,7 @@ msgstr ""
 "Une fois organisée ici, cette face ne suit plus Options dans le formulaire."
 
 #. translators: Option of a product side's canvas shape dropdown: the side draws its canvas as the product's own setting, under Store settings for this product, says. Admin product page.
-#: templates/admin/product-side.php:296
+#: templates/admin/product-side.php:302
 msgid "As the product’s store settings say"
 msgstr "Selon les réglages de la boutique du produit"
 

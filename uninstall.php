@@ -51,6 +51,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_option( \Pixonaut\WooCommerce\Schema::STORE_ACCESS_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::EVENTS_CURSOR_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::EVENTS_BASELINE_OPTION );
+		delete_option( \Pixonaut\WooCommerce\Schema::TEMPLATE_RENAMES_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::VARIANTS_BACKFILL_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::DESIGNER_LINK_WITHDRAWALS_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::WORKSPACE_SETTINGS_OPTION );

@@ -441,8 +441,8 @@ export type State = {
 	 *  they are submitted. */
 	armedOrderOutcome: ArmedOrderOutcome | null;
 	shareLinks: Map<string, ShareLink>;
-	/** By template id, `baseId@version`. */
-	templates: Map<string, TemplateVersion>;
+	/** By template id, `baseId@version`; an old base id reads its template. */
+	templates: TemplateVersions;
 	blanks: Map<string, Blank>;
 	printshops: Map<string, Printshop>;
 	/** Store-made records by collection, then id. */
@@ -461,7 +461,7 @@ export function emptyState(): State {
 		},
 		armedOrderOutcome: null,
 		shareLinks: new Map(),
-		templates: new Map(),
+		templates: new TemplateVersions(),
 		blanks: new Map(),
 		printshops: new Map(),
 		records: new Map(),
@@ -470,6 +470,51 @@ export function emptyState(): State {
 
 export function templateId(baseId: string, version: number): string {
 	return `${baseId}@${version}`;
+}
+
+/** The published template versions, by `baseId@version`. A base id Pixonaut
+ *  changed stays an alias: `<old id>@<version>` reads the template under its
+ *  new id, as `GET /v1/templates/{id}` does after a rename. Listing them
+ *  lists each version once, under its id now. */
+export class TemplateVersions extends Map<string, TemplateVersion> {
+	/** The base id each changed one became. */
+	private readonly renamed = new Map<string, string>();
+
+	override get(id: string): TemplateVersion | undefined {
+		return super.get(id) ?? super.get(this.current(id));
+	}
+
+	/** Moves every version of `from` to `to`, keeping `from` as an alias. */
+	rename(from: string, to: string): void {
+		for (const [id, version] of [...super.entries()]) {
+			if (version.baseId !== from) {
+				continue;
+			}
+			super.delete(id);
+			version.baseId = to;
+			version.template.id = to;
+			version.designDoc.templateId = templateId(to, version.version);
+			super.set(templateId(to, version.version), version);
+		}
+		this.renamed.set(from, to);
+		this.renamed.delete(to);
+	}
+
+	/** `id` with its base id followed through every change. */
+	private current(id: string): string {
+		const at = id.lastIndexOf('@');
+		let base = at > 0 ? id.slice(0, at) : id;
+		const seen = new Set<string>();
+		for (
+			let next = this.renamed.get(base);
+			next !== undefined && !seen.has(base);
+			next = this.renamed.get(base)
+		) {
+			seen.add(base);
+			base = next;
+		}
+		return at > 0 ? `${base}${id.slice(at)}` : base;
+	}
 }
 
 /** Store `value` as `storeId`'s record in `collection`. */

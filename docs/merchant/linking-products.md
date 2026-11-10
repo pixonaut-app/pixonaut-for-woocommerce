@@ -42,7 +42,9 @@ linked the same way, and each variation can override it (see
      print position is listed with the photo of its first view. A blank with
      one print position has it chosen for you.
    - Under **Template**, search for the template by name and choose it.
-     Each template is listed with its preview. Once a blank and print
+     Each template is listed with its preview, and the chosen one shows its
+     preview beside its name and an **Open in Pixonaut** link to its page in
+     the studio. Once a blank and print
      position are chosen, only live templates whose artwork fits the print
      position are listed. A template that fits it at some of the blank's
      sizes only says which it cannot be printed at (see
@@ -754,6 +756,10 @@ changes in Pixonaut, and once after it connects:
   until the template is live again (it is then checked again) or you
   choose another. Saving a product whose template is paused says so on its
   Pixonaut tab too.
+- **A template's id is changed.** Every product and variation on the
+  template, and the orders made from it, take the new id, on the version
+  each was on. Nothing is checked again, and carts and products keep
+  working.
 - **A blank is updated, deleted or restored.** The product's print positions and
   print sizes are checked against the blank as it is now, and each product
   and variation is matched to its variants again. A deleted blank stops the

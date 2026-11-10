@@ -97,6 +97,7 @@ use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
 use Pixonaut\WooCommerce\Catalogue\Purchasability;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Catalogue\StandingRows;
+use Pixonaut\WooCommerce\Catalogue\TemplateRename;
 use Pixonaut\WooCommerce\Cart\AddToCart;
 use Pixonaut\WooCommerce\Cart\CheckoutCheck;
 use Pixonaut\WooCommerce\Cart\CartCleanup;
@@ -106,6 +107,7 @@ use Pixonaut\WooCommerce\Cart\CartEditRoute;
 use Pixonaut\WooCommerce\Cart\CartProofs;
 use Pixonaut\WooCommerce\Cart\LinePicture;
 use Pixonaut\WooCommerce\Cart\DesignBasis;
+use Pixonaut\WooCommerce\Cart\CartTemplateRenames;
 use Pixonaut\WooCommerce\Cart\ErasedFieldValues;
 use Pixonaut\WooCommerce\Cart\CorrectionTrips;
 use Pixonaut\WooCommerce\Cart\OrderAgain;
@@ -249,6 +251,8 @@ final class Plugin {
 
 
 	private ?ProductRecheck $product_recheck = null;
+
+	private ?TemplateRename $template_rename = null;
 
 	private ?ProductVariants $product_variants = null;
 
@@ -415,6 +419,7 @@ final class Plugin {
 		( new ProofRoute( $this->proof_urls(), $this->proof_cache(), $designs, new WcLogger() ) )->register();
 		( new CartProofs( $this->proof_urls(), $this->templates(), $this->labels(), $this->settings(), new LinePicture( $this->settings() ) ) )->register();
 		( new ErasedFieldValues() )->register();
+		( new CartTemplateRenames() )->register();
 		$this->cart_edit()->register();
 		( new CartEditRoute( $this->cart_edit(), $this->labels() ) )->register();
 		$this->hosted_correction()->register();
@@ -423,6 +428,7 @@ final class Plugin {
 		( new NotLiveProducts() )->register();
 		( new UnavailableProduct( $this->labels() ) )->register();
 		$this->product_recheck()->register();
+		$this->template_rename()->register();
 		( new VariantWatch( $this->product_recheck() ) )->register();
 		( new TrashedProducts( $this->notices(), $this->product_recheck() ) )->register();
 		$this->product_pictures()->register();
@@ -678,6 +684,14 @@ final class Plugin {
 	}
 
 	/**
+	 * Moves the store's references to a template whose id Pixonaut changed.
+	 */
+	public function template_rename(): TemplateRename {
+		$this->template_rename ??= new TemplateRename( new WcLogger() );
+		return $this->template_rename;
+	}
+
+	/**
 	 * Each variation's blank variant.
 	 */
 	public function product_variants(): ProductVariants {
@@ -767,7 +781,8 @@ final class Plugin {
 				DesignRejected::TYPE          => array( new DesignRejected( $this->connection(), $this->sdk(), $this->proof_denial(), new WcLogger() ), 'handle' ),
 			) + $this->product_recheck()->handlers()
 				+ ( new DesignerLinkChanges( $this->designer_links(), new DesignerLinks( $this->sdk(), new WcLogger() ), new WcLogger() ) )->handlers()
-				+ $this->store_access()->handlers(),
+				+ $this->store_access()->handlers()
+				+ $this->template_rename()->handlers(),
 			new WcLogger(),
 			null,
 			// A copied site's events wait: they are about the orders of the site it was copied from.

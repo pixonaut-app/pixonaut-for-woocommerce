@@ -11,6 +11,36 @@ export function versionOf(templateId: string): number | null {
 	return /^[1-9][0-9]*$/.test(version) ? Number(version) : null;
 }
 
+/** The base id in a template id, `<baseId>@<version>`: all of it when it
+ *  names no version. */
+export function baseIdOf(templateId: string): string {
+	return versionOf(templateId) === null
+		? templateId
+		: templateId.slice(0, templateId.lastIndexOf(SEPARATOR));
+}
+
+/**
+ * Points a side's "Open in Pixonaut" link at the template's page in the
+ * studio, under the templates page its `data-studio` names, and hides it
+ * without a template.
+ */
+export function showTemplateStudio(
+	side: HTMLElement,
+	templateId: string,
+): void {
+	const link = side.querySelector<HTMLAnchorElement>(
+		'.pixonaut-template-studio',
+	);
+	if (!link) {
+		return;
+	}
+	const baseId = baseIdOf(templateId);
+	link.hidden = baseId === '';
+	if (baseId !== '') {
+		link.href = `${link.dataset.studio ?? ''}/${encodeURIComponent(baseId)}`;
+	}
+}
+
 function pickerOf(side: HTMLElement): HTMLSelectElement | null {
 	return side.querySelector<HTMLSelectElement>('.pixonaut-side-version');
 }

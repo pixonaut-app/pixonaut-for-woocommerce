@@ -147,7 +147,8 @@ final class EventsPullTest extends WP_UnitTestCase {
 		$this->assertSame( 1, $baselines );
 		$this->assertStringNotContainsString( 'after=', $this->recorder->requests[0]['url'] );
 		$this->assertStringContainsString( 'after=evt_looked_through', $this->recorder->requests[1]['url'] );
-		$this->assertStringContainsString( 'types=' . rawurlencode( implode( ',', Endpoint::EVENT_TYPES ) ), $this->recorder->requests[0]['url'] );
+		$this->assertStringContainsString( 'types=' . rawurlencode( implode( ',', array_diff( Endpoint::EVENT_TYPES, Endpoint::WEBHOOK_ONLY_TYPES ) ) ), $this->recorder->requests[0]['url'] );
+		$this->assertStringNotContainsString( 'template.renamed', $this->recorder->requests[0]['url'], 'the stream refuses a type only delivered to webhooks' );
 		$this->assertSame( array( $open->get_id() ), self::read_items(), 'only the open line is read' );
 
 		$this->recorder
