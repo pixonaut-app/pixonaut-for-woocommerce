@@ -839,7 +839,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertStringNotContainsString( 'pixonaut-printshop-name', $html, 'no blank decides it' );
 	}
 
-	public function test_a_product_without_a_blank_is_not_offered_a_default_that_prints_only_on_one(): void {
+	public function test_a_product_without_a_blank_keeps_a_default_that_prints_only_on_one_said_so(): void {
 		$product = $this->product();
 		( new ProductConfig( personalise: true ) )->save_to( $product );
 		$this->recorder->json( 200, self::printshops( self::INTEGRATED_ID ) );
@@ -848,11 +848,53 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 		$this->assertSame(
 			array(
+				''                 => 'Workspace default (Gelato): prints only on a blank',
 				self::PRINTSHOP_ID => 'Fixture Print AB',
 				'ps_other'         => 'Other Print AB',
 			),
-			$panel['printshops']
+			$panel['printshops'],
+			'kept, so updating the product does not choose another printshop'
 		);
+		$this->assertSame( '', $panel['printshop_id'] );
+	}
+
+	public function test_a_product_flagged_for_a_printshop_that_needs_a_blank_stays_flagged_while_printshops_cannot_be_read(): void {
+		$product = $this->product();
+		$posted  = array(
+			'pixonaut_blank'     => '',
+			'pixonaut_printshop' => self::INTEGRATED_ID,
+		);
+		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->script_template();
+		$this->recorder->json( 200, self::printshops() );
+		$this->save( $product->get_id(), $posted, self::template_only_side() );
+		$this->assertSame( InvalidReason::PRINTSHOP_NEEDS_BLANK, ProductConfig::stored_on( $this->reload( $product->get_id() ) )->invalid_reason );
+
+		$this->cache->flush();
+		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->script_template();
+		$this->recorder->json( 500, array( 'error' => 'db_error' ) );
+		$this->save( $product->get_id(), $posted, self::template_only_side() );
+
+		$product = $this->reload( $product->get_id() );
+		$this->assertSame( InvalidReason::PRINTSHOP_NEEDS_BLANK, ProductConfig::stored_on( $product )->invalid_reason );
+		$this->assertFalse( $product->is_purchasable() );
+	}
+
+	public function test_the_sections_open_at_a_save_open_again_each_on_its_own(): void {
+		$product = $this->product();
+		$this->script_link( array( 'legal' => true ) );
+		$this->save( $product->get_id(), array( ProductPanel::OPEN_FIELD => 'store,side-0' ) );
+		$this->recorder->json( 200, $this->blank() );
+		$this->recorder->json( 200, $this->mockups() );
+		$this->recorder->json( 200, self::printshops() );
+
+		$html = $this->panel->fields_html( $this->panel->panel( $this->reload( $product->get_id() ) ) );
+
+		$this->assertMatchesRegularExpression( '/data-disclosure="store"\s+open>/', $html );
+		$this->assertMatchesRegularExpression( '/data-disclosure="side-0"\s+open>/', $html );
+		$this->assertMatchesRegularExpression( '/data-disclosure="views"\s+>/', $html, 'the store settings remembered open no views' );
+		$this->assertStringContainsString( 'name="' . ProductPanel::OPEN_FIELD . '"', $html );
 	}
 
 	public function test_a_workspace_whose_printshops_all_need_a_blank_says_so(): void {
@@ -952,6 +994,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertStringContainsString( '<span class="pixonaut-printshop-name">Workspace default (Fixture Print AB)</span>', $parts['blank_html'] );
 		$this->assertStringContainsString( 'Blank variant: v_tee (found automatically)', $parts['blank_html'], 'found from the product\'s attributes, before the save' );
 		$this->assertStringContainsString( 'name="pixonaut_views[ticked][]"', $parts['views_html'] );
+		$this->assertMatchesRegularExpression( '/data-disclosure="views"\s+>/', $parts['views_html'], 'closed, as on a saved blank; the page keeps it open when it was' );
 		$this->assertNull( ProductConfig::stored_on( $this->reload( $product->get_id() ) )->blank_id, 'nothing is saved' );
 	}
 

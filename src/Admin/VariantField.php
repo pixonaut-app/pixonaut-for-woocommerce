@@ -84,14 +84,20 @@ final class VariantField {
 			$warnings[] = __( 'Pixonaut could not be reached to list the blank’s variants. Try again later.', 'pixonaut-for-woocommerce' );
 		}
 		if ( null === $stored && null !== $listed ) {
-			// Not saved on this blank yet: the variant the product's attributes find.
-			$stored = ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $product ), $listed );
+			// Not saved on this blank yet: the variant the product's attributes find, by the names saving matches too.
+			try {
+				$stored = ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $product ), $this->variants->named( $blank_id ) );
+			} catch ( ApiException $e ) {
+				$stored = ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $product ), $listed );
+			}
 		}
 		if ( null !== $stored?->pick && ! isset( $choices[ $stored->pick ] ) ) {
 			// A pick the list does not hold, or could not be read, stays selected.
 			$choices[ $stored->pick ] = '' === $stored->label ? $stored->pick : $stored->label;
 		}
-		return $this->templates->html(
+		// Outside the template, so a theme's copy of it binds its pick too.
+		$bound = sprintf( '<input type="hidden" name="%s" value="%s" />', esc_attr( $fields->name( PanelFields::VARIANT_BLANK ) ), esc_attr( $blank_id ) );
+		return $bound . $this->templates->html(
 			'admin/product-variant.php',
 			array(
 				'name'      => $fields->name( PanelFields::VARIANT ),
@@ -131,11 +137,19 @@ final class VariantField {
 	 * variant. A product's notice is noted here; a variation's product is
 	 * noted once its variations are all saved (`note()`).
 	 *
+	 * A pick drawn for a blank other than the one the product is saved
+	 * with, such as the last blank's while another was being read, is not
+	 * that blank's variant: the variant is then matched by options.
+	 *
 	 * @param WC_Product $product A product or variation, not a variable product.
 	 * @param mixed      $posted  The field's value as posted, unslashed; anything but a ref matches by options.
+	 * @param mixed      $bound   The blank the field was drawn for, as posted, unslashed; null when not posted.
 	 */
-	public function save( WC_Product $product, mixed $posted ): void {
+	public function save( WC_Product $product, mixed $posted, mixed $bound = null ): void {
 		$pick = is_string( $posted ) ? sanitize_text_field( $posted ) : self::MATCH_BY_OPTIONS;
+		if ( is_string( $bound ) && sanitize_text_field( $bound ) !== ProductConfig::config_for( $product )->blank_id ) {
+			$pick = self::MATCH_BY_OPTIONS;
+		}
 		try {
 			$this->variants->pick( $product, self::MATCH_BY_OPTIONS === $pick ? null : $pick );
 		} catch ( ApiException $e ) {

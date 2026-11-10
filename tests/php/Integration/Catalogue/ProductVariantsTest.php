@@ -133,6 +133,8 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 		$html = (string) ob_get_clean();
 
 		$this->assertStringContainsString( 'name="pixonaut_variation[3][variant]"', $html );
+		$this->assertStringNotContainsString( 'name="' . ProductPanel::OPEN_FIELD . '"', $html, 'only the product remembers its open sections' );
+		$this->assertStringContainsString( '<input type="hidden" name="pixonaut_variation[3][variant_blank]" value="' . self::BLANK_ID . '" />', $html, 'the pick is bound to the blank it was drawn for' );
 		$this->assertStringContainsString( 'Blank variant: Colour: White (found automatically)', $html );
 		$this->assertStringContainsString( '<option value="v_red" >Colour: Red</option>', $html );
 		$this->assertStringContainsString( '<option value="v_forest" data-retired >Colour: Forest (retired)</option>', $html );
@@ -210,6 +212,32 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 		$this->assertSame( 'v_white', ProductVariant::stored_on( $this->reload( $other->get_id() ) )?->ref );
 		$this->assertTrue( $this->reload( $other->get_id() )->is_purchasable() );
 		$this->assertSame( '', $this->notice( $other->get_id() ) );
+	}
+
+	public function test_a_pick_drawn_for_another_blank_is_not_saved_on_the_blank_saved(): void {
+		$bound   = PanelFields::PRODUCT_PREFIX . PanelFields::VARIANT_BLANK;
+		$product = $this->product();
+		$this->linked_simple( $product, array( 'Red', 'White' ) );
+
+		$this->script_link( self::LEGAL );
+		$this->save(
+			$product->get_id(),
+			array(
+				'pixonaut_variant' => 'v_white',
+				$bound             => 'blank_left',
+			)
+		);
+		$this->assertNull( ProductVariant::stored_on( $this->reload( $product->get_id() ) )?->pick, 'the last blank\'s pick is not this blank\'s variant' );
+
+		$this->script_link( self::LEGAL );
+		$this->save(
+			$product->get_id(),
+			array(
+				'pixonaut_variant' => 'v_white',
+				$bound             => self::BLANK_ID,
+			)
+		);
+		$this->assertSame( 'v_white', ProductVariant::stored_on( $this->reload( $product->get_id() ) )?->pick );
 	}
 
 	public function test_a_product_no_longer_on_a_blank_sells_no_variant(): void {

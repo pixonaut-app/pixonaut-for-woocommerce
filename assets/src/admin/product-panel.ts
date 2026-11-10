@@ -9,7 +9,9 @@ import './product-panel.css';
 import { domReady } from '../shared/dom-ready';
 import {
 	type BlankParts,
+	latestOnly,
 	readBlankParts,
+	showBlankFailed,
 	showBlankLoading,
 	showBlankParts,
 } from './blank-fields';
@@ -791,23 +793,36 @@ export function initPanel(root: HTMLElement): void {
 		}
 	};
 	// The printshop, variant and views of a blank picked, read before the product is updated.
+	const reads = latestOnly();
 	const readBlank = (id: string) => {
 		if (root.dataset.blankFieldsUrl === undefined) {
 			return;
 		}
+		const read = reads.next();
 		showBlankLoading(root, true);
 		void readBlankParts(root, id).then((parts: BlankParts | null) => {
-			if (blank.value !== id) {
+			if (!reads.isLatest(read)) {
 				return;
 			}
-			if (parts !== null) {
-				showBlankParts(root, parts);
-				initRetiredVariants(root);
-				offerInitialViews(root);
-				showViewsSummary(root);
+			if (parts === null) {
+				showBlankFailed(root);
+				return;
 			}
+			showBlankParts(root, parts);
+			initRetiredVariants(root);
+			offerInitialViews(root);
+			showViewsSummary(root);
 			showBlankLoading(root, false);
 		});
+	};
+	// Without a blank nothing of the last one stays, nor a read still to answer.
+	const forgetBlank = () => {
+		if (root.dataset.blankFieldsUrl === undefined) {
+			return;
+		}
+		reads.next();
+		showBlankParts(root, { blank_html: '', views_html: '' });
+		showBlankLoading(root, false);
 	};
 	const panel: Panel = {
 		$,
@@ -888,6 +903,7 @@ export function initPanel(root: HTMLElement): void {
 		})
 		.on('select2:clear', () => {
 			showBlank('');
+			forgetBlank();
 			fillAll([]);
 			update();
 		});

@@ -22,6 +22,7 @@
  *                                                              empty without a blank.
  * @var string                                  $views_html     The views the product is shown in, rendered from `admin/product-views.php`.
  * @var list<string>                            $open           The disclosures open when the product was last updated (`views`, `store`, `side-<index>`).
+ * @var string                                  $open_field     The field posting the disclosures open, for the product's own fields; empty for a variation's.
  * @var array<string, string>                   $printshops     The printshops a product without a blank can choose, names by id; the empty id is the workspace's default.
  *                                                              Empty when no printshop of the workspace prints without a blank.
  * @var string                                  $printshops_url The workspace's printshops in the Pixonaut studio; empty while not known.
@@ -96,7 +97,9 @@ $pixonaut_setting = static function ( string $key, string $label, array $choices
 </div>
 
 <div class="pixonaut-personalised" <?php echo $personalise ? '' : 'hidden'; ?>>
-<input type="hidden" class="pixonaut-open-disclosures" name="<?php echo esc_attr( \Pixonaut\WooCommerce\Admin\ProductPanel::OPEN_FIELD ); ?>" value="<?php echo esc_attr( implode( ',', $open ) ); ?>" />
+<?php if ( '' !== $open_field ) : ?>
+	<input type="hidden" class="pixonaut-open-disclosures" name="<?php echo esc_attr( $open_field ); ?>" value="<?php echo esc_attr( implode( ',', $open ) ); ?>" />
+<?php endif; ?>
 <div class="options_group pixonaut-group">
 	<h4 class="pixonaut-group__title"><?php /* translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: what the product is printed on, and where. */ esc_html_e( 'Printing', 'pixonaut-for-woocommerce' ); ?></h4>
 	<p class="form-field">
@@ -112,7 +115,8 @@ $pixonaut_setting = static function ( string $key, string $label, array $choices
 		<span class="description pixonaut-without-blank" <?php echo '' === $blank_id ? '' : 'hidden'; ?>><?php esc_html_e( 'Without a blank, the design is printed by itself, such as a poster or a card.', 'pixonaut-for-woocommerce' ); ?></span>
 	</p>
 	<p class="form-field pixonaut-blank-loading" hidden>
-		<span class="pixonaut-field-control"><span class="spinner is-active"></span><?php esc_html_e( 'Reading the blank from Pixonaut…', 'pixonaut-for-woocommerce' ); ?></span>
+		<span class="pixonaut-field-control pixonaut-blank-reading"><span class="spinner is-active"></span><?php esc_html_e( 'Reading the blank from Pixonaut…', 'pixonaut-for-woocommerce' ); ?></span>
+		<span class="pixonaut-field-error pixonaut-blank-failed" role="alert" hidden><?php /* translators: Shown in the Pixonaut tab of the product edit page when a blank just picked could not be read; updating the product saves the blank and reads it again. */ esc_html_e( 'Pixonaut could not be reached to read this blank. Update the product to try again.', 'pixonaut-for-woocommerce' ); ?></span>
 	</p>
 	<p class="form-field pixonaut-printshop pixonaut-without-blank" <?php echo '' === $blank_id ? '' : 'hidden'; ?>>
 		<label for="<?php echo esc_attr( $ids['printshop'] ); ?>"><?php /* translators: Label of the printshop that makes the product's orders. Admin product page. */ esc_html_e( 'Printshop', 'pixonaut-for-woocommerce' ); ?></label>
