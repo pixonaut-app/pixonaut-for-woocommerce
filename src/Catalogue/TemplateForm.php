@@ -57,7 +57,7 @@ final class TemplateForm {
 	public static function groups( mixed $template ): array {
 		$template = is_array( $template ) ? self::with_layer_names( $template ) : array();
 		$schema   = is_array( $template['formSchema'] ?? null ) ? $template['formSchema'] : array();
-		$groups = array();
+		$groups   = array();
 		foreach ( is_array( $schema['steps'] ?? null ) ? $schema['steps'] : array() as $step ) {
 			if ( ! is_array( $step ) || ! is_string( $step['groupId'] ?? null ) || '' === $step['groupId'] ) {
 				continue;

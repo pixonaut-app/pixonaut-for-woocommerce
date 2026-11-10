@@ -126,6 +126,28 @@ add_filter( 'option_pixonaut_wc_settings', 'pixonaut_e2e_attribute_options' );
 add_filter( 'default_option_pixonaut_wc_settings', 'pixonaut_e2e_attribute_options' );
 
 /**
+ * Cookie that turns the store's `swatch_names` setting off for one browser
+ * context (`off`), so a test of swatches without names changes no other
+ * test's store.
+ */
+const PIXONAUT_E2E_SWATCH_NAMES_COOKIE = 'pixonaut_e2e_swatch_names';
+
+/**
+ * The stored settings with `swatch_names` off, when the cookie says so.
+ *
+ * @param mixed $settings The stored settings.
+ * @return mixed
+ */
+function pixonaut_e2e_swatch_names( $settings ) {
+	if ( ! isset( $_COOKIE[ PIXONAUT_E2E_SWATCH_NAMES_COOKIE ] ) || 'off' !== sanitize_key( wp_unslash( $_COOKIE[ PIXONAUT_E2E_SWATCH_NAMES_COOKIE ] ) ) ) {
+		return $settings;
+	}
+	return array( \Pixonaut\WooCommerce\Settings\Settings::SWATCH_NAMES => false ) + ( is_array( $settings ) ? $settings : array() );
+}
+add_filter( 'option_pixonaut_wc_settings', 'pixonaut_e2e_swatch_names' );
+add_filter( 'default_option_pixonaut_wc_settings', 'pixonaut_e2e_swatch_names' );
+
+/**
  * Cookie that sets the store's product-form settings for one browser context
  * (`as_groups=yes`, `place=last`, `numbers=off`, as a query string), so a spec
  * never changes them for another running at once.

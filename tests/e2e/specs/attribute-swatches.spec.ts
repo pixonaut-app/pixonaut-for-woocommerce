@@ -122,3 +122,83 @@ test('a swatch chooses the variation as the theme’s own field does, by mouse a
 	await expect.poll(() => variationId(page)).not.toBe(darkVariation);
 	await expect.poll(() => variationId(page)).not.toBe('');
 });
+
+/** Read by the e2e support mu-plugin: `off` turns the store's
+ *  `swatch_names` setting off for this browser context. */
+const SWATCH_NAMES_COOKIE = 'pixonaut_e2e_swatch_names';
+
+for (const names of ['shown', 'hidden'] as const) {
+	test(`a value Pixonaut draws as a picture or an SVG shows it in its swatch, names ${names}`, async ({
+		page,
+		request,
+		fake,
+		theme,
+		blocks,
+		baseURL,
+	}) => {
+		const url = baseURL ?? '';
+		await page
+			.context()
+			.addCookies([
+				{ name: ATTRIBUTE_OPTIONS_COOKIE, value: 'swatches', url },
+				...(names === 'hidden'
+					? [{ name: SWATCH_NAMES_COOKIE, value: 'off', url }]
+					: []),
+			]);
+		for (const [value, look] of [
+			['S', 'png'],
+			['M', 'svg'],
+		]) {
+			const set = await fake.control.post(
+				`/__fake/blanks/${FIXTURE.blank.tee}/value-looks`,
+				{ data: { axis: 'Size', value, look } },
+			);
+			expect(set.ok(), `the fake gives ${value} a ${look}`).toBe(true);
+		}
+		const response = await request.post(restUrl('/pixonaut-e2e/v1/products'), {
+			data: {
+				name: `Value looks ${names} ${theme} ${blocks} ${Date.now()}`,
+				pixonaut: PERSONALISED,
+				variations: ['S', 'M'],
+				variants: {
+					S: FIXTURE.variant.teeWhiteS,
+					M: FIXTURE.variant.teeWhiteM,
+				},
+			},
+		});
+		expect(response.status()).toBe(201);
+		await page.goto((await response.json()).permalink);
+
+		const swatches = designerForm(page).getByRole('radiogroup', {
+			name: /size/i,
+		});
+		const small = swatches.getByRole('radio', { name: 'S' });
+		const medium = swatches.getByRole('radio', { name: 'M' });
+		await expect(small.locator('img')).toHaveAttribute('src', /\.png$/);
+		await expect(medium.locator('img')).toHaveAttribute('src', /\.svg$/);
+		for (const swatch of [small, medium]) {
+			// Drawn: the picture loaded and has a size.
+			await expect
+				.poll(() =>
+					swatch
+						.locator('img')
+						.evaluate((image: HTMLImageElement) => image.naturalWidth),
+				)
+				.toBeGreaterThan(0);
+		}
+		const beside = page.locator('.pixonaut-swatches__chosen-name');
+		if (names === 'shown') {
+			await expect(medium).toHaveText('M');
+			await medium.click();
+			await expect(medium).toHaveAttribute('aria-checked', 'true');
+			await expect(beside).toHaveCount(0);
+			return;
+		}
+		await expect(medium).toHaveText('');
+		await expect(medium).toHaveAttribute('title', 'M');
+		await medium.click();
+		await expect(medium).toHaveAttribute('aria-checked', 'true');
+		await expect(beside).toHaveText('M');
+		await expect.poll(() => variationId(page)).not.toBe('');
+	});
+}

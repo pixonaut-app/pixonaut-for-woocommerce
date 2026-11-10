@@ -57,8 +57,8 @@ final class SwatchNamesField {
 	 * @param int $attribute_id The attribute added or updated.
 	 */
 	public function save_attribute( int $attribute_id ): void {
-		$nonce = $_POST[ self::NONCE_FIELD ] ?? null; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- the nonce is what is checked.
-		if ( ! is_string( $nonce ) || false === wp_verify_nonce( sanitize_key( wp_unslash( $nonce ) ), self::NONCE_ACTION ) ) {
+		$nonce = isset( $_POST[ self::NONCE_FIELD ] ) && is_string( $_POST[ self::NONCE_FIELD ] ) ? sanitize_key( wp_unslash( $_POST[ self::NONCE_FIELD ] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- the nonce is what is checked.
+		if ( false === wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
 			return;
 		}
 		$choice = isset( $_POST[ self::FIELD ] ) && is_string( $_POST[ self::FIELD ] ) ? sanitize_key( wp_unslash( $_POST[ self::FIELD ] ) ) : SwatchNames::INHERIT;
@@ -88,11 +88,11 @@ final class SwatchNamesField {
 	private static function choices(): array {
 		return array(
 			/* translators: Option of "Value names beside swatches" on the screen that adds or edits a product attribute: follow the store's setting. */
-			SwatchNames::INHERIT => __( 'As the store\'s setting says', 'pixonaut-for-woocommerce' ),
+			SwatchNames::INHERIT => _x( 'As the store\'s setting says', 'value names beside swatches', 'pixonaut-for-woocommerce' ),
 			/* translators: Option of "Value names beside swatches" on the screen that adds or edits a product attribute. */
-			SwatchNames::SHOW    => __( 'Show', 'pixonaut-for-woocommerce' ),
+			SwatchNames::SHOW    => _x( 'Show', 'value names beside swatches', 'pixonaut-for-woocommerce' ),
 			/* translators: Option of "Value names beside swatches" on the screen that adds or edits a product attribute. */
-			SwatchNames::HIDE    => __( 'Hide', 'pixonaut-for-woocommerce' ),
+			SwatchNames::HIDE    => _x( 'Hide', 'value names beside swatches', 'pixonaut-for-woocommerce' ),
 		);
 	}
 }

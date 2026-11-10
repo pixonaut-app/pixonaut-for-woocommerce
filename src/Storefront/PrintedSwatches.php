@@ -115,8 +115,8 @@ final class PrintedSwatches {
 	 * @param mixed  $args `wc_dropdown_variation_attribute_options()`'s arguments.
 	 */
 	public function with_swatches( $html, $args ): string {
-		$html    = (string) $html;
-		$product = is_array( $args ) ? ( $args['product'] ?? null ) : null;
+		$html     = (string) $html;
+		$product  = is_array( $args ) ? ( $args['product'] ?? null ) : null;
 		$designer = $product instanceof WC_Product ? $this->prints( $product ) : null;
 		if ( null === $designer ) {
 			return $html;
@@ -136,7 +136,7 @@ final class PrintedSwatches {
 		$swatches = '';
 		foreach ( $choices as $value => $label ) {
 			$look      = $looks['looks'][ (string) $value ] ?? null;
-			$bare      = null !== $look && ! $looks['names'];
+			$bare      = null !== $look && null !== $looks && ! $looks['names'];
 			$classes   = array_merge(
 				array( self::SWATCH_CLASS ),
 				(string) $value === $chosen ? array( self::CHOSEN_CLASS ) : array(),
@@ -154,7 +154,8 @@ final class PrintedSwatches {
 	/**
 	 * A value's look, as the storefront script draws it (`swatch-looks.ts`).
 	 *
-	 * @param Look $look The look.
+	 * @param array<string, mixed> $look The look.
+	 * @phpstan-param Look $look
 	 */
 	private static function look( array $look ): string {
 		if ( 'image' === $look['kind'] ) {
@@ -170,7 +171,8 @@ final class PrintedSwatches {
 	 * form names each item `<field slug>-<value slug>`.
 	 *
 	 * @param array<string, AttributeLooks> $looks The product's looks, by field.
-	 * @param list<string>                  $ids   The items' ids.
+	 * @param string[]                      $ids   The items' ids.
+	 * @phpstan-param list<string> $ids
 	 * @return AttributeLooks|null
 	 */
 	private static function block_looks( array $looks, array $ids ): ?array {

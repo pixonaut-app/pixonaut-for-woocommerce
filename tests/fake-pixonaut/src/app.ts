@@ -13,6 +13,7 @@ import { registerDesignerPixelControl } from './control-designer-pixel';
 import { registerTemplateBackgroundControl } from './control-template-background';
 import { registerTemplateFieldKeyControl } from './control-template-field-key';
 import { registerTemplateRatioControl } from './control-template-ratio';
+import { registerValueLooksControl } from './control-value-looks';
 import { registerCorrectionPage } from './correction-page';
 import { registerHostedDesigner } from './designer';
 import { createFaults, DEFAULT_TIMEOUT_FAULT_MS, type Faults } from './faults';
@@ -250,6 +251,7 @@ export function createFake(options: FakeOptions = {}): Fake {
 	registerAreasControl(app, fake);
 	registerDesignerPixelControl(app, fake);
 	registerTemplateRatioControl(app, fake);
+	registerValueLooksControl(app, fake);
 	registerTemplateBackgroundControl(app, fake);
 	registerTemplateFieldKeyControl(app, fake);
 	registerWebhookControl(app, fake);

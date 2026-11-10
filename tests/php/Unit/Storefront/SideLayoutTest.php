@@ -203,8 +203,8 @@ final class SideLayoutTest extends TestCase {
 	}
 
 	public function test_an_unlabelled_text_field_is_headed_with_its_layers_name(): void {
-		$reads                                       = self::reads();
-		$reads['template']['template']['layers']     = array(
+		$reads                                   = self::reads();
+		$reads['template']['template']['layers'] = array(
 			array(
 				'id'   => 'weight',
 				'name' => 'Weight',
@@ -218,7 +218,7 @@ final class SideLayoutTest extends TestCase {
 				'name' => 'Slogan layer',
 			),
 		);
-		$text                                        = static fn ( string $layer, string $prop, string $label ): array => array(
+		$text                                    = static fn ( string $layer, string $prop, string $label ): array => array(
 			'layerId'     => $layer,
 			'prop'        => $prop,
 			'label'       => $label,

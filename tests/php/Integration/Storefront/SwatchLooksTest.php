@@ -33,8 +33,9 @@ final class SwatchLooksTest extends WP_UnitTestCase {
 	public function set_up(): void {
 		parent::set_up();
 		$this->settings = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' )->settings();
-		$this->frame    = wc_create_attribute( array( 'name' => self::FRAME ) );
-		$this->assertIsInt( $this->frame );
+		$frame          = wc_create_attribute( array( 'name' => self::FRAME ) );
+		$this->assertIsInt( $frame );
+		$this->frame = $frame;
 		$taxonomy = wc_attribute_taxonomy_name( self::FRAME );
 		register_taxonomy( $taxonomy, array( 'product', 'product_variation' ) );
 		// What WooCommerce holds for an attribute from `init` on.

@@ -893,6 +893,27 @@ stands in for the designer's, and the script replaces them with the live
 swatches it draws; once the printed form is gone, or the designer is hidden
 or unavailable, the field is the theme's again.
 
+A value Pixonaut draws as a colour, two colours or a picture is drawn as
+it. `Storefront\SwatchLooks` matches each variation attribute to an option of
+the side's blank, and each of its values to one of the option's values, by
+label, case and spacing aside, as the designer names them or as written in
+Pixonaut (the way a product's attributes name its blank variant), and takes
+the value's `appearances` entry from the blank's variants read. The form
+carries the result in `data-pixonaut-swatches`, by the attribute's posted
+field name (`attribute_pa_frame`): `names` and each value's look, by the
+value the field posts, as `{kind: "fill", colours}` (one or two `#rrggbb`) or
+`{kind: "image", url}`. A colour that is not `#rrggbb` or a link that is not
+`http(s)` is left out, and the value is drawn as its name. A swatch with a
+look gets `has-look` and a `span.pixonaut-swatches__look` before
+`span.pixonaut-swatches__name`: the colour as its background (two split
+corner to corner), the picture as an `img`, which draws an SVG as a picture,
+never as markup. With the names left out (`swatch_names` off, or the global
+attribute's own choice, `SwatchNames`) the swatch is `is-bare`, a square of
+the look alone, with the value's name as its `aria-label` and `title`, and
+the chosen value's name is shown after the attribute's label in
+`span.pixonaut-swatches__chosen-name`. A value with no look always shows its
+name. The printed swatches carry the same markup.
+
 ## Variations
 
 A variable product shows the inline designer while the product, or one of

@@ -200,7 +200,6 @@ final class SwatchLooks {
 					return null;
 				}
 			}
-			/** @var list<string> $colours */
 			return array() === $colours || count( $colours ) > self::MAX_FILL_COLOURS ? null : array(
 				'kind'    => 'fill',
 				'colours' => $colours,

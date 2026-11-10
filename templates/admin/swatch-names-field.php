@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
 /* translators: Label of a select on the screen that adds or edits a product attribute: whether its values' names show beside their colour or picture swatches in the shop. */
 $pixonaut_label = __( 'Value names beside swatches', 'pixonaut-for-woocommerce' );
 /* translators: Help under the "Value names beside swatches" select on the screen that adds or edits a product attribute. */
-$pixonaut_description = __( 'For product options shown as swatches in the designer: whether a value drawn as a colour or a picture shows its name beside it. The store\'s setting is under WooCommerce, Settings, Pixonaut. A value without a colour or picture always shows its name.', 'pixonaut-for-woocommerce' );
+$pixonaut_description = __( 'For product options shown as swatches in the designer: whether a value drawn as a colour or a picture shows its name beside it. The store\'s setting is on the Pixonaut settings page. A value without a colour or picture always shows its name.', 'pixonaut-for-woocommerce' );
 $pixonaut_select      = static function () use ( $field, $choice, $choices ): void {
 	echo '<select name="' . esc_attr( $field ) . '" id="' . esc_attr( $field ) . '">';
 	foreach ( $choices as $pixonaut_value => $pixonaut_words ) {
