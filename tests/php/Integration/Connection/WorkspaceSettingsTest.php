@@ -182,6 +182,15 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 		);
 	}
 
+	/**
+	 * The card's brand menu, apart from its other menus.
+	 *
+	 * @param string $html The card.
+	 */
+	private static function brand_menu( string $html ): string {
+		return 1 === preg_match( '/<select id="pixonaut-brand".*?<\/select>/s', $html, $menu ) ? $menu[0] : '';
+	}
+
 	private function screen(): ConnectionScreen {
 		$client = ( new Pixonaut( $this->store, new RecordingLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		return new ConnectionScreen( $this->connection, $client, $this->plugin->webhook_endpoint(), new Deprecations(), $this->plugin->templates(), ConnectionScreen::settings_url(), $this->settings() );
@@ -242,7 +251,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 		$html = (string) ob_get_clean();
 
 		$this->assertMatchesRegularExpression( '/value="' . self::DEFAULT_BRAND . '"\s+selected=\'selected\'/', $html );
-		$this->assertStringNotContainsString( 'value=""', $html );
+		$this->assertStringNotContainsString( 'value=""', self::brand_menu( $html ) );
 	}
 
 	public function test_a_workspace_with_one_brand_shows_it_as_the_only_choice(): void {
@@ -255,7 +264,7 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 		$this->plugin->templates()->render( 'admin/connection-card.php', $this->screen()->card() );
 		$html = (string) ob_get_clean();
 
-		$this->assertSame( 1, substr_count( $html, '<option ' ) );
+		$this->assertSame( 1, substr_count( self::brand_menu( $html ), '<option ' ) );
 		$this->assertStringContainsString( 'Acme (workspace default)', $html );
 		$this->assertStringNotContainsString( 'Save brand', $html );
 	}
@@ -461,15 +470,22 @@ final class WorkspaceSettingsTest extends WP_UnitTestCase {
 
 		$this->assertSame(
 			array(
-				'brand_id'         => null,
-				'chosen_brand_id'  => null,
-				'brands'           => array(),
-				'logo_url'         => 'http://127.0.0.1:9/l/logo',
-				'accent'           => self::ACCENT,
-				'watermark'        => true,
-				'deliver_to'       => 'Warehouse',
-				'min_print_dpi'    => 150.0,
-				'default_language' => 'Deutsch',
+				'brand_id'             => null,
+				'chosen_brand_id'      => null,
+				'brands'               => array(),
+				'logo_url'             => 'http://127.0.0.1:9/l/logo',
+				'accent'               => self::ACCENT,
+				'watermark'            => true,
+				'deliver_to'           => 'Warehouse',
+				'min_print_dpi'        => 150.0,
+				'default_language'     => 'Deutsch',
+				'print_file_form'      => null,
+				'print_file_tolerance' => null,
+				'prints_with'          => array(
+					'form'      => 'Flat',
+					'live_text' => false,
+					'tolerance' => '1 px',
+				),
 			),
 			$card['workspace_settings']
 		);

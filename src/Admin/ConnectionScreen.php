@@ -12,8 +12,10 @@ namespace Pixonaut\WooCommerce\Admin;
 use Pixonaut\WooCommerce\Api\Answers\ConnectedStore;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\Hosts;
+use InvalidArgumentException;
 use Pixonaut\WooCommerce\Connection\ConnectFailed;
 use Pixonaut\WooCommerce\Connection\Connection;
+use Pixonaut\WooCommerce\Connection\PrintFileForm;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
@@ -28,7 +30,7 @@ use RuntimeException;
 
 /**
  * Connect, the return from the studio, disconnect, allowing the `www.`
- * counterpart, choosing the store's brand, the switch for Pixel's access to
+ * counterpart, choosing the store's brand and its print file form, the switch for Pixel's access to
  * the store and testing the webhook endpoint are `admin-post.php` actions.
  * Each ends by sending the admin back to the card with `RESULT_ARG`
  * naming what happened, which the card shows.
@@ -56,6 +58,23 @@ final class ConnectionScreen {
 	public const BRAND_ACTION = 'pixonaut_wc_choose_brand';
 
 	public const STORE_ACCESS_ACTION = 'pixonaut_wc_store_access';
+
+	public const PRINT_FILE_ACTION = 'pixonaut_wc_print_file_form';
+
+	/**
+	 * The print file action's form field: a form, or empty to follow the workspace's.
+	 */
+	public const PRINT_FILE_FORM_ARG = 'print_file_form';
+
+	/**
+	 * The print file action's live text tolerance, a number, or empty to follow the workspace's.
+	 */
+	public const TOLERANCE_ARG = 'print_file_tolerance';
+
+	/**
+	 * The unit of the tolerance: `px` or `mm`.
+	 */
+	public const TOLERANCE_UNIT_ARG = 'print_file_tolerance_unit';
 
 	/**
 	 * The field of the connect form and of the switch's form: `1` to allow
@@ -147,6 +166,19 @@ final class ConnectionScreen {
 	 */
 	public const BRAND_FAILED = 'brand_failed';
 
+	public const PRINT_FILE_SAVED = 'print_file_saved';
+
+	/**
+	 * The form or the tolerance posted is not one Pixonaut takes, so nothing was sent.
+	 */
+	public const PRINT_FILE_INVALID = 'print_file_invalid';
+
+	/**
+	 * Pixonaut refused the print file form, or could not be reached or
+	 * answered unreadably, so the change may or may not have been made.
+	 */
+	public const PRINT_FILE_FAILED = 'print_file_failed';
+
 	/**
 	 * @param Connection             $connection   The connection.
 	 * @param Sdk                    $api          `GET /v1/connect`, for the card.
@@ -177,6 +209,7 @@ final class ConnectionScreen {
 		add_action( 'admin_post_' . self::PING_ACTION, array( $this, 'handle_ping' ) );
 		add_action( 'admin_post_' . self::BRAND_ACTION, array( $this, 'handle_choose_brand' ) );
 		add_action( 'admin_post_' . self::STORE_ACCESS_ACTION, array( $this, 'handle_store_access' ) );
+		add_action( 'admin_post_' . self::PRINT_FILE_ACTION, array( $this, 'handle_print_file_form' ) );
 		add_action( 'woocommerce_admin_field_' . self::FIELD_TYPE, array( $this, 'render' ) );
 	}
 
@@ -249,6 +282,7 @@ final class ConnectionScreen {
 			'www_allowed'        => null !== $www && in_array( $www, $origins, true ),
 			'www_url'            => $this->action_url( self::ALLOW_WWW_ACTION ),
 			'brand_url'          => $connected ? $this->action_url( self::BRAND_ACTION ) : '',
+			'print_file_url'     => $connected ? $this->action_url( self::PRINT_FILE_ACTION ) : '',
 			'store_access'       => null === $this->store_access ? null : array(
 				'on'  => $this->store_access->is_on(),
 				'cut' => $this->store_access->is_cut(),
@@ -373,6 +407,41 @@ final class ConnectionScreen {
 		}
 		$this->workspace?->remember( $answer );
 		$this->back( self::BRAND_CHOSEN );
+	}
+
+	/**
+	 * Sets the form the store's print files are made in, and the live text
+	 * tolerance, or has them follow the workspace's, and keeps what
+	 * Pixonaut answers as the workspace settings.
+	 */
+	public function handle_print_file_form(): void {
+		check_admin_referer( self::PRINT_FILE_ACTION );
+		$this->require_capability();
+		if ( null === $this->connection->current() || null !== $this->connection->paused() ) {
+			$this->back( self::PRINT_FILE_FAILED );
+		}
+		try {
+			$request = PrintFileForm::request( $this->posted( self::PRINT_FILE_FORM_ARG ), $this->posted( self::TOLERANCE_ARG ), $this->posted( self::TOLERANCE_UNIT_ARG ) );
+		} catch ( InvalidArgumentException $e ) {
+			$this->back( self::PRINT_FILE_INVALID );
+		}
+		try {
+			$answer = ConnectedStore::update( $this->api, $request );
+		} catch ( ApiException $e ) {
+			$this->back( self::PRINT_FILE_FAILED );
+		}
+		$this->workspace?->remember( $answer );
+		$this->back( self::PRINT_FILE_SAVED );
+	}
+
+	/**
+	 * A field the posted form carries, empty when it carries none.
+	 *
+	 * @param string $name The field.
+	 */
+	private function posted( string $name ): string {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- the caller checked the nonce.
+		return isset( $_POST[ $name ] ) ? sanitize_text_field( wp_unslash( $_POST[ $name ] ) ) : '';
 	}
 
 	/**

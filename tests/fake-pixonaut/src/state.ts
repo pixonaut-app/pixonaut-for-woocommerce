@@ -8,6 +8,12 @@ type Schemas = components['schemas'];
 
 export type Environment = 'live' | 'sandbox';
 
+/** The form print files are made in. */
+export type PrintFileForm = 'flat' | 'layered' | 'layered_live_text';
+
+/** How far from its outline a print file's live text may lie. */
+export type TextTolerance = { unit: 'px' | 'mm'; value: number };
+
 export type Tenant = {
 	id: string;
 	name: string;
@@ -98,6 +104,10 @@ export type Store = {
 	allowedOrigins: string[];
 	/** The brand chosen for the store; null for its workspace's default. */
 	brandId: string | null;
+	/** The form chosen for the store's print files; null for its workspace's. */
+	printFileForm: PrintFileForm | null;
+	/** The live text tolerance chosen for the store; null for its workspace's. */
+	printFileTextTolerance: TextTolerance | null;
 	/** The credential the store handed over for calling its shop tools; null
 	 *  while it holds none. */
 	storeAccess: string | null;

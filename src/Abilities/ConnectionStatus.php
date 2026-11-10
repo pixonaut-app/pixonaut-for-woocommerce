@@ -127,7 +127,7 @@ final class ConnectionStatus implements Ability {
 				),
 				'workspace_settings' => array(
 					'type'        => array( 'object', 'null' ),
-					'description' => __( 'The workspace\'s settings as Pixonaut answered them: `brands` the store may choose from (the default first), `brand_id` the brand its pages are drawn in, `chosen_brand_id` the store\'s own choice (null while it follows the default), its logo and accent colour, the proof watermark, where orders ship, the least print resolution and the default language. Null while the connection is paused or Pixonaut could not be reached.', 'pixonaut-for-woocommerce' ),
+					'description' => __( 'The workspace\'s settings as Pixonaut answered them: `brands` the store may choose from (the default first), `brand_id` the brand its pages are drawn in, `chosen_brand_id` the store\'s own choice (null while it follows the default), its logo and accent colour, the proof watermark, where orders ship, the least print resolution, the default language, `print_file_form` and `print_file_tolerance` the store\'s own print file form and live text tolerance (null while it follows the workspace\'s), and `prints_with` the form and tolerance its print files get. Null while the connection is paused or Pixonaut could not be reached.', 'pixonaut-for-woocommerce' ),
 				),
 			),
 		);

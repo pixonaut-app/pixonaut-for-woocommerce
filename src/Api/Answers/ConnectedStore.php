@@ -30,7 +30,9 @@ final class ConnectedStore {
 	 * @param ConnectedStoreDeliverOrdersTo|null $deliver_orders_to `deliverOrdersTo`; null when orders ship to their customer.
 	 * @param string                             $environment       `environment`: `live` or `sandbox`.
 	 * @param string                             $name              `name`, the integration key's name.
-	 * @param ConnectedStorePrinting             $printing          `printing`, the workspace's print defaults.
+	 * @param ConnectedStorePrinting             $printing          `printing`, the print settings the store's designs get: its own choices, else the workspace's.
+	 * @param string|null                        $print_file_form   `printFileForm`, the form chosen for the store's print files; null while it follows the workspace's.
+	 * @param ConnectedStoreTextTolerance|null   $print_file_text_tolerance `printFileTextTolerance`, the live text tolerance chosen for the store; null while it follows the workspace's.
 	 * @param bool                               $proof_watermark   `proofWatermark`.
 	 * @param bool                               $reachable         `reachable`, whether the store's webhook address answered when last checked.
 	 * @param string                             $site_url          `siteUrl`.
@@ -50,6 +52,8 @@ final class ConnectedStore {
 		public readonly string $environment,
 		public readonly string $name,
 		public readonly ConnectedStorePrinting $printing,
+		public readonly ?string $print_file_form,
+		public readonly ?ConnectedStoreTextTolerance $print_file_text_tolerance,
 		public readonly bool $proof_watermark,
 		public readonly bool $reachable,
 		public readonly string $site_url,
@@ -99,6 +103,8 @@ final class ConnectedStore {
 			environment: Read::string( $data, 'environment', $path ),
 			name: Read::string( $data, 'name', $path ),
 			printing: Read::object( $data, 'printing', $path, ConnectedStorePrinting::from_answer( ... ) ),
+			print_file_form: Read::nullable_string( $data, 'printFileForm', $path ),
+			print_file_text_tolerance: Read::nullable_object( $data, 'printFileTextTolerance', $path, ConnectedStoreTextTolerance::from_answer( ... ) ),
 			proof_watermark: Read::bool( $data, 'proofWatermark', $path ),
 			reachable: Read::bool( $data, 'reachable', $path ),
 			site_url: Read::string( $data, 'siteUrl', $path ),
