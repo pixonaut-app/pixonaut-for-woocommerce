@@ -224,6 +224,9 @@
 	margin-bottom: 1.5em;
 	width: 100%;
 	flex-basis: 100%;
+	/* A full row of a block theme's add-to-cart grid, above the quantity and
+	 * the button, also when they are not in it. */
+	grid-column: 1 / -1;
 }
 
 .pixonaut-form__side {
@@ -333,10 +336,38 @@ form.cart:has(> .pixonaut-form)::after {
 
 .pixonaut-form.is-unavailable .pixonaut-form__side,
 .pixonaut-form.is-unavailable .pixonaut-preview__side,
+.pixonaut-preview.is-unavailable .pixonaut-preview__frame,
+.pixonaut-preview .pixonaut-preview__note[hidden],
 .pixonaut-form.is-unavailable .pixonaut-tabs,
 .pixonaut-form.is-closed .pixonaut-approval,
-.pixonaut-form.is-closed + .pixonaut-cart-row .pixonaut-approval {
+.pixonaut-form.is-closed + .pixonaut-cart-row .pixonaut-approval,
+.pixonaut-form.is-closed ~ .pixonaut-approval {
 	display: none;
+}
+
+/* The product's own images, shown in the preview's place while the designer
+ * cannot be used: the first across the preview, the others in a row of
+ * thumbnails under it. */
+.pixonaut-preview__images:not([hidden]) {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 0.5em;
+}
+
+.pixonaut-preview__images[hidden] {
+	display: none;
+}
+
+.pixonaut-preview .pixonaut-preview__images img {
+	display: block;
+	width: 100%;
+	max-width: none;
+	height: auto;
+	margin: 0;
+}
+
+.pixonaut-preview .pixonaut-preview__images > :first-child {
+	grid-column: 1 / -1;
 }
 
 /* The add-to-cart form's cart row, gathered for the designer's last step:

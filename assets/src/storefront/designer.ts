@@ -141,7 +141,16 @@ const FRAME_SELECTOR = '.pixonaut-preview__frame';
  *  shape (`SideLayout::$template_shaped`). */
 const TEMPLATE_SHAPE = 'template';
 
+/** On the form container, and on the preview, while the designer cannot be
+ *  used: the preview shows the product's own images instead of its sides. */
 const UNAVAILABLE_CLASS = 'is-unavailable';
+
+/** The product's own images in its preview, shown while the designer cannot
+ *  be used. */
+const PREVIEW_IMAGES_SELECTOR = '.pixonaut-preview__images';
+
+/** The note under the preview that it follows what the customer types. */
+const PREVIEW_NOTE_SELECTOR = '.pixonaut-preview__note';
 
 /** Set beside UNAVAILABLE_CLASS once the product cannot be personalised for
  *  the rest of the page; without it the customer's next action retries. */
@@ -1567,6 +1576,7 @@ export class ProductDesigner {
 		this.unavailable = true;
 		this.destroyDesigners();
 		this.container.classList.add(UNAVAILABLE_CLASS, CLOSED_CLASS);
+		this.showProductImages(true);
 		const element = this.unavailableMessage();
 		if (element !== null) {
 			element.textContent = message;
@@ -1830,6 +1840,7 @@ export class ProductDesigner {
 
 	private showUnavailable(shown: boolean): void {
 		this.container.classList.toggle(UNAVAILABLE_CLASS, shown);
+		this.showProductImages(shown);
 		if (shown) {
 			this.giveShopPartsBack();
 		}
@@ -1843,6 +1854,25 @@ export class ProductDesigner {
 			});
 		}
 		message.hidden = !shown;
+	}
+
+	/** Shows the product's own images in its preview in place of the sides,
+	 *  without the note that the preview follows the customer's typing, or
+	 *  the sides again. */
+	private showProductImages(shown: boolean): void {
+		const preview = this.preview();
+		if (preview === null) {
+			return;
+		}
+		preview.classList.toggle(UNAVAILABLE_CLASS, shown);
+		const images = preview.querySelector<HTMLElement>(PREVIEW_IMAGES_SELECTOR);
+		if (images !== null) {
+			images.hidden = !shown;
+		}
+		const note = preview.querySelector<HTMLElement>(PREVIEW_NOTE_SELECTOR);
+		if (note !== null) {
+			note.hidden = shown;
+		}
 	}
 
 	private setLocked(locked: boolean): void {

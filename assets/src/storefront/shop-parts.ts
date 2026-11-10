@@ -56,6 +56,9 @@ export type ShopParts = {
 	options: HTMLElement | null;
 	/** The cart row, gathered in an element of its own. */
 	cartRow: HTMLElement;
+	/** The parts the cart row gathers, in order: outside the designer they
+	 *  stand in the add-to-cart form themselves (`returnShopParts()`). */
+	rowParts: Element[];
 	/** Where each part that is not the cart row goes back to
 	 *  (`returnShopParts()`): the option fields, and each attribute's field
 	 *  put in a slot of its own. */
@@ -123,8 +126,19 @@ function gatherParts(
 	const cartRow = container.ownerDocument.createElement('div');
 	cartRow.className = CART_ROW_CLASS;
 	container.after(cartRow);
-	cartRow.append(...parts, ...following);
-	return { options, cartRow, homes: new Map() };
+	const rowParts = [...parts, ...following];
+	cartRow.append(...rowParts);
+	return { options, cartRow, rowParts, homes: new Map() };
+}
+
+/** The cart row, holding its parts again when they were given back to the
+ *  add-to-cart form. */
+function filledCartRow(parts: ShopParts): HTMLElement {
+	const { cartRow, rowParts } = parts;
+	if (rowParts.some((part) => part.parentElement !== cartRow)) {
+		cartRow.append(...rowParts);
+	}
+	return cartRow;
 }
 
 /**
@@ -200,7 +214,7 @@ export function printShopParts(
 		}
 		const name = slot.dataset.pixonautSlot ?? '';
 		if (name === CART_SLOT) {
-			slot.append(parts.cartRow);
+			slot.append(filledCartRow(parts));
 			continue;
 		}
 		const part =
@@ -246,7 +260,10 @@ export function printPageParts(page: Document): void {
  * Puts each part no designer holds back where the add-to-cart form had it:
  * one in a slot of the printed form, and one a destroyed designer gave back
  * where it took it, in a printed form it has since replaced. A part in
- * `lent`, which a designer is about to take, stays.
+ * `lent`, which a designer is about to take, stays. The cart row's parts go
+ * back one by one, after the form container, without the element gathering
+ * them: a block theme lays out the quantity and the button by rules for the
+ * add-to-cart form's own children, which miss them inside it.
  */
 export function returnShopParts(
 	parts: ShopParts,
@@ -274,7 +291,10 @@ export function returnShopParts(
 		}
 	}
 	if (away(parts.cartRow)) {
-		container.after(parts.cartRow);
+		parts.cartRow.remove();
+		container.after(
+			...parts.rowParts.filter((part) => parts.cartRow.contains(part)),
+		);
 	}
 }
 
@@ -289,6 +309,6 @@ export type ShopStepOptions = Pick<
 export function shopStepOptions(parts: ShopParts): ShopStepOptions {
 	return {
 		optionsStep: parts.options === null ? {} : { content: parts.options },
-		lastStepContent: parts.cartRow,
+		lastStepContent: filledCartRow(parts),
 	};
 }

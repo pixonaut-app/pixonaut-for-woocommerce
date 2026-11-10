@@ -193,6 +193,53 @@ function pixonaut_e2e_pick_variant( WC_Product $product, ?string $ref ): void {
 	$variants->note( $product );
 }
 
+/**
+ * Gives a product a featured image and a gallery: `$count` plain pictures
+ * in turn, each a colour of its own, the first featured.
+ *
+ * @param int $product_id The product.
+ * @param int $count      How many pictures.
+ */
+function pixonaut_e2e_add_images( int $product_id, int $count ): void {
+	// Read again: the product was saved, synced and configured since it was made.
+	$product = wc_get_product( $product_id );
+	if ( ! $product instanceof WC_Product || $count < 1 ) {
+		return;
+	}
+	$colours = array( array( 46, 125, 50 ), array( 21, 101, 192 ), array( 198, 40, 40 ), array( 249, 168, 37 ) );
+	$side    = 600;
+	$ids     = array();
+	for ( $index = 0; $index < $count; $index++ ) {
+		$image  = imagecreatetruecolor( $side, $side );
+		$colour = $colours[ $index % count( $colours ) ];
+		imagefill( $image, 0, 0, (int) imagecolorallocate( $image, $colour[0], $colour[1], $colour[2] ) );
+		ob_start();
+		imagepng( $image );
+		$upload = wp_upload_bits( 'pixonaut-e2e-picture-' . $product->get_id() . '-' . $index . '.png', null, (string) ob_get_clean() );
+		if ( false !== $upload['error'] ) {
+			continue;
+		}
+		$id = wp_insert_attachment(
+			array(
+				'post_title'     => $product->get_name() . ' ' . ( $index + 1 ),
+				'post_mime_type' => 'image/png',
+				'post_status'    => 'inherit',
+			),
+			$upload['file'],
+			$product->get_id()
+		);
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $upload['file'] ) );
+		$ids[] = $id;
+	}
+	if ( array() === $ids ) {
+		return;
+	}
+	$product->set_image_id( array_shift( $ids ) );
+	$product->set_gallery_image_ids( $ids );
+	$product->save();
+}
+
 function pixonaut_e2e_forget_catalogue(): void {
 	global $wpdb;
 	$prefix = \Pixonaut\WooCommerce\Schema::CATALOGUE_CACHE_PREFIX;
@@ -476,6 +523,11 @@ add_action(
 					'variants'      => array(
 						'type' => 'object',
 					),
+					// How many pictures the product shows without its designer: a featured image, then its gallery.
+					'images'        => array(
+						'type'    => 'integer',
+						'default' => 0,
+					),
 				),
 				'callback'            => static function ( WP_REST_Request $request ) {
 					$sizes   = is_array( $request['variations'] ) ? array_map( 'strval', $request['variations'] ) : array();
@@ -536,6 +588,7 @@ add_action(
 							pixonaut_e2e_pick_variant( $variation, is_string( $by_size[ $size ] ?? null ) ? $by_size[ $size ] : $variant );
 						}
 					}
+					pixonaut_e2e_add_images( $product->get_id(), (int) $request['images'] );
 
 					return new WP_REST_Response(
 						array(

@@ -20,10 +20,13 @@
  * anything a theme draws around it; a side whose designer shows it is
  * marked `data-pixonaut-mark`, and keeps the mark's room there until it is
  * drawn. A note under the sides says the preview follows what the customer
- * types.
+ * types. `.pixonaut-preview__images` holds the product's own images, its
+ * featured image and then its gallery's, or WooCommerce's placeholder: when
+ * the designer cannot load, the script marks the preview `is-unavailable`,
+ * shows them in place of the sides and hides the note.
  *
  * @package Pixonaut\WooCommerce
- * @version 0.1.0
+ * @version 1.4.0
  *
  * @var int                       $product_id The product.
  * @var string[]                  $sides      Side keys, in display order.
@@ -31,6 +34,7 @@
  * @var string                    $note       The note under the preview.
  * @var string                    $loading    What the spinner reads out.
  * @var array<string, \Pixonaut\WooCommerce\Storefront\SideLayout> $layouts Each side's layout, by side key.
+ * @var int[]                     $images     The product's image attachment ids, its featured image first; empty for none.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -69,5 +73,14 @@ defined( 'ABSPATH' ) || exit;
 			<?php endif; ?>
 		</div>
 	<?php endforeach; ?>
+	<div class="pixonaut-preview__images" hidden>
+		<?php if ( array() === ( $images ?? array() ) ) : ?>
+			<?php echo wc_placeholder_img( 'woocommerce_single' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WooCommerce's image markup. ?>
+		<?php else : ?>
+			<?php foreach ( $images as $pixonaut_index => $pixonaut_image ) : ?>
+				<?php echo wp_get_attachment_image( $pixonaut_image, 0 === $pixonaut_index ? 'woocommerce_single' : 'woocommerce_gallery_thumbnail' ); ?>
+			<?php endforeach; ?>
+		<?php endif; ?>
+	</div>
 	<p class="pixonaut-preview__note"><?php echo esc_html( $note ); ?></p>
 </div>
