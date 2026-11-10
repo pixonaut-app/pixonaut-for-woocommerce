@@ -91,6 +91,7 @@ not recorded and it runs again. What it throws decides what the store sees:
 | Option | `pixonaut_wc_webhook_ping` | The outcome of the last test request to the webhook endpoint, `{delivered, error, at}` ([Webhooks](./webhooks/#the-endpoint)) |
 | Option | `pixonaut_wc_events_cursor`, `pixonaut_wc_events_baseline` | The event stream's cursor, and how far setting the first one has paged ([Webhooks](./webhooks/)) |
 | Option | `pixonaut_wc_request_log` | The developer tools' request log, the last 50 requests newest first ([Developer tools](./developer-tools/#request-log)) |
+| Option | `pixonaut_wc_split_attributes` | The ids of the global attributes whose values are listed as their own products by default ([Listing each value as its own product](../merchant/split-listings/)) |
 | Option | `pixonaut_wc_catalogue_generation` | The generation every cached catalogue answer's key carries; raising it drops them all |
 | Option | `pixonaut_wc_proof_lock_<…>`, `pixonaut_wc_report_<…>` | One proof image fetch at a time; the throttle on reports from product pages whose designer could not load |
 | Site option | `pixonaut_wc_update_state_stable`, `pixonaut_wc_update_state_beta` | The update checker's last check per channel ([Releasing](./releasing/)) |
@@ -117,7 +118,10 @@ again.
 
 Only `ProductConfig` reads or writes `_pixonaut_config`, and only `LineState`
 reads or writes `_pixonaut_line` and its two indexes. A variation uses the product's
-configuration unless its own has "override" set. A configuration written by
+configuration unless its own has "override" set. Its `splitListing` holds the product's own On or Off for listing each value
+of a global attribute as its own product, by attribute id; an attribute it
+does not name follows the attribute's setting, and `Catalogue\SplitListing`
+resolves the one attribute a product is listed by. A configuration written by
 a newer plugin version reads as invalid, so the product cannot be bought,
 and is never overwritten; on a variation it applies even without "override".
 A line state written by a newer plugin version reads as `needs_attention` and

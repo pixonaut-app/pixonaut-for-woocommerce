@@ -28,7 +28,7 @@ final class ProductConfig {
 
 	public const META_KEY = Schema::PRODUCT_CONFIG_META;
 
-	public const SCHEMA_VERSION = 13;
+	public const SCHEMA_VERSION = 14;
 
 	/**
 	 * Invalid reason of a document written by a newer plugin version.
@@ -48,28 +48,31 @@ final class ProductConfig {
 	public const DESIGN_VIEW = 'design';
 
 	/**
-	 * @param bool        $personalise    Whether customers personalise the product.
-	 * @param bool        $override       On a variation: use this configuration instead of the product's.
-	 * @param string|null $blank_id       The Pixonaut blank; null for a template-only product.
-	 * @param string|null $blank_name     Cached blank name.
-	 * @param Side[]      $sides          The personalisable sides, in display order.
-	 * @param string|null $layout         Layout override; null follows the setting, or on a variation its product.
-	 * @param string|null $approval_mode  Approval mode override; null follows the setting.
-	 * @param bool        $valid          False when the configuration cannot be sold as is.
-	 * @param string|null $invalid_reason Why it is invalid, a code from the check that found it.
-	 * @param string[]    $views          The ids of the blank's views the product is shown in, `DESIGN_VIEW` among them for the Design view; empty for all and the Design view.
-	 * @param string|null $form_layout    Form layout override; null follows the setting.
-	 * @param string|null $initial_view   The id of the view the designer starts on, one of `$views`
-	 *                                    when it names any; null for the first.
-	 * @param string|null $printshop_id   The printshop that makes the product's orders while it has no
-	 *                                    blank; null for the workspace's default. A blank decides its own.
-	 * @param bool|null   $draw_at_template_ratio Whether the designer draws each side's canvas at its template's
-	 *                                    ratio whatever print size is chosen (`CanvasRatio`); null follows
-	 *                                    the template. A side's own choice comes first.
-	 * @param string|null $option_groups  Where the product's options stand in the form, an `OptionGroups` choice;
-	 *                                    null follows the settings. A variation follows its product.
-	 * @param string|null $group_numbers  Whether the form numbers its groups, a `GroupNumbers` choice; null
-	 *                                    follows the setting. A variation follows its product.
+	 * @param bool               $personalise    Whether customers personalise the product.
+	 * @param bool               $override       On a variation: use this configuration instead of the product's.
+	 * @param string|null        $blank_id       The Pixonaut blank; null for a template-only product.
+	 * @param string|null        $blank_name     Cached blank name.
+	 * @param Side[]             $sides          The personalisable sides, in display order.
+	 * @param string|null        $layout         Layout override; null follows the setting, or on a variation its product.
+	 * @param string|null        $approval_mode  Approval mode override; null follows the setting.
+	 * @param bool               $valid          False when the configuration cannot be sold as is.
+	 * @param string|null        $invalid_reason Why it is invalid, a code from the check that found it.
+	 * @param string[]           $views          The ids of the blank's views the product is shown in, `DESIGN_VIEW` among them for the Design view; empty for all and the Design view.
+	 * @param string|null        $form_layout    Form layout override; null follows the setting.
+	 * @param string|null        $initial_view   The id of the view the designer starts on, one of `$views`
+	 *                                           when it names any; null for the first.
+	 * @param string|null        $printshop_id   The printshop that makes the product's orders while it has no
+	 *                                           blank; null for the workspace's default. A blank decides its own.
+	 * @param bool|null          $draw_at_template_ratio Whether the designer draws each side's canvas at its template's
+	 *                                           ratio whatever print size is chosen (`CanvasRatio`); null follows
+	 *                                           the template. A side's own choice comes first.
+	 * @param string|null        $option_groups  Where the product's options stand in the form, an `OptionGroups` choice;
+	 *                                           null follows the settings. A variation follows its product.
+	 * @param string|null        $group_numbers  Whether the form numbers its groups, a `GroupNumbers` choice; null
+	 *                                           follows the setting. A variation follows its product.
+	 * @param array<int, string> $split_listing Whether each value of a global attribute is listed as its own
+	 *                                    product, by attribute id: `SplitListing::ON` or `SplitListing::OFF`;
+	 *                                    an attribute not named follows its own setting. A variation follows its product.
 	 * @phpstan-param list<Side> $sides
 	 * @phpstan-param list<string> $views
 	 */
@@ -90,6 +93,7 @@ final class ProductConfig {
 		public readonly ?bool $draw_at_template_ratio = null,
 		public readonly ?string $option_groups = null,
 		public readonly ?string $group_numbers = null,
+		public readonly array $split_listing = array(),
 	) {
 	}
 
@@ -294,23 +298,11 @@ final class ProductConfig {
 	 * @param string|null $reason Why not; ignored when valid.
 	 */
 	public function with_validity( bool $valid, ?string $reason = null ): self {
-		return new self(
-			$this->personalise,
-			$this->override,
-			$this->blank_id,
-			$this->blank_name,
-			$this->sides,
-			$this->layout,
-			$this->approval_mode,
-			$valid,
-			$valid ? null : $reason,
-			$this->views,
-			$this->form_layout,
-			$this->initial_view,
-			$this->printshop_id,
-			$this->draw_at_template_ratio,
-			$this->option_groups,
-			$this->group_numbers,
+		return $this->with(
+			array(
+				'valid'          => $valid,
+				'invalid_reason' => $valid ? null : $reason,
+			)
 		);
 	}
 
@@ -353,24 +345,7 @@ final class ProductConfig {
 	 * @phpstan-param list<Side> $sides
 	 */
 	public function with_sides( array $sides ): self {
-		return new self(
-			$this->personalise,
-			$this->override,
-			$this->blank_id,
-			$this->blank_name,
-			$sides,
-			$this->layout,
-			$this->approval_mode,
-			$this->valid,
-			$this->invalid_reason,
-			$this->views,
-			$this->form_layout,
-			$this->initial_view,
-			$this->printshop_id,
-			$this->draw_at_template_ratio,
-			$this->option_groups,
-			$this->group_numbers,
-		);
+		return $this->with( array( 'sides' => $sides ) );
 	}
 
 	/**
@@ -460,24 +435,7 @@ final class ProductConfig {
 	 * @param bool|null $draw Whether it draws at the template's ratio; null follows the template.
 	 */
 	public function with_draw_at_template_ratio( ?bool $draw ): self {
-		return new self(
-			$this->personalise,
-			$this->override,
-			$this->blank_id,
-			$this->blank_name,
-			$this->sides,
-			$this->layout,
-			$this->approval_mode,
-			$this->valid,
-			$this->invalid_reason,
-			$this->views,
-			$this->form_layout,
-			$this->initial_view,
-			$this->printshop_id,
-			$draw,
-			$this->option_groups,
-			$this->group_numbers,
-		);
+		return $this->with( array( 'draw_at_template_ratio' => $draw ) );
 	}
 
 	/**
@@ -486,24 +444,7 @@ final class ProductConfig {
 	 * @param bool $personalise Whether the product is personalised.
 	 */
 	public function with_personalise( bool $personalise ): self {
-		return new self(
-			$personalise,
-			$this->override,
-			$this->blank_id,
-			$this->blank_name,
-			$this->sides,
-			$this->layout,
-			$this->approval_mode,
-			$this->valid,
-			$this->invalid_reason,
-			$this->views,
-			$this->form_layout,
-			$this->initial_view,
-			$this->printshop_id,
-			$this->draw_at_template_ratio,
-			$this->option_groups,
-			$this->group_numbers,
-		);
+		return $this->with( array( 'personalise' => $personalise ) );
 	}
 
 	/**
@@ -513,23 +454,13 @@ final class ProductConfig {
 	 * @param string $blank_id The blank.
 	 */
 	public function on_blank( string $blank_id ): self {
-		return new self(
-			$this->personalise,
-			$this->override,
-			$blank_id,
-			null,
-			$this->sides,
-			$this->layout,
-			$this->approval_mode,
-			$this->valid,
-			$this->invalid_reason,
-			array(),
-			$this->form_layout,
-			null,
-			$this->printshop_id,
-			$this->draw_at_template_ratio,
-			$this->option_groups,
-			$this->group_numbers,
+		return $this->with(
+			array(
+				'blank_id'     => $blank_id,
+				'blank_name'   => null,
+				'views'        => array(),
+				'initial_view' => null,
+			)
 		);
 	}
 
@@ -539,24 +470,7 @@ final class ProductConfig {
 	 * @param string|null $layout A layout, or null to follow the setting.
 	 */
 	public function with_layout( ?string $layout ): self {
-		return new self(
-			$this->personalise,
-			$this->override,
-			$this->blank_id,
-			$this->blank_name,
-			$this->sides,
-			$layout,
-			$this->approval_mode,
-			$this->valid,
-			$this->invalid_reason,
-			$this->views,
-			$this->form_layout,
-			$this->initial_view,
-			$this->printshop_id,
-			$this->draw_at_template_ratio,
-			$this->option_groups,
-			$this->group_numbers,
-		);
+		return $this->with( array( 'layout' => $layout ) );
 	}
 
 	/**
@@ -565,24 +479,7 @@ final class ProductConfig {
 	 * @param string|null $form_layout A form layout, or null to follow the setting.
 	 */
 	public function with_form_layout( ?string $form_layout ): self {
-		return new self(
-			$this->personalise,
-			$this->override,
-			$this->blank_id,
-			$this->blank_name,
-			$this->sides,
-			$this->layout,
-			$this->approval_mode,
-			$this->valid,
-			$this->invalid_reason,
-			$this->views,
-			$form_layout,
-			$this->initial_view,
-			$this->printshop_id,
-			$this->draw_at_template_ratio,
-			$this->option_groups,
-			$this->group_numbers,
-		);
+		return $this->with( array( 'form_layout' => $form_layout ) );
 	}
 
 	/**
@@ -591,7 +488,7 @@ final class ProductConfig {
 	 * @param string|null $option_groups An `OptionGroups` choice, or null to follow the settings.
 	 */
 	public function with_option_groups( ?string $option_groups ): self {
-		return new self( ...array_merge( get_object_vars( $this ), array( 'option_groups' => $option_groups ) ) );
+		return $this->with( array( 'option_groups' => $option_groups ) );
 	}
 
 	/**
@@ -600,7 +497,17 @@ final class ProductConfig {
 	 * @param string|null $group_numbers A `GroupNumbers` choice, or null to follow the setting.
 	 */
 	public function with_group_numbers( ?string $group_numbers ): self {
-		return new self( ...array_merge( get_object_vars( $this ), array( 'group_numbers' => $group_numbers ) ) );
+		return $this->with( array( 'group_numbers' => $group_numbers ) );
+	}
+
+	/**
+	 * A copy with other choices of whether each value of an attribute is
+	 * listed as its own product.
+	 *
+	 * @param array<int, string> $split_listing `SplitListing::ON` or `SplitListing::OFF` by attribute id; an attribute left out follows its own setting.
+	 */
+	public function with_split_listing( array $split_listing ): self {
+		return $this->with( array( 'split_listing' => SplitListing::choices_from( $split_listing ) ) );
 	}
 
 	/**
@@ -609,24 +516,7 @@ final class ProductConfig {
 	 * @param string|null $approval_mode An approval mode, or null to follow the setting.
 	 */
 	public function with_approval_mode( ?string $approval_mode ): self {
-		return new self(
-			$this->personalise,
-			$this->override,
-			$this->blank_id,
-			$this->blank_name,
-			$this->sides,
-			$this->layout,
-			$approval_mode,
-			$this->valid,
-			$this->invalid_reason,
-			$this->views,
-			$this->form_layout,
-			$this->initial_view,
-			$this->printshop_id,
-			$this->draw_at_template_ratio,
-			$this->option_groups,
-			$this->group_numbers,
-		);
+		return $this->with( array( 'approval_mode' => $approval_mode ) );
 	}
 
 	/**
@@ -637,23 +527,11 @@ final class ProductConfig {
 	 * @phpstan-param list<string> $views
 	 */
 	public function with_views( array $views, ?string $initial_view = null ): self {
-		return new self(
-			$this->personalise,
-			$this->override,
-			$this->blank_id,
-			$this->blank_name,
-			$this->sides,
-			$this->layout,
-			$this->approval_mode,
-			$this->valid,
-			$this->invalid_reason,
-			$views,
-			$this->form_layout,
-			$initial_view,
-			$this->printshop_id,
-			$this->draw_at_template_ratio,
-			$this->option_groups,
-			$this->group_numbers,
+		return $this->with(
+			array(
+				'views'        => $views,
+				'initial_view' => $initial_view,
+			)
 		);
 	}
 
@@ -663,24 +541,7 @@ final class ProductConfig {
 	 * @param bool $override On a variation: use this configuration instead of the product's.
 	 */
 	public function with_override( bool $override ): self {
-		return new self(
-			$this->personalise,
-			$override,
-			$this->blank_id,
-			$this->blank_name,
-			$this->sides,
-			$this->layout,
-			$this->approval_mode,
-			$this->valid,
-			$this->invalid_reason,
-			$this->views,
-			$this->form_layout,
-			$this->initial_view,
-			$this->printshop_id,
-			$this->draw_at_template_ratio,
-			$this->option_groups,
-			$this->group_numbers,
-		);
+		return $this->with( array( 'override' => $override ) );
 	}
 
 	/**
@@ -689,24 +550,16 @@ final class ProductConfig {
 	 * @param string|null $printshop_id A printshop connection's id, or null for the workspace's default.
 	 */
 	public function with_printshop( ?string $printshop_id ): self {
-		return new self(
-			$this->personalise,
-			$this->override,
-			$this->blank_id,
-			$this->blank_name,
-			$this->sides,
-			$this->layout,
-			$this->approval_mode,
-			$this->valid,
-			$this->invalid_reason,
-			$this->views,
-			$this->form_layout,
-			$this->initial_view,
-			$printshop_id,
-			$this->draw_at_template_ratio,
-			$this->option_groups,
-			$this->group_numbers,
-		);
+		return $this->with( array( 'printshop_id' => $printshop_id ) );
+	}
+
+	/**
+	 * A copy with some properties changed.
+	 *
+	 * @param array<string, mixed> $changes New values by constructor parameter name.
+	 */
+	private function with( array $changes ): self {
+		return new self( ...array_merge( get_object_vars( $this ), $changes ) );
 	}
 
 	/**
@@ -815,23 +668,12 @@ final class ProductConfig {
 			$filtered = apply_filters( 'pixonaut_wc_catalogue_side_config', $side, $bought, $this );
 			$sides[]  = $filtered instanceof Side ? $filtered : $side; // @phpstan-ignore instanceof.alwaysTrue (a filter may return anything.)
 		}
-		return new self(
-			$this->personalise,
-			$this->override,
-			$this->blank_id,
-			$this->blank_name,
-			$sides,
-			is_string( $layout ) ? $layout : null,
-			is_string( $approval_mode ) ? $approval_mode : null,
-			$this->valid,
-			$this->invalid_reason,
-			$this->views,
-			$this->form_layout,
-			$this->initial_view,
-			$this->printshop_id,
-			$this->draw_at_template_ratio,
-			$this->option_groups,
-			$this->group_numbers,
+		return $this->with(
+			array(
+				'sides'         => $sides,
+				'layout'        => is_string( $layout ) ? $layout : null,
+				'approval_mode' => is_string( $approval_mode ) ? $approval_mode : null,
+			)
 		);
 	}
 
@@ -984,6 +826,11 @@ final class ProductConfig {
 				}
 				return $data;
 			},
+			// Version 14 lets a product choose whether each value of an attribute is listed as its own product; a product saved before follows its attributes.
+			13 => static function ( array $data ): array {
+				$data['splitListing'] = array();
+				return $data;
+			},
 		);
 	}
 
@@ -1030,6 +877,7 @@ final class ProductConfig {
 			CanvasRatio::from_stored( $data['drawAtTemplateRatio'] ?? null ),
 			self::text_or_null( $data['optionGroups'] ?? null ),
 			self::text_or_null( $data['groupNumbers'] ?? null ),
+			SplitListing::choices_from( $data['splitListing'] ?? null ),
 		);
 	}
 
@@ -1059,6 +907,8 @@ final class ProductConfig {
 			'drawAtTemplateRatio' => $this->draw_at_template_ratio,
 			'optionGroups'        => $this->option_groups,
 			'groupNumbers'        => $this->group_numbers,
+			// Encoded as an object, its keys attribute ids; as an empty list when there are none.
+			'splitListing'        => $this->split_listing,
 		);
 	}
 

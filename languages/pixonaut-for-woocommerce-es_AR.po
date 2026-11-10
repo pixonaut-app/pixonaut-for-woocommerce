@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T21:09:19+00:00\n"
+"POT-Creation-Date: 2026-11-10T21:20:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -3207,6 +3207,26 @@ msgstr "Sobre qué se genera la imagen de la variación"
 #, php-format
 msgid "%1$s, photo %2$d"
 msgstr "%1$s, foto %2$d"
+
+#. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is on.
+#: src/Admin/SplitListingFields.php:211
+msgid "Auto: on, as the attribute is"
+msgstr "Auto: activado, como el atributo"
+
+#. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is off.
+#: src/Admin/SplitListingFields.php:213
+msgid "Auto: off, as the attribute is"
+msgstr "Auto: desactivado, como el atributo"
+
+#. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it on, whatever the attribute's setting.
+#: src/Admin/SplitListingFields.php:215
+msgid "On for this product"
+msgstr "Activado para este producto"
+
+#. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it off, whatever the attribute's setting.
+#: src/Admin/SplitListingFields.php:217
+msgid "Off for this product"
+msgstr "Desactivado para este producto"
 
 #: src/Admin/VariantField.php:84
 msgid ""
@@ -8750,6 +8770,26 @@ msgstr "Detener"
 #: templates/admin/regenerate-now.php:66
 msgid "Close"
 msgstr "Cerrar"
+
+#. translators: Checkbox on the screen that adds or edits a product attribute: the shop lists each of the attribute's values as its own product.
+#. translators: Three-way checkbox on an attribute's row in the product's Attributes tab: the shop lists each of the attribute's values as its own product.
+#: templates/admin/split-attribute-field.php:20
+#: templates/admin/split-listing-control.php:40
+msgid "Show each value as its own product"
+msgstr "Mostrar cada valor como un producto propio"
+
+#. translators: Help under the "Show each value as its own product" checkbox on the screen that adds or edits a product attribute.
+#: templates/admin/split-attribute-field.php:22
+msgid ""
+"A variable product using this attribute for its variations is listed once "
+"per value in the shop, its other options inside each one. Each product can "
+"follow this, or turn it on or off for itself, on its Attributes tab. Only "
+"one attribute per product is listed this way."
+msgstr ""
+"Un producto variable que usa este atributo para sus variaciones aparece una "
+"vez por valor en la tienda, con sus demás opciones dentro de cada uno. Cada "
+"producto puede seguir esto, o activarlo o desactivarlo para sí mismo, en su "
+"pestaña Atributos. Solo un atributo por producto aparece así."
 
 #: templates/admin/status-report.php:22
 msgid "Pixonaut for WooCommerce templates"
