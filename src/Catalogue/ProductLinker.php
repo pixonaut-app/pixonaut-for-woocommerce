@@ -373,7 +373,7 @@ final class ProductLinker {
 		$problem = in_array( $stored->invalid_reason, InvalidReason::INPUT, true ) ? $stored->invalid_reason : null;
 		foreach ( $sides as $side ) {
 			$menu     = $side->menu();
-			$inputs[] = new SideInput( $side->key, $side->label, $side->placement_id ?? '', null === $side->template_version ? '' : (string) new TemplateId( $side->template_base_id, $side->template_version ), $side->template_name ?? '', $menu, $side->start_size, $side->mode, $side->form_groups, $side->pinned, null, $side->draw_at_template_ratio );
+			$inputs[] = new SideInput( $side->key, $side->typed_label(), $side->placement_id ?? '', null === $side->template_version ? '' : (string) new TemplateId( $side->template_base_id, $side->template_version ), $side->template_name ?? '', $menu, $side->start_size, $side->mode, $side->form_groups, $side->pinned, null, $side->draw_at_template_ratio );
 			if ( array() === $menu && null !== $side->placement_id ) {
 				// The side sells nothing and its menu is gone: only the last save can say why,
 				// unless Pixonaut did not answer it, which would keep the product retrying.
@@ -476,7 +476,7 @@ final class ProductLinker {
 				$entered[]            = $size;
 			}
 		}
-		$sized = static fn ( array $sizes, ?array $pending, int $start ): Side => new Side( $input->key, self::label( $input, null, $name, $template->base_id ), null, null, $template->base_id, $template->version, null, $name, array_values( $sizes ), null === $pending ? null : array_values( $pending ), $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
+		$sized = static fn ( array $sizes, ?array $pending, int $start ): Side => new Side( $input->key, self::label( $input, null, $name ), null, null, $template->base_id, $template->version, null, $name, array_values( $sizes ), null === $pending ? null : array_values( $pending ), $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
 		if ( array() === $entered ) {
 			return $this->config( $current, true, null, null, array( $sized( array(), null, 0 ) ), $problem ?? InvalidReason::MISSING_PRINT_SIZE );
 		}
@@ -517,7 +517,7 @@ final class ProductLinker {
 		$name           = '' === $input->template_name ? null : $input->template_name;
 		$placement_id   = '' === $input->placement_id ? null : $input->placement_id;
 		$placement_name = null === $placement_id ? null : $placements[ $placement_id ] ?? null;
-		$sized          = static fn ( array $sizes, bool $keep_menu = false, int $start = 0 ): Side => new Side( $input->key, self::label( $input, $placement_name, $name, $template?->base_id ), $placement_id, $placement_name, $template->base_id ?? '', $template?->version, null, $name, array_values( $sizes ), $keep_menu ? $input->sizes : null, $keep_menu ? $input->start : $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
+		$sized          = static fn ( array $sizes, bool $keep_menu = false, int $start = 0 ): Side => new Side( $input->key, self::label( $input, $placement_name, $name ), $placement_id, $placement_name, $template->base_id ?? '', $template?->version, null, $name, array_values( $sizes ), $keep_menu ? $input->sizes : null, $keep_menu ? $input->start : $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
 
 		if ( null === $template ) {
 			return array( $sized( array(), true ), InvalidReason::MISSING_TEMPLATE );
@@ -625,7 +625,7 @@ final class ProductLinker {
 				}
 			}
 			$name    = '' === $input->template_name ? $same?->template_name : $input->template_name;
-			$sides[] = new Side( $input->key, self::label( $input, $same?->placement_name, $name, $template?->base_id ), $placement_id, $same?->placement_name, $base_id, $version, $same?->previous_version, $name, array(), $input->sizes, $input->start, $input->mode, form_groups: $input->form_groups, misfit_sizes: $same->misfit_sizes ?? array(), draw_at_template_ratio: $input->draw_at_template_ratio );
+			$sides[] = new Side( $input->key, self::label( $input, $same?->placement_name, $name ), $placement_id, $same?->placement_name, $base_id, $version, $same?->previous_version, $name, array(), $input->sizes, $input->start, $input->mode, form_groups: $input->form_groups, misfit_sizes: $same->misfit_sizes ?? array(), draw_at_template_ratio: $input->draw_at_template_ratio );
 		}
 		return $sides;
 	}
@@ -738,16 +738,14 @@ final class ProductLinker {
 	}
 
 	/**
-	 * The side's label: the one entered, else the placement's name, else the
-	 * template's, else the side's key.
+	 * The side's label: the one entered, else what it follows (`Side::followed_label()`).
 	 *
-	 * @param SideInput   $input            The side as entered.
-	 * @param string|null $placement_name   The placement's name.
-	 * @param string|null $template_name    The template's name.
-	 * @param string|null $template_base_id The template; null when none is chosen.
+	 * @param SideInput   $input          The side as entered.
+	 * @param string|null $placement_name The placement's name.
+	 * @param string|null $template_name  The template's name.
 	 */
-	private static function label( SideInput $input, ?string $placement_name, ?string $template_name, ?string $template_base_id ): string {
-		return '' !== $input->label ? $input->label : $placement_name ?? $template_name ?? $template_base_id ?? $input->key;
+	private static function label( SideInput $input, ?string $placement_name, ?string $template_name ): string {
+		return '' !== $input->label ? $input->label : Side::followed_label( $placement_name, $template_name, $input->key );
 	}
 
 	/**

@@ -350,7 +350,7 @@ final class ProductPanel {
 		$pictures = LinkedBlank::placement_thumbnails( $views );
 
 		return array(
-			'names'           => array(
+			'names'            => array(
 				PanelFields::PERSONALISE   => $fields->name( PanelFields::PERSONALISE ),
 				PanelFields::BLANK         => $fields->name( PanelFields::BLANK ),
 				PanelFields::LAYOUT        => $fields->name( PanelFields::LAYOUT ),
@@ -362,7 +362,7 @@ final class ProductPanel {
 				PanelFields::OPTION_GROUPS => $fields->name( PanelFields::OPTION_GROUPS ),
 				PanelFields::GROUP_NUMBERS => $fields->name( PanelFields::GROUP_NUMBERS ),
 			),
-			'ids'             => array(
+			'ids'              => array(
 				PanelFields::PERSONALISE   => $fields->id( PanelFields::PERSONALISE ),
 				PanelFields::BLANK         => $fields->id( PanelFields::BLANK ),
 				PanelFields::LAYOUT        => $fields->id( PanelFields::LAYOUT ),
@@ -374,55 +374,58 @@ final class ProductPanel {
 				PanelFields::OPTION_GROUPS => $fields->id( PanelFields::OPTION_GROUPS ),
 				PanelFields::GROUP_NUMBERS => $fields->id( PanelFields::GROUP_NUMBERS ),
 			),
-			'id_prefix'       => $fields->id_prefix,
-			'field'           => $fields->name( PanelFields::SIDES ),
-			'notice_text'     => $product->is_type( 'variation' )
+			'id_prefix'        => $fields->id_prefix,
+			'field'            => $fields->name( PanelFields::SIDES ),
+			'notice_text'      => $product->is_type( 'variation' )
 				? __( 'This variation cannot be bought until its Pixonaut configuration is fixed:', 'pixonaut-for-woocommerce' )
 				: __( 'This product cannot be bought until its Pixonaut configuration is fixed:', 'pixonaut-for-woocommerce' ),
-			'max_sides'       => PostedSides::MAX_SIDES,
-			'recommended'     => PostedSides::RECOMMENDED_SIDES,
-			'personalise'     => $config->personalise,
-			'blank_id'        => $config->blank_id ?? '',
-			'blank_name'      => $config->blank_name ?? '',
+			'max_sides'        => PostedSides::MAX_SIDES,
+			'recommended'      => PostedSides::RECOMMENDED_SIDES,
+			'personalise'      => $config->personalise,
+			'personalise_text' => $product->is_type( 'variation' )
+				? __( 'Customers design this variation with a Pixonaut template.', 'pixonaut-for-woocommerce' )
+				: __( 'Customers design this product with a Pixonaut template.', 'pixonaut-for-woocommerce' ),
+			'blank_id'         => $config->blank_id ?? '',
+			'blank_name'       => $config->blank_name ?? '',
 			// The blank's first photo: its first placement's first view.
-			'blank_thumbnail' => (string) reset( $pictures ),
-			'placements'      => array_map( static fn ( array $placement ): array => $placement + array( 'thumbnail' => $pictures[ $placement['id'] ] ?? '' ), $this->placements( $config, $blank ) ),
-			'views'           => $views,
-			'chosen_views'    => $config->views,
-			'initial_view'    => $config->initial_view ?? '',
+			'blank_thumbnail'  => (string) reset( $pictures ),
+			'placements'       => array_map( static fn ( array $placement ): array => $placement + array( 'thumbnail' => $pictures[ $placement['id'] ] ?? '' ), $this->placements( $config, $blank ) ),
+			'views'            => $views,
+			'chosen_views'     => $config->views,
+			'initial_view'     => $config->initial_view ?? '',
 			// The tile of the view of the design alone shows the template's preview.
-			'design_preview'  => null === $views || null === $this->showcases ? '' : $this->showcases->preview( $config ),
-			'sides'           => array_map( fn ( ?Side $side ): array => self::side_fields( $side ) + $this->standing_options( $side, $product->get_id() ), array() === $config->sides ? array( null ) : $config->sides ),
-			'printshop'       => null === $config->blank_id ? null : $this->blank->printshop( $config->blank_id, $blank ),
-			'printshops'      => $this->printshops( $config ),
-			'printshop_id'    => $config->printshop_id ?? '',
-			'printshops_url'  => StudioPage::section( StudioPage::PRINTSHOPS ),
-			'variable'        => $product->is_type( 'variable' ),
-			'open'            => self::remembered_open( $product ),
+			'design_preview'   => null === $views || null === $this->showcases ? '' : $this->showcases->preview( $config ),
+			'sides'            => array_map( fn ( ?Side $side ): array => self::side_fields( $side ) + $this->standing_options( $side, $product->get_id() ), array() === $config->sides ? array( null ) : $config->sides ),
+			'printshop'        => null === $config->blank_id ? null : $this->blank->printshop( $config->blank_id, $blank ),
+			'printshops'       => $this->printshops( $config ),
+			'printshop_id'     => $config->printshop_id ?? '',
+			'printshops_url'   => StudioPage::section( StudioPage::PRINTSHOPS ),
+			'variable'         => $product->is_type( 'variable' ),
+			'open'             => self::remembered_open( $product ),
 			// Only the product's own panel remembers them: a variation's would post over it.
-			'open_field'      => $product->is_type( 'variation' ) ? '' : self::OPEN_FIELD,
-			'invalid'         => self::invalid( $config, $blank ),
-			'layout'          => in_array( $config->layout, Layout::available(), true ) ? (string) $config->layout : '',
-			'layouts'         => $this->layouts( $product ),
-			'form_layout'     => in_array( $config->form_layout, FormLayout::available(), true ) ? (string) $config->form_layout : '',
-			'form_layouts'    => self::choices( FormLayout::names(), FormLayout::available(), (string) $this->settings->get( Settings::FORM_LAYOUT ) ),
-			'option_groups'   => in_array( $config->option_groups, OptionGroups::available(), true ) ? (string) $config->option_groups : '',
+			'open_field'       => $product->is_type( 'variation' ) ? '' : self::OPEN_FIELD,
+			'invalid'          => self::invalid( $config, $blank ),
+			'layout'           => in_array( $config->layout, Layout::available(), true ) ? (string) $config->layout : '',
+			'layouts'          => $this->layouts( $product ),
+			'form_layout'      => in_array( $config->form_layout, FormLayout::available(), true ) ? (string) $config->form_layout : '',
+			'form_layouts'     => self::choices( FormLayout::names(), FormLayout::available(), (string) $this->settings->get( Settings::FORM_LAYOUT ) ),
+			'option_groups'    => in_array( $config->option_groups, OptionGroups::available(), true ) ? (string) $config->option_groups : '',
 			// Only the product chooses: a variation follows it.
-			'option_choices'  => $product->is_type( 'variation' ) ? array() : self::choices( OptionGroups::names(), OptionGroups::available(), OptionGroups::of_store( $this->settings ) ),
-			'group_numbers'   => in_array( $config->group_numbers, GroupNumbers::available(), true ) ? (string) $config->group_numbers : '',
-			'number_choices'  => $product->is_type( 'variation' ) ? array() : self::choices( GroupNumbers::names(), GroupNumbers::available(), GroupNumbers::of_store( $this->settings ) ),
-			'approval_mode'   => in_array( $config->approval_mode, ApprovalMode::available(), true ) ? (string) $config->approval_mode : '',
-			'canvas_ratio'    => CanvasRatio::posted( $config->draw_at_template_ratio ),
-			'canvas_ratios'   => CanvasRatio::names(
+			'option_choices'   => $product->is_type( 'variation' ) ? array() : self::choices( OptionGroups::names(), OptionGroups::available(), OptionGroups::of_store( $this->settings ) ),
+			'group_numbers'    => in_array( $config->group_numbers, GroupNumbers::available(), true ) ? (string) $config->group_numbers : '',
+			'number_choices'   => $product->is_type( 'variation' ) ? array() : self::choices( GroupNumbers::names(), GroupNumbers::available(), GroupNumbers::of_store( $this->settings ) ),
+			'approval_mode'    => in_array( $config->approval_mode, ApprovalMode::available(), true ) ? (string) $config->approval_mode : '',
+			'canvas_ratio'     => CanvasRatio::posted( $config->draw_at_template_ratio ),
+			'canvas_ratios'    => CanvasRatio::names(
 				$product->is_type( 'variation' )
 					/* translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page. */
 					? __( 'As the product says', 'pixonaut-for-woocommerce' )
 					/* translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page. */
 					: __( 'As the template says', 'pixonaut-for-woocommerce' )
 			),
-			'approval_modes'  => self::choices( ApprovalMode::names(), ApprovalMode::available(), (string) $this->settings->get( Settings::DEFAULT_APPROVAL_MODE ) ),
+			'approval_modes'   => self::choices( ApprovalMode::names(), ApprovalMode::available(), (string) $this->settings->get( Settings::DEFAULT_APPROVAL_MODE ) ),
 			// A variation's options are chosen already, so only the product arranges its form.
-			'groups'          => $product->is_type( 'variation' ) ? null : array(
+			'groups'           => $product->is_type( 'variation' ) ? null : array(
 				'url'        => rest_url( Plugin::REST_NAMESPACE . CatalogueSearch::TEMPLATE_GROUPS_ROUTE ),
 				'attributes' => VariationAttributes::of( $product ),
 			),
@@ -864,7 +867,7 @@ final class ProductPanel {
 	 * menu Pixonaut could not check yet is shown as it was entered.
 	 *
 	 * @param Side|null $side A stored side.
-	 * @return array{key: string, label: string, placement_id: string, template_id: string, template_name: string, pinned: bool, version: int, versions: list<int>, mode: string, offers_properties: bool|null, misfit_warning: string, form_groups: string, canvas_ratio: string, sizes: list<array{kind: string, width: string, height: string, label: string, start: bool}>}
+	 * @return array{key: string, label: string, title: string, placement_id: string, template_id: string, template_name: string, pinned: bool, version: int, versions: list<int>, mode: string, offers_properties: bool|null, misfit_warning: string, form_groups: string, canvas_ratio: string, sizes: list<array{kind: string, width: string, height: string, label: string, start: bool}>}
 	 */
 	private static function side_fields( ?Side $side ): array {
 		$sizes = array();
@@ -881,7 +884,9 @@ final class ProductPanel {
 		}
 		return array(
 			'key'               => $side->key ?? '',
-			'label'             => $side->label ?? '',
+			// Only a name the merchant typed: an empty field follows the placement or template as they change.
+			'label'             => $side?->typed_label() ?? '',
+			'title'             => $side->label ?? '',
 			'placement_id'      => $side->placement_id ?? '',
 			// The latest version: the field lists the template, the version picker says which version a pinned side stays on.
 			'template_id'       => null === $side || null === $side->template_version ? '' : $side->template_base_id . '@' . $side->known_latest_version(),

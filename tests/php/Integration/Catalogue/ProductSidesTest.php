@@ -367,7 +367,9 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$panel = $this->panel->panel( $this->reload( $product->get_id() ) );
 		$this->assertCount( 2, $panel['sides'] );
 		$this->assertSame( self::BACK_ID, $panel['sides'][1]['placement_id'] );
-		$this->assertSame( 'Back', $panel['sides'][1]['label'] );
+		// Named as its print position, the side follows it: the field stays empty, the title says it.
+		$this->assertSame( '', $panel['sides'][1]['label'] );
+		$this->assertSame( 'Back', $panel['sides'][1]['title'] );
 		$this->assertSame( '', $panel['sides'][1]['template_id'] );
 		$this->assertSame( array( array( 'start' => true ) + self::a4() ), $panel['sides'][1]['sizes'] );
 	}

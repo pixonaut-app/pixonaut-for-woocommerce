@@ -13,7 +13,6 @@ function panel(override: boolean): HTMLElement {
 	element.innerHTML = `
 		<input type="checkbox" class="pixonaut-override" ${override ? 'checked' : ''} />
 		<p class="pixonaut-variation-inherits"></p>
-		<p class="pixonaut-variation-overrides"></p>
 		<div class="pixonaut-variation-fields"></div>
 		<div class="pixonaut-variation-sizes">
 			<p class="pixonaut-variation-size">
@@ -45,20 +44,20 @@ describe('newPanels', () => {
 });
 
 describe('initOverride', () => {
-	it('says which configuration the variation uses', () => {
+	it('says the variation follows its product only while it does', () => {
 		const element = panel(false);
 		initOverride(element);
 		const line = (name: string) =>
 			element.querySelector<HTMLElement>(`.pixonaut-variation-${name}`)?.hidden;
 
-		expect([line('inherits'), line('overrides')]).toEqual([false, true]);
+		expect(line('inherits')).toBe(false);
 		const override =
 			element.querySelector<HTMLInputElement>('.pixonaut-override');
 		if (override) {
 			override.checked = true;
 			override.dispatchEvent(new Event('change'));
 		}
-		expect([line('inherits'), line('overrides')]).toEqual([true, false]);
+		expect(line('inherits')).toBe(true);
 	});
 
 	it("hides the fields while the variation inherits the product's", () => {

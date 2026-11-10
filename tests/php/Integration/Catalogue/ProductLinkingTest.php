@@ -493,6 +493,8 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertNull( $config->blank_id );
 		$this->assertNull( $config->sides[0]->placement_id );
 		$this->assertSame( 'mini-tee', $config->sides[0]->template_base_id );
+		$this->assertNotNull( $config->sides[0]->template_name );
+		$this->assertSame( $config->sides[0]->template_name, $config->sides[0]->label, 'an unnamed side takes its template\'s name, never its id' );
 		$this->assertEquals( array( new PrintSize( self::PRINT_WIDTH_MM, self::PRINT_HEIGHT_MM, 'Poster' ) ), $config->sides[0]->print_sizes );
 		$this->assertCount( 3, $this->recorder->requests, 'the size check, the template, then the printshops' );
 		$this->assertStringEndsWith( '/v1/templates/mini-tee%402/print-size', $this->recorder->requests[0]['url'] );

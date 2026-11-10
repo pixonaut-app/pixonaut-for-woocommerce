@@ -8,6 +8,7 @@ import {
 	showMisfitWarning,
 	showModeWarnings,
 	showSideHints,
+	showSideName,
 	showViews,
 } from './product-panel';
 
@@ -301,5 +302,77 @@ describe('showModeWarnings', () => {
 		showModeWarnings(side);
 
 		expect(shownWarnings(side)).toEqual([STANDING_MODE]);
+	});
+});
+
+describe('showSideName', () => {
+	/** A side with its name field, print position and template as chosen. */
+	function side(typed: string, placement: string, template: string) {
+		const element = document.createElement('div');
+		element.innerHTML = `
+			<span class="pixonaut-side__name" data-placeholder="Side"></span>
+			<select class="pixonaut-side-placement"><option value="">Choose</option><option value="p1">Front</option></select>
+			<select class="pixonaut-side-template"><option value=""></option><option value="kids-poster@2">Kids poster, hearts</option></select>
+			<input class="pixonaut-side-label" placeholder="Name customers see" />`;
+		const select = (selector: string, value: string) => {
+			const field = element.querySelector<HTMLSelectElement>(selector);
+			if (field) {
+				field.value = value;
+			}
+		};
+		select('.pixonaut-side-placement', placement);
+		select('.pixonaut-side-template', template);
+		const label = element.querySelector<HTMLInputElement>(
+			'.pixonaut-side-label',
+		);
+		if (label) {
+			label.value = typed;
+		}
+		return {
+			element,
+			label,
+			name: () => element.querySelector('.pixonaut-side__name')?.textContent,
+		};
+	}
+
+	it('names the side as typed', () => {
+		const { element, name } = side('Chest', 'p1', 'kids-poster@2');
+
+		showSideName(element);
+
+		expect(name()).toBe('Chest');
+	});
+
+	it('follows the print position, and shows it as the placeholder', () => {
+		const { element, label, name } = side('', 'p1', 'kids-poster@2');
+
+		showSideName(element);
+
+		expect(name()).toBe('Front');
+		expect(label?.placeholder).toBe('Front');
+	});
+
+	it('follows the template without a print position, never its id', () => {
+		const { element, name } = side('', '', 'kids-poster@2');
+
+		showSideName(element);
+
+		expect(name()).toBe('Kids poster, hearts');
+	});
+
+	it('says Side, and puts the placeholder back, with nothing chosen', () => {
+		const { element, label, name } = side('', 'p1', '');
+		showSideName(element);
+		const placement = element.querySelector<HTMLSelectElement>(
+			'.pixonaut-side-placement',
+		);
+		if (placement) {
+			placement.value = '';
+		}
+
+		showSideName(element);
+
+		expect(name()).toBe('Side');
+		expect(label?.placeholder).toBe('Name customers see');
 	});
 });

@@ -414,23 +414,35 @@ export function checkSide(
 	return missing;
 }
 
-/** Names the side in its heading: its name as typed, else its print
- *  position's, else "Side". */
+/** The text of a select's chosen option; empty when nothing is chosen. */
+function chosenText(select: HTMLSelectElement | null): string {
+	return select && select.value !== ''
+		? (select.selectedOptions[0]?.text.trim() ?? '')
+		: '';
+}
+
+/** Names the side in its heading: its name as typed, else what an empty
+ *  name follows, its print position's name, else its template's, else
+ *  "Side". The name field's placeholder shows what it follows. */
 export function showSideName(side: HTMLElement): void {
 	const label = side.querySelector<HTMLInputElement>('.pixonaut-side-label');
 	const name = side.querySelector<HTMLElement>('.pixonaut-side__name');
 	if (!name) {
 		return;
 	}
-	const placement = side.querySelector<HTMLSelectElement>(
-		'.pixonaut-side-placement',
-	);
-	const chosen =
-		placement && placement.value !== ''
-			? (placement.selectedOptions[0]?.text ?? '')
-			: '';
+	const followed =
+		chosenText(
+			side.querySelector<HTMLSelectElement>('.pixonaut-side-placement'),
+		) ||
+		chosenText(
+			side.querySelector<HTMLSelectElement>('.pixonaut-side-template'),
+		);
+	if (label) {
+		label.dataset.placeholder ??= label.placeholder;
+		label.placeholder = followed || label.dataset.placeholder;
+	}
 	name.textContent =
-		label?.value.trim() || chosen || (name.dataset.placeholder ?? '');
+		label?.value.trim() || followed || (name.dataset.placeholder ?? '');
 }
 
 /** Asks one of the plugin's routes; its results, or null when it cannot
@@ -725,6 +737,7 @@ function initSide(panel: Panel, side: HTMLElement): void {
 		.querySelector('.pixonaut-side-label')
 		?.addEventListener('input', () => showSideName(side));
 	$(placement).on('change', () => showSideName(side));
+	$(template).on('change', () => showSideName(side));
 	showSideName(side);
 	showSideSummary(side);
 	// The saved template's picture: its link is never stored, so it is asked for.
