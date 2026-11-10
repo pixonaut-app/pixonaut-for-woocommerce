@@ -22,16 +22,32 @@ const ALL_STEPS = [
 	'Release zip',
 	'Release zip (wordpress.org)',
 	'PHP integration (HPOS off, on)',
+	'Build assets for e2e',
 	'e2e (classic, block-primary, astra)',
 ];
 
-function steps(args: string[], cwd = process.cwd()): string[] {
+/** The dry run's lines: a step's name, then its e2e specs indented. */
+function dryRun(args: string[], cwd: string): string[] {
 	const result = runScript('ci-local.mjs', [...args, '--dry-run'], {
 		cwd,
 		env: { CI_LOCAL_BASE: 'main' },
 	});
 	expect(result.status, result.stderr).toBe(0);
-	return result.stdout.trim().split('\n').filter(Boolean);
+	return result.stdout.split('\n').filter(Boolean);
+}
+
+/** A spec line's indent in the dry run. */
+const SPEC_INDENT = '  ';
+
+function steps(args: string[], cwd = process.cwd()): string[] {
+	return dryRun(args, cwd).filter((line) => !line.startsWith(SPEC_INDENT));
+}
+
+/** The e2e specs the dry run lists. */
+function specs(args: string[], cwd: string): string[] {
+	return dryRun(args, cwd)
+		.filter((line) => line.startsWith(SPEC_INDENT))
+		.map((line) => line.trim());
 }
 
 /** A repo whose branch `work` changes `files` relative to `main`. */
@@ -41,6 +57,21 @@ function branchChanging(files: Record<string, string>): string {
 	writeFiles(dir, files);
 	git(dir, 'add', '.');
 	git(dir, 'commit', '-q', '--allow-empty', '-m', 'change');
+	return dir;
+}
+
+/** A repo whose branch `work` edits `edited` and removes `removed`, both on
+ *  `main` already. */
+function branchEditing(edited: string[], removed: string[] = []): string {
+	const dir = repoWithCommit(
+		Object.fromEntries([...edited, ...removed].map((file) => [file, 'x'])),
+	);
+	git(dir, 'checkout', '-qb', 'work');
+	writeFiles(dir, Object.fromEntries(edited.map((file) => [file, 'y'])));
+	for (const file of removed) {
+		git(dir, 'rm', '-q', file);
+	}
+	git(dir, 'commit', '-q', '-am', 'change');
 	return dir;
 }
 
@@ -69,8 +100,75 @@ describe('ci:local', () => {
 				'Release zip',
 				'Release zip (wordpress.org)',
 				'PHP integration (HPOS off, on)',
+			]);
+		});
+
+		it('builds the release zips for a removed source, not for an edited one', () => {
+			const edited = steps(['--affected'], branchEditing(['src/Plugin.php']));
+			const removed = steps(
+				['--affected'],
+				branchEditing([], ['src/Plugin.php']),
+			);
+
+			expect(edited).not.toContain('Release zip');
+			expect(edited).not.toContain('Release zip (wordpress.org)');
+			expect(removed).toContain('Release zip');
+			expect(removed).toContain('Release zip (wordpress.org)');
+		});
+
+		it('builds the release zips when the main plugin file is edited', () => {
+			const dir = branchEditing(['pixonaut-for-woocommerce.php']);
+
+			expect(steps(['--affected'], dir)).toContain('Release zip');
+		});
+
+		it('runs only a changed e2e spec', () => {
+			const dir = branchChanging({ 'tests/e2e/specs/smoke.spec.ts': '' });
+
+			expect(steps(['--affected'], dir)).toEqual([
+				'Conflict markers',
+				'Biome',
+				'TypeScript',
+				'Build assets for e2e',
 				'e2e (classic, block-primary, astra)',
 			]);
+			expect(specs(['--affected'], dir)).toEqual(['smoke.spec.ts']);
+		});
+
+		it('builds the assets before the specs an edited script reaches', () => {
+			const dir = branchEditing(['assets/src/storefront/frame-shape.ts']);
+
+			expect(steps(['--affected'], dir)).toEqual([
+				'Conflict markers',
+				'Biome',
+				'TypeScript',
+				'JS unit',
+				'.pot freshness',
+				'Plugin Check',
+				'Build assets for e2e',
+				'e2e (classic, block-primary, astra)',
+			]);
+		});
+
+		it('runs no e2e step for a spec only the Nightly runs', () => {
+			const dir = branchChanging({
+				'tests/e2e/specs/compatibility.spec.ts': '',
+			});
+
+			expect(steps(['--affected'], dir)).toEqual([
+				'Conflict markers',
+				'Biome',
+				'TypeScript',
+			]);
+		});
+
+		it('runs every e2e spec when the Playwright config changes', () => {
+			const dir = branchChanging({ 'playwright.config.ts': '' });
+
+			expect(specs(['--affected'], dir)).toEqual([]);
+			expect(steps(['--affected'], dir)).toContain(
+				'e2e (classic, block-primary, astra)',
+			);
 		});
 
 		it('runs the JS steps for a change in tests/js/', () => {

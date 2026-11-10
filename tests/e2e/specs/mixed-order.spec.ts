@@ -1,8 +1,8 @@
 import { expect, type FakePixonaut, restUrl, test } from '../fixtures';
 import {
 	type CheckoutUrls,
+	createLinkedProduct,
 	type Line,
-	linkProduct,
 	openCheckouts,
 	pay,
 	personaliseIntoCart,
@@ -69,8 +69,12 @@ test('a mixed order ships its personalised items at different times and is never
 
 	// Two personalised products and one the plugin does not fulfil.
 	const stamp = `${theme} ${Date.now()}`;
-	const first = await linkProduct(admin, baseURL, `First tee ${stamp}`);
-	const second = await linkProduct(admin, baseURL, `Second tee ${stamp}`);
+	const first = await createLinkedProduct(admin, baseURL, `First tee ${stamp}`);
+	const second = await createLinkedProduct(
+		admin,
+		baseURL,
+		`Second tee ${stamp}`,
+	);
 	await personaliseIntoCart(customer, first);
 	await personaliseIntoCart(customer, second);
 	const plain = await request.post(restUrl('/pixonaut-e2e/v1/plain-product'));

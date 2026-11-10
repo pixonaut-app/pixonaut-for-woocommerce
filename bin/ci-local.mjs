@@ -6,13 +6,15 @@
 //   ci-local.mjs              every step
 //   ci-local.mjs --affected   only the steps the branch's changes touch,
 //                             compared with CI_LOCAL_BASE (default
-//                             origin/main); never attests
+//                             origin/main), and only the e2e specs they
+//                             reach (ci-local-e2e.mjs); never attests
 //   ci-local.mjs --dry-run    print the steps that would run, run nothing
 //
 // Steps marked `wpEnv` need wp-env running (pnpm env:start).
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { affectedSpecs, SPECS_DIR } from './ci-local-e2e.mjs';
 import { root, wpEnvOutput } from './env.mjs';
 
 const BASE = process.env.CI_LOCAL_BASE ?? 'origin/main';
@@ -25,16 +27,24 @@ const PHP = /\.php$/;
 const PHP_SOURCE =
 	/^(src\/|templates\/|uninstall\.php$|pixonaut-for-woocommerce\.php$)/;
 const PHP_TESTS = /^tests\/php\//;
-/** What the release zip is built from. */
+/**
+ * What the release zip is built from, where an edit can change whether it
+ * builds: headers, readme, translations, the build and release tooling.
+ */
 const RELEASE_ZIP_SOURCES = [
-	PHP_SOURCE,
-	/^assets\//,
+	/^(pixonaut-for-woocommerce|uninstall)\.php$/,
 	/^languages\//,
 	/^(LICENSE|CHANGELOG\.md|readme\.src\.txt|webpack\.config\.js)$/,
 	/^bin\/(release\/|plugin-check\.mjs$|plugin-header\.mjs$)/,
 	// The zip carries the compiled translations.
 	/^bin\/i18n(-build\.mjs$|\/(files|po)\.mjs$)/,
 ];
+/**
+ * Shipped code whose edits the zip cannot fail on: PHPCS and PHPStan check it
+ * against the minimum PHP, and Plugin Check runs on the working tree. Adding,
+ * removing or renaming a file still selects the zip, for its allowlist.
+ */
+const RELEASE_ZIP_SHAPE = [/^src\//, /^templates\//, /^assets\//];
 const COMPOSER = /^composer\.(json|lock)$/;
 /** The pinned Pixonaut contract and `consumed.json`. */
 const CONTRACT = /^contracts\/pixonaut\//;
@@ -45,6 +55,19 @@ const CONTRACT = /^contracts\/pixonaut\//;
  */
 const GLOBAL =
 	/^(package\.json|pnpm-lock\.yaml|composer\.(json|lock)|\.wp-env\.json|bin\/(env|php|wp-env|wp-env-override|ci-local)\.mjs)$/;
+
+const E2E_STEP = 'e2e (classic, block-primary, astra)';
+const BUILD_STEP = 'Build assets for e2e';
+
+/** What the e2e step runs on; ci-local-e2e.mjs then picks its specs. */
+const E2E_AFFECTED_BY = [
+	PHP_SOURCE,
+	/^assets\/src\//,
+	/^tests\/e2e\//,
+	/^tests\/fake-pixonaut\/src\/fixture-ids\.ts$/,
+	/^playwright\.config\.ts$/,
+	/^contracts\/pixonaut\/sdk\.lock\.json$/,
+];
 
 const STEPS = [
 	{
@@ -109,6 +132,7 @@ const STEPS = [
 		affectedBy: [
 			/^assets\/src\//,
 			/^tests\/js\//,
+			/^tests\/e2e\/reach\.mjs$/,
 			/^tests\/fake-pixonaut\/src\//,
 			/^bin\//,
 			/^contracts\//,
@@ -170,6 +194,7 @@ const STEPS = [
 		command: ['pnpm', 'release:zip'],
 		wpEnv: true,
 		affectedBy: RELEASE_ZIP_SOURCES,
+		affectedByShape: RELEASE_ZIP_SHAPE,
 	},
 	{
 		// Also checks the wordpress.org listing assets against its readme.
@@ -177,6 +202,7 @@ const STEPS = [
 		command: ['pnpm', 'release:zip', '--flavor', 'wporg'],
 		wpEnv: true,
 		affectedBy: [...RELEASE_ZIP_SOURCES, /^\.wordpress-org\//],
+		affectedByShape: RELEASE_ZIP_SHAPE,
 	},
 	{
 		name: 'PHP integration (HPOS off, on)',
@@ -190,19 +216,21 @@ const STEPS = [
 		],
 	},
 	{
-		name: 'e2e (classic, block-primary, astra)',
+		// The tests site serves assets/build/. Built here so the e2e step
+		// never runs on a stale build when no release zip built it first.
+		name: BUILD_STEP,
+		command: ['pnpm', 'build'],
+		affectedBy: E2E_AFFECTED_BY,
+	},
+	{
+		name: E2E_STEP,
 		command: ['pnpm', 'test:e2e'],
 		wpEnv: true,
 		notice: () =>
 			existsSync(join(root, FAKE_DIR))
 				? undefined
 				: `No fake Pixonaut yet (${FAKE_DIR}): the e2e suite runs without it.`,
-		affectedBy: [
-			PHP_SOURCE,
-			/^assets\/src\//,
-			/^tests\/e2e\//,
-			/^playwright\.config\.ts$/,
-		],
+		affectedBy: E2E_AFFECTED_BY,
 	},
 ];
 
@@ -215,25 +243,70 @@ function git(...args) {
 	return result.stdout.split('\n').filter((line) => line !== '');
 }
 
-/** Files changed since the merge base with BASE, committed or not. */
+/**
+ * Files changed since the merge base with BASE, committed or not, and which
+ * of them were added or removed (a rename is both).
+ */
 function changedFiles() {
 	const [mergeBase] = git('merge-base', BASE, 'HEAD');
-	return [
-		...git('diff', '--name-only', mergeBase),
-		...git('ls-files', '--others', '--exclude-standard'),
-	];
+	const untracked = git('ls-files', '--others', '--exclude-standard');
+	const changes = git('diff', '--name-status', '--no-renames', mergeBase).map(
+		(line) => line.split('\t'),
+	);
+	return {
+		files: [...changes.map(([, file]) => file), ...untracked],
+		addedOrRemoved: [
+			...changes
+				.filter(([status]) => status === 'A' || status === 'D')
+				.map(([, file]) => file),
+			...untracked,
+		],
+	};
 }
 
-function selectSteps(affected) {
+/** @param {RegExp[]} patterns */
+function anyMatch(files, patterns) {
+	return files.some((file) => patterns.some((pattern) => pattern.test(file)));
+}
+
+async function selectSteps(affected) {
 	if (!affected) {
 		return STEPS;
 	}
-	const files = changedFiles();
+	const { files, addedOrRemoved } = changedFiles();
 	if (files.some((file) => GLOBAL.test(file))) {
 		return STEPS;
 	}
-	return STEPS.filter(({ affectedBy }) =>
-		files.some((file) => affectedBy.some((pattern) => pattern.test(file))),
+	const steps = STEPS.filter(
+		({ affectedBy, affectedByShape = [] }) =>
+			anyMatch(files, affectedBy) || anyMatch(addedOrRemoved, affectedByShape),
+	);
+	const e2e = steps.find(({ name }) => name === E2E_STEP);
+	if (e2e === undefined) {
+		return steps;
+	}
+	const { specs, everything } = await affectedSpecs(files);
+	if (everything !== undefined) {
+		return steps.map((step) =>
+			step === e2e
+				? { ...e2e, notice: () => `Every spec runs: ${everything}.` }
+				: step,
+		);
+	}
+	if (specs.length === 0) {
+		return steps.filter((step) => step !== e2e && step.name !== BUILD_STEP);
+	}
+	return steps.map((step) =>
+		step === e2e
+			? {
+					...e2e,
+					command: [
+						...e2e.command,
+						...specs.map((spec) => `${SPECS_DIR}/${spec}`),
+					],
+					specs,
+				}
+			: step,
 	);
 }
 
@@ -242,11 +315,14 @@ function wpEnvRunning() {
 }
 
 const affected = process.argv.includes('--affected');
-const steps = selectSteps(affected);
+const steps = await selectSteps(affected);
 
 if (process.argv.includes('--dry-run')) {
-	for (const { name } of steps) {
+	for (const { name, specs = [] } of steps) {
 		console.log(name);
+		for (const spec of specs) {
+			console.log(`  ${spec}`);
+		}
 	}
 	process.exit(0);
 }
