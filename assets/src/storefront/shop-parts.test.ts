@@ -310,6 +310,30 @@ describe('returnShopParts', () => {
 		expect(container.nextElementSibling).toBe(shop.rowParts[0]);
 	});
 
+	it('puts the parts of a row gathered beside the form back one by one, and gathers them again', () => {
+		const { container, gathered } = printedPage([]);
+		const shop = gathered as NonNullable<typeof gathered>;
+		expect(container.nextElementSibling).toBe(shop.cartRow);
+
+		returnShopParts(shop, container);
+
+		expect(shop.cartRow.isConnected).toBe(false);
+		expect(container.nextElementSibling).toBe(shop.rowParts[0]);
+
+		expect(shopStepOptions(shop).lastStepContent).toBe(shop.cartRow);
+		expect(container.nextElementSibling).toBe(shop.cartRow);
+		expect(Array.from(shop.cartRow.children)).toEqual(shop.rowParts);
+	});
+
+	it('leaves a row beside the form that a designer is about to take', () => {
+		const { container, gathered } = printedPage([]);
+		const shop = gathered as NonNullable<typeof gathered>;
+
+		returnShopParts(shop, container, new Set([shop.cartRow]));
+
+		expect(container.nextElementSibling).toBe(shop.cartRow);
+	});
+
 	it('leaves parts a designer holds where they are', () => {
 		const { container, gathered } = printedPage();
 		const shop = gathered as NonNullable<typeof gathered>;

@@ -59,6 +59,8 @@ export type ShopParts = {
 	/** The parts the cart row gathers, in order: outside the designer they
 	 *  stand in the add-to-cart form themselves (`returnShopParts()`). */
 	rowParts: Element[];
+	/** The form container the cart row is gathered after. */
+	container: HTMLElement;
 	/** Where each part that is not the cart row goes back to
 	 *  (`returnShopParts()`): the option fields, and each attribute's field
 	 *  put in a slot of its own. */
@@ -128,14 +130,17 @@ function gatherParts(
 	container.after(cartRow);
 	const rowParts = [...parts, ...following];
 	cartRow.append(...rowParts);
-	return { options, cartRow, rowParts, homes: new Map() };
+	return { options, cartRow, rowParts, container, homes: new Map() };
 }
 
-/** The cart row, holding its parts again when they were given back to the
- *  add-to-cart form. */
+/** The cart row, holding its parts again, after the form container as it
+ *  was gathered, when they were given back to the add-to-cart form. */
 function filledCartRow(parts: ShopParts): HTMLElement {
-	const { cartRow, rowParts } = parts;
+	const { cartRow, rowParts, container } = parts;
 	if (rowParts.some((part) => part.parentElement !== cartRow)) {
+		if (!cartRow.isConnected) {
+			container.after(cartRow);
+		}
 		cartRow.append(...rowParts);
 	}
 	return cartRow;
@@ -290,7 +295,12 @@ export function returnShopParts(
 			parts.homes.delete(part);
 		}
 	}
-	if (away(parts.cartRow)) {
+	// Beside the form container is where the row was gathered, without a slot
+	// to stand in: a theme's copy of the printed form from before it had one.
+	const beside =
+		!lent.has(parts.cartRow) &&
+		parts.cartRow.previousElementSibling === container;
+	if (beside || away(parts.cartRow)) {
 		parts.cartRow.remove();
 		container.after(
 			...parts.rowParts.filter((part) => parts.cartRow.contains(part)),
