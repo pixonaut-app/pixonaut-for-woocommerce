@@ -944,13 +944,14 @@ export class ProductDesigner {
 	}
 
 	/**
-	 * Switches one side to the variation's: another template, blank,
-	 * placement, form layout, canvas, or set of placements or views mounts the side
-	 * again on the customer's values; another print size alone is switched in
-	 * place. Any
-	 * change drops the side's approval. A size switch that fails leaves the
-	 * side's options as they were, so the next one compares against what is
-	 * shown.
+	 * Switches one side to the variation's: another blank, placement, form
+	 * layout, canvas, or set of placements or views mounts the side again on
+	 * the customer's values; another template or print size is switched in
+	 * the mounted designer, so the page keeps its layout while the new one
+	 * draws, the template first. A template the designer cannot switch to
+	 * in place mounts the side again instead. Any change drops the side's
+	 * approval. A size switch that fails leaves the side's options as they
+	 * were, so the next one compares against what is shown.
 	 */
 	private async switchSide(
 		id: string,
@@ -968,8 +969,8 @@ export class ProductDesigner {
 			designer !== undefined && target.printSizes.includes(size)
 				? size
 				: (starting ?? size);
+		const otherTemplate = previous.templateId !== target.templateId;
 		const remounted =
-			previous.templateId !== target.templateId ||
 			previous.blankId !== target.blankId ||
 			previous.placementId !== target.placementId ||
 			!sameList(previous.placements, target.placements) ||
@@ -979,7 +980,7 @@ export class ProductDesigner {
 			previous.drawAtTemplateRatio !== target.drawAtTemplateRatio ||
 			JSON.stringify(arrangedOf(previous)) !==
 				JSON.stringify(target.formGroups);
-		if (!remounted && nextSize === size) {
+		if (!remounted && !otherTemplate && nextSize === size) {
 			// A side not mounted yet still opens on this variation's starting view.
 			if (designer === undefined) {
 				const { initialView: _shown, ...kept } = previous;
@@ -1034,15 +1035,22 @@ export class ProductDesigner {
 			selectedPrintSizeIndex: nextSize,
 		} as SideOptions;
 		const inPlace = !remounted && designer !== undefined && this.sdk !== null;
-		// A size switched in place keeps the frame's shape until the SDK has
-		// drawn it; nothing drawn yet, or drawn again, has no picture to keep.
+		// A switch in place keeps the frame's shape until the SDK has drawn
+		// the new size; nothing drawn yet, or drawn again, has no picture to
+		// keep.
 		this.shapeFrame(side, inPlace);
 		this.dropApproval(side);
 		if (designer === undefined || this.sdk === null) {
 			return;
 		}
-		if (remounted) {
+		if (
+			remounted ||
+			(otherTemplate && !(await this.switchTemplate(designer, target)))
+		) {
 			await this.remount(id, side, designer, this.sdk);
+			return;
+		}
+		if (nextSize === size) {
 			return;
 		}
 		try {
@@ -1051,6 +1059,25 @@ export class ProductDesigner {
 			this.mounts[side] = previous;
 			this.shapeFrame(side);
 			throw error;
+		}
+	}
+
+	/** Switches the designer to the side's template, carrying the
+	 *  customer's values by field key; false when it could not, and still
+	 *  shows the template it had. */
+	private async switchTemplate(
+		designer: PixonautDesigner,
+		target: VariationSide,
+	): Promise<boolean> {
+		try {
+			await designer.setTemplate(target.templateId);
+			return true;
+		} catch (error) {
+			console.error(
+				'Pixonaut: the template could not be switched in place.',
+				error,
+			);
+			return false;
 		}
 	}
 
@@ -1239,6 +1266,10 @@ export class ProductDesigner {
 		return this.sdk !== null && error instanceof this.sdk.PlacementChangedError;
 	}
 
+	private templateChanged(error: unknown): boolean {
+		return this.sdk !== null && error instanceof this.sdk.TemplateChangedError;
+	}
+
 	private readonly onSubmit = (event: SubmitEvent): void => {
 		if (this.passing) {
 			return;
@@ -1390,8 +1421,9 @@ export class ProductDesigner {
 			try {
 				result = await designer.approve();
 			} catch (error) {
-				// A view on another placement was shown while the proof was made.
-				if (this.placementChanged(error)) {
+				// A view on another placement, or another template, was shown
+				// while the proof was made.
+				if (this.placementChanged(error) || this.templateChanged(error)) {
 					continue;
 				}
 				throw error;

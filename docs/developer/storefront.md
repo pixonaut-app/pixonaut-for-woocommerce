@@ -932,14 +932,16 @@ chosen variation it then:
 | The variation differs by | The designer |
 | --- | --- |
 | print size only | `setPrintSize(index)`, unless the size the designer shows (its `getState().printSize`, which the customer may have picked) is one of the variation's |
-| template, blank, placement, `placements`, `views`, `variants`, form layout, `formGroups` or `drawAtTemplateRatio` | is destroyed and mounted again with `initialValues` from its `getState().values`, read once its `settled()` resolved, and the variation's variant as `initialVariant` |
+| template, and perhaps print size | `setTemplate(templateId)`, then `setPrintSize(index)` as above: the preview, form and view strip keep their place while the new template draws, and a value on a field key both templates share carries over. When `setTemplate()` rejects, the designer is mounted again as in the next row |
+| blank, placement, `placements`, `views`, `variants`, form layout, `formGroups` or `drawAtTemplateRatio` | is destroyed and mounted again with `initialValues` from its `getState().values`, read once its `settled()` resolved, and the variation's variant as `initialVariant` |
 
 and then shows the variation's variant (see [Views and variants](#views-and-variants)).
 
 Any switch, a switch of the variant alone included, drops the side's
 proof, unticks the approval box and removes the side's proof link, so add
 to cart approves again; an `approve()` under way when it happens, or that
-rejects with `PlacementChangedError`, is made again. A mount that rejects
+rejects with `PlacementChangedError` or `TemplateChangedError`, is made
+again. A mount that rejects
 with `unknown_placement` makes the chosen variation show
 `personalisation_unavailable` when it has that side: add to cart sends
 nothing, and the variation is reported (see
