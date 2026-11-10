@@ -799,6 +799,7 @@ final class ProductLinker {
 			$current->draw_at_template_ratio,
 			$current->option_groups,
 			$current->group_numbers,
+			$current->split_listing,
 		);
 	}
 }

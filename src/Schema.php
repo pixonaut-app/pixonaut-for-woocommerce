@@ -292,6 +292,12 @@ final class Schema {
 	const WORKSPACE_SETTINGS_OPTION = 'pixonaut_wc_workspace_settings';
 
 	/**
+	 * Option holding the ids of the global attributes whose values are listed
+	 * as their own products by default.
+	 */
+	const SPLIT_ATTRIBUTES_OPTION = 'pixonaut_wc_split_attributes';
+
+	/**
 	 * Option holding the ids of designer links Pixonaut could not be asked
 	 * to withdraw yet, which a job asks again.
 	 */

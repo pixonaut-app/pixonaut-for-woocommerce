@@ -57,6 +57,7 @@ use Pixonaut\WooCommerce\Admin\PictureFields;
 use Pixonaut\WooCommerce\Admin\RegenerateNow;
 use Pixonaut\WooCommerce\Admin\RegeneratePictures;
 use Pixonaut\WooCommerce\Admin\ShowcaseField;
+use Pixonaut\WooCommerce\Admin\SplitListingFields;
 use Pixonaut\WooCommerce\Admin\LayoutAdjustments;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Admin\StatusReport;
@@ -438,6 +439,7 @@ final class Plugin {
 			( new VariationPanel( $product_panel, $this->templates(), $this->variant_field(), $this->showcase_field(), new VariationSizeField( new VariationSizes( $this->catalogue() ), $this->templates() ) ) )->register();
 			( new PictureFields( $this->templates(), $this->settings() ) )->register();
 			$this->showcase_field()->register();
+			( new SplitListingFields( $this->templates() ) )->register();
 			( new StatusReport( $this->templates() ) )->register();
 			( new OrderBox( $this->line_actions(), $this->proof_urls(), $this->templates() ) )->register();
 		}

@@ -54,6 +54,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_option( \Pixonaut\WooCommerce\Schema::VARIANTS_BACKFILL_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::DESIGNER_LINK_WITHDRAWALS_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::WORKSPACE_SETTINGS_OPTION );
+		delete_option( \Pixonaut\WooCommerce\Schema::SPLIT_ATTRIBUTES_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::CATALOGUE_CACHE_GENERATION_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::REQUEST_LOG_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::PICTURE_GENERATION_OPTION );

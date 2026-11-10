@@ -502,6 +502,42 @@ final class ProductConfigTest extends TestCase {
 		$this->assertNull( $config->group_numbers );
 	}
 
+	public function test_reads_and_writes_its_split_listing_choices(): void {
+		$document                 = self::v1_document();
+		$document['v']            = ProductConfig::SCHEMA_VERSION;
+		$document['splitListing'] = array(
+			'7'  => 'on',
+			'3'  => 'off',
+			'9'  => 'auto',
+			'x'  => 'on',
+			'-2' => 'on',
+			'4'  => 'sometimes',
+		);
+
+		$config = ProductConfig::from_json( (string) wp_json_encode( $document ) );
+
+		$this->assertSame(
+			array(
+				3 => 'off',
+				7 => 'on',
+			),
+			$config->split_listing,
+			'only an On or Off choice of an attribute id is kept'
+		);
+		$this->assertSame( '{"3":"off","7":"on"}', (string) wp_json_encode( json_decode( $config->to_json(), true )['splitListing'] ) );
+		$this->assertSame( $config->split_listing, $config->with_validity( false, 'x' )->with_sides( array() )->with_override( true )->with_layout( null )->with_approval_mode( null )->with_personalise( true )->with_views( array() )->with_form_layout( 'steps' )->with_printshop( null )->with_draw_at_template_ratio( true )->with_option_groups( null )->with_group_numbers( null )->on_blank( 'blank' )->split_listing, 'a copy keeps them' );
+		$this->assertSame( array( 5 => 'on' ), $config->with_split_listing( array( 5 => 'on' ) )->split_listing );
+		$this->assertSame( '{}', (string) wp_json_encode( json_decode( $config->with_split_listing( array() )->to_json() )->splitListing ), 'no choices are stored as an object' );
+	}
+
+	public function test_a_product_saved_before_split_listings_follows_its_attributes(): void {
+		$document                 = self::v1_document();
+		$document['v']            = 13;
+		$document['splitListing'] = array( '7' => 'on' );
+
+		$this->assertSame( array(), ProductConfig::from_json( (string) wp_json_encode( $document ) )->split_listing );
+	}
+
 	public function test_a_sides_canvas_ratio_comes_before_its_products(): void {
 		$side   = new Side( 'front', 'Front', null, null, 'tpl', 1, null, null );
 		$config = new ProductConfig( personalise: true, sides: array( $side ), draw_at_template_ratio: true );

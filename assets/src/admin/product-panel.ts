@@ -4,7 +4,9 @@
 // is chosen, the views the product is shown in, and the sides repeater with
 // each side's print-size menu. Each picker shows a picture beside each name,
 // a required field left empty says what is missing under it, and the link
-// beside a product's own image puts its Pixonaut picture back.
+// beside a product's own image puts its Pixonaut picture back. Each global
+// attribute's row in the Attributes tab has its "Show each value as its own
+// product" control.
 import './product-panel.css';
 import { domReady } from '../shared/dom-ready';
 import {
@@ -49,6 +51,7 @@ import {
 	PLACEMENT_DEFAULT_SIZE,
 	withIndex,
 } from './sides';
+import { initSplitListing } from './split-listing';
 import {
 	initStandingOptions,
 	showStandingOptions,
@@ -984,6 +987,7 @@ function initVariations(): void {
 
 domReady(() => {
 	initUsePicture(document);
+	initSplitListing(document);
 	const panel = document.querySelector<HTMLElement>('.pixonaut-product-panel');
 	if (panel) {
 		initPanel(panel);
