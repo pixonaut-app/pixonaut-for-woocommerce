@@ -199,6 +199,7 @@ final class ProductPanel {
 		if ( ! $product_object instanceof WC_Product ) {
 			return;
 		}
+		$panel = $this->panel( $product_object );
 		$this->templates->render(
 			'admin/product-panel.php',
 			array(
@@ -207,9 +208,9 @@ final class ProductPanel {
 				'max_sides'    => PostedSides::MAX_SIDES,
 				// Shown with the blank; a variable product's variations each have their own.
 				'fields_html'  => $this->not_connected_html() . $this->fields_html(
-					$this->panel( $product_object ) + array(
+					$panel + array(
 						'variant_html'    => $product_object->is_type( 'variable' ) ? '' : $this->variant->html( $product_object, PanelFields::product(), $this->integration( ProductConfig::stored_on( $product_object ) ) ),
-						'pairing_html'    => $this->pairing_html( $product_object, ProductConfig::stored_on( $product_object ) ),
+						'pairing_html'    => true === $panel['importing'] ? '' : $this->pairing_html( $product_object, ProductConfig::stored_on( $product_object ) ),
 						'images_html'     => null === $this->showcases ? '' : $this->showcases->html( $product_object ),
 						'regenerate_html' => null === $this->regenerate ? '' : $this->regenerate->html( $product_object ),
 					)
@@ -291,7 +292,7 @@ final class ProductPanel {
 				'variant_html' => is_string( $panel['variant_html'] ?? null ) ? $panel['variant_html'] : '',
 				'variable'     => true === $panel['variable'],
 				'importing'    => true === $panel['importing'],
-				'blank_name'   => $panel['blank_name'],
+				'blank_name'   => '' !== $panel['blank_read_name'] ? $panel['blank_read_name'] : $panel['blank_name'],
 				'pairing_html' => is_string( $panel['pairing_html'] ?? null ) ? $panel['pairing_html'] : '',
 			)
 		);
@@ -299,17 +300,13 @@ final class ProductPanel {
 
 	/**
 	 * Each variation's blank variant, in a variable product's panel; empty
-	 * for another product, without a blank, or while it is imported.
+	 * for another product, or without a blank.
 	 *
 	 * @param WC_Product    $product The product.
 	 * @param ProductConfig $config  What it is shown with.
 	 */
 	private function pairing_html( WC_Product $product, ProductConfig $config ): string {
 		if ( null === $this->pairing || ! $product->is_type( 'variable' ) || null === $config->blank_id ) {
-			return '';
-		}
-		$blank = $this->blank->read( $config->blank_id );
-		if ( null !== $blank && LinkedBlank::IMPORTING === $blank['status'] ) {
 			return '';
 		}
 		return $this->pairing->html( $product, $config, $this->integration( $config ) );
@@ -329,7 +326,7 @@ final class ProductPanel {
 		$config                = $config->blank_id === $blank_id ? $config : $config->on_blank( $blank_id );
 		$panel                 = $this->panel( $product, $config );
 		$panel['variant_html'] = $product->is_type( 'variable' ) ? '' : $this->variant->html( $product, PanelFields::product(), $this->integration( $config ), $blank_id );
-		$panel['pairing_html'] = $this->pairing_html( $product, $config );
+		$panel['pairing_html'] = true === $panel['importing'] ? '' : $this->pairing_html( $product, $config );
 		return array(
 			'blank_html' => $this->blank_html( $panel ),
 			'views_html' => $this->views_html( $panel ),
@@ -427,6 +424,7 @@ final class ProductPanel {
 			'printshop'        => null === $config->blank_id ? null : $this->blank->printshop( $config->blank_id, $blank ),
 			// Pixonaut is still importing it from a printshop's catalogue: nothing to pick on it yet.
 			'importing'        => null !== $blank && LinkedBlank::IMPORTING === $blank['status'],
+			'blank_read_name'  => $blank['name'] ?? '',
 			'printshops'       => $this->printshops( $config ),
 			// A variation's own blank is picked among the workspace's blanks.
 			'catalogues'       => $product->is_type( 'variation' ) ? array() : $this->blank->catalogue_printshops(),
@@ -834,7 +832,7 @@ final class ProductPanel {
 	 * @param WC_Product                $product The product or variation.
 	 * @param ProductConfig             $config The product's configuration.
 	 * @param array<string, mixed>|null $blank  The blank as `LinkedBlank::read()` gave it.
-	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string}|null $blank
+	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string, name: string}|null $blank
 	 */
 	private static function invalid( WC_Product $product, ProductConfig $config, ?array $blank ): string {
 		if ( ! $config->personalise ) {
@@ -851,7 +849,7 @@ final class ProductPanel {
 	 *
 	 * @param ProductConfig             $config The product's configuration.
 	 * @param array<string, mixed>|null $blank  The blank as `LinkedBlank::read()` gave it.
-	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string}|null $blank
+	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string, name: string}|null $blank
 	 * @return list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>
 	 */
 	private function placements( ProductConfig $config, ?array $blank ): array {

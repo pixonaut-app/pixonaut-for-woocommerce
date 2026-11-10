@@ -249,6 +249,8 @@ final class Plugin {
 
 	private ?CatalogueSearch $catalogue_search = null;
 
+	private ?CatalogueProducts $catalogue_products = null;
+
 	private ?BlankFields $blank_fields = null;
 
 	private ?PictureQueue $picture_queue = null;
@@ -686,7 +688,8 @@ final class Plugin {
 	 * The admin's routes for a printshop's catalogue product picked in place of a blank.
 	 */
 	public function catalogue_products(): CatalogueProducts {
-		return new CatalogueProducts( new PrintshopCatalogue( $this->sdk() ) );
+		$this->catalogue_products ??= new CatalogueProducts( new PrintshopCatalogue( $this->sdk() ) );
+		return $this->catalogue_products;
 	}
 
 	/**

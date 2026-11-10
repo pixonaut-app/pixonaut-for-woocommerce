@@ -70,6 +70,7 @@ final class BlankFixture {
 			'adapter'       => $adapter,
 			'active'        => true,
 			'isDefault'     => $default_id === $id,
+			'catalogue'     => 'custom' !== $adapter,
 			'asksOfDesigns' => array(
 				'commitKeys' => array(),
 				'needsBlank' => 'custom' !== $adapter,
