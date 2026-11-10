@@ -26,9 +26,33 @@ use WC_Product;
 final class VariationSizes {
 
 	/**
+	 * Pixonaut's verdicts in this run, by what was asked, so variations
+	 * sharing a value's size ask once.
+	 *
+	 * @var array<string, string|null>
+	 */
+	private array $verdicts = array();
+
+	/**
+	 * The first failure to ask Pixonaut in this run: after it, no size is
+	 * asked about until `forget()`, so an outage costs one timeout.
+	 *
+	 * @var ApiException|null
+	 */
+	private ?ApiException $failure = null;
+
+	/**
 	 * @param Catalogue $catalogue Judges sizes.
 	 */
 	public function __construct( private readonly Catalogue $catalogue ) {
+	}
+
+	/**
+	 * Starts a new run: Pixonaut is asked again, as what it holds may have changed.
+	 */
+	public function forget(): void {
+		$this->verdicts = array();
+		$this->failure  = null;
 	}
 
 	/**
@@ -41,8 +65,9 @@ final class VariationSizes {
 	 * @param array<string, PrintSize|null> $sizes     Its own sizes by side key; null or absent for the product's.
 	 */
 	public function save( WC_Product $variation, array $sizes ): VariationSize {
-		$failed = null;
-		$judged = $this->judged( $variation, $sizes, VariationSize::stored_on( self::fresh( $variation ) ), $failed );
+		$failed        = $this->failure;
+		$judged        = $this->judged( $variation, $sizes, VariationSize::stored_on( self::fresh( $variation ) ), $failed );
+		$this->failure = $failed;
 		$judged->save_to( $variation );
 		return $judged;
 	}
@@ -60,7 +85,7 @@ final class VariationSizes {
 	 */
 	public function rejudge( WC_Product $product ): void {
 		$variations = $product->is_type( 'variation' ) ? array( $product ) : array_filter( array_map( 'wc_get_product', $product->get_children() ), static fn ( mixed $child ): bool => $child instanceof WC_Product );
-		$failed     = null;
+		$failed     = $this->failure;
 		foreach ( $variations as $variation ) {
 			$fresh    = self::fresh( $variation );
 			$document = VariationSize::document_on( $fresh );
@@ -76,6 +101,7 @@ final class VariationSizes {
 				$judged->replace_on( $fresh, $document );
 			}
 		}
+		$this->failure = $failed;
 		if ( null !== $failed ) {
 			throw $failed;
 		}
@@ -189,12 +215,14 @@ final class VariationSizes {
 				return $refused;
 			}
 		}
-		$verdict = $this->catalogue->check_print_sizes(
-			(string) new TemplateId( $side->template_base_id, $side->template_version ),
-			array( $size ),
-			$on_row ? null : $blank_id,
-			$on_row ? null : $side->placement_id
-		)[0];
-		return $verdict->legal ? null : $verdict->reason ?? InvalidReason::CHECK_FAILED;
+		$template  = (string) new TemplateId( $side->template_base_id, $side->template_version );
+		$blank_id  = $on_row ? null : $blank_id;
+		$placement = $on_row ? null : $side->placement_id;
+		$asked     = (string) wp_json_encode( array( $template, $blank_id, $placement, $size->stored() ) );
+		if ( ! array_key_exists( $asked, $this->verdicts ) ) {
+			$verdict                  = $this->catalogue->check_print_sizes( $template, array( $size ), $blank_id, $placement )[0];
+			$this->verdicts[ $asked ] = $verdict->legal ? null : $verdict->reason ?? InvalidReason::CHECK_FAILED;
+		}
+		return $this->verdicts[ $asked ];
 	}
 }
