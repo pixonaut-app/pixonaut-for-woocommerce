@@ -194,7 +194,12 @@ test('a variation on another template switches it in the designer without moving
 	const mounted = await mounts(page);
 	expect(mounted).toBe(1);
 	await watchBoxes(page);
-	const [before] = await samples(page).then((seen) => seen.slice(-1));
+	await expect
+		.poll(async () => (await samples(page)).length)
+		.toBeGreaterThan(0);
+	const before = (await samples(page)).at(-1) as Sample;
+	expect(before.preview, 'the preview is laid out').toBeGreaterThan(0);
+	expect(before.form, 'the form is laid out').toBeGreaterThan(0);
 
 	await sizes.selectOption('Poster');
 	await expect
@@ -204,14 +209,14 @@ test('a variation on another template switches it in the designer without moving
 	expect(await mounts(page)).toBe(mounted);
 	const seen = await samples(page);
 	for (const name of Object.keys(BOXES) as Array<keyof typeof BOXES>) {
+		// A box laid out empty, as a strip with no views, has no size to keep.
 		const collapsed = seen.filter(
-			(sample) => (before?.[name] ?? 0) > 0 && sample[name] === 0,
+			(sample) => before[name] > 0 && sample[name] === 0,
 		);
 		expect(collapsed, `the ${name} keeps its size`).toEqual([]);
 	}
 	const moved = seen.filter(
-		(sample) =>
-			Math.abs(sample.preview - (before?.preview ?? 0)) > SAME_HEIGHT_PX,
+		(sample) => Math.abs(sample.preview - before.preview) > SAME_HEIGHT_PX,
 	);
 	expect(moved, 'the preview keeps its height').toEqual([]);
 	await expect(field).toHaveValue(TYPED);

@@ -1056,7 +1056,11 @@ export class ProductDesigner {
 		try {
 			designer.setPrintSize(nextSize);
 		} catch (error) {
-			this.mounts[side] = previous;
+			// The template switched in place stays shown.
+			this.mounts[side] = {
+				...previous,
+				templateId: target.templateId,
+			} as SideOptions;
 			this.shapeFrame(side);
 			throw error;
 		}

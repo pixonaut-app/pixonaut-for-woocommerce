@@ -510,6 +510,22 @@ describe('ProductDesigner on a variable product', () => {
 		);
 	});
 
+	it('switches the template back after a size switch that failed once the template had switched', async () => {
+		const { form, sdkDesigner } = start();
+		await settle();
+		sdkDesigner.setPrintSize.mockImplementationOnce(() => {
+			throw new Error('The size could not be drawn.');
+		});
+		await choose(form, '28');
+
+		await choose(form, '11');
+
+		expect(sdkDesigner.setTemplate.mock.calls).toEqual([
+			['mini-poster@1'],
+			['mini-tee@2'],
+		]);
+	});
+
 	it('mounts the side again on the customer’s values when the template cannot be switched in place', async () => {
 		const { form, mount, sdkDesigner } = start();
 		await settle();
