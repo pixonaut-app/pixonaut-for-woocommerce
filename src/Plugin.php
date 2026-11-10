@@ -252,6 +252,8 @@ final class Plugin {
 
 	private ?ProductRecheck $product_recheck = null;
 
+	private ?TemplateRename $template_rename = null;
+
 	private ?ProductVariants $product_variants = null;
 
 	private ?Processor $webhook_processor = null;
@@ -426,6 +428,7 @@ final class Plugin {
 		( new NotLiveProducts() )->register();
 		( new UnavailableProduct( $this->labels() ) )->register();
 		$this->product_recheck()->register();
+		$this->template_rename()->register();
 		( new VariantWatch( $this->product_recheck() ) )->register();
 		( new TrashedProducts( $this->notices(), $this->product_recheck() ) )->register();
 		$this->product_pictures()->register();
@@ -681,6 +684,14 @@ final class Plugin {
 	}
 
 	/**
+	 * Moves the store's references to a template whose id Pixonaut changed.
+	 */
+	public function template_rename(): TemplateRename {
+		$this->template_rename ??= new TemplateRename( new WcLogger() );
+		return $this->template_rename;
+	}
+
+	/**
 	 * Each variation's blank variant.
 	 */
 	public function product_variants(): ProductVariants {
@@ -771,7 +782,7 @@ final class Plugin {
 			) + $this->product_recheck()->handlers()
 				+ ( new DesignerLinkChanges( $this->designer_links(), new DesignerLinks( $this->sdk(), new WcLogger() ), new WcLogger() ) )->handlers()
 				+ $this->store_access()->handlers()
-				+ ( new TemplateRename( new WcLogger() ) )->handlers(),
+				+ $this->template_rename()->handlers(),
 			new WcLogger(),
 			null,
 			// A copied site's events wait: they are about the orders of the site it was copied from.

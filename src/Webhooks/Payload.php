@@ -26,6 +26,17 @@ final class Payload {
 	}
 
 	/**
+	 * An integer field of the event's payload; null when absent or not an integer.
+	 *
+	 * @param Event  $event The event.
+	 * @param string $name  Field.
+	 */
+	public static function int( Event $event, string $name ): ?int {
+		$value = $event->payload[ $name ] ?? null;
+		return is_int( $value ) ? $value : null;
+	}
+
+	/**
 	 * An event the store builds itself, for a change Pixonaut answered
 	 * rather than delivered, so it is applied as its webhook would be.
 	 *

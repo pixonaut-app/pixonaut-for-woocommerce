@@ -50,6 +50,13 @@ final class TemplateRenameTest extends PersonalisedCartTestCase {
 
 	private const PINNED_VERSION = DesignFixture::LIVE_VERSION - 1;
 
+	private const SAFARI_ID = 'mini-tee-safari';
+
+	/**
+	 * Milliseconds per second, as Pixonaut dates an event.
+	 */
+	private const MILLISECONDS = 1000;
+
 	private int $sequence = 0;
 
 	public function set_up(): void {
@@ -57,11 +64,13 @@ final class TemplateRenameTest extends PersonalisedCartTestCase {
 		as_unschedule_all_actions( ProductRecheck::QUEUE_ACTION );
 		delete_option( ProductRecheck::BACKFILL_OPTION );
 		as_unschedule_all_actions( CartCleanup::ACTION );
+		as_unschedule_all_actions( TemplateRename::ACTION );
 	}
 
 	public function tear_down(): void {
 		delete_option( TemplateRenames::OPTION );
 		as_unschedule_all_actions( CartCleanup::ACTION );
+		as_unschedule_all_actions( TemplateRename::ACTION );
 		parent::tear_down();
 	}
 
@@ -92,7 +101,7 @@ final class TemplateRenameTest extends PersonalisedCartTestCase {
 	}
 
 	public function test_a_design_on_the_new_id_adds_before_the_rename_reaches_the_product(): void {
-		TemplateRenames::record( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID );
+		TemplateRenames::record( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID, time() * self::MILLISECONDS );
 		$this->script_commit( array( 'templateBaseId' => self::NEW_ID ) );
 
 		$this->assertTrue( $this->post_add_to_cart(), implode( ' ', self::errors() ) );
@@ -160,15 +169,17 @@ final class TemplateRenameTest extends PersonalisedCartTestCase {
 
 	public function test_a_rename_delivered_twice_changes_nothing_more(): void {
 		$this->order_line( DesignFixture::TEMPLATE_BASE_ID );
-		$this->rename( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID );
+		$at     = $this->rename( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID );
 		$config = ProductConfig::document_on( $this->reload( $this->product_id ) );
 		$line   = $this->line_documents();
+		$stored = get_option( TemplateRenames::OPTION );
 
-		$this->rename( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID );
+		$this->rename( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID, $at );
 
 		$this->assertSame( $config, ProductConfig::document_on( $this->reload( $this->product_id ) ) );
 		$this->assertSame( $line, $this->line_documents() );
-		$this->assertSame( array( DesignFixture::TEMPLATE_BASE_ID => self::NEW_ID ), get_option( TemplateRenames::OPTION ) );
+		$this->assertSame( $stored, get_option( TemplateRenames::OPTION ) );
+		$this->assertCount( 1, $stored );
 		$this->assertSame( array(), ActionSchedulerRunner::pending( Processor::PROCESS_HOOK ), 'no retry is queued' );
 	}
 
@@ -187,21 +198,127 @@ final class TemplateRenameTest extends PersonalisedCartTestCase {
 		WC()->cart->set_session();
 
 		$this->rename( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID );
-		$this->rename( self::NEW_ID, 'mini-tee-safari' );
+		$this->rename( self::NEW_ID, self::SAFARI_ID );
 
-		$this->assertSame( 'mini-tee-safari', $this->stored( $this->product_id )->sides[0]->template_base_id );
+		$this->assertSame( self::SAFARI_ID, $this->stored( $this->product_id )->sides[0]->template_base_id );
 		self::reload_cart();
 		$this->assertCount( 1, WC()->cart->get_cart() );
-		$this->assertSame( 'mini-tee-safari', CartLine::of( (array) reset( WC()->cart->cart_contents ) )?->sides[0]->template_base_id );
+		$this->assertSame( self::SAFARI_ID, CartLine::of( (array) reset( WC()->cart->cart_contents ) )?->sides[0]->template_base_id );
+	}
+
+	public function test_a_rename_handled_again_after_a_later_one_moves_what_is_left_to_the_last_id(): void {
+		$this->script_commit();
+		$this->assertTrue( $this->post_add_to_cart(), implode( ' ', self::errors() ) );
+		WC()->cart->set_session();
+		$at = $this->rename( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID );
+		$this->rename( self::NEW_ID, self::SAFARI_ID );
+		$left = $this->order_line( DesignFixture::TEMPLATE_BASE_ID );
+
+		// Pixonaut delivers the first change again, as a new event.
+		$this->rename( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID, $at );
+
+		$this->assertSame( self::SAFARI_ID, TemplateRenames::current( DesignFixture::TEMPLATE_BASE_ID ) );
+		$this->assertSame( DesignFixture::TEMPLATE_BASE_ID, TemplateRenames::first( self::SAFARI_ID ) );
+		$this->assertSame( self::SAFARI_ID, $this->stored( $this->product_id )->sides[0]->template_base_id );
+		$this->assertSame( self::SAFARI_ID, LineState::of( $this->item( $left ) )->side_ref( 'front', LineState::SIDE_TEMPLATE_BASE_ID ) );
+		self::reload_cart();
+		$this->assertCount( 1, WC()->cart->get_cart(), 'the line made before the renames is kept' );
+		$this->assertSame( self::SAFARI_ID, CartLine::of( (array) reset( WC()->cart->cart_contents ) )?->sides[0]->template_base_id );
+	}
+
+	public function test_a_template_taking_its_id_back_keeps_the_cart_line(): void {
+		$this->script_commit();
+		$this->assertTrue( $this->post_add_to_cart(), implode( ' ', self::errors() ) );
+		WC()->cart->set_session();
+
+		$this->rename( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID );
+		$this->rename( self::NEW_ID, DesignFixture::TEMPLATE_BASE_ID );
+
+		$this->assertSame( DesignFixture::TEMPLATE_BASE_ID, $this->stored( $this->product_id )->sides[0]->template_base_id );
+		$this->assertSame( DesignFixture::TEMPLATE_BASE_ID, TemplateRenames::first( DesignFixture::TEMPLATE_BASE_ID ) );
+		self::reload_cart();
+		$this->assertCount( 1, WC()->cart->get_cart(), 'the line made before the renames is kept' );
+		$this->assertSame( DesignFixture::TEMPLATE_BASE_ID, CartLine::of( (array) reset( WC()->cart->cart_contents ) )?->sides[0]->template_base_id );
+	}
+
+	public function test_a_rename_that_cannot_be_stored_moves_nothing_and_is_tried_again(): void {
+		$config = ProductConfig::document_on( $this->reload( $this->product_id ) );
+		add_filter( 'query', array( self::class, 'refuse_writes_to_the_history' ) );
+
+		$this->rename( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID );
+
+		remove_filter( 'query', array( self::class, 'refuse_writes_to_the_history' ) );
+		$this->assertSame( $config, ProductConfig::document_on( $this->reload( $this->product_id ) ) );
+		$this->assertFalse( get_option( TemplateRenames::OPTION ) );
+		$this->assertCount( 1, ActionSchedulerRunner::pending( Processor::PROCESS_HOOK ), 'the event is tried again' );
+		as_unschedule_all_actions( Processor::PROCESS_HOOK );
+	}
+
+	public function test_renames_stored_at_once_are_both_kept(): void {
+		$wrote = false;
+		$other = static function ( string $query ) use ( &$wrote ): string {
+			if ( ! $wrote && self::writes_the_history( $query ) ) {
+				$wrote = true;
+				// Another request notes another template's change between this one's read and write.
+				TemplateRenames::record( 'mug', 'mug-pandas', time() * self::MILLISECONDS );
+			}
+			return $query;
+		};
+		add_filter( 'query', $other );
+
+		TemplateRenames::record( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID, time() * self::MILLISECONDS );
+
+		remove_filter( 'query', $other );
+		$this->assertTrue( $wrote );
+		$this->assertSame( self::NEW_ID, TemplateRenames::current( DesignFixture::TEMPLATE_BASE_ID ) );
+		$this->assertSame( 'mug-pandas', TemplateRenames::current( 'mug' ) );
+	}
+
+	public function test_a_rename_moves_a_page_per_job_and_queues_the_rest(): void {
+		$ids = array( $this->product_id );
+		for ( $made = count( $ids ); $made <= TemplateRename::PAGE; $made++ ) {
+			$product = new WC_Product_Simple();
+			$product->set_name( 'Personalised tee ' . $made );
+			$product->save();
+			self::config()->save_to( $product );
+			$ids[] = $product->get_id();
+		}
+
+		$this->rename( DesignFixture::TEMPLATE_BASE_ID, self::NEW_ID );
+
+		$this->assertSame( array( end( $ids ) ), ProductIndex::using_template( DesignFixture::TEMPLATE_BASE_ID, 0, TemplateRename::PAGE ), 'one page moved' );
+		$this->assertCount( 1, ActionSchedulerRunner::pending( TemplateRename::ACTION ) );
+
+		ActionSchedulerRunner::run_pending( TemplateRename::ACTION );
+
+		$this->assertSame( array(), ProductIndex::using_template( DesignFixture::TEMPLATE_BASE_ID, 0, TemplateRename::PAGE ) );
+		$this->assertSame( $ids, ProductIndex::using_template( self::NEW_ID, 0, TemplateRename::PAGE + 1 ) );
+	}
+
+	/**
+	 * The database refuses writes to the history.
+	 *
+	 * @param string $query A query.
+	 */
+	public static function refuse_writes_to_the_history( string $query ): string {
+		return self::writes_the_history( $query ) ? '' : $query;
+	}
+
+	private static function writes_the_history( string $query ): bool {
+		return str_contains( $query, TemplateRenames::OPTION ) && 1 === preg_match( '/^\s*(UPDATE|INSERT)/i', $query );
 	}
 
 	/**
 	 * Delivers `template.renamed` signed as Pixonaut signs it, then runs its job.
 	 *
-	 * @param string $from The old base id.
-	 * @param string $to   The new one.
+	 * @param string   $from The old base id.
+	 * @param string   $to   The new one.
+	 * @param int|null $at   When it changed, in milliseconds; null for a moment later than every rename before.
+	 * @return int When it changed.
 	 */
-	private function rename( string $from, string $to ): void {
+	private function rename( string $from, string $to, ?int $at = null ): int {
+		// One millisecond apart, as two renames are at the least.
+		$at ??= time() * self::MILLISECONDS + $this->sequence + 1;
 		$body = (string) wp_json_encode(
 			array(
 				'id'        => 'evt_rename_' . ( ++$this->sequence ),
@@ -209,9 +326,9 @@ final class TemplateRenameTest extends PersonalisedCartTestCase {
 				'payload'   => array(
 					'oldId'     => $from,
 					'newId'     => $to,
-					'renamedAt' => time() * 1000,
+					'renamedAt' => $at,
 				),
-				'createdAt' => time() * 1000,
+				'createdAt' => time() * self::MILLISECONDS,
 			)
 		);
 		OpenApiAssert::webhook( TemplateRename::TYPE, $body );
@@ -224,6 +341,7 @@ final class TemplateRenameTest extends PersonalisedCartTestCase {
 		$this->assertSame( 200, rest_do_request( $request )->get_status() );
 
 		ActionSchedulerRunner::run_once( Processor::PROCESS_HOOK );
+		return $at;
 	}
 
 	/**

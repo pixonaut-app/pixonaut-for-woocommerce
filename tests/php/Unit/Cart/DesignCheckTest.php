@@ -132,7 +132,13 @@ final class DesignCheckTest extends TestCase {
 		$moved = array( 'templateBaseId' => 'mini-tee-pandas' );
 		$this->assertSame( DesignCheck::TEMPLATE, self::mismatch( $moved ) );
 
-		TemplateRenames::record( DesignFixture::TEMPLATE_BASE_ID, 'mini-tee-pandas' );
+		$this->options[ TemplateRenames::OPTION ] = array(
+			array(
+				'from' => DesignFixture::TEMPLATE_BASE_ID,
+				'to'   => 'mini-tee-pandas',
+				'at'   => 1,
+			),
+		);
 
 		$this->assertNull( self::mismatch( $moved ) );
 		$this->assertNull( self::mismatch( array() ), 'A design still naming the old id is the same template.' );

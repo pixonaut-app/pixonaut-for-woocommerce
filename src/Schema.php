@@ -343,8 +343,8 @@ final class Schema {
 	const EVENTS_BASELINE_OPTION = 'pixonaut_wc_events_baseline';
 
 	/**
-	 * Option holding the template ids Pixonaut changed, each old base id
-	 * mapped to the one it became (`template.renamed`).
+	 * Option holding every change of a template's id Pixonaut reported
+	 * (`template.renamed`), as `{from, to, at}`.
 	 */
 	const TEMPLATE_RENAMES_OPTION = 'pixonaut_wc_template_renames';
 

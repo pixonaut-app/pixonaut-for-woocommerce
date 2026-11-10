@@ -381,7 +381,7 @@ final class LineState {
 	 * @param string $base_id       A template's base id.
 	 * @param int    $after_item_id Only items above this one; 0 for the first page.
 	 * @param int    $limit         Items at most.
-	 * @return array{lines: list<self>, last: int} The lines, and the last item id looked at; 0 when none was.
+	 * @return array{lines: list<self>, last: int, more: bool} The lines, the last item id looked at (0 when none was), and whether the page was full, so more may follow.
 	 */
 	public static function for_template( string $base_id, int $after_item_id, int $limit ): array {
 		global $wpdb;
@@ -390,6 +390,7 @@ final class LineState {
 			return array(
 				'lines' => array(),
 				'last'  => 0,
+				'more'  => false,
 			);
 		}
 		$ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a lookup no API offers, made when Pixonaut changes a template's id.
@@ -405,6 +406,7 @@ final class LineState {
 		return array(
 			'lines' => array_values( array_filter( self::lines( $ids ), static fn ( self $line ): bool => $line->uses_template( $base_id ) ) ),
 			'last'  => array() === $ids ? 0 : $ids[ count( $ids ) - 1 ],
+			'more'  => count( $ids ) === $limit,
 		);
 	}
 
