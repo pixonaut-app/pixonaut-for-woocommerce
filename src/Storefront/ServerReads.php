@@ -84,14 +84,27 @@ final class ServerReads {
 
 	/**
 	 * The ids of a template's groups, for a side the page has no read of: a
-	 * correction's, or a variation's on another template. Null when Pixonaut
-	 * could not be asked.
+	 * correction's. Null when Pixonaut could not be asked.
 	 *
 	 * @param string $template_id `<baseId>@<version>`.
 	 * @param mixed  $locale      The mount's `locale`, when it names one.
 	 * @return list<string>|null
 	 */
 	public function template_groups( string $template_id, mixed $locale ): ?array {
+		$template = $this->template_read( $template_id, $locale );
+		return null === $template ? null : array_column( TemplateForm::groups( $template ), 'id' );
+	}
+
+	/**
+	 * A template as Pixonaut answered it, decoded, for a side the page has no
+	 * read of: a variation's on another template. Null when Pixonaut could
+	 * not be asked.
+	 *
+	 * @param string $template_id `<baseId>@<version>`.
+	 * @param mixed  $locale      The mount's `locale`, when it names one.
+	 * @return array<mixed>|null
+	 */
+	public function template_read( string $template_id, mixed $locale ): ?array {
 		if ( false !== get_transient( self::PAUSE_TRANSIENT ) ) {
 			return null;
 		}
@@ -101,7 +114,7 @@ final class ServerReads {
 			set_transient( self::PAUSE_TRANSIENT, 1, self::PAUSE_SECONDS );
 			return null;
 		}
-		return array_column( TemplateForm::groups( $template ), 'id' );
+		return is_array( $template ) ? $template : array();
 	}
 
 	/**

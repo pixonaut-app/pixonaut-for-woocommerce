@@ -822,8 +822,15 @@ untitled group the template lacks, its host items too, so such a group is
 left out and its attributes join `wc-options`; without a read of the
 template, the side mounts without `formGroups`. A variation's side carries
 its own `formGroups` (absent for none), fitted the same way when it opens
-the template read, and a switch to a variation with another arrangement
-mounts the side again. The script swaps each attribute item for a host
+the template read. On another template, the server reads that template and
+carries the product's groups to it, in their order and with their names (a
+group of the product's template left untitled takes that template's label):
+attributes stay where they are, a field moves to the other template's field
+of the same field key and is left out without one, and a group left empty
+that the other template lacks is left out. The other template's fields
+placed nowhere follow the product's groups. Without that read the
+variation shows its template's own form. A switch to a variation with
+another arrangement mounts the side again. The script swaps each attribute item for a host
 item, `{ host: "attribute_<slug>", element }`: the Add to Cart with Options
 block's attribute element, or the classic form's row moved into a
 `table.variations.pixonaut-attribute` of its own, put before the form's

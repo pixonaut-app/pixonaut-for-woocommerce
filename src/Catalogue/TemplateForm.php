@@ -23,6 +23,27 @@ final class TemplateForm {
 	private const MAX_OPTIONS = FormGroups::MAX_OPTIONS;
 
 	/**
+	 * The `layerId` the form gives the artwork's own fields: the
+	 * background's and the die's, which belong to no layer.
+	 */
+	private const ARTWORK_LAYER_ID = '$artwork';
+
+	/**
+	 * The artwork's prop the die's offered shapes are a field of.
+	 */
+	private const SHAPE_PROP = 'shape';
+
+	/**
+	 * A layer's prop its opacity is a field of.
+	 */
+	private const OPACITY_PROP = 'opacity';
+
+	/**
+	 * The prop of a field's spec its author's field key is stored under.
+	 */
+	private const FIELD_KEY_PROP = 'fieldKey';
+
+	/**
 	 * The template's groups, in its order.
 	 *
 	 * @param mixed $template The template as Pixonaut answered it.
@@ -48,6 +69,43 @@ final class TemplateForm {
 			);
 		}
 		return $groups;
+	}
+
+	/**
+	 * The fields the template's author gave a field key, by that key: the
+	 * key a customer's value follows into another template with a field of
+	 * the same key. Read from the template's document as Pixonaut's
+	 * `fieldKeySites` reads it: the background's props and the die's under
+	 * the artwork's reserved layer id, then each layer's props and opacity;
+	 * only a field a customer is offered, and of two sharing a key, the first.
+	 *
+	 * @param mixed $template The template as Pixonaut answered it.
+	 * @return array<string, string> `"<layerId>:<prop>"` by field key.
+	 */
+	public static function field_keys( mixed $template ): array {
+		$doc   = is_array( $template ) && is_array( $template['template'] ?? null ) ? $template['template'] : array();
+		$sites = array();
+		foreach ( is_array( $doc['background'] ?? null ) ? $doc['background'] : array() as $prop => $spec ) {
+			$sites[] = array( self::ARTWORK_LAYER_ID . ':' . $prop, $spec );
+		}
+		$sites[] = array( self::ARTWORK_LAYER_ID . ':' . self::SHAPE_PROP, $doc['shape'] ?? null );
+		foreach ( is_array( $doc['layers'] ?? null ) ? $doc['layers'] : array() as $layer ) {
+			if ( ! is_array( $layer ) || ! is_string( $layer['id'] ?? null ) ) {
+				continue;
+			}
+			foreach ( is_array( $layer['props'] ?? null ) ? $layer['props'] : array() as $prop => $spec ) {
+				$sites[] = array( $layer['id'] . ':' . $prop, $spec );
+			}
+			$sites[] = array( $layer['id'] . ':' . self::OPACITY_PROP, $layer['opacity'] ?? null );
+		}
+		$keys = array();
+		foreach ( $sites as list( $field, $spec ) ) {
+			$key = is_array( $spec ) ? ( $spec[ self::FIELD_KEY_PROP ] ?? null ) : null;
+			if ( is_array( $spec ) && true === ( $spec['editable'] ?? null ) && is_string( $key ) && '' !== $key && ! isset( $keys[ $key ] ) ) {
+				$keys[ $key ] = $field;
+			}
+		}
+		return $keys;
 	}
 
 	/**
