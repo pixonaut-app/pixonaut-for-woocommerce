@@ -12,11 +12,15 @@
 // the designer. The full suite still runs before a merge, so a spec left out
 // here is caught there.
 //
-// bin/ci-local's test checks that every tracked source is covered by a
-// REACH entry or by NO_SPEC, that every entry matches a tracked file, and
-// that every spec in tests/e2e/specs/ has a key here.
+// tests/js/ci-local-e2e.test.ts checks that every tracked source is covered
+// by a REACH entry or by NO_SPEC, that every entry matches a tracked file,
+// and that every spec in tests/e2e/specs/ has a key here.
 
-/** Sources no spec is about: wiring every flow passes through, or code the e2e suite does not exercise (tested by the PHP suites). A change here selects no spec; the full gate covers it. */
+/**
+ * Sources no spec is about: wiring every flow passes through, or code the e2e
+ * suite does not exercise (tested by the PHP suites). A change here selects
+ * no spec; the full gate covers it.
+ */
 export const NO_SPEC = [
 	// Wiring and plumbing every flow passes through.
 	'src/Plugin.php',
