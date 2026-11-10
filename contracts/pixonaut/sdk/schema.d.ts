@@ -85,6 +85,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/i/{token}/{file}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch a catalogue image as a named file
+         * @description The same image as `GET /i/{token}`, through a link that ends in a file name, like `picture.png`: the link a shop tool hands a shop for a library picture, since a shop names the file it saves after the link's last segment and refuses one without an extension it takes. The file name is not read; the token alone says what opens.
+         */
+        get: operations["catalogueImages.getFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/l/{token}": {
         parameters: {
             query?: never;
@@ -2300,7 +2320,7 @@ export interface paths {
         };
         /**
          * List the library's scenes
-         * @description The scenes a blank may show, by stock item, then by setting, person and pose (the selects a stock photo is chosen by), each with a link to its picture and to the passes it is drawn through, all needing no key, and the stock items a blank may choose: each with a scene in the library. A retired scene is not listed.
+         * @description The scenes a blank may show, Pixonaut's and the workspace's own, by stock item, then by setting, person and pose (the selects a stock photo is chosen by), each with a link to its picture and to the passes it is drawn through, all needing no key, and the stock items a blank may choose: each with a scene in the library. A retired scene is not listed.
          */
         get: operations["scenes.list"];
         put?: never;
@@ -21747,6 +21767,124 @@ export interface operations {
             };
         };
     };
+    "catalogueImages.getFile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file's bytes */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    /** @description The uploaded file's height in pixels, when it is known. The bytes served may be a smaller preview. */
+                    "x-pixonaut-original-height"?: number;
+                    /** @description The uploaded file's width in pixels, when it is known. The bytes served may be a smaller preview. */
+                    "x-pixonaut-original-width"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/heic": string;
+                    "image/heif": string;
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                };
+            };
+            /** @description The caller's copy, named by its ETag, is current */
+            304: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The token does not verify or has expired, or the image it names is gone (plain text), or `showcase_not_found`: the template holds no showcase with the id `showcase` names */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": string;
+                };
+            };
+            /** @description Refused: asset_map_too_large, design_doc_unreadable */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Always sent with `asset_map_too_large`. */
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `asset_map_too_large`. */
+                        maxBytes?: number;
+                    };
+                };
+            };
+            /** @description Refused: rate_limited */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description The caller left before the render started */
+            499: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: template_defaults_invalid, db_error, render_failed. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: print_box_unavailable, assets_unavailable, preview_unavailable */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
     "logos.get": {
         parameters: {
             query?: {
@@ -30344,7 +30482,7 @@ export interface operations {
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
-                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos are not painted and show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
                             paintBy: string | null;
                             partnerLocked: boolean;
                             /** @description How much of the blank is photographed. Answered in a list. */
@@ -30358,7 +30496,7 @@ export interface operations {
                             photosVaryBy: string[];
                             /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
                             placements: {
-                                /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, the placement has one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row, which every row fits inside. */
+                                /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, the placement has one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
                                 areas?: {
                                     /** @description Bleed past the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
                                     bleedMm?: number;
@@ -30374,6 +30512,13 @@ export interface operations {
                                     };
                                     /** @description Safe area inside the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
                                     safeAreaMm?: number;
+                                    /** @description Where on the product a print may go on the row, such as one phone model's camera opening: as the placement's `shape`, in fractions of the row's print area. Omitted, the placement's. */
+                                    shape?: {
+                                        /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                        cutByPrintShop?: boolean;
+                                        /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
+                                        dFrac: string;
+                                    };
                                     /** @description The height a print gets on the row when none is chosen, in millimetres, at most heightMm. */
                                     usualHeightMm: number;
                                     /** @description The width a print gets on the row when none is chosen, in millimetres, at most widthMm. */
@@ -30395,7 +30540,7 @@ export interface operations {
                                 fillColour?: string | null;
                                 /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                                 foldMm?: number;
-                                /** @description Where the placement sits on each product the blank's stock photos show, one record per stock item for every scene of it: the stock item, a garment area of it, and the print's top left and width on it in millimetres. A placement with no record on a scene's stock item draws nothing on that scene. Refused with `placement_garment_area_unknown` when the stock item or the area is unknown, and `placement_garment_outside_area` when it reaches past the area. */
+                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene whose item has no record draws nothing of the placement. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
                                 garments?: {
                                     /** @description The key of a garment area of the record's stock item. */
                                     area: string;
@@ -30440,13 +30585,13 @@ export interface operations {
                                 shopName?: string | null;
                                 /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
                                 views: {
-                                    /** @description True on a view a blank bound to its printshop's product took from the printshop (its import, Add colours, model photos): its photo size and print area are the printshop's and cannot change by hand. Absent on a view the workspace added. Set only by the printshop's own paths; a save that sends it is ignored. */
+                                    /** @description True on a view a blank bound to its printshop's product took from the printshop (its import, Add colours, model photos): its photo size and print area are the printshop's and cannot change by hand. Absent on a view the workspace added; a save that sends it is ignored. */
                                     fromPrintshop?: boolean;
                                     /** @description Unique within the blank. */
                                     id: string;
                                     /** @description What it is called, such as Flat or On model; unique among its placement's views of its kind, the printshop's or the merchant's, ignoring case. */
                                     label: string;
-                                    /** @description What it is called per customer-facing language, by code: only the languages it has a name in; a language left out reads `label`. No two views of its placement and kind read the same in one language, ignoring case. */
+                                    /** @description What it is called per customer-facing language, by code; a language left out reads `label`. No two views of its placement and kind read the same in one language, ignoring case. */
                                     localizedLabels?: {
                                         da?: string;
                                         de?: string;
@@ -30463,7 +30608,7 @@ export interface operations {
                                     /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
                                     mesh?: {
                                         /**
-                                         * @description The points draw a shape to cut the print to (CONTEXT.md → Region cut) rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                         * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
                                          * @enum {boolean}
                                          */
                                         cut?: true;
@@ -30522,7 +30667,7 @@ export interface operations {
                                     } | null;
                                     /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
                                     position?: number;
-                                    /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print is read inside it, at the window's size, and the product shows plain outside it. It lies inside its piece, and needs the piece's size on the view. Absent, the print covers the whole piece. */
+                                    /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
                                     printWindowMm?: {
                                         /** @description The window's height, in mm. */
                                         heightMm: number;
@@ -30912,7 +31057,7 @@ export interface operations {
                         })[];
                         /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                         orderCount?: number;
-                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos are not painted and show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
                         paintBy: string | null;
                         partnerLocked: boolean;
                         /** @description How much of the blank is photographed. Answered in a list. */
@@ -30926,7 +31071,7 @@ export interface operations {
                         photosVaryBy: string[];
                         /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
                         placements: {
-                            /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, the placement has one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row, which every row fits inside. */
+                            /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, the placement has one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
                             areas?: {
                                 /** @description Bleed past the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
                                 bleedMm?: number;
@@ -30942,6 +31087,13 @@ export interface operations {
                                 };
                                 /** @description Safe area inside the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
                                 safeAreaMm?: number;
+                                /** @description Where on the product a print may go on the row, such as one phone model's camera opening: as the placement's `shape`, in fractions of the row's print area. Omitted, the placement's. */
+                                shape?: {
+                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    cutByPrintShop?: boolean;
+                                    /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
+                                    dFrac: string;
+                                };
                                 /** @description The height a print gets on the row when none is chosen, in millimetres, at most heightMm. */
                                 usualHeightMm: number;
                                 /** @description The width a print gets on the row when none is chosen, in millimetres, at most widthMm. */
@@ -30963,7 +31115,7 @@ export interface operations {
                             fillColour?: string | null;
                             /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                             foldMm?: number;
-                            /** @description Where the placement sits on each product the blank's stock photos show, one record per stock item for every scene of it: the stock item, a garment area of it, and the print's top left and width on it in millimetres. A placement with no record on a scene's stock item draws nothing on that scene. Refused with `placement_garment_area_unknown` when the stock item or the area is unknown, and `placement_garment_outside_area` when it reaches past the area. */
+                            /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene whose item has no record draws nothing of the placement. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
                             garments?: {
                                 /** @description The key of a garment area of the record's stock item. */
                                 area: string;
@@ -31008,13 +31160,13 @@ export interface operations {
                             shopName?: string | null;
                             /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
                             views: {
-                                /** @description True on a view a blank bound to its printshop's product took from the printshop (its import, Add colours, model photos): its photo size and print area are the printshop's and cannot change by hand. Absent on a view the workspace added. Set only by the printshop's own paths; a save that sends it is ignored. */
+                                /** @description True on a view a blank bound to its printshop's product took from the printshop (its import, Add colours, model photos): its photo size and print area are the printshop's and cannot change by hand. Absent on a view the workspace added; a save that sends it is ignored. */
                                 fromPrintshop?: boolean;
                                 /** @description Unique within the blank. */
                                 id: string;
                                 /** @description What it is called, such as Flat or On model; unique among its placement's views of its kind, the printshop's or the merchant's, ignoring case. */
                                 label: string;
-                                /** @description What it is called per customer-facing language, by code: only the languages it has a name in; a language left out reads `label`. No two views of its placement and kind read the same in one language, ignoring case. */
+                                /** @description What it is called per customer-facing language, by code; a language left out reads `label`. No two views of its placement and kind read the same in one language, ignoring case. */
                                 localizedLabels?: {
                                     da?: string;
                                     de?: string;
@@ -31031,7 +31183,7 @@ export interface operations {
                                 /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
                                 mesh?: {
                                     /**
-                                     * @description The points draw a shape to cut the print to (CONTEXT.md → Region cut) rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                     * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
                                      * @enum {boolean}
                                      */
                                     cut?: true;
@@ -31090,7 +31242,7 @@ export interface operations {
                                 } | null;
                                 /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
                                 position?: number;
-                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print is read inside it, at the window's size, and the product shows plain outside it. It lies inside its piece, and needs the piece's size on the view. Absent, the print covers the whole piece. */
+                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
                                 printWindowMm?: {
                                     /** @description The window's height, in mm. */
                                     heightMm: number;
@@ -31369,11 +31521,18 @@ export interface operations {
                 content: {
                     "application/json": {
                         placements: {
-                            /** @description The placement's print area per row of the options the blank's print areas change with (`areasVaryBy` on the variants read): a design on a variant is printed at the area of that variant's row, at its usual size when none is chosen. Empty when the area is the same at every size. */
+                            /** @description The placement's print area per row of the options the blank's print areas change with (`areasVaryBy` on the variants read): a design on a variant is printed at the area of that variant's row, at its usual size when none is chosen, and cut to the row's shape. Empty when the area is the same at every size. */
                             areas: {
                                 heightMm: number;
                                 row: {
                                     [key: string]: string;
+                                };
+                                /** @description Where on the product a print may go on the row, such as one phone model's camera opening, as the placement's `shape` is. A preview of a variant at this row clips the print to it and draws it as a guide. Absent, the placement's. */
+                                shape?: {
+                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    cutByPrintShop?: boolean;
+                                    /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
+                                    dFrac: string;
                                 };
                                 usualHeightMm: number;
                                 usualWidthMm: number;
@@ -31415,7 +31574,7 @@ export interface operations {
                                 /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
                                 mesh?: {
                                     /**
-                                     * @description The points draw a shape to cut the print to (CONTEXT.md → Region cut) rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                     * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
                                      * @enum {boolean}
                                      */
                                     cut?: true;
@@ -31496,7 +31655,7 @@ export interface operations {
                                 } | null;
                                 /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
                                 position?: number;
-                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print is read inside it, at the window's size, and the product shows plain outside it. It lies inside its piece, and needs the piece's size on the view. Absent, the print covers the whole piece. */
+                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
                                 printWindowMm?: {
                                     /** @description The window's height, in mm. */
                                     heightMm: number;
@@ -31608,7 +31767,7 @@ export interface operations {
                                 /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
                                 mesh?: {
                                     /**
-                                     * @description The points draw a shape to cut the print to (CONTEXT.md → Region cut) rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                     * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
                                      * @enum {boolean}
                                      */
                                     cut?: true;
@@ -31624,7 +31783,7 @@ export interface operations {
                                 };
                                 /** @description The placement whose print the region shows. */
                                 placementId: string;
-                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print is read inside it, at the window's size, and the product shows plain outside it. It lies inside its piece, and needs the piece's size on the view. Absent, the print covers the whole piece. */
+                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
                                 printWindowMm?: {
                                     /** @description The window's height, in mm. */
                                     heightMm: number;
@@ -32083,7 +32242,7 @@ export interface operations {
                             };
                             values: string[];
                         }[];
-                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos are not painted and show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
                         paintBy: string | null;
                         variants: {
                             options: {
@@ -42424,7 +42583,7 @@ export interface operations {
                     cardId: string;
                     conversationId: string;
                     /**
-                     * @description Don't ask again, on a card that spends credits: turns "Confirm before spending credits" off, so later spends are applied without a card. Refused for any other card, which always asks.
+                     * @description Don't ask again, on a card that spends credits: turns "Confirm before spending credits" off, so later spends are applied without a card. On a card that creates or updates in a connected store: later writes of that kind to that store are applied without a card. Refused for any other card, which always asks.
                      * @enum {boolean}
                      */
                     dontAskAgain?: true;
@@ -42467,6 +42626,7 @@ export interface operations {
                                     current?: {
                                         name?: string;
                                         names?: string[];
+                                        templates?: string[];
                                     };
                                     estimate?: {
                                         availableCredits: number;
@@ -42502,9 +42662,12 @@ export interface operations {
                                         message: string;
                                         store: string;
                                         storesOwnWords: boolean;
+                                        variation?: number;
+                                        variationUnknown?: boolean;
                                     };
                                     tool: string;
                                     upscaleId?: string;
+                                    upscaleIds?: string[];
                                 };
                             };
                             contentKeys: {
@@ -42571,6 +42734,11 @@ export interface operations {
                                             mockupId?: string;
                                             placementId?: string;
                                             viewId?: string;
+                                        } | {
+                                            id: string;
+                                            /** @enum {string} */
+                                            kind: "scene_candidate";
+                                            slot: number;
                                         };
                                         /** @enum {string} */
                                         type: "picture";
@@ -42715,6 +42883,7 @@ export interface operations {
                                     current?: {
                                         name?: string;
                                         names?: string[];
+                                        templates?: string[];
                                     };
                                     estimate?: {
                                         availableCredits: number;
@@ -42750,9 +42919,12 @@ export interface operations {
                                         message: string;
                                         store: string;
                                         storesOwnWords: boolean;
+                                        variation?: number;
+                                        variationUnknown?: boolean;
                                     };
                                     tool: string;
                                     upscaleId?: string;
+                                    upscaleIds?: string[];
                                 };
                             };
                             contentKeys: {
@@ -42819,6 +42991,11 @@ export interface operations {
                                             mockupId?: string;
                                             placementId?: string;
                                             viewId?: string;
+                                        } | {
+                                            id: string;
+                                            /** @enum {string} */
+                                            kind: "scene_candidate";
+                                            slot: number;
                                         };
                                         /** @enum {string} */
                                         type: "picture";
@@ -42927,6 +43104,7 @@ export interface operations {
                                     current?: {
                                         name?: string;
                                         names?: string[];
+                                        templates?: string[];
                                     };
                                     estimate?: {
                                         availableCredits: number;
@@ -42962,9 +43140,12 @@ export interface operations {
                                         message: string;
                                         store: string;
                                         storesOwnWords: boolean;
+                                        variation?: number;
+                                        variationUnknown?: boolean;
                                     };
                                     tool: string;
                                     upscaleId?: string;
+                                    upscaleIds?: string[];
                                 };
                             };
                             contentKeys: {
@@ -43031,6 +43212,11 @@ export interface operations {
                                             mockupId?: string;
                                             placementId?: string;
                                             viewId?: string;
+                                        } | {
+                                            id: string;
+                                            /** @enum {string} */
+                                            kind: "scene_candidate";
+                                            slot: number;
                                         };
                                         /** @enum {string} */
                                         type: "picture";
@@ -43146,6 +43332,8 @@ export interface operations {
                             message: string;
                             store: string;
                             storesOwnWords: boolean;
+                            variation?: number;
+                            variationUnknown?: boolean;
                         };
                     };
                 };
@@ -43196,6 +43384,7 @@ export interface operations {
                                     current?: {
                                         name?: string;
                                         names?: string[];
+                                        templates?: string[];
                                     };
                                     estimate?: {
                                         availableCredits: number;
@@ -43231,9 +43420,12 @@ export interface operations {
                                         message: string;
                                         store: string;
                                         storesOwnWords: boolean;
+                                        variation?: number;
+                                        variationUnknown?: boolean;
                                     };
                                     tool: string;
                                     upscaleId?: string;
+                                    upscaleIds?: string[];
                                 };
                             };
                             contentKeys: {
@@ -43300,6 +43492,11 @@ export interface operations {
                                             mockupId?: string;
                                             placementId?: string;
                                             viewId?: string;
+                                        } | {
+                                            id: string;
+                                            /** @enum {string} */
+                                            kind: "scene_candidate";
+                                            slot: number;
                                         };
                                         /** @enum {string} */
                                         type: "picture";
@@ -43635,6 +43832,7 @@ export interface operations {
                                     current?: {
                                         name?: string;
                                         names?: string[];
+                                        templates?: string[];
                                     };
                                     estimate?: {
                                         availableCredits: number;
@@ -43670,9 +43868,12 @@ export interface operations {
                                         message: string;
                                         store: string;
                                         storesOwnWords: boolean;
+                                        variation?: number;
+                                        variationUnknown?: boolean;
                                     };
                                     tool: string;
                                     upscaleId?: string;
+                                    upscaleIds?: string[];
                                 };
                             };
                             contentKeys: {
@@ -43739,6 +43940,11 @@ export interface operations {
                                             mockupId?: string;
                                             placementId?: string;
                                             viewId?: string;
+                                        } | {
+                                            id: string;
+                                            /** @enum {string} */
+                                            kind: "scene_candidate";
+                                            slot: number;
                                         };
                                         /** @enum {string} */
                                         type: "picture";
@@ -46464,6 +46670,8 @@ export interface operations {
                             } | null;
                             /** @description Who is in the scene, or `none`: one of the selects a stock item's scenes are chosen by. */
                             person: string;
+                            /** @description Whether a composition from this scene may describe a new person: the scene's person can be replaced. Never a workspace's own scene. */
+                            personSwappable: boolean;
                             /** @description The preview picture's size, which each of `layerUrls` shares; null when it has none. */
                             pictureSizePx: {
                                 heightPx: number;
@@ -46481,6 +46689,8 @@ export interface operations {
                             studio: boolean;
                             /** @description Whether a variant's colour paints the scene's grey base. One that does not shows a material that is the point, such as bare metal, on every variant as photographed. */
                             takesDye: boolean;
+                            /** @description Whether the scene is this workspace's own, composed from a stock scene, rather than Pixonaut's. */
+                            workspace: boolean;
                         }[];
                         stockItems: {
                             areas: {

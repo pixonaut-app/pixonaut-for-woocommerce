@@ -906,7 +906,7 @@ describe('ProductDesigner on a variable product', () => {
 		const { form, container, button, report, sdkDesigner } = start();
 		await settle();
 		sdkDesigner.setVariant.mockRejectedValueOnce(
-			new VariantUnavailableError('v_tee_dark', 'no_photo'),
+			new VariantUnavailableError('v_tee_dark', 'unknown_variant'),
 		);
 		const sent = submitted(form);
 

@@ -2284,10 +2284,10 @@ export declare class PixonautDesigner extends DesignerProduct {
     setPrintSize(index: number): void;
     /** Show every view in variant `ref` (another colour or size of the
      *  product): the view shown stays when it has a photo of it, else the
-     *  first that has one is shown. `on("variant")` reports it. A ref that is
-     *  not the blank's, a retired one, and one no allowed view has a photo of
-     *  (on a product photographed in some) reject with a `VariantUnavailableError` naming why, and the variant
-     *  shown stays. Another size after `commit()` commits every side again,
+     *  first that has one is shown, else the Design view, or none, never a
+     *  photo of another variant. `on("variant")` reports it. A ref that is
+     *  not the blank's, or a retired one, rejects with a
+     *  `VariantUnavailableError` naming why, and the variant shown stays. Another size after `commit()` commits every side again,
      *  resolving as it does, on a blank whose areas change with it (#1915). */
     setVariant(ref: string): Promise<void>;
     /** Each side of the item, in `placements` order: its placement, the
@@ -3716,7 +3716,9 @@ export declare type VariantUnavailableReason =
 | "variant_retired"
 /** The mount's `variants` do not name it. */
 | "not_offered"
-/** No view the product allows has a photo of it. */
+/** Photographed only on sides the editor does not open on: an
+*  `initialVariant` is refused for it. A variant no view has a photo
+*  of is shown on the Design view instead (#3408). */
 | "no_photo";
 
 /** This SDK's release. The wasm it boots must report the same one. */
