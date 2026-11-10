@@ -53,6 +53,11 @@ final class ConnectedStoreTest extends TestCase {
 		$this->assertSame( 'sandbox', $connected->environment );
 		$this->assertSame( 'WooCommerce · Acme Shop', $connected->name );
 		$this->assertSame( 150.0, $connected->printing->min_print_dpi );
+		$this->assertSame( 'flat', $connected->printing->print_file_form );
+		$this->assertSame( 'px', $connected->printing->print_file_text_tolerance->unit );
+		$this->assertSame( 1.0, $connected->printing->print_file_text_tolerance->value );
+		$this->assertNull( $connected->print_file_form );
+		$this->assertNull( $connected->print_file_text_tolerance );
 		$this->assertTrue( $connected->proof_watermark );
 		$this->assertFalse( $connected->reachable );
 		$this->assertSame( 'http://example.org', $connected->site_url );

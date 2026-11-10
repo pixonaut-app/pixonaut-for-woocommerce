@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-10T22:50:10+00:00\n"
+"POT-Creation-Date: 2026-11-10T22:53:41+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -39,7 +39,7 @@ msgstr ""
 #: src/Abilities/Abilities.php:63
 #: src/Admin/OrderBox.php:118
 #: src/Admin/ProductPanel.php:186
-#: src/Settings/SettingsPage.php:232
+#: src/Settings/SettingsPage.php:237
 #: templates/admin/product-variation.php:40
 msgid "Pixonaut"
 msgstr ""
@@ -325,7 +325,7 @@ msgid "The last test request to the store's webhook endpoint: whether it arrived
 msgstr ""
 
 #: src/Abilities/ConnectionStatus.php:130
-msgid "The workspace's settings as Pixonaut answered them: `brands` the store may choose from (the default first), `brand_id` the brand its pages are drawn in, `chosen_brand_id` the store's own choice (null while it follows the default), its logo and accent colour, the proof watermark, where orders ship, the least print resolution and the default language. Null while the connection is paused or Pixonaut could not be reached."
+msgid "The workspace's settings as Pixonaut answered them: `brands` the store may choose from (the default first), `brand_id` the brand its pages are drawn in, `chosen_brand_id` the store's own choice (null while it follows the default), its logo and accent colour, the proof watermark, where orders ship, the least print resolution, the default language, `print_file_form` and `print_file_tolerance` the store's own print file form and live text tolerance (null while it follows the workspace's), and `prints_with` the form and tolerance its print files get. Null while the connection is paused or Pixonaut could not be reached."
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
@@ -1607,7 +1607,7 @@ msgstr ""
 msgid "Connect the store to Pixonaut to search its catalogue."
 msgstr ""
 
-#: src/Admin/ConnectionScreen.php:424
+#: src/Admin/ConnectionScreen.php:497
 msgid "You are not allowed to change the Pixonaut connection."
 msgstr ""
 
@@ -1633,7 +1633,7 @@ msgstr[1] ""
 #. translators: Item in the admin bar, shown to the merchant, when the plugin talks to a custom Pixonaut host instead of the default one.
 #. translators: Badge on the connection card: the store talks to another address than Pixonaut's own, set by a developer.
 #: src/Admin/DeveloperTools.php:394
-#: templates/admin/connection-card.php:106
+#: templates/admin/connection-card.php:111
 msgid "Custom Pixonaut host"
 msgstr ""
 
@@ -1998,7 +1998,7 @@ msgstr ""
 #. translators: Link on the Plugins screen to the plugin's settings.
 #. translators: Item in the admin menu under Pixonaut, opening the plugin's settings.
 #: src/Admin/PluginLinks.php:40
-#: src/Settings/SettingsPage.php:245
+#: src/Settings/SettingsPage.php:250
 msgid "Settings"
 msgstr ""
 
@@ -2686,6 +2686,33 @@ msgstr ""
 #: src/Connection/Connection.php:446
 #, php-format
 msgid "Pixonaut no longer accepts this store's key: the store was disconnected in Pixonaut, or its key was revoked. Personalised products and orders are paused until you <a href=\"%s\">connect the store again</a>."
+msgstr ""
+
+#. translators: Print file form on the connection card: one flat image per print.
+#: src/Connection/PrintFileForm.php:71
+msgid "Flat"
+msgstr ""
+
+#. translators: Print file form on the connection card: each printed layer its own PDF layer, with text turned into shapes.
+#: src/Connection/PrintFileForm.php:73
+msgid "Layers, text as shapes"
+msgstr ""
+
+#. translators: Print file form on the connection card: each printed layer its own PDF layer, with plain text kept as editable text.
+#: src/Connection/PrintFileForm.php:75
+msgid "Layers with live text"
+msgstr ""
+
+#. translators: 1: a number, 2: its unit, px or mm. A live text tolerance on the connection card, e.g. 0.5 mm.
+#: src/Connection/PrintFileForm.php:95
+#, php-format
+msgid "%1$s %2$s"
+msgstr ""
+
+#. translators: 1: least and 2: most device pixels, 3: least and 4: most millimetres a live text tolerance may be. Shown on the connection card.
+#: src/Connection/PrintFileForm.php:118
+#, php-format
+msgid "%1$s to %2$s px, or %3$s to %4$s mm"
 msgstr ""
 
 #. translators: %s: plugin version, e.g. 1.2.0.
@@ -4455,111 +4482,111 @@ msgstr ""
 msgid "Records the last 50 requests to Pixonaut, without keys or tokens."
 msgstr ""
 
-#: src/Settings/SettingsPage.php:230
-#: src/Settings/SettingsPage.php:243
-#: src/Settings/SettingsPage.php:317
+#: src/Settings/SettingsPage.php:235
+#: src/Settings/SettingsPage.php:248
+#: src/Settings/SettingsPage.php:322
 msgid "Pixonaut settings"
 msgstr ""
 
-#: src/Settings/SettingsPage.php:288
+#: src/Settings/SettingsPage.php:293
 msgid "You are not allowed to change the Pixonaut settings."
 msgstr ""
 
-#: src/Settings/SettingsPage.php:309
+#: src/Settings/SettingsPage.php:314
 msgid "Your settings have been saved."
 msgstr ""
 
-#: src/Settings/SettingsPage.php:333
+#: src/Settings/SettingsPage.php:338
 msgid "Save changes"
 msgstr ""
 
-#: src/Settings/SettingsPage.php:430
+#: src/Settings/SettingsPage.php:435
 msgid "The changes you made will be lost if you navigate away from this page."
 msgstr ""
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the settings for the designer on the store's product pages.
-#: src/Settings/SettingsPage.php:533
+#: src/Settings/SettingsPage.php:538
 msgid "Storefront"
 msgstr ""
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: how customers approve their designs, and the proof emails.
-#: src/Settings/SettingsPage.php:536
+#: src/Settings/SettingsPage.php:541
 msgctxt "settings tab"
 msgid "Approval"
 msgstr ""
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: which releases of the plugin WordPress offers.
-#: src/Settings/SettingsPage.php:539
+#: src/Settings/SettingsPage.php:544
 msgctxt "settings tab"
 msgid "Updates"
 msgstr ""
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the store's connection to its Pixonaut workspace.
 #. translators: Heading of the Pixonaut connection card on the settings page.
-#: src/Settings/SettingsPage.php:542
-#: templates/admin/connection-card.php:104
+#: src/Settings/SettingsPage.php:547
+#: templates/admin/connection-card.php:109
 msgid "Connection"
 msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how the designer on product pages looks and behaves.
-#: src/Settings/SettingsPage.php:558
+#: src/Settings/SettingsPage.php:563
 msgid "Product page designer"
 msgstr ""
 
-#: src/Settings/SettingsPage.php:559
+#: src/Settings/SettingsPage.php:564
 msgid "How the designer looks and behaves on product pages. A product’s Pixonaut tab can change the layouts for that product."
 msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the images of personalised products.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's images drawn by Pixonaut.
-#: src/Settings/SettingsPage.php:565
+#: src/Settings/SettingsPage.php:570
 #: templates/admin/product-showcase-images.php:58
 msgid "Product images"
 msgstr ""
 
-#: src/Settings/SettingsPage.php:566
+#: src/Settings/SettingsPage.php:571
 msgid "The image the shop, feeds, emails and search results show for a personalised product."
 msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how a personalised item shows in the cart, the checkout, orders and emails.
-#: src/Settings/SettingsPage.php:572
+#: src/Settings/SettingsPage.php:577
 msgid "Cart and orders"
 msgstr ""
 
-#: src/Settings/SettingsPage.php:573
+#: src/Settings/SettingsPage.php:578
 msgid "How a personalised item shows in the cart, the checkout, the customer’s orders and the order emails."
 msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how customers approve their design before it is printed.
 #. translators: Label of the dropdown choosing how customers approve their design (proof) before printing. Admin product page.
-#: src/Settings/SettingsPage.php:579
+#: src/Settings/SettingsPage.php:584
 #: templates/admin/product-fields.php:225
 msgid "Approval"
 msgstr ""
 
-#: src/Settings/SettingsPage.php:580
+#: src/Settings/SettingsPage.php:585
 msgid "How customers approve their design before it is printed. A product’s Pixonaut tab can choose another way for that product."
 msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the approval mode where customers approve a proof sent by email.
-#: src/Settings/SettingsPage.php:586
+#: src/Settings/SettingsPage.php:591
 msgid "Proof by email"
 msgstr ""
 
-#: src/Settings/SettingsPage.php:587
+#: src/Settings/SettingsPage.php:592
 msgid "For every product whose approval is Proof by email: how long customers have to answer, the reminders they get, and what happens when they do not approve."
 msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: which releases of this plugin WordPress offers.
-#: src/Settings/SettingsPage.php:593
+#: src/Settings/SettingsPage.php:598
 msgid "Plugin updates"
 msgstr ""
 
-#: src/Settings/SettingsPage.php:594
+#: src/Settings/SettingsPage.php:599
 msgid "Which releases of this plugin WordPress offers you on the Plugins and Updates screens."
 msgstr ""
 
-#: src/Settings/SettingsPage.php:615
+#: src/Settings/SettingsPage.php:620
 msgid "Designer accent colour is set to A custom colour: enter the colour, e.g. #1e73be."
 msgstr ""
 
@@ -4692,261 +4719,275 @@ msgstr ""
 msgid "Pixonaut did not send the test request (%s)."
 msgstr ""
 
-#: templates/admin/connection-card.php:45
+#: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."
 msgstr ""
 
-#: templates/admin/connection-card.php:46
+#: templates/admin/connection-card.php:47
 msgid "The store is disconnected from Pixonaut, and its keys are revoked."
 msgstr ""
 
-#: templates/admin/connection-card.php:47
+#: templates/admin/connection-card.php:48
 msgid "The store forgot its Pixonaut keys, but Pixonaut could not be reached to revoke them. Disconnect the store on the API Keys page in the Pixonaut studio too."
 msgstr ""
 
-#: templates/admin/connection-card.php:48
+#: templates/admin/connection-card.php:49
 msgid "This site forgot the connection it was copied with. The site it was copied from stays connected."
 msgstr ""
 
-#: templates/admin/connection-card.php:49
+#: templates/admin/connection-card.php:50
 msgid "The store cannot connect while wp-admin is on another address than the site."
 msgstr ""
 
-#: templates/admin/connection-card.php:50
+#: templates/admin/connection-card.php:51
 msgid "Pixel can now make changes to your store."
 msgstr ""
 
-#: templates/admin/connection-card.php:51
+#: templates/admin/connection-card.php:52
 msgid "Pixel can no longer make changes to your store."
 msgstr ""
 
-#: templates/admin/connection-card.php:52
+#: templates/admin/connection-card.php:53
 msgid "Pixel can no longer make changes to your store. Pixonaut could not be told, so the studio may show the switch as on until it next tries."
 msgstr ""
 
-#: templates/admin/connection-card.php:53
+#: templates/admin/connection-card.php:54
 msgid "Pixonaut could not be reached or did not accept the store's access, so the switch stays off. Try again."
 msgstr ""
 
-#: templates/admin/connection-card.php:54
+#: templates/admin/connection-card.php:55
 msgid "The store could not save the change, so Pixel may still be able to make changes to your store. Check the database, then turn the switch off again."
 msgstr ""
 
-#: templates/admin/connection-card.php:55
+#: templates/admin/connection-card.php:56
 msgid "The store is connected to Pixonaut, but Pixonaut could not be reached or did not accept the store's access, so Pixel cannot make changes to your store. Turn the switch on below to try again."
 msgstr ""
 
-#: templates/admin/connection-card.php:56
+#: templates/admin/connection-card.php:57
 msgid "Personalised products now also load on the www. address."
 msgstr ""
 
-#: templates/admin/connection-card.php:57
+#: templates/admin/connection-card.php:58
 msgid "Personalised products load on the site's own address only."
 msgstr ""
 
-#: templates/admin/connection-card.php:58
+#: templates/admin/connection-card.php:59
 msgid "Pixonaut did not change the addresses personalised products load on. Try again."
 msgstr ""
 
-#: templates/admin/connection-card.php:59
+#: templates/admin/connection-card.php:60
 msgid "The store's brand is saved. Proofs, corrections and designer links made from now on show it."
 msgstr ""
 
-#: templates/admin/connection-card.php:60
+#: templates/admin/connection-card.php:61
 msgid "That brand is no longer in the Pixonaut workspace, so the store's brand did not change. Choose another."
 msgstr ""
 
-#: templates/admin/connection-card.php:61
+#: templates/admin/connection-card.php:62
 msgid "Pixonaut did not confirm the change of the store's brand. Check the brand shown below, and try again if it is not the one you chose."
 msgstr ""
 
-#: templates/admin/connection-card.php:62
-msgid "That connect link expired or was already used. Connect again."
-msgstr ""
-
 #: templates/admin/connection-card.php:63
-msgid "The connect was cancelled in Pixonaut."
+msgid "The store's print file settings are saved. Print files made from now on follow them, unless a template sets its own."
 msgstr ""
 
-#: templates/admin/connection-card.php:64
-msgid "Pixonaut did not approve the connect. Connect again."
-msgstr ""
-
+#. translators: %s: the limits of a live text tolerance, e.g. 1 to 100 px, or 0.01 to 5 mm.
 #: templates/admin/connection-card.php:65
-msgid "Pixonaut did not hand over the store's keys: the approval expired or Pixonaut could not be reached. Connect again."
+#, php-format
+msgid "The live text tolerance is %s, so the print file settings did not change. Enter a tolerance in those limits, or leave it empty to follow the workspace."
 msgstr ""
 
 #: templates/admin/connection-card.php:66
-msgid "The Pixonaut workspace's plan connects no more stores. Upgrade the plan, or disconnect another store on the API Keys page in the Pixonaut studio, then connect again."
+msgid "Pixonaut did not confirm the change of the store's print file settings. Check the settings shown below, and try again if they are not the ones you chose."
 msgstr ""
 
 #: templates/admin/connection-card.php:67
-msgid "Pixonaut handed over the store's keys, but the store could not save them to its database. Check the database, then connect again."
+msgid "That connect link expired or was already used. Connect again."
 msgstr ""
 
 #: templates/admin/connection-card.php:68
-msgid "Another connect or disconnect is in progress. Try again in a minute."
+msgid "The connect was cancelled in Pixonaut."
 msgstr ""
 
 #: templates/admin/connection-card.php:69
+msgid "Pixonaut did not approve the connect. Connect again."
+msgstr ""
+
+#: templates/admin/connection-card.php:70
+msgid "Pixonaut did not hand over the store's keys: the approval expired or Pixonaut could not be reached. Connect again."
+msgstr ""
+
+#: templates/admin/connection-card.php:71
+msgid "The Pixonaut workspace's plan connects no more stores. Upgrade the plan, or disconnect another store on the API Keys page in the Pixonaut studio, then connect again."
+msgstr ""
+
+#: templates/admin/connection-card.php:72
+msgid "Pixonaut handed over the store's keys, but the store could not save them to its database. Check the database, then connect again."
+msgstr ""
+
+#: templates/admin/connection-card.php:73
+msgid "Another connect or disconnect is in progress. Try again in a minute."
+msgstr ""
+
+#: templates/admin/connection-card.php:74
 msgid "The store could not remove its Pixonaut keys from its database. Check the database, then disconnect again."
 msgstr ""
 
 #. translators: Name of the production Pixonaut workspace environment, where orders reach a printshop. Shown on the connection card.
-#: templates/admin/connection-card.php:73
+#: templates/admin/connection-card.php:78
 msgid "Live"
 msgstr ""
 
 #. translators: Name of the Pixonaut test environment, where orders never reach a printshop. Shown on the connection card, as a heading or button.
-#: templates/admin/connection-card.php:75
-#: templates/admin/connection-card.php:95
+#: templates/admin/connection-card.php:80
+#: templates/admin/connection-card.php:100
 msgid "Sandbox"
 msgstr ""
 
 #. translators: The switch on the connection card that lets Pixel, Pixonaut's assistant, act on the store from the Pixonaut studio.
-#: templates/admin/connection-card.php:77
+#: templates/admin/connection-card.php:82
 msgid "Allow Pixel to make changes to your store"
 msgstr ""
 
 #. translators: The switch on the connection card that lets Pixel, Pixonaut's assistant, act on the store from the Pixonaut studio.
-#: templates/admin/connection-card.php:78
+#: templates/admin/connection-card.php:83
 msgid "Pixel in the Pixonaut studio can then read and change products, variations, attributes, categories and tags, link templates to products, and read orders. Nothing else in WordPress."
 msgstr ""
 
-#: templates/admin/connection-card.php:87
+#: templates/admin/connection-card.php:92
 msgid "You can turn this off at any time."
 msgstr ""
 
 #. translators: Text before two buttons on the connection card, Live workspace and Sandbox, read: or connect only to the [Live workspace] [Sandbox].
-#: templates/admin/connection-card.php:93
+#: templates/admin/connection-card.php:98
 msgid "or connect only to the"
 msgstr ""
 
 #. translators: Button on the connection card: connect only to the live Pixonaut workspace.
-#: templates/admin/connection-card.php:94
+#: templates/admin/connection-card.php:99
 msgid "Live workspace"
 msgstr ""
 
-#: templates/admin/connection-card.php:98
+#: templates/admin/connection-card.php:103
 msgid "Connect a staging or test site to the sandbox: its orders never reach a printshop."
 msgstr ""
 
 #. translators: %s: comma separated addresses the store sends requests to instead of Pixonaut's, e.g. http://localhost:8787. Shown to the merchant on the connection card.
-#: templates/admin/connection-card.php:113
+#: templates/admin/connection-card.php:118
 #, php-format
 msgid "The store talks to %s instead of Pixonaut, and sends its key there."
 msgstr ""
 
 #. translators: %s: an HTTP method and path of a Pixonaut API operation, e.g. GET /v1/connect. Shown to the merchant on the connection card.
-#: templates/admin/connection-card.php:131
+#: templates/admin/connection-card.php:136
 #, php-format
 msgid "Pixonaut deprecated %s, which this plugin uses. Update Pixonaut for WooCommerce."
 msgstr ""
 
 #. translators: 1: an HTTP method and path of a Pixonaut API operation, e.g. GET /v1/connect, 2: the date it stops working. Shown to the merchant on the connection card.
-#: templates/admin/connection-card.php:133
+#: templates/admin/connection-card.php:138
 #, php-format
 msgid "Pixonaut deprecated %1$s, which this plugin uses, and stops answering it on %2$s. Update Pixonaut for WooCommerce before then."
 msgstr ""
 
 #. translators: 1: wp-admin's origin, e.g. https://admin.example.com, 2: the site's origin, 3: HTML link to Settings > General. Shown to the merchant on the connection card.
-#: templates/admin/connection-card.php:146
+#: templates/admin/connection-card.php:151
 #, php-format
 msgid "wp-admin is at <code>%1$s</code> and the site at <code>%2$s</code>. Pixonaut sends you back to wp-admin and delivers events to the REST API only on the site's own address. Make the WordPress Address and the Site Address the same under <a href=\"%3$s\">Settings &gt; General</a>, then connect."
 msgstr ""
 
-#: templates/admin/connection-card.php:158
+#: templates/admin/connection-card.php:163
 msgid "Connect the store to a Pixonaut workspace. You approve the connection in Pixonaut and are sent back here."
 msgstr ""
 
 #. translators: Button on the connection card that starts connecting the store; here Connect is a verb.
-#: templates/admin/connection-card.php:159
+#: templates/admin/connection-card.php:164
 msgid "Connect to Pixonaut"
 msgstr ""
 
-#: templates/admin/connection-card.php:164
+#: templates/admin/connection-card.php:169
 msgid "Site URL changed: this site is not the one that connected to Pixonaut, so nothing is sent for the site it was copied from. Personalised products and orders are paused until you connect this site. For a staging site, pick Sandbox."
 msgstr ""
 
-#: templates/admin/connection-card.php:168
+#: templates/admin/connection-card.php:173
 msgid "Pixonaut no longer accepts this store's key: the store was disconnected in Pixonaut, or its key was revoked. Personalised products and orders are paused until you connect again."
 msgstr ""
 
-#: templates/admin/connection-card.php:172
+#: templates/admin/connection-card.php:177
 msgid "Pixonaut could not be reached just now. This is the connection as it was when the store connected."
 msgstr ""
 
 #. translators: Row heading on the connection card: the name of the store's API key in Pixonaut.
-#: templates/admin/connection-card.php:178
+#: templates/admin/connection-card.php:183
 msgid "Key name"
 msgstr ""
 
 #. translators: Row heading on the connection card: the Pixonaut workspace the store is connected to.
 #. translators: Row heading in developer tools: the Pixonaut workspace the store is connected to.
-#: templates/admin/connection-card.php:182
+#: templates/admin/connection-card.php:187
 #: templates/admin/developer-tools.php:194
 msgid "Workspace"
 msgstr ""
 
 #. translators: Row heading on the connection card: live or sandbox.
-#: templates/admin/connection-card.php:186
+#: templates/admin/connection-card.php:191
 msgid "Environment"
 msgstr ""
 
-#: templates/admin/connection-card.php:190
+#: templates/admin/connection-card.php:195
 msgid "Orders placed in the sandbox never reach a printshop."
 msgstr ""
 
 #. translators: Row heading on the connection card: the store's address.
-#: templates/admin/connection-card.php:195
+#: templates/admin/connection-card.php:200
 msgid "Site URL"
 msgstr ""
 
 #. translators: Row heading on the connection card: the www. address of the site, which can be allowed in addition.
-#: templates/admin/connection-card.php:200
+#: templates/admin/connection-card.php:205
 msgid "Also allow"
 msgstr ""
 
 #. translators: Status on the connection card: the www. address is allowed.
-#: templates/admin/connection-card.php:204
+#: templates/admin/connection-card.php:209
 msgid "Allowed"
 msgstr ""
 
 #. translators: Link on the connection card that stops allowing the www. address.
-#: templates/admin/connection-card.php:205
+#: templates/admin/connection-card.php:210
 msgid "Take away"
 msgstr ""
 
 #. translators: Button on the connection card that allows the www. address; here Allow is a verb.
-#: templates/admin/connection-card.php:207
+#: templates/admin/connection-card.php:212
 msgid "Allow"
 msgstr ""
 
-#: templates/admin/connection-card.php:209
+#: templates/admin/connection-card.php:214
 msgid "Allow it when the store also answers on this address, so personalised products load there too."
 msgstr ""
 
 #. translators: Row heading on the connection card: the state of Pixonaut's event deliveries to the store.
-#: templates/admin/connection-card.php:215
+#: templates/admin/connection-card.php:220
 msgid "Webhooks"
 msgstr ""
 
 #. translators: Status on the connection card: Pixonaut's webhook endpoint for the store is off.
-#: templates/admin/connection-card.php:218
+#: templates/admin/connection-card.php:223
 msgid "Switched off"
 msgstr ""
 
 #. translators: Status on the connection card: Pixonaut cannot reach the store's address, so it sends no webhooks.
-#: templates/admin/connection-card.php:220
+#: templates/admin/connection-card.php:225
 msgid "Cannot reach the store"
 msgstr ""
 
-#: templates/admin/connection-card.php:222
+#: templates/admin/connection-card.php:227
 msgid "Pixonaut did not say how deliveries are going."
 msgstr ""
 
 #. translators: %d: number of webhook deliveries from Pixonaut that failed. Shown on the connection card.
-#: templates/admin/connection-card.php:229
+#: templates/admin/connection-card.php:234
 #, php-format
 msgid "Failing: %d delivery failed"
 msgid_plural "Failing: %d deliveries failed"
@@ -4954,195 +4995,258 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: Status on the connection card: the store's webhook endpoint is on and healthy.
-#: templates/admin/connection-card.php:236
+#: templates/admin/connection-card.php:241
 msgid "Receiving events"
 msgstr ""
 
 #. translators: %s: how long ago the test request was sent, e.g. 5 mins. Shown on the connection card.
-#: templates/admin/connection-card.php:244
+#: templates/admin/connection-card.php:249
 #, php-format
 msgid "Test request delivered %s ago."
 msgstr ""
 
 #. translators: 1: how long ago the test request was sent, e.g. 5 mins, 2: why it was not delivered. Shown on the connection card.
-#: templates/admin/connection-card.php:246
+#: templates/admin/connection-card.php:251
 #, php-format
 msgid "Test request not delivered %1$s ago: %2$s"
 msgstr ""
 
 #. translators: Button on the connection card: ask Pixonaut to send the store a test webhook.
-#: templates/admin/connection-card.php:251
+#: templates/admin/connection-card.php:256
 msgid "Send test request"
 msgstr ""
 
 #. translators: Row heading on the connection card: Pixel, Pixonaut's assistant, and whether it may act on the store.
-#: templates/admin/connection-card.php:257
+#: templates/admin/connection-card.php:262
 msgid "Pixel"
 msgstr ""
 
-#: templates/admin/connection-card.php:266
+#: templates/admin/connection-card.php:271
 msgid "On. Pixel in the Pixonaut studio can read and change products, variations, attributes, categories and tags, link templates to products, and read orders. Nothing else in WordPress. Turning it off cuts its access at once."
 msgstr ""
 
-#: templates/admin/connection-card.php:268
+#: templates/admin/connection-card.php:273
 msgid "Off, turned off here. Pixonaut cannot turn it back on: only this switch can."
 msgstr ""
 
-#: templates/admin/connection-card.php:278
+#: templates/admin/connection-card.php:283
 msgid "You chat with Pixel in the Pixonaut studio."
 msgstr ""
 
 #. translators: Link on the connection card to the Pixonaut studio, where the merchant chats with Pixel, Pixonaut's assistant; Pixel is a name, keep it as it is.
-#: templates/admin/connection-card.php:279
+#: templates/admin/connection-card.php:284
 msgid "Open the studio"
 msgstr ""
 
 #. translators: Heading on the connection card of the settings that live in the Pixonaut workspace.
-#: templates/admin/connection-card.php:287
+#: templates/admin/connection-card.php:292
 msgid "Workspace settings"
 msgstr ""
 
-#: templates/admin/connection-card.php:289
-msgid "Set in the Pixonaut studio, except the brand, which you choose here. They shape the pages Pixonaut shows your customers, and the orders it places."
+#: templates/admin/connection-card.php:294
+msgid "Set in the Pixonaut studio, except the brand and the print files, which you choose here. They shape the pages Pixonaut shows your customers, and the orders it places."
 msgstr ""
 
 #. translators: Link to the Pixonaut studio, where the workspace settings are changed.
-#: templates/admin/connection-card.php:290
+#: templates/admin/connection-card.php:295
 msgid "Change them in the studio"
 msgstr ""
 
 #. translators: Row heading on the connection card: the workspace brand the store's customer-facing Pixonaut pages are drawn in.
-#: templates/admin/connection-card.php:295
+#: templates/admin/connection-card.php:300
 msgid "Brand"
 msgstr ""
 
 #. translators: %s: the name of a brand in the Pixonaut workspace. Option on the connection card for the brand every store without one of its own is drawn in.
-#: templates/admin/connection-card.php:306
+#: templates/admin/connection-card.php:311
 #, php-format
 msgid "%s (workspace default)"
 msgstr ""
 
 #. translators: Button on the connection card that saves the brand chosen for the store.
-#: templates/admin/connection-card.php:314
+#: templates/admin/connection-card.php:319
 msgid "Save brand"
 msgstr ""
 
-#: templates/admin/connection-card.php:317
+#: templates/admin/connection-card.php:322
 msgid "The logo and colour of the proof, correction and designer pages Pixonaut shows your customers. A link keeps the brand it was made in."
 msgstr ""
 
 #. translators: Row heading on the connection card: the logo and accent colour of the store's brand.
-#: templates/admin/connection-card.php:322
+#: templates/admin/connection-card.php:327
 msgid "Branding"
 msgstr ""
 
 #. translators: Alt text of the workspace's logo image on the connection card.
-#: templates/admin/connection-card.php:325
+#: templates/admin/connection-card.php:330
 msgid "Workspace logo"
 msgstr ""
 
 #. translators: Shown on the connection card when the workspace has no logo.
-#: templates/admin/connection-card.php:327
+#: templates/admin/connection-card.php:332
 msgid "No logo"
 msgstr ""
 
 #. translators: Shown on the connection card when the workspace has no accent colour.
-#: templates/admin/connection-card.php:332
+#: templates/admin/connection-card.php:337
 msgid "No accent colour"
 msgstr ""
 
 #. translators: Row heading on the connection card: whether proofs carry a watermark.
-#: templates/admin/connection-card.php:337
+#: templates/admin/connection-card.php:342
 msgid "Proof watermark"
 msgstr ""
 
 #. translators: Value on the connection card when Pixonaut did not say.
 #. translators: Shown on the connection card when the store has not read the workspace's default language.
-#: templates/admin/connection-card.php:342
-#: templates/admin/connection-card.php:354
-#: templates/admin/connection-card.php:366
+#: templates/admin/connection-card.php:347
+#: templates/admin/connection-card.php:359
+#: templates/admin/connection-card.php:447
 msgid "Unknown"
 msgstr ""
 
 #. translators: Value on the connection card when Pixonaut did not say.
-#: templates/admin/connection-card.php:343
+#: templates/admin/connection-card.php:348
 msgid "On: proofs carry a watermark"
 msgstr ""
 
 #. translators: Value on the connection card: the proof watermark is off.
-#: templates/admin/connection-card.php:343
+#: templates/admin/connection-card.php:348
 msgid "Off"
 msgstr ""
 
 #. translators: Row heading on the connection card: the lowest print resolution Pixonaut accepts, in dots per inch.
-#: templates/admin/connection-card.php:349
+#: templates/admin/connection-card.php:354
 msgid "Minimum resolution"
 msgstr ""
 
 #. translators: %s: the minimum print resolution in dots per inch, e.g. 150. Shown on the connection card.
-#: templates/admin/connection-card.php:356
+#: templates/admin/connection-card.php:361
 #, php-format
 msgid "%s dpi, unless a template sets its own"
 msgstr ""
 
+#. translators: Row heading on the connection card: the form of the print files Pixonaut makes of the store's designs.
+#: templates/admin/connection-card.php:378
+msgid "Print files"
+msgstr ""
+
+#. translators: %s: the print file form the workspace sets, e.g. Flat. Option on the connection card.
+#: templates/admin/connection-card.php:387
+#, php-format
+msgid "Follow the workspace (%s)"
+msgstr ""
+
+#. translators: Option on the connection card: print files take the form the Pixonaut workspace sets.
+#: templates/admin/connection-card.php:389
+msgid "Follow the workspace"
+msgstr ""
+
+#. translators: 1: a print file form, e.g. Layers with live text, 2: a live text tolerance, e.g. 1 px. Shown on the connection card.
+#: templates/admin/connection-card.php:403
+#, php-format
+msgid "Print files are made as: %1$s, within %2$s at text edges."
+msgstr ""
+
+#. translators: %s: a print file form, e.g. Flat. Shown on the connection card.
+#: templates/admin/connection-card.php:405
+#, php-format
+msgid "Print files are made as: %s."
+msgstr ""
+
+#: templates/admin/connection-card.php:408
+msgid "A template that sets its own form keeps it."
+msgstr ""
+
+#: templates/admin/connection-card.php:410
+msgid "Flat print files and layers with text as shapes print exactly alike. Live text prints the same outside text, and within the tolerance at text edges. A print file edited after Pixonaut made it carries no guarantee."
+msgstr ""
+
+#. translators: Row heading on the connection card: how far live text in a print file may lie from its outline.
+#: templates/admin/connection-card.php:414
+msgid "Live text tolerance"
+msgstr ""
+
+#. translators: Accessible name of the unit menu beside the live text tolerance on the connection card.
+#: templates/admin/connection-card.php:417
+msgid "Unit"
+msgstr ""
+
+#. translators: 1: the limits of a live text tolerance, e.g. 1 to 100 px, or 0.01 to 5 mm, 2: the tolerance the workspace sets, e.g. 1 px. Shown on the connection card.
+#: templates/admin/connection-card.php:427
+#, php-format
+msgid "%1$s. Empty follows the workspace: %2$s."
+msgstr ""
+
+#. translators: %s: the limits of a live text tolerance, e.g. 1 to 100 px, or 0.01 to 5 mm. Shown on the connection card.
+#: templates/admin/connection-card.php:429
+#, php-format
+msgid "%s. Empty follows the workspace."
+msgstr ""
+
+#. translators: Button on the connection card that saves the print file form chosen for the store.
+#: templates/admin/connection-card.php:438
+msgid "Save print files"
+msgstr ""
+
 #. translators: Row heading on the connection card: the language the Pixonaut workspace's customer-facing pages use unless told otherwise.
-#: templates/admin/connection-card.php:362
+#: templates/admin/connection-card.php:443
 msgid "Default language"
 msgstr ""
 
 #. translators: Row heading on the connection card: where the printshop ships orders.
-#: templates/admin/connection-card.php:371
+#: templates/admin/connection-card.php:452
 msgid "Delivery address"
 msgstr ""
 
-#: templates/admin/connection-card.php:376
+#: templates/admin/connection-card.php:457
 msgid "Each order ships to its customer"
 msgstr ""
 
 #. translators: %s: the name of a delivery address saved in Pixonaut, e.g. Warehouse. Shown on the connection card.
-#: templates/admin/connection-card.php:378
+#: templates/admin/connection-card.php:459
 #, php-format
 msgid "Every order ships to %s instead of its customer"
 msgstr ""
 
-#: templates/admin/connection-card.php:388
+#: templates/admin/connection-card.php:469
 msgid "Pixonaut cannot reach this store at its address, so it sends the store no webhooks. Order and design updates still arrive: the store reads them from Pixonaut every 15 minutes."
 msgstr ""
 
 #. translators: Label on the connection card, followed by the address Pixonaut sends webhooks to.
-#: templates/admin/connection-card.php:391
+#: templates/admin/connection-card.php:472
 msgid "Webhook address:"
 msgstr ""
 
-#: templates/admin/connection-card.php:396
+#: templates/admin/connection-card.php:477
 msgid "On a sandbox connection you can point it at a tunnel to a local shop: change the address under Webhooks in the Pixonaut studio."
 msgstr ""
 
-#: templates/admin/connection-card.php:397
+#: templates/admin/connection-card.php:478
 msgid "Developing locally with a tunnel"
 msgstr ""
 
-#: templates/admin/connection-card.php:404
+#: templates/admin/connection-card.php:485
 msgid "Pixonaut is not sending this store its events: its webhook endpoint is switched off. Order and design updates do not reach the store until it is switched on again under Webhooks in the Pixonaut studio."
 msgstr ""
 
 #. translators: Button on the connection card that starts connecting the store again; here Connect is a verb.
-#: templates/admin/connection-card.php:409
+#: templates/admin/connection-card.php:490
 msgid "Connect again"
 msgstr ""
 
 #. translators: Button on the connection card that disconnects the store from Pixonaut; here Disconnect is a verb.
-#: templates/admin/connection-card.php:413
+#: templates/admin/connection-card.php:494
 msgid "Disconnect"
 msgstr ""
 
 #. translators: Link on the connection card to the Pixonaut studio, Pixonaut's own web app.
-#: templates/admin/connection-card.php:414
+#: templates/admin/connection-card.php:495
 msgid "Open the Pixonaut studio"
 msgstr ""
 
 #. translators: Link on the connection card to the guide on connecting the store to Pixonaut.
-#: templates/admin/connection-card.php:419
+#: templates/admin/connection-card.php:500
 msgid "How connecting works"
 msgstr ""
 

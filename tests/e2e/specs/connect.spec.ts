@@ -275,6 +275,71 @@ test("chooses the store's brand, and shows one chosen in the studio", async ({
 	await expect(brand).toHaveValue('');
 });
 
+test("chooses the store's print file form and tolerance, which survive a reload", async ({
+	connectedStore,
+}) => {
+	const card = () => connectionCard(connectedStore);
+	const form = card().getByLabel('Print files', { exact: true });
+	const tolerance = card().getByLabel('Live text tolerance');
+	const unit = card().getByLabel('Unit', { exact: true });
+	const save = async () => {
+		await card().getByRole('button', { name: 'Save print files' }).click();
+		await expect(card().locator('.pixonaut-connection-result')).toContainText(
+			"The store's print file settings are saved.",
+		);
+		await connectedStore.reload();
+	};
+
+	// Following the workspace shows what it sets.
+	await expect(form).toHaveValue('');
+	await expect(form.locator('option').first()).toHaveText(
+		'Follow the workspace (Flat)',
+	);
+	await expect(card().locator('.pixonaut-prints-with')).toContainText(
+		'Print files are made as: Flat.',
+	);
+	await expect(tolerance).toBeHidden();
+
+	for (const choice of ['flat', 'layered']) {
+		await form.selectOption(choice);
+		await save();
+		await expect(form).toHaveValue(choice);
+		await expect(tolerance).toBeHidden();
+	}
+
+	await form.selectOption('layered_live_text');
+	await expect(tolerance).toBeVisible();
+	await tolerance.fill('2.5');
+	await save();
+	await expect(form).toHaveValue('layered_live_text');
+	await expect(tolerance).toHaveValue('2.5');
+	await expect(unit).toHaveValue('px');
+	await expect(card().locator('.pixonaut-prints-with')).toContainText(
+		'Layers with live text, within 2.5 px at text edges.',
+	);
+
+	await tolerance.fill('0.25');
+	await unit.selectOption('mm');
+	await save();
+	await expect(tolerance).toHaveValue('0.25');
+	await expect(unit).toHaveValue('mm');
+
+	// Out of its unit's limits, nothing is sent.
+	await tolerance.fill('6');
+	await card().getByRole('button', { name: 'Save print files' }).click();
+	await expect(card().locator('.pixonaut-connection-result')).toContainText(
+		'The live text tolerance is 1 to 100 px, or 0.01 to 5 mm',
+	);
+	await expect(tolerance).toHaveValue('0.25');
+
+	await form.selectOption('');
+	await save();
+	await expect(form).toHaveValue('');
+	await expect(card().locator('.pixonaut-prints-with')).toContainText(
+		'Print files are made as: Flat.',
+	);
+});
+
 test('narrows and tests the webhook endpoint after connecting, and tests it again on demand', async ({
 	connectedStore,
 	fake,

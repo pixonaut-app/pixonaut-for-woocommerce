@@ -8,8 +8,10 @@ import {
 	brandsOf,
 	type ConnectCode,
 	type Environment,
+	type PrintFileForm,
 	type State,
 	type Store,
+	type TextTolerance,
 } from '../state';
 import { DESIGNER_LINKS, type DesignerLink } from './designer-links';
 import { callerOf, type Handler, type HandlerResult, refusal } from './types';
@@ -107,6 +109,11 @@ export const exchangeConnectCode: Handler = (context) => {
 		allowedOrigins: [new URL(grant.siteUrl).origin],
 		// The brand chosen for the site stays across reconnects to its workspace.
 		brandId: existing?.tenantId === tenant.id ? existing.brandId : null,
+		// So do the store's print file choices.
+		printFileForm:
+			existing?.tenantId === tenant.id ? existing.printFileForm : null,
+		printFileTextTolerance:
+			existing?.tenantId === tenant.id ? existing.printFileTextTolerance : null,
 		storeAccess: null,
 		storeAccessRequest: null,
 		webhook: {
@@ -194,11 +201,11 @@ export function callerStore(context: Parameters<Handler>[0]): Store {
 }
 
 /** The print file form of the fake's workspaces. */
-const PRINT_FILE_FORM = 'flat';
+const PRINT_FILE_FORM: PrintFileForm = 'flat';
 
 /** How far from its outline a print file's live text may lie in the fake's
  *  workspaces. */
-const PRINT_FILE_TEXT_TOLERANCE = { unit: 'px', value: 1 };
+const PRINT_FILE_TEXT_TOLERANCE: TextTolerance = { unit: 'px', value: 1 };
 
 /** The connection as `GET /v1/connect` answers it. */
 function connectionOf(store: Store, state: State): HandlerResult {
@@ -244,15 +251,16 @@ function connectionOf(store: Store, state: State): HandlerResult {
 				isDefault,
 			})),
 			reachable: store.webhook.reachable,
-			// The store chooses neither; the workspace's are what it prints with.
-			printFileForm: null,
-			printFileTextTolerance: null,
+			printFileForm: store.printFileForm,
+			printFileTextTolerance: store.printFileTextTolerance,
+			// The store's own choices, else the workspace's.
 			printing: {
 				minPrintDpi: tenant.minPrintDpi,
 				defaultBleedMm: tenant.printMargins.bleedMm,
 				defaultSafeAreaMm: tenant.printMargins.safeAreaMm,
-				printFileForm: PRINT_FILE_FORM,
-				printFileTextTolerance: PRINT_FILE_TEXT_TOLERANCE,
+				printFileForm: store.printFileForm ?? PRINT_FILE_FORM,
+				printFileTextTolerance:
+					store.printFileTextTolerance ?? PRINT_FILE_TEXT_TOLERANCE,
 			},
 			assetTtlHours: ASSET_TTL_HOURS,
 		},
@@ -262,7 +270,12 @@ function connectionOf(store: Store, state: State): HandlerResult {
 export const readConnection: Handler = (context) =>
 	connectionOf(callerStore(context), context.state);
 
-type UpdateRequest = { additionalOrigins?: string[]; brandId?: string | null };
+type UpdateRequest = {
+	additionalOrigins?: string[];
+	brandId?: string | null;
+	printFileForm?: PrintFileForm | null;
+	printFileTextTolerance?: TextTolerance | null;
+};
 
 /** Most origins a store adds besides the site's own. */
 export const MAX_ADDITIONAL_ORIGINS = 10;
@@ -303,12 +316,14 @@ function onSiteDomain(siteUrl: string, origin: string): boolean {
 }
 
 /** Sets the origins the publishable key takes besides the site's own (any
- *  host of the site's domain, up to `MAX_ADDITIONAL_ORIGINS`), and the
- *  store's brand: one of its workspace's, or null for the default. Nothing
- *  changes when either is refused. */
+ *  host of the site's domain, up to `MAX_ADDITIONAL_ORIGINS`), the store's
+ *  brand: one of its workspace's, or null for the default, and its print
+ *  file form and live text tolerance, null following the workspace's.
+ *  Nothing changes when one is refused; the spec bounds the tolerance. */
 export const updateConnection: Handler = (context) => {
 	const store = callerStore(context);
-	const { additionalOrigins, brandId } = context.body as UpdateRequest;
+	const { additionalOrigins, brandId, printFileForm, printFileTextTolerance } =
+		context.body as UpdateRequest;
 	const tenant = context.state.tenants.get(store.tenantId);
 	if (
 		typeof brandId === 'string' &&
@@ -324,6 +339,12 @@ export const updateConnection: Handler = (context) => {
 	store.allowedOrigins = origins;
 	if (brandId !== undefined) {
 		store.brandId = brandId;
+	}
+	if (printFileForm !== undefined) {
+		store.printFileForm = printFileForm;
+	}
+	if (printFileTextTolerance !== undefined) {
+		store.printFileTextTolerance = printFileTextTolerance;
 	}
 	return connectionOf(store, context.state);
 };

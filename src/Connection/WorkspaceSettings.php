@@ -23,9 +23,10 @@ use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
  * what the store's customers and merchant get: the brand its hosted pages
  * are drawn in and the workspace's brands it may choose from, whether proofs
  * carry a watermark, where orders ship, the minimum print resolution, and
- * the language its pages use when the store names none. The settings tab
- * shows them; they are changed in the studio, except the store's brand,
- * which the settings tab chooses too.
+ * the language its pages use when the store names none, and the form its
+ * print files are made in. The settings tab shows them; they are changed in
+ * the studio, except the store's brand and print file form, which the
+ * settings tab chooses too.
  *
  * The store's brand, its accent colour, the workspace's default
  * language and its slug are kept in an option, so the designer can take the accent
@@ -280,15 +281,16 @@ final class WorkspaceSettings {
 	 *
 	 * @param ConnectedStore $answer The connection as Pixonaut answered it.
 	 *
-	 * @return array{brand_id: string|null, chosen_brand_id: string|null, brands: list<array{id: string, name: string, is_default: bool}>, logo_url: string|null, accent: string|null, watermark: bool, deliver_to: string|null, min_print_dpi: float, default_language: string|null}
+	 * @return array{brand_id: string|null, chosen_brand_id: string|null, brands: list<array{id: string, name: string, is_default: bool}>, logo_url: string|null, accent: string|null, watermark: bool, deliver_to: string|null, min_print_dpi: float, default_language: string|null, print_file_form: string|null, print_file_tolerance: array{value: float, unit: string}|null, prints_with: array{form: string, live_text: bool, tolerance: string}}
 	 *         `brand_id` is the brand the store's hosted pages are drawn in, its own or else the workspace's default, null while the workspace has none, and `logo_url` and `accent` are that brand's; `chosen_brand_id` is the store's own, null while it follows the workspace's default. `brands` are the workspace's brands the store may choose from, the default first. `default_language` is the workspace's default language, named in that language (`Deutsch`), null for one the plugin does not know. `deliver_to` is the name of the address every order ships to, null when orders ship to their customer.
+	 *         `print_file_form` and `print_file_tolerance` are the store's own choices, null while it follows the workspace's; `prints_with` is what its print files get, its own choices or else the workspace's, named for the merchant.
 	 */
 	public static function shown( ConnectedStore $answer ): array {
 		$accent = $answer->branding->accent_color;
 		return array(
-			'brand_id'         => $answer->branding->brand_id,
-			'chosen_brand_id'  => $answer->brand_id,
-			'brands'           => array_map(
+			'brand_id'             => $answer->branding->brand_id,
+			'chosen_brand_id'      => $answer->brand_id,
+			'brands'               => array_map(
 				static fn ( ConnectedStoreBrand $brand ): array => array(
 					'id'         => $brand->id,
 					'name'       => $brand->name,
@@ -296,12 +298,22 @@ final class WorkspaceSettings {
 				),
 				$answer->brands
 			),
-			'logo_url'         => $answer->branding->logo_url,
-			'accent'           => null !== $accent && 1 === preg_match( '/^#[0-9a-f]{6}$/i', $accent ) ? strtolower( $accent ) : null,
-			'watermark'        => $answer->proof_watermark,
-			'deliver_to'       => $answer->deliver_orders_to?->name,
-			'min_print_dpi'    => $answer->printing->min_print_dpi,
-			'default_language' => DesignerLanguage::name( self::language_of( $answer ) ),
+			'logo_url'             => $answer->branding->logo_url,
+			'accent'               => null !== $accent && 1 === preg_match( '/^#[0-9a-f]{6}$/i', $accent ) ? strtolower( $accent ) : null,
+			'watermark'            => $answer->proof_watermark,
+			'deliver_to'           => $answer->deliver_orders_to?->name,
+			'min_print_dpi'        => $answer->printing->min_print_dpi,
+			'default_language'     => DesignerLanguage::name( self::language_of( $answer ) ),
+			'print_file_form'      => $answer->print_file_form,
+			'print_file_tolerance' => null === $answer->print_file_text_tolerance ? null : array(
+				'value' => $answer->print_file_text_tolerance->value,
+				'unit'  => $answer->print_file_text_tolerance->unit,
+			),
+			'prints_with'          => array(
+				'form'      => PrintFileForm::name( $answer->printing->print_file_form ),
+				'live_text' => PrintFileForm::LAYERED_LIVE_TEXT === $answer->printing->print_file_form,
+				'tolerance' => PrintFileForm::tolerance_name( $answer->printing->print_file_text_tolerance ),
+			),
 		);
 	}
 }

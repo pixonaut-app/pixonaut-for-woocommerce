@@ -312,6 +312,8 @@ function defaultSet({
 			name: `WooCommerce · ${new URL(url).host}`,
 			allowedOrigins: [new URL(url).origin],
 			brandId: null,
+			printFileForm: null,
+			printFileTextTolerance: null,
 			storeAccess: null,
 			storeAccessRequest: null,
 			webhook: {

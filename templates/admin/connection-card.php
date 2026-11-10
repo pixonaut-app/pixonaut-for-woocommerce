@@ -18,6 +18,7 @@
  * @var bool          $www_allowed        Whether the publishable key takes it.
  * @var string        $www_url            Allows or takes away the counterpart; add allow=1 or allow=0.
  * @var string        $brand_url          Chooses the store's brand when posted a brand field with a brand's id, or empty for the workspace's default; empty while not connected.
+ * @var string        $print_file_url     Chooses the store's print file form when posted print_file_form (a form, or empty for the workspace's), print_file_tolerance (a number, or empty for the workspace's) and print_file_tolerance_unit (px or mm); empty while not connected.
  * @var array{on: bool, cut: bool, url: string}|null $store_access Whether Pixel may make changes to the store: `on`, whether it was turned off in WordPress (`cut`), and `url`, which takes a posted store_access field of 1 or 0; empty while the switch cannot be changed. Null shows no switch.
  * @var array{active: bool, failing: bool, failed_count: int, url: string}|null $webhook The webhook endpoint's health and address; null when unknown.
  * @var bool          $webhook_reachable  False while Pixonaut cannot reach the store, and so delivers it no webhooks.
@@ -35,13 +36,13 @@
  * @var string[]      $custom_hosts       The Pixonaut addresses in use that are not Pixonaut's own; empty when none.
  * @var string        $result             What the last action did, as a key; may be empty.
  * @var array<string, array{deprecation: string, sunset: string|null, seen_at: int}> $deprecations Deprecations Pixonaut announced, by operation.
- * @var array{brand_id: string|null, chosen_brand_id: string|null, brands: list<array{id: string, name: string, is_default: bool}>, logo_url: string|null, accent: string|null, watermark: bool|null, deliver_to: string|null, min_print_dpi: float|null, default_language: string|null}|null $workspace_settings
- *      The workspace's settings as Pixonaut answered them; null when they could not be read. `brand_id` is the brand the store's hosted pages are drawn in, its own or else the workspace's default, and `logo_url` and `accent` are that brand's; `chosen_brand_id` is the store's own, null while it follows the default; `brands` are the workspace's brands the store may choose from, the default first. `deliver_to` names the address every order ships to, null when orders ship to their customer.
+ * @var array{brand_id: string|null, chosen_brand_id: string|null, brands: list<array{id: string, name: string, is_default: bool}>, logo_url: string|null, accent: string|null, watermark: bool|null, deliver_to: string|null, min_print_dpi: float|null, default_language: string|null, print_file_form?: string|null, print_file_tolerance?: array{value: float, unit: string}|null, prints_with?: array{form: string, live_text: bool, tolerance: string}}|null $workspace_settings
+ *      The workspace's settings as Pixonaut answered them; null when they could not be read. `brand_id` is the brand the store's hosted pages are drawn in, its own or else the workspace's default, and `logo_url` and `accent` are that brand's; `chosen_brand_id` is the store's own, null while it follows the default; `brands` are the workspace's brands the store may choose from, the default first. `deliver_to` names the address every order ships to, null when orders ship to their customer. `print_file_form` and `print_file_tolerance` are the store's own choices, null while it follows the workspace's; `prints_with` is what its print files get, its own choices or else the workspace's, named.
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$pixonaut_results            = array(
+$pixonaut_results = array(
 	'connected'                      => array( 'success', __( 'The store is connected to Pixonaut.', 'pixonaut-for-woocommerce' ) ),
 	'disconnected'                   => array( 'success', __( 'The store is disconnected from Pixonaut, and its keys are revoked.', 'pixonaut-for-woocommerce' ) ),
 	'disconnected_locally'           => array( 'warning', __( 'The store forgot its Pixonaut keys, but Pixonaut could not be reached to revoke them. Disconnect the store on the API Keys page in the Pixonaut studio too.', 'pixonaut-for-woocommerce' ) ),
@@ -59,6 +60,10 @@ $pixonaut_results            = array(
 	'brand_chosen'                   => array( 'success', __( 'The store\'s brand is saved. Proofs, corrections and designer links made from now on show it.', 'pixonaut-for-woocommerce' ) ),
 	'brand_not_found'                => array( 'error', __( 'That brand is no longer in the Pixonaut workspace, so the store\'s brand did not change. Choose another.', 'pixonaut-for-woocommerce' ) ),
 	'brand_failed'                   => array( 'error', __( 'Pixonaut did not confirm the change of the store\'s brand. Check the brand shown below, and try again if it is not the one you chose.', 'pixonaut-for-woocommerce' ) ),
+	'print_file_saved'               => array( 'success', __( 'The store\'s print file settings are saved. Print files made from now on follow them, unless a template sets its own.', 'pixonaut-for-woocommerce' ) ),
+	/* translators: %s: the limits of a live text tolerance, e.g. 1 to 100 px, or 0.01 to 5 mm. */
+	'print_file_invalid'             => array( 'error', sprintf( __( 'The live text tolerance is %s, so the print file settings did not change. Enter a tolerance in those limits, or leave it empty to follow the workspace.', 'pixonaut-for-woocommerce' ), Pixonaut\WooCommerce\Connection\PrintFileForm::tolerance_limits() ) ),
+	'print_file_failed'              => array( 'error', __( 'Pixonaut did not confirm the change of the store\'s print file settings. Check the settings shown below, and try again if they are not the ones you chose.', 'pixonaut-for-woocommerce' ) ),
 	'invalid_state'                  => array( 'error', __( 'That connect link expired or was already used. Connect again.', 'pixonaut-for-woocommerce' ) ),
 	'access_denied'                  => array( 'warning', __( 'The connect was cancelled in Pixonaut.', 'pixonaut-for-woocommerce' ) ),
 	'refused'                        => array( 'error', __( 'Pixonaut did not approve the connect. Connect again.', 'pixonaut-for-woocommerce' ) ),
@@ -286,7 +291,7 @@ $pixonaut_connect_links      = static function ( string $label ) use ( $connect_
 		<?php if ( null !== $workspace_settings ) : ?>
 			<h3><?php /* translators: Heading on the connection card of the settings that live in the Pixonaut workspace. */ esc_html_e( 'Workspace settings', 'pixonaut-for-woocommerce' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Set in the Pixonaut studio, except the brand, which you choose here. They shape the pages Pixonaut shows your customers, and the orders it places.', 'pixonaut-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Set in the Pixonaut studio, except the brand and the print files, which you choose here. They shape the pages Pixonaut shows your customers, and the orders it places.', 'pixonaut-for-woocommerce' ); ?>
 				<a href="<?php echo esc_url( $studio_url ); ?>" target="_blank" rel="noopener noreferrer"><?php /* translators: Link to the Pixonaut studio, where the workspace settings are changed. */ esc_html_e( 'Change them in the studio', 'pixonaut-for-woocommerce' ); ?></a>
 			</p>
 			<table class="form-table pixonaut-workspace-settings">
@@ -358,6 +363,82 @@ $pixonaut_connect_links      = static function ( string $label ) use ( $connect_
 						?>
 					</td>
 				</tr>
+				<?php if ( isset( $workspace_settings['prints_with'] ) ) : ?>
+					<?php
+					$pixonaut_print_forms = Pixonaut\WooCommerce\Connection\PrintFileForm::forms();
+					$pixonaut_print_form  = $workspace_settings['print_file_form'] ?? null;
+					$pixonaut_tolerance   = $workspace_settings['print_file_tolerance'] ?? null;
+					$pixonaut_live_text   = Pixonaut\WooCommerce\Connection\PrintFileForm::LAYERED_LIVE_TEXT;
+					if ( null !== $pixonaut_print_form && ! isset( $pixonaut_print_forms[ $pixonaut_print_form ] ) ) {
+						// A form Pixonaut added after this release: kept on saving.
+						$pixonaut_print_forms[ $pixonaut_print_form ] = $pixonaut_print_form;
+					}
+					?>
+					<tr>
+						<th scope="row"><label for="pixonaut-print-file-form"><?php /* translators: Row heading on the connection card: the form of the print files Pixonaut makes of the store's designs. */ esc_html_e( 'Print files', 'pixonaut-for-woocommerce' ); ?></label></th>
+						<td class="pixonaut-workspace-print-files">
+							<form id="pixonaut-print-file" method="post" action="<?php echo esc_url( $print_file_url ); ?>">
+								<select id="pixonaut-print-file-form" name="print_file_form">
+									<option value=""<?php selected( null, $pixonaut_print_form ); ?>>
+										<?php
+										echo esc_html(
+											null === $pixonaut_print_form
+												/* translators: %s: the print file form the workspace sets, e.g. Flat. Option on the connection card. */
+												? sprintf( __( 'Follow the workspace (%s)', 'pixonaut-for-woocommerce' ), $workspace_settings['prints_with']['form'] )
+												/* translators: Option on the connection card: print files take the form the Pixonaut workspace sets. */
+												: __( 'Follow the workspace', 'pixonaut-for-woocommerce' )
+										);
+										?>
+									</option>
+									<?php foreach ( $pixonaut_print_forms as $pixonaut_form_value => $pixonaut_form_name ) : ?>
+										<option value="<?php echo esc_attr( $pixonaut_form_value ); ?>"<?php selected( $pixonaut_form_value, $pixonaut_print_form ); ?>><?php echo esc_html( $pixonaut_form_name ); ?></option>
+									<?php endforeach; ?>
+								</select>
+							</form>
+							<p class="description pixonaut-prints-with">
+								<?php
+								echo esc_html(
+									$workspace_settings['prints_with']['live_text']
+										/* translators: 1: a print file form, e.g. Layers with live text, 2: a live text tolerance, e.g. 1 px. Shown on the connection card. */
+										? sprintf( __( 'Print files are made as: %1$s, within %2$s at text edges.', 'pixonaut-for-woocommerce' ), $workspace_settings['prints_with']['form'], $workspace_settings['prints_with']['tolerance'] )
+										/* translators: %s: a print file form, e.g. Flat. Shown on the connection card. */
+										: sprintf( __( 'Print files are made as: %s.', 'pixonaut-for-woocommerce' ), $workspace_settings['prints_with']['form'] )
+								);
+								?>
+								<?php esc_html_e( 'A template that sets its own form keeps it.', 'pixonaut-for-woocommerce' ); ?>
+							</p>
+							<p class="description"><?php esc_html_e( 'Flat print files and layers with text as shapes print exactly alike. Live text prints the same outside text, and within the tolerance at text edges. A print file edited after Pixonaut made it carries no guarantee.', 'pixonaut-for-woocommerce' ); ?></p>
+						</td>
+					</tr>
+					<tr class="<?php echo esc_attr( $pixonaut_live_text === $pixonaut_print_form ? '' : Pixonaut\WooCommerce\Settings\SettingsPage::HIDDEN_ROW ); ?>">
+						<th scope="row"><label for="pixonaut-print-file-tolerance"><?php /* translators: Row heading on the connection card: how far live text in a print file may lie from its outline. */ esc_html_e( 'Live text tolerance', 'pixonaut-for-woocommerce' ); ?></label></th>
+						<td class="pixonaut-workspace-tolerance">
+							<input type="number" id="pixonaut-print-file-tolerance" name="print_file_tolerance" form="pixonaut-print-file" class="small-text" min="<?php echo esc_attr( (string) Pixonaut\WooCommerce\Connection\PrintFileForm::TOLERANCE_LIMITS[ Pixonaut\WooCommerce\Connection\PrintFileForm::MM ]['min'] ); ?>" max="<?php echo esc_attr( (string) Pixonaut\WooCommerce\Connection\PrintFileForm::TOLERANCE_LIMITS[ Pixonaut\WooCommerce\Connection\PrintFileForm::PX ]['max'] ); ?>" step="any" value="<?php echo esc_attr( null === $pixonaut_tolerance ? '' : (string) $pixonaut_tolerance['value'] ); ?>" data-pixonaut-depends="pixonaut-print-file-form" data-pixonaut-when-equals="<?php echo esc_attr( $pixonaut_live_text ); ?>" />
+							<select name="print_file_tolerance_unit" form="pixonaut-print-file" aria-label="<?php /* translators: Accessible name of the unit menu beside the live text tolerance on the connection card. */ esc_attr_e( 'Unit', 'pixonaut-for-woocommerce' ); ?>">
+								<?php foreach ( array_keys( Pixonaut\WooCommerce\Connection\PrintFileForm::TOLERANCE_LIMITS ) as $pixonaut_unit ) : ?>
+									<option value="<?php echo esc_attr( $pixonaut_unit ); ?>"<?php selected( $pixonaut_unit, $pixonaut_tolerance['unit'] ?? Pixonaut\WooCommerce\Connection\PrintFileForm::PX ); ?>><?php echo esc_html( $pixonaut_unit ); ?></option>
+								<?php endforeach; ?>
+							</select>
+							<p class="description">
+								<?php
+								echo esc_html(
+									null === $pixonaut_tolerance
+										/* translators: 1: the limits of a live text tolerance, e.g. 1 to 100 px, or 0.01 to 5 mm, 2: the tolerance the workspace sets, e.g. 1 px. Shown on the connection card. */
+										? sprintf( __( '%1$s. Empty follows the workspace: %2$s.', 'pixonaut-for-woocommerce' ), Pixonaut\WooCommerce\Connection\PrintFileForm::tolerance_limits(), $workspace_settings['prints_with']['tolerance'] )
+										/* translators: %s: the limits of a live text tolerance, e.g. 1 to 100 px, or 0.01 to 5 mm. Shown on the connection card. */
+										: sprintf( __( '%s. Empty follows the workspace.', 'pixonaut-for-woocommerce' ), Pixonaut\WooCommerce\Connection\PrintFileForm::tolerance_limits() )
+								);
+								?>
+							</p>
+						</td>
+					</tr>
+					<?php if ( '' !== $print_file_url ) : ?>
+						<tr>
+							<th scope="row"></th>
+							<td><button type="submit" class="button" form="pixonaut-print-file"><?php /* translators: Button on the connection card that saves the print file form chosen for the store. */ esc_html_e( 'Save print files', 'pixonaut-for-woocommerce' ); ?></button></td>
+						</tr>
+					<?php endif; ?>
+				<?php endif; ?>
 				<tr>
 					<th scope="row"><?php /* translators: Row heading on the connection card: the language the Pixonaut workspace's customer-facing pages use unless told otherwise. */ esc_html_e( 'Default language', 'pixonaut-for-woocommerce' ); ?></th>
 					<td class="pixonaut-workspace-language">
