@@ -41,11 +41,6 @@ final class SplitCards {
 	public const ATTRIBUTE_HOOK = 'pixonaut_wc_split_cards_attribute';
 
 	/**
-	 * Action Scheduler group of the plugin's jobs.
-	 */
-	private const JOB_GROUP = 'pixonaut-for-woocommerce';
-
-	/**
 	 * Variations' attributes by product id, read once a request.
 	 *
 	 * @var array<int, list<array<string, string>>>
@@ -151,7 +146,7 @@ final class SplitCards {
 			self::write( $id );
 		}
 		if ( count( $ids ) === self::BATCH && function_exists( 'as_enqueue_async_action' ) ) {
-			as_enqueue_async_action( self::ATTRIBUTE_HOOK, array( $attribute_id, end( $ids ) ), self::JOB_GROUP );
+			as_enqueue_async_action( self::ATTRIBUTE_HOOK, array( $attribute_id, end( $ids ) ), Schema::ACTION_GROUP );
 		}
 	}
 

@@ -15,7 +15,6 @@ use WC_Query;
 use WeakMap;
 use WP_Post;
 use WP_Query;
-use WP_Term;
 
 /**
  * The shop, its category, tag and attribute pages and product search list
@@ -134,7 +133,7 @@ final class SplitCardListings {
 				)
 			);
 			foreach ( is_array( $terms ) ? $terms : array() as $term ) {
-				if ( $term instanceof WP_Term && ! in_array( $term->slug, $chosen, true ) ) {
+				if ( ! in_array( $term->slug, $chosen, true ) ) {
 					$out[] = $term->term_id;
 				}
 			}
@@ -235,14 +234,14 @@ final class SplitCardListings {
 		}
 		return preg_replace_callback(
 			'/data-wp-key="product-item-(\d+)"/',
-			static function ( array $match ) use ( &$shown ): string {
+			static function ( array $found ) use ( &$shown ): string {
 				foreach ( $shown as $index => $card ) {
-					if ( $card[0] === (int) $match[1] ) {
+					if ( $card[0] === (int) $found[1] ) {
 						unset( $shown[ $index ] );
-						return 0 === $card[1] ? $match[0] : 'data-wp-key="product-item-' . $card[0] . '-' . $card[1] . '"';
+						return 0 === $card[1] ? $found[0] : 'data-wp-key="product-item-' . $card[0] . '-' . $card[1] . '"';
 					}
 				}
-				return $match[0];
+				return $found[0];
 			},
 			$content
 		) ?? $content;

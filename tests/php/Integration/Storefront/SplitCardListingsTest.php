@@ -41,6 +41,8 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 
 	/**
 	 * The category every product of a test is in, whose page lists them.
+	 *
+	 * @var int
 	 */
 	private int $category;
 
@@ -88,7 +90,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 
 	public function test_a_variations_change_rewrites_its_products_cards(): void {
 		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
-		$poster    = $this->poster();
+		$poster = $this->poster();
 		$framed = $this->variation( $poster, 'ram', '30x40' );
 		$this->assertSame( array( $this->term( 'med-bild' ), $this->term( 'ram' ), $this->term( 'utan-bild' ) ), $this->cards( $poster ), 'a new variation adds its value, in the order WooCommerce lists the values' );
 
@@ -101,7 +103,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$framed->delete( true );
 		$this->assertSame( array( $this->term( 'med-bild' ), $this->term( 'utan-bild' ) ), $this->cards( $poster ), 'a deleted one neither' );
 
-		wp_delete_term( $this->term( 'utan-bild' ), wc_attribute_taxonomy_name( self::PICTURE ) );
+		wp_delete_term( $this->term( 'utan-bild' ), 'pa_bild' );
 		$this->assertSame( array( $this->term( 'med-bild' ) ), $this->cards( $poster ), 'a deleted value has no card' );
 	}
 
@@ -173,8 +175,10 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 			)
 		);
 
-		$this->assertSame( array( $poster->get_id() ), wp_list_pluck( $query->posts, 'ID' ) );
-		$this->assertObjectNotHasProperty( 'pixonaut_wc_split_term', get_post( $poster->get_id() ), 'the cached post holds no card' );
+		$this->assertSame( array( $poster->get_id() ), wp_list_pluck( (array) $query->posts, 'ID' ) );
+		$cached = get_post( $poster->get_id() );
+		$this->assertInstanceOf( \WP_Post::class, $cached );
+		$this->assertObjectNotHasProperty( 'pixonaut_wc_split_term', $cached, 'the cached post holds no card' );
 		$query->the_post();
 		$this->assertSame( (string) get_permalink( $poster->get_id() ), get_permalink( $poster->get_id() ) );
 		wp_reset_postdata();
@@ -216,7 +220,9 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	private function shop( array $args = array() ): array {
 		$this->forget_chosen_filters();
 		$_GET = array_map( 'strval', $args );
-		$this->go_to( add_query_arg( $args, (string) get_term_link( $this->category, 'product_cat' ) ) );
+		$page = get_term_link( $this->category, 'product_cat' );
+		$this->assertIsString( $page );
+		$this->go_to( add_query_arg( $args, $page ) );
 		global $wp_query;
 		$this->assertSame( 'product_query', $wp_query->get( 'wc_query' ), 'a listing of the shop\'s' );
 		$ids   = array();
@@ -239,9 +245,8 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	 * WooCommerce reads the chosen filters once a request.
 	 */
 	private function forget_chosen_filters(): void {
-		( function (): void {
-			self::$chosen_attributes = null;
-		} )->bindTo( null, WC_Query::class )();
+		$property = new \ReflectionProperty( WC_Query::class, 'chosen_attributes' );
+		$property->setValue( null, null );
 	}
 
 	/**
@@ -249,7 +254,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	 * @return list<int>
 	 */
 	private function cards( WC_Product $product ): array {
-		return array_map( 'intval', get_post_meta( $product->get_id(), SplitCards::META, false ) );
+		return array_values( array_map( 'intval', get_post_meta( $product->get_id(), SplitCards::META, false ) ) );
 	}
 
 	/**
@@ -334,8 +339,9 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * @param string       $name   The attribute's name.
-	 * @param list<string> $values Its values.
+	 * @param string   $name   The attribute's name.
+	 * @param string[] $values Its values.
+	 * @phpstan-param list<string> $values
 	 */
 	private function attribute( string $name, array $values ): void {
 		$id = wc_create_attribute( array( 'name' => $name ) );
