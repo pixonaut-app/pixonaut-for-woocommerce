@@ -12,8 +12,10 @@ namespace Pixonaut\WooCommerce\Admin;
 use Closure;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
+use Pixonaut\WooCommerce\Catalogue\BlankVariant;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\PictureView;
+use Pixonaut\WooCommerce\Catalogue\PrintAreas;
 use Pixonaut\WooCommerce\Catalogue\ProductLinker;
 use Pixonaut\WooCommerce\Catalogue\SearchResults;
 use Pixonaut\WooCommerce\DesignerLanguage;
@@ -57,6 +59,12 @@ final class LinkedBlank {
 
 	public const SOURCE_NONE = 'none';
 
+	/**
+	 * A blank's `status` while Pixonaut imports it from a printshop's
+	 * catalogue: it has its name and nothing else yet.
+	 */
+	public const IMPORTING = 'importing';
+
 	private const SOURCES = array( self::SOURCE_OWN, self::SOURCE_CATEGORY, self::SOURCE_WORKSPACE, self::SOURCE_NONE );
 
 	/**
@@ -65,7 +73,7 @@ final class LinkedBlank {
 	 * deleted: Pixonaut still reads a deleted blank, which sells nothing.
 	 *
 	 * @param string $blank_id The blank.
-	 * @return array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool}|null Null when Pixonaut cannot be asked.
+	 * @return array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string}|null Null when Pixonaut cannot be asked.
 	 */
 	public function read( string $blank_id ): ?array {
 		try {
@@ -81,11 +89,17 @@ final class LinkedBlank {
 						'printshop_id'     => null === $resolved ? $own : ( is_string( $resolved['value'] ?? null ) ? $resolved['value'] : null ),
 						'printshop_source' => is_string( $resolved['source'] ?? null ) ? $resolved['source'] : null,
 						'deleted'          => ProductLinker::is_deleted( $blank ),
+						'status'           => is_string( $blank['status'] ?? null ) ? $blank['status'] : Catalogue::BLANK_READY,
 					);
 				}
 			);
 		} catch ( ApiException $e ) {
 			return null;
+		}
+		$status = is_string( $blank['status'] ?? null ) ? $blank['status'] : Catalogue::BLANK_READY;
+		if ( self::IMPORTING === $status ) {
+			// Its placements, views and variants come as the import ends: read them again then.
+			$this->forget( $blank_id );
 		}
 		$placements = array();
 		foreach ( is_array( $blank['placements'] ?? null ) ? $blank['placements'] : array() as $placement ) {
@@ -107,7 +121,20 @@ final class LinkedBlank {
 			'printshop_id'     => $printshop_id,
 			'printshop_source' => $source,
 			'deleted'          => true === ( $blank['deleted'] ?? null ),
+			'status'           => $status,
 		);
+	}
+
+	/**
+	 * Drops what is cached of a blank, so the next read asks Pixonaut again.
+	 *
+	 * @param string $blank_id The blank.
+	 */
+	private function forget( string $blank_id ): void {
+		$this->cache->forget( 'linked-blank', array( 'blank' => $blank_id ) );
+		$this->cache->forget( 'blank-areas', array( 'blank' => $blank_id ) );
+		$language = DesignerLanguage::of_site();
+		$this->cache->forget( 'blank-mockups', array( 'blank' => $blank_id ) + ( null === $language ? array() : array( 'lang' => $language ) ) );
 	}
 
 	/**
@@ -233,7 +260,7 @@ final class LinkedBlank {
 	 *
 	 * @param string                    $blank_id The blank.
 	 * @param array<string, mixed>|null $blank    The blank as read() gave it; null when Pixonaut could not be asked.
-	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool}|null $blank
+	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string}|null $blank
 	 * @return array{name: string, url: string, integration: string}
 	 */
 	public function printshop( string $blank_id, ?array $blank ): array {
@@ -316,6 +343,74 @@ final class LinkedBlank {
 					'name'        => $connection['name'],
 					'default'     => true === ( $connection['isDefault'] ?? null ),
 					'needs_blank' => is_array( $connection['asksOfDesigns'] ?? null ) && true === ( $connection['asksOfDesigns']['needsBlank'] ?? null ),
+				);
+			}
+		}
+		return $printshops;
+	}
+
+	/**
+	 * Each variant's print area on a placement, in mm: its row's area on a
+	 * blank whose print areas change with an option (`areasVaryBy`), else
+	 * the placement's own. A variant with none named is left out.
+	 *
+	 * @param string         $blank_id     The blank.
+	 * @param string         $placement_id One of its placements.
+	 * @param BlankVariant[] $variants     Its variants.
+	 * @phpstan-param list<BlankVariant> $variants
+	 * @return array<string, array{width: float, height: float}> By variant ref; empty when Pixonaut cannot be asked.
+	 */
+	public function variant_areas( string $blank_id, string $placement_id, array $variants ): array {
+		try {
+			$blank = $this->remember( 'blank-areas', array( 'blank' => $blank_id ), fn (): array => $this->catalogue->blank( $blank_id ) );
+		} catch ( ApiException $e ) {
+			return array();
+		}
+		$varies_by = array_values( array_filter( is_array( $blank['areasVaryBy'] ?? null ) ? $blank['areasVaryBy'] : array(), 'is_string' ) );
+		$areas     = PrintAreas::areas( $blank, $placement_id );
+		$own       = null;
+		foreach ( is_array( $blank['placements'] ?? null ) ? $blank['placements'] : array() as $placement ) {
+			if ( is_array( $placement ) && ( $placement['id'] ?? null ) === $placement_id ) {
+				$own = $placement;
+			}
+		}
+		$sized = array();
+		foreach ( $variants as $variant ) {
+			$area = $own;
+			if ( array() !== $varies_by ) {
+				$row  = array_intersect_key( $variant->options, array_flip( $varies_by ) );
+				$area = count( $row ) === count( $varies_by ) ? PrintAreas::area_of( $areas, $row ) : null;
+			}
+			$width  = $area['widthMm'] ?? $area['maxWidthMm'] ?? null;
+			$height = $area['heightMm'] ?? $area['maxHeightMm'] ?? null;
+			if ( is_numeric( $width ) && is_numeric( $height ) ) {
+				$sized[ $variant->ref ] = array(
+					'width'  => (float) $width,
+					'height' => (float) $height,
+				);
+			}
+		}
+		return $sized;
+	}
+
+	/**
+	 * The workspace's active printshops with a catalogue the store can
+	 * browse and import from, such as Gelato, in Pixonaut's order.
+	 *
+	 * @return list<array{id: string, name: string}> Empty when there is none, or Pixonaut cannot be asked.
+	 */
+	public function catalogue_printshops(): array {
+		try {
+			$connections = $this->remember( 'printshop-connections', array(), fn (): array => $this->catalogue->printshop_connections() );
+		} catch ( ApiException $e ) {
+			return array();
+		}
+		$printshops = array();
+		foreach ( $connections as $connection ) {
+			if ( is_array( $connection ) && true === ( $connection['catalogue'] ?? null ) && false !== ( $connection['active'] ?? null ) && is_string( $connection['id'] ?? null ) && '' !== $connection['id'] && is_string( $connection['name'] ?? null ) ) {
+				$printshops[] = array(
+					'id'   => $connection['id'],
+					'name' => $connection['name'],
 				);
 			}
 		}

@@ -309,11 +309,6 @@ final class ProductVariantTest extends TestCase {
 		$this->assertSame( array( 'v_ok' ), array_map( static fn ( BlankVariant $variant ): string => $variant->ref, $variants ) );
 	}
 
-	/**
-	 * Two colours in two sizes; Heather Forest M alone has a photo.
-	 *
-	 * @return list<BlankVariant>
-	 */
 	public function test_a_size_written_another_way_matches_the_printshops_variant(): void {
 		$posters = BlankVariant::list_from(
 			array(
@@ -337,6 +332,11 @@ final class ProductVariantTest extends TestCase {
 		$this->assertNull( $by_size( array( 'Size' => '70x100' ) ), 'Numbers without a unit name no size.' );
 	}
 
+	/**
+	 * Two colours in two sizes; Heather Forest M alone has a photo.
+	 *
+	 * @return list<BlankVariant>
+	 */
 	private static function variants(): array {
 		$variant = static fn ( string $ref, string $colour, string $size, array $views = array() ): array => array(
 			'ref'     => $ref,

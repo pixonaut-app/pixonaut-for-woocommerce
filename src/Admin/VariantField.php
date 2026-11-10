@@ -104,7 +104,7 @@ final class VariantField {
 				'id'        => $fields->id( PanelFields::VARIANT ),
 				'picked'    => $stored->pick ?? self::MATCH_BY_OPTIONS,
 				'matched'   => null !== $stored && null === $stored->pick && null !== $stored->ref
-					? self::found( $integration, $stored->label )
+					? self::found_label( $integration, $stored->label )
 					/* translators: Option in the blank variant picker on the product edit page, shown to the merchant: find the variant from the product's own attributes. */
 					: __( 'Find automatically', 'pixonaut-for-woocommerce' ),
 				'choices'   => $choices,
@@ -124,7 +124,7 @@ final class VariantField {
 	 * @param string $integration The print partner the blank is from; empty for the store's own blank.
 	 * @param string $label       The variant's options.
 	 */
-	private static function found( string $integration, string $label ): string {
+	public static function found_label( string $integration, string $label ): string {
 		return '' === $integration
 			/* translators: %s: the variant's options, e.g. "Color: Red, Size: M". Option in the blank variant picker on the product edit page: the variant found from the product's attributes. */
 			? sprintf( __( 'Blank variant: %s (found automatically)', 'pixonaut-for-woocommerce' ), $label )

@@ -144,6 +144,7 @@ final class ProductPanel {
 	 * @param RegeneratePictures|null $regenerate Renders the Regenerate product image button; null for none.
 	 * @param ProofUrls|null          $proofs     Signs the previews of a standing side's options; null to show them without.
 	 * @param Connection|null         $connection While the store is not connected, the panel says how to connect it; null never says.
+	 * @param VariantPairing|null     $pairing    Shows and saves each variation's blank variant in a variable product's panel; null shows a line pointing at Variations.
 	 */
 	public function __construct(
 		private readonly ProductLinker $linker,
@@ -157,6 +158,7 @@ final class ProductPanel {
 		private readonly ?RegeneratePictures $regenerate = null,
 		private readonly ?ProofUrls $proofs = null,
 		private readonly ?Connection $connection = null,
+		private readonly ?VariantPairing $pairing = null,
 	) {
 	}
 
@@ -207,6 +209,7 @@ final class ProductPanel {
 				'fields_html'  => $this->not_connected_html() . $this->fields_html(
 					$this->panel( $product_object ) + array(
 						'variant_html'    => $product_object->is_type( 'variable' ) ? '' : $this->variant->html( $product_object, PanelFields::product(), $this->integration( ProductConfig::stored_on( $product_object ) ) ),
+						'pairing_html'    => $this->pairing_html( $product_object, ProductConfig::stored_on( $product_object ) ),
 						'images_html'     => null === $this->showcases ? '' : $this->showcases->html( $product_object ),
 						'regenerate_html' => null === $this->regenerate ? '' : $this->regenerate->html( $product_object ),
 					)
@@ -287,8 +290,29 @@ final class ProductPanel {
 				'printshop'    => $panel['printshop'],
 				'variant_html' => is_string( $panel['variant_html'] ?? null ) ? $panel['variant_html'] : '',
 				'variable'     => true === $panel['variable'],
+				'importing'    => true === $panel['importing'],
+				'blank_name'   => $panel['blank_name'],
+				'pairing_html' => is_string( $panel['pairing_html'] ?? null ) ? $panel['pairing_html'] : '',
 			)
 		);
+	}
+
+	/**
+	 * Each variation's blank variant, in a variable product's panel; empty
+	 * for another product, without a blank, or while it is imported.
+	 *
+	 * @param WC_Product    $product The product.
+	 * @param ProductConfig $config  What it is shown with.
+	 */
+	private function pairing_html( WC_Product $product, ProductConfig $config ): string {
+		if ( null === $this->pairing || ! $product->is_type( 'variable' ) || null === $config->blank_id ) {
+			return '';
+		}
+		$blank = $this->blank->read( $config->blank_id );
+		if ( null !== $blank && LinkedBlank::IMPORTING === $blank['status'] ) {
+			return '';
+		}
+		return $this->pairing->html( $product, $config, $this->integration( $config ) );
 	}
 
 	/**
@@ -305,6 +329,7 @@ final class ProductPanel {
 		$config                = $config->blank_id === $blank_id ? $config : $config->on_blank( $blank_id );
 		$panel                 = $this->panel( $product, $config );
 		$panel['variant_html'] = $product->is_type( 'variable' ) ? '' : $this->variant->html( $product, PanelFields::product(), $this->integration( $config ), $blank_id );
+		$panel['pairing_html'] = $this->pairing_html( $product, $config );
 		return array(
 			'blank_html' => $this->blank_html( $panel ),
 			'views_html' => $this->views_html( $panel ),
@@ -400,7 +425,11 @@ final class ProductPanel {
 			'design_preview'   => null === $views || null === $this->showcases ? '' : $this->showcases->preview( $config ),
 			'sides'            => array_map( fn ( ?Side $side ): array => self::side_fields( $side, $product->is_type( 'variable' ) ) + $this->standing_options( $side, $product->get_id() ), array() === $config->sides ? array( null ) : $config->sides ),
 			'printshop'        => null === $config->blank_id ? null : $this->blank->printshop( $config->blank_id, $blank ),
+			// Pixonaut is still importing it from a printshop's catalogue: nothing to pick on it yet.
+			'importing'        => null !== $blank && LinkedBlank::IMPORTING === $blank['status'],
 			'printshops'       => $this->printshops( $config ),
+			// A variation's own blank is picked among the workspace's blanks.
+			'catalogues'       => $product->is_type( 'variation' ) ? array() : $this->blank->catalogue_printshops(),
 			'printshop_id'     => $config->printshop_id ?? '',
 			'printshops_url'   => StudioPage::section( StudioPage::PRINTSHOPS ),
 			'variable'         => $product->is_type( 'variable' ),
@@ -450,6 +479,8 @@ final class ProductPanel {
 			'placements'        => rest_url( Plugin::REST_NAMESPACE . CatalogueSearch::PLACEMENTS_ROUTE ),
 			'template'          => rest_url( Plugin::REST_NAMESPACE . CatalogueSearch::TEMPLATE_ROUTE ),
 			'blank-fields'      => rest_url( Plugin::REST_NAMESPACE . BlankFields::ROUTE ),
+			'catalogue'         => rest_url( Plugin::REST_NAMESPACE . CatalogueProducts::SEARCH_ROUTE ),
+			'catalogue-blank'   => rest_url( Plugin::REST_NAMESPACE . CatalogueProducts::PICK_ROUTE ),
 		);
 	}
 
@@ -478,6 +509,12 @@ final class ProductPanel {
 		$this->configure( $product, $posted );
 		$this->remember_open( $product, isset( $_POST[ self::OPEN_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::OPEN_FIELD ] ) ) : '' );
 		if ( $product->is_type( 'variable' ) ) {
+			$this->pairing?->save(
+				$product,
+				isset( $_POST[ VariantPairing::FIELD ] ) && is_array( $_POST[ VariantPairing::FIELD ] ) ? map_deep( wp_unslash( $_POST[ VariantPairing::FIELD ] ), 'sanitize_text_field' ) : array(),
+				isset( $_POST[ VariantPairing::DRAWN_FIELD ] ) && is_array( $_POST[ VariantPairing::DRAWN_FIELD ] ) ? map_deep( wp_unslash( $_POST[ VariantPairing::DRAWN_FIELD ] ), 'sanitize_text_field' ) : array(),
+				isset( $_POST[ VariantPairing::BLANK_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ VariantPairing::BLANK_FIELD ] ) ) : null
+			);
 			// Its variations' variants follow the blank it was saved with.
 			$this->variant->refresh( $product );
 			return;
@@ -797,7 +834,7 @@ final class ProductPanel {
 	 * @param WC_Product                $product The product or variation.
 	 * @param ProductConfig             $config The product's configuration.
 	 * @param array<string, mixed>|null $blank  The blank as `LinkedBlank::read()` gave it.
-	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool}|null $blank
+	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string}|null $blank
 	 */
 	private static function invalid( WC_Product $product, ProductConfig $config, ?array $blank ): string {
 		if ( ! $config->personalise ) {
@@ -814,7 +851,7 @@ final class ProductPanel {
 	 *
 	 * @param ProductConfig             $config The product's configuration.
 	 * @param array<string, mixed>|null $blank  The blank as `LinkedBlank::read()` gave it.
-	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool}|null $blank
+	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool, status: string}|null $blank
 	 * @return list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>
 	 */
 	private function placements( ProductConfig $config, ?array $blank ): array {
