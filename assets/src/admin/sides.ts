@@ -35,9 +35,19 @@ export function withIndex(
 	return markup.split(placeholder).join(String(index));
 }
 
+/** A side's mode as the 0.1.0 side template's select posts it for a fixed
+ *  design (`Side::STANDING`). */
+export const STANDING_MODE = 'standing';
+
 /** Whether a side is a fixed design: its "Customers fill in the template"
- *  box (`.pixonaut-side-mode`) is unticked. */
+ *  box (`.pixonaut-side-mode`) is unticked, or, in a theme's copy of the
+ *  0.1.0 side template, its mode select says so. */
 export function isFixedDesign(side: ParentNode): boolean {
-	const box = side.querySelector<HTMLInputElement>('input.pixonaut-side-mode');
-	return box !== null && !box.checked;
+	const mode = side.querySelector<HTMLInputElement | HTMLSelectElement>(
+		'.pixonaut-side-mode',
+	);
+	if (mode instanceof HTMLSelectElement) {
+		return mode.value === STANDING_MODE;
+	}
+	return mode instanceof HTMLInputElement && !mode.checked;
 }
