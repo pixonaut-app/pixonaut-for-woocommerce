@@ -813,6 +813,7 @@ export function initPanel(root: HTMLElement): void {
 			showBlankParts(root, parts);
 			initRetiredVariants(root);
 			offerInitialViews(root);
+			showOpeningView(root);
 			showViewsSummary(root);
 			showBlankLoading(root, false);
 		});
@@ -950,6 +951,7 @@ export function initPanel(root: HTMLElement): void {
 		}
 	}
 	offerInitialViews(root);
+	showOpeningView(root);
 	showPersonalised(root);
 	update();
 	checkPanel(root);

@@ -56,7 +56,8 @@ export function showPictureBadges(list: HTMLElement): void {
 
 /**
  * Draws a card's thumbnail as its chosen tile says: the set's preview over
- * the tile's photo, or the preview alone for the design alone.
+ * the tile's photo, or the preview alone for the design alone or a photo
+ * that is not known.
  */
 export function showDrawnOn(card: Element): void {
 	const chosen = card.querySelector<HTMLInputElement>(
@@ -74,10 +75,11 @@ export function showDrawnOn(card: Element): void {
 		tile.querySelector<HTMLImageElement>(
 			'.pixonaut-showcase-kind__thumbnail img',
 		)?.src ?? '';
-	const flat = tile.classList.contains(FLAT_CHOICE) || src === '';
+	const flat = tile.classList.contains(FLAT_CHOICE);
 	thumb.classList.toggle(FLAT, flat);
-	photo.hidden = flat;
-	if (!flat) {
+	// A choice without a thumbnail, such as a photo the blank no longer has, shows no photo.
+	photo.hidden = flat || src === '';
+	if (!photo.hidden) {
 		photo.src = src;
 	}
 }

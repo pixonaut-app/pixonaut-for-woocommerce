@@ -15,6 +15,7 @@ function card(id: string, ticked: boolean): string {
 			<div class="pixonaut-showcase-image__kinds">
 				<label class="pixonaut-showcase-kind"><input type="radio" name="${id}" value="mockup" checked /><span class="pixonaut-showcase-kind__thumbnail"><img src="https://img.example/photo" /></span></label>
 				<label class="pixonaut-showcase-kind pixonaut-showcase-kind--photo"><input type="radio" name="${id}" value="mockup:back" /><span class="pixonaut-showcase-kind__thumbnail"><img src="https://img.example/back" /></span></label>
+				<label class="pixonaut-showcase-kind"><input type="radio" name="${id}" value="mockup:gone" /><span class="pixonaut-showcase-kind__thumbnail"></span></label>
 				<label class="pixonaut-showcase-kind pixonaut-showcase-kind--flat"><input type="radio" name="${id}" value="preview" /><span class="pixonaut-showcase-kind__thumbnail"><img src="https://img.example/${id}" /></span></label>
 			</div>
 		</li>`;
@@ -102,5 +103,10 @@ describe('initPictureCards', () => {
 		pick('preview');
 		expect(photo?.hidden).toBe(true);
 		expect(thumb?.classList.contains('is-flat')).toBe(true);
+
+		// A photo the blank no longer has is not the design alone.
+		pick('mockup:gone');
+		expect(photo?.hidden).toBe(true);
+		expect(thumb?.classList.contains('is-flat')).toBe(false);
 	});
 });

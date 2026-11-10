@@ -25,8 +25,9 @@ defined( 'ABSPATH' ) || exit;
 
 $pixonaut_all = null === $views ? 0 : 1 + array_sum( array_map( static fn ( array $placement ): int => count( $placement['views'] ), $views ) );
 $pixonaut_on  = count( $chosen_views );
-// The view the designer opens on: the one chosen, else the first shown.
-$pixonaut_opens = $initial_view;
+// The view the designer opens on: the one chosen while it is still shown, else the first shown.
+$pixonaut_ids   = null === $views ? array() : array_merge( array_column( array_merge( ...array_column( $views, 'views' ) ), 'id' ), array( \Pixonaut\WooCommerce\Catalogue\ProductConfig::DESIGN_VIEW ) );
+$pixonaut_opens = in_array( $initial_view, 0 === $pixonaut_on ? $pixonaut_ids : array_intersect( $pixonaut_ids, $chosen_views ), true ) ? $initial_view : '';
 foreach ( '' === $pixonaut_opens && null !== $views ? $views : array() as $pixonaut_placement ) {
 	foreach ( $pixonaut_placement['views'] as $pixonaut_view ) {
 		if ( '' === $pixonaut_opens && ( 0 === $pixonaut_on || in_array( $pixonaut_view['id'], $chosen_views, true ) ) ) {

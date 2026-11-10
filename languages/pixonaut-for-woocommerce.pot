@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-10T19:04:35+00:00\n"
+"POT-Creation-Date: 2026-11-10T19:15:59+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -2099,70 +2099,70 @@ msgid "Pixonaut could not draw the pictures of %s. They keep the images they hav
 msgstr ""
 
 #. translators: Short name of a choice of how a product image is drawn: the design on the blank product's photo, the one the product page starts on. Admin product page.
-#: src/Admin/ShowcaseField.php:117
+#: src/Admin/ShowcaseField.php:114
 msgid "Main photo"
 msgstr ""
 
-#: src/Admin/ShowcaseField.php:118
+#: src/Admin/ShowcaseField.php:115
 msgid "Drawn into the print area of the blank’s photo the product page starts on."
 msgstr ""
 
 #. translators: Short name of a choice of how a product image is drawn: the design alone, without the product. Admin product page.
-#: src/Admin/ShowcaseField.php:123
+#: src/Admin/ShowcaseField.php:120
 msgid "Design"
 msgstr ""
 
-#: src/Admin/ShowcaseField.php:124
+#: src/Admin/ShowcaseField.php:121
 msgid "The design alone, without the product."
 msgstr ""
 
 #. translators: %s: name of a showcase set of the template. Admin product page.
-#: src/Admin/ShowcaseField.php:144
+#: src/Admin/ShowcaseField.php:143
 #, php-format
 msgid "How %s is drawn"
 msgstr ""
 
 #. translators: Accessible name of the choices of how the product image is drawn while no showcase set is ticked. Admin product page.
-#: src/Admin/ShowcaseField.php:170
+#: src/Admin/ShowcaseField.php:173
 msgid "How the product image is drawn without a showcase set"
 msgstr ""
 
-#: src/Admin/ShowcaseField.php:206
+#: src/Admin/ShowcaseField.php:209
 msgid "The blank no longer has this view or photo, so the image is drawn on the photo the product page starts on until another is chosen."
 msgstr ""
 
 #. translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page.
-#: src/Admin/ShowcaseField.php:256
+#: src/Admin/ShowcaseField.php:270
 #, php-format
 msgid "%s, on the photo of the variant sold"
 msgstr ""
 
 #. translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page.
-#: src/Admin/ShowcaseField.php:260
+#: src/Admin/ShowcaseField.php:274
 msgid "No longer on the blank"
 msgstr ""
 
 #. translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page.
-#: src/Admin/ShowcaseField.php:262
+#: src/Admin/ShowcaseField.php:276
 msgid "The photo chosen before"
 msgstr ""
 
 #. translators: A choice of what a variation's image is drawn on: whatever its product's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:287
+#: src/Admin/ShowcaseField.php:301
 msgid "As the product image"
 msgstr ""
 
-#: src/Admin/ShowcaseField.php:288
+#: src/Admin/ShowcaseField.php:302
 msgid "The view and photo the product image is drawn on, in this variation’s colour where the view has it."
 msgstr ""
 
 #. translators: Accessible name of the choices of what a variation's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:303
+#: src/Admin/ShowcaseField.php:317
 msgid "What the variation image is drawn on"
 msgstr ""
 
 #. translators: 1: a view of the blank product, e.g. "Front"; 2: which of its photos, e.g. 2. Admin product page.
-#: src/Admin/ShowcaseField.php:359
+#: src/Admin/ShowcaseField.php:373
 #, php-format
 msgid "%1$s, photo %2$d"
 msgstr ""
@@ -4457,7 +4457,7 @@ msgstr ""
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the images of personalised products.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's images drawn by Pixonaut.
 #: src/Settings/SettingsPage.php:565
-#: templates/admin/product-showcase-images.php:55
+#: templates/admin/product-showcase-images.php:58
 msgid "Product images"
 msgstr ""
 
@@ -5672,84 +5672,84 @@ msgid "Pictures are drawn again by themselves when the template is republished."
 msgstr ""
 
 #. translators: Badge on a picture in the Pixonaut tab's Product images: it is the product's main image.
-#: templates/admin/product-showcase-images.php:35
+#: templates/admin/product-showcase-images.php:38
 msgid "Product image"
 msgstr ""
 
 #. translators: Badge on a picture in the Pixonaut tab's Product images: it goes to the product's gallery.
-#: templates/admin/product-showcase-images.php:37
+#: templates/admin/product-showcase-images.php:40
 msgid "Gallery"
 msgstr ""
 
 #. translators: Badge on a picture in the Pixonaut tab's Product images: ticked past the most a product shows, so it is not shown.
-#: templates/admin/product-showcase-images.php:39
+#: templates/admin/product-showcase-images.php:42
 msgid "Left out"
 msgstr ""
 
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's images drawn by Pixonaut.
-#: templates/admin/product-showcase-images.php:56
+#: templates/admin/product-showcase-images.php:59
 msgid "What the product page and the shop show before a customer designs anything."
 msgstr ""
 
 #. translators: %s: link to the Pixonaut settings page, reading "Pixonaut's settings". Admin product page.
-#: templates/admin/product-showcase-images.php:63
+#: templates/admin/product-showcase-images.php:66
 #, php-format
 msgid "These pictures are not shown yet: turn on Use Pixonaut pictures as product images in %s."
 msgstr ""
 
-#: templates/admin/product-showcase-images.php:64
+#: templates/admin/product-showcase-images.php:67
 msgid "Pixonaut’s settings"
 msgstr ""
 
 #. translators: Label of the product's pictures in the Pixonaut tab's Product images.
-#: templates/admin/product-showcase-images.php:71
+#: templates/admin/product-showcase-images.php:74
 msgid "Pictures"
 msgstr ""
 
-#: templates/admin/product-showcase-images.php:73
+#: templates/admin/product-showcase-images.php:76
 msgid "Pixonaut could not be reached to list the template’s example sets. The sets chosen before are kept."
 msgstr ""
 
-#: templates/admin/product-showcase-images.php:75
+#: templates/admin/product-showcase-images.php:78
 msgid "The template has no example sets, so its own text and pictures are drawn."
 msgstr ""
 
 #. translators: %d: most pictures a product shows. Admin product page.
-#: templates/admin/product-showcase-images.php:80
+#: templates/admin/product-showcase-images.php:83
 #, php-format
 msgid "Tick the example sets to show. The first ticked is the product image, the others go to its gallery, up to %d in all."
 msgstr ""
 
-#: templates/admin/product-showcase-images.php:107
+#: templates/admin/product-showcase-images.php:110
 msgid "This set is no longer in the template, so its image shows the template’s own defaults. Untick it, or choose another set."
 msgstr ""
 
 #. translators: Under a picture in the Pixonaut tab's Product images: the picture is one of the template's sets of example values.
-#: templates/admin/product-showcase-images.php:109
+#: templates/admin/product-showcase-images.php:112
 msgid "Example set"
 msgstr ""
 
 #. translators: Above the choices of what a picture in the Pixonaut tab's Product images is drawn on: a photo of the blank, or the design alone.
-#: templates/admin/product-showcase-images.php:116
-#: templates/admin/product-showcase-images.php:127
+#: templates/admin/product-showcase-images.php:119
+#: templates/admin/product-showcase-images.php:130
 msgid "Drawn on"
 msgstr ""
 
 #. translators: A picture in the Pixonaut tab's Product images: the template drawn with its own text and pictures.
-#: templates/admin/product-showcase-images.php:123
+#: templates/admin/product-showcase-images.php:126
 msgid "The template’s own"
 msgstr ""
 
 #. translators: A picture in the Pixonaut tab's Product images: the template drawn with its own text and pictures.
-#: templates/admin/product-showcase-images.php:124
+#: templates/admin/product-showcase-images.php:127
 msgid "Shown while no example set is ticked."
 msgstr ""
 
-#: templates/admin/product-showcase-images.php:135
+#: templates/admin/product-showcase-images.php:138
 msgid "The blank has no product photo for this side, so each picture is the design alone."
 msgstr ""
 
-#: templates/admin/product-showcase-images.php:137
+#: templates/admin/product-showcase-images.php:140
 msgid "Without a blank, each picture is the design alone."
 msgstr ""
 
@@ -6061,78 +6061,78 @@ msgstr ""
 msgid "This variation uses its own configuration below, not the product’s Pixonaut tab."
 msgstr ""
 
-#: templates/admin/product-views.php:38
-#: templates/admin/product-views.php:113
+#: templates/admin/product-views.php:39
+#: templates/admin/product-views.php:114
 msgid "The design alone"
 msgstr ""
 
 #. translators: Badge on the view the designer opens on, in the Pixonaut tab of the product edit page.
-#: templates/admin/product-views.php:46
+#: templates/admin/product-views.php:47
 msgid "Opens first"
 msgstr ""
 
 #. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the photos of the blank customers see their design on.
-#: templates/admin/product-views.php:52
+#: templates/admin/product-views.php:53
 msgid "Views on the product page"
 msgstr ""
 
 #. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the photos of the blank customers see their design on.
-#: templates/admin/product-views.php:53
-#: templates/admin/product-views.php:57
+#: templates/admin/product-views.php:54
+#: templates/admin/product-views.php:58
 msgid "Every view"
 msgstr ""
 
 #. translators: 1: how many views are ticked, 2: how many there are. Admin product page.
-#: templates/admin/product-views.php:53
-#: templates/admin/product-views.php:59
+#: templates/admin/product-views.php:54
+#: templates/admin/product-views.php:60
 #, php-format
 msgid "%1$d of %2$d views"
 msgstr ""
 
 #. translators: %s: the view the designer opens on, e.g. "Front". Summary of a closed section of the Pixonaut tab of the product edit page.
-#: templates/admin/product-views.php:64
+#: templates/admin/product-views.php:65
 #, php-format
 msgid "opens on %s"
 msgstr ""
 
-#: templates/admin/product-views.php:69
+#: templates/admin/product-views.php:70
 msgid "The pictures customers switch between while they design."
 msgstr ""
 
 #. translators: Label of the views customers see their design in. Admin product page.
-#: templates/admin/product-views.php:71
+#: templates/admin/product-views.php:72
 msgid "Views shown"
 msgstr ""
 
-#: templates/admin/product-views.php:95
+#: templates/admin/product-views.php:96
 msgid "This print position has no views in Pixonaut yet."
 msgstr ""
 
-#: templates/admin/product-views.php:101
-#: templates/admin/product-views.php:140
+#: templates/admin/product-views.php:102
+#: templates/admin/product-views.php:141
 msgctxt "view of the design alone, without the product"
 msgid "Design"
 msgstr ""
 
-#: templates/admin/product-views.php:120
+#: templates/admin/product-views.php:121
 msgid "Pixonaut could not be reached to list the blank’s views. The views chosen before are kept."
 msgstr ""
 
-#: templates/admin/product-views.php:123
+#: templates/admin/product-views.php:124
 msgid "None ticked: every view is shown."
 msgstr ""
 
-#: templates/admin/product-views.php:123
+#: templates/admin/product-views.php:124
 msgid "Only the ticked views are shown. Untick them all to show every view."
 msgstr ""
 
 #. translators: Label of the dropdown choosing which view the designer opens on. Admin product page.
-#: templates/admin/product-views.php:128
+#: templates/admin/product-views.php:129
 msgid "Opens on"
 msgstr ""
 
 #. translators: Option in the Opens on dropdown: open on the first of the views shown. Admin product page.
-#: templates/admin/product-views.php:130
+#: templates/admin/product-views.php:131
 msgid "The first view shown"
 msgstr ""
 

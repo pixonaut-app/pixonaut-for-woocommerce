@@ -14,7 +14,7 @@
  *
  * @var string                                                                                                    $field        The rows' posted name.
  * @var string                                                                                                    $listed_field Posted while the rows are listed.
- * @var list<array{id: string, name: string, kind: string, value: string, chosen: bool, gone: bool, view_gone: bool, choices_html: string, preview: string, photo: string}> $rows Each set: the template's, then chosen ones it no longer has; each with how it is drawn (`choices_html`, rendered from `admin/picture-view-choices.php`; empty when every set is flat), its preview, and the photo it is drawn on (empty for the design alone).
+ * @var list<array{id: string, name: string, kind: string, value: string, chosen: bool, gone: bool, view_gone: bool, choices_html: string, preview: string, photo: string, flat: bool}> $rows Each set: the template's, then chosen ones it no longer has; each with how it is drawn (`choices_html`, rendered from `admin/picture-view-choices.php`; empty when every set is flat), its preview (the template's own for a set it no longer has), the photo it is drawn on (empty for the design alone, or when not known), and whether it is drawn as the design alone.
  * @var bool                                                                                                      $listed       Whether Pixonaut listed the template's sets.
  * @var bool                                                                                                      $pictures_on  Whether Pixonaut pictures are product images.
  * @var string                                                                                                    $settings_url The settings page tab where Pixonaut pictures are turned on.
@@ -24,12 +24,15 @@
  * @var string                                                                                                    $view_listed  Posted with the choice of the image drawn without a set.
  * @var string                                                                                                    $view_html    What the image drawn without a set is drawn on, rendered from `admin/picture-view-choices.php`; empty when it can only be flat.
  * @var string                                                                                                    $own_preview  The template's preview; empty for none.
- * @var string                                                                                                    $own_photo    The photo the image drawn without a set is drawn on; empty for the design alone.
+ * @var string                                                                                                    $own_photo    The photo the image drawn without a set is drawn on; empty for the design alone, or when not known.
+ * @var bool                                                                                                      $own_flat     Whether the image drawn without a set is the design alone.
+ * @var int                                                                                                       $saved_sets   How many sets the product shows as saved, which stand while Pixonaut cannot list them.
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$pixonaut_ticked = count( array_filter( array_column( $rows, 'chosen' ) ) );
+// While the sets cannot be listed, the saved ones still stand.
+$pixonaut_ticked = $listed ? count( array_filter( array_column( $rows, 'chosen' ) ) ) : $saved_sets;
 $pixonaut_badges = array(
 	/* translators: Badge on a picture in the Pixonaut tab's Product images: it is the product's main image. */
 	'first'    => __( 'Product image', 'pixonaut-for-woocommerce' ),
@@ -39,10 +42,10 @@ $pixonaut_badges = array(
 	'left_out' => __( 'Left out', 'pixonaut-for-woocommerce' ),
 );
 $pixonaut_place  = 0;
-$pixonaut_thumb  = static function ( string $preview, string $photo, string $badge ): void {
+$pixonaut_thumb  = static function ( string $preview, string $photo, bool $flat, string $badge ): void {
 	?>
-	<span class="pixonaut-picture-card__thumb<?php echo '' === $photo ? ' is-flat' : ''; ?>">
-		<img class="pixonaut-picture-card__photo" src="<?php echo esc_url( $photo ); ?>" alt="" loading="lazy" <?php echo '' === $photo ? 'hidden' : ''; ?> />
+	<span class="pixonaut-picture-card__thumb<?php echo $flat ? ' is-flat' : ''; ?>">
+		<img class="pixonaut-picture-card__photo" src="<?php echo esc_url( $photo ); ?>" alt="" loading="lazy" <?php echo $flat || '' === $photo ? 'hidden' : ''; ?> />
 		<?php if ( '' !== $preview ) : ?>
 			<img class="pixonaut-picture-card__preview" src="<?php echo esc_url( $preview ); ?>" alt="" loading="lazy" />
 		<?php endif; ?>
@@ -82,7 +85,7 @@ $pixonaut_thumb  = static function ( string $preview, string $photo, string $bad
 			</span>
 			<input type="hidden" name="<?php echo esc_attr( $listed_field ); ?>" value="1" />
 		<?php endif; ?>
-		<ul class="pixonaut-picture-cards<?php echo 0 === $pixonaut_ticked ? ' pixonaut-picture-cards--none-ticked' : ''; ?>"
+		<ul class="pixonaut-picture-cards pixonaut-showcase-images__list<?php echo 0 === $pixonaut_ticked ? ' pixonaut-picture-cards--none-ticked' : ''; ?>"
 			data-max="<?php echo esc_attr( (string) $max_images ); ?>"
 			<?php foreach ( $pixonaut_badges as $pixonaut_badge_key => $pixonaut_badge_text ) : ?>
 				data-<?php echo esc_attr( str_replace( '_', '-', $pixonaut_badge_key ) ); ?>="<?php echo esc_attr( $pixonaut_badge_text ); ?>"
@@ -98,7 +101,7 @@ $pixonaut_thumb  = static function ( string $preview, string $photo, string $bad
 				}
 				?>
 				<li class="pixonaut-picture-card pixonaut-showcase-image<?php echo $pixonaut_row['gone'] ? ' pixonaut-showcase-image--gone' : ''; ?>">
-					<?php $pixonaut_thumb( $pixonaut_row['preview'], $pixonaut_row['photo'], $pixonaut_badge ); ?>
+					<?php $pixonaut_thumb( $pixonaut_row['preview'], $pixonaut_row['photo'], $pixonaut_row['flat'], $pixonaut_badge ); ?>
 					<label class="pixonaut-picture-card__name">
 						<input type="checkbox" class="pixonaut-picture-card__use" name="<?php echo esc_attr( $pixonaut_name . '[use]' ); ?>" value="yes" <?php checked( $pixonaut_row['chosen'] ); ?> />
 						<span><?php echo esc_html( $pixonaut_row['name'] ); ?></span>
@@ -118,8 +121,8 @@ $pixonaut_thumb  = static function ( string $preview, string $photo, string $bad
 					<?php endif; ?>
 				</li>
 			<?php endforeach; ?>
-			<li class="pixonaut-picture-card pixonaut-picture-card--own">
-				<?php $pixonaut_thumb( $own_preview, $own_photo, 0 === $pixonaut_ticked ? $pixonaut_badges['first'] : '' ); ?>
+			<li class="pixonaut-picture-card pixonaut-picture-card--own pixonaut-picture-view">
+				<?php $pixonaut_thumb( $own_preview, $own_photo, $own_flat, 0 === $pixonaut_ticked ? $pixonaut_badges['first'] : '' ); ?>
 				<span class="pixonaut-picture-card__name"><?php /* translators: A picture in the Pixonaut tab's Product images: the template drawn with its own text and pictures. */ esc_html_e( 'The template’s own', 'pixonaut-for-woocommerce' ); ?></span>
 				<span class="description"><?php esc_html_e( 'Shown while no example set is ticked.', 'pixonaut-for-woocommerce' ); ?></span>
 				<?php if ( '' !== $view_html ) : ?>

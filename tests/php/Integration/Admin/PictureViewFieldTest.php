@@ -155,6 +155,39 @@ final class PictureViewFieldTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'No longer on the blank', $html );
 	}
 
+	public function test_the_cards_thumbnail_shows_the_photo_a_picture_is_drawn_on(): void {
+		$product = $this->product();
+		PictureView::save(
+			$product,
+			array(
+				'kind' => PictureView::MOCKUP,
+				'view' => self::VIEW,
+			)
+		);
+		$this->answer_sets( array() );
+		$this->answer_mockups();
+		$mockups = json_decode( OpenApiAssert::example( 'GET', '/v1/blanks/{id}/mockups', 200 ), true );
+		$this->assertIsArray( $mockups );
+
+		$thumb = self::own_thumb( $this->field->html( $this->reload( $product ) ) );
+
+		// A view chosen without a photo is drawn on its first photo.
+		$this->assertStringNotContainsString( 'is-flat', $thumb );
+		$this->assertStringContainsString( 'src="' . esc_url( $mockups['placements'][0]['views'][0]['photos'][0]['thumbnailUrl'] ) . '"', $thumb );
+	}
+
+	public function test_a_photo_the_blank_no_longer_has_shows_the_main_photo_in_the_cards_thumbnail(): void {
+		$product = $this->product();
+		PictureView::save( $product, self::choice( 'mock-gone' ) );
+		$this->answer_sets( array() );
+		$this->answer_mockups();
+
+		$thumb = self::own_thumb( $this->field->html( $this->reload( $product ) ) );
+
+		$this->assertStringNotContainsString( 'is-flat', $thumb );
+		$this->assertDoesNotMatchRegularExpression( '#class="pixonaut-picture-card__photo"[^>]*hidden#', $thumb );
+	}
+
 	public function test_a_choice_stays_listed_after_the_blank_lost_every_photo(): void {
 		$product = $this->product();
 		PictureView::save( $product, self::choice( self::PHOTO ) );
@@ -251,6 +284,16 @@ final class PictureViewFieldTest extends WP_UnitTestCase {
 
 		$this->assertSame( '', $this->field->variation_html( $this->reload( $variation ), PanelFields::variation( 0 ) ) );
 		$this->assertSame( array(), $this->recorder->requests );
+	}
+
+	/**
+	 * The thumbnail of the template's own card.
+	 *
+	 * @param string $html The field.
+	 */
+	private static function own_thumb( string $html ): string {
+		preg_match( '#pixonaut-picture-card--own.*?(<span class="pixonaut-picture-card__thumb.*?</span>\s*</span>)#s', $html, $found );
+		return $found[1] ?? '';
 	}
 
 	/**

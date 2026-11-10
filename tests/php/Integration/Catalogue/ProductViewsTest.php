@@ -130,6 +130,47 @@ final class ProductViewsTest extends ProductPanelTestCase {
 		$this->assertMatchesRegularExpression( '#<option value="design"\s+>Design</option>#', $html );
 	}
 
+	public function test_the_view_the_designer_opens_on_is_badged_and_named_in_the_summary(): void {
+		$product = $this->product();
+		$this->script_link( array( 'legal' => true ) );
+		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array( 'view-front', 'view-back' ), 'view-back' ) ) );
+		$placements = array(
+			self::PLACEMENT_ID => 'Front',
+			self::BACK_ID      => 'Back',
+		);
+		$this->recorder->json( 200, $this->blank( $placements ) );
+		$this->recorder->json( 200, $this->mockups( $placements ) );
+		$this->recorder->json( 200, self::printshops() );
+
+		$html = $this->render( $product->get_id() );
+
+		$this->assertMatchesRegularExpression( self::badged( 'view-back' ), $html );
+		$this->assertDoesNotMatchRegularExpression( self::badged( 'view-front' ), $html );
+	}
+
+	public function test_an_opening_view_the_blank_no_longer_has_badges_the_first_view(): void {
+		$product = $this->product();
+		$this->script_link( array( 'legal' => true ) );
+		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array(), 'view-back' ) ) );
+		$this->recorder->json( 200, $this->blank() );
+		$this->recorder->json( 200, $this->mockups() );
+		$this->recorder->json( 200, self::printshops() );
+
+		$html = $this->render( $product->get_id() );
+
+		$this->assertMatchesRegularExpression( self::badged( 'view-front' ), $html );
+		$this->assertSame( 1, preg_match_all( '#class="pixonaut-view__opens"\s*>#', $html ) );
+	}
+
+	/**
+	 * Matches a view's tile carrying the Opens first badge, shown.
+	 *
+	 * @param string $view The view's id.
+	 */
+	private static function badged( string $view ): string {
+		return '#class="pixonaut-view__opens"\s*>[^<]*</span>\s*</span>\s*<span class="pixonaut-view__name">\s*<input type="checkbox" name="pixonaut_views\[ticked\]\[\]" value="' . preg_quote( $view, '#' ) . '"#';
+	}
+
 	public function test_the_design_view_can_be_ticked_and_started_on(): void {
 		$product = $this->product();
 		$this->script_link( array( 'legal' => true ) );

@@ -106,9 +106,6 @@ final class ShowcaseField {
 		$views    = $this->views( $config );
 		$own_view = PictureView::on( $product );
 		$viewed   = null !== $own_view || array() !== array_filter( array_column( $chosen, 'view' ) );
-		if ( array() === $chosen && null === $own_view && ( null === $sets || array() === $sets ) && ( null === $views || array() === $views ) ) {
-			return '';
-		}
 		// A choice made before keeps its controls, so it can be seen and changed.
 		$kinds = null === $photo || '' !== $photo || null === $views || array() !== $views || $viewed
 			? array(
@@ -130,12 +127,14 @@ final class ShowcaseField {
 		$tiles = array() === $kinds ? array() : array_merge( array( $kinds[ ShowcaseImages::MOCKUP ] + array( 'value' => ShowcaseImages::MOCKUP ) ), self::photo_choices( $views ?? array() ), array( $kinds[ ShowcaseImages::PREVIEW ] + array( 'value' => ShowcaseImages::PREVIEW ) ) );
 		$rows  = array();
 		foreach ( null === $sets ? array() : self::rows( $sets, $chosen, ProductPictures::stored( $product )['gone'], array() !== $kinds, $views ) as $index => $row ) {
-			$set_preview = $previews[ $row['id'] ] ?? '';
+			// A set the template no longer has is drawn with its defaults, as the template's own preview shows.
+			$set_preview = $row['gone'] ? $preview : $previews[ $row['id'] ] ?? '';
 			// The set's own preview is what its picture looks like drawn as the design alone.
 			$set_tiles = array_map( static fn ( array $tile ): array => ( $tile['flat'] ?? false ) && '' !== $set_preview ? array_replace( $tile, array( 'thumbnail' => $set_preview ) ) : $tile, $tiles );
 			$rows[]    = $row + array(
 				'preview'      => $set_preview,
-				'photo'        => self::drawn_on( $set_tiles, $row['value'] ),
+				'photo'        => self::drawn_on( PictureView::from_field( $row['value'] ), $views, $photo ?? '' ),
+				'flat'         => ShowcaseImages::PREVIEW === $row['kind'],
 				'choices_html' => array() === $tiles ? '' : $this->choices_html(
 					self::FIELD . '[' . $index . '][kind]',
 					$row,
@@ -146,7 +145,9 @@ final class ShowcaseField {
 				),
 			);
 		}
-		$own_view = self::choice( $own_view ?? array( 'kind' => PictureView::MOCKUP ), $views );
+		$own_choice = $own_view ?? array( 'kind' => PictureView::MOCKUP );
+		$own_choice = array() === $kinds ? array( 'kind' => PictureView::PREVIEW ) : $own_choice;
+		$own_view   = self::choice( $own_choice, $views );
 		return $this->templates->html(
 			'admin/product-showcase-images.php',
 			array(
@@ -161,7 +162,9 @@ final class ShowcaseField {
 				'has_blank'    => null !== $config->blank_id,
 				'view_listed'  => self::VIEW_LISTED_FIELD,
 				'own_preview'  => $preview,
-				'own_photo'    => self::drawn_on( $tiles, $own_view['value'] ),
+				'own_photo'    => self::drawn_on( $own_choice, $views, $photo ?? '' ),
+				'own_flat'     => PictureView::PREVIEW === $own_choice['kind'],
+				'saved_sets'   => count( $chosen ),
 				'view_html'    => array() === $tiles ? '' : $this->choices_html(
 					self::VIEW_FIELD,
 					$own_view,
@@ -209,19 +212,31 @@ final class ShowcaseField {
 	}
 
 	/**
-	 * The photo a picture is drawn on, as its chosen tile shows it; empty
-	 * for the design alone, or a choice the tiles do not offer.
+	 * The thumbnail of the photo a picture is drawn on, as `PictureSources`
+	 * picks it: the photo chosen, the first photo of a view chosen without
+	 * one, else the photo the product page starts on. Empty for the design
+	 * alone, or when the photo is not known.
 	 *
-	 * @param list<array{value: string, thumbnail: string, flat?: bool}> $tiles The choices offered.
-	 * @param string                                                     $value The value chosen.
+	 * @param array{kind: string, view?: string, photo?: string}                                                                      $choice The choice.
+	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null $views  The placement's views; null when Pixonaut cannot say.
+	 * @param string                                                                                                                  $main   The thumbnail of the photo the product page starts on; empty for none.
 	 */
-	private static function drawn_on( array $tiles, string $value ): string {
-		foreach ( $tiles as $tile ) {
-			if ( $tile['value'] === $value ) {
-				return ( $tile['flat'] ?? false ) ? '' : $tile['thumbnail'];
+	private static function drawn_on( array $choice, ?array $views, string $main ): string {
+		if ( PictureView::PREVIEW === $choice['kind'] ) {
+			return '';
+		}
+		$chosen = $choice['view'] ?? null;
+		foreach ( null === $chosen ? array() : $views ?? array() as $view ) {
+			if ( $view['id'] !== $chosen ) {
+				continue;
+			}
+			foreach ( $view['photos'] as $photo ) {
+				if ( ! isset( $choice['photo'] ) || $photo['id'] === $choice['photo'] ) {
+					return $photo['thumbnail'];
+				}
 			}
 		}
-		return '';
+		return $main;
 	}
 
 	/**

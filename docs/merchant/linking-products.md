@@ -655,9 +655,8 @@ images**:
 
 A variation's image shows the product's first set, on the view and photo
 chosen for it as above. With no set ticked, or a template without sets, the
-images show the template's own defaults, as before; for a template without
-sets and a product without a blank photo to choose, the tab has no
-**Product images** section.
+images show the template's own defaults, as **The template's own** card
+shows them.
 
 Showcase sets only change the product's images. Customers still start
 designing from the template's own defaults, and their designs, proofs and

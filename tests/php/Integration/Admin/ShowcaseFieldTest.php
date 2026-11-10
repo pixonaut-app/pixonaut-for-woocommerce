@@ -271,19 +271,25 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'no longer in the template', $html );
 	}
 
-	public function test_a_template_without_sets_has_no_field(): void {
+	public function test_a_template_without_sets_shows_its_own_picture(): void {
 		$this->answer_sets( array() );
 
-		$this->assertSame( '', $this->field->html( $this->product() ) );
+		$html  = $this->field->html( $this->product() );
+		$cards = $this->cards( $html );
+
+		$this->assertSame( array( 'own' ), array_keys( $cards ) );
+		$this->assertStringContainsString( 'src="' . self::PREVIEW_URL . '"', $cards['own']['thumb'] );
+		$this->assertSame( 'Product image', $cards['own']['badge'] );
+		$this->assertStringContainsString( 'The template has no example sets', $html );
 	}
 
-	public function test_an_answer_that_does_not_list_sets_has_no_field(): void {
+	public function test_an_answer_that_does_not_list_sets_shows_the_templates_own_picture(): void {
 		$template = json_decode( OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200 ), true );
 		$this->assertIsArray( $template );
 		unset( $template['showcases'] );
 		$this->recorder->off_spec( 200, $template );
 
-		$this->assertSame( '', $this->field->html( $this->product() ) );
+		$this->assertSame( array( 'own' ), array_keys( $this->cards( $this->field->html( $this->product() ) ) ) );
 	}
 
 	public function test_a_template_without_sets_lists_those_chosen_as_gone(): void {
@@ -297,10 +303,37 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'no longer in the template', $html );
 	}
 
-	public function test_without_pixonaut_and_nothing_chosen_there_is_no_field(): void {
+	public function test_without_pixonaut_the_saved_sets_still_stand(): void {
+		$product = $this->product();
+		ShowcaseImages::save( $product, array( self::SETS[0] + array( 'kind' => ShowcaseImages::PREVIEW ) ) );
 		$this->recorder->fail();
 
-		$this->assertSame( '', $this->field->html( $this->product() ) );
+		$html  = $this->field->html( $this->reload( $product ) );
+		$cards = $this->cards( $html );
+
+		$this->assertStringContainsString( 'could not be reached', $html );
+		$this->assertStringNotContainsString( 'pixonaut-picture-cards--none-ticked', $html );
+		$this->assertSame( '', $cards['own']['badge'] );
+	}
+
+	public function test_a_set_the_template_no_longer_has_shows_the_templates_own_preview(): void {
+		$product = $this->product();
+		ShowcaseImages::save(
+			$product,
+			array(
+				array(
+					'id'   => 'showcase-old',
+					'name' => 'Old sign',
+					'kind' => ShowcaseImages::PREVIEW,
+				),
+			)
+		);
+		$this->answer_sets( self::SETS );
+
+		$cards = $this->cards( $this->field->html( $this->reload( $product ) ) );
+
+		$this->assertStringContainsString( 'is-flat', $cards['showcase-old']['thumb'] );
+		$this->assertStringContainsString( 'src="' . self::PREVIEW_URL . '"', $cards['showcase-old']['thumb'] );
 	}
 
 	public function test_a_chosen_set_the_template_no_longer_has_is_listed_as_gone(): void {

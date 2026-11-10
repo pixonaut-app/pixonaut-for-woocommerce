@@ -626,7 +626,7 @@
 	margin: 8px 0 0;
 }
 
-#pixonaut_product_data .pixonaut-picture-view {
+#pixonaut_product_data .pixonaut-picture-view:not(.pixonaut-picture-card) {
 	margin: 0 12px 12px;
 }
 
