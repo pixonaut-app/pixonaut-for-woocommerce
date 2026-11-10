@@ -890,6 +890,8 @@ declare interface FormSchemaGroup {
  *  change to either caller's model instead of failing on it. */
 declare interface FormSchemaLayer {
     id: string;
+    /** The author's name for it; `unknown`, as `description` is. */
+    name?: unknown;
     type?: string;
     props?: Record<string, FormSchemaProp | undefined>;
     /** Beside `props` rather than in it, because it belongs to no one layer
