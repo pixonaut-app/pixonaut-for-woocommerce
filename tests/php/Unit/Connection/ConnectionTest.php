@@ -132,6 +132,7 @@ final class ConnectionTest extends TestCase {
 		Functions\when( 'get_bloginfo' )->justReturn( 'Acme Shop' );
 		Functions\when( 'wp_strip_all_tags' )->returnArg();
 		Functions\when( '__' )->returnArg();
+		Functions\when( 'number_format_i18n' )->alias( static fn ( float $number, int $decimals = 0 ): string => number_format( $number, $decimals ) );
 		Functions\when( 'esc_url' )->returnArg();
 		Functions\when( 'update_option' )->alias(
 			function ( string $name, mixed $value ): bool {
