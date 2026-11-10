@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use LogicException;
 use Pixonaut\WooCommerce\Schema;
 use WC_Product;
 use WC_Product_Attribute;
@@ -51,6 +52,21 @@ final class SplitListing {
 	 * The global attributes, by id, whose values are listed as their own products by default.
 	 */
 	public const OPTION = Schema::SPLIT_ATTRIBUTES_OPTION;
+
+	/**
+	 * Forgets a deleted attribute's default, however it was deleted: the
+	 * attribute screens, the REST API or WP-CLI.
+	 */
+	public static function register(): void {
+		add_action( 'woocommerce_attribute_deleted', array( self::class, 'forget_attribute' ) );
+	}
+
+	/**
+	 * @param int $attribute_id The deleted attribute.
+	 */
+	public static function forget_attribute( int $attribute_id ): void {
+		self::set_attribute_default( $attribute_id, false );
+	}
 
 	/**
 	 * @return list<string> Every choice a product has for an attribute.
@@ -138,6 +154,35 @@ final class SplitListing {
 			}
 		}
 		return $following;
+	}
+
+	/**
+	 * Drops a product's choices for the attributes it no longer has, so one
+	 * added back starts on Auto. Nothing is written when none is dropped.
+	 *
+	 * @param WC_Product $product A product.
+	 */
+	public static function forget_removed_attributes( WC_Product $product ): void {
+		$config = ProductConfig::stored_on( $product );
+		if ( array() === $config->split_listing ) {
+			return;
+		}
+		$ids = array();
+		foreach ( $product->get_attributes() as $attribute ) {
+			if ( $attribute instanceof WC_Product_Attribute && $attribute->is_taxonomy() ) {
+				$ids[] = $attribute->get_id();
+			}
+		}
+		$kept = array_intersect_key( $config->split_listing, array_flip( $ids ) );
+		if ( $kept === $config->split_listing ) {
+			return;
+		}
+		try {
+			$config->with_split_listing( $kept )->save_to( $product );
+		} catch ( LogicException $e ) {
+			// A newer plugin version's configuration is kept as it is.
+			return;
+		}
 	}
 
 	/**

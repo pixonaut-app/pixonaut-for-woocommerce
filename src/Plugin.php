@@ -94,6 +94,7 @@ use Pixonaut\WooCommerce\Catalogue\PictureRunner;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
 use Pixonaut\WooCommerce\Catalogue\Purchasability;
+use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Catalogue\StandingRows;
 use Pixonaut\WooCommerce\Cart\AddToCart;
 use Pixonaut\WooCommerce\Cart\CheckoutCheck;
@@ -416,6 +417,7 @@ final class Plugin {
 		( new CartEditRoute( $this->cart_edit(), $this->labels() ) )->register();
 		$this->hosted_correction()->register();
 		( new Purchasability() )->register();
+		SplitListing::register();
 		$this->product_recheck()->register();
 		( new VariantWatch( $this->product_recheck() ) )->register();
 		( new TrashedProducts( $this->notices(), $this->product_recheck() ) )->register();

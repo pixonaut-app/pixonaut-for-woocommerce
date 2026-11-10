@@ -43,6 +43,7 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 		wp_set_current_user( $user );
 		$this->fields = new SplitListingFields( Templates::for_plugin( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' ) );
 		$this->fields->register();
+		SplitListing::register();
 		$this->attributes[ self::PICTURE ] = $this->attribute( self::PICTURE, array( 'Med bild', 'Utan bild' ) );
 		$this->attributes[ self::SIZE ]    = $this->attribute( self::SIZE, array( '30x40', '50x70' ) );
 	}
@@ -132,6 +133,26 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 		do_action( 'woocommerce_process_product_meta', $product->get_id() );
 
 		$this->assertSame( array( $this->attributes[ self::PICTURE ] => SplitListing::ON ), $this->stored( $product )->split_listing );
+	}
+
+	public function test_a_product_saved_without_an_attribute_forgets_its_choice(): void {
+		$product = $this->poster();
+		$this->choose(
+			$product,
+			array(
+				$this->attributes[ self::PICTURE ] => SplitListing::ON,
+				$this->attributes[ self::SIZE ]    => SplitListing::OFF,
+			)
+		);
+		$fresh = $this->fresh( $product );
+		$fresh->set_attributes( array( $this->product_attribute( self::SIZE, true ) ) );
+		$fresh->save();
+		// Its last row for Bild removed: no row of it, and no nonce with it, is posted.
+		$_POST = array();
+
+		do_action( 'woocommerce_process_product_meta', $product->get_id() );
+
+		$this->assertSame( array( $this->attributes[ self::SIZE ] => SplitListing::OFF ), $this->stored( $product )->split_listing );
 	}
 
 	public function test_saving_unchanged_choices_stores_no_configuration(): void {

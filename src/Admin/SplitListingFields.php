@@ -75,7 +75,6 @@ final class SplitListingFields {
 		add_action( 'woocommerce_after_edit_attribute_fields', array( $this, 'render_edit' ) );
 		add_action( 'woocommerce_attribute_added', array( $this, 'save_attribute' ) );
 		add_action( 'woocommerce_attribute_updated', array( $this, 'save_attribute' ) );
-		add_action( 'woocommerce_attribute_deleted', array( $this, 'forget_attribute' ) );
 		add_action( 'woocommerce_after_product_attribute_settings', array( $this, 'render_row' ), 10, 2 );
 		add_action( 'woocommerce_process_product_meta', array( $this, 'save_product' ), self::SAVE_PRIORITY );
 		foreach ( array_keys( self::AJAX_SAVES ) as $action ) {
@@ -105,13 +104,6 @@ final class SplitListingFields {
 	}
 
 	/**
-	 * @param int $attribute_id The deleted attribute.
-	 */
-	public function forget_attribute( int $attribute_id ): void {
-		SplitListing::set_attribute_default( $attribute_id, false );
-	}
-
-	/**
 	 * Prints the control on a global attribute's row.
 	 *
 	 * @param mixed $attribute The row's attribute.
@@ -137,12 +129,18 @@ final class SplitListingFields {
 	}
 
 	/**
-	 * Saves the rows' choices with the product.
+	 * Saves the rows' choices with the product, then drops those of the
+	 * attributes it no longer has: with its last global attribute removed,
+	 * no row, and so no choice, is posted.
 	 *
 	 * @param int $product_id The product.
 	 */
 	public function save_product( int $product_id ): void {
 		$this->save_choices( $product_id, $_POST ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- save_choices() checks the rows' nonce.
+		$product = wc_get_product( $product_id );
+		if ( $product instanceof WC_Product ) {
+			SplitListing::forget_removed_attributes( $product );
+		}
 	}
 
 	/**
