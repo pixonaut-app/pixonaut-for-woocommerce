@@ -262,9 +262,29 @@ describe('returnShopParts', () => {
 		returnShopParts(shop, container);
 
 		expect(form.firstElementChild).toBe(shop.options);
-		expect(container.nextElementSibling).toBe(shop.cartRow);
+		// The cart row's parts stand in the form themselves, in their order.
+		expect(shop.cartRow.isConnected).toBe(false);
+		expect(shop.rowParts.length).toBeGreaterThan(0);
+		let next = container.nextElementSibling;
+		for (const part of shop.rowParts) {
+			expect(next).toBe(part);
+			next = next?.nextElementSibling ?? null;
+		}
 		expect(slotOf('options')).toBeNull();
 		expect(slotOf('cart')).toBeNull();
+	});
+
+	it('gathers the cart row again for the next designer', () => {
+		const { form, container, gathered } = printedPage();
+		const shop = gathered as NonNullable<typeof gathered>;
+		const target = document.querySelector(
+			'#pixonaut-form-front',
+		) as HTMLElement;
+		printShopParts(shop, target, form);
+		returnShopParts(shop, container);
+
+		expect(shopStepOptions(shop).lastStepContent).toBe(shop.cartRow);
+		expect(Array.from(shop.cartRow.children)).toEqual(shop.rowParts);
 	});
 
 	it('puts back parts a designer gave back beside a printed form it replaced', () => {
@@ -286,6 +306,31 @@ describe('returnShopParts', () => {
 		returnShopParts(shop, container);
 
 		expect(form.firstElementChild).toBe(shop.options);
+		expect(shop.cartRow.isConnected).toBe(false);
+		expect(container.nextElementSibling).toBe(shop.rowParts[0]);
+	});
+
+	it('puts the parts of a row gathered beside the form back one by one, and gathers them again', () => {
+		const { container, gathered } = printedPage([]);
+		const shop = gathered as NonNullable<typeof gathered>;
+		expect(container.nextElementSibling).toBe(shop.cartRow);
+
+		returnShopParts(shop, container);
+
+		expect(shop.cartRow.isConnected).toBe(false);
+		expect(container.nextElementSibling).toBe(shop.rowParts[0]);
+
+		expect(shopStepOptions(shop).lastStepContent).toBe(shop.cartRow);
+		expect(container.nextElementSibling).toBe(shop.cartRow);
+		expect(Array.from(shop.cartRow.children)).toEqual(shop.rowParts);
+	});
+
+	it('leaves a row beside the form that a designer is about to take', () => {
+		const { container, gathered } = printedPage([]);
+		const shop = gathered as NonNullable<typeof gathered>;
+
+		returnShopParts(shop, container, new Set([shop.cartRow]));
+
 		expect(container.nextElementSibling).toBe(shop.cartRow);
 	});
 

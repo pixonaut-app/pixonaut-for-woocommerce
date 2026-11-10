@@ -423,8 +423,21 @@ final class Storefront {
 				'note'       => $this->labels->get( Labels::PREVIEW_NOTE, array( 'product_id' => $designer->product->get_id() ) ),
 				'loading'    => $this->labels->get( Labels::DESIGNER_LOADING, array( 'product_id' => $designer->product->get_id() ) ),
 				'layouts'    => $this->layouts( $designer ),
+				'images'     => self::image_ids( $designer->product ),
 			)
 		);
+	}
+
+	/**
+	 * The product's own images, its featured image first and then its
+	 * gallery's, which the preview shows when its designer cannot load.
+	 *
+	 * @param WC_Product $product The product.
+	 * @return int[] Attachment ids.
+	 */
+	private static function image_ids( WC_Product $product ): array {
+		$ids = array_map( 'intval', array_merge( array( $product->get_image_id() ), $product->get_gallery_image_ids() ) );
+		return array_values( array_unique( array_filter( $ids, static fn ( int $id ): bool => $id > 0 ) ) );
 	}
 
 	/**

@@ -15,7 +15,7 @@ product.
 
 | Template | Printed | Holds |
 | --- | --- | --- |
-| `storefront/preview.php` | In place of the gallery: the classic `woocommerce_show_product_images`, or the output of the `woocommerce/product-image-gallery` or `woocommerce/product-gallery` block (product from the block's `postId` context) | `.pixonaut-preview` with a `.pixonaut-preview__frame` per side holding `#pixonaut-preview-<side>`, a `.pixonaut-spinner[role=status]` over it (label `designer_loading`), the mark target `#pixonaut-mark-<side>` under it and, on a blank, the views strip `#pixonaut-views-<side>`; then `p.pixonaut-preview__note` (label `preview_note`). See [Server-rendered layout](#server-rendered-layout) |
+| `storefront/preview.php` | In place of the gallery: the classic `woocommerce_show_product_images`, or the output of the `woocommerce/product-image-gallery` or `woocommerce/product-gallery` block (product from the block's `postId` context) | `.pixonaut-preview` with a `.pixonaut-preview__frame` per side holding `#pixonaut-preview-<side>`, a `.pixonaut-spinner[role=status]` over it (label `designer_loading`), the mark target `#pixonaut-mark-<side>` under it and, on a blank, the views strip `#pixonaut-views-<side>`; then `.pixonaut-preview__images`, hidden, holding the product's featured and gallery images (see [A designer that cannot load](#a-designer-that-cannot-load)), and `p.pixonaut-preview__note` (label `preview_note`). See [Server-rendered layout](#server-rendered-layout) |
 | `storefront/form.php` | At `woocommerce_before_add_to_cart_button`, inside the add-to-cart form | `.pixonaut-form` with `#pixonaut-form-<side>` per side, the mount options in `data-pixonaut-mounts`, the blank variant in `data-pixonaut-variant` (see [Views and variants](#views-and-variants)) or, on a variable product, `data-pixonaut-variations` (see [Variations](#variations)), a `.pixonaut-form__placeholder` (`storefront/form-placeholder.php`) in each `#pixonaut-form-<side>` and the server's reads in `script.pixonaut-reads` (see [Server-rendered layout](#server-rendered-layout)), and a hidden `pixonaut_designs[<side>]` field per side; in the checkbox approval mode, `.pixonaut-approval` with the `pixonaut_approve` box (`.pixonaut-approval__box`) in its `label` a `.pixonaut-approval__proof` button per side (`data-pixonaut-side`), the label's linked word (a label that links none has them after it instead, under a block theme with its button class, as the side tabs) and an empty, hidden `p.pixonaut-approval__error[role=alert]` (see [Checkbox approval](#checkbox-approval)); with more than one side, the side tabs (see [Sides](#sides)); the theme presets in `data-pixonaut-look` (see [Theme look](#theme-look)) and, on a page printed at its opening variation's price, the product's own price in `data-pixonaut-product-price` and the attribute values the printed price is for in `data-pixonaut-opening-choice` (see [Price](#price)) |
 
 Override either by copying it to `yourtheme/woocommerce/pixonaut/storefront/`.
@@ -739,11 +739,15 @@ parts inside the designer's form with the SDK's `optionsStep` and
 
 The elements are moved, not copied, so the listeners on them keep working,
 and they stay inside the add-to-cart form, so WooCommerce's handlers
-delegated from the form still see them. While `.pixonaut-cart-row` is back
-in the form it is `display: contents`, laid out as its parts were. The
-script destroys the designer, which puts every part back, whenever it hides
-the designer: a variation bought without a design, or one that cannot be
-personalised. The next variation that can be personalised mounts it again
+delegated from the form still see them. While `.pixonaut-cart-row` stands
+after `.pixonaut-form` before the designer takes it, it is
+`display: contents`, laid out as its parts were. The script destroys the
+designer, which puts every part back, whenever it hides the designer: a
+variation bought without a design, or one that cannot be personalised. The
+cart row's parts then go back one by one after `.pixonaut-form`, without
+`.pixonaut-cart-row` around them, so a block theme's rules for the
+add-to-cart form's own children lay out the quantity and the button as on
+any other product. The next variation that can be personalised mounts it again
 on the customer's values. With several sides the parts stay where the theme
 put them. A mount filter can remove either option.
 
@@ -1136,6 +1140,14 @@ SRI, or the CDN unreachable), it reports `sdk_load` for the first side and
 shows the same label, but the next add to cart tries again. Any other
 failure to mount (a network error) shows the label without a report and is
 tried again too.
+
+While the form shows the label, the preview is marked `is-unavailable`: its
+sides are hidden, `.pixonaut-preview__images` shows the product's own images
+(its featured image across the preview and its gallery's under it, or
+WooCommerce's placeholder), and the note under the preview is hidden. The
+quantity and **Add to cart** stand in the add-to-cart form as on any other
+product, under the label. A designer that mounts again shows the sides and
+the note again.
 
 The route is public and acts on one report per product, side and reason an
 hour. An `unknown_placement` report is checked with

@@ -107,6 +107,6 @@ section is part of the system report that **Get system report** copies.
 | `storefront/form.php` | 0.1.0 | `woocommerce/pixonaut/storefront/form.php` | The personalisation form, at the top of a personalised product's add-to-cart form. |
 | `storefront/in-cart.php` | 0.1.0 | `woocommerce/pixonaut/storefront/in-cart.php` | An item that is in the cart, in place of the add-to-cart form on its product page: its options and quantity, a button changing its design, a button to the cart and a link to make another. |
 | `storefront/personalised-notice.php` | 0.1.0 | `woocommerce/pixonaut/storefront/personalised-notice.php` | The soft note above the add-to-cart row saying this is the customer's design, with a button changing it. |
-| `storefront/preview.php` | 0.1.0 | `woocommerce/pixonaut/storefront/preview.php` | The live preview of a personalised product, in place of its gallery. |
+| `storefront/preview.php` | 1.4.0 | `woocommerce/pixonaut/storefront/preview.php` | The live preview of a personalised product, in place of its gallery. |
 
 <!-- END GENERATED templates -->

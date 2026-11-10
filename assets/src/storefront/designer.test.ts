@@ -173,7 +173,7 @@ describe('ProductDesigner', () => {
 		expect(document.querySelector('.pixonaut-placeholder__slot')).toBeNull();
 	});
 
-	it('puts the cart row back in the form before mounting when a mount filter keeps it out', async () => {
+	it("puts the cart row's parts back in the form before mounting when a mount filter keeps it out", async () => {
 		addFilter(
 			MOUNT_OPTIONS_FILTER,
 			NAMESPACE,
@@ -199,12 +199,12 @@ describe('ProductDesigner', () => {
 		await designer.mount();
 
 		expect(sdk.mount.mock.calls[0]?.[0]).not.toHaveProperty('lastStepContent');
-		const row = document.querySelector('.pixonaut-cart-row');
-		expect(page.container.nextElementSibling).toBe(row);
-		expect(row?.contains(page.button)).toBe(true);
+		// Its parts stand in the form themselves, as the theme laid them out.
+		expect(document.querySelector('.pixonaut-cart-row')).toBeNull();
+		expect(page.container.nextElementSibling).toBe(page.button);
 	});
 
-	it('puts the cart row back in the form when the designer cannot load', async () => {
+	it("puts the cart row's parts back in the form when the designer cannot load", async () => {
 		const page = productPage();
 		document
 			.getElementById('pixonaut-form-front')
@@ -223,9 +223,8 @@ describe('ProductDesigner', () => {
 
 		await designer.mount();
 
-		const row = document.querySelector('.pixonaut-cart-row');
-		expect(page.container.nextElementSibling).toBe(row);
-		expect(row?.contains(page.button)).toBe(true);
+		expect(document.querySelector('.pixonaut-cart-row')).toBeNull();
+		expect(page.container.nextElementSibling).toBe(page.button);
 		expect(document.querySelector('.pixonaut-placeholder__slot')).toBeNull();
 	});
 
@@ -1034,6 +1033,30 @@ describe('ProductDesigner', () => {
 		expect(sent).toEqual([PROOF.proofToken]);
 		expect(message?.hidden).toBe(true);
 		expect(report).not.toHaveBeenCalled();
+	});
+
+	it('shows the product’s images in the preview while the designer cannot load', async () => {
+		const sdk = fakeSdk();
+		sdk.mount.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+		const { form, button } = start(sdk);
+		submitted(form);
+		const preview = document.querySelector<HTMLElement>('.pixonaut-preview');
+		const images = preview?.querySelector<HTMLElement>(
+			'.pixonaut-preview__images',
+		);
+		const note = preview?.querySelector<HTMLElement>('.pixonaut-preview__note');
+
+		button.click();
+		await settle();
+		expect(preview?.classList.contains('is-unavailable')).toBe(true);
+		expect(images?.hidden).toBe(false);
+		expect(note?.hidden).toBe(true);
+
+		button.click();
+		await settle();
+		expect(preview?.classList.contains('is-unavailable')).toBe(false);
+		expect(images?.hidden).toBe(true);
+		expect(note?.hidden).toBe(false);
 	});
 
 	it('reports an SDK script that did not load and tries it again', async () => {
