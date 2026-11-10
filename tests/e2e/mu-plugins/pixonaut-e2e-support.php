@@ -451,6 +451,11 @@ add_action(
 						'type'  => 'array',
 						'items' => array( 'type' => 'string' ),
 					),
+					// Values of a second variation attribute, `finish`, after `size`; each variation sells any finish.
+					'finishes'      => array(
+						'type'  => 'array',
+						'items' => array( 'type' => 'string' ),
+					),
 					// A stored configuration by `size` value, for a variation that overrides its product's.
 					'overrides'     => array(
 						'type' => 'object',
@@ -485,7 +490,16 @@ add_action(
 						$attribute->set_options( $sizes );
 						$attribute->set_visible( true );
 						$attribute->set_variation( true );
-						$product->set_attributes( array( $attribute ) );
+						$attributes = array( $attribute );
+						if ( is_array( $request['finishes'] ) ) {
+							$finish = new WC_Product_Attribute();
+							$finish->set_name( 'finish' );
+							$finish->set_options( array_map( 'strval', $request['finishes'] ) );
+							$finish->set_visible( true );
+							$finish->set_variation( true );
+							$attributes[] = $finish;
+						}
+						$product->set_attributes( $attributes );
 						if ( is_string( $request['default'] ) ) {
 							$product->set_default_attributes( array( 'size' => $request['default'] ) );
 						}

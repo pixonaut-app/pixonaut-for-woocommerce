@@ -13,6 +13,7 @@ import { markThemeLook, readThemeLook, themeMountOptions } from './theme-look';
 import './storefront.css';
 import './form-placeholder.css';
 import './attribute-swatches.css';
+import './attribute-rows.css';
 
 domReady(() => {
 	const settings = readSettings();

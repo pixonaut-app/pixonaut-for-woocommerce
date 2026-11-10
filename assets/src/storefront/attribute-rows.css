@@ -1,0 +1,111 @@
+/* A classic attribute row the designer's form holds, printed or drawn
+ * (`attributePart()` moves it into a table of its own): laid out the same
+ * way on every theme, as the designer lays out its own fields. The label
+ * stands over the row, with WooCommerce's Clear link at its end, and the
+ * field (the theme's menu, or the swatches standing in for it) takes the
+ * whole row under them, whether or not the row holds the link: the form
+ * prints the link in its last row alone. Themes lay out their variations
+ * table their own way, some as a grid that puts the link in the label's
+ * row and the field in whatever cell is left, so the placement here wins
+ * over theirs. Back in the variations table, outside the form container,
+ * the row is the theme's again. */
+.pixonaut-form table.pixonaut-attribute,
+.pixonaut-form table.pixonaut-attribute > tbody {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's table layout must not move the row's parts. */
+	display: block !important;
+	width: 100%;
+	/* biome-ignore lint/complexity/noImportantStyles: the designer spaces its items, whatever margin a theme gives a table. */
+	margin: 0 !important;
+	border: 0;
+}
+
+.pixonaut-form table.pixonaut-attribute tr {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's table layout must not move the row's parts. */
+	display: grid !important;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 0.5em 1em;
+	align-items: baseline;
+}
+
+.pixonaut-form table.pixonaut-attribute th {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's table layout must not move the row's parts. */
+	display: block !important;
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's table layout must not move the row's parts. */
+	grid-area: 1 / 1 !important;
+	/* biome-ignore lint/complexity/noImportantStyles: the row's gap alone spaces the label from the field, whatever padding a theme gives the cell. */
+	padding: 0 !important;
+	border: 0;
+	text-align: start;
+}
+
+/* The cell's parts are laid out in the row's grid. */
+.pixonaut-form table.pixonaut-attribute td {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's table layout must not move the row's parts. */
+	display: contents !important;
+}
+
+.pixonaut-form table.pixonaut-attribute td > * {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's table layout must not move the row's parts. */
+	grid-column: 1 / -1 !important;
+	min-width: 0;
+}
+
+/* The theme's menu, which a theme may hold to part of its cell. */
+.pixonaut-form table.pixonaut-attribute td > select {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's width for the menu must not keep it off the whole row. */
+	width: 100% !important;
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's width for the menu must not keep it off the whole row. */
+	max-width: none !important;
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's width for the menu must not keep it off the whole row. */
+	margin-inline: 0 !important;
+}
+
+.pixonaut-form table.pixonaut-attribute td > .reset_variations {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's table layout must not move the row's parts. */
+	grid-area: 1 / 2 !important;
+	margin: 0;
+}
+
+/* An attribute in a step of its own, printed or drawn: the step's heading
+ * names it, so WooCommerce's label of its field is kept for assistive
+ * technology alone. The Clear link stays. Back in the variations table,
+ * outside the form container, the label shows again. */
+.pixonaut-form [data-pixonaut-own-step] th.label,
+.pixonaut-form
+	[data-pixonaut-own-step]
+	.wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute-name {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* With no label beside it, the Clear link of an attribute in a step of its
+ * own (marked on the printed form's slot, or on the part the designer
+ * draws) goes under the field, at its end, so the field sits right under the
+ * step's heading. While WooCommerce hides the link (nothing is chosen), it
+ * holds no room there. */
+.pixonaut-form
+	:is(
+		[data-pixonaut-own-step] > table.pixonaut-attribute,
+		table.pixonaut-attribute[data-pixonaut-own-step]
+	)
+	td
+	> .reset_variations {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's table layout must not move the row's parts. */
+	grid-area: 2 / 2 !important;
+}
+
+.pixonaut-form
+	:is(
+		[data-pixonaut-own-step] > table.pixonaut-attribute,
+		table.pixonaut-attribute[data-pixonaut-own-step]
+	)
+	td
+	> .reset_variations[style*="visibility: hidden"] {
+	display: none;
+}
