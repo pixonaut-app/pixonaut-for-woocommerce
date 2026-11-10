@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T19:15:59+00:00\n"
+"POT-Creation-Date: 2026-11-10T21:09:19+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -48,7 +48,7 @@ msgstr ""
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
 #: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:186
-#: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:38
+#: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:40
 msgid "Pixonaut"
 msgstr "Pixonaut"
 
@@ -810,7 +810,7 @@ msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr ""
 "De pagina met de variaties van elk variabel product, vanaf 1, %d per pagina."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:249
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:265
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -1026,7 +1026,7 @@ msgstr ""
 msgid "The store's products could not be read."
 msgstr "De producten van de winkel konden niet worden gelezen."
 
-#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:90
+#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:91
 msgid "No simple or variable product has this id."
 msgstr "Er is geen simpel of variabel product met deze ID."
 
@@ -1153,11 +1153,11 @@ msgstr "Hoeveel bestellingen er overeenkomen, over alle pagina's."
 msgid "The `before` that asks for the next page; null when there is none."
 msgstr "De `before` die de volgende pagina opvraagt; null als die er niet is."
 
-#: src/Abilities/ProductLinks.php:103
+#: src/Abilities/ProductLinks.php:104
 msgid "No simple or variable product or variation has this id."
 msgstr "Er is geen simpel of variabel product en geen variatie met deze ID."
 
-#: src/Abilities/ProductLinks.php:245
+#: src/Abilities/ProductLinks.php:261
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -1166,7 +1166,7 @@ msgstr ""
 "product te volgen, waarvan ze dan de instellingen geeft; false voor een "
 "product."
 
-#: src/Abilities/ProductLinks.php:253
+#: src/Abilities/ProductLinks.php:269
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -3165,27 +3165,27 @@ msgstr ""
 "er een andere is gekozen."
 
 #. translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page.
-#: src/Admin/ShowcaseField.php:270
+#: src/Admin/ShowcaseField.php:271
 #, php-format
 msgid "%s, on the photo of the variant sold"
 msgstr "%s, op de foto van de verkochte variant"
 
 #. translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page.
-#: src/Admin/ShowcaseField.php:274
+#: src/Admin/ShowcaseField.php:275
 msgid "No longer on the blank"
 msgstr "Niet meer op het blanco product"
 
 #. translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page.
-#: src/Admin/ShowcaseField.php:276
+#: src/Admin/ShowcaseField.php:277
 msgid "The photo chosen before"
 msgstr "De eerder gekozen foto"
 
 #. translators: A choice of what a variation's image is drawn on: whatever its product's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:301
+#: src/Admin/ShowcaseField.php:302
 msgid "As the product image"
 msgstr "Zoals de productafbeelding"
 
-#: src/Admin/ShowcaseField.php:302
+#: src/Admin/ShowcaseField.php:303
 msgid ""
 "The view and photo the product image is drawn on, in this variation’s colour "
 "where the view has it."
@@ -3194,12 +3194,12 @@ msgstr ""
 "kleur van deze variatie als het aanzicht die heeft."
 
 #. translators: Accessible name of the choices of what a variation's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:317
+#: src/Admin/ShowcaseField.php:318
 msgid "What the variation image is drawn on"
 msgstr "Waarop de variatieafbeelding wordt aangemaakt"
 
 #. translators: 1: a view of the blank product, e.g. "Front"; 2: which of its photos, e.g. 2. Admin product page.
-#: src/Admin/ShowcaseField.php:373
+#: src/Admin/ShowcaseField.php:374
 #, php-format
 msgid "%1$s, photo %2$d"
 msgstr "%1$s, foto %2$d"
@@ -3304,6 +3304,17 @@ msgid ""
 msgstr ""
 "Klanten kunnen niet alles van %1$s kopen: %2$s. Kies de variant in de "
 "Pixonaut-velden."
+
+#. translators: Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says, which gives no size this variation can be printed at. Admin product page.
+#: src/Admin/VariationSizeField.php:153
+msgid "As the product (no size fits this variation)"
+msgstr "Zoals het product (geen formaat past bij deze variatie)"
+
+#. translators: %s: the print sizes, e.g. "300 × 400 mm". Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says. Admin product page.
+#: src/Admin/VariationSizeField.php:157
+#, php-format
+msgid "As the product (%s)"
+msgstr "Zoals het product (%s)"
 
 #. translators: 1: product name of the order line, 2: what the customer asked.
 #: src/Approval/ChangesRequested.php:93
@@ -3715,19 +3726,19 @@ msgstr "Altijd de vorm van het sjabloon"
 msgid "Always the chosen print size’s shape"
 msgstr "Altijd de vorm van het gekozen drukformaat"
 
-#: src/Catalogue/InvalidReason.php:115
+#: src/Catalogue/InvalidReason.php:132
 msgid "Choose a template."
 msgstr "Kies een sjabloon."
 
-#: src/Catalogue/InvalidReason.php:117
+#: src/Catalogue/InvalidReason.php:134
 msgid "Choose where on the blank the design is printed."
 msgstr "Kies waar op het blanco product het ontwerp wordt gedrukt."
 
-#: src/Catalogue/InvalidReason.php:119
+#: src/Catalogue/InvalidReason.php:136
 msgid "The blank no longer exists in Pixonaut."
 msgstr "Het blanco product bestaat niet meer in Pixonaut."
 
-#: src/Catalogue/InvalidReason.php:121
+#: src/Catalogue/InvalidReason.php:138
 msgid ""
 "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or "
 "choose another blank."
@@ -3735,7 +3746,7 @@ msgstr ""
 "Het blanco product is verwijderd in Pixonaut. Zet het terug in de Pixonaut-"
 "studio of kies een ander blanco product."
 
-#: src/Catalogue/InvalidReason.php:123
+#: src/Catalogue/InvalidReason.php:140
 msgid ""
 "The blank no longer has this placement, or Pixonaut cannot size a print for "
 "it."
@@ -3743,11 +3754,11 @@ msgstr ""
 "Het blanco product heeft deze drukpositie niet meer, of Pixonaut kan er geen "
 "drukformaat voor bepalen."
 
-#: src/Catalogue/InvalidReason.php:125
+#: src/Catalogue/InvalidReason.php:142
 msgid "The template no longer exists in Pixonaut."
 msgstr "Het sjabloon bestaat niet meer in Pixonaut."
 
-#: src/Catalogue/InvalidReason.php:127
+#: src/Catalogue/InvalidReason.php:144
 msgid ""
 "The template is paused or deleted in Pixonaut. Make it live again, or choose "
 "another template."
@@ -3756,23 +3767,23 @@ msgstr ""
 "kies een ander sjabloon."
 
 #. translators: %d: most sides a product can have.
-#: src/Catalogue/InvalidReason.php:131
+#: src/Catalogue/InvalidReason.php:148
 #, php-format
 msgid "A product has at most %d sides."
 msgstr "Een product heeft maximaal %d zijden."
 
-#: src/Catalogue/InvalidReason.php:135
+#: src/Catalogue/InvalidReason.php:152
 msgid "Two sides use the same placement. Each placement can be one side only."
 msgstr ""
 "Twee zijden gebruiken dezelfde drukpositie. Elke drukpositie kan maar één "
 "zijde zijn."
 
-#: src/Catalogue/InvalidReason.php:137
+#: src/Catalogue/InvalidReason.php:154
 msgid "Two sides have the same key. Give each side its own."
 msgstr ""
 "Twee zijden hebben dezelfde sleutel. Geef elke zijde een eigen sleutel."
 
-#: src/Catalogue/InvalidReason.php:139
+#: src/Catalogue/InvalidReason.php:156
 msgid ""
 "A custom print size needs a width and height in millimetres, both above zero."
 msgstr ""
@@ -3780,12 +3791,12 @@ msgstr ""
 "beide groter dan nul."
 
 #. translators: %d: most print sizes one side can offer.
-#: src/Catalogue/InvalidReason.php:143
+#: src/Catalogue/InvalidReason.php:160
 #, php-format
 msgid "A side offers at most %d print sizes."
 msgstr "Een zijde biedt maximaal %d drukformaten."
 
-#: src/Catalogue/InvalidReason.php:147
+#: src/Catalogue/InvalidReason.php:164
 msgid ""
 "Add a print size in millimetres. Without a blank there is no placement to "
 "take one from."
@@ -3793,15 +3804,40 @@ msgstr ""
 "Voeg een drukformaat in millimeters toe. Zonder blanco product is er geen "
 "drukpositie om er een van over te nemen."
 
-#: src/Catalogue/InvalidReason.php:149
+#: src/Catalogue/InvalidReason.php:166
 msgid "The print size is larger than the placement can print."
 msgstr "Het drukformaat is groter dan de drukpositie kan drukken."
 
-#: src/Catalogue/InvalidReason.php:151
+#: src/Catalogue/InvalidReason.php:168
 msgid "The print size does not match the template's aspect ratio."
 msgstr "Het drukformaat past niet bij de beeldverhouding van het sjabloon."
 
-#: src/Catalogue/InvalidReason.php:153
+#: src/Catalogue/InvalidReason.php:170
+msgid ""
+"The placement is printed across its whole print area: the print size must be "
+"that area."
+msgstr ""
+"De drukpositie wordt over het hele drukgebied bedrukt: het drukformaat moet "
+"gelijk zijn aan dat gebied."
+
+#: src/Catalogue/InvalidReason.php:172
+msgid ""
+"The template cannot be printed at the print area of this variation's blank "
+"variant. Choose a template that fits, or stop selling the variation."
+msgstr ""
+"Het sjabloon kan niet worden gedrukt op het drukgebied van de variant van "
+"het blanco product van deze variatie. Kies een sjabloon dat past, of verkoop "
+"de variatie niet meer."
+
+#: src/Catalogue/InvalidReason.php:174
+msgid ""
+"The variation's print size has not been checked since the product changed. "
+"Update the product again."
+msgstr ""
+"Het drukformaat van de variatie is niet gecontroleerd sinds het product is "
+"gewijzigd. Werk het product opnieuw bij."
+
+#: src/Catalogue/InvalidReason.php:176
 msgid ""
 "Pixonaut could not check the configuration. Check the connection, then "
 "update the product again."
@@ -3809,7 +3845,7 @@ msgstr ""
 "Pixonaut kon de configuratie niet controleren. Controleer de koppeling en "
 "werk het product daarna opnieuw bij."
 
-#: src/Catalogue/InvalidReason.php:155
+#: src/Catalogue/InvalidReason.php:178
 msgid ""
 "Pixonaut would not make the design of a standing side. Check the side's "
 "template, placement and print size, then update the product again."
@@ -3818,7 +3854,7 @@ msgstr ""
 "sjabloon, de drukpositie en het drukformaat van de zijde en werk het product "
 "daarna opnieuw bij."
 
-#: src/Catalogue/InvalidReason.php:157
+#: src/Catalogue/InvalidReason.php:180
 msgid ""
 "Pixonaut would not make the design of a standing side: the store may not "
 "create and approve designs. Check the connection's permissions in the "
@@ -3828,7 +3864,7 @@ msgstr ""
 "geen ontwerpen aanmaken en goedkeuren. Controleer de rechten van de "
 "koppeling in de Pixonaut-studio en werk het product daarna opnieuw bij."
 
-#: src/Catalogue/InvalidReason.php:159
+#: src/Catalogue/InvalidReason.php:182
 msgid ""
 "The template of a standing side does not fit the placement at any of the "
 "blank's sizes, so none of them can be printed. Choose a template that fits."
@@ -3837,12 +3873,12 @@ msgstr ""
 "product op de drukpositie, dus geen ervan kan worden gedrukt. Kies een "
 "sjabloon dat past."
 
-#: src/Catalogue/InvalidReason.php:161
+#: src/Catalogue/InvalidReason.php:184
 msgid "Choose a blank, or a printshop that prints without one."
 msgstr ""
 "Kies een blanco product, of een drukkerij die zonder blanco product drukt."
 
-#: src/Catalogue/InvalidReason.php:163
+#: src/Catalogue/InvalidReason.php:186
 msgid ""
 "The configuration was saved by a newer version of Pixonaut for WooCommerce. "
 "Update the plugin."
@@ -3850,7 +3886,7 @@ msgstr ""
 "De configuratie is opgeslagen door een nieuwere versie van Pixonaut for "
 "WooCommerce. Werk de plugin bij."
 
-#: src/Catalogue/InvalidReason.php:165
+#: src/Catalogue/InvalidReason.php:188
 msgid "Pixonaut cannot print this configuration."
 msgstr "Pixonaut kan deze configuratie niet drukken."
 
@@ -8235,21 +8271,25 @@ msgstr "Naam, bijv. A3"
 
 #. translators: Screen reader label of the field naming a print size. Admin product page.
 #: templates/admin/product-side.php:55
+#: templates/admin/variation-print-size.php:54
 msgid "Label customers see"
 msgstr "Label dat klanten zien"
 
 #. translators: Screen reader label of the custom print size's width field. Admin product page.
 #: templates/admin/product-side.php:56
+#: templates/admin/variation-print-size.php:47
 msgid "Width in millimetres"
 msgstr "Breedte in millimeters"
 
 #. translators: Screen reader label of the custom print size's height field. Admin product page.
 #: templates/admin/product-side.php:58
+#: templates/admin/variation-print-size.php:51
 msgid "Height in millimetres"
 msgstr "Hoogte in millimeters"
 
 #. translators: Unit after a custom print size's width and height: millimetres. Admin product page.
 #: templates/admin/product-side.php:59
+#: templates/admin/variation-print-size.php:53
 msgid "mm"
 msgstr "mm"
 
@@ -8568,11 +8608,11 @@ msgid "Show retired variants"
 msgstr "Niet meer leverbare varianten tonen"
 
 #. translators: Checkbox label on a variable product's variation panel: this variation uses its own personalisation settings. Admin product page.
-#: templates/admin/product-variation.php:42
+#: templates/admin/product-variation.php:44
 msgid "Override for this variation"
 msgstr "Overschrijven voor deze variatie"
 
-#: templates/admin/product-variation.php:45
+#: templates/admin/product-variation.php:47
 msgid ""
 "This variation is personalised as the product’s Pixonaut tab says. Tick to "
 "give it its own blank, sides, templates and settings."
@@ -8581,7 +8621,7 @@ msgstr ""
 "product aangeeft. Vink dit aan om de variatie een eigen blanco product, "
 "zijden, sjablonen en instellingen te geven."
 
-#: templates/admin/product-variation.php:46
+#: templates/admin/product-variation.php:48
 msgid ""
 "This variation uses its own configuration below, not the product’s Pixonaut "
 "tab."
@@ -8811,6 +8851,32 @@ msgstr ""
 #: templates/admin/variation-picture-view.php:20
 msgid "Variation image drawn on"
 msgstr "Variatieafbeelding aangemaakt op"
+
+#. translators: %s: the side's name, e.g. "Front". Label of a variation's print size field. Admin product page, variation options.
+#: templates/admin/variation-print-size.php:34
+#, php-format
+msgid "Print size: %s"
+msgstr "Drukformaat: %s"
+
+#. translators: Option in a variation's print size dropdown: enter a width and height for this variation alone. Admin product page.
+#: templates/admin/variation-print-size.php:42
+msgid "Custom size for this variation"
+msgstr "Aangepast formaat voor deze variatie"
+
+#. translators: Label of a custom print size's width field. Admin product page.
+#: templates/admin/variation-print-size.php:46
+msgid "Width"
+msgstr "Breedte"
+
+#. translators: Label of a custom print size's height field. Admin product page.
+#: templates/admin/variation-print-size.php:50
+msgid "Height"
+msgstr "Hoogte"
+
+#. translators: Placeholder of the field naming a print size, which customers see. Admin product page.
+#: templates/admin/variation-print-size.php:54
+msgid "Label, e.g. A4"
+msgstr "Label, bijv. A4"
 
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Email to the merchant.
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Plain text email to the merchant.
@@ -9371,12 +9437,6 @@ msgstr[1] "%s weergaven"
 
 #~ msgid "Custom size"
 #~ msgstr "Aangepast formaat"
-
-#~ msgid "Width"
-#~ msgstr "Breedte"
-
-#~ msgid "Height"
-#~ msgstr "Hoogte"
 
 #~ msgid "Starts selected"
 #~ msgstr "Standaard geselecteerd"

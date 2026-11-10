@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T19:15:59+00:00\n"
+"POT-Creation-Date: 2026-11-10T21:09:19+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -50,7 +50,7 @@ msgstr ""
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
 #: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:186
-#: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:38
+#: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:40
 msgid "Pixonaut"
 msgstr "Pixonaut"
 
@@ -790,7 +790,7 @@ msgstr "Sivu, alkaen 1:stä."
 msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr "Kunkin muunnelmatuotteen muunnelmien sivu, alkaen 1:stä, %d sivulla."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:249
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:265
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -1003,7 +1003,7 @@ msgstr ""
 msgid "The store's products could not be read."
 msgstr "Kaupan tuotteita ei voitu lukea."
 
-#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:90
+#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:91
 msgid "No simple or variable product has this id."
 msgstr ""
 "Millään yksinkertaisella tuotteella tai muunnelmatuotteella ei ole tätä "
@@ -1132,13 +1132,13 @@ msgstr "Montako tilausta vastaa hakua kaikilla sivuilla yhteensä."
 msgid "The `before` that asks for the next page; null when there is none."
 msgstr "`before`, jolla saa seuraavan sivun; null, kun sellaista ei ole."
 
-#: src/Abilities/ProductLinks.php:103
+#: src/Abilities/ProductLinks.php:104
 msgid "No simple or variable product or variation has this id."
 msgstr ""
 "Millään yksinkertaisella tuotteella, muunnelmatuotteella tai muunnelmalla ei "
 "ole tätä id:tä."
 
-#: src/Abilities/ProductLinks.php:245
+#: src/Abilities/ProductLinks.php:261
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -1146,7 +1146,7 @@ msgstr ""
 "Muunnelmalle: onko sillä omat asetukset sen sijaan, että se noudattaa "
 "tuotteensa asetuksia, jotka se muuten antaa; false tuotteelle."
 
-#: src/Abilities/ProductLinks.php:253
+#: src/Abilities/ProductLinks.php:269
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -3119,27 +3119,27 @@ msgstr ""
 "kuvaan, johon tuotesivu avautuu, kunnes toinen valitaan."
 
 #. translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page.
-#: src/Admin/ShowcaseField.php:270
+#: src/Admin/ShowcaseField.php:271
 #, php-format
 msgid "%s, on the photo of the variant sold"
 msgstr "%s, myytävän version kuvassa"
 
 #. translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page.
-#: src/Admin/ShowcaseField.php:274
+#: src/Admin/ShowcaseField.php:275
 msgid "No longer on the blank"
 msgstr "Ei enää pohjatuotteella"
 
 #. translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page.
-#: src/Admin/ShowcaseField.php:276
+#: src/Admin/ShowcaseField.php:277
 msgid "The photo chosen before"
 msgstr "Aiemmin valittu kuva"
 
 #. translators: A choice of what a variation's image is drawn on: whatever its product's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:301
+#: src/Admin/ShowcaseField.php:302
 msgid "As the product image"
 msgstr "Kuten tuotekuvassa"
 
-#: src/Admin/ShowcaseField.php:302
+#: src/Admin/ShowcaseField.php:303
 msgid ""
 "The view and photo the product image is drawn on, in this variation’s colour "
 "where the view has it."
@@ -3148,12 +3148,12 @@ msgstr ""
 "näkymässä on se."
 
 #. translators: Accessible name of the choices of what a variation's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:317
+#: src/Admin/ShowcaseField.php:318
 msgid "What the variation image is drawn on"
 msgstr "Mihin muunnelman kuva luodaan"
 
 #. translators: 1: a view of the blank product, e.g. "Front"; 2: which of its photos, e.g. 2. Admin product page.
-#: src/Admin/ShowcaseField.php:373
+#: src/Admin/ShowcaseField.php:374
 #, php-format
 msgid "%1$s, photo %2$d"
 msgstr "%1$s, kuva %2$d"
@@ -3257,6 +3257,17 @@ msgid ""
 msgstr ""
 "Asiakkaat eivät voi ostaa kaikkia tuotteen %1$s muunnelmia: %2$s. Valitse "
 "versio sen Pixonaut-kentissä."
+
+#. translators: Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says, which gives no size this variation can be printed at. Admin product page.
+#: src/Admin/VariationSizeField.php:153
+msgid "As the product (no size fits this variation)"
+msgstr "Tuotteen mukaan (mikään koko ei sovi tälle muunnelmalle)"
+
+#. translators: %s: the print sizes, e.g. "300 × 400 mm". Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says. Admin product page.
+#: src/Admin/VariationSizeField.php:157
+#, php-format
+msgid "As the product (%s)"
+msgstr "Tuotteen mukaan (%s)"
 
 #. translators: 1: product name of the order line, 2: what the customer asked.
 #: src/Approval/ChangesRequested.php:93
@@ -3652,19 +3663,19 @@ msgstr "Aina mallipohjan muoto"
 msgid "Always the chosen print size’s shape"
 msgstr "Aina valitun painokoon muoto"
 
-#: src/Catalogue/InvalidReason.php:115
+#: src/Catalogue/InvalidReason.php:132
 msgid "Choose a template."
 msgstr "Valitse mallipohja."
 
-#: src/Catalogue/InvalidReason.php:117
+#: src/Catalogue/InvalidReason.php:134
 msgid "Choose where on the blank the design is printed."
 msgstr "Valitse, mihin kohtaan pohjatuotetta suunnitelma painetaan."
 
-#: src/Catalogue/InvalidReason.php:119
+#: src/Catalogue/InvalidReason.php:136
 msgid "The blank no longer exists in Pixonaut."
 msgstr "Pohjatuotetta ei enää ole Pixonautissa."
 
-#: src/Catalogue/InvalidReason.php:121
+#: src/Catalogue/InvalidReason.php:138
 msgid ""
 "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or "
 "choose another blank."
@@ -3672,7 +3683,7 @@ msgstr ""
 "Pohjatuote on poistettu Pixonautissa. Palauta se Pixonaut-studiossa tai "
 "valitse toinen pohjatuote."
 
-#: src/Catalogue/InvalidReason.php:123
+#: src/Catalogue/InvalidReason.php:140
 msgid ""
 "The blank no longer has this placement, or Pixonaut cannot size a print for "
 "it."
@@ -3680,11 +3691,11 @@ msgstr ""
 "Pohjatuotteella ei enää ole tätä painokohtaa, tai Pixonaut ei pysty "
 "mitoittamaan painatusta sille."
 
-#: src/Catalogue/InvalidReason.php:125
+#: src/Catalogue/InvalidReason.php:142
 msgid "The template no longer exists in Pixonaut."
 msgstr "Mallipohjaa ei enää ole Pixonautissa."
 
-#: src/Catalogue/InvalidReason.php:127
+#: src/Catalogue/InvalidReason.php:144
 msgid ""
 "The template is paused or deleted in Pixonaut. Make it live again, or choose "
 "another template."
@@ -3693,23 +3704,23 @@ msgstr ""
 "käyttöön tai valitse toinen mallipohja."
 
 #. translators: %d: most sides a product can have.
-#: src/Catalogue/InvalidReason.php:131
+#: src/Catalogue/InvalidReason.php:148
 #, php-format
 msgid "A product has at most %d sides."
 msgstr "Puolia voi olla tuotteella enintään %d."
 
-#: src/Catalogue/InvalidReason.php:135
+#: src/Catalogue/InvalidReason.php:152
 msgid "Two sides use the same placement. Each placement can be one side only."
 msgstr ""
 "Kaksi puolta käyttää samaa painokohtaa. Kukin painokohta voi olla vain yhden "
 "puolen käytössä."
 
-#: src/Catalogue/InvalidReason.php:137
+#: src/Catalogue/InvalidReason.php:154
 msgid "Two sides have the same key. Give each side its own."
 msgstr ""
 "Kahdella puolella on sama avain. Anna jokaiselle puolelle oma avaimensa."
 
-#: src/Catalogue/InvalidReason.php:139
+#: src/Catalogue/InvalidReason.php:156
 msgid ""
 "A custom print size needs a width and height in millimetres, both above zero."
 msgstr ""
@@ -3717,12 +3728,12 @@ msgstr ""
 "suurempia kuin nolla."
 
 #. translators: %d: most print sizes one side can offer.
-#: src/Catalogue/InvalidReason.php:143
+#: src/Catalogue/InvalidReason.php:160
 #, php-format
 msgid "A side offers at most %d print sizes."
 msgstr "Painokokoja voi olla yhdellä puolella enintään %d."
 
-#: src/Catalogue/InvalidReason.php:147
+#: src/Catalogue/InvalidReason.php:164
 msgid ""
 "Add a print size in millimetres. Without a blank there is no placement to "
 "take one from."
@@ -3730,15 +3741,39 @@ msgstr ""
 "Lisää painokoko millimetreinä. Ilman pohjatuotetta ei ole painokohtaa, josta "
 "koko otettaisiin."
 
-#: src/Catalogue/InvalidReason.php:149
+#: src/Catalogue/InvalidReason.php:166
 msgid "The print size is larger than the placement can print."
 msgstr "Painokoko on suurempi kuin painokohtaan voi painaa."
 
-#: src/Catalogue/InvalidReason.php:151
+#: src/Catalogue/InvalidReason.php:168
 msgid "The print size does not match the template's aspect ratio."
 msgstr "Painokoko ei vastaa mallipohjan kuvasuhdetta."
 
-#: src/Catalogue/InvalidReason.php:153
+#: src/Catalogue/InvalidReason.php:170
+msgid ""
+"The placement is printed across its whole print area: the print size must be "
+"that area."
+msgstr ""
+"Painokohta painetaan koko painoalueelleen, joten painokoon on vastattava "
+"painoaluetta."
+
+#: src/Catalogue/InvalidReason.php:172
+msgid ""
+"The template cannot be printed at the print area of this variation's blank "
+"variant. Choose a template that fits, or stop selling the variation."
+msgstr ""
+"Mallipohjaa ei voi painaa tämän muunnelman pohjatuotteen version "
+"painoalueelle. Valitse sopiva mallipohja tai lopeta muunnelman myynti."
+
+#: src/Catalogue/InvalidReason.php:174
+msgid ""
+"The variation's print size has not been checked since the product changed. "
+"Update the product again."
+msgstr ""
+"Muunnelman painokokoa ei ole tarkistettu tuotteen muuttamisen jälkeen. "
+"Päivitä tuote uudelleen."
+
+#: src/Catalogue/InvalidReason.php:176
 msgid ""
 "Pixonaut could not check the configuration. Check the connection, then "
 "update the product again."
@@ -3746,7 +3781,7 @@ msgstr ""
 "Pixonaut ei voinut tarkistaa määritystä. Tarkista yhteys ja päivitä tuote "
 "sitten uudelleen."
 
-#: src/Catalogue/InvalidReason.php:155
+#: src/Catalogue/InvalidReason.php:178
 msgid ""
 "Pixonaut would not make the design of a standing side. Check the side's "
 "template, placement and print size, then update the product again."
@@ -3754,7 +3789,7 @@ msgstr ""
 "Pixonaut ei luonut kiinteän puolen suunnitelmaa. Tarkista puolen mallipohja, "
 "painokohta ja painokoko ja päivitä tuote sitten uudelleen."
 
-#: src/Catalogue/InvalidReason.php:157
+#: src/Catalogue/InvalidReason.php:180
 msgid ""
 "Pixonaut would not make the design of a standing side: the store may not "
 "create and approve designs. Check the connection's permissions in the "
@@ -3764,7 +3799,7 @@ msgstr ""
 "luoda ja hyväksyä suunnitelmia. Tarkista yhteyden oikeudet Pixonaut-"
 "studiossa ja päivitä tuote sitten uudelleen."
 
-#: src/Catalogue/InvalidReason.php:159
+#: src/Catalogue/InvalidReason.php:182
 msgid ""
 "The template of a standing side does not fit the placement at any of the "
 "blank's sizes, so none of them can be printed. Choose a template that fits."
@@ -3772,11 +3807,11 @@ msgstr ""
 "Kiinteän puolen mallipohja ei sovi painokohtaan missään pohjatuotteen "
 "koossa, joten mitään niistä ei voi painaa. Valitse sopiva mallipohja."
 
-#: src/Catalogue/InvalidReason.php:161
+#: src/Catalogue/InvalidReason.php:184
 msgid "Choose a blank, or a printshop that prints without one."
 msgstr "Valitse pohjatuote tai painotalo, joka painaa ilman pohjatuotetta."
 
-#: src/Catalogue/InvalidReason.php:163
+#: src/Catalogue/InvalidReason.php:186
 msgid ""
 "The configuration was saved by a newer version of Pixonaut for WooCommerce. "
 "Update the plugin."
@@ -3784,7 +3819,7 @@ msgstr ""
 "Määritys on tallennettu Pixonaut for WooCommerce -lisäosan uudemmalla "
 "versiolla. Päivitä lisäosa."
 
-#: src/Catalogue/InvalidReason.php:165
+#: src/Catalogue/InvalidReason.php:188
 msgid "Pixonaut cannot print this configuration."
 msgstr "Pixonaut ei voi painaa tätä määritystä."
 
@@ -8096,21 +8131,25 @@ msgstr "Nimi, esim. A3"
 
 #. translators: Screen reader label of the field naming a print size. Admin product page.
 #: templates/admin/product-side.php:55
+#: templates/admin/variation-print-size.php:54
 msgid "Label customers see"
 msgstr "Asiakkaille näkyvä nimi"
 
 #. translators: Screen reader label of the custom print size's width field. Admin product page.
 #: templates/admin/product-side.php:56
+#: templates/admin/variation-print-size.php:47
 msgid "Width in millimetres"
 msgstr "Leveys millimetreinä"
 
 #. translators: Screen reader label of the custom print size's height field. Admin product page.
 #: templates/admin/product-side.php:58
+#: templates/admin/variation-print-size.php:51
 msgid "Height in millimetres"
 msgstr "Korkeus millimetreinä"
 
 #. translators: Unit after a custom print size's width and height: millimetres. Admin product page.
 #: templates/admin/product-side.php:59
+#: templates/admin/variation-print-size.php:53
 msgid "mm"
 msgstr "mm"
 
@@ -8430,11 +8469,11 @@ msgid "Show retired variants"
 msgstr "Näytä käytöstä poistetut pohjatuotteen versiot"
 
 #. translators: Checkbox label on a variable product's variation panel: this variation uses its own personalisation settings. Admin product page.
-#: templates/admin/product-variation.php:42
+#: templates/admin/product-variation.php:44
 msgid "Override for this variation"
 msgstr "Oma asetus tälle muunnelmalle"
 
-#: templates/admin/product-variation.php:45
+#: templates/admin/product-variation.php:47
 msgid ""
 "This variation is personalised as the product’s Pixonaut tab says. Tick to "
 "give it its own blank, sides, templates and settings."
@@ -8443,7 +8482,7 @@ msgstr ""
 "Rastita, niin sille voi antaa oman pohjatuotteen, puolet, mallipohjat ja "
 "asetukset."
 
-#: templates/admin/product-variation.php:46
+#: templates/admin/product-variation.php:48
 msgid ""
 "This variation uses its own configuration below, not the product’s Pixonaut "
 "tab."
@@ -8665,6 +8704,32 @@ msgstr ""
 #: templates/admin/variation-picture-view.php:20
 msgid "Variation image drawn on"
 msgstr "Muunnelman kuvan taustakuva"
+
+#. translators: %s: the side's name, e.g. "Front". Label of a variation's print size field. Admin product page, variation options.
+#: templates/admin/variation-print-size.php:34
+#, php-format
+msgid "Print size: %s"
+msgstr "Painokoko: %s"
+
+#. translators: Option in a variation's print size dropdown: enter a width and height for this variation alone. Admin product page.
+#: templates/admin/variation-print-size.php:42
+msgid "Custom size for this variation"
+msgstr "Mukautettu koko tälle muunnelmalle"
+
+#. translators: Label of a custom print size's width field. Admin product page.
+#: templates/admin/variation-print-size.php:46
+msgid "Width"
+msgstr "Leveys"
+
+#. translators: Label of a custom print size's height field. Admin product page.
+#: templates/admin/variation-print-size.php:50
+msgid "Height"
+msgstr "Korkeus"
+
+#. translators: Placeholder of the field naming a print size, which customers see. Admin product page.
+#: templates/admin/variation-print-size.php:54
+msgid "Label, e.g. A4"
+msgstr "Nimi, esim. A4"
 
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Email to the merchant.
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Plain text email to the merchant.
@@ -9218,12 +9283,6 @@ msgstr[1] "%s näkymää"
 
 #~ msgid "Custom size"
 #~ msgstr "Mukautettu koko"
-
-#~ msgid "Width"
-#~ msgstr "Leveys"
-
-#~ msgid "Height"
-#~ msgstr "Korkeus"
 
 #~ msgid "Starts selected"
 #~ msgstr "Valittuna aluksi"

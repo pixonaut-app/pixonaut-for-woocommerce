@@ -1330,6 +1330,43 @@
 	mask: url("../../images/menu-icon.svg") center / contain no-repeat;
 }
 
+/* A variation's own print size: width, height and label on one line under its dropdown. */
+.pixonaut-variation-sizes .pixonaut-variation-size-custom:not([hidden]) {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin-top: 6px;
+}
+
+/* WooCommerce sizes a variation's text fields by the Variations tab's id. */
+#variable_product_options
+	.pixonaut-variation-sizes
+	.pixonaut-variation-size-custom
+	:is(label, input) {
+	float: none;
+	width: auto;
+	margin: 0;
+}
+
+#variable_product_options
+	.pixonaut-variation-sizes
+	.pixonaut-variation-size-custom
+	input.short {
+	width: 5em;
+}
+
+.pixonaut-variation-sizes .pixonaut-variation-size-error {
+	display: block;
+}
+
+#variable_product_options
+	.pixonaut-variation-sizes
+	.pixonaut-variation-size-custom
+	input.short.pixonaut-variation-size-label {
+	width: 10em;
+}
+
 /* Last again, so nothing above shows what is hidden. */
 :is(#pixonaut_product_data, .pixonaut-variation-panel) [hidden] {
 	display: none;

@@ -28,7 +28,7 @@ final class ProductConfig {
 
 	public const META_KEY = Schema::PRODUCT_CONFIG_META;
 
-	public const SCHEMA_VERSION = 12;
+	public const SCHEMA_VERSION = 13;
 
 	/**
 	 * Invalid reason of a document written by a newer plugin version.
@@ -95,8 +95,9 @@ final class ProductConfig {
 
 	/**
 	 * The configuration that applies to what the customer buys: a variation's
-	 * own when it overrides, else the product's, as `resolved_for()` filters it.
-	 * An overriding variation with no layout of its own takes the product's.
+	 * own when it overrides, else the product's, at the variation's print
+	 * sizes (`VariationSize`), as `resolved_for()` filters it. An overriding
+	 * variation with no layout of its own takes the product's.
 	 *
 	 * @param WC_Product      $product   The product, or a variation when $variation is null.
 	 * @param WC_Product|null $variation The chosen variation, if any.
@@ -110,14 +111,48 @@ final class ProductConfig {
 			}
 			$product = $parent;
 		}
-		if ( null !== $variation ) {
-			$own = self::stored_on( $variation );
-			if ( $own->override ) {
-				$parent = self::stored_on( $product );
-				return $own->with_groups_of( $parent )->with_canvas_ratio_of( $parent )->with_form_display_of( $parent )->with_layout( $own->layout ?? $parent->layout )->resolved_for( $variation );
+		if ( null === $variation ) {
+			return self::stored_on( $product )->resolved_for( $product );
+		}
+		$config = self::inherited_by( $product, $variation );
+		$sizes  = VariationSize::stored_on( $variation );
+		if ( array() !== $sizes->sizes || self::has_row_sizes( $config ) ) {
+			$config = $sizes->applied_to( $config, ProductVariant::sold_by( $variation, $config ) );
+		}
+		return $config->resolved_for( $variation );
+	}
+
+	/**
+	 * What a variation is set up with before its own print sizes and the
+	 * filters apply: its own configuration when it overrides, with its
+	 * product's groups, canvas ratio, form display and, when it names none,
+	 * layout; else its product's.
+	 *
+	 * @param WC_Product $product   The variable product.
+	 * @param WC_Product $variation One of its variations.
+	 */
+	public static function inherited_by( WC_Product $product, WC_Product $variation ): self {
+		$own    = self::stored_on( $variation );
+		$parent = self::stored_on( $product );
+		if ( ! $own->override ) {
+			return $parent;
+		}
+		return $own->with_groups_of( $parent )->with_canvas_ratio_of( $parent )->with_form_display_of( $parent )->with_layout( $own->layout ?? $parent->layout );
+	}
+
+	/**
+	 * Whether a side of the configuration prints at its own size per row of
+	 * its blank's print areas.
+	 *
+	 * @param self $config A configuration.
+	 */
+	private static function has_row_sizes( self $config ): bool {
+		foreach ( $config->sides as $side ) {
+			if ( array() !== $side->row_sizes ) {
+				return true;
 			}
 		}
-		return self::stored_on( $product )->resolved_for( $variation ?? $product );
+		return false;
 	}
 
 	/**
@@ -937,6 +972,16 @@ final class ProductConfig {
 			11 => static function ( array $data ): array {
 				$data['optionGroups'] = null;
 				$data['groupNumbers'] = null;
+				return $data;
+			},
+			// Version 13 keeps what a side sold at the placement's default prints at per row of a blank whose print areas vary; a side saved before knows of none until it is checked again.
+			12 => static function ( array $data ): array {
+				foreach ( is_array( $data['sides'] ?? null ) ? $data['sides'] : array() as $index => $side ) {
+					if ( is_array( $side ) ) {
+						$side['rowSizes']        = array();
+						$data['sides'][ $index ] = $side;
+					}
+				}
 				return $data;
 			},
 		);

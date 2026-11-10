@@ -62,6 +62,23 @@ final class InvalidReason {
 	public const WRONG_RATIO = 'wrong_ratio';
 
 	/**
+	 * Pixonaut: the placement is printed across its whole area, and the size is not that area.
+	 */
+	public const PRINT_SIZE_NOT_AREA = 'print_size_not_area';
+
+	/**
+	 * A variation's template cannot be printed at its blank variant's print
+	 * area, or the variant is in none of the blank's rows of print areas.
+	 */
+	public const VARIANT_SIZE_UNFIT = 'variant_size_unfit';
+
+	/**
+	 * A variation's own print size was judged for another template,
+	 * placement or variant than it is sold with now.
+	 */
+	public const VARIATION_SIZE_UNCHECKED = 'variation_size_unchecked';
+
+	/**
 	 * Pixonaut could not be asked: not connected, unreachable, or it refused.
 	 */
 	public const CHECK_FAILED = 'check_failed';
@@ -149,6 +166,12 @@ final class InvalidReason {
 				return __( 'The print size is larger than the placement can print.', 'pixonaut-for-woocommerce' );
 			case self::WRONG_RATIO:
 				return __( "The print size does not match the template's aspect ratio.", 'pixonaut-for-woocommerce' );
+			case self::PRINT_SIZE_NOT_AREA:
+				return __( 'The placement is printed across its whole print area: the print size must be that area.', 'pixonaut-for-woocommerce' );
+			case self::VARIANT_SIZE_UNFIT:
+				return __( "The template cannot be printed at the print area of this variation's blank variant. Choose a template that fits, or stop selling the variation.", 'pixonaut-for-woocommerce' );
+			case self::VARIATION_SIZE_UNCHECKED:
+				return __( "The variation's print size has not been checked since the product changed. Update the product again.", 'pixonaut-for-woocommerce' );
 			case self::CHECK_FAILED:
 				return __( 'Pixonaut could not check the configuration. Check the connection, then update the product again.', 'pixonaut-for-woocommerce' );
 			case self::STANDING_REFUSED:

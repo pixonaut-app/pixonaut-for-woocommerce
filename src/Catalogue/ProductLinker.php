@@ -435,7 +435,7 @@ final class ProductLinker {
 		$sides   = array();
 		$reasons = array();
 		foreach ( $inputs as $input ) {
-			list( $side, $reason ) = $this->side( $current, $blank_id, $placements, $input, $areas_vary );
+			list( $side, $reason ) = $this->side( $current, $blank_id, $placements, $input, $areas_vary ? $blank : null );
 			$sides[]               = $side;
 			if ( null !== $reason ) {
 				$reasons[] = $reason;
@@ -498,16 +498,21 @@ final class ProductLinker {
 	 * also knows the sizes its template cannot be printed at; a standing
 	 * side learns them from its rows' designs (`standing()`). Until a check
 	 * replaces them, a side keeps the misfits it held for the same template
-	 * version on the same placement.
+	 * version on the same placement. A personalised side on such a blank
+	 * also knows what it prints at per row (`row_sizes()`), so a variation
+	 * sold at the placement's default prints at its variant's row, and a
+	 * size of its own is judged against that row. A
+	 * size Pixonaut refused is kept in the menu as entered, unsold, so the
+	 * product screen shows it with the reason.
 	 *
-	 * @param ProductConfig         $current    What the product has now.
-	 * @param string                $blank_id   The blank.
-	 * @param array<string, string> $placements The blank's placements, names by id.
-	 * @param SideInput             $input      The side as entered.
-	 * @param bool                  $areas_vary Whether the blank's print areas change with an option.
+	 * @param ProductConfig             $current    What the product has now.
+	 * @param string                    $blank_id   The blank.
+	 * @param array<string, string>     $placements The blank's placements, names by id.
+	 * @param SideInput                 $input      The side as entered.
+	 * @param array<string, mixed>|null $varying    The blank, when its print areas change with an option; null otherwise.
 	 * @return array{0: Side, 1: string|null} The side and why it cannot be sold, if it cannot.
 	 */
-	private function side( ProductConfig $current, string $blank_id, array $placements, SideInput $input, bool $areas_vary = false ): array {
+	private function side( ProductConfig $current, string $blank_id, array $placements, SideInput $input, ?array $varying = null ): array {
 		$template       = TemplateId::parse( $input->template_id );
 		$name           = '' === $input->template_name ? null : $input->template_name;
 		$placement_id   = '' === $input->placement_id ? null : $input->placement_id;
@@ -545,17 +550,25 @@ final class ProductLinker {
 			}
 			list( $legal, $legal_at, $refused ) = $this->judged( (string) $template, $sizes, $blank_id, $placement_id );
 			$misfits                            = $held;
+			$rows                               = array();
 			if ( Side::STANDING !== $input->mode ) {
-				$misfits = $areas_vary && array() !== $legal
+				$misfits = null !== $varying && array() !== $legal
 					? MisfitSizes::of( self::placement_of( $this->constraints( (string) $template, $blank_id, $placement_id ) )['sizes'] ?? null )
 					: array();
+				$rows    = null !== $varying ? $this->row_sizes( (string) $template, $blank_id, $varying, $placement_id ) : array();
 			}
 		} catch ( ApiException $e ) {
 			// Nothing unchecked is sold; the menu waits for the next save.
 			return array( $sized( array(), true )->with_misfit_sizes( $held ), self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ) );
 		}
+		if ( null !== $refused ) {
+			// The menu stays as entered, so the refused size is shown with why; the product is not sold meanwhile.
+			return array( $sized( $legal, true )->with_misfit_sizes( $misfits )->with_row_sizes( $rows ), $reason ?? $refused );
+		}
+		// A placement with an area per row, none of which any variant sold can be printed at, sells nothing at the default.
+		$unfit = null !== $varying && Side::STANDING !== $input->mode && array() === $rows && array() !== PrintAreas::areas( $varying, $placement_id ) ? InvalidReason::VARIANT_SIZE_UNFIT : null;
 		// A starting size Pixonaut cannot print leaves the first legal one to start on.
-		return array( $sized( $legal, false, $legal_at[ $checked_at[ $input->start ] ?? -1 ] ?? 0 )->with_misfit_sizes( $misfits ), $reason ?? $refused );
+		return array( $sized( $legal, false, $legal_at[ $checked_at[ $input->start ] ?? -1 ] ?? 0 )->with_misfit_sizes( $misfits )->with_row_sizes( $rows ), $reason ?? $unfit );
 	}
 
 	/**
@@ -637,6 +650,45 @@ final class ProductLinker {
 			)
 		);
 		return null === $size ? null : new PrintSize( $size->width_mm, $size->height_mm, PrintSize::label_for( $size->width_mm, $size->height_mm ), true );
+	}
+
+	/**
+	 * What a side prints at on each row of the blank's print areas when it
+	 * names no size: the template's ratio fitted into the row's
+	 * usual box, or the row's area where a print covers it whole, as
+	 * Pixonaut sizes a print naming no size there. A row Pixonaut names
+	 * among the template's misfit sizes has no size: it cannot be printed.
+	 * A row the placement has no area for is left out, so its variants are
+	 * not sold.
+	 *
+	 * @param string               $template_id  `<baseId>@<version>`.
+	 * @param string               $blank_id     The blank.
+	 * @param array<string, mixed> $blank        The blank as read.
+	 * @param string               $placement_id The side's placement.
+	 * @return list<RowSize>
+	 *
+	 * @throws ApiException When Pixonaut refused or could not be reached.
+	 */
+	private function row_sizes( string $template_id, string $blank_id, array $blank, string $placement_id ): array {
+		$constraints = $this->constraints( $template_id, $blank_id, $placement_id );
+		$ratio       = is_array( $constraints['ratio'] ?? null ) ? $constraints['ratio'] : array();
+		$ratio_w     = is_numeric( $ratio['w'] ?? null ) ? (float) $ratio['w'] : 0.0;
+		$ratio_h     = is_numeric( $ratio['h'] ?? null ) ? (float) $ratio['h'] : 0.0;
+		$misfits     = MisfitSizes::of( self::placement_of( $constraints )['sizes'] ?? null );
+		$areas       = PrintAreas::areas( $blank, $placement_id );
+		$full        = PrintAreas::covers_area( $blank, $placement_id );
+		$varies_by   = array_values( array_filter( is_array( $blank['areasVaryBy'] ?? null ) ? $blank['areasVaryBy'] : array(), 'is_string' ) );
+		$rows        = array();
+		foreach ( PrintAreas::rows( $this->catalogue->variants( $blank_id ), $varies_by ) as $found ) {
+			$area = PrintAreas::area_of( $areas, $found['row'] );
+			$size = null === $area ? null : RowSize::fitted( $area, $full, $ratio_w, $ratio_h );
+			if ( null === $area || null === $size ) {
+				continue;
+			}
+			$fits   = ! in_array( MisfitSizes::value( $found['row'] ), $misfits, true );
+			$rows[] = new RowSize( $found['row'], $found['variants'], (float) $area['widthMm'], (float) $area['heightMm'], $full, $fits ? $size : null );
+		}
+		return $rows;
 	}
 
 	/**

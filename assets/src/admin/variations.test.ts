@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { initOverride, markChanged, newPanels } from './variations';
+import {
+	initOverride,
+	initVariationSizes,
+	markChanged,
+	newPanels,
+} from './variations';
 
 function panel(override: boolean): HTMLElement {
 	const element = document.createElement('div');
@@ -9,7 +14,16 @@ function panel(override: boolean): HTMLElement {
 		<input type="checkbox" class="pixonaut-override" ${override ? 'checked' : ''} />
 		<p class="pixonaut-variation-inherits"></p>
 		<p class="pixonaut-variation-overrides"></p>
-		<div class="pixonaut-variation-fields"></div>`;
+		<div class="pixonaut-variation-fields"></div>
+		<div class="pixonaut-variation-sizes">
+			<p class="pixonaut-variation-size">
+				<select class="pixonaut-variation-size-kind">
+					<option value="product" selected>As the product</option>
+					<option value="custom">Custom size</option>
+				</select>
+				<span class="pixonaut-variation-size-custom"></span>
+			</p>
+		</div>`;
 	return element;
 }
 
@@ -89,5 +103,44 @@ describe('markChanged', () => {
 		markChanged(element);
 
 		expect(changed).not.toHaveBeenCalled();
+	});
+});
+
+describe('the variation print sizes', () => {
+	it('are hidden while the variation overrides its whole setup', () => {
+		const element = panel(false);
+		initOverride(element);
+		const sizes = element.querySelector<HTMLElement>(
+			'.pixonaut-variation-sizes',
+		);
+		const override =
+			element.querySelector<HTMLInputElement>('.pixonaut-override');
+
+		expect(sizes?.hidden).toBe(false);
+		if (override) {
+			override.checked = true;
+			override.dispatchEvent(new Event('change'));
+		}
+
+		expect(sizes?.hidden).toBe(true);
+	});
+
+	it("show a width and height only for a size of the variation's own", () => {
+		const element = panel(false);
+		initVariationSizes(element);
+		const kind = element.querySelector<HTMLSelectElement>(
+			'.pixonaut-variation-size-kind',
+		);
+		const custom = element.querySelector<HTMLElement>(
+			'.pixonaut-variation-size-custom',
+		);
+
+		expect(custom?.hidden).toBe(true);
+		if (kind) {
+			kind.value = 'custom';
+			kind.dispatchEvent(new Event('change'));
+		}
+
+		expect(custom?.hidden).toBe(false);
 	});
 });

@@ -64,7 +64,15 @@ final class ProductVariants {
 		private readonly Catalogue $catalogue,
 		private readonly VariantNotice $notice,
 	) {
+		$this->sizes = new VariationSizes( $catalogue );
 	}
+
+	/**
+	 * Judges the sizes variations have of their own again once their variant is resolved.
+	 *
+	 * @var VariationSizes
+	 */
+	private readonly VariationSizes $sizes;
 
 	/**
 	 * The blank's variants, retired ones included, named in the site's
@@ -127,10 +135,11 @@ final class ProductVariants {
 	/**
 	 * Resolves the variant of a product, of each variation of a variable
 	 * product, or of one variation, as stored now, and notes the product.
-	 * One not personalised on a blank has none.
+	 * One not personalised on a blank has none. A variation's own print
+	 * sizes are judged again for what it now sells.
 	 *
 	 * @param WC_Product $product A product or variation.
-	 * @throws ApiException When a blank's variants could not be read; what is stored is kept.
+	 * @throws ApiException When a blank's variants could not be read, or a variation's own size not judged; what is stored is kept.
 	 */
 	public function refresh( WC_Product $product ): void {
 		// A refresh follows a change in Pixonaut: what an earlier one read, in a queue runner working through several jobs, may be stale.
@@ -139,12 +148,23 @@ final class ProductVariants {
 		$sold         = $product->is_type( 'variable' )
 			? array_filter( array_map( 'wc_get_product', $product->get_children() ), static fn ( mixed $child ): bool => $child instanceof WC_Product )
 			: array( $product );
+		$unjudged     = null;
 		try {
 			foreach ( $sold as $one ) {
 				$this->resolve( $one );
+				try {
+					// Its variant, or what its product sells, may have changed what an own size is judged for.
+					$this->sizes->rejudge( $one );
+				} catch ( ApiException $e ) {
+					// The other variations are still resolved; the caller checks again later.
+					$unjudged ??= $e;
+				}
 			}
 		} finally {
 			$this->note( $product );
+		}
+		if ( null !== $unjudged ) {
+			throw $unjudged;
 		}
 	}
 
@@ -156,7 +176,7 @@ final class ProductVariants {
 	 *
 	 * @param WC_Product  $product A product or variation, not a variable product.
 	 * @param string|null $pick    A variant ref of its blank; null to match by options.
-	 * @throws ApiException When the blank's variants could not be read; the pick is stored all the same.
+	 * @throws ApiException When the blank's variants could not be read, or its own size not judged; the pick is stored all the same.
 	 */
 	public function pick( WC_Product $product, ?string $pick ): void {
 		$config = ProductConfig::config_for( $product );
@@ -166,6 +186,7 @@ final class ProductVariants {
 			( new ProductVariant( $config->blank_id, $pick ) )->save_to( $product );
 		}
 		$this->resolve( $product );
+		$this->sizes->rejudge( $product );
 	}
 
 	/**

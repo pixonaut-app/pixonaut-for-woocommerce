@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T19:15:59+00:00\n"
+"POT-Creation-Date: 2026-11-10T21:09:19+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: nb_NO\n"
@@ -49,7 +49,7 @@ msgstr ""
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
 #: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:186
-#: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:38
+#: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:40
 msgid "Pixonaut"
 msgstr "Pixonaut"
 
@@ -783,7 +783,7 @@ msgstr "Siden, fra 1."
 msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr "Siden med variantene til hvert variable produkt, fra 1, %d per side."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:249
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:265
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -993,7 +993,7 @@ msgstr ""
 msgid "The store's products could not be read."
 msgstr "Butikkens produkter kunne ikke leses."
 
-#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:90
+#: src/Abilities/MoveProductAttribute.php:244 src/Abilities/ProductLinks.php:91
 msgid "No simple or variable product has this id."
 msgstr "Ingen enkle eller variable produkter har denne id-en."
 
@@ -1114,11 +1114,11 @@ msgstr "Hvor mange ordrer som samsvarer, på tvers av alle sider."
 msgid "The `before` that asks for the next page; null when there is none."
 msgstr "Den `before` som henter neste side; null når det ikke finnes noen."
 
-#: src/Abilities/ProductLinks.php:103
+#: src/Abilities/ProductLinks.php:104
 msgid "No simple or variable product or variation has this id."
 msgstr "Ingen enkle eller variable produkter eller varianter har denne id-en."
 
-#: src/Abilities/ProductLinks.php:245
+#: src/Abilities/ProductLinks.php:261
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -1126,7 +1126,7 @@ msgstr ""
 "For en variant: om den har sitt eget oppsett i stedet for å følge "
 "produktets, som den da oppgir; false for et produkt."
 
-#: src/Abilities/ProductLinks.php:253
+#: src/Abilities/ProductLinks.php:269
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -3073,27 +3073,27 @@ msgstr ""
 "lages på fotoet produktsiden viser først, til et annet velges."
 
 #. translators: %s: a view of the blank product, e.g. "Front". A choice of what a product image is drawn on: that view, on its photo of the variant sold. Admin product page.
-#: src/Admin/ShowcaseField.php:270
+#: src/Admin/ShowcaseField.php:271
 #, php-format
 msgid "%s, on the photo of the variant sold"
 msgstr "%s, på fotoet av basisproduktvarianten som selges"
 
 #. translators: A choice of what a product image is drawn on: a view or photo the blank product no longer has. Admin product page.
-#: src/Admin/ShowcaseField.php:274
+#: src/Admin/ShowcaseField.php:275
 msgid "No longer on the blank"
 msgstr "Ikke lenger på basisproduktet"
 
 #. translators: A choice of what a product image is drawn on, made before; Pixonaut could not be asked which it is. Admin product page.
-#: src/Admin/ShowcaseField.php:276
+#: src/Admin/ShowcaseField.php:277
 msgid "The photo chosen before"
 msgstr "Fotoet som ble valgt tidligere"
 
 #. translators: A choice of what a variation's image is drawn on: whatever its product's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:301
+#: src/Admin/ShowcaseField.php:302
 msgid "As the product image"
 msgstr "Som produktbildet"
 
-#: src/Admin/ShowcaseField.php:302
+#: src/Admin/ShowcaseField.php:303
 msgid ""
 "The view and photo the product image is drawn on, in this variation’s colour "
 "where the view has it."
@@ -3102,12 +3102,12 @@ msgstr ""
 "visningen har den."
 
 #. translators: Accessible name of the choices of what a variation's image is drawn on. Admin product page, variation options.
-#: src/Admin/ShowcaseField.php:317
+#: src/Admin/ShowcaseField.php:318
 msgid "What the variation image is drawn on"
 msgstr "Hva variantbildet lages på"
 
 #. translators: 1: a view of the blank product, e.g. "Front"; 2: which of its photos, e.g. 2. Admin product page.
-#: src/Admin/ShowcaseField.php:373
+#: src/Admin/ShowcaseField.php:374
 #, php-format
 msgid "%1$s, photo %2$d"
 msgstr "%1$s, foto %2$d"
@@ -3210,6 +3210,17 @@ msgid ""
 msgstr ""
 "Kunder kan ikke kjøpe alle variantene av %1$s: %2$s. Velg "
 "basisproduktvarianten i Pixonaut-feltene."
+
+#. translators: Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says, which gives no size this variation can be printed at. Admin product page.
+#: src/Admin/VariationSizeField.php:153
+msgid "As the product (no size fits this variation)"
+msgstr "Som produktet (ingen størrelse passer til denne varianten)"
+
+#. translators: %s: the print sizes, e.g. "300 × 400 mm". Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says. Admin product page.
+#: src/Admin/VariationSizeField.php:157
+#, php-format
+msgid "As the product (%s)"
+msgstr "Som produktet (%s)"
 
 #. translators: 1: product name of the order line, 2: what the customer asked.
 #: src/Approval/ChangesRequested.php:93
@@ -3600,19 +3611,19 @@ msgstr "Alltid malens form"
 msgid "Always the chosen print size’s shape"
 msgstr "Alltid formen til den valgte trykkstørrelsen"
 
-#: src/Catalogue/InvalidReason.php:115
+#: src/Catalogue/InvalidReason.php:132
 msgid "Choose a template."
 msgstr "Velg en mal."
 
-#: src/Catalogue/InvalidReason.php:117
+#: src/Catalogue/InvalidReason.php:134
 msgid "Choose where on the blank the design is printed."
 msgstr "Velg hvor på basisproduktet designet skal trykkes."
 
-#: src/Catalogue/InvalidReason.php:119
+#: src/Catalogue/InvalidReason.php:136
 msgid "The blank no longer exists in Pixonaut."
 msgstr "Basisproduktet finnes ikke lenger i Pixonaut."
 
-#: src/Catalogue/InvalidReason.php:121
+#: src/Catalogue/InvalidReason.php:138
 msgid ""
 "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or "
 "choose another blank."
@@ -3620,7 +3631,7 @@ msgstr ""
 "Basisproduktet er slettet i Pixonaut. Gjenopprett det i Pixonaut-studioet, "
 "eller velg et annet basisprodukt."
 
-#: src/Catalogue/InvalidReason.php:123
+#: src/Catalogue/InvalidReason.php:140
 msgid ""
 "The blank no longer has this placement, or Pixonaut cannot size a print for "
 "it."
@@ -3628,11 +3639,11 @@ msgstr ""
 "Basisproduktet har ikke lenger denne plasseringen, eller Pixonaut kan ikke "
 "beregne en trykkstørrelse for den."
 
-#: src/Catalogue/InvalidReason.php:125
+#: src/Catalogue/InvalidReason.php:142
 msgid "The template no longer exists in Pixonaut."
 msgstr "Malen finnes ikke lenger i Pixonaut."
 
-#: src/Catalogue/InvalidReason.php:127
+#: src/Catalogue/InvalidReason.php:144
 msgid ""
 "The template is paused or deleted in Pixonaut. Make it live again, or choose "
 "another template."
@@ -3641,21 +3652,21 @@ msgstr ""
 "velg en annen mal."
 
 #. translators: %d: most sides a product can have.
-#: src/Catalogue/InvalidReason.php:131
+#: src/Catalogue/InvalidReason.php:148
 #, php-format
 msgid "A product has at most %d sides."
 msgstr "Et produkt kan ha høyst %d sider."
 
-#: src/Catalogue/InvalidReason.php:135
+#: src/Catalogue/InvalidReason.php:152
 msgid "Two sides use the same placement. Each placement can be one side only."
 msgstr ""
 "To sider bruker samme plassering. Hver plassering kan bare være én side."
 
-#: src/Catalogue/InvalidReason.php:137
+#: src/Catalogue/InvalidReason.php:154
 msgid "Two sides have the same key. Give each side its own."
 msgstr "To sider har samme nøkkel. Gi hver side sin egen."
 
-#: src/Catalogue/InvalidReason.php:139
+#: src/Catalogue/InvalidReason.php:156
 msgid ""
 "A custom print size needs a width and height in millimetres, both above zero."
 msgstr ""
@@ -3663,12 +3674,12 @@ msgstr ""
 "større enn null."
 
 #. translators: %d: most print sizes one side can offer.
-#: src/Catalogue/InvalidReason.php:143
+#: src/Catalogue/InvalidReason.php:160
 #, php-format
 msgid "A side offers at most %d print sizes."
 msgstr "En side kan tilby høyst %d trykkstørrelser."
 
-#: src/Catalogue/InvalidReason.php:147
+#: src/Catalogue/InvalidReason.php:164
 msgid ""
 "Add a print size in millimetres. Without a blank there is no placement to "
 "take one from."
@@ -3676,15 +3687,39 @@ msgstr ""
 "Legg til en trykkstørrelse i millimeter. Uten basisprodukt finnes det ingen "
 "plassering å hente en fra."
 
-#: src/Catalogue/InvalidReason.php:149
+#: src/Catalogue/InvalidReason.php:166
 msgid "The print size is larger than the placement can print."
 msgstr "Trykkstørrelsen er større enn det plasseringen kan trykke."
 
-#: src/Catalogue/InvalidReason.php:151
+#: src/Catalogue/InvalidReason.php:168
 msgid "The print size does not match the template's aspect ratio."
 msgstr "Trykkstørrelsen passer ikke til malens sideforhold."
 
-#: src/Catalogue/InvalidReason.php:153
+#: src/Catalogue/InvalidReason.php:170
+msgid ""
+"The placement is printed across its whole print area: the print size must be "
+"that area."
+msgstr ""
+"Trykkposisjonen trykkes over hele trykkområdet sitt, så trykkstørrelsen må "
+"tilsvare dette området."
+
+#: src/Catalogue/InvalidReason.php:172
+msgid ""
+"The template cannot be printed at the print area of this variation's blank "
+"variant. Choose a template that fits, or stop selling the variation."
+msgstr ""
+"Malen kan ikke trykkes i trykkområdet til denne variantens "
+"basisproduktvariant. Velg en mal som passer, eller slutt å selge varianten."
+
+#: src/Catalogue/InvalidReason.php:174
+msgid ""
+"The variation's print size has not been checked since the product changed. "
+"Update the product again."
+msgstr ""
+"Variantens trykkstørrelse er ikke kontrollert siden produktet ble endret. "
+"Oppdater produktet på nytt."
+
+#: src/Catalogue/InvalidReason.php:176
 msgid ""
 "Pixonaut could not check the configuration. Check the connection, then "
 "update the product again."
@@ -3692,7 +3727,7 @@ msgstr ""
 "Pixonaut kunne ikke kontrollere konfigurasjonen. Kontroller tilkoblingen, og "
 "oppdater deretter produktet på nytt."
 
-#: src/Catalogue/InvalidReason.php:155
+#: src/Catalogue/InvalidReason.php:178
 msgid ""
 "Pixonaut would not make the design of a standing side. Check the side's "
 "template, placement and print size, then update the product again."
@@ -3700,7 +3735,7 @@ msgstr ""
 "Pixonaut ville ikke lage designet for en fast side. Kontroller sidens mal, "
 "plassering og trykkstørrelse, og oppdater deretter produktet på nytt."
 
-#: src/Catalogue/InvalidReason.php:157
+#: src/Catalogue/InvalidReason.php:180
 msgid ""
 "Pixonaut would not make the design of a standing side: the store may not "
 "create and approve designs. Check the connection's permissions in the "
@@ -3710,7 +3745,7 @@ msgstr ""
 "til å opprette og godkjenne design. Kontroller tilkoblingens tillatelser i "
 "Pixonaut-studioet, og oppdater deretter produktet på nytt."
 
-#: src/Catalogue/InvalidReason.php:159
+#: src/Catalogue/InvalidReason.php:182
 msgid ""
 "The template of a standing side does not fit the placement at any of the "
 "blank's sizes, so none of them can be printed. Choose a template that fits."
@@ -3719,11 +3754,11 @@ msgstr ""
 "basisproduktets størrelser, så ingen av dem kan trykkes. Velg en mal som "
 "passer."
 
-#: src/Catalogue/InvalidReason.php:161
+#: src/Catalogue/InvalidReason.php:184
 msgid "Choose a blank, or a printshop that prints without one."
 msgstr "Velg et basisprodukt, eller et trykkeri som trykker uten basisprodukt."
 
-#: src/Catalogue/InvalidReason.php:163
+#: src/Catalogue/InvalidReason.php:186
 msgid ""
 "The configuration was saved by a newer version of Pixonaut for WooCommerce. "
 "Update the plugin."
@@ -3731,7 +3766,7 @@ msgstr ""
 "Konfigurasjonen ble lagret av en nyere versjon av Pixonaut for WooCommerce. "
 "Oppdater utvidelsen."
 
-#: src/Catalogue/InvalidReason.php:165
+#: src/Catalogue/InvalidReason.php:188
 msgid "Pixonaut cannot print this configuration."
 msgstr "Pixonaut kan ikke trykke denne konfigurasjonen."
 
@@ -8026,21 +8061,25 @@ msgstr "Navn, f.eks. A3"
 
 #. translators: Screen reader label of the field naming a print size. Admin product page.
 #: templates/admin/product-side.php:55
+#: templates/admin/variation-print-size.php:54
 msgid "Label customers see"
 msgstr "Navn kundene ser"
 
 #. translators: Screen reader label of the custom print size's width field. Admin product page.
 #: templates/admin/product-side.php:56
+#: templates/admin/variation-print-size.php:47
 msgid "Width in millimetres"
 msgstr "Bredde i millimeter"
 
 #. translators: Screen reader label of the custom print size's height field. Admin product page.
 #: templates/admin/product-side.php:58
+#: templates/admin/variation-print-size.php:51
 msgid "Height in millimetres"
 msgstr "Høyde i millimeter"
 
 #. translators: Unit after a custom print size's width and height: millimetres. Admin product page.
 #: templates/admin/product-side.php:59
+#: templates/admin/variation-print-size.php:53
 msgid "mm"
 msgstr "mm"
 
@@ -8358,11 +8397,11 @@ msgid "Show retired variants"
 msgstr "Vis utgåtte basisproduktvarianter"
 
 #. translators: Checkbox label on a variable product's variation panel: this variation uses its own personalisation settings. Admin product page.
-#: templates/admin/product-variation.php:42
+#: templates/admin/product-variation.php:44
 msgid "Override for this variation"
 msgstr "Overstyr for denne varianten"
 
-#: templates/admin/product-variation.php:45
+#: templates/admin/product-variation.php:47
 msgid ""
 "This variation is personalised as the product’s Pixonaut tab says. Tick to "
 "give it its own blank, sides, templates and settings."
@@ -8370,7 +8409,7 @@ msgstr ""
 "Denne varianten personaliseres slik produktets Pixonaut-fane angir. Kryss av "
 "for å gi den eget basisprodukt og egne sider, maler og innstillinger."
 
-#: templates/admin/product-variation.php:46
+#: templates/admin/product-variation.php:48
 msgid ""
 "This variation uses its own configuration below, not the product’s Pixonaut "
 "tab."
@@ -8590,6 +8629,32 @@ msgstr ""
 #: templates/admin/variation-picture-view.php:20
 msgid "Variation image drawn on"
 msgstr "Variantbildet lages på"
+
+#. translators: %s: the side's name, e.g. "Front". Label of a variation's print size field. Admin product page, variation options.
+#: templates/admin/variation-print-size.php:34
+#, php-format
+msgid "Print size: %s"
+msgstr "Trykkstørrelse: %s"
+
+#. translators: Option in a variation's print size dropdown: enter a width and height for this variation alone. Admin product page.
+#: templates/admin/variation-print-size.php:42
+msgid "Custom size for this variation"
+msgstr "Egendefinert størrelse for denne varianten"
+
+#. translators: Label of a custom print size's width field. Admin product page.
+#: templates/admin/variation-print-size.php:46
+msgid "Width"
+msgstr "Bredde"
+
+#. translators: Label of a custom print size's height field. Admin product page.
+#: templates/admin/variation-print-size.php:50
+msgid "Height"
+msgstr "Høyde"
+
+#. translators: Placeholder of the field naming a print size, which customers see. Admin product page.
+#: templates/admin/variation-print-size.php:54
+msgid "Label, e.g. A4"
+msgstr "Navn, f.eks. A4"
 
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Email to the merchant.
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Plain text email to the merchant.
@@ -9139,12 +9204,6 @@ msgstr[1] "%s visninger"
 
 #~ msgid "Custom size"
 #~ msgstr "Egendefinert størrelse"
-
-#~ msgid "Width"
-#~ msgstr "Bredde"
-
-#~ msgid "Height"
-#~ msgstr "Høyde"
 
 #~ msgid "Starts selected"
 #~ msgstr "Valgt fra start"

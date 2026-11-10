@@ -61,7 +61,12 @@ import {
 } from './template-version';
 import { chosenThumbnail, thumbnailOptions } from './thumbnails';
 import { initUsePicture } from './use-picture';
-import { initOverride, markChanged, newPanels } from './variations';
+import {
+	initOverride,
+	initVariationSizes,
+	markChanged,
+	newPanels,
+} from './variations';
 import { showOpeningView } from './view-tiles';
 
 type Placement = {
@@ -971,6 +976,7 @@ export function checkAll(container: ParentNode): void {
 function initVariations(): void {
 	for (const panel of newPanels(document)) {
 		initOverride(panel);
+		initVariationSizes(panel);
 		initPanel(panel);
 		initRetiredVariants(panel);
 	}

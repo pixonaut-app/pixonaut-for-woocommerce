@@ -21,8 +21,9 @@ use WP_Post;
  * checked with Pixonaut and saved on it. Unticking keeps the variation's link,
  * unchecked and unused, so ticking again restores it. A variation
  * personalised on a blank also says which of the blank's variants it is
- * (`VariantField`), whether it overrides or not, and what its image is
- * drawn on (`ShowcaseField`).
+ * (`VariantField`), whether it overrides or not, what its image is
+ * drawn on (`ShowcaseField`), and, while it follows its product, the print
+ * size of each side, which it can have of its own (`VariationSizeField`).
  */
 final class VariationPanel {
 
@@ -44,16 +45,18 @@ final class VariationPanel {
 	private const SAVE_ARGS = 2;
 
 	/**
-	 * @param ProductPanel       $panel     Renders and saves the fields the product and its variations share.
-	 * @param Templates          $templates Renders the panel.
-	 * @param VariantField       $variant   Renders and saves the variation's blank variant.
-	 * @param ShowcaseField|null $picture   Renders the choice of what the variation's image is drawn on; null for none.
+	 * @param ProductPanel            $panel     Renders and saves the fields the product and its variations share.
+	 * @param Templates               $templates Renders the panel.
+	 * @param VariantField            $variant   Renders and saves the variation's blank variant.
+	 * @param ShowcaseField|null      $picture   Renders the choice of what the variation's image is drawn on; null for none.
+	 * @param VariationSizeField|null $size      Renders and saves the variation's own print sizes; null for none.
 	 */
 	public function __construct(
 		private readonly ProductPanel $panel,
 		private readonly Templates $templates,
 		private readonly VariantField $variant,
 		private readonly ?ShowcaseField $picture = null,
+		private readonly ?VariationSizeField $size = null,
 	) {
 	}
 
@@ -95,6 +98,7 @@ final class VariationPanel {
 				'rest_nonce'    => wp_create_nonce( 'wp_rest' ),
 				'variant_html'  => $this->variant->html( $product, $fields ),
 				'picture_html'  => null === $this->picture ? '' : $this->picture->variation_html( $product, $fields ),
+				'size_html'     => null === $this->size ? '' : $this->size->html( $product, $fields, $own->override ),
 			)
 		);
 	}
@@ -120,6 +124,8 @@ final class VariationPanel {
 
 		$this->apply( $variation, isset( $posted[ PanelFields::OVERRIDE ] ) ? $posted : null );
 		$this->variant->save( $variation, $posted[ PanelFields::VARIANT ] ?? null, $posted[ PanelFields::VARIANT_BLANK ] ?? null );
+		// After the variant: a size is judged for the variant the variation sells.
+		$this->size?->save( $variation, $posted );
 		ShowcaseField::save_variation( $variation, isset( $posted[ PanelFields::PICTURE_VIEW_LISTED ] ) ? $posted[ PanelFields::PICTURE_VIEW ] ?? null : null );
 	}
 

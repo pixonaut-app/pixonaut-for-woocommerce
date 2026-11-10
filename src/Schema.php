@@ -131,6 +131,12 @@ final class Schema {
 	const PRODUCT_VARIANT_META = '_pixonaut_variant';
 
 	/**
+	 * Variation meta holding the print size it is sold at instead of its
+	 * product's, per side, with Pixonaut's verdict on it.
+	 */
+	const VARIATION_PRINT_SIZE_META = '_pixonaut_print_size';
+
+	/**
 	 * Product meta noting the custom attributes it was moved off, so links
 	 * and cart lines naming one keep selecting the same value.
 	 */

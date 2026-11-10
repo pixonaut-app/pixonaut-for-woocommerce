@@ -372,7 +372,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$this->assertSame( array( array( 'start' => true ) + self::a4() ), $panel['sides'][1]['sizes'] );
 	}
 
-	public function test_the_size_marked_to_start_is_saved_among_the_legal_ones(): void {
+	public function test_a_refused_size_stays_in_the_menu_as_entered_and_the_product_is_not_sold(): void {
 		$product = $this->product();
 		$sizes   = array( self::a4(), self::custom( (string) self::OVERSIZED_MM, (string) self::OVERSIZED_MM, 'Huge' ), self::custom( '300', '400', 'Large' ) );
 		$this->recorder->json( 200, $this->blank() );
@@ -387,27 +387,12 @@ final class ProductSidesTest extends ProductPanelTestCase {
 			)
 		);
 
-		$side = ProductConfig::stored_on( $this->reload( $product->get_id() ) )->sides[0];
-		$this->assertSame( 1, $side->start_size );
-		$this->assertSame( 1, $side->selected_size_index() );
-		$this->assert_panel_sizes( $product->get_id(), array( self::a4(), self::custom( '300', '400', 'Large' ) ), 1 );
-	}
-
-	public function test_a_starting_size_pixonaut_cannot_print_starts_on_the_first(): void {
-		$product = $this->product();
-		$this->recorder->json( 200, $this->blank() );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL, self::TOO_LARGE ) ) );
-
-		$this->save(
-			$product->get_id(),
-			array(),
-			array(
-				'sizes'      => array( self::a4(), self::custom( (string) self::OVERSIZED_MM, (string) self::OVERSIZED_MM, 'Huge' ) ),
-				'start_size' => '1',
-			)
-		);
-
-		$this->assertSame( 0, ProductConfig::stored_on( $this->reload( $product->get_id() ) )->sides[0]->start_size );
+		$config = ProductConfig::stored_on( $this->reload( $product->get_id() ) );
+		$this->assertFalse( $config->valid );
+		$this->assertSame( InvalidReason::TOO_LARGE, $config->invalid_reason );
+		$this->assertSame( 2, $config->sides[0]->start_size, 'the starting size is the one entered' );
+		$this->assertFalse( $this->reload( $product->get_id() )->is_purchasable() );
+		$this->assert_panel_sizes( $product->get_id(), $sizes, 2 );
 	}
 
 	public function test_a_menu_pixonaut_could_not_check_keeps_its_starting_size(): void {

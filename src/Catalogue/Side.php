@@ -71,9 +71,13 @@ final class Side {
 	 * @param bool|null       $draw_at_template_ratio Whether the designer draws the side's canvas at its template's
 	 *                                        ratio whatever print size is chosen (`CanvasRatio`); null for the
 	 *                                        product's choice.
+	 * @param RowSize[]       $row_sizes     A personalised side's size per row of its blank's print areas, on a blank whose
+	 *                                       areas change with an option: a variation sold at the placement's default
+	 *                                       prints at its variant's row. Empty on any other side.
 	 * @phpstan-param list<PrintSize> $print_sizes
 	 * @phpstan-param list<PrintSize|null>|null $pending_sizes
 	 * @phpstan-param list<string> $misfit_sizes
+	 * @phpstan-param list<RowSize> $row_sizes
 	 */
 	public function __construct(
 		public readonly string $key,
@@ -96,6 +100,7 @@ final class Side {
 		public readonly bool $pinned = false,
 		public readonly ?int $latest_version = null,
 		public readonly ?bool $draw_at_template_ratio = null,
+		public readonly array $row_sizes = array(),
 	) {
 	}
 
@@ -170,6 +175,31 @@ final class Side {
 	 */
 	public function with_misfit_sizes( array $sizes ): self {
 		return $this->copy( array( 'misfit_sizes' => $sizes ) );
+	}
+
+	/**
+	 * A copy that prints at the placement's default per row of its blank's print areas.
+	 *
+	 * @param RowSize[] $rows The rows; empty for none.
+	 * @phpstan-param list<RowSize> $rows
+	 */
+	public function with_row_sizes( array $rows ): self {
+		return $this->copy( array( 'row_sizes' => $rows ) );
+	}
+
+	/**
+	 * The row of the blank's print areas a variant is in; null when the
+	 * side has no rows, or none holds the variant.
+	 *
+	 * @param string|null $variant The variant's ref; null for none.
+	 */
+	public function row_size_for( ?string $variant ): ?RowSize {
+		foreach ( $this->row_sizes as $row ) {
+			if ( $row->holds( $variant ) ) {
+				return $row;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -266,6 +296,7 @@ final class Side {
 			null !== $base_id && true === ( $template['pinned'] ?? null ),
 			null === $base_id ? null : self::int_or_null( $template['latestVersion'] ?? null ),
 			CanvasRatio::from_stored( $data['drawAtTemplateRatio'] ?? null ),
+			array_values( array_filter( array_map( array( RowSize::class, 'from_array' ), is_array( $data['rowSizes'] ?? null ) ? $data['rowSizes'] : array() ) ) ),
 		);
 	}
 
@@ -297,6 +328,7 @@ final class Side {
 			'standingRows'        => array_map( static fn ( StandingRow $row ): array => $row->to_array(), $this->standing_rows ),
 			'misfitSizes'         => $this->misfit_sizes,
 			'drawAtTemplateRatio' => $this->draw_at_template_ratio,
+			'rowSizes'            => array_map( static fn ( RowSize $row ): array => $row->to_array(), $this->row_sizes ),
 		) + ( null === $this->pending_sizes ? array() : array(
 			'pendingSizes' => array_map(
 				static fn ( ?PrintSize $size ): array => null === $size ? array( 'placementDefault' => true ) : $size->stored(),

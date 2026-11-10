@@ -15,6 +15,7 @@ use Mockery\MockInterface;
 use Pixonaut\WooCommerce\Catalogue\FormGroups;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
 use RuntimeException;
@@ -625,6 +626,8 @@ final class ProductConfigTest extends TestCase {
 		/** @var WC_Product&MockInterface $product */
 		$product = Mockery::mock( WC_Product::class );
 		$product->allows( 'get_meta' )->with( ProductConfig::META_KEY, true )->andReturn( $meta );
+		// No print size of its own.
+		$product->allows( 'get_meta' )->with( VariationSize::META_KEY, true )->andReturn( '' );
 		$product->allows( 'is_type' )->with( 'variation' )->andReturn( $is_variation );
 		$product->allows( 'get_parent_id' )->andReturn( self::PARENT_ID );
 		return $product;

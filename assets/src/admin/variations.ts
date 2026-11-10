@@ -30,8 +30,13 @@ export function initOverride(panel: HTMLElement): void {
 	const overrides = panel.querySelector<HTMLElement>(
 		'.pixonaut-variation-overrides',
 	);
+	// A variation that overrides its whole setup sets its sizes in its own fields.
+	const sizes = panel.querySelector<HTMLElement>('.pixonaut-variation-sizes');
 	const show = () => {
 		fields.hidden = !override.checked;
+		if (sizes) {
+			sizes.hidden = override.checked;
+		}
 		if (inherits) {
 			inherits.hidden = override.checked;
 		}
@@ -41,6 +46,32 @@ export function initOverride(panel: HTMLElement): void {
 	};
 	override.addEventListener('change', show);
 	show();
+}
+
+/** The value of a variation's print size dropdown set to a size of its own. */
+const CUSTOM_SIZE = 'custom';
+
+/** Shows the width, height and label of each of a variation's print sizes
+ *  only while it is set to a size of the variation's own. */
+export function initVariationSizes(panel: HTMLElement): void {
+	for (const row of panel.querySelectorAll<HTMLElement>(
+		'.pixonaut-variation-size',
+	)) {
+		const kind = row.querySelector<HTMLSelectElement>(
+			'.pixonaut-variation-size-kind',
+		);
+		const custom = row.querySelector<HTMLElement>(
+			'.pixonaut-variation-size-custom',
+		);
+		if (!kind || !custom) {
+			continue;
+		}
+		const show = () => {
+			custom.hidden = kind.value !== CUSTOM_SIZE;
+		};
+		kind.addEventListener('change', show);
+		show();
+	}
 }
 
 /**
