@@ -117,7 +117,7 @@ so.
 
 Below them, **Workspace settings** shows the settings of the workspace that
 shape what your customers get. Change them in the Pixonaut studio, which the
-card links to; the store's brand you choose on the card.
+card links to; the store's brand and print files you choose on the card.
 
 | Field | What it is |
 |---|---|
@@ -125,6 +125,7 @@ card links to; the store's brand you choose on the card.
 | Branding | The logo and accent colour of the store's brand, which Pixonaut's own pages show. With **Designer accent colour** set to **None**, the designer on the product page takes the accent colour too ([Product page layouts](../layouts/)) |
 | Proof watermark | Whether proofs carry a watermark |
 | Minimum resolution | The print resolution customers' pictures are judged against, unless a template sets its own |
+| Print files | The form Pixonaut makes the store's print files in, and for live text its tolerance. See [The store's print files](#the-stores-print-files) |
 | Delivery address | Whether every order ships to a saved address instead of its customer |
 | Default language | The language Pixonaut's pages use when the store names none; see [Designer language](../layouts/#designer-language) |
 
@@ -146,6 +147,30 @@ made in; links made from then on show the new one. A brand chosen for the store
 in the studio shows here too. If Pixonaut refuses the change, the card says so
 and keeps the brand Pixonaut holds. A workspace with one brand shows it as the
 only choice.
+
+### The store's print files
+
+Pixonaut makes a print file in one of three forms:
+
+| Form | What the printshop gets |
+|---|---|
+| Flat | One flat image per print |
+| Layers, text as shapes | Each printed layer its own PDF layer, named after the layer, with text turned into shapes |
+| Layers with live text | The same, with plain text kept as live text the printshop can edit |
+
+Flat files and layers with text as shapes print exactly alike. Live text
+prints the same outside text, and within a tolerance at text edges: 1 to
+100 px, or 0.01 to 5 mm. A print file edited after Pixonaut made it carries
+no guarantee.
+
+The workspace sets the form and the tolerance in the studio. Under **Print
+files**, choose **Follow the workspace** (the default, which names the
+workspace's form) or a form of the store's own; with **Layers with live
+text**, **Live text tolerance** sets the tolerance, and left empty follows the
+workspace's. Click **Save print files**. The line under the menu shows what the
+store's print files are made as now. A template that sets its own form keeps
+it, whatever the store chooses. If Pixonaut refuses the change, or the
+tolerance is out of its limits, the card says so and nothing changes.
 
 ### The www. address
 
