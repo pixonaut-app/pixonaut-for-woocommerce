@@ -29,6 +29,7 @@ use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\PngFixture;
+use Pixonaut\WooCommerce\Tests\Support\ShopListing;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Signature;
 use Pixonaut\WooCommerce\Webhooks\EventStore;
 use Pixonaut\WooCommerce\Webhooks\Processor;
@@ -244,6 +245,7 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 		$this->assertNotNull( $notice );
 		$this->assertStringContainsString( 'href="' . esc_url( admin_url( 'post.php?post=' . $this->product_id . '&action=edit' ) ) . '"', $notice['message'] );
 		$this->assertCount( 1, $this->recorder->requests, 'a template no longer live is not checked further' );
+		$this->assertNotContains( $this->product_id, ShopListing::shop(), 'a paused template takes the product out of the shop' );
 
 		$this->script_recheck( array( DesignFixture::TEMPLATE_BASE_ID => DesignFixture::LIVE_VERSION ) );
 		$this->deliver(
@@ -257,6 +259,7 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 		$this->assertTrue( $this->stored( $this->product_id )->valid );
 		$this->assertTrue( $this->reload( $this->product_id )->is_purchasable() );
 		$this->assertFalse( $this->plugin->notices()->has( InvalidProductNotice::key( $this->product_id ) ) );
+		$this->assertContains( $this->product_id, ShopListing::shop(), 'resuming the template lists the product again' );
 	}
 
 	public function test_a_deleted_template_stops_sales(): void {

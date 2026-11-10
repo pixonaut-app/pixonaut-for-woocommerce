@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T21:20:12+00:00\n"
+"POT-Creation-Date: 2026-11-10T22:45:48+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: da_DK\n"
@@ -2862,7 +2862,7 @@ msgstr "Hos trykkeriet"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the printshop has shipped it.
 #. translators: Status of an order line on the admin order screen: the item has shipped.
-#: src/Admin/OrderBox.php:299 src/Labels.php:617
+#: src/Admin/OrderBox.php:299 src/Labels.php:628
 msgid "Shipped"
 msgstr "Afsendt"
 
@@ -2873,7 +2873,7 @@ msgstr "Mislykket"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the item is cancelled.
 #. translators: Status of an order line on the admin order screen: the item is cancelled.
-#: src/Admin/OrderBox.php:303 src/Labels.php:621
+#: src/Admin/OrderBox.php:303 src/Labels.php:632
 msgid "Cancelled"
 msgstr "Annulleret"
 
@@ -3651,19 +3651,19 @@ msgstr "Altid skabelonens form"
 msgid "Always the chosen print size’s shape"
 msgstr "Altid den valgte trykstørrelses form"
 
-#: src/Catalogue/InvalidReason.php:132
+#: src/Catalogue/InvalidReason.php:135
 msgid "Choose a template."
 msgstr "Vælg en skabelon."
 
-#: src/Catalogue/InvalidReason.php:134
+#: src/Catalogue/InvalidReason.php:137
 msgid "Choose where on the blank the design is printed."
 msgstr "Vælg, hvor på basisproduktet designet skal trykkes."
 
-#: src/Catalogue/InvalidReason.php:136
+#: src/Catalogue/InvalidReason.php:139
 msgid "The blank no longer exists in Pixonaut."
 msgstr "Basisproduktet findes ikke længere i Pixonaut."
 
-#: src/Catalogue/InvalidReason.php:138
+#: src/Catalogue/InvalidReason.php:141
 msgid ""
 "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or "
 "choose another blank."
@@ -3671,7 +3671,7 @@ msgstr ""
 "Basisproduktet er slettet i Pixonaut. Gendan det i Pixonaut-studiet, eller "
 "vælg et andet basisprodukt."
 
-#: src/Catalogue/InvalidReason.php:140
+#: src/Catalogue/InvalidReason.php:143
 msgid ""
 "The blank no longer has this placement, or Pixonaut cannot size a print for "
 "it."
@@ -3679,11 +3679,15 @@ msgstr ""
 "Basisproduktet har ikke længere denne placering, eller Pixonaut kan ikke "
 "beregne en trykstørrelse til den."
 
-#: src/Catalogue/InvalidReason.php:142
-msgid "The template no longer exists in Pixonaut."
-msgstr "Skabelonen findes ikke længere i Pixonaut."
+#: src/Catalogue/InvalidReason.php:145
+msgid ""
+"The template is not published in Pixonaut, or no longer exists. Publish it "
+"in the Pixonaut studio, or choose another template."
+msgstr ""
+"Skabelonen er ikke udgivet i Pixonaut eller findes ikke længere. Udgiv den i "
+"Pixonaut-studiet, eller vælg en anden skabelon."
 
-#: src/Catalogue/InvalidReason.php:144
+#: src/Catalogue/InvalidReason.php:147
 msgid ""
 "The template is paused or deleted in Pixonaut. Make it live again, or choose "
 "another template."
@@ -3692,20 +3696,20 @@ msgstr ""
 "eller vælg en anden skabelon."
 
 #. translators: %d: most sides a product can have.
-#: src/Catalogue/InvalidReason.php:148
+#: src/Catalogue/InvalidReason.php:151
 #, php-format
 msgid "A product has at most %d sides."
 msgstr "En vare har højst %d sider."
 
-#: src/Catalogue/InvalidReason.php:152
+#: src/Catalogue/InvalidReason.php:155
 msgid "Two sides use the same placement. Each placement can be one side only."
 msgstr "To sider bruger samme placering. Hver placering kan kun være én side."
 
-#: src/Catalogue/InvalidReason.php:154
+#: src/Catalogue/InvalidReason.php:157
 msgid "Two sides have the same key. Give each side its own."
 msgstr "To sider har samme nøgle. Giv hver side sin egen."
 
-#: src/Catalogue/InvalidReason.php:156
+#: src/Catalogue/InvalidReason.php:159
 msgid ""
 "A custom print size needs a width and height in millimetres, both above zero."
 msgstr ""
@@ -3713,12 +3717,12 @@ msgstr ""
 "over nul."
 
 #. translators: %d: most print sizes one side can offer.
-#: src/Catalogue/InvalidReason.php:160
+#: src/Catalogue/InvalidReason.php:163
 #, php-format
 msgid "A side offers at most %d print sizes."
 msgstr "En side tilbyder højst %d trykstørrelser."
 
-#: src/Catalogue/InvalidReason.php:164
+#: src/Catalogue/InvalidReason.php:167
 msgid ""
 "Add a print size in millimetres. Without a blank there is no placement to "
 "take one from."
@@ -3726,15 +3730,15 @@ msgstr ""
 "Tilføj en trykstørrelse i millimeter. Uden basisprodukt er der ingen "
 "placering at hente en fra."
 
-#: src/Catalogue/InvalidReason.php:166
+#: src/Catalogue/InvalidReason.php:169
 msgid "The print size is larger than the placement can print."
 msgstr "Trykstørrelsen er større, end der kan trykkes på placeringen."
 
-#: src/Catalogue/InvalidReason.php:168
+#: src/Catalogue/InvalidReason.php:171
 msgid "The print size does not match the template's aspect ratio."
 msgstr "Trykstørrelsen passer ikke til skabelonens størrelsesforhold."
 
-#: src/Catalogue/InvalidReason.php:170
+#: src/Catalogue/InvalidReason.php:173
 msgid ""
 "The placement is printed across its whole print area: the print size must be "
 "that area."
@@ -3742,7 +3746,7 @@ msgstr ""
 "Trykpositionen trykkes på hele sit trykområde, så trykstørrelsen skal svare "
 "til det område."
 
-#: src/Catalogue/InvalidReason.php:172
+#: src/Catalogue/InvalidReason.php:175
 msgid ""
 "The template cannot be printed at the print area of this variation's blank "
 "variant. Choose a template that fits, or stop selling the variation."
@@ -3751,7 +3755,7 @@ msgstr ""
 "basisproduktvariant. Vælg en skabelon, der passer, eller stop med at sælge "
 "varianten."
 
-#: src/Catalogue/InvalidReason.php:174
+#: src/Catalogue/InvalidReason.php:177
 msgid ""
 "The variation's print size has not been checked since the product changed. "
 "Update the product again."
@@ -3759,7 +3763,7 @@ msgstr ""
 "Variantens trykstørrelse er ikke blevet tjekket, siden varen blev ændret. "
 "Opdatér varen igen."
 
-#: src/Catalogue/InvalidReason.php:176
+#: src/Catalogue/InvalidReason.php:179
 msgid ""
 "Pixonaut could not check the configuration. Check the connection, then "
 "update the product again."
@@ -3767,7 +3771,7 @@ msgstr ""
 "Pixonaut kunne ikke tjekke opsætningen. Tjek forbindelsen, og opdatér "
 "derefter varen igen."
 
-#: src/Catalogue/InvalidReason.php:178
+#: src/Catalogue/InvalidReason.php:181
 msgid ""
 "Pixonaut would not make the design of a standing side. Check the side's "
 "template, placement and print size, then update the product again."
@@ -3775,7 +3779,7 @@ msgstr ""
 "Pixonaut ville ikke lave designet til en fast side. Tjek sidens skabelon, "
 "placering og trykstørrelse, og opdatér derefter varen igen."
 
-#: src/Catalogue/InvalidReason.php:180
+#: src/Catalogue/InvalidReason.php:183
 msgid ""
 "Pixonaut would not make the design of a standing side: the store may not "
 "create and approve designs. Check the connection's permissions in the "
@@ -3785,7 +3789,7 @@ msgstr ""
 "oprette og godkende designs. Tjek forbindelsens tilladelser i Pixonaut-"
 "studiet, og opdatér derefter varen igen."
 
-#: src/Catalogue/InvalidReason.php:182
+#: src/Catalogue/InvalidReason.php:185
 msgid ""
 "The template of a standing side does not fit the placement at any of the "
 "blank's sizes, so none of them can be printed. Choose a template that fits."
@@ -3794,11 +3798,11 @@ msgstr ""
 "basisproduktets størrelser, så ingen af dem kan trykkes. Vælg en skabelon, "
 "der passer."
 
-#: src/Catalogue/InvalidReason.php:184
+#: src/Catalogue/InvalidReason.php:187
 msgid "Choose a blank, or a printshop that prints without one."
 msgstr "Vælg et basisprodukt eller et trykkeri, der trykker uden basisprodukt."
 
-#: src/Catalogue/InvalidReason.php:186
+#: src/Catalogue/InvalidReason.php:189
 msgid ""
 "The configuration was saved by a newer version of Pixonaut for WooCommerce. "
 "Update the plugin."
@@ -3806,7 +3810,7 @@ msgstr ""
 "Opsætningen blev gemt af en nyere version af Pixonaut for WooCommerce. "
 "Opdatér pluginet."
 
-#: src/Catalogue/InvalidReason.php:188
+#: src/Catalogue/InvalidReason.php:191
 msgid "Pixonaut cannot print this configuration."
 msgstr "Pixonaut kan ikke trykke denne opsætning."
 
@@ -5277,31 +5281,36 @@ msgctxt "group numbers"
 msgid "Off"
 msgstr "Fra"
 
-#: src/Labels.php:317
+#: src/Labels.php:323
 msgid "Personalisation is unavailable right now. Please try again later."
 msgstr "Personalisering er ikke tilgængelig lige nu. Prøv igen senere."
 
-#: src/Labels.php:321
+#. translators: On the page of a personalised product the shop cannot sell for now, in place of the add-to-cart button.
+#: src/Labels.php:328
+msgid "This product is not available right now."
+msgstr "Dette produkt er ikke tilgængeligt lige nu."
+
+#: src/Labels.php:332
 msgid "Please personalise this product before adding it to your cart."
 msgstr "Personalisér denne vare, før du lægger den i kurven."
 
-#: src/Labels.php:325
+#: src/Labels.php:336
 msgid "We could not save your design. Please try again."
 msgstr "Vi kunne ikke gemme dit design. Prøv igen."
 
-#: src/Labels.php:329
+#: src/Labels.php:340
 msgid "Your design does not match this product. Please personalise it again."
 msgstr "Dit design passer ikke til denne vare. Personalisér den igen."
 
-#: src/Labels.php:333
+#: src/Labels.php:344
 msgid "This product was just updated, please reload."
 msgstr "Denne vare er netop blevet opdateret. Genindlæs siden."
 
-#: src/Labels.php:337
+#: src/Labels.php:348
 msgid "Your design preview expired. Please approve it again."
 msgstr "Forhåndsvisningen af dit design er udløbet. Godkend designet igen."
 
-#: src/Labels.php:341
+#: src/Labels.php:352
 msgid ""
 "This design is already in a cart or an order. Please personalise the product "
 "again."
@@ -5309,12 +5318,12 @@ msgstr ""
 "Dette design ligger allerede i en kurv eller en ordre. Personalisér varen "
 "igen."
 
-#: src/Labels.php:345
+#: src/Labels.php:356
 msgid "Your design could not be prepared. Please check it and try again."
 msgstr "Dit design kunne ikke klargøres. Tjek det, og prøv igen."
 
 #. translators: %s: the name of the personalised product in the shopper's cart.
-#: src/Labels.php:350
+#: src/Labels.php:361
 #, php-format
 msgid ""
 "The design for \"%s\" is no longer available. Please remove it from your "
@@ -5324,29 +5333,29 @@ msgstr ""
 "personalisér den igen."
 
 #. translators: %s: the names of the product options the shopper has not chosen yet, as a list such as "Colour and Size". Notice on the product page after pressing the Personalise button.
-#: src/Labels.php:355
+#: src/Labels.php:366
 #, php-format
 msgid "Please choose a value for %s before personalising this product."
 msgstr "Vælg en værdi for %s, før du personaliserer denne vare."
 
 #. translators: %s: the labels of the design's fields the shopper must change, as a list such as "Photo, Name and Class".
-#: src/Labels.php:360
+#: src/Labels.php:371
 #, php-format
 msgid "Please change these fields: %s"
 msgstr "Ændr disse felter: %s"
 
 #. translators: Label of the checkbox next to the preview on the product page, shown to the shopper; ticking it approves the design. %1$s and %2$s go around the word for the preview, which becomes a link that opens the design's proof.
-#: src/Labels.php:365
+#: src/Labels.php:376
 #, php-format
 msgid "I approve the %1$spreview%2$s"
 msgstr "Jeg godkender %1$sforhåndsvisningen%2$s"
 
 #. translators: Button in the cart and on the order received page, shown to the shopper; opens the proof of the design.
-#: src/Labels.php:370
+#: src/Labels.php:381
 msgid "Open proof"
 msgstr "Åbn korrektur"
 
-#: src/Labels.php:374
+#: src/Labels.php:385
 msgid ""
 "Please tick \"I approve the preview\" before adding this product to your "
 "cart."
@@ -5355,81 +5364,81 @@ msgstr ""
 "kurven."
 
 #. translators: Short note under the live preview on the product page, shown to the shopper.
-#: src/Labels.php:379
+#: src/Labels.php:390
 msgid "The preview updates as you type"
 msgstr "Forhåndsvisningen opdateres, mens du skriver"
 
-#: src/Labels.php:383
+#: src/Labels.php:394
 msgid "Loading the designer"
 msgstr "Designværktøjet indlæses"
 
 #. translators: Alternative text of the design preview image in the cart and order, shown to the shopper.
-#: src/Labels.php:388
+#: src/Labels.php:399
 msgid "Your design"
 msgstr "Dit design"
 
 #. translators: Shown to the shopper in the window over the product page while their design's proof is made.
-#: src/Labels.php:393
+#: src/Labels.php:404
 msgid "Preparing your proof"
 msgstr "Din korrektur klargøres"
 
 #. translators: Button that closes the window showing the design's proof on the product page; here Close is a verb.
-#: src/Labels.php:398
+#: src/Labels.php:409
 msgctxt "proof window"
 msgid "Close"
 msgstr "Luk"
 
 #. translators: Heading above a cart or order item's design details, shown to the shopper.
-#: src/Labels.php:403
+#: src/Labels.php:414
 msgid "Personalisation"
 msgstr "Personalisering"
 
 #. translators: Shown to the shopper in place of a design's field values once the shop has removed them after its retention period.
-#: src/Labels.php:408
+#: src/Labels.php:419
 msgid "Removed after the shop's retention period"
 msgstr "Fjernet efter webshoppens opbevaringsperiode"
 
 #. translators: Name of a design field type, a free-text field, shown to the shopper in the cart line details.
-#: src/Labels.php:413
+#: src/Labels.php:424
 msgid "Text"
 msgstr "Tekst"
 
 #. translators: Name of a design field type, a pick from a list of options, shown to the shopper in the cart line details.
-#: src/Labels.php:418
+#: src/Labels.php:429
 msgid "Choice"
 msgstr "Valg"
 
 #. translators: Name of a design field type, a numeric value, shown to the shopper in the cart line details.
-#: src/Labels.php:423
+#: src/Labels.php:434
 msgid "Number"
 msgstr "Tal"
 
 #. translators: Name of a design field type, a picked colour, shown to the shopper in the cart line details.
-#: src/Labels.php:428
+#: src/Labels.php:439
 msgid "Colour"
 msgstr "Farve"
 
 #. translators: Name of a design field type, an uploaded image, shown to the shopper in the cart line details.
-#: src/Labels.php:433
+#: src/Labels.php:444
 msgid "Image"
 msgstr "Billede"
 
 #. translators: Heading of the status of an order line on the admin order screen.
-#: src/Labels.php:438
+#: src/Labels.php:449
 msgctxt "heading: status of an order line"
 msgid "Status"
 msgstr "Status"
 
 #. translators: Heading of the shipment tracking links in the order details and shipping emails, shown to the shopper.
-#: src/Labels.php:443
+#: src/Labels.php:454
 msgid "Tracking"
 msgstr "Sporing"
 
-#: src/Labels.php:447
+#: src/Labels.php:458
 msgid "Part of your order is on its way. The rest follows as soon as it ships."
 msgstr "En del af din ordre er på vej. Resten følger, så snart den er afsendt."
 
-#: src/Labels.php:451
+#: src/Labels.php:462
 msgid ""
 "There is new tracking for your order. Follow your parcel with the details "
 "below."
@@ -5438,11 +5447,11 @@ msgstr ""
 
 #. translators: Accessible name of the tabs that switch between a product's sides, such as front and back, on the product page, read by screen readers.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's sides, such as front and back, each with its template.
-#: src/Labels.php:456 templates/admin/product-fields.php:152
+#: src/Labels.php:467 templates/admin/product-fields.php:152
 msgid "Sides"
 msgstr "Sider"
 
-#: src/Labels.php:460
+#: src/Labels.php:471
 msgid ""
 "Your order is paid. Before we print it, please check the proof of your "
 "design and approve it. Nothing is printed until you do."
@@ -5451,15 +5460,15 @@ msgstr ""
 "design og godkende det. Der trykkes intet, før du har gjort det."
 
 #. translators: Link in the proof email to the shopper, and under the order item on the order received page and in My Account; opens the proof page where the design is approved.
-#: src/Labels.php:465
+#: src/Labels.php:476
 msgid "Review and approve your design"
 msgstr "Se og godkend dit design"
 
-#: src/Labels.php:469
+#: src/Labels.php:480
 msgid "Thank you for approving your design. It is now on its way to print."
 msgstr "Tak, fordi du godkendte dit design. Det er nu på vej til tryk."
 
-#: src/Labels.php:473
+#: src/Labels.php:484
 msgid ""
 "We are still waiting for your approval. Please check the proof of your "
 "design and approve it, or tell us what to change. Nothing is printed until "
@@ -5470,7 +5479,7 @@ msgstr ""
 "du har gjort det."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:478
+#: src/Labels.php:489
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will print your design as the proof "
@@ -5480,13 +5489,13 @@ msgstr ""
 "korrekturen viser det."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:483
+#: src/Labels.php:494
 #, php-format
 msgid "If we have not heard from you by %s, we will cancel this item."
 msgstr "Hvis vi ikke har hørt fra dig senest %s, annullerer vi denne vare."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:488
+#: src/Labels.php:499
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will cancel this item and refund it."
@@ -5495,7 +5504,7 @@ msgstr ""
 "refunderer den."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:493
+#: src/Labels.php:504
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will not print your design and will "
@@ -5504,7 +5513,7 @@ msgstr ""
 "Hvis vi ikke har hørt fra dig senest %s, trykker vi ikke dit design, men "
 "kontakter dig om denne vare."
 
-#: src/Labels.php:497
+#: src/Labels.php:508
 msgid ""
 "You did not approve your design by the deadline, so we have cancelled this "
 "item. Nothing was printed."
@@ -5512,89 +5521,89 @@ msgstr ""
 "Du godkendte ikke dit design inden fristen, så vi har annulleret denne vare. "
 "Intet blev trykt."
 
-#: src/Labels.php:501
+#: src/Labels.php:512
 msgid "Its price is being refunded to you."
 msgstr "Prisen for den bliver refunderet til dig."
 
 #. translators: Button on the product page opened to edit a cart item, shown to the shopper; saves the changed design.
-#: src/Labels.php:506
+#: src/Labels.php:517
 msgid "Update design"
 msgstr "Opdatér design"
 
-#: src/Labels.php:510
+#: src/Labels.php:521
 msgid "This design was changed elsewhere. Please reload the page."
 msgstr "Dette design blev ændret et andet sted. Genindlæs siden."
 
-#: src/Labels.php:514
+#: src/Labels.php:525
 msgid "This design can no longer be changed."
 msgstr "Dette design kan ikke længere ændres."
 
-#: src/Labels.php:518
+#: src/Labels.php:529
 msgid "This item is no longer in your cart."
 msgstr "Denne vare er ikke længere i din kurv."
 
 #. translators: Button on the product page, shown to the shopper; opens the Pixonaut designer to personalise the product.
-#: src/Labels.php:523
+#: src/Labels.php:534
 msgctxt "verb: button that opens the designer"
 msgid "Personalise"
 msgstr "Personalisér"
 
-#: src/Labels.php:527
+#: src/Labels.php:538
 msgid ""
 "We could not match your design to this visit. Please personalise the product "
 "again."
 msgstr ""
 "Vi kunne ikke knytte dit design til dette besøg. Personalisér varen igen."
 
-#: src/Labels.php:531
+#: src/Labels.php:542
 msgid "Your design is ready. Use it with the button below."
 msgstr "Dit design er klar. Brug det med knappen nedenfor."
 
 #. translators: Button on the product page, shown to the shopper after returning from the Pixonaut designer when their design could not be kept yet, or when they came back in a browser that did not open the designer; keeps the design.
-#: src/Labels.php:536
+#: src/Labels.php:547
 msgid "Use my design"
 msgstr "Brug mit design"
 
 #. translators: Soft note above the add-to-cart row on a product page showing the design the shopper made in the Pixonaut designer.
-#: src/Labels.php:541
+#: src/Labels.php:552
 msgid "This is your design."
 msgstr "Dette er dit design."
 
 #. translators: Button beside the note that this is the shopper's design; reopens it in the Pixonaut designer.
-#: src/Labels.php:546
+#: src/Labels.php:557
 msgctxt "personalised product button"
 msgid "Change"
 msgstr "Ændr"
 
 #. translators: %s: the name of a printed side, such as Front. Button beside the note that this is the shopper's design; reopens that side's design in the Pixonaut designer.
-#: src/Labels.php:551
+#: src/Labels.php:562
 #, php-format
 msgid "Change %s"
 msgstr "Ændr %s"
 
 #. translators: Start of the line on a product page saying the design it shows is already in the shopper's cart, followed by its size and quantity.
-#: src/Labels.php:556
+#: src/Labels.php:567
 msgid "In your cart"
 msgstr "I din kurv"
 
 #. translators: Button on the product page of an item already in the shopper's cart; reopens its design in the Pixonaut designer.
-#: src/Labels.php:561
+#: src/Labels.php:572
 msgctxt "item in the cart button"
 msgid "Change design"
 msgstr "Ændr design"
 
 #. translators: The main button on the product page of an item already in the shopper's cart; goes to the cart.
-#: src/Labels.php:566
+#: src/Labels.php:577
 msgctxt "item in the cart button"
 msgid "View cart"
 msgstr "Se kurv"
 
 #. translators: Link on the product page of an item already in the shopper's cart; opens the plain product page, to start another design from scratch.
-#: src/Labels.php:571
+#: src/Labels.php:582
 msgid "Make another with a new design"
 msgstr "Lav en til med et nyt design"
 
-#: src/Labels.php:575
+#: src/Labels.php:586
 msgid ""
 "This proof has changed since this link was sent. Please use the link in our "
 "latest email."
@@ -5602,16 +5611,16 @@ msgstr ""
 "Denne korrektur er ændret, siden linket blev sendt. Brug linket i vores "
 "seneste e-mail."
 
-#: src/Labels.php:579
+#: src/Labels.php:590
 msgid "This design is approved and can no longer be changed."
 msgstr "Dette design er godkendt og kan ikke længere ændres."
 
 #. translators: Button on the page opened from a proof email, shown to the shopper; saves the changes and approves the design.
-#: src/Labels.php:584
+#: src/Labels.php:595
 msgid "Save and approve design"
 msgstr "Gem og godkend design"
 
-#: src/Labels.php:588
+#: src/Labels.php:599
 msgid ""
 "We received your request to change your design. If you did not finish your "
 "changes, you can open the design again here. Nothing is printed until you "
@@ -5622,11 +5631,11 @@ msgstr ""
 "før du godkender det."
 
 #. translators: Button in the email to the shopper after a change request; reopens the design.
-#: src/Labels.php:593
+#: src/Labels.php:604
 msgid "Edit your design"
 msgstr "Redigér dit design"
 
-#: src/Labels.php:597
+#: src/Labels.php:608
 msgid ""
 "We could not match your changes to this visit. Please change your design "
 "again from its product page."
@@ -5634,42 +5643,42 @@ msgstr ""
 "Vi kunne ikke knytte dine ændringer til dette besøg. Ændr dit design igen "
 "fra produktsiden."
 
-#: src/Labels.php:601
+#: src/Labels.php:612
 msgid "Your design has been updated."
 msgstr "Dit design er blevet opdateret."
 
 #. translators: Status of an order line on the admin order screen: the design is saved, payment is pending.
-#: src/Labels.php:607
+#: src/Labels.php:618
 msgid "Design saved"
 msgstr "Design gemt"
 
 #. translators: Status of an order line on the admin order screen: the shopper has to approve the proof.
-#: src/Labels.php:609
+#: src/Labels.php:620
 msgid "Awaiting your approval"
 msgstr "Afventer din godkendelse"
 
 #. translators: Status of an order line on the admin order screen: the design is approved.
-#: src/Labels.php:611
+#: src/Labels.php:622
 msgid "Design approved"
 msgstr "Design godkendt"
 
 #. translators: Status of an order line on the admin order screen: the print file is made.
-#: src/Labels.php:613
+#: src/Labels.php:624
 msgid "Print file ready"
 msgstr "Trykfil klar"
 
 #. translators: Status of an order line on the admin order screen: the printshop is making it.
-#: src/Labels.php:615
+#: src/Labels.php:626
 msgid "In production"
 msgstr "I produktion"
 
 #. translators: Status of an order line on the admin order screen: the printshop could not make it.
-#: src/Labels.php:619
+#: src/Labels.php:630
 msgid "Could not be produced"
 msgstr "Kunne ikke fremstilles"
 
 #. translators: Status of an order line on the admin order screen: the store is looking into the item.
-#: src/Labels.php:623
+#: src/Labels.php:634
 msgid "Being reviewed by the store"
 msgstr "Bliver gennemgået af webshoppen"
 
@@ -6537,7 +6546,7 @@ msgid "As swatches, like the designer's own choices"
 msgstr "Som knapper, ligesom designværktøjets egne valg"
 
 #. translators: Heading of the designer's group holding the product's options, such as Size or Colour, on the product page.
-#: src/Storefront/FormGroupsMount.php:199
+#: src/Storefront/FormGroupsMount.php:271
 msgctxt "designer group of the product options"
 msgid "Options"
 msgstr "Muligheder"
@@ -6594,6 +6603,17 @@ msgstr "I baggrunden, én ad gangen"
 #: src/Storefront/Preload.php:52
 msgid "Off: load each one when it is shown"
 msgstr "Fra: indlæs hver enkelt, når den vises"
+
+#: src/Storefront/UnavailableProduct.php:94
+msgid ""
+"Shoppers do not see this product in the shop, search or related products, "
+"and cannot buy it: its template is paused or not published in Pixonaut. Make "
+"the template live in the Pixonaut studio to sell it again."
+msgstr ""
+"Kunderne ser ikke dette produkt i butikken, i søgningen eller blandt "
+"relaterede produkter og kan ikke købe det: Dets skabelon er sat på pause "
+"eller ikke udgivet i Pixonaut. Gør skabelonen aktiv i Pixonaut-studiet for "
+"at sælge produktet igen."
 
 #. translators: %s: the product's name.
 #: src/Storefront/UnavailableReports.php:191
@@ -9032,6 +9052,9 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s visning"
 msgstr[1] "%s visninger"
+
+#~ msgid "The template no longer exists in Pixonaut."
+#~ msgstr "Skabelonen findes ikke længere i Pixonaut."
 
 #~ msgid "On the product photo"
 #~ msgstr "På varefotoet"
