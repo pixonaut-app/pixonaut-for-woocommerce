@@ -43,6 +43,21 @@ final class SplitCards {
 	public const ATTRIBUTE_HOOK = 'pixonaut_wc_split_cards_attribute';
 
 	/**
+	 * Action Scheduler hook writing the next batch of every variable product.
+	 */
+	public const ALL_HOOK = 'pixonaut_wc_split_cards_all';
+
+	/**
+	 * Option holding whether every variable product's cards wait to be written.
+	 */
+	public const BACKFILL_OPTION = Schema::SPLIT_CARDS_BACKFILL_OPTION;
+
+	/**
+	 * BACKFILL_OPTION's value while the job writing every product's cards waits to be queued.
+	 */
+	public const BACKFILL_PENDING = '1';
+
+	/**
 	 * Prefix of the MySQL lock one product's cards are written under.
 	 */
 	private const LOCK_PREFIX = 'pixonaut_split_card_';
@@ -94,6 +109,38 @@ final class SplitCards {
 		add_action( 'deleted_post_meta', array( self::class, 'config_written' ), 10, 3 );
 		add_action( 'delete_term', array( self::class, 'term_deleted' ) );
 		add_action( self::ATTRIBUTE_HOOK, array( self::class, 'write_attribute' ), 10, 2 );
+		add_action( self::ALL_HOOK, array( self::class, 'write_all' ) );
+		add_action( 'action_scheduler_init', array( self::class, 'queue_backfill' ) );
+	}
+
+	/**
+	 * Queues the job writing every variable product's cards that an upgrade
+	 * asked for, and only then forgets the ask: one that could not be
+	 * queued is tried again on the next request.
+	 */
+	public static function queue_backfill(): void {
+		if ( self::BACKFILL_PENDING !== get_option( self::BACKFILL_OPTION ) || ! function_exists( 'as_enqueue_async_action' ) ) {
+			return;
+		}
+		if ( 0 !== as_enqueue_async_action( self::ALL_HOOK, array( 0 ), Schema::ACTION_GROUP ) ) {
+			delete_option( self::BACKFILL_OPTION );
+		}
+	}
+
+	/**
+	 * Writes the cards of a batch of variable products, and queues the
+	 * next batch while there may be more.
+	 *
+	 * @param mixed $after Only products above this id.
+	 */
+	public static function write_all( mixed $after = 0 ): void {
+		$ids = self::variable_products( (int) $after );
+		foreach ( $ids as $id ) {
+			self::write( $id );
+		}
+		if ( count( $ids ) === self::BATCH && function_exists( 'as_enqueue_async_action' ) ) {
+			as_enqueue_async_action( self::ALL_HOOK, array( end( $ids ) ), Schema::ACTION_GROUP );
+		}
 	}
 
 	/**
@@ -410,6 +457,26 @@ final class SplitCards {
 		}
 		self::$variations[ $product_id ] = array_values( $by_variation );
 		return self::$variations[ $product_id ];
+	}
+
+	/**
+	 * Variable products, in id order.
+	 *
+	 * @param int $after Only products above this id.
+	 * @return list<int>
+	 */
+	private static function variable_products( int $after ): array {
+		global $wpdb;
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- paged by id, which no product query can do; read once after an upgrade.
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT product.ID FROM {$wpdb->posts} product INNER JOIN {$wpdb->term_relationships} rel ON rel.object_id = product.ID INNER JOIN {$wpdb->term_taxonomy} tax ON tax.term_taxonomy_id = rel.term_taxonomy_id INNER JOIN {$wpdb->terms} type ON type.term_id = tax.term_id WHERE tax.taxonomy = 'product_type' AND type.slug = 'variable' AND product.post_type = 'product' AND product.ID > %d ORDER BY product.ID LIMIT %d",
+				$after,
+				self::BATCH
+			)
+		);
+		// phpcs:enable
+		return array_values( array_map( 'intval', $ids ) );
 	}
 
 	/**

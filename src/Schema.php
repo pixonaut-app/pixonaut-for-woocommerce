@@ -240,6 +240,12 @@ final class Schema {
 	const VARIANTS_BACKFILL_OPTION = 'pixonaut_wc_variants_backfill';
 
 	/**
+	 * Option set while every variable product's split cards wait to be
+	 * written after an upgrade, until the job doing it is queued.
+	 */
+	const SPLIT_CARDS_BACKFILL_OPTION = 'pixonaut_wc_split_cards_backfill';
+
+	/**
 	 * Prefix of the transients caching Pixonaut catalogue answers for the admin.
 	 */
 	const CATALOGUE_CACHE_PREFIX = 'pixonaut_wc_catalogue_';

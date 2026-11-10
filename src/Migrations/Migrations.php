@@ -29,6 +29,7 @@ final class Migrations {
 			new ForgetTrashedProductNotices(),
 			new ForgetMemberLinks(),
 			new ForgetAddAfterApprove(),
+			new WriteSplitCards(),
 		);
 	}
 }

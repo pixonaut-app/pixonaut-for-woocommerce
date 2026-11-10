@@ -63,6 +63,9 @@ Product Collection block on the shop's templates) both show them.
 
 Each card shows the product's title, image and price.
 
+Products already set up this way when the plugin is updated get their
+cards within a few minutes of the update, from a background job.
+
 ## Global attributes only
 
 Only global attributes, the ones added under **Products > Attributes**, have

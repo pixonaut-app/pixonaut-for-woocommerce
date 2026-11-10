@@ -9,7 +9,6 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Migrations;
 
 use Pixonaut\WooCommerce\Migrations\ForgetAddAfterApprove;
 use Pixonaut\WooCommerce\Migrations\MigrationPostponed;
-use Pixonaut\WooCommerce\Migrations\Migrations;
 use Pixonaut\WooCommerce\Settings\Settings;
 use WP_UnitTestCase;
 
@@ -60,11 +59,5 @@ final class ForgetAddAfterApproveTest extends WP_UnitTestCase {
 		( new ForgetAddAfterApprove() )->up();
 
 		$this->assertFalse( get_option( Settings::OPTION ) );
-	}
-
-	public function test_it_is_the_last_migration(): void {
-		$all = Migrations::all();
-
-		$this->assertInstanceOf( ForgetAddAfterApprove::class, end( $all ) );
 	}
 }

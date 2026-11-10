@@ -13,6 +13,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
+use Pixonaut\WooCommerce\Migrations\WriteSplitCards;
 use Pixonaut\WooCommerce\Storefront\SplitCardListings;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use WC_Product;
@@ -136,6 +137,19 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 
 		wp_delete_post( $without->get_id(), true );
 		$this->assertSame( array( $this->term( 'med-bild' ) ), $this->cards( $poster ), 'deleted without WooCommerce' );
+	}
+
+	public function test_an_upgrade_writes_the_cards_of_a_product_set_up_before_they_were_kept(): void {
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		$poster = $this->poster();
+		delete_post_meta( $poster->get_id(), SplitCards::META );
+
+		( new WriteSplitCards() )->up();
+		SplitCards::queue_backfill();
+		SplitCards::write_all( 0 );
+
+		$this->assertSame( array( $this->term( 'med-bild' ), $this->term( 'utan-bild' ) ), $this->cards( $poster ) );
+		as_unschedule_all_actions( SplitCards::ALL_HOOK );
 	}
 
 	public function test_the_shop_lists_a_card_per_value_and_counts_them(): void {
