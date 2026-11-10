@@ -61,9 +61,11 @@ import {
 	initTemplateVersion,
 	linkedTemplateId,
 	offerVersions,
+	showTemplateStudio,
 } from './template-version';
 import { chosenThumbnail, thumbnailOptions } from './thumbnails';
 import { initUsePicture } from './use-picture';
+import { initValueSizes } from './value-sizes';
 import {
 	initOverride,
 	initVariationSizes,
@@ -414,23 +416,43 @@ export function checkSide(
 	return missing;
 }
 
-/** Names the side in its heading: its name as typed, else its print
- *  position's, else "Side". */
+/** The name of a select's chosen option; empty when nothing is chosen, or
+ *  when the option only repeats its id, as a template whose name is not
+ *  known yet does. */
+function chosenText(select: HTMLSelectElement | null): string {
+	const option =
+		select && select.value !== '' ? select.selectedOptions[0] : null;
+	const text = option?.text.trim() ?? '';
+	return text === option?.value ? '' : text;
+}
+
+/** Names the side in its heading: its name as typed, else what an empty
+ *  name follows, its print position's name, else its template's, else its
+ *  key, else "Side"; never a template id. The name field's placeholder
+ *  shows what it follows. */
 export function showSideName(side: HTMLElement): void {
 	const label = side.querySelector<HTMLInputElement>('.pixonaut-side-label');
 	const name = side.querySelector<HTMLElement>('.pixonaut-side__name');
 	if (!name) {
 		return;
 	}
-	const placement = side.querySelector<HTMLSelectElement>(
-		'.pixonaut-side-placement',
-	);
-	const chosen =
-		placement && placement.value !== ''
-			? (placement.selectedOptions[0]?.text ?? '')
-			: '';
+	const followed =
+		chosenText(
+			side.querySelector<HTMLSelectElement>('.pixonaut-side-placement'),
+		) ||
+		chosenText(
+			side.querySelector<HTMLSelectElement>('.pixonaut-side-template'),
+		);
+	if (label) {
+		label.dataset.placeholder ??= label.placeholder;
+		label.placeholder = followed || label.dataset.placeholder;
+	}
+	const key = side.querySelector<HTMLInputElement>('.pixonaut-side-key');
 	name.textContent =
-		label?.value.trim() || chosen || (name.dataset.placeholder ?? '');
+		label?.value.trim() ||
+		followed ||
+		key?.value.trim() ||
+		(name.dataset.placeholder ?? '');
 }
 
 /** Asks one of the plugin's routes; its results, or null when it cannot
@@ -651,10 +673,27 @@ function initSide(panel: Panel, side: HTMLElement): void {
 		);
 	};
 	const showTemplate = chosenThumbnail(template);
+	// A template whose name was not known when the side was saved takes the one read.
+	const nameLinked = (read: SearchOption | undefined) => {
+		const option = template.selectedOptions[0];
+		if (
+			!option ||
+			!read ||
+			read.text === read.id ||
+			option.text !== option.value
+		) {
+			return;
+		}
+		option.text = read.text;
+		templateName.value = read.text;
+		$(template).trigger('change.select2');
+		showSideName(side);
+	};
 	// What is shown of the version the side is linked to, as read.
 	const showLinked = (read: SearchOption | undefined) => {
 		showTemplate(read?.thumbnail ?? '');
 		background(read?.backgroundSeeThrough);
+		nameLinked(read);
 	};
 	const groups = initSideGroups(
 		side,
@@ -678,6 +717,7 @@ function initSide(panel: Panel, side: HTMLElement): void {
 		background(undefined);
 		showMisfitWarning(side, '');
 		showTemplate('');
+		showTemplateStudio(side, '');
 		groups?.templateChanged('');
 		offerVersions(side, '');
 	};
@@ -693,6 +733,7 @@ function initSide(panel: Panel, side: HTMLElement): void {
 			background(event.params.data.backgroundSeeThrough);
 			showMisfitWarning(side, event.params.data.warning ?? '');
 			showTemplate(event.params.data.thumbnail ?? '');
+			showTemplateStudio(side, event.params.data.id);
 			groups?.templateChanged(event.params.data.id);
 			offerVersions(side, event.params.data.id);
 		})
@@ -703,6 +744,7 @@ function initSide(panel: Panel, side: HTMLElement): void {
 			background(undefined);
 			showMisfitWarning(side, '');
 			showTemplate('');
+			showTemplateStudio(side, '');
 			groups?.templateChanged('');
 			offerVersions(side, '');
 		});
@@ -721,10 +763,12 @@ function initSide(panel: Panel, side: HTMLElement): void {
 		}
 	});
 	showModeWarnings(side);
+	initValueSizes(side);
 	side
 		.querySelector('.pixonaut-side-label')
 		?.addEventListener('input', () => showSideName(side));
 	$(placement).on('change', () => showSideName(side));
+	$(template).on('change', () => showSideName(side));
 	showSideName(side);
 	showSideSummary(side);
 	// The saved template's picture: its link is never stored, so it is asked for.

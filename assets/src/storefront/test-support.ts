@@ -267,6 +267,8 @@ export function productPage(
 	document.body.innerHTML = `
 		<div class="pixonaut-preview" data-pixonaut-product="42">
 			${eachSide(sides, (side, hidden) => `<div id="pixonaut-preview-${side}" class="pixonaut-preview__side" data-pixonaut-side="${side}"${hidden}></div>`)}
+			<div class="pixonaut-preview__images" hidden><img src="product.png" alt=""></div>
+			<p class="pixonaut-preview__note">Note</p>
 		</div>
 		<form class="cart" method="post">
 			<div class="pixonaut-form" data-pixonaut-product="42" data-pixonaut-field="pixonaut_designs">

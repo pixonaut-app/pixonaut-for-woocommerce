@@ -59,7 +59,14 @@ final class Endpoint {
 		'template.deleted',
 		'template.live_changed',
 		'template.published',
+		'template.renamed',
 	);
+
+	/**
+	 * The types among EVENT_TYPES Pixonaut only delivers to the endpoint:
+	 * `GET /v1/events` refuses to be asked for them.
+	 */
+	public const WEBHOOK_ONLY_TYPES = array( 'template.renamed' );
 
 	public const PING_OPTION = Schema::WEBHOOK_PING_OPTION;
 

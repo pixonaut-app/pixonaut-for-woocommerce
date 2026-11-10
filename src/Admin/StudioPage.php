@@ -13,7 +13,7 @@ use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
 
 /**
- * A page of the studio for one design, order or blank. Every such page sits
+ * A page of the studio for one design, order, blank or template. Every such page sits
  * under its workspace (`/w/<slug>/…`), so a merchant who belongs to several
  * workspaces lands in the store's. The studio keeps no page without the
  * workspace, so while the store knows no slug there is no link.
@@ -28,6 +28,8 @@ final class StudioPage {
 
 	public const BLANKS = 'blanks';
 
+	public const TEMPLATES = 'templates';
+
 	/**
 	 * The workspace's printshops, under its settings.
 	 */
@@ -36,8 +38,8 @@ final class StudioPage {
 	/**
 	 * The page, or empty when the workspace's slug is not known yet.
 	 *
-	 * @param string $section One of `DESIGNS`, `ORDERS` or `BLANKS`.
-	 * @param string $id      The design, order or blank.
+	 * @param string $section One of `DESIGNS`, `ORDERS`, `BLANKS` or `TEMPLATES`.
+	 * @param string $id      The design, order or blank, or the template's base id.
 	 */
 	public static function url( string $section, string $id ): string {
 		$slug = WorkspaceSettings::tenant_slug();

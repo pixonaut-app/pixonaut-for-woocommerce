@@ -38,6 +38,13 @@ final class Side {
 	public const MAX_VERSIONS_OFFERED = 50;
 
 	/**
+	 * A template id as Pixonaut writes one: lower-case words joined by
+	 * hyphens, e.g. `kids-poster-safari-17`. Earlier saves named a side
+	 * after its template's id; such a name was never typed by the merchant.
+	 */
+	private const TEMPLATE_ID_SHAPE = '/^[a-z0-9]+(?:-[a-z0-9]+)+$/';
+
+	/**
 	 * @param string          $key              Stable key, unique within the product, e.g. `front`.
 	 * @param string          $label            Name customers see, e.g. "Front".
 	 * @param string|null     $placement_id     Placement on the blank; null for a product without a blank.
@@ -74,6 +81,8 @@ final class Side {
 	 * @param RowSize[]       $row_sizes     A personalised side's size per row of its blank's print areas, on a blank whose
 	 *                                       areas change with an option: a variation sold at the placement's default
 	 *                                       prints at its variant's row. Empty on any other side.
+	 * @param ValueSizes|null $value_sizes   A personalised side's size per value of one of its variable product's
+	 *                                       attributes, which a variation with that value prints at; null for none.
 	 * @phpstan-param list<PrintSize> $print_sizes
 	 * @phpstan-param list<PrintSize|null>|null $pending_sizes
 	 * @phpstan-param list<string> $misfit_sizes
@@ -101,7 +110,39 @@ final class Side {
 		public readonly ?int $latest_version = null,
 		public readonly ?bool $draw_at_template_ratio = null,
 		public readonly array $row_sizes = array(),
+		public readonly ?ValueSizes $value_sizes = null,
 	) {
+	}
+
+	/**
+	 * The name a side takes while the merchant has typed none: its
+	 * placement's, else its template's, else its key. Never a template id.
+	 *
+	 * @param string|null $placement_name The placement's name; null without one.
+	 * @param string|null $template_name  The template's name; null while unknown.
+	 * @param string      $key            The side's key.
+	 */
+	public static function followed_label( ?string $placement_name, ?string $template_name, string $key ): string {
+		foreach ( array( $placement_name, $template_name ) as $name ) {
+			if ( null !== $name && '' !== $name ) {
+				return $name;
+			}
+		}
+		return $key;
+	}
+
+	/**
+	 * The name the merchant typed for the side, or empty when its name is
+	 * one it follows: its placement's or template's name, its key, or a
+	 * template id an earlier save stored. An empty name follows the
+	 * placement or template as they change.
+	 */
+	public function typed_label(): string {
+		$followed = array( $this->placement_name, $this->template_name, $this->template_base_id, $this->key );
+		if ( in_array( $this->label, $followed, true ) || 1 === preg_match( self::TEMPLATE_ID_SHAPE, $this->label ) ) {
+			return '';
+		}
+		return $this->label;
 	}
 
 	/**
@@ -188,6 +229,15 @@ final class Side {
 	}
 
 	/**
+	 * A copy with a size per value of an attribute.
+	 *
+	 * @param ValueSizes|null $sizes The sizes; null for none.
+	 */
+	public function with_value_sizes( ?ValueSizes $sizes ): self {
+		return $this->copy( array( 'value_sizes' => $sizes ) );
+	}
+
+	/**
 	 * The row of the blank's print areas a variant is in; null when the
 	 * side has no rows, or none holds the variant.
 	 *
@@ -239,7 +289,25 @@ final class Side {
 		if ( null === $name || $name === $this->template_name ) {
 			return $this;
 		}
-		return $this->copy( array( 'template_name' => $name ) );
+		$renamed = $this->copy( array( 'template_name' => $name ) );
+		// A name that followed the template follows its new name.
+		return '' === $this->typed_label() ? $renamed->copy( array( 'label' => self::followed_label( $this->placement_name, $name, $this->key ) ) ) : $renamed;
+	}
+
+	/**
+	 * A copy on template `$to`, keeping its versions, when it is on `$from`,
+	 * its rows' layout adjustments too; this very side otherwise.
+	 *
+	 * @param string $from The template's old base id.
+	 * @param string $to   Its new base id.
+	 */
+	public function with_template_renamed( string $from, string $to ): self {
+		$rows    = array_map( static fn ( StandingRow $row ): StandingRow => $row->with_template_renamed( $from, $to ), $this->standing_rows );
+		$changes = $rows === $this->standing_rows ? array() : array( 'standing_rows' => $rows );
+		if ( $this->template_base_id === $from ) {
+			$changes['template_base_id'] = $to;
+		}
+		return array() === $changes ? $this : $this->copy( $changes );
 	}
 
 	/**
@@ -275,7 +343,7 @@ final class Side {
 			}
 		}
 
-		return new self(
+		$side = new self(
 			$data['key'],
 			self::is_text( $data['label'] ?? null ) ? $data['label'] : $data['key'],
 			self::text_or_null( $placement['id'] ?? null ),
@@ -297,7 +365,10 @@ final class Side {
 			null === $base_id ? null : self::int_or_null( $template['latestVersion'] ?? null ),
 			CanvasRatio::from_stored( $data['drawAtTemplateRatio'] ?? null ),
 			array_values( array_filter( array_map( array( RowSize::class, 'from_array' ), is_array( $data['rowSizes'] ?? null ) ? $data['rowSizes'] : array() ) ) ),
+			ValueSizes::from_array( $data['valueSizes'] ?? null ),
 		);
+		// A name the merchant did not type is what the side follows now, never a template id an earlier save stored.
+		return '' === $side->typed_label() ? $side->copy( array( 'label' => self::followed_label( $side->placement_name, $side->template_name, $side->key ) ) ) : $side;
 	}
 
 	/**
@@ -329,6 +400,7 @@ final class Side {
 			'misfitSizes'         => $this->misfit_sizes,
 			'drawAtTemplateRatio' => $this->draw_at_template_ratio,
 			'rowSizes'            => array_map( static fn ( RowSize $row ): array => $row->to_array(), $this->row_sizes ),
+			'valueSizes'          => $this->value_sizes?->to_array(),
 		) + ( null === $this->pending_sizes ? array() : array(
 			'pendingSizes' => array_map(
 				static fn ( ?PrintSize $size ): array => null === $size ? array( 'placementDefault' => true ) : $size->stored(),

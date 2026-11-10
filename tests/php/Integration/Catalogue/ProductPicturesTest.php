@@ -286,6 +286,39 @@ final class ProductPicturesTest extends WP_UnitTestCase {
 		delete_option( ProductPictures::LOCK_OPTION_PREFIX . $product->get_id() );
 	}
 
+	public function test_a_drawing_that_waits_for_the_lock_starts_once_the_drawing_holding_it_is_done(): void {
+		$product = $this->product( self::config() );
+		$lock    = ProductPictures::LOCK_OPTION_PREFIX . $product->get_id();
+		add_option( $lock, (string) time(), '', false );
+		ActionSchedulerRunner::run_once( ProductPictures::ACTION );
+		$this->assertGreaterThan( time(), ActionSchedulerRunner::due_at( ProductPictures::ACTION )[0] );
+		delete_option( $lock );
+
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+		$this->plugin->product_pictures()->refresh( $product->get_id() );
+
+		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductPictures::ACTION ) );
+		$this->assertLessThanOrEqual( time(), ActionSchedulerRunner::due_at( ProductPictures::ACTION )[0] );
+	}
+
+	public function test_a_drawing_that_waits_for_a_lock_given_up_meanwhile_starts_at_once(): void {
+		$product = $this->product( self::config() );
+		$lock    = ProductPictures::LOCK_OPTION_PREFIX . $product->get_id();
+		as_unschedule_all_actions( ProductPictures::ACTION );
+		add_option( $lock, (string) time(), '', false );
+		// The drawing holding the lock is done as this one schedules itself for later.
+		$done = static function () use ( $lock ): void {
+			delete_option( $lock );
+		};
+		add_action( 'action_scheduler_stored_action', $done );
+
+		$this->plugin->product_pictures()->refresh( $product->get_id() );
+		remove_action( 'action_scheduler_stored_action', $done );
+
+		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductPictures::ACTION ) );
+		$this->assertLessThanOrEqual( time(), ActionSchedulerRunner::due_at( ProductPictures::ACTION )[0] );
+	}
+
 	public function test_a_change_while_pixonaut_draws_the_picture_is_drawn_after_it(): void {
 		$product = $this->product( self::config() );
 		$changes = static function ( $preempt ) use ( $product ) {

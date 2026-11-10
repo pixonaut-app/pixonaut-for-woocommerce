@@ -145,10 +145,11 @@ final class ProductVariants {
 		// A refresh follows a change in Pixonaut: what an earlier one read, in a queue runner working through several jobs, may be stale.
 		$this->read   = array();
 		$this->failed = array();
-		$sold         = $product->is_type( 'variable' )
+		$this->sizes->forget();
+		$sold     = $product->is_type( 'variable' )
 			? array_filter( array_map( 'wc_get_product', $product->get_children() ), static fn ( mixed $child ): bool => $child instanceof WC_Product )
 			: array( $product );
-		$unjudged     = null;
+		$unjudged = null;
 		try {
 			foreach ( $sold as $one ) {
 				$this->resolve( $one );

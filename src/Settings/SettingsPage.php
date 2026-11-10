@@ -41,6 +41,11 @@ final class SettingsPage {
 
 	public const CONNECTION = 'connection';
 
+	/**
+	 * The class of a dependent setting's row while it does not apply, as the settings script sets it too.
+	 */
+	public const HIDDEN_ROW = 'pixonaut-hidden';
+
 	public const STOREFRONT = 'storefront';
 
 	public const APPROVAL = 'approval';
@@ -501,7 +506,7 @@ final class SettingsPage {
 			$attributes['data-pixonaut-required'] = self::missing_colour();
 		}
 		$field['custom_attributes'] = $attributes + ( is_array( $field['custom_attributes'] ?? null ) ? $field['custom_attributes'] : array() );
-		$field['row_class']         = self::DEPENDENT_ROW . ( $this->applies( $rule ) ? '' : ' pixonaut-hidden' );
+		$field['row_class']         = self::DEPENDENT_ROW . ( $this->applies( $rule ) ? '' : ' ' . self::HIDDEN_ROW );
 		return $field;
 	}
 

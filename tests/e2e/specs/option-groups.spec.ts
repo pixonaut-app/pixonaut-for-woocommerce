@@ -8,7 +8,11 @@ import {
 	usePlainPermalinks,
 } from '../fixtures';
 import { mcpSession } from '../mcp';
-import { addToCartButton, PERSONALISED } from '../personalised';
+import {
+	addToCartButton,
+	connectFixtureStore,
+	PERSONALISED,
+} from '../personalised';
 import { openPixonautTab, openStoreSettings, productPanel } from '../products';
 
 const ABILITY = (name: string) => `pixonaut-for-woocommerce/${name}`;
@@ -380,6 +384,89 @@ test('a variation on another template keeps the options in their groups, first a
 			})
 			.toBe(true);
 		await expect(headings.filter({ hasText: ATTRIBUTE })).toHaveCount(1);
+	}
+});
+
+test("a product's groups apply to a variation on another template", async ({
+	page,
+	request,
+	baseURL,
+	theme,
+	fake,
+}) => {
+	test.skip(theme !== 'storefront', 'worked out on the server');
+	// Both templates' slogans share a key, so the slogan keeps its place.
+	for (const template of [FIXTURE.template.live, FIXTURE.template.landscape]) {
+		const keyed = await fake.control.post(
+			`/__fake/templates/${template}/field-key`,
+			{ data: { field: 'slogan.content', key: 'slogan' } },
+		);
+		expect(keyed.ok(), 'the fake keys the slogan').toBe(true);
+	}
+	// Connecting again clears the template reads the store keeps.
+	await connectFixtureStore(request, baseURL ?? '');
+	const side = {
+		...PERSONALISED.sides[0],
+		formGroups: {
+			groups: [
+				{
+					id: 'wc-mine',
+					title: 'Personalisering & Storlek',
+					items: [
+						{ attribute: ATTRIBUTE },
+						{ field: 'slogan:content', label: 'Ditt namn' },
+					],
+				},
+				{ id: 'ladda-upp-motiv', title: 'Foto', items: [] },
+				{ id: 'text-front', items: [{ field: 'slogan:fontFamily' }] },
+			],
+		},
+	};
+	const config = { ...PERSONALISED, sides: [side], v: SCHEMA_VERSION };
+	const created = await request.post(restUrl('/pixonaut-e2e/v1/products'), {
+		data: {
+			name: `Groups on another template ${Date.now()}`,
+			pixonaut: config,
+			variations: SIZES,
+			default: SIZES[0],
+			variant: FIXTURE.variant.teeWhiteS,
+			overrides: {
+				[SIZES[1]]: {
+					...config,
+					// Only the product arranges the form: the variation names no groups.
+					sides: [
+						{
+							...PERSONALISED.sides[0],
+							template: {
+								baseId: 'mini-poster',
+								version: 1,
+								name: 'Mini poster',
+							},
+							printSizes: [
+								{ widthMm: 297, heightMm: 210, label: 'A4 landscape' },
+							],
+						},
+					],
+				},
+			},
+		},
+	});
+	expect(created.status()).toBe(201);
+	const headings = page.locator(`${DESIGNER_FORM} > h3`);
+	const groups = numbered(['Personalisering & Storlek', 'Foto', 'Text']);
+	const named = page
+		.locator(DESIGNER_FORM)
+		.getByRole('textbox', { name: 'Ditt namn' });
+	const sizes = page.locator(`select[name="attribute_${ATTRIBUTE}"]`);
+
+	await page.goto((await created.json()).permalink);
+	await expect(headings).toHaveText(groups);
+	await expect(named).toBeVisible();
+
+	for (const size of [SIZES[1], SIZES[0], SIZES[1]]) {
+		await sizes.selectOption(size);
+		await expect(headings).toHaveText(groups);
+		await expect(named).toBeVisible();
 	}
 });
 

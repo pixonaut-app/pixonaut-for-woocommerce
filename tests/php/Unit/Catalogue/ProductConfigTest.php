@@ -167,6 +167,48 @@ final class ProductConfigTest extends TestCase {
 		$this->assertNull( $rows[0]->adjusted );
 	}
 
+	public function test_reads_and_writes_a_sides_sizes_per_attribute_value(): void {
+		$document                           = self::v1_document();
+		$document['v']                      = ProductConfig::SCHEMA_VERSION;
+		$document['sides'][0]['valueSizes'] = array(
+			'attribute' => 'pa_size',
+			'sizes'     => array(
+				'30x40' => array(
+					'widthMm'  => 300,
+					'heightMm' => 400,
+					'label'    => '30×40 cm',
+				),
+				'bad'   => array( 'widthMm' => 0 ),
+			),
+		);
+
+		$config = ProductConfig::from_json( (string) wp_json_encode( $document ) );
+		$sizes  = $config->sides[0]->value_sizes;
+
+		$this->assertNotNull( $sizes );
+		$this->assertSame( 'pa_size', $sizes->attribute );
+		$this->assertEquals( array( '30x40' => new PrintSize( 300, 400, '30×40 cm' ) ), $sizes->sizes, 'an unusable size is dropped' );
+		$this->assertEquals( $sizes->sizes['30x40'], $sizes->size_for( array( 'pa_size' => '30x40' ) ) );
+		$this->assertNull( $sizes->size_for( array( 'pa_size' => '' ) ), 'any value has none' );
+		$this->assertEquals( $config, ProductConfig::from_json( $config->to_json() ) );
+	}
+
+	public function test_a_side_saved_before_sizes_per_value_has_none(): void {
+		$document                           = self::v1_document();
+		$document['v']                      = ProductConfig::SCHEMA_VERSION - 1;
+		$document['sides'][0]['valueSizes'] = array(
+			'attribute' => 'pa_size',
+			'sizes'     => array(
+				'30x40' => array(
+					'widthMm'  => 300,
+					'heightMm' => 400,
+				),
+			),
+		);
+
+		$this->assertNull( ProductConfig::from_json( (string) wp_json_encode( $document ) )->sides[0]->value_sizes );
+	}
+
 	public function test_a_side_saved_before_misfit_sizes_knows_of_none(): void {
 		$document                                 = self::v1_document();
 		$document['v']                            = 9;

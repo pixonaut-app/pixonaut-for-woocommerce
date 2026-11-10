@@ -15,17 +15,20 @@ use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\ValueSizes;
 use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Catalogue\VariationSizes;
 use Pixonaut\WooCommerce\Templates;
 use WC_Product;
+use WC_Product_Attribute;
 
 /**
  * In a variation's Pixonaut section, each personalised side of what it
  * inherits says what the variation prints at (on a blank whose print areas
- * change with an option, its blank variant's area) and takes a size of the
- * variation's own instead, judged with Pixonaut on saving. A refused size
- * stays in the field, with the reason. A variation that overrides its whole
+ * change with an option, its blank variant's area; with a size per value
+ * of an attribute, its value's) and takes a size of the variation's own
+ * instead, judged with Pixonaut on saving. A refused size stays in the
+ * field, with the reason. A variation that overrides its whole
  * setup sets its sizes there, so this field is hidden and its sizes dropped.
  */
 final class VariationSizeField {
@@ -62,23 +65,25 @@ final class VariationSizeField {
 		if ( array() === $sides ) {
 			return '';
 		}
-		$variant   = ProductVariant::sold_by( $variation, $config );
-		$inherited = ( new VariationSize() )->applied_to( $config, $variant );
-		$own       = VariationSize::stored_on( $variation );
-		$rows      = array();
+		$variant    = ProductVariant::sold_by( $variation, $config );
+		$attributes = ValueSizes::attributes_of( $variation );
+		$inherited  = ( new VariationSize() )->applied_to( $config, $variant, $attributes );
+		$own        = VariationSize::stored_on( $variation );
+		$rows       = array();
 		foreach ( $sides as $side ) {
 			$size   = $own->size_of( $side->key );
+			$value  = VariationSize::value_size( $side, $attributes );
 			$name   = $fields->name( PanelFields::PRINT_SIZE ) . '[' . $side->key . ']';
 			$rows[] = array(
 				'label'      => $side->label,
 				'name'       => $name,
 				'id'         => $fields->id( PanelFields::PRINT_SIZE . '_' . $side->key ),
-				'inherited'  => self::inherited( $inherited, $side->key ),
+				'inherited'  => self::inherited( $inherited, $side, $parent, null !== $value ),
 				'custom'     => null !== $size,
 				'width'      => null === $size ? '' : (string) $size->width_mm,
 				'height'     => null === $size ? '' : (string) $size->height_mm,
 				'size_label' => null === $size || PrintSize::label_for( $size->width_mm, $size->height_mm ) === $size->label ? '' : $size->label,
-				'error'      => self::error( $own, $side, $config->blank_id, $variant ),
+				'error'      => self::error( $own, $side, $config->blank_id, $variant, $value ),
 			);
 		}
 		return $this->templates->html(
@@ -100,7 +105,8 @@ final class VariationSizeField {
 	 */
 	public function save( WC_Product $variation, array $posted ): void {
 		if ( isset( $posted[ PanelFields::OVERRIDE ] ) ) {
-			$this->sizes->save( $variation, array() );
+			// Its own setup holds its sizes, its attribute values' among them.
+			( new VariationSize() )->save_to( $variation );
 			return;
 		}
 		if ( ! isset( $posted[ PanelFields::PRINT_SIZE_LISTED ] ) ) {
@@ -136,17 +142,28 @@ final class VariationSizeField {
 
 	/**
 	 * The product's choice for a side, as the dropdown names it: the sizes
-	 * the variation prints the side at without one of its own.
+	 * the variation prints the side at without one of its own, which its
+	 * attribute value may give.
 	 *
 	 * @param ProductConfig $inherited What the variation sells without sizes of its own.
-	 * @param string        $key       The side's key.
+	 * @param Side          $side      The side.
+	 * @param WC_Product    $product   The variation's product.
+	 * @param bool          $by_value  Whether its attribute value gives the size.
 	 */
-	private static function inherited( ProductConfig $inherited, string $key ): string {
+	private static function inherited( ProductConfig $inherited, Side $side, WC_Product $product, bool $by_value ): string {
 		$labels = array();
-		foreach ( $inherited->sides as $side ) {
-			if ( $side->key === $key ) {
-				$labels = array_map( static fn ( PrintSize $size ): string => $size->label, $side->print_sizes );
+		foreach ( $inherited->sides as $sold ) {
+			if ( $sold->key === $side->key ) {
+				$labels = array_map( static fn ( PrintSize $size ): string => $size->label, $sold->print_sizes );
 			}
+		}
+		if ( $by_value && null !== $side->value_sizes && array() !== $labels ) {
+			return sprintf(
+				/* translators: 1: the product attribute whose value gives the print size, e.g. "Size"; 2: the print size, e.g. "30×40 cm". Option in a variation's print size dropdown: print the side at the size the product gives the variation's value of that attribute. Admin product page. */
+				__( 'As its %1$s (%2$s)', 'pixonaut-for-woocommerce' ),
+				wc_attribute_label( self::attribute_name( $product, $side->value_sizes->attribute ), $product ),
+				implode( ', ', $labels )
+			);
 		}
 		if ( array() === $labels ) {
 			/* translators: Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says, which gives no size this variation can be printed at. Admin product page. */
@@ -160,17 +177,38 @@ final class VariationSizeField {
 	}
 
 	/**
-	 * Why a side's own size cannot be printed, as the field says it; empty when it can.
+	 * The name of a product's attribute a variation names by its slug,
+	 * `pa_size` or a custom attribute's name as a slug.
 	 *
-	 * @param VariationSize $own      The variation's own sizes.
-	 * @param Side          $side     The side.
-	 * @param string|null   $blank_id The blank.
-	 * @param string|null   $variant  The variant the variation sells.
+	 * @param WC_Product $product The variable product.
+	 * @param string     $slug    The attribute's slug.
 	 */
-	private static function error( VariationSize $own, Side $side, ?string $blank_id, ?string $variant ): string {
+	private static function attribute_name( WC_Product $product, string $slug ): string {
+		foreach ( $product->get_attributes() as $attribute ) {
+			if ( $attribute instanceof WC_Product_Attribute && sanitize_title( $attribute->get_name() ) === $slug ) {
+				return $attribute->get_name();
+			}
+		}
+		return $slug;
+	}
+
+	/**
+	 * Why the size a side prints at, the variation's own or its attribute
+	 * value's, cannot be printed, as the field says it; empty when it can.
+	 *
+	 * @param VariationSize  $own      The variation's sizes.
+	 * @param Side           $side     The side.
+	 * @param string|null    $blank_id The blank.
+	 * @param string|null    $variant  The variant the variation sells.
+	 * @param PrintSize|null $value    The size the product gives the variation's attribute value; null for none.
+	 */
+	private static function error( VariationSize $own, Side $side, ?string $blank_id, ?string $variant, ?PrintSize $value ): string {
 		$entry = $own->sizes[ $side->key ] ?? null;
+		if ( null !== $entry && VariationSize::is_value( $entry ) && ( null === $value || $value->stored() !== $entry['size']->stored() ) ) {
+			$entry = null;
+		}
 		if ( null === $entry ) {
-			return '';
+			return null === $value ? '' : InvalidReason::message( InvalidReason::VARIATION_SIZE_UNCHECKED );
 		}
 		if ( null !== $entry['refused'] ) {
 			return InvalidReason::message( $entry['refused'] );

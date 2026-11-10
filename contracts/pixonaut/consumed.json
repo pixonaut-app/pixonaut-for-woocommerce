@@ -90,6 +90,7 @@
 		"template.deleted",
 		"template.live_changed",
 		"template.published",
+		"template.renamed",
 		"webhook.ping"
 	],
 	"keys": {
@@ -154,5 +155,7 @@
 		"PUT /v1/connect/store-access": "integrationKey",
 		"PUT /v1/designs/{id}/external-ref": "integrationKey"
 	},
-	"pending": []
+	"pending": [
+		{ "op": "WEBHOOK template.renamed", "requirement": "pixonaut-app/pixonaut-for-woocommerce#63" }
+	]
 }

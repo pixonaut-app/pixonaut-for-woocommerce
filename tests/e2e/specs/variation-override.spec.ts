@@ -77,3 +77,46 @@ test('saves a variation that overrides its product with its own print size', asy
 	);
 	expect(checks).toHaveLength(1);
 });
+
+test("names a variation's side after what it follows, never a template id", async ({
+	connectedStore: page,
+	request,
+}) => {
+	// Saved by an earlier version, the side was named after its template's id.
+	const stale = 'mini-tee-safari-copy-17';
+	const id = await createVariableProduct(
+		request,
+		`Personalised hoodie ${Date.now()}`,
+		PERSONALISED,
+		['S', 'L'],
+		{
+			L: {
+				...PERSONALISED,
+				sides: [{ ...PERSONALISED.sides[0], label: stale }],
+			},
+		},
+	);
+	await page.goto(`/wp-admin/post.php?post=${id}&action=edit`);
+	await page.locator('.variations_tab a').click();
+	const large = page.locator('.woocommerce_variation', {
+		has: page.locator(
+			'select[name^="attribute_size"] option[value="L"]:checked',
+		),
+	});
+	await large.locator('h3 strong').first().click();
+	const panel = large.locator('.pixonaut-variation-panel');
+	await expect(panel.getByLabel('Override for this variation')).toBeChecked();
+	const side = panel.locator('.pixonaut-side[data-index="0"]');
+	await side.locator('details.pixonaut-side-more > summary').click();
+	const name = side.locator('.pixonaut-side-label');
+
+	await expect(name).toHaveValue('');
+	await expect(name).toHaveAttribute('placeholder', 'Front');
+	await expect(side.locator('.pixonaut-side__name')).toHaveText('Front');
+	await expect(panel).not.toContainText(stale);
+
+	// Another print position: the name follows it at once.
+	await side.locator('.pixonaut-side-placement').selectOption('Back');
+	await expect(name).toHaveAttribute('placeholder', 'Back');
+	await expect(side.locator('.pixonaut-side__name')).toHaveText('Back');
+});

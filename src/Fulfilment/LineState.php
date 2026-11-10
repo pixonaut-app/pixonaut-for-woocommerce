@@ -374,6 +374,76 @@ final class LineState {
 	}
 
 	/**
+	 * A page of the lines one of whose sides was made from template
+	 * `$base_id`, in item id order. A line the search finds is returned
+	 * only when a side's own `templateBaseId` ref is `$base_id`.
+	 *
+	 * @param string $base_id       A template's base id.
+	 * @param int    $after_item_id Only items above this one; 0 for the first page.
+	 * @param int    $limit         Items at most.
+	 * @return array{lines: list<self>, last: int, more: bool} The lines, the last item id looked at (0 when none was), and whether the page was full, so more may follow.
+	 */
+	public static function for_template( string $base_id, int $after_item_id, int $limit ): array {
+		global $wpdb;
+		$ref = wp_json_encode( $base_id );
+		if ( '' === $base_id || false === $ref ) {
+			return array(
+				'lines' => array(),
+				'last'  => 0,
+				'more'  => false,
+			);
+		}
+		$ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a lookup no API offers, made when Pixonaut changes a template's id.
+			$wpdb->prepare(
+				"SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta WHERE meta_key = %s AND meta_value LIKE %s AND order_item_id > %d ORDER BY order_item_id LIMIT %d",
+				self::META_KEY,
+				'%' . $wpdb->esc_like( '"' . self::SIDE_TEMPLATE_BASE_ID . '":' . $ref ) . '%',
+				$after_item_id,
+				$limit
+			)
+		);
+		$ids = array_values( array_map( 'intval', $ids ) );
+		return array(
+			'lines' => array_values( array_filter( self::lines( $ids ), static fn ( self $line ): bool => $line->uses_template( $base_id ) ) ),
+			'last'  => array() === $ids ? 0 : $ids[ count( $ids ) - 1 ],
+			'more'  => count( $ids ) === $limit,
+		);
+	}
+
+	/**
+	 * Whether one of the line's sides was made from template `$base_id`.
+	 *
+	 * @param string $base_id A template's base id.
+	 */
+	public function uses_template( string $base_id ): bool {
+		foreach ( $this->sides() as $key ) {
+			if ( $this->side_ref( $key, self::SIDE_TEMPLATE_BASE_ID ) === $base_id ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Names template `$to` on the sides made from `$from`, as Pixonaut
+	 * changed the template's id. The caller saves the line.
+	 *
+	 * @param string $from The template's old base id.
+	 * @param string $to   Its new base id.
+	 * @return bool Whether a side was on `$from`.
+	 */
+	public function rename_template( string $from, string $to ): bool {
+		$renamed = false;
+		foreach ( $this->sides() as $key ) {
+			if ( $this->side_ref( $key, self::SIDE_TEMPLATE_BASE_ID ) === $from ) {
+				$this->set_side_ref( $key, self::SIDE_TEMPLATE_BASE_ID, $to );
+				$renamed = true;
+			}
+		}
+		return $renamed;
+	}
+
+	/**
 	 * @param array<mixed> $ids Order item ids.
 	 * @return list<self> The tracked lines among them.
 	 */

@@ -14,6 +14,7 @@ JavaScript (see [hooks](../hooks/)). An unknown key reads as the key itself.
 | Key | Default text | Shown |
 |---|---|---|
 | `personalisation_unavailable` | Personalisation is unavailable right now. Please try again later. | On a personalised product when the designer cannot load, or when it cannot be added to the cart for a reason the customer cannot fix |
+| `product_unavailable` | This product is not available right now. | On the page of a personalised product whose template is paused or not published in Pixonaut, in place of the add-to-cart form; the product is also left out of the shop, search and related products |
 | `design_required` | Please personalise this product before adding it to your cart. | Notice when a personalised product is not added to the cart |
 | `design_not_saved` | We could not save your design. Please try again. | Notice when a personalised product is not added to the cart |
 | `design_mismatch` | Your design does not match this product. Please personalise it again. | Notice when a personalised product is not added to the cart |

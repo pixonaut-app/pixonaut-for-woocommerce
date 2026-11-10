@@ -756,12 +756,19 @@
 	font-size: 12px;
 }
 
-/* What a card's picture is drawn on: small photo tiles, their names short. */
-#pixonaut_product_data .pixonaut-picture-card .pixonaut-showcase-image__kinds {
+/* What a card's picture, or a variation's image, is drawn on: small photo tiles, their names short. */
+:is(
+	#pixonaut_product_data .pixonaut-picture-card,
+	.pixonaut-variation-panel .pixonaut-picture-view
+) .pixonaut-showcase-image__kinds {
 	gap: 4px;
 }
 
-#pixonaut_product_data .pixonaut-picture-card .pixonaut-showcase-kind {
+:is(
+		#pixonaut_product_data .pixonaut-picture-card,
+		.pixonaut-variation-panel .pixonaut-picture-view
+	)
+	.pixonaut-showcase-kind {
 	position: relative;
 	flex-direction: column;
 	align-items: center;
@@ -776,42 +783,56 @@
 	text-align: center;
 }
 
-#pixonaut_product_data
-	.pixonaut-picture-card
+:is(
+		#pixonaut_product_data .pixonaut-picture-card,
+		.pixonaut-variation-panel .pixonaut-picture-view
+	)
 	.pixonaut-showcase-kind:has(input:checked) {
 	box-shadow: none;
 }
 
-#pixonaut_product_data
-	.pixonaut-picture-card
+:is(
+		#pixonaut_product_data .pixonaut-picture-card,
+		.pixonaut-variation-panel .pixonaut-picture-view
+	)
 	.pixonaut-showcase-kind__thumbnail {
 	box-sizing: border-box;
 	width: 36px;
 	height: 36px;
 }
 
-#pixonaut_product_data
-	.pixonaut-picture-card
+:is(
+		#pixonaut_product_data .pixonaut-picture-card,
+		.pixonaut-variation-panel .pixonaut-picture-view
+	)
 	.pixonaut-showcase-kind:has(input:checked)
 	.pixonaut-showcase-kind__thumbnail {
 	border: 2px solid #2271b1;
 }
 
-#pixonaut_product_data
-	.pixonaut-picture-card
+:is(
+		#pixonaut_product_data .pixonaut-picture-card,
+		.pixonaut-variation-panel .pixonaut-picture-view
+	)
 	.pixonaut-showcase-kind:has(input:focus-visible)
 	.pixonaut-showcase-kind__thumbnail {
 	outline: 2px solid #2271b1;
 	outline-offset: 1px;
 }
 
-#pixonaut_product_data .pixonaut-picture-card .pixonaut-showcase-kind__name {
+:is(
+		#pixonaut_product_data .pixonaut-picture-card,
+		.pixonaut-variation-panel .pixonaut-picture-view
+	)
+	.pixonaut-showcase-kind__name {
 	font-weight: 400;
 	overflow-wrap: normal;
 }
 
-#pixonaut_product_data
-	.pixonaut-picture-card
+:is(
+		#pixonaut_product_data .pixonaut-picture-card,
+		.pixonaut-variation-panel .pixonaut-picture-view
+	)
 	.pixonaut-showcase-kind
 	.description {
 	position: absolute;
@@ -1208,6 +1229,34 @@
 	width: 7em !important;
 }
 
+#pixonaut_product_data .pixonaut-value-size-table {
+	margin-top: 8px;
+	border-collapse: collapse;
+}
+
+#pixonaut_product_data .pixonaut-value-size-table th {
+	padding: 4px 12px 4px 0;
+	font-weight: 400;
+	text-align: start;
+}
+
+#pixonaut_product_data .pixonaut-value-size-table td {
+	padding: 4px 0;
+}
+
+#pixonaut_product_data .pixonaut-value-size-table input {
+	float: none;
+	margin: 0;
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce sizes the panel's text inputs with !important. */
+	width: 4.5em !important;
+	padding: 0 6px;
+}
+
+#pixonaut_product_data .pixonaut-value-size-table input.pixonaut-size-label {
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce sizes the panel's text inputs with !important. */
+	width: 10em !important;
+}
+
 :is(#pixonaut_product_data, .pixonaut-variation-panel)
 	.pixonaut-size-body
 	> :is(.pixonaut-size-limit, .pixonaut-field-error) {
@@ -1384,7 +1433,12 @@
 }
 
 /* The radio covers its tile, unseen, so a click on the tile picks it. */
-#pixonaut_product_data .pixonaut-picture-card .pixonaut-showcase-kind input {
+:is(
+		#pixonaut_product_data .pixonaut-picture-card,
+		.pixonaut-variation-panel .pixonaut-picture-view
+	)
+	.pixonaut-showcase-kind
+	input {
 	position: absolute;
 	inset: 0;
 	z-index: 1;
@@ -1453,4 +1507,27 @@
 .pixonaut-split-listing__state {
 	display: block;
 	margin-left: calc(1.25rem + 0.25em);
+}
+
+/* The Personalise box keeps what it means beside it, the words wrapping there. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-group--personalise
+	.pixonaut-field-control {
+	flex-wrap: nowrap;
+	align-items: flex-start;
+}
+
+/* A variation's own rows outside the override box: no panel height of
+ * WooCommerce's, and lined up with the Pixonaut heading. */
+.pixonaut-variation-panel
+> .woocommerce_options_panel:not(.pixonaut-variation-fields) {
+	min-height: 0;
+	padding: 0;
+}
+
+.pixonaut-variation-panel
+	> .woocommerce_options_panel:not(.pixonaut-variation-fields)
+	> .form-field {
+	/* biome-ignore lint/complexity/noImportantStyles: the rows' own padding above is set with !important against WooCommerce's. */
+	padding-left: 0 !important;
 }

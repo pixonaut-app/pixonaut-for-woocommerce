@@ -75,9 +75,11 @@ firewall dropped it. So every 15 minutes a recurring job
 `GET /v1/events?after=<cursor>&types=<types>`, following `nextCursor` until it
 is null, and hands every event to the same intake as a delivery: an event
 that came both ways is handled once. `types` is every webhook the plugin
-consumes but `webhook.ping`: `Endpoint::EVENT_TYPES`, as the endpoint is
-narrowed to, but never filtered, so a filtered type the pull would be refused
-for cannot stop it.
+consumes but `webhook.ping` and those Pixonaut only delivers to the
+endpoint (`Endpoint::WEBHOOK_ONLY_TYPES`, now `template.renamed`), which the
+stream answers `400 invalid_event_type` for: `Endpoint::EVENT_TYPES`, as the
+endpoint is narrowed to, but never filtered, so a filtered type the pull would
+be refused for cannot stop it.
 
 - **Cursor.** The option `pixonaut_wc_events_cursor` holds the id of the
   last event pulled, with the `connection_id` of the connection it belongs
@@ -533,6 +535,51 @@ variant was not matched on queues its re-check too (`Catalogue\VariantWatch`).
   attempts in all (`ProductRecheck::MAX_ATTEMPTS`). A batch whose live list
   could not be read is retried the same way, and the job is recorded as
   failed in Action Scheduler.
+
+### A template's id changed in Pixonaut
+
+A member can change a published template's id in the studio.
+`template.renamed` (`{oldId, newId, renamedAt}`, base ids without a version)
+says so; Pixonaut keeps answering `<oldId>@<version>`, and moves the
+designs, proofs and designer links made under the old id to the new one, so
+a design read afterwards names the new id. `Catalogue\TemplateRename`
+handles it without asking Pixonaut anything:
+
+- **Noted.** The option `pixonaut_wc_template_renames` keeps every change
+  as `{from, to, at}` (`Catalogue\TemplateRenames`), `at` being the event's
+  `renamedAt`. The history is only added to, and read by time: a chain of
+  changes is followed to its end, a change delivered again, late or after a
+  later one undoes nothing, and an id a template takes back names it again.
+  It is written over the row it read, so two changes noted at once are both
+  kept; one that cannot be stored fails the job before anything is moved.
+  Add to cart compares a design's template with the side's through it, so a
+  design on the new id is accepted while the side still holds the old one.
+- **Products.** Every product and variation indexed under the old id
+  (`_pixonaut_template`) has the side on it, and the layout adjustments of
+  its standing rows, moved to the template's id now, with its index, as one
+  conditional write over the configuration it read
+  (`ProductConfig::replace_on()`). Versions, pins and everything else stay as
+  they were.
+- **Order lines.** Each line one of whose sides was made from the template
+  has its `templateBaseId` moved.
+- **Paged.** The event's job moves the first 100 products and order lines
+  (`TemplateRename::PAGE`); a full page queues a job for the pages after it
+  (`pixonaut_wc_template_rename`). Every job moves to the id the template has
+  when it runs, so one running after a later change moves straight to the
+  last id.
+- **Carts.** A cart line lives in its customer's session, so it takes the
+  new id when the cart is next loaded (`Cart\CartTemplateRenames`). A cart
+  line's product hash takes each side's template by the first id the store
+  knew it by, so the rename does not drop it as a changed product.
+- **Again.** Delivered twice, or naming an id no product uses, it changes
+  nothing more. A product or line saved while it was moved is moved by a job
+  queued again later, from the start, 60 seconds later and doubling, up to 5
+  attempts in all (`TemplateRename::MAX_ATTEMPTS`); a job that cannot be
+  queued fails the one that queues it, which is tried again.
+- **Missed.** `GET /v1/events` does not list `template.renamed` yet
+  (pixonaut-app/pixonaut#3451). A store that missed the delivery keeps the
+  old id, which Pixonaut goes on answering, but a design made from then on
+  names the new one and is refused at add to cart until the event is handled.
 
 ### Designer links changed in Pixonaut
 

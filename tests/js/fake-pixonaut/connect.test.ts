@@ -509,3 +509,46 @@ describe('brands', () => {
 		expect(read.branding.brandId).toBe(PETS);
 	});
 });
+
+describe('print files', () => {
+	const asStore = { headers: bearer(MAIN.integrationKey) };
+	const WORKSPACE = { form: 'flat', tolerance: { unit: 'px', value: 1 } };
+
+	it("answers the workspace's form while the store follows it", async () => {
+		const read = await (await send(fake, '/v1/connect', asStore)).json();
+
+		expect(read.printFileForm).toBeNull();
+		expect(read.printFileTextTolerance).toBeNull();
+		expect(read.printing.printFileForm).toBe(WORKSPACE.form);
+		expect(read.printing.printFileTextTolerance).toEqual(WORKSPACE.tolerance);
+	});
+
+	it("sets the store's own form and tolerance, and follows the workspace again for null", async () => {
+		const tolerance = { unit: 'mm', value: 0.25 };
+		const chosen = await send(fake, '/v1/connect', {
+			...asStore,
+			method: 'PATCH',
+			json: {
+				printFileForm: 'layered_live_text',
+				printFileTextTolerance: tolerance,
+			},
+		});
+		const answer = await chosen.json();
+		expect(chosen.status).toBe(200);
+		expect(answer.printFileForm).toBe('layered_live_text');
+		expect(answer.printFileTextTolerance).toEqual(tolerance);
+		expect(answer.printing.printFileForm).toBe('layered_live_text');
+		expect(answer.printing.printFileTextTolerance).toEqual(tolerance);
+
+		const back = await send(fake, '/v1/connect', {
+			...asStore,
+			method: 'PATCH',
+			json: { printFileForm: null, printFileTextTolerance: null },
+		});
+		const read = await back.json();
+		expect(read.printFileForm).toBeNull();
+		expect(read.printing.printFileForm).toBe(WORKSPACE.form);
+		expect(read.printing.printFileTextTolerance).toEqual(WORKSPACE.tolerance);
+		expect(fake.violations).toEqual([]);
+	});
+});

@@ -9,6 +9,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
 use Pixonaut\WooCommerce\Admin\LinkedBlank;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
+use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
@@ -233,6 +234,9 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$this->assertStringContainsString( 'name="pixonaut_sides[1][sizes][0][width]" value="210"', $html );
 		$this->assertStringContainsString( 'name="pixonaut_sides[' . ProductPanel::NEW_SIDE_INDEX . '][key]"', $html );
 		$this->assertStringContainsString( 'Other Print AB', $html );
+		// Each side links its template's page in the studio.
+		$this->assertSame( 2, substr_count( $html, 'href="' . Hosts::studio() . ConnectionAnswers::studio_path() . 'templates/mini-tee"' ) );
+		$this->assertStringContainsString( 'Open in Pixonaut', $html );
 		// Two sides are within what Pixonaut recommends, and on a blank there may be more than one.
 		$this->assertMatchesRegularExpression( '/class="description pixonaut-sides-over-recommended" data-recommended="' . PostedSides::RECOMMENDED_SIDES . '"\s+hidden>/', $html );
 		// Each placement says the largest print it takes, for a custom size to show and check.
@@ -367,7 +371,9 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$panel = $this->panel->panel( $this->reload( $product->get_id() ) );
 		$this->assertCount( 2, $panel['sides'] );
 		$this->assertSame( self::BACK_ID, $panel['sides'][1]['placement_id'] );
-		$this->assertSame( 'Back', $panel['sides'][1]['label'] );
+		// Named as its print position, the side follows it: the field stays empty, the title says it.
+		$this->assertSame( '', $panel['sides'][1]['label'] );
+		$this->assertSame( 'Back', $panel['sides'][1]['title'] );
 		$this->assertSame( '', $panel['sides'][1]['template_id'] );
 		$this->assertSame( array( array( 'start' => true ) + self::a4() ), $panel['sides'][1]['sizes'] );
 	}

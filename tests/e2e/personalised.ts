@@ -109,15 +109,17 @@ export async function addPersonalised(
 }
 
 /** A published variable product with a variation per `sizes` value, linked
- *  in its Pixonaut tab with `pixonaut`; its id. */
+ *  in its Pixonaut tab with `pixonaut`, each `overrides` entry the own
+ *  configuration of the variation of that size; its id. */
 export async function createVariableProduct(
 	request: APIRequestContext,
 	name: string,
 	pixonaut: object,
 	sizes: string[],
+	overrides?: Record<string, object>,
 ): Promise<number> {
 	const response = await request.post(restUrl('/pixonaut-e2e/v1/products'), {
-		data: { name, pixonaut, variations: sizes },
+		data: { name, pixonaut, variations: sizes, overrides },
 	});
 	expect(response.status()).toBe(201);
 	return (await response.json()).id;

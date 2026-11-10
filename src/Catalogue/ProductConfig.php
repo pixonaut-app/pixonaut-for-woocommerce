@@ -28,7 +28,7 @@ final class ProductConfig {
 
 	public const META_KEY = Schema::PRODUCT_CONFIG_META;
 
-	public const SCHEMA_VERSION = 14;
+	public const SCHEMA_VERSION = 15;
 
 	/**
 	 * Invalid reason of a document written by a newer plugin version.
@@ -100,8 +100,9 @@ final class ProductConfig {
 	/**
 	 * The configuration that applies to what the customer buys: a variation's
 	 * own when it overrides, else the product's, at the variation's print
-	 * sizes (`VariationSize`), as `resolved_for()` filters it. An overriding
-	 * variation with no layout of its own takes the product's.
+	 * sizes, its own or its attribute value's (`VariationSize`), as
+	 * `resolved_for()` filters it. An overriding variation with no layout
+	 * of its own takes the product's.
 	 *
 	 * @param WC_Product      $product   The product, or a variation when $variation is null.
 	 * @param WC_Product|null $variation The chosen variation, if any.
@@ -120,8 +121,9 @@ final class ProductConfig {
 		}
 		$config = self::inherited_by( $product, $variation );
 		$sizes  = VariationSize::stored_on( $variation );
-		if ( array() !== $sizes->sizes || self::has_row_sizes( $config ) ) {
-			$config = $sizes->applied_to( $config, ProductVariant::sold_by( $variation, $config ) );
+		if ( array() !== $sizes->sizes || self::has_row_sizes( $config ) || self::has_value_sizes( $config ) ) {
+			// An overriding variation sets its sizes in its own setup.
+			$config = $sizes->applied_to( $config, ProductVariant::sold_by( $variation, $config ), $config->override ? array() : ValueSizes::attributes_of( $variation ) );
 		}
 		return $config->resolved_for( $variation );
 	}
@@ -142,6 +144,20 @@ final class ProductConfig {
 			return $parent;
 		}
 		return $own->with_groups_of( $parent )->with_canvas_ratio_of( $parent )->with_form_display_of( $parent )->with_layout( $own->layout ?? $parent->layout );
+	}
+
+	/**
+	 * Whether a side of the configuration has a size per attribute value.
+	 *
+	 * @param self $config A configuration.
+	 */
+	private static function has_value_sizes( self $config ): bool {
+		foreach ( $config->sides as $side ) {
+			if ( null !== $side->value_sizes ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -346,6 +362,18 @@ final class ProductConfig {
 	 */
 	public function with_sides( array $sides ): self {
 		return $this->with( array( 'sides' => $sides ) );
+	}
+
+	/**
+	 * A copy whose sides on template `$from` are on `$to`, as Pixonaut
+	 * changed the template's id; this very configuration when none is.
+	 *
+	 * @param string $from The template's old base id.
+	 * @param string $to   Its new base id.
+	 */
+	public function with_template_renamed( string $from, string $to ): self {
+		$sides = array_map( static fn ( Side $side ): Side => $side->with_template_renamed( $from, $to ), $this->sides );
+		return $sides === $this->sides ? $this : $this->with_sides( $sides );
 	}
 
 	/**
@@ -829,6 +857,16 @@ final class ProductConfig {
 			// Version 14 lets a product choose whether each value of an attribute is listed as its own product; a product saved before follows its attributes.
 			13 => static function ( array $data ): array {
 				$data['splitListing'] = array();
+				return $data;
+			},
+			// Version 15 lets a side of a variable product take a print size per value of one of its attributes; a side saved before has none.
+			14 => static function ( array $data ): array {
+				foreach ( is_array( $data['sides'] ?? null ) ? $data['sides'] : array() as $index => $side ) {
+					if ( is_array( $side ) ) {
+						$side['valueSizes']      = null;
+						$data['sides'][ $index ] = $side;
+					}
+				}
 				return $data;
 			},
 		);

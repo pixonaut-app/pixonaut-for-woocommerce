@@ -480,7 +480,8 @@ and id, `live` or `sandbox`, when it was connected, and why it is paused
 publishable key takes, the site's `www.` counterpart and whether it is
 among them, the last webhook test (`last_ping`), and, while the connection
 works, the workspace's settings as the connection card shows them
-(`workspace_settings`: `brands`, `brand_id`, `chosen_brand_id`, …), read
+(`workspace_settings`: `brands`, `brand_id`, `chosen_brand_id`,
+`print_file_form`, `prints_with`, …), read
 from `GET /v1/connect`. It never gives a key.
 
 `choose-brand` (`brand_id`, null for the workspace's default), `allow-www`

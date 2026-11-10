@@ -49,6 +49,87 @@ final class PostedSidesTest extends TestCase {
 		$this->assertSame( array( null ), $posted->sides[1]->sizes );
 	}
 
+	public function test_reads_a_sides_sizes_per_value_of_the_attribute_chosen(): void {
+		$side                             = self::side( 'front', 'Front', array() );
+		$side[ PostedSides::VALUE_SIZES ] = array(
+			'attribute' => 'pa_size',
+			'rows'      => array(
+				'pa_size' => array(
+					array(
+						'value'  => '30x40',
+						'name'   => '30×40 cm',
+						'width'  => '300',
+						'height' => '400',
+						'label'  => '',
+					),
+					array(
+						'value'  => '50x70',
+						'name'   => '50×70 cm',
+						'width'  => '500,5',
+						'height' => '700',
+						'label'  => 'Large',
+					),
+					array(
+						'value'  => '70x100',
+						'name'   => '70×100 cm',
+						'width'  => '',
+						'height' => '',
+						'label'  => '',
+					),
+				),
+				'colour'  => array(
+					array(
+						'value'  => 'red',
+						'width'  => '100',
+						'height' => '100',
+					),
+				),
+			),
+		);
+
+		$posted = PostedSides::parse( array( $side ) );
+
+		$this->assertNull( $posted->problem );
+		$sizes = $posted->sides[0]->value_sizes;
+		$this->assertNotNull( $sizes );
+		$this->assertSame( 'pa_size', $sizes->attribute );
+		$this->assertEquals(
+			array(
+				'30x40' => new PrintSize( 300.0, 400.0, '30×40 cm' ),
+				'50x70' => new PrintSize( 500.5, 700.0, 'Large' ),
+			),
+			$sizes->sizes,
+			'an empty label is the value’s name; a value left empty has no size; another attribute’s rows are not read'
+		);
+	}
+
+	public function test_a_value_size_without_a_usable_width_is_a_problem(): void {
+		$side                             = self::side( 'front', 'Front', array() );
+		$side[ PostedSides::VALUE_SIZES ] = array(
+			'attribute' => 'pa_size',
+			'rows'      => array(
+				'pa_size' => array(
+					array(
+						'value'  => '30x40',
+						'width'  => 'abc',
+						'height' => '400',
+					),
+				),
+			),
+		);
+
+		$posted = PostedSides::parse( array( $side ) );
+
+		$this->assertSame( InvalidReason::INVALID_PRINT_SIZE, $posted->problem );
+		$this->assertTrue( $posted->sides[0]->value_sizes?->is_empty() );
+	}
+
+	public function test_a_side_without_the_field_keeps_its_sizes_per_value(): void {
+		$posted = PostedSides::parse( array( self::side( 'front', 'Front', array() ) ) );
+
+		$this->assertNull( $posted->sides[0]->value_sizes );
+	}
+
 	public function test_reads_a_sides_mode_personalised_unless_standing(): void {
 		$standing         = self::side( 'front', 'Front', array() );
 		$standing['mode'] = Side::STANDING;

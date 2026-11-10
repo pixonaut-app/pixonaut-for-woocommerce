@@ -94,7 +94,34 @@ final class ProductLinker {
 		$linked = '' === $blank_id
 			? $this->template_only( $current, $posted->sides[0] ?? null, $posted->first_problem )
 			: $this->checked( $current, $blank_id, $posted->sides, $posted->problem );
-		return $this->standing( $this->live( self::versioned( $linked, $current, $posted->sides ) ), $current );
+		return self::valued( $this->standing( $this->live( self::versioned( $linked, $current, $posted->sides ) ), $current ), $current, $posted->sides );
+	}
+
+	/**
+	 * Each personalised side with its size per attribute value as entered,
+	 * or, where none was entered, as the side with the same key had it. A
+	 * standing side is printed at the size it starts on, so it has none.
+	 *
+	 * @param ProductConfig $linked  The configuration as checked.
+	 * @param ProductConfig $current What the product had.
+	 * @param SideInput[]   $inputs  The sides as entered.
+	 * @phpstan-param list<SideInput> $inputs
+	 */
+	private static function valued( ProductConfig $linked, ProductConfig $current, array $inputs ): ProductConfig {
+		$entered = array();
+		foreach ( $inputs as $input ) {
+			$entered[ $input->key ] = $input->value_sizes;
+		}
+		$had = array();
+		foreach ( $current->sides as $side ) {
+			$had[ $side->key ] = $side->value_sizes;
+		}
+		$sides = array();
+		foreach ( $linked->sides as $side ) {
+			$sizes   = $entered[ $side->key ] ?? $had[ $side->key ] ?? null;
+			$sides[] = $side->with_value_sizes( $side->is_standing() || null === $sizes || $sizes->is_empty() ? null : $sizes );
+		}
+		return $linked->with_sides( $sides );
 	}
 
 	/**
@@ -176,7 +203,8 @@ final class ProductLinker {
 	 * @param ProductConfig $config The configuration as checked.
 	 */
 	private function live( ProductConfig $config ): ProductConfig {
-		if ( ! $config->valid ) {
+		// A product without a size of its own still sells the variations that have one, so its template is checked too.
+		if ( ! $config->valid && InvalidReason::MISSING_PRINT_SIZE !== $config->invalid_reason ) {
 			return $config;
 		}
 		$read  = array();
@@ -196,8 +224,8 @@ final class ProductLinker {
 				return $config->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE );
 			}
 			$side = $side->with_offers_properties( $read[ $id ]['offers_properties'] );
-			// A side entered without its template's name (by an ability) takes the one Pixonaut gives.
-			$sides[] = null === $side->template_name ? $side->with_template_name( $read[ $id ]['name'] ) : $side;
+			// The name Pixonaut gives now: for a side entered without one (by an ability), or a template renamed since.
+			$sides[] = $side->with_template_name( $read[ $id ]['name'] );
 		}
 		return $config->with_sides( $sides );
 	}
@@ -373,7 +401,7 @@ final class ProductLinker {
 		$problem = in_array( $stored->invalid_reason, InvalidReason::INPUT, true ) ? $stored->invalid_reason : null;
 		foreach ( $sides as $side ) {
 			$menu     = $side->menu();
-			$inputs[] = new SideInput( $side->key, $side->label, $side->placement_id ?? '', null === $side->template_version ? '' : (string) new TemplateId( $side->template_base_id, $side->template_version ), $side->template_name ?? '', $menu, $side->start_size, $side->mode, $side->form_groups, $side->pinned, null, $side->draw_at_template_ratio );
+			$inputs[] = new SideInput( $side->key, $side->typed_label(), $side->placement_id ?? '', null === $side->template_version ? '' : (string) new TemplateId( $side->template_base_id, $side->template_version ), $side->template_name ?? '', $menu, $side->start_size, $side->mode, $side->form_groups, $side->pinned, null, $side->draw_at_template_ratio, $side->value_sizes );
 			if ( array() === $menu && null !== $side->placement_id ) {
 				// The side sells nothing and its menu is gone: only the last save can say why,
 				// unless Pixonaut did not answer it, which would keep the product retrying.
@@ -393,7 +421,7 @@ final class ProductLinker {
 			$kept[] = $side->with( $side->template_version, $before?->previous_version, $checked->valid ? $side->print_sizes : array(), $menu, null === $menu ? $side->start_size : $inputs[ $i ]->start )->with_offers_properties( $before?->offers_properties )
 				->with_versions( $before->pinned ?? false, $before?->previous_version, $before?->latest_version );
 		}
-		return $this->standing( $checked->with_sides( $kept ), $stored );
+		return self::valued( $this->standing( $checked->with_sides( $kept ), $stored ), $stored, $inputs );
 	}
 
 	/**
@@ -476,7 +504,7 @@ final class ProductLinker {
 				$entered[]            = $size;
 			}
 		}
-		$sized = static fn ( array $sizes, ?array $pending, int $start ): Side => new Side( $input->key, self::label( $input, null, $name, $template->base_id ), null, null, $template->base_id, $template->version, null, $name, array_values( $sizes ), null === $pending ? null : array_values( $pending ), $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
+		$sized = static fn ( array $sizes, ?array $pending, int $start ): Side => new Side( $input->key, self::label( $input, null, $name ), null, null, $template->base_id, $template->version, null, $name, array_values( $sizes ), null === $pending ? null : array_values( $pending ), $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
 		if ( array() === $entered ) {
 			return $this->config( $current, true, null, null, array( $sized( array(), null, 0 ) ), $problem ?? InvalidReason::MISSING_PRINT_SIZE );
 		}
@@ -517,7 +545,7 @@ final class ProductLinker {
 		$name           = '' === $input->template_name ? null : $input->template_name;
 		$placement_id   = '' === $input->placement_id ? null : $input->placement_id;
 		$placement_name = null === $placement_id ? null : $placements[ $placement_id ] ?? null;
-		$sized          = static fn ( array $sizes, bool $keep_menu = false, int $start = 0 ): Side => new Side( $input->key, self::label( $input, $placement_name, $name, $template?->base_id ), $placement_id, $placement_name, $template->base_id ?? '', $template?->version, null, $name, array_values( $sizes ), $keep_menu ? $input->sizes : null, $keep_menu ? $input->start : $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
+		$sized          = static fn ( array $sizes, bool $keep_menu = false, int $start = 0 ): Side => new Side( $input->key, self::label( $input, $placement_name, $name ), $placement_id, $placement_name, $template->base_id ?? '', $template?->version, null, $name, array_values( $sizes ), $keep_menu ? $input->sizes : null, $keep_menu ? $input->start : $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
 
 		if ( null === $template ) {
 			return array( $sized( array(), true ), InvalidReason::MISSING_TEMPLATE );
@@ -625,7 +653,7 @@ final class ProductLinker {
 				}
 			}
 			$name    = '' === $input->template_name ? $same?->template_name : $input->template_name;
-			$sides[] = new Side( $input->key, self::label( $input, $same?->placement_name, $name, $template?->base_id ), $placement_id, $same?->placement_name, $base_id, $version, $same?->previous_version, $name, array(), $input->sizes, $input->start, $input->mode, form_groups: $input->form_groups, misfit_sizes: $same->misfit_sizes ?? array(), draw_at_template_ratio: $input->draw_at_template_ratio );
+			$sides[] = new Side( $input->key, self::label( $input, $same?->placement_name, $name ), $placement_id, $same?->placement_name, $base_id, $version, $same?->previous_version, $name, array(), $input->sizes, $input->start, $input->mode, form_groups: $input->form_groups, misfit_sizes: $same->misfit_sizes ?? array(), draw_at_template_ratio: $input->draw_at_template_ratio );
 		}
 		return $sides;
 	}
@@ -738,16 +766,14 @@ final class ProductLinker {
 	}
 
 	/**
-	 * The side's label: the one entered, else the placement's name, else the
-	 * template's, else the side's key.
+	 * The side's label: the one entered, else what it follows (`Side::followed_label()`).
 	 *
-	 * @param SideInput   $input            The side as entered.
-	 * @param string|null $placement_name   The placement's name.
-	 * @param string|null $template_name    The template's name.
-	 * @param string|null $template_base_id The template; null when none is chosen.
+	 * @param SideInput   $input          The side as entered.
+	 * @param string|null $placement_name The placement's name.
+	 * @param string|null $template_name  The template's name.
 	 */
-	private static function label( SideInput $input, ?string $placement_name, ?string $template_name, ?string $template_base_id ): string {
-		return '' !== $input->label ? $input->label : $placement_name ?? $template_name ?? $template_base_id ?? $input->key;
+	private static function label( SideInput $input, ?string $placement_name, ?string $template_name ): string {
+		return '' !== $input->label ? $input->label : Side::followed_label( $placement_name, $template_name, $input->key );
 	}
 
 	/**

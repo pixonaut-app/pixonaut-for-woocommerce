@@ -424,7 +424,8 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertSame( 'Front', $side->placement_name );
 		$this->assertSame( 'mini-tee', $side->template_base_id );
 		$this->assertSame( 2, $side->template_version );
-		$this->assertSame( 'Mini tee', $side->template_name );
+		// The name Pixonaut gives when the template is read, not the one the panel posted.
+		$this->assertSame( 'T-shirt print, front', $side->template_name );
 		$this->assertCount( 1, $side->print_sizes );
 		$this->assertSame( (float) self::PRINT_WIDTH_MM, $side->print_sizes[0]->width_mm );
 		$this->assertSame( (float) self::PRINT_HEIGHT_MM, $side->print_sizes[0]->height_mm );
@@ -493,6 +494,8 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertNull( $config->blank_id );
 		$this->assertNull( $config->sides[0]->placement_id );
 		$this->assertSame( 'mini-tee', $config->sides[0]->template_base_id );
+		$this->assertNotNull( $config->sides[0]->template_name );
+		$this->assertSame( $config->sides[0]->template_name, $config->sides[0]->label, 'an unnamed side takes its template\'s name, never its id' );
 		$this->assertEquals( array( new PrintSize( self::PRINT_WIDTH_MM, self::PRINT_HEIGHT_MM, 'Poster' ) ), $config->sides[0]->print_sizes );
 		$this->assertCount( 3, $this->recorder->requests, 'the size check, the template, then the printshops' );
 		$this->assertStringEndsWith( '/v1/templates/mini-tee%402/print-size', $this->recorder->requests[0]['url'] );
@@ -512,8 +515,41 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertTrue( $this->reload( $product->get_id() )->is_purchasable() );
 	}
 
+	public function test_a_side_named_after_its_template_takes_the_templates_new_name(): void {
+		$product = $this->product();
+		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->script_template();
+		$this->recorder->json( 200, self::printshops() );
+
+		$this->save( $product->get_id(), array( 'pixonaut_blank' => '' ), array( 'template_name' => 'Mini tee, before its rename' ) + self::template_only_side() );
+
+		$side = ProductConfig::stored_on( $this->reload( $product->get_id() ) )->sides[0];
+		$this->assertNotSame( 'Mini tee, before its rename', $side->template_name, 'the name Pixonaut gives now' );
+		$this->assertSame( $side->template_name, $side->label );
+	}
+
+	public function test_a_typed_side_name_stays_when_the_template_is_renamed(): void {
+		$product = $this->product();
+		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->script_template();
+		$this->recorder->json( 200, self::printshops() );
+
+		$this->save(
+			$product->get_id(),
+			array( 'pixonaut_blank' => '' ),
+			array(
+				'label'         => 'Wall print',
+				'template_name' => 'Mini tee, before its rename',
+			) + self::template_only_side()
+		);
+
+		$this->assertSame( 'Wall print', ProductConfig::stored_on( $this->reload( $product->get_id() ) )->sides[0]->label );
+	}
+
 	public function test_a_template_only_product_without_a_size_cannot_be_bought_and_raises_a_notice(): void {
 		$product = $this->product();
+		$this->script_template();
+		$this->recorder->json( 200, self::printshops() );
 
 		$this->save( $product->get_id(), array( 'pixonaut_blank' => '' ), array( 'placement' => '' ) );
 
@@ -522,7 +558,8 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertSame( InvalidReason::MISSING_PRINT_SIZE, $config->invalid_reason );
 		$this->assertSame( 'mini-tee', $config->sides[0]->template_base_id, 'the template is kept' );
 		$this->assertFalse( $saved->is_purchasable() );
-		$this->assertSame( array(), $this->recorder->requests, 'nothing to ask Pixonaut' );
+		$this->assertCount( 2, $this->recorder->requests, 'what a variation with a size would sell under: the template, then the printshops' );
+		$this->assertStringEndsWith( '/v1/templates/mini-tee%402', $this->recorder->requests[0]['url'] );
 		$key = ProductPanel::notice_key( $product->get_id() );
 		$this->assertStringContainsString( esc_html( InvalidReason::message( InvalidReason::MISSING_PRINT_SIZE ) ), $this->plugin->notices()->all()[ $key ]['message'] );
 	}

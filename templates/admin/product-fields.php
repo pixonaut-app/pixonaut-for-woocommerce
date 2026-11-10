@@ -15,6 +15,7 @@
  * @var int                                     $max_sides      Most sides a product has.
  * @var int                                     $recommended    Most sides Pixonaut's designer is built for; more are shown a hint.
  * @var bool                                    $personalise    Whether customers personalise it.
+ * @var string                                  $personalise_text What the Personalise checkbox says: that customers design the product, or the variation.
  * @var string                                  $blank_id       Linked blank, or empty.
  * @var string                                  $blank_name     Its name.
  * @var string                                  $blank_thumbnail Its first photo, shown beside its name; empty without one.
@@ -91,7 +92,7 @@ $pixonaut_setting = static function ( string $key, string $label, array $choices
 		<label for="<?php echo esc_attr( $ids['personalise'] ); ?>"><?php echo esc_html_x( 'Personalise', 'checkbox on the product: customers personalise it', 'pixonaut-for-woocommerce' ); ?></label>
 		<span class="pixonaut-field-control">
 			<input type="checkbox" class="checkbox pixonaut-personalise" id="<?php echo esc_attr( $ids['personalise'] ); ?>" name="<?php echo esc_attr( $names['personalise'] ); ?>" value="yes" <?php checked( $personalise ); ?> />
-			<span class="description"><?php esc_html_e( 'Customers design this product with a Pixonaut template.', 'pixonaut-for-woocommerce' ); ?></span>
+			<span class="description"><?php echo esc_html( $personalise_text ); ?></span>
 		</span>
 	</p>
 </div>

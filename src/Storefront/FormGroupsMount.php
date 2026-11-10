@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Storefront;
 
 use Pixonaut\WooCommerce\Catalogue\FormGroups;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\TemplateForm;
 use Pixonaut\WooCommerce\Catalogue\VariationAttributes;
 use Pixonaut\WooCommerce\OptionGroups;
 use WC_Product;
@@ -119,6 +120,66 @@ final class FormGroupsMount {
 	}
 
 	/**
+	 * The option, made for the product's template, carried to a variation
+	 * on another template, to be `fitted()` to that template's groups next.
+	 * The product's groups keep their order and their names: a group of the
+	 * product's template the arrangement left untitled takes that template's
+	 * label for it. Attributes stay where they are; a field moves to the
+	 * other template's field of the same field key, else stays when the
+	 * other template has it too (as in an arrangement made for that
+	 * template), and is left out otherwise; a group left holding nothing
+	 * that the other template lacks is left out too. The other template's fields placed nowhere follow the
+	 * product's groups in its own groups, as the designer shows a field the
+	 * option does not place.
+	 *
+	 * @param mixed $option The `formGroups` option, from `option()`.
+	 * @param mixed $from   The product's template as Pixonaut answered it; null when the page could not read it.
+	 * @param mixed $to     The variation's template as Pixonaut answered it.
+	 * @return array{groups: list<array<string, mixed>>}|null
+	 */
+	public static function carried( mixed $option, mixed $from, mixed $to ): ?array {
+		if ( ! is_array( $option ) || ! is_array( $option['groups'] ?? null ) ) {
+			return null;
+		}
+		$labels    = array_column( TemplateForm::groups( $from ), 'label', 'id' );
+		$to_groups = TemplateForm::groups( $to );
+		$to_ids    = array_column( $to_groups, 'id' );
+		$offered   = array_column( array_merge( array(), ...array_column( $to_groups, 'fields' ) ), 'field' );
+		$to_keys   = TemplateForm::field_keys( $to );
+		$moved     = array();
+		foreach ( TemplateForm::field_keys( $from ) as $key => $field ) {
+			if ( isset( $to_keys[ $key ] ) && in_array( $to_keys[ $key ], $offered, true ) ) {
+				$moved[ $field ] = $to_keys[ $key ];
+			}
+		}
+		$groups = array();
+		foreach ( $option['groups'] as $group ) {
+			if ( ! is_array( $group ) || ! is_string( $group['id'] ?? null ) ) {
+				continue;
+			}
+			$items = array();
+			foreach ( is_array( $group['items'] ?? null ) ? $group['items'] : array() as $item ) {
+				if ( ! is_array( $item ) || ! is_string( $item['field'] ?? null ) ) {
+					$items[] = $item;
+				} elseif ( isset( $moved[ $item['field'] ] ) ) {
+					$items[] = array_merge( $item, array( 'field' => $moved[ $item['field'] ] ) );
+				} elseif ( in_array( $item['field'], $offered, true ) ) {
+					$items[] = $item;
+				}
+			}
+			$label = $labels[ $group['id'] ] ?? '';
+			if ( ! FormGroups::is_own( $group['id'] ) && ! isset( $group['title'] ) && '' !== $label ) {
+				$group['title'] = $label;
+			}
+			if ( array() === $items && self::TEMPLATE_GROUPS_ID !== $group['id'] && ! in_array( $group['id'], $to_ids, true ) ) {
+				continue;
+			}
+			$groups[] = array_merge( $group, array( 'items' => $items ) );
+		}
+		return array( 'groups' => $groups );
+	}
+
+	/**
 	 * Whether the option holds the stand-in for the template's groups, so
 	 * fitting it needs them read.
 	 *
@@ -127,6 +188,17 @@ final class FormGroupsMount {
 	public static function awaits_template_groups( mixed $option ): bool {
 		$groups = is_array( $option ) && is_array( $option['groups'] ?? null ) ? $option['groups'] : array();
 		return in_array( self::TEMPLATE_GROUPS_ID, array_column( $groups, 'id' ), true );
+	}
+
+	/**
+	 * Whether fitting the option to a template needs that template read:
+	 * false for one whose every group is one attribute's own, which fits
+	 * any template as it is.
+	 *
+	 * @param mixed $option The `formGroups` option, from `option()`.
+	 */
+	public static function needs_template( mixed $option ): bool {
+		return is_array( $option ) && is_array( $option['groups'] ?? null ) && ! self::names_only_options( $option['groups'] );
 	}
 
 	/**

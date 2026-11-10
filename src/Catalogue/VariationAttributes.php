@@ -42,4 +42,43 @@ final class VariationAttributes {
 		}
 		return $attributes;
 	}
+
+	/**
+	 * Each attribute as `of()` gives it, with its values on the product:
+	 * each as a variation stores it (a term's slug, or a custom attribute's
+	 * value as entered) and its name.
+	 *
+	 * @param WC_Product $product A variable product.
+	 * @return list<array{slug: string, label: string, values: list<array{value: string, name: string}>}>
+	 */
+	public static function with_values( WC_Product $product ): array {
+		$attributes = array();
+		foreach ( $product->is_type( 'variable' ) ? $product->get_attributes() : array() as $attribute ) {
+			if ( ! $attribute instanceof WC_Product_Attribute || ! $attribute->get_variation() ) {
+				continue;
+			}
+			$values = array();
+			if ( $attribute->is_taxonomy() ) {
+				foreach ( $attribute->get_terms() ?? array() as $term ) {
+					$values[] = array(
+						'value' => $term->slug,
+						'name'  => $term->name,
+					);
+				}
+			} else {
+				foreach ( $attribute->get_options() as $option ) {
+					$values[] = array(
+						'value' => (string) $option,
+						'name'  => (string) $option,
+					);
+				}
+			}
+			$attributes[] = array(
+				'slug'   => sanitize_title( $attribute->get_name() ),
+				'label'  => wc_attribute_label( $attribute->get_name(), $product ),
+				'values' => $values,
+			);
+		}
+		return $attributes;
+	}
 }

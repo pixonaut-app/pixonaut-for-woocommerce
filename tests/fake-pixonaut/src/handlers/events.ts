@@ -1,6 +1,7 @@
 // The store's event stream, pulled to catch up on what its webhook endpoint
 // missed: every event the fake emitted to the store, in the order it was
-// recorded, whether or not its delivery got through.
+// recorded, whether or not its delivery got through, but those only
+// delivered to webhooks.
 import type { Contract } from '../spec';
 import { PING_TYPE } from '../webhooks/deliveries';
 import { callerOf, type Handler, refusal } from './types';
@@ -15,10 +16,19 @@ export const EVENTS_LOOKED_THROUGH = 1000;
 /** Separates the types in `types`. */
 const TYPES_SEPARATOR = ',';
 
-/** The event types the reference names: its webhooks, but the ping. */
+/** The types Pixonaut only delivers to webhooks: the pull neither answers
+ *  them nor takes them in `types` (pixonaut-app/pixonaut#3451). */
+export const WEBHOOK_ONLY_TYPES: ReadonlySet<string> = new Set([
+	'template.renamed',
+]);
+
+/** The event types the pull answers: the reference's webhooks, but the
+ *  ping and those only delivered to webhooks. */
 function eventTypes(contract: Contract): Set<string> {
 	return new Set(
-		Object.keys(contract.spec.webhooks).filter((type) => type !== PING_TYPE),
+		Object.keys(contract.spec.webhooks).filter(
+			(type) => type !== PING_TYPE && !WEBHOOK_ONLY_TYPES.has(type),
+		),
 	);
 }
 
@@ -54,7 +64,11 @@ export const listEvents: Handler = (context) => {
 	let looked = 0;
 	for (const event of window) {
 		looked += 1;
-		if (wanted === null || wanted.has(event.type)) {
+		if (
+			wanted === null
+				? !WEBHOOK_ONLY_TYPES.has(event.type)
+				: wanted.has(event.type)
+		) {
 			events.push(event);
 			if (events.length === limit) {
 				break;

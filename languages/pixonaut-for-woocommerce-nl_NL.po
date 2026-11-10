@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T21:20:12+00:00\n"
+"POT-Creation-Date: 2026-11-10T23:03:11+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -47,8 +47,8 @@ msgstr ""
 #. translators: The plugin's item in the admin menu, shown to the merchant; the product name, keep it as it is.
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
-#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:186
-#: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:40
+#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:187
+#: src/Settings/SettingsPage.php:237 templates/admin/product-variation.php:40
 msgid "Pixonaut"
 msgstr "Pixonaut"
 
@@ -521,17 +521,23 @@ msgid ""
 "choose from (the default first), `brand_id` the brand its pages are drawn "
 "in, `chosen_brand_id` the store's own choice (null while it follows the "
 "default), its logo and accent colour, the proof watermark, where orders "
-"ship, the least print resolution and the default language. Null while the "
-"connection is paused or Pixonaut could not be reached."
+"ship, the least print resolution, the default language, `print_file_form` "
+"and `print_file_tolerance` the store's own print file form and live text "
+"tolerance (null while it follows the workspace's), and `prints_with` the "
+"form and tolerance its print files get. Null while the connection is paused "
+"or Pixonaut could not be reached."
 msgstr ""
 "De instellingen van de werkruimte zoals Pixonaut ze heeft doorgegeven: "
 "`brands` waaruit de winkel mag kiezen (het standaardmerk eerst), `brand_id` "
 "het merk waarin de pagina's van de winkel worden weergegeven, "
 "`chosen_brand_id` de eigen keuze van de winkel (null zolang die de standaard "
 "volgt), het logo en de accentkleur, het watermerk van de drukproef, waarheen "
-"bestellingen worden verzonden, de minimale drukresolutie en de "
-"standaardtaal. Null zolang de koppeling gepauzeerd is of Pixonaut niet "
-"bereikbaar was."
+"bestellingen worden verzonden, de minimale drukresolutie, de standaardtaal, "
+"`print_file_form` en `print_file_tolerance` de eigen keuze van de winkel "
+"voor de vorm van drukbestanden en de tolerantie voor bewerkbare tekst (null "
+"zolang die de werkruimte volgt), en `prints_with` de vorm en tolerantie "
+"waarmee de drukbestanden van de winkel worden gemaakt. Null zolang de "
+"koppeling gepauzeerd is of Pixonaut niet bereikbaar was."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductPictureViews.php:42
@@ -1183,7 +1189,7 @@ msgstr "Of het aan een sjabloon is gekoppeld, gepersonaliseerd of niet."
 msgid "Whether customers personalise it."
 msgstr "Of klanten het personaliseren."
 
-#: src/Abilities/ProductSetup.php:125 src/Abilities/ProductSetup.php:299
+#: src/Abilities/ProductSetup.php:125 src/Abilities/ProductSetup.php:298
 msgid ""
 "False when Pixonaut found a problem: it cannot be bought until it is fixed."
 msgstr ""
@@ -1351,7 +1357,7 @@ msgstr ""
 "Of de winkelmanager de variant heeft gekozen in plaats van dat die op basis "
 "van de attributen van het product is gekoppeld."
 
-#: src/Abilities/ProductSetup.php:302
+#: src/Abilities/ProductSetup.php:301
 msgid ""
 "Why not, as a code such as `too_large` or `template_not_live`; null when "
 "valid."
@@ -1359,7 +1365,7 @@ msgstr ""
 "Waarom niet, als code zoals `too_large` of `template_not_live`; null als het "
 "geldig is."
 
-#: src/Abilities/ProductSetup.php:305
+#: src/Abilities/ProductSetup.php:304
 msgid "Why not, in words, as the product screen says it; null when valid."
 msgstr ""
 "Waarom niet, in woorden, zoals het bewerkscherm van het product het toont; "
@@ -2574,7 +2580,7 @@ msgstr "Er kon niet in Pixonaut worden gezocht. Probeer het zo meteen opnieuw."
 msgid "Connect the store to Pixonaut to search its catalogue."
 msgstr "Koppel de winkel aan Pixonaut om in de catalogus te zoeken."
 
-#: src/Admin/ConnectionScreen.php:424
+#: src/Admin/ConnectionScreen.php:497
 msgid "You are not allowed to change the Pixonaut connection."
 msgstr "Je hebt geen toestemming om de Pixonaut-koppeling te wijzigen."
 
@@ -2605,7 +2611,7 @@ msgstr[1] "Nog %d keer om de ontwikkelaarstools in te schakelen"
 
 #. translators: Item in the admin bar, shown to the merchant, when the plugin talks to a custom Pixonaut host instead of the default one.
 #. translators: Badge on the connection card: the store talks to another address than Pixonaut's own, set by a developer.
-#: src/Admin/DeveloperTools.php:394 templates/admin/connection-card.php:106
+#: src/Admin/DeveloperTools.php:394 templates/admin/connection-card.php:111
 msgid "Custom Pixonaut host"
 msgstr "Aangepaste Pixonaut-host"
 
@@ -2706,7 +2712,7 @@ msgstr "Eigen groep"
 
 #. translators: Button that removes a group the merchant added. Admin product page.
 #. translators: Button that removes one print size row from a side. Admin product page.
-#: src/Admin/GroupsStrings.php:49 templates/admin/product-side.php:63
+#: src/Admin/GroupsStrings.php:49 templates/admin/product-side.php:67
 msgid "Remove"
 msgstr "Verwijderen"
 
@@ -2831,7 +2837,7 @@ msgid "Field"
 msgstr "Veld"
 
 #. translators: 1: product edit link, 2: why it cannot be bought.
-#: src/Admin/InvalidProductNotice.php:65
+#: src/Admin/InvalidProductNotice.php:66
 #, php-format
 msgid "Customers cannot buy %1$s: %2$s"
 msgstr "Klanten kunnen %1$s niet kopen: %2$s"
@@ -2871,17 +2877,17 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:284 src/Admin/ProductPanel.php:724
+#: src/Admin/LinkedBlank.php:284 src/Admin/ProductPanel.php:734
 msgid "Workspace default"
 msgstr "Standaard van de werkruimte"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:286 src/Admin/ProductPanel.php:727
+#: src/Admin/LinkedBlank.php:286 src/Admin/ProductPanel.php:737
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Standaard van de werkruimte (%s)"
 
-#: src/Admin/LinkedBlank.php:289 src/Admin/ProductPanel.php:739
+#: src/Admin/LinkedBlank.php:289 src/Admin/ProductPanel.php:749
 msgid "A printshop no longer connected to the workspace"
 msgstr "Een drukkerij die niet meer aan de werkruimte is gekoppeld"
 
@@ -2932,7 +2938,7 @@ msgstr "Bij de drukkerij"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the printshop has shipped it.
 #. translators: Status of an order line on the admin order screen: the item has shipped.
-#: src/Admin/OrderBox.php:299 src/Labels.php:617
+#: src/Admin/OrderBox.php:299 src/Labels.php:628
 msgid "Shipped"
 msgstr "Verzonden"
 
@@ -2943,7 +2949,7 @@ msgstr "Mislukt"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the item is cancelled.
 #. translators: Status of an order line on the admin order screen: the item is cancelled.
-#: src/Admin/OrderBox.php:303 src/Labels.php:621
+#: src/Admin/OrderBox.php:303 src/Labels.php:632
 msgid "Cancelled"
 msgstr "Geannuleerd"
 
@@ -3013,7 +3019,7 @@ msgstr ""
 
 #. translators: Link on the Plugins screen to the plugin's settings.
 #. translators: Item in the admin menu under Pixonaut, opening the plugin's settings.
-#: src/Admin/PluginLinks.php:40 src/Settings/SettingsPage.php:245
+#: src/Admin/PluginLinks.php:40 src/Settings/SettingsPage.php:250
 msgid "Settings"
 msgstr "Instellingen"
 
@@ -3027,48 +3033,56 @@ msgstr "Documentatie"
 msgid "Support"
 msgstr "Ondersteuning"
 
-#: src/Admin/ProductPanel.php:380
+#: src/Admin/ProductPanel.php:383
 msgid ""
 "This variation cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Deze variatie kan pas worden gekocht als de Pixonaut-configuratie is "
 "hersteld:"
 
-#: src/Admin/ProductPanel.php:381
+#: src/Admin/ProductPanel.php:384
 msgid ""
 "This product cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Dit product kan pas worden gekocht als de Pixonaut-configuratie is hersteld:"
 
+#: src/Admin/ProductPanel.php:389
+msgid "Customers design this variation with a Pixonaut template."
+msgstr "Klanten ontwerpen deze variatie met een Pixonaut-sjabloon."
+
+#: src/Admin/ProductPanel.php:390
+msgid "Customers design this product with a Pixonaut template."
+msgstr "Klanten ontwerpen dit product met een Pixonaut-sjabloon."
+
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:419 src/Admin/ProductPanel.php:640
+#: src/Admin/ProductPanel.php:425 src/Admin/ProductPanel.php:650
 msgid "As the product says"
 msgstr "Zoals het product aangeeft"
 
 #. translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page.
-#: src/Admin/ProductPanel.php:421
+#: src/Admin/ProductPanel.php:427
 msgid "As the template says"
 msgstr "Zoals het sjabloon aangeeft"
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:657
+#: src/Admin/ProductPanel.php:667
 #, php-format
 msgid "Store setting: %s"
 msgstr "Winkelinstelling: %s"
 
 #. translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page.
-#: src/Admin/ProductPanel.php:731
+#: src/Admin/ProductPanel.php:741
 #, php-format
 msgid "Workspace default (%s): prints only on a blank"
 msgstr "Standaard van de werkruimte (%s): drukt alleen op een blanco product"
 
-#: src/Admin/ProductPanel.php:736
+#: src/Admin/ProductPanel.php:746
 msgid "The printshop chosen before"
 msgstr "De eerder gekozen drukkerij"
 
 #. translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page.
-#: src/Admin/ProductPanel.php:738
+#: src/Admin/ProductPanel.php:748
 #, php-format
 msgid "%s (prints only on a blank)"
 msgstr "%s (drukt alleen op een blanco product)"
@@ -3325,13 +3339,19 @@ msgstr ""
 "Klanten kunnen niet alles van %1$s kopen: %2$s. Kies de variant in de "
 "Pixonaut-velden."
 
+#. translators: 1: the product attribute whose value gives the print size, e.g. "Size"; 2: the print size, e.g. "30×40 cm". Option in a variation's print size dropdown: print the side at the size the product gives the variation's value of that attribute. Admin product page.
+#: src/Admin/VariationSizeField.php:163
+#, php-format
+msgid "As its %1$s (%2$s)"
+msgstr "Zoals de waarde voor %1$s (%2$s)"
+
 #. translators: Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says, which gives no size this variation can be printed at. Admin product page.
-#: src/Admin/VariationSizeField.php:153
+#: src/Admin/VariationSizeField.php:170
 msgid "As the product (no size fits this variation)"
 msgstr "Zoals het product (geen formaat past bij deze variatie)"
 
 #. translators: %s: the print sizes, e.g. "300 × 400 mm". Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says. Admin product page.
-#: src/Admin/VariationSizeField.php:157
+#: src/Admin/VariationSizeField.php:174
 #, php-format
 msgid "As the product (%s)"
 msgstr "Zoals het product (%s)"
@@ -3746,19 +3766,19 @@ msgstr "Altijd de vorm van het sjabloon"
 msgid "Always the chosen print size’s shape"
 msgstr "Altijd de vorm van het gekozen drukformaat"
 
-#: src/Catalogue/InvalidReason.php:132
+#: src/Catalogue/InvalidReason.php:163
 msgid "Choose a template."
 msgstr "Kies een sjabloon."
 
-#: src/Catalogue/InvalidReason.php:134
+#: src/Catalogue/InvalidReason.php:165
 msgid "Choose where on the blank the design is printed."
 msgstr "Kies waar op het blanco product het ontwerp wordt gedrukt."
 
-#: src/Catalogue/InvalidReason.php:136
+#: src/Catalogue/InvalidReason.php:167
 msgid "The blank no longer exists in Pixonaut."
 msgstr "Het blanco product bestaat niet meer in Pixonaut."
 
-#: src/Catalogue/InvalidReason.php:138
+#: src/Catalogue/InvalidReason.php:169
 msgid ""
 "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or "
 "choose another blank."
@@ -3766,7 +3786,7 @@ msgstr ""
 "Het blanco product is verwijderd in Pixonaut. Zet het terug in de Pixonaut-"
 "studio of kies een ander blanco product."
 
-#: src/Catalogue/InvalidReason.php:140
+#: src/Catalogue/InvalidReason.php:171
 msgid ""
 "The blank no longer has this placement, or Pixonaut cannot size a print for "
 "it."
@@ -3774,11 +3794,15 @@ msgstr ""
 "Het blanco product heeft deze drukpositie niet meer, of Pixonaut kan er geen "
 "drukformaat voor bepalen."
 
-#: src/Catalogue/InvalidReason.php:142
-msgid "The template no longer exists in Pixonaut."
-msgstr "Het sjabloon bestaat niet meer in Pixonaut."
+#: src/Catalogue/InvalidReason.php:173
+msgid ""
+"The template is not published in Pixonaut, or no longer exists. Publish it "
+"in the Pixonaut studio, or choose another template."
+msgstr ""
+"Het sjabloon is niet gepubliceerd in Pixonaut of bestaat niet meer. "
+"Publiceer het in de Pixonaut-studio of kies een ander sjabloon."
 
-#: src/Catalogue/InvalidReason.php:144
+#: src/Catalogue/InvalidReason.php:175
 msgid ""
 "The template is paused or deleted in Pixonaut. Make it live again, or choose "
 "another template."
@@ -3787,23 +3811,23 @@ msgstr ""
 "kies een ander sjabloon."
 
 #. translators: %d: most sides a product can have.
-#: src/Catalogue/InvalidReason.php:148
+#: src/Catalogue/InvalidReason.php:179
 #, php-format
 msgid "A product has at most %d sides."
 msgstr "Een product heeft maximaal %d zijden."
 
-#: src/Catalogue/InvalidReason.php:152
+#: src/Catalogue/InvalidReason.php:183
 msgid "Two sides use the same placement. Each placement can be one side only."
 msgstr ""
 "Twee zijden gebruiken dezelfde drukpositie. Elke drukpositie kan maar één "
 "zijde zijn."
 
-#: src/Catalogue/InvalidReason.php:154
+#: src/Catalogue/InvalidReason.php:185
 msgid "Two sides have the same key. Give each side its own."
 msgstr ""
 "Twee zijden hebben dezelfde sleutel. Geef elke zijde een eigen sleutel."
 
-#: src/Catalogue/InvalidReason.php:156
+#: src/Catalogue/InvalidReason.php:187
 msgid ""
 "A custom print size needs a width and height in millimetres, both above zero."
 msgstr ""
@@ -3811,12 +3835,12 @@ msgstr ""
 "beide groter dan nul."
 
 #. translators: %d: most print sizes one side can offer.
-#: src/Catalogue/InvalidReason.php:160
+#: src/Catalogue/InvalidReason.php:191
 #, php-format
 msgid "A side offers at most %d print sizes."
 msgstr "Een zijde biedt maximaal %d drukformaten."
 
-#: src/Catalogue/InvalidReason.php:164
+#: src/Catalogue/InvalidReason.php:195
 msgid ""
 "Add a print size in millimetres. Without a blank there is no placement to "
 "take one from."
@@ -3824,15 +3848,24 @@ msgstr ""
 "Voeg een drukformaat in millimeters toe. Zonder blanco product is er geen "
 "drukpositie om er een van over te nemen."
 
-#: src/Catalogue/InvalidReason.php:166
+#: src/Catalogue/InvalidReason.php:197
+msgid ""
+"Some variations have no print size. Add one in millimetres here, one for "
+"each value of an attribute, or one on each of those variations."
+msgstr ""
+"Sommige variaties hebben geen drukformaat. Voeg er hier een toe in "
+"millimeters, een voor elke waarde van een attribuut, of een op elk van die "
+"variaties."
+
+#: src/Catalogue/InvalidReason.php:199
 msgid "The print size is larger than the placement can print."
 msgstr "Het drukformaat is groter dan de drukpositie kan drukken."
 
-#: src/Catalogue/InvalidReason.php:168
+#: src/Catalogue/InvalidReason.php:201
 msgid "The print size does not match the template's aspect ratio."
 msgstr "Het drukformaat past niet bij de beeldverhouding van het sjabloon."
 
-#: src/Catalogue/InvalidReason.php:170
+#: src/Catalogue/InvalidReason.php:203
 msgid ""
 "The placement is printed across its whole print area: the print size must be "
 "that area."
@@ -3840,7 +3873,7 @@ msgstr ""
 "De drukpositie wordt over het hele drukgebied bedrukt: het drukformaat moet "
 "gelijk zijn aan dat gebied."
 
-#: src/Catalogue/InvalidReason.php:172
+#: src/Catalogue/InvalidReason.php:205
 msgid ""
 "The template cannot be printed at the print area of this variation's blank "
 "variant. Choose a template that fits, or stop selling the variation."
@@ -3849,7 +3882,7 @@ msgstr ""
 "het blanco product van deze variatie. Kies een sjabloon dat past, of verkoop "
 "de variatie niet meer."
 
-#: src/Catalogue/InvalidReason.php:174
+#: src/Catalogue/InvalidReason.php:207
 msgid ""
 "The variation's print size has not been checked since the product changed. "
 "Update the product again."
@@ -3857,7 +3890,7 @@ msgstr ""
 "Het drukformaat van de variatie is niet gecontroleerd sinds het product is "
 "gewijzigd. Werk het product opnieuw bij."
 
-#: src/Catalogue/InvalidReason.php:176
+#: src/Catalogue/InvalidReason.php:209
 msgid ""
 "Pixonaut could not check the configuration. Check the connection, then "
 "update the product again."
@@ -3865,7 +3898,7 @@ msgstr ""
 "Pixonaut kon de configuratie niet controleren. Controleer de koppeling en "
 "werk het product daarna opnieuw bij."
 
-#: src/Catalogue/InvalidReason.php:178
+#: src/Catalogue/InvalidReason.php:211
 msgid ""
 "Pixonaut would not make the design of a standing side. Check the side's "
 "template, placement and print size, then update the product again."
@@ -3874,7 +3907,7 @@ msgstr ""
 "sjabloon, de drukpositie en het drukformaat van de zijde en werk het product "
 "daarna opnieuw bij."
 
-#: src/Catalogue/InvalidReason.php:180
+#: src/Catalogue/InvalidReason.php:213
 msgid ""
 "Pixonaut would not make the design of a standing side: the store may not "
 "create and approve designs. Check the connection's permissions in the "
@@ -3884,7 +3917,7 @@ msgstr ""
 "geen ontwerpen aanmaken en goedkeuren. Controleer de rechten van de "
 "koppeling in de Pixonaut-studio en werk het product daarna opnieuw bij."
 
-#: src/Catalogue/InvalidReason.php:182
+#: src/Catalogue/InvalidReason.php:215
 msgid ""
 "The template of a standing side does not fit the placement at any of the "
 "blank's sizes, so none of them can be printed. Choose a template that fits."
@@ -3893,12 +3926,12 @@ msgstr ""
 "product op de drukpositie, dus geen ervan kan worden gedrukt. Kies een "
 "sjabloon dat past."
 
-#: src/Catalogue/InvalidReason.php:184
+#: src/Catalogue/InvalidReason.php:217
 msgid "Choose a blank, or a printshop that prints without one."
 msgstr ""
 "Kies een blanco product, of een drukkerij die zonder blanco product drukt."
 
-#: src/Catalogue/InvalidReason.php:186
+#: src/Catalogue/InvalidReason.php:219
 msgid ""
 "The configuration was saved by a newer version of Pixonaut for WooCommerce. "
 "Update the plugin."
@@ -3906,7 +3939,7 @@ msgstr ""
 "De configuratie is opgeslagen door een nieuwere versie van Pixonaut for "
 "WooCommerce. Werk de plugin bij."
 
-#: src/Catalogue/InvalidReason.php:188
+#: src/Catalogue/InvalidReason.php:221
 msgid "Pixonaut cannot print this configuration."
 msgstr "Pixonaut kan deze configuratie niet drukken."
 
@@ -3959,6 +3992,33 @@ msgstr ""
 "Pixonaut ontkoppeld of de sleutel is ingetrokken. Gepersonaliseerde "
 "producten en bestellingen zijn gepauzeerd tot je <a href=\"%s\">de winkel "
 "opnieuw koppelt</a>."
+
+#. translators: Print file form on the connection card: one flat image per print.
+#: src/Connection/PrintFileForm.php:71
+msgid "Flat"
+msgstr "Plat"
+
+#. translators: Print file form on the connection card: each printed layer its own PDF layer, with text turned into shapes.
+#: src/Connection/PrintFileForm.php:73
+msgid "Layers, text as shapes"
+msgstr "Lagen, tekst als contouren"
+
+#. translators: Print file form on the connection card: each printed layer its own PDF layer, with plain text kept as editable text.
+#: src/Connection/PrintFileForm.php:75
+msgid "Layers with live text"
+msgstr "Lagen met bewerkbare tekst"
+
+#. translators: 1: a number, 2: its unit, px or mm. A live text tolerance on the connection card, e.g. 0.5 mm.
+#: src/Connection/PrintFileForm.php:95
+#, php-format
+msgid "%1$s %2$s"
+msgstr "%1$s %2$s"
+
+#. translators: 1: least and 2: most device pixels, 3: least and 4: most millimetres a live text tolerance may be. Shown on the connection card.
+#: src/Connection/PrintFileForm.php:118
+#, php-format
+msgid "%1$s to %2$s px, or %3$s to %4$s mm"
+msgstr "%1$s tot %2$s px, of %3$s tot %4$s mm"
 
 #. translators: %s: plugin version, e.g. 1.2.0.
 #: src/DeprecatedHooks.php:119
@@ -5417,32 +5477,37 @@ msgctxt "group numbers"
 msgid "Off"
 msgstr "Uit"
 
-#: src/Labels.php:317
+#: src/Labels.php:323
 msgid "Personalisation is unavailable right now. Please try again later."
 msgstr ""
 "Personaliseren is op dit moment niet beschikbaar. Probeer het later opnieuw."
 
-#: src/Labels.php:321
+#. translators: On the page of a personalised product the shop cannot sell for now, in place of the add-to-cart button.
+#: src/Labels.php:328
+msgid "This product is not available right now."
+msgstr "Dit product is op dit moment niet beschikbaar."
+
+#: src/Labels.php:332
 msgid "Please personalise this product before adding it to your cart."
 msgstr "Personaliseer dit product voordat je het aan je winkelwagen toevoegt."
 
-#: src/Labels.php:325
+#: src/Labels.php:336
 msgid "We could not save your design. Please try again."
 msgstr "We konden je ontwerp niet opslaan. Probeer het opnieuw."
 
-#: src/Labels.php:329
+#: src/Labels.php:340
 msgid "Your design does not match this product. Please personalise it again."
 msgstr "Je ontwerp past niet bij dit product. Personaliseer het opnieuw."
 
-#: src/Labels.php:333
+#: src/Labels.php:344
 msgid "This product was just updated, please reload."
 msgstr "Dit product is zojuist bijgewerkt. Laad de pagina opnieuw."
 
-#: src/Labels.php:337
+#: src/Labels.php:348
 msgid "Your design preview expired. Please approve it again."
 msgstr "Het voorbeeld van je ontwerp is verlopen. Keur het opnieuw goed."
 
-#: src/Labels.php:341
+#: src/Labels.php:352
 msgid ""
 "This design is already in a cart or an order. Please personalise the product "
 "again."
@@ -5450,13 +5515,13 @@ msgstr ""
 "Dit ontwerp zit al in een winkelwagen of een bestelling. Personaliseer het "
 "product opnieuw."
 
-#: src/Labels.php:345
+#: src/Labels.php:356
 msgid "Your design could not be prepared. Please check it and try again."
 msgstr ""
 "Je ontwerp kon niet worden voorbereid. Controleer het en probeer het opnieuw."
 
 #. translators: %s: the name of the personalised product in the shopper's cart.
-#: src/Labels.php:350
+#: src/Labels.php:361
 #, php-format
 msgid ""
 "The design for \"%s\" is no longer available. Please remove it from your "
@@ -5466,29 +5531,29 @@ msgstr ""
 "je winkelwagen of personaliseer het opnieuw."
 
 #. translators: %s: the names of the product options the shopper has not chosen yet, as a list such as "Colour and Size". Notice on the product page after pressing the Personalise button.
-#: src/Labels.php:355
+#: src/Labels.php:366
 #, php-format
 msgid "Please choose a value for %s before personalising this product."
 msgstr "Kies een waarde voor %s voordat je dit product personaliseert."
 
 #. translators: %s: the labels of the design's fields the shopper must change, as a list such as "Photo, Name and Class".
-#: src/Labels.php:360
+#: src/Labels.php:371
 #, php-format
 msgid "Please change these fields: %s"
 msgstr "Wijzig deze velden: %s"
 
 #. translators: Label of the checkbox next to the preview on the product page, shown to the shopper; ticking it approves the design. %1$s and %2$s go around the word for the preview, which becomes a link that opens the design's proof.
-#: src/Labels.php:365
+#: src/Labels.php:376
 #, php-format
 msgid "I approve the %1$spreview%2$s"
 msgstr "Ik keur het %1$svoorbeeld%2$s goed"
 
 #. translators: Button in the cart and on the order received page, shown to the shopper; opens the proof of the design.
-#: src/Labels.php:370
+#: src/Labels.php:381
 msgid "Open proof"
 msgstr "Drukproef openen"
 
-#: src/Labels.php:374
+#: src/Labels.php:385
 msgid ""
 "Please tick \"I approve the preview\" before adding this product to your "
 "cart."
@@ -5497,82 +5562,82 @@ msgstr ""
 "winkelwagen toevoegt."
 
 #. translators: Short note under the live preview on the product page, shown to the shopper.
-#: src/Labels.php:379
+#: src/Labels.php:390
 msgid "The preview updates as you type"
 msgstr "Het voorbeeld wordt bijgewerkt terwijl je typt"
 
-#: src/Labels.php:383
+#: src/Labels.php:394
 msgid "Loading the designer"
 msgstr "Ontwerptool wordt geladen"
 
 #. translators: Alternative text of the design preview image in the cart and order, shown to the shopper.
-#: src/Labels.php:388
+#: src/Labels.php:399
 msgid "Your design"
 msgstr "Je ontwerp"
 
 #. translators: Shown to the shopper in the window over the product page while their design's proof is made.
-#: src/Labels.php:393
+#: src/Labels.php:404
 msgid "Preparing your proof"
 msgstr "Je drukproef wordt gemaakt"
 
 #. translators: Button that closes the window showing the design's proof on the product page; here Close is a verb.
-#: src/Labels.php:398
+#: src/Labels.php:409
 msgctxt "proof window"
 msgid "Close"
 msgstr "Sluiten"
 
 #. translators: Heading above a cart or order item's design details, shown to the shopper.
-#: src/Labels.php:403
+#: src/Labels.php:414
 msgid "Personalisation"
 msgstr "Personalisatie"
 
 #. translators: Shown to the shopper in place of a design's field values once the shop has removed them after its retention period.
-#: src/Labels.php:408
+#: src/Labels.php:419
 msgid "Removed after the shop's retention period"
 msgstr "Verwijderd na de bewaartermijn van de winkel"
 
 #. translators: Name of a design field type, a free-text field, shown to the shopper in the cart line details.
-#: src/Labels.php:413
+#: src/Labels.php:424
 msgid "Text"
 msgstr "Tekst"
 
 #. translators: Name of a design field type, a pick from a list of options, shown to the shopper in the cart line details.
-#: src/Labels.php:418
+#: src/Labels.php:429
 msgid "Choice"
 msgstr "Keuze"
 
 #. translators: Name of a design field type, a numeric value, shown to the shopper in the cart line details.
-#: src/Labels.php:423
+#: src/Labels.php:434
 msgid "Number"
 msgstr "Getal"
 
 #. translators: Name of a design field type, a picked colour, shown to the shopper in the cart line details.
-#: src/Labels.php:428
+#: src/Labels.php:439
 msgid "Colour"
 msgstr "Kleur"
 
 #. translators: Name of a design field type, an uploaded image, shown to the shopper in the cart line details.
-#: src/Labels.php:433
+#: src/Labels.php:444
 msgid "Image"
 msgstr "Afbeelding"
 
 #. translators: Heading of the status of an order line on the admin order screen.
-#: src/Labels.php:438
+#: src/Labels.php:449
 msgctxt "heading: status of an order line"
 msgid "Status"
 msgstr "Status"
 
 #. translators: Heading of the shipment tracking links in the order details and shipping emails, shown to the shopper.
-#: src/Labels.php:443
+#: src/Labels.php:454
 msgid "Tracking"
 msgstr "Zending volgen"
 
-#: src/Labels.php:447
+#: src/Labels.php:458
 msgid "Part of your order is on its way. The rest follows as soon as it ships."
 msgstr ""
 "Een deel van je bestelling is onderweg. De rest volgt zodra die is verzonden."
 
-#: src/Labels.php:451
+#: src/Labels.php:462
 msgid ""
 "There is new tracking for your order. Follow your parcel with the details "
 "below."
@@ -5582,11 +5647,11 @@ msgstr ""
 
 #. translators: Accessible name of the tabs that switch between a product's sides, such as front and back, on the product page, read by screen readers.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's sides, such as front and back, each with its template.
-#: src/Labels.php:456 templates/admin/product-fields.php:152
+#: src/Labels.php:467 templates/admin/product-fields.php:153
 msgid "Sides"
 msgstr "Zijden"
 
-#: src/Labels.php:460
+#: src/Labels.php:471
 msgid ""
 "Your order is paid. Before we print it, please check the proof of your "
 "design and approve it. Nothing is printed until you do."
@@ -5596,16 +5661,16 @@ msgstr ""
 "gedaan."
 
 #. translators: Link in the proof email to the shopper, and under the order item on the order received page and in My Account; opens the proof page where the design is approved.
-#: src/Labels.php:465
+#: src/Labels.php:476
 msgid "Review and approve your design"
 msgstr "Bekijk je ontwerp en keur het goed"
 
-#: src/Labels.php:469
+#: src/Labels.php:480
 msgid "Thank you for approving your design. It is now on its way to print."
 msgstr ""
 "Bedankt voor het goedkeuren van je ontwerp. Het gaat nu naar de drukkerij."
 
-#: src/Labels.php:473
+#: src/Labels.php:484
 msgid ""
 "We are still waiting for your approval. Please check the proof of your "
 "design and approve it, or tell us what to change. Nothing is printed until "
@@ -5616,7 +5681,7 @@ msgstr ""
 "gedrukt totdat je dat hebt gedaan."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:478
+#: src/Labels.php:489
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will print your design as the proof "
@@ -5626,13 +5691,13 @@ msgstr ""
 "drukproef het toont."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:483
+#: src/Labels.php:494
 #, php-format
 msgid "If we have not heard from you by %s, we will cancel this item."
 msgstr "Als we op %s nog niets van je hebben gehoord, annuleren we dit item."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:488
+#: src/Labels.php:499
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will cancel this item and refund it."
@@ -5641,7 +5706,7 @@ msgstr ""
 "betalen we het terug."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:493
+#: src/Labels.php:504
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will not print your design and will "
@@ -5650,7 +5715,7 @@ msgstr ""
 "Als we op %s nog niets van je hebben gehoord, drukken we je ontwerp niet en "
 "nemen we contact met je op over dit item."
 
-#: src/Labels.php:497
+#: src/Labels.php:508
 msgid ""
 "You did not approve your design by the deadline, so we have cancelled this "
 "item. Nothing was printed."
@@ -5658,34 +5723,34 @@ msgstr ""
 "Je hebt je ontwerp niet binnen de termijn goedgekeurd, dus we hebben dit "
 "item geannuleerd. Er is niets gedrukt."
 
-#: src/Labels.php:501
+#: src/Labels.php:512
 msgid "Its price is being refunded to you."
 msgstr "Het bedrag wordt aan je terugbetaald."
 
 #. translators: Button on the product page opened to edit a cart item, shown to the shopper; saves the changed design.
-#: src/Labels.php:506
+#: src/Labels.php:517
 msgid "Update design"
 msgstr "Ontwerp bijwerken"
 
-#: src/Labels.php:510
+#: src/Labels.php:521
 msgid "This design was changed elsewhere. Please reload the page."
 msgstr "Dit ontwerp is ergens anders gewijzigd. Laad de pagina opnieuw."
 
-#: src/Labels.php:514
+#: src/Labels.php:525
 msgid "This design can no longer be changed."
 msgstr "Dit ontwerp kan niet meer worden gewijzigd."
 
-#: src/Labels.php:518
+#: src/Labels.php:529
 msgid "This item is no longer in your cart."
 msgstr "Dit item zit niet meer in je winkelwagen."
 
 #. translators: Button on the product page, shown to the shopper; opens the Pixonaut designer to personalise the product.
-#: src/Labels.php:523
+#: src/Labels.php:534
 msgctxt "verb: button that opens the designer"
 msgid "Personalise"
 msgstr "Personaliseren"
 
-#: src/Labels.php:527
+#: src/Labels.php:538
 msgid ""
 "We could not match your design to this visit. Please personalise the product "
 "again."
@@ -5693,55 +5758,55 @@ msgstr ""
 "We konden je ontwerp niet aan dit bezoek koppelen. Personaliseer het product "
 "opnieuw."
 
-#: src/Labels.php:531
+#: src/Labels.php:542
 msgid "Your design is ready. Use it with the button below."
 msgstr "Je ontwerp is klaar. Gebruik het met de knop hieronder."
 
 #. translators: Button on the product page, shown to the shopper after returning from the Pixonaut designer when their design could not be kept yet, or when they came back in a browser that did not open the designer; keeps the design.
-#: src/Labels.php:536
+#: src/Labels.php:547
 msgid "Use my design"
 msgstr "Mijn ontwerp gebruiken"
 
 #. translators: Soft note above the add-to-cart row on a product page showing the design the shopper made in the Pixonaut designer.
-#: src/Labels.php:541
+#: src/Labels.php:552
 msgid "This is your design."
 msgstr "Dit is je ontwerp."
 
 #. translators: Button beside the note that this is the shopper's design; reopens it in the Pixonaut designer.
-#: src/Labels.php:546
+#: src/Labels.php:557
 msgctxt "personalised product button"
 msgid "Change"
 msgstr "Wijzigen"
 
 #. translators: %s: the name of a printed side, such as Front. Button beside the note that this is the shopper's design; reopens that side's design in the Pixonaut designer.
-#: src/Labels.php:551
+#: src/Labels.php:562
 #, php-format
 msgid "Change %s"
 msgstr "%s wijzigen"
 
 #. translators: Start of the line on a product page saying the design it shows is already in the shopper's cart, followed by its size and quantity.
-#: src/Labels.php:556
+#: src/Labels.php:567
 msgid "In your cart"
 msgstr "In je winkelwagen"
 
 #. translators: Button on the product page of an item already in the shopper's cart; reopens its design in the Pixonaut designer.
-#: src/Labels.php:561
+#: src/Labels.php:572
 msgctxt "item in the cart button"
 msgid "Change design"
 msgstr "Ontwerp wijzigen"
 
 #. translators: The main button on the product page of an item already in the shopper's cart; goes to the cart.
-#: src/Labels.php:566
+#: src/Labels.php:577
 msgctxt "item in the cart button"
 msgid "View cart"
 msgstr "Winkelwagen bekijken"
 
 #. translators: Link on the product page of an item already in the shopper's cart; opens the plain product page, to start another design from scratch.
-#: src/Labels.php:571
+#: src/Labels.php:582
 msgid "Make another with a new design"
 msgstr "Nog een maken met een nieuw ontwerp"
 
-#: src/Labels.php:575
+#: src/Labels.php:586
 msgid ""
 "This proof has changed since this link was sent. Please use the link in our "
 "latest email."
@@ -5749,16 +5814,16 @@ msgstr ""
 "Deze drukproef is gewijzigd sinds deze link werd verstuurd. Gebruik de link "
 "in onze laatste e-mail."
 
-#: src/Labels.php:579
+#: src/Labels.php:590
 msgid "This design is approved and can no longer be changed."
 msgstr "Dit ontwerp is goedgekeurd en kan niet meer worden gewijzigd."
 
 #. translators: Button on the page opened from a proof email, shown to the shopper; saves the changes and approves the design.
-#: src/Labels.php:584
+#: src/Labels.php:595
 msgid "Save and approve design"
 msgstr "Ontwerp opslaan en goedkeuren"
 
-#: src/Labels.php:588
+#: src/Labels.php:599
 msgid ""
 "We received your request to change your design. If you did not finish your "
 "changes, you can open the design again here. Nothing is printed until you "
@@ -5769,11 +5834,11 @@ msgstr ""
 "wordt niets gedrukt totdat je het goedkeurt."
 
 #. translators: Button in the email to the shopper after a change request; reopens the design.
-#: src/Labels.php:593
+#: src/Labels.php:604
 msgid "Edit your design"
 msgstr "Je ontwerp bewerken"
 
-#: src/Labels.php:597
+#: src/Labels.php:608
 msgid ""
 "We could not match your changes to this visit. Please change your design "
 "again from its product page."
@@ -5781,42 +5846,42 @@ msgstr ""
 "We konden je wijzigingen niet aan dit bezoek koppelen. Wijzig je ontwerp "
 "opnieuw vanaf de productpagina."
 
-#: src/Labels.php:601
+#: src/Labels.php:612
 msgid "Your design has been updated."
 msgstr "Je ontwerp is bijgewerkt."
 
 #. translators: Status of an order line on the admin order screen: the design is saved, payment is pending.
-#: src/Labels.php:607
+#: src/Labels.php:618
 msgid "Design saved"
 msgstr "Ontwerp opgeslagen"
 
 #. translators: Status of an order line on the admin order screen: the shopper has to approve the proof.
-#: src/Labels.php:609
+#: src/Labels.php:620
 msgid "Awaiting your approval"
 msgstr "Wacht op je goedkeuring"
 
 #. translators: Status of an order line on the admin order screen: the design is approved.
-#: src/Labels.php:611
+#: src/Labels.php:622
 msgid "Design approved"
 msgstr "Ontwerp goedgekeurd"
 
 #. translators: Status of an order line on the admin order screen: the print file is made.
-#: src/Labels.php:613
+#: src/Labels.php:624
 msgid "Print file ready"
 msgstr "Drukbestand klaar"
 
 #. translators: Status of an order line on the admin order screen: the printshop is making it.
-#: src/Labels.php:615
+#: src/Labels.php:626
 msgid "In production"
 msgstr "In productie"
 
 #. translators: Status of an order line on the admin order screen: the printshop could not make it.
-#: src/Labels.php:619
+#: src/Labels.php:630
 msgid "Could not be produced"
 msgstr "Kon niet worden gemaakt"
 
 #. translators: Status of an order line on the admin order screen: the store is looking into the item.
-#: src/Labels.php:623
+#: src/Labels.php:634
 msgid "Being reviewed by the store"
 msgstr "Wordt bekeken door de winkel"
 
@@ -6130,7 +6195,7 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
 #. translators: Label of the dropdown choosing how the product page designer lays out its form. Admin product page.
-#: src/Settings/Settings.php:136 templates/admin/product-fields.php:214
+#: src/Settings/Settings.php:136 templates/admin/product-fields.php:215
 msgid "Form layout"
 msgstr "Formulierindeling"
 
@@ -6178,7 +6243,7 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the designer's form numbers its groups.
 #. translators: Label of the dropdown choosing whether the designer's form numbers its groups. Admin product page.
-#: src/Settings/Settings.php:174 templates/admin/product-fields.php:219
+#: src/Settings/Settings.php:174 templates/admin/product-fields.php:220
 msgid "Group numbers"
 msgstr "Groepsnummers"
 
@@ -6536,57 +6601,57 @@ msgid "Records the last 50 requests to Pixonaut, without keys or tokens."
 msgstr ""
 "Registreert de laatste 50 verzoeken aan Pixonaut, zonder sleutels of tokens."
 
-#: src/Settings/SettingsPage.php:230 src/Settings/SettingsPage.php:243
-#: src/Settings/SettingsPage.php:317
+#: src/Settings/SettingsPage.php:235 src/Settings/SettingsPage.php:248
+#: src/Settings/SettingsPage.php:322
 msgid "Pixonaut settings"
 msgstr "Pixonaut-instellingen"
 
-#: src/Settings/SettingsPage.php:288
+#: src/Settings/SettingsPage.php:293
 msgid "You are not allowed to change the Pixonaut settings."
 msgstr "Je mag de Pixonaut-instellingen niet wijzigen."
 
-#: src/Settings/SettingsPage.php:309
+#: src/Settings/SettingsPage.php:314
 msgid "Your settings have been saved."
 msgstr "Je instellingen zijn opgeslagen."
 
-#: src/Settings/SettingsPage.php:333
+#: src/Settings/SettingsPage.php:338
 msgid "Save changes"
 msgstr "Wijzigingen opslaan"
 
-#: src/Settings/SettingsPage.php:430
+#: src/Settings/SettingsPage.php:435
 msgid "The changes you made will be lost if you navigate away from this page."
 msgstr ""
 "De wijzigingen die je hebt gemaakt gaan verloren als je deze pagina verlaat."
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the settings for the designer on the store's product pages.
-#: src/Settings/SettingsPage.php:533
+#: src/Settings/SettingsPage.php:538
 msgid "Storefront"
 msgstr "Winkel"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: how customers approve their designs, and the proof emails.
-#: src/Settings/SettingsPage.php:536
+#: src/Settings/SettingsPage.php:541
 msgctxt "settings tab"
 msgid "Approval"
 msgstr "Goedkeuring"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: which releases of the plugin WordPress offers.
-#: src/Settings/SettingsPage.php:539
+#: src/Settings/SettingsPage.php:544
 msgctxt "settings tab"
 msgid "Updates"
 msgstr "Updates"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the store's connection to its Pixonaut workspace.
 #. translators: Heading of the Pixonaut connection card on the settings page.
-#: src/Settings/SettingsPage.php:542 templates/admin/connection-card.php:104
+#: src/Settings/SettingsPage.php:547 templates/admin/connection-card.php:109
 msgid "Connection"
 msgstr "Koppeling"
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how the designer on product pages looks and behaves.
-#: src/Settings/SettingsPage.php:558
+#: src/Settings/SettingsPage.php:563
 msgid "Product page designer"
 msgstr "Ontwerptool op de productpagina"
 
-#: src/Settings/SettingsPage.php:559
+#: src/Settings/SettingsPage.php:564
 msgid ""
 "How the designer looks and behaves on product pages. A product’s Pixonaut "
 "tab can change the layouts for that product."
@@ -6597,12 +6662,12 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the images of personalised products.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's images drawn by Pixonaut.
-#: src/Settings/SettingsPage.php:565
+#: src/Settings/SettingsPage.php:570
 #: templates/admin/product-showcase-images.php:58
 msgid "Product images"
 msgstr "Productafbeeldingen"
 
-#: src/Settings/SettingsPage.php:566
+#: src/Settings/SettingsPage.php:571
 msgid ""
 "The image the shop, feeds, emails and search results show for a personalised "
 "product."
@@ -6611,11 +6676,11 @@ msgstr ""
 "voor een gepersonaliseerd product."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how a personalised item shows in the cart, the checkout, orders and emails.
-#: src/Settings/SettingsPage.php:572
+#: src/Settings/SettingsPage.php:577
 msgid "Cart and orders"
 msgstr "Winkelwagen en bestellingen"
 
-#: src/Settings/SettingsPage.php:573
+#: src/Settings/SettingsPage.php:578
 msgid ""
 "How a personalised item shows in the cart, the checkout, the customer’s "
 "orders and the order emails."
@@ -6625,11 +6690,11 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how customers approve their design before it is printed.
 #. translators: Label of the dropdown choosing how customers approve their design (proof) before printing. Admin product page.
-#: src/Settings/SettingsPage.php:579 templates/admin/product-fields.php:224
+#: src/Settings/SettingsPage.php:584 templates/admin/product-fields.php:225
 msgid "Approval"
 msgstr "Goedkeuring"
 
-#: src/Settings/SettingsPage.php:580
+#: src/Settings/SettingsPage.php:585
 msgid ""
 "How customers approve their design before it is printed. A product’s "
 "Pixonaut tab can choose another way for that product."
@@ -6638,11 +6703,11 @@ msgstr ""
 "tabblad van een product kan voor dat product een andere manier kiezen."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the approval mode where customers approve a proof sent by email.
-#: src/Settings/SettingsPage.php:586
+#: src/Settings/SettingsPage.php:591
 msgid "Proof by email"
 msgstr "Drukproef per e-mail"
 
-#: src/Settings/SettingsPage.php:587
+#: src/Settings/SettingsPage.php:592
 msgid ""
 "For every product whose approval is Proof by email: how long customers have "
 "to answer, the reminders they get, and what happens when they do not approve."
@@ -6652,11 +6717,11 @@ msgstr ""
 "gebeurt als ze niet goedkeuren."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: which releases of this plugin WordPress offers.
-#: src/Settings/SettingsPage.php:593
+#: src/Settings/SettingsPage.php:598
 msgid "Plugin updates"
 msgstr "Plugin-updates"
 
-#: src/Settings/SettingsPage.php:594
+#: src/Settings/SettingsPage.php:599
 msgid ""
 "Which releases of this plugin WordPress offers you on the Plugins and "
 "Updates screens."
@@ -6664,7 +6729,7 @@ msgstr ""
 "Welke versies van deze plugin WordPress je aanbiedt op de schermen Plugins "
 "en Updates."
 
-#: src/Settings/SettingsPage.php:615
+#: src/Settings/SettingsPage.php:620
 msgid ""
 "Designer accent colour is set to A custom colour: enter the colour, e.g. "
 "#1e73be."
@@ -6702,7 +6767,7 @@ msgid "As swatches, like the designer's own choices"
 msgstr "Als knoppen, zoals de eigen keuzes van de ontwerptool"
 
 #. translators: Heading of the designer's group holding the product's options, such as Size or Colour, on the product page.
-#: src/Storefront/FormGroupsMount.php:199
+#: src/Storefront/FormGroupsMount.php:271
 msgctxt "designer group of the product options"
 msgid "Options"
 msgstr "Opties"
@@ -6761,6 +6826,17 @@ msgstr "Op de achtergrond, één tegelijk"
 #: src/Storefront/Preload.php:52
 msgid "Off: load each one when it is shown"
 msgstr "Uit: elk pas laden wanneer het wordt getoond"
+
+#: src/Storefront/UnavailableProduct.php:94
+msgid ""
+"Shoppers do not see this product in the shop, search or related products, "
+"and cannot buy it: its template is paused or not published in Pixonaut. Make "
+"the template live in the Pixonaut studio to sell it again."
+msgstr ""
+"Klanten zien dit product niet in de winkel, bij het zoeken of bij "
+"gerelateerde producten, en kunnen het niet kopen: het sjabloon is gepauzeerd "
+"of niet gepubliceerd in Pixonaut. Zet het sjabloon live in de Pixonaut-"
+"studio om het weer te verkopen."
 
 #. translators: %s: the product's name.
 #: src/Storefront/UnavailableReports.php:191
@@ -6834,20 +6910,20 @@ msgstr ""
 "je bijwerkt."
 
 #. translators: %s: why Pixonaut did not answer, e.g. rate_limited.
-#: src/Webhooks/Endpoint.php:196
+#: src/Webhooks/Endpoint.php:203
 #, php-format
 msgid "Pixonaut did not send the test request (%s)."
 msgstr "Pixonaut heeft het testverzoek niet verstuurd (%s)."
 
-#: templates/admin/connection-card.php:45
+#: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."
 msgstr "De winkel is gekoppeld aan Pixonaut."
 
-#: templates/admin/connection-card.php:46
+#: templates/admin/connection-card.php:47
 msgid "The store is disconnected from Pixonaut, and its keys are revoked."
 msgstr "De winkel is ontkoppeld van Pixonaut en de sleutels zijn ingetrokken."
 
-#: templates/admin/connection-card.php:47
+#: templates/admin/connection-card.php:48
 msgid ""
 "The store forgot its Pixonaut keys, but Pixonaut could not be reached to "
 "revoke them. Disconnect the store on the API Keys page in the Pixonaut "
@@ -6857,7 +6933,7 @@ msgstr ""
 "bereikbaar om ze in te trekken. Ontkoppel de winkel ook op de pagina API "
 "Keys in de Pixonaut-studio."
 
-#: templates/admin/connection-card.php:48
+#: templates/admin/connection-card.php:49
 msgid ""
 "This site forgot the connection it was copied with. The site it was copied "
 "from stays connected."
@@ -6865,22 +6941,22 @@ msgstr ""
 "Deze site heeft de koppeling vergeten waarmee hij is gekopieerd. De site "
 "waarvan hij is gekopieerd, blijft gekoppeld."
 
-#: templates/admin/connection-card.php:49
+#: templates/admin/connection-card.php:50
 msgid ""
 "The store cannot connect while wp-admin is on another address than the site."
 msgstr ""
 "De winkel kan niet koppelen zolang wp-admin op een ander adres staat dan de "
 "site."
 
-#: templates/admin/connection-card.php:50
+#: templates/admin/connection-card.php:51
 msgid "Pixel can now make changes to your store."
 msgstr "Pixel kan nu wijzigingen aan je winkel aanbrengen."
 
-#: templates/admin/connection-card.php:51
+#: templates/admin/connection-card.php:52
 msgid "Pixel can no longer make changes to your store."
 msgstr "Pixel kan geen wijzigingen meer aan je winkel aanbrengen."
 
-#: templates/admin/connection-card.php:52
+#: templates/admin/connection-card.php:53
 msgid ""
 "Pixel can no longer make changes to your store. Pixonaut could not be told, "
 "so the studio may show the switch as on until it next tries."
@@ -6889,7 +6965,7 @@ msgstr ""
 "op de hoogte worden gebracht, dus de studio kan de schakelaar als aan tonen "
 "tot de volgende poging."
 
-#: templates/admin/connection-card.php:53
+#: templates/admin/connection-card.php:54
 msgid ""
 "Pixonaut could not be reached or did not accept the store's access, so the "
 "switch stays off. Try again."
@@ -6897,7 +6973,7 @@ msgstr ""
 "Pixonaut was niet bereikbaar of heeft de toegang van de winkel niet "
 "geaccepteerd, dus de schakelaar blijft uit. Probeer het opnieuw."
 
-#: templates/admin/connection-card.php:54
+#: templates/admin/connection-card.php:55
 msgid ""
 "The store could not save the change, so Pixel may still be able to make "
 "changes to your store. Check the database, then turn the switch off again."
@@ -6906,7 +6982,7 @@ msgstr ""
 "wijzigingen aan je winkel aanbrengen. Controleer de database en zet de "
 "schakelaar daarna opnieuw uit."
 
-#: templates/admin/connection-card.php:55
+#: templates/admin/connection-card.php:56
 msgid ""
 "The store is connected to Pixonaut, but Pixonaut could not be reached or did "
 "not accept the store's access, so Pixel cannot make changes to your store. "
@@ -6917,16 +6993,16 @@ msgstr ""
 "wijzigingen aan je winkel aanbrengen. Schakel de schakelaar hieronder in om "
 "het opnieuw te proberen."
 
-#: templates/admin/connection-card.php:56
+#: templates/admin/connection-card.php:57
 msgid "Personalised products now also load on the www. address."
 msgstr "Gepersonaliseerde producten laden nu ook op het www.-adres."
 
-#: templates/admin/connection-card.php:57
+#: templates/admin/connection-card.php:58
 msgid "Personalised products load on the site's own address only."
 msgstr ""
 "Gepersonaliseerde producten laden alleen op het eigen adres van de site."
 
-#: templates/admin/connection-card.php:58
+#: templates/admin/connection-card.php:59
 msgid ""
 "Pixonaut did not change the addresses personalised products load on. Try "
 "again."
@@ -6934,7 +7010,7 @@ msgstr ""
 "Pixonaut heeft de adressen waarop gepersonaliseerde producten laden niet "
 "gewijzigd. Probeer het opnieuw."
 
-#: templates/admin/connection-card.php:59
+#: templates/admin/connection-card.php:60
 msgid ""
 "The store's brand is saved. Proofs, corrections and designer links made from "
 "now on show it."
@@ -6942,7 +7018,7 @@ msgstr ""
 "Het merk van de winkel is opgeslagen. Drukproeven, correcties en "
 "ontwerplinks die vanaf nu worden gemaakt, tonen het."
 
-#: templates/admin/connection-card.php:60
+#: templates/admin/connection-card.php:61
 msgid ""
 "That brand is no longer in the Pixonaut workspace, so the store's brand did "
 "not change. Choose another."
@@ -6950,7 +7026,7 @@ msgstr ""
 "Dat merk staat niet meer in de Pixonaut-werkruimte, dus het merk van de "
 "winkel is niet gewijzigd. Kies een ander merk."
 
-#: templates/admin/connection-card.php:61
+#: templates/admin/connection-card.php:62
 msgid ""
 "Pixonaut did not confirm the change of the store's brand. Check the brand "
 "shown below, and try again if it is not the one you chose."
@@ -6959,19 +7035,49 @@ msgstr ""
 "Controleer het merk hieronder en probeer het opnieuw als het niet het merk "
 "is dat je koos."
 
-#: templates/admin/connection-card.php:62
+#: templates/admin/connection-card.php:63
+msgid ""
+"The store's print file settings are saved. Print files made from now on "
+"follow them, unless a template sets its own."
+msgstr ""
+"De instellingen voor drukbestanden van de winkel zijn opgeslagen. "
+"Drukbestanden die vanaf nu worden gemaakt, volgen ze, tenzij een sjabloon "
+"eigen instellingen heeft."
+
+#. translators: %s: the limits of a live text tolerance, e.g. 1 to 100 px, or 0.01 to 5 mm.
+#: templates/admin/connection-card.php:65
+#, php-format
+msgid ""
+"The live text tolerance is %s, so the print file settings did not change. "
+"Enter a tolerance in those limits, or leave it empty to follow the workspace."
+msgstr ""
+"De tolerantie voor bewerkbare tekst moet %s zijn, dus de instellingen voor "
+"drukbestanden zijn niet gewijzigd. Vul een tolerantie binnen die grenzen in, "
+"of laat het veld leeg om de werkruimte te volgen."
+
+#: templates/admin/connection-card.php:66
+msgid ""
+"Pixonaut did not confirm the change of the store's print file settings. "
+"Check the settings shown below, and try again if they are not the ones you "
+"chose."
+msgstr ""
+"Pixonaut heeft de wijziging van de instellingen voor drukbestanden van de "
+"winkel niet bevestigd. Controleer de instellingen hieronder en probeer het "
+"opnieuw als het niet de instellingen zijn die je koos."
+
+#: templates/admin/connection-card.php:67
 msgid "That connect link expired or was already used. Connect again."
 msgstr "Die koppellink is verlopen of al gebruikt. Koppel opnieuw."
 
-#: templates/admin/connection-card.php:63
+#: templates/admin/connection-card.php:68
 msgid "The connect was cancelled in Pixonaut."
 msgstr "Het koppelen is in Pixonaut geannuleerd."
 
-#: templates/admin/connection-card.php:64
+#: templates/admin/connection-card.php:69
 msgid "Pixonaut did not approve the connect. Connect again."
 msgstr "Pixonaut heeft het koppelen niet goedgekeurd. Koppel opnieuw."
 
-#: templates/admin/connection-card.php:65
+#: templates/admin/connection-card.php:70
 msgid ""
 "Pixonaut did not hand over the store's keys: the approval expired or "
 "Pixonaut could not be reached. Connect again."
@@ -6979,7 +7085,7 @@ msgstr ""
 "Pixonaut heeft de sleutels van de winkel niet overgedragen: de goedkeuring "
 "is verlopen of Pixonaut was niet bereikbaar. Koppel opnieuw."
 
-#: templates/admin/connection-card.php:66
+#: templates/admin/connection-card.php:71
 msgid ""
 "The Pixonaut workspace's plan connects no more stores. Upgrade the plan, or "
 "disconnect another store on the API Keys page in the Pixonaut studio, then "
@@ -6989,7 +7095,7 @@ msgstr ""
 "worden gekoppeld. Upgrade het abonnement of ontkoppel een andere winkel op "
 "de pagina API Keys in de Pixonaut-studio, en koppel daarna opnieuw."
 
-#: templates/admin/connection-card.php:67
+#: templates/admin/connection-card.php:72
 msgid ""
 "Pixonaut handed over the store's keys, but the store could not save them to "
 "its database. Check the database, then connect again."
@@ -6997,12 +7103,12 @@ msgstr ""
 "Pixonaut heeft de sleutels van de winkel overgedragen, maar de winkel kon ze "
 "niet in de database opslaan. Controleer de database en koppel daarna opnieuw."
 
-#: templates/admin/connection-card.php:68
+#: templates/admin/connection-card.php:73
 msgid "Another connect or disconnect is in progress. Try again in a minute."
 msgstr ""
 "Er wordt al gekoppeld of ontkoppeld. Probeer het over een minuut opnieuw."
 
-#: templates/admin/connection-card.php:69
+#: templates/admin/connection-card.php:74
 msgid ""
 "The store could not remove its Pixonaut keys from its database. Check the "
 "database, then disconnect again."
@@ -7011,23 +7117,23 @@ msgstr ""
 "Controleer de database en ontkoppel daarna opnieuw."
 
 #. translators: Name of the production Pixonaut workspace environment, where orders reach a printshop. Shown on the connection card.
-#: templates/admin/connection-card.php:73
+#: templates/admin/connection-card.php:78
 msgid "Live"
 msgstr "Live"
 
 #. translators: Name of the Pixonaut test environment, where orders never reach a printshop. Shown on the connection card, as a heading or button.
-#: templates/admin/connection-card.php:75
-#: templates/admin/connection-card.php:95
+#: templates/admin/connection-card.php:80
+#: templates/admin/connection-card.php:100
 msgid "Sandbox"
 msgstr "Sandbox"
 
 #. translators: The switch on the connection card that lets Pixel, Pixonaut's assistant, act on the store from the Pixonaut studio.
-#: templates/admin/connection-card.php:77
+#: templates/admin/connection-card.php:82
 msgid "Allow Pixel to make changes to your store"
 msgstr "Pixel toestaan wijzigingen aan je winkel aan te brengen"
 
 #. translators: The switch on the connection card that lets Pixel, Pixonaut's assistant, act on the store from the Pixonaut studio.
-#: templates/admin/connection-card.php:78
+#: templates/admin/connection-card.php:83
 msgid ""
 "Pixel in the Pixonaut studio can then read and change products, variations, "
 "attributes, categories and tags, link templates to products, and read "
@@ -7037,21 +7143,21 @@ msgstr ""
 "categorieën en tags lezen en wijzigen, sjablonen aan producten koppelen en "
 "bestellingen lezen. Verder niets in WordPress."
 
-#: templates/admin/connection-card.php:87
+#: templates/admin/connection-card.php:92
 msgid "You can turn this off at any time."
 msgstr "Je kunt dit op elk moment uitschakelen."
 
 #. translators: Text before two buttons on the connection card, Live workspace and Sandbox, read: or connect only to the [Live workspace] [Sandbox].
-#: templates/admin/connection-card.php:93
+#: templates/admin/connection-card.php:98
 msgid "or connect only to the"
 msgstr "of koppel alleen aan de"
 
 #. translators: Button on the connection card: connect only to the live Pixonaut workspace.
-#: templates/admin/connection-card.php:94
+#: templates/admin/connection-card.php:99
 msgid "Live workspace"
 msgstr "Live-werkruimte"
 
-#: templates/admin/connection-card.php:98
+#: templates/admin/connection-card.php:103
 msgid ""
 "Connect a staging or test site to the sandbox: its orders never reach a "
 "printshop."
@@ -7060,7 +7166,7 @@ msgstr ""
 "bereiken nooit een drukkerij."
 
 #. translators: %s: comma separated addresses the store sends requests to instead of Pixonaut's, e.g. http://localhost:8787. Shown to the merchant on the connection card.
-#: templates/admin/connection-card.php:113
+#: templates/admin/connection-card.php:118
 #, php-format
 msgid "The store talks to %s instead of Pixonaut, and sends its key there."
 msgstr ""
@@ -7068,7 +7174,7 @@ msgstr ""
 "sleutel daarheen."
 
 #. translators: %s: an HTTP method and path of a Pixonaut API operation, e.g. GET /v1/connect. Shown to the merchant on the connection card.
-#: templates/admin/connection-card.php:131
+#: templates/admin/connection-card.php:136
 #, php-format
 msgid ""
 "Pixonaut deprecated %s, which this plugin uses. Update Pixonaut for "
@@ -7078,7 +7184,7 @@ msgstr ""
 "Pixonaut for WooCommerce bij."
 
 #. translators: 1: an HTTP method and path of a Pixonaut API operation, e.g. GET /v1/connect, 2: the date it stops working. Shown to the merchant on the connection card.
-#: templates/admin/connection-card.php:133
+#: templates/admin/connection-card.php:138
 #, php-format
 msgid ""
 "Pixonaut deprecated %1$s, which this plugin uses, and stops answering it on "
@@ -7089,7 +7195,7 @@ msgstr ""
 "datum bij."
 
 #. translators: 1: wp-admin's origin, e.g. https://admin.example.com, 2: the site's origin, 3: HTML link to Settings > General. Shown to the merchant on the connection card.
-#: templates/admin/connection-card.php:146
+#: templates/admin/connection-card.php:151
 #, php-format
 msgid ""
 "wp-admin is at <code>%1$s</code> and the site at <code>%2$s</code>. Pixonaut "
@@ -7103,7 +7209,7 @@ msgstr ""
 "gelijk onder <a href=\"%3$s\">Instellingen &gt; Algemeen</a> en koppel "
 "daarna."
 
-#: templates/admin/connection-card.php:158
+#: templates/admin/connection-card.php:163
 msgid ""
 "Connect the store to a Pixonaut workspace. You approve the connection in "
 "Pixonaut and are sent back here."
@@ -7112,11 +7218,11 @@ msgstr ""
 "Pixonaut en wordt daarna hierheen teruggestuurd."
 
 #. translators: Button on the connection card that starts connecting the store; here Connect is a verb.
-#: templates/admin/connection-card.php:159
+#: templates/admin/connection-card.php:164
 msgid "Connect to Pixonaut"
 msgstr "Koppelen aan Pixonaut"
 
-#: templates/admin/connection-card.php:164
+#: templates/admin/connection-card.php:169
 msgid ""
 "Site URL changed: this site is not the one that connected to Pixonaut, so "
 "nothing is sent for the site it was copied from. Personalised products and "
@@ -7128,7 +7234,7 @@ msgstr ""
 "Gepersonaliseerde producten en bestellingen zijn gepauzeerd tot je deze site "
 "koppelt. Kies Sandbox voor een staging-site."
 
-#: templates/admin/connection-card.php:168
+#: templates/admin/connection-card.php:173
 msgid ""
 "Pixonaut no longer accepts this store's key: the store was disconnected in "
 "Pixonaut, or its key was revoked. Personalised products and orders are "
@@ -7138,7 +7244,7 @@ msgstr ""
 "Pixonaut ontkoppeld of de sleutel is ingetrokken. Gepersonaliseerde "
 "producten en bestellingen zijn gepauzeerd tot je opnieuw koppelt."
 
-#: templates/admin/connection-card.php:172
+#: templates/admin/connection-card.php:177
 msgid ""
 "Pixonaut could not be reached just now. This is the connection as it was "
 "when the store connected."
@@ -7147,54 +7253,54 @@ msgstr ""
 "de winkel werd gekoppeld."
 
 #. translators: Row heading on the connection card: the name of the store's API key in Pixonaut.
-#: templates/admin/connection-card.php:178
+#: templates/admin/connection-card.php:183
 msgid "Key name"
 msgstr "Naam van de sleutel"
 
 #. translators: Row heading on the connection card: the Pixonaut workspace the store is connected to.
 #. translators: Row heading in developer tools: the Pixonaut workspace the store is connected to.
-#: templates/admin/connection-card.php:182
+#: templates/admin/connection-card.php:187
 #: templates/admin/developer-tools.php:194
 msgid "Workspace"
 msgstr "Werkruimte"
 
 #. translators: Row heading on the connection card: live or sandbox.
-#: templates/admin/connection-card.php:186
+#: templates/admin/connection-card.php:191
 msgid "Environment"
 msgstr "Omgeving"
 
-#: templates/admin/connection-card.php:190
+#: templates/admin/connection-card.php:195
 msgid "Orders placed in the sandbox never reach a printshop."
 msgstr ""
 "Bestellingen die in de sandbox worden geplaatst, bereiken nooit een "
 "drukkerij."
 
 #. translators: Row heading on the connection card: the store's address.
-#: templates/admin/connection-card.php:195
+#: templates/admin/connection-card.php:200
 msgid "Site URL"
 msgstr "Site-URL"
 
 #. translators: Row heading on the connection card: the www. address of the site, which can be allowed in addition.
-#: templates/admin/connection-card.php:200
+#: templates/admin/connection-card.php:205
 msgid "Also allow"
 msgstr "Ook toestaan"
 
 #. translators: Status on the connection card: the www. address is allowed.
-#: templates/admin/connection-card.php:204
+#: templates/admin/connection-card.php:209
 msgid "Allowed"
 msgstr "Toegestaan"
 
 #. translators: Link on the connection card that stops allowing the www. address.
-#: templates/admin/connection-card.php:205
+#: templates/admin/connection-card.php:210
 msgid "Take away"
 msgstr "Intrekken"
 
 #. translators: Button on the connection card that allows the www. address; here Allow is a verb.
-#: templates/admin/connection-card.php:207
+#: templates/admin/connection-card.php:212
 msgid "Allow"
 msgstr "Toestaan"
 
-#: templates/admin/connection-card.php:209
+#: templates/admin/connection-card.php:214
 msgid ""
 "Allow it when the store also answers on this address, so personalised "
 "products load there too."
@@ -7203,26 +7309,26 @@ msgstr ""
 "gepersonaliseerde producten daar ook laden."
 
 #. translators: Row heading on the connection card: the state of Pixonaut's event deliveries to the store.
-#: templates/admin/connection-card.php:215
+#: templates/admin/connection-card.php:220
 msgid "Webhooks"
 msgstr "Webhooks"
 
 #. translators: Status on the connection card: Pixonaut's webhook endpoint for the store is off.
-#: templates/admin/connection-card.php:218
+#: templates/admin/connection-card.php:223
 msgid "Switched off"
 msgstr "Uitgeschakeld"
 
 #. translators: Status on the connection card: Pixonaut cannot reach the store's address, so it sends no webhooks.
-#: templates/admin/connection-card.php:220
+#: templates/admin/connection-card.php:225
 msgid "Cannot reach the store"
 msgstr "Winkel niet bereikbaar"
 
-#: templates/admin/connection-card.php:222
+#: templates/admin/connection-card.php:227
 msgid "Pixonaut did not say how deliveries are going."
 msgstr "Pixonaut heeft niet laten weten hoe de leveringen verlopen."
 
 #. translators: %d: number of webhook deliveries from Pixonaut that failed. Shown on the connection card.
-#: templates/admin/connection-card.php:229
+#: templates/admin/connection-card.php:234
 #, php-format
 msgid "Failing: %d delivery failed"
 msgid_plural "Failing: %d deliveries failed"
@@ -7230,33 +7336,33 @@ msgstr[0] "Problemen: %d levering mislukt"
 msgstr[1] "Problemen: %d leveringen mislukt"
 
 #. translators: Status on the connection card: the store's webhook endpoint is on and healthy.
-#: templates/admin/connection-card.php:236
+#: templates/admin/connection-card.php:241
 msgid "Receiving events"
 msgstr "Ontvangt events"
 
 #. translators: %s: how long ago the test request was sent, e.g. 5 mins. Shown on the connection card.
-#: templates/admin/connection-card.php:244
+#: templates/admin/connection-card.php:249
 #, php-format
 msgid "Test request delivered %s ago."
 msgstr "Testverzoek %s geleden afgeleverd."
 
 #. translators: 1: how long ago the test request was sent, e.g. 5 mins, 2: why it was not delivered. Shown on the connection card.
-#: templates/admin/connection-card.php:246
+#: templates/admin/connection-card.php:251
 #, php-format
 msgid "Test request not delivered %1$s ago: %2$s"
 msgstr "Testverzoek %1$s geleden niet afgeleverd: %2$s"
 
 #. translators: Button on the connection card: ask Pixonaut to send the store a test webhook.
-#: templates/admin/connection-card.php:251
+#: templates/admin/connection-card.php:256
 msgid "Send test request"
 msgstr "Testverzoek versturen"
 
 #. translators: Row heading on the connection card: Pixel, Pixonaut's assistant, and whether it may act on the store.
-#: templates/admin/connection-card.php:257
+#: templates/admin/connection-card.php:262
 msgid "Pixel"
 msgstr "Pixel"
 
-#: templates/admin/connection-card.php:266
+#: templates/admin/connection-card.php:271
 msgid ""
 "On. Pixel in the Pixonaut studio can read and change products, variations, "
 "attributes, categories and tags, link templates to products, and read "
@@ -7267,58 +7373,59 @@ msgstr ""
 "bestellingen lezen. Verder niets in WordPress. Uitschakelen beëindigt de "
 "toegang meteen."
 
-#: templates/admin/connection-card.php:268
+#: templates/admin/connection-card.php:273
 msgid ""
 "Off, turned off here. Pixonaut cannot turn it back on: only this switch can."
 msgstr ""
 "Uit, hier uitgeschakeld. Pixonaut kan het niet weer inschakelen: dat kan "
 "alleen met deze schakelaar."
 
-#: templates/admin/connection-card.php:278
+#: templates/admin/connection-card.php:283
 msgid "You chat with Pixel in the Pixonaut studio."
 msgstr "Je chat met Pixel in de Pixonaut-studio."
 
 #. translators: Link on the connection card to the Pixonaut studio, where the merchant chats with Pixel, Pixonaut's assistant; Pixel is a name, keep it as it is.
-#: templates/admin/connection-card.php:279
+#: templates/admin/connection-card.php:284
 msgid "Open the studio"
 msgstr "De studio openen"
 
 #. translators: Heading on the connection card of the settings that live in the Pixonaut workspace.
-#: templates/admin/connection-card.php:287
+#: templates/admin/connection-card.php:292
 msgid "Workspace settings"
 msgstr "Instellingen van de werkruimte"
 
-#: templates/admin/connection-card.php:289
+#: templates/admin/connection-card.php:294
 msgid ""
-"Set in the Pixonaut studio, except the brand, which you choose here. They "
-"shape the pages Pixonaut shows your customers, and the orders it places."
+"Set in the Pixonaut studio, except the brand and the print files, which you "
+"choose here. They shape the pages Pixonaut shows your customers, and the "
+"orders it places."
 msgstr ""
-"Ingesteld in de Pixonaut-studio, behalve het merk, dat je hier kiest. Ze "
-"bepalen de pagina’s die Pixonaut aan je klanten toont, en de bestellingen "
-"die Pixonaut plaatst."
+"Ingesteld in de Pixonaut-studio, behalve het merk en de drukbestanden, die "
+"je hier kiest. Ze bepalen de pagina’s die Pixonaut aan je klanten toont, en "
+"de bestellingen die Pixonaut plaatst."
 
 #. translators: Link to the Pixonaut studio, where the workspace settings are changed.
-#: templates/admin/connection-card.php:290
+#: templates/admin/connection-card.php:295
 msgid "Change them in the studio"
 msgstr "Wijzig ze in de studio"
 
 #. translators: Row heading on the connection card: the workspace brand the store's customer-facing Pixonaut pages are drawn in.
-#: templates/admin/connection-card.php:295
+#: templates/admin/connection-card.php:300
 msgid "Brand"
 msgstr "Merk"
 
 #. translators: %s: the name of a brand in the Pixonaut workspace. Option on the connection card for the brand every store without one of its own is drawn in.
-#: templates/admin/connection-card.php:306
+#: templates/admin/connection-card.php:311
 #, php-format
 msgid "%s (workspace default)"
 msgstr "%s (standaard van de werkruimte)"
 
 #. translators: Button on the connection card that saves the brand chosen for the store.
-#: templates/admin/connection-card.php:314
+#: templates/admin/connection-card.php:319
 msgid "Save brand"
 msgstr "Merk opslaan"
 
-#: templates/admin/connection-card.php:317
+#: templates/admin/connection-card.php:322
 msgid ""
 "The logo and colour of the proof, correction and designer pages Pixonaut "
 "shows your customers. A link keeps the brand it was made in."
@@ -7328,80 +7435,152 @@ msgstr ""
 "waarin hij is gemaakt."
 
 #. translators: Row heading on the connection card: the logo and accent colour of the store's brand.
-#: templates/admin/connection-card.php:322
+#: templates/admin/connection-card.php:327
 msgid "Branding"
 msgstr "Huisstijl"
 
 #. translators: Alt text of the workspace's logo image on the connection card.
-#: templates/admin/connection-card.php:325
+#: templates/admin/connection-card.php:330
 msgid "Workspace logo"
 msgstr "Logo van de werkruimte"
 
 #. translators: Shown on the connection card when the workspace has no logo.
-#: templates/admin/connection-card.php:327
+#: templates/admin/connection-card.php:332
 msgid "No logo"
 msgstr "Geen logo"
 
 #. translators: Shown on the connection card when the workspace has no accent colour.
-#: templates/admin/connection-card.php:332
+#: templates/admin/connection-card.php:337
 msgid "No accent colour"
 msgstr "Geen accentkleur"
 
 #. translators: Row heading on the connection card: whether proofs carry a watermark.
-#: templates/admin/connection-card.php:337
+#: templates/admin/connection-card.php:342
 msgid "Proof watermark"
 msgstr "Watermerk op drukproef"
 
 #. translators: Value on the connection card when Pixonaut did not say.
 #. translators: Shown on the connection card when the store has not read the workspace's default language.
-#: templates/admin/connection-card.php:342
-#: templates/admin/connection-card.php:354
-#: templates/admin/connection-card.php:366
+#: templates/admin/connection-card.php:347
+#: templates/admin/connection-card.php:359
+#: templates/admin/connection-card.php:447
 msgid "Unknown"
 msgstr "Onbekend"
 
 #. translators: Value on the connection card when Pixonaut did not say.
-#: templates/admin/connection-card.php:343
+#: templates/admin/connection-card.php:348
 msgid "On: proofs carry a watermark"
 msgstr "Aan: drukproeven krijgen een watermerk"
 
 #. translators: Value on the connection card: the proof watermark is off.
-#: templates/admin/connection-card.php:343
+#: templates/admin/connection-card.php:348
 msgid "Off"
 msgstr "Uit"
 
 #. translators: Row heading on the connection card: the lowest print resolution Pixonaut accepts, in dots per inch.
-#: templates/admin/connection-card.php:349
+#: templates/admin/connection-card.php:354
 msgid "Minimum resolution"
 msgstr "Minimale resolutie"
 
 #. translators: %s: the minimum print resolution in dots per inch, e.g. 150. Shown on the connection card.
-#: templates/admin/connection-card.php:356
+#: templates/admin/connection-card.php:361
 #, php-format
 msgid "%s dpi, unless a template sets its own"
 msgstr "%s dpi, tenzij een sjabloon een eigen waarde instelt"
 
+#. translators: Row heading on the connection card: the form of the print files Pixonaut makes of the store's designs.
+#: templates/admin/connection-card.php:378
+msgid "Print files"
+msgstr "Drukbestanden"
+
+#. translators: %s: the print file form the workspace sets, e.g. Flat. Option on the connection card.
+#: templates/admin/connection-card.php:387
+#, php-format
+msgid "Follow the workspace (%s)"
+msgstr "Werkruimte volgen (%s)"
+
+#. translators: Option on the connection card: print files take the form the Pixonaut workspace sets.
+#: templates/admin/connection-card.php:389
+msgid "Follow the workspace"
+msgstr "Werkruimte volgen"
+
+#. translators: 1: a print file form, e.g. Layers with live text, 2: a live text tolerance, e.g. 1 px. Shown on the connection card.
+#: templates/admin/connection-card.php:403
+#, php-format
+msgid "Print files are made as: %1$s, within %2$s at text edges."
+msgstr ""
+"Drukbestanden worden gemaakt als: %1$s, met maximaal %2$s afwijking aan "
+"tekstranden."
+
+#. translators: %s: a print file form, e.g. Flat. Shown on the connection card.
+#: templates/admin/connection-card.php:405
+#, php-format
+msgid "Print files are made as: %s."
+msgstr "Drukbestanden worden gemaakt als: %s."
+
+#: templates/admin/connection-card.php:408
+msgid "A template that sets its own form keeps it."
+msgstr "Een sjabloon met eigen instellingen houdt die."
+
+#: templates/admin/connection-card.php:410
+msgid ""
+"Flat print files and layers with text as shapes print exactly alike. Live "
+"text prints the same outside text, and within the tolerance at text edges. A "
+"print file edited after Pixonaut made it carries no guarantee."
+msgstr ""
+"Platte drukbestanden en lagen met tekst als contouren worden precies "
+"hetzelfde gedrukt. Bewerkbare tekst wordt buiten de tekst hetzelfde gedrukt, "
+"en aan tekstranden binnen de tolerantie. Voor een drukbestand dat is bewerkt "
+"nadat Pixonaut het maakte, geldt geen garantie."
+
+#. translators: Row heading on the connection card: how far live text in a print file may lie from its outline.
+#: templates/admin/connection-card.php:414
+msgid "Live text tolerance"
+msgstr "Tolerantie voor bewerkbare tekst"
+
+#. translators: Accessible name of the unit menu beside the live text tolerance on the connection card.
+#: templates/admin/connection-card.php:417
+msgid "Unit"
+msgstr "Eenheid"
+
+#. translators: 1: the limits of a live text tolerance, e.g. 1 to 100 px, or 0.01 to 5 mm, 2: the tolerance the workspace sets, e.g. 1 px. Shown on the connection card.
+#: templates/admin/connection-card.php:427
+#, php-format
+msgid "%1$s. Empty follows the workspace: %2$s."
+msgstr "%1$s. Laat leeg om de werkruimte te volgen: %2$s."
+
+#. translators: %s: the limits of a live text tolerance, e.g. 1 to 100 px, or 0.01 to 5 mm. Shown on the connection card.
+#: templates/admin/connection-card.php:429
+#, php-format
+msgid "%s. Empty follows the workspace."
+msgstr "%s. Laat leeg om de werkruimte te volgen."
+
+#. translators: Button on the connection card that saves the print file form chosen for the store.
+#: templates/admin/connection-card.php:438
+msgid "Save print files"
+msgstr "Instellingen voor drukbestanden opslaan"
+
 #. translators: Row heading on the connection card: the language the Pixonaut workspace's customer-facing pages use unless told otherwise.
-#: templates/admin/connection-card.php:362
+#: templates/admin/connection-card.php:443
 msgid "Default language"
 msgstr "Standaardtaal"
 
 #. translators: Row heading on the connection card: where the printshop ships orders.
-#: templates/admin/connection-card.php:371
+#: templates/admin/connection-card.php:452
 msgid "Delivery address"
 msgstr "Verzendadres"
 
-#: templates/admin/connection-card.php:376
+#: templates/admin/connection-card.php:457
 msgid "Each order ships to its customer"
 msgstr "Elke bestelling wordt naar de klant verzonden"
 
 #. translators: %s: the name of a delivery address saved in Pixonaut, e.g. Warehouse. Shown on the connection card.
-#: templates/admin/connection-card.php:378
+#: templates/admin/connection-card.php:459
 #, php-format
 msgid "Every order ships to %s instead of its customer"
 msgstr "Elke bestelling wordt naar %s verzonden in plaats van naar de klant"
 
-#: templates/admin/connection-card.php:388
+#: templates/admin/connection-card.php:469
 msgid ""
 "Pixonaut cannot reach this store at its address, so it sends the store no "
 "webhooks. Order and design updates still arrive: the store reads them from "
@@ -7412,11 +7591,11 @@ msgstr ""
 "winkel leest ze elke 15 minuten uit Pixonaut."
 
 #. translators: Label on the connection card, followed by the address Pixonaut sends webhooks to.
-#: templates/admin/connection-card.php:391
+#: templates/admin/connection-card.php:472
 msgid "Webhook address:"
 msgstr "Webhook-adres:"
 
-#: templates/admin/connection-card.php:396
+#: templates/admin/connection-card.php:477
 msgid ""
 "On a sandbox connection you can point it at a tunnel to a local shop: change "
 "the address under Webhooks in the Pixonaut studio."
@@ -7424,11 +7603,11 @@ msgstr ""
 "Bij een sandbox-koppeling kan het adres naar een tunnel naar een lokale "
 "winkel wijzen: wijzig het onder Webhooks in de Pixonaut-studio."
 
-#: templates/admin/connection-card.php:397
+#: templates/admin/connection-card.php:478
 msgid "Developing locally with a tunnel"
 msgstr "Lokaal ontwikkelen met een tunnel"
 
-#: templates/admin/connection-card.php:404
+#: templates/admin/connection-card.php:485
 msgid ""
 "Pixonaut is not sending this store its events: its webhook endpoint is "
 "switched off. Order and design updates do not reach the store until it is "
@@ -7439,22 +7618,22 @@ msgstr ""
 "als het weer wordt ingeschakeld onder Webhooks in de Pixonaut-studio."
 
 #. translators: Button on the connection card that starts connecting the store again; here Connect is a verb.
-#: templates/admin/connection-card.php:409
+#: templates/admin/connection-card.php:490
 msgid "Connect again"
 msgstr "Opnieuw koppelen"
 
 #. translators: Button on the connection card that disconnects the store from Pixonaut; here Disconnect is a verb.
-#: templates/admin/connection-card.php:413
+#: templates/admin/connection-card.php:494
 msgid "Disconnect"
 msgstr "Ontkoppelen"
 
 #. translators: Link on the connection card to the Pixonaut studio, Pixonaut's own web app.
-#: templates/admin/connection-card.php:414
+#: templates/admin/connection-card.php:495
 msgid "Open the Pixonaut studio"
 msgstr "De Pixonaut-studio openen"
 
 #. translators: Link on the connection card to the guide on connecting the store to Pixonaut.
-#: templates/admin/connection-card.php:419
+#: templates/admin/connection-card.php:500
 msgid "How connecting works"
 msgstr "Zo werkt het koppelen"
 
@@ -7549,7 +7728,7 @@ msgstr ""
 #. translators: Button in developer tools that restores a field's default value; here Reset is a verb.
 #. translators: Link that puts an option whose layout was adjusted by hand back on the side's own layout. Admin product page.
 #: templates/admin/developer-tools.php:91
-#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:227
+#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:279
 msgid "Reset"
 msgstr "Herstellen"
 
@@ -7891,7 +8070,8 @@ msgid "Printshop order %1$s, \"%2$s\" in Pixonaut"
 msgstr "Drukopdracht %1$s, “%2$s” in Pixonaut"
 
 #. translators: Link on the order screen to the item's printshop order in the Pixonaut studio.
-#: templates/admin/order-box.php:98
+#. translators: Link beside a product side's template picker to that template's page in the Pixonaut studio. Admin product page.
+#: templates/admin/order-box.php:98 templates/admin/product-side.php:121
 msgid "Open in Pixonaut"
 msgstr "Openen in Pixonaut"
 
@@ -7925,7 +8105,7 @@ msgid "The printshop's order reference, if it gave one"
 msgstr "De bestelreferentie van de drukkerij, als die er een heeft gegeven"
 
 #. translators: Label of the printshop that makes the product's orders. Admin product page.
-#: templates/admin/product-blank.php:21 templates/admin/product-fields.php:122
+#: templates/admin/product-blank.php:21 templates/admin/product-fields.php:123
 msgid "Printshop"
 msgstr "Drukkerij"
 
@@ -7945,43 +8125,39 @@ msgstr "Variant"
 msgid "Each variation has its own, under Variations."
 msgstr "Elke variatie heeft een eigen variant, onder Variaties."
 
-#: templates/admin/product-fields.php:91
+#: templates/admin/product-fields.php:92
 msgctxt "checkbox on the product: customers personalise it"
 msgid "Personalise"
 msgstr "Personaliseren"
 
-#: templates/admin/product-fields.php:94
-msgid "Customers design this product with a Pixonaut template."
-msgstr "Klanten ontwerpen dit product met een Pixonaut-sjabloon."
-
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: what the product is printed on, and where.
-#: templates/admin/product-fields.php:104
+#: templates/admin/product-fields.php:105
 msgid "Printing"
 msgstr "Bedrukking"
 
 #. translators: Label of the blank picker: what the product is printed on, a blank such as a T-shirt, or nothing. Admin product page.
-#: templates/admin/product-fields.php:106
+#: templates/admin/product-fields.php:107
 msgid "Printed on"
 msgstr "Gedrukt op"
 
 #. translators: Placeholder of the blank picker: the product has no blank, only the design is printed. Admin product page.
-#: templates/admin/product-fields.php:108
+#: templates/admin/product-fields.php:109
 msgid "No blank: the design alone"
 msgstr "Geen blanco product: alleen het ontwerp"
 
-#: templates/admin/product-fields.php:115
+#: templates/admin/product-fields.php:116
 msgid ""
 "Without a blank, the design is printed by itself, such as a poster or a card."
 msgstr ""
 "Zonder blanco product wordt alleen het ontwerp gedrukt, zoals een poster of "
 "een kaart."
 
-#: templates/admin/product-fields.php:118
+#: templates/admin/product-fields.php:119
 msgid "Reading the blank from Pixonaut…"
 msgstr "Blanco product ophalen uit Pixonaut…"
 
 #. translators: Shown in the Pixonaut tab of the product edit page when a blank just picked could not be read; updating the product saves the blank and reads it again.
-#: templates/admin/product-fields.php:119
+#: templates/admin/product-fields.php:120
 msgid ""
 "Pixonaut could not be reached to read this blank. Update the product to try "
 "again."
@@ -7989,37 +8165,37 @@ msgstr ""
 "Pixonaut is niet bereikbaar om dit blanco product te lezen. Werk het product "
 "bij om het opnieuw te proberen."
 
-#: templates/admin/product-fields.php:134
+#: templates/admin/product-fields.php:135
 msgid "Only printshops that print without a blank are listed."
 msgstr "Alleen drukkerijen die zonder blanco product drukken, worden getoond."
 
-#: templates/admin/product-fields.php:137
+#: templates/admin/product-fields.php:138
 msgid "No printshop in your workspace prints without a blank."
 msgstr "Geen drukkerij in je werkruimte drukt zonder blanco product."
 
 #. translators: Link to the printshops of the Pixonaut studio, where the merchant adds one. Admin product page.
-#: templates/admin/product-fields.php:139
+#: templates/admin/product-fields.php:140
 msgid "Add one in Pixonaut"
 msgstr "Voeg er een toe in Pixonaut"
 
 #. translators: Heading of the group of fields in the Pixonaut tab of the product edit page holding a product's only side: its template and the print sizes customers choose.
-#: templates/admin/product-fields.php:151
+#: templates/admin/product-fields.php:152
 msgid "Template and print sizes"
 msgstr "Sjabloon en drukformaten"
 
 #. translators: Button that adds a product side. Admin product page.
-#: templates/admin/product-fields.php:163
+#: templates/admin/product-fields.php:164
 msgid "Add side"
 msgstr "Zijde toevoegen"
 
 #. translators: %d: most sides a product can have.
-#: templates/admin/product-fields.php:169
+#: templates/admin/product-fields.php:170
 #, php-format
 msgid "Another print position, such as the back. Up to %d sides."
 msgstr "Nog een drukpositie, zoals de achterkant. Maximaal %d zijden."
 
 #. translators: %d: most sides Pixonaut's designer is built for.
-#: templates/admin/product-fields.php:180
+#: templates/admin/product-fields.php:181
 #, php-format
 msgid ""
 "Pixonaut recommends at most %d sides. Each side is one more step in the "
@@ -8029,42 +8205,42 @@ msgstr ""
 "ontwerptool en maakt die trager op het apparaat van de klant."
 
 #. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the Pixonaut settings page's choices, changed for this product alone.
-#: templates/admin/product-fields.php:197
+#: templates/admin/product-fields.php:198
 msgid "Store settings for this product"
 msgstr "Winkelinstellingen voor dit product"
 
 #. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the Pixonaut settings page's choices, changed for this product alone.
-#: templates/admin/product-fields.php:198
-#: templates/admin/product-fields.php:202
+#: templates/admin/product-fields.php:199
+#: templates/admin/product-fields.php:203
 msgid "Follows the store’s settings"
 msgstr "Volgt de winkelinstellingen"
 
 #. translators: %d: how many of the store's settings this product changes. Admin product page.
-#: templates/admin/product-fields.php:198
-#: templates/admin/product-fields.php:204
+#: templates/admin/product-fields.php:199
+#: templates/admin/product-fields.php:205
 #, php-format
 msgid "%d changed for this product"
 msgid_plural "%d changed for this product"
 msgstr[0] "%d gewijzigd voor dit product"
 msgstr[1] "%d gewijzigd voor dit product"
 
-#: templates/admin/product-fields.php:209
+#: templates/admin/product-fields.php:210
 msgid "Each follows the Pixonaut settings page until you change it here."
 msgstr ""
 "Elke instelling volgt de Pixonaut-instellingen tot je die hier wijzigt."
 
 #. translators: Label of the dropdown choosing how customers open the designer on the product page. Admin product page.
-#: templates/admin/product-fields.php:212
+#: templates/admin/product-fields.php:213
 msgid "Layout"
 msgstr "Weergave"
 
 #. translators: Label of the dropdown choosing where the product's options, such as Size or Colour, stand in the designer's form. Admin product page.
-#: templates/admin/product-fields.php:217
+#: templates/admin/product-fields.php:218
 msgid "Options in the form"
 msgstr "Opties in het formulier"
 
 #. translators: Label of the dropdown choosing whether the designer's canvas keeps the template's proportions or takes the chosen print size's, asked as a question. Admin product page.
-#: templates/admin/product-fields.php:222 templates/admin/product-side.php:292
+#: templates/admin/product-fields.php:223 templates/admin/product-side.php:344
 msgid "When a print size has other proportions"
 msgstr "Als een drukformaat andere verhoudingen heeft"
 
@@ -8275,117 +8451,118 @@ msgid "Without a blank, each picture is the design alone."
 msgstr "Zonder blanco product is elke afbeelding alleen het ontwerp."
 
 #. translators: Radio button on a print size: this size is chosen when the designer opens. Admin product page.
-#: templates/admin/product-side.php:45
+#: templates/admin/product-side.php:49
 msgid "Selected when the designer opens"
 msgstr "Geselecteerd als de ontwerptool opent"
 
 #. translators: A print size row: the size the print position (placement) itself defines. Admin product page.
-#: templates/admin/product-side.php:49
+#: templates/admin/product-side.php:53
 msgid "The print position’s size"
 msgstr "Het formaat van de drukpositie"
 
 #. translators: Placeholder of the field naming a print size, which customers see. Admin product page.
-#: templates/admin/product-side.php:55
+#: templates/admin/product-side.php:59
 msgid "Name, e.g. A3"
 msgstr "Naam, bijv. A3"
 
 #. translators: Screen reader label of the field naming a print size. Admin product page.
-#: templates/admin/product-side.php:55
+#: templates/admin/product-side.php:59
 #: templates/admin/variation-print-size.php:54
 msgid "Label customers see"
 msgstr "Label dat klanten zien"
 
 #. translators: Screen reader label of the custom print size's width field. Admin product page.
-#: templates/admin/product-side.php:56
+#: templates/admin/product-side.php:60
 #: templates/admin/variation-print-size.php:47
 msgid "Width in millimetres"
 msgstr "Breedte in millimeters"
 
 #. translators: Screen reader label of the custom print size's height field. Admin product page.
-#: templates/admin/product-side.php:58
+#: templates/admin/product-side.php:62
 #: templates/admin/variation-print-size.php:51
 msgid "Height in millimetres"
 msgstr "Hoogte in millimeters"
 
 #. translators: Unit after a custom print size's width and height: millimetres. Admin product page.
-#: templates/admin/product-side.php:59
+#. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the height of that value's print size. Admin product page.
+#: templates/admin/product-side.php:63 templates/admin/product-side.php:187
 #: templates/admin/variation-print-size.php:53
 msgid "mm"
 msgstr "mm"
 
-#: templates/admin/product-side.php:72
+#: templates/admin/product-side.php:76
 msgid "Customers fill in"
 msgstr "Klanten vullen in"
 
-#: templates/admin/product-side.php:73
+#: templates/admin/product-side.php:77
 msgid "Fixed design"
 msgstr "Vast ontwerp"
 
-#: templates/admin/product-side.php:74
+#: templates/admin/product-side.php:78
 msgid "follows new template versions"
 msgstr "volgt nieuwe sjabloonversies"
 
 #. translators: %d: the template version a product side stays on, e.g. 2. Summary of a side's settings. Admin product page.
-#: templates/admin/product-side.php:76
+#: templates/admin/product-side.php:80
 #, php-format
 msgid "stays on version %d"
 msgstr "blijft op versie %d"
 
-#: templates/admin/product-side.php:79
+#: templates/admin/product-side.php:83
 msgid "Choose a template for this side."
 msgstr "Kies een sjabloon voor deze zijde."
 
-#: templates/admin/product-side.php:80
+#: templates/admin/product-side.php:84
 msgid "Choose where on the blank this side is printed."
 msgstr "Kies waar op het blanco product deze zijde wordt gedrukt."
 
-#: templates/admin/product-side.php:81
+#: templates/admin/product-side.php:85
 msgid "Enter the width and height in millimetres."
 msgstr "Vul de breedte en hoogte in millimeters in."
 
 #. translators: Shown under a custom print size's width and height. %1$s: the largest width, %2$s: the largest height the side's print position prints, both in millimetres. Admin product page.
-#: templates/admin/product-side.php:82
+#: templates/admin/product-side.php:86
 #, php-format
 msgid "Up to %1$s × %2$s mm"
 msgstr "Tot %1$s × %2$s mm"
 
 #. translators: Error under a custom print size larger than the print position prints. %1$s: the largest width, %2$s: the largest height, both in millimetres. Admin product page.
-#: templates/admin/product-side.php:83
+#: templates/admin/product-side.php:87
 #, php-format
 msgid "This print position prints at most %1$s × %2$s mm."
 msgstr "Deze drukpositie drukt maximaal %1$s × %2$s mm."
 
-#: templates/admin/product-side.php:87
+#: templates/admin/product-side.php:91
 msgctxt "product side such as front or back"
 msgid "Side"
 msgstr "Zijde"
 
 #. translators: Button that removes a whole side from the product. Admin product page.
-#: templates/admin/product-side.php:89
+#: templates/admin/product-side.php:93
 msgid "Remove side"
 msgstr "Zijde verwijderen"
 
 #. translators: Label of the dropdown that picks the spot on the blank (placement) a side is printed on, such as chest or back. Admin product page.
-#: templates/admin/product-side.php:92
+#: templates/admin/product-side.php:96
 msgid "Print position"
 msgstr "Drukpositie"
 
 #. translators: First option of the print position dropdown, nothing chosen yet. Admin product page.
-#: templates/admin/product-side.php:95
+#: templates/admin/product-side.php:99
 msgid "Choose a print position"
 msgstr "Kies een drukpositie"
 
-#: templates/admin/product-side.php:107
+#: templates/admin/product-side.php:111
 msgctxt "Pixonaut template that customers fill in"
 msgid "Template"
 msgstr "Sjabloon"
 
 #. translators: Placeholder of the template search dropdown. Admin product page.
-#: templates/admin/product-side.php:109
+#: templates/admin/product-side.php:113
 msgid "Search for a template"
 msgstr "Zoek een sjabloon"
 
-#: templates/admin/product-side.php:119
+#: templates/admin/product-side.php:126
 msgid ""
 "This template’s background shows through, and this product has no blank: "
 "customers see the design on white paper in the designer, and it prints on "
@@ -8400,56 +8577,95 @@ msgstr ""
 "het dan zo; klanten kunnen het product toch kopen."
 
 #. translators: Label of the list of print sizes customers choose from for a side. Admin product page.
-#: templates/admin/product-side.php:125
+#: templates/admin/product-side.php:132
 msgid "Print sizes"
 msgstr "Drukformaten"
 
 #. translators: Column heading over the radio buttons marking the print size chosen when the designer opens. Short. Admin product page.
-#: templates/admin/product-side.php:128
+#: templates/admin/product-side.php:135
 msgid "Start"
 msgstr "Start"
 
 #. translators: Column heading over a side's print sizes. Admin product page.
-#: templates/admin/product-side.php:129
+#: templates/admin/product-side.php:136
 msgid "Size customers choose"
 msgstr "Formaat dat klanten kiezen"
 
 #. translators: Button that adds the print position's own size to a side's print sizes. Admin product page.
-#: templates/admin/product-side.php:141
+#: templates/admin/product-side.php:148
 msgid "Add the print position’s size"
 msgstr "Formaat van de drukpositie toevoegen"
 
 #. translators: Button that adds a print size entered in millimetres to a side. Admin product page.
-#: templates/admin/product-side.php:142
+#: templates/admin/product-side.php:149
 msgid "Add a size in mm"
 msgstr "Formaat in mm toevoegen"
 
+#. translators: Label of the dropdown choosing the product attribute (such as Size) whose values each get a print size of their own. Admin product page.
+#: templates/admin/product-side.php:160
+msgid "Print size by attribute"
+msgstr "Drukformaat per attribuut"
+
+#. translators: Option of the Print size by attribute dropdown: no attribute gives the print size. Admin product page.
+#: templates/admin/product-side.php:163
+msgid "None"
+msgstr "Geen"
+
+#: templates/admin/product-side.php:169
+msgid ""
+"Each variation prints at the size of its value, unless it has a print size "
+"of its own. Variations without either print at the print sizes above; when "
+"every variation has a size, those are not needed."
+msgstr ""
+"Elke variatie wordt gedrukt op het formaat van haar waarde, tenzij ze een "
+"eigen drukformaat heeft. Variaties zonder een van beide worden gedrukt op de "
+"drukformaten hierboven; als elke variatie een formaat heeft, zijn die niet "
+"nodig."
+
+#. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the width of that value's print size. Admin product page.
+#: templates/admin/product-side.php:184
+#, php-format
+msgid "%s: width in millimetres"
+msgstr "%s: breedte in millimeters"
+
+#. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the height of that value's print size. Admin product page.
+#: templates/admin/product-side.php:186
+#, php-format
+msgid "%s: height in millimetres"
+msgstr "%s: hoogte in millimeters"
+
+#. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the name customers see for that value's print size. Admin product page.
+#: templates/admin/product-side.php:188
+#, php-format
+msgid "%s: label customers see"
+msgstr "%s: label dat klanten zien"
+
 #. translators: A closed section of a product side holding its less used settings. Admin product page.
-#: templates/admin/product-side.php:147
+#: templates/admin/product-side.php:199
 msgid "More for this side"
 msgstr "Meer voor deze zijde"
 
 #. translators: Label of the fields naming a product side and its key. Admin product page.
-#: templates/admin/product-side.php:153
+#: templates/admin/product-side.php:205
 msgid "Name"
 msgstr "Naam"
 
 #. translators: Placeholder of the field naming a product side, which customers see. Admin product page.
-#: templates/admin/product-side.php:155
+#: templates/admin/product-side.php:207
 msgid "Name customers see, e.g. Front"
 msgstr "Naam die klanten zien, bijv. Voorkant"
 
 #. translators: Placeholder of the field for a side's key, a short lowercase identifier. Admin product page.
-#: templates/admin/product-side.php:156
+#: templates/admin/product-side.php:208
 msgid "Key, e.g. front"
 msgstr "Sleutel, bijv. front"
 
 #. translators: Screen reader label of the field for a side's key. Admin product page.
-#: templates/admin/product-side.php:156
+#: templates/admin/product-side.php:208
 msgid "Side key"
 msgstr "Sleutel van de zijde"
 
-#: templates/admin/product-side.php:158
+#: templates/admin/product-side.php:210
 msgid ""
 "Shown on the side’s tab in the designer. Empty, both follow the print "
 "position."
@@ -8458,11 +8674,11 @@ msgstr ""
 "drukpositie."
 
 #. translators: Checkbox on a product side; unticked, the side is a fixed design printed as the template is. Admin product page.
-#: templates/admin/product-side.php:165
+#: templates/admin/product-side.php:217
 msgid "Customers fill in the template"
 msgstr "Klanten vullen het sjabloon in"
 
-#: templates/admin/product-side.php:168
+#: templates/admin/product-side.php:220
 msgid ""
 "Unticked, it is a fixed design: printed as the template is, made when you "
 "update the product."
@@ -8470,7 +8686,7 @@ msgstr ""
 "Uitgevinkt is het een vast ontwerp: gedrukt zoals het sjabloon is, gemaakt "
 "wanneer je het product bijwerkt."
 
-#: templates/admin/product-side.php:171
+#: templates/admin/product-side.php:223
 msgid ""
 "This template offers fields to fill in. On a standing side customers do not "
 "get to fill them in: it is printed as the template is."
@@ -8478,7 +8694,7 @@ msgstr ""
 "Dit sjabloon heeft velden om in te vullen. Op een vaste zijde kunnen klanten "
 "die niet invullen: de zijde wordt gedrukt zoals het sjabloon is."
 
-#: templates/admin/product-side.php:174
+#: templates/admin/product-side.php:226
 msgid ""
 "This template offers nothing to fill in, so customers have nothing to "
 "personalise. Make the side standing to sell it as the template is."
@@ -8487,13 +8703,13 @@ msgstr ""
 "personaliseren. Maak de zijde vast om die te verkopen zoals het sjabloon is."
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Label of a standing side's previews, one per value of that option. Admin product page.
-#: templates/admin/product-side.php:186
+#: templates/admin/product-side.php:238
 #, php-format
 msgid "Per %s"
 msgstr "Per %s"
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Admin product page.
-#: templates/admin/product-side.php:192
+#: templates/admin/product-side.php:244
 #, php-format
 msgid ""
 "The print area changes with %s, so each of its values is printed from its "
@@ -8507,7 +8723,7 @@ msgstr ""
 "hand aan waar dat nodig is: een aangepaste waarde behoudt haar opmaak "
 "wanneer de zijde verandert, totdat je die terugzet."
 
-#: templates/admin/product-side.php:195
+#: templates/admin/product-side.php:247
 msgid ""
 "The previews appear when you update the product. An adjusted value keeps its "
 "layout."
@@ -8516,28 +8732,28 @@ msgstr ""
 "waarde behoudt haar opmaak."
 
 #. translators: 1: the option, e.g. "Size"; 2: its value, e.g. "XL". Alt text of a standing side's preview for one option. Admin product page.
-#: templates/admin/product-side.php:202
+#: templates/admin/product-side.php:254
 #, php-format
 msgid "%1$s %2$s: the design on the blank"
 msgstr "%1$s %2$s: het ontwerp op het blanco product"
 
 #. translators: Badge beside an option's value whose layout the store manager adjusted by hand on a standing side. Admin product page.
-#: templates/admin/product-side.php:211
+#: templates/admin/product-side.php:263
 msgid "Adjusted"
 msgstr "Aangepast"
 
 #. translators: Under a standing side's preview for one option value: the side's print size does not fit that value's print area, so the design prints at the value's usual size. Admin product page.
-#: templates/admin/product-side.php:218
+#: templates/admin/product-side.php:270
 msgid "Usual size: the side's is too big"
 msgstr "Gebruikelijk formaat: dat van de zijde is te groot"
 
 #. translators: Link that opens an option's adjusted layout on Pixonaut again, to adjust it once more. Admin product page.
-#: templates/admin/product-side.php:222
+#: templates/admin/product-side.php:274
 msgid "Adjust again"
 msgstr "Opnieuw aanpassen"
 
 #. translators: %s: an option's value, e.g. "XL". Confirmation before the store manager resets the layout they adjusted by hand for that option. Admin product page.
-#: templates/admin/product-side.php:225
+#: templates/admin/product-side.php:277
 #, php-format
 msgid ""
 "Reset the layout of %s? It then follows the side again, and the layout you "
@@ -8547,12 +8763,12 @@ msgstr ""
 "die je hebt aangepast, wordt niet bewaard."
 
 #. translators: Link that opens one option's design of a standing side on Pixonaut, to move and scale its artwork by hand. Admin product page.
-#: templates/admin/product-side.php:229
+#: templates/admin/product-side.php:281
 msgid "Adjust layout"
 msgstr "Opmaak aanpassen"
 
 #. translators: %d: how many options a standing side has a preview of. Button that shows them all. Admin product page.
-#: templates/admin/product-side.php:238
+#: templates/admin/product-side.php:290
 #, php-format
 msgid "Show all %d"
 msgid_plural "Show all %d"
@@ -8560,43 +8776,43 @@ msgstr[0] "Alle %d tonen"
 msgstr[1] "Alle %d tonen"
 
 #. translators: Button that shows only the first of a standing side's option previews again. Admin product page.
-#: templates/admin/product-side.php:240
+#: templates/admin/product-side.php:292
 msgid "Show fewer"
 msgstr "Minder tonen"
 
 #. translators: Label of the setting that keeps a product side on one version of its template. Admin product page.
-#: templates/admin/product-side.php:245
+#: templates/admin/product-side.php:297
 msgid "Template version"
 msgstr "Sjabloonversie"
 
 #. translators: Checkbox on a product side: keep the side on the template version picked beside it instead of moving to each new version published. Admin product page.
-#: templates/admin/product-side.php:249
+#: templates/admin/product-side.php:301
 msgid "Stay on one version"
 msgstr "Op één versie blijven"
 
 #. translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page.
-#: templates/admin/product-side.php:252 templates/admin/product-side.php:263
+#: templates/admin/product-side.php:304 templates/admin/product-side.php:315
 #, php-format
 msgid "Version %d (current)"
 msgstr "Versie %d (actueel)"
 
 #. translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page.
-#: templates/admin/product-side.php:253 templates/admin/product-side.php:265
+#: templates/admin/product-side.php:305 templates/admin/product-side.php:317
 #, php-format
 msgid "Version %d"
 msgstr "Versie %d"
 
-#: templates/admin/product-side.php:274
+#: templates/admin/product-side.php:326
 msgid "Unticked, the side follows each new version of the template."
 msgstr "Uitgevinkt volgt de zijde elke nieuwe versie van het sjabloon."
 
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:282
+#: templates/admin/product-side.php:334
 msgid "Groups"
 msgstr "Groepen"
 
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:283
+#: templates/admin/product-side.php:335
 msgid ""
 "The order and names of the groups customers see in the designer. Open to "
 "arrange them."
@@ -8604,7 +8820,7 @@ msgstr ""
 "De volgorde en namen van de groepen die klanten in de ontwerptool zien. Open "
 "de instelling om ze te ordenen."
 
-#: templates/admin/product-side.php:286
+#: templates/admin/product-side.php:338
 msgid ""
 "The order and names customers see in the designer on this product’s page. "
 "Drag groups and their fields to reorder them. A name changed here is this "
@@ -8618,7 +8834,7 @@ msgstr ""
 "ingedeeld volgt deze zijde Opties in het formulier niet meer."
 
 #. translators: Option of a product side's canvas shape dropdown: the side draws its canvas as the product's own setting, under Store settings for this product, says. Admin product page.
-#: templates/admin/product-side.php:296
+#: templates/admin/product-side.php:348
 msgid "As the product’s store settings say"
 msgstr "Zoals de winkelinstellingen van het product aangeven"
 
@@ -8634,20 +8850,11 @@ msgstr "Overschrijven voor deze variatie"
 
 #: templates/admin/product-variation.php:47
 msgid ""
-"This variation is personalised as the product’s Pixonaut tab says. Tick to "
-"give it its own blank, sides, templates and settings."
+"Personalised as the product’s Pixonaut tab says. Tick to give this variation "
+"its own setup."
 msgstr ""
-"Deze variatie wordt gepersonaliseerd zoals het Pixonaut-tabblad van het "
-"product aangeeft. Vink dit aan om de variatie een eigen blanco product, "
-"zijden, sjablonen en instellingen te geven."
-
-#: templates/admin/product-variation.php:48
-msgid ""
-"This variation uses its own configuration below, not the product’s Pixonaut "
-"tab."
-msgstr ""
-"Deze variatie gebruikt de eigen configuratie hieronder, niet het Pixonaut-"
-"tabblad van het product."
+"Gepersonaliseerd zoals het Pixonaut-tabblad van het product aangeeft. Vink "
+"aan om deze variatie een eigen instelling te geven."
 
 #: templates/admin/product-views.php:39 templates/admin/product-views.php:114
 msgid "The design alone"
@@ -9234,6 +9441,49 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s weergave"
 msgstr[1] "%s weergaven"
+
+#~ msgid ""
+#~ "The workspace's settings as Pixonaut answered them: `brands` the store "
+#~ "may choose from (the default first), `brand_id` the brand its pages are "
+#~ "drawn in, `chosen_brand_id` the store's own choice (null while it follows "
+#~ "the default), its logo and accent colour, the proof watermark, where "
+#~ "orders ship, the least print resolution and the default language. Null "
+#~ "while the connection is paused or Pixonaut could not be reached."
+#~ msgstr ""
+#~ "De instellingen van de werkruimte zoals Pixonaut ze heeft doorgegeven: "
+#~ "`brands` waaruit de winkel mag kiezen (het standaardmerk eerst), "
+#~ "`brand_id` het merk waarin de pagina's van de winkel worden weergegeven, "
+#~ "`chosen_brand_id` de eigen keuze van de winkel (null zolang die de "
+#~ "standaard volgt), het logo en de accentkleur, het watermerk van de "
+#~ "drukproef, waarheen bestellingen worden verzonden, de minimale "
+#~ "drukresolutie en de standaardtaal. Null zolang de koppeling gepauzeerd is "
+#~ "of Pixonaut niet bereikbaar was."
+
+#~ msgid ""
+#~ "Set in the Pixonaut studio, except the brand, which you choose here. They "
+#~ "shape the pages Pixonaut shows your customers, and the orders it places."
+#~ msgstr ""
+#~ "Ingesteld in de Pixonaut-studio, behalve het merk, dat je hier kiest. Ze "
+#~ "bepalen de pagina’s die Pixonaut aan je klanten toont, en de bestellingen "
+#~ "die Pixonaut plaatst."
+
+#~ msgid ""
+#~ "This variation is personalised as the product’s Pixonaut tab says. Tick "
+#~ "to give it its own blank, sides, templates and settings."
+#~ msgstr ""
+#~ "Deze variatie wordt gepersonaliseerd zoals het Pixonaut-tabblad van het "
+#~ "product aangeeft. Vink dit aan om de variatie een eigen blanco product, "
+#~ "zijden, sjablonen en instellingen te geven."
+
+#~ msgid ""
+#~ "This variation uses its own configuration below, not the product’s "
+#~ "Pixonaut tab."
+#~ msgstr ""
+#~ "Deze variatie gebruikt de eigen configuratie hieronder, niet het Pixonaut-"
+#~ "tabblad van het product."
+
+#~ msgid "The template no longer exists in Pixonaut."
+#~ msgstr "Het sjabloon bestaat niet meer in Pixonaut."
 
 #~ msgid "On the product photo"
 #~ msgstr "Op de productfoto"

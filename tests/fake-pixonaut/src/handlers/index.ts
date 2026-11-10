@@ -190,4 +190,5 @@ export const SERVED_WEBHOOKS: readonly string[] = [
 	'template.deleted',
 	'template.live_changed',
 	'template.published',
+	'template.renamed',
 ];

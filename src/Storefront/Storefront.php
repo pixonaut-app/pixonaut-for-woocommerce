@@ -423,8 +423,21 @@ final class Storefront {
 				'note'       => $this->labels->get( Labels::PREVIEW_NOTE, array( 'product_id' => $designer->product->get_id() ) ),
 				'loading'    => $this->labels->get( Labels::DESIGNER_LOADING, array( 'product_id' => $designer->product->get_id() ) ),
 				'layouts'    => $this->layouts( $designer ),
+				'images'     => self::image_ids( $designer->product ),
 			)
 		);
+	}
+
+	/**
+	 * The product's own images, its featured image first and then its
+	 * gallery's, which the preview shows when its designer cannot load.
+	 *
+	 * @param WC_Product $product The product.
+	 * @return int[] Attachment ids.
+	 */
+	private static function image_ids( WC_Product $product ): array {
+		$ids = array_map( 'intval', array_merge( array( $product->get_image_id() ), $product->get_gallery_image_ids() ) );
+		return array_values( array_unique( array_filter( $ids, static fn ( int $id ): bool => $id > 0 ) ) );
 	}
 
 	/**
@@ -451,7 +464,9 @@ final class Storefront {
 	/**
 	 * The mounts and the variations with each side's `formGroups` fitted to
 	 * the template the page read for that side (`FormGroupsMount::fitted()`).
-	 * A variation side on another template than the one read shows that
+	 * A variation side on another template than the one read is read for
+	 * that template, and the product's groups are carried to it
+	 * (`FormGroupsMount::carried()`); without that read it shows the
 	 * template's own form, unless the product's options stand in groups of
 	 * their own, which every template takes. A correction has no read of its
 	 * own, so its template is read for its groups alone.
@@ -466,11 +481,13 @@ final class Storefront {
 			return array( $mounts, $variations );
 		}
 		// The layouts' reads too, kept for the request.
-		$reads  = $this->reads( $designer );
-		$groups = array();
+		$reads     = $this->reads( $designer );
+		$groups    = array();
+		$templates = array();
 		foreach ( $mounts as $side => $options ) {
-			$template        = ServerReads::decoded( $reads[ (string) $side ] ?? array() )['template'] ?? null;
-			$groups[ $side ] = null === $template ? null : array_column( TemplateForm::groups( $template ), 'id' );
+			$template           = ServerReads::decoded( $reads[ (string) $side ] ?? array() )['template'] ?? null;
+			$templates[ $side ] = $template;
+			$groups[ $side ]    = null === $template ? null : array_column( TemplateForm::groups( $template ), 'id' );
 			if ( null === $template && isset( $options['formGroups'], $options['design'] ) ) {
 				$groups[ $side ] = $this->correction_groups( $designer, (string) $side, $options );
 			}
@@ -486,9 +503,14 @@ final class Storefront {
 				if ( ! is_array( $target ) ) {
 					continue;
 				}
-				$same           = ( $target['templateId'] ?? null ) === ( $mounts[ $side ]['templateId'] ?? null );
-				$own            = ! $same && FormGroupsMount::awaits_template_groups( $target['formGroups'] ?? null ) && is_string( $target['templateId'] ?? null ) ? $this->server->template_groups( $target['templateId'], $mounts[ $side ]['locale'] ?? null ) : null;
-				$sides[ $side ] = self::with_groups( $target, FormGroupsMount::fitted( $target['formGroups'] ?? null, $same ? $groups[ $side ] ?? null : $own ) );
+				$same = ( $target['templateId'] ?? null ) === ( $mounts[ $side ]['templateId'] ?? null );
+				if ( $same ) {
+					$sides[ $side ] = self::with_groups( $target, FormGroupsMount::fitted( $target['formGroups'] ?? null, $groups[ $side ] ?? null ) );
+					continue;
+				}
+				$other          = FormGroupsMount::needs_template( $target['formGroups'] ?? null ) && is_string( $target['templateId'] ?? null ) ? $this->server->template_read( $target['templateId'], $mounts[ $side ]['locale'] ?? null ) : null;
+				$carried        = null === $other ? $target['formGroups'] ?? null : FormGroupsMount::carried( $target['formGroups'], $templates[ $side ] ?? null, $other );
+				$sides[ $side ] = self::with_groups( $target, FormGroupsMount::fitted( $carried, null === $other ? null : array_column( TemplateForm::groups( $other ), 'id' ) ) );
 			}
 			$variations[ $id ]['sides'] = (object) $sides;
 		}

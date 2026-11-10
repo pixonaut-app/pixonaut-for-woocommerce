@@ -1,7 +1,8 @@
 // The control API's catalogue changes: what a member does to the workspace's
 // templates and blanks in the studio. Each changes the fake's catalogue as
 // Pixonaut would and emits the event Pixonaut sends for it: publishing a
-// template's next version, pausing or resuming it, deleting it, and updating,
+// template's next version, pausing or resuming it, deleting it, changing its
+// id, and updating,
 // deleting or restoring a blank. Pixonaut sends catalogue events to every
 // store of the workspace; the fake sends them to the store a command names
 // (the main one by default), so a test reads one stream.
@@ -225,6 +226,42 @@ export function registerCatalogueEvents(app: Hono, fake: Fake): void {
 			return {
 				ok: true,
 				value: { type: 'template.deleted', payload: { baseId, wasLive } },
+			};
+		},
+	);
+
+	registerChange(
+		app,
+		fake,
+		`${TEMPLATES_CONTROL}/rename`,
+		'template',
+		findTemplate,
+		(versions, body) => {
+			const newId = optionalString(body, 'newId');
+			if (!newId.ok) {
+				return newId;
+			}
+			const from = versions[0]?.baseId ?? '';
+			const to = newId.value;
+			if (to === undefined || to === '' || to.includes('@')) {
+				return refused('`newId` is required: a base id, without a version');
+			}
+			if (versionsOf(fake.state, to).length > 0) {
+				return refused(`template ${to} exists`);
+			}
+			// As Pixonaut moves the template, its designs and its designer links in one go.
+			fake.state.templates.rename(from, to);
+			for (const link of fake.state.shareLinks.values()) {
+				if (link.subject.kind === 'template' && link.subject.id === from) {
+					link.subject.id = to;
+				}
+			}
+			return {
+				ok: true,
+				value: {
+					type: 'template.renamed',
+					payload: { oldId: from, newId: to, renamedAt: fake.clock.now() },
+				},
 			};
 		},
 	);
