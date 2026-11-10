@@ -14,6 +14,7 @@ pretty permalinks).
 | Route | Methods |
 |---|---|
 | `/pixonaut/v1` | GET |
+| `/pixonaut/v1/admin/blank-fields` | GET |
 | `/pixonaut/v1/admin/search/blanks` | GET |
 | `/pixonaut/v1/admin/search/fitting-templates` | GET |
 | `/pixonaut/v1/admin/search/placements` | GET |
