@@ -327,7 +327,7 @@ size of the blank against the template.
   the sizes the template fits still sell. Choose a template that fits every
   size, or stop selling those sizes.
 
-On such a blank, a personalised side sold in the **Placement default** prints
+On such a blank, a personalised side sold at *The print position's size* prints
 each variation at its own blank variant's print area: the template's shape
 fitted into the area's usual size, or, where the print covers the whole area
 (a poster printed edge to edge, say), exactly that area. Nothing needs to be
