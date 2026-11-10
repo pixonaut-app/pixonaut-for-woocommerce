@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T15:12:46+00:00\n"
+"POT-Creation-Date: 2026-11-10T15:20:00+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -814,7 +814,7 @@ msgstr "Die Seite, beginnend bei 1."
 msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr "Die Seite der Varianten jedes variablen Produkts, ab 1, %d pro Seite."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:248
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:249
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -1163,7 +1163,7 @@ msgstr "Das `before`, das die nächste Seite abruft; null, wenn es keine gibt."
 msgid "No simple or variable product or variation has this id."
 msgstr "Kein einfaches oder variables Produkt und keine Variante hat diese ID."
 
-#: src/Abilities/ProductLinks.php:244
+#: src/Abilities/ProductLinks.php:245
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -1172,7 +1172,7 @@ msgstr ""
 "Produkts zu folgen, dessen Einrichtung sie dann nennt; false bei einem "
 "Produkt."
 
-#: src/Abilities/ProductLinks.php:252
+#: src/Abilities/ProductLinks.php:253
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -1864,7 +1864,7 @@ msgstr ""
 "mit `placement_default` true ist diese Standardgrösse. Ohne Rohling muss "
 "jede zum Seitenverhältnis der Vorlage passen."
 
-#: src/Abilities/SetupFields.php:209 src/Abilities/SetVariationPrintSize.php:91
+#: src/Abilities/SetupFields.php:209 src/Abilities/SetVariationPrintSize.php:90
 msgid "The name customers see, e.g. \"A3\"; left out for the millimetres."
 msgstr ""
 "Der Name, den Kunden sehen, z. B. «A3»; weggelassen für die Millimeterangabe."
@@ -1930,11 +1930,11 @@ msgid "No live template has the id \"%s\"."
 msgstr "Keine veröffentlichte Vorlage hat die ID «%s»."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetVariationPrintSize.php:72
+#: src/Abilities/SetVariationPrintSize.php:71
 msgid "Set a variation's print size"
 msgstr "Druckgrösse einer Variante festlegen"
 
-#: src/Abilities/SetVariationPrintSize.php:73
+#: src/Abilities/SetVariationPrintSize.php:72
 msgid ""
 "Gives one variation its own print size, in millimetres, on a product with or "
 "without a blank: the variation gets a setup of its own, starting from the "
@@ -1951,7 +1951,7 @@ msgstr ""
 "abgelehnt, und nichts wird gespeichert. Die Antwort nennt danach die "
 "Gültigkeit und die Rohling-Variante der Variante."
 
-#: src/Abilities/SetVariationPrintSize.php:102
+#: src/Abilities/SetVariationPrintSize.php:101
 #: src/Abilities/SetVariationVariants.php:108
 msgid ""
 "The blank's variant the variation sells; null when it is not personalised on "
@@ -1960,24 +1960,24 @@ msgstr ""
 "Die Rohling-Variante, die die Variante verkauft; null, wenn sie nicht auf "
 "einem Rohling personalisiert ist."
 
-#: src/Abilities/SetVariationPrintSize.php:132
+#: src/Abilities/SetVariationPrintSize.php:131
 msgid "No variation has this id."
 msgstr "Keine Variante hat diese ID."
 
-#: src/Abilities/SetVariationPrintSize.php:143
-msgid ""
-"The variation is not personalised with a template. Link its product first."
-msgstr ""
-"Die Variante ist nicht mit einer Vorlage personalisiert. Verknüpfen Sie "
-"zuerst ihr Produkt mit einer Vorlage."
-
-#: src/Abilities/SetVariationPrintSize.php:146
+#: src/Abilities/SetVariationPrintSize.php:142
 msgid ""
 "The variation has several sides, each with its own print sizes: set them "
 "with set-product-setup."
 msgstr ""
 "Die Variante hat mehrere Seiten mit jeweils eigenen Druckgrössen: Legen Sie "
 "sie mit set-product-setup fest."
+
+#: src/Abilities/SetVariationPrintSize.php:146
+msgid ""
+"The variation is not personalised with a template. Link its product first."
+msgstr ""
+"Die Variante ist nicht mit einer Vorlage personalisiert. Verknüpfen Sie "
+"zuerst ihr Produkt mit einer Vorlage."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetVariationVariants.php:56

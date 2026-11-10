@@ -189,9 +189,10 @@ final class ProductLinks {
 	 *
 	 * @param WC_Product           $variation The variation.
 	 * @param array<string, mixed> $posted    Its fields, by `PanelFields` key.
+	 * @param ProductConfig|null   $current   What the fields change; null for what its panel shows.
 	 */
-	public function check_variation( WC_Product $variation, array $posted ): ProductConfig {
-		return $this->variations->checked( $variation, $posted );
+	public function check_variation( WC_Product $variation, array $posted, ?ProductConfig $current = null ): ProductConfig {
+		return $this->variations->checked( $variation, $posted, $current );
 	}
 
 	/**

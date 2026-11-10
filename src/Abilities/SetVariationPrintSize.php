@@ -9,17 +9,16 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Abilities;
 
-use Pixonaut\WooCommerce\Admin\VariationPanel;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
-use Pixonaut\WooCommerce\Catalogue\Side;
 use WC_Product;
 use WP_Error;
 
 /**
- * Gives one variation a setup of its own, starting from what it has (its
- * own, or else its product's), in which its one side is sold in one print
+ * Gives one variation a setup of its own, starting from the one it is sold
+ * under (its own while it overrides, else its product's, even when it keeps
+ * an unused one of its own), in which its one side is sold in one print
  * size: the width and height given, in millimetres. The size is checked with
  * Pixonaut as the variation's Pixonaut panel checks it, on the blank's
  * placement or, without a blank, against the template; a size Pixonaut
@@ -137,15 +136,16 @@ final class SetVariationPrintSize implements Ability {
 			return self::refusal( InvalidReason::INVALID_PRINT_SIZE );
 		}
 
-		$current = VariationPanel::own_or_inherited( $variation );
-		$sides   = array_values( array_filter( $current->sides, static fn ( Side $side ): bool => '' !== $side->template_base_id ) );
-		if ( ! $current->personalise || array() === $sides ) {
-			return new WP_Error( 'pixonaut_wc_ability_not_personalised', __( 'The variation is not personalised with a template. Link its product first.', 'pixonaut-for-woocommerce' ) );
-		}
-		if ( count( $sides ) > 1 ) {
+		$current = self::sold_under( $variation );
+		// Every side counts: one left unfinished would be dropped by saving the other alone.
+		if ( count( $current->sides ) > 1 ) {
 			return new WP_Error( 'pixonaut_wc_ability_several_sides', __( 'The variation has several sides, each with its own print sizes: set them with set-product-setup.', 'pixonaut-for-woocommerce' ) );
 		}
-		$side                = SetupFields::side_of( $sides[0] );
+		$only = $current->sides[0] ?? null;
+		if ( ! $current->personalise || null === $only || '' === $only->template_base_id ) {
+			return new WP_Error( 'pixonaut_wc_ability_not_personalised', __( 'The variation is not personalised with a template. Link its product first.', 'pixonaut-for-woocommerce' ) );
+		}
+		$side                = SetupFields::side_of( $only );
 		$side['print_sizes'] = array(
 			array(
 				'width_mm'  => $width,
@@ -159,7 +159,7 @@ final class SetVariationPrintSize implements Ability {
 			return $posted;
 		}
 
-		$checked = $this->links->check_variation( $variation, $posted );
+		$checked = $this->links->check_variation( $variation, $posted, $current );
 		$refused = self::refused( $checked );
 		if ( null !== $refused ) {
 			return self::refusal( $refused );
@@ -173,6 +173,18 @@ final class SetVariationPrintSize implements Ability {
 			'pixonaut_validity' => ProductSetup::validity( $saved ),
 			'pixonaut_variant'  => ProductSetup::variation_variant( $saved ),
 		);
+	}
+
+	/**
+	 * The setup the variation is sold under, as stored: its own while it
+	 * overrides, else its product's.
+	 *
+	 * @param WC_Product $variation The variation.
+	 */
+	private static function sold_under( WC_Product $variation ): ProductConfig {
+		$own    = ProductConfig::stored_on( $variation );
+		$parent = wc_get_product( $variation->get_parent_id() );
+		return $own->override || ! $parent instanceof WC_Product ? $own : ProductConfig::stored_on( $parent );
 	}
 
 	/**

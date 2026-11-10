@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T15:12:46+00:00\n"
+"POT-Creation-Date: 2026-11-10T15:20:00+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -790,7 +790,7 @@ msgstr "Sivu, alkaen 1:stä."
 msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr "Kunkin muunnelmatuotteen muunnelmien sivu, alkaen 1:stä, %d sivulla."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:248
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:249
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -1138,7 +1138,7 @@ msgstr ""
 "Millään yksinkertaisella tuotteella, muunnelmatuotteella tai muunnelmalla ei "
 "ole tätä id:tä."
 
-#: src/Abilities/ProductLinks.php:244
+#: src/Abilities/ProductLinks.php:245
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -1146,7 +1146,7 @@ msgstr ""
 "Muunnelmalle: onko sillä omat asetukset sen sijaan, että se noudattaa "
 "tuotteensa asetuksia, jotka se muuten antaa; false tuotteelle."
 
-#: src/Abilities/ProductLinks.php:252
+#: src/Abilities/ProductLinks.php:253
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -1830,7 +1830,7 @@ msgstr ""
 "`placement_default` on true, on tämä oletuskoko. Ilman pohjatuotetta "
 "jokaisen on vastattava mallipohjan kuvasuhdetta."
 
-#: src/Abilities/SetupFields.php:209 src/Abilities/SetVariationPrintSize.php:91
+#: src/Abilities/SetupFields.php:209 src/Abilities/SetVariationPrintSize.php:90
 msgid "The name customers see, e.g. \"A3\"; left out for the millimetres."
 msgstr "Nimi, jonka asiakkaat näkevät, esim. ”A3”; pois jätettynä millimetrit."
 
@@ -1893,11 +1893,11 @@ msgid "No live template has the id \"%s\"."
 msgstr "Millään aktiivisella mallipohjalla ei ole id:tä ”%s”."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetVariationPrintSize.php:72
+#: src/Abilities/SetVariationPrintSize.php:71
 msgid "Set a variation's print size"
 msgstr "Aseta muunnelman painokoko"
 
-#: src/Abilities/SetVariationPrintSize.php:73
+#: src/Abilities/SetVariationPrintSize.php:72
 msgid ""
 "Gives one variation its own print size, in millimetres, on a product with or "
 "without a blank: the variation gets a setup of its own, starting from the "
@@ -1913,7 +1913,7 @@ msgstr ""
 "hyväksytä, vaan syy kerrotaan, eikä mitään tallenneta. Vastaus kertoo sen "
 "jälkeen muunnelman kelpoisuuden ja pohjatuotteen version."
 
-#: src/Abilities/SetVariationPrintSize.php:102
+#: src/Abilities/SetVariationPrintSize.php:101
 #: src/Abilities/SetVariationVariants.php:108
 msgid ""
 "The blank's variant the variation sells; null when it is not personalised on "
@@ -1922,24 +1922,24 @@ msgstr ""
 "Pohjatuotteen versio, jota muunnelma myy; null, kun muunnelmaa ei ole "
 "personoitu pohjatuotteelle."
 
-#: src/Abilities/SetVariationPrintSize.php:132
+#: src/Abilities/SetVariationPrintSize.php:131
 msgid "No variation has this id."
 msgstr "Millään muunnelmalla ei ole tätä id:tä."
 
-#: src/Abilities/SetVariationPrintSize.php:143
-msgid ""
-"The variation is not personalised with a template. Link its product first."
-msgstr ""
-"Muunnelmaa ei ole personoitu mallipohjalla. Liitä ensin sen tuote "
-"mallipohjaan."
-
-#: src/Abilities/SetVariationPrintSize.php:146
+#: src/Abilities/SetVariationPrintSize.php:142
 msgid ""
 "The variation has several sides, each with its own print sizes: set them "
 "with set-product-setup."
 msgstr ""
 "Muunnelmalla on useita puolia, joilla kullakin on omat painokokonsa: aseta "
 "ne kyvyllä set-product-setup."
+
+#: src/Abilities/SetVariationPrintSize.php:146
+msgid ""
+"The variation is not personalised with a template. Link its product first."
+msgstr ""
+"Muunnelmaa ei ole personoitu mallipohjalla. Liitä ensin sen tuote "
+"mallipohjaan."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetVariationVariants.php:56

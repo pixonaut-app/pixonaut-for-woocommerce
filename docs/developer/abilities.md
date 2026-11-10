@@ -310,8 +310,9 @@ it is no longer on is matched by options again.
 `set-variation-print-size` gives one variation its own print size, on a
 product with or without a blank: `variation_id`, `width_mm`, `height_mm` and
 optionally `label`. The variation gets a setup of its own, starting from the
-one it has (its own, or else its product's), whose one side is sold in that
-size alone. A variation with several sides is refused: set them with
+one it is sold under (its own while it overrides, else its product's, even
+when it keeps an unused one), whose one side is sold in that size alone. A
+variation with several sides, finished or not, is refused: set them with
 `set-product-setup`. The size is checked as the variation's Pixonaut panel
 checks it; one Pixonaut cannot print (or no width and height above zero)
 is refused with `pixonaut_wc_invalid_print_size`, the reason's code in the

@@ -51,6 +51,11 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 
 	private const TEMPLATE_VERSION = 1;
 
+	/**
+	 * The template of a variation's own setup it no longer uses.
+	 */
+	private const OLD_TEMPLATE_BASE_ID = 'old-poster';
+
 	private const WIDTH_MM = 300.0;
 
 	private const HEIGHT_MM = 400.0;
@@ -253,6 +258,71 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 		$this->assertSame( InvalidReason::INVALID_PRINT_SIZE, $answer->get_data()['reason'] );
 		$this->assertSame( array(), $this->recorder->requests );
 		$this->assertFalse( ProductConfig::is_stored_on( $this->reload( $variation ) ) );
+	}
+
+	public function test_a_variation_following_its_product_starts_from_the_products_setup_not_its_unused_own(): void {
+		$product   = $this->poster();
+		$variation = $this->variation( $product, 'Small' );
+		$unused    = new Side( 'front', 'Front', null, null, self::OLD_TEMPLATE_BASE_ID, self::TEMPLATE_VERSION, null, 'Old poster', array( new PrintSize( self::PRODUCT_SIZE_MM, self::PRODUCT_SIZE_MM, '' ) ) );
+		( new ProductConfig( personalise: false, override: false, sides: array( $unused ) ) )->save_to( $variation );
+		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
+
+		$answer = $this->succeed(
+			array(
+				'variation_id' => $variation->get_id(),
+				'width_mm'     => self::WIDTH_MM,
+				'height_mm'    => self::HEIGHT_MM,
+			)
+		);
+
+		$this->assertSame( self::VALID, $answer['pixonaut_validity'] );
+		$this->assertStringContainsString( '/v1/templates/' . self::TEMPLATE_BASE_ID . '%40', $this->recorder->requests[0]['url'] );
+		$own = ProductConfig::stored_on( $this->reload( $variation ) );
+		$this->assertTrue( $own->override );
+		$this->assertTrue( $own->personalise );
+		$this->assertSame( self::TEMPLATE_BASE_ID, $own->sides[0]->template_base_id, 'the template it is sold with' );
+	}
+
+	public function test_a_size_that_could_not_be_checked_is_saved_unchecked_as_the_panel_saves_it(): void {
+		$product   = $this->poster();
+		$variation = $this->variation( $product, 'Small' );
+		$this->recorder->fail();
+		$this->recorder->fail();
+
+		$answer = $this->succeed(
+			array(
+				'variation_id' => $variation->get_id(),
+				'width_mm'     => self::WIDTH_MM,
+				'height_mm'    => self::HEIGHT_MM,
+			)
+		);
+
+		$this->assertFalse( $answer['pixonaut_validity']['valid'] );
+		$own = ProductConfig::stored_on( $this->reload( $variation ) );
+		$this->assertTrue( $own->override );
+		$this->assertSame( array(), $own->sides[0]->print_sizes, 'nothing unchecked is sold' );
+		$this->assertEquals( array( new PrintSize( self::WIDTH_MM, self::HEIGHT_MM, PrintSize::label_for( self::WIDTH_MM, self::HEIGHT_MM ) ) ), $own->sides[0]->pending_sizes, 'kept to be checked again' );
+		$this->assertSame( self::PRODUCT_SIZE_MM, ProductConfig::stored_on( $this->reload( $product ) )->sides[0]->print_sizes[0]->width_mm, 'the product keeps its own' );
+	}
+
+	public function test_a_variation_with_a_second_unfinished_side_is_refused_and_keeps_it(): void {
+		$unfinished = new Side( 'back', 'Back', null, null, '', null, null, null );
+		$product    = $this->poster( new ProductConfig( personalise: true, sides: array( self::side(), $unfinished ) ) );
+		$variation  = $this->variation( $product, 'Small' );
+
+		$answer = $this->call(
+			array(
+				'variation_id' => $variation->get_id(),
+				'width_mm'     => self::WIDTH_MM,
+				'height_mm'    => self::HEIGHT_MM,
+			)
+		);
+
+		$this->assertSame( 422, $answer->get_status() );
+		$this->assertSame( 'invalid_input', $answer->get_data()['code'] );
+		$this->assertFalse( ProductConfig::is_stored_on( $this->reload( $variation ) ) );
+		$this->assertSame( array(), $this->recorder->requests );
 	}
 
 	/**
