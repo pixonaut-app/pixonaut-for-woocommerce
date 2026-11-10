@@ -16,6 +16,7 @@ use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
@@ -206,6 +207,34 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 		$this->assertCount( 1, $own->sides );
 		$this->assertEquals( array( new PrintSize( self::WIDTH_MM, self::HEIGHT_MM, self::LABEL ) ), $own->sides[0]->print_sizes );
 		$this->assertSame( self::PRODUCT_SIZE_MM, ProductConfig::stored_on( $this->reload( $product ) )->sides[0]->print_sizes[0]->width_mm, 'the product keeps its own' );
+	}
+
+	public function test_a_size_set_on_a_variation_replaces_the_size_it_had_without_overriding(): void {
+		$product   = $this->poster();
+		$variation = $this->variation( $product, 'Small' );
+		$kept      = new PrintSize( self::PRODUCT_SIZE_MM, self::PRODUCT_SIZE_MM, '' );
+		$own       = array(
+			'size'    => $kept,
+			'refused' => null,
+			'basis'   => VariationSize::basis( self::side(), null, null ),
+		);
+		( new VariationSize( array( 'front' => $own ) ) )->save_to( $variation );
+		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
+
+		$answer = $this->succeed(
+			array(
+				'variation_id' => $variation->get_id(),
+				'width_mm'     => self::WIDTH_MM,
+				'height_mm'    => self::HEIGHT_MM,
+				'label'        => self::LABEL,
+			)
+		);
+
+		$this->assertSame( self::VALID, $answer['pixonaut_validity'] );
+		$saved = $this->reload( $variation );
+		$this->assertSame( array(), VariationSize::stored_on( $saved )->sizes, 'the overriding setup has its own size' );
+		$this->assertEquals( array( new PrintSize( self::WIDTH_MM, self::HEIGHT_MM, self::LABEL ) ), ProductConfig::config_for( $saved )->sides[0]->print_sizes );
 	}
 
 	public function test_a_size_pixonaut_cannot_print_is_refused_with_the_reason_and_nothing_is_saved(): void {

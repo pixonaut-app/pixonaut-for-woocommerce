@@ -20,6 +20,7 @@ use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\TemplateId;
+use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use WC_Product;
 use WP_Error;
 
@@ -179,6 +180,9 @@ final class ProductLinks {
 	 */
 	public function configure_variation( WC_Product $variation, ?array $posted, ?string $variant = null ): array {
 		$this->variations->apply( $variation, $posted );
+		if ( null !== $posted ) {
+			self::drop_own_sizes( $variation );
+		}
 		return $this->variation_saved( $variation, $variant );
 	}
 
@@ -205,7 +209,19 @@ final class ProductLinks {
 	 */
 	public function save_variation( WC_Product $variation, ProductConfig $checked ): array {
 		$this->panel->store( $variation, $checked );
+		self::drop_own_sizes( $variation );
 		return $this->variation_saved( $variation, null );
+	}
+
+	/**
+	 * Drops the print sizes a variation was given without overriding, once
+	 * it overrides its whole setup, as its panel does: the overriding setup
+	 * has its own sizes, which they would otherwise replace.
+	 *
+	 * @param WC_Product $variation The variation, now overriding.
+	 */
+	private static function drop_own_sizes( WC_Product $variation ): void {
+		( new VariationSize() )->save_to( $variation );
 	}
 
 	/**
