@@ -58,6 +58,7 @@ use Pixonaut\WooCommerce\Admin\RegenerateNow;
 use Pixonaut\WooCommerce\Admin\RegeneratePictures;
 use Pixonaut\WooCommerce\Admin\ShowcaseField;
 use Pixonaut\WooCommerce\Admin\SplitListingFields;
+use Pixonaut\WooCommerce\Admin\SwatchNamesField;
 use Pixonaut\WooCommerce\Admin\LayoutAdjustments;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Admin\StatusReport;
@@ -175,6 +176,8 @@ use Pixonaut\WooCommerce\Storefront\OpeningPrice;
 use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
 use Pixonaut\WooCommerce\Storefront\ServerReads;
 use Pixonaut\WooCommerce\Storefront\Storefront;
+use Pixonaut\WooCommerce\Storefront\SwatchLooks;
+use Pixonaut\WooCommerce\Storefront\SwatchNames;
 use Pixonaut\WooCommerce\Storefront\UnavailableReports;
 use Pixonaut\WooCommerce\Storefront\UnavailableProduct;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
@@ -293,6 +296,8 @@ final class Plugin {
 	private ?CartCleanup $cart_cleanup = null;
 
 	private ?ServerReads $server_reads = null;
+
+	private ?SwatchLooks $swatch_looks = null;
 
 	private ?PersonaliseButton $personalise_button = null;
 
@@ -425,6 +430,7 @@ final class Plugin {
 		$this->hosted_correction()->register();
 		( new Purchasability() )->register();
 		SplitListing::register();
+		SwatchNames::register();
 		( new NotLiveProducts() )->register();
 		( new UnavailableProduct( $this->labels() ) )->register();
 		$this->product_recheck()->register();
@@ -452,12 +458,13 @@ final class Plugin {
 			( new PictureFields( $this->templates(), $this->settings() ) )->register();
 			$this->showcase_field()->register();
 			( new SplitListingFields( $this->templates() ) )->register();
+			( new SwatchNamesField( $this->templates() ) )->register();
 			( new StatusReport( $this->templates() ) )->register();
 			( new OrderBox( $this->line_actions(), $this->proof_urls(), $this->templates() ) )->register();
 		}
 		$this->storefront()->register();
 		$this->opening_price()->register();
-		( new PrintedSwatches( $this->inline_products(), $this->settings() ) )->register();
+		( new PrintedSwatches( $this->inline_products(), $this->settings(), $this->swatch_looks() ) )->register();
 		$this->personalise_button()->register();
 		$this->personalised_designs()->register();
 		( new MovedAttributeLinks() )->register();
@@ -945,8 +952,17 @@ final class Plugin {
 		return $this->server_reads;
 	}
 
+	/**
+	 * How each value of a product page's attributes looks as a swatch, for
+	 * the printed swatches and the storefront script alike.
+	 */
+	public function swatch_looks(): SwatchLooks {
+		$this->swatch_looks ??= new SwatchLooks( $this->server_reads(), $this->settings() );
+		return $this->swatch_looks;
+	}
+
 	public function storefront(): Storefront {
-		$this->storefront ??= new Storefront( $this->inline_products(), $this->templates(), $this->labels(), $this->settings(), $this->file, $this->server_reads(), $this->opening_price() );
+		$this->storefront ??= new Storefront( $this->inline_products(), $this->templates(), $this->labels(), $this->settings(), $this->file, $this->server_reads(), $this->opening_price(), $this->swatch_looks() );
 		return $this->storefront;
 	}
 

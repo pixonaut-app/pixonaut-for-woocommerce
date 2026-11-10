@@ -434,11 +434,12 @@ final class ProductVariant {
 	}
 
 	/**
-	 * A label compared case and spacing aside.
+	 * A label compared case and spacing aside, as a product's attributes
+	 * name a blank's options and their values.
 	 *
 	 * @param string $label A label.
 	 */
-	private static function normalise( string $label ): string {
+	public static function normalise( string $label ): string {
 		return mb_strtolower( (string) preg_replace( '/\s+/u', ' ', trim( $label ) ) );
 	}
 

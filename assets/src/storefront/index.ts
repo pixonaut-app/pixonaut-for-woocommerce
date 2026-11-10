@@ -9,6 +9,7 @@ import { reportUnavailable } from './report';
 import { loadSdk } from './sdk-loader';
 import { readSettings } from './settings';
 import { drawStepNumbers } from './step-numbers';
+import { readSwatchLooks } from './swatch-looks';
 import { markThemeLook, readThemeLook, themeMountOptions } from './theme-look';
 import './storefront.css';
 import './form-placeholder.css';
@@ -41,7 +42,10 @@ domReady(() => {
 			navigate: (url) => window.location.assign(url),
 			...(settings.themeAccent ? { themeOptions: themeMountOptions } : {}),
 			...(settings.attributeSwatches
-				? { attributeSwatches: drawAttributeSwatches }
+				? {
+						attributeSwatches: (part: HTMLElement) =>
+							drawAttributeSwatches(part, readSwatchLooks(container)),
+					}
 				: {}),
 			...(settings.debug
 				? {

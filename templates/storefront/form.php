@@ -58,8 +58,12 @@
  * by field name, which the script keeps it for while the form holds them; left
  * out, it shows the product's own as soon as the form holds no variation.
  *
+ * `data-pixonaut-swatches` holds how the values of the product's attributes
+ * look as swatches (`SwatchLooks`), by field name: whether the attribute's
+ * swatches show their names, and each value's colours or picture.
+ *
  * @package Pixonaut\WooCommerce
- * @version 0.1.0
+ * @version 1.4.0
  *
  * @var int                                 $product_id      The product.
  * @var array<string, array<string, mixed>> $mounts          Mount options by side key; empty when personalisation is unavailable.
@@ -83,11 +87,12 @@
  * @var string                              $product_price   The product's own price HTML when the page prints its opening variation's; empty otherwise.
  * @var array<string, string>               $opening_choice  The attribute values the page prints the opening variation's price for, by field name; left out or empty when it prints the product's own.
  * @var string[]                            $look            The theme presets the designer takes its look from (`ThemeLook`).
+ * @var array<string, array<string, mixed>> $swatches        How each attribute's values look as swatches, by field name; left out or empty for none.
  */
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<div class="pixonaut-form" data-pixonaut-product="<?php echo esc_attr( (string) $product_id ); ?>" data-pixonaut-field="<?php echo esc_attr( $field ); ?>"<?php echo array() === $mounts ? '' : ' data-pixonaut-mounts="' . esc_attr( (string) wp_json_encode( $mounts ) ) . '"'; ?><?php echo array() === $edit ? '' : ' data-pixonaut-edit="' . esc_attr( (string) wp_json_encode( $edit ) ) . '"'; ?><?php echo array() === $variations ? '' : ' data-pixonaut-variations="' . esc_attr( (string) wp_json_encode( (object) $variations ) ) . '"'; ?><?php echo '' === $variant ? '' : ' data-pixonaut-variant="' . esc_attr( $variant ) . '"'; ?><?php echo '' === ( $product_price ?? '' ) ? '' : ' data-pixonaut-product-price="' . esc_attr( $product_price ) . '"'; ?><?php echo array() === ( $opening_choice ?? array() ) ? '' : ' data-pixonaut-opening-choice="' . esc_attr( (string) wp_json_encode( $opening_choice ) ) . '"'; ?><?php echo array() === ( $look ?? array() ) ? '' : ' data-pixonaut-look="' . esc_attr( implode( ' ', $look ) ) . '"'; ?><?php echo false === ( $group_numbers ?? true ) ? ' data-pixonaut-group-numbers="off"' : ''; ?>>
+<div class="pixonaut-form" data-pixonaut-product="<?php echo esc_attr( (string) $product_id ); ?>" data-pixonaut-field="<?php echo esc_attr( $field ); ?>"<?php echo array() === $mounts ? '' : ' data-pixonaut-mounts="' . esc_attr( (string) wp_json_encode( $mounts ) ) . '"'; ?><?php echo array() === $edit ? '' : ' data-pixonaut-edit="' . esc_attr( (string) wp_json_encode( $edit ) ) . '"'; ?><?php echo array() === $variations ? '' : ' data-pixonaut-variations="' . esc_attr( (string) wp_json_encode( (object) $variations ) ) . '"'; ?><?php echo '' === $variant ? '' : ' data-pixonaut-variant="' . esc_attr( $variant ) . '"'; ?><?php echo '' === ( $product_price ?? '' ) ? '' : ' data-pixonaut-product-price="' . esc_attr( $product_price ) . '"'; ?><?php echo array() === ( $opening_choice ?? array() ) ? '' : ' data-pixonaut-opening-choice="' . esc_attr( (string) wp_json_encode( $opening_choice ) ) . '"'; ?><?php echo array() === ( $look ?? array() ) ? '' : ' data-pixonaut-look="' . esc_attr( implode( ' ', $look ) ) . '"'; ?><?php echo false === ( $group_numbers ?? true ) ? ' data-pixonaut-group-numbers="off"' : ''; ?><?php echo array() === ( $swatches ?? array() ) ? '' : ' data-pixonaut-swatches="' . esc_attr( (string) wp_json_encode( $swatches ) ) . '"'; ?>>
 	<p class="pixonaut-form__unavailable" role="alert"<?php echo array() === $mounts ? '' : ' hidden'; ?>><?php echo esc_html( $unavailable ); ?></p>
 	<p class="pixonaut-form__error" role="alert" hidden></p>
 	<?php $pixonaut_first = (string) array_key_first( $mounts ); ?>

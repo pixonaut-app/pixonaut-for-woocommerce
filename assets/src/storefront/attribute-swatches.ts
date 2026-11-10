@@ -8,8 +8,16 @@
  * swatches redraw whenever the field changes: a choice, a reset, or the
  * options the other choices leave available. A click on the chosen swatch
  * clears the attribute, as the block form's own chips do, so a customer
- * whose choices leave no other option available can start again.
+ * whose choices leave no other option available can start again. A value
+ * Pixonaut draws as a colour or a picture is drawn as it (`swatch-looks.ts`).
  */
+
+import {
+	type AttributeLooks,
+	drawSwatchFace,
+	type SwatchLooks,
+	showChosenName,
+} from './swatch-looks';
 
 /** One option of an attribute, as its field offers it now. */
 export type AttributeChoice = {
@@ -31,6 +39,9 @@ type ThemeField = {
 	clear: () => void;
 	/** The id of the attribute's name the field is labelled by; null for none. */
 	labelId: () => string | null;
+	/** The name the attribute is posted as, `attribute_pa_frame`; null when
+	 *  the field has none. */
+	name: string | null;
 };
 
 /** The block form's element of one attribute. */
@@ -47,6 +58,10 @@ const BLOCK_NAME_SELECTOR =
 
 /** The classic form's field of one attribute. */
 const CLASSIC_SELECT_SELECTOR = 'select[name^="attribute_"]';
+
+/** The block form's posted field of one attribute, which its chips or
+ *  dropdown set. */
+const BLOCK_POSTED_SELECTOR = 'input[name^="attribute_"]';
 
 /** On the theme's field once swatches stand in for it; the stylesheet
  *  hides it. */
@@ -95,14 +110,20 @@ export function removePrintedSwatches(root: HTMLElement): void {
 
 /**
  * Draws swatches for every attribute field in `root` (a part of the
- * add-to-cart form the designer draws in its form) that has none yet.
- * Returns a function that takes them away again and shows the fields as
- * the theme rendered them, for when the designer gives the part back.
+ * add-to-cart form the designer draws in its form) that has none yet, each
+ * value in its look from `looks`, by the field's posted name. Returns a
+ * function that takes them away again and shows the fields as the theme
+ * rendered them, for when the designer gives the part back.
  */
-export function drawAttributeSwatches(root: HTMLElement): () => void {
+export function drawAttributeSwatches(
+	root: HTMLElement,
+	looks: SwatchLooks = {},
+): () => void {
 	const removers = themeFields(root)
 		.filter((field) => !field.element.classList.contains(REPLACED_CLASS))
-		.map(swatchesFor);
+		.map((field) =>
+			swatchesFor(field, field.name === null ? undefined : looks[field.name]),
+		);
 	return () => {
 		for (const remove of removers) {
 			remove();
@@ -122,17 +143,22 @@ function themeFields(root: HTMLElement): ThemeField[] {
 		const chips = block.querySelector<HTMLElement>(BLOCK_CHIPS_SELECTOR);
 		const select = block.querySelector('select');
 		const nameId = () => block.querySelector(BLOCK_NAME_SELECTOR)?.id || null;
+		const posted =
+			block.querySelector<HTMLInputElement>(BLOCK_POSTED_SELECTOR)?.name ??
+			null;
 		if (chips !== null) {
-			fields.push(chipsField(chips, nameId));
+			fields.push(chipsField(chips, nameId, posted));
 		} else if (select !== null) {
-			fields.push(selectField(select, nameId));
+			fields.push(selectField(select, nameId, posted));
 		}
 	}
 	for (const select of root.querySelectorAll<HTMLSelectElement>(
 		CLASSIC_SELECT_SELECTOR,
 	)) {
 		if (select.closest(BLOCK_ATTRIBUTE_SELECTOR) === null) {
-			fields.push(selectField(select, () => classicLabelId(select)));
+			fields.push(
+				selectField(select, () => classicLabelId(select), select.name),
+			);
 		}
 	}
 	return fields;
@@ -146,6 +172,7 @@ function themeFields(root: HTMLElement): ThemeField[] {
 function selectField(
 	select: HTMLSelectElement,
 	labelId: () => string | null,
+	name: string | null,
 ): ThemeField {
 	const labels = new Map<string, string>();
 	const offered = () =>
@@ -179,6 +206,7 @@ function selectField(
 		pick: (value) => choose(value),
 		clear: () => choose(''),
 		labelId,
+		name,
 	};
 }
 
@@ -188,6 +216,7 @@ function selectField(
 function chipsField(
 	chips: HTMLElement,
 	labelId: () => string | null,
+	name: string | null,
 ): ThemeField {
 	const each = () =>
 		Array.from(chips.querySelectorAll<HTMLButtonElement>(BLOCK_CHIP_SELECTOR));
@@ -211,6 +240,7 @@ function chipsField(
 		},
 		clear: () => each().find(isChecked)?.click(),
 		labelId,
+		name,
 	};
 }
 
@@ -234,9 +264,10 @@ function classicLabelId(select: HTMLSelectElement): string | null {
 	return label.id;
 }
 
-/** Puts the swatches of `field` after it, hides it, and keeps them drawn
- *  as it changes. Returns a function that takes them away again. */
-function swatchesFor(field: ThemeField): () => void {
+/** Puts the swatches of `field` after it, each value in its look from
+ *  `looks`, hides it, and keeps them drawn as it changes. Returns a
+ *  function that takes them away again. */
+function swatchesFor(field: ThemeField, looks?: AttributeLooks): () => void {
 	const document = field.element.ownerDocument;
 	const group = document.createElement('div');
 	group.className = GROUP_CLASS;
@@ -245,7 +276,20 @@ function swatchesFor(field: ThemeField): () => void {
 	if (labelId !== null) {
 		group.setAttribute('aria-labelledby', labelId);
 	}
-	const draw = () => drawSwatches(group, field.choices());
+	// With the names left out, the chosen one shows beside the attribute's.
+	const nameBeside = looks !== undefined && !looks.names;
+	const label = () =>
+		labelId === null ? null : document.getElementById(labelId);
+	const draw = () => {
+		const choices = field.choices();
+		drawSwatches(group, choices, looks);
+		if (nameBeside) {
+			showChosenName(
+				label(),
+				choices.find((choice) => choice.chosen)?.label ?? null,
+			);
+		}
+	};
 	group.addEventListener('click', (event) => {
 		const swatch = (event.target as Element).closest<HTMLElement>(
 			`.${SWATCH_CLASS}`,
@@ -320,12 +364,20 @@ function swatchesFor(field: ThemeField): () => void {
 		}
 		group.remove();
 		field.element.classList.remove(REPLACED_CLASS);
+		if (nameBeside) {
+			showChosenName(label(), null);
+		}
 	};
 }
 
-/** Draws `choices` in `group`, reusing the swatches it holds. One swatch
- *  takes the focus from Tab: the chosen one, else the first available. */
-function drawSwatches(group: HTMLElement, choices: AttributeChoice[]): void {
+/** Draws `choices` in `group`, in their looks, reusing the swatches it
+ *  holds. One swatch takes the focus from Tab: the chosen one, else the
+ *  first available. */
+function drawSwatches(
+	group: HTMLElement,
+	choices: AttributeChoice[],
+	looks?: AttributeLooks,
+): void {
 	const document = group.ownerDocument;
 	const kept = new Map(
 		Array.from(group.querySelectorAll<HTMLElement>(`.${SWATCH_CLASS}`)).map(
@@ -344,7 +396,12 @@ function drawSwatches(group: HTMLElement, choices: AttributeChoice[]): void {
 		swatch.setAttribute('role', 'radio');
 		swatch.setAttribute('aria-checked', String(choice.chosen));
 		swatch.dataset.value = choice.value;
-		swatch.textContent = choice.label;
+		drawSwatchFace(
+			swatch,
+			choice.label,
+			looks?.looks[choice.value],
+			looks?.names ?? true,
+		);
 		if (choice.available) {
 			swatch.removeAttribute('aria-disabled');
 		} else {

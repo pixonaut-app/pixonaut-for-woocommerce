@@ -113,6 +113,7 @@ final class Storefront {
 	 * @param string            $plugin_file Absolute path of the main plugin file.
 	 * @param ServerReads       $server      Reads what the designer starts from, before the page prints.
 	 * @param OpeningPrice|null $opening_price Prints a variable product's price as its opening variation's; null leaves the range.
+	 * @param SwatchLooks|null  $swatch_looks  How each attribute value looks as a swatch; null draws every value as its name.
 	 */
 	public function __construct(
 		private readonly InlineProducts $products,
@@ -122,6 +123,7 @@ final class Storefront {
 		private readonly string $plugin_file,
 		private readonly ServerReads $server,
 		private readonly ?OpeningPrice $opening_price = null,
+		private readonly ?SwatchLooks $swatch_looks = null,
 	) {
 	}
 
@@ -272,6 +274,7 @@ final class Storefront {
 				'opening_choice'  => null === $this->opening_price ? array() : $this->opening_price->opening_choice( $product ),
 				'look'            => ThemeLook::presets(),
 				'group_numbers'   => GroupNumbers::shown( $designer->config, $this->settings ),
+				'swatches'        => array() === $mounts || null === $this->swatch_looks || ! AttributeOptions::swatches( $this->settings ) ? array() : $this->swatch_looks->of( $designer ),
 			)
 		);
 	}
