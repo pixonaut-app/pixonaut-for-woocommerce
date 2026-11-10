@@ -11,6 +11,7 @@ import { registerControl } from './control';
 import { registerAreasControl } from './control-areas';
 import { registerDesignerPixelControl } from './control-designer-pixel';
 import { registerTemplateBackgroundControl } from './control-template-background';
+import { registerTemplateFieldKeyControl } from './control-template-field-key';
 import { registerTemplateRatioControl } from './control-template-ratio';
 import { registerCorrectionPage } from './correction-page';
 import { registerHostedDesigner } from './designer';
@@ -250,6 +251,7 @@ export function createFake(options: FakeOptions = {}): Fake {
 	registerDesignerPixelControl(app, fake);
 	registerTemplateRatioControl(app, fake);
 	registerTemplateBackgroundControl(app, fake);
+	registerTemplateFieldKeyControl(app, fake);
 	registerWebhookControl(app, fake);
 	registerMoveOrder(app, fake);
 	registerHoldOrder(app, fake);

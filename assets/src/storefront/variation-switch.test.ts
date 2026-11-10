@@ -13,6 +13,7 @@ import {
 	productPage,
 	requestError,
 	settle,
+	TemplateChangedError,
 	TWO_SIDES,
 	VariantUnavailableError,
 } from './test-support';
@@ -58,6 +59,9 @@ const VARIATIONS = {
 		variant: 'v_hoodie',
 	},
 	'14': personalised('P', { front: { ...FRONT, templateId: 'mini-poster@1' } }),
+	'28': personalised('Q', {
+		front: { ...FRONT, templateId: 'mini-poster@1', printSizes: [1] },
+	}),
 	'15': { state: 'plain', attributes: { attribute_size: '' } },
 	'16': personalised('S', { front: { ...FRONT, views: ['front_flat'] } }),
 	'17': personalised('S', {
@@ -477,11 +481,59 @@ describe('ProductDesigner on a variable product', () => {
 		expect(options(mount, 2)).not.toHaveProperty('drawAtTemplateRatio');
 	});
 
-	it('mounts the side again on the customer’s values for another template', async () => {
+	it('switches the template in the mounted designer for another template', async () => {
+		const { form, mount, sdkDesigner } = start();
+		await settle();
+
+		await choose(form, '14');
+
+		expect(sdkDesigner.setTemplate).toHaveBeenCalledExactlyOnceWith(
+			'mini-poster@1',
+		);
+		expect(sdkDesigner.destroy).not.toHaveBeenCalled();
+		expect(sdkDesigner.setPrintSize).not.toHaveBeenCalled();
+		expect(mount).toHaveBeenCalledOnce();
+	});
+
+	it('switches the print size once the template is switched', async () => {
+		const { form, sdkDesigner } = start();
+		await settle();
+
+		await choose(form, '28');
+
+		expect(sdkDesigner.setTemplate).toHaveBeenCalledExactlyOnceWith(
+			'mini-poster@1',
+		);
+		expect(sdkDesigner.setPrintSize).toHaveBeenCalledExactlyOnceWith(1);
+		expect(sdkDesigner.setTemplate.mock.invocationCallOrder[0]).toBeLessThan(
+			sdkDesigner.setPrintSize.mock.invocationCallOrder[0] ?? 0,
+		);
+	});
+
+	it('switches the template back after a size switch that failed once the template had switched', async () => {
+		const { form, sdkDesigner } = start();
+		await settle();
+		sdkDesigner.setPrintSize.mockImplementationOnce(() => {
+			throw new Error('The size could not be drawn.');
+		});
+		await choose(form, '28');
+
+		await choose(form, '11');
+
+		expect(sdkDesigner.setTemplate.mock.calls).toEqual([
+			['mini-poster@1'],
+			['mini-tee@2'],
+		]);
+	});
+
+	it('mounts the side again on the customer’s values when the template cannot be switched in place', async () => {
 		const { form, mount, sdkDesigner } = start();
 		await settle();
 		const values = { headline: { text: 'Hello' } };
 		sdkDesigner.getState.mockReturnValue({ templateId: 'mini-tee@2', values });
+		sdkDesigner.setTemplate.mockRejectedValueOnce(
+			requestError(503, 'unavailable'),
+		);
 
 		await choose(form, '14');
 
@@ -493,6 +545,22 @@ describe('ProductDesigner on a variable product', () => {
 			placementId: 'front',
 			initialValues: values,
 		});
+	});
+
+	it('approves again when a switch changed the template under the proof', async () => {
+		const { form, button, sdkDesigner } = start();
+		await settle();
+		const sent = submitted(form);
+		sdkDesigner.approve
+			.mockRejectedValueOnce(new TemplateChangedError())
+			.mockResolvedValue(PROOF);
+		await choose(form, '14');
+
+		button.click();
+		await settle();
+
+		expect(sdkDesigner.approve).toHaveBeenCalledTimes(2);
+		expect(sent).toEqual([{ front: PROOF.proofToken, back: 'null' }]);
 	});
 
 	it('keeps the frame in the template’s shape on a variation on no blank, and gives the printed one back on a blank', async () => {
@@ -1364,7 +1432,7 @@ describe('ProductDesigner on a variable product', () => {
 				refuse = reject;
 			}),
 		);
-		await choose(form, '14');
+		await choose(form, '13');
 
 		await choose(form, '11');
 		refuse(requestError(422, 'unknown_placement'));

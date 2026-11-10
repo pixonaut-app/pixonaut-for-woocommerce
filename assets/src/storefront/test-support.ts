@@ -18,6 +18,7 @@ export class WasmBootError extends Error {}
 export class WasmIntegrityError extends Error {}
 export class WasmVersionMismatchError extends Error {}
 export class PlacementChangedError extends Error {}
+export class TemplateChangedError extends Error {}
 export class UnreadableDocumentError extends Error {}
 export class VariantUnavailableError extends Error {
 	constructor(
@@ -41,6 +42,7 @@ export type FakeDesigner = {
 	setLocked: ReturnType<typeof vi.fn>;
 	destroy: ReturnType<typeof vi.fn>;
 	setPrintSize: ReturnType<typeof vi.fn>;
+	setTemplate: ReturnType<typeof vi.fn>;
 	setHostItemComplete: ReturnType<typeof vi.fn>;
 	reportPreviewOpened: Mock<() => void>;
 	wasPreviewOpened: Mock<() => boolean>;
@@ -103,6 +105,7 @@ export function fakeDesigner({
 		setLocked: vi.fn(),
 		destroy: vi.fn(),
 		setPrintSize: vi.fn(),
+		setTemplate: vi.fn().mockResolvedValue(undefined),
 		setHostItemComplete: vi.fn(),
 		getVariant: vi.fn(() => variant),
 		getVariants: vi.fn(() =>
@@ -182,6 +185,7 @@ export function fakeSdk(designer: FakeDesigner = fakeDesigner()) {
 		WasmIntegrityError,
 		WasmVersionMismatchError,
 		PlacementChangedError,
+		TemplateChangedError,
 		UnreadableDocumentError,
 		VariantUnavailableError,
 	} as unknown as PixonautSdk;
