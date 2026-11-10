@@ -24,8 +24,8 @@ export function variantRef(
 /**
  * Shows variant `ref` in each designer that does not show it yet. False
  * once Pixonaut cannot show it (the SDK's `VariantUnavailableError`: an
- * unknown or retired variant, or one without a photo); any other failure
- * rejects.
+ * unknown or retired variant); any other failure rejects. A variant no view
+ * has a photo of is shown on the Design view.
  */
 export async function showVariant(
 	designers: Iterable<PixonautDesigner>,

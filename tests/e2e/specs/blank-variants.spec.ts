@@ -49,11 +49,16 @@ test('a variation without a blank variant, or with a retired one, cannot be boug
 		customer.locator('#pixonaut-form-front *').first(),
 	).toBeVisible();
 	await expect(customer.getByText(UNAVAILABLE)).toBeHidden();
-	// The designer cannot show a variant no view has a photo of.
-	for (const unavailable of ['Heather', 'Sold', 'Retired', 'Unknown']) {
+	for (const unavailable of ['Sold', 'Retired', 'Unknown']) {
 		await size.selectOption(unavailable);
 		await expect(customer.getByText(UNAVAILABLE), unavailable).toBeVisible();
 	}
+	// A variant no view has a photo of is shown on the Design view.
+	await size.selectOption('Heather');
+	await expect(customer.getByText(UNAVAILABLE)).toBeHidden();
+	await expect(
+		customer.locator('#pixonaut-form-front *').first(),
+	).toBeVisible();
 
 	await admin.goto(`/wp-admin/post.php?post=${id}&action=edit`);
 	const notice = admin.locator('.notice', { hasText: name });
