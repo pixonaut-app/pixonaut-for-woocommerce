@@ -43,6 +43,21 @@ final class SplitCards {
 	public const ATTRIBUTE_HOOK = 'pixonaut_wc_split_cards_attribute';
 
 	/**
+	 * Prefix of the MySQL lock one product's cards are written under.
+	 */
+	private const LOCK_PREFIX = 'pixonaut_split_card_';
+
+	/**
+	 * How long a write waits for another one of the same product's cards.
+	 */
+	private const LOCK_WAIT_SECONDS = 5;
+
+	/**
+	 * What MySQL's `GET_LOCK()` answers once the lock is taken.
+	 */
+	private const LOCK_TAKEN = '1';
+
+	/**
 	 * Hook priority after WooCommerce's own handler of a restored product,
 	 * which restores its variations.
 	 */
@@ -163,17 +178,33 @@ final class SplitCards {
 	 * @param int $product_id A product.
 	 */
 	public static function write( int $product_id ): void {
-		unset( self::$variations[ $product_id ] );
-		$product = $product_id > 0 ? wc_get_product( $product_id ) : null;
-		$values  = $product instanceof WC_Product ? self::values( $product ) : array();
-		$stored  = array_map( 'intval', get_post_meta( $product_id, self::META, false ) );
-		if ( $stored === $values ) {
+		global $wpdb;
+		// Two requests rebuilding the rows at once would each add them, so a
+		// write waits for one already running, and reads the product only
+		// once it holds the lock. One still running after the wait is taken
+		// to be stuck: this write is skipped, and the product's next change
+		// writes its cards.
+		$lock = self::LOCK_PREFIX . md5( $wpdb->prefix . $product_id );
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a lock, never cached.
+		if ( self::LOCK_TAKEN !== $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', $lock, self::LOCK_WAIT_SECONDS ) ) ) {
 			return;
 		}
-		delete_post_meta( $product_id, self::META );
-		foreach ( $values as $term_id ) {
-			add_post_meta( $product_id, self::META, (string) $term_id );
+		try {
+			unset( self::$variations[ $product_id ] );
+			$product = $product_id > 0 ? wc_get_product( $product_id ) : null;
+			$values  = $product instanceof WC_Product ? self::values( $product ) : array();
+			$stored  = array_map( 'intval', get_post_meta( $product_id, self::META, false ) );
+			if ( $stored === $values ) {
+				return;
+			}
+			delete_post_meta( $product_id, self::META );
+			foreach ( $values as $term_id ) {
+				add_post_meta( $product_id, self::META, (string) $term_id );
+			}
+		} finally {
+			$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock ) );
 		}
+		// phpcs:enable
 	}
 
 	/**
