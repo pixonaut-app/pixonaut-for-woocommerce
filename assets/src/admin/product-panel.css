@@ -973,13 +973,16 @@
 :is(#pixonaut_product_data, .pixonaut-variation-panel)
 	.pixonaut-size-custom
 	input {
-	width: 5.5em;
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce sizes the panel's text inputs with !important. */
+	width: 4.5em !important;
+	padding: 0 6px;
 }
 
 :is(#pixonaut_product_data, .pixonaut-variation-panel)
 	.pixonaut-size-custom
 	input.pixonaut-size-label {
-	width: 9em;
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce sizes the panel's text inputs with !important. */
+	width: 7em !important;
 }
 
 :is(#pixonaut_product_data, .pixonaut-variation-panel)
