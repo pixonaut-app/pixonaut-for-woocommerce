@@ -123,11 +123,56 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 		$this->assertSame( 3, substr_count( $html, 'role="radiogroup"' ), 'the image without a set, and each set' );
 		$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[0\]\[kind\]" value="mockup"\s+checked#', $html );
 		$this->assertMatchesRegularExpression( '#name="pixonaut_showcase_images\[1\]\[kind\]" value="preview"\s+checked#', $html );
-		$this->assertStringContainsString( 'On the product photo', $html );
+		$this->assertStringContainsString( 'Main photo', $html );
 		$this->assertStringContainsString( 'The design alone, without the product.', $html );
 		$this->assertStringContainsString( 'src="' . self::PHOTO_URL . '"', $html );
 		$this->assertStringContainsString( 'src="' . self::PREVIEW_URL . '"', $html );
 		$this->assertStringNotContainsString( 'pixonaut-showcase-images__flat', $html );
+	}
+
+	public function test_each_card_shows_its_picture_on_the_photo_it_is_drawn_on_or_as_the_design_alone(): void {
+		$product = $this->product( self::BLANK_ID );
+		ShowcaseImages::save( $product, array( self::SETS[1] + array( 'kind' => ShowcaseImages::PREVIEW ) ) );
+		$this->answer_sets( self::SETS );
+		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/blanks/{id}/mockups', 200 ), 'application/json' );
+
+		$cards = $this->cards( $this->field->html( $this->reload( $product ) ) );
+
+		$anna = $cards['showcase-anna'];
+		$this->assertStringNotContainsString( 'is-flat', $anna['thumb'] );
+		$this->assertStringContainsString( 'src="' . self::PHOTO_URL . '"', $anna['thumb'] );
+		$this->assertStringContainsString( 'src="' . self::BASE_URL . '/i/showcase-anna"', $anna['thumb'] );
+		$team = $cards['showcase-team'];
+		$this->assertStringContainsString( 'is-flat', $team['thumb'] );
+		$this->assertStringContainsString( 'src="' . self::BASE_URL . '/i/showcase-team"', $team['thumb'] );
+		// Drawn as the design alone, a set looks like its own preview.
+		$this->assertMatchesRegularExpression( '#pixonaut-showcase-kind--flat.*?src="' . preg_quote( self::BASE_URL . '/i/showcase-team', '#' ) . '"#s', $team['html'] );
+		$own = $cards['own'];
+		$this->assertStringContainsString( 'src="' . self::PREVIEW_URL . '"', $own['thumb'] );
+	}
+
+	public function test_the_first_ticked_set_is_the_product_image_and_the_others_go_to_the_gallery(): void {
+		$product = $this->product();
+		ShowcaseImages::save( $product, array( self::SETS[1] + array( 'kind' => ShowcaseImages::PREVIEW ), self::SETS[0] + array( 'kind' => ShowcaseImages::PREVIEW ) ) );
+		$this->answer_sets( self::SETS );
+
+		$cards = $this->cards( $this->field->html( $this->reload( $product ) ) );
+
+		// In the order the template lists them, as they are saved.
+		$this->assertSame( 'Product image', $cards['showcase-anna']['badge'] );
+		$this->assertSame( 'Gallery', $cards['showcase-team']['badge'] );
+		$this->assertSame( '', $cards['own']['badge'] );
+	}
+
+	public function test_with_no_set_ticked_the_templates_own_picture_is_the_product_image(): void {
+		$this->answer_sets( self::SETS );
+
+		$html  = $this->field->html( $this->product() );
+		$cards = $this->cards( $html );
+
+		$this->assertStringContainsString( 'pixonaut-picture-cards--none-ticked', $html );
+		$this->assertSame( 'Product image', $cards['own']['badge'] );
+		$this->assertSame( '', $cards['showcase-anna']['badge'] );
 	}
 
 	public function test_on_a_blank_without_a_photo_for_the_side_every_set_is_flat(): void {
@@ -141,7 +186,7 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 
 		$html = $this->field->html( $this->reload( $product ) );
 
-		$this->assertStringNotContainsString( 'On the product photo', $html );
+		$this->assertStringNotContainsString( 'Main photo', $html );
 		$this->assertStringNotContainsString( 'type="radio"', $html );
 		$this->assertMatchesRegularExpression( '#type="hidden" name="pixonaut_showcase_images\[0\]\[kind\]" value="preview"#', $html );
 		$this->assertStringContainsString( 'The blank has no product photo for this side', $html );
@@ -193,7 +238,7 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 		$this->assertCount( 1, $this->recorder->requests, 'no blank to read' );
 		$this->assertStringNotContainsString( 'type="radio"', $html );
 		$this->assertMatchesRegularExpression( '#type="hidden" name="pixonaut_showcase_images\[1\]\[kind\]" value="preview"#', $html );
-		$this->assertStringContainsString( 'The product has no blank', $html );
+		$this->assertStringContainsString( 'Without a blank, each picture is the design alone.', $html );
 	}
 
 	public function test_while_the_blanks_photos_cannot_be_read_both_are_offered(): void {
@@ -203,7 +248,7 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 
 		$html = $this->field->html( $product );
 
-		$this->assertStringContainsString( 'On the product photo', $html );
+		$this->assertStringContainsString( 'Main photo', $html );
 		$this->assertStringNotContainsString( 'src="' . self::PHOTO_URL . '"', $html );
 	}
 
@@ -375,6 +420,32 @@ final class ShowcaseFieldTest extends WP_UnitTestCase {
 			),
 			'application/json'
 		);
+	}
+
+	/**
+	 * The field's cards by set id, `own` for the template's own picture:
+	 * each card's markup, its thumbnail's, and its badge's text, empty when
+	 * the badge is hidden.
+	 *
+	 * @param string $html The field.
+	 * @return array<string, array{html: string, thumb: string, badge: string}>
+	 */
+	private function cards( string $html ): array {
+		$cards = array();
+		foreach ( (array) preg_split( '#<li class="pixonaut-picture-card#', $html ) as $index => $part ) {
+			$card = (string) $part;
+			if ( 0 === $index ) {
+				continue;
+			}
+			$id = str_starts_with( $card, ' pixonaut-picture-card--own' ) ? 'own' : ( preg_match( '#\[id\]" value="([^"]+)"#', $card, $found ) ? $found[1] : '' );
+			preg_match( '#<span class="pixonaut-picture-card__thumb.*?<span class="pixonaut-picture-card__badge"\s*(hidden)?>([^<]*)</span>#s', $card, $thumb );
+			$cards[ $id ] = array(
+				'html'  => $card,
+				'thumb' => $thumb[0] ?? '',
+				'badge' => '' === ( $thumb[1] ?? '' ) ? trim( $thumb[2] ?? '' ) : '',
+			);
+		}
+		return $cards;
 	}
 
 	/**

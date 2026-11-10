@@ -461,49 +461,84 @@
 :is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-view label {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
 	gap: 4px;
-	width: auto;
+	width: 96px;
 	margin: 0;
 	float: none;
+	cursor: pointer;
+}
+
+/* A view's photo, 96 px: bordered blue while ticked, washed out while other
+ * views are ticked and it is not, so the tiles show what customers see. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-view__thumb {
+	position: relative;
+	display: block;
+	box-sizing: border-box;
+	width: 96px;
+	height: 96px;
+	border: 1px solid #dcdcde;
+	background: #f6f7f7;
+	overflow: hidden;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-view__thumb--design {
+	background: #fff;
 }
 
 :is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-view img {
-	width: 64px;
-	height: 64px;
-	object-fit: cover;
-	border: 1px solid #ddd;
-}
-
-/* The product images field: one row per showcase set, its tick, name and drawing. */
-#pixonaut_product_data .pixonaut-showcase-images__list {
-	margin: 0 12px 8px;
-	padding: 0;
-	list-style: none;
-}
-
-#pixonaut_product_data .pixonaut-showcase-images > .description {
 	display: block;
-	margin: 0 12px 8px;
-	padding: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
-#pixonaut_product_data .pixonaut-showcase-image {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 4px 12px;
-	margin: 0 0 6px;
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-view__thumb--design
+	img {
+	object-fit: contain;
 }
 
-#pixonaut_product_data .pixonaut-showcase-image > label {
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-view:has(input:checked)
+	.pixonaut-view__thumb {
+	border: 2px solid #2271b1;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-views:has(.pixonaut-views__list input:checked)
+	.pixonaut-view:not(:has(input:checked))
+	.pixonaut-view__thumb {
+	opacity: 0.45;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-view__name {
 	display: flex;
-	align-items: center;
-	gap: 6px;
-	width: auto;
-	min-width: 12em;
-	margin: 0;
-	float: none;
+	align-items: flex-start;
+	gap: 4px;
+}
+
+/* The badge on the view the designer opens on, and on a product picture's role. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+:is(.pixonaut-view__opens, .pixonaut-picture-card__badge) {
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	padding: 0 6px;
+	border-radius: 2px;
+	background: #2271b1;
+	color: #fff;
+	font-size: 12px;
+	line-height: 20px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	:is(.pixonaut-view__opens, .pixonaut-picture-card__badge)[hidden] {
+	display: none;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-views__intro {
+	margin: 6px 12px 6px;
 }
 
 /* What a picture is drawn on: the photo the product page starts on, each photo of the blank, or flat, each with its thumbnail. */
@@ -614,6 +649,194 @@
 #pixonaut_product_data .pixonaut-showcase-image__gone {
 	flex-basis: 100%;
 	color: #b32d2e;
+}
+
+/* The product's pictures: a card per picture, a thumbnail of it at the top. */
+#pixonaut_product_data .pixonaut-pictures > .pixonaut-field-label {
+	align-self: start;
+}
+
+#pixonaut_product_data .pixonaut-picture-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, 180px);
+	gap: 12px;
+	margin: 4px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+#pixonaut_product_data .pixonaut-picture-card {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+	margin: 0;
+	padding: 8px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+}
+
+#pixonaut_product_data
+	.pixonaut-picture-card:has(.pixonaut-picture-card__use:checked) {
+	border: 2px solid #2271b1;
+	padding: 7px;
+}
+
+/* The template's own picture: first while no set is ticked, then last. */
+#pixonaut_product_data
+	.pixonaut-picture-cards--none-ticked
+	.pixonaut-picture-card--own {
+	order: -1;
+	border: 2px solid #2271b1;
+	padding: 7px;
+}
+
+#pixonaut_product_data
+	.pixonaut-picture-cards:not(.pixonaut-picture-cards--none-ticked)
+	.pixonaut-picture-card--own {
+	border-style: dashed;
+	border-color: #c3c4c7;
+}
+
+#pixonaut_product_data .pixonaut-picture-card__thumb {
+	position: relative;
+	display: block;
+	aspect-ratio: 1;
+	border: 1px solid #dcdcde;
+	background: #fff;
+	overflow: hidden;
+}
+
+#pixonaut_product_data .pixonaut-picture-card__photo {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* On a photo, the set's preview over the photo's middle; the drawn picture
+ * places it in the photo's print area. As the design alone, it fills the tile. */
+#pixonaut_product_data .pixonaut-picture-card__preview {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 36%;
+	height: 36%;
+	object-fit: contain;
+	transform: translate(-50%, -50%);
+}
+
+#pixonaut_product_data
+	.pixonaut-picture-card__thumb.is-flat
+	.pixonaut-picture-card__preview {
+	width: 84%;
+	height: 84%;
+}
+
+#pixonaut_product_data .pixonaut-picture-card__name {
+	display: flex;
+	align-items: flex-start;
+	gap: 6px;
+	width: auto;
+	margin: 0;
+	float: none;
+	font-weight: 600;
+}
+
+#pixonaut_product_data .pixonaut-picture-card__drawn-on {
+	margin-top: 2px;
+	color: #50575e;
+	font-size: 12px;
+}
+
+#pixonaut_product_data .pixonaut-picture-card > .description {
+	margin: 0;
+	padding: 0;
+	font-size: 12px;
+}
+
+/* What a card's picture is drawn on: small photo tiles, their names short. */
+#pixonaut_product_data .pixonaut-picture-card .pixonaut-showcase-image__kinds {
+	gap: 4px;
+}
+
+#pixonaut_product_data .pixonaut-picture-card .pixonaut-showcase-kind {
+	position: relative;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	width: 36px;
+	max-width: none;
+	padding: 0;
+	border: 0;
+	background: none;
+	font-size: 11px;
+	line-height: 1.2;
+	text-align: center;
+}
+
+#pixonaut_product_data
+	.pixonaut-picture-card
+	.pixonaut-showcase-kind:has(input:checked) {
+	box-shadow: none;
+}
+
+#pixonaut_product_data
+	.pixonaut-picture-card
+	.pixonaut-showcase-kind__thumbnail {
+	box-sizing: border-box;
+	width: 36px;
+	height: 36px;
+}
+
+#pixonaut_product_data
+	.pixonaut-picture-card
+	.pixonaut-showcase-kind:has(input:checked)
+	.pixonaut-showcase-kind__thumbnail {
+	border: 2px solid #2271b1;
+}
+
+#pixonaut_product_data
+	.pixonaut-picture-card
+	.pixonaut-showcase-kind:has(input:focus-visible)
+	.pixonaut-showcase-kind__thumbnail {
+	outline: 2px solid #2271b1;
+	outline-offset: 1px;
+}
+
+#pixonaut_product_data .pixonaut-picture-card .pixonaut-showcase-kind__name {
+	font-weight: 400;
+	overflow-wrap: normal;
+}
+
+#pixonaut_product_data
+	.pixonaut-picture-card
+	.pixonaut-showcase-kind
+	.description {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* Draw again sits in Product images, under the cards. */
+#pixonaut_product_data .pixonaut-showcase-images + .pixonaut-regenerate {
+	border-top: 0;
+}
+
+#pixonaut_product_data
+	.pixonaut-regenerate__status:not(:empty)
+	+ .pixonaut-regenerate__hint {
+	display: none;
+}
+
+@media (max-width: 600px) {
+	#pixonaut_product_data .pixonaut-picture-cards {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
 }
 
 /* A side's mode that does not suit its template, or sizes its template does
@@ -1110,4 +1333,27 @@
 /* Last again, so nothing above shows what is hidden. */
 :is(#pixonaut_product_data, .pixonaut-variation-panel) [hidden] {
 	display: none;
+}
+
+/* Inputs inside the view tiles and picture cards, after the panel's own input rules. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-view__name
+	input {
+	margin: 2px 0 0;
+}
+
+#pixonaut_product_data .pixonaut-picture-card__name input {
+	margin: 2px 0 0;
+}
+
+/* The radio covers its tile, unseen, so a click on the tile picks it. */
+#pixonaut_product_data .pixonaut-picture-card .pixonaut-showcase-kind input {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
 }

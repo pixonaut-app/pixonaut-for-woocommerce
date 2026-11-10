@@ -91,7 +91,7 @@ final class PictureViewFieldTest extends WP_UnitTestCase {
 		$html = $this->field->html( $this->product() );
 
 		$this->assertSame( 1, substr_count( $html, 'role="radiogroup"' ) );
-		$this->assertStringNotContainsString( 'pixonaut-showcase-images__list', $html );
+		$this->assertStringNotContainsString( 'pixonaut-picture-card__use', $html );
 		$this->assertMatchesRegularExpression( '#name="' . ShowcaseField::VIEW_FIELD . '" value="mockup"\s+checked#', $html );
 		$this->assertStringContainsString( 'value="' . esc_attr( self::value( self::SCENE_PHOTO ) ) . '"', $html );
 		$this->assertStringContainsString( 'src="' . self::SCENE_URL . '"', $html );

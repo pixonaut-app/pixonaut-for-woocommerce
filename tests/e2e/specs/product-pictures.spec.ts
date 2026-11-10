@@ -114,15 +114,28 @@ test('the product images show the template’s showcase sets the merchant ticks'
 	await openPixonautTab(page);
 	const images = productPanel(page).locator('.pixonaut-showcase-images');
 
+	// Each set's card shows its preview, and the template's own picture
+	// leads as the product image while none is ticked.
+	const cards = images.locator('.pixonaut-picture-card');
+	await expect(cards.locator('.pixonaut-picture-card__preview')).toHaveCount(3);
+	const own = images.locator('.pixonaut-picture-card--own');
+	await expect(own.locator('.pixonaut-picture-card__badge')).toHaveText(
+		'Product image',
+	);
 	await images.getByRole('checkbox', { name: 'Anna, class of 2026' }).check();
 	await images.getByRole('checkbox', { name: 'Team photo' }).check();
+	const badges = images.locator('.pixonaut-picture-card__badge:visible');
+	await expect(badges).toHaveText(['Product image', 'Gallery']);
 	const teamPhoto = images.getByRole('radiogroup', {
 		name: 'How Team photo is drawn',
 	});
 	// Each way it can be drawn shows a thumbnail of what it is drawn from:
 	// the photo the product page starts on, each photo of the front, flat.
 	await expect(teamPhoto.locator('img')).toHaveCount(4);
-	await teamPhoto.getByRole('radio', { name: /Flat design/ }).check();
+	await teamPhoto.getByRole('radio', { name: /^Design/ }).check();
+	// Drawn as the design alone, its card shows the preview without a photo.
+	const teamCard = cards.filter({ has: teamPhoto });
+	await expect(teamCard.locator('.pixonaut-picture-card__photo')).toBeHidden();
 	const annaPhoto = images.getByRole('radiogroup', {
 		name: 'How Anna, class of 2026 is drawn',
 	});
@@ -139,9 +152,7 @@ test('the product images show the template’s showcase sets the merchant ticks'
 	await expect(
 		images.getByRole('checkbox', { name: 'Anna, class of 2026' }),
 	).toBeChecked();
-	await expect(
-		teamPhoto.getByRole('radio', { name: /Flat design/ }),
-	).toBeChecked();
+	await expect(teamPhoto.getByRole('radio', { name: /^Design/ })).toBeChecked();
 	await expect(
 		annaPhoto.getByRole('radio', { name: 'Front, dark' }),
 	).toBeChecked();
@@ -218,8 +229,18 @@ test('Regenerate in background draws a variable product’s pictures at once and
 	await openPixonautTab(page);
 	// Two showcase sets: the product image, and a gallery picture.
 	const images = productPanel(page).locator('.pixonaut-showcase-images');
+	// Each set's card shows its preview, and the template's own picture
+	// leads as the product image while none is ticked.
+	const cards = images.locator('.pixonaut-picture-card');
+	await expect(cards.locator('.pixonaut-picture-card__preview')).toHaveCount(3);
+	const own = images.locator('.pixonaut-picture-card--own');
+	await expect(own.locator('.pixonaut-picture-card__badge')).toHaveText(
+		'Product image',
+	);
 	await images.getByRole('checkbox', { name: 'Anna, class of 2026' }).check();
 	await images.getByRole('checkbox', { name: 'Team photo' }).check();
+	const badges = images.locator('.pixonaut-picture-card__badge:visible');
+	await expect(badges).toHaveText(['Product image', 'Gallery']);
 	await publish(page);
 	await runJobs(request, { hook: VARIATIONS_HOOK });
 	await runJobs(request, { hook: PICTURE_HOOK });

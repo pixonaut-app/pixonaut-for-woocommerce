@@ -509,7 +509,7 @@ The server builds each side's options, which the PHP filter
 `pixonaut_wc_storefront_mount_options` changes ([Hooks](../hooks/)):
 `publishableKey`, `apiBase`, `templateId`, `blankId`, `placementId`,
 `placements` and `views` (with a blank), `initialView` (with a blank, when
-the product names a **Starting view**), `printSizes` (with a size menu),
+the product names an **Opens on** view), `printSizes` (with a size menu),
 `selectedPrintSizeIndex` (the size marked **Starts selected**, else 0), `locale` (from the **Designer
 language** setting, absent for the workspace's default; see
 [Designer language](#designer-language)) and `layout` (`page` or `steps`, from the product's

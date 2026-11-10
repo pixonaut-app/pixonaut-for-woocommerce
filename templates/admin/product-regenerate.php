@@ -1,7 +1,7 @@
 <?php
 /**
  * The Regenerate in background and Regenerate now buttons in the Pixonaut
- * tab, a spinner while the pictures are drawn in the background, and the
+ * tab, under Product images as Draw again, a spinner while the pictures are drawn in the background, and the
  * line saying how the drawing went. Regenerate now asks for confirmation
  * and shows its progress in a dialog (`admin/regenerate-now.php`); it stays
  * on while the background drawing runs, so pictures stuck in the queue can
@@ -35,11 +35,13 @@ $pixonaut_states = array(
 	<?php endforeach; ?>
 	>
 	<p class="form-field">
+		<span class="pixonaut-field-label"><?php /* translators: Label of the buttons that draw a product's Pixonaut pictures again, in the Pixonaut tab of the product edit page. */ esc_html_e( 'Draw again', 'pixonaut-for-woocommerce' ); ?></span>
 		<span class="pixonaut-field-control">
-			<button type="button" class="button pixonaut-regenerate__button"<?php disabled( \Pixonaut\WooCommerce\Admin\RegeneratePictures::DRAWING, $state ); ?>><?php /* translators: Bulk and row action on the admin products list, and button in the product's Pixonaut tab: queues the product's Pixonaut pictures to be drawn again by background jobs. */ esc_html_e( 'Regenerate in background', 'pixonaut-for-woocommerce' ); ?></button>
 			<button type="button" class="button pixonaut-regenerate__now" data-product-id="<?php echo esc_attr( (string) $product_id ); ?>"><?php /* translators: Bulk and row action on the admin products list, and button in the product's Pixonaut tab: draws the product's Pixonaut pictures again right away, while the page stays open. */ esc_html_e( 'Regenerate now', 'pixonaut-for-woocommerce' ); ?></button>
+			<button type="button" class="button pixonaut-regenerate__button"<?php disabled( \Pixonaut\WooCommerce\Admin\RegeneratePictures::DRAWING, $state ); ?>><?php /* translators: Bulk and row action on the admin products list, and button in the product's Pixonaut tab: queues the product's Pixonaut pictures to be drawn again by background jobs. */ esc_html_e( 'Regenerate in background', 'pixonaut-for-woocommerce' ); ?></button>
 			<span class="spinner pixonaut-regenerate__spinner<?php echo \Pixonaut\WooCommerce\Admin\RegeneratePictures::DRAWING === $state ? ' is-active' : ''; ?>"></span>
 		</span>
 		<span class="description pixonaut-regenerate__status" role="status" aria-live="polite"><?php echo \Pixonaut\WooCommerce\Admin\RegeneratePictures::DRAWING === $state ? esc_html( $pixonaut_states[ \Pixonaut\WooCommerce\Admin\RegeneratePictures::DRAWING ] ) : ''; ?></span>
+		<span class="description pixonaut-regenerate__hint"><?php esc_html_e( 'Pictures are drawn again by themselves when the template is republished.', 'pixonaut-for-woocommerce' ); ?></span>
 	</p>
 </div>

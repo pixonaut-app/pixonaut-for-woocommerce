@@ -390,6 +390,8 @@ final class ProductPanel {
 			'views'           => $views,
 			'chosen_views'    => $config->views,
 			'initial_view'    => $config->initial_view ?? '',
+			// The tile of the view of the design alone shows the template's preview.
+			'design_preview'  => null === $views || null === $this->showcases ? '' : $this->showcases->preview( $config ),
 			'sides'           => array_map( fn ( ?Side $side ): array => self::side_fields( $side ) + $this->standing_options( $side, $product->get_id() ), array() === $config->sides ? array( null ) : $config->sides ),
 			'printshop'       => null === $config->blank_id ? null : $this->blank->printshop( $config->blank_id, $blank ),
 			'printshops'      => $this->printshops( $config ),

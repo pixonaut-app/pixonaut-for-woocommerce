@@ -73,8 +73,8 @@ linked the same way, and each variation can override it (see
    designer and slows it down on the customer's device, so the tab says so
    past four. **Remove side** takes a side off.
 7. Optionally, open **Views on the product page**, tick the views customers
-   see their design in under **Shown in**, and choose the **Starting view**
-   (see [Views](#views)).
+   see their design in under **Views shown**, and choose the view it
+   **Opens on** (see [Views](#views)).
 8. Optionally, open **Store settings for this product** to set this product
    apart from the store's settings. Each field's first choice follows the
    store's setting (*Store setting: …*); on a variation, *As the product
@@ -336,15 +336,18 @@ the photos of the views of each side's print position, in the colour of the
 variant they buy (see [Variant](#variant)), and switch between
 those views in the designer.
 
-**Shown in**, in the closed **Views on the product page** section, lists the
-blank's views by print position, each with a thumbnail of its first photo. Tick the ones
-customers see; with none ticked, they see every view. A view without a photo
+**Views shown**, in the closed **Views on the product page** section, lists
+the blank's views by print position, each as a tile with its first photo.
+Tick the ones customers see; with none ticked, they see every view. While
+some are ticked, the others are washed out, so the tiles show what customers
+see. The view the designer opens on carries an **Opens first** badge, and
+the section's summary names it. A view without a photo
 of the colour being bought is not shown for it, and neither is a view the
 studio limits to some option values, such as some colours, for a variant
 without them.
 
 After the blank's views, **Design** is the design alone, without the
-product, on a checked background, the same in every colour. Tick it to offer
+product, its tile showing the template's preview, on a checked background, the same in every colour. Tick it to offer
 it beside the photos, or alone; with no view ticked it is offered too.
 
 The list shows the blank chosen when the product was last updated: after
@@ -533,7 +536,8 @@ and whenever Pixonaut cannot be reached, the product keeps the image it has.
 ### Regenerating a product's image
 
 To have a product's pictures drawn again, for example after changing how
-they are drawn, use one of the two buttons at the bottom of its Pixonaut tab.
+they are drawn, use one of the two buttons under **Draw again**, at the end of
+**Product images** in its Pixonaut tab.
 Both draw the product image, its gallery's Pixonaut pictures and its
 variations' images again from the template version and settings they use
 now.
@@ -593,16 +597,18 @@ personalised variation's options say the same beside its image.
 ### Choosing the view and photo
 
 When the product is on a blank with photos for its first side's print position,
-**Product images** in the Pixonaut tab lets you choose what the product image
-is drawn on, each choice with a thumbnail:
+**Product images** in the Pixonaut tab shows a card for each picture the
+product can show, with a thumbnail of it. **The template's own** card is the
+image drawn with the template's own text and pictures, and under **Drawn on**
+lets you choose what it is drawn on, each choice a small tile:
 
-- **On the product photo**, the default: the first view the product is shown
+- **Main photo**, the default: the first view the product is shown
   in, on the photo of the blank variant it sells.
 - **One of the blank's photos** for that print position: every photo of every
   view, scene photos included, named after its view. Choose one to show the
   product on it, for example a lifestyle scene, without hiding other views
   from customers.
-- **Flat design**: the design alone, without the product.
+- **Design**: the design alone, without the product.
 
 Update the product, and its pictures are drawn again a few moments later.
 This choice is used while no showcase set is ticked; each ticked set has its
@@ -633,13 +639,18 @@ images**:
 
 1. Tick each set the product's images show. The first set ticked, in the
    order listed, is the product image; the others are added to the product
-   gallery, before the gallery's own images.
-2. For each set, choose what it is drawn on, as for the image without a set
-   (above): **On the product photo**, one of the blank's photos, or **Flat
-   design**, the design alone without the product. Each choice shows a
-   thumbnail: the blank's photo, or the template's preview. When the
-   product has no blank, or the blank has no photo for the first side's
-   print position, there is nothing to choose: every set is the flat design.
+   gallery, before the gallery's own images. Each card's badge says which:
+   **Product image**, **Gallery**, or **Left out** past the most a product
+   shows. With none ticked, **The template's own** card is the product
+   image.
+2. For each set, choose what it is drawn on under **Drawn on**, as for the
+   image without a set (above): **Main photo**, one of the blank's photos,
+   or **Design**, the design alone without the product. The card's
+   thumbnail shows the set's preview over the photo chosen, or alone for
+   the design; the drawn picture places the design in the photo's print
+   area. When the product has no blank, or the blank has no photo for the
+   first side's print position, there is nothing to choose: every set is
+   the design alone.
 3. Update the product. The images are drawn a few moments later.
 
 A variation's image shows the product's first set, on the view and photo

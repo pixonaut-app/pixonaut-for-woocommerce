@@ -30,6 +30,7 @@ import {
 	showViewsSummary,
 } from './disclosures';
 import { setFieldError } from './field-error';
+import { initPictureCards } from './picture-cards';
 import {
 	describeLimit,
 	overLimit,
@@ -61,6 +62,7 @@ import {
 import { chosenThumbnail, thumbnailOptions } from './thumbnails';
 import { initUsePicture } from './use-picture';
 import { initOverride, markChanged, newPanels } from './variations';
+import { showOpeningView } from './view-tiles';
 
 type Placement = {
 	id: string;
@@ -919,9 +921,11 @@ export function initPanel(root: HTMLElement): void {
 			event.target.closest('.pixonaut-views') !== null
 		) {
 			offerInitialViews(root);
+			showOpeningView(root);
 		}
 	});
 	initDisclosures(root);
+	initPictureCards(root);
 	showStoreSummary(root);
 	root
 		.querySelector('.pixonaut-personalise')
