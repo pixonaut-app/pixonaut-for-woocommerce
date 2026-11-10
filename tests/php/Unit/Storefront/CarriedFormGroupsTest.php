@@ -118,6 +118,41 @@ final class CarriedFormGroupsTest extends TestCase {
 		);
 	}
 
+	public function test_an_arrangement_made_for_the_other_template_keeps_its_fields(): void {
+		$own = array(
+			'groups' => array(
+				array(
+					'id'    => 'text',
+					'title' => 'Your words',
+					'items' => array(
+						array(
+							'field' => 'extra:content',
+							'label' => 'A line of your own',
+						),
+					),
+				),
+			),
+		);
+
+		$this->assertSame( $own, FormGroupsMount::carried( $own, self::product_template(), self::other_template() ) );
+	}
+
+	public function test_only_an_arrangement_naming_more_than_the_options_own_groups_needs_the_template_read(): void {
+		$options_first = array(
+			'groups' => array(
+				array(
+					'id'    => FormGroupsMount::OPTION_GROUP_PREFIX . 'size',
+					'title' => 'Size',
+					'items' => array( array( 'attribute' => 'size' ) ),
+				),
+			),
+		);
+
+		$this->assertFalse( FormGroupsMount::needs_template( $options_first ) );
+		$this->assertFalse( FormGroupsMount::needs_template( null ) );
+		$this->assertTrue( FormGroupsMount::needs_template( self::ARRANGEMENT ) );
+	}
+
 	public function test_without_a_read_of_the_products_template_only_attributes_and_titles_carry(): void {
 		$carried = FormGroupsMount::carried( self::ARRANGEMENT, null, self::other_template() );
 

@@ -826,8 +826,10 @@ the template read. On another template, the server reads that template and
 carries the product's groups to it, in their order and with their names (a
 group of the product's template left untitled takes that template's label):
 attributes stay where they are, a field moves to the other template's field
-of the same field key and is left out without one, and a group left empty
-that the other template lacks is left out. The other template's fields
+of the same field key, else stays when the other template has that field
+too, and is left out otherwise; a group left empty that the other template
+lacks is left out. An arrangement holding only the options' own groups fits
+any template and needs no read. The other template's fields
 placed nowhere follow the product's groups. Without that read the
 variation shows its template's own form. A switch to a variation with
 another arrangement mounts the side again. The script swaps each attribute item for a host

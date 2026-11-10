@@ -495,7 +495,7 @@ final class Storefront {
 					$sides[ $side ] = self::with_groups( $target, FormGroupsMount::fitted( $target['formGroups'] ?? null, $groups[ $side ] ?? null ) );
 					continue;
 				}
-				$other          = isset( $target['formGroups'] ) && is_string( $target['templateId'] ?? null ) ? $this->server->template_read( $target['templateId'], $mounts[ $side ]['locale'] ?? null ) : null;
+				$other          = FormGroupsMount::needs_template( $target['formGroups'] ?? null ) && is_string( $target['templateId'] ?? null ) ? $this->server->template_read( $target['templateId'], $mounts[ $side ]['locale'] ?? null ) : null;
 				$carried        = null === $other ? $target['formGroups'] ?? null : FormGroupsMount::carried( $target['formGroups'], $templates[ $side ] ?? null, $other );
 				$sides[ $side ] = self::with_groups( $target, FormGroupsMount::fitted( $carried, null === $other ? null : array_column( TemplateForm::groups( $other ), 'id' ) ) );
 			}

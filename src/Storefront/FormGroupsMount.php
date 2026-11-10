@@ -125,9 +125,10 @@ final class FormGroupsMount {
 	 * The product's groups keep their order and their names: a group of the
 	 * product's template the arrangement left untitled takes that template's
 	 * label for it. Attributes stay where they are; a field moves to the
-	 * other template's field of the same field key and is left out without
-	 * one, and a group left holding nothing that the other template lacks is
-	 * left out too. The other template's fields placed nowhere follow the
+	 * other template's field of the same field key, else stays when the
+	 * other template has it too (as in an arrangement made for that
+	 * template), and is left out otherwise; a group left holding nothing
+	 * that the other template lacks is left out too. The other template's fields placed nowhere follow the
 	 * product's groups in its own groups, as the designer shows a field the
 	 * option does not place.
 	 *
@@ -162,6 +163,8 @@ final class FormGroupsMount {
 					$items[] = $item;
 				} elseif ( isset( $moved[ $item['field'] ] ) ) {
 					$items[] = array_merge( $item, array( 'field' => $moved[ $item['field'] ] ) );
+				} elseif ( in_array( $item['field'], $offered, true ) ) {
+					$items[] = $item;
 				}
 			}
 			$label = $labels[ $group['id'] ] ?? '';
@@ -185,6 +188,17 @@ final class FormGroupsMount {
 	public static function awaits_template_groups( mixed $option ): bool {
 		$groups = is_array( $option ) && is_array( $option['groups'] ?? null ) ? $option['groups'] : array();
 		return in_array( self::TEMPLATE_GROUPS_ID, array_column( $groups, 'id' ), true );
+	}
+
+	/**
+	 * Whether fitting the option to a template needs that template read:
+	 * false for one whose every group is one attribute's own, which fits
+	 * any template as it is.
+	 *
+	 * @param mixed $option The `formGroups` option, from `option()`.
+	 */
+	public static function needs_template( mixed $option ): bool {
+		return is_array( $option ) && is_array( $option['groups'] ?? null ) && ! self::names_only_options( $option['groups'] );
 	}
 
 	/**
