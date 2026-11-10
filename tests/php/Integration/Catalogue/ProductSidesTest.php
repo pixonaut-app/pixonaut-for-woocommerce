@@ -171,6 +171,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$product = $this->product();
 		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
 		$this->script_template();
+		$this->recorder->json( 200, self::printshops() );
 
 		$this->save_sides( $product->get_id(), array( self::template_only_side(), array( 'placement' => self::BACK_ID ) ), array( 'pixonaut_blank' => '' ) );
 
@@ -179,7 +180,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$this->assertCount( 1, $config->sides );
 		$this->assertNull( $config->sides[0]->placement_id );
 		$this->assertCount( 1, $config->sides[0]->print_sizes );
-		$this->assertCount( 2, $this->recorder->requests, 'only the first side is checked' );
+		$this->assertCount( 3, $this->recorder->requests, 'only the first side is checked, then the printshops are read' );
 	}
 
 	public function test_the_panel_shows_each_side_and_the_printshop_the_blank_names(): void {
@@ -234,7 +235,6 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$this->assertStringContainsString( 'Other Print AB', $html );
 		// Two sides are within what Pixonaut recommends, and on a blank there may be more than one.
 		$this->assertMatchesRegularExpression( '/class="description pixonaut-sides-over-recommended" data-recommended="' . PostedSides::RECOMMENDED_SIDES . '"\s+hidden>/', $html );
-		$this->assertMatchesRegularExpression( '/class="pixonaut-sides-actions pixonaut-without-blank"\s+hidden>/', $html );
 		// Each placement says the largest print it takes, for a custom size to show and check.
 		$this->assertMatchesRegularExpression( '/<option value="' . self::BACK_ID . '" data-thumbnail="[^"]*"\s+data-max-width-mm="330" data-max-height-mm="420"/', $html );
 		$this->assertStringContainsString( 'data-size-limit="Up to %1$s × %2$s mm"', $html );

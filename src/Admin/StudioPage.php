@@ -29,6 +29,11 @@ final class StudioPage {
 	public const BLANKS = 'blanks';
 
 	/**
+	 * The workspace's printshops, under its settings.
+	 */
+	public const PRINTSHOPS = 'settings/printshop';
+
+	/**
 	 * The page, or empty when the workspace's slug is not known yet.
 	 *
 	 * @param string $section One of `DESIGNS`, `ORDERS` or `BLANKS`.
@@ -40,5 +45,19 @@ final class StudioPage {
 			return '';
 		}
 		return untrailingslashit( Hosts::studio() ) . '/w/' . rawurlencode( $slug ) . '/' . $section . '/' . rawurlencode( $id );
+	}
+
+	/**
+	 * A section's own page, such as `PRINTSHOPS`; empty when the workspace's
+	 * slug is not known yet.
+	 *
+	 * @param string $section The section.
+	 */
+	public static function section( string $section ): string {
+		$slug = WorkspaceSettings::tenant_slug();
+		if ( null === $slug ) {
+			return '';
+		}
+		return untrailingslashit( Hosts::studio() ) . '/w/' . rawurlencode( $slug ) . '/' . $section;
 	}
 }

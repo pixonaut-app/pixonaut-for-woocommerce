@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
+use Pixonaut\WooCommerce\Admin\BlankFields;
 use Pixonaut\WooCommerce\Admin\CatalogueSearch;
 use Pixonaut\WooCommerce\Admin\LinkedBlank;
 use Pixonaut\WooCommerce\Admin\PanelFields;
@@ -483,6 +484,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$product = $this->product();
 		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
 		$this->script_template();
+		$this->recorder->json( 200, self::printshops() );
 
 		$this->save( $product->get_id(), array( 'pixonaut_blank' => '' ), self::template_only_side() );
 
@@ -492,7 +494,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertNull( $config->sides[0]->placement_id );
 		$this->assertSame( 'mini-tee', $config->sides[0]->template_base_id );
 		$this->assertEquals( array( new PrintSize( self::PRINT_WIDTH_MM, self::PRINT_HEIGHT_MM, 'Poster' ) ), $config->sides[0]->print_sizes );
-		$this->assertCount( 2, $this->recorder->requests );
+		$this->assertCount( 3, $this->recorder->requests, 'the size check, the template, then the printshops' );
 		$this->assertStringEndsWith( '/v1/templates/mini-tee%402/print-size', $this->recorder->requests[0]['url'] );
 		$this->assertEquals(
 			array(
@@ -644,6 +646,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		add_filter( 'pixonaut_wc_catalogue_product_config', $filter );
 		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
 		$this->script_template();
+		$this->recorder->json( 200, self::printshops() );
 
 		$this->save( $product->get_id(), array( 'pixonaut_blank' => '' ), self::template_only_side() );
 
@@ -743,7 +746,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 		$this->assertSame( FormLayout::PAGE, $panel['form_layout'] );
 		$this->assertSame( array( '', FormLayout::TEMPLATE, FormLayout::PAGE, FormLayout::STEPS ), array_keys( $panel['form_layouts'] ) );
-		$this->assertSame( 'Store default: Steps', $panel['form_layouts'][''] );
+		$this->assertSame( 'Store setting: Steps', $panel['form_layouts'][''] );
 	}
 
 	public function test_a_save_without_the_panel_changes_nothing(): void {
@@ -827,11 +830,80 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 				self::PRINTSHOP_ID => 'Fixture Print AB',
 				'ps_other'         => 'Other Print AB',
 			),
+			$panel['printshops'],
+			'Gelato prints only on a blank'
+		);
+		$this->assertMatchesRegularExpression( '/<select id="pixonaut_printshop" name="pixonaut_printshop" class="pixonaut-printshop-choice"[^>]*>/', $html );
+		$this->assertStringContainsString( '<option value="ps_other"  selected=\'selected\'>Other Print AB</option>', $html );
+		$this->assertStringNotContainsString( 'Gelato', $html );
+		$this->assertStringNotContainsString( 'pixonaut-printshop-name', $html, 'no blank decides it' );
+	}
+
+	public function test_a_product_without_a_blank_is_not_offered_a_default_that_prints_only_on_one(): void {
+		$product = $this->product();
+		( new ProductConfig( personalise: true ) )->save_to( $product );
+		$this->recorder->json( 200, self::printshops( self::INTEGRATED_ID ) );
+
+		$panel = $this->panel->panel( $this->reload( $product->get_id() ) );
+
+		$this->assertSame(
+			array(
+				self::PRINTSHOP_ID => 'Fixture Print AB',
+				'ps_other'         => 'Other Print AB',
+			),
 			$panel['printshops']
 		);
-		$this->assertMatchesRegularExpression( '/<select id="pixonaut_printshop" name="pixonaut_printshop" class="pixonaut-printshop-choice pixonaut-without-blank"[^>]*>/', $html );
-		$this->assertStringContainsString( '<option value="ps_other"  selected=\'selected\'>Other Print AB</option>', $html );
-		$this->assertStringNotContainsString( 'pixonaut-printshop-name', $html, 'no blank decides it' );
+	}
+
+	public function test_a_workspace_whose_printshops_all_need_a_blank_says_so(): void {
+		$product = $this->product();
+		( new ProductConfig( personalise: true ) )->save_to( $product );
+		$this->recorder->json(
+			200,
+			array(
+				'connections' => array_values(
+					array_filter(
+						self::printshops( self::INTEGRATED_ID )['connections'],
+						static fn ( array $connection ): bool => self::INTEGRATED_ID === $connection['id']
+					)
+				),
+			)
+		);
+
+		$panel = $this->panel->panel( $this->reload( $product->get_id() ) );
+		$html  = $this->panel->fields_html( $panel );
+
+		$this->assertSame( array(), $panel['printshops'] );
+		$this->assertStringContainsString( 'No printshop in your workspace prints without a blank.', $html );
+		$this->assertStringNotContainsString( 'id="pixonaut_printshop"', $html );
+	}
+
+	public function test_a_product_without_a_blank_saved_on_a_printshop_that_needs_one_cannot_be_bought(): void {
+		$product = $this->product();
+		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->script_template();
+		$this->recorder->json( 200, self::printshops() );
+
+		$this->save(
+			$product->get_id(),
+			array(
+				'pixonaut_blank'     => '',
+				'pixonaut_printshop' => self::INTEGRATED_ID,
+			),
+			self::template_only_side()
+		);
+
+		$product = $this->reload( $product->get_id() );
+		$config  = ProductConfig::stored_on( $product );
+		$this->assertSame( InvalidReason::PRINTSHOP_NEEDS_BLANK, $config->invalid_reason );
+		$this->assertSame( self::INTEGRATED_ID, $config->printshop_id, 'the choice is kept, so the panel shows it' );
+		$this->assertFalse( $product->is_purchasable() );
+
+		$this->recorder->json( 200, self::printshops() );
+		$panel = $this->panel->panel( $product );
+		$html  = $this->panel->fields_html( $panel );
+		$this->assertSame( 'Gelato (prints only on a blank)', $panel['printshops'][ self::INTEGRATED_ID ] );
+		$this->assertStringContainsString( '<span class="pixonaut-field-error" role="alert">Choose a blank, or a printshop that prints without one.</span>', $html );
 	}
 
 	public function test_a_chosen_printshop_the_workspace_no_longer_has_stays_chosen(): void {
@@ -855,8 +927,48 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 		$html = $this->panel->fields_html( $this->panel->panel( $this->reload( $product->get_id() ) ) );
 
-		$this->assertMatchesRegularExpression( '/<select class="pixonaut-printshop-name pixonaut-with-blank"[^>]* disabled[^>]*>\s*<option selected="selected">Workspace default \(Fixture Print AB\)<\/option>/', $html );
-		$this->assertMatchesRegularExpression( '/<select id="pixonaut_printshop"[^>]* hidden>/', $html, 'the product\'s own choice waits, hidden, for the blank to go' );
+		$this->assertStringContainsString( '<span class="pixonaut-printshop-name">Workspace default (Fixture Print AB)</span>', $html );
+		$this->assertMatchesRegularExpression( '/<p class="form-field pixonaut-printshop pixonaut-without-blank"\s+hidden>/', $html, 'the product\'s own choice waits, hidden, for the blank to go' );
+	}
+
+	public function test_the_blank_fields_route_draws_a_picked_blanks_printshop_and_views_before_the_save(): void {
+		$product = $this->product();
+		wp_set_current_user( $this->user( 'shop_manager' ) );
+		$this->recorder->json( 200, $this->blank() );
+		$this->recorder->json( 200, $this->mockups() );
+		$this->recorder->json( 200, self::printshops() );
+
+		$response = $this->get(
+			BlankFields::ROUTE,
+			array(
+				'product' => $product->get_id(),
+				'blank'   => self::BLANK_ID,
+			)
+		);
+
+		$this->assertSame( 200, $response->get_status() );
+		$parts = $response->get_data();
+		$this->assertIsArray( $parts );
+		$this->assertStringContainsString( '<span class="pixonaut-printshop-name">Workspace default (Fixture Print AB)</span>', $parts['blank_html'] );
+		$this->assertStringContainsString( 'Blank variant: v_tee (found automatically)', $parts['blank_html'], 'found from the product\'s attributes, before the save' );
+		$this->assertStringContainsString( 'name="pixonaut_views[ticked][]"', $parts['views_html'] );
+		$this->assertNull( ProductConfig::stored_on( $this->reload( $product->get_id() ) )->blank_id, 'nothing is saved' );
+	}
+
+	public function test_the_blank_fields_route_answers_only_someone_who_may_edit_the_product(): void {
+		$product = $this->product();
+		wp_set_current_user( $this->user( 'customer' ) );
+
+		$response = $this->get(
+			BlankFields::ROUTE,
+			array(
+				'product' => $product->get_id(),
+				'blank'   => self::BLANK_ID,
+			)
+		);
+
+		$this->assertSame( 403, $response->get_status() );
+		$this->assertSame( array(), $this->recorder->requests, 'Pixonaut is not asked' );
 	}
 
 	public function test_the_placements_route_lists_a_blanks_placements_with_their_pictures(): void {

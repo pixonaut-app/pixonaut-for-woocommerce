@@ -196,10 +196,7 @@ function modeSide(mode: string, offers: string): HTMLElement {
 	const side = document.createElement('div');
 	side.dataset.offersProperties = offers;
 	side.innerHTML = `
-		<select class="pixonaut-side-mode">
-			<option value="${PERSONALISED_MODE}" ${mode === PERSONALISED_MODE ? 'selected' : ''}></option>
-			<option value="${STANDING_MODE}" ${mode === STANDING_MODE ? 'selected' : ''}></option>
-		</select>
+		<input type="checkbox" class="pixonaut-side-mode" value="${PERSONALISED_MODE}" ${mode === PERSONALISED_MODE ? 'checked' : ''} />
 		<div class="pixonaut-mode-warning pixonaut-mode-warning--standing" hidden></div>
 		<div class="pixonaut-mode-warning pixonaut-mode-warning--personalised" hidden></div>`;
 	return side;
@@ -296,9 +293,9 @@ describe('showModeWarnings', () => {
 	it('follows the mode as it is changed', () => {
 		const side = modeSide(PERSONALISED_MODE, 'true');
 		showModeWarnings(side);
-		const select = side.querySelector<HTMLSelectElement>('.pixonaut-side-mode');
-		if (select) {
-			select.value = STANDING_MODE;
+		const box = side.querySelector<HTMLInputElement>('.pixonaut-side-mode');
+		if (box) {
+			box.checked = false;
 		}
 
 		showModeWarnings(side);

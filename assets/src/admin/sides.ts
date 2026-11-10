@@ -34,3 +34,10 @@ export function withIndex(
 ): string {
 	return markup.split(placeholder).join(String(index));
 }
+
+/** Whether a side is a fixed design: its "Customers fill in the template"
+ *  box (`.pixonaut-side-mode`) is unticked. */
+export function isFixedDesign(side: ParentNode): boolean {
+	const box = side.querySelector<HTMLInputElement>('input.pixonaut-side-mode');
+	return box !== null && !box.checked;
+}

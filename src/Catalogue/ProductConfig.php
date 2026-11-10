@@ -472,6 +472,33 @@ final class ProductConfig {
 	}
 
 	/**
+	 * A copy on another blank, not shown in any of its views yet: what the
+	 * product screen shows of a blank picked before the product is saved.
+	 *
+	 * @param string $blank_id The blank.
+	 */
+	public function on_blank( string $blank_id ): self {
+		return new self(
+			$this->personalise,
+			$this->override,
+			$blank_id,
+			null,
+			$this->sides,
+			$this->layout,
+			$this->approval_mode,
+			$this->valid,
+			$this->invalid_reason,
+			array(),
+			$this->form_layout,
+			null,
+			$this->printshop_id,
+			$this->draw_at_template_ratio,
+			$this->option_groups,
+			$this->group_numbers,
+		);
+	}
+
+	/**
 	 * A copy with another layout override.
 	 *
 	 * @param string|null $layout A layout, or null to follow the setting.

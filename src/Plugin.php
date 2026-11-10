@@ -43,6 +43,7 @@ use Pixonaut\WooCommerce\Abilities\Store\StoreResources;
 use Pixonaut\WooCommerce\Abilities\UnlinkProduct;
 use Pixonaut\WooCommerce\Abilities\UpdatePluginSettings;
 use Pixonaut\WooCommerce\Abilities\UseProductPicture;
+use Pixonaut\WooCommerce\Admin\BlankFields;
 use Pixonaut\WooCommerce\Admin\CatalogueSearch;
 use Pixonaut\WooCommerce\Admin\ConnectionScreen;
 use Pixonaut\WooCommerce\Admin\ConnectNotice;
@@ -231,6 +232,8 @@ final class Plugin {
 	private ?CatalogueCache $catalogue_cache = null;
 
 	private ?CatalogueSearch $catalogue_search = null;
+
+	private ?BlankFields $blank_fields = null;
 
 	private ?PictureQueue $picture_queue = null;
 
@@ -423,6 +426,7 @@ final class Plugin {
 			}
 		);
 		$this->catalogue_search()->register();
+		$this->blank_fields()->register();
 		$this->regenerate_pictures()->register();
 		$this->regenerate_now()->register();
 		if ( is_admin() ) {
@@ -645,6 +649,14 @@ final class Plugin {
 	public function catalogue_search(): CatalogueSearch {
 		$this->catalogue_search ??= new CatalogueSearch( $this->catalogue(), $this->catalogue_cache() );
 		return $this->catalogue_search;
+	}
+
+	/**
+	 * The product screen's read of a blank picked but not saved yet.
+	 */
+	public function blank_fields(): BlankFields {
+		$this->blank_fields ??= new BlankFields( fn (): ProductPanel => $this->product_panel() );
+		return $this->blank_fields;
 	}
 
 	/**

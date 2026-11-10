@@ -2,6 +2,7 @@ import { expect, test, usePlainPermalinks } from '../fixtures';
 import {
 	linkSide,
 	openPixonautTab,
+	openSideMore,
 	pick,
 	productPanel,
 	publish,
@@ -28,7 +29,8 @@ test('a side follows its template until it is stuck to one version', async ({
 	await linkSide(page, 0, 'Front');
 
 	const side = panel.locator('.pixonaut-side[data-index="0"]');
-	const stick = side.getByLabel('Stick to one version');
+	await openSideMore(page, 0);
+	const stick = side.getByLabel('Stay on one version');
 	const picker = side.locator('select.pixonaut-side-version');
 	// A template just chosen is followed: the picker waits for the box.
 	await expect(stick).not.toBeChecked();
@@ -44,7 +46,8 @@ test('a side follows its template until it is stuck to one version', async ({
 
 	await openPixonautTab(page);
 	const saved = productPanel(page).locator('.pixonaut-side[data-index="0"]');
-	await expect(saved.getByLabel('Stick to one version')).toBeChecked();
+	// Stuck to a version, its section opens by itself.
+	await expect(saved.getByLabel('Stay on one version')).toBeChecked();
 	await expect(saved.locator('select.pixonaut-side-version')).toHaveValue(
 		current,
 	);

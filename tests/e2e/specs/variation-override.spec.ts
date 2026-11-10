@@ -49,9 +49,8 @@ test('saves a variation that overrides its product with its own print size', asy
 		fields.locator('select.pixonaut-blank option:checked'),
 	).toHaveText('Fixture tee');
 	const front = fields.locator('.pixonaut-side[data-index="0"]');
-	await front
-		.getByLabel('Print size', { exact: true })
-		.selectOption('Custom size');
+	await front.getByRole('button', { name: 'Remove', exact: true }).click();
+	await front.getByRole('button', { name: 'Add a size in mm' }).click();
 	await front.getByLabel('Width in millimetres').fill('210');
 	await front.getByLabel('Height in millimetres').fill('270');
 	await front.getByLabel('Label customers see').fill('Small');

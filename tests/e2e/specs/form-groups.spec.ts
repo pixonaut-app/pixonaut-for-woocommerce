@@ -7,7 +7,7 @@ import {
 	createVariableProduct,
 	PERSONALISED,
 } from '../personalised';
-import { openPixonautTab, productPanel } from '../products';
+import { openPixonautTab, openSideMore, productPanel } from '../products';
 
 /** The tee in steps, its size placed in the template's Text group, renamed,
  *  before the slogan: a version 6 configuration, the first with an
@@ -205,6 +205,7 @@ test.describe('in the product screen', () => {
 		);
 		await page.goto(`/wp-admin/post.php?post=${id}&action=edit`);
 		await openPixonautTab(page);
+		await openSideMore(page, 0);
 		const groups = productPanel(page).locator('.pixonaut-groups');
 		// Closed until opened, whenever the page opens.
 		const expand = groups.getByRole('button', {

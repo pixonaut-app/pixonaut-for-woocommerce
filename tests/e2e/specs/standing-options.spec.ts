@@ -10,6 +10,7 @@ import {
 	FIXTURE_VARIANT,
 	linkSide,
 	openPixonautTab,
+	openSideMore,
 	pick,
 	pickVariant,
 	productPanel,
@@ -67,7 +68,8 @@ async function fixedTee(page: Page, fake: FakePixonaut): Promise<void> {
 	await panel.getByLabel('Personalise').check();
 	await pick(page, 'pixonaut_blank', 'tee', 'Fixture tee');
 	await linkSide(page, 0, 'Front');
-	await panel.locator('#pixonaut_side_0_mode').selectOption('standing');
+	await openSideMore(page, 0);
+	await panel.locator('#pixonaut_side_0_mode').uncheck();
 	await publish(page);
 	await pickVariant(page, FIXTURE_VARIANT);
 	await openPixonautTab(page);
@@ -110,11 +112,13 @@ test('a standing side on a blank whose print areas vary shows a design per size'
 	);
 
 	// A change to the side makes new designs on the next update.
-	await panel.locator('#pixonaut_side_0_mode').selectOption('personalised');
+	await panel.locator('#pixonaut_side_0_mode').check();
 	await expect(options).toBeHidden();
-	await panel.locator('#pixonaut_side_0_mode').selectOption('standing');
+	await panel.locator('#pixonaut_side_0_mode').uncheck();
 	await expect(options).toBeVisible();
-	await panel.getByRole('button', { name: 'Add print size' }).click();
+	await panel
+		.getByRole('button', { name: 'Add the print position’s size' })
+		.click();
 	await expect(
 		options.getByText('The previews appear when you update the product.'),
 	).toBeVisible();

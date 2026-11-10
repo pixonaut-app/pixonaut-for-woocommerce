@@ -263,7 +263,8 @@ test('the picture and the background warning follow the version a side sticks to
 	const latest = (await picture.getAttribute('src')) ?? '';
 	expect(latest).not.toBe('');
 
-	const stick = side.getByLabel('Stick to one version');
+	await side.locator('.pixonaut-side-more > summary').click();
+	const stick = side.getByLabel('Stay on one version');
 	await stick.check();
 	await side
 		.locator('.pixonaut-side-version')
@@ -320,7 +321,9 @@ test('a template-only product is sold in the sizes entered on the product screen
 	await pick(page, 'pixonaut_side_0_template', 'shirt', 'T-shirt med tryck');
 	const side = panel.locator('.pixonaut-side[data-index="0"]');
 	// Without a blank every size is entered: there is no placement default.
-	await expect(side.getByLabel('Print size', { exact: true })).toBeHidden();
+	await expect(
+		side.getByRole('button', { name: 'Add the print position’s size' }),
+	).toBeHidden();
 	await side.getByRole('button', { name: 'Remove', exact: true }).click();
 	await publish(page);
 

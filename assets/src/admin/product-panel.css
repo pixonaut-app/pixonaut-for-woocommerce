@@ -45,13 +45,6 @@
 	width: 7em;
 }
 
-/* A menu of one size starts on it; there is nothing to choose. */
-:is(#pixonaut_product_data, .pixonaut-variation-panel)
-	.pixonaut-size:only-child
-	.pixonaut-size-start {
-	display: none;
-}
-
 /* Every row: its label in a column of its own, its value on the label's
  * line, its help text under the field. WooCommerce floats a row's label into
  * a left padding it sets with !important; a grid replaces both. */
@@ -667,33 +660,41 @@
 	display: block;
 }
 
-/* Each side a card, numbered in its heading. */
+/* One side sits in its group as it is; several are each a card, named in
+ * its heading (the panel root's `pixonaut-has-sides`). */
 :is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-sides {
-	counter-reset: pixonaut-side;
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel).pixonaut-has-sides
+	.pixonaut-sides {
 	margin: 0 12px;
 }
 
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-side {
-	counter-increment: pixonaut-side;
+:is(#pixonaut_product_data, .pixonaut-variation-panel).pixonaut-has-sides
+	.pixonaut-side {
 	border: 1px solid #dcdcde;
 	border-radius: 4px;
 }
 
-:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-side__header {
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-side__header,
+:is(#pixonaut_product_data, .pixonaut-variation-panel).pixonaut-has-sides
+	.pixonaut-sides-title--one,
+:is(#pixonaut_product_data, .pixonaut-variation-panel):not(.pixonaut-has-sides)
+	.pixonaut-sides-title--many {
+	display: none;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel).pixonaut-has-sides
+	.pixonaut-side__header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	padding: 8px 12px;
 	background: #f6f7f7;
 	border-bottom: 1px solid #dcdcde;
-}
-
-:is(#pixonaut_product_data, .pixonaut-variation-panel)
-	.pixonaut-side__number::before {
-	content: counter(pixonaut-side);
 }
 
 /* Required fields and what is missing. */
@@ -896,4 +897,214 @@
 	.pixonaut-variant-show-retired {
 	float: none;
 	margin: 0;
+}
+
+/* Print sizes: a table of their own, so they stand out: Start, the size
+ * (the print position's own, or a name and width × height in mm), Remove. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size-menu {
+	align-items: start;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size-menu
+	> label:first-child {
+	font-weight: 600;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size-table {
+	max-width: 560px;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	background: #f6f7f7;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	:is(.pixonaut-size-table__head, .pixonaut-size) {
+	display: grid;
+	grid-template-columns: 48px minmax(0, 1fr) auto;
+	gap: 8px;
+	align-items: center;
+	margin: 0;
+	padding: 6px 10px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size-table__head {
+	border-bottom: 1px solid #dcdcde;
+	color: #50575e;
+	font-size: 12px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size {
+	padding: 8px 10px;
+	background: #fff;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size:last-child {
+	border-bottom: 0;
+	border-radius: 0 0 4px 4px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size-start {
+	justify-self: center;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size-body {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size-default:not([hidden]) {
+	display: flex;
+	flex-direction: column;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size-default
+	.pixonaut-print-size {
+	color: #646970;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size-custom
+	input {
+	width: 5.5em;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size-custom
+	input.pixonaut-size-label {
+	width: 9em;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size-body
+	> :is(.pixonaut-size-limit, .pixonaut-field-error) {
+	margin: 0;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-size-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+/* A menu of one size starts on it; there is nothing to choose. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-size:only-child
+	.pixonaut-size-start {
+	visibility: hidden;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-side-mode-field
+	label {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	float: none;
+	width: auto;
+	margin: 0;
+}
+
+/* A read-only row (the printshop of a blank): its label where a label goes. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.form-field
+	> .pixonaut-field-label {
+	grid-row: 1;
+	grid-column: 1;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-blank-loading
+	.spinner {
+	float: none;
+	margin: 0 6px 0 0;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-is-loading {
+	opacity: 0.5;
+}
+
+/* The closed sections: what is set inside said beside the heading. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	details.pixonaut-disclosure
+	> summary {
+	padding: 10px 12px;
+	cursor: pointer;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	details.pixonaut-store-settings,
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-views-section {
+	border-top: 1px solid #eee;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-side-more {
+	margin: 6px 12px 0;
+	border-top: 1px solid #f0f0f1;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	details.pixonaut-side-more
+	> summary {
+	padding: 8px 0;
+	color: #2271b1;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-side-more
+	.form-field {
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce sets this padding with !important. */
+	padding: 5px 0 !important;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-disclosure__summary {
+	color: #646970;
+	font-weight: 400;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-disclosure__summary::before {
+	content: "· ";
+}
+
+/* On a narrow screen each label goes above its field. */
+@media screen and (max-width: 782px) {
+	:is(#pixonaut_product_data, .pixonaut-variation-panel) .form-field {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	:is(#pixonaut_product_data, .pixonaut-variation-panel)
+		.form-field
+		> :is(label:first-child, .pixonaut-field-label, .pixonaut-groups__expand) {
+		grid-column: 1;
+	}
+
+	:is(#pixonaut_product_data, .pixonaut-variation-panel) .form-field > * {
+		grid-column: 1;
+	}
+}
+
+/* The Pixonaut tab shows the admin menu's Pixonaut icon, not WooCommerce's wrench. */
+#woocommerce-product-data ul.wc-tabs li.pixonaut_options a::before {
+	content: "";
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	background-color: currentcolor;
+	vertical-align: -0.125em;
+	mask: url("../../images/menu-icon.svg") center / contain no-repeat;
+}
+
+/* Last again, so nothing above shows what is hidden. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel) [hidden] {
+	display: none;
 }

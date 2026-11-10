@@ -133,8 +133,7 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 		$html = (string) ob_get_clean();
 
 		$this->assertStringContainsString( 'name="pixonaut_variation[3][variant]"', $html );
-		$this->assertStringContainsString( 'Match by options (now: Colour: White)', $html );
-		$this->assertStringContainsString( 'When none matches, the variation cannot be bought until you pick its variant here; it does not fall back to the product’s.', $html );
+		$this->assertStringContainsString( 'Blank variant: Colour: White (found automatically)', $html );
 		$this->assertStringContainsString( '<option value="v_red" >Colour: Red</option>', $html );
 		$this->assertStringContainsString( '<option value="v_forest" data-retired >Colour: Forest (retired)</option>', $html );
 		$this->assertStringContainsString( 'class="pixonaut-variant-show-retired"', $html );
@@ -151,7 +150,7 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 		$this->variations->render( 0, array(), get_post( $variations['Red']->get_id() ) );
 		$html = (string) ob_get_clean();
 
-		$this->assertStringContainsString( 'Match by options (now: Colour: Red)', $html );
+		$this->assertStringContainsString( 'Blank variant: Colour: Red (found automatically)', $html );
 		$this->assertStringNotContainsString( 'pixonaut-variant-warning', $html );
 	}
 
