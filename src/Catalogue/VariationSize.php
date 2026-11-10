@@ -17,12 +17,15 @@ use WC_Product;
  * with two things of its own: on a blank whose print areas change with an
  * option, a side sold at the placement's default prints at the variation's
  * blank variant's area (`RowSize`), and any personalised side can be given
- * a size of its own here, without overriding the rest of its setup. Each
- * own size is kept with Pixonaut's verdict and what it was judged for (the
- * template version, blank, placement and variant), stored as JSON in the
- * variation's `_pixonaut_print_size` meta. A refused size, or one judged
- * for what the variation no longer sells, stays as entered and makes the
- * variation unsellable, saying why.
+ * a size of its own here, without overriding the rest of its setup. A side
+ * with a size per attribute value (`ValueSizes`) prints at its value's size
+ * unless the variation has one of its own. Each such size is kept with
+ * Pixonaut's verdict and what it was judged for (the template version,
+ * blank, placement and variant), stored as JSON in the variation's
+ * `_pixonaut_print_size` meta. A refused size, or one judged for what the
+ * variation no longer sells, stays as entered and makes the variation
+ * unsellable, saying why; a value's size the product no longer gives is
+ * not sold.
  */
 final class VariationSize {
 
@@ -31,7 +34,7 @@ final class VariationSize {
 	public const SCHEMA_VERSION = 1;
 
 	/**
-	 * @param array<string, array{size: PrintSize, refused: string|null, basis: string}> $sizes The sizes by side key: the size, why Pixonaut refused it (null when it did not), and what it was judged for (`basis()`).
+	 * @param array<string, array{size: PrintSize, refused: string|null, basis: string, value?: bool}> $sizes The sizes by side key: the size, why Pixonaut refused it (null when it did not), what it was judged for (`basis()`), and whether it is the variation's attribute value's size rather than its own.
 	 */
 	public function __construct( public readonly array $sizes = array() ) {
 	}
@@ -42,17 +45,83 @@ final class VariationSize {
 	 * @param string $key The side's key.
 	 */
 	public function size_of( string $key ): ?PrintSize {
-		return $this->sizes[ $key ]['size'] ?? null;
+		$entry = $this->sizes[ $key ] ?? null;
+		return null === $entry || self::is_value( $entry ) ? null : $entry['size'];
 	}
 
 	/**
-	 * Why Pixonaut refused the variation's own size of a side; null when it
-	 * did not, or the side has no size of its own.
+	 * The variation's own sizes, by side key, without its attribute values'.
+	 *
+	 * @return array<string, PrintSize>
+	 */
+	public function own(): array {
+		$own = array();
+		foreach ( $this->sizes as $key => $entry ) {
+			if ( ! self::is_value( $entry ) ) {
+				$own[ $key ] = $entry['size'];
+			}
+		}
+		return $own;
+	}
+
+	/**
+	 * Why Pixonaut refused the size a side prints at, the variation's own or
+	 * its attribute value's; null when it did not, or there is none.
 	 *
 	 * @param string $key The side's key.
 	 */
 	public function refused( string $key ): ?string {
 		return $this->sizes[ $key ]['refused'] ?? null;
+	}
+
+	/**
+	 * Whether an entry is the size of the variation's attribute value.
+	 *
+	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool} $entry An entry of `$sizes`.
+	 */
+	public static function is_value( array $entry ): bool {
+		return true === ( $entry['value'] ?? false );
+	}
+
+	/**
+	 * The size of a side a variation prints at by its attribute value, as
+	 * its product gives it now; null for none.
+	 *
+	 * @param Side                 $side       The side.
+	 * @param array<string, mixed> $attributes The variation's attributes (`ValueSizes::attributes_of()`).
+	 */
+	public static function value_size( Side $side, array $attributes ): ?PrintSize {
+		return $side->is_standing() ? null : $side->value_sizes?->size_for( $attributes );
+	}
+
+	/**
+	 * Whether a variable product's enabled variations that follow it, one at least,
+	 * each have a print size for every side the product gives none, their
+	 * own or their attribute value's: a product without a size of its own
+	 * then needs none.
+	 *
+	 * @param WC_Product    $product A variable product.
+	 * @param ProductConfig $config  Its configuration.
+	 */
+	public static function covers_variations( WC_Product $product, ProductConfig $config ): bool {
+		$unsized   = array_filter( $config->sides, static fn ( Side $side ): bool => array() === $side->print_sizes && null === $side->pending_sizes );
+		$following = 0;
+		foreach ( $product->is_type( 'variable' ) ? $product->get_children() : array() as $child_id ) {
+			$variation = wc_get_product( $child_id );
+			// A disabled variation is stored as private, and is not sold.
+			if ( ! $variation instanceof WC_Product || ProductConfig::PUBLIC_STATUS !== $variation->get_status() || ProductConfig::stored_on( $variation )->override ) {
+				continue;
+			}
+			++$following;
+			$own        = self::stored_on( $variation );
+			$attributes = ValueSizes::attributes_of( $variation );
+			foreach ( $unsized as $side ) {
+				if ( $side->is_standing() || ( null === $own->size_of( $side->key ) && null === self::value_size( $side, $attributes ) ) ) {
+					return false;
+				}
+			}
+		}
+		return array() !== $unsized && $following > 0;
 	}
 
 	/**
@@ -71,14 +140,17 @@ final class VariationSize {
 	/**
 	 * The configuration a variation is sold under: each personalised side
 	 * sold at the placement's default printing at the variant's row, and
-	 * each side the variation has a size of its own for selling that size
-	 * alone. A size refused, judged for something else, or a variant in no
-	 * row the template can be printed at makes it unsellable, saying why.
+	 * each side the variation has a size of its own for, or its attribute
+	 * value has one for, selling that size alone. A size refused, judged for
+	 * something else, or a variant in no row the template can be printed at
+	 * makes it unsellable, saying why. A product sold without a size of its
+	 * own sells a variation that has one for every side.
 	 *
-	 * @param ProductConfig $config  What the variation inherits or overrides with.
-	 * @param string|null   $variant The blank variant it sells; null for none.
+	 * @param ProductConfig        $config     What the variation inherits or overrides with.
+	 * @param string|null          $variant    The blank variant it sells; null for none.
+	 * @param array<string, mixed> $attributes The variation's attributes (`ValueSizes::attributes_of()`).
 	 */
-	public function applied_to( ProductConfig $config, ?string $variant ): ProductConfig {
+	public function applied_to( ProductConfig $config, ?string $variant, array $attributes = array() ): ProductConfig {
 		$sides  = array();
 		$reason = null;
 		foreach ( $config->sides as $side ) {
@@ -86,20 +158,47 @@ final class VariationSize {
 				$sides[] = $side;
 				continue;
 			}
-			$own = $this->sizes[ $side->key ] ?? null;
-			if ( null !== $own ) {
-				if ( self::basis( $side, $config->blank_id, $variant ) !== $own['basis'] ) {
+			$held  = $this->sizes[ $side->key ] ?? null;
+			$value = self::value_size( $side, $attributes );
+			if ( null !== $held && self::is_value( $held ) && ( null === $value || $value->stored() !== $held['size']->stored() ) ) {
+				// The product's size for the value changed since it was judged.
+				$held = null;
+			}
+			if ( null === $held && null !== $value ) {
+				$reason ??= InvalidReason::VARIATION_SIZE_UNCHECKED;
+				$sides[] = $side->with( $side->template_version, $side->previous_version, array( $value ), null, 0 );
+				continue;
+			}
+			if ( null !== $held ) {
+				if ( self::basis( $side, $config->blank_id, $variant ) !== $held['basis'] ) {
 					$reason ??= InvalidReason::VARIATION_SIZE_UNCHECKED;
-				} elseif ( null !== $own['refused'] ) {
-					$reason ??= $own['refused'];
+				} elseif ( null !== $held['refused'] ) {
+					$reason ??= $held['refused'];
 				}
-				$sides[] = $side->with( $side->template_version, $side->previous_version, array( $own['size'] ), null, 0 );
+				$sides[] = $side->with( $side->template_version, $side->previous_version, array( $held['size'] ), null, 0 );
 				continue;
 			}
 			$sides[] = self::at_row( $side, $variant, $reason );
 		}
 		$applied = $config->with_sides( $sides );
-		return null === $reason || ! $config->valid ? $applied : $applied->with_validity( false, $reason );
+		if ( ! $config->valid && ( InvalidReason::MISSING_PRINT_SIZE !== $config->invalid_reason || ! self::all_sized( $sides ) ) ) {
+			return $applied;
+		}
+		return null === $reason ? $applied->with_validity( true ) : $applied->with_validity( false, $reason );
+	}
+
+	/**
+	 * Whether every side sells at least one size.
+	 *
+	 * @param Side[] $sides The sides.
+	 */
+	private static function all_sized( array $sides ): bool {
+		foreach ( $sides as $side ) {
+			if ( array() === $side->print_sizes ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -171,7 +270,7 @@ final class VariationSize {
 				'size'    => $size,
 				'refused' => is_string( $entry['refused'] ?? null ) && '' !== $entry['refused'] ? $entry['refused'] : null,
 				'basis'   => $entry['basis'],
-			);
+			) + ( true === ( $entry['value'] ?? null ) ? array( 'value' => true ) : array() );
 		}
 		return new self( $sizes );
 	}
@@ -210,6 +309,21 @@ final class VariationSize {
 	}
 
 	/**
+	 * Stores the sizes on a variation only while it has none stored, so a
+	 * check that took a while never overwrites a size the store manager
+	 * saved meanwhile.
+	 *
+	 * @param WC_Product $variation The variation.
+	 * @return bool False when sizes were stored meanwhile, or there are none to store.
+	 */
+	public function add_to( WC_Product $variation ): bool {
+		if ( array() === $this->sizes ) {
+			return false;
+		}
+		return false !== add_post_meta( $variation->get_id(), self::META_KEY, wp_slash( (string) wp_json_encode( $this->to_array() ) ), true );
+	}
+
+	/**
 	 * The sizes as the variation stores them.
 	 *
 	 * @return array<string, mixed>
@@ -221,7 +335,7 @@ final class VariationSize {
 				'size'    => $entry['size']->stored(),
 				'refused' => $entry['refused'],
 				'basis'   => $entry['basis'],
-			);
+			) + ( self::is_value( $entry ) ? array( 'value' => true ) : array() );
 		}
 		return array(
 			'v'     => self::SCHEMA_VERSION,

@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use WC_Product;
+
 /**
  * The codes `ProductConfig::$invalid_reason` holds, and what each tells the
  * store manager. Pixonaut's own verdict reasons (`too_large`, `wrong_ratio`)
@@ -53,6 +55,32 @@ final class InvalidReason {
 	 * A side without a blank names no print size: it has no placement to take one from.
 	 */
 	public const MISSING_PRINT_SIZE = 'missing_print_size';
+
+	/**
+	 * A variable product without a print size of its own has variations
+	 * with none either, of their own or by an attribute value. Said of the
+	 * product, which stores `MISSING_PRINT_SIZE`.
+	 */
+	public const VARIATION_MISSING_PRINT_SIZE = 'variation_missing_print_size';
+
+	/**
+	 * Why a product cannot be bought, as its notice and its Pixonaut tab
+	 * say it; null when nothing stops it. A variable product without a size
+	 * of its own needs none while every variation has one, its own or its
+	 * attribute value's.
+	 *
+	 * @param WC_Product    $product The product or variation.
+	 * @param ProductConfig $config  Its configuration as stored.
+	 */
+	public static function of( WC_Product $product, ProductConfig $config ): ?string {
+		if ( ! $config->personalise || $config->valid ) {
+			return null;
+		}
+		if ( self::MISSING_PRINT_SIZE !== $config->invalid_reason || ! $product->is_type( 'variable' ) ) {
+			return $config->invalid_reason;
+		}
+		return VariationSize::covers_variations( $product, $config ) ? null : self::VARIATION_MISSING_PRINT_SIZE;
+	}
 
 	/**
 	 * Pixonaut: the size exceeds the placement's largest print area.
@@ -165,6 +193,8 @@ final class InvalidReason {
 				);
 			case self::MISSING_PRINT_SIZE:
 				return __( 'Add a print size in millimetres. Without a blank there is no placement to take one from.', 'pixonaut-for-woocommerce' );
+			case self::VARIATION_MISSING_PRINT_SIZE:
+				return __( 'Some variations have no print size. Add one in millimetres here, one for each value of an attribute, or one on each of those variations.', 'pixonaut-for-woocommerce' );
 			case self::TOO_LARGE:
 				return __( 'The print size is larger than the placement can print.', 'pixonaut-for-woocommerce' );
 			case self::WRONG_RATIO:

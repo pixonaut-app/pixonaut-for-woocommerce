@@ -123,6 +123,11 @@ final class PostedSides {
 	public const CANVAS_RATIO = 'canvas_ratio';
 
 	/**
+	 * The posted field of a side's size per attribute value.
+	 */
+	public const VALUE_SIZES = 'value_sizes';
+
+	/**
 	 * Put before a key of digits alone, which PHP would read back from the
 	 * posted `pixonaut_designs[<key>]` as an integer rather than the key.
 	 */
@@ -213,7 +218,44 @@ final class PostedSides {
 			$pinned && null !== $parsed,
 			$parsed?->version,
 			CanvasRatio::from_posted( self::text( $row, self::CANVAS_RATIO ) ),
+			self::value_sizes( $row[ self::VALUE_SIZES ] ?? null, $problems ),
 		);
+	}
+
+	/**
+	 * A side's size per value of an attribute, as entered: the attribute
+	 * chosen, and the rows of its values with a width and height. A value
+	 * left without either has no size; a label left empty is the value's
+	 * name. Null when the side's form did not have the field.
+	 *
+	 * @param mixed    $posted   `attribute`, and `rows` by attribute, each row's `value`, `name`, `width`, `height` and `label`.
+	 * @param string[] $problems Problems found so far; appended to.
+	 */
+	private static function value_sizes( mixed $posted, array &$problems ): ?ValueSizes {
+		if ( ! is_array( $posted ) ) {
+			return null;
+		}
+		$attribute = self::text( $posted, 'attribute' );
+		$rows      = is_array( $posted['rows'] ?? null ) && is_array( $posted['rows'][ $attribute ] ?? null ) ? $posted['rows'][ $attribute ] : array();
+		$sizes     = array();
+		foreach ( '' === $attribute ? array() : $rows as $row ) {
+			$value = is_array( $row ) ? self::text( $row, 'value' ) : '';
+			if ( '' === $value || ( '' === self::text( $row, 'width' ) && '' === self::text( $row, 'height' ) ) ) {
+				continue;
+			}
+			if ( count( $sizes ) === self::MAX_SIZES ) {
+				$problems[] = InvalidReason::TOO_MANY_PRINT_SIZES;
+				break;
+			}
+			$name = mb_substr( self::text( $row, 'name' ), 0, self::LABEL_MAX_LENGTH );
+			$size = self::custom_size( '' === self::text( $row, 'label' ) && '' !== $name ? array( 'label' => $name ) + $row : $row );
+			if ( null === $size ) {
+				$problems[] = InvalidReason::INVALID_PRINT_SIZE;
+				continue;
+			}
+			$sizes[ $value ] = $size;
+		}
+		return new ValueSizes( $attribute, $sizes );
 	}
 
 	/**

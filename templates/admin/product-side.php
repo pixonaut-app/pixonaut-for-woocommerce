@@ -12,12 +12,13 @@
  * @var string                                                                    $id_prefix     Put before every field's id.
  * @var string                                                                    $index         The side's index, or the placeholder a new side's is put in.
  * @var string                                                                    $size_index    The placeholder a new size row's index is put in.
- * @var array{key: string, label: string, title?: string, placement_id: string, template_id: string, template_name: string, pinned: bool, version: int, versions: list<int>, mode: string, offers_properties: bool|null, misfit_warning?: string, form_groups?: string, canvas_ratio?: string, sizes: list<array{kind: string, width: string, height: string, label: string, start: bool}>, options_by?: string, options?: list<array{value: string, size: string, usual: bool, image: string, adjusted: bool, adjust_url: string, reset_url: string}>} $side The side's fields: `label` is the name the merchant typed, empty while it follows the placement or template, and `title` the name it has now; `versions` are its template's versions, the latest first, `template_id` names the latest, and `pinned` whether it stays on `version` rather than following the latest; a standing side on a blank whose print areas change with an option has `options`, its design per row of `options_by` (empty otherwise), `misfit_warning` names the blank's sizes its template cannot be printed at (empty when it fits every size), and `canvas_ratio` is how the designer draws a print size whose ratio is not the template's, a `CanvasRatio` choice (empty for the product's).
+ * @var array{key: string, label: string, title?: string, placement_id: string, template_id: string, template_name: string, pinned: bool, version: int, versions: list<int>, mode: string, offers_properties: bool|null, misfit_warning?: string, form_groups?: string, canvas_ratio?: string, sizes: list<array{kind: string, width: string, height: string, label: string, start: bool}>, value_sizes?: array{attribute: string, sizes: array<string, array{width: string, height: string, label: string}>}, options_by?: string, options?: list<array{value: string, size: string, usual: bool, image: string, adjusted: bool, adjust_url: string, reset_url: string}>} $side The side's fields: `label` is the name the merchant typed, empty while it follows the placement or template, and `title` the name it has now; `versions` are its template's versions, the latest first, `template_id` names the latest, and `pinned` whether it stays on `version` rather than following the latest; a standing side on a blank whose print areas change with an option has `options`, its design per row of `options_by` (empty otherwise), `misfit_warning` names the blank's sizes its template cannot be printed at (empty when it fits every size), and `canvas_ratio` is how the designer draws a print size whose ratio is not the template's, a `CanvasRatio` choice (empty for the product's); `value_sizes` is the attribute it has a size per value of (empty for none) and those sizes by value.
  * @var array{kind: string, width: string, height: string, label: string, start: bool} $new_size A new size row's fields.
  * @var list<array{id: string, text: string, thumbnail: string, maxWidthMm?: float, maxHeightMm?: float}> $placements The blank's placements, each with its first view's photo (empty without one) and the largest print it takes, when Pixonaut said.
  * @var list<string>                                                              $open       The disclosures open when the product was last updated; `side-<index>` opens this side's.
  * @var array{url: string, attributes: list<array{slug: string, label: string}>}|null $groups The Groups setting's template groups route and the product's attributes used for variations; null where the form is not arranged (a variation's own sides).
  * @var string                                                                    $studio     The Pixonaut studio's templates page, a template's own page being under it by its base id; empty while the workspace is not known, which shows no link.
+ * @var list<array{slug: string, label: string, values: list<array{value: string, name: string}>}> $values The product's attributes used for variations, each with its values; empty where sizes per value are not set (a product without variations, a variation's own sides).
  */
 
 use Pixonaut\WooCommerce\Catalogue\CanvasRatio;
@@ -148,6 +149,51 @@ $pixonaut_stays = __( 'stays on version %d', 'pixonaut-for-woocommerce' );
 			<button type="button" class="button pixonaut-add-custom-size"><?php /* translators: Button that adds a print size entered in millimetres to a side. Admin product page. */ esc_html_e( 'Add a size in mm', 'pixonaut-for-woocommerce' ); ?></button>
 		</span>
 	</div>
+	<?php if ( array() !== $values ) : ?>
+		<?php
+		$pixonaut_by_value = $side['value_sizes'] ?? array(
+			'attribute' => '',
+			'sizes'     => array(),
+		);
+		?>
+		<div class="form-field pixonaut-value-sizes">
+			<label for="<?php echo esc_attr( $pixonaut_id( 'value_attribute' ) ); ?>"><?php /* translators: Label of the dropdown choosing the product attribute (such as Size) whose values each get a print size of their own. Admin product page. */ esc_html_e( 'Print size by attribute', 'pixonaut-for-woocommerce' ); ?></label>
+			<span class="pixonaut-field-control">
+				<select id="<?php echo esc_attr( $pixonaut_id( 'value_attribute' ) ); ?>" class="pixonaut-value-attribute" name="<?php echo esc_attr( $pixonaut_name( '[' . PostedSides::VALUE_SIZES . '][attribute]' ) ); ?>">
+					<option value=""><?php /* translators: Option of the Print size by attribute dropdown: no attribute gives the print size. Admin product page. */ esc_html_e( 'None', 'pixonaut-for-woocommerce' ); ?></option>
+					<?php foreach ( $values as $pixonaut_attribute ) : ?>
+						<option value="<?php echo esc_attr( $pixonaut_attribute['slug'] ); ?>" <?php selected( $pixonaut_by_value['attribute'], $pixonaut_attribute['slug'] ); ?>><?php echo esc_html( $pixonaut_attribute['label'] ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</span>
+			<span class="description"><?php esc_html_e( 'Each variation prints at the size of its value, unless it has a print size of its own. Variations without either print at the print sizes above; when every variation has a size, those are not needed.', 'pixonaut-for-woocommerce' ); ?></span>
+			<?php foreach ( $values as $pixonaut_attribute ) : ?>
+				<?php $pixonaut_shown_attribute = $pixonaut_by_value['attribute'] === $pixonaut_attribute['slug']; ?>
+				<table class="pixonaut-value-size-table" data-attribute="<?php echo esc_attr( $pixonaut_attribute['slug'] ); ?>" <?php echo $pixonaut_shown_attribute ? '' : 'hidden'; ?>>
+					<tbody>
+						<?php foreach ( $pixonaut_attribute['values'] as $pixonaut_row => $pixonaut_value ) : ?>
+							<?php
+							$pixonaut_value_name = static fn ( string $sub ): string => $pixonaut_name( '[' . PostedSides::VALUE_SIZES . '][rows][' . $pixonaut_attribute['slug'] . '][' . $pixonaut_row . '][' . $sub . ']' );
+							$pixonaut_held       = $pixonaut_shown_attribute ? $pixonaut_by_value['sizes'][ $pixonaut_value['value'] ] ?? null : null;
+							?>
+							<tr class="pixonaut-value-size">
+								<th scope="row"><?php echo esc_html( $pixonaut_value['name'] ); ?></th>
+								<td>
+									<input type="hidden" name="<?php echo esc_attr( $pixonaut_value_name( 'value' ) ); ?>" value="<?php echo esc_attr( $pixonaut_value['value'] ); ?>" />
+									<input type="hidden" name="<?php echo esc_attr( $pixonaut_value_name( 'name' ) ); ?>" value="<?php echo esc_attr( $pixonaut_value['name'] ); ?>" />
+									<input type="text" inputmode="decimal" class="pixonaut-size-width" name="<?php echo esc_attr( $pixonaut_value_name( 'width' ) ); ?>" value="<?php echo esc_attr( $pixonaut_held['width'] ?? '' ); ?>" aria-label="<?php /* translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the width of that value's print size. Admin product page. */ echo esc_attr( sprintf( __( '%s: width in millimetres', 'pixonaut-for-woocommerce' ), $pixonaut_value['name'] ) ); ?>" />
+									<span aria-hidden="true">×</span>
+									<input type="text" inputmode="decimal" class="pixonaut-size-height" name="<?php echo esc_attr( $pixonaut_value_name( 'height' ) ); ?>" value="<?php echo esc_attr( $pixonaut_held['height'] ?? '' ); ?>" aria-label="<?php /* translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the height of that value's print size. Admin product page. */ echo esc_attr( sprintf( __( '%s: height in millimetres', 'pixonaut-for-woocommerce' ), $pixonaut_value['name'] ) ); ?>" />
+									<?php esc_html_e( 'mm', 'pixonaut-for-woocommerce' ); ?>
+									<input type="text" class="pixonaut-size-label" name="<?php echo esc_attr( $pixonaut_value_name( 'label' ) ); ?>" value="<?php echo esc_attr( null === $pixonaut_held || $pixonaut_held['label'] === $pixonaut_value['name'] ? '' : $pixonaut_held['label'] ); ?>" placeholder="<?php echo esc_attr( $pixonaut_value['name'] ); ?>" aria-label="<?php /* translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the name customers see for that value's print size. Admin product page. */ echo esc_attr( sprintf( __( '%s: label customers see', 'pixonaut-for-woocommerce' ), $pixonaut_value['name'] ) ); ?>" />
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endforeach; ?>
+		</div>
+	<?php endif; ?>
 	<details class="pixonaut-disclosure pixonaut-side-more" data-disclosure="side-<?php echo esc_attr( $index ); ?>" <?php echo $pixonaut_more_open ? 'open' : ''; ?>>
 		<summary>
 			<?php /* translators: A closed section of a product side holding its less used settings. Admin product page. */ esc_html_e( 'More for this side', 'pixonaut-for-woocommerce' ); ?>

@@ -81,6 +81,8 @@ final class Side {
 	 * @param RowSize[]       $row_sizes     A personalised side's size per row of its blank's print areas, on a blank whose
 	 *                                       areas change with an option: a variation sold at the placement's default
 	 *                                       prints at its variant's row. Empty on any other side.
+	 * @param ValueSizes|null $value_sizes   A personalised side's size per value of one of its variable product's
+	 *                                       attributes, which a variation with that value prints at; null for none.
 	 * @phpstan-param list<PrintSize> $print_sizes
 	 * @phpstan-param list<PrintSize|null>|null $pending_sizes
 	 * @phpstan-param list<string> $misfit_sizes
@@ -108,6 +110,7 @@ final class Side {
 		public readonly ?int $latest_version = null,
 		public readonly ?bool $draw_at_template_ratio = null,
 		public readonly array $row_sizes = array(),
+		public readonly ?ValueSizes $value_sizes = null,
 	) {
 	}
 
@@ -223,6 +226,15 @@ final class Side {
 	 */
 	public function with_row_sizes( array $rows ): self {
 		return $this->copy( array( 'row_sizes' => $rows ) );
+	}
+
+	/**
+	 * A copy with a size per value of an attribute.
+	 *
+	 * @param ValueSizes|null $sizes The sizes; null for none.
+	 */
+	public function with_value_sizes( ?ValueSizes $sizes ): self {
+		return $this->copy( array( 'value_sizes' => $sizes ) );
 	}
 
 	/**
@@ -353,6 +365,7 @@ final class Side {
 			null === $base_id ? null : self::int_or_null( $template['latestVersion'] ?? null ),
 			CanvasRatio::from_stored( $data['drawAtTemplateRatio'] ?? null ),
 			array_values( array_filter( array_map( array( RowSize::class, 'from_array' ), is_array( $data['rowSizes'] ?? null ) ? $data['rowSizes'] : array() ) ) ),
+			ValueSizes::from_array( $data['valueSizes'] ?? null ),
 		);
 		// A name the merchant did not type is what the side follows now, never a template id an earlier save stored.
 		return '' === $side->typed_label() ? $side->copy( array( 'label' => self::followed_label( $side->placement_name, $side->template_name, $side->key ) ) ) : $side;
@@ -387,6 +400,7 @@ final class Side {
 			'misfitSizes'         => $this->misfit_sizes,
 			'drawAtTemplateRatio' => $this->draw_at_template_ratio,
 			'rowSizes'            => array_map( static fn ( RowSize $row ): array => $row->to_array(), $this->row_sizes ),
+			'valueSizes'          => $this->value_sizes?->to_array(),
 		) + ( null === $this->pending_sizes ? array() : array(
 			'pendingSizes' => array_map(
 				static fn ( ?PrintSize $size ): array => null === $size ? array( 'placementDefault' => true ) : $size->stored(),
