@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.2.0...v1.3.0) (2026-11-10)
+
+
+### Features
+
+* list only the blank variants on sale, retired ones behind a toggle ([#45](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/45)) ([08a3988](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/08a39883e4de71e7b1e4dd531cdafeea2af3c7b6))
+* set which blank variant each variation is printed as from a shop tool ([#40](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/40)) ([895b3e7](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/895b3e70a8c1b05158574a6853eb06b380815a27))
+* **shop-tools:** reach a product's showcase pictures from the shop-tool route ([#43](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/43)) ([78bc4be](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/78bc4be441886ee4bff65b9f89e69f29d4cd2e3f))
+
+
+### Bug Fixes
+
+* **api:** read Pixonaut's answers through typed models that survive a removed field ([#42](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/42)) ([680122e](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/680122ef4071d315dae1def12ea25053fec46e0f))
+* **env:** raise PHP's memory limit with the page builders installed ([#46](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/46)) ([b726528](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/b726528f8ae158f8929f417ca2790cf7ccfbfd4b))
+* **sdk:** move to Pixonaut API 3.0.0, SDK 0.31.0 and pixonaut-php 3.0.0 ([#47](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/47)) ([cadab38](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/cadab38966546a78415ab8012a28fa12a0f2fbaf))
+* **storefront:** drop WooCommerce's label from an attribute in its own step ([#39](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/39)) ([6aec240](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/6aec240a4eaa7a86e7a745803cb0b33fd6d86ebc))
+
 ## [1.2.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.1.3...v1.2.0) (2026-11-09)
 
 
