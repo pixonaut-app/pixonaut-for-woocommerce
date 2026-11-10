@@ -106,15 +106,22 @@ final class VariationSizeField {
 		if ( ! isset( $posted[ PanelFields::PRINT_SIZE_LISTED ] ) ) {
 			return;
 		}
-		$this->sizes->save( $variation, self::parsed( $posted[ PanelFields::PRINT_SIZE ] ?? null ) );
+		$sizes = self::parsed( $posted[ PanelFields::PRINT_SIZE ] ?? null );
+		$held  = VariationSize::stored_on( $variation );
+		foreach ( $sizes as $key => $size ) {
+			// A custom size without a usable width and height keeps the size saved before, rather than falling back to the product's.
+			$sizes[ $key ] = $size ?? $held->size_of( (string) $key );
+		}
+		$this->sizes->save( $variation, $sizes );
 	}
 
 	/**
-	 * The sizes posted, by side key: each side set to a custom size with a
-	 * usable width and height; any other is the product's.
+	 * The sizes posted, by side key: each side set to a custom size, null
+	 * for one without a usable width and height; a side left out is the
+	 * product's.
 	 *
 	 * @param mixed $posted Rows of `kind`, `width`, `height` and `label`, by side key, unslashed.
-	 * @return array<string, PrintSize>
+	 * @return array<string, PrintSize|null>
 	 */
 	public static function parsed( mixed $posted ): array {
 		$sizes = array();
@@ -122,10 +129,7 @@ final class VariationSizeField {
 			if ( ! is_array( $row ) || self::CUSTOM !== ( $row['kind'] ?? null ) ) {
 				continue;
 			}
-			$size = PostedSides::custom_size( map_deep( $row, 'sanitize_text_field' ) );
-			if ( null !== $size ) {
-				$sizes[ sanitize_text_field( (string) $key ) ] = $size;
-			}
+			$sizes[ sanitize_text_field( (string) $key ) ] = PostedSides::custom_size( map_deep( $row, 'sanitize_text_field' ) );
 		}
 		return $sizes;
 	}

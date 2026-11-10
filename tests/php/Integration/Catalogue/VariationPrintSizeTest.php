@@ -18,6 +18,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Catalogue\VariationSizes;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variable;
@@ -163,7 +164,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
 		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
 
-		// The product is updated; Pixonaut now judges the size off the template's ratio.
+		// The product is updated onto the template's next version, whose ratio the size is off.
 		$this->script_varying_save( 'within' );
 		$this->recorder->json(
 			200,
@@ -176,7 +177,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 				),
 			)
 		);
-		$this->save( $parent->get_id() );
+		$this->save( $parent->get_id(), array(), array( 'template' => 'mini-tee@3' ) );
 
 		$this->assertSame( InvalidReason::WRONG_RATIO, VariationSize::stored_on( $this->reload_any( $small->get_id() ) )->refused( self::SIDE_KEY ) );
 		$this->assertFalse( $this->reload_any( $small->get_id() )->is_purchasable() );
@@ -202,6 +203,76 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$sizes->save( $this->reload_any( $small->get_id() ), array( PanelFields::OVERRIDE => 'yes' ) );
 
 		$this->assertSame( array(), VariationSize::stored_on( $this->reload_any( $small->get_id() ) )->sizes );
+	}
+
+	public function test_saving_the_same_size_again_asks_pixonaut_nothing(): void {
+		list( , $small ) = $this->linked( 'within' );
+		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
+		$requests = count( $this->recorder->requests );
+
+		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
+
+		$this->assertCount( $requests, $this->recorder->requests );
+		$this->assertTrue( $this->reload_any( $small->get_id() )->is_purchasable() );
+	}
+
+	public function test_a_custom_size_without_a_usable_width_keeps_the_one_saved(): void {
+		list( , $small ) = $this->linked( 'within' );
+		$this->save_variation( $small, 0, self::custom( '400', '500' ) );
+
+		$this->save_variation( $small, 0, self::custom( '', 'abc' ) );
+
+		$size = VariationSize::stored_on( $this->reload_any( $small->get_id() ) )->size_of( self::SIDE_KEY );
+		$this->assertSame( array( 400.0, 500.0 ), array( $size?->width_mm, $size?->height_mm ) );
+		$this->assertFalse( $this->reload_any( $small->get_id() )->is_purchasable() );
+	}
+
+	public function test_a_rejudge_pixonaut_cannot_answer_keeps_the_verdict_and_says_so(): void {
+		list( $parent, $small ) = $this->linked( 'within' );
+		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
+		$config = ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) );
+		$config->with_sides( array( $config->sides[0]->rolled_to( 3 ) ) )->save_to( $this->reload_any( $parent->get_id() ) );
+		$this->recorder->json( 500, array( 'error' => 'db_error' ) );
+
+		try {
+			( new VariationSizes( $this->catalogue ) )->rejudge( $this->reload_any( $parent->get_id() ) );
+			$this->fail( 'the caller is told to check again' );
+		} catch ( ApiException $e ) {
+			$this->assertSame( 500, $e->status );
+		}
+
+		$this->assertNull( VariationSize::stored_on( $this->reload_any( $small->get_id() ) )->refused( self::SIDE_KEY ), 'the verdict it had stands' );
+		$this->assertSame( InvalidReason::VARIATION_SIZE_UNCHECKED, ProductConfig::config_for( $this->reload_any( $small->get_id() ) )->invalid_reason );
+	}
+
+	public function test_a_rejudge_never_writes_over_sizes_saved_meanwhile(): void {
+		list( , $small ) = $this->linked( 'within' );
+		$this->save_variation( $small, 0, self::custom( '400', '500' ) );
+		$read = VariationSize::document_on( $this->reload_any( $small->get_id() ) );
+		$this->assertNotNull( $read );
+		$this->save_variation( $small, 0, array( 'kind' => 'product' ) );
+
+		$this->assertFalse( VariationSize::from_document( $read )->replace_on( $this->reload_any( $small->get_id() ), $read ) );
+		$this->assertSame( array(), VariationSize::stored_on( $this->reload_any( $small->get_id() ) )->sizes );
+	}
+
+	public function test_a_placement_with_areas_no_variant_sold_is_in_sells_nothing(): void {
+		$this->variants->answer = BlankFixture::variants(
+			array(
+				array(
+					'ref'     => 'v_huge',
+					'options' => array( self::AREAS_VARY_BY => '100x140' ),
+				),
+			),
+			array( self::AREAS_VARY_BY )
+		);
+
+		list( $parent, $small ) = $this->linked( 'within' );
+
+		$this->assertSame( InvalidReason::VARIANT_SIZE_UNFIT, ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) )->invalid_reason );
+		$this->assertFalse( $this->reload_any( $small->get_id() )->is_purchasable() );
 	}
 
 	/**

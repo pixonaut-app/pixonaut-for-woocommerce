@@ -137,8 +137,27 @@ final class VariationSize {
 	 * @param WC_Product $variation The variation.
 	 */
 	public static function stored_on( WC_Product $variation ): self {
-		$raw  = $variation->get_meta( self::META_KEY, true );
-		$data = is_string( $raw ) && '' !== $raw ? json_decode( $raw, true ) : null;
+		return self::from_document( self::document_on( $variation ) );
+	}
+
+	/**
+	 * The stored document as it is, for `replace_on()` to write over only it.
+	 *
+	 * @param WC_Product $variation The variation.
+	 * @return string|null Null when none is stored.
+	 */
+	public static function document_on( WC_Product $variation ): ?string {
+		$raw = $variation->get_meta( self::META_KEY, true );
+		return is_string( $raw ) && '' !== $raw ? $raw : null;
+	}
+
+	/**
+	 * The sizes a stored document holds; none for null or one that cannot be read.
+	 *
+	 * @param string|null $document A document as `document_on()` read it.
+	 */
+	public static function from_document( ?string $document ): self {
+		$data = null === $document ? null : json_decode( $document, true );
 		if ( ! is_array( $data ) || self::SCHEMA_VERSION !== ( $data['v'] ?? null ) || ! is_array( $data['sides'] ?? null ) ) {
 			return new self();
 		}
@@ -155,6 +174,39 @@ final class VariationSize {
 			);
 		}
 		return new self( $sizes );
+	}
+
+	/**
+	 * Stores the sizes on a variation only while the stored document is
+	 * still $expected, so a check that took a while never overwrites a size
+	 * the store manager saved meanwhile, nor restores one removed. Writes
+	 * the database directly; $variation itself is left as it was read.
+	 *
+	 * @param WC_Product $variation The variation.
+	 * @param string     $expected  The document the sizes were judged from, as `document_on()` read it.
+	 * @return bool False when another document was stored meanwhile, or none is; nothing is written then.
+	 */
+	public function replace_on( WC_Product $variation, string $expected ): bool {
+		global $wpdb;
+		$variation_id = $variation->get_id();
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- one conditional query on the variation's own row; its caches are cleared below.
+		$where = array(
+			'post_id'    => $variation_id,
+			'meta_key'   => self::META_KEY,
+			'meta_value' => $expected,
+		);
+		// No row matches once another document is stored, or none is.
+		$changed = array() === $this->sizes
+			? $wpdb->delete( $wpdb->postmeta, $where )
+			: $wpdb->update( $wpdb->postmeta, array( 'meta_value' => (string) wp_json_encode( $this->to_array() ) ), $where );
+		// phpcs:enable
+		if ( ! is_int( $changed ) || $changed < 1 ) {
+			return false;
+		}
+		clean_post_cache( $variation_id );
+		wp_cache_delete( (string) $variation_id, 'post_meta' );
+		wc_delete_product_transients( $variation_id );
+		return true;
 	}
 
 	/**

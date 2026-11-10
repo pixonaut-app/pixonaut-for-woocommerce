@@ -565,8 +565,10 @@ final class ProductLinker {
 			// The menu stays as entered, so the refused size is shown with why; the product is not sold meanwhile.
 			return array( $sized( $legal, true )->with_misfit_sizes( $misfits )->with_row_sizes( $rows ), $reason ?? $refused );
 		}
+		// A placement with an area per row, none of which any variant sold can be printed at, sells nothing at the default.
+		$unfit = null !== $varying && Side::STANDING !== $input->mode && array() === $rows && array() !== PrintAreas::areas( $varying, $placement_id ) ? InvalidReason::VARIANT_SIZE_UNFIT : null;
 		// A starting size Pixonaut cannot print leaves the first legal one to start on.
-		return array( $sized( $legal, false, $legal_at[ $checked_at[ $input->start ] ?? -1 ] ?? 0 )->with_misfit_sizes( $misfits )->with_row_sizes( $rows ), $reason );
+		return array( $sized( $legal, false, $legal_at[ $checked_at[ $input->start ] ?? -1 ] ?? 0 )->with_misfit_sizes( $misfits )->with_row_sizes( $rows ), $reason ?? $unfit );
 	}
 
 	/**
