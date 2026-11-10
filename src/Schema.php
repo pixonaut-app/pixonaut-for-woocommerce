@@ -143,6 +143,13 @@ final class Schema {
 	const PRODUCT_MOVED_ATTRIBUTES_META = '_pixonaut_moved_attributes';
 
 	/**
+	 * Product meta listing the values of the attribute a variable product is
+	 * listed by, one card per value: a row per term id, in the product's
+	 * order of values. The shop's listings join it to show each card.
+	 */
+	const PRODUCT_SPLIT_CARD_META = '_pixonaut_split_card';
+
+	/**
 	 * Product and variation meta recording its Pixonaut picture: the
 	 * attachment, and what it was drawn from.
 	 */

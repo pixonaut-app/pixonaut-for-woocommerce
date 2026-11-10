@@ -91,6 +91,9 @@ final class SplitListing {
 	 * @param bool $split        Whether its values are listed as their own products by default.
 	 */
 	public static function set_attribute_default( int $attribute_id, bool $split ): void {
+		if ( self::attribute_default( $attribute_id ) === $split ) {
+			return;
+		}
 		$ids = array_values( array_diff( self::default_attributes(), array( $attribute_id ) ) );
 		if ( $split ) {
 			$ids[] = $attribute_id;
@@ -98,9 +101,10 @@ final class SplitListing {
 		}
 		if ( array() === $ids ) {
 			delete_option( self::OPTION );
-			return;
+		} else {
+			update_option( self::OPTION, $ids, true );
 		}
-		update_option( self::OPTION, $ids, true );
+		SplitCards::write_attribute( $attribute_id );
 	}
 
 	/**
