@@ -1488,3 +1488,18 @@
 	flex-wrap: nowrap;
 	align-items: flex-start;
 }
+
+/* A variation's own rows outside the override box: no panel height of
+ * WooCommerce's, and lined up with the Pixonaut heading. */
+.pixonaut-variation-panel
+> .woocommerce_options_panel:not(.pixonaut-variation-fields) {
+	min-height: 0;
+	padding: 0;
+}
+
+.pixonaut-variation-panel
+	> .woocommerce_options_panel:not(.pixonaut-variation-fields)
+	> .form-field {
+	/* biome-ignore lint/complexity/noImportantStyles: the rows' own padding above is set with !important against WooCommerce's. */
+	padding-left: 0 !important;
+}
