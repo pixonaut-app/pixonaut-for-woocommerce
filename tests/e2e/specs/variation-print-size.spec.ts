@@ -116,7 +116,9 @@ test("a variation prints at its blank variant's area, or at a size of its own ke
 	// Each variation is paired with its variant; the small one gets a size of its own, the medium one one too large.
 	await openVariations(page, id);
 	const small = await variation(page, 'S');
-	await small.getByLabel('Blank variant').selectOption('Color: White, Size: S');
+	await small
+		.getByLabel('Variant', { exact: true })
+		.selectOption('Color: White, Size: S');
 	await expect(small.locator('.pixonaut-variation-size-custom')).toBeHidden();
 	await sizes(small)
 		.getByLabel('Print size: Front')
@@ -125,7 +127,7 @@ test("a variation prints at its blank variant's area, or at a size of its own ke
 	await sizes(small).getByLabel('Height in millimetres').fill('180');
 	const medium = await variation(page, 'M');
 	await medium
-		.getByLabel('Blank variant')
+		.getByLabel('Variant', { exact: true })
 		.selectOption('Color: White, Size: M');
 	await sizes(medium)
 		.getByLabel('Print size: Front')
