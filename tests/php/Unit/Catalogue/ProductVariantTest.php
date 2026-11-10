@@ -314,6 +314,29 @@ final class ProductVariantTest extends TestCase {
 	 *
 	 * @return list<BlankVariant>
 	 */
+	public function test_a_size_written_another_way_matches_the_printshops_variant(): void {
+		$posters = BlankVariant::list_from(
+			array(
+				array(
+					'ref'     => 'v_50x70',
+					'options' => array( 'Size' => '20x30" / 50x70cm' ),
+				),
+				array(
+					'ref'     => 'v_70x100',
+					'options' => array( 'Size' => '28x40" / 70x100cm' ),
+				),
+			)
+		);
+		$by_size = static fn ( array $attributes ): ?string => ProductVariant::resolve( self::BLANK_ID, null, $attributes, $posters )->ref;
+
+		$this->assertSame( 'v_70x100', $by_size( array( 'Size' => '70×100 cm' ) ) );
+		$this->assertSame( 'v_70x100', $by_size( array( 'Size' => '700 x 1000 mm' ) ) );
+		$this->assertSame( 'v_50x70', $by_size( array( 'Size' => '70 × 50 cm' ) ), 'Either way round.' );
+		$this->assertSame( 'v_50x70', $by_size( array( 'Format' => '50x70cm' ) ), 'A size no attribute is named after matches the attribute naming it.' );
+		$this->assertNull( $by_size( array( 'Size' => '30×40 cm' ) ) );
+		$this->assertNull( $by_size( array( 'Size' => '70x100' ) ), 'Numbers without a unit name no size.' );
+	}
+
 	private static function variants(): array {
 		$variant = static fn ( string $ref, string $colour, string $size, array $views = array() ): array => array(
 			'ref'     => $ref,
