@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use WC_Product;
 use WC_Query;
@@ -27,7 +28,8 @@ use WP_Query;
  * once.
  *
  * Each card links to the product with its value chosen. A filter by the
- * split attribute keeps only the cards of the chosen values.
+ * split attribute keeps only the cards of the chosen values, and a value
+ * whose variations are all on a template that is not live has no card.
  */
 final class SplitCardListings {
 
@@ -113,6 +115,9 @@ final class SplitCardListings {
 		if ( array() !== $filtered_out ) {
 			$clauses['where'] = ( $clauses['where'] ?? '' ) . " AND ( {$alias}.meta_value IS NULL OR {$alias}.meta_value NOT IN ( '" . implode( "', '", $filtered_out ) . "' ) )";
 		}
+		foreach ( self::not_live_cards() as $product_id => $term_ids ) {
+			$clauses['where'] .= " AND NOT ( {$wpdb->posts}.ID = " . $product_id . " AND {$alias}.meta_value IN ( '" . implode( "', '", $term_ids ) . "' ) )";
+		}
 		return $clauses;
 	}
 
@@ -139,6 +144,33 @@ final class SplitCardListings {
 			}
 		}
 		return $out;
+	}
+
+	/**
+	 * The cards left out because each variation offered with their value
+	 * is on a template that is not live, by product. Only the products
+	 * `NotLiveProducts` names as candidates are read.
+	 *
+	 * @return array<int, list<int>> Term ids by product id.
+	 */
+	private static function not_live_cards(): array {
+		$candidates = NotLiveProducts::candidate_ids();
+		if ( array() === $candidates ) {
+			return array();
+		}
+		update_meta_cache( 'post', $candidates );
+		$cards = array();
+		foreach ( $candidates as $product_id ) {
+			if ( array() === get_post_meta( $product_id, SplitCards::META, false ) ) {
+				continue;
+			}
+			$product  = wc_get_product( $product_id );
+			$term_ids = $product instanceof WC_Product ? SplitCards::not_live_values( $product ) : array();
+			if ( array() !== $term_ids ) {
+				$cards[ $product_id ] = $term_ids;
+			}
+		}
+		return $cards;
 	}
 
 	/**

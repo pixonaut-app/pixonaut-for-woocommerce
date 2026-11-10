@@ -778,14 +778,17 @@ add_action(
 						$key      = (string) $request['key'];
 						$category = get_term_by( 'slug', 'split-' . $key, 'product_cat' );
 						if ( $category instanceof WP_Term ) {
-							foreach ( wc_get_products(
+							$products = wc_get_products(
 								array(
 									'category' => array( $category->slug ),
 									'limit'    => -1,
 									'status'   => 'any',
 								)
-							) as $product ) {
-								$product->delete( true );
+							);
+							foreach ( is_array( $products ) ? $products : array() as $product ) {
+								if ( $product instanceof WC_Product ) {
+									$product->delete( true );
+								}
 							}
 							wp_delete_term( $category->term_id, 'product_cat' );
 						}

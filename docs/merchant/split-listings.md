@@ -55,6 +55,9 @@ Product Collection block on the shop's templates) both show them.
   tags. A filter by the attribute the product is listed by keeps only the
   chosen values' cards; any other filter keeps or drops all of them, as it
   would the product.
+- **Templates that are not live**: a value whose every variation is on a
+  paused or unpublished template has no card, as a product would have none;
+  a card chooses only among the variations on a live template.
 - **Elsewhere** the product is shown once: related products, up-sells,
   cross-sells and a Product Collection block with its own products chosen.
 

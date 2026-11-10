@@ -7,10 +7,14 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\InvalidReason;
+use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Storefront\SplitCardListings;
+use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Simple;
@@ -163,6 +167,43 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'attribute_pa_bild=utan-bild', $listed['links'][0] );
 	}
 
+	public function test_a_value_sold_only_on_a_template_that_is_not_live_has_no_card(): void {
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		$poster = $this->poster();
+		self::personalised()->save_to( $poster );
+		$paused = self::personalised()->with_override( true )->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE );
+		$sizes  = array();
+		foreach ( $poster->get_children() as $id ) {
+			$variation = wc_get_product( $id );
+			$this->assertInstanceOf( WC_Product::class, $variation );
+			$picture = $variation->get_attribute( 'pa_bild' );
+			if ( 'Utan bild' === $picture || '50x70' === $variation->get_attribute( 'pa_storlek' ) ) {
+				$paused->save_to( $variation );
+			}
+			$sizes[ $picture ][] = $variation->get_attribute( 'pa_storlek' );
+		}
+		$this->assertSame( array( '30x40', '50x70' ), $sizes['Med bild'] );
+
+		$listed = $this->shop();
+
+		$this->assertSame( array( $poster->get_id() ), $listed['ids'], 'without a photo is only on the paused template' );
+		$this->assertSame( 1, $listed['found'] );
+		$this->assertSame(
+			add_query_arg(
+				array(
+					'attribute_pa_bild'    => 'med-bild',
+					'attribute_pa_storlek' => '30x40',
+				),
+				(string) get_permalink( $poster->get_id() )
+			),
+			$listed['links'][0],
+			'the card chooses the one size it is offered in on a live template'
+		);
+
+		self::personalised()->with_override( true )->save_to( $this->variation_of( $poster, 'Utan bild' ) );
+		$this->assertSame( 2, $this->shop()['found'], 'live again, it is listed again' );
+	}
+
 	public function test_another_product_query_lists_the_product_once(): void {
 		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
 		$poster = $this->poster();
@@ -197,6 +238,36 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$keyed = $this->listings->keys( '<li data-wp-key="product-item-7"></li><li data-wp-key="product-item-7"></li><li data-wp-key="product-item-9"></li>' );
 
 		$this->assertSame( '<li data-wp-key="product-item-7-11"></li><li data-wp-key="product-item-7-12"></li><li data-wp-key="product-item-9"></li>', $keyed );
+	}
+
+	/**
+	 * A personalised configuration on a live template.
+	 */
+	private static function personalised(): ProductConfig {
+		return new ProductConfig(
+			personalise: true,
+			blank_id: DesignFixture::BLANK_ID,
+			blank_name: 'Fixture tee',
+			sides: array(
+				new Side( 'front', 'Front', DesignFixture::PLACEMENT_ID, 'Front', DesignFixture::TEMPLATE_BASE_ID, DesignFixture::LIVE_VERSION, null, 'Mini tee', array( new PrintSize( DesignFixture::WIDTH_MM, DesignFixture::HEIGHT_MM, 'Large' ) ) ),
+			)
+		);
+	}
+
+	/**
+	 * A product's variation with a picture.
+	 *
+	 * @param WC_Product $product A poster.
+	 * @param string     $picture The picture's name.
+	 */
+	private function variation_of( WC_Product $product, string $picture ): WC_Product {
+		foreach ( $product->get_children() as $id ) {
+			$variation = wc_get_product( $id );
+			if ( $variation instanceof WC_Product && $picture === $variation->get_attribute( 'pa_bild' ) ) {
+				return $variation;
+			}
+		}
+		$this->fail( "No variation {$picture}" );
 	}
 
 	/**

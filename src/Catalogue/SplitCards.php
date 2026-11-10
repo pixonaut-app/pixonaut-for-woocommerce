@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Catalogue;
 use Pixonaut\WooCommerce\Schema;
 use WC_Product;
 use WC_Product_Attribute;
+use WC_Product_Variation;
 
 /**
  * A product listed by one of its attributes (`SplitListing`) is shown once
@@ -201,7 +202,7 @@ final class SplitCards {
 	/**
 	 * The query parameters a card's link chooses its value with: the split
 	 * attribute's, and each other variation attribute's that every variation
-	 * selling the value shares. Empty when the product is not listed by an
+	 * offered with the value on a live template shares. Empty when the product is not listed by an
 	 * attribute holding the term.
 	 *
 	 * @param WC_Product $product A product.
@@ -216,7 +217,7 @@ final class SplitCards {
 		}
 		$key      = self::field( $attribute );
 		$matching = array_filter(
-			self::variations( $product->get_id() ),
+			array_map( static fn ( array $offer ): array => $offer['attributes'], array_filter( self::offers( $product ), static fn ( array $offer ): bool => $offer['offered'] && $offer['live'] ) ),
 			static fn ( array $variation ): bool => in_array( $variation[ $key ] ?? '', array( '', $term->slug ), true )
 		);
 		$chosen   = array( $key => $term->slug );
@@ -231,6 +232,59 @@ final class SplitCards {
 			}
 		}
 		return $chosen;
+	}
+
+	/**
+	 * The values among a product's cards that the shop leaves out: those
+	 * whose every variation WooCommerce offers is on a template that is not
+	 * live, as `NotLiveProducts` leaves out a whole product. A value with no
+	 * variation offered at all keeps its card, as a product would.
+	 *
+	 * @param WC_Product $product A product listed by an attribute.
+	 * @return list<int> Term ids.
+	 */
+	public static function not_live_values( WC_Product $product ): array {
+		$attribute = SplitListing::attribute_of( $product );
+		if ( null === $attribute ) {
+			return array();
+		}
+		$key    = self::field( $attribute );
+		$offers = self::offers( $product );
+		$hidden = array();
+		foreach ( self::values( $product ) as $term_id ) {
+			$term = get_term( $term_id, $attribute->get_name() );
+			if ( ! $term instanceof \WP_Term ) {
+				continue;
+			}
+			$shown = array_filter( $offers, static fn ( array $offer ): bool => $offer['offered'] && in_array( $offer['attributes'][ $key ] ?? '', array( '', $term->slug ), true ) );
+			if ( array() !== $shown && array() === array_filter( $shown, static fn ( array $offer ): bool => $offer['live'] ) ) {
+				$hidden[] = $term_id;
+			}
+		}
+		return $hidden;
+	}
+
+	/**
+	 * A product's enabled variations, each with its attribute values,
+	 * whether WooCommerce offers it (it has a price, and is not hidden out
+	 * of stock) and whether it is on a live template.
+	 *
+	 * @param WC_Product $product A variable product.
+	 * @return list<array{attributes: array<string, string>, offered: bool, live: bool}>
+	 */
+	private static function offers( WC_Product $product ): array {
+		$offers = array();
+		foreach ( ProductConfig::sold_variations( $product ) as list( $variation, $config ) ) {
+			if ( ! $variation instanceof WC_Product_Variation ) {
+				continue;
+			}
+			$offers[] = array(
+				'attributes' => array_map( 'strval', $variation->get_variation_attributes() ),
+				'offered'    => $variation->variation_is_visible(),
+				'live'       => ! NotLiveProducts::not_live( $config ),
+			);
+		}
+		return $offers;
 	}
 
 	/**
