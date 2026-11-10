@@ -3,15 +3,22 @@
 // A spec runs when it changed itself, when a helper it imports changed (the
 // import graph of tests/, followed transitively), or when a source it is about
 // changed: tests/e2e/reach.mjs maps each spec to those sources. A source in
-// the map's NO_SPEC list selects no spec. A source in neither list, or a
-// change to the e2e harness itself, runs every spec.
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+// the map's NO_SPEC list selects no spec. A source in neither list (a new
+// one, or one removed with its entry), or a change to the e2e harness itself,
+// runs every spec. Only the specs of `pnpm test:e2e`'s projects count.
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, normalize, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { root } from './env.mjs';
 
 export const SPECS_DIR = 'tests/e2e/specs';
 const SPEC = /\.spec\.ts$/;
+
+/**
+ * Specs no project of `pnpm test:e2e` runs: playwright.config.ts gives the
+ * compatibility spec to the Nightly's theme and page builder projects only.
+ */
+const NIGHTLY_ONLY = /^compatibility\.spec\.ts$/;
 const TS = /\.ts$/;
 
 /** Sources tests/e2e/reach.mjs has to place: what the plugin ships. */
@@ -60,6 +67,15 @@ export function allSpecs(dir = root) {
 	return readdirSync(join(dir, SPECS_DIR))
 		.filter((name) => SPEC.test(name))
 		.sort();
+}
+
+/**
+ * The spec file names `pnpm test:e2e` runs, sorted.
+ *
+ * @param {string} [dir]
+ */
+export function gateSpecs(dir = root) {
+	return allSpecs(dir).filter((name) => !NIGHTLY_ONLY.test(name));
 }
 
 /**
@@ -125,7 +141,7 @@ function importersBySource(dir) {
  * @returns {Promise<{ specs: string[], everything?: string }>}
  */
 export async function affectedSpecs(files, dir = root) {
-	const specs = allSpecs(dir);
+	const specs = gateSpecs(dir);
 	const harness = files.find((file) => HARNESS.test(file));
 	if (harness !== undefined) {
 		return { specs, everything: `${harness} changed` };
@@ -156,7 +172,9 @@ export async function affectedSpecs(files, dir = root) {
 			.map(([spec]) => spec);
 		const placed =
 			reaching.length > 0 || NO_SPEC.some((e) => entryMatches(e, file));
-		if (!placed && existsSync(join(dir, file))) {
+		// A removed source counts too: its map entry goes with it, and what
+		// used it may still break.
+		if (!placed) {
 			return {
 				specs,
 				everything: `${file} is not in tests/e2e/reach.mjs`,

@@ -22,6 +22,7 @@ const ALL_STEPS = [
 	'Release zip',
 	'Release zip (wordpress.org)',
 	'PHP integration (HPOS off, on)',
+	'Build assets for e2e',
 	'e2e (classic, block-primary, astra)',
 ];
 
@@ -128,9 +129,37 @@ describe('ci:local', () => {
 				'Conflict markers',
 				'Biome',
 				'TypeScript',
+				'Build assets for e2e',
 				'e2e (classic, block-primary, astra)',
 			]);
 			expect(specs(['--affected'], dir)).toEqual(['smoke.spec.ts']);
+		});
+
+		it('builds the assets before the specs an edited script reaches', () => {
+			const dir = branchEditing(['assets/src/storefront/frame-shape.ts']);
+
+			expect(steps(['--affected'], dir)).toEqual([
+				'Conflict markers',
+				'Biome',
+				'TypeScript',
+				'JS unit',
+				'.pot freshness',
+				'Plugin Check',
+				'Build assets for e2e',
+				'e2e (classic, block-primary, astra)',
+			]);
+		});
+
+		it('runs no e2e step for a spec only the Nightly runs', () => {
+			const dir = branchChanging({
+				'tests/e2e/specs/compatibility.spec.ts': '',
+			});
+
+			expect(steps(['--affected'], dir)).toEqual([
+				'Conflict markers',
+				'Biome',
+				'TypeScript',
+			]);
 		});
 
 		it('runs every e2e spec when the Playwright config changes', () => {

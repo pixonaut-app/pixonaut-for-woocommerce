@@ -111,6 +111,7 @@ and exits non-zero if any step failed.
 | Release zip | `pnpm release:zip` | yes |
 | Release zip (wordpress.org), with its listing assets | `pnpm release:zip --flavor wporg` | yes |
 | PHP integration, HPOS off then on, then the `multisite` group | `pnpm test:integration` | yes |
+| Build assets for e2e (the tests site serves `assets/build/`) | `pnpm build` | |
 | e2e, `classic`, `block-primary` and `astra` | `pnpm test:e2e` | yes |
 
 The `block-secondary` e2e project is not part of the gate; run it with
@@ -201,7 +202,12 @@ The e2e step runs only the specs the change reaches (`bin/ci-local-e2e.mjs`):
   every flow passes through (`Plugin.php`, the API client, the storefront
   entry) is in its `NO_SPEC` list and selects none;
 - every spec when the change touches `playwright.config.ts`, the e2e
-  mu-plugins or the pinned SDK, or a source the map does not place.
+  mu-plugins or the pinned SDK, or a source the map does not place (a new
+  one, or one removed along with its entry).
+
+Only the specs of `pnpm test:e2e`'s projects count: a change to
+`compatibility.spec.ts` alone runs no e2e step. The assets are built before
+the e2e step whenever it runs.
 
 A new source file goes into `tests/e2e/reach.mjs` with the change that adds
 it: the JS unit suite fails while a shipped source is missing from it, and

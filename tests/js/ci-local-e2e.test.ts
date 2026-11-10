@@ -92,9 +92,23 @@ describe('affectedSpecs', () => {
 		});
 	});
 
-	it('skips a removed source the map does not place', async () => {
+	it('runs every spec for a removed source the map no longer places', async () => {
 		expect(await affectedSpecs(['src/Admin/Gone.php'], checkout())).toEqual({
-			specs: [],
+			specs: BOTH,
+			everything: 'src/Admin/Gone.php is not in tests/e2e/reach.mjs',
+		});
+	});
+
+	it('leaves out a spec only the Nightly runs', async () => {
+		const dir = checkout();
+		writeFiles(dir, { 'tests/e2e/specs/compatibility.spec.ts': '' });
+
+		expect(
+			await affectedSpecs(['tests/e2e/specs/compatibility.spec.ts'], dir),
+		).toEqual({ specs: [] });
+		expect(await affectedSpecs(['playwright.config.ts'], dir)).toEqual({
+			specs: BOTH,
+			everything: 'playwright.config.ts changed',
 		});
 	});
 

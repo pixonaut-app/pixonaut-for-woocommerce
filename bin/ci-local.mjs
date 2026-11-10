@@ -57,6 +57,17 @@ const GLOBAL =
 	/^(package\.json|pnpm-lock\.yaml|composer\.(json|lock)|\.wp-env\.json|bin\/(env|php|wp-env|wp-env-override|ci-local)\.mjs)$/;
 
 const E2E_STEP = 'e2e (classic, block-primary, astra)';
+const BUILD_STEP = 'Build assets for e2e';
+
+/** What the e2e step runs on; ci-local-e2e.mjs then picks its specs. */
+const E2E_AFFECTED_BY = [
+	PHP_SOURCE,
+	/^assets\/src\//,
+	/^tests\/e2e\//,
+	/^tests\/fake-pixonaut\/src\/fixture-ids\.ts$/,
+	/^playwright\.config\.ts$/,
+	/^contracts\/pixonaut\/sdk\.lock\.json$/,
+];
 
 const STEPS = [
 	{
@@ -205,6 +216,13 @@ const STEPS = [
 		],
 	},
 	{
+		// The tests site serves assets/build/. Built here so the e2e step
+		// never runs on a stale build when no release zip built it first.
+		name: BUILD_STEP,
+		command: ['pnpm', 'build'],
+		affectedBy: E2E_AFFECTED_BY,
+	},
+	{
 		name: E2E_STEP,
 		command: ['pnpm', 'test:e2e'],
 		wpEnv: true,
@@ -212,14 +230,7 @@ const STEPS = [
 			existsSync(join(root, FAKE_DIR))
 				? undefined
 				: `No fake Pixonaut yet (${FAKE_DIR}): the e2e suite runs without it.`,
-		affectedBy: [
-			PHP_SOURCE,
-			/^assets\/src\//,
-			/^tests\/e2e\//,
-			/^tests\/fake-pixonaut\/src\/fixture-ids\.ts$/,
-			/^playwright\.config\.ts$/,
-			/^contracts\/pixonaut\/sdk\.lock\.json$/,
-		],
+		affectedBy: E2E_AFFECTED_BY,
 	},
 ];
 
@@ -283,7 +294,7 @@ async function selectSteps(affected) {
 		);
 	}
 	if (specs.length === 0) {
-		return steps.filter((step) => step !== e2e);
+		return steps.filter((step) => step !== e2e && step.name !== BUILD_STEP);
 	}
 	return steps.map((step) =>
 		step === e2e
