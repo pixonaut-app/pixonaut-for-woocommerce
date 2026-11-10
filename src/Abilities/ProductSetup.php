@@ -275,12 +275,11 @@ final class ProductSetup {
 	 * @return array{valid: bool, reason: string|null, message: string|null}
 	 */
 	public static function validity( WC_Product $product ): array {
-		$config = ProductConfig::config_for( $product );
-		$valid  = ! $config->personalise || $config->valid;
+		$reason = InvalidReason::of( $product, ProductConfig::config_for( $product ) );
 		return array(
-			'valid'   => $valid,
-			'reason'  => $valid ? null : $config->invalid_reason,
-			'message' => $valid ? null : InvalidReason::message( $config->invalid_reason ),
+			'valid'   => null === $reason,
+			'reason'  => $reason,
+			'message' => null === $reason ? null : InvalidReason::message( $reason ),
 		);
 	}
 

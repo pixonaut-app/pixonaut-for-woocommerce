@@ -166,8 +166,10 @@ final class VariationPanel {
 	}
 
 	/**
-	 * Raises or clears the product's variant notice once, after WooCommerce
-	 * saved a batch of its variations, rather than once per variation.
+	 * Raises or clears the product's variant notice, and its own notice,
+	 * once, after WooCommerce saved a batch of its variations, rather than
+	 * once per variation: whether the product needs a print size of its
+	 * own depends on its variations' sizes.
 	 *
 	 * @param mixed $product_id The variable product.
 	 */
@@ -175,6 +177,7 @@ final class VariationPanel {
 		$product = wc_get_product( (int) $product_id );
 		if ( $product instanceof WC_Product ) {
 			$this->variant->note( $product );
+			$this->panel->note( $product, ProductConfig::stored_on( $product ) );
 		}
 	}
 

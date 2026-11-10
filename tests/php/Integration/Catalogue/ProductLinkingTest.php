@@ -548,6 +548,8 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_a_template_only_product_without_a_size_cannot_be_bought_and_raises_a_notice(): void {
 		$product = $this->product();
+		$this->script_template();
+		$this->recorder->json( 200, self::printshops() );
 
 		$this->save( $product->get_id(), array( 'pixonaut_blank' => '' ), array( 'placement' => '' ) );
 
@@ -556,7 +558,8 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertSame( InvalidReason::MISSING_PRINT_SIZE, $config->invalid_reason );
 		$this->assertSame( 'mini-tee', $config->sides[0]->template_base_id, 'the template is kept' );
 		$this->assertFalse( $saved->is_purchasable() );
-		$this->assertSame( array(), $this->recorder->requests, 'nothing to ask Pixonaut' );
+		$this->assertCount( 2, $this->recorder->requests, 'what a variation with a size would sell under: the template, then the printshops' );
+		$this->assertStringEndsWith( '/v1/templates/mini-tee%402', $this->recorder->requests[0]['url'] );
 		$key = ProductPanel::notice_key( $product->get_id() );
 		$this->assertStringContainsString( esc_html( InvalidReason::message( InvalidReason::MISSING_PRINT_SIZE ) ), $this->plugin->notices()->all()[ $key ]['message'] );
 	}

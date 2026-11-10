@@ -94,7 +94,34 @@ final class ProductLinker {
 		$linked = '' === $blank_id
 			? $this->template_only( $current, $posted->sides[0] ?? null, $posted->first_problem )
 			: $this->checked( $current, $blank_id, $posted->sides, $posted->problem );
-		return $this->standing( $this->live( self::versioned( $linked, $current, $posted->sides ) ), $current );
+		return self::valued( $this->standing( $this->live( self::versioned( $linked, $current, $posted->sides ) ), $current ), $current, $posted->sides );
+	}
+
+	/**
+	 * Each personalised side with its size per attribute value as entered,
+	 * or, where none was entered, as the side with the same key had it. A
+	 * standing side is printed at the size it starts on, so it has none.
+	 *
+	 * @param ProductConfig $linked  The configuration as checked.
+	 * @param ProductConfig $current What the product had.
+	 * @param SideInput[]   $inputs  The sides as entered.
+	 * @phpstan-param list<SideInput> $inputs
+	 */
+	private static function valued( ProductConfig $linked, ProductConfig $current, array $inputs ): ProductConfig {
+		$entered = array();
+		foreach ( $inputs as $input ) {
+			$entered[ $input->key ] = $input->value_sizes;
+		}
+		$had = array();
+		foreach ( $current->sides as $side ) {
+			$had[ $side->key ] = $side->value_sizes;
+		}
+		$sides = array();
+		foreach ( $linked->sides as $side ) {
+			$sizes   = $entered[ $side->key ] ?? $had[ $side->key ] ?? null;
+			$sides[] = $side->with_value_sizes( $side->is_standing() || null === $sizes || $sizes->is_empty() ? null : $sizes );
+		}
+		return $linked->with_sides( $sides );
 	}
 
 	/**
@@ -176,7 +203,8 @@ final class ProductLinker {
 	 * @param ProductConfig $config The configuration as checked.
 	 */
 	private function live( ProductConfig $config ): ProductConfig {
-		if ( ! $config->valid ) {
+		// A product without a size of its own still sells the variations that have one, so its template is checked too.
+		if ( ! $config->valid && InvalidReason::MISSING_PRINT_SIZE !== $config->invalid_reason ) {
 			return $config;
 		}
 		$read  = array();
@@ -373,7 +401,7 @@ final class ProductLinker {
 		$problem = in_array( $stored->invalid_reason, InvalidReason::INPUT, true ) ? $stored->invalid_reason : null;
 		foreach ( $sides as $side ) {
 			$menu     = $side->menu();
-			$inputs[] = new SideInput( $side->key, $side->typed_label(), $side->placement_id ?? '', null === $side->template_version ? '' : (string) new TemplateId( $side->template_base_id, $side->template_version ), $side->template_name ?? '', $menu, $side->start_size, $side->mode, $side->form_groups, $side->pinned, null, $side->draw_at_template_ratio );
+			$inputs[] = new SideInput( $side->key, $side->typed_label(), $side->placement_id ?? '', null === $side->template_version ? '' : (string) new TemplateId( $side->template_base_id, $side->template_version ), $side->template_name ?? '', $menu, $side->start_size, $side->mode, $side->form_groups, $side->pinned, null, $side->draw_at_template_ratio, $side->value_sizes );
 			if ( array() === $menu && null !== $side->placement_id ) {
 				// The side sells nothing and its menu is gone: only the last save can say why,
 				// unless Pixonaut did not answer it, which would keep the product retrying.
@@ -393,7 +421,7 @@ final class ProductLinker {
 			$kept[] = $side->with( $side->template_version, $before?->previous_version, $checked->valid ? $side->print_sizes : array(), $menu, null === $menu ? $side->start_size : $inputs[ $i ]->start )->with_offers_properties( $before?->offers_properties )
 				->with_versions( $before->pinned ?? false, $before?->previous_version, $before?->latest_version );
 		}
-		return $this->standing( $checked->with_sides( $kept ), $stored );
+		return self::valued( $this->standing( $checked->with_sides( $kept ), $stored ), $stored, $inputs );
 	}
 
 	/**

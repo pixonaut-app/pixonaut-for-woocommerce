@@ -65,6 +65,7 @@ import {
 } from './template-version';
 import { chosenThumbnail, thumbnailOptions } from './thumbnails';
 import { initUsePicture } from './use-picture';
+import { initValueSizes } from './value-sizes';
 import {
 	initOverride,
 	initVariationSizes,
@@ -762,6 +763,7 @@ function initSide(panel: Panel, side: HTMLElement): void {
 		}
 	});
 	showModeWarnings(side);
+	initValueSizes(side);
 	side
 		.querySelector('.pixonaut-side-label')
 		?.addEventListener('input', () => showSideName(side));

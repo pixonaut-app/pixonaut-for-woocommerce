@@ -1229,6 +1229,34 @@
 	width: 7em !important;
 }
 
+#pixonaut_product_data .pixonaut-value-size-table {
+	margin-top: 8px;
+	border-collapse: collapse;
+}
+
+#pixonaut_product_data .pixonaut-value-size-table th {
+	padding: 4px 12px 4px 0;
+	font-weight: 400;
+	text-align: start;
+}
+
+#pixonaut_product_data .pixonaut-value-size-table td {
+	padding: 4px 0;
+}
+
+#pixonaut_product_data .pixonaut-value-size-table input {
+	float: none;
+	margin: 0;
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce sizes the panel's text inputs with !important. */
+	width: 4.5em !important;
+	padding: 0 6px;
+}
+
+#pixonaut_product_data .pixonaut-value-size-table input.pixonaut-size-label {
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce sizes the panel's text inputs with !important. */
+	width: 10em !important;
+}
+
 :is(#pixonaut_product_data, .pixonaut-variation-panel)
 	.pixonaut-size-body
 	> :is(.pixonaut-size-limit, .pixonaut-field-error) {

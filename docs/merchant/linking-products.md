@@ -460,7 +460,10 @@ millimetres, in the template's shape (a 5:7 sign, for example, at 500 × 700
 mm).
 Pixonaut checks each one against the template's aspect ratio when you update
 the product. A product without a blank and without a print size cannot be
-bought.
+bought. On a variable product, a print size here is needed only for the
+variations that have none of their own or from their attribute value (see
+[Print sizes by attribute](#print-sizes-by-attribute)): when every variation
+has one, leave the table empty.
 
 #### Templates whose background shows through
 
@@ -520,6 +523,32 @@ Untick the override and save to make the variation follow the product
 again. Its own link is kept, unused and unchecked, so ticking the override
 again restores it, checked again on the next save.
 
+### Print sizes by attribute
+
+On a variable product, a side can take its print size from one attribute
+the variations are chosen by, so you enter each size once rather than on
+every variation. A poster sold in Posterstorlek 30×40 cm and 50×70 cm, for
+example, prints the 30×40 cm variations at 300 × 400 mm and the 50×70 cm
+ones at 500 × 700 mm:
+
+1. In the side's **Print sizes**, under **Print size by attribute**, choose
+   the attribute, such as *Posterstorlek*. Its values are listed.
+2. Enter each value's width and height in millimetres. The label customers
+   see is the value's name unless you enter another. A value left empty has
+   no size of its own.
+3. Update the product.
+
+Every variation with that value prints at its size, checked by Pixonaut for
+the variation as its own size is (below). A variation with a size of its
+own prints at that instead. A variation set to "Any" for the attribute, or
+whose value has no size, prints at the side's print sizes, which it then
+needs: on a product without a blank, the product cannot be bought in that
+variation until it has one, and the notice says so.
+
+A value's size Pixonaut refuses, or could not check yet, stops only the
+variations with that value from being bought, and their **Print size**
+field says why.
+
 ### A variation's own print size
 
 A variation that follows the product can still be printed at a size of its
@@ -528,7 +557,9 @@ section, each personalised side has a **Print size** field:
 
 - *As the product* prints the side as the product's **Pixonaut** tab says,
   and names the size: on a blank whose print area changes with the size,
-  the variation's blank variant's area.
+  the variation's blank variant's area. With a size per attribute value,
+  it reads *As its Posterstorlek (30×40 cm)*: the size of the variation's
+  value.
 - *Custom size for this variation* takes a width and a height in
   millimetres, and the label customers see. Only that size is sold for the
   variation; its blank, sides, templates and settings follow the product.
@@ -717,7 +748,8 @@ include:
 - two sides on the same print position, or with the same key;
 - more than ten sides, more than 50 print sizes on a side, or a custom
   size without a usable width and height;
-- no print size on a product without a blank;
+- no print size on a product without a blank, or, on a variable product,
+  on a variation that has none of its own or from its attribute value;
 - the blank is deleted in Pixonaut, or the blank, print position or template no
   longer exists there;
 - a print size does not fit the print position or the template's shape;

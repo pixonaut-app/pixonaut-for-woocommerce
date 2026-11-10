@@ -43,8 +43,9 @@ final class InvalidProductNotice {
 	 * @param ProductConfig $config  Its configuration as saved; a variation's applies only while it overrides.
 	 */
 	public function note( WC_Product $product, ProductConfig $config ): void {
-		$key = self::key( $product->get_id() );
-		if ( ! $config->personalise || $config->valid || ( $product->is_type( 'variation' ) && ! $config->override ) || TrashedProducts::in_trash( $product ) ) {
+		$key    = self::key( $product->get_id() );
+		$reason = InvalidReason::of( $product, $config );
+		if ( null === $reason || ( $product->is_type( 'variation' ) && ! $config->override ) || TrashedProducts::in_trash( $product ) ) {
 			$this->notices->remove( $key );
 			return;
 		}
@@ -64,7 +65,7 @@ final class InvalidProductNotice {
 				/* translators: 1: product edit link, 2: why it cannot be bought. */
 				__( 'Customers cannot buy %1$s: %2$s', 'pixonaut-for-woocommerce' ),
 				sprintf( '<a href="%s">%s</a>', esc_url( $link ), esc_html( $product->get_name() ) ),
-				esc_html( InvalidReason::message( $config->invalid_reason ) )
+				esc_html( InvalidReason::message( $reason ) )
 			),
 			'error',
 			false
