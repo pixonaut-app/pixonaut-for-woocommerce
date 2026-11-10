@@ -111,6 +111,33 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$this->assertSame( array( $this->term( 'med-bild' ) ), $this->cards( $poster ), 'a deleted value has no card' );
 	}
 
+	public function test_a_trashed_and_restored_product_has_its_cards_again(): void {
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		$poster = $this->poster();
+		$both   = array( $this->term( 'med-bild' ), $this->term( 'utan-bild' ) );
+
+		wp_trash_post( $poster->get_id() );
+		$this->assertSame( array(), $this->cards( $poster ), 'its variations are trashed with it' );
+
+		wp_untrash_post( $poster->get_id() );
+		$this->assertSame( $both, $this->cards( $poster ) );
+	}
+
+	public function test_a_trashed_restored_or_deleted_variation_rewrites_its_products_cards(): void {
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		$poster  = $this->poster();
+		$without = $this->variation_of( $poster, 'Utan bild' );
+
+		wp_trash_post( $without->get_id() );
+		$this->assertSame( array( $this->term( 'med-bild' ) ), $this->cards( $poster ) );
+
+		wp_untrash_post( $without->get_id() );
+		$this->assertSame( array( $this->term( 'med-bild' ), $this->term( 'utan-bild' ) ), $this->cards( $poster ) );
+
+		wp_delete_post( $without->get_id(), true );
+		$this->assertSame( array( $this->term( 'med-bild' ) ), $this->cards( $poster ), 'deleted without WooCommerce' );
+	}
+
 	public function test_the_shop_lists_a_card_per_value_and_counts_them(): void {
 		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
 		$poster = $this->poster();

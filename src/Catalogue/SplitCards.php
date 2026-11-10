@@ -13,6 +13,7 @@ use Pixonaut\WooCommerce\Schema;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variation;
+use WP_Post;
 
 /**
  * A product listed by one of its attributes (`SplitListing`) is shown once
@@ -20,8 +21,8 @@ use WC_Product_Variation;
  * on the product, one per value in the product's order, so the shop's
  * listings can join them and count, page and sort the cards in SQL. They
  * are written again whenever what they come from changes: the product or a
- * variation saved, a variation deleted, the product's choice or the
- * attribute's default changed.
+ * variation saved, trashed, restored or deleted, the product's choice or
+ * the attribute's default changed.
  *
  * A card opens the product with its value chosen, and with each other
  * attribute's value that the card's variations all share.
@@ -42,25 +43,23 @@ final class SplitCards {
 	public const ATTRIBUTE_HOOK = 'pixonaut_wc_split_cards_attribute';
 
 	/**
+	 * Hook priority after WooCommerce's own handler of a restored product,
+	 * which restores its variations.
+	 */
+	private const AFTER_WOOCOMMERCE_RESTORE = 20;
+
+	/**
 	 * Variations' attributes by product id, read once a request.
 	 *
 	 * @var array<int, list<array<string, string>>>
 	 */
 	private static array $variations = array();
 
-	/**
-	 * Parents of the variations being deleted, by variation id: a deleted
-	 * variation no longer names its product.
-	 *
-	 * @var array<int, int>
-	 */
-	private static array $deleting = array();
-
 	public static function register(): void {
 		add_action( 'woocommerce_after_product_object_save', array( self::class, 'product_saved' ) );
-		add_action( 'woocommerce_trash_product_variation', array( self::class, 'variation_gone' ) );
-		add_action( 'woocommerce_before_delete_product_variation', array( self::class, 'variation_deleting' ) );
-		add_action( 'woocommerce_delete_product_variation', array( self::class, 'variation_gone' ) );
+		add_action( 'trashed_post', array( self::class, 'post_changed' ) );
+		add_action( 'untrashed_post', array( self::class, 'post_changed' ), self::AFTER_WOOCOMMERCE_RESTORE );
+		add_action( 'after_delete_post', array( self::class, 'post_deleted' ), 10, 2 );
 		add_action( 'added_post_meta', array( self::class, 'config_written' ), 10, 3 );
 		add_action( 'updated_post_meta', array( self::class, 'config_written' ), 10, 3 );
 		add_action( 'deleted_post_meta', array( self::class, 'config_written' ), 10, 3 );
@@ -81,29 +80,35 @@ final class SplitCards {
 	}
 
 	/**
-	 * Notes a variation's product before the variation is deleted.
+	 * Writes the cards of a trashed or restored product, or of a trashed or
+	 * restored variation's product. WordPress fires these however the post
+	 * was trashed or restored, WooCommerce's own hooks only for some ways.
 	 *
-	 * @param mixed $variation_id The variation.
+	 * @param mixed $post_id The post.
 	 */
-	public static function variation_deleting( mixed $variation_id ): void {
-		$variation_id = (int) $variation_id;
-		$parent       = wp_get_post_parent_id( $variation_id );
-		if ( is_int( $parent ) && $parent > 0 ) {
-			self::$deleting[ $variation_id ] = $parent;
+	public static function post_changed( mixed $post_id ): void {
+		$post = get_post( (int) $post_id );
+		if ( $post instanceof WP_Post ) {
+			self::post_deleted( $post->ID, $post );
 		}
 	}
 
 	/**
-	 * Writes the cards of a trashed or deleted variation's product.
+	 * Writes the cards of a product, or of a variation's product, once it
+	 * was deleted: the post as it was still names the variation's parent.
 	 *
-	 * @param mixed $variation_id The variation.
+	 * @param mixed $post_id The post; unused.
+	 * @param mixed $post    The post as it was.
 	 */
-	public static function variation_gone( mixed $variation_id ): void {
-		$variation_id = (int) $variation_id;
-		$parent       = self::$deleting[ $variation_id ] ?? wp_get_post_parent_id( $variation_id );
-		unset( self::$deleting[ $variation_id ] );
-		if ( is_int( $parent ) && $parent > 0 ) {
-			self::write( $parent );
+	public static function post_deleted( mixed $post_id, mixed $post ): void {
+		unset( $post_id );
+		if ( ! $post instanceof WP_Post ) {
+			return;
+		}
+		if ( 'product' === $post->post_type ) {
+			self::write( $post->ID );
+		} elseif ( 'product_variation' === $post->post_type && $post->post_parent > 0 ) {
+			self::write( $post->post_parent );
 		}
 	}
 
