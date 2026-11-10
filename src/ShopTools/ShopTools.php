@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Abilities\GetProductPictureViews;
 use Pixonaut\WooCommerce\Abilities\LinkProduct;
 use Pixonaut\WooCommerce\Abilities\ProductLinks;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
+use Pixonaut\WooCommerce\Abilities\SetVariationPrintSize;
 use Pixonaut\WooCommerce\Abilities\SetVariationVariants;
 use Pixonaut\WooCommerce\Abilities\Store\ResourceAbility;
 use Pixonaut\WooCommerce\Abilities\Store\StoreResource;
@@ -48,16 +49,19 @@ final class ShopTools {
 	 * @param Closure $variants  Gives what reads a blank's variants and stores a variation's, once a call needs it.
 	 * @param Closure $showcases Makes what lists a template's showcase sets, once a call needs it.
 	 * @param Closure $views     Makes the ability that reads what a product's images are drawn on, once a call needs it.
+	 * @param Closure $print_size Makes the ability that sets a variation's print size, once a call needs it.
 	 * @phpstan-param Closure(): ProductLinks $links
 	 * @phpstan-param Closure(): ProductVariants $variants
 	 * @phpstan-param Closure(): ShowcaseField $showcases
 	 * @phpstan-param Closure(): GetProductPictureViews $views
+	 * @phpstan-param Closure(): SetVariationPrintSize $print_size
 	 */
 	public function __construct(
 		private readonly Closure $links,
 		private readonly Closure $variants,
 		private readonly Closure $showcases,
 		private readonly Closure $views,
+		private readonly Closure $print_size,
 	) {
 	}
 
@@ -75,7 +79,7 @@ final class ShopTools {
 			}
 		}
 		$links = ( $this->links )();
-		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )() ) as $tool ) {
+		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )() ) as $tool ) {
 			$tools[ $tool->name() ] = $tool;
 		}
 		return $tools;

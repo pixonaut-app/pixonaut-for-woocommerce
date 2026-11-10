@@ -55,6 +55,7 @@ and a call answers `200 {"result": ...}`. Otherwise `{"code", "message"}`:
 | 403 | `store_access_off` | The switch is off |
 | 404 | `unknown_tool` | Not one of the tools below |
 | 422 | `invalid_input` | The body is not JSON, does not fit the tool's schema, or names what is not there |
+| 422 | `invalid_print_size` | `set-variation-print-size` was given a size that cannot be printed; `reason` gives the code, e.g. `too_large` or `wrong_ratio` |
 | 502 | `store_error` | The shop itself failed, or Pixonaut could not give what a tool needed from it |
 
 `ShopTools\ShopTools` is the closed list of tools, separate from the abilities
@@ -70,8 +71,14 @@ offered to a user:
 | Tags | `list-product-tags`, `get-product-tag`, `create-product-tag`, `update-product-tag`, `delete-product-tag` |
 | Linking a template | `link-product` |
 | Blank variants of variations | `set-variation-variants` |
+| A variation's print size | `set-variation-print-size` |
 | Showcase pictures | `set-product-showcase`, `get-product-picture-views` |
 | Orders, read only | `list-orders`, `get-order` |
+
+The product and variation tools answer as the store abilities of the same
+names ([Abilities](../abilities/)), and `list-products` gives each product as
+`get-product` does: each product and variation read carries
+`pixonaut_validity`, and each variation `pixonaut_variant`.
 
 Pixonaut asks for changes to the switch with the webhook events
 `store_access.requested`, ignored once it was turned off in WordPress, and

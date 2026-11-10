@@ -264,6 +264,51 @@ final class ProductSetup {
 	}
 
 	/**
+	 * Whether a product or variation can be sold as far as the configuration
+	 * it is sold under goes, and why not: the reason's code (an
+	 * `InvalidReason`, or Pixonaut's own) and the text the store manager
+	 * reads for it. One not personalised can. Its blank variant is given
+	 * apart, by `variation_variant()`. Read from what is stored, without
+	 * asking Pixonaut.
+	 *
+	 * @param WC_Product $product A product or variation.
+	 * @return array{valid: bool, reason: string|null, message: string|null}
+	 */
+	public static function validity( WC_Product $product ): array {
+		$config = ProductConfig::config_for( $product );
+		$valid  = ! $config->personalise || $config->valid;
+		return array(
+			'valid'   => $valid,
+			'reason'  => $valid ? null : $config->invalid_reason,
+			'message' => $valid ? null : InvalidReason::message( $config->invalid_reason ),
+		);
+	}
+
+	/**
+	 * The schema of `validity()`'s answer.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function validity_schema(): array {
+		$text_or_null = array( 'type' => array( 'string', 'null' ) );
+		return array(
+			'type'       => 'object',
+			'properties' => array(
+				'valid'   => array(
+					'type'        => 'boolean',
+					'description' => __( 'False when Pixonaut found a problem: it cannot be bought until it is fixed.', 'pixonaut-for-woocommerce' ),
+				),
+				'reason'  => $text_or_null + array(
+					'description' => __( 'Why not, as a code such as `too_large` or `template_not_live`; null when valid.', 'pixonaut-for-woocommerce' ),
+				),
+				'message' => $text_or_null + array(
+					'description' => __( 'Why not, in words, as the product screen says it; null when valid.', 'pixonaut-for-woocommerce' ),
+				),
+			),
+		);
+	}
+
+	/**
 	 * The blank variant a variation sells, as `variant()` gives it under
 	 * the configuration it is sold under; null when it is not personalised
 	 * on a blank. Read from what is stored, without asking Pixonaut.

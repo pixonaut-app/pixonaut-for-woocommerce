@@ -396,6 +396,18 @@ final class ProductPanel {
 	 * @param ProductConfig|null   $current  What the posted choice changes, its overrides kept; null for what is stored.
 	 */
 	public function configure( WC_Product $product, array $posted, ?ProductConfig $current = null ): ProductConfig {
+		return $this->store( $product, $this->checked( $product, $posted, $current ) );
+	}
+
+	/**
+	 * The configuration what was posted for a product or a variation makes,
+	 * checked with Pixonaut and filtered, without saving it.
+	 *
+	 * @param WC_Product           $product  The product or variation.
+	 * @param array<string, mixed> $posted   The fields as posted, unslashed, by `PanelFields` key.
+	 * @param ProductConfig|null   $current  What the posted choice changes, its overrides kept; null for what is stored.
+	 */
+	public function checked( WC_Product $product, array $posted, ?ProductConfig $current = null ): ProductConfig {
 		$config        = $this->linker->link(
 			$current ?? ProductConfig::stored_on( $product ),
 			isset( $posted[ PanelFields::PERSONALISE ] ),
@@ -449,8 +461,18 @@ final class ProductPanel {
 		 * }, 10, 2 );
 		 */
 		$filtered = apply_filters( 'pixonaut_wc_catalogue_product_config', $config, $product );
-		$config   = $filtered instanceof ProductConfig ? $filtered : $config; // @phpstan-ignore instanceof.alwaysTrue (a filter may return anything.)
+		return $filtered instanceof ProductConfig ? $filtered : $config; // @phpstan-ignore instanceof.alwaysTrue (a filter may return anything.)
+	}
 
+	/**
+	 * Saves a configuration `checked()` made on its product or variation and
+	 * raises or clears its notice.
+	 *
+	 * @param WC_Product    $product The product or variation.
+	 * @param ProductConfig $config  The checked configuration.
+	 * @return ProductConfig The configuration it has now.
+	 */
+	public function store( WC_Product $product, ProductConfig $config ): ProductConfig {
 		try {
 			$config->save_to( $product );
 		} catch ( LogicException $e ) {

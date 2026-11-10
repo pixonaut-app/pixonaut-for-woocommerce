@@ -134,7 +134,7 @@ final class VariationPanel {
 	 */
 	public function apply( WC_Product $variation, ?array $posted ): ProductConfig {
 		if ( null !== $posted ) {
-			return $this->panel->configure( $variation, $posted, self::own_or_inherited( $variation )->with_override( true ) );
+			return $this->panel->store( $variation, $this->checked( $variation, $posted ) );
 		}
 		$stored = ProductConfig::stored_on( $variation );
 		// A newer plugin version's configuration is kept as it is; the notice says why.
@@ -145,6 +145,18 @@ final class VariationPanel {
 		}
 		$this->panel->note( $variation, $stored );
 		return $stored;
+	}
+
+	/**
+	 * The variation's own configuration its fields make, checked with
+	 * Pixonaut, without saving it: what `apply()` saves for them.
+	 *
+	 * @param WC_Product         $variation The variation.
+	 * @param array<mixed>       $posted    Its fields, by `PanelFields` key.
+	 * @param ProductConfig|null $current   What the fields change; null for what its panel shows (`own_or_inherited()`).
+	 */
+	public function checked( WC_Product $variation, array $posted, ?ProductConfig $current = null ): ProductConfig {
+		return $this->panel->checked( $variation, $posted, ( $current ?? self::own_or_inherited( $variation ) )->with_override( true ) );
 	}
 
 	/**

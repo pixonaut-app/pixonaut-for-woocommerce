@@ -37,7 +37,12 @@ final class ResourceAbility implements Ability {
 	private const MEDIA = 'media';
 
 	/**
-	 * The resource whose reads give each variation's blank variant.
+	 * The resource whose reads give each product's validity.
+	 */
+	private const PRODUCT = 'product';
+
+	/**
+	 * The resource whose reads give each variation's validity and blank variant.
 	 */
 	private const VARIATION = 'product-variation';
 
@@ -45,6 +50,11 @@ final class ResourceAbility implements Ability {
 	 * The field a variation read gives its blank variant in.
 	 */
 	public const VARIANT_FIELD = 'pixonaut_variant';
+
+	/**
+	 * The field a product or variation read gives its validity in.
+	 */
+	public const VALIDITY_FIELD = 'pixonaut_validity';
 
 	/**
 	 * The field of a media file's create that names where to download it from.
@@ -268,8 +278,11 @@ final class ResourceAbility implements Ability {
 		if ( StoreResource::CREATE === $this->operation && self::MEDIA === $resource->key ) {
 			$description .= ' ' . __( 'The store downloads the file from `fields.source_url`, a public URL.', 'pixonaut-for-woocommerce' );
 		}
-		if ( self::VARIATION === $resource->key && ( StoreResource::LIST === $this->operation || StoreResource::GET === $this->operation ) ) {
-			$description .= ' ' . __( 'Each variation also gives `pixonaut_variant`, the variant of its blank it is printed as: `ref` null and `problem` `unmapped` when it sells none, `retired` when the blank no longer sells it, `picked` when the store manager picked it rather than it being matched on the variation\'s attributes; null when it is not personalised on a blank.', 'pixonaut-for-woocommerce' );
+		if ( self::PRODUCT === $resource->key && $this->reads() ) {
+			$description .= ' ' . self::validity_description();
+		}
+		if ( self::VARIATION === $resource->key && $this->reads() ) {
+			$description .= ' ' . self::validity_description() . ' ' . __( 'Each variation also gives `pixonaut_variant`, the variant of its blank it is printed as: `ref` null and `problem` `unmapped` when it sells none, `retired` when the blank no longer sells it, `picked` when the store manager picked it rather than it being matched on the variation\'s attributes; null when it is not personalised on a blank.', 'pixonaut-for-woocommerce' );
 		}
 		return $description;
 	}
@@ -376,12 +389,12 @@ final class ResourceAbility implements Ability {
 		}
 		$data = self::data( $response );
 		if ( StoreResource::GET === $this->operation ) {
-			return $this->with_variant( $data );
+			return $this->with_pixonaut_fields( $data );
 		}
 		if ( StoreResource::LIST !== $this->operation ) {
 			return $data;
 		}
-		$data    = is_array( $data ) ? array_map( array( $this, 'with_variant' ), $data ) : $data;
+		$data    = is_array( $data ) ? array_map( array( $this, 'with_pixonaut_fields' ), $data ) : $data;
 		$headers = $response->get_headers();
 		return array(
 			'items' => is_array( $data ) ? $data : array(),
@@ -391,23 +404,35 @@ final class ResourceAbility implements Ability {
 	}
 
 	/**
-	 * A variation as read, with the blank variant it sells, from what is
-	 * stored, as `ProductSetup` gives a variation's: null when it is not
-	 * personalised on a blank. Any other resource as read.
+	 * A product as read, with its validity; a variation with its validity
+	 * and the blank variant it sells: null when it is not personalised on a
+	 * blank. Both from what is stored, as `ProductSetup` gives them. Any
+	 * other resource as read.
 	 *
 	 * @param mixed $item One item a read answered.
 	 * @return mixed
 	 */
-	private function with_variant( mixed $item ): mixed {
-		if ( self::VARIATION !== $this->kind->key || ! is_array( $item ) || ! is_int( $item['id'] ?? null ) ) {
+	private function with_pixonaut_fields( mixed $item ): mixed {
+		$variation = self::VARIATION === $this->kind->key;
+		if ( ( ! $variation && self::PRODUCT !== $this->kind->key ) || ! is_array( $item ) || ! is_int( $item['id'] ?? null ) ) {
 			return $item;
 		}
-		$variation = wc_get_product( $item['id'] );
-		if ( ! $variation instanceof WC_Product || ! $variation->is_type( 'variation' ) ) {
+		$product = wc_get_product( $item['id'] );
+		if ( ! $product instanceof WC_Product || $variation !== $product->is_type( 'variation' ) ) {
 			return $item;
 		}
-		$item[ self::VARIANT_FIELD ] = ProductSetup::variation_variant( $variation );
+		$item[ self::VALIDITY_FIELD ] = ProductSetup::validity( $product );
+		if ( $variation ) {
+			$item[ self::VARIANT_FIELD ] = ProductSetup::variation_variant( $product );
+		}
 		return $item;
+	}
+
+	/**
+	 * What a product or variation read says of `pixonaut_validity`.
+	 */
+	private static function validity_description(): string {
+		return __( 'Each also gives `pixonaut_validity`: `valid` false when its Pixonaut setup has a problem and it cannot be bought until it is fixed, with the `reason` as a code and the `message` the product screen shows for it, both null when valid.', 'pixonaut-for-woocommerce' );
 	}
 
 	/**

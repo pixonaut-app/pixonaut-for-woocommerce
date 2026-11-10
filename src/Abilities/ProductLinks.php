@@ -179,6 +179,44 @@ final class ProductLinks {
 	 */
 	public function configure_variation( WC_Product $variation, ?array $posted, ?string $variant = null ): array {
 		$this->variations->apply( $variation, $posted );
+		return $this->variation_saved( $variation, $variant );
+	}
+
+	/**
+	 * A variation's own setup its fields make, checked with Pixonaut, without
+	 * saving it, for a caller that refuses some outcomes before
+	 * `save_variation()` saves it.
+	 *
+	 * @param WC_Product           $variation The variation.
+	 * @param array<string, mixed> $posted    Its fields, by `PanelFields` key.
+	 * @param ProductConfig|null   $current   What the fields change; null for what its panel shows.
+	 */
+	public function check_variation( WC_Product $variation, array $posted, ?ProductConfig $current = null ): ProductConfig {
+		return $this->variations->checked( $variation, $posted, $current );
+	}
+
+	/**
+	 * Saves a variation's own setup `check_variation()` made, and resolves
+	 * its blank variant as `configure_variation()` does.
+	 *
+	 * @param WC_Product    $variation The variation.
+	 * @param ProductConfig $checked   Its setup, as checked.
+	 * @return array<string, mixed> As `summary()`.
+	 */
+	public function save_variation( WC_Product $variation, ProductConfig $checked ): array {
+		$this->panel->store( $variation, $checked );
+		return $this->variation_saved( $variation, null );
+	}
+
+	/**
+	 * Resolves a variation's blank variant once its setup is saved, notes
+	 * its product's variants again, and gives its summary.
+	 *
+	 * @param WC_Product  $variation The variation.
+	 * @param string|null $variant   Its blank variant, `''` to match it by options; null keeps what it has.
+	 * @return array<string, mixed> As `summary()`.
+	 */
+	private function variation_saved( WC_Product $variation, ?string $variant ): array {
 		$stored = ProductVariant::stored_on( $variation );
 		// A pick names a variant of one blank: it is kept only while the variation is on that blank.
 		$blank = ProductConfig::config_for( $variation )->blank_id;

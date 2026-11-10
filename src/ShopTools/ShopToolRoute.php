@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\ShopTools;
 
+use Pixonaut\WooCommerce\Abilities\SetVariationPrintSize;
 use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Plugin;
@@ -20,7 +21,8 @@ use WP_REST_Server;
 
 /**
  * `POST /pixonaut/v1/shop-tools/{tool}`, with `Authorization: Bearer <secret>`
- * and the tool's input as a JSON body. Answers `{result}`, or `{code, message}`.
+ * and the tool's input as a JSON body. Answers `{result}`, or `{code, message}`,
+ * with the `reason` too for a print size that cannot be printed.
  *
  * Pixonaut is not a WordPress user: the credential is the authentication,
  * and each call runs as nobody, with WooCommerce's own permission check let
@@ -58,6 +60,15 @@ final class ShopToolRoute {
 	private const INVALID_INPUT = 'invalid_input';
 
 	private const STORE_ERROR = 'store_error';
+
+	/**
+	 * Refusals Pixonaut tells apart from other bad input: the code of the
+	 * plugin's error, and the one the route answers with, beside the
+	 * `reason` the error's data gives.
+	 */
+	private const NAMED_REFUSALS = array(
+		SetVariationPrintSize::REFUSED => 'invalid_print_size',
+	);
 
 	/**
 	 * What a route answers when the input names something that is not there,
@@ -220,7 +231,18 @@ final class ShopToolRoute {
 	 * @param WP_Error $error What the tool answered.
 	 */
 	private static function answer_error( WP_Error $error ): WP_REST_Response {
-		$data   = $error->get_error_data();
+		$data  = $error->get_error_data();
+		$named = self::NAMED_REFUSALS[ $error->get_error_code() ] ?? null;
+		if ( null !== $named ) {
+			return new WP_REST_Response(
+				array(
+					'code'    => $named,
+					'message' => $error->get_error_message(),
+					'reason'  => is_array( $data ) && is_string( $data['reason'] ?? null ) ? $data['reason'] : null,
+				),
+				self::UNPROCESSABLE
+			);
+		}
 		$status = is_array( $data ) ? ( $data['status'] ?? null ) : null;
 		$own    = str_starts_with( (string) $error->get_error_code(), self::OWN_ERROR_PREFIX );
 		if ( ( null === $status && $own ) || in_array( $status, self::STATUSES_OF_BAD_INPUT, true ) ) {
