@@ -14,7 +14,7 @@ design once the order is paid.
 The **Default approval** setting (**Pixonaut > Approval**)
 applies to every personalised product. To give one product another mode,
 open it, go to the **Pixonaut** tab of its **Product data** box, and choose
-it under **Approval**. *Store default* follows the setting, and names the
+it under **Approval**. *Store setting: …* follows the setting, and names the
 mode the setting has now.
 
 The mode a product has when the customer adds it to the cart is kept with
@@ -24,9 +24,9 @@ does not change what that customer agreed to.
 When the customer changes the design from the cart, the update is their
 approval again, in the same mode ([Editing a design from the cart](../cart-editing/)).
 
-A [standing side](../linking-products/#standing-sides) has no design of the
+A [fixed design](../linking-products/#fixed-designs) has no design of the
 customer's to approve: its design was approved when you updated the
-product. A product whose sides are all standing asks for no approval in any
+product. A product whose sides are fixed designs asks for no approval in any
 mode; one with a personalised side asks for the approval of that side alone.
 
 ## Adding to the cart approves the design

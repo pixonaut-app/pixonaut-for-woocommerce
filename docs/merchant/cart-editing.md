@@ -25,7 +25,7 @@ cart page after successful addition*).
 On the inline layout the edit page is the product page with the designer showing the design as
 it is in the cart, on the product's photos and views as when it was added.
 The add-to-cart button reads **Update design**. A design the product no
-longer sells as it was made (its blank, placement or print size changed
+longer sells as it was made (its blank, print position or print size changed
 since) opens on its own, without the product's photos.
 
 On the Personalise button layout the item's page shows the item's design as the

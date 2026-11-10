@@ -664,7 +664,7 @@ switcher between the views of the side's placement into
 `#pixonaut-views-<side>`, under the preview.
 
 The designer shows the product in the variant it is sold as, the one its
-order names ([Blank variant](../../merchant/linking-products/#blank-variant);
+order names ([Variant](../../merchant/linking-products/#variant);
 stored as `_pixonaut_variant`, see [Stored data](../#stored-data)): a side
 mounts with it as `initialVariant`, and the script calls `setVariant(ref)`
 on a side that shows another (a switch of variation, or a mount whose

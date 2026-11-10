@@ -16,14 +16,14 @@ the product. Open the product's **Pixonaut** tab: it says the same.
 |---|---|
 | The template is paused or deleted in Pixonaut. | Make the template live again in the Pixonaut studio, or choose another template for the product. The product is checked again on its own when the template goes live. |
 | The blank is deleted in Pixonaut. | Restore the blank in the Pixonaut studio, or choose another blank. A restored blank is checked again on its own, and the product sold again with the print sizes you had chosen. |
-| The blank, placement or template no longer exists in Pixonaut. | Choose another blank, placement or template, then update the product. |
-| A print size is larger than the placement can print, or does not match the template's shape. | Change the print sizes, or fix the blank in Pixonaut; a changed blank is checked again on its own. |
+| The blank, print position or template no longer exists in Pixonaut. | Choose another blank, print position or template, then update the product. |
+| A print size is larger than the print position can print, or does not match the template's shape. | Change the print sizes, or fix the blank in Pixonaut; a changed blank is checked again on its own. |
 | Pixonaut could not check the configuration. | Check the connection under **Pixonaut > Connection**, then update the product. |
-| Pixonaut would not make the design of a standing side. | Check the side's template, placement and the print size marked **Starts selected**, then update the product. See [Standing sides](../linking-products/#standing-sides). |
-| Pixonaut would not make the design of a standing side: the store may not create and approve designs. | Check the connection's permissions in the Pixonaut studio, then update the product. |
-| The template of a standing side does not fit the placement at any of the blank's sizes, so none of them can be printed. Choose a template that fits. | Choose a template that fits the placement at the sizes you sell, then update the product. See [Sizes a template cannot be printed at](../linking-products/#sizes-a-template-cannot-be-printed-at). |
+| Pixonaut would not make the design of a fixed-design side. | Check the side's template, print position and the print size marked in the **Start** column, then update the product. See [Fixed designs](../linking-products/#fixed-designs). |
+| Pixonaut would not make the design of a fixed-design side: the store may not create and approve designs. | Check the connection's permissions in the Pixonaut studio, then update the product. |
+| The template of a fixed-design side does not fit the print position at any of the blank's sizes, so none of them can be printed. Choose a template that fits. | Choose a template that fits the print position at the sizes you sell, then update the product. See [Sizes a template cannot be printed at](../linking-products/#sizes-a-template-cannot-be-printed-at). |
 | The configuration was saved by a newer version of Pixonaut for WooCommerce. | Update the plugin ([Updates](../updates/)). |
-| The product, or a variation, is no variant of its blank, or its variant is retired. The notice says "Customers cannot buy all of …" and names each. | Pick the variant in the product's or the variation's **Blank variant** field, then save. See [Blank variant](../linking-products/#blank-variant). |
+| The product, or a variation, is no variant of its blank, or its variant is retired. The notice says "Customers cannot buy all of …" and names each. | Pick the variant in the product's or the variation's **Variant** field, then save. See [Variant](../linking-products/#variant). |
 
 The store checks its products again whenever a template or blank changes in
 Pixonaut (see [Link a product](../linking-products/#when-templates-and-blanks-change-in-pixonaut)),
@@ -174,9 +174,9 @@ stopped, the line keeps needing attention with the reason
 | `printshop_disconnected` | The printshop that makes the item is disconnected in Pixonaut. | Reconnect the printshop in the Pixonaut studio, then retry. |
 | `print_needs_printshop` | The design is on no blank, and the Pixonaut workspace has no default printshop, so nothing can make it. | Set a default printshop in the Pixonaut studio, then retry. |
 | `variant_retired` | The blank variant the item was bought as was retired in Pixonaut after the customer bought it, so the printshop cannot make it. | Refund or cancel the item. |
-| `variant_not_of_blank`, `variant_required` | Pixonaut could not tell which variant of the blank the item is. | Pick the product's variant in its **Blank variant** field, then refund or cancel the item. |
+| `variant_not_of_blank`, `variant_required` | Pixonaut could not tell which variant of the blank the item is. | Pick the product's variant in its **Variant** field, then refund or cancel the item. |
 | `print_not_position_size`, `print_exceeds_machine` | The print is at a size its position on the blank does not print, or larger than the printshop's machine takes. | Check the blank's positions and the printshop's machine in the Pixonaut studio, then have the customer personalise the item again at a size it prints. |
-| `field_value_missing` | The printshop needs a value the blank's variant or placement does not have. | Fill it in for the blank in the Pixonaut studio, then retry. |
+| `field_value_missing` | The printshop needs a value the blank's variant or print position does not have. | Fill it in for the blank in the Pixonaut studio, then retry. |
 | `revision_changed`, `not_committed` | The design changed in Pixonaut after the customer approved it, or is no longer waiting for approval at the revision the customer approved. | Check the design in Pixonaut with the customer. |
 | `design_already_ordered` | The design already has a printshop order in Pixonaut that this item did not place, for example one placed in the studio. Pixonaut orders a design once unless asked to order it again. The order note names that order. | Check that order in Pixonaut. If it is this item's, cancel one of them; if the item is to be made as well, click **Order again anyway**. |
 | `design_erased` | The design's personal data was erased in Pixonaut, so it can no longer be printed or ordered. | Refund the item, or have the customer personalise it again. |

@@ -18,10 +18,10 @@ before the product joins the cart:
 - **Every side is personalised.** A product with a front and a back needs
   a design for both. Without one, the customer sees "Please personalise this
   product before adding it to your cart." A
-  [standing side](../linking-products/#standing-sides) needs none: it is
-  printed from its standing design, and a product of standing sides alone
+  [fixed design](../linking-products/#fixed-designs) needs none: it is
+  printed from its design, and a product of fixed designs alone
   is added to the cart as any other product, with nothing saved in Pixonaut.
-- **The design is what the product sells.** Its template, blank, placement
+- **The design is what the product sells.** Its template, blank, print position
   and print size must be the product's. The print size must be one of the
   sizes the product is sold in, to within a hundredth of a millimetre. A
   design that does not match is deleted from Pixonaut and the customer is
@@ -44,7 +44,7 @@ shop showed the product. The order received page, the customer's orders in
 My Account and the order emails show it too. **Picture shows** under
 **Pixonaut > Storefront** (**Cart and orders**) chooses the view it is drawn
 in: the one the customer previewed their design in, or the first of the
-placement's views the product is shown in. A product without a blank shows
+print position's views the product is shown in. A product without a blank shows
 the design on its own. The images come from your store, which fetches each
 one from Pixonaut once and keeps a copy for a week. Once a design's personal
 data is erased, its line shows the product's image again.
@@ -58,7 +58,7 @@ any other colour by the hex code the form showed (`#1A1A18`), a size as the
 form wrote it. The order screen in the admin lists them either
 way.
 
-The store sends each side's placement with its design, for printshops that
+The store sends each side's print position with its design, for printshops that
 need it (Printful does). The recipient follows with the order.
 
 If Pixonaut cannot route the design to a printshop (the blank's printshop is
@@ -70,7 +70,7 @@ Fix the printshop in the Pixonaut studio.
 While the store is not connected, or its connection is paused, personalised
 products cannot be added to the cart. Nor can a product, or variation, that
 sells no variant of its blank, or a retired one (see
-[Blank variant](../linking-products/#blank-variant)).
+[Variant](../linking-products/#variant)).
 
 The approval mode the product uses when it is added (see
 [Approval modes](../approval-modes/)) is kept with the cart line, so changing
@@ -91,7 +91,7 @@ hook `pixonaut_delete_design`):
 - **The product can no longer be bought**, and WooCommerce takes it out of
   the cart the next time the customer visits.
 - **You changed what the design was made on**: the product's blank, or a
-  side's template, placement, or the sides themselves. WooCommerce takes the
+  side's template, print position, or the sides themselves. WooCommerce takes the
   product out of the cart the next time the customer visits and tells them
   it was modified. Changing its price, description or stock, or publishing a
   new version of its template, keeps it in the cart.
@@ -148,15 +148,15 @@ and takes the line through two steps:
 
 1. **Approve.** Each design of the line is approved for print, with the
    customer's consent: when and how they agreed (for example by adding it to
-   the cart). A standing side's design was approved when the product was
-   saved, so a line of standing sides alone goes straight on. A line whose approval mode is *proof by email* is not approved
+   the cart). A fixed design was approved when the product was
+   saved, so a line of fixed designs alone goes straight on. A line whose approval mode is *proof by email* is not approved
    by the store: the customer is emailed a proof page and the line waits,
    as *awaiting customer*, until they approve it there (see
    [Approval modes](../approval-modes/)). A design approved already, in the
    studio for one, goes straight on.
 2. **Order.** One printshop order is placed for the line as soon as its
    designs are approved, with all its designs (the first side leads, and a
-   standing side's standing design is among them), the blank variant the line was bought as,
+   fixed design is among them), the blank variant the line was bought as,
    the line's quantity, and the order's shipping address. The store never
    picks the printshop: the blank the product is made on decides it, or
    the workspace's default printshop for a product without a blank.
@@ -211,11 +211,11 @@ its personalised lines go back in the cart beside the plain products, each
 with the design as it was ordered. The store makes a copy of each design in
 Pixonaut for the new cart line, checked against the product as it sells now,
 like a design added from the product page; the earlier order keeps its own
-designs, untouched. A line of [standing sides](../linking-products/#standing-sides)
-alone comes back with the product's standing designs.
+designs, untouched. A line of [fixed designs](../linking-products/#fixed-designs)
+alone comes back with the product's fixed designs.
 
 A line whose design was deleted or erased, or no longer matches the product
-(you changed its blank, placement, sizes, or published two new versions of
+(you changed its blank, print position, sizes, or published two new versions of
 its template since), is left out, and the customer is asked to personalise
 the product again. If Pixonaut cannot be reached, the line is left out and
 the customer is asked to try again.

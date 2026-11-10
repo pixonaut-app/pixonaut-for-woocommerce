@@ -1,19 +1,19 @@
 ---
 title: Link a product
-description: Link a simple or variable product, and each of its variations, to a Pixonaut blank and its sides, each with a placement, a template, a mode and print sizes, so customers can personalise it or buy it printed as the template is.
+description: Link a simple or variable product, and each of its variations, to a Pixonaut blank and its sides, each with a print position, a template and print sizes, so customers can personalise it or buy it printed as the template is.
 sidebar:
   order: 3
 ---
 
 A personalised product is a WooCommerce product linked to what Pixonaut
 prints: a **template** customers fill in, and usually a **blank** (the item
-it is printed on, such as a t-shirt) and a **placement** on that blank (such
-as the front). Connect the store first ([Connect your store](../connect/)).
+it is printed on, such as a t-shirt) and a **print position** on that blank
+(such as the front). Connect the store first ([Connect your store](../connect/)).
 
 A product has one or more **sides**, such as a front and a back, each
-printed on its own placement with its own template. Each side is either
-**personalised**, filled in by the customer, or **standing**, printed as the
-template is (see [Standing sides](#standing-sides)). A variable product is
+printed on its own print position with its own template. Each side is either
+**personalised**, filled in by the customer, or a **fixed design**, printed as
+the template is (see [Fixed designs](#fixed-designs)). A variable product is
 linked the same way, and each variation can override it (see
 [Variations](#variations)).
 
@@ -23,81 +23,90 @@ linked the same way, and each variation can override it (see
    *Simple product*.
 2. In the **Product data** box, open the **Pixonaut** tab.
 3. Tick **Personalise**. The rest of the tab shows once it is ticked,
-   grouped as **Printed on** (the blank, its printshop and its variant),
-   **Sides**, and **On the product page** (the layout, approval and the
-   views customers see their design in). Each field's label sits on its
-   line, with its help text under it.
+   grouped as **Printing** (**Printed on**, the blank, with its printshop and
+   variant), **Template and print sizes** (the sides), **Product images**,
+   and two closed sections: **Views on the product page** and **Store
+   settings for this product** (the layout, approval and more). A section
+   opens by itself when something in it was changed. Each field's label sits
+   on its line, with its help text under it.
    Fields marked with a red asterisk are required: each side's
-   **Template**, its **Placement** with a blank, and the width and height
-   of a custom print size. One left empty says what is missing under it.
-4. Under **Blank**, search for the blank by name and choose it. Each blank
-   is listed with its first photo. Only blanks with at least one placement
-   are listed, and not one still being imported into Pixonaut or whose
-   import failed.
-5. Set up the first side:
-   - **Name** is the name customers see, such as *Front*. Leave it empty to
-     use the placement's name. The key beside it identifies the side in
-     orders and in Pixonaut; it defaults to the placement.
-   - Under **Placement**, choose where the design is printed. Each
-     placement is listed with the photo of its first view. A blank with
-     one placement has it chosen for you.
+   **Template**, its **Print position** with a blank, and the width and height
+   of a size in mm. One left empty says what is missing under it.
+4. Under **Printed on**, search for the blank by name and choose it. Each blank
+   is listed with its first photo. Only blanks with at least one print
+   position are listed, and not one still being imported into Pixonaut or
+   whose import failed. Its **Printshop** and **Variant** show at once, and
+   its views, before you update the product.
+5. Set up the first side. With one side, its fields sit inline:
+   - Under **Print position**, choose where the design is printed. Each
+     print position is listed with the photo of its first view. A blank with
+     one print position has it chosen for you.
    - Under **Template**, search for the template by name and choose it.
-     Each template is listed with its preview. Once a blank and placement
-     are chosen, only live templates whose artwork fits the placement are
-     listed. A template that fits it at some of the blank's sizes only says
-     which it cannot be printed at (see
+     Each template is listed with its preview. Once a blank and print
+     position are chosen, only live templates whose artwork fits the print
+     position are listed. A template that fits it at some of the blank's
+     sizes only says which it cannot be printed at (see
      [Sizes a template cannot be printed at](#sizes-a-template-cannot-be-printed-at)).
      Without a blank, a template whose background shows through gets a
      warning (see
      [Templates whose background shows through](#templates-whose-background-shows-through)).
-   - Optionally, under **Template version**, tick **Stick to one version**
-     to keep the side on one version of its template (see
-     [Template versions](#template-versions)).
-   - Under **Mode**, choose *Personalised* for customers to fill in the
-     template, or *Standing* to print it as it is (see
-     [Standing sides](#standing-sides)).
-   - Optionally, under **Groups**, arrange the designer's form for this
-     product (see [Groups](#groups)).
-   - Under **Print sizes**, choose what the side is sold in (see below).
-   - Optionally, under **Canvas shape**, choose the shape customers design
-     this side on (see [Canvas shape](#canvas-shape)).
-6. To personalise another placement, click **Add side** and set it up the
-   same way. Each placement can be one side, up to ten sides. Pixonaut
-   recommends at most four: each side is one more step in the designer and
-   slows it down on the customer's device, so the tab says so past four.
-   **Remove side** takes a side off.
-7. Optionally, under **Layout**, choose how the product page shows the
-   designer. *Store default* follows the **Default layout** setting; on a
-   variation, *As the product says* follows the product's. See
-   [Product page layouts](../layouts/).
-8. Optionally, under **Form layout**, choose how the designer lays
-   out its form for this product. *Store default* follows the **Form layout**
-   setting. See [Form layout](../layouts/#form-layout).
-9. Optionally, under **Canvas shape**, choose the shape customers design on
-   when a print size's proportions are not the template's (see
-   [Canvas shape](#canvas-shape)).
-10. Optionally, under **Approval**, choose how customers approve their design
-   for this product. *Store default* follows the **Default approval**
-   setting. See [Approval modes](../approval-modes/).
-11. Optionally, at the end of **On the product page**, tick the views
-    customers see their design in under **Shown in**, and choose the
-    **Starting view** (see [Views](#views)).
-12. Click **Update** (or **Publish**).
+   - Under **Print sizes**, choose what the side is sold in (see
+     [Print sizes](#print-sizes)).
+   - Open **More for this side** for the rest, all optional:
+     - **Name** is the name customers see, such as *Front*. Leave it empty to
+       use the print position's name. The key beside it identifies the side in
+       orders and in Pixonaut; it defaults to the print position.
+     - Untick **Customers fill in the template** to print the template as it
+       is, a fixed design (see [Fixed designs](#fixed-designs)).
+     - Under **Template version**, tick **Stay on one version** to keep the
+       side on one version of its template (see
+       [Template versions](#template-versions)).
+     - Under **When a print size has other proportions**, choose the shape
+       customers design this side on (see
+       [When a print size has other proportions](#when-a-print-size-has-other-proportions)).
+     - Under **Groups**, arrange the designer's form for this product (see
+       [Groups](#groups)).
+6. To personalise another print position, click **Add side**: the sides
+   become cards under a **Sides** heading, each named, and you set up the
+   new one the same way. Each print position can be one side, up to ten
+   sides. Pixonaut recommends at most four: each side is one more step in the
+   designer and slows it down on the customer's device, so the tab says so
+   past four. **Remove side** takes a side off.
+7. Optionally, open **Views on the product page**, tick the views customers
+   see their design in under **Shown in**, and choose the **Starting view**
+   (see [Views](#views)).
+8. Optionally, open **Store settings for this product** to set this product
+   apart from the store's settings. Each field's first choice follows the
+   store's setting (*Store setting: …*); on a variation, *As the product
+   says* follows the product's.
+   - Under **Layout**, choose how the product page shows the designer. See
+     [Product page layouts](../layouts/).
+   - Under **Form layout**, choose how the designer lays out its form. See
+     [Form layout](../layouts/#form-layout).
+   - Under **Options in the form** and **Group numbers**, choose how the
+     product's options and the groups' numbers show in the form (see
+     [Product page layouts](../layouts/)).
+   - Under **When a print size has other proportions**, choose the shape
+     customers design on (see
+     [When a print size has other proportions](#when-a-print-size-has-other-proportions)).
+   - Under **Approval**, choose how customers approve their design for this
+     product. See [Approval modes](../approval-modes/).
+9. Click **Update** (or **Publish**).
 
 Saving asks Pixonaut to check every side, and matches the product to one of
-the blank's variants (see [Blank variant](#blank-variant)): check the
-**Blank variant** field the tab then shows.
+the blank's variants (see [Variant](#variant)): check the **Variant** field
+the tab then shows.
 
 ### Template versions
 
 A side follows its template: each time a new version of the template is
 published in Pixonaut, the side moves to it on its own, with nothing to
 update in the product. It keeps its setup on the new version: its groups,
-print sizes, starting size and mode. A customer who personalised the product
+print sizes, starting size and whether customers fill it in. A customer who personalised the product
 on the version just left can still add that design to the cart.
 
-To keep a side on one version, tick **Stick to one version** under
-**Template version** and pick it: *Version 3 (current)* is the latest version
+To keep a side on one version, tick **Stay on one version** under
+**Template version**, in **More for this side**, and pick it: *Version 3 (current)* is the latest version
 published, then *Version 2*, *Version 1* and so on. The label moves to the new
 number after a publish; the number you chose stays the one the side is on.
 Click **Update**. The
@@ -105,7 +114,7 @@ side stays on that version through later publishes until you change it
 here; untick the box to follow the template again, which moves the side to
 the latest version.
 
-A variation with its own configuration follows or sticks to a version in
+A variation with its own configuration follows or stays on a version in
 the same way, under its own sides.
 
 ### Groups
@@ -145,36 +154,38 @@ group, marked **New**; a group or field it no longer has is left out, and
 the setting says which. The product page keeps working either way: an
 option placed in a group the template no longer has comes first again,
 with the other options. A
-standing side and a variation's own sides have no Groups setting: a
+fixed design and a variation's own sides have no Groups setting: a
 variation with its own configuration shows the groups of the product's side
 of the same key.
 
 ### Print sizes
 
-Each side has a menu of print sizes. Customers choose from it when they
+Each side has a table of print sizes. Customers choose from it when they
 personalise the product.
 
-- **Placement default** is the placement's default print area, fitted to
-  the template's shape. After saving, the tab shows its size in
+- *The print position's size* is the print position's default print area,
+  fitted to the template's shape. After saving, the tab shows its size in
   millimetres.
-- **Custom size** takes a width and a height in millimetres, and the label
-  customers see, such as *A4*. Without a label, customers see the
+- *A size in mm* takes a name, a width and a height in millimetres. The name
+  is what customers see, such as *A4*. Without a name, customers see the
   millimetres. Under them, the tab shows the largest print the side's
-  placement takes, such as *Up to 330 × 420 mm*; a width or height past it
-  is marked in red with that limit, and Pixonaut refuses it when you update
-  the product.
+  print position takes, such as *Up to 330 × 420 mm*; a width or height past
+  it is marked in red with that limit, and Pixonaut refuses it when you
+  update the product.
 
-Click **Add print size** to offer another size, and **Remove** to take one
-off. A side with no sizes is sold in the placement default.
+Click **Add the print position's size** or **Add a size in mm** to offer
+another size, and **Remove** to take one off. A side with no sizes is sold in
+the print position's size.
 
-The designer opens on the size marked **Starts selected**, on the inline
+The designer opens on the size whose radio button is ticked in the **Start**
+column, on the inline
 designer and on the hosted one alike; with none marked, on the first. A side
 with one size starts on it, and the choice is not shown. When Pixonaut
 removes the size marked to start, the side starts on the first size it kept.
 Products linked before this choice existed start on their first size.
 
 Pixonaut checks every size of a side when you update the product. A size it
-cannot print, because it is larger than the placement or does not match the
+cannot print, because it is larger than the print position or does not match the
 template's shape, is removed from the menu, and the product cannot be bought
 until you update it again; the notice says why. The sizes Pixonaut accepted
 are kept.
@@ -185,12 +196,13 @@ the product again once Pixonaut answers checks those sizes. A side you have
 not chosen a template for yet is kept too, and the product cannot be bought
 until it has one.
 
-### Canvas shape
+### When a print size has other proportions
 
 A template can be sold at print sizes whose proportions are not its own,
 within the ratio tolerance set on the template in Pixonaut: a 5:7 template
 sold at 70 × 100 cm, say. The template says, in Pixonaut, which shape
-customers design on then. **Canvas shape** lets the product choose instead:
+customers design on then. **When a print size has other proportions** lets
+the product choose instead:
 
 - *As the template says* (the default) follows the template's setting.
 - *Always the template's shape* keeps the canvas in the template's
@@ -201,33 +213,34 @@ customers design on then. **Canvas shape** lets the product choose instead:
 - *Always the chosen print size's shape* reshapes the canvas to each size
   the customer chooses.
 
-The **On the product page** group holds the product's choice; each side has
-its own **Canvas shape** below its print sizes, where *As the product says*
-takes the product's. A variation with its own configuration chooses in the
+**Store settings for this product** holds the product's choice; each side has
+its own, in **More for this side**, where *As the product's store settings
+say* takes the product's. A variation with its own configuration chooses in the
 same way: its sides first, then its own choice, then, when it chooses
 neither, the product's. The choice has no effect on a shaped print area or a
 repeating design, which are always drawn at the chosen size, and Pixonaut's
 hosted designer (the **Personalise** button layout) follows the template.
 
-### Standing sides
+### Fixed designs
 
-A standing side is printed as its template is, with nothing for the
-customer to fill in: the same picture on every item. When you update the
-product, Pixonaut finds or makes one design of the template for the side,
-on its placement at the size marked **Starts selected**, and approves it.
+A side with **Customers fill in the template** unticked is a fixed design: it
+is printed as its template is, with nothing for the customer to fill in, the
+same picture on every item. When you update the product, Pixonaut finds or
+makes one design of the template for the side, on its print position at the
+start size (the one marked in the **Start** column), and approves it.
 Every paid order of the product is printed from that design, so no one has
 to make it in the Pixonaut studio first.
 
-- A product whose sides are all standing sells as any other product: its
+- A product whose sides are all fixed designs sells as any other product: its
   page shows no designer, it goes into the cart with **Add to cart**, and
   the customer approves nothing (no approval box, no proof by email).
 - The design belongs to this store's connection. Another store connected
   to the same workspace makes its own, and designs made in the Pixonaut
-  studio are never used for a standing side.
-- A product can mix the two, such as a standing front and a personalised
+  studio are never used for a fixed design.
+- A product can mix the two, such as a fixed front design and a personalised
   back. Customers then design the back alone, and approve it as the
   product's approval mode says; both sides are printed as one item.
-- Changing a standing side's template, placement or starting size, or a
+- Changing a fixed design's template, print position or start size, or a
   new version of its template, finds or makes the design for what it is
   now when the product is checked again.
 
@@ -235,20 +248,20 @@ to make it in the Pixonaut studio first.
 
 On some blanks the print area changes with an option, most often the size:
 the front of a small t-shirt takes a smaller print than the front of an
-extra large one. You still set the standing side up once. When you update
+extra large one. You still set the side up once. When you update
 the product, Pixonaut makes one design of the side for each value of that
 option the blank sells, such as one for S, one for M and one for L, each
 fitted to that value's print area. Every order is printed from the design
 of the value it was bought in.
 
-- Each design is printed at the size marked **Starts selected** when that
+- Each design is printed at the start size when that
   size fits the value's print area. When it does not fit, that value's
   design is printed at its usual size instead.
-- Under **Mode**, the side shows a preview per value (**Per size**): the
+- Below the template, the side shows a preview per value (**Per size**): the
   design on the blank, the value, and the size it prints at. Check how the
   design sits on each one. A blank that sells more than eight values shows
   the first eight; **Show all** opens the rest.
-- Changing the side's template, placement or print sizes replaces the
+- Changing the side's template, print position or print sizes replaces the
   previews with a line saying they appear when you update the product.
   Updating makes every value's design again from the side, so they stay in
   step, except a value whose layout you adjusted (below).
@@ -274,20 +287,20 @@ saved at once; you do not need to update the product.
   of its template or another print size. The other values follow the side
   as before.
 - It follows the side again when you choose another template, blank or
-  placement for the side, or when the blank no longer sells that value.
+  print position for the side, or when the blank no longer sells that value.
 - **Adjust again** opens your layout to change it once more. **Reset** asks
   first, then puts the value back on the side's own design; the layout you
   adjusted is not kept.
 - Your adjustment is this product's only. Another product on the same
   template, blank and size keeps its own design.
 
-The tab warns, without stopping the update, when a side's mode does not
-suit its template:
+The tab warns, without stopping the update, when **Customers fill in the
+template** does not suit the template:
 
-- **Standing** on a template that offers fields to fill in: customers do
-  not get to fill them in.
-- **Personalised** on a template that offers none: customers have nothing
-  to personalise. Make the side standing instead.
+- Unticked on a template that offers fields to fill in: customers do not
+  get to fill them in.
+- Ticked on a template that offers none: customers have nothing to
+  personalise. Untick it to make the side a fixed design.
 
 The tab knows whether a template offers fields once you choose it from the
 template search or update the product.
@@ -306,7 +319,7 @@ size of the blank against the template.
   until you choose a template that fits every size, or the template changes
   so that it does. Each check of the product, on update or when the
   template or blank changes in Pixonaut, reads them again.
-- On a [standing side](#standing-sides), those sizes get no design and
+- On a [fixed design](#fixed-designs), those sizes get no design and
   their variants cannot be bought; the sizes the template fits still sell.
   Stop selling the misfit sizes, for example by removing those variations,
   or choose a template that fits them.
@@ -319,12 +332,12 @@ size of the blank against the template.
 A view is a way the blank is photographed, set up in the Pixonaut studio,
 such as "Flat" or "On model" for the front of a t-shirt; each view holds a
 photo of every colour it was shot in. Customers see their design drawn onto
-the photos of the views of each side's placement, in the colour of the
-variant they buy (see [Blank variant](#blank-variant)), and switch between
+the photos of the views of each side's print position, in the colour of the
+variant they buy (see [Variant](#variant)), and switch between
 those views in the designer.
 
-**Shown in**, at the end of **On the product page**, lists the blank's views
-by placement, each with a thumbnail of its first photo. Tick the ones
+**Shown in**, in the closed **Views on the product page** section, lists the
+blank's views by print position, each with a thumbnail of its first photo. Tick the ones
 customers see; with none ticked, they see every view. A view without a photo
 of the colour being bought is not shown for it, and neither is a view the
 studio limits to some option values, such as some colours, for a variant
@@ -342,8 +355,8 @@ updating the product keeps the views chosen before.
 
 **Starting view** chooses the view the designer opens on, among those
 ticked (any of the blank's views while none is ticked). Left at **The first
-view**, each side opens on the first view of its placement with a photo. On
-a product with several sides, the starting view is one side's placement's:
+view**, each side opens on the first view of its print position with a photo. On
+a product with several sides, the starting view is one side's print position's:
 that side opens on it, and every other side on its own first view. Every
 side opens on **Design** when it is the starting view. A
 starting view that is unticked, or a product moved to another blank, goes
@@ -356,7 +369,7 @@ expired.
 ### Printshop
 
 Once a blank is linked, the tab shows the **Printshop** that makes its
-prints, locked: the blank's own, its category's (marked *from the blank's
+prints, read-only: the blank's own, its category's (marked *from the blank's
 category*), or the workspace default when neither names one. When none of
 them names a printshop, the tab says **None set**: Pixonaut cannot route
 the blank's orders until one is chosen. The blank decides its printshop, so
@@ -364,27 +377,34 @@ the store cannot choose another. To change it, follow **Change in Pixonaut**
 to the blank in the Pixonaut studio.
 
 A product without a blank chooses its printshop: **Printshop** lists the
-workspace's printshops, with **Workspace default** first. Left on
-**Workspace default**, its orders go to the workspace's default printshop.
-A printshop chosen earlier that the workspace no longer has stays chosen,
-marked *A printshop no longer connected to the workspace*, until you choose
-another.
+workspace's printshops that print without a blank, with **Workspace default**
+first. Left on **Workspace default**, its orders go to the workspace's
+default printshop. A workspace with none says "No printshop in your workspace
+prints without a blank." A printshop chosen earlier that the workspace no
+longer has stays chosen, marked *A printshop no longer connected to the
+workspace*, until you choose another. A product saved on a printshop that
+needs a blank cannot be bought: the tab says "Choose a blank, or a printshop
+that prints without one."
 
-### Blank variant
+### Variant
 
 A blank comes in variants, such as each colour in each size. Once a product
-is saved on a blank, its **Pixonaut** tab shows the **Blank variant** it
-sells. By default it is matched by option labels: the variant whose every
+is saved on a blank, its **Pixonaut** tab shows the **Variant** it
+sells. By default it is found automatically, by option labels: the variant whose every
 option is one of the product's attributes, so `Color: Red, Size: M` matches
 a product with a **Color** attribute of only `Red` and a **Size** attribute
 of only `M`, case and spacing aside. When more than one variant matches,
 none is chosen. When the labels differ (your size "Medium" for the blank's
 `M`), or the product has no such attributes, pick the variant from the list
-and update the product. **Match by options** matches again, and shows the
-variant it matched, such as *Match by options (now: Color: Red, Size: M)*.
-When nothing matches, nothing falls back: the product, or the variation,
-cannot be bought until you pick its variant; a variation does not use its
-product's. The field says so under it. A retired variant is listed with
+and update the product. *Find automatically* finds it again, and once it has, the field reads
+such as *Gelato variant: 28x40" / 70x100cm (found automatically)*: the
+printshop's name for a blank from a print partner's catalogue, else *Blank
+variant: Color: Red, Size: M (found automatically)*. When none is found, the
+field says so, such as "No Gelato variant found: pick one." Nothing falls
+back: the product, or the variation, cannot be bought until you pick its
+variant; a variation does not use its product's. Picking a blank or a variant
+shows its printshop, variant and views straight away, before you update the
+product. A retired variant is listed with
 *(retired)*.
 
 The blank's option names, option values and view labels are shown in your
@@ -393,7 +413,7 @@ there; the variant a product stores is named the same way. Attributes match
 either: a product whose attributes were named before the blank had names in
 your site's language keeps its variant.
 
-A variable product's own **Pixonaut** tab has no **Blank variant** field:
+A variable product's own **Pixonaut** tab has no **Variant** field:
 each variation is a variant of its own, picked below its attributes.
 
 When you change the attributes of a product or variation matched by
@@ -403,7 +423,7 @@ attributes. That happens in the background within a few moments; it never
 keeps selling the variant of its old attributes. A variant you picked is
 kept whatever the attributes.
 
-A variation has its own **Blank variant** field below its attributes,
+A variation has its own **Variant** field below its attributes,
 whether or not it overrides the product; see [Variations](#variations).
 
 A product without a variant, or whose variant is retired in Pixonaut
@@ -415,15 +435,16 @@ shows it as unavailable.
 
 ### Without a blank
 
-Leave **Blank** empty to link a template on its own, such as a sign or a
+Leave **Printed on** empty (*No blank: the design alone*) to link a template on its own, such as a sign or a
 poster. The product then has one side, with only a template and its print
-sizes: no placement, view, variant or printshop is checked. Its orders go
+sizes: no print position, view or variant is checked. Its orders go
 to the printshop chosen under [Printshop](#printshop), or to the
 workspace's default printshop.
 
-There is no placement to take a default size from, so enter each print size
-yourself: its width and height in millimetres, in the template's shape (a
-5:7 sign, for example, at 500 × 700 mm), and the label customers see.
+There is no print position to take a size from, so add each print size
+yourself with **Add a size in mm**: its name and its width and height in
+millimetres, in the template's shape (a 5:7 sign, for example, at 500 × 700
+mm).
 Pixonaut checks each one against the template's aspect ratio when you update
 the product. A product without a blank and without a print size cannot be
 bought.
@@ -457,11 +478,11 @@ sizes of a hoodie:
    The variation's own Pixonaut fields appear, filled in with the
    product's, to change from there.
 3. Change what differs: the blank, its views, the sides, their templates,
-   print sizes or canvas shape, or the layout or approval mode. Untick **Personalise** to sell this
+   print sizes or the shape customers design on, or the layout or approval. Untick **Personalise** to sell this
    variation unpersonalised while the others are personalised.
 4. Click **Save changes** (or update the product).
 
-Each variation is one of its blank's variants. Its **Blank variant** field,
+Each variation is one of its blank's variants. Its **Variant** field,
 below its attributes, says which: the variant matched by the variation's
 attribute labels (`Color: Red, Size: M` matches the variation Red, M), or
 the one you pick there, for example when your sizes read "Medium" and the
@@ -496,7 +517,7 @@ category pages, the front page's product sections, related products, search
 results, the cart, order emails, the admin, and anything else that reads the
 image, such as product feeds and the picture search engines and social
 networks show for the product's page. The picture is the product's first
-side's template on the first view of its placement that the product is
+side's template on the first view of its print position that the product is
 shown in, unless you choose another view or photo (below). A variation's
 picture is on the photo of its own blank variant, so each colour shows its
 own, and becomes the variation's image. A product without a blank shows the
@@ -504,7 +525,7 @@ template's own picture.
 
 The pictures are saved in the media library, named `pixonaut-<product id>-…`,
 and are made a few moments after the product is personalised, then again
-after its blank, placement, template or variant changes, after a new version
+after its blank, print position, template or variant changes, after a new version
 of its template is published in Pixonaut, after a blank is updated in
 Pixonaut, or when you delete the picture from the media library. Until then,
 and whenever Pixonaut cannot be reached, the product keeps the image it has.
@@ -571,13 +592,13 @@ personalised variation's options say the same beside its image.
 
 ### Choosing the view and photo
 
-When the product is on a blank with photos for its first side's placement,
+When the product is on a blank with photos for its first side's print position,
 **Product images** in the Pixonaut tab lets you choose what the product image
 is drawn on, each choice with a thumbnail:
 
 - **On the product photo**, the default: the first view the product is shown
   in, on the photo of the blank variant it sells.
-- **One of the blank's photos** for that placement: every photo of every
+- **One of the blank's photos** for that print position: every photo of every
   view, scene photos included, named after its view. Choose one to show the
   product on it, for example a lifestyle scene, without hiding other views
   from customers.
@@ -618,7 +639,7 @@ images**:
    design**, the design alone without the product. Each choice shows a
    thumbnail: the blank's photo, or the template's preview. When the
    product has no blank, or the blank has no photo for the first side's
-   placement, there is nothing to choose: every set is the flat design.
+   print position, there is nothing to choose: every set is the flat design.
 3. Update the product. The images are drawn a few moments later.
 
 A variation's image shows the product's first set, on the view and photo
@@ -650,17 +671,17 @@ cannot buy it until it is fixed. The Pixonaut tab says why, and a notice at
 the top of the admin screens names the product until you fix it. Reasons
 include:
 
-- no template chosen, or no placement for a side;
-- two sides on the same placement, or with the same key;
+- no template chosen, or no print position for a side;
+- two sides on the same print position, or with the same key;
 - more than ten sides, more than 50 print sizes on a side, or a custom
   size without a usable width and height;
 - no print size on a product without a blank;
-- the blank is deleted in Pixonaut, or the blank, placement or template no
+- the blank is deleted in Pixonaut, or the blank, print position or template no
   longer exists there;
-- a print size does not fit the placement or the template's shape;
-- Pixonaut would not make the design of a standing side, or the store may
+- a print size does not fit the print position or the template's shape;
+- Pixonaut would not make the design of a fixed-design side, or the store may
   not create and approve designs;
-- the template of a standing side cannot be printed at any of the blank's
+- the template of a fixed design cannot be printed at any of the blank's
   sizes;
 - Pixonaut could not be reached, for example because the store is not
   connected;
@@ -675,7 +696,7 @@ to do for each reason.
 A product, or a variation, that is no variant of its blank, or whose variant
 is retired, cannot be bought either. The product page shows the variation
 as unavailable, and a notice names the product and each such variation
-until each sells a variant again: pick another in its **Blank variant**
+until each sells a variant again: pick another in its **Variant**
 field.
 
 ## When templates and blanks change in Pixonaut
@@ -688,12 +709,12 @@ changes in Pixonaut, and once after it connects:
   [Template versions](#template-versions)).
   A customer who personalised the product just before keeps the design
   made from the version it replaced, and can still add it to the cart. A
-  standing side is printed from the new version's design from then on.
+  fixed design is printed from the new version's design from then on.
 - **A template is paused or deleted.** Customers cannot buy the product
   until the template is live again (it is then checked again) or you
   choose another. Saving a product whose template is paused says so on its
   Pixonaut tab too.
-- **A blank is updated, deleted or restored.** The product's placements and
+- **A blank is updated, deleted or restored.** The product's print positions and
   print sizes are checked against the blank as it is now, and each product
   and variation is matched to its variants again. A deleted blank stops the
   product; the Pixonaut tab says so even before the check has run. When the

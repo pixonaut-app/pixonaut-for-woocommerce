@@ -23,12 +23,12 @@ printshop.
 ## 2. Link a product
 
 Open a simple product, or add one, and in its **Product data** box open the
-**Pixonaut** tab. Tick **Personalise**, choose the **Blank**, then the
-side's **Placement** and **Template**, and publish the product. The tab shows
-the print sizes it is sold in, the printshop that makes it, the **Views**
-customers see their design in, and the **Blank variant** it sells, such as
+**Pixonaut** tab. Tick **Personalise**, choose the blank under **Printed on**, then the
+side's **Print position** and **Template**, and publish the product. The tab shows
+the print sizes it is sold in, the printshop that makes it, the views
+customers see their design in, and the **Variant** it sells, such as
 the white t-shirt in size M. Check that variant: a product that sells none
-cannot be bought, so pick one when the tab says no variant matches, and
+cannot be bought, so pick one when the tab says no variant was found, and
 update the product. See [Link a product](../linking-products/).
 
 ## 3. Check the settings
@@ -56,7 +56,7 @@ workspace, this order is printed and shipped.
 Once the order is paid (WooCommerce marks it **Processing** or
 **Completed**), the store
 approves the design, has Pixonaut render its print file, and places one
-printshop order for the line, for the blank variant it sells, sent to the
+printshop order for the line, for the variant it sells, sent to the
 order's shipping address. This
 runs in the background, as a job under **WooCommerce > Status > Scheduled
 Actions** (`pixonaut_fulfil_item`). See
