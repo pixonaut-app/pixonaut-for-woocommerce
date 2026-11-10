@@ -59,10 +59,7 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 
 	protected const PRINTSHOP_ID = BlankFixture::PRINTSHOP_ID;
 
-	/**
-	 * Gelato's integration: a printshop that prints only on a blank.
-	 */
-	protected const INTEGRATED_ID = 'ps_gelato';
+	protected const INTEGRATED_ID = BlankFixture::INTEGRATED_ID;
 
 	protected HttpRecorder $recorder;
 
@@ -243,31 +240,13 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 	}
 
 	/**
-	 * A `GET /v1/printshop-connections` answer: the workspace's own two
-	 * printshops and Gelato's integration, which prints only on a blank.
+	 * A `GET /v1/printshop-connections` answer, as `BlankFixture` gives it.
 	 *
 	 * @param string $default_id The workspace's default printshop.
 	 * @return array<string, mixed>
 	 */
 	protected static function printshops( string $default_id = self::PRINTSHOP_ID ): array {
-		$printshop = static fn ( string $id, string $name, string $adapter ): array => array(
-			'id'            => $id,
-			'name'          => $name,
-			'adapter'       => $adapter,
-			'active'        => true,
-			'isDefault'     => $default_id === $id,
-			'asksOfDesigns' => array(
-				'commitKeys' => array(),
-				'needsBlank' => 'custom' !== $adapter,
-			),
-		);
-		return array(
-			'connections' => array(
-				$printshop( self::PRINTSHOP_ID, 'Fixture Print AB', 'custom' ),
-				$printshop( 'ps_other', 'Other Print AB', 'custom' ),
-				$printshop( self::INTEGRATED_ID, 'Gelato', 'gelato' ),
-			),
-		);
+		return BlankFixture::printshops( $default_id );
 	}
 
 	/**

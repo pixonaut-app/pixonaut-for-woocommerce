@@ -97,6 +97,8 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 		$this->recorder = ( new HttpRecorder( Hosts::server_api() ) )->start();
 		$this->variants = ( new VariantsAnswer() )->start();
 		$this->plugin->connection_store()->save( self::connection() );
+		// A product without a blank is checked against the printshops it may be sent to.
+		BlankFixture::remember_printshops( $this->plugin->catalogue_cache() );
 		( new ReflectionProperty( ProductVariants::class, 'read' ) )->setValue( $this->plugin->product_variants(), array() );
 		wp_set_current_user( $this->user( 'shop_manager' ) );
 	}

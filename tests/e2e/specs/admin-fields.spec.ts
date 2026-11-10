@@ -20,12 +20,12 @@ test('shows the configuration once Personalise is ticked, pictures in its picker
 	await openPixonautTab(page);
 	const panel = productPanel(page);
 
-	await expect(panel.getByRole('heading', { name: 'Printed on' })).toBeHidden();
+	await expect(panel.getByRole('heading', { name: 'Printing' })).toBeHidden();
 	await panel.getByLabel('Personalise').check();
+	await expect(panel.getByRole('heading', { name: 'Printing' })).toBeVisible();
 	await expect(
-		panel.getByRole('heading', { name: 'Printed on' }),
+		panel.getByRole('heading', { name: 'Template and print sizes' }),
 	).toBeVisible();
-	await expect(panel.getByRole('heading', { name: 'Sides' })).toBeVisible();
 
 	// The blank picker shows each blank's photo beside its name.
 	await page.locator('#pixonaut_blank + .select2-container').click();
