@@ -66,6 +66,9 @@ Each card shows the product's title, image and price.
 Products already set up this way when the plugin is updated get their
 cards within a few minutes of the update, from a background job.
 
+A trashed product or variation counts as gone, and a restored one counts
+again: a value whose only variations are in the trash has no card.
+
 ## Global attributes only
 
 Only global attributes, the ones added under **Products > Attributes**, have

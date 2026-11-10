@@ -126,9 +126,11 @@ of a global attribute as its own product, by attribute id; an attribute it
 does not name follows the attribute's setting, and `Catalogue\SplitListing`
 resolves the one attribute a product is listed by. `Catalogue\SplitCards`
 writes the product's `_pixonaut_split_card` rows from it whenever the product,
-a variation, its configuration or the attribute's setting changes, and once
-for every variable product after the upgrade that added them, and
-`Storefront\SplitCardListings` joins them to the shop's main product query,
+a variation, its configuration or the attribute's setting changes, when the
+product or a variation is trashed, restored or deleted, and once for every
+variable product after the upgrade that added them; one request at a time
+writes a product's rows, under a MySQL named lock per product.
+`Storefront\SplitCardListings` joins the rows to the shop's main product query,
 so the count, pages and sort take each card as a product. A configuration written by
 a newer plugin version reads as invalid, so the product cannot be bought,
 and is never overwritten; on a variation it applies even without "override".
