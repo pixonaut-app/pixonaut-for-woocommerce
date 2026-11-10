@@ -1362,7 +1362,8 @@
 
 #variable_product_options
 	.pixonaut-variation-sizes
-	input.pixonaut-variation-size-label {
+	.pixonaut-variation-size-custom
+	input.short.pixonaut-variation-size-label {
 	width: 10em;
 }
 
