@@ -10,11 +10,13 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 use Pixonaut\WooCommerce\Admin\PanelFields;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Admin\VariationPanel;
+use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Catalogue\CanvasRatio;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\PictureView;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variable;
@@ -250,6 +252,7 @@ final class VariationPanelTest extends ProductPanelTestCase {
 		$this->assertStringContainsString( 'id="pixonaut_variation_1_side_0_placement"', $html );
 		$this->assertStringContainsString( 'name="pixonaut_variation[1][blank]"', $html );
 		$this->assertStringContainsString( 'Fixture tee', $html, 'Prefilled from the product.' );
+		$this->assertStringContainsString( 'class="pixonaut-template-studio" href="' . Hosts::studio() . ConnectionAnswers::studio_path() . 'templates/mini-tee"', $html );
 		$this->assertStringContainsString( 'class="woocommerce_options_panel pixonaut-variation-fields" hidden', $html );
 	}
 

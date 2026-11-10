@@ -61,6 +61,7 @@ import {
 	initTemplateVersion,
 	linkedTemplateId,
 	offerVersions,
+	showTemplateStudio,
 } from './template-version';
 import { chosenThumbnail, thumbnailOptions } from './thumbnails';
 import { initUsePicture } from './use-picture';
@@ -715,6 +716,7 @@ function initSide(panel: Panel, side: HTMLElement): void {
 		background(undefined);
 		showMisfitWarning(side, '');
 		showTemplate('');
+		showTemplateStudio(side, '');
 		groups?.templateChanged('');
 		offerVersions(side, '');
 	};
@@ -730,6 +732,7 @@ function initSide(panel: Panel, side: HTMLElement): void {
 			background(event.params.data.backgroundSeeThrough);
 			showMisfitWarning(side, event.params.data.warning ?? '');
 			showTemplate(event.params.data.thumbnail ?? '');
+			showTemplateStudio(side, event.params.data.id);
 			groups?.templateChanged(event.params.data.id);
 			offerVersions(side, event.params.data.id);
 		})
@@ -740,6 +743,7 @@ function initSide(panel: Panel, side: HTMLElement): void {
 			background(undefined);
 			showMisfitWarning(side, '');
 			showTemplate('');
+			showTemplateStudio(side, '');
 			groups?.templateChanged('');
 			offerVersions(side, '');
 		});

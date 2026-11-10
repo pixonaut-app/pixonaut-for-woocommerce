@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 import {
+	baseIdOf,
 	initTemplateVersion,
 	linkedTemplateId,
 	offerVersions,
+	showTemplateStudio,
 	versionOf,
 } from './template-version';
 
@@ -135,5 +137,47 @@ describe('linkedTemplateId', () => {
 		picker(element).dispatchEvent(new Event('change'));
 
 		expect(heardIds).toEqual(['mini-tee@1', 'mini-tee@3']);
+	});
+});
+
+describe('showTemplateStudio', () => {
+	const STUDIO = 'https://studio.pixonaut.app/w/fixture-prints/templates';
+
+	function linked(href = ''): HTMLElement {
+		const element = document.createElement('div');
+		element.innerHTML = `<a class="pixonaut-template-studio" href="${href}" data-studio="${STUDIO}" hidden>Open in Pixonaut</a>`;
+		return element;
+	}
+
+	const link = (element: HTMLElement) =>
+		element.querySelector('.pixonaut-template-studio') as HTMLAnchorElement;
+
+	it("points at the picked template's page by its base id", () => {
+		const element = linked();
+
+		showTemplateStudio(element, 'barnrumstavla-safari-copy-17@3');
+
+		expect(link(element).hidden).toBe(false);
+		expect(link(element).href).toBe(`${STUDIO}/barnrumstavla-safari-copy-17`);
+	});
+
+	it('hides the link once the template is cleared', () => {
+		const element = linked(`${STUDIO}/mini-tee`);
+		link(element).hidden = false;
+
+		showTemplateStudio(element, '');
+
+		expect(link(element).hidden).toBe(true);
+	});
+
+	it('does nothing on a side printed without the link', () => {
+		const element = document.createElement('div');
+
+		expect(() => showTemplateStudio(element, 'mini-tee@2')).not.toThrow();
+	});
+
+	it('reads the base id before the last @', () => {
+		expect(baseIdOf('shirt@2@4')).toBe('shirt@2');
+		expect(baseIdOf('mini-tee')).toBe('mini-tee');
 	});
 });
