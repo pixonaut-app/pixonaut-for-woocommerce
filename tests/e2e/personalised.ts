@@ -61,13 +61,16 @@ export async function connectFixtureStore(
 	expect(response.status(), 'the tests site stores the connection').toBe(204);
 }
 
+/** A published simple product, personalised with `pixonaut` when given and
+ *  selling the blank `variant` (by default its first on sale); its address. */
 export async function createProduct(
 	request: APIRequestContext,
 	name: string,
 	pixonaut?: object,
+	variant?: string,
 ): Promise<string> {
 	const response = await request.post(restUrl('/pixonaut-e2e/v1/products'), {
-		data: { name, pixonaut },
+		data: { name, pixonaut, variant },
 	});
 	expect(response.status()).toBe(201);
 	return (await response.json()).permalink;

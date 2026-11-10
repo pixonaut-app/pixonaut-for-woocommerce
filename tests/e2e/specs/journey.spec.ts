@@ -92,6 +92,7 @@ async function orderPersonalisedTee({
 		checkout,
 		checkoutUrls,
 		name: `Journey tee ${theme} ${Date.now()}`,
+		linkedInAdmin: true,
 	});
 	const placed = await readOrder(request, orderId);
 	expect(placed.status).toBe('processing');
