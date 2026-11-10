@@ -134,7 +134,7 @@ final class RowSize {
 			array_values( array_filter( is_array( $data['variants'] ?? null ) ? $data['variants'] : array(), static fn ( mixed $ref ): bool => is_string( $ref ) && '' !== $ref ) ),
 			$width,
 			$height,
-			true === ( $data['full'] ?? null ),
+			isset( $data['full'] ) && true === $data['full'],
 			PrintSize::from_array( $data['size'] ?? null ),
 		);
 	}
