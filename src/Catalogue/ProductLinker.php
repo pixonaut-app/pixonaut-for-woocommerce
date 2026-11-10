@@ -421,7 +421,7 @@ final class ProductLinker {
 			$kept[] = $side->with( $side->template_version, $before?->previous_version, $checked->valid ? $side->print_sizes : array(), $menu, null === $menu ? $side->start_size : $inputs[ $i ]->start )->with_offers_properties( $before?->offers_properties )
 				->with_versions( $before->pinned ?? false, $before?->previous_version, $before?->latest_version );
 		}
-		return $this->standing( $checked->with_sides( $kept ), $stored );
+		return self::valued( $this->standing( $checked->with_sides( $kept ), $stored ), $stored, $inputs );
 	}
 
 	/**

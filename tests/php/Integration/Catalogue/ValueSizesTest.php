@@ -211,6 +211,75 @@ final class ValueSizesTest extends ProductPanelTestCase {
 		$this->assertSame( InvalidReason::VARIATION_SIZE_UNCHECKED, $config->invalid_reason );
 	}
 
+	public function test_a_recheck_keeps_the_sizes_per_value(): void {
+		list( $parent, $small ) = $this->poster();
+		$this->save_template_only(
+			$parent,
+			$this->value_sizes(
+				array(
+					self::SMALL => array( '300', '400', '' ),
+					self::LARGE => array( '500', '700', '' ),
+				)
+			)
+		);
+		$stored = ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) );
+
+		$rechecked = $this->linker->recheck( $stored, array( 'mini-tee' => 2 ) );
+
+		$this->assertEquals( $stored->sides[0]->value_sizes, $rechecked->sides[0]->value_sizes );
+		$rechecked->save_to( $this->reload_any( $parent->get_id() ) );
+		$this->assertSame( array( 300.0, 400.0 ), $this->sold_size( $small ) );
+		$this->assertTrue( $this->reload_any( $small->get_id() )->is_purchasable() );
+	}
+
+	public function test_an_overriding_variation_takes_no_size_per_value(): void {
+		list( $parent, $small ) = $this->poster();
+		$this->save_template_only(
+			$parent,
+			$this->value_sizes(
+				array(
+					self::SMALL => array( '300', '400', '' ),
+					self::LARGE => array( '500', '700', '' ),
+				)
+			)
+		);
+		// A first override starts from the product's sides, sizes per value among them.
+		$own = ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) )->with_override( true );
+		$own = $own->with_sides( array( $own->sides[0]->with( 2, null, array( new PrintSize( 210, 270, 'Own' ) ), null, 0 ) ) )->with_validity( true );
+		$own->save_to( $this->reload_any( $small->get_id() ) );
+
+		$config = ProductConfig::config_for( $this->reload_any( $small->get_id() ) );
+
+		$this->assertTrue( $config->valid );
+		$this->assertSame( 'Own', $config->sides[0]->print_sizes[0]->label );
+	}
+
+	public function test_a_product_whose_variations_all_override_needs_no_size(): void {
+		list( $parent, $small, $large ) = $this->poster();
+		$this->save_template_only( $parent );
+		foreach ( array( $small, $large ) as $variation ) {
+			( new ProductConfig( true, true, null, null, array( new Side( self::SIDE_KEY, 'Poster', null, null, 'mini-tee', 2, null, 'Mini tee', array( new PrintSize( 300, 400, 'A' ) ) ) ) ) )->save_to( $this->reload_any( $variation->get_id() ) );
+		}
+
+		$reloaded = $this->reload_any( $parent->get_id() );
+		$this->assertNull( InvalidReason::of( $reloaded, ProductConfig::stored_on( $reloaded ) ) );
+	}
+
+	public function test_saving_the_last_variations_size_clears_the_products_notice(): void {
+		list( $parent, $small, $large ) = $this->poster();
+		$this->save_template_only( $parent );
+		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->save_variation( $small, 0, '300', '400' );
+		$this->variations->saved( $parent->get_id() );
+		$this->assertArrayHasKey( InvalidProductNotice::key( $parent->get_id() ), $this->plugin->notices()->all() );
+		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+
+		$this->save_variation( $large, 1, '500', '700' );
+		$this->variations->saved( $parent->get_id() );
+
+		$this->assertArrayNotHasKey( InvalidProductNotice::key( $parent->get_id() ), $this->plugin->notices()->all() );
+	}
+
 	public function test_a_variation_set_to_any_value_takes_the_products_size(): void {
 		list( $parent ) = $this->poster();
 		$any            = $this->variation( $parent, '' );

@@ -122,7 +122,8 @@ final class ProductConfig {
 		$config = self::inherited_by( $product, $variation );
 		$sizes  = VariationSize::stored_on( $variation );
 		if ( array() !== $sizes->sizes || self::has_row_sizes( $config ) || self::has_value_sizes( $config ) ) {
-			$config = $sizes->applied_to( $config, ProductVariant::sold_by( $variation, $config ), ValueSizes::attributes_of( $variation ) );
+			// An overriding variation sets its sizes in its own setup.
+			$config = $sizes->applied_to( $config, ProductVariant::sold_by( $variation, $config ), $config->override ? array() : ValueSizes::attributes_of( $variation ) );
 		}
 		return $config->resolved_for( $variation );
 	}

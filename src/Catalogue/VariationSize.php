@@ -95,24 +95,27 @@ final class VariationSize {
 	}
 
 	/**
-	 * Whether a variable product's enabled variations that follow it, one at least,
-	 * each have a print size for every side the product gives none, their
-	 * own or their attribute value's: a product without a size of its own
-	 * then needs none.
+	 * Whether a variable product's enabled variations, one at least, each
+	 * override its setup or have a print size for every side the product
+	 * gives none, their own or their attribute value's: a product without a
+	 * size of its own then needs none.
 	 *
 	 * @param WC_Product    $product A variable product.
 	 * @param ProductConfig $config  Its configuration.
 	 */
 	public static function covers_variations( WC_Product $product, ProductConfig $config ): bool {
-		$unsized   = array_filter( $config->sides, static fn ( Side $side ): bool => array() === $side->print_sizes && null === $side->pending_sizes );
-		$following = 0;
+		$unsized = array_filter( $config->sides, static fn ( Side $side ): bool => array() === $side->print_sizes && null === $side->pending_sizes );
+		$enabled = 0;
 		foreach ( $product->is_type( 'variable' ) ? $product->get_children() : array() as $child_id ) {
 			$variation = wc_get_product( $child_id );
 			// A disabled variation is stored as private, and is not sold.
-			if ( ! $variation instanceof WC_Product || ProductConfig::PUBLIC_STATUS !== $variation->get_status() || ProductConfig::stored_on( $variation )->override ) {
+			if ( ! $variation instanceof WC_Product || ProductConfig::PUBLIC_STATUS !== $variation->get_status() ) {
 				continue;
 			}
-			++$following;
+			++$enabled;
+			if ( ProductConfig::stored_on( $variation )->override ) {
+				continue;
+			}
 			$own        = self::stored_on( $variation );
 			$attributes = ValueSizes::attributes_of( $variation );
 			foreach ( $unsized as $side ) {
@@ -121,7 +124,8 @@ final class VariationSize {
 				}
 			}
 		}
-		return array() !== $unsized && $following > 0;
+		// Variations that all override use none of the product's sizes; a product with none enabled sells nothing.
+		return array() !== $unsized && $enabled > 0;
 	}
 
 	/**
