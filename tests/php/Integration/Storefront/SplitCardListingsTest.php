@@ -208,6 +208,16 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'attribute_pa_bild=utan-bild', $listed['links'][0] );
 	}
 
+	public function test_a_filter_by_another_attribute_keeps_every_card_of_a_product_it_keeps(): void {
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		$poster = $this->poster();
+
+		$listed = $this->shop( array( 'filter_storlek' => '30x40' ) );
+
+		$this->assertSame( array( $poster->get_id(), $poster->get_id() ), $listed['ids'] );
+		$this->assertSame( 2, $listed['found'] );
+	}
+
 	public function test_a_value_sold_only_on_a_template_that_is_not_live_has_no_card(): void {
 		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
 		$poster = $this->poster();

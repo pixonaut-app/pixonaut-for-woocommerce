@@ -111,10 +111,7 @@ final class SplitCardListings {
 		$clauses['fields']  = ( $clauses['fields'] ?? '' ) . ", {$alias}.meta_value AS " . self::FIELD;
 		$clauses['groupby'] = '' === trim( (string) ( $clauses['groupby'] ?? '' ) ) ? '' : $clauses['groupby'] . ", {$alias}.meta_id";
 		$clauses['orderby'] = '' === trim( (string) ( $clauses['orderby'] ?? '' ) ) ? "{$alias}.meta_id ASC" : $clauses['orderby'] . ", {$alias}.meta_id ASC";
-		$filtered_out       = self::filtered_out();
-		if ( array() !== $filtered_out ) {
-			$clauses['where'] = ( $clauses['where'] ?? '' ) . " AND ( {$alias}.meta_value IS NULL OR {$alias}.meta_value NOT IN ( '" . implode( "', '", $filtered_out ) . "' ) )";
-		}
+		$clauses['where']   = ( $clauses['where'] ?? '' ) . self::filtered_cards();
 		foreach ( self::not_live_cards() as $product_id => $term_ids ) {
 			$clauses['where'] .= " AND NOT ( {$wpdb->posts}.ID = " . $product_id . " AND {$alias}.meta_value IN ( '" . implode( "', '", $term_ids ) . "' ) )";
 		}
@@ -122,28 +119,43 @@ final class SplitCardListings {
 	}
 
 	/**
-	 * The values of the filtered attributes that no filter chose, whose
-	 * cards a filtered listing leaves out.
-	 *
-	 * @return list<int>
+	 * The condition a filtered listing keeps a card by: its value is one a
+	 * filter chose, or of an attribute no filter is on. A product listed
+	 * once has no value and is kept. Empty without a filter.
 	 */
-	private static function filtered_out(): array {
-		$out = array();
+	private static function filtered_cards(): string {
+		$taxonomies = array();
+		$chosen     = array();
 		foreach ( WC_Query::get_layered_nav_chosen_attributes() as $taxonomy => $filter ) {
-			$chosen = is_array( $filter['terms'] ?? null ) ? $filter['terms'] : array();
-			$terms  = get_terms(
+			$slugs        = is_array( $filter['terms'] ?? null ) ? array_values( array_map( 'strval', $filter['terms'] ) ) : array();
+			$taxonomies[] = (string) $taxonomy;
+			$ids          = array() === $slugs ? array() : get_terms(
 				array(
 					'taxonomy'   => (string) $taxonomy,
+					'slug'       => $slugs,
 					'hide_empty' => false,
+					'fields'     => 'ids',
 				)
 			);
-			foreach ( is_array( $terms ) ? $terms : array() as $term ) {
-				if ( ! in_array( $term->slug, $chosen, true ) ) {
-					$out[] = $term->term_id;
-				}
-			}
+			$chosen       = array_merge( $chosen, is_array( $ids ) ? array_map( 'intval', $ids ) : array() );
 		}
-		return $out;
+		if ( array() === $taxonomies ) {
+			return '';
+		}
+		global $wpdb;
+		$alias = self::ALIAS;
+		// The chosen ids are none when no slug names a term: a 0 keeps the list valid and matches no term.
+		$chosen      = array() === $chosen ? array( 0 ) : array_values( array_unique( $chosen ) );
+		$in_filtered = implode( ', ', array_fill( 0, count( $taxonomies ), '%s' ) );
+		$is_chosen   = implode( ', ', array_fill( 0, count( $chosen ), '%d' ) );
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- table names, a constant alias and a placeholder per value.
+		$where = $wpdb->prepare(
+			" AND ( {$alias}.meta_value IS NULL OR {$alias}.meta_value NOT IN ( SELECT term_id FROM {$wpdb->term_taxonomy} WHERE taxonomy IN ( {$in_filtered} ) ) OR {$alias}.meta_value IN ( {$is_chosen} ) )",
+			...$taxonomies,
+			...$chosen
+		);
+		// phpcs:enable
+		return is_string( $where ) ? $where : '';
 	}
 
 	/**
