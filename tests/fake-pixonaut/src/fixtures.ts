@@ -7,6 +7,7 @@ import { FIXTURE } from './fixture-ids';
 import {
 	type Blank,
 	type BlankNames,
+	type CatalogueProduct,
 	CUSTOM_ADAPTER,
 	emptyState,
 	type Photo,
@@ -236,6 +237,82 @@ function colourSize(
 
 const COLOUR_SIZE_AXES = ['Color', 'Size'];
 
+/** The poster's sizes: its variant, the label the printshop gives it, and
+ *  its print area in mm. */
+const POSTER_SIZES = [
+	[FIXTURE.variant.poster50x70, '20x30" / 50x70cm', 500, 700],
+	[FIXTURE.variant.poster70x100, '28x40" / 70x100cm', 700, 1000],
+	[FIXTURE.variant.poster30x40, '12x16" / 30x40cm', 300, 400],
+] as const;
+
+/** The integrated printshop's catalogue: a poster whose print area is its
+ *  size, and a gift card with nothing to print on. */
+function catalogueProducts(): CatalogueProduct[] {
+	const poster = (blankId: string): ReturnType<CatalogueProduct['makes']> => ({
+		categoryId: 'cat_wall_art',
+		axes: ['Size'],
+		areasVaryBy: ['Size'],
+		variants: POSTER_SIZES.map(([ref, size]) => ({
+			ref,
+			options: { Size: size },
+			retired: null,
+		})),
+		placements: [
+			{
+				id: FIXTURE.placement.front,
+				name: 'Front',
+				shopName: null,
+				maxWidthMm: 700,
+				maxHeightMm: 1000,
+				defaultWidthMm: 700,
+				defaultHeightMm: 1000,
+				bleedMm: 3,
+				safeAreaMm: 5,
+				views: [
+					view('view_front', 'Front', [
+						{
+							id: FIXTURE.mockup.front,
+							assetId: `asset_${blankId}_front`,
+							uploaded: true,
+							variantRefs: [],
+						},
+					]),
+				],
+				areas: POSTER_SIZES.map(([, size, widthMm, heightMm]) => ({
+					row: { Size: size },
+					widthMm,
+					heightMm,
+					usualWidthMm: widthMm,
+					usualHeightMm: heightMm,
+				})),
+			},
+		],
+	});
+	return [
+		{
+			connectionId: FIXTURE.printshop.integrated,
+			productId: FIXTURE.catalogue.poster,
+			name: 'Classic poster',
+			brand: null,
+			variantCount: POSTER_SIZES.length,
+			makes: poster,
+		},
+		{
+			connectionId: FIXTURE.printshop.integrated,
+			productId: FIXTURE.catalogue.unprintable,
+			name: 'Gift card',
+			brand: null,
+			variantCount: null,
+			makes: () => ({
+				categoryId: null,
+				axes: [],
+				variants: [],
+				placements: [],
+			}),
+		},
+	];
+}
+
 /** The tee's variants: white and black in two sizes, a red retired for
  *  each reason, and a heather no photo shows. */
 function teeVariants(): Variant[] {
@@ -414,6 +491,10 @@ function defaultSet({
 		variants: [{ ref: FIXTURE.variant.tote, options: {}, retired: null }],
 		...stamped,
 	});
+
+	for (const product of catalogueProducts()) {
+		state.catalogue.set(product.productId, product);
+	}
 
 	state.shareLinks.set(FIXTURE.shareLink, {
 		token: FIXTURE.shareLink,

@@ -2,8 +2,8 @@
 // templates and blanks in the studio. Each changes the fake's catalogue as
 // Pixonaut would and emits the event Pixonaut sends for it: publishing a
 // template's next version, pausing or resuming it, deleting it, changing its
-// id, and updating,
-// deleting or restoring a blank. Pixonaut sends catalogue events to every
+// id, and updating, deleting or restoring a blank, or finishing its import
+// from a catalogue. Pixonaut sends catalogue events to every
 // store of the workspace; the fake sends them to the store a command names
 // (the main one by default), so a test reads one stream.
 import type { Hono } from 'hono';
@@ -300,6 +300,37 @@ export function registerCatalogueEvents(app: Hono, fake: Fake): void {
 				value: {
 					type: 'blank.updated',
 					payload: { blankId: blank.id, fields },
+				},
+			};
+		},
+	);
+
+	registerChange(
+		app,
+		fake,
+		`${BLANKS_CONTROL}/finish-import`,
+		'blank',
+		findBlank,
+		(blank) => {
+			const product =
+				blank.importedFrom === undefined
+					? undefined
+					: fake.state.catalogue.get(blank.importedFrom.productId);
+			if (blank.status !== 'importing' || product === undefined) {
+				return refused(`blank ${blank.id} is not importing`);
+			}
+			Object.assign(blank, product.makes(blank.id), {
+				status: 'ready',
+				updatedAt: fake.clock.now(),
+			});
+			return {
+				ok: true,
+				value: {
+					type: 'blank.updated',
+					payload: {
+						blankId: blank.id,
+						fields: ['status', 'placements', 'variants'],
+					},
 				},
 			};
 		},

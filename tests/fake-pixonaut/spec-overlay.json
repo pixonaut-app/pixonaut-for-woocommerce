@@ -58,6 +58,726 @@
 			}
 		},
 		{
+			"pointer": "/paths/~1v1~1printshop-catalogue-products",
+			"awaits": "pixonaut-app/pixonaut#3492",
+			"value": {
+				"get": {
+					"operationId": "printshopCatalogueProducts.list",
+					"summary": "List the printshop's catalogue",
+					"tags": ["Catalogue"],
+					"description": "One page of a printshop connection's catalogue, each product marked with the blank it was imported as.",
+					"security": [
+						{
+							"integrationKey": []
+						}
+					],
+					"parameters": [
+						{
+							"in": "query",
+							"name": "limit",
+							"required": false,
+							"schema": {
+								"type": "integer",
+								"minimum": 1,
+								"maximum": 100,
+								"default": 20
+							}
+						},
+						{
+							"in": "query",
+							"name": "offset",
+							"required": false,
+							"schema": {
+								"type": "integer",
+								"minimum": 0,
+								"default": 0
+							}
+						},
+						{
+							"description": "The printshop connection whose catalogue is read.",
+							"in": "query",
+							"name": "connectionId",
+							"required": true,
+							"schema": {
+								"minLength": 1,
+								"type": "string"
+							}
+						},
+						{
+							"in": "query",
+							"name": "categoryId",
+							"required": false,
+							"schema": {
+								"type": "string",
+								"minLength": 1
+							}
+						},
+						{
+							"in": "query",
+							"name": "search",
+							"required": false,
+							"schema": {
+								"type": "string",
+								"maxLength": 200
+							}
+						}
+					],
+					"responses": {
+						"200": {
+							"description": "A page of the partner's products",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							},
+							"content": {
+								"application/json": {
+									"schema": {
+										"type": "object",
+										"required": [
+											"total",
+											"catalogueTotal",
+											"searchComplete",
+											"searchedProducts",
+											"products"
+										],
+										"properties": {
+											"total": {
+												"type": ["number", "null"]
+											},
+											"catalogueTotal": {
+												"type": ["number", "null"]
+											},
+											"searchComplete": {
+												"type": "boolean"
+											},
+											"searchedProducts": {
+												"type": ["number", "null"]
+											},
+											"products": {
+												"type": "array",
+												"items": {
+													"type": "object",
+													"required": [
+														"productId",
+														"name",
+														"brand",
+														"imageUrl",
+														"categoryId",
+														"holds",
+														"hasImportedBlank",
+														"importedBlankId"
+													],
+													"properties": {
+														"productId": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"brand": {
+															"type": ["string", "null"]
+														},
+														"imageUrl": {
+															"type": ["string", "null"]
+														},
+														"categoryId": {
+															"type": ["string", "null"]
+														},
+														"holds": {
+															"type": "object",
+															"required": ["colours", "sizes", "variants"],
+															"properties": {
+																"colours": {
+																	"type": ["integer", "null"],
+																	"minimum": 0
+																},
+																"sizes": {
+																	"type": ["integer", "null"],
+																	"minimum": 0
+																},
+																"variants": {
+																	"type": ["integer", "null"],
+																	"minimum": 0
+																}
+															}
+														},
+														"hasImportedBlank": {
+															"type": "boolean"
+														},
+														"importedBlankId": {
+															"type": ["string", "null"],
+															"description": "The blank it was imported as through this connection, the latest when there are several; null when it has not been."
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						},
+						"400": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["invalid_input"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: invalid_input",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"401": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["unauthorized"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: unauthorized",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"403": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["forbidden"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: forbidden",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"404": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["not_found"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: not_found",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"409": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": [
+													"connection_inactive",
+													"not_a_catalogue"
+												]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: the connection cannot be read",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"500": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["internal_error"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: internal_error",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"502": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["catalogue_unavailable"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: catalogue_unavailable",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"503": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": [
+													"catalogue_loading",
+													"catalogue_unavailable"
+												]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: catalogue_loading, catalogue_unavailable",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"pointer": "/paths/~1v1~1printshop-catalogue-products~1{productId}~1blank",
+			"awaits": "pixonaut-app/pixonaut#3492",
+			"value": {
+				"post": {
+					"operationId": "printshopCatalogueProducts.blank.create",
+					"summary": "Import a catalogue product as a blank",
+					"tags": ["Catalogue"],
+					"description": "Writes the blank at once, `importing`, and answers with it and the job that fills in its variants and photos in the background. The blank becomes `ready` when the job ends, or `failed` with `importFailure` saying why.",
+					"security": [
+						{
+							"integrationKey": []
+						}
+					],
+					"parameters": [
+						{
+							"in": "path",
+							"name": "productId",
+							"required": true,
+							"schema": {
+								"type": "string",
+								"minLength": 1
+							}
+						},
+						{
+							"description": "The printshop connection whose catalogue is read.",
+							"in": "query",
+							"name": "connectionId",
+							"required": true,
+							"schema": {
+								"minLength": 1,
+								"type": "string"
+							}
+						}
+					],
+					"requestBody": {
+						"required": false,
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"name": {
+											"type": "string",
+											"minLength": 1,
+											"maxLength": 200
+										},
+										"printshopPhotos": {
+											"type": "boolean"
+										}
+									}
+								}
+							}
+						}
+					},
+					"responses": {
+						"202": {
+							"description": "The blank, importing, and the job filling it in",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							},
+							"content": {
+								"application/json": {
+									"schema": {
+										"type": "object",
+										"required": ["blank", "job"],
+										"properties": {
+											"blank": {
+												"type": "object",
+												"required": ["id", "name", "status", "importFailure"],
+												"properties": {
+													"id": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													},
+													"status": {
+														"type": "string",
+														"x-extensible-enum": [
+															"importing",
+															"ready",
+															"failed"
+														]
+													},
+													"importFailure": {
+														"type": ["string", "null"]
+													}
+												}
+											},
+											"job": {
+												"type": "object",
+												"required": ["id"],
+												"properties": {
+													"id": {
+														"type": "string"
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						},
+						"400": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["invalid_input"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: invalid_input",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"401": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["unauthorized"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: unauthorized",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"403": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["forbidden"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: forbidden",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"404": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["not_found"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: not_found",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"409": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": [
+													"connection_inactive",
+													"not_a_catalogue",
+													"duplicate_name"
+												]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: the connection cannot be used, or the workspace has a blank of that name",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"422": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": [
+													"no_printable_placement",
+													"no_printshop_photos"
+												]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: the product has nothing to print on",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"500": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["internal_error"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: internal_error",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"502": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["import_failed"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: import_failed",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						},
+						"503": {
+							"content": {
+								"application/json": {
+									"schema": {
+										"properties": {
+											"error": {
+												"type": "string",
+												"x-extensible-enum": ["import_failed", "lock_timeout"]
+											},
+											"reason": {
+												"type": "string"
+											}
+										},
+										"required": ["error"],
+										"type": "object"
+									}
+								}
+							},
+							"description": "Refused: import_failed, lock_timeout",
+							"headers": {
+								"X-Request-Id": {
+									"$ref": "#/components/headers/RequestId"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"pointer": "/paths/~1v1~1printshop-connections/get/responses/200/content/application~1json/schema/anyOf/1/properties/connections/items/properties/catalogue",
+			"awaits": "pixonaut-app/pixonaut#3492",
+			"value": {
+				"type": "boolean",
+				"description": "Whether the printshop has a catalogue a store can browse and import from."
+			}
+		},
+		{
 			"pointer": "/webhooks/template.renamed",
 			"awaits": "pixonaut-app/pixonaut#3429",
 			"value": {

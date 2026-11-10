@@ -9,6 +9,7 @@ import { authenticate } from './auth';
 import { type Clock, createClock } from './clock';
 import { registerControl } from './control';
 import { registerAreasControl } from './control-areas';
+import { registerCatalogueImportControl } from './control-catalogue-imports';
 import { registerDesignerPixelControl } from './control-designer-pixel';
 import { registerTemplateBackgroundControl } from './control-template-background';
 import { registerTemplateFieldKeyControl } from './control-template-field-key';
@@ -249,6 +250,7 @@ export function createFake(options: FakeOptions = {}): Fake {
 
 	registerControl(app, fake);
 	registerAreasControl(app, fake);
+	registerCatalogueImportControl(app, fake);
 	registerDesignerPixelControl(app, fake);
 	registerTemplateRatioControl(app, fake);
 	registerValueLooksControl(app, fake);

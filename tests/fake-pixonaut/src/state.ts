@@ -390,6 +390,29 @@ export type Blank = {
 	/** When the blank was deleted, epoch ms; null while it is not. A
 	 *  deleted blank is still read by id, and left out of the list. */
 	deletedAt: number | null;
+	/** `importing` while its import from a printshop's catalogue runs;
+	 *  `ready` when left out. */
+	status?: BlankStatus;
+	/** The catalogue product it was imported from, through which connection. */
+	importedFrom?: { connectionId: string; productId: string };
+};
+
+export type BlankStatus = 'importing' | 'ready' | 'failed';
+
+/** A product of an integrated printshop's catalogue: what it lists, and the
+ *  blank an import of it makes (without its ids, which the import gives). */
+export type CatalogueProduct = {
+	connectionId: string;
+	productId: string;
+	name: string;
+	brand: string | null;
+	variantCount: number | null;
+	makes: (
+		blankId: string,
+	) => Pick<
+		Blank,
+		'categoryId' | 'placements' | 'axes' | 'variants' | 'areasVaryBy'
+	>;
 };
 
 /** The adapter of a printshop the merchant runs themselves; every other
@@ -455,6 +478,11 @@ export type State = {
 	templates: TemplateVersions;
 	blanks: Map<string, Blank>;
 	printshops: Map<string, Printshop>;
+	/** The integrated printshops' catalogues, by product id. */
+	catalogue: Map<string, CatalogueProduct>;
+	/** Whether an import stays `importing` until the control API finishes
+	 *  it, rather than being whole at once. */
+	catalogueImportsHeld: boolean;
 	/** Store-made records by collection, then id. */
 	records: Map<string, Map<string, Owned<unknown>>>;
 };
@@ -474,6 +502,8 @@ export function emptyState(): State {
 		templates: new TemplateVersions(),
 		blanks: new Map(),
 		printshops: new Map(),
+		catalogue: new Map(),
+		catalogueImportsHeld: false,
 		records: new Map(),
 	};
 }

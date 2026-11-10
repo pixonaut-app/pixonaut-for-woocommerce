@@ -463,6 +463,7 @@ describe('GET /v1/printshop-connections', () => {
 					adapter: 'custom',
 					active: true,
 					isDefault: true,
+					catalogue: false,
 					asksOfDesigns: { commitKeys: [], needsBlank: false },
 				},
 				{
@@ -471,6 +472,7 @@ describe('GET /v1/printshop-connections', () => {
 					adapter: 'gelato',
 					active: true,
 					isDefault: false,
+					catalogue: true,
 					asksOfDesigns: { commitKeys: [], needsBlank: true },
 				},
 				{
@@ -479,6 +481,7 @@ describe('GET /v1/printshop-connections', () => {
 					adapter: 'custom',
 					active: true,
 					isDefault: false,
+					catalogue: false,
 					asksOfDesigns: { commitKeys: [], needsBlank: false },
 				},
 			],

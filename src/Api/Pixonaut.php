@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Vendor\Nyholm\Psr7\Factory\Psr17Factory;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Config;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Credentials\Credential;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Credentials\CredentialProvider;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
@@ -70,6 +71,10 @@ final class Pixonaut {
 		'blanks.variants.list',
 		'blanks.placements.fittingTemplates.list',
 		'printshopConnections.list',
+		// Not in the pinned SDK yet: see `PENDING`.
+		'printshopCatalogueProducts.list',
+		// Takes no key: a repeat imports the product again, which the store never asks for once it is imported.
+		'printshopCatalogueProducts.blank.create',
 		'designs.commit',
 		// One design per store, version, blank, placement and size: a repeat answers it again, so it takes no key.
 		'designs.findOrCreateStanding',
@@ -105,6 +110,25 @@ final class Pixonaut {
 		'shareLinks.update',
 		// Revoking a revoked link changes nothing, so it takes no key.
 		'shareLinks.delete',
+	);
+
+	/**
+	 * Operations the plugin calls that the pinned SDK does not describe yet,
+	 * each as Pixonaut agreed to add it (pixonaut-app/pixonaut#3492). One
+	 * the SDK has is taken from it instead, so moving to an SDK that has
+	 * them changes nothing here but this list, which then empties.
+	 *
+	 * @var array<string, array{method: string, path: string}>
+	 */
+	private const PENDING = array(
+		'printshopCatalogueProducts.list'         => array(
+			'method' => 'GET',
+			'path'   => '/v1/printshop-catalogue-products',
+		),
+		'printshopCatalogueProducts.blank.create' => array(
+			'method' => 'POST',
+			'path'   => '/v1/printshop-catalogue-products/{productId}/blank',
+		),
 	);
 
 	/**
@@ -225,6 +249,9 @@ final class Pixonaut {
 			return self::$catalogue;
 		}
 		$operations = array();
+		foreach ( self::PENDING as $id => $pending ) {
+			$operations[ $id ] = new Operation( $id, $pending['method'], $pending['path'], array( Credential::IntegrationKey ) );
+		}
 		foreach ( Operations::all() as $operation ) {
 			$operations[ $operation->id ] = $operation;
 		}

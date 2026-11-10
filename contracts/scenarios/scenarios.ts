@@ -1,5 +1,6 @@
 // The exchanges the plugin and the SDK have with Pixonaut, in the order a
 // store has them: connect, narrow the webhook endpoint, read the catalogue,
+// import a printshop's catalogue product as a blank,
 // let a customer personalise, commit, approve and order, sell a fixed
 // product from a standing design, hold orders on the free plan and release
 // them (where the target can), mint a proof page, correct a design from
@@ -67,6 +68,10 @@ const CUT_OUT_READ = [200, 404];
 /** A picture's copy in threads: made before or none to make, made now, or
  *  refused where the workspace has no embroidery. */
 const THREAD_COPY = [200, 201, 403];
+/** A catalogue import is written at once and filled in in the background. */
+const ACCEPTED = 202;
+/** A catalogue product with no print position is refused, before anything is written. */
+const UNPRINTABLE = 422;
 /** A machine's threads, as a placement's stitch block lists them. */
 const THREADS = {
 	maxThreads: 6,
@@ -410,6 +415,34 @@ export const SCENARIOS: Scenario[] = [
 					accept: 'image/png',
 				});
 			}
+		},
+	},
+	{
+		name: "link a product by a printshop's catalogue product",
+		async run(session) {
+			const connections = (await session.call('GET /v1/printshop-connections'))
+				.body.connections as { id: string; catalogue?: boolean }[];
+			const connectionId = need(
+				connections.find((connection) => connection.catalogue === true)?.id,
+				'a printshop with a catalogue',
+			);
+			const products = (
+				await session.call('GET /v1/printshop-catalogue-products', {
+					query: { connectionId, limit: '20' },
+				})
+			).body.products as { productId: string }[];
+			// A name of its own, so an import made by an earlier run does not refuse it.
+			await session.call(
+				'POST /v1/printshop-catalogue-products/{productId}/blank',
+				{
+					params: {
+						productId: need(products[0]?.productId, 'a catalogue product'),
+					},
+					query: { connectionId },
+					json: { name: `Store import ${randomUUID()}` },
+					expect: [ACCEPTED, UNPRINTABLE],
+				},
+			);
 		},
 	},
 	{
