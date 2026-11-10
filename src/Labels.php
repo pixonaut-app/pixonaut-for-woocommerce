@@ -21,6 +21,12 @@ final class Labels {
 	public const PERSONALISATION_UNAVAILABLE = 'personalisation_unavailable';
 
 	/**
+	 * A personalised product whose template is paused or not published in
+	 * Pixonaut, on its page, where the add-to-cart form would be.
+	 */
+	public const PRODUCT_UNAVAILABLE = 'product_unavailable';
+
+	/**
 	 * The Personalise button pressed before a variation was chosen, with `%s`
 	 * for the options still to choose.
 	 */
@@ -316,6 +322,11 @@ final class Labels {
 			self::PERSONALISATION_UNAVAILABLE => array(
 				'text'  => __( 'Personalisation is unavailable right now. Please try again later.', 'pixonaut-for-woocommerce' ),
 				'shown' => 'On a personalised product when the designer cannot load, or when it cannot be added to the cart for a reason the customer cannot fix',
+			),
+			self::PRODUCT_UNAVAILABLE         => array(
+				/* translators: On the page of a personalised product the shop cannot sell for now, in place of the add-to-cart button. */
+				'text'  => __( 'This product is not available right now.', 'pixonaut-for-woocommerce' ),
+				'shown' => 'On the page of a personalised product whose template is paused or not published in Pixonaut, in place of the add-to-cart form; the product is also left out of the shop, search and related products',
 			),
 			self::DESIGN_REQUIRED             => array(
 				'text'  => __( 'Please personalise this product before adding it to your cart.', 'pixonaut-for-woocommerce' ),

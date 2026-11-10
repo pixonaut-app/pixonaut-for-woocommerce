@@ -15,8 +15,9 @@ the product. Open the product's **Pixonaut** tab: it says the same.
 | Reason | What to do |
 |---|---|
 | The template is paused or deleted in Pixonaut. | Make the template live again in the Pixonaut studio, or choose another template for the product. The product is checked again on its own when the template goes live. |
+| The template is not published in Pixonaut, or no longer exists. | Publish the template in the Pixonaut studio, then update the product, or choose another template. |
 | The blank is deleted in Pixonaut. | Restore the blank in the Pixonaut studio, or choose another blank. A restored blank is checked again on its own, and the product sold again with the print sizes you had chosen. |
-| The blank, print position or template no longer exists in Pixonaut. | Choose another blank, print position or template, then update the product. |
+| The blank or print position no longer exists in Pixonaut. | Choose another blank or print position, then update the product. |
 | A print size is larger than the print position can print, or does not match the template's shape. | Change the print sizes, or fix the blank in Pixonaut; a changed blank is checked again on its own. |
 | The print position is printed across its whole print area: the print size must be that area. | Enter the whole area, or use *The print position's size*, which is that area. On a variation, choose *As the product*. |
 | The template cannot be printed at the print area of this variation's blank variant. Shown under the variation's **Print size** field. | Choose a template that fits that size, or stop selling the variation. See [Sizes a template cannot be printed at](../linking-products/#sizes-a-template-cannot-be-printed-at). |
@@ -27,6 +28,17 @@ the product. Open the product's **Pixonaut** tab: it says the same.
 | The template of a fixed-design side does not fit the print position at any of the blank's sizes, so none of them can be printed. Choose a template that fits. | Choose a template that fits the print position at the sizes you sell, then update the product. See [Sizes a template cannot be printed at](../linking-products/#sizes-a-template-cannot-be-printed-at). |
 | The configuration was saved by a newer version of Pixonaut for WooCommerce. | Update the plugin ([Updates](../updates/)). |
 | The product, or a variation, is no variant of its blank, or its variant is retired. The notice says "Customers cannot buy all of …" and names each. | Pick the variant in the product's or the variation's **Variant** field, then save. See [Variant](../linking-products/#variant). |
+
+While its template is paused, not published or deleted, a product is also
+left out of the shop, its categories, search, product blocks and related
+products, so shoppers do not come across it. Its page still opens, for links
+already shared, and says the product is not available right now. Signed in
+as a store manager, you see the page as shoppers do, with a note on why they
+cannot buy it. The plugin never changes the product's status or catalogue
+visibility: once the template is live again, the product is listed again as
+it was. On a variable product, a variation on a template that is not live is
+unavailable on its own, and the product stays listed while another variation
+can be bought.
 
 The store checks its products again whenever a template or blank changes in
 Pixonaut (see [Link a product](../linking-products/#when-templates-and-blanks-change-in-pixonaut)),

@@ -114,3 +114,73 @@ test('a new template version keeps the product on sale; a deleted template takes
 		admin.locator('.pixonaut-notice', { hasText: name }),
 	).toContainText('paused or deleted');
 });
+
+/** The names of the products the Store API lists for a search. */
+async function storeApiNames(
+	request: APIRequestContext,
+	search: string,
+): Promise<string[]> {
+	const response = await request.get(
+		`${restUrl('/wc/store/v1/products')}&search=${encodeURIComponent(search)}`,
+	);
+	expect(response.ok(), await response.text()).toBe(true);
+	return ((await response.json()) as { name: string }[]).map((p) => p.name);
+}
+
+test('a paused template takes the product out of the shop; resuming it brings it back', async ({
+	connectedStore: admin,
+	customer,
+	fake,
+	request,
+	baseURL,
+	theme,
+}) => {
+	test.slow();
+	const name = `Paused tee ${theme} ${Date.now()}`;
+	// WooCommerce opens the product of a search that finds it alone.
+	const search = `/?post_type=product&s=${encodeURIComponent(name)}`;
+	const found = customer.getByRole('heading', {
+		level: 1,
+		name,
+		exact: true,
+	});
+	await forgetOtherProducts(request);
+	const permalink = await linkProduct(admin, baseURL, name);
+	await receiveWebhooks(fake);
+	await settle(request);
+
+	await customer.goto(search);
+	await expect(found).toBeVisible();
+	expect(await storeApiNames(request, name)).toEqual([name]);
+
+	await change(fake, 'templates/pause', { template: TEMPLATE });
+	await settle(request);
+
+	await customer.goto(search);
+	await expect(found).toHaveCount(0);
+	await expect(customer.getByRole('link', { name, exact: true })).toHaveCount(
+		0,
+	);
+	expect(await storeApiNames(request, name)).toEqual([]);
+	const page = await customer.goto(permalink);
+	expect(page?.status()).toBe(200);
+	await expect(customer.locator('.pixonaut-unavailable')).toHaveText(
+		'This product is not available right now.',
+	);
+	await expect(addToCart(customer)).toHaveCount(0);
+	await expect(customer.locator('.pixonaut-unavailable__note')).toHaveCount(0);
+	// The store manager previews the page, and reads why shoppers do not see it.
+	await admin.goto(permalink);
+	await expect(admin.locator('.pixonaut-unavailable__note')).toContainText(
+		'Shoppers do not see this product',
+	);
+
+	await change(fake, 'templates/resume', { template: TEMPLATE });
+	await settle(request);
+
+	await customer.goto(search);
+	await expect(found).toBeVisible();
+	expect(await storeApiNames(request, name)).toEqual([name]);
+	await expect(customer.locator('.pixonaut-unavailable')).toHaveCount(0);
+	await expect(addToCart(customer)).toBeVisible();
+});

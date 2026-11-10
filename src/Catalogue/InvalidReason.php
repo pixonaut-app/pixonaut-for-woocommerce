@@ -29,6 +29,9 @@ final class InvalidReason {
 
 	public const UNKNOWN_PLACEMENT = 'unknown_placement';
 
+	/**
+	 * Pixonaut has no published template with the id: never published, or gone.
+	 */
 	public const UNKNOWN_TEMPLATE = 'unknown_template';
 
 	/**
@@ -139,7 +142,7 @@ final class InvalidReason {
 			case self::UNKNOWN_PLACEMENT:
 				return __( 'The blank no longer has this placement, or Pixonaut cannot size a print for it.', 'pixonaut-for-woocommerce' );
 			case self::UNKNOWN_TEMPLATE:
-				return __( 'The template no longer exists in Pixonaut.', 'pixonaut-for-woocommerce' );
+				return __( 'The template is not published in Pixonaut, or no longer exists. Publish it in the Pixonaut studio, or choose another template.', 'pixonaut-for-woocommerce' );
 			case self::TEMPLATE_NOT_LIVE:
 				return __( 'The template is paused or deleted in Pixonaut. Make it live again, or choose another template.', 'pixonaut-for-woocommerce' );
 			case self::TOO_MANY_SIDES:
