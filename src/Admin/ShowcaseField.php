@@ -19,6 +19,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use Pixonaut\WooCommerce\Catalogue\TemplateId;
 use Pixonaut\WooCommerce\Settings\Settings;
+use Pixonaut\WooCommerce\Settings\SettingsPage;
 use Pixonaut\WooCommerce\Templates;
 use WC_Product;
 
@@ -88,12 +89,14 @@ final class ShowcaseField {
 		if ( null === $template ) {
 			return '';
 		}
-		$chosen  = ShowcaseImages::on( $product );
-		$preview = '';
+		$chosen   = ShowcaseImages::on( $product );
+		$preview  = '';
+		$previews = array();
 		try {
-			$listed  = $this->listed( $template );
-			$sets    = ShowcaseImages::sets( $listed['showcases'] ?? array() );
-			$preview = is_string( $listed['preview_url'] ?? null ) ? $listed['preview_url'] : '';
+			$listed   = $this->listed( $template );
+			$sets     = ShowcaseImages::sets( $listed['showcases'] ?? array() );
+			$preview  = is_string( $listed['preview_url'] ?? null ) ? $listed['preview_url'] : '';
+			$previews = self::previews( $listed['showcases'] ?? array() );
 		} catch ( ApiException $e ) {
 			$sets = null;
 		}
@@ -103,41 +106,48 @@ final class ShowcaseField {
 		$views    = $this->views( $config );
 		$own_view = PictureView::on( $product );
 		$viewed   = null !== $own_view || array() !== array_filter( array_column( $chosen, 'view' ) );
-		if ( array() === $chosen && null === $own_view && ( null === $sets || array() === $sets ) && ( null === $views || array() === $views ) ) {
-			return '';
-		}
 		// A choice made before keeps its controls, so it can be seen and changed.
 		$kinds = null === $photo || '' !== $photo || null === $views || array() !== $views || $viewed
 			? array(
 				ShowcaseImages::MOCKUP  => array(
-					/* translators: Option of how a product image is drawn: the design on the blank product's photo, the one the product page starts on. Admin product page. */
-					'name'        => __( 'On the product photo', 'pixonaut-for-woocommerce' ),
+					/* translators: Short name of a choice of how a product image is drawn: the design on the blank product's photo, the one the product page starts on. Admin product page. */
+					'name'        => __( 'Main photo', 'pixonaut-for-woocommerce' ),
 					'description' => __( 'Drawn into the print area of the blank’s photo the product page starts on.', 'pixonaut-for-woocommerce' ),
 					'thumbnail'   => $photo ?? '',
 				),
 				ShowcaseImages::PREVIEW => array(
-					/* translators: Option of how a showcase product image is drawn: the design alone, flat. Admin product page. */
-					'name'        => __( 'Flat design', 'pixonaut-for-woocommerce' ),
+					/* translators: Short name of a choice of how a product image is drawn: the design alone, without the product. Admin product page. */
+					'name'        => __( 'Design', 'pixonaut-for-woocommerce' ),
 					'description' => __( 'The design alone, without the product.', 'pixonaut-for-woocommerce' ),
 					'thumbnail'   => $preview,
+					'flat'        => true,
 				),
 			)
 			: array();
 		$tiles = array() === $kinds ? array() : array_merge( array( $kinds[ ShowcaseImages::MOCKUP ] + array( 'value' => ShowcaseImages::MOCKUP ) ), self::photo_choices( $views ?? array() ), array( $kinds[ ShowcaseImages::PREVIEW ] + array( 'value' => ShowcaseImages::PREVIEW ) ) );
 		$rows  = array();
 		foreach ( null === $sets ? array() : self::rows( $sets, $chosen, ProductPictures::stored( $product )['gone'], array() !== $kinds, $views ) as $index => $row ) {
-			$rows[] = $row + array(
+			// A set the template no longer has is drawn with its defaults, as the template's own preview shows.
+			$set_preview = $row['gone'] ? $preview : $previews[ $row['id'] ] ?? '';
+			// The set's own preview is what its picture looks like drawn as the design alone.
+			$set_tiles = array_map( static fn ( array $tile ): array => ( $tile['flat'] ?? false ) && '' !== $set_preview ? array_replace( $tile, array( 'thumbnail' => $set_preview ) ) : $tile, $tiles );
+			$rows[]    = $row + array(
+				'preview'      => $set_preview,
+				'photo'        => self::drawn_on( PictureView::from_field( $row['value'] ), $views, $photo ?? '' ),
+				'flat'         => ShowcaseImages::PREVIEW === $row['kind'],
 				'choices_html' => array() === $tiles ? '' : $this->choices_html(
 					self::FIELD . '[' . $index . '][kind]',
 					$row,
-					$tiles,
+					$set_tiles,
 					/* translators: %s: name of a showcase set of the template. Admin product page. */
 					sprintf( __( 'How %s is drawn', 'pixonaut-for-woocommerce' ), $row['name'] ),
 					null !== $views
 				),
 			);
 		}
-		$own_view = self::choice( $own_view ?? array( 'kind' => PictureView::MOCKUP ), $views );
+		$own_choice = $own_view ?? array( 'kind' => PictureView::MOCKUP );
+		$own_choice = array() === $kinds ? array( 'kind' => PictureView::PREVIEW ) : $own_choice;
+		$own_view   = self::choice( $own_choice, $views );
 		return $this->templates->html(
 			'admin/product-showcase-images.php',
 			array(
@@ -146,10 +156,15 @@ final class ShowcaseField {
 				'rows'         => $rows,
 				'listed'       => null !== $sets,
 				'pictures_on'  => ProductPictures::enabled( $this->settings ),
+				'settings_url' => SettingsPage::url( SettingsPage::STOREFRONT ),
 				'max_images'   => ShowcaseImages::MAX_IMAGES,
 				'on_photo'     => array() !== $kinds,
 				'has_blank'    => null !== $config->blank_id,
 				'view_listed'  => self::VIEW_LISTED_FIELD,
+				'own_preview'  => $preview,
+				'own_photo'    => self::drawn_on( $own_choice, $views, $photo ?? '' ),
+				'own_flat'     => PictureView::PREVIEW === $own_choice['kind'],
+				'saved_sets'   => count( $chosen ),
 				'view_html'    => array() === $tiles ? '' : $this->choices_html(
 					self::VIEW_FIELD,
 					$own_view,
@@ -168,11 +183,11 @@ final class ShowcaseField {
 	 * blank when Pixonaut listed its views, as chosen before when it could
 	 * not.
 	 *
-	 * @param string                                                                           $name   The radio buttons' posted name.
-	 * @param array{value: string, gone?: bool, view_gone?: bool, view_label?: string}         $shown  The choice as `choice()` or `rows()` shows it.
-	 * @param list<array{value: string, name: string, description: string, thumbnail: string}> $tiles  The choices offered.
-	 * @param string                                                                           $label  What the group chooses, for screen readers.
-	 * @param bool                                                                             $listed Whether Pixonaut listed the blank's views.
+	 * @param string                                                                                        $name   The radio buttons' posted name.
+	 * @param array{value: string, gone?: bool, view_gone?: bool, view_label?: string}                      $shown  The choice as `choice()` or `rows()` shows it.
+	 * @param list<array{value: string, name: string, description: string, thumbnail: string, flat?: bool}> $tiles The choices offered.
+	 * @param string                                                                                        $label  What the group chooses, for screen readers.
+	 * @param bool                                                                                          $listed Whether Pixonaut listed the blank's views.
 	 */
 	private function choices_html( string $name, array $shown, array $tiles, string $label, bool $listed ): string {
 		$gone = true === ( $shown['view_gone'] ?? $shown['gone'] ?? false );
@@ -194,6 +209,50 @@ final class ShowcaseField {
 				'note'    => $gone ? __( 'The blank no longer has this view or photo, so the image is drawn on the photo the product page starts on until another is chosen.', 'pixonaut-for-woocommerce' ) : '',
 			)
 		);
+	}
+
+	/**
+	 * The thumbnail of the photo a picture is drawn on, as `PictureSources`
+	 * picks it: the photo chosen, the first photo of a view chosen without
+	 * one, else the photo the product page starts on. Empty for the design
+	 * alone, or when the photo is not known.
+	 *
+	 * @param array{kind: string, view?: string, photo?: string}                                                                      $choice The choice.
+	 * @param list<array{id: string, label: string, photos: list<array{id: string, thumbnail: string, variants: list<string>}>}>|null $views  The placement's views; null when Pixonaut cannot say.
+	 * @param string                                                                                                                  $main   The thumbnail of the photo the product page starts on; empty for none.
+	 */
+	private static function drawn_on( array $choice, ?array $views, string $main ): string {
+		if ( PictureView::PREVIEW === $choice['kind'] ) {
+			return '';
+		}
+		$chosen = $choice['view'] ?? null;
+		foreach ( null === $chosen ? array() : $views ?? array() as $view ) {
+			if ( $view['id'] !== $chosen ) {
+				continue;
+			}
+			foreach ( $view['photos'] as $photo ) {
+				if ( ! isset( $choice['photo'] ) || $photo['id'] === $choice['photo'] ) {
+					return $photo['thumbnail'];
+				}
+			}
+		}
+		return $main;
+	}
+
+	/**
+	 * Each listed set's preview, by the set's id.
+	 *
+	 * @param mixed $showcases The sets as `Catalogue::template_showcases()` lists them.
+	 * @return array<string, string>
+	 */
+	private static function previews( mixed $showcases ): array {
+		$previews = array();
+		foreach ( is_array( $showcases ) ? $showcases : array() as $showcase ) {
+			if ( is_array( $showcase ) && is_string( $showcase['id'] ?? null ) && is_string( $showcase['preview_url'] ?? null ) ) {
+				$previews[ $showcase['id'] ] = $showcase['preview_url'];
+			}
+		}
+		return $previews;
 	}
 
 	/**
@@ -532,6 +591,26 @@ final class ShowcaseField {
 			'view_gone'  => $shown['gone'],
 			'view_label' => $shown['view_label'],
 		);
+	}
+
+	/**
+	 * The preview of a configuration's first side's template, the design
+	 * alone as a product shown in it looks; empty without a template, or
+	 * when Pixonaut cannot be asked.
+	 *
+	 * @param ProductConfig $config A configuration.
+	 */
+	public function preview( ProductConfig $config ): string {
+		$side = $config->sides[0] ?? null;
+		if ( null === $side || '' === $side->template_base_id || null === $side->template_version ) {
+			return '';
+		}
+		try {
+			$preview = $this->listed( (string) new TemplateId( $side->template_base_id, $side->template_version ) )['preview_url'] ?? null;
+		} catch ( ApiException $e ) {
+			return '';
+		}
+		return is_string( $preview ) ? $preview : '';
 	}
 
 	/**

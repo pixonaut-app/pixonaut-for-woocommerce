@@ -169,9 +169,47 @@ test('keeps what a merchant rarely changes in closed sections at the end', async
 	await expect(store).toHaveAttribute('open');
 	await openViews(page);
 	await expect(views.locator('.form-field > label')).toHaveText([
-		'Shown in',
-		'Starting view',
+		'Views shown',
+		'Opens on',
 	]);
+});
+
+test('shows each view as a photo, badging the one the designer opens on', async ({
+	connectedStore: page,
+	baseURL,
+}) => {
+	const panel = await linkedTee(page, baseURL);
+	await openViews(page);
+	const views = panel.locator('details.pixonaut-views-section');
+	const opens = views.locator('.pixonaut-view__opens:visible');
+
+	// None ticked: every view shows, and the designer opens on the first.
+	await expect(views.locator('.pixonaut-view img').first()).toBeVisible();
+	await expect(opens).toHaveCount(1);
+	const first = views.locator('.pixonaut-view').first();
+	await expect(first.locator('.pixonaut-view__opens')).toBeVisible();
+	await expect(views.locator('summary')).toContainText('Every view');
+	await expect(views.locator('.pixonaut-views__hint')).toHaveText(
+		'None ticked: every view is shown.',
+	);
+
+	// Ticking another view alone moves the badge to it.
+	const second = views.locator('.pixonaut-view').nth(1);
+	await second.getByRole('checkbox').check();
+	await expect(second.locator('.pixonaut-view__opens')).toBeVisible();
+	await expect(opens).toHaveCount(1);
+	const name = await second.locator('.pixonaut-view__name').innerText();
+	await expect(views.locator('.pixonaut-views__opens-summary')).toHaveText(
+		`opens on ${name.trim()}`,
+	);
+	await expect(views.locator('.pixonaut-views__hint')).toHaveText(
+		'Only the ticked views are shown. Untick them all to show every view.',
+	);
+
+	// The design alone shows the template's preview.
+	await expect(
+		views.locator('.pixonaut-view__thumb--design img'),
+	).toHaveAttribute('src', /./);
 });
 
 test('turns one side into cards once a second is added', async ({

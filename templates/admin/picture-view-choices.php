@@ -8,12 +8,12 @@
  * Field names and classes are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.2.0
+ * @version 1.4.0
  *
  * @var string                                                                             $name    The radio buttons' posted name.
  * @var string                                                                             $value   The value checked.
  * @var string                                                                             $label   What the group chooses, for screen readers.
- * @var list<array{value: string, name: string, description: string, thumbnail: string}> $choices Each choice: its posted value, name, what it draws (may be empty) and thumbnail (empty for none).
+ * @var list<array{value: string, name: string, description: string, thumbnail: string, flat?: bool}> $choices Each choice: its posted value, name, what it draws (may be empty), thumbnail (empty for none), and whether it draws the design alone.
  * @var string                                                                             $note    Said under the choices when the one checked is no longer on the blank; empty otherwise.
  */
 
@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <div class="pixonaut-showcase-image__kinds" role="radiogroup" aria-label="<?php echo esc_attr( $label ); ?>">
 	<?php foreach ( $choices as $pixonaut_choice ) : ?>
-		<label class="pixonaut-showcase-kind<?php echo '' === $pixonaut_choice['description'] ? ' pixonaut-showcase-kind--photo' : ''; ?>">
+		<label class="pixonaut-showcase-kind<?php echo '' === $pixonaut_choice['description'] ? ' pixonaut-showcase-kind--photo' : ''; ?><?php echo ( $pixonaut_choice['flat'] ?? false ) ? ' pixonaut-showcase-kind--flat' : ''; ?>" title="<?php echo esc_attr( '' === $pixonaut_choice['description'] ? $pixonaut_choice['name'] : $pixonaut_choice['description'] ); ?>">
 			<input type="radio" name="<?php echo esc_attr( $name ); ?>" value="<?php echo esc_attr( $pixonaut_choice['value'] ); ?>" <?php checked( $pixonaut_choice['value'], $value ); ?> />
 			<span class="pixonaut-showcase-kind__thumbnail">
 				<?php if ( '' !== $pixonaut_choice['thumbnail'] ) : ?>

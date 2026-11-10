@@ -163,12 +163,12 @@ final class Catalogue {
 	/**
 	 * `GET /v1/templates/{id}`: the template's showcase sets, named sets of
 	 * example values its pictures can be drawn with, in the template's order,
-	 * and its preview. A template that lists none, or an answer without the
-	 * list, has none.
+	 * each with its preview, and the template's own preview. A template that
+	 * lists none, or an answer without the list, has none.
 	 *
 	 * @param string $template_id `<baseId>@<version>`.
 	 *
-	 * @return array{showcases: list<array{id: string, name: string}>, preview_url: string|null} `preview_url` works for an hour or two; null when Pixonaut sent none.
+	 * @return array{showcases: list<array{id: string, name: string, preview_url: string|null}>, preview_url: string|null} A `preview_url` works for an hour or two; null when Pixonaut sent none.
 	 *
 	 * @throws ApiException When Pixonaut refused (`404` for an unknown template), could not be reached, or answered with something else than a JSON object.
 	 */
@@ -180,16 +180,25 @@ final class Catalogue {
 			if ( is_string( $id ) && '' !== $id ) {
 				$name        = $showcase['name'] ?? null;
 				$showcases[] = array(
-					'id'   => $id,
-					'name' => is_string( $name ) && '' !== $name ? $name : $id,
+					'id'          => $id,
+					'name'        => is_string( $name ) && '' !== $name ? $name : $id,
+					'preview_url' => self::link( $showcase['previewUrl'] ?? null ),
 				);
 			}
 		}
-		$preview = $template['previewUrl'] ?? null;
 		return array(
 			'showcases'   => $showcases,
-			'preview_url' => is_string( $preview ) && '' !== $preview ? $preview : null,
+			'preview_url' => self::link( $template['previewUrl'] ?? null ),
 		);
+	}
+
+	/**
+	 * A link Pixonaut sent; null for none.
+	 *
+	 * @param mixed $value The answer's value.
+	 */
+	private static function link( mixed $value ): ?string {
+		return is_string( $value ) && '' !== $value ? $value : null;
 	}
 
 	/**
