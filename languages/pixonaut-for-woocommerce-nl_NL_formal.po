@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-09T22:18:28+00:00\n"
+"POT-Creation-Date: 2026-11-10T15:12:46+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -810,7 +810,7 @@ msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr ""
 "De pagina met de variaties van elk variabel product, vanaf 1, %d per pagina."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:211
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:248
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -1158,7 +1158,7 @@ msgstr "De `before` die de volgende pagina opvraagt; null als die er niet is."
 msgid "No simple or variable product or variation has this id."
 msgstr "Er is geen simpel of variabel product en geen variatie met deze ID."
 
-#: src/Abilities/ProductLinks.php:207
+#: src/Abilities/ProductLinks.php:244
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -1167,7 +1167,7 @@ msgstr ""
 "product te volgen, waarvan ze dan de instellingen geeft; false voor een "
 "product."
 
-#: src/Abilities/ProductLinks.php:215
+#: src/Abilities/ProductLinks.php:252
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -1184,7 +1184,7 @@ msgstr "Of het aan een sjabloon is gekoppeld, gepersonaliseerd of niet."
 msgid "Whether customers personalise it."
 msgstr "Of klanten het personaliseren."
 
-#: src/Abilities/ProductSetup.php:125
+#: src/Abilities/ProductSetup.php:125 src/Abilities/ProductSetup.php:299
 msgid ""
 "False when Pixonaut found a problem: it cannot be bought until it is fixed."
 msgstr ""
@@ -1351,6 +1351,20 @@ msgid ""
 msgstr ""
 "Of de winkelmanager de variant heeft gekozen in plaats van dat die op basis "
 "van de attributen van het product is gekoppeld."
+
+#: src/Abilities/ProductSetup.php:302
+msgid ""
+"Why not, as a code such as `too_large` or `template_not_live`; null when "
+"valid."
+msgstr ""
+"Waarom niet, als code zoals `too_large` of `template_not_live`; null als het "
+"geldig is."
+
+#: src/Abilities/ProductSetup.php:305
+msgid "Why not, in words, as the product screen says it; null when valid."
+msgstr ""
+"Waarom niet, in woorden, zoals het bewerkscherm van het product het toont; "
+"null als het geldig is."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/ReadPluginSettings.php:39
@@ -1845,7 +1859,7 @@ msgstr ""
 "`placement_default` true is dat standaardformaat. Zonder blanco product moet "
 "elk formaat passen bij de beeldverhouding van het sjabloon."
 
-#: src/Abilities/SetupFields.php:209
+#: src/Abilities/SetupFields.php:209 src/Abilities/SetVariationPrintSize.php:91
 msgid "The name customers see, e.g. \"A3\"; left out for the millimetres."
 msgstr "De naam die klanten zien, bijv. “A3”; weggelaten voor de millimeters."
 
@@ -1911,6 +1925,57 @@ msgid "No live template has the id \"%s\"."
 msgstr "Er is geen gepubliceerd sjabloon met de ID “%s”."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetVariationPrintSize.php:72
+msgid "Set a variation's print size"
+msgstr "Het drukformaat van een variatie instellen"
+
+#: src/Abilities/SetVariationPrintSize.php:73
+msgid ""
+"Gives one variation its own print size, in millimetres, on a product with or "
+"without a blank: the variation gets a setup of its own, starting from the "
+"one it has, whose one side is sold in that size alone. Pixonaut checks the "
+"size as the variation's Pixonaut panel does; a size it cannot print is "
+"refused with the reason, and nothing is saved. The answer gives the "
+"variation's validity and blank variant now."
+msgstr ""
+"Geeft één variatie een eigen drukformaat, in millimeters, bij een product "
+"met of zonder blanco product: de variatie krijgt eigen instellingen, "
+"uitgaande van de instellingen die ze heeft, waarvan de enige zijde alleen in "
+"dat formaat wordt verkocht. Pixonaut controleert het formaat zoals het "
+"Pixonaut-paneel van de variatie dat doet; een formaat dat niet kan worden "
+"gedrukt, wordt geweigerd met de reden, en er wordt niets opgeslagen. Het "
+"antwoord geeft daarna de geldigheid en de variant van het blanco product van "
+"de variatie."
+
+#: src/Abilities/SetVariationPrintSize.php:102
+#: src/Abilities/SetVariationVariants.php:108
+msgid ""
+"The blank's variant the variation sells; null when it is not personalised on "
+"a blank."
+msgstr ""
+"De variant van het blanco product die de variatie verkoopt; null als die "
+"niet op een blanco product is gepersonaliseerd."
+
+#: src/Abilities/SetVariationPrintSize.php:132
+msgid "No variation has this id."
+msgstr "Er is geen variatie met deze ID."
+
+#: src/Abilities/SetVariationPrintSize.php:143
+msgid ""
+"The variation is not personalised with a template. Link its product first."
+msgstr ""
+"De variatie is niet gepersonaliseerd met een sjabloon. Koppel eerst het "
+"product ervan aan een sjabloon."
+
+#: src/Abilities/SetVariationPrintSize.php:146
+msgid ""
+"The variation has several sides, each with its own print sizes: set them "
+"with set-product-setup."
+msgstr ""
+"De variatie heeft meerdere zijden, elk met eigen drukformaten: stel ze in "
+"met set-product-setup."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetVariationVariants.php:56
 msgid "Set the blank variant of variations"
 msgstr "De variant van het blanco product van variaties instellen"
@@ -1956,14 +2021,6 @@ msgid ""
 msgstr ""
 "Welke variaties van het product geen variant van het blanco product "
 "verkopen, in woorden; null als elke variatie er een verkoopt."
-
-#: src/Abilities/SetVariationVariants.php:108
-msgid ""
-"The blank's variant the variation sells; null when it is not personalised on "
-"a blank."
-msgstr ""
-"De variant van het blanco product die de variatie verkoopt; null als die "
-"niet op een blanco product is gepersonaliseerd."
 
 #: src/Abilities/SetVariationVariants.php:131
 msgid "No variable product has this id."
@@ -2045,49 +2102,49 @@ msgid "The store has no such kind of thing."
 msgstr "De winkel heeft zo'n soort object niet."
 
 #. translators: %s: the input fields a store ability needs, e.g. "product_id, id".
-#: src/Abilities/Store/ResourceAbility.php:144
+#: src/Abilities/Store/ResourceAbility.php:154
 #, php-format
 msgid "Name %s."
 msgstr "Geef %s op."
 
 #. translators: %s: a kind of thing in the store, plural, e.g. "product categories". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:232
+#: src/Abilities/Store/ResourceAbility.php:242
 #, php-format
 msgid "List %s"
 msgstr "%s weergeven"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:234
+#: src/Abilities/Store/ResourceAbility.php:244
 #, php-format
 msgid "Read %s"
 msgstr "%s opvragen"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:236
+#: src/Abilities/Store/ResourceAbility.php:246
 #, php-format
 msgid "Create %s"
 msgstr "%s aanmaken"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category", or several, e.g. "shipping zone locations". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:238
+#: src/Abilities/Store/ResourceAbility.php:248
 #, php-format
 msgid "Update %s"
 msgstr "%s bijwerken"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:240
+#: src/Abilities/Store/ResourceAbility.php:250
 #, php-format
 msgid "Delete %s"
 msgstr "%s verwijderen"
 
 #. translators: 1: a few field names, e.g. "name, slug, parent"; 2: the name of the ability that describes every field.
-#: src/Abilities/Store/ResourceAbility.php:249
+#: src/Abilities/Store/ResourceAbility.php:259
 #, php-format
 msgid "Fields include %1$s; %2$s gives every field."
 msgstr "Velden zijn onder meer %1$s; %2$s geeft alle velden."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:255
+#: src/Abilities/Store/ResourceAbility.php:265
 #, php-format
 msgid ""
 "Lists the store's %1$s through the REST route %2$s. `query` takes the "
@@ -2099,13 +2156,13 @@ msgstr ""
 "om maar een deel van de velden te lezen."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:257
+#: src/Abilities/Store/ResourceAbility.php:267
 #, php-format
 msgid "Reads one of the store's %1$s by its id through the REST route %2$s."
 msgstr "Leest een van de %1$s van de winkel op ID via de REST-route %2$s."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:259
+#: src/Abilities/Store/ResourceAbility.php:269
 #, php-format
 msgid ""
 "Creates one of the store's %1$s through the REST route %2$s, with `fields` "
@@ -2115,7 +2172,7 @@ msgstr ""
 "zoals de route ze verwacht."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "shipping zone locations"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:262
+#: src/Abilities/Store/ResourceAbility.php:272
 #, php-format
 msgid ""
 "Replaces the %1$s through the REST route %2$s with `items`, the whole new "
@@ -2125,7 +2182,7 @@ msgstr ""
 "wat daarin ontbreekt, wordt verwijderd."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:264
+#: src/Abilities/Store/ResourceAbility.php:274
 #, php-format
 msgid ""
 "Changes one of the store's %1$s through the REST route %2$s, with only the "
@@ -2135,7 +2192,7 @@ msgstr ""
 "`fields` die veranderen."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:266
+#: src/Abilities/Store/ResourceAbility.php:276
 #, php-format
 msgid ""
 "Deletes one of the store's %1$s through the REST route %2$s. With `force` it "
@@ -2145,12 +2202,12 @@ msgstr ""
 "wordt het permanent verwijderd waar de route het anders naar de prullenbak "
 "zou verplaatsen."
 
-#: src/Abilities/Store/ResourceAbility.php:269
+#: src/Abilities/Store/ResourceAbility.php:279
 msgid "The store downloads the file from `fields.source_url`, a public URL."
 msgstr ""
 "De winkel downloadt het bestand van `fields.source_url`, een openbare URL."
 
-#: src/Abilities/Store/ResourceAbility.php:272
+#: src/Abilities/Store/ResourceAbility.php:285
 msgid ""
 "Each variation also gives `pixonaut_variant`, the variant of its blank it is "
 "printed as: `ref` null and `problem` `unmapped` when it sells none, "
@@ -2165,52 +2222,65 @@ msgstr ""
 "basis van de attributen van de variatie is gekoppeld; null als die niet op "
 "een blanco product is gepersonaliseerd."
 
-#: src/Abilities/Store/ResourceAbility.php:290
+#: src/Abilities/Store/ResourceAbility.php:303
 msgid "The route's query parameters, e.g. search, page and per_page."
 msgstr "De queryparameters van de route, bijv. search, page en per_page."
 
-#: src/Abilities/Store/ResourceAbility.php:299
+#: src/Abilities/Store/ResourceAbility.php:312
 msgid "The whole new list."
 msgstr "De hele nieuwe lijst."
 
-#: src/Abilities/Store/ResourceAbility.php:311
+#: src/Abilities/Store/ResourceAbility.php:324
 msgid "The fields as the route takes them."
 msgstr "De velden zoals de route ze verwacht."
 
-#: src/Abilities/Store/ResourceAbility.php:312
+#: src/Abilities/Store/ResourceAbility.php:325
 msgid "Only the fields to change, as the route takes them."
 msgstr "Alleen de velden die veranderen, zoals de route ze verwacht."
 
-#: src/Abilities/Store/ResourceAbility.php:320
+#: src/Abilities/Store/ResourceAbility.php:333
 msgid "Delete it for good rather than move it to the trash."
 msgstr "Permanent verwijderen in plaats van naar de prullenbak verplaatsen."
 
-#: src/Abilities/Store/ResourceAbility.php:341
+#: src/Abilities/Store/ResourceAbility.php:354
 msgid "Dates and times are RFC 3339, with their offset."
 msgstr "Datums en tijden zijn in RFC 3339, inclusief de offset."
 
 #. translators: 1: a REST API route; 2: a sentence on how dates are written.
-#: src/Abilities/Store/ResourceAbility.php:346
+#: src/Abilities/Store/ResourceAbility.php:359
 #, php-format
 msgid "What the REST route %1$s answers, without its links. %2$s"
 msgstr "Wat de REST-route %1$s teruggeeft, zonder de links. %2$s"
 
-#: src/Abilities/Store/ResourceAbility.php:444
+#: src/Abilities/Store/ResourceAbility.php:435
+msgid ""
+"Each also gives `pixonaut_validity`: `valid` false when its Pixonaut setup "
+"has a problem and it cannot be bought until it is fixed, with the `reason` "
+"as a code and the `message` the product screen shows for it, both null when "
+"valid."
+msgstr ""
+"Elk geeft ook `pixonaut_validity`: `valid` false als de Pixonaut-"
+"instellingen een probleem hebben en het niet kan worden gekocht totdat dat "
+"is opgelost, met de reden als code in `reason` en de tekst die het "
+"bewerkscherm van het product ervoor toont in `message`; beide null als het "
+"geldig is."
+
+#: src/Abilities/Store/ResourceAbility.php:469
 msgid "The store refused it."
 msgstr "De winkel heeft het geweigerd."
 
-#: src/Abilities/Store/ResourceAbility.php:460
+#: src/Abilities/Store/ResourceAbility.php:485
 msgid "Give the file's public URL as fields.source_url."
 msgstr "Geef de openbare URL van het bestand op als fields.source_url."
 
 #. translators: %s: the largest file the store takes, e.g. "64 MB".
-#: src/Abilities/Store/ResourceAbility.php:471
+#: src/Abilities/Store/ResourceAbility.php:496
 #, php-format
 msgid "The file is larger than the store takes, at most %s."
 msgstr "Het bestand is groter dan de winkel aanneemt, hoogstens %s."
 
 #. translators: %d: the HTTP status the file's URL answered with.
-#: src/Abilities/Store/ResourceAbility.php:507
+#: src/Abilities/Store/ResourceAbility.php:532
 #, php-format
 msgid "The file could not be downloaded: its URL answered %d."
 msgstr "Het bestand kon niet worden gedownload: de URL antwoordde met %d."
@@ -2798,17 +2868,17 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:268 src/Admin/ProductPanel.php:564
+#: src/Admin/LinkedBlank.php:268 src/Admin/ProductPanel.php:586
 msgid "Workspace default"
 msgstr "Standaard van de werkruimte"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:270 src/Admin/ProductPanel.php:566
+#: src/Admin/LinkedBlank.php:270 src/Admin/ProductPanel.php:588
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Standaard van de werkruimte (%s)"
 
-#: src/Admin/LinkedBlank.php:273 src/Admin/ProductPanel.php:571
+#: src/Admin/LinkedBlank.php:273 src/Admin/ProductPanel.php:593
 msgid "A printshop no longer connected to the workspace"
 msgstr "Een drukkerij die niet meer aan de werkruimte is gekoppeld"
 
@@ -2969,7 +3039,7 @@ msgstr ""
 
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:330 src/Admin/ProductPanel.php:518
+#: src/Admin/ProductPanel.php:330 src/Admin/ProductPanel.php:540
 #: templates/admin/product-side.php:275
 msgid "As the product says"
 msgstr "Zoals het product aangeeft"
@@ -2980,12 +3050,12 @@ msgid "As the template says"
 msgstr "Zoals het sjabloon aangeeft"
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:535
+#: src/Admin/ProductPanel.php:557
 #, php-format
 msgid "Store default: %s"
 msgstr "Standaard van de winkel: %s"
 
-#: src/Admin/ProductPanel.php:570
+#: src/Admin/ProductPanel.php:592
 msgid "The printshop chosen before"
 msgstr "De eerder gekozen drukkerij"
 
@@ -9084,6 +9154,17 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s weergave"
 msgstr[1] "%s weergaven"
+
+#, fuzzy
+#~| msgid ""
+#~| "False when Pixonaut found a problem: it cannot be bought until it is "
+#~| "fixed."
+#~ msgid ""
+#~ "False when its Pixonaut setup has a problem: it cannot be bought until it "
+#~ "is fixed."
+#~ msgstr ""
+#~ "False als Pixonaut een probleem heeft gevonden: het kan pas worden "
+#~ "gekocht als het probleem is opgelost."
 
 #~ msgid ""
 #~ "Reads what a personalised product's or variation's Pixonaut images are "

@@ -21,6 +21,7 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/link-product` | Links a simple or variable product to one template, optionally on a blank's placement | `edit_product` on that product |
 | `pixonaut-for-woocommerce/unlink-product` | Turns personalisation off for a product, keeping its link | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-variation-variants` | Sets which variant of its blank each listed variation of a variable product is printed as, by the variant's options | `edit_product` on that product |
+| `pixonaut-for-woocommerce/set-variation-print-size` | Gives one variation its own print size, checked with Pixonaut; a size it cannot print is refused | `edit_product` on that variation and its product |
 | `pixonaut-for-woocommerce/set-product-setup` | Sets up a simple or variable product, or a variation, as its Pixonaut tab does: blank, sides, settings, views, printshop and blank variant | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/set-product-showcase` | Sets which of its template's showcase sets a product's images are drawn with | `edit_product` on that product |
 | `pixonaut-for-woocommerce/get-product-picture-views` | What a product's or variation's images are drawn on, the views and photos of its side's placement, and the showcase sets a product can show | `edit_product` on that product (and on a variation's product) |
@@ -91,7 +92,14 @@ as, `pixonaut-for-woocommerce-describe-store-resource`
 (`Abilities::tool()`).
 
 Each declares an output schema: a list's `{items, total, pages}`, or the
-route's answer. `list-product-variations` and `get-product-variation` add
+route's answer. `get-product`, `list-product-variations` and
+`get-product-variation` add `pixonaut_validity` to each product and
+variation: `{valid, reason, message}`, `valid` false when the setup it is
+sold under (a variation's own, or else its product's) has a problem and it
+cannot be bought until it is fixed, `reason` the code stored with it (such
+as `too_large`, `wrong_ratio` or `template_not_live`) and `message` the
+text its product screen shows, both null when valid. One not personalised
+is valid. `list-product-variations` and `get-product-variation` also add
 `pixonaut_variant` to each variation, the variant of its blank it is printed
 as, read from what is stored without asking Pixonaut: `ref`, `label`,
 `problem` and `picked` as `list-products` gives a variation's `variant`
@@ -298,6 +306,19 @@ A variation given any setup field gets a setup of its own, starting from its
 product's; `own_setup` false makes it follow its product again, keeping its
 own unused. Its `variant` can be set either way; left out, a variant picked on a blank
 it is no longer on is matched by options again.
+
+`set-variation-print-size` gives one variation its own print size, on a
+product with or without a blank: `variation_id`, `width_mm`, `height_mm` and
+optionally `label`. The variation gets a setup of its own, starting from the
+one it has (its own, or else its product's), whose one side is sold in that
+size alone. A variation with several sides is refused: set them with
+`set-product-setup`. The size is checked as the variation's Pixonaut panel
+checks it; one Pixonaut cannot print (or no width and height above zero)
+is refused with `pixonaut_wc_invalid_print_size`, the reason's code in the
+error's data as `reason`, and nothing is saved. A size that could not be
+checked, Pixonaut being unreachable, is saved as the panel saves it, to be
+checked again. The answer gives `variation_id`, `pixonaut_validity` and
+`pixonaut_variant`, as the variation reads give them.
 
 `set-variation-variants` sets the variant of several variations of one
 variable product at once, by the variant's options rather than its ref:
