@@ -360,6 +360,20 @@ describe('showSideName', () => {
 		expect(name()).toBe('Kids poster, hearts');
 	});
 
+	it('never follows a template whose name is not known, only its id', () => {
+		const { element, name } = side('', '', 'kids-poster@2');
+		const option = element.querySelector<HTMLOptionElement>(
+			'.pixonaut-side-template option[value="kids-poster@2"]',
+		);
+		if (option) {
+			option.text = 'kids-poster@2';
+		}
+
+		showSideName(element);
+
+		expect(name()).toBe('Side');
+	});
+
 	it('says Side, and puts the placeholder back, with nothing chosen', () => {
 		const { element, label, name } = side('', 'p1', '');
 		showSideName(element);

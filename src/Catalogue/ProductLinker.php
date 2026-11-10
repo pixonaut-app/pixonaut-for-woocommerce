@@ -196,8 +196,8 @@ final class ProductLinker {
 				return $config->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE );
 			}
 			$side = $side->with_offers_properties( $read[ $id ]['offers_properties'] );
-			// A side entered without its template's name (by an ability) takes the one Pixonaut gives.
-			$sides[] = null === $side->template_name ? $side->with_template_name( $read[ $id ]['name'] ) : $side;
+			// The name Pixonaut gives now: for a side entered without one (by an ability), or a template renamed since.
+			$sides[] = $side->with_template_name( $read[ $id ]['name'] );
 		}
 		return $config->with_sides( $sides );
 	}
