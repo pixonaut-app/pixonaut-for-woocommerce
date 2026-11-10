@@ -11,7 +11,7 @@
  * Classes and data attributes are what the plugin's script reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 0.1.0
+ * @version 1.4.0
  *
  * @var string $url        The product's pictures route, which Regenerate in background posts to and then asks until they are drawn.
  * @var int    $product_id The product, which Regenerate now draws.
@@ -42,5 +42,4 @@ $pixonaut_states = array(
 		</span>
 		<span class="description pixonaut-regenerate__status" role="status" aria-live="polite"><?php echo \Pixonaut\WooCommerce\Admin\RegeneratePictures::DRAWING === $state ? esc_html( $pixonaut_states[ \Pixonaut\WooCommerce\Admin\RegeneratePictures::DRAWING ] ) : ''; ?></span>
 	</p>
-	<p class="description pixonaut-regenerate__intro"><?php esc_html_e( 'Draws the product image, its gallery pictures and its variations’ images again from the template version and settings they use now: in background jobs, or right away while this page stays open.', 'pixonaut-for-woocommerce' ); ?></p>
 </div>

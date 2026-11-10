@@ -9,7 +9,7 @@ import {
 } from '../fixtures';
 import { mcpSession } from '../mcp';
 import { addToCartButton, PERSONALISED } from '../personalised';
-import { openPixonautTab, productPanel } from '../products';
+import { openPixonautTab, openStoreSettings, productPanel } from '../products';
 
 const ABILITY = (name: string) => `pixonaut-for-woocommerce/${name}`;
 
@@ -435,16 +435,17 @@ test('the product screen offers the store default, and the settings page shows t
 	await page.goto(`/wp-admin/post.php?post=${id}&action=edit`);
 	await openPixonautTab(page);
 	const panel = productPanel(page);
+	await openStoreSettings(page);
 	await expect(
 		panel.getByLabel('Options in the form').locator('option'),
 	).toHaveText([
-		/^Store default: /,
+		/^Store setting: /,
 		'On top, unnumbered',
 		'Own groups, first',
 		'Own groups, last',
 	]);
 	await expect(panel.getByLabel('Group numbers').locator('option')).toHaveText([
-		'Store default: On',
+		'Store setting: On',
 		'On',
 		'Off',
 	]);

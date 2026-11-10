@@ -372,6 +372,10 @@ export type Blank = {
 	deletedAt: number | null;
 };
 
+/** The adapter of a printshop the merchant runs themselves; every other
+ *  adapter is a print partner's integration, which prints only on a blank. */
+export const CUSTOM_ADAPTER = 'custom';
+
 export type Printshop = {
 	id: string;
 	tenantId: string;

@@ -63,10 +63,15 @@ export async function publishLinkedProduct(
 	await pick(page, 'pixonaut_blank', 'tee', 'Fixture tee');
 	await linkSide(page, 0, 'Front');
 	if (back) {
+		await openSideMore(page, 0);
 		await panel.locator('#pixonaut_side_0_label').fill('Front');
 		await panel.getByRole('button', { name: 'Add side' }).click();
 		await linkSide(page, 1, 'Back');
+		await openSideMore(page, 1);
 		await panel.locator('#pixonaut_side_1_label').fill('Back');
+	}
+	if (approval !== undefined || layout !== undefined) {
+		await openStoreSettings(page);
 	}
 	if (approval !== undefined) {
 		await panel.getByLabel('Approval').selectOption({ label: approval });
@@ -85,9 +90,35 @@ export async function publishLinkedProduct(
 export async function pickVariant(page: Page, variant: string): Promise<void> {
 	await openPixonautTab(page);
 	await productPanel(page)
-		.getByLabel('Blank variant')
+		.getByLabel('Variant', { exact: true })
 		.selectOption({ label: variant });
 	await publish(page);
+}
+
+/** Opens a closed section of the Pixonaut tab, the one `section` finds. */
+async function open(page: Page, section: string): Promise<void> {
+	const details = productPanel(page).locator(section);
+	if ((await details.getAttribute('open')) === null) {
+		await details.locator(':scope > summary').click();
+	}
+}
+
+/** Opens the tab's Store settings for this product. */
+export async function openStoreSettings(page: Page): Promise<void> {
+	await open(page, 'details.pixonaut-store-settings');
+}
+
+/** Opens the tab's Views on the product page. */
+export async function openViews(page: Page): Promise<void> {
+	await open(page, 'details.pixonaut-views-section');
+}
+
+/** Opens More for this side of side `index`. */
+export async function openSideMore(page: Page, index: number): Promise<void> {
+	await open(
+		page,
+		`.pixonaut-side[data-index="${index}"] details.pixonaut-side-more`,
+	);
 }
 
 /** Sets side `index` of the Pixonaut tab to `placement` with the fixture's

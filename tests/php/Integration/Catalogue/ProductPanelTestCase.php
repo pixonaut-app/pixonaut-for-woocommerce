@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
+use Pixonaut\WooCommerce\Admin\BlankFields;
 use Pixonaut\WooCommerce\Admin\CatalogueSearch;
 use Pixonaut\WooCommerce\Admin\LinkedBlank;
 use Pixonaut\WooCommerce\Admin\Notices;
@@ -58,11 +59,15 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 
 	protected const PRINTSHOP_ID = BlankFixture::PRINTSHOP_ID;
 
+	protected const INTEGRATED_ID = BlankFixture::INTEGRATED_ID;
+
 	protected HttpRecorder $recorder;
 
 	protected RecordingLogger $logger;
 
 	protected CatalogueSearch $search;
+
+	protected BlankFields $blank_fields;
 
 	protected ProductPanel $panel;
 
@@ -106,7 +111,10 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 
 		// The routes answer from the recorder rather than the plugin's own Pixonaut.
 		remove_action( 'rest_api_init', array( $this->plugin->catalogue_search(), 'register_routes' ) );
+		remove_action( 'rest_api_init', array( $this->plugin->blank_fields(), 'register_route' ) );
 		$this->search->register();
+		$this->blank_fields = new BlankFields( fn (): ProductPanel => $this->panel );
+		$this->blank_fields->register();
 		$GLOBALS['wp_rest_server'] = new WP_REST_Server();
 		do_action( 'rest_api_init', $GLOBALS['wp_rest_server'] );
 	}
@@ -123,6 +131,8 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 		$this->variants->stop();
 		remove_action( 'rest_api_init', array( $this->search, 'register_routes' ) );
 		add_action( 'rest_api_init', array( $this->plugin->catalogue_search(), 'register_routes' ) );
+		remove_action( 'rest_api_init', array( $this->blank_fields, 'register_route' ) );
+		add_action( 'rest_api_init', array( $this->plugin->blank_fields(), 'register_route' ) );
 		$GLOBALS['wp_rest_server'] = null;
 		$_POST                     = array();
 		delete_option( Notices::OPTION );
@@ -230,29 +240,13 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 	}
 
 	/**
-	 * A `GET /v1/printshop-connections` answer: the workspace's default and one more.
+	 * A `GET /v1/printshop-connections` answer, as `BlankFixture` gives it.
 	 *
+	 * @param string $default_id The workspace's default printshop.
 	 * @return array<string, mixed>
 	 */
-	protected static function printshops(): array {
-		return array(
-			'connections' => array(
-				array(
-					'id'        => self::PRINTSHOP_ID,
-					'name'      => 'Fixture Print AB',
-					'adapter'   => 'custom',
-					'active'    => true,
-					'isDefault' => true,
-				),
-				array(
-					'id'        => 'ps_other',
-					'name'      => 'Other Print AB',
-					'adapter'   => 'custom',
-					'active'    => true,
-					'isDefault' => false,
-				),
-			),
-		);
+	protected static function printshops( string $default_id = self::PRINTSHOP_ID ): array {
+		return BlankFixture::printshops( $default_id );
 	}
 
 	/**

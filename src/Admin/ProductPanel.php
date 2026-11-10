@@ -109,6 +109,18 @@ final class ProductPanel {
 	public const VIEWS_INITIAL_KEY = 'initial';
 
 	/**
+	 * Posted with the panel: the disclosures open when it was saved, which
+	 * stay open on the page the save leads to.
+	 */
+	public const OPEN_FIELD = 'pixonaut_open_disclosures';
+
+	/**
+	 * How long, in seconds, the disclosures open at a save are remembered:
+	 * ten minutes, well past the page load that follows it.
+	 */
+	private const OPEN_TTL = 600;
+
+	/**
 	 * Most views a product is shown in: more than a blank photographs.
 	 */
 	private const MAX_VIEWS = 50;
@@ -193,7 +205,7 @@ final class ProductPanel {
 				// Shown with the blank; a variable product's variations each have their own.
 				'fields_html'  => $this->not_connected_html() . $this->fields_html(
 					$this->panel( $product_object ) + array(
-						'variant_html'    => $product_object->is_type( 'variable' ) ? '' : $this->variant->html( $product_object, PanelFields::product() ),
+						'variant_html'    => $product_object->is_type( 'variable' ) ? '' : $this->variant->html( $product_object, PanelFields::product(), $this->integration( ProductConfig::stored_on( $product_object ) ) ),
 						'images_html'     => null === $this->showcases ? '' : $this->showcases->html( $product_object ),
 						'regenerate_html' => null === $this->regenerate ? '' : $this->regenerate->html( $product_object ),
 					)
@@ -201,6 +213,7 @@ final class ProductPanel {
 				'search_urls'  => self::search_urls(),
 				'rest_nonce'   => wp_create_nonce( 'wp_rest' ),
 				'variant_html' => '',
+				'product_id'   => $product_object->get_id(),
 			)
 		);
 	}
@@ -241,6 +254,7 @@ final class ProductPanel {
 				'new_size'   => self::default_size_fields(),
 				'placements' => $panel['placements'],
 				'groups'     => $panel['groups'] ?? null,
+				'open'       => $panel['open'],
 			)
 		);
 
@@ -249,7 +263,75 @@ final class ProductPanel {
 			$panel['sides_html'][] = $side( (string) $index, $fields );
 		}
 		$panel['new_side_html'] = $side( self::NEW_SIDE_INDEX, self::side_fields( null ) + $this->standing_options( null ) );
+		$panel['blank_html']    = $this->blank_html( $panel );
+		$panel['views_html']    = $this->views_html( $panel );
 		return $this->templates->html( 'admin/product-fields.php', $panel );
+	}
+
+	/**
+	 * What the panel shows of its blank, as `admin/product-blank.php` prints
+	 * it; empty without a blank.
+	 *
+	 * @param array<string, mixed> $panel What `panel()` gave, with the blank variant field as `variant_html`.
+	 */
+	private function blank_html( array $panel ): string {
+		if ( null === $panel['printshop'] ) {
+			return '';
+		}
+		return $this->templates->html(
+			'admin/product-blank.php',
+			array(
+				'printshop'    => $panel['printshop'],
+				'variant_html' => is_string( $panel['variant_html'] ?? null ) ? $panel['variant_html'] : '',
+				'variable'     => true === $panel['variable'],
+			)
+		);
+	}
+
+	/**
+	 * What the panel shows of a blank picked but not saved yet: its printshop
+	 * and variant, and its views, drawn as the panel draws them for a saved
+	 * blank.
+	 *
+	 * @param WC_Product $product  The product, simple or variable.
+	 * @param string     $blank_id The blank picked.
+	 * @return array{blank_html: string, views_html: string}
+	 */
+	public function blank_fields( WC_Product $product, string $blank_id ): array {
+		$config                = ProductConfig::stored_on( $product );
+		$config                = $config->blank_id === $blank_id ? $config : $config->on_blank( $blank_id );
+		$panel                 = $this->panel( $product, $config );
+		$panel['variant_html'] = $product->is_type( 'variable' ) ? '' : $this->variant->html( $product, PanelFields::product(), $this->integration( $config ), $blank_id );
+		return array(
+			'blank_html' => $this->blank_html( $panel ),
+			'views_html' => $this->views_html( $panel ),
+		);
+	}
+
+	/**
+	 * The views the product is shown in, as `admin/product-views.php` prints
+	 * them: open when they were open at the last update, or show a choice.
+	 *
+	 * @param array<string, mixed> $panel What `panel()` gave.
+	 */
+	private function views_html( array $panel ): string {
+		$open = is_array( $panel['open'] ) && in_array( 'views', $panel['open'], true );
+		// The template takes whether its own section is open, not the list.
+		return $this->templates->html( 'admin/product-views.php', array_replace( $panel, array( 'open' => $open ) ) );
+	}
+
+	/**
+	 * The print partner a configuration's blank is from, such as Gelato,
+	 * which its variant is called after; empty without a blank, or for a
+	 * blank of the store's own printshop.
+	 *
+	 * @param ProductConfig $config The configuration.
+	 */
+	private function integration( ProductConfig $config ): string {
+		if ( null === $config->blank_id ) {
+			return '';
+		}
+		return $this->blank->printshop( $config->blank_id, $this->blank->read( $config->blank_id ) )['integration'];
 	}
 
 	/**
@@ -312,6 +394,11 @@ final class ProductPanel {
 			'printshop'       => null === $config->blank_id ? null : $this->blank->printshop( $config->blank_id, $blank ),
 			'printshops'      => $this->printshops( $config ),
 			'printshop_id'    => $config->printshop_id ?? '',
+			'printshops_url'  => StudioPage::section( StudioPage::PRINTSHOPS ),
+			'variable'        => $product->is_type( 'variable' ),
+			'open'            => self::remembered_open( $product ),
+			// Only the product's own panel remembers them: a variation's would post over it.
+			'open_field'      => $product->is_type( 'variation' ) ? '' : self::OPEN_FIELD,
 			'invalid'         => self::invalid( $config, $blank ),
 			'layout'          => in_array( $config->layout, Layout::available(), true ) ? (string) $config->layout : '',
 			'layouts'         => $this->layouts( $product ),
@@ -352,6 +439,7 @@ final class ProductPanel {
 			'fitting-templates' => rest_url( Plugin::REST_NAMESPACE . CatalogueSearch::FITTING_TEMPLATES_ROUTE ),
 			'placements'        => rest_url( Plugin::REST_NAMESPACE . CatalogueSearch::PLACEMENTS_ROUTE ),
 			'template'          => rest_url( Plugin::REST_NAMESPACE . CatalogueSearch::TEMPLATE_ROUTE ),
+			'blank-fields'      => rest_url( Plugin::REST_NAMESPACE . BlankFields::ROUTE ),
 		);
 	}
 
@@ -378,13 +466,19 @@ final class ProductPanel {
 			}
 		}
 		$this->configure( $product, $posted );
+		$this->remember_open( $product, isset( $_POST[ self::OPEN_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::OPEN_FIELD ] ) ) : '' );
 		if ( $product->is_type( 'variable' ) ) {
 			// Its variations' variants follow the blank it was saved with.
 			$this->variant->refresh( $product );
 			return;
 		}
-		$name = $fields->name( PanelFields::VARIANT );
-		$this->variant->save( $product, isset( $_POST[ $name ] ) ? sanitize_text_field( wp_unslash( $_POST[ $name ] ) ) : null );
+		$name  = $fields->name( PanelFields::VARIANT );
+		$bound = $fields->name( PanelFields::VARIANT_BLANK );
+		$this->variant->save(
+			$product,
+			isset( $_POST[ $name ] ) ? sanitize_text_field( wp_unslash( $_POST[ $name ] ) ) : null,
+			isset( $_POST[ $bound ] ) ? sanitize_text_field( wp_unslash( $_POST[ $bound ] ) ) : null
+		);
 	}
 
 	/**
@@ -408,8 +502,9 @@ final class ProductPanel {
 	 * @param ProductConfig|null   $current  What the posted choice changes, its overrides kept; null for what is stored.
 	 */
 	public function checked( WC_Product $product, array $posted, ?ProductConfig $current = null ): ProductConfig {
+		$before        = $current ?? ProductConfig::stored_on( $product );
 		$config        = $this->linker->link(
-			$current ?? ProductConfig::stored_on( $product ),
+			$before,
 			isset( $posted[ PanelFields::PERSONALISE ] ),
 			self::text( $posted[ PanelFields::BLANK ] ?? '' ),
 			PostedSides::parse( is_array( $posted[ PanelFields::SIDES ] ?? null ) ? self::sanitised_sides( $posted[ PanelFields::SIDES ] ) : array() )
@@ -439,6 +534,9 @@ final class ProductPanel {
 		if ( isset( $posted[ PanelFields::PRINTSHOP ] ) ) {
 			$printshop = self::text( $posted[ PanelFields::PRINTSHOP ] );
 			$config    = $config->with_printshop( '' === $printshop ? null : $printshop );
+		}
+		if ( $config->personalise && $config->valid && null === $config->blank_id && $this->needs_blank( $config->printshop_id, $before ) ) {
+			$config = $config->with_validity( false, InvalidReason::PRINTSHOP_NEEDS_BLANK );
 		}
 
 		/**
@@ -554,7 +652,7 @@ final class ProductPanel {
 	private static function choices( array $names, array $available, string $current ): array {
 		$choices = array(
 			/* translators: %s: the store's default choice, e.g. a layout or an approval mode. */
-			'' => sprintf( __( 'Store default: %s', 'pixonaut-for-woocommerce' ), $names[ $current ] ?? $current ),
+			'' => sprintf( __( 'Store setting: %s', 'pixonaut-for-woocommerce' ), $names[ $current ] ?? $current ),
 		);
 		foreach ( $available as $choice ) {
 			$choices[ $choice ] = $names[ $choice ] ?? $choice;
@@ -563,36 +661,121 @@ final class ProductPanel {
 	}
 
 	/**
+	 * Remembers, for the user saving it, the product's disclosures that
+	 * were open, so the page the save leads to opens them again.
+	 *
+	 * @param WC_Product $product The product.
+	 * @param string     $posted  The open disclosures, comma separated.
+	 */
+	private function remember_open( WC_Product $product, string $posted ): void {
+		$open = array_values( array_filter( array_map( 'sanitize_key', explode( ',', $posted ) ) ) );
+		$key  = self::open_key( $product );
+		if ( array() === $open ) {
+			delete_transient( $key );
+			return;
+		}
+		set_transient( $key, $open, self::OPEN_TTL );
+	}
+
+	/**
+	 * The disclosures open when the current user last saved the product.
+	 *
+	 * @param WC_Product $product The product or variation.
+	 * @return list<string>
+	 */
+	private static function remembered_open( WC_Product $product ): array {
+		$open = get_transient( self::open_key( $product ) );
+		return is_array( $open ) ? array_values( array_filter( $open, 'is_string' ) ) : array();
+	}
+
+	private static function open_key( WC_Product $product ): string {
+		return 'pixonaut_wc_open_' . get_current_user_id() . '_' . $product->get_id();
+	}
+
+	/**
 	 * The printshop choices of a product without a blank: the workspace's
-	 * default first, under the empty value, then each of the workspace's
-	 * printshops. A chosen printshop the workspace no longer has, or that
-	 * could not be listed, stays a choice, so saving again keeps it.
+	 * default first, under the empty value, said to print only on a blank
+	 * when it does, then each of the workspace's printshops, leaving out
+	 * those that print only on a blank (a print partner's integration). A
+	 * chosen printshop the workspace no longer has, could not be listed, or
+	 * prints only on a blank, stays a choice, so saving again keeps it.
 	 *
 	 * @param ProductConfig $config The product's configuration.
-	 * @return array<string, string> Names by printshop id.
+	 * @return array<string, string> Names by printshop id; empty when no printshop of the workspace prints without a blank.
 	 */
 	private function printshops( ProductConfig $config ): array {
 		$listed  = $this->blank->printshops();
 		$default = null;
 		$choices = array();
+		$offered = null === $listed;
 		foreach ( $listed ?? array() as $printshop ) {
-			$choices[ $printshop['id'] ] = $printshop['name'];
 			if ( $printshop['default'] ) {
-				$default = $printshop['name'];
+				$default = $printshop;
+			}
+			if ( ! $printshop['needs_blank'] ) {
+				$choices[ $printshop['id'] ] = $printshop['name'];
+				$offered                     = true;
 			}
 		}
-		$choices = array(
+		if ( null === $default ) {
 			/* translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace. */
-			'' => null === $default ? __( 'Workspace default', 'pixonaut-for-woocommerce' )
-				/* translators: %s: the workspace's default printshop. */
-				: sprintf( __( 'Workspace default (%s)', 'pixonaut-for-woocommerce' ), $default ),
-		) + $choices;
-		if ( null !== $config->printshop_id && ! isset( $choices[ $config->printshop_id ] ) ) {
-			$choices[ $config->printshop_id ] = null === $listed
-				? __( 'The printshop chosen before', 'pixonaut-for-woocommerce' )
-				: __( 'A printshop no longer connected to the workspace', 'pixonaut-for-woocommerce' );
+			$choices = array( '' => __( 'Workspace default', 'pixonaut-for-woocommerce' ) ) + $choices;
+		} elseif ( ! $default['needs_blank'] ) {
+			/* translators: %s: the workspace's default printshop. */
+			$choices = array( '' => sprintf( __( 'Workspace default (%s)', 'pixonaut-for-woocommerce' ), $default['name'] ) ) + $choices;
+		} else {
+			// Kept, so a product on it is not saved on another printshop; the panel says it cannot be bought.
+			/* translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page. */
+			$choices = array( '' => sprintf( __( 'Workspace default (%s): prints only on a blank', 'pixonaut-for-woocommerce' ), $default['name'] ) ) + $choices;
 		}
-		return $choices;
+		if ( null !== $config->printshop_id && ! isset( $choices[ $config->printshop_id ] ) ) {
+			$needs_blank                      = self::named( $listed, $config->printshop_id );
+			$choices[ $config->printshop_id ] = match ( true ) {
+				null === $listed => __( 'The printshop chosen before', 'pixonaut-for-woocommerce' ),
+				/* translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page. */
+				null !== $needs_blank => sprintf( __( '%s (prints only on a blank)', 'pixonaut-for-woocommerce' ), $needs_blank ),
+				default => __( 'A printshop no longer connected to the workspace', 'pixonaut-for-woocommerce' ),
+			};
+		}
+		return $offered || null !== $config->printshop_id ? $choices : array();
+	}
+
+	/**
+	 * The name of a listed printshop; null when it is not listed.
+	 *
+	 * @param list<array{id: string, name: string, default: bool, needs_blank: bool}>|null $listed       The workspace's printshops.
+	 * @param string                                                                       $printshop_id The printshop.
+	 */
+	private static function named( ?array $listed, string $printshop_id ): ?string {
+		foreach ( $listed ?? array() as $printshop ) {
+			if ( $printshop['id'] === $printshop_id ) {
+				return $printshop['name'];
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Whether a product without a blank sends its orders to a printshop that
+	 * prints only on a blank: the one it chose, or the workspace's default.
+	 * When Pixonaut could not list the printshops, what was said before the
+	 * save holds while the choice is the same, so an outage does not make
+	 * such a product buyable; otherwise false.
+	 *
+	 * @param string|null   $printshop_id The printshop chosen; null for the workspace's default.
+	 * @param ProductConfig $before       The configuration before the save.
+	 */
+	private function needs_blank( ?string $printshop_id, ProductConfig $before ): bool {
+		$listed = $this->blank->printshops();
+		if ( null === $listed ) {
+			return ! $before->valid && InvalidReason::PRINTSHOP_NEEDS_BLANK === $before->invalid_reason && $before->printshop_id === $printshop_id;
+		}
+		foreach ( $listed as $printshop ) {
+			if ( null === $printshop_id ? $printshop['default'] : $printshop['id'] === $printshop_id ) {
+				return $printshop['needs_blank'];
+			}
+		}
+		return false;
 	}
 
 	/**

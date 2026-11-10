@@ -65,7 +65,7 @@ and in Pixonaut's own designer the Personalise button opens:
 - **Steps**: one step at a time, with **Back** and **Next**.
 
 A product can override it with **Form layout** on its Pixonaut tab, where
-**Store default** follows the setting.
+*Store setting: …* follows the setting.
 
 ### Product options as their own groups
 
@@ -90,7 +90,7 @@ own designer the Personalise button opens keeps its numbers.
 Changing a setting changes every product following it, with nothing to update
 on each, and a new product follows it. To make a product differ, choose
 **Options in the form** and **Group numbers** on its Pixonaut tab, where
-**Store default** follows the settings. A variation follows its product, on
+*Store setting: …* follows the settings. A variation follows its product, on
 another template too, and a customer editing a design from the cart or a proof
 sees the same form.
 
@@ -142,7 +142,7 @@ configuration (see [Link a product](../linking-products/#variations)):
 - the designer shows the product in the blank variant the variation sells
   (its colour, say) at once;
 - another print size is picked in the designer at once;
-- another blank, placement, set of views or template opens the designer
+- another blank, print position, set of views or template opens the designer
   again on it, with the customer's text and images carried over where it has
   the same fields.
 
@@ -255,10 +255,10 @@ unavailable right now*, when:
   Pixonaut for WooCommerce includes;
 - the product, or the chosen variation, sells no variant of its blank, or
   Pixonaut cannot show it in its variant: the variant is retired, or none
-  of the product's views has a photo of it (the **Blank variant** field
-  warns about this; see [Blank variant](../linking-products/#blank-variant)).
+  of the product's views has a photo of it (the **Variant** field
+  warns about this; see [Variant](../linking-products/#variant)).
 
-When Pixonaut no longer has the placement a product prints on, the store
+When Pixonaut no longer has the print position a product prints on, the store
 checks with Pixonaut, flags the product and shows a notice asking you to link
 it again. When the designer could not start in a customer's browser, a notice
 says so: the site's Content Security Policy, a browser extension, or a
@@ -365,7 +365,7 @@ personalised on the button layout is chosen.
 
 A variation with its own Pixonaut configuration has a **Layout** field too.
 **As the product says**, the choice it starts on, follows the product's
-layout, and the product's **Store default** follows the setting. A variation
+layout, and the product's *Store setting: …* follows the setting. A variation
 set to **Inline** on a product on the button says personalisation is
 unavailable, as the button's page cannot show the inline designer.
 

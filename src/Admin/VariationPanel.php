@@ -119,7 +119,7 @@ final class VariationPanel {
 		}
 
 		$this->apply( $variation, isset( $posted[ PanelFields::OVERRIDE ] ) ? $posted : null );
-		$this->variant->save( $variation, $posted[ PanelFields::VARIANT ] ?? null );
+		$this->variant->save( $variation, $posted[ PanelFields::VARIANT ] ?? null, $posted[ PanelFields::VARIANT_BLANK ] ?? null );
 		ShowcaseField::save_variation( $variation, isset( $posted[ PanelFields::PICTURE_VIEW_LISTED ] ) ? $posted[ PanelFields::PICTURE_VIEW ] ?? null : null );
 	}
 

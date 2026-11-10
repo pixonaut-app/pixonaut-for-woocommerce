@@ -83,6 +83,12 @@ final class InvalidReason {
 	public const NO_FITTING_SIZE = 'no_fitting_size';
 
 	/**
+	 * A product on no blank whose printshop prints only on a blank, as a
+	 * print partner's integration does.
+	 */
+	public const PRINTSHOP_NEEDS_BLANK = 'printshop_needs_blank';
+
+	/**
 	 * Reasons found in what the store manager entered rather than in what
 	 * Pixonaut answered: only saving the product again clears them.
 	 */
@@ -95,6 +101,7 @@ final class InvalidReason {
 		self::INVALID_PRINT_SIZE,
 		self::TOO_MANY_PRINT_SIZES,
 		self::MISSING_PRINT_SIZE,
+		self::PRINTSHOP_NEEDS_BLANK,
 	);
 
 	/**
@@ -150,6 +157,8 @@ final class InvalidReason {
 				return __( 'Pixonaut would not make the design of a standing side: the store may not create and approve designs. Check the connection\'s permissions in the Pixonaut studio, then update the product again.', 'pixonaut-for-woocommerce' );
 			case self::NO_FITTING_SIZE:
 				return __( 'The template of a standing side does not fit the placement at any of the blank\'s sizes, so none of them can be printed. Choose a template that fits.', 'pixonaut-for-woocommerce' );
+			case self::PRINTSHOP_NEEDS_BLANK:
+				return __( 'Choose a blank, or a printshop that prints without one.', 'pixonaut-for-woocommerce' );
 			case ProductConfig::REASON_NEWER_SCHEMA:
 				return __( 'The configuration was saved by a newer version of Pixonaut for WooCommerce. Update the plugin.', 'pixonaut-for-woocommerce' );
 			default:

@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Tests\Support;
 
 use Pixonaut\WooCommerce\Admin\LinkedBlank;
 use Pixonaut\WooCommerce\Api\Catalogue;
+use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 
 /**
  * `GET /v1/blanks/{id}` answers for `DesignFixture`'s blank.
@@ -41,6 +42,11 @@ final class BlankFixture {
 	public const VIEW_ID = 'view_front';
 
 	/**
+	 * Gelato's integration: a printshop that prints only on a blank.
+	 */
+	public const INTEGRATED_ID = 'ps_gelato';
+
+	/**
 	 * How far in a placement folds, as a canvas round its frame does.
 	 */
 	private const FOLD_MM = 20;
@@ -49,6 +55,45 @@ final class BlankFixture {
 	 * A view's `source` for the merchant's own photos.
 	 */
 	private const OWN = 'own';
+
+	/**
+	 * A `GET /v1/printshop-connections` answer: the workspace's own two
+	 * printshops and Gelato's integration, which prints only on a blank.
+	 *
+	 * @param string $default_id The workspace's default printshop.
+	 * @return array{connections: list<array<string, mixed>>}
+	 */
+	public static function printshops( string $default_id = self::PRINTSHOP_ID ): array {
+		$printshop = static fn ( string $id, string $name, string $adapter ): array => array(
+			'id'            => $id,
+			'name'          => $name,
+			'adapter'       => $adapter,
+			'active'        => true,
+			'isDefault'     => $default_id === $id,
+			'asksOfDesigns' => array(
+				'commitKeys' => array(),
+				'needsBlank' => 'custom' !== $adapter,
+			),
+		);
+		return array(
+			'connections' => array(
+				$printshop( self::PRINTSHOP_ID, 'Fixture Print AB', 'custom' ),
+				$printshop( 'ps_other', 'Other Print AB', 'custom' ),
+				$printshop( self::INTEGRATED_ID, 'Gelato', 'gelato' ),
+			),
+		);
+	}
+
+	/**
+	 * Caches the workspace's printshops as `printshops()` lists them, for a
+	 * test whose scripted requests leave out the read that checks whether a
+	 * product without a blank is on a printshop that needs one.
+	 *
+	 * @param CatalogueCache $cache The plugin's catalogue cache.
+	 */
+	public static function remember_printshops( CatalogueCache $cache ): void {
+		$cache->remember( 'printshop-connections', array(), static fn (): array => self::printshops()['connections'] );
+	}
 
 	/**
 	 * A `GET /v1/blanks/{id}` answer.

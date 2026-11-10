@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T15:20:00+00:00\n"
+"POT-Creation-Date: 2026-11-10T17:14:40+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -47,7 +47,7 @@ msgstr ""
 #. translators: The plugin's item in the admin menu, shown to the merchant; the product name, keep it as it is.
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
-#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:174
+#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:186
 #: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:38
 msgid "Pixonaut"
 msgstr "Pixonaut"
@@ -2562,6 +2562,10 @@ msgstr ""
 "Het product toont zijn Pixonaut-afbeelding, of doet dat zodra die is "
 "aangemaakt: er staat geen afbeelding van de winkelmanager op die plaats."
 
+#: src/Admin/BlankFields.php:91
+msgid "No such product."
+msgstr "Dit product bestaat niet."
+
 #: src/Admin/CatalogueSearch.php:239 src/Admin/CatalogueSearch.php:317
 msgid "Pixonaut could not be searched. Try again in a moment."
 msgstr "Er kon niet in Pixonaut worden gezocht. Probeer het zo meteen opnieuw."
@@ -2703,7 +2707,7 @@ msgstr "Eigen groep"
 
 #. translators: Button that removes a group the merchant added. Admin product page.
 #. translators: Button that removes one print size row from a side. Admin product page.
-#: src/Admin/GroupsStrings.php:49 templates/admin/product-side.php:65
+#: src/Admin/GroupsStrings.php:49 templates/admin/product-side.php:63
 msgid "Remove"
 msgstr "Verwijderen"
 
@@ -2858,7 +2862,7 @@ msgstr ""
 "De opmaak van %s kon niet worden gewijzigd in Pixonaut. Probeer het zo "
 "meteen opnieuw."
 
-#: src/Admin/LinkedBlank.php:250
+#: src/Admin/LinkedBlank.php:278
 msgid ""
 "None set: Pixonaut cannot route this blank’s orders until a printshop is "
 "chosen."
@@ -2868,27 +2872,27 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:268 src/Admin/ProductPanel.php:586
+#: src/Admin/LinkedBlank.php:284 src/Admin/ProductPanel.php:722
 msgid "Workspace default"
 msgstr "Standaard van de werkruimte"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:270 src/Admin/ProductPanel.php:588
+#: src/Admin/LinkedBlank.php:286 src/Admin/ProductPanel.php:725
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Standaard van de werkruimte (%s)"
 
-#: src/Admin/LinkedBlank.php:273 src/Admin/ProductPanel.php:593
+#: src/Admin/LinkedBlank.php:289 src/Admin/ProductPanel.php:737
 msgid "A printshop no longer connected to the workspace"
 msgstr "Een drukkerij die niet meer aan de werkruimte is gekoppeld"
 
 #. translators: %s: the printshop the blank's category names.
-#: src/Admin/LinkedBlank.php:277
+#: src/Admin/LinkedBlank.php:293
 #, php-format
 msgid "%s (from the blank’s category)"
 msgstr "%s (uit de categorie van het blanco product)"
 
-#: src/Admin/LinkedBlank.php:307
+#: src/Admin/LinkedBlank.php:326
 msgid "Pixonaut could not be asked which printshop this is."
 msgstr "Pixonaut kon niet worden gevraagd welke drukkerij dit is."
 
@@ -3024,14 +3028,14 @@ msgstr "Documentatie"
 msgid "Support"
 msgstr "Ondersteuning"
 
-#: src/Admin/ProductPanel.php:298
+#: src/Admin/ProductPanel.php:380
 msgid ""
 "This variation cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Deze variatie kan pas worden gekocht als de Pixonaut-configuratie is "
 "hersteld:"
 
-#: src/Admin/ProductPanel.php:299
+#: src/Admin/ProductPanel.php:381
 msgid ""
 "This product cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
@@ -3039,25 +3043,36 @@ msgstr ""
 
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:330 src/Admin/ProductPanel.php:540
-#: templates/admin/product-side.php:275
+#: src/Admin/ProductPanel.php:417 src/Admin/ProductPanel.php:638
 msgid "As the product says"
 msgstr "Zoals het product aangeeft"
 
 #. translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page.
-#: src/Admin/ProductPanel.php:332
+#: src/Admin/ProductPanel.php:419
 msgid "As the template says"
 msgstr "Zoals het sjabloon aangeeft"
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:557
+#: src/Admin/ProductPanel.php:655
 #, php-format
-msgid "Store default: %s"
-msgstr "Standaard van de winkel: %s"
+msgid "Store setting: %s"
+msgstr "Winkelinstelling: %s"
 
-#: src/Admin/ProductPanel.php:592
+#. translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page.
+#: src/Admin/ProductPanel.php:729
+#, php-format
+msgid "Workspace default (%s): prints only on a blank"
+msgstr "Standaard van de werkruimte (%s): drukt alleen op een blanco product"
+
+#: src/Admin/ProductPanel.php:734
 msgid "The printshop chosen before"
 msgstr "De eerder gekozen drukkerij"
+
+#. translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page.
+#: src/Admin/ProductPanel.php:736
+#, php-format
+msgid "%s (prints only on a blank)"
+msgstr "%s (drukt alleen op een blanco product)"
 
 #: src/Admin/RegenerateNow.php:195 src/Admin/RegeneratePictures.php:463
 msgid "This product shows no Pixonaut picture."
@@ -3190,60 +3205,59 @@ msgstr "Waarop de variatieafbeelding wordt aangemaakt"
 msgid "%1$s, photo %2$d"
 msgstr "%1$s, foto %2$d"
 
-#: src/Admin/VariantField.php:77
+#: src/Admin/VariantField.php:84
 msgid ""
 "Pixonaut could not be reached to list the blank’s variants. Try again later."
 msgstr ""
 "Pixonaut was niet bereikbaar om de varianten van het blanco product op te "
 "halen. Probeer het later opnieuw."
 
-#. translators: %s: the matched variant's options, e.g. "Color: Red, Size: M". Option in the blank variant picker on the product edit page, shown to the merchant.
-#: src/Admin/VariantField.php:91
+#. translators: Option in the blank variant picker on the product edit page, shown to the merchant: find the variant from the product's own attributes.
+#: src/Admin/VariantField.php:109
+msgid "Find automatically"
+msgstr "Automatisch zoeken"
+
+#: src/Admin/VariantField.php:114
+msgid ""
+"Found from this variation’s attributes; it does not fall back to the "
+"product’s."
+msgstr ""
+"Gevonden op basis van de attributen van deze variatie; die van het product "
+"worden niet gebruikt."
+
+#: src/Admin/VariantField.php:115
+msgid "Found from this product’s attributes."
+msgstr "Gevonden op basis van de attributen van dit product."
+
+#. translators: %s: the variant's options, e.g. "Color: Red, Size: M". Option in the blank variant picker on the product edit page: the variant found from the product's attributes.
+#: src/Admin/VariantField.php:130
 #, php-format
-msgid "Match by options (now: %s)"
-msgstr "Koppelen op opties (nu: %s)"
+msgid "Blank variant: %s (found automatically)"
+msgstr "Variant van het blanco product: %s (automatisch gevonden)"
 
-#. translators: Option in the blank variant picker on the product edit page, shown to the merchant: match the variant by the product's options.
-#: src/Admin/VariantField.php:93
-msgid "Match by options"
-msgstr "Koppelen op opties"
-
-#: src/Admin/VariantField.php:98
-msgid ""
-"Match by options finds the blank variant with the same option values as this "
-"variation’s attributes. When none matches, the variation cannot be bought "
-"until you pick its variant here; it does not fall back to the product’s."
-msgstr ""
-"‘Koppelen op opties’ zoekt de variant van het blanco product met dezelfde "
-"optiewaarden als de attributen van deze variatie. Als er geen overeenkomt, "
-"kan de variatie pas worden gekocht als u hier de variant kiest; er wordt "
-"niet teruggevallen op die van het product."
-
-#: src/Admin/VariantField.php:99
-msgid ""
-"Match by options finds the blank variant with the same option values as this "
-"product’s attributes. When none matches, the product cannot be bought until "
-"you pick its variant here."
-msgstr ""
-"‘Koppelen op opties’ zoekt de variant van het blanco product met dezelfde "
-"optiewaarden als de attributen van dit product. Als er geen overeenkomt, kan "
-"het product pas worden gekocht als u hier de variant kiest."
+#. translators: 1: a print partner, such as Gelato, whose product the blank is; 2: the variant's options, e.g. "28x40\" / 70x100cm". Option in the blank variant picker on the product edit page: the variant found from the product's attributes.
+#: src/Admin/VariantField.php:132
+#, php-format
+msgid "%1$s variant: %2$s (found automatically)"
+msgstr "%1$s-variant: %2$s (automatisch gevonden)"
 
 #. translators: %s: the variant's options, e.g. "Color: Red, Size: M".
-#: src/Admin/VariantField.php:174
+#: src/Admin/VariantField.php:213
 #, php-format
 msgid "%s (retired)"
 msgstr "%s (niet meer leverbaar)"
 
-#: src/Admin/VariantField.php:187
-msgid ""
-"No variant of the blank matches, so customers cannot buy this. Pick the "
-"variant it is."
-msgstr ""
-"Geen enkele variant van het blanco product komt overeen, dus klanten kunnen "
-"dit niet kopen. Kies de juiste variant."
+#: src/Admin/VariantField.php:229
+msgid "No blank variant found: pick one."
+msgstr "Geen variant van het blanco product gevonden: kies er een."
 
-#: src/Admin/VariantField.php:190
+#. translators: %s: a print partner, such as Gelato, whose product the blank is. Shown under the blank variant picker on the product edit page.
+#: src/Admin/VariantField.php:231
+#, php-format
+msgid "No %s variant found: pick one."
+msgstr "Geen %s-variant gevonden: kies er een."
+
+#: src/Admin/VariantField.php:235
 msgid ""
 "This variant is retired, so customers cannot buy this. Pick another variant."
 msgstr ""
@@ -3251,7 +3265,7 @@ msgstr ""
 "een andere variant."
 
 #. translators: %l: the sides with no photo, e.g. "Front and Back".
-#: src/Admin/VariantField.php:199
+#: src/Admin/VariantField.php:244
 msgid ""
 "No view the product is shown in has a photo of this variant on %l, so "
 "customers cannot design it."
@@ -3702,19 +3716,19 @@ msgstr "Altijd de vorm van het sjabloon"
 msgid "Always the chosen print size’s shape"
 msgstr "Altijd de vorm van het gekozen drukformaat"
 
-#: src/Catalogue/InvalidReason.php:108
+#: src/Catalogue/InvalidReason.php:115
 msgid "Choose a template."
 msgstr "Kies een sjabloon."
 
-#: src/Catalogue/InvalidReason.php:110
+#: src/Catalogue/InvalidReason.php:117
 msgid "Choose where on the blank the design is printed."
 msgstr "Kies waar op het blanco product het ontwerp wordt gedrukt."
 
-#: src/Catalogue/InvalidReason.php:112
+#: src/Catalogue/InvalidReason.php:119
 msgid "The blank no longer exists in Pixonaut."
 msgstr "Het blanco product bestaat niet meer in Pixonaut."
 
-#: src/Catalogue/InvalidReason.php:114
+#: src/Catalogue/InvalidReason.php:121
 msgid ""
 "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or "
 "choose another blank."
@@ -3722,7 +3736,7 @@ msgstr ""
 "Het blanco product is verwijderd in Pixonaut. Zet het terug in de Pixonaut-"
 "studio of kies een ander blanco product."
 
-#: src/Catalogue/InvalidReason.php:116
+#: src/Catalogue/InvalidReason.php:123
 msgid ""
 "The blank no longer has this placement, or Pixonaut cannot size a print for "
 "it."
@@ -3730,11 +3744,11 @@ msgstr ""
 "Het blanco product heeft deze drukpositie niet meer, of Pixonaut kan er geen "
 "drukformaat voor bepalen."
 
-#: src/Catalogue/InvalidReason.php:118
+#: src/Catalogue/InvalidReason.php:125
 msgid "The template no longer exists in Pixonaut."
 msgstr "Het sjabloon bestaat niet meer in Pixonaut."
 
-#: src/Catalogue/InvalidReason.php:120
+#: src/Catalogue/InvalidReason.php:127
 msgid ""
 "The template is paused or deleted in Pixonaut. Make it live again, or choose "
 "another template."
@@ -3743,23 +3757,23 @@ msgstr ""
 "kies een ander sjabloon."
 
 #. translators: %d: most sides a product can have.
-#: src/Catalogue/InvalidReason.php:124
+#: src/Catalogue/InvalidReason.php:131
 #, php-format
 msgid "A product has at most %d sides."
 msgstr "Een product heeft maximaal %d zijden."
 
-#: src/Catalogue/InvalidReason.php:128
+#: src/Catalogue/InvalidReason.php:135
 msgid "Two sides use the same placement. Each placement can be one side only."
 msgstr ""
 "Twee zijden gebruiken dezelfde drukpositie. Elke drukpositie kan maar één "
 "zijde zijn."
 
-#: src/Catalogue/InvalidReason.php:130
+#: src/Catalogue/InvalidReason.php:137
 msgid "Two sides have the same key. Give each side its own."
 msgstr ""
 "Twee zijden hebben dezelfde sleutel. Geef elke zijde een eigen sleutel."
 
-#: src/Catalogue/InvalidReason.php:132
+#: src/Catalogue/InvalidReason.php:139
 msgid ""
 "A custom print size needs a width and height in millimetres, both above zero."
 msgstr ""
@@ -3767,12 +3781,12 @@ msgstr ""
 "beide groter dan nul."
 
 #. translators: %d: most print sizes one side can offer.
-#: src/Catalogue/InvalidReason.php:136
+#: src/Catalogue/InvalidReason.php:143
 #, php-format
 msgid "A side offers at most %d print sizes."
 msgstr "Een zijde biedt maximaal %d drukformaten."
 
-#: src/Catalogue/InvalidReason.php:140
+#: src/Catalogue/InvalidReason.php:147
 msgid ""
 "Add a print size in millimetres. Without a blank there is no placement to "
 "take one from."
@@ -3780,15 +3794,15 @@ msgstr ""
 "Voeg een drukformaat in millimeters toe. Zonder blanco product is er geen "
 "drukpositie om er een van over te nemen."
 
-#: src/Catalogue/InvalidReason.php:142
+#: src/Catalogue/InvalidReason.php:149
 msgid "The print size is larger than the placement can print."
 msgstr "Het drukformaat is groter dan de drukpositie kan drukken."
 
-#: src/Catalogue/InvalidReason.php:144
+#: src/Catalogue/InvalidReason.php:151
 msgid "The print size does not match the template's aspect ratio."
 msgstr "Het drukformaat past niet bij de beeldverhouding van het sjabloon."
 
-#: src/Catalogue/InvalidReason.php:146
+#: src/Catalogue/InvalidReason.php:153
 msgid ""
 "Pixonaut could not check the configuration. Check the connection, then "
 "update the product again."
@@ -3796,7 +3810,7 @@ msgstr ""
 "Pixonaut kon de configuratie niet controleren. Controleer de koppeling en "
 "werk het product daarna opnieuw bij."
 
-#: src/Catalogue/InvalidReason.php:148
+#: src/Catalogue/InvalidReason.php:155
 msgid ""
 "Pixonaut would not make the design of a standing side. Check the side's "
 "template, placement and print size, then update the product again."
@@ -3805,7 +3819,7 @@ msgstr ""
 "sjabloon, de drukpositie en het drukformaat van de zijde en werk het product "
 "daarna opnieuw bij."
 
-#: src/Catalogue/InvalidReason.php:150
+#: src/Catalogue/InvalidReason.php:157
 msgid ""
 "Pixonaut would not make the design of a standing side: the store may not "
 "create and approve designs. Check the connection's permissions in the "
@@ -3815,7 +3829,7 @@ msgstr ""
 "geen ontwerpen aanmaken en goedkeuren. Controleer de rechten van de "
 "koppeling in de Pixonaut-studio en werk het product daarna opnieuw bij."
 
-#: src/Catalogue/InvalidReason.php:152
+#: src/Catalogue/InvalidReason.php:159
 msgid ""
 "The template of a standing side does not fit the placement at any of the "
 "blank's sizes, so none of them can be printed. Choose a template that fits."
@@ -3824,7 +3838,12 @@ msgstr ""
 "product op de drukpositie, dus geen ervan kan worden gedrukt. Kies een "
 "sjabloon dat past."
 
-#: src/Catalogue/InvalidReason.php:154
+#: src/Catalogue/InvalidReason.php:161
+msgid "Choose a blank, or a printshop that prints without one."
+msgstr ""
+"Kies een blanco product, of een drukkerij die zonder blanco product drukt."
+
+#: src/Catalogue/InvalidReason.php:163
 msgid ""
 "The configuration was saved by a newer version of Pixonaut for WooCommerce. "
 "Update the plugin."
@@ -3832,7 +3851,7 @@ msgstr ""
 "De configuratie is opgeslagen door een nieuwere versie van Pixonaut for "
 "WooCommerce. Werk de plugin bij."
 
-#: src/Catalogue/InvalidReason.php:156
+#: src/Catalogue/InvalidReason.php:165
 msgid "Pixonaut cannot print this configuration."
 msgstr "Pixonaut kan deze configuratie niet drukken."
 
@@ -5452,8 +5471,7 @@ msgid "Close"
 msgstr "Sluiten"
 
 #. translators: Heading above a cart or order item's design details, shown to the shopper.
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: whether customers design the product.
-#: src/Labels.php:403 templates/admin/product-fields.php:60
+#: src/Labels.php:403
 msgid "Personalisation"
 msgstr "Personalisatie"
 
@@ -5512,8 +5530,8 @@ msgstr ""
 "gegevens hieronder."
 
 #. translators: Accessible name of the tabs that switch between a product's sides, such as front and back, on the product page, read by screen readers.
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product sides, such as front and back, each with its template.
-#: src/Labels.php:456 templates/admin/product-fields.php:112
+#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's sides, such as front and back, each with its template.
+#: src/Labels.php:456 templates/admin/product-fields.php:152
 msgid "Sides"
 msgstr "Zijden"
 
@@ -6061,7 +6079,7 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
 #. translators: Label of the dropdown choosing how the product page designer lays out its form. Admin product page.
-#: src/Settings/Settings.php:136 templates/admin/product-fields.php:164
+#: src/Settings/Settings.php:136 templates/admin/product-fields.php:214
 msgid "Form layout"
 msgstr "Formulierindeling"
 
@@ -6109,7 +6127,7 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the designer's form numbers its groups.
 #. translators: Label of the dropdown choosing whether the designer's form numbers its groups. Admin product page.
-#: src/Settings/Settings.php:174 templates/admin/product-fields.php:183
+#: src/Settings/Settings.php:174 templates/admin/product-fields.php:219
 msgid "Group numbers"
 msgstr "Groepsnummers"
 
@@ -6556,7 +6574,7 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how customers approve their design before it is printed.
 #. translators: Label of the dropdown choosing how customers approve their design (proof) before printing. Admin product page.
-#: src/Settings/SettingsPage.php:579 templates/admin/product-fields.php:202
+#: src/Settings/SettingsPage.php:579 templates/admin/product-fields.php:224
 msgid "Approval"
 msgstr "Goedkeuring"
 
@@ -7480,7 +7498,7 @@ msgstr ""
 #. translators: Button in developer tools that restores a field's default value; here Reset is a verb.
 #. translators: Link that puts an option whose layout was adjusted by hand back on the side's own layout. Admin product page.
 #: templates/admin/developer-tools.php:91
-#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:224
+#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:227
 msgid "Reset"
 msgstr "Herstellen"
 
@@ -7584,8 +7602,7 @@ msgid "Key prefix"
 msgstr "Sleutelprefix"
 
 #. translators: Row heading in developer tools: live or sandbox.
-#. translators: Label of the dropdown choosing whether a side is personalised by customers or standing. Admin product page.
-#: templates/admin/developer-tools.php:202 templates/admin/product-side.php:160
+#: templates/admin/developer-tools.php:202
 msgid "Mode"
 msgstr "Modus"
 
@@ -7856,109 +7873,102 @@ msgstr "Wat zei de drukkerij?"
 msgid "The printshop's order reference, if it gave one"
 msgstr "De bestelreferentie van de drukkerij, als die er een heeft gegeven"
 
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: whether customers design the product.
-#: templates/admin/product-fields.php:61
-msgid "Whether customers design this product before they buy it."
-msgstr "Of klanten dit product ontwerpen voordat ze het kopen."
+#. translators: Label of the printshop that makes the product's orders. Admin product page.
+#: templates/admin/product-blank.php:21 templates/admin/product-fields.php:122
+msgid "Printshop"
+msgstr "Drukkerij"
 
-#: templates/admin/product-fields.php:63
+#. translators: Link to the Pixonaut studio where the merchant changes the blank's printshop. Admin product page.
+#: templates/admin/product-blank.php:25
+msgid "Change in Pixonaut"
+msgstr "Wijzigen in Pixonaut"
+
+#. translators: Label of the variant of the blank the product is printed on. Admin product page.
+#. translators: Label of the dropdown choosing which variant of the Pixonaut blank this product is printed on. Admin product page.
+#: templates/admin/product-blank.php:31 templates/admin/product-variant.php:26
+msgid "Variant"
+msgstr "Variant"
+
+#. translators: Label of the variant of the blank the product is printed on. Admin product page.
+#: templates/admin/product-blank.php:32
+msgid "Each variation has its own, under Variations."
+msgstr "Elke variatie heeft een eigen variant, onder Variaties."
+
+#: templates/admin/product-fields.php:91
 msgctxt "checkbox on the product: customers personalise it"
 msgid "Personalise"
 msgstr "Personaliseren"
 
-#: templates/admin/product-fields.php:66
+#: templates/admin/product-fields.php:94
 msgid "Customers design this product with a Pixonaut template."
 msgstr "Klanten ontwerpen dit product met een Pixonaut-sjabloon."
 
-#: templates/admin/product-fields.php:68
-msgid ""
-"Tick it to choose the blank it is printed on, its sides and their templates."
-msgstr ""
-"Vink dit aan om het blanco product te kiezen waarop het wordt gedrukt, en de "
-"zijden met hun sjablonen."
+#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: what the product is printed on, and where.
+#: templates/admin/product-fields.php:104
+msgid "Printing"
+msgstr "Bedrukking"
 
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the blank the design is printed on.
-#: templates/admin/product-fields.php:74
+#. translators: Label of the blank picker: what the product is printed on, a blank such as a T-shirt, or nothing. Admin product page.
+#: templates/admin/product-fields.php:106
 msgid "Printed on"
 msgstr "Gedrukt op"
 
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the blank the design is printed on.
-#: templates/admin/product-fields.php:75
+#. translators: Placeholder of the blank picker: the product has no blank, only the design is printed. Admin product page.
+#: templates/admin/product-fields.php:108
+msgid "No blank: the design alone"
+msgstr "Geen blanco product: alleen het ontwerp"
+
+#: templates/admin/product-fields.php:115
 msgid ""
-"The blank product the design is printed on, and which of its variants this "
-"is."
+"Without a blank, the design is printed by itself, such as a poster or a card."
 msgstr ""
-"Het blanco product waarop het ontwerp wordt gedrukt, en welke variant ervan "
-"dit is."
+"Zonder blanco product wordt alleen het ontwerp gedrukt, zoals een poster of "
+"een kaart."
 
-#: templates/admin/product-fields.php:77
-msgctxt "Pixonaut blank, the unprinted product a design is printed on"
-msgid "Blank"
-msgstr "Blanco product"
+#: templates/admin/product-fields.php:118
+msgid "Reading the blank from Pixonaut…"
+msgstr "Blanco product ophalen uit Pixonaut…"
 
-#. translators: Placeholder of the blank dropdown: the product has no blank, only a template. Admin product page.
-#: templates/admin/product-fields.php:79
-msgid "No blank: template only"
-msgstr "Geen blanco product: alleen sjabloon"
-
-#: templates/admin/product-fields.php:86
+#. translators: Shown in the Pixonaut tab of the product edit page when a blank just picked could not be read; updating the product saves the blank and reads it again.
+#: templates/admin/product-fields.php:119
 msgid ""
-"The product the design is printed on, e.g. a T-shirt. Without one, customers "
-"buy the template’s design alone, such as a poster or a card."
+"Pixonaut could not be reached to read this blank. Update the product to try "
+"again."
 msgstr ""
-"Het product waarop het ontwerp wordt gedrukt, bijv. een T-shirt. Zonder "
-"blanco product kopen klanten alleen het ontwerp van het sjabloon, zoals een "
-"poster of een kaart."
+"Pixonaut is niet bereikbaar om dit blanco product te lezen. Werk het product "
+"bij om het opnieuw te proberen."
 
-#. translators: Label of the printshop that makes the product's orders. Admin product page.
-#: templates/admin/product-fields.php:89
-msgid "Printshop"
-msgstr "Drukkerij"
+#: templates/admin/product-fields.php:134
+msgid "Only printshops that print without a blank are listed."
+msgstr "Alleen drukkerijen die zonder blanco product drukken, worden getoond."
 
-#. translators: Screen reader label of the locked printshop of a product on a blank. Admin product page.
-#: templates/admin/product-fields.php:97
-msgid "Printshop, decided by the blank"
-msgstr "Drukkerij, bepaald door het blanco product"
+#: templates/admin/product-fields.php:137
+msgid "No printshop in your workspace prints without a blank."
+msgstr "Geen drukkerij in uw werkruimte drukt zonder blanco product."
 
-#. translators: Link to the Pixonaut studio where the merchant changes the blank's printshop. Admin product page.
-#: templates/admin/product-fields.php:101
-msgid "Change in Pixonaut"
-msgstr "Wijzigen in Pixonaut"
+#. translators: Link to the printshops of the Pixonaut studio, where the merchant adds one. Admin product page.
+#: templates/admin/product-fields.php:139
+msgid "Add one in Pixonaut"
+msgstr "Voeg er een toe in Pixonaut"
 
-#: templates/admin/product-fields.php:105
-msgid ""
-"Where this product’s orders are made. Workspace default sends them to the "
-"workspace’s default printshop."
-msgstr ""
-"Waar de bestellingen van dit product worden gemaakt. Met ‘Standaard van de "
-"werkruimte’ gaan ze naar de standaarddrukkerij van de werkruimte."
-
-#: templates/admin/product-fields.php:106
-msgid "The blank decides where its prints are made."
-msgstr "Het blanco product bepaalt waar er wordt gedrukt."
-
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product sides, such as front and back, each with its template.
-#: templates/admin/product-fields.php:113
-msgid ""
-"Each side is one place on the blank customers design, with its template and "
-"print sizes."
-msgstr ""
-"Elke zijde is één plek op het blanco product die klanten ontwerpen, met een "
-"eigen sjabloon en drukformaten."
+#. translators: Heading of the group of fields in the Pixonaut tab of the product edit page holding a product's only side: its template and the print sizes customers choose.
+#: templates/admin/product-fields.php:151
+msgid "Template and print sizes"
+msgstr "Sjabloon en drukformaten"
 
 #. translators: Button that adds a product side. Admin product page.
-#: templates/admin/product-fields.php:123
+#: templates/admin/product-fields.php:163
 msgid "Add side"
 msgstr "Zijde toevoegen"
 
 #. translators: %d: most sides a product can have.
-#: templates/admin/product-fields.php:129
+#: templates/admin/product-fields.php:169
 #, php-format
-msgid "Each placement can be one side, up to %d sides."
-msgstr "Elke drukpositie kan één zijde zijn, tot maximaal %d zijden."
+msgid "Another print position, such as the back. Up to %d sides."
+msgstr "Nog een drukpositie, zoals de achterkant. Maximaal %d zijden."
 
 #. translators: %d: most sides Pixonaut's designer is built for.
-#: templates/admin/product-fields.php:140
+#: templates/admin/product-fields.php:180
 #, php-format
 msgid ""
 "Pixonaut recommends at most %d sides. Each side is one more step in the "
@@ -7967,147 +7977,44 @@ msgstr ""
 "Pixonaut raadt maximaal %d zijden aan. Elke zijde is een extra stap in de "
 "ontwerptool en maakt die trager op het apparaat van de klant."
 
-#: templates/admin/product-fields.php:148
-msgid "A product without a blank has one side. Choose a blank to give it more."
-msgstr ""
-"Een product zonder blanco product heeft één zijde. Kies een blanco product "
-"om er meer te geven."
+#. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the Pixonaut settings page's choices, changed for this product alone.
+#: templates/admin/product-fields.php:197
+msgid "Store settings for this product"
+msgstr "Winkelinstellingen voor dit product"
 
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: how customers open the designer and approve their design.
-#: templates/admin/product-fields.php:152
-msgid "On the product page"
-msgstr "Op de productpagina"
+#. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the Pixonaut settings page's choices, changed for this product alone.
+#: templates/admin/product-fields.php:198
+#: templates/admin/product-fields.php:202
+msgid "Follows the store’s settings"
+msgstr "Volgt de winkelinstellingen"
 
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: how customers open the designer and approve their design.
-#: templates/admin/product-fields.php:153
-msgid ""
-"How customers open the designer, the photos they see their design on, and "
-"how they approve it. Store default follows the Pixonaut settings page."
-msgstr ""
-"Hoe klanten de ontwerptool openen, op welke foto's ze hun ontwerp zien en "
-"hoe ze het goedkeuren. ‘Standaard van de winkel’ volgt de Pixonaut-"
-"instellingen."
+#. translators: %d: how many of the store's settings this product changes. Admin product page.
+#: templates/admin/product-fields.php:198
+#: templates/admin/product-fields.php:204
+#, php-format
+msgid "%d changed for this product"
+msgid_plural "%d changed for this product"
+msgstr[0] "%d gewijzigd voor dit product"
+msgstr[1] "%d gewijzigd voor dit product"
+
+#: templates/admin/product-fields.php:209
+msgid "Each follows the Pixonaut settings page until you change it here."
+msgstr "Elke instelling volgt de Pixonaut-instellingen tot u die hier wijzigt."
 
 #. translators: Label of the dropdown choosing how customers open the designer on the product page. Admin product page.
-#: templates/admin/product-fields.php:155
+#: templates/admin/product-fields.php:212
 msgid "Layout"
 msgstr "Weergave"
 
-#: templates/admin/product-fields.php:161
-msgid "How customers open the designer on the product page."
-msgstr "Hoe klanten de ontwerptool op de productpagina openen."
-
-#: templates/admin/product-fields.php:170
-msgid ""
-"How the designer on the product page lays out its form. The Personalise "
-"button opens Pixonaut’s designer, which always follows the template."
-msgstr ""
-"Hoe de ontwerptool op de productpagina het formulier indeelt. De knop "
-"Personaliseren opent de Pixonaut-ontwerptool, die altijd het sjabloon volgt."
-
 #. translators: Label of the dropdown choosing where the product's options, such as Size or Colour, stand in the designer's form. Admin product page.
-#: templates/admin/product-fields.php:174
+#: templates/admin/product-fields.php:217
 msgid "Options in the form"
 msgstr "Opties in het formulier"
 
-#: templates/admin/product-fields.php:180
-msgid ""
-"Where the product’s options, such as Size or Colour, stand in the designer "
-"on the product page: on top of the form, or each in a group of its own named "
-"after it. A side whose Groups you arranged keeps them."
-msgstr ""
-"Waar de opties van het product, zoals Maat of Kleur, staan in de ontwerptool "
-"op de productpagina: bovenaan het formulier, of elk in een eigen groep die "
-"ernaar is genoemd. Een zijde waarvan de groepen zijn ingedeeld, behoudt ze."
-
-#: templates/admin/product-fields.php:189
-msgid ""
-"Whether the designer on the product page numbers its groups: 1 Photo, 2 Text "
-"on one page, Step 1 of 2 in steps. Off shows the group names with no numbers."
-msgstr ""
-"Of de ontwerptool op de productpagina zijn groepen nummert: 1 Foto, 2 Tekst "
-"op één pagina, Stap 1 van 2 in stappen. Uit toont de groepsnamen zonder "
-"nummers."
-
-#. translators: Label of the dropdown choosing whether the designer's canvas keeps the template's proportions or takes the chosen print size's. Admin product page.
-#: templates/admin/product-fields.php:193 templates/admin/product-side.php:271
-msgid "Canvas shape"
-msgstr "Canvasvorm"
-
-#: templates/admin/product-fields.php:199
-msgid ""
-"The shape customers design on when a print size’s proportions are not the "
-"template’s. In the template’s shape, the canvas keeps its shape whatever "
-"size is chosen, and the print is cropped to the size as the template fits "
-"it; in the print size’s shape, the canvas changes shape with each size. Each "
-"side can choose otherwise."
-msgstr ""
-"De vorm van het canvas waarop klanten ontwerpen wanneer de verhoudingen van "
-"een drukformaat niet die van het sjabloon zijn. Met de vorm van het sjabloon "
-"houdt het canvas zijn vorm, welk formaat er ook gekozen wordt, en wordt de "
-"druk bijgesneden tot het formaat zoals het sjabloon erin past; met de vorm "
-"van het drukformaat verandert het canvas van vorm met elk formaat. Elke "
-"zijde kan een andere keuze maken."
-
-#: templates/admin/product-fields.php:208
-msgid "How customers approve their design before it is printed."
-msgstr "Hoe klanten hun ontwerp goedkeuren voordat het wordt gedrukt."
-
-#. translators: Label of the views customers see their design in. Admin product page.
-#: templates/admin/product-fields.php:212
-msgid "Shown in"
-msgstr "Getoond in"
-
-#: templates/admin/product-fields.php:231
-msgid "This placement has no views in Pixonaut yet."
-msgstr "Deze drukpositie heeft nog geen aanzichten in Pixonaut."
-
-#: templates/admin/product-fields.php:237
-#: templates/admin/product-fields.php:269
-msgctxt "view of the design alone, without the product"
-msgid "Design"
-msgstr "Ontwerp"
-
-#: templates/admin/product-fields.php:242
-msgid "The design alone, without the product"
-msgstr "Alleen het ontwerp, zonder het product"
-
-#: templates/admin/product-fields.php:248
-msgid ""
-"Pixonaut could not be reached to list the blank’s views. The views chosen "
-"before are kept."
-msgstr ""
-"Pixonaut was niet bereikbaar om de aanzichten van het blanco product op te "
-"halen. De eerder gekozen aanzichten blijven behouden."
-
-#: templates/admin/product-fields.php:250
-msgid "The blank’s views are listed once the product is updated with it."
-msgstr ""
-"De aanzichten van het blanco product worden getoond zodra het product ermee "
-"is bijgewerkt."
-
-#: templates/admin/product-fields.php:252
-#: templates/admin/product-fields.php:271
-msgid ""
-"Customers see their design in the views ticked here, and on its own in the "
-"Design view when that is ticked. With none ticked, they see it in every view "
-"of the blank and in the Design view. The designer opens on the starting "
-"view, one of those ticked."
-msgstr ""
-"Klanten zien hun ontwerp in de hier aangevinkte aanzichten, en los in het "
-"aanzicht Ontwerp als dat is aangevinkt. Als er niets is aangevinkt, zien ze "
-"het in elk aanzicht van het blanco product en in het aanzicht Ontwerp. De "
-"ontwerptool opent op het beginaanzicht, een van de aangevinkte."
-
-#. translators: Label of the dropdown choosing which view the designer opens on. Admin product page.
-#: templates/admin/product-fields.php:257
-msgid "Starting view"
-msgstr "Beginaanzicht"
-
-#. translators: Option in the starting view dropdown: open on the first view of the blank. Admin product page.
-#: templates/admin/product-fields.php:259
-msgid "The first view"
-msgstr "Het eerste aanzicht"
+#. translators: Label of the dropdown choosing whether the designer's canvas keeps the template's proportions or takes the chosen print size's, asked as a question. Admin product page.
+#: templates/admin/product-fields.php:222 templates/admin/product-side.php:292
+msgid "When a print size has other proportions"
+msgstr "Als een drukformaat andere verhoudingen heeft"
 
 #: templates/admin/product-not-connected.php:18
 msgid ""
@@ -8196,17 +8103,6 @@ msgstr ""
 "De productafbeelding kon niet opnieuw worden aangemaakt. Probeer het zo "
 "meteen opnieuw."
 
-#: templates/admin/product-regenerate.php:45
-msgid ""
-"Draws the product image, its gallery pictures and its variations’ images "
-"again from the template version and settings they use now: in background "
-"jobs, or right away while this page stays open."
-msgstr ""
-"Maakt de productafbeelding, de afbeeldingen in de productgalerij en de "
-"afbeeldingen van de variaties opnieuw aan op basis van de sjabloonversie en "
-"de instellingen die ze nu gebruiken: met achtergrondtaken, of meteen terwijl "
-"deze pagina open blijft."
-
 #: templates/admin/product-showcase-images.php:30
 msgid ""
 "Pixonaut pictures are not used as product images: turn on Use Pixonaut "
@@ -8218,18 +8114,10 @@ msgstr ""
 
 #: templates/admin/product-showcase-images.php:35
 msgid ""
-"While no showcase set is ticked, the product image is the template with its "
-"own defaults. Choose what it is drawn on: the photo the product page starts "
-"on, any photo of the blank, such as a scene, even of a view customers are "
-"not shown, or the design alone. The designer still starts on its own "
-"starting view."
+"What the product image is drawn on, while no example set below is ticked."
 msgstr ""
-"Zolang er geen voorbeeldset is aangevinkt, is de productafbeelding het "
-"sjabloon met zijn eigen standaardwaarden. Kies waarop die wordt aangemaakt: "
-"de foto waarmee de productpagina opent, een willekeurige foto van het blanco "
-"product, zoals een scène, ook van een aanzicht dat klanten niet te zien "
-"krijgen, of alleen het ontwerp. De ontwerptool opent nog steeds op zijn "
-"eigen beginaanzicht."
+"Waarop de productafbeelding wordt getekend, zolang hieronder geen "
+"voorbeeldset is aangevinkt."
 
 #: templates/admin/product-showcase-images.php:40
 msgid ""
@@ -8241,16 +8129,11 @@ msgstr ""
 
 #: templates/admin/product-showcase-images.php:42
 msgid ""
-"Show the template filled in with one of its showcase sets, example values "
-"such as a real name or photo, instead of its placeholders. The first set "
-"ticked is the product image, the others are added to the product gallery. "
-"Customers still start designing from the template’s own defaults."
+"Example sets of the template: the first ticked is the product image, the "
+"others go to its gallery."
 msgstr ""
-"Toon het sjabloon ingevuld met een van zijn voorbeeldsets, voorbeeldwaarden "
-"zoals een echte naam of foto, in plaats van de tijdelijke aanduidingen. De "
-"eerste aangevinkte set wordt de productafbeelding, de andere worden aan de "
-"productgalerij toegevoegd. Klanten beginnen toch met ontwerpen vanuit de "
-"eigen standaardwaarden van het sjabloon."
+"Voorbeeldsets van het sjabloon: de eerste aangevinkte is de "
+"productafbeelding, de andere gaan naar de galerij."
 
 #: templates/admin/product-showcase-images.php:60
 msgid ""
@@ -8289,159 +8172,114 @@ msgstr ""
 "Er worden maximaal %d sets getoond; sets die daarna zijn aangevinkt, vallen "
 "weg."
 
-#. translators: Screen reader label of the dropdown that picks a print size for a side, on the admin product page, read by the merchant.
-#. translators: Heading of the print size picker in the product page's designer, as Pixonaut's designer words it.
-#: templates/admin/product-side.php:41
-#: templates/storefront/form-placeholder.php:380
-msgid "Print size"
-msgstr "Drukformaat"
+#. translators: Radio button on a print size: this size is chosen when the designer opens. Admin product page.
+#: templates/admin/product-side.php:45
+msgid "Selected when the designer opens"
+msgstr "Geselecteerd als de ontwerptool opent"
 
-#. translators: Option in a side's print size dropdown: use the print size the placement defines. Admin product page.
-#: templates/admin/product-side.php:42
-msgid "Placement default"
-msgstr "Standaard van de drukpositie"
+#. translators: A print size row: the size the print position (placement) itself defines. Admin product page.
+#: templates/admin/product-side.php:49
+msgid "The print position’s size"
+msgstr "Het formaat van de drukpositie"
 
-#. translators: Option in a side's print size dropdown: enter an own width and height. Admin product page.
-#: templates/admin/product-side.php:43
-msgid "Custom size"
-msgstr "Aangepast formaat"
+#. translators: Placeholder of the field naming a print size, which customers see. Admin product page.
+#: templates/admin/product-side.php:55
+msgid "Name, e.g. A3"
+msgstr "Naam, bijv. A3"
 
-#. translators: Label of a custom print size's width field. Admin product page.
-#: templates/admin/product-side.php:50
-msgid "Width"
-msgstr "Breedte"
+#. translators: Screen reader label of the field naming a print size. Admin product page.
+#: templates/admin/product-side.php:55
+msgid "Label customers see"
+msgstr "Label dat klanten zien"
 
 #. translators: Screen reader label of the custom print size's width field. Admin product page.
-#: templates/admin/product-side.php:51
+#: templates/admin/product-side.php:56
 msgid "Width in millimetres"
 msgstr "Breedte in millimeters"
 
-#. translators: Label of a custom print size's height field. Admin product page.
-#: templates/admin/product-side.php:54
-msgid "Height"
-msgstr "Hoogte"
-
 #. translators: Screen reader label of the custom print size's height field. Admin product page.
-#: templates/admin/product-side.php:55
+#: templates/admin/product-side.php:58
 msgid "Height in millimetres"
 msgstr "Hoogte in millimeters"
 
 #. translators: Unit after a custom print size's width and height: millimetres. Admin product page.
-#: templates/admin/product-side.php:57
+#: templates/admin/product-side.php:59
 msgid "mm"
 msgstr "mm"
 
-#. translators: Placeholder of the field naming a print size, which customers see. Admin product page.
-#: templates/admin/product-side.php:58
-msgid "Label, e.g. A4"
-msgstr "Label, bijv. A4"
+#: templates/admin/product-side.php:72
+msgid "Customers fill in"
+msgstr "Klanten vullen in"
 
-#. translators: Screen reader label of the field naming a print size. Admin product page.
-#: templates/admin/product-side.php:58
-msgid "Label customers see"
-msgstr "Label dat klanten zien"
+#: templates/admin/product-side.php:73
+msgid "Fixed design"
+msgstr "Vast ontwerp"
 
-#. translators: Radio button label on a print size: this size is chosen when the designer opens. Admin product page.
-#: templates/admin/product-side.php:63
-msgid "Starts selected"
-msgstr "Standaard geselecteerd"
+#: templates/admin/product-side.php:74
+msgid "follows new template versions"
+msgstr "volgt nieuwe sjabloonversies"
 
-#: templates/admin/product-side.php:71
+#. translators: %d: the template version a product side stays on, e.g. 2. Summary of a side's settings. Admin product page.
+#: templates/admin/product-side.php:76
+#, php-format
+msgid "stays on version %d"
+msgstr "blijft op versie %d"
+
+#: templates/admin/product-side.php:79
 msgid "Choose a template for this side."
 msgstr "Kies een sjabloon voor deze zijde."
 
-#: templates/admin/product-side.php:72
+#: templates/admin/product-side.php:80
 msgid "Choose where on the blank this side is printed."
 msgstr "Kies waar op het blanco product deze zijde wordt gedrukt."
 
-#: templates/admin/product-side.php:73
+#: templates/admin/product-side.php:81
 msgid "Enter the width and height in millimetres."
 msgstr "Vul de breedte en hoogte in millimeters in."
 
-#. translators: Shown under a custom print size's width and height. %1$s: the largest width, %2$s: the largest height the side's placement prints, both in millimetres. Admin product page.
-#: templates/admin/product-side.php:74
+#. translators: Shown under a custom print size's width and height. %1$s: the largest width, %2$s: the largest height the side's print position prints, both in millimetres. Admin product page.
+#: templates/admin/product-side.php:82
 #, php-format
 msgid "Up to %1$s × %2$s mm"
 msgstr "Tot %1$s × %2$s mm"
 
-#. translators: Error under a custom print size larger than the placement prints. %1$s: the largest width, %2$s: the largest height, both in millimetres. Admin product page.
-#: templates/admin/product-side.php:75
+#. translators: Error under a custom print size larger than the print position prints. %1$s: the largest width, %2$s: the largest height, both in millimetres. Admin product page.
+#: templates/admin/product-side.php:83
 #, php-format
-msgid "This placement prints at most %1$s × %2$s mm."
+msgid "This print position prints at most %1$s × %2$s mm."
 msgstr "Deze drukpositie drukt maximaal %1$s × %2$s mm."
 
-#: templates/admin/product-side.php:79
+#: templates/admin/product-side.php:87
 msgctxt "product side such as front or back"
 msgid "Side"
 msgstr "Zijde"
 
 #. translators: Button that removes a whole side from the product. Admin product page.
-#: templates/admin/product-side.php:82
+#: templates/admin/product-side.php:89
 msgid "Remove side"
 msgstr "Zijde verwijderen"
 
-#. translators: Label of the fields naming a product side and its key. Admin product page.
-#: templates/admin/product-side.php:85
-msgid "Name"
-msgstr "Naam"
-
-#. translators: Placeholder of the field naming a product side, which customers see. Admin product page.
-#: templates/admin/product-side.php:87
-msgid "Name customers see, e.g. Front"
-msgstr "Naam die klanten zien, bijv. Voorkant"
-
-#. translators: Placeholder of the field for a side's key, a short lowercase identifier. Admin product page.
-#: templates/admin/product-side.php:88
-msgid "Key, e.g. front"
-msgstr "Sleutel, bijv. front"
-
-#. translators: Screen reader label of the field for a side's key. Admin product page.
-#: templates/admin/product-side.php:88
-msgid "Side key"
-msgstr "Sleutel van de zijde"
-
-#: templates/admin/product-side.php:90
-msgid ""
-"The name customers see on the side’s tab, and the key the cart and order "
-"keep it under. Empty, both follow the placement."
-msgstr ""
-"De naam die klanten op het tabblad van de zijde zien, en de sleutel "
-"waaronder de winkelwagen en de bestelling de zijde bewaren. Als ze leeg "
-"zijn, volgen beide de drukpositie."
-
-#. translators: Label of the dropdown that picks the blank's placement (print area) a side is printed on. Admin product page.
-#: templates/admin/product-side.php:93
-msgid "Placement"
+#. translators: Label of the dropdown that picks the spot on the blank (placement) a side is printed on, such as chest or back. Admin product page.
+#: templates/admin/product-side.php:92
+msgid "Print position"
 msgstr "Drukpositie"
 
-#. translators: First option of the placement dropdown, nothing chosen yet. Admin product page.
-#: templates/admin/product-side.php:96
-msgid "Choose a placement"
+#. translators: First option of the print position dropdown, nothing chosen yet. Admin product page.
+#: templates/admin/product-side.php:95
+msgid "Choose a print position"
 msgstr "Kies een drukpositie"
 
-#: templates/admin/product-side.php:106
-msgid "Where on the blank this side is printed."
-msgstr "Waar op het blanco product deze zijde wordt gedrukt."
-
-#: templates/admin/product-side.php:109
+#: templates/admin/product-side.php:107
 msgctxt "Pixonaut template that customers fill in"
 msgid "Template"
 msgstr "Sjabloon"
 
 #. translators: Placeholder of the template search dropdown. Admin product page.
-#: templates/admin/product-side.php:111
+#: templates/admin/product-side.php:109
 msgid "Search for a template"
 msgstr "Zoek een sjabloon"
 
 #: templates/admin/product-side.php:119
-msgid ""
-"What customers fill in. With a blank, only templates that fit the placement "
-"are listed."
-msgstr ""
-"Wat klanten invullen. Met een blanco product worden alleen sjablonen getoond "
-"die bij de drukpositie passen."
-
-#: templates/admin/product-side.php:122
 msgid ""
 "This template’s background shows through, and this product has no blank: "
 "customers see the design on white paper in the designer, and it prints on "
@@ -8455,57 +8293,78 @@ msgstr ""
 "achtergrond voor het sjabloon instellen. Is transparant de bedoeling, laat "
 "het dan zo; klanten kunnen het product toch kopen."
 
-#. translators: Label of the setting that keeps a product side on one version of its template. Admin product page.
+#. translators: Label of the list of print sizes customers choose from for a side. Admin product page.
 #: templates/admin/product-side.php:125
-msgid "Template version"
-msgstr "Sjabloonversie"
+msgid "Print sizes"
+msgstr "Drukformaten"
 
-#. translators: Checkbox on a product side: keep the side on the template version picked beside it instead of moving to each new version published. Admin product page.
+#. translators: Column heading over the radio buttons marking the print size chosen when the designer opens. Short. Admin product page.
+#: templates/admin/product-side.php:128
+msgid "Start"
+msgstr "Start"
+
+#. translators: Column heading over a side's print sizes. Admin product page.
 #: templates/admin/product-side.php:129
-msgid "Stick to one version"
-msgstr "Bij één versie blijven"
+msgid "Size customers choose"
+msgstr "Formaat dat klanten kiezen"
 
-#. translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page.
-#: templates/admin/product-side.php:132 templates/admin/product-side.php:143
-#, php-format
-msgid "Version %d (current)"
-msgstr "Versie %d (actueel)"
+#. translators: Button that adds the print position's own size to a side's print sizes. Admin product page.
+#: templates/admin/product-side.php:141
+msgid "Add the print position’s size"
+msgstr "Formaat van de drukpositie toevoegen"
 
-#. translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page.
-#: templates/admin/product-side.php:133 templates/admin/product-side.php:145
-#, php-format
-msgid "Version %d"
-msgstr "Versie %d"
+#. translators: Button that adds a print size entered in millimetres to a side. Admin product page.
+#: templates/admin/product-side.php:142
+msgid "Add a size in mm"
+msgstr "Formaat in mm toevoegen"
 
-#: templates/admin/product-side.php:154
+#. translators: A closed section of a product side holding its less used settings. Admin product page.
+#: templates/admin/product-side.php:147
+msgid "More for this side"
+msgstr "Meer voor deze zijde"
+
+#. translators: Label of the fields naming a product side and its key. Admin product page.
+#: templates/admin/product-side.php:153
+msgid "Name"
+msgstr "Naam"
+
+#. translators: Placeholder of the field naming a product side, which customers see. Admin product page.
+#: templates/admin/product-side.php:155
+msgid "Name customers see, e.g. Front"
+msgstr "Naam die klanten zien, bijv. Voorkant"
+
+#. translators: Placeholder of the field for a side's key, a short lowercase identifier. Admin product page.
+#: templates/admin/product-side.php:156
+msgid "Key, e.g. front"
+msgstr "Sleutel, bijv. front"
+
+#. translators: Screen reader label of the field for a side's key. Admin product page.
+#: templates/admin/product-side.php:156
+msgid "Side key"
+msgstr "Sleutel van de zijde"
+
+#: templates/admin/product-side.php:158
 msgid ""
-"The side moves to each new version of the template when it is published, "
-"keeping its groups and print sizes. Stuck to one version, it stays on it "
-"until you change it here."
+"Shown on the side’s tab in the designer. Empty, both follow the print "
+"position."
 msgstr ""
-"De zijde gaat naar elke nieuwe versie van het sjabloon zodra die wordt "
-"gepubliceerd, en behoudt haar groepen en drukformaten. Vastgezet op één "
-"versie blijft ze daarop tot u dat hier wijzigt."
+"Getoond op het tabblad van de zijde in de ontwerptool. Leeg volgen beide de "
+"drukpositie."
 
-#: templates/admin/product-side.php:162
-msgid "Personalised: customers fill in the template"
-msgstr "Gepersonaliseerd: klanten vullen het sjabloon in"
-
-#: templates/admin/product-side.php:163
-msgid "Standing: printed as the template is, with nothing to fill in"
-msgstr "Vast: gedrukt zoals het sjabloon is, zonder iets in te vullen"
-
+#. translators: Checkbox on a product side; unticked, the side is a fixed design printed as the template is. Admin product page.
 #: templates/admin/product-side.php:165
-msgid ""
-"A standing side is printed from one design of the template, made when you "
-"update the product. A product whose sides are all standing sells without the "
-"designer."
-msgstr ""
-"Een vaste zijde wordt gedrukt vanaf één ontwerp van het sjabloon, dat wordt "
-"gemaakt wanneer u het product bijwerkt. Een product waarvan alle zijden vast "
-"zijn, wordt verkocht zonder de ontwerptool."
+msgid "Customers fill in the template"
+msgstr "Klanten vullen het sjabloon in"
 
 #: templates/admin/product-side.php:168
+msgid ""
+"Unticked, it is a fixed design: printed as the template is, made when you "
+"update the product."
+msgstr ""
+"Uitgevinkt is het een vast ontwerp: gedrukt zoals het sjabloon is, gemaakt "
+"wanneer u het product bijwerkt."
+
+#: templates/admin/product-side.php:171
 msgid ""
 "This template offers fields to fill in. On a standing side customers do not "
 "get to fill them in: it is printed as the template is."
@@ -8513,7 +8372,7 @@ msgstr ""
 "Dit sjabloon heeft velden om in te vullen. Op een vaste zijde kunnen klanten "
 "die niet invullen: de zijde wordt gedrukt zoals het sjabloon is."
 
-#: templates/admin/product-side.php:171
+#: templates/admin/product-side.php:174
 msgid ""
 "This template offers nothing to fill in, so customers have nothing to "
 "personalise. Make the side standing to sell it as the template is."
@@ -8522,13 +8381,13 @@ msgstr ""
 "personaliseren. Maak de zijde vast om die te verkopen zoals het sjabloon is."
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Label of a standing side's previews, one per value of that option. Admin product page.
-#: templates/admin/product-side.php:183
+#: templates/admin/product-side.php:186
 #, php-format
 msgid "Per %s"
 msgstr "Per %s"
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Admin product page.
-#: templates/admin/product-side.php:189
+#: templates/admin/product-side.php:192
 #, php-format
 msgid ""
 "The print area changes with %s, so each of its values is printed from its "
@@ -8542,7 +8401,7 @@ msgstr ""
 "hand aan waar dat nodig is: een aangepaste waarde behoudt haar opmaak "
 "wanneer de zijde verandert, totdat u die terugzet."
 
-#: templates/admin/product-side.php:192
+#: templates/admin/product-side.php:195
 msgid ""
 "The previews appear when you update the product. An adjusted value keeps its "
 "layout."
@@ -8551,28 +8410,28 @@ msgstr ""
 "waarde behoudt haar opmaak."
 
 #. translators: 1: the option, e.g. "Size"; 2: its value, e.g. "XL". Alt text of a standing side's preview for one option. Admin product page.
-#: templates/admin/product-side.php:199
+#: templates/admin/product-side.php:202
 #, php-format
 msgid "%1$s %2$s: the design on the blank"
 msgstr "%1$s %2$s: het ontwerp op het blanco product"
 
 #. translators: Badge beside an option's value whose layout the store manager adjusted by hand on a standing side. Admin product page.
-#: templates/admin/product-side.php:208
+#: templates/admin/product-side.php:211
 msgid "Adjusted"
 msgstr "Aangepast"
 
 #. translators: Under a standing side's preview for one option value: the side's print size does not fit that value's print area, so the design prints at the value's usual size. Admin product page.
-#: templates/admin/product-side.php:215
+#: templates/admin/product-side.php:218
 msgid "Usual size: the side's is too big"
 msgstr "Gebruikelijk formaat: dat van de zijde is te groot"
 
 #. translators: Link that opens an option's adjusted layout on Pixonaut again, to adjust it once more. Admin product page.
-#: templates/admin/product-side.php:219
+#: templates/admin/product-side.php:222
 msgid "Adjust again"
 msgstr "Opnieuw aanpassen"
 
 #. translators: %s: an option's value, e.g. "XL". Confirmation before the store manager resets the layout they adjusted by hand for that option. Admin product page.
-#: templates/admin/product-side.php:222
+#: templates/admin/product-side.php:225
 #, php-format
 msgid ""
 "Reset the layout of %s? It then follows the side again, and the layout you "
@@ -8582,12 +8441,12 @@ msgstr ""
 "die u hebt aangepast, wordt niet bewaard."
 
 #. translators: Link that opens one option's design of a standing side on Pixonaut, to move and scale its artwork by hand. Admin product page.
-#: templates/admin/product-side.php:226
+#: templates/admin/product-side.php:229
 msgid "Adjust layout"
 msgstr "Opmaak aanpassen"
 
 #. translators: %d: how many options a standing side has a preview of. Button that shows them all. Admin product page.
-#: templates/admin/product-side.php:235
+#: templates/admin/product-side.php:238
 #, php-format
 msgid "Show all %d"
 msgid_plural "Show all %d"
@@ -8595,17 +8454,43 @@ msgstr[0] "Alle %d tonen"
 msgstr[1] "Alle %d tonen"
 
 #. translators: Button that shows only the first of a standing side's option previews again. Admin product page.
-#: templates/admin/product-side.php:237
+#: templates/admin/product-side.php:240
 msgid "Show fewer"
 msgstr "Minder tonen"
 
+#. translators: Label of the setting that keeps a product side on one version of its template. Admin product page.
+#: templates/admin/product-side.php:245
+msgid "Template version"
+msgstr "Sjabloonversie"
+
+#. translators: Checkbox on a product side: keep the side on the template version picked beside it instead of moving to each new version published. Admin product page.
+#: templates/admin/product-side.php:249
+msgid "Stay on one version"
+msgstr "Op één versie blijven"
+
+#. translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page.
+#: templates/admin/product-side.php:252 templates/admin/product-side.php:263
+#, php-format
+msgid "Version %d (current)"
+msgstr "Versie %d (actueel)"
+
+#. translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page.
+#: templates/admin/product-side.php:253 templates/admin/product-side.php:265
+#, php-format
+msgid "Version %d"
+msgstr "Versie %d"
+
+#: templates/admin/product-side.php:274
+msgid "Unticked, the side follows each new version of the template."
+msgstr "Uitgevinkt volgt de zijde elke nieuwe versie van het sjabloon."
+
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:247
+#: templates/admin/product-side.php:282
 msgid "Groups"
 msgstr "Groepen"
 
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:248
+#: templates/admin/product-side.php:283
 msgid ""
 "The order and names of the groups customers see in the designer. Open to "
 "arrange them."
@@ -8613,7 +8498,7 @@ msgstr ""
 "De volgorde en namen van de groepen die klanten in de ontwerptool zien. Open "
 "de instelling om ze te ordenen."
 
-#: templates/admin/product-side.php:251
+#: templates/admin/product-side.php:286
 msgid ""
 "The order and names customers see in the designer on this product’s page. "
 "Drag groups and their fields to reorder them. A name changed here is this "
@@ -8626,50 +8511,10 @@ msgstr ""
 "blijft hij leeg, dan wordt die van het sjabloon getoond. Eenmaal hier "
 "ingedeeld volgt deze zijde Opties in het formulier niet meer."
 
-#. translators: Label of the list of print sizes customers choose from for a side. Admin product page.
-#: templates/admin/product-side.php:257
-msgid "Print sizes"
-msgstr "Drukformaten"
-
-#. translators: Button that adds a print size to a side. Admin product page.
-#: templates/admin/product-side.php:266
-msgid "Add print size"
-msgstr "Drukformaat toevoegen"
-
-#. translators: Button that adds a print size to a side. Admin product page.
-#: templates/admin/product-side.php:267
-msgid ""
-"Customers choose from these sizes. The one marked Starts selected is chosen "
-"when the designer opens; with none marked, the first. Pixonaut checks each "
-"one when you update the product; a size it cannot print is removed."
-msgstr ""
-"Klanten kiezen uit deze formaten. Het formaat dat als ‘Standaard "
-"geselecteerd’ is gemarkeerd, is gekozen wanneer de ontwerptool opent; als er "
-"geen is gemarkeerd, het eerste. Pixonaut controleert elk formaat wanneer u "
-"het product bijwerkt; een formaat dat niet kan worden gedrukt, wordt "
-"verwijderd."
-
-#: templates/admin/product-side.php:268
-msgid ""
-"Without a blank, enter each size in millimetres, in the template’s aspect "
-"ratio. A product without a print size cannot be bought."
-msgstr ""
-"Vul zonder blanco product elk formaat in millimeters in, in de "
-"beeldverhouding van het sjabloon. Een product zonder drukformaat kan niet "
-"worden gekocht."
-
-#: templates/admin/product-side.php:280
-msgid ""
-"The shape customers design this side on when a print size’s proportions are "
-"not the template’s."
-msgstr ""
-"De vorm van het canvas waarop klanten deze zijde ontwerpen wanneer de "
-"verhoudingen van een drukformaat niet die van het sjabloon zijn."
-
-#. translators: Label of the dropdown choosing which variant of the Pixonaut blank this product is printed on. Admin product page.
-#: templates/admin/product-variant.php:26
-msgid "Blank variant"
-msgstr "Variant van het blanco product"
+#. translators: Option of a product side's canvas shape dropdown: the side draws its canvas as the product's own setting, under Store settings for this product, says. Admin product page.
+#: templates/admin/product-side.php:296
+msgid "As the product’s store settings say"
+msgstr "Zoals de winkelinstellingen van het product aangeven"
 
 #. translators: Checkbox beside the blank variant dropdown on the product edit page: also list the variants the blank no longer sells.
 #: templates/admin/product-variant.php:36
@@ -8697,6 +8542,62 @@ msgid ""
 msgstr ""
 "Deze variatie gebruikt de eigen configuratie hieronder, niet het Pixonaut-"
 "tabblad van het product."
+
+#. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the photos of the blank customers see their design on.
+#: templates/admin/product-views.php:29
+msgid "Views on the product page"
+msgstr "Aanzichten op de productpagina"
+
+#. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the photos of the blank customers see their design on.
+#: templates/admin/product-views.php:30 templates/admin/product-views.php:34
+msgid "Every view"
+msgstr "Alle aanzichten"
+
+#. translators: 1: how many views are ticked, 2: how many there are. Admin product page.
+#: templates/admin/product-views.php:30 templates/admin/product-views.php:36
+#, php-format
+msgid "%1$d of %2$d views"
+msgstr "%1$d van %2$d aanzichten"
+
+#. translators: Label of the views customers see their design in. Admin product page.
+#: templates/admin/product-views.php:43
+msgid "Shown in"
+msgstr "Getoond in"
+
+#: templates/admin/product-views.php:62
+msgid "This print position has no views in Pixonaut yet."
+msgstr "Deze drukpositie heeft nog geen aanzichten in Pixonaut."
+
+#: templates/admin/product-views.php:68 templates/admin/product-views.php:99
+msgctxt "view of the design alone, without the product"
+msgid "Design"
+msgstr "Ontwerp"
+
+#: templates/admin/product-views.php:73
+msgid "The design alone, without the product"
+msgstr "Alleen het ontwerp, zonder het product"
+
+#: templates/admin/product-views.php:79
+msgid ""
+"Pixonaut could not be reached to list the blank’s views. The views chosen "
+"before are kept."
+msgstr ""
+"Pixonaut was niet bereikbaar om de aanzichten van het blanco product op te "
+"halen. De eerder gekozen aanzichten blijven behouden."
+
+#: templates/admin/product-views.php:82
+msgid "None ticked: every view, and the design alone."
+msgstr "Geen aangevinkt: alle aanzichten en alleen het ontwerp."
+
+#. translators: Label of the dropdown choosing which view the designer opens on. Admin product page.
+#: templates/admin/product-views.php:87
+msgid "Starting view"
+msgstr "Beginaanzicht"
+
+#. translators: Option in the starting view dropdown: open on the first view of the blank. Admin product page.
+#: templates/admin/product-views.php:89
+msgid "The first view"
+msgstr "Het eerste aanzicht"
 
 #. translators: %1$s: pictures drawn so far, %2$s: pictures to draw, of one product. Regenerate now's progress.
 #: templates/admin/regenerate-now.php:23
@@ -9117,6 +9018,11 @@ msgstr "Herstellen"
 msgid "Colour %d"
 msgstr "Kleur %d"
 
+#. translators: Heading of the print size picker in the product page's designer, as Pixonaut's designer words it.
+#: templates/storefront/form-placeholder.php:380
+msgid "Print size"
+msgstr "Drukformaat"
+
 #. translators: Name of the first step of the product page's designer, where the customer picks the product's options, as Pixonaut's designer words it.
 #: templates/storefront/form-placeholder.php:393
 msgctxt "designer step"
@@ -9155,16 +9061,292 @@ msgid_plural "%s views"
 msgstr[0] "%s weergave"
 msgstr[1] "%s weergaven"
 
-#, fuzzy
-#~| msgid ""
-#~| "False when Pixonaut found a problem: it cannot be bought until it is "
-#~| "fixed."
+#, php-format
+#~ msgid "Store default: %s"
+#~ msgstr "Standaard van de winkel: %s"
+
+#, php-format
+#~ msgid "Match by options (now: %s)"
+#~ msgstr "Koppelen op opties (nu: %s)"
+
+#~ msgid "Match by options"
+#~ msgstr "Koppelen op opties"
+
 #~ msgid ""
-#~ "False when its Pixonaut setup has a problem: it cannot be bought until it "
-#~ "is fixed."
+#~ "Match by options finds the blank variant with the same option values as "
+#~ "this variation’s attributes. When none matches, the variation cannot be "
+#~ "bought until you pick its variant here; it does not fall back to the "
+#~ "product’s."
 #~ msgstr ""
-#~ "False als Pixonaut een probleem heeft gevonden: het kan pas worden "
-#~ "gekocht als het probleem is opgelost."
+#~ "‘Koppelen op opties’ zoekt de variant van het blanco product met dezelfde "
+#~ "optiewaarden als de attributen van deze variatie. Als er geen "
+#~ "overeenkomt, kan de variatie pas worden gekocht als u hier de variant "
+#~ "kiest; er wordt niet teruggevallen op die van het product."
+
+#~ msgid ""
+#~ "Match by options finds the blank variant with the same option values as "
+#~ "this product’s attributes. When none matches, the product cannot be "
+#~ "bought until you pick its variant here."
+#~ msgstr ""
+#~ "‘Koppelen op opties’ zoekt de variant van het blanco product met dezelfde "
+#~ "optiewaarden als de attributen van dit product. Als er geen overeenkomt, "
+#~ "kan het product pas worden gekocht als u hier de variant kiest."
+
+#~ msgid ""
+#~ "No variant of the blank matches, so customers cannot buy this. Pick the "
+#~ "variant it is."
+#~ msgstr ""
+#~ "Geen enkele variant van het blanco product komt overeen, dus klanten "
+#~ "kunnen dit niet kopen. Kies de juiste variant."
+
+#~ msgid "Whether customers design this product before they buy it."
+#~ msgstr "Of klanten dit product ontwerpen voordat ze het kopen."
+
+#~ msgid ""
+#~ "Tick it to choose the blank it is printed on, its sides and their "
+#~ "templates."
+#~ msgstr ""
+#~ "Vink dit aan om het blanco product te kiezen waarop het wordt gedrukt, en "
+#~ "de zijden met hun sjablonen."
+
+#~ msgid ""
+#~ "The blank product the design is printed on, and which of its variants "
+#~ "this is."
+#~ msgstr ""
+#~ "Het blanco product waarop het ontwerp wordt gedrukt, en welke variant "
+#~ "ervan dit is."
+
+#~ msgctxt "Pixonaut blank, the unprinted product a design is printed on"
+#~ msgid "Blank"
+#~ msgstr "Blanco product"
+
+#~ msgid ""
+#~ "The product the design is printed on, e.g. a T-shirt. Without one, "
+#~ "customers buy the template’s design alone, such as a poster or a card."
+#~ msgstr ""
+#~ "Het product waarop het ontwerp wordt gedrukt, bijv. een T-shirt. Zonder "
+#~ "blanco product kopen klanten alleen het ontwerp van het sjabloon, zoals "
+#~ "een poster of een kaart."
+
+#~ msgid "Printshop, decided by the blank"
+#~ msgstr "Drukkerij, bepaald door het blanco product"
+
+#~ msgid ""
+#~ "Where this product’s orders are made. Workspace default sends them to the "
+#~ "workspace’s default printshop."
+#~ msgstr ""
+#~ "Waar de bestellingen van dit product worden gemaakt. Met ‘Standaard van "
+#~ "de werkruimte’ gaan ze naar de standaarddrukkerij van de werkruimte."
+
+#~ msgid "The blank decides where its prints are made."
+#~ msgstr "Het blanco product bepaalt waar er wordt gedrukt."
+
+#~ msgid ""
+#~ "Each side is one place on the blank customers design, with its template "
+#~ "and print sizes."
+#~ msgstr ""
+#~ "Elke zijde is één plek op het blanco product die klanten ontwerpen, met "
+#~ "een eigen sjabloon en drukformaten."
+
+#, php-format
+#~ msgid "Each placement can be one side, up to %d sides."
+#~ msgstr "Elke drukpositie kan één zijde zijn, tot maximaal %d zijden."
+
+#~ msgid ""
+#~ "A product without a blank has one side. Choose a blank to give it more."
+#~ msgstr ""
+#~ "Een product zonder blanco product heeft één zijde. Kies een blanco "
+#~ "product om er meer te geven."
+
+#~ msgid ""
+#~ "How customers open the designer, the photos they see their design on, and "
+#~ "how they approve it. Store default follows the Pixonaut settings page."
+#~ msgstr ""
+#~ "Hoe klanten de ontwerptool openen, op welke foto's ze hun ontwerp zien en "
+#~ "hoe ze het goedkeuren. ‘Standaard van de winkel’ volgt de Pixonaut-"
+#~ "instellingen."
+
+#~ msgid "How customers open the designer on the product page."
+#~ msgstr "Hoe klanten de ontwerptool op de productpagina openen."
+
+#~ msgid ""
+#~ "How the designer on the product page lays out its form. The Personalise "
+#~ "button opens Pixonaut’s designer, which always follows the template."
+#~ msgstr ""
+#~ "Hoe de ontwerptool op de productpagina het formulier indeelt. De knop "
+#~ "Personaliseren opent de Pixonaut-ontwerptool, die altijd het sjabloon "
+#~ "volgt."
+
+#~ msgid ""
+#~ "Where the product’s options, such as Size or Colour, stand in the "
+#~ "designer on the product page: on top of the form, or each in a group of "
+#~ "its own named after it. A side whose Groups you arranged keeps them."
+#~ msgstr ""
+#~ "Waar de opties van het product, zoals Maat of Kleur, staan in de "
+#~ "ontwerptool op de productpagina: bovenaan het formulier, of elk in een "
+#~ "eigen groep die ernaar is genoemd. Een zijde waarvan de groepen zijn "
+#~ "ingedeeld, behoudt ze."
+
+#~ msgid ""
+#~ "Whether the designer on the product page numbers its groups: 1 Photo, 2 "
+#~ "Text on one page, Step 1 of 2 in steps. Off shows the group names with no "
+#~ "numbers."
+#~ msgstr ""
+#~ "Of de ontwerptool op de productpagina zijn groepen nummert: 1 Foto, 2 "
+#~ "Tekst op één pagina, Stap 1 van 2 in stappen. Uit toont de groepsnamen "
+#~ "zonder nummers."
+
+#~ msgid "Canvas shape"
+#~ msgstr "Canvasvorm"
+
+#~ msgid ""
+#~ "The shape customers design on when a print size’s proportions are not the "
+#~ "template’s. In the template’s shape, the canvas keeps its shape whatever "
+#~ "size is chosen, and the print is cropped to the size as the template fits "
+#~ "it; in the print size’s shape, the canvas changes shape with each size. "
+#~ "Each side can choose otherwise."
+#~ msgstr ""
+#~ "De vorm van het canvas waarop klanten ontwerpen wanneer de verhoudingen "
+#~ "van een drukformaat niet die van het sjabloon zijn. Met de vorm van het "
+#~ "sjabloon houdt het canvas zijn vorm, welk formaat er ook gekozen wordt, "
+#~ "en wordt de druk bijgesneden tot het formaat zoals het sjabloon erin "
+#~ "past; met de vorm van het drukformaat verandert het canvas van vorm met "
+#~ "elk formaat. Elke zijde kan een andere keuze maken."
+
+#~ msgid "How customers approve their design before it is printed."
+#~ msgstr "Hoe klanten hun ontwerp goedkeuren voordat het wordt gedrukt."
+
+#~ msgid "The blank’s views are listed once the product is updated with it."
+#~ msgstr ""
+#~ "De aanzichten van het blanco product worden getoond zodra het product "
+#~ "ermee is bijgewerkt."
+
+#~ msgid ""
+#~ "Customers see their design in the views ticked here, and on its own in "
+#~ "the Design view when that is ticked. With none ticked, they see it in "
+#~ "every view of the blank and in the Design view. The designer opens on the "
+#~ "starting view, one of those ticked."
+#~ msgstr ""
+#~ "Klanten zien hun ontwerp in de hier aangevinkte aanzichten, en los in het "
+#~ "aanzicht Ontwerp als dat is aangevinkt. Als er niets is aangevinkt, zien "
+#~ "ze het in elk aanzicht van het blanco product en in het aanzicht Ontwerp. "
+#~ "De ontwerptool opent op het beginaanzicht, een van de aangevinkte."
+
+#~ msgid ""
+#~ "Draws the product image, its gallery pictures and its variations’ images "
+#~ "again from the template version and settings they use now: in background "
+#~ "jobs, or right away while this page stays open."
+#~ msgstr ""
+#~ "Maakt de productafbeelding, de afbeeldingen in de productgalerij en de "
+#~ "afbeeldingen van de variaties opnieuw aan op basis van de sjabloonversie "
+#~ "en de instellingen die ze nu gebruiken: met achtergrondtaken, of meteen "
+#~ "terwijl deze pagina open blijft."
+
+#~ msgid ""
+#~ "While no showcase set is ticked, the product image is the template with "
+#~ "its own defaults. Choose what it is drawn on: the photo the product page "
+#~ "starts on, any photo of the blank, such as a scene, even of a view "
+#~ "customers are not shown, or the design alone. The designer still starts "
+#~ "on its own starting view."
+#~ msgstr ""
+#~ "Zolang er geen voorbeeldset is aangevinkt, is de productafbeelding het "
+#~ "sjabloon met zijn eigen standaardwaarden. Kies waarop die wordt "
+#~ "aangemaakt: de foto waarmee de productpagina opent, een willekeurige foto "
+#~ "van het blanco product, zoals een scène, ook van een aanzicht dat klanten "
+#~ "niet te zien krijgen, of alleen het ontwerp. De ontwerptool opent nog "
+#~ "steeds op zijn eigen beginaanzicht."
+
+#~ msgid ""
+#~ "Show the template filled in with one of its showcase sets, example values "
+#~ "such as a real name or photo, instead of its placeholders. The first set "
+#~ "ticked is the product image, the others are added to the product gallery. "
+#~ "Customers still start designing from the template’s own defaults."
+#~ msgstr ""
+#~ "Toon het sjabloon ingevuld met een van zijn voorbeeldsets, "
+#~ "voorbeeldwaarden zoals een echte naam of foto, in plaats van de "
+#~ "tijdelijke aanduidingen. De eerste aangevinkte set wordt de "
+#~ "productafbeelding, de andere worden aan de productgalerij toegevoegd. "
+#~ "Klanten beginnen toch met ontwerpen vanuit de eigen standaardwaarden van "
+#~ "het sjabloon."
+
+#~ msgid "Placement default"
+#~ msgstr "Standaard van de drukpositie"
+
+#~ msgid "Custom size"
+#~ msgstr "Aangepast formaat"
+
+#~ msgid "Width"
+#~ msgstr "Breedte"
+
+#~ msgid "Height"
+#~ msgstr "Hoogte"
+
+#~ msgid "Starts selected"
+#~ msgstr "Standaard geselecteerd"
+
+#~ msgid "Placement"
+#~ msgstr "Drukpositie"
+
+#~ msgid "Choose a placement"
+#~ msgstr "Kies een drukpositie"
+
+#~ msgid "Where on the blank this side is printed."
+#~ msgstr "Waar op het blanco product deze zijde wordt gedrukt."
+
+#~ msgid ""
+#~ "What customers fill in. With a blank, only templates that fit the "
+#~ "placement are listed."
+#~ msgstr ""
+#~ "Wat klanten invullen. Met een blanco product worden alleen sjablonen "
+#~ "getoond die bij de drukpositie passen."
+
+#~ msgid ""
+#~ "The side moves to each new version of the template when it is published, "
+#~ "keeping its groups and print sizes. Stuck to one version, it stays on it "
+#~ "until you change it here."
+#~ msgstr ""
+#~ "De zijde gaat naar elke nieuwe versie van het sjabloon zodra die wordt "
+#~ "gepubliceerd, en behoudt haar groepen en drukformaten. Vastgezet op één "
+#~ "versie blijft ze daarop tot u dat hier wijzigt."
+
+#~ msgid "Standing: printed as the template is, with nothing to fill in"
+#~ msgstr "Vast: gedrukt zoals het sjabloon is, zonder iets in te vullen"
+
+#~ msgid ""
+#~ "A standing side is printed from one design of the template, made when you "
+#~ "update the product. A product whose sides are all standing sells without "
+#~ "the designer."
+#~ msgstr ""
+#~ "Een vaste zijde wordt gedrukt vanaf één ontwerp van het sjabloon, dat "
+#~ "wordt gemaakt wanneer u het product bijwerkt. Een product waarvan alle "
+#~ "zijden vast zijn, wordt verkocht zonder de ontwerptool."
+
+#~ msgid ""
+#~ "Customers choose from these sizes. The one marked Starts selected is "
+#~ "chosen when the designer opens; with none marked, the first. Pixonaut "
+#~ "checks each one when you update the product; a size it cannot print is "
+#~ "removed."
+#~ msgstr ""
+#~ "Klanten kiezen uit deze formaten. Het formaat dat als ‘Standaard "
+#~ "geselecteerd’ is gemarkeerd, is gekozen wanneer de ontwerptool opent; als "
+#~ "er geen is gemarkeerd, het eerste. Pixonaut controleert elk formaat "
+#~ "wanneer u het product bijwerkt; een formaat dat niet kan worden gedrukt, "
+#~ "wordt verwijderd."
+
+#~ msgid ""
+#~ "Without a blank, enter each size in millimetres, in the template’s aspect "
+#~ "ratio. A product without a print size cannot be bought."
+#~ msgstr ""
+#~ "Vul zonder blanco product elk formaat in millimeters in, in de "
+#~ "beeldverhouding van het sjabloon. Een product zonder drukformaat kan niet "
+#~ "worden gekocht."
+
+#~ msgid ""
+#~ "The shape customers design this side on when a print size’s proportions "
+#~ "are not the template’s."
+#~ msgstr ""
+#~ "De vorm van het canvas waarop klanten deze zijde ontwerpen wanneer de "
+#~ "verhoudingen van een drukformaat niet die van het sjabloon zijn."
 
 #~ msgid ""
 #~ "Reads what a personalised product's or variation's Pixonaut images are "
@@ -9521,9 +9703,6 @@ msgstr[1] "%s weergaven"
 #~ msgid "nothing"
 #~ msgstr "niets"
 
-#~ msgid "Looked up products"
-#~ msgstr "Producten opgezocht"
-
 #~ msgid "Looked up orders"
 #~ msgstr "Bestellingen opgezocht"
 
@@ -9768,10 +9947,6 @@ msgstr[1] "%s weergaven"
 #~ "hoogte gebracht."
 
 #, php-format
-#~ msgid "Done in Pixonaut: %s"
-#~ msgstr "Uitgevoerd in Pixonaut: %s"
-
-#, php-format
 #~ msgid "%1$s: %2$s"
 #~ msgstr "%1$s: %2$s"
 
@@ -9907,9 +10082,6 @@ msgstr[1] "%s weergaven"
 
 #~ msgid "You have personalised this product."
 #~ msgstr "U heeft dit product gepersonaliseerd."
-
-#~ msgid "Start over"
-#~ msgstr "Opnieuw beginnen"
 
 #~ msgid "Add my design to the cart"
 #~ msgstr "Mijn ontwerp aan de winkelwagen toevoegen"

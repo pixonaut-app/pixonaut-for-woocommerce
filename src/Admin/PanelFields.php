@@ -72,6 +72,12 @@ final class PanelFields {
 	public const VARIANT = 'variant';
 
 	/**
+	 * The blank the variant field was drawn for, so a pick is not saved
+	 * against another blank.
+	 */
+	public const VARIANT_BLANK = 'variant_blank';
+
+	/**
 	 * The view and photo a picture is drawn on (`PictureView`), and its
 	 * marker, posted while the views were listed.
 	 */

@@ -6,7 +6,7 @@
  * Field names, classes and the `data-` attributes are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 0.1.0
+ * @version 1.4.0
  *
  * @var string                                                                    $field         Name of the posted sides field.
  * @var string                                                                    $id_prefix     Put before every field's id.
@@ -15,6 +15,7 @@
  * @var array{key: string, label: string, placement_id: string, template_id: string, template_name: string, pinned: bool, version: int, versions: list<int>, mode: string, offers_properties: bool|null, misfit_warning?: string, form_groups?: string, canvas_ratio?: string, sizes: list<array{kind: string, width: string, height: string, label: string, start: bool}>, options_by?: string, options?: list<array{value: string, size: string, usual: bool, image: string, adjusted: bool, adjust_url: string, reset_url: string}>} $side The side's fields: `versions` are its template's versions, the latest first, `template_id` names the latest, and `pinned` whether it stays on `version` rather than following the latest; a standing side on a blank whose print areas change with an option has `options`, its design per row of `options_by` (empty otherwise), `misfit_warning` names the blank's sizes its template cannot be printed at (empty when it fits every size), and `canvas_ratio` is how the designer draws a print size whose ratio is not the template's, a `CanvasRatio` choice (empty for the product's).
  * @var array{kind: string, width: string, height: string, label: string, start: bool} $new_size A new size row's fields.
  * @var list<array{id: string, text: string, thumbnail: string, maxWidthMm?: float, maxHeightMm?: float}> $placements The blank's placements, each with its first view's photo (empty without one) and the largest print it takes, when Pixonaut said.
+ * @var list<string>                                                              $open       The disclosures open when the product was last updated; `side-<index>` opens this side's.
  * @var array{url: string, attributes: list<array{slug: string, label: string}>}|null $groups The Groups setting's template groups route and the product's attributes used for variations; null where the form is not arranged (a variation's own sides).
  */
 
@@ -38,62 +39,60 @@ $pixonaut_size = static function ( string $row, array $size ) use ( $pixonaut_na
 	$pixonaut_custom    = PostedSides::SIZE_CUSTOM === $size['kind'];
 	?>
 	<li class="pixonaut-size">
-		<select name="<?php echo esc_attr( $pixonaut_size_name( 'kind' ) ); ?>" class="pixonaut-size-kind pixonaut-with-blank" aria-label="<?php /* translators: Screen reader label of the dropdown that picks a print size for a side, on the admin product page, read by the merchant. */ esc_attr_e( 'Print size', 'pixonaut-for-woocommerce' ); ?>">
-			<option value="<?php echo esc_attr( PostedSides::SIZE_PLACEMENT_DEFAULT ); ?>" <?php selected( ! $pixonaut_custom ); ?>><?php /* translators: Option in a side's print size dropdown: use the print size the placement defines. Admin product page. */ esc_html_e( 'Placement default', 'pixonaut-for-woocommerce' ); ?></option>
-			<option value="<?php echo esc_attr( PostedSides::SIZE_CUSTOM ); ?>" <?php selected( $pixonaut_custom ); ?>><?php /* translators: Option in a side's print size dropdown: enter an own width and height. Admin product page. */ esc_html_e( 'Custom size', 'pixonaut-for-woocommerce' ); ?></option>
-		</select>
-		<?php if ( ! $pixonaut_custom && '' !== $size['label'] ) : ?>
-			<span class="pixonaut-print-size"><?php echo esc_html( $size['label'] ); ?></span>
-		<?php endif; ?>
-		<span class="pixonaut-size-custom" <?php echo $pixonaut_custom ? '' : 'hidden'; ?>>
-			<label class="pixonaut-size-dimension">
-				<?php /* translators: Label of a custom print size's width field. Admin product page. */ esc_html_e( 'Width', 'pixonaut-for-woocommerce' ); ?> <span class="pixonaut-required-mark" aria-hidden="true">*</span>
-				<input type="text" inputmode="decimal" class="short pixonaut-size-width" name="<?php echo esc_attr( $pixonaut_size_name( 'width' ) ); ?>" value="<?php echo esc_attr( $pixonaut_custom ? $size['width'] : '' ); ?>" aria-label="<?php /* translators: Screen reader label of the custom print size's width field. Admin product page. */ esc_attr_e( 'Width in millimetres', 'pixonaut-for-woocommerce' ); ?>" aria-required="true" />
-			</label>
-			<label class="pixonaut-size-dimension">
-				<?php /* translators: Label of a custom print size's height field. Admin product page. */ esc_html_e( 'Height', 'pixonaut-for-woocommerce' ); ?> <span class="pixonaut-required-mark" aria-hidden="true">*</span>
-				<input type="text" inputmode="decimal" class="short pixonaut-size-height" name="<?php echo esc_attr( $pixonaut_size_name( 'height' ) ); ?>" value="<?php echo esc_attr( $pixonaut_custom ? $size['height'] : '' ); ?>" aria-label="<?php /* translators: Screen reader label of the custom print size's height field. Admin product page. */ esc_attr_e( 'Height in millimetres', 'pixonaut-for-woocommerce' ); ?>" aria-required="true" />
-			</label>
-			<?php /* translators: Unit after a custom print size's width and height: millimetres. Admin product page. */ esc_html_e( 'mm', 'pixonaut-for-woocommerce' ); ?>
-			<input type="text" class="short" name="<?php echo esc_attr( $pixonaut_size_name( 'label' ) ); ?>" value="<?php echo esc_attr( $pixonaut_custom ? $size['label'] : '' ); ?>" placeholder="<?php /* translators: Placeholder of the field naming a print size, which customers see. Admin product page. */ esc_attr_e( 'Label, e.g. A4', 'pixonaut-for-woocommerce' ); ?>" aria-label="<?php /* translators: Screen reader label of the field naming a print size. Admin product page. */ esc_attr_e( 'Label customers see', 'pixonaut-for-woocommerce' ); ?>" />
-		</span>
-		<span class="description pixonaut-size-limit" hidden></span>
+		<input type="hidden" class="pixonaut-size-kind" name="<?php echo esc_attr( $pixonaut_size_name( 'kind' ) ); ?>" value="<?php echo esc_attr( $pixonaut_custom ? PostedSides::SIZE_CUSTOM : PostedSides::SIZE_PLACEMENT_DEFAULT ); ?>" />
 		<label class="pixonaut-size-start">
 			<input type="radio" name="<?php echo esc_attr( $pixonaut_name( '[start_size]' ) ); ?>" value="<?php echo esc_attr( $row ); ?>" <?php checked( $size['start'] ); ?> />
-			<?php /* translators: Radio button label on a print size: this size is chosen when the designer opens. Admin product page. */ esc_html_e( 'Starts selected', 'pixonaut-for-woocommerce' ); ?>
+			<span class="screen-reader-text"><?php /* translators: Radio button on a print size: this size is chosen when the designer opens. Admin product page. */ esc_html_e( 'Selected when the designer opens', 'pixonaut-for-woocommerce' ); ?></span>
 		</label>
+		<span class="pixonaut-size-body">
+			<span class="pixonaut-size-default" <?php echo $pixonaut_custom ? 'hidden' : ''; ?>>
+				<strong><?php /* translators: A print size row: the size the print position (placement) itself defines. Admin product page. */ esc_html_e( 'The print position’s size', 'pixonaut-for-woocommerce' ); ?></strong>
+				<?php if ( ! $pixonaut_custom && '' !== $size['label'] ) : ?>
+					<span class="pixonaut-print-size"><?php echo esc_html( $size['label'] ); ?></span>
+				<?php endif; ?>
+			</span>
+			<span class="pixonaut-size-custom" <?php echo $pixonaut_custom ? '' : 'hidden'; ?>>
+				<input type="text" class="pixonaut-size-label" name="<?php echo esc_attr( $pixonaut_size_name( 'label' ) ); ?>" value="<?php echo esc_attr( $pixonaut_custom ? $size['label'] : '' ); ?>" placeholder="<?php /* translators: Placeholder of the field naming a print size, which customers see. Admin product page. */ esc_attr_e( 'Name, e.g. A3', 'pixonaut-for-woocommerce' ); ?>" aria-label="<?php /* translators: Screen reader label of the field naming a print size. Admin product page. */ esc_attr_e( 'Label customers see', 'pixonaut-for-woocommerce' ); ?>" />
+				<input type="text" inputmode="decimal" class="pixonaut-size-width" name="<?php echo esc_attr( $pixonaut_size_name( 'width' ) ); ?>" value="<?php echo esc_attr( $pixonaut_custom ? $size['width'] : '' ); ?>" aria-label="<?php /* translators: Screen reader label of the custom print size's width field. Admin product page. */ esc_attr_e( 'Width in millimetres', 'pixonaut-for-woocommerce' ); ?>" aria-required="true" />
+				<span aria-hidden="true">×</span>
+				<input type="text" inputmode="decimal" class="pixonaut-size-height" name="<?php echo esc_attr( $pixonaut_size_name( 'height' ) ); ?>" value="<?php echo esc_attr( $pixonaut_custom ? $size['height'] : '' ); ?>" aria-label="<?php /* translators: Screen reader label of the custom print size's height field. Admin product page. */ esc_attr_e( 'Height in millimetres', 'pixonaut-for-woocommerce' ); ?>" aria-required="true" />
+				<?php /* translators: Unit after a custom print size's width and height: millimetres. Admin product page. */ esc_html_e( 'mm', 'pixonaut-for-woocommerce' ); ?>
+			</span>
+			<span class="description pixonaut-size-limit" hidden></span>
+		</span>
 		<button type="button" class="button-link pixonaut-remove-size"><?php /* translators: Button that removes one print size row from a side. Admin product page. */ esc_html_e( 'Remove', 'pixonaut-for-woocommerce' ); ?></button>
 	</li>
 	<?php
 };
 ?>
+<?php
+$pixonaut_more_open = in_array( 'side-' . $index, $open ?? array(), true )
+	|| Side::STANDING === $side['mode'] || $side['pinned']
+	|| '' !== ( $side['form_groups'] ?? '' ) || '' !== ( $side['canvas_ratio'] ?? '' );
+$pixonaut_fills     = __( 'Customers fill in', 'pixonaut-for-woocommerce' );
+$pixonaut_fixed     = __( 'Fixed design', 'pixonaut-for-woocommerce' );
+$pixonaut_follow    = __( 'follows new template versions', 'pixonaut-for-woocommerce' );
+/* translators: %d: the template version a product side stays on, e.g. 2. Summary of a side's settings. Admin product page. */
+$pixonaut_stays = __( 'stays on version %d', 'pixonaut-for-woocommerce' );
+?>
 <div class="pixonaut-side" data-index="<?php echo esc_attr( $index ); ?>"
 	data-missing-template="<?php esc_attr_e( 'Choose a template for this side.', 'pixonaut-for-woocommerce' ); ?>"
 	data-missing-placement="<?php esc_attr_e( 'Choose where on the blank this side is printed.', 'pixonaut-for-woocommerce' ); ?>"
 	data-missing-size="<?php esc_attr_e( 'Enter the width and height in millimetres.', 'pixonaut-for-woocommerce' ); ?>"
-	data-size-limit="<?php /* translators: Shown under a custom print size's width and height. %1$s: the largest width, %2$s: the largest height the side's placement prints, both in millimetres. Admin product page. */ esc_attr_e( 'Up to %1$s × %2$s mm', 'pixonaut-for-woocommerce' ); ?>"
-	data-size-over="<?php /* translators: Error under a custom print size larger than the placement prints. %1$s: the largest width, %2$s: the largest height, both in millimetres. Admin product page. */ esc_attr_e( 'This placement prints at most %1$s × %2$s mm.', 'pixonaut-for-woocommerce' ); ?>"
+	data-size-limit="<?php /* translators: Shown under a custom print size's width and height. %1$s: the largest width, %2$s: the largest height the side's print position prints, both in millimetres. Admin product page. */ esc_attr_e( 'Up to %1$s × %2$s mm', 'pixonaut-for-woocommerce' ); ?>"
+	data-size-over="<?php /* translators: Error under a custom print size larger than the print position prints. %1$s: the largest width, %2$s: the largest height, both in millimetres. Admin product page. */ esc_attr_e( 'This print position prints at most %1$s × %2$s mm.', 'pixonaut-for-woocommerce' ); ?>"
 	data-offers-properties="<?php echo esc_attr( null === $side['offers_properties'] ? '' : ( $side['offers_properties'] ? 'true' : 'false' ) ); ?>">
 	<div class="pixonaut-side__header">
 		<strong class="pixonaut-side__title">
-			<?php echo esc_html_x( 'Side', 'product side such as front or back', 'pixonaut-for-woocommerce' ); ?>
-			<span class="pixonaut-side__number" aria-hidden="true"></span><span class="pixonaut-side__name"><?php echo esc_html( '' === $side['label'] ? '' : ' · ' . $side['label'] ); ?></span>
+			<span class="pixonaut-side__name" data-placeholder="<?php echo esc_attr_x( 'Side', 'product side such as front or back', 'pixonaut-for-woocommerce' ); ?>"><?php echo esc_html( '' === $side['label'] ? _x( 'Side', 'product side such as front or back', 'pixonaut-for-woocommerce' ) : $side['label'] ); ?></span>
 		</strong>
 		<button type="button" class="button-link button-link-delete pixonaut-remove-side pixonaut-with-blank"><?php /* translators: Button that removes a whole side from the product. Admin product page. */ esc_html_e( 'Remove side', 'pixonaut-for-woocommerce' ); ?></button>
 	</div>
 	<p class="form-field pixonaut-with-blank">
-		<label for="<?php echo esc_attr( $pixonaut_id( 'label' ) ); ?>"><?php /* translators: Label of the fields naming a product side and its key. Admin product page. */ esc_html_e( 'Name', 'pixonaut-for-woocommerce' ); ?></label>
-		<span class="pixonaut-field-control">
-			<input type="text" class="short pixonaut-side-label" id="<?php echo esc_attr( $pixonaut_id( 'label' ) ); ?>" name="<?php echo esc_attr( $pixonaut_name( '[label]' ) ); ?>" value="<?php echo esc_attr( $side['label'] ); ?>" placeholder="<?php /* translators: Placeholder of the field naming a product side, which customers see. Admin product page. */ esc_attr_e( 'Name customers see, e.g. Front', 'pixonaut-for-woocommerce' ); ?>" />
-			<input type="text" class="short pixonaut-side-key" id="<?php echo esc_attr( $pixonaut_id( 'key' ) ); ?>" name="<?php echo esc_attr( $pixonaut_name( '[key]' ) ); ?>" value="<?php echo esc_attr( $side['key'] ); ?>" placeholder="<?php /* translators: Placeholder of the field for a side's key, a short lowercase identifier. Admin product page. */ esc_attr_e( 'Key, e.g. front', 'pixonaut-for-woocommerce' ); ?>" aria-label="<?php /* translators: Screen reader label of the field for a side's key. Admin product page. */ esc_attr_e( 'Side key', 'pixonaut-for-woocommerce' ); ?>" />
-		</span>
-		<span class="description"><?php esc_html_e( 'The name customers see on the side’s tab, and the key the cart and order keep it under. Empty, both follow the placement.', 'pixonaut-for-woocommerce' ); ?></span>
-	</p>
-	<p class="form-field pixonaut-with-blank">
-		<label for="<?php echo esc_attr( $pixonaut_id( 'placement' ) ); ?>"><?php /* translators: Label of the dropdown that picks the blank's placement (print area) a side is printed on. Admin product page. */ esc_html_e( 'Placement', 'pixonaut-for-woocommerce' ); ?> <span class="pixonaut-required-mark" aria-hidden="true">*</span></label>
+		<label for="<?php echo esc_attr( $pixonaut_id( 'placement' ) ); ?>"><?php /* translators: Label of the dropdown that picks the spot on the blank (placement) a side is printed on, such as chest or back. Admin product page. */ esc_html_e( 'Print position', 'pixonaut-for-woocommerce' ); ?> <span class="pixonaut-required-mark" aria-hidden="true">*</span></label>
 		<span class="pixonaut-field-control">
 			<select id="<?php echo esc_attr( $pixonaut_id( 'placement' ) ); ?>" name="<?php echo esc_attr( $pixonaut_name( '[placement]' ) ); ?>" class="pixonaut-side-placement" style="width: 50%;" aria-required="true">
-				<option value=""><?php /* translators: First option of the placement dropdown, nothing chosen yet. Admin product page. */ esc_html_e( 'Choose a placement', 'pixonaut-for-woocommerce' ); ?></option>
+				<option value=""><?php /* translators: First option of the print position dropdown, nothing chosen yet. Admin product page. */ esc_html_e( 'Choose a print position', 'pixonaut-for-woocommerce' ); ?></option>
 				<?php foreach ( $placements as $pixonaut_placement ) : ?>
 					<option value="<?php echo esc_attr( $pixonaut_placement['id'] ); ?>" data-thumbnail="<?php echo esc_url( $pixonaut_placement['thumbnail'] ); ?>"
 						<?php if ( isset( $pixonaut_placement['maxWidthMm'], $pixonaut_placement['maxHeightMm'] ) ) : ?>
@@ -103,7 +102,6 @@ $pixonaut_size = static function ( string $row, array $size ) use ( $pixonaut_na
 				<?php endforeach; ?>
 			</select>
 		</span>
-		<span class="description"><?php esc_html_e( 'Where on the blank this side is printed.', 'pixonaut-for-woocommerce' ); ?></span>
 	</p>
 	<p class="form-field">
 		<label for="<?php echo esc_attr( $pixonaut_id( 'template' ) ); ?>"><?php echo esc_html_x( 'Template', 'Pixonaut template that customers fill in', 'pixonaut-for-woocommerce' ); ?> <span class="pixonaut-required-mark" aria-hidden="true">*</span></label>
@@ -116,54 +114,59 @@ $pixonaut_size = static function ( string $row, array $size ) use ( $pixonaut_na
 			</select>
 		</span>
 		<input type="hidden" class="pixonaut-side-template-name" name="<?php echo esc_attr( $pixonaut_name( '[template_name]' ) ); ?>" value="<?php echo esc_attr( $side['template_name'] ); ?>" />
-		<span class="description"><?php esc_html_e( 'What customers fill in. With a blank, only templates that fit the placement are listed.', 'pixonaut-for-woocommerce' ); ?></span>
 	</p>
 	<div class="inline notice notice-warning pixonaut-background-warning" hidden>
 		<p><?php esc_html_e( 'This template’s background shows through, and this product has no blank: customers see the design on white paper in the designer, and it prints on white paper. You probably want to set a background on the template in Pixonaut. If transparent is what you intend, leave it as it is; customers can still buy the product.', 'pixonaut-for-woocommerce' ); ?></p>
 	</div>
-	<p class="form-field pixonaut-template-version" <?php echo array() === $side['versions'] ? 'hidden' : ''; ?>>
-		<label for="<?php echo esc_attr( $pixonaut_id( 'version' ) ); ?>"><?php /* translators: Label of the setting that keeps a product side on one version of its template. Admin product page. */ esc_html_e( 'Template version', 'pixonaut-for-woocommerce' ); ?></label>
-		<span class="pixonaut-field-control">
-			<label class="pixonaut-template-version__pin">
-				<input type="checkbox" class="pixonaut-side-pinned" name="<?php echo esc_attr( $pixonaut_name( '[pinned]' ) ); ?>" value="<?php echo esc_attr( PostedSides::PINNED ); ?>" <?php checked( $side['pinned'] ); ?> />
-				<?php /* translators: Checkbox on a product side: keep the side on the template version picked beside it instead of moving to each new version published. Admin product page. */ esc_html_e( 'Stick to one version', 'pixonaut-for-woocommerce' ); ?>
-			</label>
-			<select id="<?php echo esc_attr( $pixonaut_id( 'version' ) ); ?>" name="<?php echo esc_attr( $pixonaut_name( '[version]' ) ); ?>" class="pixonaut-side-version"
-				data-current="<?php /* translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page. */ esc_attr_e( 'Version %d (current)', 'pixonaut-for-woocommerce' ); ?>"
-				data-version="<?php /* translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page. */ esc_attr_e( 'Version %d', 'pixonaut-for-woocommerce' ); ?>"
-				data-max-versions="<?php echo esc_attr( (string) Side::MAX_VERSIONS_OFFERED ); ?>"
-				<?php echo $side['pinned'] ? '' : 'hidden'; ?>>
-				<?php foreach ( $side['versions'] as $pixonaut_at => $pixonaut_version ) : ?>
-					<option value="<?php echo esc_attr( (string) $pixonaut_version ); ?>" <?php selected( $pixonaut_version, $side['version'] ); ?>>
-						<?php
-						echo esc_html(
-							sprintf(
-								0 === $pixonaut_at
-									/* translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page. */
-									? __( 'Version %d (current)', 'pixonaut-for-woocommerce' )
-									/* translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page. */
-									: __( 'Version %d', 'pixonaut-for-woocommerce' ),
-								$pixonaut_version
-							)
-						);
-						?>
-					</option>
-				<?php endforeach; ?>
-			</select>
-		</span>
-		<span class="description"><?php esc_html_e( 'The side moves to each new version of the template when it is published, keeping its groups and print sizes. Stuck to one version, it stays on it until you change it here.', 'pixonaut-for-woocommerce' ); ?></span>
-	</p>
 	<div class="inline notice notice-warning pixonaut-misfit-warning" <?php echo '' === ( $side['misfit_warning'] ?? '' ) ? 'hidden' : ''; ?>>
 		<p><?php echo esc_html( $side['misfit_warning'] ?? '' ); ?></p>
 	</div>
-	<p class="form-field">
-		<label for="<?php echo esc_attr( $pixonaut_id( 'mode' ) ); ?>"><?php /* translators: Label of the dropdown choosing whether a side is personalised by customers or standing. Admin product page. */ esc_html_e( 'Mode', 'pixonaut-for-woocommerce' ); ?></label>
-		<select id="<?php echo esc_attr( $pixonaut_id( 'mode' ) ); ?>" name="<?php echo esc_attr( $pixonaut_name( '[mode]' ) ); ?>" class="pixonaut-side-mode">
-			<option value="<?php echo esc_attr( Side::PERSONALISED ); ?>" <?php selected( Side::PERSONALISED, $side['mode'] ); ?>><?php esc_html_e( 'Personalised: customers fill in the template', 'pixonaut-for-woocommerce' ); ?></option>
-			<option value="<?php echo esc_attr( Side::STANDING ); ?>" <?php selected( Side::STANDING, $side['mode'] ); ?>><?php esc_html_e( 'Standing: printed as the template is, with nothing to fill in', 'pixonaut-for-woocommerce' ); ?></option>
-		</select>
-		<span class="description"><?php esc_html_e( 'A standing side is printed from one design of the template, made when you update the product. A product whose sides are all standing sells without the designer.', 'pixonaut-for-woocommerce' ); ?></span>
-	</p>
+	<div class="form-field pixonaut-size-menu">
+		<label><?php /* translators: Label of the list of print sizes customers choose from for a side. Admin product page. */ esc_html_e( 'Print sizes', 'pixonaut-for-woocommerce' ); ?></label>
+		<div class="pixonaut-size-table">
+			<div class="pixonaut-size-table__head" aria-hidden="true">
+				<span><?php /* translators: Column heading over the radio buttons marking the print size chosen when the designer opens. Short. Admin product page. */ esc_html_e( 'Start', 'pixonaut-for-woocommerce' ); ?></span>
+				<span><?php /* translators: Column heading over a side's print sizes. Admin product page. */ esc_html_e( 'Size customers choose', 'pixonaut-for-woocommerce' ); ?></span>
+			</div>
+			<ul class="pixonaut-sizes">
+				<?php
+				foreach ( $side['sizes'] as $pixonaut_row => $pixonaut_size_fields ) {
+					$pixonaut_size( (string) $pixonaut_row, $pixonaut_size_fields );
+				}
+				?>
+			</ul>
+		</div>
+		<template class="pixonaut-size-template"><?php $pixonaut_size( $size_index, $new_size ); ?></template>
+		<span class="pixonaut-size-actions">
+			<button type="button" class="button pixonaut-add-size pixonaut-with-blank"><?php /* translators: Button that adds the print position's own size to a side's print sizes. Admin product page. */ esc_html_e( 'Add the print position’s size', 'pixonaut-for-woocommerce' ); ?></button>
+			<button type="button" class="button pixonaut-add-custom-size"><?php /* translators: Button that adds a print size entered in millimetres to a side. Admin product page. */ esc_html_e( 'Add a size in mm', 'pixonaut-for-woocommerce' ); ?></button>
+		</span>
+	</div>
+	<details class="pixonaut-disclosure pixonaut-side-more" data-disclosure="side-<?php echo esc_attr( $index ); ?>" <?php echo $pixonaut_more_open ? 'open' : ''; ?>>
+		<summary>
+			<?php /* translators: A closed section of a product side holding its less used settings. Admin product page. */ esc_html_e( 'More for this side', 'pixonaut-for-woocommerce' ); ?>
+			<span class="pixonaut-disclosure__summary pixonaut-side-more__summary" data-fills="<?php echo esc_attr( $pixonaut_fills ); ?>" data-fixed="<?php echo esc_attr( $pixonaut_fixed ); ?>" data-follow="<?php echo esc_attr( $pixonaut_follow ); ?>" data-stays="<?php echo esc_attr( $pixonaut_stays ); ?>">
+				<?php echo esc_html( ( Side::STANDING === $side['mode'] ? $pixonaut_fixed : $pixonaut_fills ) . ' · ' . ( $side['pinned'] ? sprintf( $pixonaut_stays, $side['version'] ) : $pixonaut_follow ) ); ?>
+			</span>
+		</summary>
+		<p class="form-field pixonaut-with-blank">
+			<label for="<?php echo esc_attr( $pixonaut_id( 'label' ) ); ?>"><?php /* translators: Label of the fields naming a product side and its key. Admin product page. */ esc_html_e( 'Name', 'pixonaut-for-woocommerce' ); ?></label>
+			<span class="pixonaut-field-control">
+				<input type="text" class="short pixonaut-side-label" id="<?php echo esc_attr( $pixonaut_id( 'label' ) ); ?>" name="<?php echo esc_attr( $pixonaut_name( '[label]' ) ); ?>" value="<?php echo esc_attr( $side['label'] ); ?>" placeholder="<?php /* translators: Placeholder of the field naming a product side, which customers see. Admin product page. */ esc_attr_e( 'Name customers see, e.g. Front', 'pixonaut-for-woocommerce' ); ?>" />
+				<input type="text" class="short pixonaut-side-key" id="<?php echo esc_attr( $pixonaut_id( 'key' ) ); ?>" name="<?php echo esc_attr( $pixonaut_name( '[key]' ) ); ?>" value="<?php echo esc_attr( $side['key'] ); ?>" placeholder="<?php /* translators: Placeholder of the field for a side's key, a short lowercase identifier. Admin product page. */ esc_attr_e( 'Key, e.g. front', 'pixonaut-for-woocommerce' ); ?>" aria-label="<?php /* translators: Screen reader label of the field for a side's key. Admin product page. */ esc_attr_e( 'Side key', 'pixonaut-for-woocommerce' ); ?>" />
+			</span>
+			<span class="description"><?php esc_html_e( 'Shown on the side’s tab in the designer. Empty, both follow the print position.', 'pixonaut-for-woocommerce' ); ?></span>
+		</p>
+		<p class="form-field pixonaut-side-mode-field">
+			<span class="pixonaut-field-control">
+				<input type="hidden" name="<?php echo esc_attr( $pixonaut_name( '[mode]' ) ); ?>" value="<?php echo esc_attr( Side::STANDING ); ?>" />
+				<label>
+					<input type="checkbox" class="pixonaut-side-mode" id="<?php echo esc_attr( $pixonaut_id( 'mode' ) ); ?>" name="<?php echo esc_attr( $pixonaut_name( '[mode]' ) ); ?>" value="<?php echo esc_attr( Side::PERSONALISED ); ?>" <?php checked( Side::STANDING !== $side['mode'] ); ?> />
+					<?php /* translators: Checkbox on a product side; unticked, the side is a fixed design printed as the template is. Admin product page. */ esc_html_e( 'Customers fill in the template', 'pixonaut-for-woocommerce' ); ?>
+				</label>
+			</span>
+			<span class="description"><?php esc_html_e( 'Unticked, it is a fixed design: printed as the template is, made when you update the product.', 'pixonaut-for-woocommerce' ); ?></span>
+		</p>
 	<div class="inline notice notice-warning pixonaut-mode-warning pixonaut-mode-warning--standing" <?php echo Side::STANDING === $side['mode'] && true === $side['offers_properties'] ? '' : 'hidden'; ?>>
 		<p><?php esc_html_e( 'This template offers fields to fill in. On a standing side customers do not get to fill them in: it is printed as the template is.', 'pixonaut-for-woocommerce' ); ?></p>
 	</div>
@@ -238,6 +241,38 @@ $pixonaut_size = static function ( string $row, array $size ) use ( $pixonaut_na
 			<?php endif; ?>
 		</div>
 	<?php endif; ?>
+	<p class="form-field pixonaut-template-version" <?php echo array() === $side['versions'] ? 'hidden' : ''; ?>>
+		<label for="<?php echo esc_attr( $pixonaut_id( 'version' ) ); ?>"><?php /* translators: Label of the setting that keeps a product side on one version of its template. Admin product page. */ esc_html_e( 'Template version', 'pixonaut-for-woocommerce' ); ?></label>
+		<span class="pixonaut-field-control">
+			<label class="pixonaut-template-version__pin">
+				<input type="checkbox" class="pixonaut-side-pinned" name="<?php echo esc_attr( $pixonaut_name( '[pinned]' ) ); ?>" value="<?php echo esc_attr( PostedSides::PINNED ); ?>" <?php checked( $side['pinned'] ); ?> />
+				<?php /* translators: Checkbox on a product side: keep the side on the template version picked beside it instead of moving to each new version published. Admin product page. */ esc_html_e( 'Stay on one version', 'pixonaut-for-woocommerce' ); ?>
+			</label>
+			<select id="<?php echo esc_attr( $pixonaut_id( 'version' ) ); ?>" name="<?php echo esc_attr( $pixonaut_name( '[version]' ) ); ?>" class="pixonaut-side-version"
+				data-current="<?php /* translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page. */ esc_attr_e( 'Version %d (current)', 'pixonaut-for-woocommerce' ); ?>"
+				data-version="<?php /* translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page. */ esc_attr_e( 'Version %d', 'pixonaut-for-woocommerce' ); ?>"
+				data-max-versions="<?php echo esc_attr( (string) Side::MAX_VERSIONS_OFFERED ); ?>"
+				<?php echo $side['pinned'] ? '' : 'hidden'; ?>>
+				<?php foreach ( $side['versions'] as $pixonaut_at => $pixonaut_version ) : ?>
+					<option value="<?php echo esc_attr( (string) $pixonaut_version ); ?>" <?php selected( $pixonaut_version, $side['version'] ); ?>>
+						<?php
+						echo esc_html(
+							sprintf(
+								0 === $pixonaut_at
+									/* translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page. */
+									? __( 'Version %d (current)', 'pixonaut-for-woocommerce' )
+									/* translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page. */
+									: __( 'Version %d', 'pixonaut-for-woocommerce' ),
+								$pixonaut_version
+							)
+						);
+						?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+		</span>
+		<span class="description"><?php esc_html_e( 'Unticked, the side follows each new version of the template.', 'pixonaut-for-woocommerce' ); ?></span>
+	</p>
 	<?php if ( null !== ( $groups ?? null ) ) : ?>
 		<div class="form-field pixonaut-groups"
 			data-url="<?php echo esc_url( $groups['url'] ); ?>"
@@ -253,30 +288,16 @@ $pixonaut_size = static function ( string $row, array $size ) use ( $pixonaut_na
 			<input type="hidden" class="pixonaut-groups-value" name="<?php echo esc_attr( $pixonaut_name( '[' . \Pixonaut\WooCommerce\Admin\ProductPanel::FORM_GROUPS_FIELD . ']' ) ); ?>" value="<?php echo esc_attr( $side['form_groups'] ?? '' ); ?>" />
 		</div>
 	<?php endif; ?>
-	<div class="form-field pixonaut-size-menu">
-		<label><?php /* translators: Label of the list of print sizes customers choose from for a side. Admin product page. */ esc_html_e( 'Print sizes', 'pixonaut-for-woocommerce' ); ?></label>
-		<ul class="pixonaut-sizes">
-			<?php
-			foreach ( $side['sizes'] as $pixonaut_row => $pixonaut_size_fields ) {
-				$pixonaut_size( (string) $pixonaut_row, $pixonaut_size_fields );
-			}
-			?>
-		</ul>
-		<template class="pixonaut-size-template"><?php $pixonaut_size( $size_index, $new_size ); ?></template>
-		<button type="button" class="button pixonaut-add-size"><?php /* translators: Button that adds a print size to a side. Admin product page. */ esc_html_e( 'Add print size', 'pixonaut-for-woocommerce' ); ?></button>
-		<span class="description"><?php esc_html_e( 'Customers choose from these sizes. The one marked Starts selected is chosen when the designer opens; with none marked, the first. Pixonaut checks each one when you update the product; a size it cannot print is removed.', 'pixonaut-for-woocommerce' ); ?></span>
-		<span class="description pixonaut-without-blank" hidden><?php esc_html_e( 'Without a blank, enter each size in millimetres, in the template’s aspect ratio. A product without a print size cannot be bought.', 'pixonaut-for-woocommerce' ); ?></span>
-	</div>
 	<p class="form-field pixonaut-side-canvas-ratio" <?php echo Side::STANDING === $side['mode'] ? 'hidden' : ''; ?>>
-		<label for="<?php echo esc_attr( $pixonaut_id( PostedSides::CANVAS_RATIO ) ); ?>"><?php /* translators: Label of the dropdown choosing whether the designer's canvas keeps the template's proportions or takes the chosen print size's. Admin product page. */ esc_html_e( 'Canvas shape', 'pixonaut-for-woocommerce' ); ?></label>
+		<label for="<?php echo esc_attr( $pixonaut_id( PostedSides::CANVAS_RATIO ) ); ?>"><?php /* translators: Label of the dropdown choosing whether the designer's canvas keeps the template's proportions or takes the chosen print size's, asked as a question. Admin product page. */ esc_html_e( 'When a print size has other proportions', 'pixonaut-for-woocommerce' ); ?></label>
 		<select id="<?php echo esc_attr( $pixonaut_id( PostedSides::CANVAS_RATIO ) ); ?>" name="<?php echo esc_attr( $pixonaut_name( '[' . PostedSides::CANVAS_RATIO . ']' ) ); ?>" class="pixonaut-side-canvas-ratio__choice">
 			<?php
-			/* translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page. */
-			foreach ( CanvasRatio::names( __( 'As the product says', 'pixonaut-for-woocommerce' ) ) as $pixonaut_ratio => $pixonaut_ratio_name ) :
+			/* translators: Option of a product side's canvas shape dropdown: the side draws its canvas as the product's own setting, under Store settings for this product, says. Admin product page. */
+			foreach ( CanvasRatio::names( __( 'As the product’s store settings say', 'pixonaut-for-woocommerce' ) ) as $pixonaut_ratio => $pixonaut_ratio_name ) :
 				?>
 				<option value="<?php echo esc_attr( (string) $pixonaut_ratio ); ?>" <?php selected( (string) $pixonaut_ratio, $side['canvas_ratio'] ?? CanvasRatio::FOLLOW ); ?>><?php echo esc_html( $pixonaut_ratio_name ); ?></option>
 			<?php endforeach; ?>
 		</select>
-		<span class="description"><?php esc_html_e( 'The shape customers design this side on when a print size’s proportions are not the template’s.', 'pixonaut-for-woocommerce' ); ?></span>
 	</p>
+	</details>
 </div>

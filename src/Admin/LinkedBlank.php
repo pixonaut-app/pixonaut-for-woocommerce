@@ -227,41 +227,57 @@ final class LinkedBlank {
 
 	/**
 	 * The printshop line: the printshop the blank resolves to and where it
-	 * comes from, and where in the studio to change it.
+	 * comes from, where in the studio to change it, and, for a print
+	 * partner's integration (one that prints only on a blank), its name, which
+	 * the blank variant is called after.
 	 *
 	 * @param string                    $blank_id The blank.
 	 * @param array<string, mixed>|null $blank    The blank as read() gave it; null when Pixonaut could not be asked.
 	 * @phpstan-param array{placements: list<array{id: string, text: string, maxWidthMm?: float, maxHeightMm?: float}>, printshop_id: string|null, printshop_source: string, deleted: bool}|null $blank
-	 * @return array{name: string, url: string}
+	 * @return array{name: string, url: string, integration: string}
 	 */
 	public function printshop( string $blank_id, ?array $blank ): array {
+		$connection = null === $blank ? null : $this->connection( $blank['printshop_id'], $blank['printshop_source'] );
 		return array(
-			'name' => null === $blank ? self::unknown() : $this->name( $blank['printshop_id'], $blank['printshop_source'] ),
-			'url'  => self::studio_url( $blank_id ),
+			'name'        => null === $blank ? self::unknown() : $this->name( $connection, $blank['printshop_source'] ),
+			'url'         => self::studio_url( $blank_id ),
+			'integration' => null !== $connection && $connection['needs_blank'] ? $connection['name'] : '',
 		);
 	}
 
 	/**
+	 * The workspace's printshop a blank resolves to; null when it names none,
+	 * or Pixonaut could not list them.
+	 *
 	 * @param string|null $printshop_id The printshop the blank resolves to.
 	 * @param string      $source       Where it comes from, a `SOURCE_*`.
+	 * @return array{id: string, name: string, default: bool, needs_blank: bool}|null
 	 */
-	private function name( ?string $printshop_id, string $source ): string {
+	private function connection( ?string $printshop_id, string $source ): ?array {
 		if ( self::SOURCE_NONE === $source ) {
-			return __( 'None set: Pixonaut cannot route this blank’s orders until a printshop is chosen.', 'pixonaut-for-woocommerce' );
+			return null;
 		}
-
-		$connections = $this->printshops();
-		$named       = null;
-		foreach ( $connections ?? array() as $connection ) {
+		foreach ( $this->printshops() ?? array() as $connection ) {
 			// Only the workspace's default is found without an id.
 			$match = null === $printshop_id
 				? self::SOURCE_WORKSPACE === $source && $connection['default']
 				: $connection['id'] === $printshop_id;
 			if ( $match ) {
-				$named = $connection['name'];
+				return $connection;
 			}
 		}
+		return null;
+	}
 
+	/**
+	 * @param array{id: string, name: string, default: bool, needs_blank: bool}|null $connection The printshop the blank resolves to, as connection() found it.
+	 * @param string                                                                 $source     Where it comes from, a `SOURCE_*`.
+	 */
+	private function name( ?array $connection, string $source ): string {
+		if ( self::SOURCE_NONE === $source ) {
+			return __( 'None set: Pixonaut cannot route this blank’s orders until a printshop is chosen.', 'pixonaut-for-woocommerce' );
+		}
+		$named = $connection['name'] ?? null;
 		if ( self::SOURCE_WORKSPACE === $source ) {
 			return null === $named
 				/* translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace. */
@@ -270,7 +286,7 @@ final class LinkedBlank {
 				: sprintf( __( 'Workspace default (%s)', 'pixonaut-for-woocommerce' ), $named );
 		}
 		if ( null === $named ) {
-			return null === $connections ? self::unknown() : __( 'A printshop no longer connected to the workspace', 'pixonaut-for-woocommerce' );
+			return null === $this->printshops() ? self::unknown() : __( 'A printshop no longer connected to the workspace', 'pixonaut-for-woocommerce' );
 		}
 		return self::SOURCE_CATEGORY === $source
 			/* translators: %s: the printshop the blank's category names. */
@@ -279,10 +295,12 @@ final class LinkedBlank {
 	}
 
 	/**
-	 * The workspace's printshops, in the order Pixonaut lists them: the
-	 * ones a product without a blank can send its orders to.
+	 * The workspace's printshops, in the order Pixonaut lists them, each
+	 * saying whether it prints only on a blank, as a print partner's
+	 * integration does: a product without a blank cannot send its orders to
+	 * one of those.
 	 *
-	 * @return list<array{id: string, name: string, default: bool}>|null Null when Pixonaut cannot be asked.
+	 * @return list<array{id: string, name: string, default: bool, needs_blank: bool}>|null Null when Pixonaut cannot be asked.
 	 */
 	public function printshops(): ?array {
 		try {
@@ -294,9 +312,10 @@ final class LinkedBlank {
 		foreach ( $connections as $connection ) {
 			if ( is_array( $connection ) && is_string( $connection['id'] ?? null ) && '' !== $connection['id'] && is_string( $connection['name'] ?? null ) ) {
 				$printshops[] = array(
-					'id'      => $connection['id'],
-					'name'    => $connection['name'],
-					'default' => true === ( $connection['isDefault'] ?? null ),
+					'id'          => $connection['id'],
+					'name'        => $connection['name'],
+					'default'     => true === ( $connection['isDefault'] ?? null ),
+					'needs_blank' => is_array( $connection['asksOfDesigns'] ?? null ) && true === ( $connection['asksOfDesigns']['needsBlank'] ?? null ),
 				);
 			}
 		}

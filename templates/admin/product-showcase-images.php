@@ -8,7 +8,7 @@
  * Field names and classes are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.2.0
+ * @version 1.4.0
  *
  * @var string                                                                                                    $field        The rows' posted name.
  * @var string                                                                                                    $listed_field Posted while the rows are listed.
@@ -32,14 +32,14 @@ defined( 'ABSPATH' ) || exit;
 	<?php if ( '' !== $view_html ) : ?>
 		<div class="pixonaut-picture-view">
 			<input type="hidden" name="<?php echo esc_attr( $view_listed ); ?>" value="1" />
-			<p class="pixonaut-picture-view__intro"><?php esc_html_e( 'While no showcase set is ticked, the product image is the template with its own defaults. Choose what it is drawn on: the photo the product page starts on, any photo of the blank, such as a scene, even of a view customers are not shown, or the design alone. The designer still starts on its own starting view.', 'pixonaut-for-woocommerce' ); ?></p>
+			<p class="pixonaut-picture-view__intro"><?php esc_html_e( 'What the product image is drawn on, while no example set below is ticked.', 'pixonaut-for-woocommerce' ); ?></p>
 			<?php echo $view_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in admin/picture-view-choices.php. ?>
 		</div>
 	<?php endif; ?>
 	<?php if ( ! $listed ) : ?>
 		<p class="description"><?php esc_html_e( 'Pixonaut could not be reached to list the template’s showcase sets. The sets chosen before are kept.', 'pixonaut-for-woocommerce' ); ?></p>
 	<?php elseif ( array() !== $rows ) : ?>
-		<p class="pixonaut-group__intro"><?php esc_html_e( 'Show the template filled in with one of its showcase sets, example values such as a real name or photo, instead of its placeholders. The first set ticked is the product image, the others are added to the product gallery. Customers still start designing from the template’s own defaults.', 'pixonaut-for-woocommerce' ); ?></p>
+		<p class="pixonaut-group__intro"><?php esc_html_e( 'Example sets of the template: the first ticked is the product image, the others go to its gallery.', 'pixonaut-for-woocommerce' ); ?></p>
 		<input type="hidden" name="<?php echo esc_attr( $listed_field ); ?>" value="1" />
 		<ul class="pixonaut-showcase-images__list">
 			<?php foreach ( $rows as $pixonaut_index => $pixonaut_row ) : ?>

@@ -105,7 +105,7 @@ not recorded and it runs again. What it throws decides what the store sees:
 | Order item meta | `_pixonaut_design_id` | Each of the design ids the customer committed for the line, one row per side, kept in step with `_pixonaut_line`; a standing side's design is not indexed, as many lines share it |
 
 Only `Catalogue\ProductVariant` reads or writes `_pixonaut_variant`
-(the merchant's side: [Blank variant](../merchant/linking-products/#blank-variant));
+(the merchant's side: [Variant](../merchant/linking-products/#variant));
 `ProductVariants` resolves it from `GET /v1/blanks/{id}/variants` when the
 product is saved and when its blank is re-checked, so the storefront never
 asks Pixonaut whether a variation can be bought. It writes only over the

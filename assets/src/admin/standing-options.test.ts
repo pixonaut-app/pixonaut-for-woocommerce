@@ -18,10 +18,7 @@ function side(count: number, mode = STANDING): HTMLElement {
 			`<li class="pixonaut-standing-option" ${i < 2 ? '' : 'hidden data-more'}>${i}</li>`,
 	).join('');
 	element.innerHTML = `
-		<select class="pixonaut-side-mode">
-			<option value="personalised" ${mode === STANDING ? '' : 'selected'}>P</option>
-			<option value="standing" ${mode === STANDING ? 'selected' : ''}>S</option>
-		</select>
+		<input type="checkbox" class="pixonaut-side-mode" value="personalised" ${mode === STANDING ? '' : 'checked'} />
 		<div class="pixonaut-standing-options">
 			<p class="pixonaut-standing-options__pending" hidden>Pending</p>
 			<ul class="pixonaut-standing-options__tiles">${tiles}</ul>
@@ -82,22 +79,20 @@ describe('standingOptionsChanged', () => {
 });
 
 describe('showStandingOptions', () => {
-	it('shows the previews only while the side is standing', () => {
+	it('shows the previews only while the side is a fixed design', () => {
 		const element = side(1, 'personalised');
 		const options = element.querySelector<HTMLElement>(
 			'.pixonaut-standing-options',
 		);
 
-		showStandingOptions(element, STANDING);
+		showStandingOptions(element);
 		expect(options?.hidden).toBe(true);
 
-		const mode = element.querySelector<HTMLSelectElement>(
-			'.pixonaut-side-mode',
-		);
+		const mode = element.querySelector<HTMLInputElement>('.pixonaut-side-mode');
 		if (mode) {
-			mode.value = STANDING;
+			mode.checked = false;
 		}
-		showStandingOptions(element, STANDING);
+		showStandingOptions(element);
 		expect(options?.hidden).toBe(false);
 	});
 });

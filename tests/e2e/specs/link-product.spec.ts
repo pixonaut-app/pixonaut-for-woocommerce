@@ -3,6 +3,7 @@ import { expect, test, usePlainPermalinks } from '../fixtures';
 import {
 	linkSide,
 	openPixonautTab,
+	openSideMore,
 	pick,
 	productPanel,
 	publish,
@@ -82,15 +83,16 @@ test('saves two sides with their own print sizes and shows the printshop', async
 	await panel.getByLabel('Personalise').check();
 	await pick(page, 'pixonaut_blank', 'tee', 'Fixture tee');
 	await linkSide(page, 0, 'Front');
+	await openSideMore(page, 0);
 	await panel.locator('#pixonaut_side_0_label').fill('Front');
 
 	await panel.getByRole('button', { name: 'Add side' }).click();
 	await linkSide(page, 1, 'Back');
+	await openSideMore(page, 1);
 	await panel.locator('#pixonaut_side_1_label').fill('Back');
 	const back = panel.locator('.pixonaut-side[data-index="1"]');
-	await back
-		.getByLabel('Print size', { exact: true })
-		.selectOption('Custom size');
+	await back.getByRole('button', { name: 'Remove', exact: true }).click();
+	await back.getByRole('button', { name: 'Add a size in mm' }).click();
 	await back.getByLabel('Width in millimetres').fill('210');
 	await back.getByLabel('Height in millimetres').fill('270');
 	await back.getByLabel('Label customers see').fill('Small');
@@ -104,7 +106,7 @@ test('saves two sides with their own print sizes and shows the printshop', async
 	);
 	await expect(
 		panel
-			.locator('.pixonaut-side[data-index="1"] input[name$="[label]"]')
+			.locator('.pixonaut-side[data-index="1"] input.pixonaut-size-label')
 			.last(),
 	).toHaveValue('Small');
 	// The fixture tee prints at its locked default printshop.

@@ -51,23 +51,30 @@ final class VariantField {
 
 	/**
 	 * The field, as `admin/product-variant.php` prints it; empty for a
-	 * product or variation not personalised on a blank.
+	 * product or variation not personalised on a blank. Given a blank other
+	 * than the one saved, it shows that blank's variants and the one the
+	 * product's attributes find, before the product is updated with it.
 	 *
-	 * @param WC_Product  $product A product or variation, not a variable product.
-	 * @param PanelFields $fields  Names the field.
+	 * @param WC_Product  $product     A product or variation, not a variable product.
+	 * @param PanelFields $fields      Names the field.
+	 * @param string      $integration The print partner whose catalogue the blank is from, such as Gelato, which the variant is called after; empty for a blank of the store's own.
+	 * @param string|null $blank_id    The blank shown; null for the one saved.
 	 */
-	public function html( WC_Product $product, PanelFields $fields ): string {
+	public function html( WC_Product $product, PanelFields $fields, string $integration = '', ?string $blank_id = null ): string {
 		$config = ProductConfig::config_for( $product );
-		if ( ! $config->personalise || null === $config->blank_id ) {
+		if ( null === $blank_id && ( ! $config->personalise || null === $config->blank_id ) ) {
 			return '';
 		}
-		$stored   = ProductVariant::stored_on( $product );
-		$stored   = null !== $stored && $stored->blank_id === $config->blank_id ? $stored : null;
-		$choices  = array();
-		$retired  = array();
-		$warnings = array();
+		$blank_id ??= (string) $config->blank_id;
+		$stored     = ProductVariant::stored_on( $product );
+		$stored     = null !== $stored && $stored->blank_id === $blank_id ? $stored : null;
+		$choices    = array();
+		$retired    = array();
+		$warnings   = array();
+		$listed     = null;
 		try {
-			foreach ( $this->variants->variants( $config->blank_id ) as $variant ) {
+			$listed = $this->variants->variants( $blank_id );
+			foreach ( $listed as $variant ) {
 				$choices[ $variant->ref ] = self::choice( $variant );
 				if ( null !== $variant->retired ) {
 					$retired[] = $variant->ref;
@@ -76,29 +83,53 @@ final class VariantField {
 		} catch ( ApiException $e ) {
 			$warnings[] = __( 'Pixonaut could not be reached to list the blank’s variants. Try again later.', 'pixonaut-for-woocommerce' );
 		}
+		if ( null === $stored && null !== $listed ) {
+			// Not saved on this blank yet: the variant the product's attributes find, by the names saving matches too.
+			try {
+				$stored = ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $product ), $this->variants->named( $blank_id ) );
+			} catch ( ApiException $e ) {
+				$stored = ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $product ), $listed );
+			}
+		}
 		if ( null !== $stored?->pick && ! isset( $choices[ $stored->pick ] ) ) {
 			// A pick the list does not hold, or could not be read, stays selected.
 			$choices[ $stored->pick ] = '' === $stored->label ? $stored->pick : $stored->label;
 		}
-		return $this->templates->html(
+		// Outside the template, so a theme's copy of it binds its pick too.
+		$bound = sprintf( '<input type="hidden" name="%s" value="%s" />', esc_attr( $fields->name( PanelFields::VARIANT_BLANK ) ), esc_attr( $blank_id ) );
+		return $bound . $this->templates->html(
 			'admin/product-variant.php',
 			array(
 				'name'      => $fields->name( PanelFields::VARIANT ),
 				'id'        => $fields->id( PanelFields::VARIANT ),
 				'picked'    => $stored->pick ?? self::MATCH_BY_OPTIONS,
 				'matched'   => null !== $stored && null === $stored->pick && null !== $stored->ref
-					/* translators: %s: the matched variant's options, e.g. "Color: Red, Size: M". Option in the blank variant picker on the product edit page, shown to the merchant. */
-					? sprintf( __( 'Match by options (now: %s)', 'pixonaut-for-woocommerce' ), $stored->label )
-					/* translators: Option in the blank variant picker on the product edit page, shown to the merchant: match the variant by the product's options. */
-					: __( 'Match by options', 'pixonaut-for-woocommerce' ),
+					? self::found( $integration, $stored->label )
+					/* translators: Option in the blank variant picker on the product edit page, shown to the merchant: find the variant from the product's own attributes. */
+					: __( 'Find automatically', 'pixonaut-for-woocommerce' ),
 				'choices'   => $choices,
 				'retired'   => $retired,
-				'warnings'  => array_merge( $warnings, self::warnings( $stored, $config ) ),
+				'warnings'  => array_merge( $warnings, null === $listed && null === $stored ? array() : self::warnings( $stored, $config->blank_id === $blank_id ? $config : null, $integration ) ),
 				'explained' => $product->is_type( 'variation' )
-					? __( 'Match by options finds the blank variant with the same option values as this variation’s attributes. When none matches, the variation cannot be bought until you pick its variant here; it does not fall back to the product’s.', 'pixonaut-for-woocommerce' )
-					: __( 'Match by options finds the blank variant with the same option values as this product’s attributes. When none matches, the product cannot be bought until you pick its variant here.', 'pixonaut-for-woocommerce' ),
+					? __( 'Found from this variation’s attributes; it does not fall back to the product’s.', 'pixonaut-for-woocommerce' )
+					: __( 'Found from this product’s attributes.', 'pixonaut-for-woocommerce' ),
 			)
 		);
+	}
+
+	/**
+	 * The automatic choice once it found a variant: "Gelato variant: 28x40
+	 * (found automatically)".
+	 *
+	 * @param string $integration The print partner the blank is from; empty for the store's own blank.
+	 * @param string $label       The variant's options.
+	 */
+	private static function found( string $integration, string $label ): string {
+		return '' === $integration
+			/* translators: %s: the variant's options, e.g. "Color: Red, Size: M". Option in the blank variant picker on the product edit page: the variant found from the product's attributes. */
+			? sprintf( __( 'Blank variant: %s (found automatically)', 'pixonaut-for-woocommerce' ), $label )
+			/* translators: 1: a print partner, such as Gelato, whose product the blank is; 2: the variant's options, e.g. "28x40\" / 70x100cm". Option in the blank variant picker on the product edit page: the variant found from the product's attributes. */
+			: sprintf( __( '%1$s variant: %2$s (found automatically)', 'pixonaut-for-woocommerce' ), $integration, $label );
 	}
 
 	/**
@@ -106,11 +137,19 @@ final class VariantField {
 	 * variant. A product's notice is noted here; a variation's product is
 	 * noted once its variations are all saved (`note()`).
 	 *
+	 * A pick drawn for a blank other than the one the product is saved
+	 * with, such as the last blank's while another was being read, is not
+	 * that blank's variant: the variant is then matched by options.
+	 *
 	 * @param WC_Product $product A product or variation, not a variable product.
 	 * @param mixed      $posted  The field's value as posted, unslashed; anything but a ref matches by options.
+	 * @param mixed      $bound   The blank the field was drawn for, as posted, unslashed; null when not posted.
 	 */
-	public function save( WC_Product $product, mixed $posted ): void {
+	public function save( WC_Product $product, mixed $posted, mixed $bound = null ): void {
 		$pick = is_string( $posted ) ? sanitize_text_field( $posted ) : self::MATCH_BY_OPTIONS;
+		if ( is_string( $bound ) && sanitize_text_field( $bound ) !== ProductConfig::config_for( $product )->blank_id ) {
+			$pick = self::MATCH_BY_OPTIONS;
+		}
 		try {
 			$this->variants->pick( $product, self::MATCH_BY_OPTIONS === $pick ? null : $pick );
 		} catch ( ApiException $e ) {
@@ -177,19 +216,25 @@ final class VariantField {
 	/**
 	 * What is wrong with the variant used, as the store manager reads it.
 	 *
-	 * @param ProductVariant|null $stored The variant stored for the configuration's blank; null for none.
-	 * @param ProductConfig       $config The configuration it is sold under.
+	 * @param ProductVariant|null $stored      The variant stored for the configuration's blank; null for none.
+	 * @param ProductConfig|null  $config      The configuration it is sold under; null while it is another blank's.
+	 * @param string              $integration The print partner the blank is from; empty for the store's own blank.
 	 * @return list<string>
 	 */
-	private static function warnings( ?ProductVariant $stored, ProductConfig $config ): array {
+	private static function warnings( ?ProductVariant $stored, ?ProductConfig $config, string $integration ): array {
 		$problem = null === $stored ? ProductVariant::UNMAPPED : $stored->problem();
 		if ( ProductVariant::UNMAPPED === $problem ) {
-			return array( __( 'No variant of the blank matches, so customers cannot buy this. Pick the variant it is.', 'pixonaut-for-woocommerce' ) );
+			return array(
+				'' === $integration
+					? __( 'No blank variant found: pick one.', 'pixonaut-for-woocommerce' )
+					/* translators: %s: a print partner, such as Gelato, whose product the blank is. Shown under the blank variant picker on the product edit page. */
+					: sprintf( __( 'No %s variant found: pick one.', 'pixonaut-for-woocommerce' ), $integration ),
+			);
 		}
 		if ( ProductVariant::RETIRED === $problem ) {
 			return array( __( 'This variant is retired, so customers cannot buy this. Pick another variant.', 'pixonaut-for-woocommerce' ) );
 		}
-		$missing = null === $stored ? array() : $stored->sides_without_photo( $config );
+		$missing = null === $stored || null === $config ? array() : $stored->sides_without_photo( $config );
 		if ( array() === $missing ) {
 			return array();
 		}

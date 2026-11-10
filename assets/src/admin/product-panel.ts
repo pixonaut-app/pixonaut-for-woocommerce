@@ -8,6 +8,14 @@
 import './product-panel.css';
 import { domReady } from '../shared/dom-ready';
 import {
+	type BlankParts,
+	latestOnly,
+	readBlankParts,
+	showBlankFailed,
+	showBlankLoading,
+	showBlankParts,
+} from './blank-fields';
+import {
 	ajaxOptions,
 	type SearchOption,
 	type SearchRequest,
@@ -15,6 +23,12 @@ import {
 	searchUrls,
 	templateSearch,
 } from './catalogue-search';
+import {
+	initDisclosures,
+	showSideSummary,
+	showStoreSummary,
+	showViewsSummary,
+} from './disclosures';
 import { setFieldError } from './field-error';
 import {
 	describeLimit,
@@ -27,6 +41,7 @@ import { initRetiredVariants } from './retired-variants';
 import { initSideGroups } from './side-groups';
 import {
 	CUSTOM_SIZE,
+	isFixedDesign,
 	NEW_SIDE_INDEX,
 	NEW_SIZE_INDEX,
 	nextIndex,
@@ -185,7 +200,7 @@ export function showMisfitWarning(side: HTMLElement, warning: string): void {
  * then neither shows.
  */
 export function showModeWarnings(side: HTMLElement): void {
-	const mode = side.querySelector<HTMLSelectElement>('.pixonaut-side-mode');
+	const fixed = isFixedDesign(side);
 	const offers = side.dataset.offersProperties ?? '';
 	const standing = side.querySelector<HTMLElement>(
 		'.pixonaut-mode-warning--standing',
@@ -194,12 +209,10 @@ export function showModeWarnings(side: HTMLElement): void {
 		'.pixonaut-mode-warning--personalised',
 	);
 	if (standing) {
-		standing.hidden = !(mode?.value === STANDING_MODE && offers === 'true');
+		standing.hidden = !(fixed && offers === 'true');
 	}
 	if (personalised) {
-		personalised.hidden = !(
-			mode?.value === PERSONALISED_MODE && offers === 'false'
-		);
+		personalised.hidden = !(!fixed && offers === 'false');
 	}
 }
 
@@ -227,11 +240,10 @@ export function showBackgroundWarning(
 /** Shows a side's designer settings, its Groups and Canvas shape, while
  *  customers fill the side in: a standing side has no designer. */
 export function showGroups(side: HTMLElement): void {
-	const mode = side.querySelector<HTMLSelectElement>('.pixonaut-side-mode');
 	for (const setting of side.querySelectorAll<HTMLElement>(
 		'.pixonaut-groups, .pixonaut-side-canvas-ratio',
 	)) {
-		setting.hidden = mode?.value === STANDING_MODE;
+		setting.hidden = isFixedDesign(side);
 	}
 }
 
@@ -264,7 +276,7 @@ export function customSizesWithoutBlank(
 	root: HTMLElement,
 	withBlank: boolean,
 ): void {
-	for (const kind of root.querySelectorAll<HTMLSelectElement>(
+	for (const kind of root.querySelectorAll<HTMLInputElement>(
 		'.pixonaut-size-kind',
 	)) {
 		const row = kind.closest<HTMLElement>('.pixonaut-size');
@@ -352,7 +364,7 @@ export function checkSide(
 	);
 	for (const row of side.querySelectorAll<HTMLElement>('.pixonaut-size')) {
 		const custom =
-			row.querySelector<HTMLSelectElement>('.pixonaut-size-kind')?.value ===
+			row.querySelector<HTMLInputElement>('.pixonaut-size-kind')?.value ===
 			CUSTOM_SIZE;
 		const empty = [
 			...row.querySelectorAll<HTMLInputElement>(
@@ -392,14 +404,23 @@ export function checkSide(
 	return missing;
 }
 
-/** Shows the side's name in its heading as it is typed. */
-function showSideName(side: HTMLElement): void {
+/** Names the side in its heading: its name as typed, else its print
+ *  position's, else "Side". */
+export function showSideName(side: HTMLElement): void {
 	const label = side.querySelector<HTMLInputElement>('.pixonaut-side-label');
 	const name = side.querySelector<HTMLElement>('.pixonaut-side__name');
-	if (label && name) {
-		name.textContent =
-			label.value.trim() === '' ? '' : ` · ${label.value.trim()}`;
+	if (!name) {
+		return;
 	}
+	const placement = side.querySelector<HTMLSelectElement>(
+		'.pixonaut-side-placement',
+	);
+	const chosen =
+		placement && placement.value !== ''
+			? (placement.selectedOptions[0]?.text ?? '')
+			: '';
+	name.textContent =
+		label?.value.trim() || chosen || (name.dataset.placeholder ?? '');
 }
 
 /** Asks one of the plugin's routes; its results, or null when it cannot
@@ -510,11 +531,12 @@ function fromTemplate(
 	return holder.firstElementChild as HTMLElement | null;
 }
 
-/** Shows a size row's width, height and label only for a custom size. */
+/** Shows a size row's width, height and label only for a custom size, and
+ *  the print position's own size otherwise. */
 function initSize(row: HTMLElement, onRemove: () => void): void {
-	const kind = row.querySelector<HTMLSelectElement>('.pixonaut-size-kind');
+	const kind = row.querySelector<HTMLInputElement>('.pixonaut-size-kind');
 	const custom = row.querySelector<HTMLElement>('.pixonaut-size-custom');
-	const resolved = row.querySelector<HTMLElement>('.pixonaut-print-size');
+	const resolved = row.querySelector<HTMLElement>('.pixonaut-size-default');
 	const show = () => {
 		const isCustom = kind?.value === CUSTOM_SIZE;
 		if (custom) {
@@ -677,7 +699,7 @@ function initSide(panel: Panel, side: HTMLElement): void {
 	side.querySelector('.pixonaut-side-mode')?.addEventListener('change', () => {
 		showModeWarnings(side);
 		showGroups(side);
-		showStandingOptions(side, STANDING_MODE);
+		showStandingOptions(side);
 	});
 	// A size changed, added or removed makes new designs on the next update.
 	for (const event of ['change', 'input']) {
@@ -692,6 +714,9 @@ function initSide(panel: Panel, side: HTMLElement): void {
 	side
 		.querySelector('.pixonaut-side-label')
 		?.addEventListener('input', () => showSideName(side));
+	$(placement).on('change', () => showSideName(side));
+	showSideName(side);
+	showSideSummary(side);
 	// The saved template's picture: its link is never stored, so it is asked for.
 	readLinked(showLinked);
 
@@ -699,19 +724,30 @@ function initSide(panel: Panel, side: HTMLElement): void {
 		initSize(row, panel.onChange);
 	}
 	let sizeIndex = sizes.children.length;
-	side.querySelector('.pixonaut-add-size')?.addEventListener('click', () => {
+	const addSize = (kind: string) => {
 		const row = fromTemplate(
 			side.querySelector('template.pixonaut-size-template'),
 			NEW_SIZE_INDEX,
 			sizeIndex++,
 		);
-		if (row) {
+		const kindField = row?.querySelector<HTMLInputElement>(
+			'.pixonaut-size-kind',
+		);
+		if (row && kindField) {
+			kindField.value = kind;
 			sizes.append(row);
 			initSize(row, panel.onChange);
 			standingOptionsChanged(side);
 			panel.onChange();
+			row.querySelector<HTMLInputElement>('.pixonaut-size-label')?.focus();
 		}
-	});
+	};
+	side
+		.querySelector('.pixonaut-add-size')
+		?.addEventListener('click', () => addSize(PLACEMENT_DEFAULT_SIZE));
+	side
+		.querySelector('.pixonaut-add-custom-size')
+		?.addEventListener('click', () => addSize(CUSTOM_SIZE));
 	side.querySelector('.pixonaut-remove-side')?.addEventListener('click', () => {
 		side.remove();
 		panel.onChange();
@@ -744,10 +780,49 @@ export function initPanel(root: HTMLElement): void {
 		sideElements().forEach((side, index) => {
 			side.hidden = !withBlank && index > 0;
 		});
+		// One side sits in the group as it is; several are each a card.
+		root.classList.toggle(
+			'pixonaut-has-sides',
+			withBlank && sideElements().length > 1,
+		);
 		addSide.disabled = sideElements().length >= maxSides;
 		customSizesWithoutBlank(root, withBlank);
 		showSideHints(root, sideElements().length, withBlank);
-		showViews(root, blank.value);
+		if (root.dataset.blankFieldsUrl === undefined) {
+			showViews(root, blank.value);
+		}
+	};
+	// The printshop, variant and views of a blank picked, read before the product is updated.
+	const reads = latestOnly();
+	const readBlank = (id: string) => {
+		if (root.dataset.blankFieldsUrl === undefined) {
+			return;
+		}
+		const read = reads.next();
+		showBlankLoading(root, true);
+		void readBlankParts(root, id).then((parts: BlankParts | null) => {
+			if (!reads.isLatest(read)) {
+				return;
+			}
+			if (parts === null) {
+				showBlankFailed(root);
+				return;
+			}
+			showBlankParts(root, parts);
+			initRetiredVariants(root);
+			offerInitialViews(root);
+			showViewsSummary(root);
+			showBlankLoading(root, false);
+		});
+	};
+	// Without a blank nothing of the last one stays, nor a read still to answer.
+	const forgetBlank = () => {
+		if (root.dataset.blankFieldsUrl === undefined) {
+			return;
+		}
+		reads.next();
+		showBlankParts(root, { blank_html: '', views_html: '' });
+		showBlankLoading(root, false);
 	};
 	const panel: Panel = {
 		$,
@@ -808,6 +883,7 @@ export function initPanel(root: HTMLElement): void {
 			showBlank(thumbnail ?? '');
 			fillAll(listed ?? []);
 			update();
+			readBlank(id);
 			// The pictures, once they come; the placements picked meanwhile stay.
 			void placementsOf(panel.urls, panel.nonce, id).then((pictured) => {
 				if (pictured !== null && blank.value === id) {
@@ -827,6 +903,7 @@ export function initPanel(root: HTMLElement): void {
 		})
 		.on('select2:clear', () => {
 			showBlank('');
+			forgetBlank();
 			fillAll([]);
 			update();
 		});
@@ -835,9 +912,17 @@ export function initPanel(root: HTMLElement): void {
 		initSide(panel, side);
 	}
 	addSide.addEventListener('click', add);
-	root
-		.querySelector('.pixonaut-views')
-		?.addEventListener('change', () => offerInitialViews(root));
+	// Delegated: the views are drawn again when another blank is picked.
+	root.addEventListener('change', (event) => {
+		if (
+			event.target instanceof Element &&
+			event.target.closest('.pixonaut-views') !== null
+		) {
+			offerInitialViews(root);
+		}
+	});
+	initDisclosures(root);
+	showStoreSummary(root);
 	root
 		.querySelector('.pixonaut-personalise')
 		?.addEventListener('change', () => {

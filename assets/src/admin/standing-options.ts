@@ -6,20 +6,18 @@
 // Each tile links to adjusting its layout by hand; Reset, on a tile adjusted,
 // asks first.
 
+import { isFixedDesign } from './sides';
+
 /** The side's previews, or null when it has none to show. */
 function optionsOf(side: HTMLElement): HTMLElement | null {
 	return side.querySelector<HTMLElement>('.pixonaut-standing-options');
 }
 
-/** Shows the previews only while the side's mode is `standingMode`. */
-export function showStandingOptions(
-	side: HTMLElement,
-	standingMode: string,
-): void {
+/** Shows the previews only while the side is a fixed design. */
+export function showStandingOptions(side: HTMLElement): void {
 	const options = optionsOf(side);
-	const mode = side.querySelector<HTMLSelectElement>('.pixonaut-side-mode');
 	if (options) {
-		options.hidden = mode?.value !== standingMode;
+		options.hidden = !isFixedDesign(side);
 	}
 }
 

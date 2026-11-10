@@ -81,7 +81,7 @@ test('a variation without a blank variant, or with a retired one, cannot be boug
 		),
 	});
 	await small.locator('h3 strong').first().click();
-	const variant = small.getByLabel('Blank variant');
+	const variant = small.getByLabel('Variant', { exact: true });
 	await expect(variant.locator('option:checked')).toHaveText(
 		'Color: White, Size: S',
 	);
@@ -100,7 +100,7 @@ test('a variation without a blank variant, or with a retired one, cannot be boug
 		),
 	});
 	await retired.locator('h3 strong').first().click();
-	const retiredVariant = retired.getByLabel('Blank variant');
+	const retiredVariant = retired.getByLabel('Variant', { exact: true });
 	await expect(retiredVariant.locator('option:checked')).toHaveText(
 		'Color: Red, Size: M (retired)',
 	);

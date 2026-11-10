@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T15:20:00+00:00\n"
+"POT-Creation-Date: 2026-11-10T17:14:40+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: da_DK\n"
@@ -48,7 +48,7 @@ msgstr ""
 #. translators: The plugin's item in the admin menu, shown to the merchant; the product name, keep it as it is.
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
-#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:174
+#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:186
 #: src/Settings/SettingsPage.php:232 templates/admin/product-variation.php:38
 msgid "Pixonaut"
 msgstr "Pixonaut"
@@ -2495,6 +2495,10 @@ msgstr ""
 "Varen viser sit Pixonaut-billede eller gør det, når det er lavet: intet "
 "billede fra webshoplederen står i stedet."
 
+#: src/Admin/BlankFields.php:91
+msgid "No such product."
+msgstr "Varen findes ikke."
+
 #: src/Admin/CatalogueSearch.php:239 src/Admin/CatalogueSearch.php:317
 msgid "Pixonaut could not be searched. Try again in a moment."
 msgstr "Der kunne ikke søges i Pixonaut. Prøv igen om et øjeblik."
@@ -2634,7 +2638,7 @@ msgstr "Egen gruppe"
 
 #. translators: Button that removes a group the merchant added. Admin product page.
 #. translators: Button that removes one print size row from a side. Admin product page.
-#: src/Admin/GroupsStrings.php:49 templates/admin/product-side.php:65
+#: src/Admin/GroupsStrings.php:49 templates/admin/product-side.php:63
 msgid "Remove"
 msgstr "Fjern"
 
@@ -2787,7 +2791,7 @@ msgid ""
 "The layout of %s could not be changed in Pixonaut. Try again in a moment."
 msgstr "Layoutet for %s kunne ikke ændres i Pixonaut. Prøv igen om lidt."
 
-#: src/Admin/LinkedBlank.php:250
+#: src/Admin/LinkedBlank.php:278
 msgid ""
 "None set: Pixonaut cannot route this blank’s orders until a printshop is "
 "chosen."
@@ -2797,27 +2801,27 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:268 src/Admin/ProductPanel.php:586
+#: src/Admin/LinkedBlank.php:284 src/Admin/ProductPanel.php:722
 msgid "Workspace default"
 msgstr "Arbejdsområdets standard"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:270 src/Admin/ProductPanel.php:588
+#: src/Admin/LinkedBlank.php:286 src/Admin/ProductPanel.php:725
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Arbejdsområdets standard (%s)"
 
-#: src/Admin/LinkedBlank.php:273 src/Admin/ProductPanel.php:593
+#: src/Admin/LinkedBlank.php:289 src/Admin/ProductPanel.php:737
 msgid "A printshop no longer connected to the workspace"
 msgstr "Et trykkeri, der ikke længere er forbundet med arbejdsområdet"
 
 #. translators: %s: the printshop the blank's category names.
-#: src/Admin/LinkedBlank.php:277
+#: src/Admin/LinkedBlank.php:293
 #, php-format
 msgid "%s (from the blank’s category)"
 msgstr "%s (fra basisproduktets kategori)"
 
-#: src/Admin/LinkedBlank.php:307
+#: src/Admin/LinkedBlank.php:326
 msgid "Pixonaut could not be asked which printshop this is."
 msgstr "Pixonaut kunne ikke spørges om, hvilket trykkeri dette er."
 
@@ -2953,37 +2957,48 @@ msgstr "Dokumentation"
 msgid "Support"
 msgstr "Support"
 
-#: src/Admin/ProductPanel.php:298
+#: src/Admin/ProductPanel.php:380
 msgid ""
 "This variation cannot be bought until its Pixonaut configuration is fixed:"
 msgstr "Denne variant kan ikke købes, før dens Pixonaut-opsætning er rettet:"
 
-#: src/Admin/ProductPanel.php:299
+#: src/Admin/ProductPanel.php:381
 msgid ""
 "This product cannot be bought until its Pixonaut configuration is fixed:"
 msgstr "Denne vare kan ikke købes, før dens Pixonaut-opsætning er rettet:"
 
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:330 src/Admin/ProductPanel.php:540
-#: templates/admin/product-side.php:275
+#: src/Admin/ProductPanel.php:417 src/Admin/ProductPanel.php:638
 msgid "As the product says"
 msgstr "Som varen angiver"
 
 #. translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page.
-#: src/Admin/ProductPanel.php:332
+#: src/Admin/ProductPanel.php:419
 msgid "As the template says"
 msgstr "Som skabelonen angiver"
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:557
+#: src/Admin/ProductPanel.php:655
 #, php-format
-msgid "Store default: %s"
-msgstr "Webshoppens standard: %s"
+msgid "Store setting: %s"
+msgstr "Butiksindstilling: %s"
 
-#: src/Admin/ProductPanel.php:592
+#. translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page.
+#: src/Admin/ProductPanel.php:729
+#, php-format
+msgid "Workspace default (%s): prints only on a blank"
+msgstr "Arbejdsområdets standard (%s): trykker kun på et basisprodukt"
+
+#: src/Admin/ProductPanel.php:734
 msgid "The printshop chosen before"
 msgstr "Det tidligere valgte trykkeri"
+
+#. translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page.
+#: src/Admin/ProductPanel.php:736
+#, php-format
+msgid "%s (prints only on a blank)"
+msgstr "%s (trykker kun på et basisprodukt)"
 
 #: src/Admin/RegenerateNow.php:195 src/Admin/RegeneratePictures.php:463
 msgid "This product shows no Pixonaut picture."
@@ -3114,60 +3129,59 @@ msgstr "Hvad variantbilledet laves på"
 msgid "%1$s, photo %2$d"
 msgstr "%1$s, foto %2$d"
 
-#: src/Admin/VariantField.php:77
+#: src/Admin/VariantField.php:84
 msgid ""
 "Pixonaut could not be reached to list the blank’s variants. Try again later."
 msgstr ""
 "Pixonaut kunne ikke nås for at vise basisproduktets varianter. Prøv igen "
 "senere."
 
-#. translators: %s: the matched variant's options, e.g. "Color: Red, Size: M". Option in the blank variant picker on the product edit page, shown to the merchant.
-#: src/Admin/VariantField.php:91
+#. translators: Option in the blank variant picker on the product edit page, shown to the merchant: find the variant from the product's own attributes.
+#: src/Admin/VariantField.php:109
+msgid "Find automatically"
+msgstr "Find automatisk"
+
+#: src/Admin/VariantField.php:114
+msgid ""
+"Found from this variation’s attributes; it does not fall back to the "
+"product’s."
+msgstr ""
+"Findes ud fra denne variants egenskaber; varens egenskaber bruges ikke i "
+"stedet."
+
+#: src/Admin/VariantField.php:115
+msgid "Found from this product’s attributes."
+msgstr "Findes ud fra varens egenskaber."
+
+#. translators: %s: the variant's options, e.g. "Color: Red, Size: M". Option in the blank variant picker on the product edit page: the variant found from the product's attributes.
+#: src/Admin/VariantField.php:130
 #, php-format
-msgid "Match by options (now: %s)"
-msgstr "Match efter egenskaber (nu: %s)"
+msgid "Blank variant: %s (found automatically)"
+msgstr "Basisproduktvariant: %s (fundet automatisk)"
 
-#. translators: Option in the blank variant picker on the product edit page, shown to the merchant: match the variant by the product's options.
-#: src/Admin/VariantField.php:93
-msgid "Match by options"
-msgstr "Match efter egenskaber"
-
-#: src/Admin/VariantField.php:98
-msgid ""
-"Match by options finds the blank variant with the same option values as this "
-"variation’s attributes. When none matches, the variation cannot be bought "
-"until you pick its variant here; it does not fall back to the product’s."
-msgstr ""
-"Match efter egenskaber finder den basisproduktvariant, der har de samme "
-"egenskabsværdier som denne variants egenskaber. Matcher ingen, kan varianten "
-"ikke købes, før du vælger dens basisproduktvariant her; den falder ikke "
-"tilbage på varens."
-
-#: src/Admin/VariantField.php:99
-msgid ""
-"Match by options finds the blank variant with the same option values as this "
-"product’s attributes. When none matches, the product cannot be bought until "
-"you pick its variant here."
-msgstr ""
-"Match efter egenskaber finder den basisproduktvariant, der har de samme "
-"egenskabsværdier som denne vares egenskaber. Matcher ingen, kan varen ikke "
-"købes, før du vælger dens basisproduktvariant her."
+#. translators: 1: a print partner, such as Gelato, whose product the blank is; 2: the variant's options, e.g. "28x40\" / 70x100cm". Option in the blank variant picker on the product edit page: the variant found from the product's attributes.
+#: src/Admin/VariantField.php:132
+#, php-format
+msgid "%1$s variant: %2$s (found automatically)"
+msgstr "%1$s-variant: %2$s (fundet automatisk)"
 
 #. translators: %s: the variant's options, e.g. "Color: Red, Size: M".
-#: src/Admin/VariantField.php:174
+#: src/Admin/VariantField.php:213
 #, php-format
 msgid "%s (retired)"
 msgstr "%s (udgået)"
 
-#: src/Admin/VariantField.php:187
-msgid ""
-"No variant of the blank matches, so customers cannot buy this. Pick the "
-"variant it is."
-msgstr ""
-"Ingen af basisproduktets varianter passer, så kunderne kan ikke købe den. "
-"Vælg den rigtige basisproduktvariant."
+#: src/Admin/VariantField.php:229
+msgid "No blank variant found: pick one."
+msgstr "Ingen basisproduktvariant fundet: vælg en."
 
-#: src/Admin/VariantField.php:190
+#. translators: %s: a print partner, such as Gelato, whose product the blank is. Shown under the blank variant picker on the product edit page.
+#: src/Admin/VariantField.php:231
+#, php-format
+msgid "No %s variant found: pick one."
+msgstr "Ingen %s-variant fundet: vælg en."
+
+#: src/Admin/VariantField.php:235
 msgid ""
 "This variant is retired, so customers cannot buy this. Pick another variant."
 msgstr ""
@@ -3175,7 +3189,7 @@ msgstr ""
 "anden."
 
 #. translators: %l: the sides with no photo, e.g. "Front and Back".
-#: src/Admin/VariantField.php:199
+#: src/Admin/VariantField.php:244
 msgid ""
 "No view the product is shown in has a photo of this variant on %l, so "
 "customers cannot design it."
@@ -3606,19 +3620,19 @@ msgstr "Altid skabelonens form"
 msgid "Always the chosen print size’s shape"
 msgstr "Altid den valgte trykstørrelses form"
 
-#: src/Catalogue/InvalidReason.php:108
+#: src/Catalogue/InvalidReason.php:115
 msgid "Choose a template."
 msgstr "Vælg en skabelon."
 
-#: src/Catalogue/InvalidReason.php:110
+#: src/Catalogue/InvalidReason.php:117
 msgid "Choose where on the blank the design is printed."
 msgstr "Vælg, hvor på basisproduktet designet skal trykkes."
 
-#: src/Catalogue/InvalidReason.php:112
+#: src/Catalogue/InvalidReason.php:119
 msgid "The blank no longer exists in Pixonaut."
 msgstr "Basisproduktet findes ikke længere i Pixonaut."
 
-#: src/Catalogue/InvalidReason.php:114
+#: src/Catalogue/InvalidReason.php:121
 msgid ""
 "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or "
 "choose another blank."
@@ -3626,7 +3640,7 @@ msgstr ""
 "Basisproduktet er slettet i Pixonaut. Gendan det i Pixonaut-studiet, eller "
 "vælg et andet basisprodukt."
 
-#: src/Catalogue/InvalidReason.php:116
+#: src/Catalogue/InvalidReason.php:123
 msgid ""
 "The blank no longer has this placement, or Pixonaut cannot size a print for "
 "it."
@@ -3634,11 +3648,11 @@ msgstr ""
 "Basisproduktet har ikke længere denne placering, eller Pixonaut kan ikke "
 "beregne en trykstørrelse til den."
 
-#: src/Catalogue/InvalidReason.php:118
+#: src/Catalogue/InvalidReason.php:125
 msgid "The template no longer exists in Pixonaut."
 msgstr "Skabelonen findes ikke længere i Pixonaut."
 
-#: src/Catalogue/InvalidReason.php:120
+#: src/Catalogue/InvalidReason.php:127
 msgid ""
 "The template is paused or deleted in Pixonaut. Make it live again, or choose "
 "another template."
@@ -3647,20 +3661,20 @@ msgstr ""
 "eller vælg en anden skabelon."
 
 #. translators: %d: most sides a product can have.
-#: src/Catalogue/InvalidReason.php:124
+#: src/Catalogue/InvalidReason.php:131
 #, php-format
 msgid "A product has at most %d sides."
 msgstr "En vare har højst %d sider."
 
-#: src/Catalogue/InvalidReason.php:128
+#: src/Catalogue/InvalidReason.php:135
 msgid "Two sides use the same placement. Each placement can be one side only."
 msgstr "To sider bruger samme placering. Hver placering kan kun være én side."
 
-#: src/Catalogue/InvalidReason.php:130
+#: src/Catalogue/InvalidReason.php:137
 msgid "Two sides have the same key. Give each side its own."
 msgstr "To sider har samme nøgle. Giv hver side sin egen."
 
-#: src/Catalogue/InvalidReason.php:132
+#: src/Catalogue/InvalidReason.php:139
 msgid ""
 "A custom print size needs a width and height in millimetres, both above zero."
 msgstr ""
@@ -3668,12 +3682,12 @@ msgstr ""
 "over nul."
 
 #. translators: %d: most print sizes one side can offer.
-#: src/Catalogue/InvalidReason.php:136
+#: src/Catalogue/InvalidReason.php:143
 #, php-format
 msgid "A side offers at most %d print sizes."
 msgstr "En side tilbyder højst %d trykstørrelser."
 
-#: src/Catalogue/InvalidReason.php:140
+#: src/Catalogue/InvalidReason.php:147
 msgid ""
 "Add a print size in millimetres. Without a blank there is no placement to "
 "take one from."
@@ -3681,15 +3695,15 @@ msgstr ""
 "Tilføj en trykstørrelse i millimeter. Uden basisprodukt er der ingen "
 "placering at hente en fra."
 
-#: src/Catalogue/InvalidReason.php:142
+#: src/Catalogue/InvalidReason.php:149
 msgid "The print size is larger than the placement can print."
 msgstr "Trykstørrelsen er større, end der kan trykkes på placeringen."
 
-#: src/Catalogue/InvalidReason.php:144
+#: src/Catalogue/InvalidReason.php:151
 msgid "The print size does not match the template's aspect ratio."
 msgstr "Trykstørrelsen passer ikke til skabelonens størrelsesforhold."
 
-#: src/Catalogue/InvalidReason.php:146
+#: src/Catalogue/InvalidReason.php:153
 msgid ""
 "Pixonaut could not check the configuration. Check the connection, then "
 "update the product again."
@@ -3697,7 +3711,7 @@ msgstr ""
 "Pixonaut kunne ikke tjekke opsætningen. Tjek forbindelsen, og opdatér "
 "derefter varen igen."
 
-#: src/Catalogue/InvalidReason.php:148
+#: src/Catalogue/InvalidReason.php:155
 msgid ""
 "Pixonaut would not make the design of a standing side. Check the side's "
 "template, placement and print size, then update the product again."
@@ -3705,7 +3719,7 @@ msgstr ""
 "Pixonaut ville ikke lave designet til en fast side. Tjek sidens skabelon, "
 "placering og trykstørrelse, og opdatér derefter varen igen."
 
-#: src/Catalogue/InvalidReason.php:150
+#: src/Catalogue/InvalidReason.php:157
 msgid ""
 "Pixonaut would not make the design of a standing side: the store may not "
 "create and approve designs. Check the connection's permissions in the "
@@ -3715,7 +3729,7 @@ msgstr ""
 "oprette og godkende designs. Tjek forbindelsens tilladelser i Pixonaut-"
 "studiet, og opdatér derefter varen igen."
 
-#: src/Catalogue/InvalidReason.php:152
+#: src/Catalogue/InvalidReason.php:159
 msgid ""
 "The template of a standing side does not fit the placement at any of the "
 "blank's sizes, so none of them can be printed. Choose a template that fits."
@@ -3724,7 +3738,11 @@ msgstr ""
 "basisproduktets størrelser, så ingen af dem kan trykkes. Vælg en skabelon, "
 "der passer."
 
-#: src/Catalogue/InvalidReason.php:154
+#: src/Catalogue/InvalidReason.php:161
+msgid "Choose a blank, or a printshop that prints without one."
+msgstr "Vælg et basisprodukt eller et trykkeri, der trykker uden basisprodukt."
+
+#: src/Catalogue/InvalidReason.php:163
 msgid ""
 "The configuration was saved by a newer version of Pixonaut for WooCommerce. "
 "Update the plugin."
@@ -3732,7 +3750,7 @@ msgstr ""
 "Opsætningen blev gemt af en nyere version af Pixonaut for WooCommerce. "
 "Opdatér pluginet."
 
-#: src/Catalogue/InvalidReason.php:156
+#: src/Catalogue/InvalidReason.php:165
 msgid "Pixonaut cannot print this configuration."
 msgstr "Pixonaut kan ikke trykke denne opsætning."
 
@@ -5306,8 +5324,7 @@ msgid "Close"
 msgstr "Luk"
 
 #. translators: Heading above a cart or order item's design details, shown to the shopper.
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: whether customers design the product.
-#: src/Labels.php:403 templates/admin/product-fields.php:60
+#: src/Labels.php:403
 msgid "Personalisation"
 msgstr "Personalisering"
 
@@ -5364,8 +5381,8 @@ msgstr ""
 "Der er ny sporing for din ordre. Følg din pakke med oplysningerne nedenfor."
 
 #. translators: Accessible name of the tabs that switch between a product's sides, such as front and back, on the product page, read by screen readers.
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product sides, such as front and back, each with its template.
-#: src/Labels.php:456 templates/admin/product-fields.php:112
+#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's sides, such as front and back, each with its template.
+#: src/Labels.php:456 templates/admin/product-fields.php:152
 msgid "Sides"
 msgstr "Sider"
 
@@ -5905,7 +5922,7 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
 #. translators: Label of the dropdown choosing how the product page designer lays out its form. Admin product page.
-#: src/Settings/Settings.php:136 templates/admin/product-fields.php:164
+#: src/Settings/Settings.php:136 templates/admin/product-fields.php:214
 msgid "Form layout"
 msgstr "Formularlayout"
 
@@ -5952,7 +5969,7 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the designer's form numbers its groups.
 #. translators: Label of the dropdown choosing whether the designer's form numbers its groups. Admin product page.
-#: src/Settings/Settings.php:174 templates/admin/product-fields.php:183
+#: src/Settings/Settings.php:174 templates/admin/product-fields.php:219
 msgid "Group numbers"
 msgstr "Gruppenumre"
 
@@ -6387,7 +6404,7 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how customers approve their design before it is printed.
 #. translators: Label of the dropdown choosing how customers approve their design (proof) before printing. Admin product page.
-#: src/Settings/SettingsPage.php:579 templates/admin/product-fields.php:202
+#: src/Settings/SettingsPage.php:579 templates/admin/product-fields.php:224
 msgid "Approval"
 msgstr "Godkendelse"
 
@@ -7300,7 +7317,7 @@ msgstr ""
 #. translators: Button in developer tools that restores a field's default value; here Reset is a verb.
 #. translators: Link that puts an option whose layout was adjusted by hand back on the side's own layout. Admin product page.
 #: templates/admin/developer-tools.php:91
-#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:224
+#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:227
 msgid "Reset"
 msgstr "Nulstil"
 
@@ -7403,8 +7420,7 @@ msgid "Key prefix"
 msgstr "Nøglepræfiks"
 
 #. translators: Row heading in developer tools: live or sandbox.
-#. translators: Label of the dropdown choosing whether a side is personalised by customers or standing. Admin product page.
-#: templates/admin/developer-tools.php:202 templates/admin/product-side.php:160
+#: templates/admin/developer-tools.php:202
 msgid "Mode"
 msgstr "Tilstand"
 
@@ -7673,107 +7689,101 @@ msgstr "Hvad sagde trykkeriet?"
 msgid "The printshop's order reference, if it gave one"
 msgstr "Trykkeriets ordrereference, hvis det gav en"
 
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: whether customers design the product.
-#: templates/admin/product-fields.php:61
-msgid "Whether customers design this product before they buy it."
-msgstr "Om kunderne designer denne vare, før de køber den."
+#. translators: Label of the printshop that makes the product's orders. Admin product page.
+#: templates/admin/product-blank.php:21 templates/admin/product-fields.php:122
+msgid "Printshop"
+msgstr "Trykkeri"
 
-#: templates/admin/product-fields.php:63
+#. translators: Link to the Pixonaut studio where the merchant changes the blank's printshop. Admin product page.
+#: templates/admin/product-blank.php:25
+msgid "Change in Pixonaut"
+msgstr "Skift i Pixonaut"
+
+#. translators: Label of the variant of the blank the product is printed on. Admin product page.
+#. translators: Label of the dropdown choosing which variant of the Pixonaut blank this product is printed on. Admin product page.
+#: templates/admin/product-blank.php:31 templates/admin/product-variant.php:26
+msgid "Variant"
+msgstr "Basisproduktvariant"
+
+#. translators: Label of the variant of the blank the product is printed on. Admin product page.
+#: templates/admin/product-blank.php:32
+msgid "Each variation has its own, under Variations."
+msgstr "Hver variant har sin egen under Varianter."
+
+#: templates/admin/product-fields.php:91
 msgctxt "checkbox on the product: customers personalise it"
 msgid "Personalise"
 msgstr "Kan personaliseres"
 
-#: templates/admin/product-fields.php:66
+#: templates/admin/product-fields.php:94
 msgid "Customers design this product with a Pixonaut template."
 msgstr "Kunderne designer denne vare med en Pixonaut-skabelon."
 
-#: templates/admin/product-fields.php:68
-msgid ""
-"Tick it to choose the blank it is printed on, its sides and their templates."
-msgstr ""
-"Markér feltet for at vælge det basisprodukt, den trykkes på, dens sider og "
-"deres skabeloner."
+#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: what the product is printed on, and where.
+#: templates/admin/product-fields.php:104
+msgid "Printing"
+msgstr "Tryk"
 
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the blank the design is printed on.
-#: templates/admin/product-fields.php:74
+#. translators: Label of the blank picker: what the product is printed on, a blank such as a T-shirt, or nothing. Admin product page.
+#: templates/admin/product-fields.php:106
 msgid "Printed on"
 msgstr "Trykkes på"
 
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the blank the design is printed on.
-#: templates/admin/product-fields.php:75
+#. translators: Placeholder of the blank picker: the product has no blank, only the design is printed. Admin product page.
+#: templates/admin/product-fields.php:108
+msgid "No blank: the design alone"
+msgstr "Intet basisprodukt: kun designet"
+
+#: templates/admin/product-fields.php:115
 msgid ""
-"The blank product the design is printed on, and which of its variants this "
-"is."
+"Without a blank, the design is printed by itself, such as a poster or a card."
 msgstr ""
-"Det basisprodukt, designet trykkes på, og hvilken basisproduktvariant det er."
+"Uden basisprodukt trykkes kun designet, f.eks. en plakat eller et kort."
 
-#: templates/admin/product-fields.php:77
-msgctxt "Pixonaut blank, the unprinted product a design is printed on"
-msgid "Blank"
-msgstr "Basisprodukt"
+#: templates/admin/product-fields.php:118
+msgid "Reading the blank from Pixonaut…"
+msgstr "Henter basisproduktet fra Pixonaut…"
 
-#. translators: Placeholder of the blank dropdown: the product has no blank, only a template. Admin product page.
-#: templates/admin/product-fields.php:79
-msgid "No blank: template only"
-msgstr "Intet basisprodukt: kun skabelon"
-
-#: templates/admin/product-fields.php:86
+#. translators: Shown in the Pixonaut tab of the product edit page when a blank just picked could not be read; updating the product saves the blank and reads it again.
+#: templates/admin/product-fields.php:119
 msgid ""
-"The product the design is printed on, e.g. a T-shirt. Without one, customers "
-"buy the template’s design alone, such as a poster or a card."
+"Pixonaut could not be reached to read this blank. Update the product to try "
+"again."
 msgstr ""
-"Den vare, designet trykkes på, f.eks. en T-shirt. Uden et basisprodukt køber "
-"kunderne kun skabelonens design, f.eks. en plakat eller et kort."
+"Pixonaut kunne ikke nås for at hente basisproduktet. Opdater produktet for "
+"at prøve igen."
 
-#. translators: Label of the printshop that makes the product's orders. Admin product page.
-#: templates/admin/product-fields.php:89
-msgid "Printshop"
-msgstr "Trykkeri"
+#: templates/admin/product-fields.php:134
+msgid "Only printshops that print without a blank are listed."
+msgstr "Kun trykkerier, der trykker uden basisprodukt, vises."
 
-#. translators: Screen reader label of the locked printshop of a product on a blank. Admin product page.
-#: templates/admin/product-fields.php:97
-msgid "Printshop, decided by the blank"
-msgstr "Trykkeri, bestemt af basisproduktet"
+#: templates/admin/product-fields.php:137
+msgid "No printshop in your workspace prints without a blank."
+msgstr "Intet trykkeri i dit arbejdsområde trykker uden basisprodukt."
 
-#. translators: Link to the Pixonaut studio where the merchant changes the blank's printshop. Admin product page.
-#: templates/admin/product-fields.php:101
-msgid "Change in Pixonaut"
-msgstr "Skift i Pixonaut"
+#. translators: Link to the printshops of the Pixonaut studio, where the merchant adds one. Admin product page.
+#: templates/admin/product-fields.php:139
+msgid "Add one in Pixonaut"
+msgstr "Tilføj et i Pixonaut"
 
-#: templates/admin/product-fields.php:105
-msgid ""
-"Where this product’s orders are made. Workspace default sends them to the "
-"workspace’s default printshop."
-msgstr ""
-"Hvor denne vares ordrer fremstilles. Med »Arbejdsområdets standard« går de "
-"til arbejdsområdets standardtrykkeri."
-
-#: templates/admin/product-fields.php:106
-msgid "The blank decides where its prints are made."
-msgstr "Basisproduktet bestemmer, hvor dets tryk fremstilles."
-
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product sides, such as front and back, each with its template.
-#: templates/admin/product-fields.php:113
-msgid ""
-"Each side is one place on the blank customers design, with its template and "
-"print sizes."
-msgstr ""
-"Hver side er ét sted på basisproduktet, som kunderne designer, med sin "
-"skabelon og sine trykstørrelser."
+#. translators: Heading of the group of fields in the Pixonaut tab of the product edit page holding a product's only side: its template and the print sizes customers choose.
+#: templates/admin/product-fields.php:151
+msgid "Template and print sizes"
+msgstr "Skabelon og trykstørrelser"
 
 #. translators: Button that adds a product side. Admin product page.
-#: templates/admin/product-fields.php:123
+#: templates/admin/product-fields.php:163
 msgid "Add side"
 msgstr "Tilføj side"
 
 #. translators: %d: most sides a product can have.
-#: templates/admin/product-fields.php:129
+#: templates/admin/product-fields.php:169
 #, php-format
-msgid "Each placement can be one side, up to %d sides."
-msgstr "Hver placering kan være én side, op til %d sider."
+msgid "Another print position, such as the back. Up to %d sides."
+msgstr "Endnu en trykposition, f.eks. bagsiden. Op til %d sider."
 
 #. translators: %d: most sides Pixonaut's designer is built for.
-#: templates/admin/product-fields.php:140
+#: templates/admin/product-fields.php:180
 #, php-format
 msgid ""
 "Pixonaut recommends at most %d sides. Each side is one more step in the "
@@ -7782,143 +7792,44 @@ msgstr ""
 "Pixonaut anbefaler højst %d sider. Hver side er ét trin mere i "
 "designværktøjet og gør det langsommere på kundens enhed."
 
-#: templates/admin/product-fields.php:148
-msgid "A product without a blank has one side. Choose a blank to give it more."
-msgstr ""
-"En vare uden basisprodukt har én side. Vælg et basisprodukt for at give den "
-"flere."
+#. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the Pixonaut settings page's choices, changed for this product alone.
+#: templates/admin/product-fields.php:197
+msgid "Store settings for this product"
+msgstr "Butiksindstillinger for denne vare"
 
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: how customers open the designer and approve their design.
-#: templates/admin/product-fields.php:152
-msgid "On the product page"
-msgstr "På varesiden"
+#. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the Pixonaut settings page's choices, changed for this product alone.
+#: templates/admin/product-fields.php:198
+#: templates/admin/product-fields.php:202
+msgid "Follows the store’s settings"
+msgstr "Følger butikkens indstillinger"
 
-#. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: how customers open the designer and approve their design.
-#: templates/admin/product-fields.php:153
-msgid ""
-"How customers open the designer, the photos they see their design on, and "
-"how they approve it. Store default follows the Pixonaut settings page."
-msgstr ""
-"Hvordan kunderne åbner designværktøjet, hvilke fotos de ser deres design på, "
-"og hvordan de godkender det. Webshoppens standard følger Pixonaut-"
-"indstillingerne."
+#. translators: %d: how many of the store's settings this product changes. Admin product page.
+#: templates/admin/product-fields.php:198
+#: templates/admin/product-fields.php:204
+#, php-format
+msgid "%d changed for this product"
+msgid_plural "%d changed for this product"
+msgstr[0] "%d ændret for denne vare"
+msgstr[1] "%d ændret for denne vare"
+
+#: templates/admin/product-fields.php:209
+msgid "Each follows the Pixonaut settings page until you change it here."
+msgstr "Hver følger Pixonaut-indstillingerne, indtil du ændrer den her."
 
 #. translators: Label of the dropdown choosing how customers open the designer on the product page. Admin product page.
-#: templates/admin/product-fields.php:155
+#: templates/admin/product-fields.php:212
 msgid "Layout"
 msgstr "Layout"
 
-#: templates/admin/product-fields.php:161
-msgid "How customers open the designer on the product page."
-msgstr "Hvordan kunderne åbner designværktøjet på varesiden."
-
-#: templates/admin/product-fields.php:170
-msgid ""
-"How the designer on the product page lays out its form. The Personalise "
-"button opens Pixonaut’s designer, which always follows the template."
-msgstr ""
-"Hvordan designværktøjet på varesiden opstiller sin formular. Personalisér-"
-"knappen åbner Pixonauts designværktøj, som altid følger skabelonen."
-
 #. translators: Label of the dropdown choosing where the product's options, such as Size or Colour, stand in the designer's form. Admin product page.
-#: templates/admin/product-fields.php:174
+#: templates/admin/product-fields.php:217
 msgid "Options in the form"
 msgstr "Muligheder i formularen"
 
-#: templates/admin/product-fields.php:180
-msgid ""
-"Where the product’s options, such as Size or Colour, stand in the designer "
-"on the product page: on top of the form, or each in a group of its own named "
-"after it. A side whose Groups you arranged keeps them."
-msgstr ""
-"Hvor varens muligheder, fx Størrelse eller Farve, står i designværktøjet på "
-"varesiden: øverst i formularen eller hver i sin egen gruppe opkaldt efter "
-"den. En side, hvis Grupper er ordnet, beholder dem."
-
-#: templates/admin/product-fields.php:189
-msgid ""
-"Whether the designer on the product page numbers its groups: 1 Photo, 2 Text "
-"on one page, Step 1 of 2 in steps. Off shows the group names with no numbers."
-msgstr ""
-"Om designværktøjet på varesiden nummererer sine grupper: 1 Foto, 2 Tekst på "
-"én side, Trin 1 af 2 i trin. Fra viser gruppernes navne uden numre."
-
-#. translators: Label of the dropdown choosing whether the designer's canvas keeps the template's proportions or takes the chosen print size's. Admin product page.
-#: templates/admin/product-fields.php:193 templates/admin/product-side.php:271
-msgid "Canvas shape"
-msgstr "Lærredsform"
-
-#: templates/admin/product-fields.php:199
-msgid ""
-"The shape customers design on when a print size’s proportions are not the "
-"template’s. In the template’s shape, the canvas keeps its shape whatever "
-"size is chosen, and the print is cropped to the size as the template fits "
-"it; in the print size’s shape, the canvas changes shape with each size. Each "
-"side can choose otherwise."
-msgstr ""
-"Formen på det lærred, kunderne designer på, når en trykstørrelses "
-"proportioner ikke er skabelonens. Med skabelonens form bevarer lærredet sin "
-"form, uanset hvilken størrelse der vælges, og trykket beskæres til "
-"størrelsen, sådan som skabelonen tilpasses den; med trykstørrelsens form "
-"skifter lærredet form med hver størrelse. Hver side kan vælge anderledes."
-
-#: templates/admin/product-fields.php:208
-msgid "How customers approve their design before it is printed."
-msgstr "Hvordan kunderne godkender deres design, før det trykkes."
-
-#. translators: Label of the views customers see their design in. Admin product page.
-#: templates/admin/product-fields.php:212
-msgid "Shown in"
-msgstr "Vises i"
-
-#: templates/admin/product-fields.php:231
-msgid "This placement has no views in Pixonaut yet."
-msgstr "Denne placering har endnu ingen visninger i Pixonaut."
-
-#: templates/admin/product-fields.php:237
-#: templates/admin/product-fields.php:269
-msgctxt "view of the design alone, without the product"
-msgid "Design"
-msgstr "Design"
-
-#: templates/admin/product-fields.php:242
-msgid "The design alone, without the product"
-msgstr "Designet alene, uden varen"
-
-#: templates/admin/product-fields.php:248
-msgid ""
-"Pixonaut could not be reached to list the blank’s views. The views chosen "
-"before are kept."
-msgstr ""
-"Pixonaut kunne ikke nås for at hente basisproduktets visninger. De tidligere "
-"valgte visninger bevares."
-
-#: templates/admin/product-fields.php:250
-msgid "The blank’s views are listed once the product is updated with it."
-msgstr "Basisproduktets visninger vises, når varen er opdateret med det."
-
-#: templates/admin/product-fields.php:252
-#: templates/admin/product-fields.php:271
-msgid ""
-"Customers see their design in the views ticked here, and on its own in the "
-"Design view when that is ticked. With none ticked, they see it in every view "
-"of the blank and in the Design view. The designer opens on the starting "
-"view, one of those ticked."
-msgstr ""
-"Kunderne ser deres design i de visninger, der er markeret her, og alene i "
-"visningen Design, når den er markeret. Er ingen markeret, ser de det i alle "
-"basisproduktets visninger og i visningen Design. Designværktøjet åbner på "
-"startvisningen, som er en af de markerede."
-
-#. translators: Label of the dropdown choosing which view the designer opens on. Admin product page.
-#: templates/admin/product-fields.php:257
-msgid "Starting view"
-msgstr "Startvisning"
-
-#. translators: Option in the starting view dropdown: open on the first view of the blank. Admin product page.
-#: templates/admin/product-fields.php:259
-msgid "The first view"
-msgstr "Den første visning"
+#. translators: Label of the dropdown choosing whether the designer's canvas keeps the template's proportions or takes the chosen print size's, asked as a question. Admin product page.
+#: templates/admin/product-fields.php:222 templates/admin/product-side.php:292
+msgid "When a print size has other proportions"
+msgstr "Når en trykstørrelse har andre proportioner"
 
 #: templates/admin/product-not-connected.php:18
 msgid ""
@@ -8000,16 +7911,6 @@ msgstr ""
 msgid "The product image could not be regenerated. Try again in a moment."
 msgstr "Varebilledet kunne ikke laves igen. Prøv igen om et øjeblik."
 
-#: templates/admin/product-regenerate.php:45
-msgid ""
-"Draws the product image, its gallery pictures and its variations’ images "
-"again from the template version and settings they use now: in background "
-"jobs, or right away while this page stays open."
-msgstr ""
-"Laver varebilledet, billederne i varegalleriet og varianternes billeder igen "
-"ud fra den skabelonversion og de indstillinger, de bruger nu: i baggrundsjob "
-"eller med det samme, mens denne side er åben."
-
 #: templates/admin/product-showcase-images.php:30
 msgid ""
 "Pixonaut pictures are not used as product images: turn on Use Pixonaut "
@@ -8020,17 +7921,9 @@ msgstr ""
 
 #: templates/admin/product-showcase-images.php:35
 msgid ""
-"While no showcase set is ticked, the product image is the template with its "
-"own defaults. Choose what it is drawn on: the photo the product page starts "
-"on, any photo of the blank, such as a scene, even of a view customers are "
-"not shown, or the design alone. The designer still starts on its own "
-"starting view."
+"What the product image is drawn on, while no example set below is ticked."
 msgstr ""
-"Så længe intet eksempelsæt er markeret, er varebilledet skabelonen med dens "
-"egne standardværdier. Vælg, hvad det laves på: det foto, varesiden viser "
-"først, et vilkårligt foto af basisproduktet, fx en scene, også af en "
-"visning, kunderne ikke får vist, eller designet alene. Designværktøjet åbner "
-"stadig på sin egen startvisning."
+"Hvad varebilledet tegnes på, så længe intet eksempelsæt nedenfor er markeret."
 
 #: templates/admin/product-showcase-images.php:40
 msgid ""
@@ -8042,15 +7935,11 @@ msgstr ""
 
 #: templates/admin/product-showcase-images.php:42
 msgid ""
-"Show the template filled in with one of its showcase sets, example values "
-"such as a real name or photo, instead of its placeholders. The first set "
-"ticked is the product image, the others are added to the product gallery. "
-"Customers still start designing from the template’s own defaults."
+"Example sets of the template: the first ticked is the product image, the "
+"others go to its gallery."
 msgstr ""
-"Vis skabelonen udfyldt med et af dens eksempelsæt, eksempelværdier som et "
-"rigtigt navn eller foto, i stedet for dens pladsholdere. Det første "
-"markerede sæt bliver varebilledet, og de øvrige føjes til varegalleriet. "
-"Kunderne begynder stadig at designe ud fra skabelonens egne standardværdier."
+"Skabelonens eksempelsæt: det første markerede bliver varebilledet, de andre "
+"kommer i galleriet."
 
 #: templates/admin/product-showcase-images.php:60
 msgid ""
@@ -8086,158 +7975,114 @@ msgstr ""
 msgid "Up to %d sets are shown; those ticked after them are left out."
 msgstr "Op til %d sæt vises; sæt, der er markeret efter dem, udelades."
 
-#. translators: Screen reader label of the dropdown that picks a print size for a side, on the admin product page, read by the merchant.
-#. translators: Heading of the print size picker in the product page's designer, as Pixonaut's designer words it.
-#: templates/admin/product-side.php:41
-#: templates/storefront/form-placeholder.php:380
-msgid "Print size"
-msgstr "Trykstørrelse"
+#. translators: Radio button on a print size: this size is chosen when the designer opens. Admin product page.
+#: templates/admin/product-side.php:45
+msgid "Selected when the designer opens"
+msgstr "Valgt, når designværktøjet åbnes"
 
-#. translators: Option in a side's print size dropdown: use the print size the placement defines. Admin product page.
-#: templates/admin/product-side.php:42
-msgid "Placement default"
-msgstr "Placeringens standard"
+#. translators: A print size row: the size the print position (placement) itself defines. Admin product page.
+#: templates/admin/product-side.php:49
+msgid "The print position’s size"
+msgstr "Trykpositionens størrelse"
 
-#. translators: Option in a side's print size dropdown: enter an own width and height. Admin product page.
-#: templates/admin/product-side.php:43
-msgid "Custom size"
-msgstr "Brugerdefineret størrelse"
+#. translators: Placeholder of the field naming a print size, which customers see. Admin product page.
+#: templates/admin/product-side.php:55
+msgid "Name, e.g. A3"
+msgstr "Navn, f.eks. A3"
 
-#. translators: Label of a custom print size's width field. Admin product page.
-#: templates/admin/product-side.php:50
-msgid "Width"
-msgstr "Bredde"
+#. translators: Screen reader label of the field naming a print size. Admin product page.
+#: templates/admin/product-side.php:55
+msgid "Label customers see"
+msgstr "Navn, som kunderne ser"
 
 #. translators: Screen reader label of the custom print size's width field. Admin product page.
-#: templates/admin/product-side.php:51
+#: templates/admin/product-side.php:56
 msgid "Width in millimetres"
 msgstr "Bredde i millimeter"
 
-#. translators: Label of a custom print size's height field. Admin product page.
-#: templates/admin/product-side.php:54
-msgid "Height"
-msgstr "Højde"
-
 #. translators: Screen reader label of the custom print size's height field. Admin product page.
-#: templates/admin/product-side.php:55
+#: templates/admin/product-side.php:58
 msgid "Height in millimetres"
 msgstr "Højde i millimeter"
 
 #. translators: Unit after a custom print size's width and height: millimetres. Admin product page.
-#: templates/admin/product-side.php:57
+#: templates/admin/product-side.php:59
 msgid "mm"
 msgstr "mm"
 
-#. translators: Placeholder of the field naming a print size, which customers see. Admin product page.
-#: templates/admin/product-side.php:58
-msgid "Label, e.g. A4"
-msgstr "Navn, f.eks. A4"
+#: templates/admin/product-side.php:72
+msgid "Customers fill in"
+msgstr "Kunderne udfylder"
 
-#. translators: Screen reader label of the field naming a print size. Admin product page.
-#: templates/admin/product-side.php:58
-msgid "Label customers see"
-msgstr "Navn, som kunderne ser"
+#: templates/admin/product-side.php:73
+msgid "Fixed design"
+msgstr "Fast design"
 
-#. translators: Radio button label on a print size: this size is chosen when the designer opens. Admin product page.
-#: templates/admin/product-side.php:63
-msgid "Starts selected"
-msgstr "Valgt fra start"
+#: templates/admin/product-side.php:74
+msgid "follows new template versions"
+msgstr "følger nye skabelonversioner"
 
-#: templates/admin/product-side.php:71
+#. translators: %d: the template version a product side stays on, e.g. 2. Summary of a side's settings. Admin product page.
+#: templates/admin/product-side.php:76
+#, php-format
+msgid "stays on version %d"
+msgstr "bliver på version %d"
+
+#: templates/admin/product-side.php:79
 msgid "Choose a template for this side."
 msgstr "Vælg en skabelon til denne side."
 
-#: templates/admin/product-side.php:72
+#: templates/admin/product-side.php:80
 msgid "Choose where on the blank this side is printed."
 msgstr "Vælg, hvor på basisproduktet denne side skal trykkes."
 
-#: templates/admin/product-side.php:73
+#: templates/admin/product-side.php:81
 msgid "Enter the width and height in millimetres."
 msgstr "Angiv bredde og højde i millimeter."
 
-#. translators: Shown under a custom print size's width and height. %1$s: the largest width, %2$s: the largest height the side's placement prints, both in millimetres. Admin product page.
-#: templates/admin/product-side.php:74
+#. translators: Shown under a custom print size's width and height. %1$s: the largest width, %2$s: the largest height the side's print position prints, both in millimetres. Admin product page.
+#: templates/admin/product-side.php:82
 #, php-format
 msgid "Up to %1$s × %2$s mm"
 msgstr "Op til %1$s × %2$s mm"
 
-#. translators: Error under a custom print size larger than the placement prints. %1$s: the largest width, %2$s: the largest height, both in millimetres. Admin product page.
-#: templates/admin/product-side.php:75
+#. translators: Error under a custom print size larger than the print position prints. %1$s: the largest width, %2$s: the largest height, both in millimetres. Admin product page.
+#: templates/admin/product-side.php:83
 #, php-format
-msgid "This placement prints at most %1$s × %2$s mm."
-msgstr "Denne placering kan højst trykke %1$s × %2$s mm."
+msgid "This print position prints at most %1$s × %2$s mm."
+msgstr "Denne trykposition kan højst trykke %1$s × %2$s mm."
 
-#: templates/admin/product-side.php:79
+#: templates/admin/product-side.php:87
 msgctxt "product side such as front or back"
 msgid "Side"
 msgstr "Side"
 
 #. translators: Button that removes a whole side from the product. Admin product page.
-#: templates/admin/product-side.php:82
+#: templates/admin/product-side.php:89
 msgid "Remove side"
 msgstr "Fjern side"
 
-#. translators: Label of the fields naming a product side and its key. Admin product page.
-#: templates/admin/product-side.php:85
-msgid "Name"
-msgstr "Navn"
+#. translators: Label of the dropdown that picks the spot on the blank (placement) a side is printed on, such as chest or back. Admin product page.
+#: templates/admin/product-side.php:92
+msgid "Print position"
+msgstr "Trykposition"
 
-#. translators: Placeholder of the field naming a product side, which customers see. Admin product page.
-#: templates/admin/product-side.php:87
-msgid "Name customers see, e.g. Front"
-msgstr "Navn, som kunderne ser, f.eks. Forside"
+#. translators: First option of the print position dropdown, nothing chosen yet. Admin product page.
+#: templates/admin/product-side.php:95
+msgid "Choose a print position"
+msgstr "Vælg en trykposition"
 
-#. translators: Placeholder of the field for a side's key, a short lowercase identifier. Admin product page.
-#: templates/admin/product-side.php:88
-msgid "Key, e.g. front"
-msgstr "Nøgle, f.eks. front"
-
-#. translators: Screen reader label of the field for a side's key. Admin product page.
-#: templates/admin/product-side.php:88
-msgid "Side key"
-msgstr "Sidens nøgle"
-
-#: templates/admin/product-side.php:90
-msgid ""
-"The name customers see on the side’s tab, and the key the cart and order "
-"keep it under. Empty, both follow the placement."
-msgstr ""
-"Det navn, kunderne ser på sidens fane, og den nøgle, kurven og ordren gemmer "
-"den under. Står felterne tomme, følger begge placeringen."
-
-#. translators: Label of the dropdown that picks the blank's placement (print area) a side is printed on. Admin product page.
-#: templates/admin/product-side.php:93
-msgid "Placement"
-msgstr "Placering"
-
-#. translators: First option of the placement dropdown, nothing chosen yet. Admin product page.
-#: templates/admin/product-side.php:96
-msgid "Choose a placement"
-msgstr "Vælg en placering"
-
-#: templates/admin/product-side.php:106
-msgid "Where on the blank this side is printed."
-msgstr "Hvor på basisproduktet denne side trykkes."
-
-#: templates/admin/product-side.php:109
+#: templates/admin/product-side.php:107
 msgctxt "Pixonaut template that customers fill in"
 msgid "Template"
 msgstr "Skabelon"
 
 #. translators: Placeholder of the template search dropdown. Admin product page.
-#: templates/admin/product-side.php:111
+#: templates/admin/product-side.php:109
 msgid "Search for a template"
 msgstr "Søg efter en skabelon"
 
 #: templates/admin/product-side.php:119
-msgid ""
-"What customers fill in. With a blank, only templates that fit the placement "
-"are listed."
-msgstr ""
-"Det, kunderne udfylder. Med et basisprodukt vises kun skabeloner, der passer "
-"til placeringen."
-
-#: templates/admin/product-side.php:122
 msgid ""
 "This template’s background shows through, and this product has no blank: "
 "customers see the design on white paper in the designer, and it prints on "
@@ -8251,57 +8096,78 @@ msgstr ""
 "Pixonaut. Hvis gennemsigtigt er meningen, så lad det være; kunderne kan "
 "stadig købe produktet."
 
-#. translators: Label of the setting that keeps a product side on one version of its template. Admin product page.
+#. translators: Label of the list of print sizes customers choose from for a side. Admin product page.
 #: templates/admin/product-side.php:125
-msgid "Template version"
-msgstr "Skabelonversion"
+msgid "Print sizes"
+msgstr "Trykstørrelser"
 
-#. translators: Checkbox on a product side: keep the side on the template version picked beside it instead of moving to each new version published. Admin product page.
+#. translators: Column heading over the radio buttons marking the print size chosen when the designer opens. Short. Admin product page.
+#: templates/admin/product-side.php:128
+msgid "Start"
+msgstr "Start"
+
+#. translators: Column heading over a side's print sizes. Admin product page.
 #: templates/admin/product-side.php:129
-msgid "Stick to one version"
-msgstr "Hold fast i én version"
+msgid "Size customers choose"
+msgstr "Størrelse, kunderne vælger"
 
-#. translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page.
-#: templates/admin/product-side.php:132 templates/admin/product-side.php:143
-#, php-format
-msgid "Version %d (current)"
-msgstr "Version %d (aktuel)"
+#. translators: Button that adds the print position's own size to a side's print sizes. Admin product page.
+#: templates/admin/product-side.php:141
+msgid "Add the print position’s size"
+msgstr "Tilføj trykpositionens størrelse"
 
-#. translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page.
-#: templates/admin/product-side.php:133 templates/admin/product-side.php:145
-#, php-format
-msgid "Version %d"
-msgstr "Version %d"
+#. translators: Button that adds a print size entered in millimetres to a side. Admin product page.
+#: templates/admin/product-side.php:142
+msgid "Add a size in mm"
+msgstr "Tilføj en størrelse i mm"
 
-#: templates/admin/product-side.php:154
+#. translators: A closed section of a product side holding its less used settings. Admin product page.
+#: templates/admin/product-side.php:147
+msgid "More for this side"
+msgstr "Mere for denne side"
+
+#. translators: Label of the fields naming a product side and its key. Admin product page.
+#: templates/admin/product-side.php:153
+msgid "Name"
+msgstr "Navn"
+
+#. translators: Placeholder of the field naming a product side, which customers see. Admin product page.
+#: templates/admin/product-side.php:155
+msgid "Name customers see, e.g. Front"
+msgstr "Navn, som kunderne ser, f.eks. Forside"
+
+#. translators: Placeholder of the field for a side's key, a short lowercase identifier. Admin product page.
+#: templates/admin/product-side.php:156
+msgid "Key, e.g. front"
+msgstr "Nøgle, f.eks. front"
+
+#. translators: Screen reader label of the field for a side's key. Admin product page.
+#: templates/admin/product-side.php:156
+msgid "Side key"
+msgstr "Sidens nøgle"
+
+#: templates/admin/product-side.php:158
 msgid ""
-"The side moves to each new version of the template when it is published, "
-"keeping its groups and print sizes. Stuck to one version, it stays on it "
-"until you change it here."
+"Shown on the side’s tab in the designer. Empty, both follow the print "
+"position."
 msgstr ""
-"Siden skifter til hver ny version af skabelonen, når den udgives, og "
-"beholder sine grupper og trykstørrelser. Låst til én version bliver den på "
-"den, indtil du ændrer det her."
+"Vises på sidens fane i designværktøjet. Er felterne tomme, følger begge "
+"trykpositionen."
 
-#: templates/admin/product-side.php:162
-msgid "Personalised: customers fill in the template"
-msgstr "Personaliseret: kunderne udfylder skabelonen"
-
-#: templates/admin/product-side.php:163
-msgid "Standing: printed as the template is, with nothing to fill in"
-msgstr "Fast: trykkes, som skabelonen er, uden noget at udfylde"
-
+#. translators: Checkbox on a product side; unticked, the side is a fixed design printed as the template is. Admin product page.
 #: templates/admin/product-side.php:165
-msgid ""
-"A standing side is printed from one design of the template, made when you "
-"update the product. A product whose sides are all standing sells without the "
-"designer."
-msgstr ""
-"En fast side trykkes fra ét design af skabelonen, som laves, når du "
-"opdaterer varen. En vare, hvis sider alle er faste, sælges uden "
-"designværktøjet."
+msgid "Customers fill in the template"
+msgstr "Kunderne udfylder skabelonen"
 
 #: templates/admin/product-side.php:168
+msgid ""
+"Unticked, it is a fixed design: printed as the template is, made when you "
+"update the product."
+msgstr ""
+"Uden markering er det et fast design: trykt som skabelonen er og lavet, når "
+"du opdaterer varen."
+
+#: templates/admin/product-side.php:171
 msgid ""
 "This template offers fields to fill in. On a standing side customers do not "
 "get to fill them in: it is printed as the template is."
@@ -8309,7 +8175,7 @@ msgstr ""
 "Denne skabelon har felter, der kan udfyldes. På en fast side kan kunderne "
 "ikke udfylde dem: den trykkes, som skabelonen er."
 
-#: templates/admin/product-side.php:171
+#: templates/admin/product-side.php:174
 msgid ""
 "This template offers nothing to fill in, so customers have nothing to "
 "personalise. Make the side standing to sell it as the template is."
@@ -8318,13 +8184,13 @@ msgstr ""
 "Gør siden fast for at sælge den, som skabelonen er."
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Label of a standing side's previews, one per value of that option. Admin product page.
-#: templates/admin/product-side.php:183
+#: templates/admin/product-side.php:186
 #, php-format
 msgid "Per %s"
 msgstr "Pr. %s"
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Admin product page.
-#: templates/admin/product-side.php:189
+#: templates/admin/product-side.php:192
 #, php-format
 msgid ""
 "The print area changes with %s, so each of its values is printed from its "
@@ -8338,7 +8204,7 @@ msgstr ""
 "justeret værdi beholder sit layout, når siden ændres, indtil du nulstiller "
 "den."
 
-#: templates/admin/product-side.php:192
+#: templates/admin/product-side.php:195
 msgid ""
 "The previews appear when you update the product. An adjusted value keeps its "
 "layout."
@@ -8347,28 +8213,28 @@ msgstr ""
 "beholder sit layout."
 
 #. translators: 1: the option, e.g. "Size"; 2: its value, e.g. "XL". Alt text of a standing side's preview for one option. Admin product page.
-#: templates/admin/product-side.php:199
+#: templates/admin/product-side.php:202
 #, php-format
 msgid "%1$s %2$s: the design on the blank"
 msgstr "%1$s %2$s: designet på basisproduktet"
 
 #. translators: Badge beside an option's value whose layout the store manager adjusted by hand on a standing side. Admin product page.
-#: templates/admin/product-side.php:208
+#: templates/admin/product-side.php:211
 msgid "Adjusted"
 msgstr "Justeret"
 
 #. translators: Under a standing side's preview for one option value: the side's print size does not fit that value's print area, so the design prints at the value's usual size. Admin product page.
-#: templates/admin/product-side.php:215
+#: templates/admin/product-side.php:218
 msgid "Usual size: the side's is too big"
 msgstr "Normal størrelse: sidens er for stor"
 
 #. translators: Link that opens an option's adjusted layout on Pixonaut again, to adjust it once more. Admin product page.
-#: templates/admin/product-side.php:219
+#: templates/admin/product-side.php:222
 msgid "Adjust again"
 msgstr "Juster igen"
 
 #. translators: %s: an option's value, e.g. "XL". Confirmation before the store manager resets the layout they adjusted by hand for that option. Admin product page.
-#: templates/admin/product-side.php:222
+#: templates/admin/product-side.php:225
 #, php-format
 msgid ""
 "Reset the layout of %s? It then follows the side again, and the layout you "
@@ -8378,12 +8244,12 @@ msgstr ""
 "layout, du justerede, gemmes ikke."
 
 #. translators: Link that opens one option's design of a standing side on Pixonaut, to move and scale its artwork by hand. Admin product page.
-#: templates/admin/product-side.php:226
+#: templates/admin/product-side.php:229
 msgid "Adjust layout"
 msgstr "Juster layout"
 
 #. translators: %d: how many options a standing side has a preview of. Button that shows them all. Admin product page.
-#: templates/admin/product-side.php:235
+#: templates/admin/product-side.php:238
 #, php-format
 msgid "Show all %d"
 msgid_plural "Show all %d"
@@ -8391,17 +8257,43 @@ msgstr[0] "Vis alle %d"
 msgstr[1] "Vis alle %d"
 
 #. translators: Button that shows only the first of a standing side's option previews again. Admin product page.
-#: templates/admin/product-side.php:237
+#: templates/admin/product-side.php:240
 msgid "Show fewer"
 msgstr "Vis færre"
 
+#. translators: Label of the setting that keeps a product side on one version of its template. Admin product page.
+#: templates/admin/product-side.php:245
+msgid "Template version"
+msgstr "Skabelonversion"
+
+#. translators: Checkbox on a product side: keep the side on the template version picked beside it instead of moving to each new version published. Admin product page.
+#: templates/admin/product-side.php:249
+msgid "Stay on one version"
+msgstr "Bliv på én version"
+
+#. translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page.
+#: templates/admin/product-side.php:252 templates/admin/product-side.php:263
+#, php-format
+msgid "Version %d (current)"
+msgstr "Version %d (aktuel)"
+
+#. translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page.
+#: templates/admin/product-side.php:253 templates/admin/product-side.php:265
+#, php-format
+msgid "Version %d"
+msgstr "Version %d"
+
+#: templates/admin/product-side.php:274
+msgid "Unticked, the side follows each new version of the template."
+msgstr "Uden markering følger siden hver ny version af skabelonen."
+
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:247
+#: templates/admin/product-side.php:282
 msgid "Groups"
 msgstr "Grupper"
 
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:248
+#: templates/admin/product-side.php:283
 msgid ""
 "The order and names of the groups customers see in the designer. Open to "
 "arrange them."
@@ -8409,7 +8301,7 @@ msgstr ""
 "Rækkefølgen og navnene på de grupper, kunderne ser i designværktøjet. Åbn "
 "indstillingen for at arrangere dem."
 
-#: templates/admin/product-side.php:251
+#: templates/admin/product-side.php:286
 msgid ""
 "The order and names customers see in the designer on this product’s page. "
 "Drag groups and their fields to reorder them. A name changed here is this "
@@ -8422,48 +8314,10 @@ msgstr ""
 "vises skabelonens eget. Når den er ordnet her, følger denne side ikke "
 "længere Muligheder i formularen."
 
-#. translators: Label of the list of print sizes customers choose from for a side. Admin product page.
-#: templates/admin/product-side.php:257
-msgid "Print sizes"
-msgstr "Trykstørrelser"
-
-#. translators: Button that adds a print size to a side. Admin product page.
-#: templates/admin/product-side.php:266
-msgid "Add print size"
-msgstr "Tilføj trykstørrelse"
-
-#. translators: Button that adds a print size to a side. Admin product page.
-#: templates/admin/product-side.php:267
-msgid ""
-"Customers choose from these sizes. The one marked Starts selected is chosen "
-"when the designer opens; with none marked, the first. Pixonaut checks each "
-"one when you update the product; a size it cannot print is removed."
-msgstr ""
-"Kunderne vælger mellem disse størrelser. Den, der er markeret Valgt fra "
-"start, er valgt, når designværktøjet åbner; er ingen markeret, den første. "
-"Pixonaut kontrollerer hver enkelt, når du opdaterer varen; en størrelse, der "
-"ikke kan trykkes, fjernes."
-
-#: templates/admin/product-side.php:268
-msgid ""
-"Without a blank, enter each size in millimetres, in the template’s aspect "
-"ratio. A product without a print size cannot be bought."
-msgstr ""
-"Uden basisprodukt angiver du hver størrelse i millimeter, i skabelonens "
-"størrelsesforhold. Et produkt uden trykstørrelse kan ikke købes."
-
-#: templates/admin/product-side.php:280
-msgid ""
-"The shape customers design this side on when a print size’s proportions are "
-"not the template’s."
-msgstr ""
-"Formen på det lærred, kunderne designer denne side på, når en trykstørrelses "
-"proportioner ikke er skabelonens."
-
-#. translators: Label of the dropdown choosing which variant of the Pixonaut blank this product is printed on. Admin product page.
-#: templates/admin/product-variant.php:26
-msgid "Blank variant"
-msgstr "Basisproduktvariant"
+#. translators: Option of a product side's canvas shape dropdown: the side draws its canvas as the product's own setting, under Store settings for this product, says. Admin product page.
+#: templates/admin/product-side.php:296
+msgid "As the product’s store settings say"
+msgstr "Som varens butiksindstillinger angiver"
 
 #. translators: Checkbox beside the blank variant dropdown on the product edit page: also list the variants the blank no longer sells.
 #: templates/admin/product-variant.php:36
@@ -8491,6 +8345,62 @@ msgid ""
 msgstr ""
 "Denne variant bruger sin egen konfiguration nedenfor, ikke varens Pixonaut-"
 "fane."
+
+#. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the photos of the blank customers see their design on.
+#: templates/admin/product-views.php:29
+msgid "Views on the product page"
+msgstr "Visninger på varesiden"
+
+#. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the photos of the blank customers see their design on.
+#: templates/admin/product-views.php:30 templates/admin/product-views.php:34
+msgid "Every view"
+msgstr "Alle visninger"
+
+#. translators: 1: how many views are ticked, 2: how many there are. Admin product page.
+#: templates/admin/product-views.php:30 templates/admin/product-views.php:36
+#, php-format
+msgid "%1$d of %2$d views"
+msgstr "%1$d af %2$d visninger"
+
+#. translators: Label of the views customers see their design in. Admin product page.
+#: templates/admin/product-views.php:43
+msgid "Shown in"
+msgstr "Vises i"
+
+#: templates/admin/product-views.php:62
+msgid "This print position has no views in Pixonaut yet."
+msgstr "Denne trykposition har endnu ingen visninger i Pixonaut."
+
+#: templates/admin/product-views.php:68 templates/admin/product-views.php:99
+msgctxt "view of the design alone, without the product"
+msgid "Design"
+msgstr "Design"
+
+#: templates/admin/product-views.php:73
+msgid "The design alone, without the product"
+msgstr "Designet alene, uden varen"
+
+#: templates/admin/product-views.php:79
+msgid ""
+"Pixonaut could not be reached to list the blank’s views. The views chosen "
+"before are kept."
+msgstr ""
+"Pixonaut kunne ikke nås for at hente basisproduktets visninger. De tidligere "
+"valgte visninger bevares."
+
+#: templates/admin/product-views.php:82
+msgid "None ticked: every view, and the design alone."
+msgstr "Ingen markeret: alle visninger og designet alene."
+
+#. translators: Label of the dropdown choosing which view the designer opens on. Admin product page.
+#: templates/admin/product-views.php:87
+msgid "Starting view"
+msgstr "Startvisning"
+
+#. translators: Option in the starting view dropdown: open on the first view of the blank. Admin product page.
+#: templates/admin/product-views.php:89
+msgid "The first view"
+msgstr "Den første visning"
 
 #. translators: %1$s: pictures drawn so far, %2$s: pictures to draw, of one product. Regenerate now's progress.
 #: templates/admin/regenerate-now.php:23
@@ -8902,6 +8812,11 @@ msgstr "Nulstil"
 msgid "Colour %d"
 msgstr "Farve %d"
 
+#. translators: Heading of the print size picker in the product page's designer, as Pixonaut's designer words it.
+#: templates/storefront/form-placeholder.php:380
+msgid "Print size"
+msgstr "Trykstørrelse"
+
 #. translators: Name of the first step of the product page's designer, where the customer picks the product's options, as Pixonaut's designer words it.
 #: templates/storefront/form-placeholder.php:393
 msgctxt "designer step"
@@ -8940,16 +8855,280 @@ msgid_plural "%s views"
 msgstr[0] "%s visning"
 msgstr[1] "%s visninger"
 
-#, fuzzy
-#~| msgid ""
-#~| "False when Pixonaut found a problem: it cannot be bought until it is "
-#~| "fixed."
+#, php-format
+#~ msgid "Store default: %s"
+#~ msgstr "Webshoppens standard: %s"
+
+#, php-format
+#~ msgid "Match by options (now: %s)"
+#~ msgstr "Match efter egenskaber (nu: %s)"
+
+#~ msgid "Match by options"
+#~ msgstr "Match efter egenskaber"
+
 #~ msgid ""
-#~ "False when its Pixonaut setup has a problem: it cannot be bought until it "
-#~ "is fixed."
+#~ "Match by options finds the blank variant with the same option values as "
+#~ "this variation’s attributes. When none matches, the variation cannot be "
+#~ "bought until you pick its variant here; it does not fall back to the "
+#~ "product’s."
 #~ msgstr ""
-#~ "False, når Pixonaut har fundet et problem: den kan ikke købes, før "
-#~ "problemet er rettet."
+#~ "Match efter egenskaber finder den basisproduktvariant, der har de samme "
+#~ "egenskabsværdier som denne variants egenskaber. Matcher ingen, kan "
+#~ "varianten ikke købes, før du vælger dens basisproduktvariant her; den "
+#~ "falder ikke tilbage på varens."
+
+#~ msgid ""
+#~ "Match by options finds the blank variant with the same option values as "
+#~ "this product’s attributes. When none matches, the product cannot be "
+#~ "bought until you pick its variant here."
+#~ msgstr ""
+#~ "Match efter egenskaber finder den basisproduktvariant, der har de samme "
+#~ "egenskabsværdier som denne vares egenskaber. Matcher ingen, kan varen "
+#~ "ikke købes, før du vælger dens basisproduktvariant her."
+
+#~ msgid ""
+#~ "No variant of the blank matches, so customers cannot buy this. Pick the "
+#~ "variant it is."
+#~ msgstr ""
+#~ "Ingen af basisproduktets varianter passer, så kunderne kan ikke købe den. "
+#~ "Vælg den rigtige basisproduktvariant."
+
+#~ msgid "Whether customers design this product before they buy it."
+#~ msgstr "Om kunderne designer denne vare, før de køber den."
+
+#~ msgid ""
+#~ "Tick it to choose the blank it is printed on, its sides and their "
+#~ "templates."
+#~ msgstr ""
+#~ "Markér feltet for at vælge det basisprodukt, den trykkes på, dens sider "
+#~ "og deres skabeloner."
+
+#~ msgid ""
+#~ "The blank product the design is printed on, and which of its variants "
+#~ "this is."
+#~ msgstr ""
+#~ "Det basisprodukt, designet trykkes på, og hvilken basisproduktvariant det "
+#~ "er."
+
+#~ msgctxt "Pixonaut blank, the unprinted product a design is printed on"
+#~ msgid "Blank"
+#~ msgstr "Basisprodukt"
+
+#~ msgid ""
+#~ "The product the design is printed on, e.g. a T-shirt. Without one, "
+#~ "customers buy the template’s design alone, such as a poster or a card."
+#~ msgstr ""
+#~ "Den vare, designet trykkes på, f.eks. en T-shirt. Uden et basisprodukt "
+#~ "køber kunderne kun skabelonens design, f.eks. en plakat eller et kort."
+
+#~ msgid "Printshop, decided by the blank"
+#~ msgstr "Trykkeri, bestemt af basisproduktet"
+
+#~ msgid ""
+#~ "Where this product’s orders are made. Workspace default sends them to the "
+#~ "workspace’s default printshop."
+#~ msgstr ""
+#~ "Hvor denne vares ordrer fremstilles. Med »Arbejdsområdets standard« går "
+#~ "de til arbejdsområdets standardtrykkeri."
+
+#~ msgid "The blank decides where its prints are made."
+#~ msgstr "Basisproduktet bestemmer, hvor dets tryk fremstilles."
+
+#~ msgid ""
+#~ "Each side is one place on the blank customers design, with its template "
+#~ "and print sizes."
+#~ msgstr ""
+#~ "Hver side er ét sted på basisproduktet, som kunderne designer, med sin "
+#~ "skabelon og sine trykstørrelser."
+
+#, php-format
+#~ msgid "Each placement can be one side, up to %d sides."
+#~ msgstr "Hver placering kan være én side, op til %d sider."
+
+#~ msgid ""
+#~ "A product without a blank has one side. Choose a blank to give it more."
+#~ msgstr ""
+#~ "En vare uden basisprodukt har én side. Vælg et basisprodukt for at give "
+#~ "den flere."
+
+#~ msgid ""
+#~ "How customers open the designer, the photos they see their design on, and "
+#~ "how they approve it. Store default follows the Pixonaut settings page."
+#~ msgstr ""
+#~ "Hvordan kunderne åbner designværktøjet, hvilke fotos de ser deres design "
+#~ "på, og hvordan de godkender det. Webshoppens standard følger Pixonaut-"
+#~ "indstillingerne."
+
+#~ msgid "How customers open the designer on the product page."
+#~ msgstr "Hvordan kunderne åbner designværktøjet på varesiden."
+
+#~ msgid ""
+#~ "How the designer on the product page lays out its form. The Personalise "
+#~ "button opens Pixonaut’s designer, which always follows the template."
+#~ msgstr ""
+#~ "Hvordan designværktøjet på varesiden opstiller sin formular. Personalisér-"
+#~ "knappen åbner Pixonauts designværktøj, som altid følger skabelonen."
+
+#~ msgid ""
+#~ "Where the product’s options, such as Size or Colour, stand in the "
+#~ "designer on the product page: on top of the form, or each in a group of "
+#~ "its own named after it. A side whose Groups you arranged keeps them."
+#~ msgstr ""
+#~ "Hvor varens muligheder, fx Størrelse eller Farve, står i designværktøjet "
+#~ "på varesiden: øverst i formularen eller hver i sin egen gruppe opkaldt "
+#~ "efter den. En side, hvis Grupper er ordnet, beholder dem."
+
+#~ msgid ""
+#~ "Whether the designer on the product page numbers its groups: 1 Photo, 2 "
+#~ "Text on one page, Step 1 of 2 in steps. Off shows the group names with no "
+#~ "numbers."
+#~ msgstr ""
+#~ "Om designværktøjet på varesiden nummererer sine grupper: 1 Foto, 2 Tekst "
+#~ "på én side, Trin 1 af 2 i trin. Fra viser gruppernes navne uden numre."
+
+#~ msgid "Canvas shape"
+#~ msgstr "Lærredsform"
+
+#~ msgid ""
+#~ "The shape customers design on when a print size’s proportions are not the "
+#~ "template’s. In the template’s shape, the canvas keeps its shape whatever "
+#~ "size is chosen, and the print is cropped to the size as the template fits "
+#~ "it; in the print size’s shape, the canvas changes shape with each size. "
+#~ "Each side can choose otherwise."
+#~ msgstr ""
+#~ "Formen på det lærred, kunderne designer på, når en trykstørrelses "
+#~ "proportioner ikke er skabelonens. Med skabelonens form bevarer lærredet "
+#~ "sin form, uanset hvilken størrelse der vælges, og trykket beskæres til "
+#~ "størrelsen, sådan som skabelonen tilpasses den; med trykstørrelsens form "
+#~ "skifter lærredet form med hver størrelse. Hver side kan vælge anderledes."
+
+#~ msgid "How customers approve their design before it is printed."
+#~ msgstr "Hvordan kunderne godkender deres design, før det trykkes."
+
+#~ msgid "The blank’s views are listed once the product is updated with it."
+#~ msgstr "Basisproduktets visninger vises, når varen er opdateret med det."
+
+#~ msgid ""
+#~ "Customers see their design in the views ticked here, and on its own in "
+#~ "the Design view when that is ticked. With none ticked, they see it in "
+#~ "every view of the blank and in the Design view. The designer opens on the "
+#~ "starting view, one of those ticked."
+#~ msgstr ""
+#~ "Kunderne ser deres design i de visninger, der er markeret her, og alene i "
+#~ "visningen Design, når den er markeret. Er ingen markeret, ser de det i "
+#~ "alle basisproduktets visninger og i visningen Design. Designværktøjet "
+#~ "åbner på startvisningen, som er en af de markerede."
+
+#~ msgid ""
+#~ "Draws the product image, its gallery pictures and its variations’ images "
+#~ "again from the template version and settings they use now: in background "
+#~ "jobs, or right away while this page stays open."
+#~ msgstr ""
+#~ "Laver varebilledet, billederne i varegalleriet og varianternes billeder "
+#~ "igen ud fra den skabelonversion og de indstillinger, de bruger nu: i "
+#~ "baggrundsjob eller med det samme, mens denne side er åben."
+
+#~ msgid ""
+#~ "While no showcase set is ticked, the product image is the template with "
+#~ "its own defaults. Choose what it is drawn on: the photo the product page "
+#~ "starts on, any photo of the blank, such as a scene, even of a view "
+#~ "customers are not shown, or the design alone. The designer still starts "
+#~ "on its own starting view."
+#~ msgstr ""
+#~ "Så længe intet eksempelsæt er markeret, er varebilledet skabelonen med "
+#~ "dens egne standardværdier. Vælg, hvad det laves på: det foto, varesiden "
+#~ "viser først, et vilkårligt foto af basisproduktet, fx en scene, også af "
+#~ "en visning, kunderne ikke får vist, eller designet alene. Designværktøjet "
+#~ "åbner stadig på sin egen startvisning."
+
+#~ msgid ""
+#~ "Show the template filled in with one of its showcase sets, example values "
+#~ "such as a real name or photo, instead of its placeholders. The first set "
+#~ "ticked is the product image, the others are added to the product gallery. "
+#~ "Customers still start designing from the template’s own defaults."
+#~ msgstr ""
+#~ "Vis skabelonen udfyldt med et af dens eksempelsæt, eksempelværdier som et "
+#~ "rigtigt navn eller foto, i stedet for dens pladsholdere. Det første "
+#~ "markerede sæt bliver varebilledet, og de øvrige føjes til varegalleriet. "
+#~ "Kunderne begynder stadig at designe ud fra skabelonens egne "
+#~ "standardværdier."
+
+#~ msgid "Placement default"
+#~ msgstr "Placeringens standard"
+
+#~ msgid "Custom size"
+#~ msgstr "Brugerdefineret størrelse"
+
+#~ msgid "Width"
+#~ msgstr "Bredde"
+
+#~ msgid "Height"
+#~ msgstr "Højde"
+
+#~ msgid "Starts selected"
+#~ msgstr "Valgt fra start"
+
+#~ msgid "Placement"
+#~ msgstr "Placering"
+
+#~ msgid "Choose a placement"
+#~ msgstr "Vælg en placering"
+
+#~ msgid "Where on the blank this side is printed."
+#~ msgstr "Hvor på basisproduktet denne side trykkes."
+
+#~ msgid ""
+#~ "What customers fill in. With a blank, only templates that fit the "
+#~ "placement are listed."
+#~ msgstr ""
+#~ "Det, kunderne udfylder. Med et basisprodukt vises kun skabeloner, der "
+#~ "passer til placeringen."
+
+#~ msgid ""
+#~ "The side moves to each new version of the template when it is published, "
+#~ "keeping its groups and print sizes. Stuck to one version, it stays on it "
+#~ "until you change it here."
+#~ msgstr ""
+#~ "Siden skifter til hver ny version af skabelonen, når den udgives, og "
+#~ "beholder sine grupper og trykstørrelser. Låst til én version bliver den "
+#~ "på den, indtil du ændrer det her."
+
+#~ msgid "Standing: printed as the template is, with nothing to fill in"
+#~ msgstr "Fast: trykkes, som skabelonen er, uden noget at udfylde"
+
+#~ msgid ""
+#~ "A standing side is printed from one design of the template, made when you "
+#~ "update the product. A product whose sides are all standing sells without "
+#~ "the designer."
+#~ msgstr ""
+#~ "En fast side trykkes fra ét design af skabelonen, som laves, når du "
+#~ "opdaterer varen. En vare, hvis sider alle er faste, sælges uden "
+#~ "designværktøjet."
+
+#~ msgid ""
+#~ "Customers choose from these sizes. The one marked Starts selected is "
+#~ "chosen when the designer opens; with none marked, the first. Pixonaut "
+#~ "checks each one when you update the product; a size it cannot print is "
+#~ "removed."
+#~ msgstr ""
+#~ "Kunderne vælger mellem disse størrelser. Den, der er markeret Valgt fra "
+#~ "start, er valgt, når designværktøjet åbner; er ingen markeret, den "
+#~ "første. Pixonaut kontrollerer hver enkelt, når du opdaterer varen; en "
+#~ "størrelse, der ikke kan trykkes, fjernes."
+
+#~ msgid ""
+#~ "Without a blank, enter each size in millimetres, in the template’s aspect "
+#~ "ratio. A product without a print size cannot be bought."
+#~ msgstr ""
+#~ "Uden basisprodukt angiver du hver størrelse i millimeter, i skabelonens "
+#~ "størrelsesforhold. Et produkt uden trykstørrelse kan ikke købes."
+
+#~ msgid ""
+#~ "The shape customers design this side on when a print size’s proportions "
+#~ "are not the template’s."
+#~ msgstr ""
+#~ "Formen på det lærred, kunderne designer denne side på, når en "
+#~ "trykstørrelses proportioner ikke er skabelonens."
 
 #~ msgid ""
 #~ "Reads what a personalised product's or variation's Pixonaut images are "
@@ -9296,9 +9475,6 @@ msgstr[1] "%s visninger"
 #~ msgid "nothing"
 #~ msgstr "ingenting"
 
-#~ msgid "Looked up products"
-#~ msgstr "Søgte efter varer"
-
 #~ msgid "Looked up orders"
 #~ msgstr "Søgte efter ordrer"
 
@@ -9533,10 +9709,6 @@ msgstr[1] "%s visninger"
 #~ "Pixonaut afviste det, så der blev ikke gjort noget. Pixel har fået besked."
 
 #, php-format
-#~ msgid "Done in Pixonaut: %s"
-#~ msgstr "Udført i Pixonaut: %s"
-
-#, php-format
 #~ msgid "%1$s: %2$s"
 #~ msgstr "%1$s: %2$s"
 
@@ -9672,9 +9844,6 @@ msgstr[1] "%s visninger"
 
 #~ msgid "You have personalised this product."
 #~ msgstr "Du har personaliseret dette produkt."
-
-#~ msgid "Start over"
-#~ msgstr "Start forfra"
 
 #~ msgid "Add my design to the cart"
 #~ msgstr "Læg mit design i kurven"

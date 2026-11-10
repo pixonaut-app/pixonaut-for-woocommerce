@@ -20,6 +20,7 @@ use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use WC_Product;
@@ -88,6 +89,8 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 		$wp_rest_server = new WP_REST_Server();
 		do_action( 'rest_api_init', $wp_rest_server );
 		$this->plugin->connection_store()->save( self::connection() );
+		// A product without a blank is checked against the printshops it may be sent to.
+		BlankFixture::remember_printshops( $this->plugin->catalogue_cache() );
 		update_option(
 			StoreAccess::OPTION,
 			array(
