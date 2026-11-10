@@ -44,8 +44,7 @@ defined( 'ABSPATH' ) || exit;
 			<?php /* translators: Checkbox label on a variable product's variation panel: this variation uses its own personalisation settings. Admin product page. */ esc_html_e( 'Override for this variation', 'pixonaut-for-woocommerce' ); ?>
 		</label>
 	</p>
-	<p class="description pixonaut-variation-inherits" <?php echo $override ? 'hidden' : ''; ?>><?php esc_html_e( 'This variation is personalised as the product’s Pixonaut tab says. Tick to give it its own blank, sides, templates and settings.', 'pixonaut-for-woocommerce' ); ?></p>
-	<p class="description pixonaut-variation-overrides" <?php echo $override ? '' : 'hidden'; ?>><?php esc_html_e( 'This variation uses its own configuration below, not the product’s Pixonaut tab.', 'pixonaut-for-woocommerce' ); ?></p>
+	<p class="description pixonaut-variation-inherits" <?php echo $override ? 'hidden' : ''; ?>><?php esc_html_e( 'Personalised as the product’s Pixonaut tab says. Tick to give this variation its own setup.', 'pixonaut-for-woocommerce' ); ?></p>
 	<div class="woocommerce_options_panel pixonaut-variation-fields" <?php echo $override ? '' : 'hidden'; ?>>
 		<?php echo $fields_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in admin/product-fields.php. ?>
 	</div>

@@ -38,6 +38,13 @@ final class Side {
 	public const MAX_VERSIONS_OFFERED = 50;
 
 	/**
+	 * A template id as Pixonaut writes one: lower-case words joined by
+	 * hyphens, e.g. `kids-poster-safari-17`. Earlier saves named a side
+	 * after its template's id; such a name was never typed by the merchant.
+	 */
+	private const TEMPLATE_ID_SHAPE = '/^[a-z0-9]+(?:-[a-z0-9]+)+$/';
+
+	/**
 	 * @param string          $key              Stable key, unique within the product, e.g. `front`.
 	 * @param string          $label            Name customers see, e.g. "Front".
 	 * @param string|null     $placement_id     Placement on the blank; null for a product without a blank.
@@ -102,6 +109,37 @@ final class Side {
 		public readonly ?bool $draw_at_template_ratio = null,
 		public readonly array $row_sizes = array(),
 	) {
+	}
+
+	/**
+	 * The name a side takes while the merchant has typed none: its
+	 * placement's, else its template's, else its key. Never a template id.
+	 *
+	 * @param string|null $placement_name The placement's name; null without one.
+	 * @param string|null $template_name  The template's name; null while unknown.
+	 * @param string      $key            The side's key.
+	 */
+	public static function followed_label( ?string $placement_name, ?string $template_name, string $key ): string {
+		foreach ( array( $placement_name, $template_name ) as $name ) {
+			if ( null !== $name && '' !== $name ) {
+				return $name;
+			}
+		}
+		return $key;
+	}
+
+	/**
+	 * The name the merchant typed for the side, or empty when its name is
+	 * one it follows: its placement's or template's name, its key, or a
+	 * template id an earlier save stored. An empty name follows the
+	 * placement or template as they change.
+	 */
+	public function typed_label(): string {
+		$followed = array( $this->placement_name, $this->template_name, $this->template_base_id, $this->key );
+		if ( in_array( $this->label, $followed, true ) || 1 === preg_match( self::TEMPLATE_ID_SHAPE, $this->label ) ) {
+			return '';
+		}
+		return $this->label;
 	}
 
 	/**
@@ -239,7 +277,9 @@ final class Side {
 		if ( null === $name || $name === $this->template_name ) {
 			return $this;
 		}
-		return $this->copy( array( 'template_name' => $name ) );
+		$renamed = $this->copy( array( 'template_name' => $name ) );
+		// A name that followed the template follows its new name.
+		return '' === $this->typed_label() ? $renamed->copy( array( 'label' => self::followed_label( $this->placement_name, $name, $this->key ) ) ) : $renamed;
 	}
 
 	/**
@@ -275,7 +315,7 @@ final class Side {
 			}
 		}
 
-		return new self(
+		$side = new self(
 			$data['key'],
 			self::is_text( $data['label'] ?? null ) ? $data['label'] : $data['key'],
 			self::text_or_null( $placement['id'] ?? null ),
@@ -298,6 +338,8 @@ final class Side {
 			CanvasRatio::from_stored( $data['drawAtTemplateRatio'] ?? null ),
 			array_values( array_filter( array_map( array( RowSize::class, 'from_array' ), is_array( $data['rowSizes'] ?? null ) ? $data['rowSizes'] : array() ) ) ),
 		);
+		// A name the merchant did not type is what the side follows now, never a template id an earlier save stored.
+		return '' === $side->typed_label() ? $side->copy( array( 'label' => self::followed_label( $side->placement_name, $side->template_name, $side->key ) ) ) : $side;
 	}
 
 	/**

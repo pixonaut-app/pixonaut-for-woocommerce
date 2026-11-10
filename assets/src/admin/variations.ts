@@ -17,7 +17,7 @@ export function newPanels(container: ParentNode): HTMLElement[] {
 }
 
 /** Shows the variation's own fields only while it overrides the product's,
- *  and the line that says which configuration it uses. */
+ *  and the line saying it follows the product while it does not. */
 export function initOverride(panel: HTMLElement): void {
 	const override = panel.querySelector<HTMLInputElement>('.pixonaut-override');
 	const fields = panel.querySelector<HTMLElement>('.pixonaut-variation-fields');
@@ -26,9 +26,6 @@ export function initOverride(panel: HTMLElement): void {
 	}
 	const inherits = panel.querySelector<HTMLElement>(
 		'.pixonaut-variation-inherits',
-	);
-	const overrides = panel.querySelector<HTMLElement>(
-		'.pixonaut-variation-overrides',
 	);
 	// A variation that overrides its whole setup sets its sizes in its own fields.
 	const sizes = panel.querySelector<HTMLElement>('.pixonaut-variation-sizes');
@@ -39,9 +36,6 @@ export function initOverride(panel: HTMLElement): void {
 		}
 		if (inherits) {
 			inherits.hidden = override.checked;
-		}
-		if (overrides) {
-			overrides.hidden = !override.checked;
 		}
 	};
 	override.addEventListener('change', show);

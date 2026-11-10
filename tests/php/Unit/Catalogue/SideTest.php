@@ -265,6 +265,59 @@ final class SideTest extends TestCase {
 		$this->assertFalse( $row->is( array( 'Size' => 'S' ) ) );
 	}
 
+	public function test_a_name_the_merchant_typed_is_kept(): void {
+		$side = new Side( 'front', 'Chest print', 'front', 'Front', 'mini-tee', self::LIVE_VERSION, null, 'Mini tee' );
+
+		$this->assertSame( 'Chest print', $side->typed_label() );
+		$this->assertSame( 'Chest print', Side::from_array( $side->to_array() )?->label );
+		$this->assertSame( 'Chest print', $side->with_template_name( 'Mini tee, new' )->label );
+	}
+
+	/**
+	 * @return iterable<string, array{string}>
+	 */
+	public static function followed_names(): iterable {
+		yield 'the placement name' => array( 'Front' );
+		yield 'the template name' => array( 'Mini tee' );
+		yield 'the template id' => array( 'mini-tee' );
+		yield 'the key' => array( 'front' );
+		yield 'another template id' => array( 'kids-poster-safari-copy-17' );
+	}
+
+	/**
+	 * @dataProvider followed_names
+	 *
+	 * @param string $label The side's stored name.
+	 */
+	public function test_a_name_the_side_follows_is_not_typed( string $label ): void {
+		$side = new Side( 'front', $label, 'front', 'Front', 'mini-tee', self::LIVE_VERSION, null, 'Mini tee' );
+
+		$this->assertSame( '', $side->typed_label() );
+	}
+
+	public function test_a_stored_template_id_reads_back_as_what_the_side_follows(): void {
+		$on_blank   = new Side( 'design', 'kids-poster-safari-copy-17', 'print', 'Print', 'kids-poster-hearts', self::LIVE_VERSION, null, 'Kids poster, hearts' );
+		$no_blank   = new Side( 'design', 'kids-poster-safari-copy-17', null, null, 'kids-poster-hearts', self::LIVE_VERSION, null, 'Kids poster, hearts' );
+		$no_name_at = new Side( 'design', 'kids-poster-hearts', null, null, 'kids-poster-hearts', self::LIVE_VERSION, null, null );
+
+		$this->assertSame( 'Print', Side::from_array( $on_blank->to_array() )?->label );
+		$this->assertSame( 'Kids poster, hearts', Side::from_array( $no_blank->to_array() )?->label );
+		$this->assertSame( 'design', Side::from_array( $no_name_at->to_array() )?->label );
+	}
+
+	public function test_a_name_that_followed_the_template_follows_its_new_name(): void {
+		$side = new Side( 'design', 'Mini tee', null, null, 'mini-tee', self::LIVE_VERSION, null, 'Mini tee' );
+
+		$this->assertSame( 'Mini tee, new', $side->with_template_name( 'Mini tee, new' )->label );
+	}
+
+	public function test_an_empty_name_follows_the_placement_then_the_template_then_the_key(): void {
+		$this->assertSame( 'Front', Side::followed_label( 'Front', 'Mini tee', 'front' ) );
+		$this->assertSame( 'Mini tee', Side::followed_label( null, 'Mini tee', 'front' ) );
+		$this->assertSame( 'Mini tee', Side::followed_label( '', 'Mini tee', 'front' ) );
+		$this->assertSame( 'front', Side::followed_label( null, null, 'front' ) );
+	}
+
 	/**
 	 * @param int         $version  Live version.
 	 * @param int|null    $previous Previous version.
