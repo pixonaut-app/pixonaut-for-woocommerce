@@ -58,6 +58,8 @@ final class Settings {
 
 	public const ATTRIBUTE_OPTIONS = 'attribute_options';
 
+	public const SWATCH_NAMES = 'swatch_names';
+
 	public const PRODUCT_PICTURES = 'product_pictures';
 
 	public const SHOW_FIELD_VALUES = 'show_field_values';
@@ -249,6 +251,17 @@ final class Settings {
 					'desc'     => __( 'How the designer on the product page shows the options of a variable product, such as its sizes, when it draws them in its form. As the theme shows them (the default) keeps the theme\'s own field, and any swatches another plugin draws in it. As swatches shows each option as a button like the designer\'s own choices, an option that cannot be bought with the other choices greyed out.', 'pixonaut-for-woocommerce' ),
 					'desc_tip' => true,
 					'options'  => AttributeOptions::names(),
+				)
+			)
+		);
+		$this->register(
+			Setting::checkbox(
+				self::SWATCH_NAMES,
+				true,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant: whether a product option's swatches drawn as a colour or a picture show the option's name beside them. */
+					'title' => __( 'Show value names beside swatches', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'With product options shown as swatches, a value Pixonaut draws as a colour or a picture shows its name beside it. Off, the swatch shows the colour or picture alone; its name is still read out by screen readers, shown when the swatch is pointed at, and the chosen value\'s name shows beside the option\'s name. A value without a colour or picture always shows its name. Each global attribute can show or hide them whatever this says, on its edit screen under Products, Attributes.', 'pixonaut-for-woocommerce' ),
 				)
 			)
 		);

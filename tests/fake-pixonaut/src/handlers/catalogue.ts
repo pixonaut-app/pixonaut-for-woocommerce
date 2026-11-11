@@ -10,6 +10,7 @@ import {
 	type Placement,
 	type State,
 	type TemplateVersion,
+	type ValueAppearance,
 	type View,
 } from '../state';
 import { AS_WRITTEN, type BlankNamer, namerFor } from './blank-names';
@@ -265,8 +266,6 @@ const COLOUR_FILLS: Record<string, string> = {
 	Red: '#cc0000',
 };
 
-type Appearance = { kind: 'fill'; colours: string[] } | null;
-
 type Tone = 'light' | 'dark';
 
 /** The fixture colour values whose garment is dark; every other value is
@@ -281,7 +280,7 @@ function optionsOf(
 ): {
 	name: string;
 	values: string[];
-	appearances: Record<string, Appearance>;
+	appearances: Record<string, ValueAppearance>;
 	tones: Record<string, Tone>;
 }[] {
 	return blank.axes.map((axis) => {
@@ -294,11 +293,16 @@ function optionsOf(
 			),
 		];
 		const appearances = Object.fromEntries(
-			values.map((value): [string, Appearance] => {
+			values.map((value): [string, ValueAppearance] => {
+				const set = blank.valueLooks?.[axis];
 				const fill = COLOUR_FILLS[value];
 				return [
 					names.value(axis, value),
-					fill === undefined ? null : { kind: 'fill', colours: [fill] },
+					set !== undefined && value in set
+						? (set[value] ?? null)
+						: fill === undefined
+							? null
+							: { kind: 'fill', colours: [fill] },
 				];
 			}),
 		);

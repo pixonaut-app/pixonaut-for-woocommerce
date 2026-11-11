@@ -202,6 +202,42 @@ final class SideLayoutTest extends TestCase {
 		$this->assertSame( array(), $layout->step_labels );
 	}
 
+	public function test_an_unlabelled_text_field_is_headed_with_its_layers_name(): void {
+		$reads                                   = self::reads();
+		$reads['template']['template']['layers'] = array(
+			array(
+				'id'   => 'weight',
+				'name' => 'Weight',
+			),
+			array(
+				'id'   => 'nameless',
+				'name' => '  ',
+			),
+			array(
+				'id'   => 'slogan',
+				'name' => 'Slogan layer',
+			),
+		);
+		$text                                    = static fn ( string $layer, string $prop, string $label ): array => array(
+			'layerId'     => $layer,
+			'prop'        => $prop,
+			'label'       => $label,
+			'type'        => 'text',
+			'constraints' => array( 'maxLines' => 1 ),
+		);
+		$reads['template']['formSchema']['steps'][1]['fields'] = array(
+			$text( 'weight', 'content', 'content' ),
+			$text( 'weight', 'content', ' ' ),
+			$text( 'nameless', 'content', 'content' ),
+			$text( 'slogan', 'content', 'Slogan' ),
+			$text( 'weight', 'fontFamily', 'fontFamily' ),
+		);
+
+		$labels = array_column( SideLayout::of( self::OPTIONS, $reads, null )->steps[1]['fields'], 'label' );
+
+		$this->assertSame( array( 'Weight', 'Weight', 'content', 'Slogan', 'fontFamily' ), $labels );
+	}
+
 	public function test_a_palette_field_takes_the_templates_palette_by_name(): void {
 		$reads                                     = self::reads();
 		$reads['template']['template']['palettes'] = array(

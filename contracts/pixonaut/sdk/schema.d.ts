@@ -32231,6 +32231,8 @@ export interface operations {
                                     assetId: string;
                                     /** @enum {string} */
                                     kind: "image";
+                                    /** @description The picture's type, as `url` serves it: `image/png`, `image/jpeg` or `image/webp`. */
+                                    mime: string;
                                     /** @description The picture, opened with no key. It stays valid for at least 30 days and at most 60, and any cache may keep it that long. */
                                     url: string;
                                 } | null;

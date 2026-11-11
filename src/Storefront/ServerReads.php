@@ -267,6 +267,38 @@ final class ServerReads {
 	}
 
 	/**
+	 * The blank's options as written in Pixonaut, each with its `values`
+	 * and how each looks (`appearances`), from its cached variants read;
+	 * empty when Pixonaut could not be asked.
+	 *
+	 * @param string $blank_id The blank.
+	 * @return list<array<mixed>>
+	 */
+	public function written_options( string $blank_id ): array {
+		if ( false !== get_transient( self::PAUSE_TRANSIENT ) ) {
+			return array();
+		}
+		try {
+			$variants = json_decode( $this->blank( $blank_id, null )['variants'], true );
+		} catch ( ApiException ) {
+			set_transient( self::PAUSE_TRANSIENT, 1, self::PAUSE_SECONDS );
+			return array();
+		}
+		return self::options_of( $variants );
+	}
+
+	/**
+	 * The `options` of a blank's variants read, each one an array.
+	 *
+	 * @param mixed $variants The read, decoded.
+	 * @return list<array<mixed>>
+	 */
+	public static function options_of( mixed $variants ): array {
+		$options = is_array( $variants ) && is_array( $variants['options'] ?? null ) ? $variants['options'] : array();
+		return array_values( array_filter( $options, 'is_array' ) );
+	}
+
+	/**
 	 * The blank's views and variants, cached.
 	 *
 	 * @param string      $blank_id The blank.

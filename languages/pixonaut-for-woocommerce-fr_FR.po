@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T23:03:11+00:00\n"
+"POT-Creation-Date: 2026-11-10T23:46:52+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -3273,6 +3273,24 @@ msgstr "Activé pour ce produit"
 msgid "Off for this product"
 msgstr "Désactivé pour ce produit"
 
+#. translators: Option of "Value names beside swatches" on the screen that adds or edits a product attribute: follow the store's setting.
+#: src/Admin/SwatchNamesField.php:91
+msgctxt "value names beside swatches"
+msgid "As the store's setting says"
+msgstr "Selon le réglage de la boutique"
+
+#. translators: Option of "Value names beside swatches" on the screen that adds or edits a product attribute.
+#: src/Admin/SwatchNamesField.php:93
+msgctxt "value names beside swatches"
+msgid "Show"
+msgstr "Afficher"
+
+#. translators: Option of "Value names beside swatches" on the screen that adds or edits a product attribute.
+#: src/Admin/SwatchNamesField.php:95
+msgctxt "value names beside swatches"
+msgid "Hide"
+msgstr "Masquer"
+
 #: src/Admin/VariantField.php:84
 msgid ""
 "Pixonaut could not be reached to list the blank’s variants. Try again later."
@@ -6212,11 +6230,11 @@ msgstr ""
 "active. Mettez à jour WooCommerce pour l'utiliser."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:108
+#: src/Settings/Settings.php:110
 msgid "Default layout"
 msgstr "Mise en page par défaut"
 
-#: src/Settings/Settings.php:109
+#: src/Settings/Settings.php:111
 msgid ""
 "How personalised products show the designer, unless a product overrides it."
 msgstr ""
@@ -6224,11 +6242,11 @@ msgstr ""
 "personnalisation, sauf si un produit la remplace."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:122
+#: src/Settings/Settings.php:124
 msgid "Designer language"
 msgstr "Langue de l'outil de personnalisation"
 
-#: src/Settings/Settings.php:123
+#: src/Settings/Settings.php:125
 msgid ""
 "The language of the designer on the product page, of Pixonaut’s designer the "
 "Personalise button opens, and of the proof pages customers approve their "
@@ -6245,11 +6263,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
 #. translators: Label of the dropdown choosing how the product page designer lays out its form. Admin product page.
-#: src/Settings/Settings.php:136 templates/admin/product-fields.php:215
+#: src/Settings/Settings.php:138 templates/admin/product-fields.php:215
 msgid "Form layout"
 msgstr "Mise en page du formulaire"
 
-#: src/Settings/Settings.php:137
+#: src/Settings/Settings.php:139
 msgid ""
 "How the designer lays out its form, on the product page and in Pixonaut’s "
 "designer the Personalise button opens, unless a product overrides it: as the "
@@ -6261,11 +6279,11 @@ msgstr ""
 "toutes les étapes sur une seule page, ou une étape à la fois."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: each product option, such as Size or Colour, gets a group of its own in the designer's form.
-#: src/Settings/Settings.php:149
+#: src/Settings/Settings.php:151
 msgid "As its own group"
 msgstr "Comme groupe distinct"
 
-#: src/Settings/Settings.php:150
+#: src/Settings/Settings.php:152
 msgid ""
 "Puts each of a product's options, such as Size or Colour, in a group of its "
 "own in the designer's form on the product page, named after the option, in "
@@ -6279,11 +6297,11 @@ msgstr ""
 "produit dont les groupes ont été organisés à la main les conserve."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the groups of a product's options come before or after the template's groups.
-#: src/Settings/Settings.php:161
+#: src/Settings/Settings.php:163
 msgid "Place of the option groups"
 msgstr "Position des groupes d'options"
 
-#: src/Settings/Settings.php:162
+#: src/Settings/Settings.php:164
 msgid ""
 "Whether the groups of a product's options come before or after the "
 "template's groups."
@@ -6293,11 +6311,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the designer's form numbers its groups.
 #. translators: Label of the dropdown choosing whether the designer's form numbers its groups. Admin product page.
-#: src/Settings/Settings.php:174 templates/admin/product-fields.php:220
+#: src/Settings/Settings.php:176 templates/admin/product-fields.php:220
 msgid "Group numbers"
 msgstr "Numéros des groupes"
 
-#: src/Settings/Settings.php:175
+#: src/Settings/Settings.php:177
 msgid ""
 "Numbers the groups of the designer's form on the product page: 1 Photo, 2 "
 "Text on one page, Step 1 of 2 in steps. Off shows the group names with no "
@@ -6308,11 +6326,11 @@ msgstr ""
 "Désactivé, les noms des groupes s'affichent sans numéro."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:186
+#: src/Settings/Settings.php:188
 msgid "Load other colours and views"
 msgstr "Charger les autres couleurs et vues"
 
-#: src/Settings/Settings.php:187
+#: src/Settings/Settings.php:189
 msgid ""
 "Whether the designer loads a product's other colours, views and sides before "
 "the customer picks one, so they show at once. Choose In the background or "
@@ -6325,11 +6343,11 @@ msgstr ""
 "surtout un téléphone."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:200
+#: src/Settings/Settings.php:202
 msgid "Designer accent colour"
 msgstr "Couleur d'accentuation de l'outil de personnalisation"
 
-#: src/Settings/Settings.php:201
+#: src/Settings/Settings.php:203
 msgid ""
 "The colour the designer on the product page marks the chosen view, colour "
 "and option in, and draws its Next button in. None takes the accent colour of "
@@ -6343,11 +6361,11 @@ msgstr ""
 "personnalisation si la marque n'en a pas."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:212
+#: src/Settings/Settings.php:214
 msgid "Custom accent colour"
 msgstr "Couleur d'accentuation personnalisée"
 
-#: src/Settings/Settings.php:213
+#: src/Settings/Settings.php:215
 msgid ""
 "The accent colour when Designer accent colour is A custom colour, e.g. "
 "#1e73be."
@@ -6356,11 +6374,11 @@ msgstr ""
 "personnalisation vaut Une couleur personnalisée, par ex. #1e73be."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:224
+#: src/Settings/Settings.php:226
 msgid "Show the print area's frame"
 msgstr "Afficher le cadre de la zone d'impression"
 
-#: src/Settings/Settings.php:225
+#: src/Settings/Settings.php:227
 msgid ""
 "Draws a thin grey frame on the preview around where the design can go, in "
 "the designer on the product page and in Pixonaut's designer the Personalise "
@@ -6374,12 +6392,12 @@ msgstr ""
 "imprimée."
 
 #. translators: Title of a setting on the settings page, shown to the merchant. "Hosted page" is Pixonaut's designer page the Personalise button opens.
-#: src/Settings/Settings.php:235
+#: src/Settings/Settings.php:237
 msgid "Add to cart after approve in hosted page"
 msgstr "Ajouter au panier après validation sur la page hébergée"
 
 #. translators: Help text of a setting on the settings page. "Approve and add to cart" and "Approve and go back" are the labels of the button on Pixonaut's designer page.
-#: src/Settings/Settings.php:237
+#: src/Settings/Settings.php:239
 msgid ""
 "For the Personalise button layout. Approving adds the product to the cart "
 "and opens its cart item's page, and Pixonaut's designer says Approve and add "
@@ -6393,11 +6411,11 @@ msgstr ""
 "et revenir."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: how the options of a product option such as a size show in the designer's form.
-#: src/Settings/Settings.php:248
+#: src/Settings/Settings.php:250
 msgid "Product options in the designer"
 msgstr "Options du produit dans l'outil de personnalisation"
 
-#: src/Settings/Settings.php:249
+#: src/Settings/Settings.php:251
 msgid ""
 "How the designer on the product page shows the options of a variable "
 "product, such as its sizes, when it draws them in its form. As the theme "
@@ -6414,12 +6432,36 @@ msgstr ""
 "à l'outil de personnalisation. Une option qui ne peut pas être achetée avec "
 "les autres choix est grisée."
 
+#. translators: Title of a setting on the settings page, shown to the merchant: whether a product option's swatches drawn as a colour or a picture show the option's name beside them.
+#: src/Settings/Settings.php:263
+msgid "Show value names beside swatches"
+msgstr "Afficher les noms des valeurs à côté des boutons"
+
+#: src/Settings/Settings.php:264
+msgid ""
+"With product options shown as swatches, a value Pixonaut draws as a colour "
+"or a picture shows its name beside it. Off, the swatch shows the colour or "
+"picture alone; its name is still read out by screen readers, shown when the "
+"swatch is pointed at, and the chosen value's name shows beside the option's "
+"name. A value without a colour or picture always shows its name. Each global "
+"attribute can show or hide them whatever this says, on its edit screen under "
+"Products, Attributes."
+msgstr ""
+"Lorsque les options de produit sont affichées en boutons, une valeur que "
+"Pixonaut représente par une couleur ou une image affiche son nom à côté. "
+"Désactivé, le bouton n'affiche que la couleur ou l'image ; son nom reste lu "
+"par les lecteurs d'écran et s'affiche au survol du bouton, et le nom de la "
+"valeur choisie s'affiche à côté du nom de l'option. Une valeur sans couleur "
+"ni image affiche toujours son nom. Chaque attribut global peut afficher ou "
+"masquer les noms quel que soit ce réglage, sur son écran de modification "
+"sous Produits > Attributs."
+
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:261
+#: src/Settings/Settings.php:274
 msgid "Use Pixonaut pictures as product images"
 msgstr "Utiliser les images Pixonaut comme images produit"
 
-#: src/Settings/Settings.php:262
+#: src/Settings/Settings.php:275
 msgid ""
 "Sets each personalised product’s and variation’s image to Pixonaut’s picture "
 "of it, its template on the blank, and draws it again when the product "
@@ -6435,11 +6477,11 @@ msgstr ""
 "chaque produit retrouve l'image qu'il avait auparavant."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the fields are the ones the customer filled in to personalise the item.
-#: src/Settings/Settings.php:272
+#: src/Settings/Settings.php:285
 msgid "List the design's fields"
 msgstr "Lister les champs de la création"
 
-#: src/Settings/Settings.php:273
+#: src/Settings/Settings.php:286
 msgid ""
 "Lists what the customer filled in under a personalised item in the cart, the "
 "checkout, their orders and the order emails, as the designer showed it. Off, "
@@ -6453,11 +6495,11 @@ msgstr ""
 "l'administration les liste toujours."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: which view of the product the picture of a personalised item shows.
-#: src/Settings/Settings.php:284
+#: src/Settings/Settings.php:297
 msgid "Picture shows"
 msgstr "L'image montre"
 
-#: src/Settings/Settings.php:285
+#: src/Settings/Settings.php:298
 msgid ""
 "A personalised item shows the customer’s design on the product in the cart, "
 "the checkout, their orders and the order emails. This chooses the view of "
@@ -6471,11 +6513,11 @@ msgstr ""
 "la première des vues de l'emplacement dans lesquelles le produit est montré."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:298
+#: src/Settings/Settings.php:311
 msgid "Default approval"
 msgstr "Validation par défaut"
 
-#: src/Settings/Settings.php:299
+#: src/Settings/Settings.php:312
 msgid ""
 "How customers approve their design before it is printed, unless a product "
 "overrides it."
@@ -6484,11 +6526,11 @@ msgstr ""
 "si un produit la remplace."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:313
+#: src/Settings/Settings.php:326
 msgid "Proof approval deadline (days)"
 msgstr "Date limite de validation de l'épreuve (jours)"
 
-#: src/Settings/Settings.php:314
+#: src/Settings/Settings.php:327
 msgid ""
 "With proof by email, how many days the customer has to approve their proof. "
 "The link in the email works a week longer."
@@ -6497,11 +6539,11 @@ msgstr ""
 "valider son épreuve. Le lien de l'e-mail reste valable une semaine de plus."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:326
+#: src/Settings/Settings.php:339
 msgid "When no answer by the deadline"
 msgstr "Sans réponse à la date limite"
 
-#: src/Settings/Settings.php:327
+#: src/Settings/Settings.php:340
 msgid ""
 "With proof by email, what happens to a design the customer neither approved "
 "nor rejected by the deadline."
@@ -6510,11 +6552,11 @@ msgstr ""
 "ni validée ni refusée avant la date limite."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; what happens to an item whose design the customer rejected.
-#: src/Settings/Settings.php:340
+#: src/Settings/Settings.php:353
 msgid "On deny"
 msgstr "En cas de refus"
 
-#: src/Settings/Settings.php:341
+#: src/Settings/Settings.php:354
 msgid ""
 "What happens to an item whose design the customer rejected, or which was "
 "denied at the deadline."
@@ -6523,11 +6565,11 @@ msgstr ""
 "été refusé à la date limite."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:355
+#: src/Settings/Settings.php:368
 msgid "First proof reminder after (days)"
 msgstr "Premier rappel d'épreuve après (jours)"
 
-#: src/Settings/Settings.php:356
+#: src/Settings/Settings.php:369
 msgid ""
 "Days after the proof email that a customer who has not answered is reminded. "
 "Only reminders before the deadline are sent."
@@ -6537,20 +6579,20 @@ msgstr ""
 "sont envoyés."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:369
+#: src/Settings/Settings.php:382
 msgid "Then remind every (days)"
 msgstr "Puis rappeler tous les (jours)"
 
-#: src/Settings/Settings.php:370
+#: src/Settings/Settings.php:383
 msgid "Days between one proof reminder and the next."
 msgstr "Nombre de jours entre un rappel d'épreuve et le suivant."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of reminders.
-#: src/Settings/Settings.php:383
+#: src/Settings/Settings.php:396
 msgid "Proof reminders at most"
 msgstr "Nombre maximal de rappels d'épreuve"
 
-#: src/Settings/Settings.php:384
+#: src/Settings/Settings.php:397
 msgid ""
 "How many reminders a customer gets at most; 0 sends none. The last one says "
 "when the deadline is and what happens then."
@@ -6559,11 +6601,11 @@ msgstr ""
 "dernier indique la date limite et ce qui se passera ensuite."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut API.
-#: src/Settings/Settings.php:402
+#: src/Settings/Settings.php:415
 msgid "API base"
 msgstr "Base de l'API"
 
-#: src/Settings/Settings.php:403
+#: src/Settings/Settings.php:416
 msgid ""
 "The Pixonaut API as the browser reaches it, e.g. a local Pixonaut. Empty "
 "uses Pixonaut’s own. The store’s key is sent to this address."
@@ -6573,11 +6615,11 @@ msgstr ""
 "cette adresse."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL WordPress uses for the Pixonaut API.
-#: src/Settings/Settings.php:412
+#: src/Settings/Settings.php:425
 msgid "Server-to-server API base"
 msgstr "Base de l'API de serveur à serveur"
 
-#: src/Settings/Settings.php:413
+#: src/Settings/Settings.php:426
 msgid ""
 "The Pixonaut API as WordPress itself reaches it, when that differs from the "
 "browser’s address (WordPress inside Docker, say). Empty uses the API base."
@@ -6587,11 +6629,11 @@ msgstr ""
 "la base de l'API est utilisée."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut studio.
-#: src/Settings/Settings.php:422
+#: src/Settings/Settings.php:435
 msgid "Studio base"
 msgstr "Base du studio"
 
-#: src/Settings/Settings.php:423
+#: src/Settings/Settings.php:436
 msgid ""
 "The Pixonaut studio, where a connect is approved and the admin’s studio "
 "links lead. Empty uses Pixonaut’s own."
@@ -6601,11 +6643,11 @@ msgstr ""
 "utilisé."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the CDN the designer SDK loads from.
-#: src/Settings/Settings.php:432
+#: src/Settings/Settings.php:445
 msgid "CDN base"
 msgstr "Base du CDN"
 
-#: src/Settings/Settings.php:433
+#: src/Settings/Settings.php:446
 msgid ""
 "Where the pinned designer SDK release loads from, e.g. Pixonaut’s staging "
 "CDN. The release’s integrity is still checked. Empty uses Pixonaut’s own."
@@ -6616,11 +6658,11 @@ msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the URL of a designer SDK script.
 #. translators: Label of the field for the SDK script's URL, in developer tools.
-#: src/Settings/Settings.php:442 templates/admin/developer-tools.php:111
+#: src/Settings/Settings.php:455 templates/admin/developer-tools.php:111
 msgid "SDK script"
 msgstr "Script du SDK"
 
-#: src/Settings/Settings.php:443
+#: src/Settings/Settings.php:456
 msgid ""
 "Loads the designer SDK from this script, e.g. a local build, instead of the "
 "pinned release from the CDN base. Its integrity is not checked. Empty loads "
@@ -6631,11 +6673,11 @@ msgstr ""
 "intégrité n'est pas vérifiée. Vide, la version épinglée est chargée."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on debug logging of the designer SDK.
-#: src/Settings/Settings.php:452
+#: src/Settings/Settings.php:465
 msgid "SDK debug"
 msgstr "Débogage du SDK"
 
-#: src/Settings/Settings.php:453
+#: src/Settings/Settings.php:466
 msgid ""
 "Logs every designer mount and its failures to the browser console. On the "
 "storefront, only for logged-in store managers."
@@ -6646,11 +6688,11 @@ msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on a log of requests to Pixonaut.
 #. translators: Heading of the table of recent requests to Pixonaut, in developer tools.
-#: src/Settings/Settings.php:462 templates/admin/developer-tools.php:149
+#: src/Settings/Settings.php:475 templates/admin/developer-tools.php:149
 msgid "Request log"
 msgstr "Journal des requêtes"
 
-#: src/Settings/Settings.php:463
+#: src/Settings/Settings.php:476
 msgid "Records the last 50 requests to Pixonaut, without keys or tokens."
 msgstr ""
 "Enregistre les 50 dernières requêtes envoyées à Pixonaut, sans clés ni "
@@ -9158,6 +9200,25 @@ msgstr ""
 "Comparez chaque copie obsolète avec le modèle de l'extension, reportez-y ses "
 "modifications et copiez son en-tête @version."
 
+#. translators: Label of a select on the screen that adds or edits a product attribute: whether its values' names show beside their colour or picture swatches in the shop.
+#: templates/admin/swatch-names-field.php:21
+msgid "Value names beside swatches"
+msgstr "Noms des valeurs à côté des boutons"
+
+#. translators: Help under the "Value names beside swatches" select on the screen that adds or edits a product attribute.
+#: templates/admin/swatch-names-field.php:23
+msgid ""
+"For product options shown as swatches in the designer: whether a value drawn "
+"as a colour or a picture shows its name beside it. The store's setting is on "
+"the Pixonaut settings page. A value without a colour or picture always shows "
+"its name."
+msgstr ""
+"Pour les options de produit affichées en boutons dans l'outil de "
+"personnalisation : si une valeur représentée par une couleur ou une image "
+"affiche son nom à côté. Le réglage de la boutique se trouve sur la page des "
+"réglages de Pixonaut. Une valeur sans couleur ni image affiche toujours son "
+"nom."
+
 #. translators: Label of the choices of what a variation's Pixonaut image is drawn on. Admin product page, variation options.
 #: templates/admin/variation-picture-view.php:20
 msgid "Variation image drawn on"
@@ -9500,7 +9561,7 @@ msgid "Next: %s"
 msgstr "Suivant : %s"
 
 #. translators: %s: How many views of the product the strip under its preview shows, as Pixonaut's designer counts them.
-#: templates/storefront/preview.php:53
+#: templates/storefront/preview.php:57
 #, php-format
 msgid "%s view"
 msgid_plural "%s views"
@@ -9567,9 +9628,6 @@ msgstr[1] "%s vues"
 #, php-format
 #~ msgid "Up to %d sets are shown; those ticked after them are left out."
 #~ msgstr "Jusqu'à %d jeux sont affichés : ceux cochés au-delà sont ignorés."
-
-#~ msgid "Shown in"
-#~ msgstr "Affichée dans"
 
 #~ msgid "The design alone, without the product"
 #~ msgstr "La création seule, sans le produit"

@@ -151,6 +151,12 @@ Default: `theme`.
 | `theme` | As the theme shows them |
 | `swatches` | As swatches, like the designer's own choices |
 
+### `swatch_names`
+
+**Show value names beside swatches** (checkbox). With product options shown as swatches, a value Pixonaut draws as a colour or a picture shows its name beside it. Off, the swatch shows the colour or picture alone; its name is still read out by screen readers, shown when the swatch is pointed at, and the chosen value's name shows beside the option's name. A value without a colour or picture always shows its name. Each global attribute can show or hide them whatever this says, on its edit screen under Products, Attributes.
+
+Default: `true`.
+
 ### `product_pictures`
 
 **Use Pixonaut pictures as product images** (checkbox). Sets each personalised product’s and variation’s image to Pixonaut’s picture of it, its template on the blank, and draws it again when the product changes. A product can show its template’s showcase sets instead, chosen under Product images in its Pixonaut tab. An image you set yourself is kept. Off, each product gets back the image it had before.

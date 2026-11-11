@@ -94,6 +94,8 @@ export const NO_SPEC = [
 	'src/Catalogue/SplitListing.php',
 	'templates/admin/split-attribute-field.php',
 	'templates/admin/split-listing-control.php',
+	'src/Admin/SwatchNamesField.php', // an attribute's swatch names choice
+	'templates/admin/swatch-names-field.php',
 	'assets/src/admin/split-listing.ts',
 	'templates/admin/product-not-connected.php',
 	'src/Cart/CheckoutCheck.php',
@@ -217,8 +219,11 @@ export const REACH = {
 	'attribute-swatches.spec.ts': [
 		'assets/src/storefront/attribute-swatches.ts',
 		'assets/src/storefront/attribute-swatches.css',
+		'assets/src/storefront/swatch-looks.ts',
 		'src/Storefront/AttributeOptions.php',
 		'src/Storefront/PrintedSwatches.php',
+		'src/Storefront/SwatchLooks.php',
+		'src/Storefront/SwatchNames.php',
 	],
 	'blank-variants.spec.ts': [
 		'src/Admin/VariantField.php',

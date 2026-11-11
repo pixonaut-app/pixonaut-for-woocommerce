@@ -354,6 +354,13 @@ export type BlankNames = {
 	views: Record<string, string>;
 };
 
+/** How a blank's option value looks to a shopper: a colour fill, a picture,
+ *  or none, when it is drawn as its name. */
+export type ValueAppearance =
+	| { kind: 'fill'; colours: string[] }
+	| { kind: 'image'; assetId: string; url: string }
+	| null;
+
 export type Blank = {
 	id: string;
 	tenantId: string;
@@ -375,6 +382,9 @@ export type Blank = {
 	areasVaryBy?: string[];
 	/** Its names by language code; a language left out has none. */
 	names?: Record<string, BlankNames>;
+	/** A look given a value by a test, by axis and value as written, over
+	 *  the fixture's colour fills (`POST /__fake/blanks/:id/value-looks`). */
+	valueLooks?: Record<string, Record<string, ValueAppearance>>;
 	createdAt: number;
 	updatedAt: number;
 	/** When the blank was deleted, epoch ms; null while it is not. A

@@ -298,6 +298,12 @@ final class Schema {
 	const SPLIT_ATTRIBUTES_OPTION = 'pixonaut_wc_split_attributes';
 
 	/**
+	 * Option holding, by global attribute id, whether its swatches show
+	 * their values' names whatever the store's setting says.
+	 */
+	const SWATCH_NAMES_OPTION = 'pixonaut_wc_swatch_names';
+
+	/**
 	 * Option holding the ids of designer links Pixonaut could not be asked
 	 * to withdraw yet, which a job asks again.
 	 */

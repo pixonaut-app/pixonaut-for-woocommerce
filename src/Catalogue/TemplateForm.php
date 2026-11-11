@@ -44,14 +44,20 @@ final class TemplateForm {
 	private const FIELD_KEY_PROP = 'fieldKey';
 
 	/**
+	 * A text layer's prop its words are a field of.
+	 */
+	private const TEXT_CONTENT_PROP = 'content';
+
+	/**
 	 * The template's groups, in its order.
 	 *
 	 * @param mixed $template The template as Pixonaut answered it.
 	 * @return list<array{id: string, label: string, fields: list<array{field: string, label: string, help: string, type: string, options: list<string>}>}>
 	 */
 	public static function groups( mixed $template ): array {
-		$schema = is_array( $template ) && is_array( $template['formSchema'] ?? null ) ? $template['formSchema'] : array();
-		$groups = array();
+		$template = is_array( $template ) ? self::with_layer_names( $template ) : array();
+		$schema   = is_array( $template['formSchema'] ?? null ) ? $template['formSchema'] : array();
+		$groups   = array();
 		foreach ( is_array( $schema['steps'] ?? null ) ? $schema['steps'] : array() as $step ) {
 			if ( ! is_array( $step ) || ! is_string( $step['groupId'] ?? null ) || '' === $step['groupId'] ) {
 				continue;
@@ -69,6 +75,39 @@ final class TemplateForm {
 			);
 		}
 		return $groups;
+	}
+
+	/**
+	 * The template with each unlabelled text field of its `formSchema`
+	 * headed with its layer's name, as Pixonaut's designer heads it: a
+	 * merchant names a layer "Name" or "Weight" for what it holds. Only a
+	 * text layer's words take it, and only when the author left the label
+	 * empty or Pixonaut named the field by its prop, as its reads did before
+	 * they gave the name themselves; a layer without a name keeps the label.
+	 *
+	 * @param array<mixed> $template The template as Pixonaut answered it.
+	 * @return array<mixed>
+	 */
+	public static function with_layer_names( array $template ): array {
+		$names = array();
+		foreach ( is_array( $template['template']['layers'] ?? null ) ? $template['template']['layers'] : array() as $layer ) {
+			if ( is_array( $layer ) && is_string( $layer['id'] ?? null ) && is_string( $layer['name'] ?? null ) && '' !== trim( $layer['name'] ) ) {
+				$names[ $layer['id'] ] = $layer['name'];
+			}
+		}
+		if ( array() === $names || ! is_array( $template['formSchema']['steps'] ?? null ) ) {
+			return $template;
+		}
+		foreach ( $template['formSchema']['steps'] as $step_index => $step ) {
+			foreach ( is_array( $step ) && is_array( $step['fields'] ?? null ) ? $step['fields'] : array() as $field_index => $field ) {
+				$label = is_array( $field ) ? ( $field['label'] ?? null ) : null;
+				$name  = is_array( $field ) && is_string( $field['layerId'] ?? null ) ? ( $names[ $field['layerId'] ] ?? null ) : null;
+				if ( null !== $name && self::TEXT_CONTENT_PROP === ( $field['prop'] ?? null ) && ( ! is_string( $label ) || '' === trim( $label ) || self::TEXT_CONTENT_PROP === $label ) ) {
+					$template['formSchema']['steps'][ $step_index ]['fields'][ $field_index ]['label'] = $name;
+				}
+			}
+		}
+		return $template;
 	}
 
 	/**
