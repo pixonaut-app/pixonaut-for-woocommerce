@@ -16,16 +16,16 @@ use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Migrations\WriteSplitCards;
 use Pixonaut\WooCommerce\Storefront\SplitCardListings;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
+use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
-use WC_Product_Attribute;
 use WC_Product_Simple;
-use WC_Product_Variable;
-use WC_Product_Variation;
 use WC_Query;
 use WP_Query;
 use WP_UnitTestCase;
 
 final class SplitCardListingsTest extends WP_UnitTestCase {
+
+	use SplitPosters;
 
 	/**
 	 * The attribute the poster is listed by: with a photo, without one, and
@@ -35,41 +35,17 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 
 	private const SIZE = 'Storlek';
 
-	/**
-	 * Attribute ids by name.
-	 *
-	 * @var array<string, int>
-	 */
-	private array $attributes = array();
-
 	private SplitCardListings $listings;
-
-	/**
-	 * The category every product of a test is in, whose page lists them.
-	 *
-	 * @var int
-	 */
-	private int $category;
 
 	public function set_up(): void {
 		parent::set_up();
 		// The plugin's own listings and card writers are registered at boot; this one only tells keys apart.
 		$this->listings = new SplitCardListings();
-		$this->attribute( self::PICTURE, array( 'Med bild', 'Utan bild', 'Ram' ) );
-		$this->attribute( self::SIZE, array( '30x40', '50x70' ) );
-		$category = wp_insert_term( 'Posters', 'product_cat' );
-		$this->assertIsArray( $category );
-		$this->category = (int) $category['term_id'];
+		$this->set_up_posters();
 	}
 
 	public function tear_down(): void {
-		foreach ( array_keys( $this->attributes ) as $name ) {
-			$taxonomy = wc_attribute_taxonomy_name( $name );
-			unregister_taxonomy( $taxonomy );
-			unset( $GLOBALS['wc_product_attributes'][ $taxonomy ] );
-		}
-		delete_transient( 'wc_attribute_taxonomies' );
-		delete_option( SplitListing::OPTION );
+		$this->tear_down_posters();
 		$_GET = array();
 		$this->forget_chosen_filters();
 		parent::tear_down();
@@ -389,49 +365,6 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		ProductConfig::stored_on( $fresh )->with_split_listing( $choices )->save_to( $fresh );
 	}
 
-	private function term( string $slug ): int {
-		foreach ( array_keys( $this->attributes ) as $name ) {
-			$term = get_term_by( 'slug', $slug, wc_attribute_taxonomy_name( $name ) );
-			if ( $term instanceof \WP_Term ) {
-				return $term->term_id;
-			}
-		}
-		$this->fail( "No term {$slug}" );
-	}
-
-	/**
-	 * A poster sold with a photo in both sizes, and without one in 30x40.
-	 */
-	private function poster(): WC_Product {
-		$product = new WC_Product_Variable();
-		$product->set_name( 'Safari' );
-		$product->set_status( 'publish' );
-		$product->set_category_ids( array( $this->category ) );
-		$product->set_attributes( array( $this->product_attribute( self::PICTURE ), $this->product_attribute( self::SIZE ) ) );
-		$product->save();
-		$this->variation( $product, 'med-bild', '30x40' );
-		$this->variation( $product, 'med-bild', '50x70' );
-		$this->variation( $product, 'utan-bild', '30x40' );
-		WC_Product_Variable::sync( $product->get_id() );
-		$fresh = wc_get_product( $product->get_id() );
-		$this->assertInstanceOf( WC_Product::class, $fresh );
-		return $fresh;
-	}
-
-	private function variation( WC_Product $product, string $picture, string $size ): WC_Product_Variation {
-		$variation = new WC_Product_Variation();
-		$variation->set_parent_id( $product->get_id() );
-		$variation->set_attributes(
-			array(
-				'pa_bild'    => $picture,
-				'pa_storlek' => $size,
-			)
-		);
-		$variation->set_regular_price( '10' );
-		$variation->save();
-		return $variation;
-	}
-
 	private function simple( string $name ): WC_Product {
 		$product = new WC_Product_Simple();
 		$product->set_name( $name );
@@ -440,41 +373,5 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$product->set_regular_price( '5' );
 		$product->save();
 		return $product;
-	}
-
-	private function product_attribute( string $name ): WC_Product_Attribute {
-		$taxonomy  = wc_attribute_taxonomy_name( $name );
-		$attribute = new WC_Product_Attribute();
-		$attribute->set_id( $this->attributes[ $name ] );
-		$attribute->set_name( $taxonomy );
-		$terms = get_terms(
-			array(
-				'taxonomy'   => $taxonomy,
-				'hide_empty' => false,
-				'fields'     => 'ids',
-				'orderby'    => 'term_id',
-			)
-		);
-		$attribute->set_options( is_array( $terms ) ? $terms : array() );
-		$attribute->set_variation( true );
-		return $attribute;
-	}
-
-	/**
-	 * @param string   $name   The attribute's name.
-	 * @param string[] $values Its values.
-	 * @phpstan-param list<string> $values
-	 */
-	private function attribute( string $name, array $values ): void {
-		$id = wc_create_attribute( array( 'name' => $name ) );
-		$this->assertIsInt( $id );
-		$taxonomy = wc_attribute_taxonomy_name( $name );
-		register_taxonomy( $taxonomy, array( 'product', 'product_variation' ) );
-		// What WooCommerce holds for an attribute from `init` on.
-		$GLOBALS['wc_product_attributes'][ $taxonomy ] = current( wp_list_filter( wc_get_attribute_taxonomies(), array( 'attribute_id' => $id ) ) );
-		foreach ( $values as $value ) {
-			wp_insert_term( $value, $taxonomy );
-		}
-		$this->attributes[ $name ] = $id;
 	}
 }

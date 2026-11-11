@@ -157,6 +157,12 @@ final class Schema {
 	const PRODUCT_SPLIT_CARD_META = '_pixonaut_split_card';
 
 	/**
+	 * Product meta holding a split product's cards' own titles and images,
+	 * by term id, as the store manager set them.
+	 */
+	const PRODUCT_SPLIT_CARD_LOOKS_META = '_pixonaut_split_card_looks';
+
+	/**
 	 * Product and variation meta recording its Pixonaut picture: the
 	 * attachment, and what it was drawn from.
 	 */

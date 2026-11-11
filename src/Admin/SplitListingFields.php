@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Admin;
 
 use LogicException;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Templates;
 use WC_Product;
@@ -21,8 +22,11 @@ use WC_Product_Attribute;
  * A checkbox on a global attribute's add and edit screens turns its default
  * on; a three-way control on each global attribute's row in the product's
  * Attributes tab follows it (Auto) or turns it on or off for the product.
- * The row's choice is saved with the product and with WooCommerce's Save
- * attributes button. Custom attributes have no control (`SplitListing`).
+ * Under it, each of the row's values has a title and an image field for its
+ * card in the shop, shown while the row's choice lists the values as their
+ * own products. The row's choice and the cards' titles and images are saved
+ * with the product and with WooCommerce's Save attributes button. Custom
+ * attributes have no control (`SplitListing`).
  */
 final class SplitListingFields {
 
@@ -35,6 +39,16 @@ final class SplitListingFields {
 	 * The product rows' choices, by the row's index in WooCommerce's `attribute_names`.
 	 */
 	public const PRODUCT_FIELD = 'pixonaut_wc_split_listing';
+
+	/**
+	 * Each value's card's own title and image, by term id (`SplitCardLooks`).
+	 */
+	public const CARD_FIELD = 'pixonaut_wc_split_card';
+
+	/**
+	 * The image size a card's image is previewed at.
+	 */
+	private const PREVIEW_SIZE = 'thumbnail';
 
 	public const NONCE_ACTION = 'pixonaut_wc_save_split_listing';
 
@@ -126,6 +140,47 @@ final class SplitListingFields {
 				'nonce_field' => wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD, false, false ),
 			)
 		);
+		$cards = self::cards( $attribute, null === $product ? array() : SplitCardLooks::stored_on( $product->get_id() ) );
+		if ( array() === $cards ) {
+			return;
+		}
+		$this->templates->render(
+			'admin/split-card-looks.php',
+			array(
+				'field'             => self::CARD_FIELD,
+				'id'                => 'pixonaut-split-card-' . $row,
+				'shown'             => SplitListing::splits( $config, $attribute->get_id() ),
+				'attribute_default' => SplitListing::attribute_default( $attribute->get_id() ),
+				'product_title'     => null === $product ? '' : $product->get_name(),
+				'cards'             => $cards,
+			)
+		);
+	}
+
+	/**
+	 * The row's values, each with its card's own title and image.
+	 *
+	 * @param WC_Product_Attribute                          $attribute A global attribute's row.
+	 * @param array<int, array{title: string, image: int}> $looks     The product's cards' own titles and images.
+	 * @return list<array{term_id: int, name: string, title: string, image: int, image_url: string}>
+	 */
+	private static function cards( WC_Product_Attribute $attribute, array $looks ): array {
+		$cards = array();
+		foreach ( $attribute->get_terms() ?? array() as $term ) {
+			$look    = $looks[ $term->term_id ] ?? array(
+				'title' => '',
+				'image' => 0,
+			);
+			$url     = $look['image'] > 0 ? wp_get_attachment_image_url( $look['image'], self::PREVIEW_SIZE ) : false;
+			$cards[] = array(
+				'term_id'   => $term->term_id,
+				'name'      => $term->name,
+				'title'     => $look['title'],
+				'image'     => $look['image'],
+				'image_url' => is_string( $url ) ? $url : '',
+			);
+		}
+		return $cards;
 	}
 
 	/**
@@ -158,16 +213,18 @@ final class SplitListingFields {
 			return;
 		}
 		parse_str( wp_unslash( $_POST['data'] ), $data ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- save_choices() keeps only known names and choices.
-		$this->save_choices( absint( $_POST['post_id'] ), $data );
+		// Slashed again, as a posted product form is, which save_choices() unslashes.
+		$this->save_choices( absint( $_POST['post_id'] ), wp_slash( $data ) );
 	}
 
 	/**
-	 * Stores the posted rows' choices on the product; the attributes no row
-	 * names lose theirs. Nothing is stored when the rows were not posted, or
-	 * when the choices are what is stored.
+	 * Stores the posted rows' choices and cards' titles and images on the
+	 * product; the attributes and values no row names lose theirs. Nothing
+	 * is stored when the rows were not posted, or when they are what is
+	 * stored.
 	 *
 	 * @param int                 $product_id The product.
-	 * @param array<mixed, mixed> $posted    The posted form.
+	 * @param array<mixed, mixed> $posted    The posted form, slashed.
 	 */
 	public function save_choices( int $product_id, array $posted ): void {
 		if ( ! self::posted_nonce_valid( $posted ) || ! is_array( $posted[ self::PRODUCT_FIELD ] ?? null ) ) {
@@ -186,6 +243,8 @@ final class SplitListingFields {
 				$choices[ $attribute_id ] = $choice;
 			}
 		}
+		$looks = is_array( $posted[ self::CARD_FIELD ] ?? null ) ? $posted[ self::CARD_FIELD ] : array();
+		SplitCardLooks::save( $product_id, wp_unslash( $looks ) );
 		$config = ProductConfig::stored_on( $product );
 		if ( SplitListing::choices_from( $choices ) === $config->split_listing ) {
 			return;

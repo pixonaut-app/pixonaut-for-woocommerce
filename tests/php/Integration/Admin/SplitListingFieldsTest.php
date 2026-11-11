@@ -9,6 +9,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Admin;
 
 use Pixonaut\WooCommerce\Admin\SplitListingFields;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Templates;
 use WC_Product;
@@ -191,6 +192,111 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 		$this->assertSame( array( $this->attributes[ self::PICTURE ] => SplitListing::OFF ), $this->stored( $product )->split_listing );
 	}
 
+	public function test_a_product_saves_each_values_card_title_and_image(): void {
+		$product = $this->poster();
+		$image   = $this->image();
+		$with    = $this->term( 'med-bild' );
+		$without = $this->term( 'utan-bild' );
+		// As WordPress posts a form: slashed.
+		$_POST = wp_slash(
+			$this->nonced(
+				array(
+					'attribute_names'                 => array( 'pa_bild' ),
+					SplitListingFields::PRODUCT_FIELD => array( 'on' ),
+					SplitListingFields::CARD_FIELD    => array(
+						$with    => array(
+							'title' => " Safari's <b>photo</b> ",
+							'image' => (string) $image,
+						),
+						$without => array(
+							'title' => '',
+							'image' => '',
+						),
+					),
+				)
+			)
+		);
+
+		do_action( 'woocommerce_process_product_meta', $product->get_id() );
+
+		$this->assertSame(
+			array(
+				$with => array(
+					'title' => "Safari's photo",
+					'image' => $image,
+				),
+			),
+			SplitCardLooks::stored_on( $product->get_id() ),
+			'plain text, and a value with neither is left out'
+		);
+
+		$_POST[ SplitListingFields::CARD_FIELD ] = array(
+			$with => array(
+				'title' => '',
+				'image' => '',
+			),
+		);
+		do_action( 'woocommerce_process_product_meta', $product->get_id() );
+		$this->assertSame( array(), get_post_meta( $product->get_id(), SplitCardLooks::META, false ), 'nothing is kept once every card has neither' );
+	}
+
+	public function test_the_save_attributes_button_saves_the_cards(): void {
+		$product = $this->poster();
+		remove_all_actions( 'wp_ajax_woocommerce_save_attributes' );
+		$this->fields->register();
+		$with                 = $this->term( 'med-bild' );
+		$form                 = $this->nonced(
+			array(
+				'attribute_names'                 => array( 'pa_bild' ),
+				SplitListingFields::PRODUCT_FIELD => array( 'auto' ),
+				SplitListingFields::CARD_FIELD    => array(
+					$with => array(
+						'title' => 'Safari\\s photo',
+						'image' => '',
+					),
+				),
+			)
+		);
+		$_POST                = wp_slash(
+			array(
+				'data'    => http_build_query( $form ),
+				'post_id' => (string) $product->get_id(),
+			)
+		);
+		$_REQUEST['security'] = wp_create_nonce( 'save-attributes' );
+
+		do_action( 'wp_ajax_woocommerce_save_attributes' );
+		unset( $_REQUEST['security'] );
+
+		$this->assertSame( 'Safari\\s photo', SplitCardLooks::of( $product->get_id(), $with )['title'], 'a backslash typed is kept' );
+	}
+
+	public function test_a_rows_cards_show_while_it_lists_its_values_as_their_own_products(): void {
+		$product = $this->poster();
+		$image   = $this->image();
+		$with    = $this->term( 'med-bild' );
+		SplitCardLooks::save(
+			$product->get_id(),
+			array(
+				$with => array(
+					'title' => 'Safari med bild',
+					'image' => $image,
+				),
+			)
+		);
+		$GLOBALS['product_object'] = $product;
+		$attributes                = $product->get_attributes();
+
+		$hidden = $this->row( $attributes['pa_bild'], 0 );
+		$this->assertStringContainsString( '<tr class="pixonaut-split-cards" data-attribute-default="0" hidden>', $hidden, 'Auto, with the attribute off' );
+		$this->assertStringContainsString( 'name="' . SplitListingFields::CARD_FIELD . '[' . $with . '][title]" value="Safari med bild" placeholder="Safari"', $hidden );
+		$this->assertStringContainsString( 'name="' . SplitListingFields::CARD_FIELD . '[' . $with . '][image]" value="' . $image . '"', $hidden );
+		$this->assertStringContainsString( 'Title for “Utan bild”', $hidden );
+
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		$this->assertStringContainsString( '<tr class="pixonaut-split-cards" data-attribute-default="1">', $this->row( $attributes['pa_bild'], 0 ) );
+	}
+
 	public function test_auto_follows_the_attribute_and_a_products_own_choice_comes_first(): void {
 		$product = $this->poster();
 		$picture = $this->attributes[ self::PICTURE ];
@@ -295,6 +401,31 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 			wp_insert_term( $value, $taxonomy );
 		}
 		$this->attributes[ $name ] = $id;
+		return $id;
+	}
+
+	/**
+	 * A global attribute value's term id.
+	 *
+	 * @param string $slug The value's slug.
+	 */
+	private function term( string $slug ): int {
+		$term = get_term_by( 'slug', $slug, wc_attribute_taxonomy_name( self::PICTURE ) );
+		$this->assertInstanceOf( \WP_Term::class, $term );
+		return $term->term_id;
+	}
+
+	/**
+	 * An image in the media library.
+	 */
+	private function image(): int {
+		$id = self::factory()->attachment->create_object(
+			array(
+				'file'           => 'card.png',
+				'post_mime_type' => 'image/png',
+			)
+		);
+		$this->assertIsInt( $id );
 		return $id;
 	}
 

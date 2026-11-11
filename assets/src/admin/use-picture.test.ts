@@ -31,7 +31,7 @@ afterEach(() => {
 describe('the Product image box', () => {
 	it('sets the drawn picture as the featured image', () => {
 		const set = vi.fn();
-		window.wp = { media: { featuredImage: { set } } };
+		window.wp = { media: Object.assign(vi.fn(), { featuredImage: { set } }) };
 		document.body.innerHTML = `<div id="postimagediv">${link(31)}</div>`;
 
 		click(document);
@@ -41,7 +41,7 @@ describe('the Product image box', () => {
 
 	it('removes the image when no picture is drawn, so one is', () => {
 		const set = vi.fn();
-		window.wp = { media: { featuredImage: { set } } };
+		window.wp = { media: Object.assign(vi.fn(), { featuredImage: { set } }) };
 		document.body.innerHTML = `<div id="postimagediv">${link(0)}</div>`;
 
 		click(document);

@@ -70,3 +70,109 @@ describe('the control on an attribute row', () => {
 		document.removeEventListener('change', changed);
 	});
 });
+
+/** A row's control followed by its cards, the attribute on by default or not. */
+function rowWithCards(choice: string, attributeDefault: boolean): HTMLElement {
+	const table = row(choice);
+	table.querySelector('tbody')?.insertAdjacentHTML(
+		'beforeend',
+		`<tr class="pixonaut-split-cards" data-attribute-default="${attributeDefault ? '1' : '0'}"><td colspan="2">
+			<div class="pixonaut-split-card">
+				<input type="text" class="pixonaut-split-card__title" name="pixonaut_wc_split_card[7][title]" />
+				<input type="hidden" class="pixonaut-split-card__image-id" name="pixonaut_wc_split_card[7][image]" value="" />
+				<img class="pixonaut-split-card__preview" src="" alt="" hidden />
+				<button type="button" class="button pixonaut-split-card__choose" data-frame-title="Image for “Med bild”" data-frame-button="Use this image">Choose</button>
+				<button type="button" class="button-link pixonaut-split-card__remove" hidden>Remove</button>
+			</div>
+		</td></tr>`,
+	);
+	return table;
+}
+
+function cardsOf(table: HTMLElement): HTMLElement {
+	const cards = table.querySelector<HTMLElement>('.pixonaut-split-cards');
+	if (!cards) {
+		throw new Error('no cards');
+	}
+	return cards;
+}
+
+describe('each value’s card', () => {
+	it('shows while the choice lists the values as their own products', () => {
+		const table = rowWithCards('auto', true);
+		const cards = cardsOf(table);
+
+		click(table);
+		expect(cards.hidden).toBe(false);
+		click(table);
+		expect(cards.hidden).toBe(true);
+		click(table);
+		expect(cards.hidden).toBe(false);
+	});
+
+	it('hides on Auto when the attribute is off', () => {
+		const table = rowWithCards('off', false);
+
+		click(table);
+
+		expect(cardsOf(table).hidden).toBe(true);
+	});
+
+	it('takes the image chosen in the media library, and removes it', () => {
+		const changed = vi.fn();
+		document.addEventListener('change', changed);
+		let select = () => {};
+		const open = vi.fn();
+		const media = vi.fn(() => ({
+			on: (_event: 'select', handler: () => void) => {
+				select = handler;
+			},
+			open,
+			state: () => ({
+				get: () => ({
+					first: () => ({
+						toJSON: () => ({
+							id: 42,
+							url: 'full.png',
+							sizes: { thumbnail: { url: 'thumb.png' } },
+						}),
+					}),
+				}),
+			}),
+		}));
+		window.wp = { media };
+		const table = rowWithCards('on', false);
+		const field = table.querySelector<HTMLInputElement>(
+			'.pixonaut-split-card__image-id',
+		);
+		const preview = table.querySelector<HTMLImageElement>(
+			'.pixonaut-split-card__preview',
+		);
+		const remove = table.querySelector<HTMLElement>(
+			'.pixonaut-split-card__remove',
+		);
+
+		table.querySelector<HTMLElement>('.pixonaut-split-card__choose')?.click();
+		expect(media).toHaveBeenCalledWith(
+			expect.objectContaining({
+				title: 'Image for “Med bild”',
+				button: { text: 'Use this image' },
+				multiple: false,
+			}),
+		);
+		expect(open).toHaveBeenCalled();
+		select();
+		expect(field?.value).toBe('42');
+		expect(preview?.getAttribute('src')).toBe('thumb.png');
+		expect(preview?.hidden).toBe(false);
+		expect(remove?.hidden).toBe(false);
+
+		remove?.click();
+		expect(field?.value).toBe('');
+		expect(preview?.hidden).toBe(true);
+		expect(remove?.hidden).toBe(true);
+		expect(changed).toHaveBeenCalledTimes(2);
+		document.removeEventListener('change', changed);
+		delete window.wp;
+	});
+});

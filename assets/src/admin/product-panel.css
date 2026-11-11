@@ -1537,6 +1537,49 @@
 	margin-left: calc(1.25rem + 0.25em);
 }
 
+/* Each value's card under the control: a title field and an image per value. */
+.pixonaut-split-cards[hidden] {
+	display: none;
+}
+
+.pixonaut-split-cards__fieldset {
+	margin: 0.5em 0 0;
+}
+
+.pixonaut-split-cards__legend {
+	font-weight: 600;
+}
+
+.pixonaut-split-card {
+	display: grid;
+	gap: 0.25em;
+	margin-top: 0.75em;
+}
+
+.pixonaut-split-card__title {
+	width: 100%;
+	max-width: 25em;
+}
+
+.pixonaut-split-card__image {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5em;
+}
+
+.pixonaut-split-card__preview {
+	width: 3rem;
+	height: 3rem;
+	object-fit: cover;
+	border: 1px solid #dcdcde;
+}
+
+.pixonaut-split-card__preview[hidden],
+.pixonaut-split-card__remove[hidden] {
+	display: none;
+}
+
 /* The Personalise box keeps what it means beside it, the words wrapping there. */
 :is(#pixonaut_product_data, .pixonaut-variation-panel)
 	.pixonaut-group--personalise

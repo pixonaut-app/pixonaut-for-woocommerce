@@ -78,7 +78,7 @@ final class SplitCardListings {
 	public function register(): void {
 		add_filter( 'posts_clauses', array( $this, 'clauses' ), self::CLAUSES_PRIORITY, 2 );
 		add_filter( 'posts_results', array( $this, 'results' ), 10, 2 );
-		add_action( 'the_post', array( $this, 'enter' ) );
+		add_action( 'the_post', array( $this, 'enter' ), 10, 2 );
 		add_action( 'loop_end', array( $this, 'leave' ) );
 		add_filter( 'post_type_link', array( $this, 'link' ), 10, 2 );
 		add_filter( 'pre_render_block', array( $this, 'start_template' ), 10, 2 );
@@ -211,17 +211,34 @@ final class SplitCardListings {
 	}
 
 	/**
-	 * Notes the card a loop moves to.
+	 * Notes the card a loop moves to. A query sets its post up again out of
+	 * its loop too, as `wp_reset_postdata()` does after another query: no
+	 * card is shown then.
 	 *
-	 * @param mixed $post The post.
+	 * @param mixed $post  The post.
+	 * @param mixed $query The query whose post it is.
 	 */
-	public function enter( mixed $post ): void {
+	public function enter( mixed $post, mixed $query = null ): void {
+		if ( $query instanceof WP_Query && ! $query->in_the_loop ) {
+			$this->current = null;
+			return;
+		}
 		if ( ! $post instanceof WP_Post ) {
 			return;
 		}
 		$term_id       = $this->cards[ $post ] ?? 0;
 		$this->current = $term_id > 0 ? array( $post->ID, $term_id ) : null;
 		$this->shown[] = array( $post->ID, $term_id );
+	}
+
+	/**
+	 * The product and value of the card a loop shows now; null while it
+	 * shows none.
+	 *
+	 * @return array{0: int, 1: int}|null
+	 */
+	public function current(): ?array {
+		return $this->current;
 	}
 
 	/**
