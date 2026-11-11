@@ -38,7 +38,7 @@ function dryRun(args: string[], cwd: string, sites = '1'): string[] {
 		env: {
 			CI_LOCAL_BASE: 'main',
 			PIXONAUT_E2E_SITES: sites,
-			E2E_SITES_COUNT: '8',
+			E2E_SITES_COUNT: '12',
 		},
 	});
 	expect(result.status, result.stderr).toBe(0);
