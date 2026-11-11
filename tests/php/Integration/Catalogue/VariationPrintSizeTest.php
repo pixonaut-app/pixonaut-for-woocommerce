@@ -406,9 +406,9 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 	/**
 	 * Saves a variation's panel, following its product, with a print size for its one side.
 	 *
-	 * @param WC_Product           $variation The variation.
-	 * @param int                  $loop      Its place in the variations list.
-	 * @param array<string, mixed> $size      The size's fields.
+	 * @param WC_Product            $variation The variation.
+	 * @param int                   $loop      Its place in the variations list.
+	 * @param array<string, mixed>  $size      The size's fields.
 	 * @param array<string, string> $choices  What was chosen on its warnings about soft images, by key.
 	 */
 	private function save_variation( WC_Product $variation, int $loop, array $size, array $choices = array() ): void {

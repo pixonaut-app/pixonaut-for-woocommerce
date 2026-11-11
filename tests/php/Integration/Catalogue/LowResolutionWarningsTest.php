@@ -125,9 +125,9 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 	 * Saves the product linked at the placement's size, Pixonaut answering
 	 * the soft images given.
 	 *
-	 * @param int                               $product_id The product.
-	 * @param list<array<string, mixed>>        $soft       What Pixonaut answers in `lowResolution`.
-	 * @param array<string, string>             $choices    What was chosen on the warnings, by key.
+	 * @param int                                 $product_id The product.
+	 * @param list<array<string, mixed>>          $soft       What Pixonaut answers in `lowResolution`.
+	 * @param array<string, string>               $choices    What was chosen on the warnings, by key.
 	 * @param array{legal: bool, reason?: string} $verdict  The verdict besides them.
 	 */
 	private function link( int $product_id, array $soft, array $choices = array(), array $verdict = array( 'legal' => true ) ): void {

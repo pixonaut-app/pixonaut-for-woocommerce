@@ -59,7 +59,8 @@ final class LowResolutionSize {
 		if ( null === $size || array() === $images ) {
 			return null;
 		}
-		return new self( $size, $images, true === ( $data['refused'] ?? false ) );
+		$refused = $data['refused'] ?? false;
+		return new self( $size, $images, true === $refused );
 	}
 
 	/**
