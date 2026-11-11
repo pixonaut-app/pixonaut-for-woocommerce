@@ -272,6 +272,19 @@ export type TemplateVersion = {
 	/** What `backgroundSeeThrough` answers; absent answers `null`, not known,
 	 *  until `POST /__fake/templates/:id/background` says otherwise. */
 	backgroundSeeThrough?: boolean | null;
+	/** The workspace's pictures the version holds that a print size can
+	 *  print too soft, each with its width in pixels, and what the
+	 *  workspace does with such a size; absent, every image is sharp
+	 *  enough at any size. Set by `POST /__fake/templates/:id/low-resolution`. */
+	lowResolution?: LowResolutionSetup;
+};
+
+/** Images a print size judges against their recommended resolution. */
+export type LowResolutionSetup = {
+	images: { layerId: string; assetId: string; widthPx: number }[];
+	recommendedDpi: number;
+	/** `warn` names them with a legal size; `refuse` refuses the size. */
+	action: 'warn' | 'refuse';
 };
 
 /** A photo of the blank a mockup is rendered on; its id is the mockup id. */

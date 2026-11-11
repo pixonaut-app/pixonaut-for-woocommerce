@@ -527,7 +527,7 @@ describe('POST /v1/templates/{id}/print-size', () => {
 		const response = await judge(tee, TEE_FITTED);
 
 		expect(response.status).toBe(200);
-		expect(await response.json()).toEqual({ legal: true });
+		expect(await response.json()).toEqual({ legal: true, lowResolution: [] });
 	});
 
 	it('calls a size of another shape wrong_ratio at tolerance 0', async () => {
@@ -536,15 +536,20 @@ describe('POST /v1/templates/{id}/print-size', () => {
 		expect(await response.json()).toEqual({
 			legal: false,
 			reason: 'wrong_ratio',
+			lowResolution: [],
 		});
 	});
 
 	it.each([
-		['inside', { widthMm: 420, heightMm: 310 }, { legal: true }],
+		[
+			'inside',
+			{ widthMm: 420, heightMm: 310 },
+			{ legal: true, lowResolution: [] },
+		],
 		[
 			'outside',
 			{ widthMm: 420, heightMm: 320 },
-			{ legal: false, reason: 'wrong_ratio' },
+			{ legal: false, reason: 'wrong_ratio', lowResolution: [] },
 		],
 	])('judges a shape %s the relative tolerance', async (_, size, verdict) => {
 		const response = await judge(poster, size);
@@ -558,13 +563,14 @@ describe('POST /v1/templates/{id}/print-size', () => {
 		expect(await response.json()).toEqual({
 			legal: false,
 			reason: 'too_large',
+			lowResolution: [],
 		});
 	});
 
 	it('leaves the bounds unchecked without a placement', async () => {
 		const response = await judge(tee, tooLarge);
 
-		expect(await response.json()).toEqual({ legal: true });
+		expect(await response.json()).toEqual({ legal: true, lowResolution: [] });
 	});
 
 	it('answers one verdict per size, in the order asked', async () => {
@@ -575,9 +581,9 @@ describe('POST /v1/templates/{id}/print-size', () => {
 
 		expect(await response.json()).toEqual({
 			verdicts: [
-				{ legal: true },
-				{ legal: false, reason: 'too_large' },
-				{ legal: false, reason: 'wrong_ratio' },
+				{ legal: true, lowResolution: [] },
+				{ legal: false, reason: 'too_large', lowResolution: [] },
+				{ legal: false, reason: 'wrong_ratio', lowResolution: [] },
 			],
 		});
 	});
@@ -633,7 +639,7 @@ describe('POST /v1/templates/{id}/print-size', () => {
 			headers: bearer(FIXTURE.shareLink),
 		});
 
-		expect(await response.json()).toEqual({ legal: true });
+		expect(await response.json()).toEqual({ legal: true, lowResolution: [] });
 	});
 });
 

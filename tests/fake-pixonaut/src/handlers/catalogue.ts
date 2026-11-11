@@ -7,6 +7,7 @@ import { fieldKeysOf, offersProperties } from '../field-keys';
 import {
 	type Blank,
 	CUSTOM_ADAPTER,
+	type LowResolutionSetup,
 	type Placement,
 	type State,
 	type TemplateVersion,
@@ -621,6 +622,32 @@ export const listFittingTemplates: Handler = (context) => {
 	return { status: 200, body: { items, total: matching.length, ...paging } };
 };
 
+/** Millimetres in an inch, which a resolution in dots per inch is measured along. */
+const MM_PER_INCH = 25.4;
+
+/** A verdict with the images the size prints below their recommended
+ *  resolution, which Pixonaut names on every verdict; under `refuse` a
+ *  size that is otherwise legal is refused for them. Each is judged along
+ *  its width alone, which the fake's images fill. */
+function withLowResolution(
+	verdict: Verdict,
+	size: Box,
+	setup: LowResolutionSetup | undefined,
+) {
+	const lowResolution = (setup?.images ?? [])
+		.map((image) => ({
+			layerId: image.layerId,
+			assetId: image.assetId,
+			effectiveDpi: image.widthPx / (size.widthMm / MM_PER_INCH),
+			recommendedDpi: setup?.recommendedDpi ?? 0,
+		}))
+		.filter((image) => image.effectiveDpi < image.recommendedDpi);
+	if (verdict.legal && setup?.action === 'refuse' && lowResolution.length > 0) {
+		return { legal: false, reason: 'low_resolution', lowResolution };
+	}
+	return { ...verdict, lowResolution };
+}
+
 type NamedPlacement = { blankId?: string; placementId?: string };
 type PrintSizeBody = NamedPlacement & (Box | { sizes: Box[] });
 
@@ -650,7 +677,12 @@ export const judgePrintSize: Handler = (context) => {
 		}
 	}
 	const artwork = artworkOf(template);
-	const judge = (size: Box) => verdictOf(artwork, size, placement);
+	const judge = (size: Box) =>
+		withLowResolution(
+			verdictOf(artwork, size, placement),
+			size,
+			template.lowResolution,
+		);
 	if ('sizes' in body) {
 		return { status: 200, body: { verdicts: body.sizes.map(judge) } };
 	}
