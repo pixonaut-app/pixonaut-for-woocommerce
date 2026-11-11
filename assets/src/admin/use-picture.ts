@@ -5,14 +5,7 @@
 // variation's options it does the same to the variation's image field, which
 // WooCommerce saves with the variation.
 
-/** WordPress's featured-image box, `wp.media.featuredImage`. */
-type FeaturedImage = { set: (id: number) => void };
-
-declare global {
-	interface Window {
-		wp?: { media?: { featuredImage?: FeaturedImage } };
-	}
-}
+import './wp-media';
 
 /** The id `wp.media.featuredImage.set()` takes to remove the image. */
 export const NO_IMAGE = -1;

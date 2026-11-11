@@ -90,12 +90,11 @@ export const NO_SPEC = [
 	'src/Admin/StatusReport.php',
 	'templates/admin/status-report.php',
 	'src/Admin/TrashedProducts.php',
-	'src/Admin/SplitListingFields.php', // listing each value as its own product
-	'templates/admin/split-attribute-field.php',
+	'templates/admin/split-attribute-field.php', // listing each value as its own product
 	'templates/admin/split-listing-control.php',
 	'src/Admin/SwatchNamesField.php', // an attribute's swatch names choice
 	'templates/admin/swatch-names-field.php',
-	'assets/src/admin/split-listing.ts',
+	'assets/src/admin/wp-media.ts', // types of WordPress's media script
 	'templates/admin/product-not-connected.php',
 	'src/Cart/CheckoutCheck.php',
 	'src/Cart/CommitFailures.php',
@@ -645,9 +644,14 @@ export const REACH = {
 	// Whether the plugin runs at all: what loads it and refuses to.
 	'smoke.spec.ts': ['pixonaut-for-woocommerce.php', 'src/Requirements.php'],
 	'split-listings.spec.ts': [
+		'src/Admin/SplitListingFields.php',
+		'src/Catalogue/SplitCardLooks.php',
 		'src/Catalogue/SplitCards.php',
 		'src/Catalogue/SplitListing.php',
+		'src/Storefront/SplitCardFaces.php',
 		'src/Storefront/SplitCardListings.php',
+		'templates/admin/split-card-looks.php',
+		'assets/src/admin/split-listing.ts',
 	],
 	'standing-options.spec.ts': [
 		'src/Admin/LayoutAdjustments.php',

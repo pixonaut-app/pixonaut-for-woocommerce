@@ -640,9 +640,10 @@ add_action(
 
 		// A variable poster listed once per picture: global attributes `Bild`
 		// (Med bild, Utan bild) and `Storlek` (30x40, 50x70) under slugs of
-		// the test's own, the poster sold with a photo in both sizes and
-		// without one in 30x40 only, a plain vase beside it, both in a category
-		// of their own. DELETE removes them.
+		// the test's own, the poster sold with a photo in both sizes (19.00
+		// and 29.00) and without one in 30x40 only (15.00), with a featured
+		// image and one more in its gallery, a plain vase beside it, both in a
+		// category of their own. DELETE removes them.
 		register_rest_route(
 			'pixonaut-e2e/v1',
 			'/split-products',
@@ -715,7 +716,7 @@ add_action(
 						$poster->set_category_ids( array( $category_id ) );
 						$poster->set_attributes( $attributes );
 						$poster->save();
-						foreach ( array( array( 'med-bild', '30x40' ), array( 'med-bild', '50x70' ), array( 'utan-bild', '30x40' ) ) as list( $picture, $size ) ) {
+						foreach ( array( array( 'med-bild', '30x40', '19.00' ), array( 'med-bild', '50x70', '29.00' ), array( 'utan-bild', '30x40', '15.00' ) ) as list( $picture, $size, $price ) ) {
 							$variation = new WC_Product_Variation();
 							$variation->set_parent_id( $poster->get_id() );
 							$variation->set_attributes(
@@ -724,7 +725,7 @@ add_action(
 									$taxonomies['storlek']['taxonomy'] => $size,
 								)
 							);
-							$variation->set_regular_price( '19.00' );
+							$variation->set_regular_price( $price );
 							$variation->save();
 						}
 						WC_Product_Variable::sync( $poster->get_id() );
@@ -739,6 +740,8 @@ add_action(
 							}
 						}
 						\Pixonaut\WooCommerce\Catalogue\SplitListing::set_attribute_default( $taxonomies['bild']['id'], true );
+						pixonaut_e2e_add_images( $poster instanceof WC_Product ? $poster->get_id() : 0, 2 );
+						$poster = $poster instanceof WC_Product ? wc_get_product( $poster->get_id() ) : $poster;
 
 						$vase = new WC_Product_Simple();
 						$vase->set_name( 'Split vase ' . $key );
@@ -757,6 +760,8 @@ add_action(
 									'id'        => $vase->get_id(),
 									'permalink' => $vase->get_permalink(),
 								),
+								// The poster's featured image, then its gallery's.
+								'images'     => $poster instanceof WC_Product ? array_merge( array( (int) $poster->get_image_id() ), array_map( 'intval', $poster->get_gallery_image_ids() ) ) : array(),
 								'category'   => get_term_link( $category_id, 'product_cat' ),
 								'taxonomies' => $taxonomies,
 							),
@@ -787,6 +792,11 @@ add_action(
 							);
 							foreach ( is_array( $products ) ? $products : array() as $product ) {
 								if ( $product instanceof WC_Product ) {
+									foreach ( array_merge( array( (int) $product->get_image_id() ), $product->get_gallery_image_ids() ) as $image_id ) {
+										if ( (int) $image_id > 0 ) {
+											wp_delete_attachment( (int) $image_id, true );
+										}
+									}
 									$product->delete( true );
 								}
 							}

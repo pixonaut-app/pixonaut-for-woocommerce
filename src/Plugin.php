@@ -179,6 +179,7 @@ use Pixonaut\WooCommerce\Storefront\ButtonProducts;
 use Pixonaut\WooCommerce\Storefront\OpeningPrice;
 use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
 use Pixonaut\WooCommerce\Storefront\ServerReads;
+use Pixonaut\WooCommerce\Storefront\SplitCardFaces;
 use Pixonaut\WooCommerce\Storefront\SplitCardListings;
 use Pixonaut\WooCommerce\Storefront\Storefront;
 use Pixonaut\WooCommerce\Storefront\SwatchLooks;
@@ -477,7 +478,9 @@ final class Plugin {
 		$this->personalise_button()->register();
 		$this->personalised_designs()->register();
 		( new MovedAttributeLinks() )->register();
-		( new SplitCardListings() )->register();
+		$split_card_listings = new SplitCardListings();
+		$split_card_listings->register();
+		( new SplitCardFaces( $split_card_listings ) )->register();
 		$this->designer_links()->register();
 		$this->designer_link_withdrawals()->register();
 		( new UnavailableReports( $this->inline_products(), $this->catalogue(), $this->notices(), new WcLogger() ) )->register();

@@ -88,7 +88,7 @@ final class SplitCards {
 	/**
 	 * Products' offers, by product id, read once a request.
 	 *
-	 * @var array<int, list<array{attributes: array<string, string>, offered: bool, live: bool}>>
+	 * @var array<int, list<array{id: int, attributes: array<string, string>, offered: bool, live: bool}>>
 	 */
 	private static array $offers = array();
 
@@ -340,12 +340,8 @@ final class SplitCards {
 		if ( null === $attribute || ! $term instanceof \WP_Term ) {
 			return array();
 		}
-		$key      = self::field( $attribute );
-		$matching = array_filter(
-			array_map( static fn ( array $offer ): array => $offer['attributes'], array_filter( self::offers( $product ), static fn ( array $offer ): bool => $offer['offered'] && $offer['live'] ) ),
-			static fn ( array $variation ): bool => in_array( $variation[ $key ] ?? '', array( '', $term->slug ), true )
-		);
-		$chosen   = array( $key => $term->slug );
+		$matching = array_map( static fn ( array $offer ): array => $offer['attributes'], self::card_offers( $product, $term_id ) );
+		$chosen   = array( self::field( $attribute ) => $term->slug );
 		foreach ( $product->get_attributes() as $other ) {
 			if ( ! $other instanceof WC_Product_Attribute || ! $other->get_variation() || $other->get_name() === $attribute->get_name() ) {
 				continue;
@@ -357,6 +353,40 @@ final class SplitCards {
 			}
 		}
 		return $chosen;
+	}
+
+	/**
+	 * The variations a card sells: those WooCommerce offers with its value
+	 * on a live template, in the product's order of variations.
+	 *
+	 * @param WC_Product $product A product listed by an attribute.
+	 * @param int        $term_id The card's value.
+	 * @return list<int> Variation ids.
+	 */
+	public static function card_variations( WC_Product $product, int $term_id ): array {
+		return array_map( static fn ( array $offer ): int => $offer['id'], self::card_offers( $product, $term_id ) );
+	}
+
+	/**
+	 * The offers of `card_variations()`.
+	 *
+	 * @param WC_Product $product A product listed by an attribute.
+	 * @param int        $term_id The card's value.
+	 * @return list<array{id: int, attributes: array<string, string>, offered: bool, live: bool}>
+	 */
+	private static function card_offers( WC_Product $product, int $term_id ): array {
+		$attribute = SplitListing::attribute_of( $product );
+		$term      = null === $attribute ? null : get_term( $term_id, $attribute->get_name() );
+		if ( null === $attribute || ! $term instanceof \WP_Term ) {
+			return array();
+		}
+		$key = self::field( $attribute );
+		return array_values(
+			array_filter(
+				self::offers( $product ),
+				static fn ( array $offer ): bool => $offer['offered'] && $offer['live'] && in_array( $offer['attributes'][ $key ] ?? '', array( '', $term->slug ), true )
+			)
+		);
 	}
 
 	/**
@@ -390,12 +420,12 @@ final class SplitCards {
 	}
 
 	/**
-	 * A product's enabled variations, each with its attribute values,
+	 * A product's enabled variations, each with its id, its attribute values,
 	 * whether WooCommerce offers it (it has a price, and is not hidden out
 	 * of stock) and whether it is on a live template.
 	 *
 	 * @param WC_Product $product A variable product.
-	 * @return list<array{attributes: array<string, string>, offered: bool, live: bool}>
+	 * @return list<array{id: int, attributes: array<string, string>, offered: bool, live: bool}>
 	 */
 	private static function offers( WC_Product $product ): array {
 		if ( isset( self::$offers[ $product->get_id() ] ) ) {
@@ -407,8 +437,10 @@ final class SplitCards {
 				continue;
 			}
 			$offers[] = array(
+				'id'         => $variation->get_id(),
 				'attributes' => array_map( 'strval', $variation->get_variation_attributes() ),
-				'offered'    => $variation->variation_is_visible(),
+				// As `get_available_variations()` decides: one out of stock is left out while the store hides those.
+				'offered'    => $variation->variation_is_visible() && ( $variation->is_in_stock() || 'yes' !== get_option( 'woocommerce_hide_out_of_stock_items' ) ),
 				'live'       => ! NotLiveProducts::not_live( $config ),
 			);
 		}

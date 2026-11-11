@@ -61,7 +61,47 @@ Product Collection block on the shop's templates) both show them.
 - **Elsewhere** the product is shown once: related products, up-sells,
   cross-sells and a Product Collection block with its own products chosen.
 
-Each card shows the product's title, image and price.
+## Each value's card
+
+Each card shows:
+
+- **A title**: the value's own title, or the product's.
+- **An image**: the value's own image; without one, the image of the first
+  of the value's variations that has an image of its own; else the
+  product's.
+- **A price**: "From:" the lowest price among the value's variations, sale
+  prices counted. When they all cost the same, that one price, as the
+  product page shows it. A variation the shop hides because it is out of
+  stock counts for neither the price nor the image.
+
+To give a value's card its own title or image, open the product's
+**Attributes** tab. Under the attribute's **Show each value as its own
+product** box, while the product is listed once per value (On, or Auto with
+the attribute ticked), **Each value's card in the shop** lists the
+attribute's values:
+
+- **Title for "…"**: leave it empty to show the product's title, which the
+  empty field shows in grey.
+- **Choose an image for "…"** opens the media library; **Remove the image**
+  goes back to the default.
+
+Save the product, or use **Save attributes**. A value added to the row
+gets its fields once the attributes are saved.
+
+A title and an image belong to the value, so they come back when the
+product is listed by that attribute again.
+
+## Themes
+
+The cards' titles, images and prices replace the product's own where a
+theme prints them the way WooCommerce does: the title with WordPress's
+`get_the_title()`, the image from the product's image, and the price from
+the product's price. Classic themes such as Storefront, and block
+themes with the Product Collection block's Product Title, Product Image and
+Product Price blocks, all do. A theme or a page builder that writes a
+product's title, image or price in its own way shows the product's own on
+each card; the cards themselves, their links and their count are the same
+in every theme.
 
 Products already set up this way when the plugin is updated get their
 cards within a few minutes of the update, from a background job.
