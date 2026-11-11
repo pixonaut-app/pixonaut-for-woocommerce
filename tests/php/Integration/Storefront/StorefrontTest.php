@@ -241,6 +241,8 @@ final class StorefrontTest extends WP_UnitTestCase {
 		$product  = self::product( self::personalised() );
 		$featured = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg', $product->get_id() );
 		$gallery  = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/waffles.jpg', $product->get_id() );
+		$this->assertIsInt( $featured );
+		$this->assertIsInt( $gallery );
 		$product->set_image_id( $featured );
 		$product->set_gallery_image_ids( array( $gallery, $featured ) );
 		$product->save();
@@ -249,10 +251,11 @@ final class StorefrontTest extends WP_UnitTestCase {
 
 		$html = $this->capture( static fn () => do_action( 'woocommerce_before_single_product_summary' ) );
 
-		$this->assertSame( 1, preg_match( '/<div class="pixonaut-preview__images" hidden>(.*?)<\/div>/s', $html, $images ) );
-		$this->assertSame( 2, preg_match_all( '/<img /', $images[1] ) );
-		$this->assertStringContainsString( 'canola', explode( '<img ', $images[1] )[1] );
-		$this->assertStringContainsString( 'waffles', explode( '<img ', $images[1] )[2] );
+		$this->assertSame( 1, preg_match( '/<div class="pixonaut-preview__images" hidden>(.*?)<\/div>/s', $html, $matches ) );
+		$images = explode( '<img ', $matches[1] ?? '' );
+		$this->assertCount( 3, $images, 'Two images follow the text before the first one.' );
+		$this->assertStringContainsString( 'canola', $images[1] );
+		$this->assertStringContainsString( 'waffles', $images[2] );
 	}
 
 	public function test_the_preview_of_a_product_without_images_holds_the_placeholder(): void {
