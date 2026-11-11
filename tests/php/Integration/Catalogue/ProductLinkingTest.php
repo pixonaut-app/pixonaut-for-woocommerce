@@ -473,6 +473,9 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$key     = ProductPanel::notice_key( $product->get_id() );
 		$this->assertArrayHasKey( $key, $notices );
 		$this->assertStringContainsString( InvalidReason::message( InvalidReason::TOO_LARGE ), $notices[ $key ]['message'] );
+		$this->assertNotNull( $config->invalid_detail?->size, 'the refused size is kept to name it' );
+		$this->assertStringContainsString( esc_html( InvalidReason::stored( $config ) ), $notices[ $key ]['message'] );
+		$this->assertStringContainsString( 'At ' . esc_html( (string) $config->invalid_detail->size ) . ': ', $notices[ $key ]['message'] );
 
 		// Fixed: the product can be bought again and the notice goes.
 		$this->script_link( array( 'legal' => true ) );
@@ -655,6 +658,19 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$saved = $this->reload( $product->get_id() );
 		$this->assertSame( InvalidReason::CHECK_FAILED, ProductConfig::stored_on( $saved )->invalid_reason );
 		$this->assertFalse( $saved->is_purchasable() );
+	}
+
+	public function test_a_refused_check_says_what_pixonaut_answered(): void {
+		$product = $this->product();
+		$this->recorder->json( 401, array( 'error' => 'unauthorized' ) );
+
+		$this->save( $product->get_id() );
+
+		$config = ProductConfig::stored_on( $this->reload( $product->get_id() ) );
+		$this->assertSame( InvalidReason::CHECK_FAILED, $config->invalid_reason );
+		$this->assertSame( 'unauthorized', $config->invalid_detail?->code );
+		$this->assertStringContainsString( 'Connect the store again', InvalidReason::stored( $config ) );
+		$this->assertStringContainsString( esc_html( InvalidReason::stored( $config ) ), $this->plugin->notices()->all()[ ProductPanel::notice_key( $product->get_id() ) ]['message'] );
 	}
 
 	public function test_switching_personalisation_off_keeps_the_link_and_sells_the_product_plain(): void {
@@ -982,7 +998,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$panel = $this->panel->panel( $product );
 		$html  = $this->panel->fields_html( $panel );
 		$this->assertSame( 'Gelato (prints only on a blank)', $panel['printshops'][ self::INTEGRATED_ID ] );
-		$this->assertStringContainsString( '<span class="pixonaut-field-error" role="alert">Choose a blank, or a printshop that prints without one.</span>', $html );
+		$this->assertStringContainsString( '<span class="pixonaut-field-error" role="alert">' . esc_html( InvalidReason::message( InvalidReason::PRINTSHOP_NEEDS_BLANK ) ) . '</span>', $html );
 	}
 
 	public function test_a_chosen_printshop_the_workspace_no_longer_has_stays_chosen(): void {

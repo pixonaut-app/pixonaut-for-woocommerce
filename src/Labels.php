@@ -59,6 +59,12 @@ final class Labels {
 	public const DESIGN_FIELDS_TO_CHANGE = 'design_fields_to_change';
 
 	/**
+	 * A design Pixonaut refused at its print size: the product cannot be
+	 * printed at the size chosen.
+	 */
+	public const DESIGN_SIZE_REFUSED = 'design_size_refused';
+
+	/**
 	 * The approval box's label, with `%1$s` and `%2$s` around the word that
 	 * opens the proof (`link_parts()`).
 	 */
@@ -370,6 +376,11 @@ final class Labels {
 				/* translators: %s: the labels of the design's fields the shopper must change, as a list such as "Photo, Name and Class". */
 				'text'  => __( 'Please change these fields: %s', 'pixonaut-for-woocommerce' ),
 				'shown' => 'On a personalised product when adding it to the cart refused the design for fields the customer must change, such as a default left as it was. Keep %s, the fields\' labels',
+			),
+			self::DESIGN_SIZE_REFUSED         => array(
+				/* translators: Notice on the product page, shown to the shopper, when the design was refused because the product cannot be printed at the chosen print size. */
+				'text'  => __( 'This product cannot be printed at this size. Please choose another size, or contact the store.', 'pixonaut-for-woocommerce' ),
+				'shown' => 'On a personalised product when adding it to the cart refused the design for its print size: the product cannot be printed at the size chosen',
 			),
 			self::APPROVE_PREVIEW             => array(
 				/* translators: Label of the checkbox next to the preview on the product page, shown to the shopper; ticking it approves the design. %1$s and %2$s go around the word for the preview, which becomes a link that opens the design's proof. */

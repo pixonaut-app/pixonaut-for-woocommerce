@@ -163,7 +163,9 @@ test("a variation prints at its blank variant's area, or at a size of its own ke
 		).toHaveValue('500');
 		await expect(
 			mediumAgain.locator('.pixonaut-variation-size-error'),
-		).toHaveText('The print size is larger than the placement can print.');
+		).toHaveText(
+			'The print size is larger than the print position can print. Enter a smaller size, or choose the print position’s size, in the variation’s Pixonaut fields.',
+		);
 		// Overriding the rest of the setup was not needed.
 		await expect(
 			mediumAgain.getByLabel('Override for this variation'),

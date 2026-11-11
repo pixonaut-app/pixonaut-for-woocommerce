@@ -51,7 +51,12 @@ import {
 import { PriceDisplay } from './price';
 import { dropUntouchedInputs, followPrintedInputs } from './printed-inputs';
 import { ProofDialog, type ProofFetch } from './proof-dialog';
-import { joinLabels, refusedFieldLabels } from './refused-fields';
+import {
+	isPrintSizeRefusal,
+	joinLabels,
+	refusalBody,
+	refusedFieldLabels,
+} from './refused-fields';
 import type { PixonautSdk } from './sdk-loader';
 import { mountSide, readServerReads } from './server-reads';
 import { type ProductMounts, readMounts, type SideOptions } from './settings';
@@ -171,6 +176,9 @@ const DESIGN_FAILED_LABEL = 'design_failed';
 /** Shown when the design was refused for fields the customer must change,
  *  with `%s` for their labels. */
 const FIELDS_TO_CHANGE_LABEL = 'design_fields_to_change';
+
+/** Shown when Pixonaut refused the design at its print size. */
+const SIZE_REFUSED_LABEL = 'design_size_refused';
 
 /** Shown under the approval box when the form is sent without it. */
 const APPROVAL_REQUIRED_LABEL = 'approval_required';
@@ -1697,11 +1705,20 @@ export class ProductDesigner {
 	}
 
 	/** What a failed approval of `side` says: the fields the customer must
-	 *  change when the refusal names any the form heads, else that the
-	 *  design could not be prepared. */
+	 *  change when the refusal names any the form heads; that the product
+	 *  cannot be printed at this size when the size was refused, with the
+	 *  refusal in the console for the store; else that the design could not
+	 *  be prepared. */
 	private refusedFieldsText(side: string, error: unknown): string {
 		const context = { productId: this.productId };
 		const labels = refusedFieldLabels(error, this.designers.get(side));
+		if (labels.length === 0 && isPrintSizeRefusal(error)) {
+			console.error(
+				'Pixonaut: the design was refused at its print size.',
+				refusalBody(error),
+			);
+			return this.deps.label(SIZE_REFUSED_LABEL, context);
+		}
 		if (labels.length === 0) {
 			return this.deps.label(DESIGN_FAILED_LABEL, context);
 		}

@@ -34,7 +34,7 @@ final class VariationSize {
 	public const SCHEMA_VERSION = 1;
 
 	/**
-	 * @param array<string, array{size: PrintSize, refused: string|null, basis: string, value?: bool}> $sizes The sizes by side key: the size, why Pixonaut refused it (null when it did not), what it was judged for (`basis()`), and whether it is the variation's attribute value's size rather than its own.
+	 * @param array<string, array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string}> $sizes The sizes by side key: the size, why Pixonaut refused it (null when it did not), what it was judged for (`basis()`), whether it is the variation's attribute value's size rather than its own, and the error code Pixonaut answered when it could not judge it.
 	 */
 	public function __construct( public readonly array $sizes = array() ) {
 	}
@@ -77,7 +77,7 @@ final class VariationSize {
 	/**
 	 * Whether an entry is the size of the variation's attribute value.
 	 *
-	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool} $entry An entry of `$sizes`.
+	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string} $entry An entry of `$sizes`.
 	 */
 	public static function is_value( array $entry ): bool {
 		return true === ( $entry['value'] ?? false );
@@ -157,6 +157,9 @@ final class VariationSize {
 	public function applied_to( ProductConfig $config, ?string $variant, array $attributes = array() ): ProductConfig {
 		$sides  = array();
 		$reason = null;
+		$detail = null;
+		// A side is named only where there is another to tell it from.
+		$named = static fn ( Side $side ): ?string => count( $config->sides ) > 1 ? $side->label : null;
 		foreach ( $config->sides as $side ) {
 			if ( $side->is_standing() ) {
 				$sides[] = $side;
@@ -169,26 +172,34 @@ final class VariationSize {
 				$held = null;
 			}
 			if ( null === $held && null !== $value ) {
-				$reason ??= InvalidReason::VARIATION_SIZE_UNCHECKED;
+				if ( null === $reason ) {
+					$reason = InvalidReason::VARIATION_SIZE_UNCHECKED;
+					$detail = InvalidDetail::of( $named( $side ), $value->described() );
+				}
 				$sides[] = $side->with( $side->template_version, $side->previous_version, array( $value ), null, 0 );
 				continue;
 			}
 			if ( null !== $held ) {
-				if ( self::basis( $side, $config->blank_id, $variant ) !== $held['basis'] ) {
-					$reason ??= InvalidReason::VARIATION_SIZE_UNCHECKED;
-				} elseif ( null !== $held['refused'] ) {
-					$reason ??= $held['refused'];
+				$why = self::basis( $side, $config->blank_id, $variant ) !== $held['basis'] ? InvalidReason::VARIATION_SIZE_UNCHECKED : $held['refused'];
+				if ( null === $reason && null !== $why ) {
+					$reason = $why;
+					// An attribute value's size is set on the product, the variation's own in its fields.
+					$detail = InvalidDetail::of( $named( $side ), $held['size']->described(), InvalidReason::CHECK_FAILED === $why ? $held['code'] ?? null : null, ! self::is_value( $held ) );
 				}
 				$sides[] = $side->with( $side->template_version, $side->previous_version, array( $held['size'] ), null, 0 );
 				continue;
 			}
+			$unfit   = $reason;
 			$sides[] = self::at_row( $side, $variant, $reason );
+			if ( null === $unfit && null !== $reason ) {
+				$detail = InvalidDetail::of( $named( $side ), null, null, true );
+			}
 		}
 		$applied = $config->with_sides( $sides );
 		if ( ! $config->valid && ( InvalidReason::MISSING_PRINT_SIZE !== $config->invalid_reason || ! self::all_sized( $sides ) ) ) {
 			return $applied;
 		}
-		return null === $reason ? $applied->with_validity( true ) : $applied->with_validity( false, $reason );
+		return null === $reason ? $applied->with_validity( true ) : $applied->with_validity( false, $reason, $detail );
 	}
 
 	/**
@@ -274,7 +285,8 @@ final class VariationSize {
 				'size'    => $size,
 				'refused' => is_string( $entry['refused'] ?? null ) && '' !== $entry['refused'] ? $entry['refused'] : null,
 				'basis'   => $entry['basis'],
-			) + ( true === ( $entry['value'] ?? null ) ? array( 'value' => true ) : array() );
+			) + ( true === ( $entry['value'] ?? null ) ? array( 'value' => true ) : array() )
+				+ ( is_string( $entry['code'] ?? null ) && '' !== $entry['code'] ? array( 'code' => $entry['code'] ) : array() );
 		}
 		return new self( $sizes );
 	}
@@ -339,7 +351,8 @@ final class VariationSize {
 				'size'    => $entry['size']->stored(),
 				'refused' => $entry['refused'],
 				'basis'   => $entry['basis'],
-			) + ( self::is_value( $entry ) ? array( 'value' => true ) : array() );
+			) + ( self::is_value( $entry ) ? array( 'value' => true ) : array() )
+				+ ( isset( $entry['code'] ) ? array( 'code' => $entry['code'] ) : array() );
 		}
 		return array(
 			'v'     => self::SCHEMA_VERSION,

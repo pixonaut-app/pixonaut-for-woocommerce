@@ -10,7 +10,11 @@ sidebar:
 A personalised product whose Pixonaut setup cannot be printed is not for
 sale: the product page offers no **Add to cart**, and a notice at the top of
 the admin screens says "Customers cannot buy …" with the reason and a link to
-the product. Open the product's **Pixonaut** tab: it says the same.
+the product. Open the product's **Pixonaut** tab: it says the same. The
+reason starts with where the problem is when it knows: the side, on a
+product with more than one, and the print size Pixonaut refused, as in
+*Side "Back" at 300 × 400 mm: …*. It ends with what to change, in the
+product's Pixonaut tab or the variation's Pixonaut fields.
 
 | Reason | What to do |
 |---|---|
@@ -23,7 +27,8 @@ the product. Open the product's **Pixonaut** tab: it says the same.
 | The template cannot be printed at the print area of this variation's blank variant. Shown under the variation's **Print size** field. | Choose a template that fits that size, or stop selling the variation. See [Sizes a template cannot be printed at](../linking-products/#sizes-a-template-cannot-be-printed-at). |
 | Some variations have no print size. | On a variable product without a blank, give those variations a size: in the side's **Print sizes**, per value of an attribute, or in each variation's **Print size** field. See [Print sizes by attribute](../linking-products/#print-sizes-by-attribute). |
 | The variation's print size has not been checked since the product changed. Shown under the variation's **Print size** field. | Update the product, or save the variation again. See [A variation's own print size](../linking-products/#a-variations-own-print-size). |
-| Pixonaut could not check the configuration. | Check the connection under **Pixonaut > Connection**, then update the product. |
+| Pixonaut could not be reached to check the configuration. | Check the connection under **Pixonaut > Connection**, then update the product. |
+| Pixonaut refused the check, for example because it no longer accepts the store's connection, the workspace is suspended, or Pixonaut was asked too often. The reason says which, and what to do. | Do what the reason says, then update the product. A reason that quotes a code, such as *answered "…"*, is one this version of the plugin does not know: update the plugin, or send the code to Pixonaut. |
 | Pixonaut would not make the design of a fixed-design side. | Check the side's template, print position and the print size marked in the **Start** column, then update the product. See [Fixed designs](../linking-products/#fixed-designs). |
 | Pixonaut would not make the design of a fixed-design side: the store may not create and approve designs. | Check the connection's permissions in the Pixonaut studio, then update the product. |
 | The template of a fixed-design side does not fit the print position at any of the blank's sizes, so none of them can be printed. Choose a template that fits. | Choose a template that fits the print position at the sizes you sell, then update the product. See [Sizes a template cannot be printed at](../linking-products/#sizes-a-template-cannot-be-printed-at). |

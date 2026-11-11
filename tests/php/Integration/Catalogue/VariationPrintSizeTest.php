@@ -12,6 +12,7 @@ use DOMXPath;
 use Pixonaut\WooCommerce\Admin\PanelFields;
 use Pixonaut\WooCommerce\Admin\VariationPanel;
 use Pixonaut\WooCommerce\Admin\VariationSizeField;
+use Pixonaut\WooCommerce\Catalogue\InvalidDetail;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -130,14 +131,32 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		list( , $small ) = $this->linked( 'within' );
 		$requests        = count( $this->recorder->requests );
 
-		$this->save_variation( $small, 0, self::custom( '400', '500' ) );
+		$this->save_variation( $small, 0, self::custom( '400', '500', 'Poster' ) );
 
 		$this->assertCount( $requests, $this->recorder->requests, 'larger than the row: Pixonaut need not be asked' );
 		$this->assertFalse( $this->reload_any( $small->get_id() )->is_purchasable() );
 		$this->assertSame( InvalidReason::TOO_LARGE, ProductConfig::config_for( $this->reload_any( $small->get_id() ) )->invalid_reason );
 		$field = $this->field( $small, 0 );
 		$this->assertSame( array( 'custom', '400', '500' ), array( $field['kind'], $field['width'], $field['height'] ) );
-		$this->assertSame( InvalidReason::message( InvalidReason::TOO_LARGE ), $field['error'] );
+		$this->assertSame( InvalidReason::message( InvalidReason::TOO_LARGE, null, true ), $field['error'] );
+		$sold = ProductConfig::config_for( $this->reload_any( $small->get_id() ) );
+		$this->assertSame( 'Poster (400 × 500 mm)', $sold->invalid_detail?->size, 'the notice names the refused size by its name and dimensions' );
+		$this->assertStringStartsWith( 'At Poster (400 × 500 mm): ', InvalidReason::stored( $sold ) );
+		$this->assertStringContainsString( 'the variation’s Pixonaut fields', InvalidReason::stored( $sold ) );
+	}
+
+	public function test_a_size_pixonaut_refuses_to_judge_says_what_it_answered(): void {
+		list( , $small ) = $this->linked( 'within' );
+		$this->recorder->json( 403, array( 'error' => 'workspace_suspended' ) );
+
+		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
+
+		$sold = ProductConfig::config_for( $this->reload_any( $small->get_id() ) );
+		$this->assertSame( InvalidReason::CHECK_FAILED, $sold->invalid_reason );
+		$this->assertSame( 'workspace_suspended', $sold->invalid_detail?->code );
+		$suspended = InvalidReason::message( InvalidReason::CHECK_FAILED, new InvalidDetail( code: 'workspace_suspended' ), true );
+		$this->assertStringEndsWith( $suspended, InvalidReason::stored( $sold ) );
+		$this->assertSame( $suspended, $this->field( $small, 0 )['error'] );
 	}
 
 	public function test_a_size_other_than_a_whole_area_is_refused_where_the_print_covers_it(): void {

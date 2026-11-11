@@ -216,6 +216,8 @@ final class ProductStandingTest extends StandingTestCase {
 		$config = ProductConfig::stored_on( $this->reload( $product->get_id() ) );
 		$this->assertFalse( $config->valid );
 		$this->assertSame( InvalidReason::STANDING_REFUSED, $config->invalid_reason );
+		$this->assertSame( self::CONSTRAINT_VIOLATION, $config->invalid_detail?->code );
+		$this->assertStringContainsString( 'breaks one of its rules', InvalidReason::stored( $config ) );
 	}
 
 	public function test_the_panel_previews_each_rows_design_on_the_blank(): void {

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Admin;
 
+use Pixonaut\WooCommerce\Catalogue\InvalidDetail;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
@@ -210,9 +211,11 @@ final class VariationSizeField {
 		if ( null === $entry ) {
 			return null === $value ? '' : InvalidReason::message( InvalidReason::VARIATION_SIZE_UNCHECKED );
 		}
+		// An attribute value's size is set on the product, the variation's own in its fields.
+		$own_size = ! VariationSize::is_value( $entry );
 		if ( null !== $entry['refused'] ) {
-			return InvalidReason::message( $entry['refused'] );
+			return InvalidReason::message( $entry['refused'], InvalidDetail::of( null, null, $entry['code'] ?? null ), $own_size );
 		}
-		return VariationSize::basis( $side, $blank_id, $variant ) === $entry['basis'] ? '' : InvalidReason::message( InvalidReason::VARIATION_SIZE_UNCHECKED );
+		return VariationSize::basis( $side, $blank_id, $variant ) === $entry['basis'] ? '' : InvalidReason::message( InvalidReason::VARIATION_SIZE_UNCHECKED, null, $own_size );
 	}
 }

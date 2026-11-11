@@ -85,7 +85,7 @@ final class ProductSetup {
 			'linked'          => array() !== array_filter( $config->sides, static fn ( Side $side ): bool => '' !== $side->template_base_id ),
 			'personalised'    => $config->personalise,
 			'valid'           => $config->valid,
-			'invalid_reason'  => $config->valid ? null : InvalidReason::message( $config->invalid_reason ),
+			'invalid_reason'  => $config->valid ? null : InvalidReason::stored( $config, $product->is_type( 'variation' ) && $config->override ),
 			'blank_id'        => $config->blank_id,
 			'blank_name'      => $config->blank_name,
 			'variant'         => self::variant( $product, $config ),
@@ -275,11 +275,12 @@ final class ProductSetup {
 	 * @return array{valid: bool, reason: string|null, message: string|null}
 	 */
 	public static function validity( WC_Product $product ): array {
-		$reason = InvalidReason::of( $product, ProductConfig::config_for( $product ) );
+		$config = ProductConfig::config_for( $product );
+		$reason = InvalidReason::of( $product, $config );
 		return array(
 			'valid'   => null === $reason,
 			'reason'  => $reason,
-			'message' => null === $reason ? null : InvalidReason::message( $reason ),
+			'message' => null === $reason ? null : InvalidReason::explain( $product, $config, $product->is_type( 'variation' ) && $config->override ),
 		);
 	}
 

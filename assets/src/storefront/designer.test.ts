@@ -996,6 +996,42 @@ describe('ProductDesigner', () => {
 				container.querySelector('.pixonaut-form__error')?.textContent,
 			).toBe('label:design_failed %s');
 		});
+
+		it('says the product cannot be printed at this size when the size was refused, and logs the refusal', async () => {
+			const { button, container, sdkDesigner } = startNaming();
+			Object.assign(sdkDesigner, {
+				getFieldTexts: vi.fn().mockReturnValue(FIELD_TEXTS),
+			});
+			const violation = {
+				layerId: '',
+				prop: 'widthMm',
+				rule: 'too_large',
+				given: { widthMm: 700, heightMm: 1000 },
+				severity: 'error',
+			};
+			sdkDesigner.approve.mockRejectedValue(
+				Object.assign(requestError(422, 'constraint_violation'), {
+					violations: [violation],
+				}),
+			);
+			const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+			button.click();
+			await settle();
+
+			expect(
+				container.querySelector('.pixonaut-form__error')?.textContent,
+			).toBe('label:design_size_refused %s');
+			expect(logged).toHaveBeenCalledWith(
+				'Pixonaut: the design was refused at its print size.',
+				expect.objectContaining({
+					status: 422,
+					code: 'constraint_violation',
+					violations: [violation],
+				}),
+			);
+			logged.mockRestore();
+		});
 	});
 
 	it('reports an SDK that cannot boot and says personalisation is unavailable', async () => {

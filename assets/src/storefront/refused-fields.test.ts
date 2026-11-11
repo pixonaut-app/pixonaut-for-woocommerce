@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { joinLabels, refusedFieldLabels } from './refused-fields';
+import {
+	isPrintSizeRefusal,
+	joinLabels,
+	refusalBody,
+	refusedFieldLabels,
+} from './refused-fields';
 import { requestError } from './test-support';
 
 /** A designer whose form heads `fields`, each `[layerId, prop, label]`. */
@@ -147,5 +152,41 @@ describe('joinLabels', () => {
 
 	it('falls back to the page’s language for a tag it cannot read', () => {
 		expect(joinLabels(['Photo', 'Name'], 'not a tag!')).toContain('Photo');
+	});
+});
+
+describe('isPrintSizeRefusal', () => {
+	it('is a violation of no layer on the size or the placement', () => {
+		expect(isPrintSizeRefusal(refused(['', 'widthMm', 'too_large']))).toBe(
+			true,
+		);
+		expect(
+			isPrintSizeRefusal(refused(['', 'placementId', 'print_size_not_area'])),
+		).toBe(true);
+	});
+
+	it('is a size verdict whatever field it names', () => {
+		expect(isPrintSizeRefusal(refused(['', 'size', 'wrong_ratio']))).toBe(true);
+	});
+
+	it('is not a refusal of a field, nor another failure', () => {
+		expect(isPrintSizeRefusal(refused(['photo', 'src', 'too_large']))).toBe(
+			false,
+		);
+		expect(
+			isPrintSizeRefusal(refused(['', 'templateId', 'unknown_template'])),
+		).toBe(false);
+		expect(isPrintSizeRefusal(requestError(500, 'db_error'))).toBe(false);
+		expect(isPrintSizeRefusal(null)).toBe(false);
+	});
+});
+
+describe('refusalBody', () => {
+	it('is what the refusal carries', () => {
+		expect(refusalBody(refused(['', 'widthMm', 'too_large']))).toEqual({
+			status: 422,
+			code: 'constraint_violation',
+			violations: [{ layerId: '', prop: 'widthMm', rule: 'too_large' }],
+		});
 	});
 });

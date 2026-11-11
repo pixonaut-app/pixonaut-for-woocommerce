@@ -806,8 +806,7 @@ final class ProductPanel {
 		if ( null !== $blank && $blank['deleted'] ) {
 			return InvalidReason::message( InvalidReason::BLANK_DELETED );
 		}
-		$reason = InvalidReason::of( $product, $config );
-		return null === $reason ? '' : InvalidReason::message( $reason );
+		return InvalidReason::explain( $product, $config, $product->is_type( 'variation' ) ) ?? '';
 	}
 
 	/**
