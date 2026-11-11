@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-10T23:46:52+00:00\n"
+"POT-Creation-Date: 2026-11-11T00:19:28+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1189,7 +1189,7 @@ msgstr "Of het aan een sjabloon is gekoppeld, gepersonaliseerd of niet."
 msgid "Whether customers personalise it."
 msgstr "Of klanten het personaliseren."
 
-#: src/Abilities/ProductSetup.php:125 src/Abilities/ProductSetup.php:298
+#: src/Abilities/ProductSetup.php:125 src/Abilities/ProductSetup.php:299
 msgid ""
 "False when Pixonaut found a problem: it cannot be bought until it is fixed."
 msgstr ""
@@ -1357,7 +1357,7 @@ msgstr ""
 "Of de winkelmanager de variant heeft gekozen in plaats van dat die op basis "
 "van de attributen van het product is gekoppeld."
 
-#: src/Abilities/ProductSetup.php:301
+#: src/Abilities/ProductSetup.php:302
 msgid ""
 "Why not, as a code such as `too_large` or `template_not_live`; null when "
 "valid."
@@ -1365,7 +1365,7 @@ msgstr ""
 "Waarom niet, als code zoals `too_large` of `template_not_live`; null als het "
 "geldig is."
 
-#: src/Abilities/ProductSetup.php:304
+#: src/Abilities/ProductSetup.php:305
 msgid "Why not, in words, as the product screen says it; null when valid."
 msgstr ""
 "Waarom niet, in woorden, zoals het bewerkscherm van het product het toont; "
@@ -2938,7 +2938,7 @@ msgstr "Bij de drukkerij"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the printshop has shipped it.
 #. translators: Status of an order line on the admin order screen: the item has shipped.
-#: src/Admin/OrderBox.php:299 src/Labels.php:628
+#: src/Admin/OrderBox.php:299 src/Labels.php:639
 msgid "Shipped"
 msgstr "Verzonden"
 
@@ -2949,7 +2949,7 @@ msgstr "Mislukt"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the item is cancelled.
 #. translators: Status of an order line on the admin order screen: the item is cancelled.
-#: src/Admin/OrderBox.php:303 src/Labels.php:632
+#: src/Admin/OrderBox.php:303 src/Labels.php:643
 msgid "Cancelled"
 msgstr "Geannuleerd"
 
@@ -3784,172 +3784,273 @@ msgstr "Altijd de vorm van het sjabloon"
 msgid "Always the chosen print size’s shape"
 msgstr "Altijd de vorm van het gekozen drukformaat"
 
-#: src/Catalogue/InvalidReason.php:163
-msgid "Choose a template."
-msgstr "Kies een sjabloon."
+#. translators: %s: a print size, e.g. "300 × 400 mm". Starts a message to the merchant saying what is wrong with that print size of a personalised product.
+#: src/Catalogue/InvalidDetail.php:66
+#, php-format
+msgid "At %s"
+msgstr "Drukformaat %s"
 
-#: src/Catalogue/InvalidReason.php:165
-msgid "Choose where on the blank the design is printed."
-msgstr "Kies waar op het blanco product het ontwerp wordt gedrukt."
+#. translators: %s: a side's label, e.g. "Front". Starts a message to the merchant saying what is wrong on that side of a personalised product.
+#: src/Catalogue/InvalidDetail.php:73
+#, php-format
+msgid "Side “%s”"
+msgstr "Zijde ‘%s’"
 
-#: src/Catalogue/InvalidReason.php:167
-msgid "The blank no longer exists in Pixonaut."
-msgstr "Het blanco product bestaat niet meer in Pixonaut."
+#. translators: 1: a side's label, e.g. "Front", 2: a print size, e.g. "300 × 400 mm". Starts a message to the merchant saying what is wrong with that print size on that side of a personalised product.
+#: src/Catalogue/InvalidDetail.php:79
+#, php-format
+msgid "Side “%1$s” at %2$s"
+msgstr "Zijde ‘%1$s’, drukformaat %2$s"
 
-#: src/Catalogue/InvalidReason.php:169
+#. translators: Where a variation's Pixonaut settings are changed, used after "in" in messages such as "Choose a template in %s." Admin product page.
+#: src/Catalogue/InvalidReason.php:185
+msgid "the variation’s Pixonaut fields"
+msgstr "in de Pixonaut-velden van de variatie"
+
+#. translators: Where a product's Pixonaut settings are changed, used after "in" in messages such as "Choose a template in %s." Admin product page.
+#: src/Catalogue/InvalidReason.php:187
+msgid "the product’s Pixonaut tab"
+msgstr "in het Pixonaut-tabblad van het product"
+
+#. translators: 1: where on the product, e.g. "Side “Front” at 300 × 400 mm", 2: what is wrong there and how to fix it.
+#: src/Catalogue/InvalidReason.php:203
+#, php-format
+msgid "%1$s: %2$s"
+msgstr "%1$s: %2$s"
+
+#: src/Catalogue/InvalidReason.php:251
+msgid "Pixonaut cannot print this configuration."
+msgstr "Pixonaut kan deze configuratie niet drukken."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:255
+#, php-format
+msgid "No template is chosen. Choose one in %s."
+msgstr "Er is geen sjabloon gekozen. Kies er een %s."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:261
+#, php-format
+msgid ""
+"No print position is chosen for where on the blank the design is printed. "
+"Choose one in %s."
+msgstr ""
+"Er is geen drukpositie gekozen voor de plek op het blanco product waar het "
+"ontwerp wordt gedrukt. Kies er een %s."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:267
+#, php-format
+msgid "The blank no longer exists in Pixonaut. Choose another blank in %s."
+msgstr ""
+"Het blanco product bestaat niet meer in Pixonaut. Kies %s een ander blanco "
+"product."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:273
+#, php-format
 msgid ""
 "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or "
-"choose another blank."
+"choose another blank in %s."
 msgstr ""
 "Het blanco product is verwijderd in Pixonaut. Zet het terug in de Pixonaut-"
-"studio of kies een ander blanco product."
+"studio of kies %s een ander blanco product."
 
-#: src/Catalogue/InvalidReason.php:171
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:279
+#, php-format
 msgid ""
-"The blank no longer has this placement, or Pixonaut cannot size a print for "
-"it."
+"The blank no longer has this print position, or Pixonaut cannot size a print "
+"for it. Choose another print position in %s."
 msgstr ""
 "Het blanco product heeft deze drukpositie niet meer, of Pixonaut kan er geen "
-"drukformaat voor bepalen."
+"drukformaat voor bepalen. Kies %s een andere drukpositie."
 
-#: src/Catalogue/InvalidReason.php:173
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:285
+#, php-format
 msgid ""
 "The template is not published in Pixonaut, or no longer exists. Publish it "
-"in the Pixonaut studio, or choose another template."
-msgstr ""
-"Het sjabloon is niet gepubliceerd in Pixonaut of bestaat niet meer. "
-"Publiceer het in de Pixonaut-studio of kies een ander sjabloon."
+"in the Pixonaut studio, or choose another template in %s."
+msgstr "Het sjabloon is niet gepubliceerd in Pixonaut of bestaat niet meer. Publiceer het in de Pixonaut-studio of kies %s een ander sjabloon."
 
-#: src/Catalogue/InvalidReason.php:175
-msgid ""
-"The template is paused or deleted in Pixonaut. Make it live again, or choose "
-"another template."
-msgstr ""
-"Het sjabloon is gepauzeerd of verwijderd in Pixonaut. Zet het weer live of "
-"kies een ander sjabloon."
-
-#. translators: %d: most sides a product can have.
-#: src/Catalogue/InvalidReason.php:179
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:291
 #, php-format
-msgid "A product has at most %d sides."
-msgstr "Een product heeft maximaal %d zijden."
-
-#: src/Catalogue/InvalidReason.php:183
-msgid "Two sides use the same placement. Each placement can be one side only."
-msgstr ""
-"Twee zijden gebruiken dezelfde drukpositie. Elke drukpositie kan maar één "
-"zijde zijn."
-
-#: src/Catalogue/InvalidReason.php:185
-msgid "Two sides have the same key. Give each side its own."
-msgstr ""
-"Twee zijden hebben dezelfde sleutel. Geef elke zijde een eigen sleutel."
-
-#: src/Catalogue/InvalidReason.php:187
 msgid ""
-"A custom print size needs a width and height in millimetres, both above zero."
+"The template is paused or deleted in Pixonaut. Make it live again in the "
+"Pixonaut studio, or choose another template in %s."
 msgstr ""
-"Een aangepast drukformaat heeft een breedte en hoogte in millimeters nodig, "
-"beide groter dan nul."
+"Het sjabloon is gepauzeerd of verwijderd in Pixonaut. Zet het weer live in "
+"de Pixonaut-studio of kies %s een ander sjabloon."
 
-#. translators: %d: most print sizes one side can offer.
-#: src/Catalogue/InvalidReason.php:191
+#. translators: 1: most sides a product can have, 2: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:297
 #, php-format
-msgid "A side offers at most %d print sizes."
-msgstr "Een zijde biedt maximaal %d drukformaten."
+msgid "A product has at most %1$d sides. Remove sides in %2$s."
+msgstr "Een product heeft maximaal %1$d zijden. Verwijder zijden %2$s."
 
-#: src/Catalogue/InvalidReason.php:195
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:304
+#, php-format
 msgid ""
-"Add a print size in millimetres. Without a blank there is no placement to "
-"take one from."
+"Two sides use the same print position, and each print position can be one "
+"side only. Choose another print position for one of them in %s."
 msgstr ""
-"Voeg een drukformaat in millimeters toe. Zonder blanco product is er geen "
-"drukpositie om er een van over te nemen."
+"Twee zijden gebruiken dezelfde drukpositie, en elke drukpositie kan maar bij "
+"één zijde horen. Kies %s voor een van beide een andere drukpositie."
 
-#: src/Catalogue/InvalidReason.php:197
-msgid ""
-"Some variations have no print size. Add one in millimetres here, one for "
-"each value of an attribute, or one on each of those variations."
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:310
+#, php-format
+msgid "Two sides have the same key. Give each side its own in %s."
 msgstr ""
-"Sommige variaties hebben geen drukformaat. Voeg er hier een toe in "
-"millimeters, een voor elke waarde van een attribuut, of een op elk van die "
-"variaties."
+"Twee zijden hebben dezelfde sleutel. Geef %s elke zijde een eigen sleutel."
 
-#: src/Catalogue/InvalidReason.php:199
-msgid "The print size is larger than the placement can print."
-msgstr "Het drukformaat is groter dan de drukpositie kan drukken."
-
-#: src/Catalogue/InvalidReason.php:201
-msgid "The print size does not match the template's aspect ratio."
-msgstr "Het drukformaat past niet bij de beeldverhouding van het sjabloon."
-
-#: src/Catalogue/InvalidReason.php:203
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:316
+#, php-format
 msgid ""
-"The placement is printed across its whole print area: the print size must be "
-"that area."
+"A custom print size has no width or height, or one that is not above zero. "
+"Enter both in millimetres under the side’s print sizes in %s."
 msgstr ""
-"De drukpositie wordt over het hele drukgebied bedrukt: het drukformaat moet "
-"gelijk zijn aan dat gebied."
+"Een aangepast drukformaat heeft geen breedte of hoogte, of een die niet "
+"groter is dan nul. Vul beide in millimeters in bij de drukformaten van de "
+"zijde %s."
 
-#: src/Catalogue/InvalidReason.php:205
+#. translators: 1: most print sizes one side can offer, 2: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:322
+#, php-format
 msgid ""
-"The template cannot be printed at the print area of this variation's blank "
-"variant. Choose a template that fits, or stop selling the variation."
+"A side offers at most %1$d print sizes. Remove sizes under the side’s print "
+"sizes in %2$s."
+msgstr ""
+"Een zijde biedt maximaal %1$d drukformaten. Verwijder formaten bij de "
+"drukformaten van de zijde %2$s."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:329
+#, php-format
+msgid ""
+"The side has no print size, and without a blank there is no print position "
+"to take one from. Add a size in millimetres in %s, or choose a blank."
+msgstr ""
+"De zijde heeft geen drukformaat, en zonder blanco product is er geen "
+"drukpositie om er een van over te nemen. Voeg %s een formaat in millimeters "
+"toe, of kies een blanco product."
+
+#. translators: %s: where the product's settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:335
+#, php-format
+msgid ""
+"Some variations have no print size. Add one in millimetres in %s, or one for "
+"each value of an attribute there, or add one in each of those variations’ "
+"Pixonaut fields."
+msgstr "Sommige variaties hebben geen drukformaat. Voeg er %s een toe in millimeters, of daar een voor elke waarde van een attribuut, of voeg er een toe in de Pixonaut-velden van elk van die variaties."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:341
+#, php-format
+msgid ""
+"The print size is larger than the print position can print. Enter a smaller "
+"size, or choose the print position’s size, in %s."
+msgstr ""
+"Het drukformaat is groter dan de drukpositie kan drukken. Vul %s een kleiner "
+"formaat in, of kies het formaat van de drukpositie."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:347
+#, php-format
+msgid ""
+"The print size does not match the template’s aspect ratio. Enter a size at "
+"the template’s ratio, or choose the print position’s size, in %s."
+msgstr ""
+"Het drukformaat past niet bij de beeldverhouding van het sjabloon. Vul %s "
+"een formaat in met de verhouding van het sjabloon, of kies het formaat van "
+"de drukpositie."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:353
+#, php-format
+msgid ""
+"The print position is printed across its whole print area, so the print size "
+"must be that area. Choose the print position’s size instead in %s."
+msgstr ""
+"De drukpositie wordt over het hele drukgebied bedrukt, dus het drukformaat "
+"moet precies dat gebied zijn. Kies in plaats daarvan %s het formaat van de "
+"drukpositie."
+
+#: src/Catalogue/InvalidReason.php:357
+msgid ""
+"The template cannot be printed at the print area of this variation’s blank "
+"variant. Choose a template that fits, or another variant, in the variation’s "
+"Pixonaut fields, or stop selling the variation."
 msgstr ""
 "Het sjabloon kan niet worden gedrukt op het drukgebied van de variant van "
-"het blanco product van deze variatie. Kies een sjabloon dat past, of verkoop "
-"de variatie niet meer."
+"het blanco product van deze variatie. Kies in de Pixonaut-velden van de "
+"variatie een sjabloon dat past of een andere variant, of verkoop de variatie "
+"niet meer."
 
-#: src/Catalogue/InvalidReason.php:207
+#: src/Catalogue/InvalidReason.php:359
 msgid ""
-"The variation's print size has not been checked since the product changed. "
-"Update the product again."
+"The variation’s own print size has not been checked since the product "
+"changed. Update the product to check it again."
 msgstr ""
-"Het drukformaat van de variatie is niet gecontroleerd sinds het product is "
-"gewijzigd. Werk het product opnieuw bij."
+"Het eigen drukformaat van de variatie is niet gecontroleerd sinds het "
+"product is gewijzigd. Werk het product bij om het opnieuw te controleren."
 
-#: src/Catalogue/InvalidReason.php:209
+#: src/Catalogue/InvalidReason.php:361
 msgid ""
-"Pixonaut could not check the configuration. Check the connection, then "
-"update the product again."
+"Pixonaut could not be reached to check the configuration. Check the "
+"connection on the Pixonaut settings page, then update the product."
 msgstr ""
-"Pixonaut kon de configuratie niet controleren. Controleer de koppeling en "
-"werk het product daarna opnieuw bij."
+"Pixonaut was niet bereikbaar om de configuratie te controleren. Controleer "
+"de koppeling in de Pixonaut-instellingen en werk daarna het product bij."
 
-#: src/Catalogue/InvalidReason.php:211
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:365
+#, php-format
 msgid ""
-"Pixonaut would not make the design of a standing side. Check the side's "
-"template, placement and print size, then update the product again."
+"Pixonaut would not make the design of a fixed-design side. Check the side’s "
+"template, print position and print size in %s, then update the product."
 msgstr ""
-"Pixonaut weigerde het ontwerp van een vaste zijde te maken. Controleer het "
-"sjabloon, de drukpositie en het drukformaat van de zijde en werk het product "
-"daarna opnieuw bij."
+"Pixonaut wilde het ontwerp van een vaste zijde niet maken. Controleer %s het "
+"sjabloon, de drukpositie en het drukformaat van de zijde en werk daarna het "
+"product bij."
 
-#: src/Catalogue/InvalidReason.php:213
+#: src/Catalogue/InvalidReason.php:369
 msgid ""
-"Pixonaut would not make the design of a standing side: the store may not "
-"create and approve designs. Check the connection's permissions in the "
-"Pixonaut studio, then update the product again."
+"Pixonaut would not make the design of a fixed-design side: the store may not "
+"create and approve designs. Check the connection’s permissions in the "
+"Pixonaut studio, then update the product."
 msgstr ""
-"Pixonaut weigerde het ontwerp van een vaste zijde te maken: de winkel mag "
+"Pixonaut wilde het ontwerp van een vaste zijde niet maken: de winkel mag "
 "geen ontwerpen aanmaken en goedkeuren. Controleer de rechten van de "
-"koppeling in de Pixonaut-studio en werk het product daarna opnieuw bij."
+"koppeling in de Pixonaut-studio en werk daarna het product bij."
 
-#: src/Catalogue/InvalidReason.php:215
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:373
+#, php-format
 msgid ""
-"The template of a standing side does not fit the placement at any of the "
-"blank's sizes, so none of them can be printed. Choose a template that fits."
+"The template of a fixed-design side does not fit the print position at any "
+"of the blank’s sizes, so none of them can be printed. Choose a template that "
+"fits in %s."
 msgstr ""
-"Het sjabloon van een vaste zijde past in geen enkele maat van het blanco "
-"product op de drukpositie, dus geen ervan kan worden gedrukt. Kies een "
+"Het sjabloon van een vaste zijde past in geen enkel formaat van het blanco "
+"product op de drukpositie, dus geen ervan kan worden gedrukt. Kies %s een "
 "sjabloon dat past."
 
-#: src/Catalogue/InvalidReason.php:217
-msgid "Choose a blank, or a printshop that prints without one."
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:379
+#, php-format
+msgid ""
+"The printshop prints only on a blank. Choose a blank, or a printshop that "
+"prints without one, in %s."
 msgstr ""
-"Kies een blanco product, of een drukkerij die zonder blanco product drukt."
+"De drukkerij drukt alleen op een blanco product. Kies %s een blanco product, "
+"of een drukkerij die zonder blanco product drukt."
 
-#: src/Catalogue/InvalidReason.php:219
+#: src/Catalogue/InvalidReason.php:383
 msgid ""
 "The configuration was saved by a newer version of Pixonaut for WooCommerce. "
 "Update the plugin."
@@ -3957,9 +4058,21 @@ msgstr ""
 "De configuratie is opgeslagen door een nieuwere versie van Pixonaut for "
 "WooCommerce. Werk de plugin bij."
 
-#: src/Catalogue/InvalidReason.php:221
-msgid "Pixonaut cannot print this configuration."
-msgstr "Pixonaut kan deze configuratie niet drukken."
+#. translators: %s: why, and what to do, e.g. "Pixonaut was asked too often. Wait a minute, then update the product."
+#: src/Catalogue/InvalidReason.php:401
+#, php-format
+msgid "Pixonaut would not make the design of a fixed-design side. %s"
+msgstr "Pixonaut wilde het ontwerp van een vaste zijde niet maken. %s"
+
+#. translators: %s: the code Pixonaut answered, e.g. "too_small", kept as it is.
+#: src/Catalogue/InvalidReason.php:414
+#, php-format
+msgid ""
+"Pixonaut cannot print this configuration, and answered “%s”. Update Pixonaut "
+"for WooCommerce, or contact Pixonaut with this code."
+msgstr ""
+"Pixonaut kan deze configuratie niet drukken en antwoordde ‘%s’. Werk "
+"Pixonaut for WooCommerce bij, of neem met deze code contact op met Pixonaut."
 
 #. translators: %l: the sizes, e.g. "XL and 3XL". Beside a template in the template search of the admin product page: the template cannot be printed at these sizes of the blank.
 #: src/Catalogue/MisfitSizes.php:88
@@ -3976,6 +4089,153 @@ msgstr ""
 "Dit sjabloon past in %l niet op de drukpositie: het kan in die maten niet "
 "worden gedrukt. Kies een sjabloon dat in elke maat past, of verkoop die "
 "maten niet meer."
+
+#: src/Catalogue/PixonautRefusal.php:106
+msgid ""
+"The store is not connected to Pixonaut. Connect it on the Pixonaut settings "
+"page, then update the product."
+msgstr ""
+"De winkel is niet gekoppeld aan Pixonaut. Koppel de winkel in de Pixonaut-"
+"instellingen en werk daarna het product bij."
+
+#: src/Catalogue/PixonautRefusal.php:110
+msgid ""
+"Pixonaut answered in a way this version of Pixonaut for WooCommerce does not "
+"understand. Update the plugin, then update the product."
+msgstr ""
+"Pixonaut antwoordde op een manier die deze versie van Pixonaut for "
+"WooCommerce niet begrijpt. Werk de plugin bij en daarna het product."
+
+#: src/Catalogue/PixonautRefusal.php:112
+msgid ""
+"Pixonaut no longer accepts the store’s connection. Connect the store again "
+"on the Pixonaut settings page, then update the product."
+msgstr ""
+"Pixonaut accepteert de koppeling van de winkel niet meer. Koppel de winkel "
+"opnieuw in de Pixonaut-instellingen en werk daarna het product bij."
+
+#: src/Catalogue/PixonautRefusal.php:114
+msgid ""
+"The store’s connection may not do this in Pixonaut. Check the connection’s "
+"permissions in the Pixonaut studio, then update the product."
+msgstr ""
+"De koppeling van de winkel mag dit niet in Pixonaut. Controleer de rechten "
+"van de koppeling in de Pixonaut-studio en werk daarna het product bij."
+
+#: src/Catalogue/PixonautRefusal.php:116
+msgid ""
+"Pixonaut refused the store’s web address. If the store moved to another "
+"address, connect it again on the Pixonaut settings page, then update the "
+"product."
+msgstr ""
+"Pixonaut heeft het webadres van de winkel geweigerd. Is de winkel naar een "
+"ander adres verhuisd, koppel de winkel dan opnieuw in de Pixonaut-"
+"instellingen en werk daarna het product bij."
+
+#: src/Catalogue/PixonautRefusal.php:118
+msgid ""
+"The Pixonaut workspace does not include the API. Check its plan in the "
+"Pixonaut studio, then update the product."
+msgstr ""
+"De Pixonaut-werkruimte bevat de API niet. Controleer het abonnement in de "
+"Pixonaut-studio en werk daarna het product bij."
+
+#: src/Catalogue/PixonautRefusal.php:120
+msgid ""
+"The Pixonaut workspace is suspended. Contact Pixonaut to lift it, then "
+"update the product."
+msgstr ""
+"De Pixonaut-werkruimte is opgeschort. Neem contact op met Pixonaut om de "
+"opschorting op te heffen en werk daarna het product bij."
+
+#: src/Catalogue/PixonautRefusal.php:122
+msgid "Pixonaut was asked too often. Wait a minute, then update the product."
+msgstr ""
+"Pixonaut is te vaak aangeroepen. Wacht een minuut en werk daarna het product "
+"bij."
+
+#: src/Catalogue/PixonautRefusal.php:124
+msgid "Pixonaut had a problem of its own. Update the product again in a while."
+msgstr ""
+"Pixonaut had zelf een probleem. Werk het product over een tijdje opnieuw bij."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/PixonautRefusal.php:128
+#, php-format
+msgid ""
+"The template, blank or print position no longer exists in Pixonaut. Choose "
+"another in %s."
+msgstr ""
+"Het sjabloon, het blanco product of de drukpositie bestaat niet meer in "
+"Pixonaut. Kies %s een alternatief."
+
+#: src/Catalogue/PixonautRefusal.php:132
+msgid ""
+"Pixonaut could not read what the store sent. Update Pixonaut for "
+"WooCommerce, then update the product."
+msgstr ""
+"Pixonaut kon niet lezen wat de winkel verstuurde. Werk Pixonaut for "
+"WooCommerce bij en daarna het product."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/PixonautRefusal.php:136
+#, php-format
+msgid ""
+"The template’s own design breaks one of its rules at this print size. Fix "
+"the template in the Pixonaut studio, or choose another size or template in "
+"%s."
+msgstr ""
+"Het ontwerp van het sjabloon zelf breekt bij dit drukformaat een van zijn "
+"regels. Corrigeer het sjabloon in de Pixonaut-studio, of kies %s een ander "
+"formaat of sjabloon."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/PixonautRefusal.php:142
+#, php-format
+msgid ""
+"The template cannot be made with the blank’s print technique, such as "
+"embroidery or spot colours. Choose a template made for it in %s."
+msgstr ""
+"Het sjabloon kan niet worden gemaakt met de druktechniek van het blanco "
+"product, zoals borduren of steunkleuren. Kies %s een sjabloon dat daarvoor "
+"gemaakt is."
+
+#: src/Catalogue/PixonautRefusal.php:146
+msgid ""
+"Pixonaut could not read the template’s design. Publish the template again in "
+"the Pixonaut studio, then update the product."
+msgstr ""
+"Pixonaut kon het ontwerp van het sjabloon niet lezen. Publiceer het sjabloon "
+"opnieuw in de Pixonaut-studio en werk daarna het product bij."
+
+#: src/Catalogue/PixonautRefusal.php:148
+msgid ""
+"Pixonaut could not use an earlier proof of the design. Update the product "
+"again."
+msgstr ""
+"Pixonaut kon een eerdere drukproef van het ontwerp niet gebruiken. Werk het "
+"product opnieuw bij."
+
+#: src/Catalogue/PixonautRefusal.php:152
+msgid ""
+"The blank needs a variant for this print position, or the variant chosen is "
+"not one of the blank’s. Pick the variant in the variation’s Pixonaut fields."
+msgstr ""
+"Het blanco product heeft een variant nodig voor deze drukpositie, of de "
+"gekozen variant hoort niet bij het blanco product. Kies de variant in de "
+"Pixonaut-velden van de variatie."
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/PixonautRefusal.php:156
+#, php-format
+msgid ""
+"The printshop is unknown, disconnected, unavailable, or not the one the "
+"blank is printed at. Choose another printshop in %s, or connect it again in "
+"the Pixonaut studio."
+msgstr ""
+"De drukkerij is onbekend, ontkoppeld, niet beschikbaar of niet de drukkerij "
+"waar het blanco product wordt gedrukt. Kies %s een andere drukkerij, of "
+"koppel de drukkerij opnieuw in de Pixonaut-studio."
 
 #. translators: 1: width, 2: height, both in millimetres.
 #: src/Catalogue/PrintSize.php:74
@@ -5495,37 +5755,37 @@ msgctxt "group numbers"
 msgid "Off"
 msgstr "Uit"
 
-#: src/Labels.php:323
+#: src/Labels.php:329
 msgid "Personalisation is unavailable right now. Please try again later."
 msgstr ""
 "Personaliseren is op dit moment niet beschikbaar. Probeer het later opnieuw."
 
 #. translators: On the page of a personalised product the shop cannot sell for now, in place of the add-to-cart button.
-#: src/Labels.php:328
+#: src/Labels.php:334
 msgid "This product is not available right now."
 msgstr "Dit product is op dit moment niet beschikbaar."
 
-#: src/Labels.php:332
+#: src/Labels.php:338
 msgid "Please personalise this product before adding it to your cart."
 msgstr "Personaliseer dit product voordat je het aan je winkelwagen toevoegt."
 
-#: src/Labels.php:336
+#: src/Labels.php:342
 msgid "We could not save your design. Please try again."
 msgstr "We konden je ontwerp niet opslaan. Probeer het opnieuw."
 
-#: src/Labels.php:340
+#: src/Labels.php:346
 msgid "Your design does not match this product. Please personalise it again."
 msgstr "Je ontwerp past niet bij dit product. Personaliseer het opnieuw."
 
-#: src/Labels.php:344
+#: src/Labels.php:350
 msgid "This product was just updated, please reload."
 msgstr "Dit product is zojuist bijgewerkt. Laad de pagina opnieuw."
 
-#: src/Labels.php:348
+#: src/Labels.php:354
 msgid "Your design preview expired. Please approve it again."
 msgstr "Het voorbeeld van je ontwerp is verlopen. Keur het opnieuw goed."
 
-#: src/Labels.php:352
+#: src/Labels.php:358
 msgid ""
 "This design is already in a cart or an order. Please personalise the product "
 "again."
@@ -5533,13 +5793,13 @@ msgstr ""
 "Dit ontwerp zit al in een winkelwagen of een bestelling. Personaliseer het "
 "product opnieuw."
 
-#: src/Labels.php:356
+#: src/Labels.php:362
 msgid "Your design could not be prepared. Please check it and try again."
 msgstr ""
 "Je ontwerp kon niet worden voorbereid. Controleer het en probeer het opnieuw."
 
 #. translators: %s: the name of the personalised product in the shopper's cart.
-#: src/Labels.php:361
+#: src/Labels.php:367
 #, php-format
 msgid ""
 "The design for \"%s\" is no longer available. Please remove it from your "
@@ -5549,29 +5809,38 @@ msgstr ""
 "je winkelwagen of personaliseer het opnieuw."
 
 #. translators: %s: the names of the product options the shopper has not chosen yet, as a list such as "Colour and Size". Notice on the product page after pressing the Personalise button.
-#: src/Labels.php:366
+#: src/Labels.php:372
 #, php-format
 msgid "Please choose a value for %s before personalising this product."
 msgstr "Kies een waarde voor %s voordat je dit product personaliseert."
 
 #. translators: %s: the labels of the design's fields the shopper must change, as a list such as "Photo, Name and Class".
-#: src/Labels.php:371
+#: src/Labels.php:377
 #, php-format
 msgid "Please change these fields: %s"
 msgstr "Wijzig deze velden: %s"
 
+#. translators: Notice on the product page, shown to the shopper, when the design was refused because the product cannot be printed at the chosen print size.
+#: src/Labels.php:382
+msgid ""
+"This product cannot be printed at this size. Please choose another size, or "
+"contact the store."
+msgstr ""
+"Dit product kan niet in dit formaat worden gedrukt. Kies een ander formaat "
+"of neem contact op met de winkel."
+
 #. translators: Label of the checkbox next to the preview on the product page, shown to the shopper; ticking it approves the design. %1$s and %2$s go around the word for the preview, which becomes a link that opens the design's proof.
-#: src/Labels.php:376
+#: src/Labels.php:387
 #, php-format
 msgid "I approve the %1$spreview%2$s"
 msgstr "Ik keur het %1$svoorbeeld%2$s goed"
 
 #. translators: Button in the cart and on the order received page, shown to the shopper; opens the proof of the design.
-#: src/Labels.php:381
+#: src/Labels.php:392
 msgid "Open proof"
 msgstr "Drukproef openen"
 
-#: src/Labels.php:385
+#: src/Labels.php:396
 msgid ""
 "Please tick \"I approve the preview\" before adding this product to your "
 "cart."
@@ -5580,82 +5849,82 @@ msgstr ""
 "winkelwagen toevoegt."
 
 #. translators: Short note under the live preview on the product page, shown to the shopper.
-#: src/Labels.php:390
+#: src/Labels.php:401
 msgid "The preview updates as you type"
 msgstr "Het voorbeeld wordt bijgewerkt terwijl je typt"
 
-#: src/Labels.php:394
+#: src/Labels.php:405
 msgid "Loading the designer"
 msgstr "Ontwerptool wordt geladen"
 
 #. translators: Alternative text of the design preview image in the cart and order, shown to the shopper.
-#: src/Labels.php:399
+#: src/Labels.php:410
 msgid "Your design"
 msgstr "Je ontwerp"
 
 #. translators: Shown to the shopper in the window over the product page while their design's proof is made.
-#: src/Labels.php:404
+#: src/Labels.php:415
 msgid "Preparing your proof"
 msgstr "Je drukproef wordt gemaakt"
 
 #. translators: Button that closes the window showing the design's proof on the product page; here Close is a verb.
-#: src/Labels.php:409
+#: src/Labels.php:420
 msgctxt "proof window"
 msgid "Close"
 msgstr "Sluiten"
 
 #. translators: Heading above a cart or order item's design details, shown to the shopper.
-#: src/Labels.php:414
+#: src/Labels.php:425
 msgid "Personalisation"
 msgstr "Personalisatie"
 
 #. translators: Shown to the shopper in place of a design's field values once the shop has removed them after its retention period.
-#: src/Labels.php:419
+#: src/Labels.php:430
 msgid "Removed after the shop's retention period"
 msgstr "Verwijderd na de bewaartermijn van de winkel"
 
 #. translators: Name of a design field type, a free-text field, shown to the shopper in the cart line details.
-#: src/Labels.php:424
+#: src/Labels.php:435
 msgid "Text"
 msgstr "Tekst"
 
 #. translators: Name of a design field type, a pick from a list of options, shown to the shopper in the cart line details.
-#: src/Labels.php:429
+#: src/Labels.php:440
 msgid "Choice"
 msgstr "Keuze"
 
 #. translators: Name of a design field type, a numeric value, shown to the shopper in the cart line details.
-#: src/Labels.php:434
+#: src/Labels.php:445
 msgid "Number"
 msgstr "Getal"
 
 #. translators: Name of a design field type, a picked colour, shown to the shopper in the cart line details.
-#: src/Labels.php:439
+#: src/Labels.php:450
 msgid "Colour"
 msgstr "Kleur"
 
 #. translators: Name of a design field type, an uploaded image, shown to the shopper in the cart line details.
-#: src/Labels.php:444
+#: src/Labels.php:455
 msgid "Image"
 msgstr "Afbeelding"
 
 #. translators: Heading of the status of an order line on the admin order screen.
-#: src/Labels.php:449
+#: src/Labels.php:460
 msgctxt "heading: status of an order line"
 msgid "Status"
 msgstr "Status"
 
 #. translators: Heading of the shipment tracking links in the order details and shipping emails, shown to the shopper.
-#: src/Labels.php:454
+#: src/Labels.php:465
 msgid "Tracking"
 msgstr "Zending volgen"
 
-#: src/Labels.php:458
+#: src/Labels.php:469
 msgid "Part of your order is on its way. The rest follows as soon as it ships."
 msgstr ""
 "Een deel van je bestelling is onderweg. De rest volgt zodra die is verzonden."
 
-#: src/Labels.php:462
+#: src/Labels.php:473
 msgid ""
 "There is new tracking for your order. Follow your parcel with the details "
 "below."
@@ -5665,11 +5934,11 @@ msgstr ""
 
 #. translators: Accessible name of the tabs that switch between a product's sides, such as front and back, on the product page, read by screen readers.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's sides, such as front and back, each with its template.
-#: src/Labels.php:467 templates/admin/product-fields.php:153
+#: src/Labels.php:478 templates/admin/product-fields.php:153
 msgid "Sides"
 msgstr "Zijden"
 
-#: src/Labels.php:471
+#: src/Labels.php:482
 msgid ""
 "Your order is paid. Before we print it, please check the proof of your "
 "design and approve it. Nothing is printed until you do."
@@ -5679,16 +5948,16 @@ msgstr ""
 "gedaan."
 
 #. translators: Link in the proof email to the shopper, and under the order item on the order received page and in My Account; opens the proof page where the design is approved.
-#: src/Labels.php:476
+#: src/Labels.php:487
 msgid "Review and approve your design"
 msgstr "Bekijk je ontwerp en keur het goed"
 
-#: src/Labels.php:480
+#: src/Labels.php:491
 msgid "Thank you for approving your design. It is now on its way to print."
 msgstr ""
 "Bedankt voor het goedkeuren van je ontwerp. Het gaat nu naar de drukkerij."
 
-#: src/Labels.php:484
+#: src/Labels.php:495
 msgid ""
 "We are still waiting for your approval. Please check the proof of your "
 "design and approve it, or tell us what to change. Nothing is printed until "
@@ -5699,7 +5968,7 @@ msgstr ""
 "gedrukt totdat je dat hebt gedaan."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:489
+#: src/Labels.php:500
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will print your design as the proof "
@@ -5709,13 +5978,13 @@ msgstr ""
 "drukproef het toont."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:494
+#: src/Labels.php:505
 #, php-format
 msgid "If we have not heard from you by %s, we will cancel this item."
 msgstr "Als we op %s nog niets van je hebben gehoord, annuleren we dit item."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:499
+#: src/Labels.php:510
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will cancel this item and refund it."
@@ -5724,7 +5993,7 @@ msgstr ""
 "betalen we het terug."
 
 #. translators: %s: date of the approval deadline.
-#: src/Labels.php:504
+#: src/Labels.php:515
 #, php-format
 msgid ""
 "If we have not heard from you by %s, we will not print your design and will "
@@ -5733,7 +6002,7 @@ msgstr ""
 "Als we op %s nog niets van je hebben gehoord, drukken we je ontwerp niet en "
 "nemen we contact met je op over dit item."
 
-#: src/Labels.php:508
+#: src/Labels.php:519
 msgid ""
 "You did not approve your design by the deadline, so we have cancelled this "
 "item. Nothing was printed."
@@ -5741,34 +6010,34 @@ msgstr ""
 "Je hebt je ontwerp niet binnen de termijn goedgekeurd, dus we hebben dit "
 "item geannuleerd. Er is niets gedrukt."
 
-#: src/Labels.php:512
+#: src/Labels.php:523
 msgid "Its price is being refunded to you."
 msgstr "Het bedrag wordt aan je terugbetaald."
 
 #. translators: Button on the product page opened to edit a cart item, shown to the shopper; saves the changed design.
-#: src/Labels.php:517
+#: src/Labels.php:528
 msgid "Update design"
 msgstr "Ontwerp bijwerken"
 
-#: src/Labels.php:521
+#: src/Labels.php:532
 msgid "This design was changed elsewhere. Please reload the page."
 msgstr "Dit ontwerp is ergens anders gewijzigd. Laad de pagina opnieuw."
 
-#: src/Labels.php:525
+#: src/Labels.php:536
 msgid "This design can no longer be changed."
 msgstr "Dit ontwerp kan niet meer worden gewijzigd."
 
-#: src/Labels.php:529
+#: src/Labels.php:540
 msgid "This item is no longer in your cart."
 msgstr "Dit item zit niet meer in je winkelwagen."
 
 #. translators: Button on the product page, shown to the shopper; opens the Pixonaut designer to personalise the product.
-#: src/Labels.php:534
+#: src/Labels.php:545
 msgctxt "verb: button that opens the designer"
 msgid "Personalise"
 msgstr "Personaliseren"
 
-#: src/Labels.php:538
+#: src/Labels.php:549
 msgid ""
 "We could not match your design to this visit. Please personalise the product "
 "again."
@@ -5776,55 +6045,55 @@ msgstr ""
 "We konden je ontwerp niet aan dit bezoek koppelen. Personaliseer het product "
 "opnieuw."
 
-#: src/Labels.php:542
+#: src/Labels.php:553
 msgid "Your design is ready. Use it with the button below."
 msgstr "Je ontwerp is klaar. Gebruik het met de knop hieronder."
 
 #. translators: Button on the product page, shown to the shopper after returning from the Pixonaut designer when their design could not be kept yet, or when they came back in a browser that did not open the designer; keeps the design.
-#: src/Labels.php:547
+#: src/Labels.php:558
 msgid "Use my design"
 msgstr "Mijn ontwerp gebruiken"
 
 #. translators: Soft note above the add-to-cart row on a product page showing the design the shopper made in the Pixonaut designer.
-#: src/Labels.php:552
+#: src/Labels.php:563
 msgid "This is your design."
 msgstr "Dit is je ontwerp."
 
 #. translators: Button beside the note that this is the shopper's design; reopens it in the Pixonaut designer.
-#: src/Labels.php:557
+#: src/Labels.php:568
 msgctxt "personalised product button"
 msgid "Change"
 msgstr "Wijzigen"
 
 #. translators: %s: the name of a printed side, such as Front. Button beside the note that this is the shopper's design; reopens that side's design in the Pixonaut designer.
-#: src/Labels.php:562
+#: src/Labels.php:573
 #, php-format
 msgid "Change %s"
 msgstr "%s wijzigen"
 
 #. translators: Start of the line on a product page saying the design it shows is already in the shopper's cart, followed by its size and quantity.
-#: src/Labels.php:567
+#: src/Labels.php:578
 msgid "In your cart"
 msgstr "In je winkelwagen"
 
 #. translators: Button on the product page of an item already in the shopper's cart; reopens its design in the Pixonaut designer.
-#: src/Labels.php:572
+#: src/Labels.php:583
 msgctxt "item in the cart button"
 msgid "Change design"
 msgstr "Ontwerp wijzigen"
 
 #. translators: The main button on the product page of an item already in the shopper's cart; goes to the cart.
-#: src/Labels.php:577
+#: src/Labels.php:588
 msgctxt "item in the cart button"
 msgid "View cart"
 msgstr "Winkelwagen bekijken"
 
 #. translators: Link on the product page of an item already in the shopper's cart; opens the plain product page, to start another design from scratch.
-#: src/Labels.php:582
+#: src/Labels.php:593
 msgid "Make another with a new design"
 msgstr "Nog een maken met een nieuw ontwerp"
 
-#: src/Labels.php:586
+#: src/Labels.php:597
 msgid ""
 "This proof has changed since this link was sent. Please use the link in our "
 "latest email."
@@ -5832,16 +6101,16 @@ msgstr ""
 "Deze drukproef is gewijzigd sinds deze link werd verstuurd. Gebruik de link "
 "in onze laatste e-mail."
 
-#: src/Labels.php:590
+#: src/Labels.php:601
 msgid "This design is approved and can no longer be changed."
 msgstr "Dit ontwerp is goedgekeurd en kan niet meer worden gewijzigd."
 
 #. translators: Button on the page opened from a proof email, shown to the shopper; saves the changes and approves the design.
-#: src/Labels.php:595
+#: src/Labels.php:606
 msgid "Save and approve design"
 msgstr "Ontwerp opslaan en goedkeuren"
 
-#: src/Labels.php:599
+#: src/Labels.php:610
 msgid ""
 "We received your request to change your design. If you did not finish your "
 "changes, you can open the design again here. Nothing is printed until you "
@@ -5852,11 +6121,11 @@ msgstr ""
 "wordt niets gedrukt totdat je het goedkeurt."
 
 #. translators: Button in the email to the shopper after a change request; reopens the design.
-#: src/Labels.php:604
+#: src/Labels.php:615
 msgid "Edit your design"
 msgstr "Je ontwerp bewerken"
 
-#: src/Labels.php:608
+#: src/Labels.php:619
 msgid ""
 "We could not match your changes to this visit. Please change your design "
 "again from its product page."
@@ -5864,42 +6133,42 @@ msgstr ""
 "We konden je wijzigingen niet aan dit bezoek koppelen. Wijzig je ontwerp "
 "opnieuw vanaf de productpagina."
 
-#: src/Labels.php:612
+#: src/Labels.php:623
 msgid "Your design has been updated."
 msgstr "Je ontwerp is bijgewerkt."
 
 #. translators: Status of an order line on the admin order screen: the design is saved, payment is pending.
-#: src/Labels.php:618
+#: src/Labels.php:629
 msgid "Design saved"
 msgstr "Ontwerp opgeslagen"
 
 #. translators: Status of an order line on the admin order screen: the shopper has to approve the proof.
-#: src/Labels.php:620
+#: src/Labels.php:631
 msgid "Awaiting your approval"
 msgstr "Wacht op je goedkeuring"
 
 #. translators: Status of an order line on the admin order screen: the design is approved.
-#: src/Labels.php:622
+#: src/Labels.php:633
 msgid "Design approved"
 msgstr "Ontwerp goedgekeurd"
 
 #. translators: Status of an order line on the admin order screen: the print file is made.
-#: src/Labels.php:624
+#: src/Labels.php:635
 msgid "Print file ready"
 msgstr "Drukbestand klaar"
 
 #. translators: Status of an order line on the admin order screen: the printshop is making it.
-#: src/Labels.php:626
+#: src/Labels.php:637
 msgid "In production"
 msgstr "In productie"
 
 #. translators: Status of an order line on the admin order screen: the printshop could not make it.
-#: src/Labels.php:630
+#: src/Labels.php:641
 msgid "Could not be produced"
 msgstr "Kon niet worden gemaakt"
 
 #. translators: Status of an order line on the admin order screen: the store is looking into the item.
-#: src/Labels.php:634
+#: src/Labels.php:645
 msgid "Being reviewed by the store"
 msgstr "Wordt bekeken door de winkel"
 
@@ -9502,6 +9771,133 @@ msgid_plural "%s views"
 msgstr[0] "%s weergave"
 msgstr[1] "%s weergaven"
 
+#~ msgid "Choose a template."
+#~ msgstr "Kies een sjabloon."
+
+#~ msgid "Choose where on the blank the design is printed."
+#~ msgstr "Kies waar op het blanco product het ontwerp wordt gedrukt."
+
+#~ msgid "The blank no longer exists in Pixonaut."
+#~ msgstr "Het blanco product bestaat niet meer in Pixonaut."
+
+#~ msgid ""
+#~ "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or "
+#~ "choose another blank."
+#~ msgstr ""
+#~ "Het blanco product is verwijderd in Pixonaut. Zet het terug in de "
+#~ "Pixonaut-studio of kies een ander blanco product."
+
+#~ msgid ""
+#~ "The blank no longer has this placement, or Pixonaut cannot size a print "
+#~ "for it."
+#~ msgstr ""
+#~ "Het blanco product heeft deze drukpositie niet meer, of Pixonaut kan er "
+#~ "geen drukformaat voor bepalen."
+
+#~ msgid ""
+#~ "The template is paused or deleted in Pixonaut. Make it live again, or "
+#~ "choose another template."
+#~ msgstr ""
+#~ "Het sjabloon is gepauzeerd of verwijderd in Pixonaut. Zet het weer live "
+#~ "of kies een ander sjabloon."
+
+#, php-format
+#~ msgid "A product has at most %d sides."
+#~ msgstr "Een product heeft maximaal %d zijden."
+
+#~ msgid ""
+#~ "Two sides use the same placement. Each placement can be one side only."
+#~ msgstr ""
+#~ "Twee zijden gebruiken dezelfde drukpositie. Elke drukpositie kan maar één "
+#~ "zijde zijn."
+
+#~ msgid "Two sides have the same key. Give each side its own."
+#~ msgstr ""
+#~ "Twee zijden hebben dezelfde sleutel. Geef elke zijde een eigen sleutel."
+
+#~ msgid ""
+#~ "A custom print size needs a width and height in millimetres, both above "
+#~ "zero."
+#~ msgstr ""
+#~ "Een aangepast drukformaat heeft een breedte en hoogte in millimeters "
+#~ "nodig, beide groter dan nul."
+
+#, php-format
+#~ msgid "A side offers at most %d print sizes."
+#~ msgstr "Een zijde biedt maximaal %d drukformaten."
+
+#~ msgid ""
+#~ "Add a print size in millimetres. Without a blank there is no placement to "
+#~ "take one from."
+#~ msgstr ""
+#~ "Voeg een drukformaat in millimeters toe. Zonder blanco product is er geen "
+#~ "drukpositie om er een van over te nemen."
+
+#~ msgid "The print size is larger than the placement can print."
+#~ msgstr "Het drukformaat is groter dan de drukpositie kan drukken."
+
+#~ msgid "The print size does not match the template's aspect ratio."
+#~ msgstr "Het drukformaat past niet bij de beeldverhouding van het sjabloon."
+
+#~ msgid ""
+#~ "The placement is printed across its whole print area: the print size must "
+#~ "be that area."
+#~ msgstr ""
+#~ "De drukpositie wordt over het hele drukgebied bedrukt: het drukformaat "
+#~ "moet gelijk zijn aan dat gebied."
+
+#~ msgid ""
+#~ "The template cannot be printed at the print area of this variation's "
+#~ "blank variant. Choose a template that fits, or stop selling the variation."
+#~ msgstr ""
+#~ "Het sjabloon kan niet worden gedrukt op het drukgebied van de variant van "
+#~ "het blanco product van deze variatie. Kies een sjabloon dat past, of "
+#~ "verkoop de variatie niet meer."
+
+#~ msgid ""
+#~ "The variation's print size has not been checked since the product "
+#~ "changed. Update the product again."
+#~ msgstr ""
+#~ "Het drukformaat van de variatie is niet gecontroleerd sinds het product "
+#~ "is gewijzigd. Werk het product opnieuw bij."
+
+#~ msgid ""
+#~ "Pixonaut could not check the configuration. Check the connection, then "
+#~ "update the product again."
+#~ msgstr ""
+#~ "Pixonaut kon de configuratie niet controleren. Controleer de koppeling en "
+#~ "werk het product daarna opnieuw bij."
+
+#~ msgid ""
+#~ "Pixonaut would not make the design of a standing side. Check the side's "
+#~ "template, placement and print size, then update the product again."
+#~ msgstr ""
+#~ "Pixonaut weigerde het ontwerp van een vaste zijde te maken. Controleer "
+#~ "het sjabloon, de drukpositie en het drukformaat van de zijde en werk het "
+#~ "product daarna opnieuw bij."
+
+#~ msgid ""
+#~ "Pixonaut would not make the design of a standing side: the store may not "
+#~ "create and approve designs. Check the connection's permissions in the "
+#~ "Pixonaut studio, then update the product again."
+#~ msgstr ""
+#~ "Pixonaut weigerde het ontwerp van een vaste zijde te maken: de winkel mag "
+#~ "geen ontwerpen aanmaken en goedkeuren. Controleer de rechten van de "
+#~ "koppeling in de Pixonaut-studio en werk het product daarna opnieuw bij."
+
+#~ msgid ""
+#~ "The template of a standing side does not fit the placement at any of the "
+#~ "blank's sizes, so none of them can be printed. Choose a template that "
+#~ "fits."
+#~ msgstr ""
+#~ "Het sjabloon van een vaste zijde past in geen enkele maat van het blanco "
+#~ "product op de drukpositie, dus geen ervan kan worden gedrukt. Kies een "
+#~ "sjabloon dat past."
+
+#~ msgid "Choose a blank, or a printshop that prints without one."
+#~ msgstr ""
+#~ "Kies een blanco product, of een drukkerij die zonder blanco product drukt."
+
 #~ msgid ""
 #~ "The workspace's settings as Pixonaut answered them: `brands` the store "
 #~ "may choose from (the default first), `brand_id` the brand its pages are "
@@ -10449,10 +10845,6 @@ msgstr[1] "%s weergaven"
 #~ msgstr ""
 #~ "Pixonaut heeft het geweigerd, dus er is niets gedaan. Pixel is op de "
 #~ "hoogte gebracht."
-
-#, php-format
-#~ msgid "%1$s: %2$s"
-#~ msgstr "%1$s: %2$s"
 
 #~ msgid "Pixel is no longer waiting for that answer. Ask again."
 #~ msgstr "Pixel wacht niet meer op dat antwoord. Vraag het opnieuw."

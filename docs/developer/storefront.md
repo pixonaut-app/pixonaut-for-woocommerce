@@ -189,8 +189,11 @@ or a required field is empty, and Pixonaut refuses it with 422
 `constraint_violation` for what the SDK could not tell; either way `approve()`
 rejects with a `PixonautApiError` carrying `violations`, and the SDK marks
 each field in the form. The fields are named by `getFieldTexts()`, as the
-form heads them; a refusal naming no field the form heads shows
-`design_failed`.
+form heads them. A refusal of the print size itself, a violation of no
+layer on `widthMm` or `placementId` (or under the rule `too_large`,
+`wrong_ratio` or `print_size_not_area`), shows `design_size_refused` and logs
+the refusal's body to the browser console. Any other refusal naming no field
+the form heads shows `design_failed`.
 
 A page shows one inline designer. The first personalised product whose
 preview or form is printed claims the page; the script looks up each form

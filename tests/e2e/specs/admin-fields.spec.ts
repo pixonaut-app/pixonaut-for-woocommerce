@@ -94,7 +94,7 @@ test('shows the configuration once Personalise is ticked, pictures in its picker
 	await publish(page);
 	await openPixonautTab(page);
 	await expect(panel.locator('.pixonaut-product-invalid')).toContainText(
-		'Choose a template.',
+		'No template is chosen. Choose one in the product’s Pixonaut tab.',
 	);
 	await expect(
 		panel.getByText('Choose a template for this side.'),

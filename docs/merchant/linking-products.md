@@ -396,8 +396,9 @@ default printshop. A workspace with none says "No printshop in your workspace
 prints without a blank." A printshop chosen earlier that the workspace no
 longer has stays chosen, marked *A printshop no longer connected to the
 workspace*, until you choose another. A product saved on a printshop that
-needs a blank cannot be bought: the tab says "Choose a blank, or a printshop
-that prints without one."
+needs a blank cannot be bought: the tab says "The printshop prints only on a
+blank. Choose a blank, or a printshop that prints without one, in the
+product's Pixonaut tab."
 
 ### Variant
 
@@ -741,7 +742,12 @@ prints never use a showcase set.
 
 If Pixonaut finds a problem, the product is still saved, but customers
 cannot buy it until it is fixed. The Pixonaut tab says why, and a notice at
-the top of the admin screens names the product until you fix it. Reasons
+the top of the admin screens names the product until you fix it. Each
+message says what is wrong, where (the side, when the product has more than
+one, and the print size Pixonaut refused) and what to change, in the
+product's Pixonaut tab or the variation's Pixonaut fields. When Pixonaut
+refused a request, the message says what its answer means; an answer this
+version of the plugin does not know is quoted as Pixonaut's code. Reasons
 include:
 
 - no template chosen, or no print position for a side;

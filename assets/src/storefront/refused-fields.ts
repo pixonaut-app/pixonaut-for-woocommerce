@@ -62,6 +62,56 @@ export function refusedFieldLabels(
 	return [...named];
 }
 
+/** A refusal's `prop` that names the print size rather than a field: the
+ *  size asked for, or the placement whose area gave it. */
+const SIZE_PROPS: ReadonlySet<string> = new Set([
+	'widthMm',
+	'heightMm',
+	'placementId',
+]);
+
+/** Pixonaut's verdicts on a print size, as a violation's `rule`. */
+const SIZE_RULES: ReadonlySet<string> = new Set([
+	'too_large',
+	'wrong_ratio',
+	'print_size_not_area',
+]);
+
+/** Whether a refusal is of the print size, not of a field: a violation of
+ *  the whole design (no layer) on the size, or under a size verdict. */
+export function isPrintSizeRefusal(error: unknown): boolean {
+	if (typeof error !== 'object' || error === null) {
+		return false;
+	}
+	const { violations } = error as { violations?: unknown };
+	if (!Array.isArray(violations)) {
+		return false;
+	}
+	return violations.some((violation: unknown) => {
+		if (typeof violation !== 'object' || violation === null) {
+			return false;
+		}
+		const { layerId, prop, rule } = violation as {
+			layerId?: unknown;
+			prop?: unknown;
+			rule?: unknown;
+		};
+		return (
+			(layerId === undefined || layerId === '') &&
+			((typeof prop === 'string' && SIZE_PROPS.has(prop)) ||
+				(typeof rule === 'string' && SIZE_RULES.has(rule)))
+		);
+	});
+}
+
+/** What Pixonaut answered with a refusal: the fields the SDK copies from
+ *  its body onto the error, for the console. */
+export function refusalBody(error: unknown): Record<string, unknown> {
+	return typeof error === 'object' && error !== null
+		? { ...(error as Record<string, unknown>) }
+		: { error };
+}
+
 /** `labels` as one list in `locale`'s words ("Name, Class and Photo"); the
  *  page's own language when `locale` is not one the browser knows. */
 export function joinLabels(

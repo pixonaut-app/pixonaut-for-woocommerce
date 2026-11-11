@@ -167,7 +167,7 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 		$expected = array(
 			'valid'   => false,
 			'reason'  => $reason,
-			'message' => InvalidReason::message( $reason ),
+			'message' => InvalidReason::message( $reason, null, true ),
 		);
 		$this->assertSame( $expected, $read['pixonaut_validity'] );
 		$this->assertArrayHasKey( 'pixonaut_variant', $read );
@@ -265,7 +265,7 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 		$this->assertSame(
 			array(
 				'code'    => 'invalid_print_size',
-				'message' => InvalidReason::message( InvalidReason::WRONG_RATIO ),
+				'message' => InvalidReason::message( InvalidReason::WRONG_RATIO, null, true ),
 				'reason'  => InvalidReason::WRONG_RATIO,
 			),
 			$answer->get_data()

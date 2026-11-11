@@ -210,7 +210,7 @@ final class SetVariationPrintSize implements Ability {
 	private static function refusal( string $reason ): WP_Error {
 		return new WP_Error(
 			self::REFUSED,
-			InvalidReason::message( $reason ),
+			InvalidReason::message( $reason, null, true ),
 			array(
 				'status' => self::UNPROCESSABLE,
 				'reason' => $reason,

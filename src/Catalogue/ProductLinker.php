@@ -218,7 +218,7 @@ final class ProductLinker {
 			try {
 				$read[ $id ] ??= $this->catalogue->template_state( $id );
 			} catch ( ApiException $e ) {
-				return $config->with_validity( false, self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ) );
+				return $config->with_validity( false, self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ), self::refusal( $e )?->on_side( self::named_side( $config, $side ) ) );
 			}
 			if ( Catalogue::LIVE !== $read[ $id ]['status'] ) {
 				return $config->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE );
@@ -273,13 +273,13 @@ final class ProductLinker {
 						'code'        => $e->errorCode,
 					)
 				);
-				return self::keeping_adjusted( $config, $before )->with_validity( false, self::standing_reason( $e ) );
+				return self::keeping_adjusted( $config, $before )->with_validity( false, self::standing_reason( $e ), InvalidDetail::of( self::named_side( $config, $side ), null, $e->errorCode ) );
 			}
 		}
 		$standing = $config->with_sides( $sides );
 		foreach ( $sides as $side ) {
 			if ( $side->is_standing() && null === $side->standing_design_id && array() === $side->standing_rows && array() !== $side->misfit_sizes ) {
-				return $standing->with_validity( false, InvalidReason::NO_FITTING_SIZE );
+				return $standing->with_validity( false, InvalidReason::NO_FITTING_SIZE, InvalidDetail::of( self::named_side( $config, $side ) ) );
 			}
 		}
 		return $standing;
@@ -409,9 +409,11 @@ final class ProductLinker {
 				$problem ??= $saved ?? InvalidReason::INVALID_PRINT_SIZE;
 			}
 		}
-		$checked = null === $stored->blank_id
-			? $this->template_only( $rolled, $inputs[0] ?? null, $problem )
-			: $this->checked( $rolled, $stored->blank_id, $inputs, $problem );
+		// A problem the last save found keeps what it said of where.
+		$problem_detail = null !== $problem && $problem === $stored->invalid_reason ? $stored->invalid_detail : null;
+		$checked        = null === $stored->blank_id
+			? $this->template_only( $rolled, $inputs[0] ?? null, $problem, $problem_detail )
+			: $this->checked( $rolled, $stored->blank_id, $inputs, $problem, $problem_detail );
 
 		$kept = array();
 		foreach ( $checked->sides as $i => $side ) {
@@ -429,19 +431,20 @@ final class ProductLinker {
 	 * Pixonaut could not check makes the configuration `check_failed`
 	 * whatever else is wrong with it, so it is checked again.
 	 *
-	 * @param ProductConfig $current  What the product has now; its overrides are kept.
-	 * @param string        $blank_id The blank.
-	 * @param SideInput[]   $inputs   The sides to check.
-	 * @param string|null   $problem  Why the sides cannot be sold whatever Pixonaut says, if anything.
+	 * @param ProductConfig      $current  What the product has now; its overrides are kept.
+	 * @param string             $blank_id The blank.
+	 * @param SideInput[]        $inputs   The sides to check.
+	 * @param string|null        $problem  Why the sides cannot be sold whatever Pixonaut says, if anything.
+	 * @param InvalidDetail|null $problem_detail Where that problem is, when known.
 	 * @phpstan-param list<SideInput> $inputs
 	 */
-	private function checked( ProductConfig $current, string $blank_id, array $inputs, ?string $problem ): ProductConfig {
+	private function checked( ProductConfig $current, string $blank_id, array $inputs, ?string $problem, ?InvalidDetail $problem_detail = null ): ProductConfig {
 		try {
 			$blank = $this->catalogue->blank( $blank_id );
 		} catch ( ApiException $e ) {
 			// The choice is kept, unchecked, so updating again once Pixonaut answers retries it.
 			$kept = $current->blank_id === $blank_id ? $current : null;
-			return $this->config( $current, true, $blank_id, $kept?->blank_name, $this->unchecked( $kept, $inputs ), self::reason( $e, InvalidReason::UNKNOWN_BLANK ) );
+			return $this->config( $current, true, $blank_id, $kept?->blank_name, $this->unchecked( $kept, $inputs ), self::reason( $e, InvalidReason::UNKNOWN_BLANK ), self::refusal( $e ) );
 		}
 		$blank_name = is_string( $blank['name'] ?? null ) ? $blank['name'] : null;
 		if ( self::is_deleted( $blank ) ) {
@@ -449,7 +452,7 @@ final class ProductLinker {
 			// in what was entered is kept over the deletion, which the panel reads from the blank,
 			// so restoring it does not sell what only a save can fix.
 			$kept = $current->blank_id === $blank_id ? $current : null;
-			return $this->config( $current, true, $blank_id, $blank_name, $this->unchecked( $kept, $inputs ), $problem ?? InvalidReason::BLANK_DELETED );
+			return $this->config( $current, true, $blank_id, $blank_name, $this->unchecked( $kept, $inputs ), $problem ?? InvalidReason::BLANK_DELETED, $problem_detail );
 		}
 
 		$placements = array();
@@ -462,19 +465,28 @@ final class ProductLinker {
 
 		$sides   = array();
 		$reasons = array();
+		// What each reason is about, by its index in `$reasons`.
+		$details = array();
 		foreach ( $inputs as $input ) {
-			list( $side, $reason ) = $this->side( $current, $blank_id, $placements, $input, $areas_vary ? $blank : null );
-			$sides[]               = $side;
+			list( $side, $reason, $detail ) = $this->side( $current, $blank_id, $placements, $input, $areas_vary ? $blank : null );
+			$sides[]                        = $side;
 			if ( null !== $reason ) {
 				$reasons[] = $reason;
+				$details[] = count( $inputs ) > 1 ? ( $detail ?? new InvalidDetail() )->on_side( $side->label ) : $detail;
 			}
 		}
 		if ( array() === $inputs ) {
 			$reasons[] = InvalidReason::MISSING_TEMPLATE;
+			$details[] = null;
 		}
 
-		$reason = in_array( InvalidReason::CHECK_FAILED, $reasons, true ) ? InvalidReason::CHECK_FAILED : $problem ?? $reasons[0] ?? null;
-		return $this->config( $current, true, $blank_id, $blank_name, $sides, $reason );
+		$failed = array_search( InvalidReason::CHECK_FAILED, $reasons, true );
+		if ( false === $failed && null !== $problem ) {
+			// A problem in what was entered, which PostedSides names without a side.
+			return $this->config( $current, true, $blank_id, $blank_name, $sides, $problem, $problem_detail );
+		}
+		$first = false === $failed ? 0 : $failed;
+		return $this->config( $current, true, $blank_id, $blank_name, $sides, $reasons[ $first ] ?? null, $details[ $first ] ?? null );
 	}
 
 	/**
@@ -485,11 +497,12 @@ final class ProductLinker {
 	 * no size cannot be sold, and so cannot one whose entered sizes had a
 	 * problem, which is kept until the product is saved again.
 	 *
-	 * @param ProductConfig  $current What the product has now.
-	 * @param SideInput|null $input   The first side entered.
-	 * @param string|null    $problem Why the side cannot be sold whatever Pixonaut says, if anything.
+	 * @param ProductConfig      $current What the product has now.
+	 * @param SideInput|null     $input   The first side entered.
+	 * @param string|null        $problem Why the side cannot be sold whatever Pixonaut says, if anything.
+	 * @param InvalidDetail|null $problem_detail Where that problem is, when known.
 	 */
-	private function template_only( ProductConfig $current, ?SideInput $input, ?string $problem ): ProductConfig {
+	private function template_only( ProductConfig $current, ?SideInput $input, ?string $problem, ?InvalidDetail $problem_detail = null ): ProductConfig {
 		$template = null === $input ? null : TemplateId::parse( $input->template_id );
 		if ( null === $input || null === $template ) {
 			return $this->config( $current, true, null, null, array(), InvalidReason::MISSING_TEMPLATE );
@@ -506,17 +519,20 @@ final class ProductLinker {
 		}
 		$sized = static fn ( array $sizes, ?array $pending, int $start ): Side => new Side( $input->key, self::label( $input, null, $name ), null, null, $template->base_id, $template->version, null, $name, array_values( $sizes ), null === $pending ? null : array_values( $pending ), $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
 		if ( array() === $entered ) {
-			return $this->config( $current, true, null, null, array( $sized( array(), null, 0 ) ), $problem ?? InvalidReason::MISSING_PRINT_SIZE );
+			return $this->config( $current, true, null, null, array( $sized( array(), null, 0 ) ), $problem ?? InvalidReason::MISSING_PRINT_SIZE, $problem_detail );
 		}
 
 		try {
-			list( $legal, $legal_at, $reason ) = $this->judged( (string) $template, $entered, null, null );
+			list( $legal, $legal_at, $reason, $refused ) = $this->judged( (string) $template, $entered, null, null );
 		} catch ( ApiException $e ) {
 			// Nothing unchecked is sold; the menu waits for the next save.
-			return $this->config( $current, true, null, null, array( $sized( array(), $entered, $entered_at[ $input->start ] ?? 0 ) ), self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ) );
+			return $this->config( $current, true, null, null, array( $sized( array(), $entered, $entered_at[ $input->start ] ?? 0 ) ), self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ), self::refusal( $e ) );
 		}
 		$side = $sized( $legal, null, $legal_at[ $entered_at[ $input->start ] ?? -1 ] ?? 0 );
-		return $this->config( $current, true, null, null, array( $side ), $problem ?? ( array() === $legal ? $reason ?? InvalidReason::MISSING_PRINT_SIZE : $reason ) );
+		if ( null !== $problem ) {
+			return $this->config( $current, true, null, null, array( $side ), $problem, $problem_detail );
+		}
+		return $this->config( $current, true, null, null, array( $side ), array() === $legal ? $reason ?? InvalidReason::MISSING_PRINT_SIZE : $reason, InvalidDetail::of( null, $refused ) );
 	}
 
 	/**
@@ -538,7 +554,7 @@ final class ProductLinker {
 	 * @param array<string, string>     $placements The blank's placements, names by id.
 	 * @param SideInput                 $input      The side as entered.
 	 * @param array<string, mixed>|null $varying    The blank, when its print areas change with an option; null otherwise.
-	 * @return array{0: Side, 1: string|null} The side and why it cannot be sold, if it cannot.
+	 * @return array{0: Side, 1: string|null, 2: InvalidDetail|null} The side, why it cannot be sold, if it cannot, and the size or Pixonaut's answer that says more.
 	 */
 	private function side( ProductConfig $current, string $blank_id, array $placements, SideInput $input, ?array $varying = null ): array {
 		$template       = TemplateId::parse( $input->template_id );
@@ -548,17 +564,17 @@ final class ProductLinker {
 		$sized          = static fn ( array $sizes, bool $keep_menu = false, int $start = 0 ): Side => new Side( $input->key, self::label( $input, $placement_name, $name ), $placement_id, $placement_name, $template->base_id ?? '', $template?->version, null, $name, array_values( $sizes ), $keep_menu ? $input->sizes : null, $keep_menu ? $input->start : $start, $input->mode, form_groups: $input->form_groups, draw_at_template_ratio: $input->draw_at_template_ratio );
 
 		if ( null === $template ) {
-			return array( $sized( array(), true ), InvalidReason::MISSING_TEMPLATE );
+			return array( $sized( array(), true ), InvalidReason::MISSING_TEMPLATE, null );
 		}
 		if ( null === $placement_id ) {
-			return array( $sized( array(), true ), InvalidReason::MISSING_PLACEMENT );
+			return array( $sized( array(), true ), InvalidReason::MISSING_PLACEMENT, null );
 		}
 		if ( null === $placement_name ) {
-			return array( $sized( array(), true ), InvalidReason::UNKNOWN_PLACEMENT );
+			return array( $sized( array(), true ), InvalidReason::UNKNOWN_PLACEMENT, null );
 		}
 		if ( array() === $input->sizes ) {
 			// Every size entered was unusable; PostedSides says why.
-			return array( $sized( array() ), null );
+			return array( $sized( array() ), null, null );
 		}
 
 		$held   = self::held_misfits( $current, $blank_id, $placement_id, $template );
@@ -576,9 +592,9 @@ final class ProductLinker {
 				$checked_at[ $entered ] = count( $sizes );
 				$sizes[]                = $size;
 			}
-			list( $legal, $legal_at, $refused ) = $this->judged( (string) $template, $sizes, $blank_id, $placement_id );
-			$misfits                            = $held;
-			$rows                               = array();
+			list( $legal, $legal_at, $refused, $refused_size ) = $this->judged( (string) $template, $sizes, $blank_id, $placement_id );
+			$misfits = $held;
+			$rows    = array();
 			if ( Side::STANDING !== $input->mode ) {
 				$misfits = null !== $varying && array() !== $legal
 					? MisfitSizes::of( self::placement_of( $this->constraints( (string) $template, $blank_id, $placement_id ) )['sizes'] ?? null )
@@ -587,16 +603,16 @@ final class ProductLinker {
 			}
 		} catch ( ApiException $e ) {
 			// Nothing unchecked is sold; the menu waits for the next save.
-			return array( $sized( array(), true )->with_misfit_sizes( $held ), self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ) );
+			return array( $sized( array(), true )->with_misfit_sizes( $held ), self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ), self::refusal( $e ) );
 		}
 		if ( null !== $refused ) {
 			// The menu stays as entered, so the refused size is shown with why; the product is not sold meanwhile.
-			return array( $sized( $legal, true )->with_misfit_sizes( $misfits )->with_row_sizes( $rows ), $reason ?? $refused );
+			return array( $sized( $legal, true )->with_misfit_sizes( $misfits )->with_row_sizes( $rows ), $reason ?? $refused, null === $reason ? InvalidDetail::of( null, $refused_size ) : null );
 		}
 		// A placement with an area per row, none of which any variant sold can be printed at, sells nothing at the default.
 		$unfit = null !== $varying && Side::STANDING !== $input->mode && array() === $rows && array() !== PrintAreas::areas( $varying, $placement_id ) ? InvalidReason::VARIANT_SIZE_UNFIT : null;
 		// A starting size Pixonaut cannot print leaves the first legal one to start on.
-		return array( $sized( $legal, false, $legal_at[ $checked_at[ $input->start ] ?? -1 ] ?? 0 )->with_misfit_sizes( $misfits )->with_row_sizes( $rows ), $reason ?? $unfit );
+		return array( $sized( $legal, false, $legal_at[ $checked_at[ $input->start ] ?? -1 ] ?? 0 )->with_misfit_sizes( $misfits )->with_row_sizes( $rows ), $reason ?? $unfit, null );
 	}
 
 	/**
@@ -607,7 +623,7 @@ final class ProductLinker {
 	 * @param string|null $blank_id     The blank; null to judge against the template alone.
 	 * @param string|null $placement_id Its placement; null without a blank.
 	 * @phpstan-param list<PrintSize> $sizes
-	 * @return array{0: list<PrintSize>, 1: array<int, int>, 2: string|null} The legal sizes, where each judged size landed among them by its index in `$sizes`, and why the first one refused was.
+	 * @return array{0: list<PrintSize>, 1: array<int, int>, 2: string|null, 3: string|null} The legal sizes, where each judged size landed among them by its index in `$sizes`, why the first one refused was, and its label.
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
@@ -616,6 +632,7 @@ final class ProductLinker {
 		$legal    = array();
 		$legal_at = array();
 		$reason   = null;
+		$refused  = null;
 		foreach ( $sizes as $i => $size ) {
 			$verdict = $verdicts[ $i ];
 			if ( $verdict->legal ) {
@@ -623,9 +640,10 @@ final class ProductLinker {
 				$legal[]        = $size;
 				continue;
 			}
-			$reason ??= $verdict->reason ?? InvalidReason::CHECK_FAILED;
+			$refused ??= $size->label;
+			$reason  ??= $verdict->reason ?? InvalidReason::CHECK_FAILED;
 		}
-		return array( $legal, $legal_at, $reason );
+		return array( $legal, $legal_at, $reason, $refused );
 	}
 
 	/**
@@ -798,15 +816,36 @@ final class ProductLinker {
 	}
 
 	/**
-	 * @param ProductConfig $current     Overrides, the printshop and the canvas ratio, and the views and starting view on the same blank, come from here.
-	 * @param bool          $personalise Whether customers personalise the product.
-	 * @param string|null   $blank_id    The blank.
-	 * @param string|null   $blank_name  Its cached name.
-	 * @param Side[]        $sides       The sides.
-	 * @param string|null   $reason      Why it cannot be sold; null when it can.
+	 * The error code Pixonaut answered, which says more than the reason does.
+	 *
+	 * @param ApiException $error What Pixonaut answered.
+	 */
+	private static function refusal( ApiException $error ): ?InvalidDetail {
+		return InvalidDetail::of( null, null, $error->errorCode );
+	}
+
+	/**
+	 * A side's label, when the configuration has more than one side to
+	 * tell it from; null otherwise.
+	 *
+	 * @param ProductConfig $config The configuration.
+	 * @param Side          $side   One of its sides.
+	 */
+	private static function named_side( ProductConfig $config, Side $side ): ?string {
+		return count( $config->sides ) > 1 ? $side->label : null;
+	}
+
+	/**
+	 * @param ProductConfig      $current     Overrides, the printshop and the canvas ratio, and the views and starting view on the same blank, come from here.
+	 * @param bool               $personalise Whether customers personalise the product.
+	 * @param string|null        $blank_id    The blank.
+	 * @param string|null        $blank_name  Its cached name.
+	 * @param Side[]             $sides       The sides.
+	 * @param string|null        $reason      Why it cannot be sold; null when it can.
+	 * @param InvalidDetail|null $detail      Where, and what Pixonaut answered, when known.
 	 * @phpstan-param list<Side> $sides
 	 */
-	private function config( ProductConfig $current, bool $personalise, ?string $blank_id, ?string $blank_name, array $sides, ?string $reason ): ProductConfig {
+	private function config( ProductConfig $current, bool $personalise, ?string $blank_id, ?string $blank_name, array $sides, ?string $reason, ?InvalidDetail $detail = null ): ProductConfig {
 		return new ProductConfig(
 			$personalise,
 			$current->override,
@@ -826,6 +865,7 @@ final class ProductLinker {
 			$current->option_groups,
 			$current->group_numbers,
 			$current->split_listing,
+			null === $reason ? null : $detail,
 		);
 	}
 }

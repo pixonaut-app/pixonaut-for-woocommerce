@@ -211,8 +211,8 @@ final class VariationSizeField {
 			return null === $value ? '' : InvalidReason::message( InvalidReason::VARIATION_SIZE_UNCHECKED );
 		}
 		if ( null !== $entry['refused'] ) {
-			return InvalidReason::message( $entry['refused'] );
+			return InvalidReason::message( $entry['refused'], null, true );
 		}
-		return VariationSize::basis( $side, $blank_id, $variant ) === $entry['basis'] ? '' : InvalidReason::message( InvalidReason::VARIATION_SIZE_UNCHECKED );
+		return VariationSize::basis( $side, $blank_id, $variant ) === $entry['basis'] ? '' : InvalidReason::message( InvalidReason::VARIATION_SIZE_UNCHECKED, null, true );
 	}
 }

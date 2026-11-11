@@ -137,7 +137,11 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$this->assertSame( InvalidReason::TOO_LARGE, ProductConfig::config_for( $this->reload_any( $small->get_id() ) )->invalid_reason );
 		$field = $this->field( $small, 0 );
 		$this->assertSame( array( 'custom', '400', '500' ), array( $field['kind'], $field['width'], $field['height'] ) );
-		$this->assertSame( InvalidReason::message( InvalidReason::TOO_LARGE ), $field['error'] );
+		$this->assertSame( InvalidReason::message( InvalidReason::TOO_LARGE, null, true ), $field['error'] );
+		$sold = ProductConfig::config_for( $this->reload_any( $small->get_id() ) );
+		$this->assertSame( '400 × 500 mm', $sold->invalid_detail?->size, 'the notice names the refused size' );
+		$this->assertStringStartsWith( 'At 400 × 500 mm: ', InvalidReason::stored( $sold ) );
+		$this->assertStringContainsString( 'the variation’s Pixonaut fields', InvalidReason::stored( $sold ) );
 	}
 
 	public function test_a_size_other_than_a_whole_area_is_refused_where_the_print_covers_it(): void {

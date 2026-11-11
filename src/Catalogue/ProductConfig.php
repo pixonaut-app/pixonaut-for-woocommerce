@@ -73,6 +73,7 @@ final class ProductConfig {
 	 * @param array<int, string> $split_listing Whether each value of a global attribute is listed as its own
 	 *                                    product, by attribute id: `SplitListing::ON` or `SplitListing::OFF`;
 	 *                                    an attribute not named follows its own setting. A variation follows its product.
+	 * @param InvalidDetail|null $invalid_detail Where it is invalid, and what Pixonaut answered, when the check knows.
 	 * @phpstan-param list<Side> $sides
 	 * @phpstan-param list<string> $views
 	 */
@@ -94,6 +95,7 @@ final class ProductConfig {
 		public readonly ?string $option_groups = null,
 		public readonly ?string $group_numbers = null,
 		public readonly array $split_listing = array(),
+		public readonly ?InvalidDetail $invalid_detail = null,
 	) {
 	}
 
@@ -310,14 +312,16 @@ final class ProductConfig {
 	/**
 	 * A copy with another validity.
 	 *
-	 * @param bool        $valid  Whether the configuration can be sold.
-	 * @param string|null $reason Why not; ignored when valid.
+	 * @param bool               $valid  Whether the configuration can be sold.
+	 * @param string|null        $reason Why not; ignored when valid.
+	 * @param InvalidDetail|null $detail Where, and what Pixonaut answered; ignored when valid.
 	 */
-	public function with_validity( bool $valid, ?string $reason = null ): self {
+	public function with_validity( bool $valid, ?string $reason = null, ?InvalidDetail $detail = null ): self {
 		return $this->with(
 			array(
 				'valid'          => $valid,
 				'invalid_reason' => $valid ? null : $reason,
+				'invalid_detail' => $valid ? null : $detail,
 			)
 		);
 	}
@@ -916,6 +920,7 @@ final class ProductConfig {
 			self::text_or_null( $data['optionGroups'] ?? null ),
 			self::text_or_null( $data['groupNumbers'] ?? null ),
 			SplitListing::choices_from( $data['splitListing'] ?? null ),
+			$valid ? null : InvalidDetail::from_array( $validity['detail'] ?? null ),
 		);
 	}
 
@@ -937,7 +942,7 @@ final class ProductConfig {
 			'validity'            => array(
 				'valid'  => $this->valid,
 				'reason' => $this->invalid_reason,
-			),
+			) + ( null === $this->invalid_detail ? array() : array( 'detail' => $this->invalid_detail->to_array() ) ),
 			'views'               => $this->views,
 			'formLayout'          => $this->form_layout,
 			'initialView'         => $this->initial_view,
