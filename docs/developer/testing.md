@@ -240,9 +240,11 @@ A site is the tests site of `.wp-env.json` (its plugins, themes, constants
 and mu-plugins) as wp-env's only environment, from a config written under
 `.wp-env-e2e/`, with its own wp-env home there; the checkout's own wp-env is
 left alone. The first start downloads WordPress and the plugins for each
-site; later starts take about a minute. `node bin/e2e-sites.mjs start` and
-`stop` start and stop the sites alone; `test` leaves running the sites that
-were running before it. A site's fake reaches it as `http://wordpress`
+site; later starts take seconds. `node bin/e2e-sites.mjs start` and
+`stop` start and stop the sites alone. `test` fails before starting any site
+when its spec files and options select no test, and leaves running only the
+sites that were running before it: a failed or interrupted run stops the
+others, after its wp-env and Playwright processes have exited. A site's fake reaches it as `http://wordpress`
 (`PIXONAUT_E2E_SITE_ON_NETWORK`, which `TESTS_SITE_ON_NETWORK` in
 `tests/e2e/fixtures.ts` follows). Each shard writes its traces to
 `test-results/e2e-<n>/` and its report to `playwright-report/e2e-<n>/`.
