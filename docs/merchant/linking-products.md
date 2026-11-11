@@ -201,6 +201,45 @@ the product again once Pixonaut answers checks those sizes. A side you have
 not chosen a template for yet is kept too, and the product cannot be bought
 until it has one.
 
+### Images printed too soft
+
+A template can hold images of your own, such as a photo or a logo from the
+Pixonaut library. The larger the print size, the fewer of an image's pixels
+fall on each inch: a 4800-pixel-wide photo printed 1000 mm wide has about
+122 dots per inch (dpi), and may look soft or pixelated. When you update the
+product, Pixonaut also checks each print size against the resolution it
+recommends for the template's images. A size an image falls below it at gets
+a warning under the side, such as *The image in "photo" prints at 122 dpi at
+1000 × 1000 mm, below the 300 dpi recommended, so it may look soft*. On a
+product with more than one side, the warning starts with the side's name. A
+variation's own print size, or its attribute value's, is warned of under its
+**Print size** field in the same way.
+
+The product can still be bought. On each warning you can:
+
+- Click **Upscale in Pixonaut**. The image opens in the Pixonaut studio's
+  library, where you upscale it and use the upscale in the templates that
+  hold it. Once the template uses the upscale and is published again, the
+  store checks the product again on its own, and the warning goes.
+- Choose *Accept at this size*. The warning goes for that image at that size
+  of that side. A new image, or another size, is warned of again.
+- Choose *Don't warn me again about this image*. That image is not warned of
+  on any product again. **Pixonaut > Storefront > Image resolution** lists
+  those images; remove one there to be warned of it again.
+- Choose *Don't warn me again about any image*. This turns off **Warn about
+  soft images** under **Pixonaut > Storefront > Image resolution**; tick it to
+  turn the warnings back on.
+
+Your choice is saved when you update the product.
+
+Whether Pixonaut warns, refuses such sizes, or says nothing at all is chosen
+for the whole workspace in its settings in the Pixonaut studio, and an image
+can be accepted as it is in the studio's library. When the workspace refuses
+them, the size is not sold: the product cannot be bought until you change
+it, and the warning says why, with **Upscale in Pixonaut** and **Accept in
+Pixonaut** but nothing to accept in the store. Turning the store's warnings
+off does not change that.
+
 ### When a print size has other proportions
 
 A template can be sold at print sizes whose proportions are not its own,

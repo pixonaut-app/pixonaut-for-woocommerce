@@ -56,6 +56,7 @@ section is part of the system report that **Get system report** copies.
 |---|---|---|---|
 | `admin/connection-card.php` | 0.1.0 | `woocommerce/pixonaut/admin/connection-card.php` | The Pixonaut connection card on the settings page's Connection tab. |
 | `admin/developer-tools.php` | 0.1.0 | `woocommerce/pixonaut/admin/developer-tools.php` | The hidden developer tools on the settings page's Connection tab. |
+| `admin/low-resolution-warnings.php` | 1.4.0 | `woocommerce/pixonaut/admin/low-resolution-warnings.php` | Images of a product side's template that print below their recommended resolution at one of its print sizes, each with what the store manager can do about it. |
 | `admin/notice.php` | 0.1.0 | `woocommerce/pixonaut/admin/notice.php` | An admin notice raised by Pixonaut for WooCommerce. |
 | `admin/order-box.php` | 0.1.0 | `woocommerce/pixonaut/admin/order-box.php` | The Pixonaut box on the order screen: each personalised line, its proofs, where it stands and what can be done about it. |
 | `admin/order-item-details.php` | 0.1.0 | `woocommerce/pixonaut/admin/order-item-details.php` | A personalised order line's details on the admin order screen: the values the customer chose for each design's fields, the line's state and its tracking, under WooCommerce's own meta. |
