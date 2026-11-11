@@ -1790,6 +1790,10 @@ declare function operations({ json, raw }: Reads): {
         /** List the tenant's prints */
         list: (query?: QueryOf<"/v1/prints">) => Promise<AnswerOf<"/v1/prints">>;
     };
+    printshopCatalogueProducts: {
+        /** List the printshop's catalogue */
+        list: (query?: QueryOf<"/v1/printshop-catalogue-products">) => Promise<AnswerOf<"/v1/printshop-catalogue-products">>;
+    };
     printshopConnections: {
         /** List the tenant's printshop connections */
         list: (query?: QueryOf<"/v1/printshop-connections">) => Promise<AnswerOf<"/v1/printshop-connections">>;
