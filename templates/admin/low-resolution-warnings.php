@@ -23,7 +23,7 @@ defined( 'ABSPATH' ) || exit;
 	<?php foreach ( $rows as $pixonaut_row ) : ?>
 		<div class="pixonaut-low-resolution__row" data-key="<?php echo esc_attr( $pixonaut_row['key'] ); ?>">
 			<p class="pixonaut-low-resolution__text"><?php echo esc_html( $pixonaut_row['text'] ); ?></p>
-			<p class="pixonaut-low-resolution__actions">
+			<div class="pixonaut-low-resolution__actions">
 				<?php if ( '' !== $pixonaut_row['studio'] ) : ?>
 					<a class="button pixonaut-low-resolution__upscale" href="<?php echo esc_url( $pixonaut_row['studio'] ); ?>" target="_blank" rel="noopener noreferrer"><?php /* translators: Button on a warning about an image that prints below its recommended resolution: opens the image in the Pixonaut studio, where it is upscaled. Admin product page. */ esc_html_e( 'Upscale in Pixonaut', 'pixonaut-for-woocommerce' ); ?></a>
 				<?php endif; ?>
@@ -32,18 +32,15 @@ defined( 'ABSPATH' ) || exit;
 						<a class="button-link pixonaut-low-resolution__accept-studio" href="<?php echo esc_url( $pixonaut_row['studio'] ); ?>" target="_blank" rel="noopener noreferrer"><?php /* translators: Link on a print size Pixonaut refuses because an image prints below its recommended resolution: opens the image in the Pixonaut studio, where its resolution can be accepted as it is. Admin product page. */ esc_html_e( 'Accept in Pixonaut', 'pixonaut-for-woocommerce' ); ?></a>
 					<?php endif; ?>
 				<?php else : ?>
-					<label class="pixonaut-low-resolution__choice">
-						<span class="screen-reader-text"><?php /* translators: Screen reader label of the dropdown choosing what to do about an image that prints below its recommended resolution. Admin product page. */ esc_html_e( 'What to do about this image', 'pixonaut-for-woocommerce' ); ?></span>
-						<select name="<?php echo esc_attr( $pixonaut_row['name'] ); ?>">
-							<option value=""><?php /* translators: Option of the dropdown on a warning about an image printed below its recommended resolution: keep the warning. Admin product page. */ esc_html_e( 'Keep warning', 'pixonaut-for-woocommerce' ); ?></option>
-							<option value="<?php echo esc_attr( LowResolutionWarnings::ACCEPT ); ?>"><?php /* translators: Option of the dropdown on a warning about an image printed below its recommended resolution: accept it at this print size, which hides the warning. Admin product page. */ esc_html_e( 'Accept at this size', 'pixonaut-for-woocommerce' ); ?></option>
-							<option value="<?php echo esc_attr( LowResolutionWarnings::QUIET_IMAGE ); ?>"><?php /* translators: Option of the dropdown on a warning about an image printed below its recommended resolution: never warn about this image again, on any product. Admin product page. */ esc_html_e( 'Don’t warn me again about this image', 'pixonaut-for-woocommerce' ); ?></option>
-							<option value="<?php echo esc_attr( LowResolutionWarnings::QUIET_ALL ); ?>"><?php /* translators: Option of the dropdown on a warning about an image printed below its recommended resolution: never warn about any image again. Admin product page. */ esc_html_e( 'Don’t warn me again about any image', 'pixonaut-for-woocommerce' ); ?></option>
-						</select>
-					</label>
+					<select class="pixonaut-low-resolution__choice" name="<?php echo esc_attr( $pixonaut_row['name'] ); ?>" aria-label="<?php /* translators: Screen reader label of the dropdown choosing what to do about an image that prints below its recommended resolution. Admin product page. */ esc_attr_e( 'What to do about this image', 'pixonaut-for-woocommerce' ); ?>">
+						<option value=""><?php /* translators: Option of the dropdown on a warning about an image printed below its recommended resolution: keep the warning. Admin product page. */ esc_html_e( 'Keep warning', 'pixonaut-for-woocommerce' ); ?></option>
+						<option value="<?php echo esc_attr( LowResolutionWarnings::ACCEPT ); ?>"><?php /* translators: Option of the dropdown on a warning about an image printed below its recommended resolution: accept it at this print size, which hides the warning. Admin product page. */ esc_html_e( 'Accept at this size', 'pixonaut-for-woocommerce' ); ?></option>
+						<option value="<?php echo esc_attr( LowResolutionWarnings::QUIET_IMAGE ); ?>"><?php /* translators: Option of the dropdown on a warning about an image printed below its recommended resolution: never warn about this image again, on any product. Admin product page. */ esc_html_e( 'Don’t warn me again about this image', 'pixonaut-for-woocommerce' ); ?></option>
+						<option value="<?php echo esc_attr( LowResolutionWarnings::QUIET_ALL ); ?>"><?php /* translators: Option of the dropdown on a warning about an image printed below its recommended resolution: never warn about any image again. Admin product page. */ esc_html_e( 'Don’t warn me again about any image', 'pixonaut-for-woocommerce' ); ?></option>
+					</select>
 					<span class="description"><?php /* translators: Hint beside the dropdown on a warning about an image printed below its recommended resolution. Admin product page. */ esc_html_e( 'Saved when you update the product.', 'pixonaut-for-woocommerce' ); ?></span>
 				<?php endif; ?>
-			</p>
+			</div>
 		</div>
 	<?php endforeach; ?>
 </div>
