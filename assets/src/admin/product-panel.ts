@@ -985,12 +985,16 @@ export function initPanel(root: HTMLElement): void {
 				update();
 				return;
 			}
-			const option = blank.selectedOptions[0];
-			if (option) {
-				option.value = picked.id;
-				option.textContent = picked.text;
-				option.dataset.thumbnail = thumbnail;
+			// A new option, so selectWoo's own record of the pick names the blank, not the product.
+			for (const option of [...blank.options]) {
+				if (option.value === product) {
+					option.remove();
+				}
 			}
+			const option = new Option(picked.text, picked.id, true, true);
+			option.dataset.thumbnail = thumbnail;
+			blank.append(option);
+			$(blank).trigger('change.select2');
 			pickBlank(picked.id, [], thumbnail);
 		});
 	};

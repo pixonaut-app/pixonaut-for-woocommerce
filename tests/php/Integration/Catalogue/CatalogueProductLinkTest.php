@@ -105,7 +105,6 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 
 	public function test_a_product_not_imported_yet_is_imported_as_a_blank(): void {
 		wp_set_current_user( $this->user( 'shop_manager' ) );
-		$this->recorder->json( 200, self::catalogue( null ) );
 		$this->recorder->json( 202, self::imported( 'importing' ) );
 
 		$response = $this->pick();
@@ -119,15 +118,13 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 			),
 			$response->get_data()
 		);
-		$this->assertSame( array( 'GET', 'POST' ), array_column( $this->recorder->requests, 'method' ) );
-		$this->assertStringContainsString( '/v1/printshop-catalogue-products/' . self::PRODUCT_ID . '/blank?connectionId=' . self::INTEGRATED_ID, $this->recorder->requests[1]['url'] );
+		$this->assertSame( array( 'POST' ), array_column( $this->recorder->requests, 'method' ) );
+		$this->assertStringContainsString( '/v1/printshop-catalogue-products/' . self::PRODUCT_ID . '/blank?connectionId=' . self::INTEGRATED_ID, $this->recorder->requests[0]['url'] );
 	}
 
 	public function test_a_product_imported_before_reuses_its_blank(): void {
 		wp_set_current_user( $this->user( 'shop_manager' ) );
-		$this->recorder->json( 200, self::catalogue( self::IMPORTED_ID ) );
-
-		$response = $this->pick();
+		$this->recorder->json( 200, self::imported( 'ready' ) );
 
 		$this->assertSame(
 			array(
@@ -135,29 +132,36 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 				'text'      => self::PRODUCT_NAME,
 				'importing' => false,
 			),
-			$response->get_data()
+			$this->pick()->get_data()
 		);
-		$this->assertCount( 1, $this->recorder->requests, 'nothing is imported again' );
 	}
 
-	public function test_an_import_refused_for_its_name_takes_the_blank_imported_meanwhile(): void {
+	public function test_a_product_imported_before_answered_without_a_body_is_found_in_the_catalogue(): void {
 		wp_set_current_user( $this->user( 'shop_manager' ) );
-		$this->recorder->json( 200, self::catalogue( null ) );
-		$this->recorder->json( 409, array( 'error' => 'duplicate_name' ) );
+		$this->recorder->empty_body( 200 );
 		$this->recorder->json( 200, self::catalogue( self::IMPORTED_ID ) );
 
 		$this->assertSame( self::IMPORTED_ID, $this->pick()->get_data()['id'] );
 	}
 
+	public function test_an_import_refused_for_its_name_says_which_blank_has_it(): void {
+		wp_set_current_user( $this->user( 'shop_manager' ) );
+		$this->recorder->json( 409, array( 'error' => 'duplicate_name' ) );
+
+		$response = $this->pick();
+
+		$this->assertSame( 422, $response->get_status() );
+		$this->assertStringStartsWith( 'Pixonaut already has a blank called Classic poster.', $this->error_message( $response ) );
+	}
+
 	public function test_a_product_with_nothing_to_print_on_says_so(): void {
 		wp_set_current_user( $this->user( 'shop_manager' ) );
-		$this->recorder->json( 200, self::catalogue( null ) );
 		$this->recorder->json( 422, array( 'error' => 'no_printable_placement' ) );
 
 		$response = $this->pick();
 
 		$this->assertSame( 422, $response->get_status() );
-		$this->assertSame( 'Pixonaut cannot print on this product: it has no print position.', $response->as_error()->get_error_message() );
+		$this->assertSame( 'Pixonaut cannot print on this product: it has no print position.', $this->error_message( $response ) );
 	}
 
 	public function test_only_someone_who_may_edit_products_picks_one(): void {
@@ -258,6 +262,17 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 	}
 
 	/**
+	 * The message of a route's error.
+	 *
+	 * @param WP_REST_Response $response The answer.
+	 */
+	private function error_message( WP_REST_Response $response ): string {
+		$error = $response->as_error();
+		$this->assertInstanceOf( \WP_Error::class, $error );
+		return $error->get_error_message();
+	}
+
+	/**
 	 * The blank fields route's parts for the product's saved blank.
 	 *
 	 * @param int $product_id The product.
@@ -275,7 +290,12 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 		$this->assertSame( 200, $response->get_status() );
 		$parts = $response->get_data();
 		$this->assertIsArray( $parts );
-		return $parts;
+		$this->assertIsString( $parts['blank_html'] ?? null );
+		$this->assertIsString( $parts['views_html'] ?? null );
+		return array(
+			'blank_html' => $parts['blank_html'],
+			'views_html' => $parts['views_html'],
+		);
 	}
 
 	/**
@@ -368,14 +388,27 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 	 * @return array<string, mixed>
 	 */
 	private static function imported( string $status ): array {
+		$blank = array(
+			'id'         => self::IMPORTED_ID,
+			'name'       => self::PRODUCT_NAME,
+			'status'     => $status,
+			'generation' => null,
+		) + BlankFixture::answer( array(), self::INTEGRATED_ID );
 		return array(
-			'blank' => array(
-				'id'            => self::IMPORTED_ID,
-				'name'          => self::PRODUCT_NAME,
-				'status'        => $status,
-				'importFailure' => null,
+			'blank' => $blank,
+			'job'   => array(
+				'id'         => 'job_1',
+				'kind'       => 'blank.import',
+				'subjectId'  => self::IMPORTED_ID,
+				'state'      => 'importing' === $status ? 'queued' : 'done',
+				'attempts'   => 1,
+				'runAt'      => 1,
+				'parkReason' => null,
+				'lastError'  => null,
+				'lastRunAt'  => null,
+				'createdAt'  => 1,
+				'finishedAt' => null,
 			),
-			'job'   => array( 'id' => 'job_1' ),
 		);
 	}
 

@@ -134,13 +134,13 @@ describe('POST /v1/printshop-catalogue-products/{productId}/blank', () => {
 		]);
 	});
 
-	it('refuses a second import under the same name', async () => {
-		await importPoster();
+	it('answers the blank imported before rather than importing again', async () => {
+		const first = await (await importPoster()).json();
 
 		const again = await importPoster();
 
-		expect(again.status).toBe(409);
-		expect(await again.json()).toEqual({ error: 'duplicate_name' });
+		expect(again.status).toBe(200);
+		expect((await again.json()).blank.id).toBe(first.blank.id);
 	});
 
 	it('refuses a product with nothing to print on', async () => {

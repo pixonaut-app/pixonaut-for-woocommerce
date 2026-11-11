@@ -73,8 +73,8 @@ final class Pixonaut {
 		'printshopConnections.list',
 		// Not in the pinned SDK yet: see `PENDING`.
 		'printshopCatalogueProducts.list',
-		// Takes no key: a repeat imports the product again, which the store never asks for once it is imported.
-		'printshopCatalogueProducts.blank.create',
+		// A repeat answers the blank imported before, so it takes no key.
+		'printshopCatalogueProducts.importBlank',
 		'designs.commit',
 		// One design per store, version, blank, placement and size: a repeat answers it again, so it takes no key.
 		'designs.findOrCreateStanding',
@@ -125,7 +125,7 @@ final class Pixonaut {
 			'method' => 'GET',
 			'path'   => '/v1/printshop-catalogue-products',
 		),
-		'printshopCatalogueProducts.blank.create' => array(
+		'printshopCatalogueProducts.importBlank' => array(
 			'method' => 'POST',
 			'path'   => '/v1/printshop-catalogue-products/{productId}/blank',
 		),

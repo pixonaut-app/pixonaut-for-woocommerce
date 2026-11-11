@@ -889,7 +889,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertMatchesRegularExpression( '/<select id="pixonaut_printshop" name="pixonaut_printshop" class="pixonaut-printshop-choice"[^>]*>/', $html );
 		$this->assertStringContainsString( '<option value="ps_other"  selected=\'selected\'>Other Print AB</option>', $html );
 		$this->assertSame( 1, preg_match( '/class="pixonaut-printshop-choice".*?<\/select>/s', $html, $choice ) );
-		$this->assertStringNotContainsString( 'Gelato', $choice[0] );
+		$this->assertStringNotContainsString( 'Gelato', $choice[0] ?? '' );
 		$this->assertStringContainsString( 'Gelato’s catalogue', $html, 'its catalogue is where Printed on searches' );
 		$this->assertStringNotContainsString( 'pixonaut-printshop-name', $html, 'no blank decides it' );
 	}

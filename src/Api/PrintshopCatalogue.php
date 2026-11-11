@@ -78,20 +78,22 @@ final class PrintshopCatalogue {
 	/**
 	 * `POST /v1/printshop-catalogue-products/{productId}/blank`: imports the
 	 * product as a blank of the workspace, every colour and view, under the
-	 * printshop's name for it.
+	 * printshop's name for it; or, when it was imported through the
+	 * connection before, answers that blank (`200`) rather than importing
+	 * it again.
 	 *
 	 * @param string $connection_id The printshop connection.
 	 * @param string $product_id    The product.
-	 * @return array{id: string, name: string, status: string} The blank, `importing` while Pixonaut fills it in.
+	 * @return array{id: string, name: string, status: string}|null The blank, `importing` while Pixonaut fills it in; null for a blank imported before that Pixonaut answered without a body.
 	 *
-	 * @throws ApiException When Pixonaut refused (`409 duplicate_name` for a name the workspace has, `422` for a product with nothing to print on), could not be reached, or answered without the blank.
+	 * @throws ApiException When Pixonaut refused (`409 duplicate_name` for a name the workspace has, `422` for a product with nothing to print on), or could not be reached.
 	 */
-	public function import( string $connection_id, string $product_id ): array {
-		$operation = 'printshopCatalogueProducts.blank.create';
-		$answer    = $this->pixonaut->call( $operation, array( 'productId' => $product_id ), array( 'connectionId' => $connection_id ), array() )->object();
-		$blank     = is_array( $answer['blank'] ?? null ) ? $answer['blank'] : array();
+	public function import( string $connection_id, string $product_id ): ?array {
+		$result = $this->pixonaut->call( 'printshopCatalogueProducts.importBlank', array( 'productId' => $product_id ), array( 'connectionId' => $connection_id ), array() );
+		$answer = '' === trim( $result->body ) ? array() : $result->object();
+		$blank  = is_array( $answer['blank'] ?? null ) ? $answer['blank'] : array();
 		if ( ! is_string( $blank['id'] ?? null ) || '' === $blank['id'] ) {
-			throw new ApiException( $operation, 200, ApiException::UNEXPECTED_RESPONSE, false );
+			return null;
 		}
 		return array(
 			'id'     => $blank['id'],

@@ -1,7 +1,7 @@
 // An integrated printshop's catalogue, which a store browses and imports
 // from with its integration key: a page of the products, each marked with the
-// blank it was imported as, and an import that makes a blank of one. An
-// import is whole at once, or stays `importing` while the control API holds
+// blank it was imported as, and an import that makes a blank of one, or
+// answers the one made before. An import is whole at once, or stays `importing` while the control API holds
 // imports (`POST /__fake/catalogue/imports`) until it finishes it
 // (`POST /__fake/blanks/finish-import`), as Pixonaut's background job does.
 import {
@@ -108,6 +108,11 @@ export const importCatalogueBlank: Handler = (context) => {
 		return NOT_FOUND;
 	}
 	const { tenantId } = callerOf(context);
+	// An integration key is answered the blank imported before, not a second one.
+	const imported = importedBlank(context.state, tenantId, product);
+	if (imported !== undefined && imported.status !== 'failed') {
+		return { status: 200, body: importAnswer(imported) };
+	}
 	const body = (context.body ?? {}) as { name?: unknown };
 	const name = typeof body.name === 'string' ? body.name : product.name;
 	const taken = [...context.state.blanks.values()].some(
@@ -144,8 +149,26 @@ export const importCatalogueBlank: Handler = (context) => {
 		importedFrom: { connectionId: connection.id, productId: product.productId },
 	};
 	context.state.blanks.set(id, blank);
-	return {
-		status: 202,
-		body: { blank: blankBody(blank), job: { id: `job_import_${id}` } },
-	};
+	return { status: 202, body: importAnswer(blank) };
 };
+
+/** The import's answer: the blank and the job filling it in. */
+function importAnswer(blank: Blank): Record<string, unknown> {
+	const finished = blank.status === 'importing' ? null : blank.updatedAt;
+	return {
+		blank: { ...blankBody(blank), generation: null },
+		job: {
+			id: `job_import_${blank.id}`,
+			kind: 'blank.import',
+			subjectId: blank.id,
+			state: finished === null ? 'queued' : 'done',
+			attempts: finished === null ? 0 : 1,
+			runAt: blank.createdAt,
+			parkReason: null,
+			lastError: null,
+			lastRunAt: finished,
+			createdAt: blank.createdAt,
+			finishedAt: finished,
+		},
+	};
+}

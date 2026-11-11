@@ -21,6 +21,8 @@ test("links a variable product by the printshop's catalogue product and pairs it
 	fake,
 	baseURL,
 }) => {
+	// The import is read again every few seconds until it is done.
+	test.slow();
 	await usePlainPermalinks(page, baseURL);
 	const id = await createVariableProduct(
 		request,
@@ -72,12 +74,19 @@ test("links a variable product by the printshop's catalogue product and pairs it
 	});
 
 	// Picked again, the product reuses the blank it was imported as.
+	const picked = page.waitForResponse(
+		(response) =>
+			response.url().includes('catalogue-products%2Fblank') ||
+			response.url().includes('catalogue-products/blank'),
+	);
 	await pick(page, 'pixonaut_blank', 'poster', 'Classic poster');
+	expect((await picked).ok()).toBe(true);
 	await expect(pairing).toBeVisible();
 	expect(await panel.locator('#pixonaut_blank').inputValue()).toBe(blankId);
 	const imports = (await fake.requests()).filter(
 		(r) =>
 			r.operation === 'POST /v1/printshop-catalogue-products/{productId}/blank',
 	);
-	expect(imports).toHaveLength(1);
+	// Pixonaut answers the blank imported before rather than importing again.
+	expect(imports.map((r) => r.status)).toEqual([202, 200]);
 });
