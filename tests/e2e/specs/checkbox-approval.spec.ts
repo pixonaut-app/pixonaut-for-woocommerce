@@ -1,17 +1,9 @@
-import {
-	expect,
-	type FakePixonaut,
-	test,
-	usePlainPermalinks,
-} from '../fixtures';
+import { expect, type FakePixonaut, test } from '../fixtures';
 import { type Line, openCheckouts, pay, readOrder, runJobs } from '../orders';
-import { publishLinkedProduct } from '../products';
+import { createLinkedProduct } from '../products';
 
 /** What the customer writes on the fixture tee's text layer. */
 const SLOGAN = 'Ticked and approved';
-
-/** The checkbox approval mode's name in the product panel. */
-const CHECKBOX_MODE = 'Customer ticks "I approve the preview"';
 
 /** The error under the box, from the label `approval_required`. */
 const APPROVAL_REQUIRED =
@@ -37,23 +29,17 @@ test('a customer ticks "I approve the preview" and the order is approved with th
 	const checkoutUrls = await openCheckouts(request);
 
 	// The merchant links a product that asks for the checkbox.
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(
+	const permalink = await createLinkedProduct(
 		admin,
+		baseURL,
 		`Checkbox tee ${theme} ${Date.now()}`,
-		'25',
 		{
-			approval: CHECKBOX_MODE,
+			approval: 'checkbox',
 		},
 	);
-	const permalink = await admin
-		.locator('#wp-admin-bar-view a, #view-post-btn a')
-		.first()
-		.getAttribute('href');
-	expect(permalink).toBeTruthy();
 
 	// The customer personalises it, with the note under the preview …
-	await customer.goto(permalink ?? '');
+	await customer.goto(permalink);
 	await expect(customer.locator('.pixonaut-preview *').first()).toBeVisible();
 	await expect(customer.locator('.pixonaut-preview__note')).toHaveText(
 		'The preview updates as you type',
@@ -149,18 +135,12 @@ test('a design records whether its preview was opened before the box was ticked'
 	theme,
 }) => {
 	test.slow();
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(
+	const permalink = await createLinkedProduct(
 		admin,
+		baseURL,
 		`Previewed tee ${theme} ${Date.now()}`,
-		'25',
-		{ approval: CHECKBOX_MODE },
+		{ approval: 'checkbox' },
 	);
-	const permalink = await admin
-		.locator('#wp-admin-bar-view a, #view-post-btn a')
-		.first()
-		.getAttribute('href');
-	expect(permalink).toBeTruthy();
 	const addToCart = customer
 		.locator('form.cart, form[data-wp-interactive]')
 		.getByRole('button', { name: /add to cart/i });
@@ -182,7 +162,7 @@ test('a design records whether its preview was opened before the box was ticked'
 	};
 
 	// Approved blind, it records false.
-	await customer.goto(permalink ?? '');
+	await customer.goto(permalink);
 	await customer.getByRole('textbox', { name: /Slogan/ }).fill('Blind');
 	await box.check();
 	await addToCart.click();
@@ -190,7 +170,7 @@ test('a design records whether its preview was opened before the box was ticked'
 	expect(await recorded()).toBe(false);
 
 	// Approved after looking, it records true.
-	await customer.goto(permalink ?? '');
+	await customer.goto(permalink);
 	await customer.getByRole('textbox', { name: /Slogan/ }).fill('Looked');
 	await approval.getByRole('button', { name: 'preview', exact: true }).click();
 	const dialog = customer.getByRole('dialog', { name: 'Your design' });

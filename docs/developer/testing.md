@@ -182,9 +182,10 @@ sets how many products a page of the shop lists for one browser context.
 
 Link a product on the product screen (`publishLinkedProduct()` in
 `tests/e2e/products.ts`) only in a test about linking it. A test about what
-happens after, such as the order specs, makes it with
-`createLinkedProduct()` in `tests/e2e/orders.ts`, which stores what the
-screen would: wp-admin's two publishes cost a test about ten seconds.
+happens after, such as the order and proof specs, makes it with
+`createLinkedProduct()` beside it, which stores what the screen would, with
+the same choices: an approval mode (`proof_email`, `checkbox`), the button
+layout, a back side. wp-admin's two publishes cost a test about ten seconds.
 
 The tests site keeps every product earlier tests and runs created. A test
 whose work grows with the store's linked products, such as one firing a
@@ -218,6 +219,33 @@ pay at the project's checkout, check the checkout started the line's job, run th
 printshop order, also after a payment reported twice), move the order to
 `shipped` with `POST /__fake/orders/move`, and run the jobs again: the line
 is shipped and the order completed.
+
+## Running in parallel
+
+Every test resets the tests site and the fake, so the suite runs one test at
+a time on one site. `pnpm test:e2e:parallel` (`bin/e2e-sites.mjs`) starts
+extra tests sites, each a wp-env environment of its own with its own fake
+Pixonaut, splits the suite across them with Playwright's `--shard`, prints
+each shard's output as it finishes, and stops the sites it started. Spec
+files after it narrow the run, as with `pnpm test:e2e`. `ci:local` runs its
+e2e step this way.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `PIXONAUT_E2E_SITES` | 4 | How many sites, and so shards |
+| `E2E_SITES_PORT_BASE` | 8900 | Site *n* listens on this plus 2(*n* − 1), its fake on the next port |
+| `E2E_SITES_COUNT` | | How many ports from the base are free; more sites than half of it is an error |
+
+A site is the tests site of `.wp-env.json` (its plugins, themes, constants
+and mu-plugins) as wp-env's only environment, from a config written under
+`.wp-env-e2e/`, with its own wp-env home there; the checkout's own wp-env is
+left alone. The first start downloads WordPress and the plugins for each
+site; later starts take about a minute. `node bin/e2e-sites.mjs start` and
+`stop` start and stop the sites alone; `test` leaves running the sites that
+were running before it. A site's fake reaches it as `http://wordpress`
+(`PIXONAUT_E2E_SITE_ON_NETWORK`, which `TESTS_SITE_ON_NETWORK` in
+`tests/e2e/fixtures.ts` follows). Each shard writes its traces to
+`test-results/e2e-<n>/` and its report to `playwright-report/e2e-<n>/`.
 
 ## Projects
 

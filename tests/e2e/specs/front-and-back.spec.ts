@@ -1,9 +1,4 @@
-import {
-	expect,
-	type FakePixonaut,
-	test,
-	usePlainPermalinks,
-} from '../fixtures';
+import { expect, type FakePixonaut, test } from '../fixtures';
 import {
 	type CheckoutUrls,
 	type Line,
@@ -12,7 +7,7 @@ import {
 	readOrder,
 	runJobs,
 } from '../orders';
-import { publishLinkedProduct } from '../products';
+import { createLinkedProduct } from '../products';
 
 /** What the customer writes on each side's text layer. */
 const FRONT_SLOGAN = 'Printed on the front';
@@ -45,23 +40,17 @@ test('a front and a back go to the cart as one line and to the printshop as one 
 	theme,
 }) => {
 	test.slow();
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(
+	const permalink = await createLinkedProduct(
 		admin,
+		baseURL,
 		`Two-sided tee ${theme} ${Date.now()}`,
-		'30',
 		{
 			back: true,
 		},
 	);
-	const permalink = await admin
-		.locator('#wp-admin-bar-view a, #view-post-btn a')
-		.first()
-		.getAttribute('href');
-	expect(permalink).toBeTruthy();
 
 	// The customer personalises the front, then the back under its tab.
-	await customer.goto(permalink ?? '');
+	await customer.goto(permalink);
 	const tabs = customer.getByRole('tablist', { name: 'Sides' });
 	const front = tabs.getByRole('tab', { name: 'Front' });
 	const back = tabs.getByRole('tab', { name: 'Back' });

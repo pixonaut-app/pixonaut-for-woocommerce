@@ -2,6 +2,7 @@
 /vendor/
 /assets/build/
 /.wp-env-home/
+/.wp-env-e2e/
 /test-results/
 /playwright-report/
 /blob-report/

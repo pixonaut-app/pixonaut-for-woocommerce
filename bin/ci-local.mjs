@@ -11,10 +11,17 @@
 //   ci-local.mjs --dry-run    print the steps that would run, run nothing
 //
 // Steps marked `wpEnv` need wp-env running (pnpm env:start).
-import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+//
+// With more than one e2e site (bin/e2e-sites.mjs), the e2e step runs on those
+// sites in the background, beside the other steps, which keep the checkout's
+// own wp-env to themselves; its output is printed when the other steps are
+// done. A few specs run on the checkout's tests site after the other steps
+// instead, as before: starting the sites would take longer than they do.
+import { spawn, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, openSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { affectedSpecs, SPECS_DIR } from './ci-local-e2e.mjs';
+import { plannedSites, SITES_DIR } from './e2e-sites.mjs';
 import { root, wpEnvOutput } from './env.mjs';
 
 const BASE = process.env.CI_LOCAL_BASE ?? 'origin/main';
@@ -57,7 +64,14 @@ const GLOBAL =
 	/^(package\.json|pnpm-lock\.yaml|composer\.(json|lock)|\.wp-env\.json|bin\/(env|php|wp-env|wp-env-override|ci-local)\.mjs)$/;
 
 const E2E_STEP = 'e2e (classic, block-primary, astra)';
-const BUILD_STEP = 'Build assets for e2e';
+const BUILD_STEP = 'Build assets and translations';
+
+/** Fewer spec files than this run on the checkout's own tests site: the e2e
+ *  sites take a minute or two to start. */
+const MIN_SPEC_FILES_FOR_SITES = 8;
+
+/** Where the e2e step's output goes while it runs beside the other steps. */
+const E2E_LOG = join(SITES_DIR, 'ci-local-e2e.log');
 
 /** What the e2e step runs on; ci-local-e2e.mjs then picks its specs. */
 const E2E_AFFECTED_BY = [
@@ -67,9 +81,19 @@ const E2E_AFFECTED_BY = [
 	/^tests\/fake-pixonaut\/src\/fixture-ids\.ts$/,
 	/^playwright\.config\.ts$/,
 	/^contracts\/pixonaut\/sdk\.lock\.json$/,
+	/^bin\/(e2e-sites|fake-pixonaut)\.mjs$/,
 ];
 
 const STEPS = [
+	{
+		// The tests sites serve assets/build/. Built first, so the e2e step
+		// never runs on a stale build, and once: the release zips take it as
+		// it is (--prebuilt), since a rebuild would clear it under the e2e
+		// step running beside them.
+		name: BUILD_STEP,
+		command: ['sh', '-c', 'pnpm build && node bin/i18n-build.mjs'],
+		affectedBy: E2E_AFFECTED_BY,
+	},
 	{
 		name: 'Conflict markers',
 		command: ['node', 'bin/check-conflict-markers.mjs'],
@@ -192,6 +216,7 @@ const STEPS = [
 	{
 		name: 'Release zip',
 		command: ['pnpm', 'release:zip'],
+		takesBuild: true,
 		wpEnv: true,
 		affectedBy: RELEASE_ZIP_SOURCES,
 		affectedByShape: RELEASE_ZIP_SHAPE,
@@ -200,6 +225,7 @@ const STEPS = [
 		// Also checks the wordpress.org listing assets against its readme.
 		name: 'Release zip (wordpress.org)',
 		command: ['pnpm', 'release:zip', '--flavor', 'wporg'],
+		takesBuild: true,
 		wpEnv: true,
 		affectedBy: [...RELEASE_ZIP_SOURCES, /^\.wordpress-org\//],
 		affectedByShape: RELEASE_ZIP_SHAPE,
@@ -216,15 +242,10 @@ const STEPS = [
 		],
 	},
 	{
-		// The tests site serves assets/build/. Built here so the e2e step
-		// never runs on a stale build when no release zip built it first.
-		name: BUILD_STEP,
-		command: ['pnpm', 'build'],
-		affectedBy: E2E_AFFECTED_BY,
-	},
-	{
 		name: E2E_STEP,
 		command: ['pnpm', 'test:e2e'],
+		// On the e2e sites, beside the other steps.
+		parallelCommand: ['pnpm', 'test:e2e:parallel'],
 		wpEnv: true,
 		notice: () =>
 			existsSync(join(root, FAKE_DIR))
@@ -296,18 +317,66 @@ async function selectSteps(affected) {
 	if (specs.length === 0) {
 		return steps.filter((step) => step !== e2e && step.name !== BUILD_STEP);
 	}
-	return steps.map((step) =>
-		step === e2e
-			? {
-					...e2e,
-					command: [
-						...e2e.command,
-						...specs.map((spec) => `${SPECS_DIR}/${spec}`),
-					],
-					specs,
-				}
-			: step,
-	);
+	return steps.map((step) => (step === e2e ? { ...e2e, specs } : step));
+}
+
+/**
+ * The commands the chosen steps run: the e2e step's on the e2e sites in the
+ * background, right after the build, when there are several and enough
+ * specs to share, and limited to its specs when only some were chosen; the
+ * release zips on the build the build step made, when it runs.
+ */
+function arrange(steps, sites = plannedSites().length) {
+	const built = steps.some(({ name }) => name === BUILD_STEP);
+	const arranged = steps.map((step) => {
+		if (step.takesBuild && built) {
+			return { ...step, command: [...step.command, '--prebuilt'] };
+		}
+		if (step.name !== E2E_STEP) {
+			return step;
+		}
+		const background =
+			sites > 1 &&
+			(step.specs === undefined ||
+				step.specs.length >= MIN_SPEC_FILES_FOR_SITES);
+		return {
+			...step,
+			background,
+			command: [
+				...(background ? step.parallelCommand : step.command),
+				...(step.specs ?? []).map((spec) => `${SPECS_DIR}/${spec}`),
+			],
+		};
+	});
+	// Started in the background as soon as the build is done, so it runs
+	// beside every other step rather than after them.
+	const e2e = arranged.find(({ background }) => background);
+	if (e2e === undefined) {
+		return arranged;
+	}
+	const rest = arranged.filter((step) => step !== e2e);
+	const build = rest.findIndex(({ name }) => name === BUILD_STEP);
+	return [...rest.slice(0, build + 1), e2e, ...rest.slice(build + 1)];
+}
+
+/**
+ * Runs `command` and resolves with whether it passed and how long it took.
+ * Without `log` it writes to this terminal.
+ */
+function run(command, log) {
+	const started = Date.now();
+	const [bin, ...args] = command;
+	const stdio = log === undefined ? 'inherit' : ['ignore', log, log];
+	return new Promise((resolve) => {
+		const child = spawn(bin, args, { cwd: root, stdio });
+		const done = (passed) =>
+			resolve({
+				passed,
+				seconds: Math.round((Date.now() - started) / MS_PER_SECOND),
+			});
+		child.on('error', () => done(false));
+		child.on('close', (code) => done(code === 0));
+	});
 }
 
 function wpEnvRunning() {
@@ -315,11 +384,15 @@ function wpEnvRunning() {
 }
 
 const affected = process.argv.includes('--affected');
-const steps = await selectSteps(affected);
+const steps = arrange(await selectSteps(affected));
 
 if (process.argv.includes('--dry-run')) {
-	for (const { name, specs = [] } of steps) {
-		console.log(name);
+	for (const { name, specs = [], background } of steps) {
+		console.log(
+			background
+				? `${name} (on ${plannedSites().length} e2e sites, beside the other steps)`
+				: name,
+		);
 		for (const spec of specs) {
 			console.log(`  ${spec}`);
 		}
@@ -344,28 +417,44 @@ const startTree =
 		? git('rev-parse', 'HEAD^{tree}')[0]
 		: undefined;
 
-const results = [];
-for (const { name, command, notice } of steps) {
+const gateStarted = Date.now();
+/** @type {Map<string, { passed: boolean, seconds: number }>} */
+const results = new Map();
+let background;
+for (const { name, command, notice, background: inBackground } of steps) {
 	console.log(`\n=== ${name}: ${command.join(' ')}`);
 	const message = notice?.();
 	if (message !== undefined) {
 		console.log(message);
 	}
-	const started = Date.now();
-	const [bin, ...args] = command;
-	const { status } = spawnSync(bin, args, { cwd: root, stdio: 'inherit' });
-	results.push({
-		name,
-		passed: status === 0,
-		seconds: Math.round((Date.now() - started) / MS_PER_SECOND),
-	});
+	if (results.get(BUILD_STEP)?.passed === false && name === E2E_STEP) {
+		console.log('Not run: the build failed.');
+		results.set(name, { passed: false, seconds: 0 });
+	} else if (inBackground) {
+		mkdirSync(SITES_DIR, { recursive: true });
+		console.log(
+			`Runs beside the next steps; its output follows them (${E2E_LOG}).`,
+		);
+		background = { name, done: run(command, openSync(E2E_LOG, 'w')) };
+	} else {
+		results.set(name, await run(command));
+	}
+}
+if (background !== undefined) {
+	const result = await background.done;
+	console.log(`\n=== ${background.name}: output`);
+	console.log(readFileSync(E2E_LOG, 'utf8'));
+	results.set(background.name, result);
 }
 
 console.log(`\n=== ci:local${affected ? ' --affected' : ''}`);
-for (const { name, passed, seconds } of results) {
+for (const [name, { passed, seconds }] of results) {
 	console.log(`${passed ? 'pass' : 'FAIL'}  ${name} (${seconds}s)`);
 }
-if (results.some(({ passed }) => !passed)) {
+console.log(
+	`Wall time: ${Math.round((Date.now() - gateStarted) / MS_PER_SECOND)}s`,
+);
+if ([...results.values()].some(({ passed }) => !passed)) {
 	process.exit(1);
 }
 if (affected) {

@@ -53,7 +53,11 @@ function configuredPort() {
 	return Number(new URL(config.PIXONAUT_WC_API_BASE).port);
 }
 
-/** The constants that point the plugin at the fake, for wp-env's `config`. */
+/**
+ * The constants that point the plugin at the fake, for wp-env's `config`.
+ *
+ * @param {number} port
+ */
 export function fakeConstants(port) {
 	const browser = `http://localhost:${port}`;
 	return {
@@ -63,7 +67,11 @@ export function fakeConstants(port) {
 	};
 }
 
-/** The network wp-env's compose project runs on, and the fake joins. */
+/**
+ * The network wp-env's compose project runs on, and the fake joins.
+ *
+ * @param {string} project
+ */
 function networkOf(project) {
 	return `${project}_default`;
 }
@@ -84,6 +92,10 @@ export function composeProject() {
 	return projects[0];
 }
 
+/**
+ * @param {string[]} args
+ * @param {{ capture?: boolean, quiet?: boolean, allowFailure?: boolean }} [options]
+ */
 function docker(args, options = {}) {
 	const result = spawnSync(dockerBin, args, {
 		cwd: root,
@@ -111,7 +123,7 @@ function docker(args, options = {}) {
  * does not hold the loop itself, and an interval holds it for the whole wait.
  */
 export async function waitUntilReady(
-	port,
+	/** @type {number} */ port,
 	{
 		timeoutMs = READY_TIMEOUT_MS,
 		pollMs = READY_POLL_MS,
@@ -141,10 +153,21 @@ export async function waitUntilReady(
 	}
 }
 
-export async function startFake(port = configuredPort()) {
-	const project = composeProject();
-	const container = `${project}-${FAKE_HOST}`;
-	const image = `${project}-${FAKE_HOST}`;
+/**
+ * The image the fake runs as, for a wp-env project.
+ *
+ * @param {string} project
+ */
+export function fakeImage(project) {
+	return `${project}-${FAKE_HOST}`;
+}
+
+/**
+ * Bundles the fake and builds its image as `image`.
+ *
+ * @param {string} image
+ */
+export function buildFake(image) {
 	const build = spawnSync(
 		process.execPath,
 		[join(root, 'tests', 'fake-pixonaut', 'scripts', 'build.mjs')],
@@ -156,7 +179,19 @@ export async function startFake(port = configuredPort()) {
 	docker(['build', '--quiet', '-t', image, 'tests/fake-pixonaut/dist'], {
 		quiet: true,
 	});
-	removeFakes(container);
+}
+
+/**
+ * Runs the fake built as `image` on `project`'s network, in place of any
+ * earlier one there, and resolves once it answers on `port`. `label` marks
+ * it as this checkout's (or one of its e2e sites'), for `stopFake`.
+ *
+ * @param {number} port
+ * @param {{ project: string, image: string, label?: string }} options
+ */
+export async function runFake(port, { project, image, label = root }) {
+	const container = `${project}-${FAKE_HOST}`;
+	removeFakes(container, label);
 	docker(
 		[
 			'run',
@@ -164,7 +199,7 @@ export async function startFake(port = configuredPort()) {
 			'--name',
 			container,
 			'--label',
-			`${CHECKOUT_LABEL}=${root}`,
+			`${CHECKOUT_LABEL}=${label}`,
 			'--network',
 			networkOf(project),
 			'--network-alias',
@@ -183,12 +218,35 @@ export async function startFake(port = configuredPort()) {
 	console.log(`Fake Pixonaut started at http://localhost:${port}`);
 }
 
+export async function startFake(port = configuredPort()) {
+	const project = composeProject();
+	const image = fakeImage(project);
+	buildFake(image);
+	await runFake(port, { project, image });
+}
+
 /** Matches Docker's message for a network that does not exist. */
 const NO_SUCH_NETWORK = /no such network|not found/i;
 
-/** Lines of a captured Docker command's stdout. */
+/**
+ * A Docker command's result, its output captured, whatever its status.
+ *
+ * @param {string[]} args
+ * @returns {import('node:child_process').SpawnSyncReturns<string>}
+ */
+function captured(args) {
+	return /** @type {import('node:child_process').SpawnSyncReturns<string>} */ (
+		docker(args, { capture: true, allowFailure: true })
+	);
+}
+
+/**
+ * Lines of a captured Docker command's stdout.
+ *
+ * @param {string[]} args
+ */
 function lines(args) {
-	return docker(args, { capture: true, allowFailure: true })
+	return captured(args)
 		.stdout.split('\n')
 		.map((line) => line.trim())
 		.filter(Boolean);
@@ -196,17 +254,20 @@ function lines(args) {
 
 /**
  * Removes this checkout's fake containers: the one named `named`, if any,
- * and every one carrying this checkout's label. Returns the wp-env networks
- * the labelled ones were attached to, which may belong to a project that is
- * gone and so would otherwise never be removed.
+ * and every one carrying `label`. Returns the wp-env networks the labelled
+ * ones were attached to, which may belong to a project that is gone and so
+ * would otherwise never be removed.
+ *
+ * @param {string | null} named
+ * @param {string} [label]
  */
-function removeFakes(named) {
+function removeFakes(named, label = root) {
 	const labelled = lines([
 		'ps',
 		'--all',
 		'--quiet',
 		'--filter',
-		`label=${CHECKOUT_LABEL}=${root}`,
+		`label=${CHECKOUT_LABEL}=${label}`,
 	]);
 	const networks =
 		labelled.length > 0
@@ -236,10 +297,18 @@ function projectOrNull() {
 	}
 }
 
-/** Removes this checkout's fakes; returns the networks to remove once wp-env
- *  has stopped, the project's own included. */
-export function stopFake(project = projectOrNull()) {
-	const networks = removeFakes(project ? `${project}-${FAKE_HOST}` : null);
+/**
+ * Removes this checkout's fakes, or those labelled `label`; returns the
+ * networks to remove once wp-env has stopped, the project's own included.
+ *
+ * @param {string | null} [project]
+ * @param {string} [label]
+ */
+export function stopFake(project = projectOrNull(), label = root) {
+	const networks = removeFakes(
+		project ? `${project}-${FAKE_HOST}` : null,
+		label,
+	);
 	return [...new Set([...(project ? [networkOf(project)] : []), ...networks])];
 }
 
@@ -247,13 +316,11 @@ export function stopFake(project = projectOrNull()) {
  * Removes a network that `docker compose down` left behind. A network
  * already gone is fine; any other failure is reported on stderr.
  *
+ * @param {string} network
  * @returns {boolean} Whether the network is gone.
  */
 export function removeNetwork(network) {
-	const result = docker(['network', 'rm', network], {
-		capture: true,
-		allowFailure: true,
-	});
+	const result = captured(['network', 'rm', network]);
 	if (result.status === 0 || NO_SUCH_NETWORK.test(result.stderr)) {
 		return true;
 	}

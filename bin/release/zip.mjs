@@ -5,7 +5,9 @@
 //   dist/pixonaut-for-woocommerce-<version>.zip.sha256
 //
 // `--flavor wporg` builds the wordpress.org flavor instead (flavor.mjs), as
-// dist/pixonaut-for-woocommerce-<version>-wporg.zip.
+// dist/pixonaut-for-woocommerce-<version>-wporg.zip. `--prebuilt` takes the
+// assets and translations as they are, built by the caller: a rebuild clears
+// assets/build/, which a tests site running meanwhile is serving.
 //
 // The zip holds the built assets, Composer's production autoloader (with
 // the update checker prefixed by Strauss) and a generated readme.txt.
@@ -17,6 +19,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
 	cpSync,
+	existsSync,
 	mkdirSync,
 	readdirSync,
 	readFileSync,
@@ -113,11 +116,17 @@ const flavor = flavorFromArgs(process.argv.slice(2));
 const zipFile = zipName(version, flavor);
 const zipPath = join(DIST, zipFile);
 
-step('Build assets');
-mustRun('pnpm', ['build']);
+if (process.argv.includes('--prebuilt')) {
+	if (!existsSync(join(root, 'assets', 'build'))) {
+		fail('--prebuilt, but assets/build/ is missing: run pnpm build.');
+	}
+} else {
+	step('Build assets');
+	mustRun('pnpm', ['build']);
 
-step('Compile translations');
-mustRun('node', ['bin/i18n-build.mjs']);
+	step('Compile translations');
+	mustRun('node', ['bin/i18n-build.mjs']);
+}
 
 step(`Stage ${relative(root, STAGE)}`);
 // Only this flavor's files: the other flavor's zip stays, so a release can attach both.

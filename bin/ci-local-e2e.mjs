@@ -35,7 +35,7 @@ export function isMappedSource(file) {
 
 /** The harness every spec runs on: a change here runs them all. */
 const HARNESS =
-	/^(playwright\.config\.ts$|tests\/e2e\/mu-plugins\/|contracts\/pixonaut\/sdk\.lock\.json$)/;
+	/^(playwright\.config\.ts$|tests\/e2e\/mu-plugins\/|contracts\/pixonaut\/sdk\.lock\.json$|bin\/(e2e-sites|fake-pixonaut)\.mjs$)/;
 
 /** A relative import or re-export in a test file. */
 const RELATIVE_IMPORT = /\bfrom\s+'(\.{1,2}\/[^']+)'/g;

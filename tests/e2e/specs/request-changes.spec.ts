@@ -1,5 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
-import { expect, restUrl, test, usePlainPermalinks } from '../fixtures';
+import { expect, restUrl, TESTS_SITE_ON_NETWORK, test } from '../fixtures';
 import {
 	type Line,
 	openCheckouts,
@@ -8,11 +8,7 @@ import {
 	runJobs,
 	statuses,
 } from '../orders';
-import { publishLinkedProduct } from '../products';
-
-/** The tests site as the fake reaches it: by its service name on wp-env's
- *  Docker network. */
-const TESTS_SITE_ON_NETWORK = 'http://tests-wordpress';
+import { createLinkedProduct } from '../products';
 
 /** The plugin's webhook receiver. */
 const WEBHOOK_ROUTE = '/pixonaut/v1/webhook';
@@ -24,9 +20,6 @@ const CORRECTED = 'First draft';
 
 /** What the customer asks on the proof page. */
 const REQUEST = 'Please fix the typo in the slogan.';
-
-/** The proof-by-email approval mode's name in the product panel. */
-const PROOF_EMAIL_MODE = 'Proof by email after payment';
 
 /** A proof page's path on the fake, which stands in for Pixonaut's. */
 const PROOF_PAGE = /\/h\/proof\/[A-Za-z0-9_-]+/;
@@ -67,21 +60,15 @@ test('a customer asks for changes on the proof, edits the design on the store an
 	});
 	expect(endpoint.ok()).toBe(true);
 
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(
+	const permalink = await createLinkedProduct(
 		admin,
+		baseURL,
 		`Changes tee ${theme} ${Date.now()}`,
-		'25',
-		{ approval: PROOF_EMAIL_MODE },
+		{ approval: 'proof_email' },
 	);
-	const permalink = await admin
-		.locator('#wp-admin-bar-view a, #view-post-btn a')
-		.first()
-		.getAttribute('href');
-	expect(permalink).toBeTruthy();
 
 	// The customer personalises the product, adds it to the cart and pays.
-	await customer.goto(permalink ?? '');
+	await customer.goto(permalink);
 	await expect(customer.locator('.pixonaut-preview *').first()).toBeVisible();
 	await customer.getByRole('textbox', { name: /Slogan/ }).fill(SLOGAN);
 	await customer

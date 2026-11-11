@@ -7,7 +7,7 @@
 // also remove the fake's containers and then wp-env's networks, which the
 // fake would otherwise keep alive.
 import { writeFileSync } from 'node:fs';
-import { dockerBin, spawn, wpEnvBin } from './env.mjs';
+import { makeUploadsWritable, spawn, wpEnvBin } from './env.mjs';
 import {
 	composeProject,
 	fakeConstants,
@@ -22,27 +22,6 @@ import { overrideConfig } from './wp-env-override.mjs';
 /** The WordPress containers, whose media library takes the products'
  *  pictures. */
 const WORDPRESS_SERVICES = ['wordpress', 'tests-wordpress'];
-
-/** World-writable: Apache runs as the host's user, and `wp-content` is
- *  root's, inside a container that is thrown away. */
-const UPLOADS_MODE = '0777';
-
-/** Makes each site's `wp-content/uploads`, which WordPress cannot create in
- *  a `wp-content` it does not own. */
-function makeUploadsWritable() {
-	const project = composeProject();
-	return WORDPRESS_SERVICES.map((service) =>
-		spawn(dockerBin, [
-			'exec',
-			'--user',
-			'root',
-			`${project}-${service}-1`,
-			'sh',
-			'-c',
-			`mkdir -p wp-content/uploads && chmod ${UPLOADS_MODE} wp-content/uploads`,
-		]),
-	).every((exit) => exit === 0);
-}
 
 const args = process.argv.slice(2);
 const [command] = args;
@@ -65,7 +44,7 @@ if (status === 0 && removed.includes(false)) {
 	status = 1;
 }
 if (status === 0 && command === 'start') {
-	if (!makeUploadsWritable()) {
+	if (!makeUploadsWritable(composeProject(), WORDPRESS_SERVICES)) {
 		status = 1;
 	}
 	await startFake(fakePort());

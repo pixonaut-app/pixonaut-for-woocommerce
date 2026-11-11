@@ -3,24 +3,17 @@ import {
 	expect,
 	type FakePixonaut,
 	restUrl,
+	TESTS_SITE_ON_NETWORK,
 	test,
-	usePlainPermalinks,
 } from '../fixtures';
 import { type Line, openCheckouts, pay, readOrder, runJobs } from '../orders';
-import { publishLinkedProduct } from '../products';
-
-/** The tests site as the fake reaches it: by its service name on wp-env's
- *  Docker network. */
-const TESTS_SITE_ON_NETWORK = 'http://tests-wordpress';
+import { createLinkedProduct } from '../products';
 
 /** The plugin's webhook receiver. */
 const WEBHOOK_ROUTE = '/pixonaut/v1/webhook';
 
 /** What the customer writes on the fixture tee's text layer. */
 const SLOGAN = 'Approved by email';
-
-/** The proof-by-email approval mode's name in the product panel. */
-const PROOF_EMAIL_MODE = 'Proof by email after payment';
 
 /** A proof page's path on the fake, which stands in for Pixonaut's. */
 const PROOF_PAGE = /\/h\/proof\/[A-Za-z0-9_-]+/;
@@ -68,18 +61,17 @@ test('a customer approves the emailed proof after payment and only then is the o
 	expect(endpoint.ok()).toBe(true);
 
 	// The merchant links a product approved by proof email.
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(admin, `Proof tee ${theme} ${Date.now()}`, '25', {
-		approval: PROOF_EMAIL_MODE,
-	});
-	const permalink = await admin
-		.locator('#wp-admin-bar-view a, #view-post-btn a')
-		.first()
-		.getAttribute('href');
-	expect(permalink).toBeTruthy();
+	const permalink = await createLinkedProduct(
+		admin,
+		baseURL,
+		`Proof tee ${theme} ${Date.now()}`,
+		{
+			approval: 'proof_email',
+		},
+	);
 
 	// The customer personalises it, adds it to the cart and pays.
-	await customer.goto(permalink ?? '');
+	await customer.goto(permalink);
 	await expect(customer.locator('.pixonaut-preview *').first()).toBeVisible();
 	await customer.getByRole('textbox', { name: /Slogan/ }).fill(SLOGAN);
 	await customer

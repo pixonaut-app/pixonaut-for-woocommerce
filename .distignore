@@ -7,6 +7,7 @@
 .github
 .gitignore
 .release-please-manifest.json
+.wp-env-e2e
 .wp-env-home
 .wp-env.json
 .wp-env.override.json
