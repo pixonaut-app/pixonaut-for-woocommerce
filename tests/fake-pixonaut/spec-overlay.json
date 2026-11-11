@@ -5038,68 +5038,6 @@
 			}
 		},
 		{
-			"pointer": "/webhooks/template.renamed",
-			"awaits": "pixonaut-app/pixonaut#3429",
-			"value": {
-				"post": {
-					"description": "A published template's id was changed. `<oldId>@<version>` goes on reading the template under its new id, so a stored reference keeps working whether or not this arrives; new references use `newId`, and a store that receives it moves the ones it holds.",
-					"parameters": [
-						{
-							"description": "When this attempt was sent, in Unix seconds.",
-							"in": "header",
-							"name": "x-pixonaut-timestamp",
-							"required": true,
-							"schema": {
-								"description": "When this attempt was sent, in Unix seconds.",
-								"type": "string"
-							}
-						},
-						{
-							"description": "`v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body.",
-							"in": "header",
-							"name": "x-pixonaut-signature",
-							"required": true,
-							"schema": {
-								"description": "`v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body.",
-								"type": "string"
-							}
-						}
-					],
-					"requestBody": {
-						"content": {
-							"application/json": {
-								"examples": {
-									"example": {
-										"summary": "Example",
-										"value": {
-											"createdAt": 1790002180000,
-											"id": "1790002180000-0b6f1d2e-5a4c-4f0e-9d3b-7c21e8a4f915",
-											"payload": {
-												"newId": "tshirt-pandas",
-												"oldId": "tshirt-basic-copy-2",
-												"renamedAt": 1790002180000
-											},
-											"type": "template.renamed"
-										}
-									}
-								},
-								"schema": {
-									"$ref": "#/components/schemas/TemplateRenamedEvent"
-								}
-							}
-						}
-					},
-					"responses": {
-						"200": {
-							"description": "Any 2xx acknowledges the delivery."
-						}
-					},
-					"summary": "template.renamed",
-					"tags": ["Webhooks"]
-				}
-			}
-		},
-		{
 			"pointer": "/paths/~1v1~1templates~1{id}~1print-size/post/responses/200/content/application~1json/schema/anyOf/0/properties/lowResolution",
 			"awaits": "pixonaut-app/pixonaut#3432",
 			"value": {
@@ -5213,6 +5151,68 @@
 					"type": "object"
 				},
 				"type": "array"
+			}
+		},
+		{
+			"pointer": "/webhooks/template.renamed",
+			"awaits": "pixonaut-app/pixonaut#3429",
+			"value": {
+				"post": {
+					"description": "A published template's id was changed. `<oldId>@<version>` goes on reading the template under its new id, so a stored reference keeps working whether or not this arrives; new references use `newId`, and a store that receives it moves the ones it holds.",
+					"parameters": [
+						{
+							"description": "When this attempt was sent, in Unix seconds.",
+							"in": "header",
+							"name": "x-pixonaut-timestamp",
+							"required": true,
+							"schema": {
+								"description": "When this attempt was sent, in Unix seconds.",
+								"type": "string"
+							}
+						},
+						{
+							"description": "`v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body.",
+							"in": "header",
+							"name": "x-pixonaut-signature",
+							"required": true,
+							"schema": {
+								"description": "`v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body.",
+								"type": "string"
+							}
+						}
+					],
+					"requestBody": {
+						"content": {
+							"application/json": {
+								"examples": {
+									"example": {
+										"summary": "Example",
+										"value": {
+											"createdAt": 1790002180000,
+											"id": "1790002180000-0b6f1d2e-5a4c-4f0e-9d3b-7c21e8a4f915",
+											"payload": {
+												"newId": "tshirt-pandas",
+												"oldId": "tshirt-basic-copy-2",
+												"renamedAt": 1790002180000
+											},
+											"type": "template.renamed"
+										}
+									}
+								},
+								"schema": {
+									"$ref": "#/components/schemas/TemplateRenamedEvent"
+								}
+							}
+						}
+					},
+					"responses": {
+						"200": {
+							"description": "Any 2xx acknowledges the delivery."
+						}
+					},
+					"summary": "template.renamed",
+					"tags": ["Webhooks"]
+				}
 			}
 		}
 	]
