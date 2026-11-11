@@ -8,9 +8,11 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
 use Pixonaut\WooCommerce\Admin\InvalidProductNotice;
+use Pixonaut\WooCommerce\Admin\LowResolutionWarnings;
 use Pixonaut\WooCommerce\Admin\VariantNotice;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
+use Pixonaut\WooCommerce\Catalogue\LowResolutionSize;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductIndex;
@@ -70,6 +72,16 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 	 * The `_pixonaut_variant` version stored before views were named by id.
 	 */
 	private const VARIANT_VERSION_BEFORE_VIEW_IDS = 1;
+
+	/**
+	 * What Pixonaut answers of an image printing below its recommended resolution at the product's size.
+	 */
+	private const SOFT = array(
+		'layerId'        => 'photo',
+		'assetId'        => 'ast_photo',
+		'effectiveDpi'   => 121.9,
+		'recommendedDpi' => 300,
+	);
 
 	private int $sequence = 0;
 
@@ -357,6 +369,27 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 		$this->assertTrue( $stored->valid );
 		$this->assertEquals( self::config()->sides[0]->print_sizes, $stored->sides[0]->print_sizes );
 		$this->assertNull( $stored->sides[0]->pending_sizes );
+	}
+
+	public function test_an_accepted_soft_image_the_recheck_no_longer_finds_warns_again_when_it_comes_back(): void {
+		$this->script_soft_recheck( array( self::SOFT ) );
+		$this->deliver_blank_updated();
+		$soft = $this->stored( $this->product_id )->sides[0];
+		$this->assertCount( 1, $soft->low_resolution );
+		$key = LowResolutionSize::key( $soft->key, $soft->low_resolution[0]->size, $soft->low_resolution[0]->images[0] );
+		update_post_meta( $this->product_id, LowResolutionWarnings::META_KEY, array( $key ) );
+
+		$this->script_soft_recheck( array() );
+		$this->deliver_blank_updated();
+
+		$this->assertSame( array(), $this->stored( $this->product_id )->sides[0]->low_resolution );
+		$this->assertSame( array(), LowResolutionWarnings::accepted_on( $this->reload( $this->product_id ) ), 'the accept goes with the warning' );
+
+		$this->script_soft_recheck( array( self::SOFT ) );
+		$this->deliver_blank_updated();
+
+		$this->assertCount( 1, $this->stored( $this->product_id )->sides[0]->low_resolution );
+		$this->assertNotContains( $key, LowResolutionWarnings::accepted_on( $this->reload( $this->product_id ) ), 'warned of again' );
 	}
 
 	public function test_pixonaut_not_answering_leaves_the_product_sellable_and_tries_again_later(): void {
@@ -817,6 +850,28 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 		$this->live_list( $live );
 		$this->recorder->json( 200, BlankFixture::answer() );
 		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+	}
+
+	/**
+	 * Scripts a re-check of one product at the live version, its size
+	 * sold with the soft images given.
+	 *
+	 * @param list<array<string, mixed>> $soft What Pixonaut answers in `lowResolution`.
+	 */
+	private function script_soft_recheck( array $soft ): void {
+		$this->live_list( array( DesignFixture::TEMPLATE_BASE_ID => DesignFixture::LIVE_VERSION ) );
+		$this->recorder->json( 200, BlankFixture::answer() );
+		$this->recorder->json(
+			200,
+			array(
+				'verdicts' => array(
+					array(
+						'legal'         => true,
+						'lowResolution' => $soft,
+					),
+				),
+			)
+		);
 	}
 
 	/**

@@ -153,6 +153,29 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$this->assertSame( '', $this->warnings( $small, 0 ), 'the same size is not judged again, and its warning stays accepted' );
 	}
 
+	public function test_a_rejudge_no_longer_finding_an_accepted_image_drops_the_accept(): void {
+		list( $parent, $small ) = $this->linked( 'within' );
+		$soft                   = array(
+			'layerId'        => 'photo',
+			'assetId'        => 'ast_photo',
+			'effectiveDpi'   => 150,
+			'recommendedDpi' => 300,
+		);
+		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL + array( 'lowResolution' => array( $soft ) ) ) ) );
+		$this->save_variation( $small, 0, self::custom( '210', '270', 'A4-ish' ) );
+		$key = LowResolutionSize::key( self::SIDE_KEY, new PrintSize( 210, 270, 'A4-ish' ), LowResolutionImage::from_answer( $soft ) );
+		$this->save_variation( $small, 0, self::custom( '210', '270', 'A4-ish' ), array( $key => LowResolutionWarnings::ACCEPT ) );
+		$this->assertSame( array( $key ), LowResolutionWarnings::accepted_on( $this->reload_any( $small->get_id() ) ) );
+		$config = ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) );
+		$config->with_sides( array( $config->sides[0]->rolled_to( 3 ) ) )->save_to( $this->reload_any( $parent->get_id() ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+
+		( new VariationSizes( $this->catalogue ) )->rejudge( $this->reload_any( $parent->get_id() ) );
+
+		$this->assertSame( array(), VariationSize::stored_on( $this->reload_any( $small->get_id() ) )->low_resolution( self::SIDE_KEY ) );
+		$this->assertSame( array(), LowResolutionWarnings::accepted_on( $this->reload_any( $small->get_id() ) ), 'the accept goes with the warning' );
+	}
+
 	public function test_a_refused_size_stays_in_the_field_with_why_and_the_variation_is_not_sold(): void {
 		list( , $small ) = $this->linked( 'within' );
 		$requests        = count( $this->recorder->requests );

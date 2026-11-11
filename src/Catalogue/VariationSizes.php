@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Pixonaut\WooCommerce\Admin\LowResolutionWarnings;
 use Pixonaut\WooCommerce\Api\Answers\LowResolutionImage;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
@@ -96,11 +97,11 @@ final class VariationSizes {
 			if ( $judged->to_array() === $stored->to_array() ) {
 				continue;
 			}
-			if ( null === $document ) {
-				// None was stored to write over: a size saved meanwhile is judged by its own save.
-				$judged->add_to( $fresh );
-			} else {
-				$judged->replace_on( $fresh, $document );
+			// With none stored to write over, a size saved meanwhile is judged by its own save.
+			$written = null === $document ? $judged->add_to( $fresh ) : $judged->replace_on( $fresh, $document );
+			if ( $written ) {
+				// Read again as stored: an accept is kept only for what the new verdicts warn of.
+				LowResolutionWarnings::prune( self::fresh( $fresh ) );
 			}
 		}
 		$this->failure = $failed;

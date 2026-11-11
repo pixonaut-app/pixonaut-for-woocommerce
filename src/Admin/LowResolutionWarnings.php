@@ -127,12 +127,11 @@ final class LowResolutionWarnings {
 	 * Accepts are kept only for images still warned of now, so one whose
 	 * side, size or picture changed warns again.
 	 *
-	 * @param WC_Product $product The product or variation.
+	 * @param WC_Product $product The product or variation, as stored now.
 	 * @param mixed      $posted  The rows' choices, by key, unslashed.
-	 * @param string[]   $current The keys warned of now (`keys()`).
-	 * @phpstan-param list<string> $current
 	 */
-	public function save( WC_Product $product, mixed $posted, array $current ): void {
+	public function save( WC_Product $product, mixed $posted ): void {
+		$current  = self::current_keys( $product );
 		$accepted = array_values( array_intersect( self::accepted_on( $product ), $current ) );
 		$quiet    = $this->settings->quiet_images();
 		foreach ( is_array( $posted ) ? $posted : array() as $key => $choice ) {
@@ -152,17 +151,42 @@ final class LowResolutionWarnings {
 					break;
 			}
 		}
-		$accepted = array_values( array_unique( $accepted ) );
-		if ( array() === $accepted ) {
-			$product->delete_meta_data( self::META_KEY );
-		} else {
-			$product->update_meta_data( self::META_KEY, $accepted );
-		}
-		$product->save_meta_data();
+		self::store_accepted( $product, array_values( array_unique( $accepted ) ) );
 		$quiet = array_values( array_unique( $quiet ) );
 		if ( $quiet !== $this->settings->quiet_images() ) {
 			$this->settings->set( Settings::LOW_RESOLUTION_QUIET_IMAGES, $quiet );
 		}
+	}
+
+	/**
+	 * Drops the accepts of images a product or variation no longer warns
+	 * of, once a check stored new verdicts on it, so an image that warns
+	 * again later is shown again.
+	 *
+	 * @param WC_Product $product The product or variation, as stored now.
+	 */
+	public static function prune( WC_Product $product ): void {
+		$accepted = self::accepted_on( $product );
+		$kept     = array_values( array_intersect( $accepted, self::current_keys( $product ) ) );
+		if ( $kept !== $accepted ) {
+			self::store_accepted( $product, $kept );
+		}
+	}
+
+	/**
+	 * The keys a product or variation warns of as stored: an accept can be
+	 * kept for these only.
+	 *
+	 * @param WC_Product $product The product or variation.
+	 * @return list<string>
+	 */
+	public static function current_keys( WC_Product $product ): array {
+		$config = ProductConfig::stored_on( $product );
+		if ( ! $product->is_type( 'variation' ) ) {
+			return self::keys( $config );
+		}
+		// A variation that follows its product shows the product's sides, whose warnings are the product's.
+		return self::keys( $config->override ? $config : $config->with_sides( array() ), VariationSize::stored_on( $product ) );
 	}
 
 	/**
@@ -247,6 +271,22 @@ final class LowResolutionWarnings {
 			}
 		}
 		return array_values( $by_asset );
+	}
+
+	/**
+	 * Stores the keys accepted on a product or variation; none removes the meta.
+	 *
+	 * @param WC_Product $product  The product or variation.
+	 * @param string[]   $accepted The keys accepted.
+	 * @phpstan-param list<string> $accepted
+	 */
+	private static function store_accepted( WC_Product $product, array $accepted ): void {
+		if ( array() === $accepted ) {
+			$product->delete_meta_data( self::META_KEY );
+		} else {
+			$product->update_meta_data( self::META_KEY, $accepted );
+		}
+		$product->save_meta_data();
 	}
 
 	/**

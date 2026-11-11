@@ -20,7 +20,6 @@ use Pixonaut\WooCommerce\Catalogue\ProductLinker;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\ValueSizes;
 use Pixonaut\WooCommerce\Catalogue\VariationAttributes;
-use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\FormLayout;
 use Pixonaut\WooCommerce\GroupNumbers;
@@ -183,15 +182,11 @@ final class ProductPanel {
 	 * Saves what was chosen on a product's or variation's warnings about
 	 * images printed too soft, for what it warns of as stored now.
 	 *
-	 * @param WC_Product         $product The product or variation.
-	 * @param mixed              $posted  The choices as posted, unslashed.
-	 * @param VariationSize|null $sizes   A variation's own sizes, as stored; null for a product.
+	 * @param WC_Product $product The product or variation, as stored now.
+	 * @param mixed      $posted  The choices as posted, unslashed.
 	 */
-	public function save_low_resolution( WC_Product $product, mixed $posted, ?VariationSize $sizes = null ): void {
-		$config = ProductConfig::stored_on( $product );
-		// A variation that follows its product shows the product's sides, whose warnings are the product's.
-		$own = ! $product->is_type( 'variation' ) || $config->override;
-		$this->low_resolution->save( $product, $posted, LowResolutionWarnings::keys( $own ? $config : $config->with_sides( array() ), $sizes ) );
+	public function save_low_resolution( WC_Product $product, mixed $posted ): void {
+		$this->low_resolution->save( $product, $posted );
 	}
 
 	public function register(): void {

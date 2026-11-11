@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Catalogue;
 
 use LogicException;
 use Pixonaut\WooCommerce\Admin\InvalidProductNotice;
+use Pixonaut\WooCommerce\Admin\LowResolutionWarnings;
 use Pixonaut\WooCommerce\Admin\TrashedProducts;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Schema;
@@ -317,6 +318,9 @@ final class ProductRecheck {
 				// A newer plugin version's configuration is not this one's to change.
 				return true;
 			}
+			// Read again as stored: an accept is kept only for what the new configuration warns of.
+			$fresh = wc_get_product( $product_id );
+			LowResolutionWarnings::prune( $fresh instanceof WC_Product ? $fresh : $product );
 		}
 		$this->notice->note( $product, $checked );
 		return $this->refresh_variants( $product );
