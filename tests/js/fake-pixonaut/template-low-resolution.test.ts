@@ -15,6 +15,9 @@ const HUGE = { widthMm: 1000, heightMm: (1000 * 360) / 280 };
 /** A picture 4800 px wide: about 122 dpi across 1000 mm, 435 across 280. */
 const PHOTO = { layerId: 'photo', assetId: 'ast_photo', widthPx: 4800 };
 
+/** Above the photo's 435 dpi at the tee's fitted size, so it prints too soft there. */
+const SHARP_AT_FITTED_DPI = 600;
+
 /** Digits of the dpi a test compares. */
 const DPI_DIGITS = 2;
 
@@ -66,6 +69,37 @@ describe('POST /__fake/templates/:id/low-resolution', () => {
 		expect(verdict.legal).toBe(false);
 		expect(verdict.reason).toBe('low_resolution');
 		expect(verdict.lowResolution).toHaveLength(1);
+	});
+
+	it('names the image on the template fitted to a placement too', async () => {
+		await setLowResolution({
+			images: [PHOTO],
+			recommendedDpi: SHARP_AT_FITTED_DPI,
+		});
+
+		const response = await send(
+			fake,
+			`/v1/blanks/${FIXTURE.blank.tee}/placements/${FIXTURE.placement.front}/fitting-templates`,
+			asStore,
+		);
+
+		expect(response.status).toBe(200);
+		const { items } = await response.json();
+		const live = items.find(
+			(item: { templateId: string }) =>
+				item.templateId === FIXTURE.template.live,
+		);
+		expect(live.lowResolution).toEqual([
+			expect.objectContaining({ layerId: 'photo', assetId: 'ast_photo' }),
+		]);
+		expect(
+			items
+				.filter((item: { templateId: string }) => item !== live)
+				.every(
+					(item: { lowResolution: unknown[] }) =>
+						item.lowResolution.length === 0,
+				),
+		).toBe(true);
 	});
 
 	it('forgets it with no images, and at the next reset', async () => {

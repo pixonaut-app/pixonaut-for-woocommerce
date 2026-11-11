@@ -160,6 +160,8 @@ final class BlankFixture {
 			'referenceRow'       => null,
 			'status'             => Catalogue::BLANK_READY,
 			'importFailure'      => null,
+			// A blank drawn with AI waits on its draw; this one is not.
+			'generation'         => null,
 		);
 	}
 

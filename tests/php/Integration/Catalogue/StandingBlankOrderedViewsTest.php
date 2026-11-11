@@ -10,6 +10,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\StandingRow;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 
 /**
  * A standing side on a blank whose print areas change with Size, the blank
@@ -25,7 +26,7 @@ final class StandingBlankOrderedViewsTest extends StandingTestCase {
 
 	public function test_a_standing_side_gets_a_design_per_row_of_a_blank_with_ordered_views(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_s', 'des_row_m' ) );
 
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );

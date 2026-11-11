@@ -20,6 +20,7 @@ use Pixonaut\WooCommerce\Catalogue\StandingRows;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use RuntimeException;
 use WC_Product_Simple;
@@ -113,7 +114,7 @@ final class LayoutAdjustmentTest extends StandingTestCase {
 		$this->adjust( $product, 'S' );
 		$before = count( $this->standing_requests() );
 
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_m3' ) );
 		$this->save(
 			$product->get_id(),
@@ -155,7 +156,7 @@ final class LayoutAdjustmentTest extends StandingTestCase {
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
 		$this->assertFalse( ProductConfig::stored_on( $this->reload( $product->get_id() ) )->valid );
 
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		// The failed save kept S alone; M's design is read again.
 		$this->script_rows( array( 'des_row_m' ) );
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
@@ -170,7 +171,7 @@ final class LayoutAdjustmentTest extends StandingTestCase {
 		$this->adjust( $product, 'S', false );
 		$this->assertNull( $this->rows( $product->get_id() )[0]->proof_id );
 
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array(), 'read' );
 		$this->script_adjusted_read();
 		$this->script_standing( 'des_row_m' );
@@ -246,7 +247,7 @@ final class LayoutAdjustmentTest extends StandingTestCase {
 	 */
 	private function standing_product(): WC_Product_Simple {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_s', 'des_row_m' ) );
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
 		return $product;

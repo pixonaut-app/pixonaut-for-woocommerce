@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Catalogue\PictureView;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variable;
@@ -28,11 +29,10 @@ use WC_Product_Variation;
  */
 final class VariationPanelTest extends ProductPanelTestCase {
 
-	private const LEGAL = array( 'legal' => true );
-
 	private const ILLEGAL = array(
-		'legal'  => false,
-		'reason' => InvalidReason::TOO_LARGE,
+		'legal'         => false,
+		'reason'        => InvalidReason::TOO_LARGE,
+		'lowResolution' => array(),
 	);
 
 	private const FIRST_VERSION = 1;
@@ -55,7 +55,7 @@ final class VariationPanelTest extends ProductPanelTestCase {
 
 	public function test_a_variable_product_is_linked_in_its_pixonaut_tab(): void {
 		list( $parent ) = $this->variable_product();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $parent->get_id() );
 
@@ -80,7 +80,7 @@ final class VariationPanelTest extends ProductPanelTestCase {
 
 	public function test_an_overriding_variation_is_checked_and_sold_with_its_own_menu(): void {
 		list( , $small, $large ) = $this->linked_variable_product();
-		$this->script_custom_size( self::LEGAL );
+		$this->script_custom_size( VerdictAnswers::LEGAL );
 
 		$this->save_variation( $large, 1, $this->a4_side() );
 
@@ -116,9 +116,9 @@ final class VariationPanelTest extends ProductPanelTestCase {
 
 	public function test_an_overriding_variation_follows_the_template_or_sticks_to_a_version(): void {
 		list( , $small, $large ) = $this->linked_variable_product();
-		$this->script_custom_size( self::LEGAL );
+		$this->script_custom_size( VerdictAnswers::LEGAL );
 		$this->save_variation( $small, 0, $this->a4_side() );
-		$this->script_custom_size( self::LEGAL );
+		$this->script_custom_size( VerdictAnswers::LEGAL );
 		$this->save_variation(
 			$large,
 			1,
@@ -130,7 +130,7 @@ final class VariationPanelTest extends ProductPanelTestCase {
 
 		foreach ( array( $small, $large ) as $variation ) {
 			$this->recorder->json( 200, $this->blank() );
-			$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+			$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 			$product = $this->reload_any( $variation->get_id() );
 			$this->linker->recheck( ProductConfig::stored_on( $product ), array( 'mini-tee' => self::PUBLISHED_VERSION ) )->save_to( $product );
 		}
@@ -143,9 +143,9 @@ final class VariationPanelTest extends ProductPanelTestCase {
 
 	public function test_an_overriding_variation_chooses_its_own_canvas_ratio(): void {
 		list( , $small, $large ) = $this->linked_variable_product();
-		$this->script_custom_size( self::LEGAL );
+		$this->script_custom_size( VerdictAnswers::LEGAL );
 		$this->save_variation( $small, 0, $this->a4_side(), array( PanelFields::CANVAS_RATIO => CanvasRatio::TEMPLATE ) );
-		$this->script_custom_size( self::LEGAL );
+		$this->script_custom_size( VerdictAnswers::LEGAL );
 		$this->save_variation( $large, 1, array( PostedSides::CANVAS_RATIO => CanvasRatio::PRINT_SIZE ) + $this->a4_side() );
 
 		$own = ProductConfig::stored_on( $this->reload_any( $small->get_id() ) );
@@ -291,7 +291,7 @@ final class VariationPanelTest extends ProductPanelTestCase {
 	 */
 	private function linked_variable_product(): array {
 		$products = $this->variable_product();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $products[0]->get_id() );
 		return $products;
 	}

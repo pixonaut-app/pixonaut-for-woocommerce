@@ -355,6 +355,7 @@ describe('GET /v1/blanks/{id}/placements/{placementId}/fitting-templates', () =>
 					printWidthMm: POSTER_FITTED.widthMm,
 					printHeightMm: POSTER_FITTED.heightMm,
 					verdict: { legal: true },
+					lowResolution: [],
 					// A print is placed inside the fake's placements, so no size is named.
 					sizes: { fits: [], misfits: [] },
 					previewUrl: expect.stringMatching(/^http:\/\/fake\.test\/i\//),
@@ -368,6 +369,7 @@ describe('GET /v1/blanks/{id}/placements/{placementId}/fitting-templates', () =>
 					printWidthMm: TEE_FITTED.widthMm,
 					printHeightMm: TEE_FITTED.heightMm,
 					verdict: { legal: true },
+					lowResolution: [],
 					sizes: { fits: [], misfits: [] },
 					previewUrl: expect.stringMatching(/^http:\/\/fake\.test\/i\//),
 				},
@@ -380,6 +382,7 @@ describe('GET /v1/blanks/{id}/placements/{placementId}/fitting-templates', () =>
 					printWidthMm: TEE_FITTED.widthMm,
 					printHeightMm: TEE_FITTED.heightMm,
 					verdict: { legal: true },
+					lowResolution: [],
 					sizes: { fits: [], misfits: [] },
 					previewUrl: expect.stringMatching(/^http:\/\/fake\.test\/i\//),
 				},

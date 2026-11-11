@@ -16,6 +16,7 @@ use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WC_Product;
 
 final class ProductSidesTest extends ProductPanelTestCase {
@@ -39,20 +40,19 @@ final class ProductSidesTest extends ProductPanelTestCase {
 	 */
 	private const OVERSIZED_MM = 900;
 
-	private const LEGAL = array( 'legal' => true );
-
 	private const TOO_LARGE = array(
-		'legal'  => false,
-		'reason' => InvalidReason::TOO_LARGE,
+		'legal'         => false,
+		'reason'        => InvalidReason::TOO_LARGE,
+		'lowResolution' => array(),
 	);
 
 	public function test_saves_each_side_with_its_own_size_menu_checked_in_one_call(): void {
 		$product = $this->product();
 		$this->recorder->json( 200, $this->blank( self::PLACEMENTS ) );
 		$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		// The back sells two custom sizes and no default: no constraints read.
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL, self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL, VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 
 		$this->save_sides(
@@ -114,8 +114,8 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$product = $this->product();
 		$this->recorder->json( 200, $this->blank( self::PLACEMENTS ) );
 		$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL, self::TOO_LARGE ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL, self::TOO_LARGE ) ) );
 
 		$this->save_sides(
 			$product->get_id(),
@@ -144,8 +144,8 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$sides = array( array( 'key' => 'front' ), array( 'key' => 'again' ) );
 		// Each side is still checked on its own; the template's constraints on the placement are read once.
 		$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 
 		$this->save_sides( $product->get_id(), $sides );
 
@@ -159,7 +159,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 	public function test_an_unusable_custom_size_flags_the_product_and_keeps_the_rest(): void {
 		$product = $this->product();
 		$this->recorder->json( 200, $this->blank() );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 
 		$this->save( $product->get_id(), array(), array( 'sizes' => array( self::custom( '0', '297', 'Flat' ), self::a4() ) ) );
 
@@ -170,7 +170,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 
 	public function test_without_a_blank_only_the_first_side_counts(): void {
 		$product = $this->product();
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->recorder->json( 200, self::printshops() );
 
@@ -188,8 +188,8 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$product = $this->product();
 		$this->recorder->json( 200, $this->blank( self::PLACEMENTS ) );
 		$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->save_sides(
 			$product->get_id(),
@@ -246,7 +246,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 
 	public function test_a_printshop_pixonaut_cannot_name_says_so(): void {
 		$product = $this->product();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->recorder->json( 200, $this->blank( array( self::PLACEMENT_ID => 'Front' ), self::PRINTSHOP_ID ) );
 		$this->recorder->json( 200, $this->mockups() );
@@ -259,7 +259,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 
 	public function test_each_side_the_storefront_sees_can_be_filtered(): void {
 		$product = $this->product();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$seen   = array();
 		$filter = static function ( Side $side, WC_Product $bought ) use ( &$seen ): Side {
@@ -299,7 +299,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 
 		$this->recorder->requests = array();
 		$this->recorder->json( 200, $this->blank() );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL, self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL, VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->save( $product->get_id(), array(), array( 'sizes' => $sizes ) );
 
@@ -353,7 +353,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		foreach ( array( 1, 2 ) as $save ) {
 			$this->recorder->json( 200, $this->blank( self::PLACEMENTS ) );
 			$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
-			$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+			$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 
 			$this->save_sides( $product->get_id(), array( array( 'key' => 'front' ), $back ) );
 
@@ -382,7 +382,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 		$product = $this->product();
 		$sizes   = array( self::a4(), self::custom( (string) self::OVERSIZED_MM, (string) self::OVERSIZED_MM, 'Huge' ), self::custom( '300', '400', 'Large' ) );
 		$this->recorder->json( 200, $this->blank() );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL, self::TOO_LARGE, self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL, self::TOO_LARGE, VerdictAnswers::LEGAL ) ) );
 
 		$this->save(
 			$product->get_id(),
@@ -425,7 +425,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 	public function test_custom_millimetres_are_shown_exactly(): void {
 		$product = $this->product();
 		$this->recorder->json( 200, $this->blank() );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->save( $product->get_id(), array(), array( 'sizes' => array( self::custom( '210.07', '270.09', 'Odd' ) ) ) );
 
@@ -434,7 +434,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 
 	public function test_a_printshop_from_the_blanks_category_says_so(): void {
 		$product = $this->product();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->recorder->json( 200, $this->blank( array( self::PLACEMENT_ID => 'Front' ), 'ps_other', LinkedBlank::SOURCE_CATEGORY ) );
 		$this->recorder->json( 200, $this->mockups() );
@@ -447,7 +447,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 
 	public function test_a_blank_with_no_printshop_anywhere_says_none_is_set(): void {
 		$product = $this->product();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->recorder->json( 200, $this->blank( array( self::PLACEMENT_ID => 'Front' ), null, LinkedBlank::SOURCE_NONE ) );
 		$this->recorder->json( 200, $this->mockups() );
@@ -460,7 +460,7 @@ final class ProductSidesTest extends ProductPanelTestCase {
 
 	public function test_a_blank_pixonaut_cannot_read_does_not_claim_the_workspace_default(): void {
 		$product = $this->product();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		// The printshops are already known; the blank is not.
 		$this->recorder->json( 200, self::printshops() );

@@ -13,6 +13,7 @@ use Pixonaut\WooCommerce\Admin\VariantNotice;
 use Pixonaut\WooCommerce\Admin\VariationPanel;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variable;
@@ -24,8 +25,6 @@ use WC_Product_Variation;
  * with none, or a retired one, cannot be bought.
  */
 final class ProductVariantsTest extends ProductPanelTestCase {
-
-	private const LEGAL = array( 'legal' => true );
 
 	private const AXIS = 'Colour';
 
@@ -174,7 +173,7 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 	public function test_the_variant_field_warns_about_a_variant_with_no_photo_in_the_views_the_product_is_shown_in(): void {
 		$variations = $this->linked_variable_product();
 		$parent     = $variations['Red']->get_parent_id();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save(
 			$parent,
 			array(
@@ -206,7 +205,7 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 		$this->assertFalse( $this->reload( $other->get_id() )->is_purchasable(), 'an attribute of two values names no variant' );
 		$this->assertStringContainsString( 'it is no variant of its blank', $this->notice( $other->get_id() ) );
 
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $other->get_id(), array( 'pixonaut_variant' => 'v_white' ) );
 
 		$this->assertSame( 'v_white', ProductVariant::stored_on( $this->reload( $other->get_id() ) )?->ref );
@@ -219,7 +218,7 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 		$product = $this->product();
 		$this->linked_simple( $product, array( 'Red', 'White' ) );
 
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save(
 			$product->get_id(),
 			array(
@@ -229,7 +228,7 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 		);
 		$this->assertNull( ProductVariant::stored_on( $this->reload( $product->get_id() ) )?->pick, 'the last blank\'s pick is not this blank\'s variant' );
 
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save(
 			$product->get_id(),
 			array(
@@ -304,7 +303,7 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 			$variations[ $colour ] = $variation;
 		}
 		WC_Product_Variable::sync( $parent->get_id() );
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $parent->get_id() );
 		return $variations;
 	}
@@ -318,7 +317,7 @@ final class ProductVariantsTest extends ProductPanelTestCase {
 	private function linked_simple( WC_Product $product, array $colours ): void {
 		$product->set_attributes( array( self::attribute( $colours, false ) ) );
 		$product->save();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 	}
 

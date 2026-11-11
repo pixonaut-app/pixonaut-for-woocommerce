@@ -23,6 +23,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Catalogue\VariationSizes;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use WC_Product;
 use WC_Product_Attribute;
@@ -55,8 +56,6 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		self::SMALL => array( 300, 400 ),
 		self::LARGE => array( 508, 711.2 ),
 	);
-
-	private const LEGAL = array( 'legal' => true );
 
 	private VariationPanel $variations;
 
@@ -107,7 +106,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 
 	public function test_a_size_of_the_variations_own_saves_survives_reopening_and_is_sold(): void {
 		list( , $small, $large ) = $this->linked( 'within' );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 
 		$this->save_variation( $small, 0, self::custom( '210', '270', 'A4-ish' ) );
 
@@ -139,7 +138,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 			'effectiveDpi'   => 150,
 			'recommendedDpi' => 300,
 		);
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL + array( 'lowResolution' => array( $soft ) ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( array( 'lowResolution' => array( $soft ) ) + VerdictAnswers::LEGAL ) ) );
 
 		$this->save_variation( $small, 0, self::custom( '210', '270', 'A4-ish' ) );
 
@@ -161,14 +160,14 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 			'effectiveDpi'   => 150,
 			'recommendedDpi' => 300,
 		);
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL + array( 'lowResolution' => array( $soft ) ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( array( 'lowResolution' => array( $soft ) ) + VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $small, 0, self::custom( '210', '270', 'A4-ish' ) );
 		$key = LowResolutionSize::key( self::SIDE_KEY, new PrintSize( 210, 270, 'A4-ish' ), LowResolutionImage::from_answer( $soft ) );
 		$this->save_variation( $small, 0, self::custom( '210', '270', 'A4-ish' ), array( $key => LowResolutionWarnings::ACCEPT ) );
 		$this->assertSame( array( $key ), LowResolutionWarnings::accepted_on( $this->reload_any( $small->get_id() ) ) );
 		$config = ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) );
 		$config->with_sides( array( $config->sides[0]->rolled_to( 3 ) ) )->save_to( $this->reload_any( $parent->get_id() ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 
 		( new VariationSizes( $this->catalogue ) )->rejudge( $this->reload_any( $parent->get_id() ) );
 
@@ -229,7 +228,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 
 	public function test_updating_the_product_judges_a_variations_own_size_again(): void {
 		list( $parent, $small ) = $this->linked( 'within' );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
 
 		// The product is updated onto the template's next version, whose ratio the size is off.
@@ -239,8 +238,9 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 			array(
 				'verdicts' => array(
 					array(
-						'legal'  => false,
-						'reason' => InvalidReason::WRONG_RATIO,
+						'legal'         => false,
+						'reason'        => InvalidReason::WRONG_RATIO,
+						'lowResolution' => array(),
 					),
 				),
 			)
@@ -253,7 +253,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 
 	public function test_a_size_judged_for_another_template_version_is_not_sold_until_judged_again(): void {
 		list( $parent, $small ) = $this->linked( 'within' );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
 
 		$config = ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) );
@@ -275,7 +275,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 
 	public function test_saving_the_same_size_again_asks_pixonaut_nothing(): void {
 		list( , $small ) = $this->linked( 'within' );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
 		$requests = count( $this->recorder->requests );
 
@@ -298,7 +298,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 
 	public function test_a_rejudge_pixonaut_cannot_answer_keeps_the_verdict_and_says_so(): void {
 		list( $parent, $small ) = $this->linked( 'within' );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
 		$config = ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) );
 		$config->with_sides( array( $config->sides[0]->rolled_to( 3 ) ) )->save_to( $this->reload_any( $parent->get_id() ) );
@@ -422,7 +422,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 			'misfits' => $misfits,
 		);
 		$this->recorder->json( 200, $constraints );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 	}
 

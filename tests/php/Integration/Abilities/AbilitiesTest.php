@@ -31,6 +31,7 @@ use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\VariantsAnswer;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use ReflectionProperty;
@@ -462,7 +463,7 @@ final class AbilitiesTest extends WP_UnitTestCase {
 	public function test_linking_a_product_to_a_template_without_a_blank_checks_it_with_pixonaut(): void {
 		wp_set_current_user( $this->user( 'shop_manager' ) );
 		$product = $this->product();
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->ability( self::LINK_PRODUCT )->execute(
@@ -521,7 +522,7 @@ final class AbilitiesTest extends WP_UnitTestCase {
 		( new ProductConfig( approval_mode: ApprovalMode::CHECKBOX, layout: Layout::BUTTON ) )->save_to( $product );
 		$this->recorder->json( 200, BlankFixture::answer( array( self::PLACEMENT_ID => 'Front' ) ) );
 		$this->recorder->json( 200, $this->constraints() );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->ability( self::LINK_PRODUCT )->execute(
@@ -555,7 +556,7 @@ final class AbilitiesTest extends WP_UnitTestCase {
 		$this->variants->answer['variants'][0]['retired'] = array( 'reason' => 'retired' );
 		$this->recorder->json( 200, BlankFixture::answer( array( self::PLACEMENT_ID => 'Front' ) ) );
 		$this->recorder->json( 200, $this->constraints() );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->ability( self::LINK_PRODUCT )->execute(
@@ -591,7 +592,7 @@ final class AbilitiesTest extends WP_UnitTestCase {
 	public function test_a_link_pixonaut_refuses_is_saved_unsellable_and_says_why(): void {
 		wp_set_current_user( $this->user( 'shop_manager' ) );
 		$product = $this->product();
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => 'paused' ) ), 'application/json' );
 
 		$answer = $this->ability( self::LINK_PRODUCT )->execute(

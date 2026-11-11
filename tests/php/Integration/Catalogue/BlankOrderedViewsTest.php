@@ -12,6 +12,7 @@ use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WP_REST_Request;
 
 /**
@@ -57,7 +58,7 @@ final class BlankOrderedViewsTest extends ProductPanelTestCase {
 		$product = $this->product();
 		$this->recorder->json( 200, BlankFixture::with_ordered_views( $this->blank() ) );
 		$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 
 		$this->save( $product->get_id() );
@@ -72,7 +73,7 @@ final class BlankOrderedViewsTest extends ProductPanelTestCase {
 
 	public function test_the_panel_shows_a_linked_blank_with_ordered_views(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		// The panel reads the blank afresh, not what the save kept.
 		$this->cache->flush();

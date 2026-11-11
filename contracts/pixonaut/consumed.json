@@ -159,9 +159,5 @@
 		"PUT /v1/connect/store-access": "integrationKey",
 		"PUT /v1/designs/{id}/external-ref": "integrationKey"
 	},
-	"pending": [
-		{ "op": "GET /v1/printshop-catalogue-products", "requirement": "pixonaut-app/pixonaut-for-woocommerce#67" },
-		{ "op": "POST /v1/printshop-catalogue-products/{productId}/blank", "requirement": "pixonaut-app/pixonaut-for-woocommerce#67" },
-		{ "op": "WEBHOOK template.renamed", "requirement": "pixonaut-app/pixonaut-for-woocommerce#63" }
-	]
+	"pending": []
 }

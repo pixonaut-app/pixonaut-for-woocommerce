@@ -33,6 +33,7 @@ use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\VariantsAnswer;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use ReflectionProperty;
 use WC_Product;
 use WC_Product_Simple;
@@ -124,8 +125,8 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 			)
 		);
 		// Sizes of their own are judged without the placement's constraints.
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ), array( 'legal' => true ) ) ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL, VerdictAnswers::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->succeed(
@@ -191,7 +192,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 		$product = $this->product();
 		( new ProductConfig( approval_mode: ApprovalMode::CHECKBOX, layout: Layout::BUTTON ) )->save_to( $product );
 		$this->recorder->json( 200, self::live_templates( 'mini-tee', 3 ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->succeed(
@@ -220,7 +221,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 	public function test_a_variation_gets_its_own_setup_follows_its_product_again_and_picks_its_variant(): void {
 		$product = $this->variable_product();
 		$small   = $this->variation( $product, 'S' );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$own = $this->succeed(
@@ -263,7 +264,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 	public function test_moving_to_a_new_version_keeps_the_sides_of_the_product_and_its_variations(): void {
 		$product = $this->product();
 		self::template_only( 'Small', self::SMALL_WIDTH_MM, self::SMALL_HEIGHT_MM )->save_to( $product );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->succeed(
@@ -287,7 +288,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 		$config  = self::template_only( 'Small', self::SMALL_WIDTH_MM, self::SMALL_HEIGHT_MM );
 		// The product already knows of version 3, so a following side on version 2 would be moved to it.
 		$config->with_sides( array( $config->sides[0]->with_versions( false, null, 3 ) ) )->save_to( $product );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->succeed(
@@ -308,7 +309,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 		$this->assertSame( self::TEMPLATE_ID, $answer['sides'][0]['template_id'] );
 		$this->assertTrue( $answer['sides'][0]['template_pinned'] );
 
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 		$this->succeed(
 			self::SET_SETUP,
@@ -326,7 +327,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 	public function test_the_canvas_ratio_is_set_on_the_product_and_a_side_and_kept_when_left_out(): void {
 		$product = $this->product();
 		self::template_only( 'Small', self::SMALL_WIDTH_MM, self::SMALL_HEIGHT_MM )->save_to( $product );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->succeed(
@@ -348,7 +349,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 		$this->assertSame( CanvasRatio::TEMPLATE, $answer['canvas_ratio'] );
 		$this->assertSame( CanvasRatio::PRINT_SIZE, $answer['sides'][0]['canvas_ratio'] );
 
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 		$this->succeed(
 			self::SET_SETUP,
@@ -366,7 +367,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 	public function test_the_products_choices_for_its_forms_options_and_numbers_are_read_and_set_and_kept_when_left_out(): void {
 		$product = $this->product();
 		self::template_only( 'Small', self::SMALL_WIDTH_MM, self::SMALL_HEIGHT_MM )->save_to( $product );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->succeed(
@@ -381,7 +382,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 		$this->assertSame( OptionGroups::LAST, $answer['option_groups'] );
 		$this->assertSame( GroupNumbers::OFF, $answer['group_numbers'] );
 
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 		$this->succeed(
 			self::SET_SETUP,
@@ -394,7 +395,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 		$this->assertSame( OptionGroups::LAST, $config->option_groups );
 		$this->assertSame( GroupNumbers::OFF, $config->group_numbers );
 
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 		$this->succeed(
 			self::SET_SETUP,
@@ -426,7 +427,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 	public function test_a_side_moved_to_a_version_stays_on_it_until_it_is_given_without_a_pin(): void {
 		$product = $this->product();
 		self::template_only( 'Small', self::SMALL_WIDTH_MM, self::SMALL_HEIGHT_MM )->save_to( $product );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$pinned = $this->succeed(
@@ -440,7 +441,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 
 		$this->assertTrue( $pinned['sides'][0]['template_pinned'] );
 
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 		$side = $pinned['sides'][0];
 		// What `list-products` gives besides what `set-product-setup` takes; no blank, so no placement.
@@ -462,7 +463,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 		$small   = $this->variation( $product, 'S' );
 		$large   = $this->variation( $product, 'L' );
 		self::template_only( 'Small', self::SMALL_WIDTH_MM, self::SMALL_HEIGHT_MM, true )->save_to( $small );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->succeed(
@@ -533,7 +534,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 			)
 		);
 		$this->assertSame( 'v_l', ProductVariant::stored_on( $this->reload( $small->get_id() ) )?->pick );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		// Its own setup has no blank: the pick of the product's blank no longer applies.

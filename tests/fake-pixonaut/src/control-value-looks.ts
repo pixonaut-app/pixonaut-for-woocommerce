@@ -98,6 +98,7 @@ function appearanceOf(
 			kind: 'image',
 			assetId: `asset_value_${look}`,
 			url: `${origin}/v/${name}.${look}`,
+			mime: PICTURES[look].contentType,
 		};
 	}
 	const colours = (look as { colours?: unknown } | undefined)?.colours;

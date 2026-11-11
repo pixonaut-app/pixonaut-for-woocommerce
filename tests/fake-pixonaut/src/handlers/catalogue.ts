@@ -355,6 +355,8 @@ export function blankBody(blank: Blank): Record<string, unknown> {
 		referenceRow: null,
 		status: blank.status ?? 'ready',
 		importFailure: null,
+		// The fake draws no blank with AI.
+		generation: null,
 	};
 }
 
@@ -614,6 +616,7 @@ export const listFittingTemplates: Handler = (context) => {
 			printWidthMm: size.widthMm,
 			printHeightMm: size.heightMm,
 			verdict: verdictOf(artwork, size, placement),
+			lowResolution: lowResolutionAt(size, t.lowResolution),
 			sizes: sizeFits(),
 			// Every template the fake keeps is a published version.
 			previewUrl: templatePreviewUrl(context, t),
@@ -625,16 +628,10 @@ export const listFittingTemplates: Handler = (context) => {
 /** Millimetres in an inch, which a resolution in dots per inch is measured along. */
 const MM_PER_INCH = 25.4;
 
-/** A verdict with the images the size prints below their recommended
- *  resolution, which Pixonaut names on every verdict; under `refuse` a
- *  size that is otherwise legal is refused for them. Each is judged along
- *  its width alone, which the fake's images fill. */
-function withLowResolution(
-	verdict: Verdict,
-	size: Box,
-	setup: LowResolutionSetup | undefined,
-) {
-	const lowResolution = (setup?.images ?? [])
+/** The images `size` prints below their recommended resolution, each
+ *  judged along its width alone, which the fake's images fill. */
+function lowResolutionAt(size: Box, setup: LowResolutionSetup | undefined) {
+	return (setup?.images ?? [])
 		.map((image) => ({
 			layerId: image.layerId,
 			assetId: image.assetId,
@@ -642,6 +639,17 @@ function withLowResolution(
 			recommendedDpi: setup?.recommendedDpi ?? 0,
 		}))
 		.filter((image) => image.effectiveDpi < image.recommendedDpi);
+}
+
+/** A verdict with the images the size prints below their recommended
+ *  resolution, which Pixonaut names on every verdict; under `refuse` a
+ *  size that is otherwise legal is refused for them. */
+function withLowResolution(
+	verdict: Verdict,
+	size: Box,
+	setup: LowResolutionSetup | undefined,
+) {
+	const lowResolution = lowResolutionAt(size, setup);
 	if (verdict.legal && setup?.action === 'refuse' && lowResolution.length > 0) {
 		return { legal: false, reason: 'low_resolution', lowResolution };
 	}
