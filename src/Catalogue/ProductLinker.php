@@ -221,7 +221,7 @@ final class ProductLinker {
 				return $config->with_validity( false, self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ), self::refusal( $e )?->on_side( self::named_side( $config, $side ) ) );
 			}
 			if ( Catalogue::LIVE !== $read[ $id ]['status'] ) {
-				return $config->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE );
+				return $config->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE, InvalidDetail::of( self::named_side( $config, $side ) ) );
 			}
 			$side = $side->with_offers_properties( $read[ $id ]['offers_properties'] );
 			// The name Pixonaut gives now: for a side entered without one (by an ability), or a template renamed since.
@@ -393,7 +393,7 @@ final class ProductLinker {
 		$rolled = $stored->with_sides( $sides );
 		foreach ( $sides as $side ) {
 			if ( '' !== $side->template_base_id && ! isset( $live[ $side->template_base_id ] ) ) {
-				return $rolled->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE );
+				return $rolled->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE, InvalidDetail::of( self::named_side( $rolled, $side ) ) );
 			}
 		}
 
@@ -640,7 +640,7 @@ final class ProductLinker {
 				$legal[]        = $size;
 				continue;
 			}
-			$refused ??= $size->label;
+			$refused ??= $size->described();
 			$reason  ??= $verdict->reason ?? InvalidReason::CHECK_FAILED;
 		}
 		return array( $legal, $legal_at, $reason, $refused );

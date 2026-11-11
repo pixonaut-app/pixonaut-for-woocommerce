@@ -486,6 +486,26 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 		$this->assertFalse( $this->reload( $this->product_id )->is_purchasable() );
 	}
 
+	public function test_a_paused_template_names_the_side_it_is_on(): void {
+		$front = self::config()->sides[0];
+		$back  = new Side( 'back', 'Back', self::BACK_PLACEMENT_ID, 'Back', self::OTHER_TEMPLATE, DesignFixture::LIVE_VERSION, null, null, $front->print_sizes );
+		self::config()->with_sides( array( $front, $back ) )->save_to( $this->reload( $this->product_id ) );
+		$this->live_list( array( DesignFixture::TEMPLATE_BASE_ID => DesignFixture::LIVE_VERSION ) );
+
+		$this->deliver(
+			ProductRecheck::TEMPLATE_LIVE_CHANGED,
+			array(
+				'baseId' => self::OTHER_TEMPLATE,
+				'live'   => false,
+			)
+		);
+
+		$stored = $this->stored( $this->product_id );
+		$this->assertSame( InvalidReason::TEMPLATE_NOT_LIVE, $stored->invalid_reason );
+		$this->assertSame( 'Back', $stored->invalid_detail?->side );
+		$this->assertStringStartsWith( 'Side “Back”: ', InvalidReason::stored( $stored ) );
+	}
+
 	public function test_a_side_without_sizes_saved_while_pixonaut_was_away_is_not_retried_for_ever(): void {
 		$front = self::config()->sides[0];
 		$empty = new Side( $front->key, $front->label, $front->placement_id, $front->placement_name, $front->template_base_id, $front->template_version, null, $front->template_name );

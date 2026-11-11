@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-11T00:19:28+00:00\n"
+"POT-Creation-Date: 2026-11-11T00:38:14+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -3359,18 +3359,18 @@ msgstr ""
 "Pixonaut-velden."
 
 #. translators: 1: the product attribute whose value gives the print size, e.g. "Size"; 2: the print size, e.g. "30×40 cm". Option in a variation's print size dropdown: print the side at the size the product gives the variation's value of that attribute. Admin product page.
-#: src/Admin/VariationSizeField.php:163
+#: src/Admin/VariationSizeField.php:164
 #, php-format
 msgid "As its %1$s (%2$s)"
 msgstr "Zoals de waarde voor %1$s (%2$s)"
 
 #. translators: Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says, which gives no size this variation can be printed at. Admin product page.
-#: src/Admin/VariationSizeField.php:170
+#: src/Admin/VariationSizeField.php:171
 msgid "As the product (no size fits this variation)"
 msgstr "Zoals het product (geen formaat past bij deze variatie)"
 
 #. translators: %s: the print sizes, e.g. "300 × 400 mm". Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says. Admin product page.
-#: src/Admin/VariationSizeField.php:174
+#: src/Admin/VariationSizeField.php:175
 #, php-format
 msgid "As the product (%s)"
 msgstr "Zoals het product (%s)"
@@ -3873,7 +3873,9 @@ msgstr ""
 msgid ""
 "The template is not published in Pixonaut, or no longer exists. Publish it "
 "in the Pixonaut studio, or choose another template in %s."
-msgstr "Het sjabloon is niet gepubliceerd in Pixonaut of bestaat niet meer. Publiceer het in de Pixonaut-studio of kies %s een ander sjabloon."
+msgstr ""
+"Het sjabloon is niet gepubliceerd in Pixonaut of bestaat niet meer. "
+"Publiceer het in de Pixonaut-studio of kies %s een ander sjabloon."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:291
@@ -3947,7 +3949,10 @@ msgid ""
 "Some variations have no print size. Add one in millimetres in %s, or one for "
 "each value of an attribute there, or add one in each of those variations’ "
 "Pixonaut fields."
-msgstr "Sommige variaties hebben geen drukformaat. Voeg er %s een toe in millimeters, of daar een voor elke waarde van een attribuut, of voeg er een toe in de Pixonaut-velden van elk van die variaties."
+msgstr ""
+"Sommige variaties hebben geen drukformaat. Voeg er %s een toe in "
+"millimeters, of daar een voor elke waarde van een attribuut, of voeg er een "
+"toe in de Pixonaut-velden van elk van die variaties."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:341
@@ -4238,8 +4243,14 @@ msgstr ""
 "waar het blanco product wordt gedrukt. Kies %s een andere drukkerij, of "
 "koppel de drukkerij opnieuw in de Pixonaut-studio."
 
+#. translators: 1: a print size's name as customers see it, e.g. "Large", 2: its width and height, e.g. "700 × 1000 mm".
+#: src/Catalogue/PrintSize.php:73
+#, php-format
+msgid "%1$s (%2$s)"
+msgstr "%1$s (%2$s)"
+
 #. translators: 1: width, 2: height, both in millimetres.
-#: src/Catalogue/PrintSize.php:74
+#: src/Catalogue/PrintSize.php:88
 #, php-format
 msgid "%1$s × %2$s mm"
 msgstr "%1$s × %2$s mm"

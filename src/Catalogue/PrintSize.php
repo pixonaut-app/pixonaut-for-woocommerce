@@ -63,6 +63,20 @@ final class PrintSize {
 	}
 
 	/**
+	 * The size as the store manager tells it apart: its dimensions, after
+	 * its label when the label is a name of its own, e.g. "Large (700 × 1000 mm)".
+	 */
+	public function described(): string {
+		$dimensions = self::label_for( $this->width_mm, $this->height_mm );
+		return '' === $this->label || $dimensions === $this->label ? $dimensions : sprintf(
+			/* translators: 1: a print size's name as customers see it, e.g. "Large", 2: its width and height, e.g. "700 × 1000 mm". */
+			__( '%1$s (%2$s)', 'pixonaut-for-woocommerce' ),
+			$this->label,
+			$dimensions
+		);
+	}
+
+	/**
 	 * The label a size gets when the store manager names none, e.g. "280 × 360 mm".
 	 *
 	 * @param float $width_mm  Width in millimetres.

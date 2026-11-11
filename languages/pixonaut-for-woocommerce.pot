@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-11T00:19:28+00:00\n"
+"POT-Creation-Date: 2026-11-11T00:38:14+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -2296,18 +2296,18 @@ msgid "Customers cannot buy all of %1$s: %2$s. Pick the variant in its Pixonaut 
 msgstr ""
 
 #. translators: 1: the product attribute whose value gives the print size, e.g. "Size"; 2: the print size, e.g. "30×40 cm". Option in a variation's print size dropdown: print the side at the size the product gives the variation's value of that attribute. Admin product page.
-#: src/Admin/VariationSizeField.php:163
+#: src/Admin/VariationSizeField.php:164
 #, php-format
 msgid "As its %1$s (%2$s)"
 msgstr ""
 
 #. translators: Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says, which gives no size this variation can be printed at. Admin product page.
-#: src/Admin/VariationSizeField.php:170
+#: src/Admin/VariationSizeField.php:171
 msgid "As the product (no size fits this variation)"
 msgstr ""
 
 #. translators: %s: the print sizes, e.g. "300 × 400 mm". Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says. Admin product page.
-#: src/Admin/VariationSizeField.php:174
+#: src/Admin/VariationSizeField.php:175
 #, php-format
 msgid "As the product (%s)"
 msgstr ""
@@ -2856,8 +2856,14 @@ msgstr ""
 msgid "The printshop is unknown, disconnected, unavailable, or not the one the blank is printed at. Choose another printshop in %s, or connect it again in the Pixonaut studio."
 msgstr ""
 
+#. translators: 1: a print size's name as customers see it, e.g. "Large", 2: its width and height, e.g. "700 × 1000 mm".
+#: src/Catalogue/PrintSize.php:73
+#, php-format
+msgid "%1$s (%2$s)"
+msgstr ""
+
 #. translators: 1: width, 2: height, both in millimetres.
-#: src/Catalogue/PrintSize.php:74
+#: src/Catalogue/PrintSize.php:88
 #, php-format
 msgid "%1$s × %2$s mm"
 msgstr ""
