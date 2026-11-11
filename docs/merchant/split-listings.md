@@ -71,7 +71,8 @@ Each card shows:
   product's.
 - **A price**: "From:" the lowest price among the value's variations, sale
   prices counted. When they all cost the same, that one price, as the
-  product page shows it.
+  product page shows it. A variation the shop hides because it is out of
+  stock counts for neither the price nor the image.
 
 To give a value's card its own title or image, open the product's
 **Attributes** tab. Under the attribute's **Show each value as its own

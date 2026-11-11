@@ -439,7 +439,8 @@ final class SplitCards {
 			$offers[] = array(
 				'id'         => $variation->get_id(),
 				'attributes' => array_map( 'strval', $variation->get_variation_attributes() ),
-				'offered'    => $variation->variation_is_visible(),
+				// As `get_available_variations()` decides: one out of stock is left out while the store hides those.
+				'offered'    => $variation->variation_is_visible() && ( $variation->is_in_stock() || 'yes' !== get_option( 'woocommerce_hide_out_of_stock_items' ) ),
 				'live'       => ! NotLiveProducts::not_live( $config ),
 			);
 		}

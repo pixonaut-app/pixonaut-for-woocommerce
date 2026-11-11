@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
+use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
@@ -111,6 +112,36 @@ final class SplitCardFacesTest extends WP_UnitTestCase {
 		$this->assertInstanceOf( WC_Product::class, $fresh );
 		$this->assertStringContainsString( '29.00', $fresh->get_price_html(), 'out of the loop the product shows its range' );
 		$this->assertStringNotContainsString( wc_get_price_html_from_text(), $fresh->get_price_html() );
+	}
+
+	public function test_a_card_leaves_out_a_variation_the_store_hides_out_of_stock(): void {
+		$poster = new WC_Product_Variable();
+		$poster->set_name( 'Safari' );
+		$poster->set_status( 'publish' );
+		$poster->set_category_ids( array( $this->category ) );
+		$poster->set_attributes( array( $this->product_attribute( self::PICTURE ), $this->product_attribute( self::SIZE ) ) );
+		$poster->save();
+		$sold_out = $this->variation( $poster, 'med-bild', '30x40', '10' );
+		$sold_out->set_stock_status( 'outofstock' );
+		$sold_out->set_image_id( $this->image() );
+		$sold_out->save();
+		$in_stock = $this->variation( $poster, 'med-bild', '50x70', '20' );
+		$picture  = $this->image();
+		$in_stock->set_image_id( $picture );
+		$in_stock->save();
+		WC_Product_Variable::sync( $poster->get_id() );
+
+		update_option( 'woocommerce_hide_out_of_stock_items', 'yes' );
+		$hidden = $this->shop();
+		update_option( 'woocommerce_hide_out_of_stock_items', 'no' );
+
+		$available = wc_get_product( $in_stock->get_id() );
+		$this->assertInstanceOf( WC_Product::class, $available );
+		$this->assertSame( $available->get_price_html(), $hidden[0]['price'], 'only the variation customers can buy' );
+		$this->assertSame( $picture, $hidden[0]['image'] );
+		// The variations' offers are read once a request; writing the cards forgets them.
+		SplitCards::write( $poster->get_id() );
+		$this->assertSame( wc_get_price_html_from_text() . wc_price( 10 ), $this->shop()[0]['price'], 'counted while the store shows it' );
 	}
 
 	/**
