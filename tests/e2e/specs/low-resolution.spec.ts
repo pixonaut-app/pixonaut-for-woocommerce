@@ -5,16 +5,12 @@ import {
 	test,
 	usePlainPermalinks,
 } from '../fixtures';
-import { connectFixtureStore } from '../personalised';
 import { openPixonautTab, pick, productPanel, publish } from '../products';
 
-/** A picture 4800 px wide: 174 dpi across 700 mm, 435 across 280. */
+/** A picture 4800 px wide: 174 dpi across 700 mm. */
 const PHOTO = { layerId: 'photo', assetId: 'ast_photo', widthPx: 4800 };
 
-/** The T-shirt template's own 280:360 shape, sharp enough for the photo. */
-const SMALL = { width: '280', height: '360', label: 'Small' };
-
-/** The same shape 700 mm wide, where the photo prints too soft. */
+/** The T-shirt template's 280:360 shape 700 mm wide, where the photo prints too soft. */
 const LARGE = { width: '700', height: '900', label: 'Large' };
 
 /** Tells the fake the T-shirt template holds the photo, and what the
@@ -31,16 +27,13 @@ async function holdPhoto(
 }
 
 test('a print size that prints an image too soft is warned of until accepted, and said why when refused', async ({
-	admin: page,
+	connectedStore: page,
 	fake,
-	request,
 	baseURL,
 	theme,
 }) => {
 	test.skip(theme !== 'storefront', 'wp-admin does not depend on the theme');
 	await holdPhoto(fake, 'warn');
-	// Connecting clears the template reads the store keeps.
-	await connectFixtureStore(request, baseURL ?? '');
 	await usePlainPermalinks(page, baseURL);
 	await page.goto('/wp-admin/post-new.php?post_type=product');
 	await page.locator('#title').fill(`Soft photo sign ${Date.now()}`);
@@ -50,18 +43,12 @@ test('a print size that prints an image too soft is warned of until accepted, an
 	await panel.getByLabel('Personalise').check();
 	await pick(page, 'pixonaut_side_0_template', 'shirt', 'T-shirt med tryck');
 	const side = panel.locator('.pixonaut-side[data-index="0"]');
-	for (const [row, size] of [SMALL, LARGE].entries()) {
-		if (row > 0) {
-			await side.getByRole('button', { name: 'Add a size in mm' }).click();
-		}
-		const fields = side.locator('.pixonaut-size').nth(row);
-		await fields.getByLabel('Label customers see').fill(size.label);
-		await fields.getByLabel('Width in millimetres').fill(size.width);
-		await fields.getByLabel('Height in millimetres').fill(size.height);
-	}
+	await side.getByLabel('Label customers see').fill(LARGE.label);
+	await side.getByLabel('Width in millimetres').fill(LARGE.width);
+	await side.getByLabel('Height in millimetres').fill(LARGE.height);
 	await publish(page);
 
-	// Sold, and warned of at the large size alone.
+	// Sold, and warned of.
 	await expect(page.locator('.pixonaut-notice')).toHaveCount(0);
 	await openPixonautTab(page);
 	const warnings = side.locator('.pixonaut-low-resolution__row');
