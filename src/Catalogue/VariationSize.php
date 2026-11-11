@@ -34,7 +34,7 @@ final class VariationSize {
 	public const SCHEMA_VERSION = 1;
 
 	/**
-	 * @param array<string, array{size: PrintSize, refused: string|null, basis: string, value?: bool}> $sizes The sizes by side key: the size, why Pixonaut refused it (null when it did not), what it was judged for (`basis()`), and whether it is the variation's attribute value's size rather than its own.
+	 * @param array<string, array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string}> $sizes The sizes by side key: the size, why Pixonaut refused it (null when it did not), what it was judged for (`basis()`), whether it is the variation's attribute value's size rather than its own, and the error code Pixonaut answered when it could not judge it.
 	 */
 	public function __construct( public readonly array $sizes = array() ) {
 	}
@@ -77,7 +77,7 @@ final class VariationSize {
 	/**
 	 * Whether an entry is the size of the variation's attribute value.
 	 *
-	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool} $entry An entry of `$sizes`.
+	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string} $entry An entry of `$sizes`.
 	 */
 	public static function is_value( array $entry ): bool {
 		return true === ( $entry['value'] ?? false );
@@ -174,7 +174,7 @@ final class VariationSize {
 			if ( null === $held && null !== $value ) {
 				if ( null === $reason ) {
 					$reason = InvalidReason::VARIATION_SIZE_UNCHECKED;
-					$detail = InvalidDetail::of( $named( $side ), $value->label );
+					$detail = InvalidDetail::of( $named( $side ), $value->described() );
 				}
 				$sides[] = $side->with( $side->template_version, $side->previous_version, array( $value ), null, 0 );
 				continue;
@@ -184,7 +184,7 @@ final class VariationSize {
 				if ( null === $reason && null !== $why ) {
 					$reason = $why;
 					// An attribute value's size is set on the product, the variation's own in its fields.
-					$detail = InvalidDetail::of( $named( $side ), $held['size']->label, null, ! self::is_value( $held ) );
+					$detail = InvalidDetail::of( $named( $side ), $held['size']->described(), InvalidReason::CHECK_FAILED === $why ? $held['code'] ?? null : null, ! self::is_value( $held ) );
 				}
 				$sides[] = $side->with( $side->template_version, $side->previous_version, array( $held['size'] ), null, 0 );
 				continue;
@@ -285,7 +285,8 @@ final class VariationSize {
 				'size'    => $size,
 				'refused' => is_string( $entry['refused'] ?? null ) && '' !== $entry['refused'] ? $entry['refused'] : null,
 				'basis'   => $entry['basis'],
-			) + ( true === ( $entry['value'] ?? null ) ? array( 'value' => true ) : array() );
+			) + ( true === ( $entry['value'] ?? null ) ? array( 'value' => true ) : array() )
+				+ ( is_string( $entry['code'] ?? null ) && '' !== $entry['code'] ? array( 'code' => $entry['code'] ) : array() );
 		}
 		return new self( $sizes );
 	}
@@ -350,7 +351,8 @@ final class VariationSize {
 				'size'    => $entry['size']->stored(),
 				'refused' => $entry['refused'],
 				'basis'   => $entry['basis'],
-			) + ( self::is_value( $entry ) ? array( 'value' => true ) : array() );
+			) + ( self::is_value( $entry ) ? array( 'value' => true ) : array() )
+				+ ( isset( $entry['code'] ) ? array( 'code' => $entry['code'] ) : array() );
 		}
 		return array(
 			'v'     => self::SCHEMA_VERSION,

@@ -161,7 +161,7 @@ final class VariationSizes {
 				'size'    => $size,
 				'refused' => $refused,
 				'basis'   => $basis,
-			) + $from;
+			) + $from + ( InvalidReason::CHECK_FAILED === $refused && null !== $failed ? array( 'code' => $failed->errorCode ) : array() );
 		}
 		return new VariationSize( $judged );
 	}
@@ -170,9 +170,9 @@ final class VariationSizes {
 	 * An entry judged before, marked as the variation's own size or its
 	 * attribute value's, as it is now.
 	 *
-	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool} $held The entry.
-	 * @param array{value?: true}                                                       $from Marks an attribute value's size.
-	 * @return array{size: PrintSize, refused: string|null, basis: string, value?: bool}
+	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string} $held The entry.
+	 * @param array{value?: true}                                                                      $from Marks an attribute value's size.
+	 * @return array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string}
 	 */
 	private static function sourced( array $held, array $from ): array {
 		unset( $held['value'] );
