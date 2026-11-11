@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-11T01:47:29+00:00\n"
+"POT-Creation-Date: 2026-11-11T03:06:50+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -3290,22 +3290,22 @@ msgid "%1$s, photo %2$d"
 msgstr "%1$s, foto %2$d"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is on.
-#: src/Admin/SplitListingFields.php:211
+#: src/Admin/SplitListingFields.php:270
 msgid "Auto: on, as the attribute is"
 msgstr "Auto: aan, zoals de eigenschap"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is off.
-#: src/Admin/SplitListingFields.php:213
+#: src/Admin/SplitListingFields.php:272
 msgid "Auto: off, as the attribute is"
 msgstr "Auto: uit, zoals de eigenschap"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it on, whatever the attribute's setting.
-#: src/Admin/SplitListingFields.php:215
+#: src/Admin/SplitListingFields.php:274
 msgid "On for this product"
 msgstr "Aan voor dit product"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it off, whatever the attribute's setting.
-#: src/Admin/SplitListingFields.php:217
+#: src/Admin/SplitListingFields.php:276
 msgid "Off for this product"
 msgstr "Uit voor dit product"
 
@@ -9695,6 +9695,47 @@ msgstr ""
 "op zijn tabblad Eigenschappen. Per product wordt maar één eigenschap zo "
 "getoond."
 
+#. translators: Heading over a title and an image field per value of an attribute, on the attribute's row in the product's Attributes tab.
+#: templates/admin/split-card-looks.php:29
+msgid "Each value’s card in the shop"
+msgstr "Kaart van elke waarde in de winkel"
+
+#: templates/admin/split-card-looks.php:33
+msgid ""
+"A card without a title of its own shows the product’s. Without an image of "
+"its own, it shows the image of the value’s first variation that has one, "
+"else the product’s. Save attributes to add a row for a value you just added."
+msgstr "Een kaart zonder eigen titel toont die van het product. Zonder eigen afbeelding toont deze de afbeelding van de eerste variatie van de waarde die er een heeft, anders die van het product. Sla de eigenschappen op om een rij toe te voegen voor een waarde die je net hebt toegevoegd."
+
+#. translators: %s: an attribute value, such as "With photo". Title of the media library window choosing the image of that value's card in the shop.
+#: templates/admin/split-card-looks.php:40
+#, php-format
+msgid "Image for “%s”"
+msgstr "Afbeelding voor ‘%s’"
+
+#. translators: Button of the media library window choosing the image of an attribute value's card in the shop.
+#: templates/admin/split-card-looks.php:42
+msgid "Use this image"
+msgstr "Deze afbeelding gebruiken"
+
+#. translators: %s: an attribute value, such as "With photo". Label of the field for the title of that value's card in the shop.
+#: templates/admin/split-card-looks.php:48
+#, php-format
+msgid "Title for “%s”"
+msgstr "Titel voor ‘%s’"
+
+#. translators: %s: an attribute value, such as "With photo". Button opening the media library to choose the image of that value's card in the shop.
+#: templates/admin/split-card-looks.php:58
+#, php-format
+msgid "Choose an image for “%s”"
+msgstr "Een afbeelding kiezen voor ‘%s’"
+
+#. translators: %s: an attribute value, such as "With photo". Link removing the image of that value's card in the shop, which then shows its default image.
+#: templates/admin/split-card-looks.php:64
+#, php-format
+msgid "Remove the image for “%s”"
+msgstr "Afbeelding voor ‘%s’ verwijderen"
+
 #: templates/admin/status-report.php:22
 msgid "Pixonaut for WooCommerce templates"
 msgstr "Templates van Pixonaut for WooCommerce"
@@ -10796,10 +10837,6 @@ msgstr[1] "%s weergaven"
 #~ msgstr "Verzendadres van bestelling #%s gewijzigd"
 
 #, php-format
-#~ msgid "Ran “%s”"
-#~ msgstr "“%s” uitgevoerd"
-
-#, php-format
 #~ msgid "Move the sandbox printshop order for “%1$s” in order #%2$s to %3$s"
 #~ msgstr "Sandbox-drukopdracht voor “%1$s” in bestelling #%2$s op %3$s zetten"
 
@@ -10854,10 +10891,6 @@ msgstr[1] "%s weergaven"
 #, php-format
 #~ msgid "Create the product “%1$s” at %2$s"
 #~ msgstr "Product “%1$s” aanmaken voor %2$s"
-
-#, php-format
-#~ msgid "Create the product “%s”"
-#~ msgstr "Product “%s” aanmaken"
 
 #, php-format
 #~ msgid ""
