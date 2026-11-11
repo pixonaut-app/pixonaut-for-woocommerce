@@ -7,21 +7,24 @@
 // writes under .wp-env-e2e/ (the tests site of .wp-env.json, as the only
 // site), with its own wp-env home, so the checkout's own wp-env is left
 // alone. Ports come from E2E_SITES_PORT_BASE: site n listens on that port plus
-// 2(n - 1), its fake on the next. E2E_SITES_COUNT, when set, is how many
-// ports there are; PIXONAUT_E2E_SITES how many sites to run.
+// 3(n - 1), its fake on the next and its database on the one after.
+// E2E_SITES_COUNT, when set, is how many ports there are; PIXONAUT_E2E_SITES
+// how many sites to run, as many as those ports hold when it is not set.
 //
 //   e2e-sites.mjs start           start the sites and their fakes
 //   e2e-sites.mjs stop            stop them
 //   e2e-sites.mjs test [args...]  start them, run `playwright test [args]`
 //                                 split across them (--shard), and stop the
 //                                 ones it started
-import { spawn as spawnAsync } from 'node:child_process';
+import { spawn as spawnAsync, spawnSync } from 'node:child_process';
 import {
 	existsSync,
 	mkdirSync,
 	openSync,
 	readdirSync,
 	readFileSync,
+	realpathSync,
+	rmSync,
 	writeFileSync,
 } from 'node:fs';
 import { basename, join } from 'node:path';
@@ -39,19 +42,29 @@ import { overrideConfig } from './wp-env-override.mjs';
 /** Where the sites' configs, wp-env homes and logs live. */
 export const SITES_DIR = join(root, '.wp-env-e2e');
 
-/** A site's WordPress port and its fake's. */
-const PORTS_PER_SITE = 2;
+/** A site's WordPress port, its fake's and its database's. A database
+ *  without a port of its own gets one Docker picks, which rootless Docker
+ *  can pick while the host already holds it. */
+const PORTS_PER_SITE = 3;
+
+/** Where a site's fake and database ports sit in its block of ports. */
+const FAKE_PORT_OFFSET = 1;
+const MYSQL_PORT_OFFSET = 2;
 
 /** The first port without E2E_SITES_PORT_BASE: past wp-env's defaults (8888,
  *  8889) and the fake's (8890). */
 const DEFAULT_FIRST_PORT = 8900;
 
-/** How many sites run without PIXONAUT_E2E_SITES. Each takes about 1 GB with
- *  its browser; four bring a full run of the suite to about a quarter. */
+/** How many sites run without PIXONAUT_E2E_SITES, unless E2E_SITES_COUNT
+ *  holds fewer. Each takes about 1 GB with its browser; four bring a full run
+ *  of the suite to about a quarter. */
 const DEFAULT_SITES = 4;
 
 /** A site's only WordPress container. */
 const WORDPRESS_SERVICE = 'wordpress';
+
+/** The clones of WordPress core wp-env makes in a site's project. */
+const CORE_CLONES = ['WordPress', 'tests-WordPress'];
 
 /** Where a site's fake reaches it, on the site's Docker network. */
 export const SITE_ON_NETWORK = `http://${WORDPRESS_SERVICE}`;
@@ -59,7 +72,7 @@ export const SITE_ON_NETWORK = `http://${WORDPRESS_SERVICE}`;
 const MS_PER_SECOND = 1000;
 
 /**
- * @typedef {{ number: number, port: number, fakePort: number, dir: string }} Site
+ * @typedef {{ number: number, port: number, fakePort: number, mysqlPort: number, dir: string }} Site
  */
 
 /**
@@ -70,7 +83,14 @@ const MS_PER_SECOND = 1000;
  */
 export function plannedSites(env = process.env) {
 	const firstPort = Number(env.E2E_SITES_PORT_BASE ?? DEFAULT_FIRST_PORT);
-	const wanted = Number(env.PIXONAUT_E2E_SITES ?? DEFAULT_SITES);
+	const fitting =
+		env.E2E_SITES_COUNT === undefined
+			? DEFAULT_SITES
+			: Math.min(
+					DEFAULT_SITES,
+					Math.floor(Number(env.E2E_SITES_COUNT) / PORTS_PER_SITE),
+				);
+	const wanted = Number(env.PIXONAUT_E2E_SITES ?? fitting);
 	if (!Number.isInteger(firstPort) || !Number.isInteger(wanted) || wanted < 1) {
 		throw new Error(
 			'E2E_SITES_PORT_BASE and PIXONAUT_E2E_SITES must be whole numbers, and at least one site.',
@@ -87,7 +107,8 @@ export function plannedSites(env = process.env) {
 	return Array.from({ length: wanted }, (_, index) => ({
 		number: index + 1,
 		port: firstPort + index * PORTS_PER_SITE,
-		fakePort: firstPort + index * PORTS_PER_SITE + 1,
+		fakePort: firstPort + index * PORTS_PER_SITE + FAKE_PORT_OFFSET,
+		mysqlPort: firstPort + index * PORTS_PER_SITE + MYSQL_PORT_OFFSET,
 		// Named after the checkout: wp-env names the site's containers after
 		// this directory.
 		dir: join(SITES_DIR, `${basename(root)}-e2e-${index + 1}`),
@@ -112,6 +133,7 @@ export function siteConfig(base, site) {
 		plugins: plugins ?? base.plugins,
 		themes: themes ?? base.themes,
 		port: site.port,
+		mysqlPort: site.mysqlPort,
 		testsEnvironment: false,
 		config: { ...base.config, ...tests.config, ...config },
 		mappings: tests.mappings ?? {},
@@ -151,6 +173,75 @@ function projectOf(site) {
 				.map((entry) => entry.name)
 		: [];
 	return project;
+}
+
+/**
+ * Whether the clone of WordPress core in `dir` is one an interrupted start
+ * left behind: not a repository, or with files of its checkout missing or
+ * changed. Running WordPress only adds untracked files (wp-config.php,
+ * uploads), which a complete clone may have. wp-env reuses whatever
+ * repository it finds there, and a partial one fails its checkout.
+ *
+ * @param {string} dir
+ */
+export function partialClone(dir) {
+	const top = gitIn(dir, ['rev-parse', '--show-toplevel']);
+	return (
+		top.status !== 0 ||
+		realpathOrSelf(top.stdout.trim()) !== realpathOrSelf(dir) ||
+		gitIn(dir, ['rev-parse', '--verify', '--quiet', 'HEAD']).status !== 0 ||
+		gitIn(dir, [
+			'status',
+			'--porcelain',
+			'--untracked-files=no',
+		]).stdout.trim() !== ''
+	);
+}
+
+/**
+ * Runs git in `dir` and captures its output.
+ *
+ * @param {string} dir
+ * @param {string[]} args
+ */
+function gitIn(dir, args) {
+	const result = spawnSync('git', ['-C', dir, ...args], {
+		encoding: 'utf8',
+		stdio: ['ignore', 'pipe', 'ignore'],
+	});
+	if (result.error) {
+		throw result.error;
+	}
+	return result;
+}
+
+/** @param {string} path */
+function realpathOrSelf(path) {
+	try {
+		return realpathSync(path);
+	} catch {
+		return path;
+	}
+}
+
+/**
+ * Removes the partial clones of WordPress core in a site's project, so its
+ * next start clones afresh. Answers the clones it removed.
+ *
+ * @param {Site} site
+ * @returns {string[]}
+ */
+export function removePartialClones(site) {
+	const project = projectOf(site);
+	if (project === undefined) {
+		return [];
+	}
+	return CORE_CLONES.map((name) => join(siteHome(site), project, name))
+		.filter((dir) => existsSync(dir) && partialClone(dir))
+		.map((dir) => {
+			rmSync(dir, { recursive: true, force: true });
+			return dir;
+		});
 }
 
 /** The children running now, each with the promise of its exit, so a
@@ -226,8 +317,11 @@ function siteWpEnv(site, args) {
 		...process.env,
 		WP_ENV_HOME: siteHome(site),
 		WP_ENV_PORT: String(site.port),
+		WP_ENV_MYSQL_PORT: String(site.mysqlPort),
 	};
+	// The checkout's own: the site has no tests environment.
 	delete env.WP_ENV_TESTS_PORT;
+	delete env.WP_ENV_TESTS_MYSQL_PORT;
 	return runLogged(wpEnvBin, [...args, '--config', siteConfigPath(site)], {
 		log: join(site.dir, 'wp-env.log'),
 		env,
@@ -283,6 +377,7 @@ export async function stoppedSites(sites) {
 export async function startSites(sites) {
 	const base = JSON.parse(readFileSync(join(root, '.wp-env.json'), 'utf8'));
 	for (const site of sites) {
+		reportRemovedClones(site, removePartialClones(site));
 		mkdirSync(site.dir, { recursive: true });
 		writeFileSync(
 			siteConfigPath(site),
@@ -300,6 +395,11 @@ export async function startSites(sites) {
 		const { status, seconds } = started[index] ?? { status: 1, seconds: 0 };
 		const project = projectOf(site);
 		if (status !== 0 || project === undefined) {
+			for (const failed of sites.filter(
+				(_, other) => (started[other]?.status ?? 1) !== 0,
+			)) {
+				reportRemovedClones(failed, removePartialClones(failed));
+			}
 			throw new Error(
 				`site ${site.number} did not start; see ${join(site.dir, 'wp-env.log')}.`,
 			);
@@ -321,6 +421,54 @@ export async function startSites(sites) {
 }
 
 /**
+ * @param {Site} site
+ * @param {string[]} removed
+ */
+function reportRemovedClones(site, removed) {
+	for (const dir of removed) {
+		console.log(
+			`Site ${site.number}: removed the partial WordPress clone in ${dir}.`,
+		);
+	}
+}
+
+/**
+ * The containers of a wp-env project, in any state.
+ *
+ * @param {string} project
+ * @returns {string[]}
+ */
+function projectContainers(project) {
+	const result = spawnSync(
+		dockerBin,
+		[
+			'ps',
+			'--all',
+			'--quiet',
+			'--filter',
+			`label=com.docker.compose.project=${project}`,
+		],
+		{ encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+	);
+	return (result.stdout ?? '').split('\n').filter(Boolean);
+}
+
+/**
+ * The sites wp-env has anything to stop for: a project with containers. A
+ * site whose start failed before any container was made has none, and wp-env
+ * fails to stop it.
+ *
+ * @param {Site[]} sites
+ * @param {(project: string) => string[]} containersOf
+ */
+export function sitesWithContainers(sites, containersOf = projectContainers) {
+	return sites.filter((site) => {
+		const project = projectOf(site);
+		return project !== undefined && containersOf(project).length > 0;
+	});
+}
+
+/**
  * Stops the sites and their fakes; answers whether every one stopped.
  *
  * @param {Site[]} sites
@@ -331,9 +479,7 @@ export async function stopSites(sites) {
 		stopFake(projectOf(site) ?? null, fakeLabel(site)),
 	);
 	const stopped = await Promise.all(
-		sites
-			.filter((site) => projectOf(site) !== undefined)
-			.map((site) => siteWpEnv(site, ['stop'])),
+		sitesWithContainers(sites).map((site) => siteWpEnv(site, ['stop'])),
 	);
 	const removed = networks.flat().map(removeNetwork);
 	return (
