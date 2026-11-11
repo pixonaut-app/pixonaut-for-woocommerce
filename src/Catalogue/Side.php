@@ -45,48 +45,51 @@ final class Side {
 	private const TEMPLATE_ID_SHAPE = '/^[a-z0-9]+(?:-[a-z0-9]+)+$/';
 
 	/**
-	 * @param string          $key              Stable key, unique within the product, e.g. `front`.
-	 * @param string          $label            Name customers see, e.g. "Front".
-	 * @param string|null     $placement_id     Placement on the blank; null for a product without a blank.
-	 * @param string|null     $placement_name   Cached placement name.
-	 * @param string          $template_base_id Template id without the `@version` suffix; empty while the
-	 *                                          store manager has not chosen one, which only an invalid
-	 *                                          configuration has.
-	 * @param int|null        $template_version The template's live version when last checked; null without a template.
-	 * @param int|null        $previous_version The live version before that, set when a re-check moved it.
-	 * @param string|null     $template_name    Cached template name.
-	 * @param PrintSize[]     $print_sizes      Sizes the side is sold in; empty means the placement's default.
-	 * @param array|null      $pending_sizes    The print-size menu as entered, kept while Pixonaut could not
-	 *                                          check it (a custom size, or null for the placement's default),
-	 *                                          so the product screen shows it again; null once checked.
-	 * @param int             $start_size       The size the designer starts on, by its index into the menu the
-	 *                                          side holds: the pending one while it is kept, else the sizes sold.
-	 *                                          A standing side is printed at it.
-	 * @param string          $mode             `PERSONALISED` or `STANDING`.
-	 * @param string|null     $standing_design_id A standing side's design, as Pixonaut last found it; null until found.
-	 * @param bool|null       $offers_properties Whether the template version offers the customer a field, as last read; null unknown.
-	 * @param FormGroups|null $form_groups  How the designer's form is arranged on the product page; null for the template's own.
-	 * @param StandingRow[]   $standing_rows A standing side's design per row of its blank's print areas, on a blank whose
-	 *                                       areas change with an option; empty on any other, which has `standing_design_id`.
-	 * @param string[]        $misfit_sizes  The blank's sizes the template cannot be printed at on the placement, by option
-	 *                                       value such as `XL` (several options' values joined with ` / `), as last checked:
-	 *                                       a standing side sells none of them. Empty when it prints at every size.
-	 * @param bool            $pinned        Whether the side stays on `template_version` when a new version is
-	 *                                       published; false follows the template's latest version.
-	 * @param int|null        $latest_version The template's latest published version, as last known; null when
-	 *                                        never read, which `template_version` then stands in for.
-	 * @param bool|null       $draw_at_template_ratio Whether the designer draws the side's canvas at its template's
-	 *                                        ratio whatever print size is chosen (`CanvasRatio`); null for the
-	 *                                        product's choice.
-	 * @param RowSize[]       $row_sizes     A personalised side's size per row of its blank's print areas, on a blank whose
-	 *                                       areas change with an option: a variation sold at the placement's default
-	 *                                       prints at its variant's row. Empty on any other side.
-	 * @param ValueSizes|null $value_sizes   A personalised side's size per value of one of its variable product's
-	 *                                       attributes, which a variation with that value prints at; null for none.
+	 * @param string              $key              Stable key, unique within the product, e.g. `front`.
+	 * @param string              $label            Name customers see, e.g. "Front".
+	 * @param string|null         $placement_id     Placement on the blank; null for a product without a blank.
+	 * @param string|null         $placement_name   Cached placement name.
+	 * @param string              $template_base_id Template id without the `@version` suffix; empty while the
+	 *                                              store manager has not chosen one, which only an invalid
+	 *                                              configuration has.
+	 * @param int|null            $template_version The template's live version when last checked; null without a template.
+	 * @param int|null            $previous_version The live version before that, set when a re-check moved it.
+	 * @param string|null         $template_name    Cached template name.
+	 * @param PrintSize[]         $print_sizes      Sizes the side is sold in; empty means the placement's default.
+	 * @param array|null          $pending_sizes    The print-size menu as entered, kept while Pixonaut could not
+	 *                                              check it (a custom size, or null for the placement's default),
+	 *                                              so the product screen shows it again; null once checked.
+	 * @param int                 $start_size       The size the designer starts on, by its index into the menu the
+	 *                                              side holds: the pending one while it is kept, else the sizes sold.
+	 *                                              A standing side is printed at it.
+	 * @param string              $mode             `PERSONALISED` or `STANDING`.
+	 * @param string|null         $standing_design_id A standing side's design, as Pixonaut last found it; null until found.
+	 * @param bool|null           $offers_properties Whether the template version offers the customer a field, as last read; null unknown.
+	 * @param FormGroups|null     $form_groups  How the designer's form is arranged on the product page; null for the template's own.
+	 * @param StandingRow[]       $standing_rows A standing side's design per row of its blank's print areas, on a blank whose
+	 *                                           areas change with an option; empty on any other, which has `standing_design_id`.
+	 * @param string[]            $misfit_sizes  The blank's sizes the template cannot be printed at on the placement, by option
+	 *                                           value such as `XL` (several options' values joined with ` / `), as last checked:
+	 *                                           a standing side sells none of them. Empty when it prints at every size.
+	 * @param bool                $pinned        Whether the side stays on `template_version` when a new version is
+	 *                                           published; false follows the template's latest version.
+	 * @param int|null            $latest_version The template's latest published version, as last known; null when
+	 *                                            never read, which `template_version` then stands in for.
+	 * @param bool|null           $draw_at_template_ratio Whether the designer draws the side's canvas at its template's
+	 *                                            ratio whatever print size is chosen (`CanvasRatio`); null for the
+	 *                                            product's choice.
+	 * @param RowSize[]           $row_sizes     A personalised side's size per row of its blank's print areas, on a blank whose
+	 *                                           areas change with an option: a variation sold at the placement's default
+	 *                                           prints at its variant's row. Empty on any other side.
+	 * @param ValueSizes|null     $value_sizes   A personalised side's size per value of one of its variable product's
+	 *                                           attributes, which a variation with that value prints at; null for none.
+	 * @param LowResolutionSize[] $low_resolution The sizes judged, sold or refused, at which images of the template print
+	 *                                       below their recommended resolution, as last checked; empty when none.
 	 * @phpstan-param list<PrintSize> $print_sizes
 	 * @phpstan-param list<PrintSize|null>|null $pending_sizes
 	 * @phpstan-param list<string> $misfit_sizes
 	 * @phpstan-param list<RowSize> $row_sizes
+	 * @phpstan-param list<LowResolutionSize> $low_resolution
 	 */
 	public function __construct(
 		public readonly string $key,
@@ -111,6 +114,7 @@ final class Side {
 		public readonly ?bool $draw_at_template_ratio = null,
 		public readonly array $row_sizes = array(),
 		public readonly ?ValueSizes $value_sizes = null,
+		public readonly array $low_resolution = array(),
 	) {
 	}
 
@@ -226,6 +230,17 @@ final class Side {
 	 */
 	public function with_row_sizes( array $rows ): self {
 		return $this->copy( array( 'row_sizes' => $rows ) );
+	}
+
+	/**
+	 * A copy that knows at which of its sizes images of its template print
+	 * below their recommended resolution.
+	 *
+	 * @param LowResolutionSize[] $sizes The sizes; empty for none.
+	 * @phpstan-param list<LowResolutionSize> $sizes
+	 */
+	public function with_low_resolution( array $sizes ): self {
+		return $this->copy( array( 'low_resolution' => $sizes ) );
 	}
 
 	/**
@@ -366,6 +381,7 @@ final class Side {
 			CanvasRatio::from_stored( $data['drawAtTemplateRatio'] ?? null ),
 			array_values( array_filter( array_map( array( RowSize::class, 'from_array' ), is_array( $data['rowSizes'] ?? null ) ? $data['rowSizes'] : array() ) ) ),
 			ValueSizes::from_array( $data['valueSizes'] ?? null ),
+			LowResolutionSize::list_from_array( $data['lowResolution'] ?? null ),
 		);
 		// A name the merchant did not type is what the side follows now, never a template id an earlier save stored.
 		return '' === $side->typed_label() ? $side->copy( array( 'label' => self::followed_label( $side->placement_name, $side->template_name, $side->key ) ) ) : $side;
@@ -401,6 +417,7 @@ final class Side {
 			'drawAtTemplateRatio' => $this->draw_at_template_ratio,
 			'rowSizes'            => array_map( static fn ( RowSize $row ): array => $row->to_array(), $this->row_sizes ),
 			'valueSizes'          => $this->value_sizes?->to_array(),
+			'lowResolution'       => array_map( static fn ( LowResolutionSize $size ): array => $size->to_array(), $this->low_resolution ),
 		) + ( null === $this->pending_sizes ? array() : array(
 			'pendingSizes' => array_map(
 				static fn ( ?PrintSize $size ): array => null === $size ? array( 'placementDefault' => true ) : $size->stored(),

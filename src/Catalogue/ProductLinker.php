@@ -523,12 +523,12 @@ final class ProductLinker {
 		}
 
 		try {
-			list( $legal, $legal_at, $reason, $refused ) = $this->judged( (string) $template, $entered, null, null );
+			list( $legal, $legal_at, $reason, $refused, $soft ) = $this->judged( (string) $template, $entered, null, null );
 		} catch ( ApiException $e ) {
 			// Nothing unchecked is sold; the menu waits for the next save.
 			return $this->config( $current, true, null, null, array( $sized( array(), $entered, $entered_at[ $input->start ] ?? 0 ) ), self::reason( $e, InvalidReason::UNKNOWN_TEMPLATE ), self::refusal( $e ) );
 		}
-		$side = $sized( $legal, null, $legal_at[ $entered_at[ $input->start ] ?? -1 ] ?? 0 );
+		$side = $sized( $legal, null, $legal_at[ $entered_at[ $input->start ] ?? -1 ] ?? 0 )->with_low_resolution( $soft );
 		if ( null !== $problem ) {
 			return $this->config( $current, true, null, null, array( $side ), $problem, $problem_detail );
 		}
@@ -592,7 +592,7 @@ final class ProductLinker {
 				$checked_at[ $entered ] = count( $sizes );
 				$sizes[]                = $size;
 			}
-			list( $legal, $legal_at, $refused, $refused_size ) = $this->judged( (string) $template, $sizes, $blank_id, $placement_id );
+			list( $legal, $legal_at, $refused, $refused_size, $soft ) = $this->judged( (string) $template, $sizes, $blank_id, $placement_id );
 			$misfits = $held;
 			$rows    = array();
 			if ( Side::STANDING !== $input->mode ) {
@@ -607,12 +607,12 @@ final class ProductLinker {
 		}
 		if ( null !== $refused ) {
 			// The menu stays as entered, so the refused size is shown with why; the product is not sold meanwhile.
-			return array( $sized( $legal, true )->with_misfit_sizes( $misfits )->with_row_sizes( $rows ), $reason ?? $refused, null === $reason ? InvalidDetail::of( null, $refused_size ) : null );
+			return array( $sized( $legal, true )->with_misfit_sizes( $misfits )->with_row_sizes( $rows )->with_low_resolution( $soft ), $reason ?? $refused, null === $reason ? InvalidDetail::of( null, $refused_size ) : null );
 		}
 		// A placement with an area per row, none of which any variant sold can be printed at, sells nothing at the default.
 		$unfit = null !== $varying && Side::STANDING !== $input->mode && array() === $rows && array() !== PrintAreas::areas( $varying, $placement_id ) ? InvalidReason::VARIANT_SIZE_UNFIT : null;
 		// A starting size Pixonaut cannot print leaves the first legal one to start on.
-		return array( $sized( $legal, false, $legal_at[ $checked_at[ $input->start ] ?? -1 ] ?? 0 )->with_misfit_sizes( $misfits )->with_row_sizes( $rows ), $reason ?? $unfit, null );
+		return array( $sized( $legal, false, $legal_at[ $checked_at[ $input->start ] ?? -1 ] ?? 0 )->with_misfit_sizes( $misfits )->with_row_sizes( $rows )->with_low_resolution( $soft ), $reason ?? $unfit, null );
 	}
 
 	/**
@@ -623,7 +623,7 @@ final class ProductLinker {
 	 * @param string|null $blank_id     The blank; null to judge against the template alone.
 	 * @param string|null $placement_id Its placement; null without a blank.
 	 * @phpstan-param list<PrintSize> $sizes
-	 * @return array{0: list<PrintSize>, 1: array<int, int>, 2: string|null, 3: string|null} The legal sizes, where each judged size landed among them by its index in `$sizes`, why the first one refused was, and its label.
+	 * @return array{0: list<PrintSize>, 1: array<int, int>, 2: string|null, 3: string|null, 4: list<LowResolutionSize>} The legal sizes, where each judged size landed among them by its index in `$sizes`, why the first one refused was, its label, and the sizes, legal or not, at which an image of the template prints below its recommended resolution.
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
@@ -633,8 +633,12 @@ final class ProductLinker {
 		$legal_at = array();
 		$reason   = null;
 		$refused  = null;
+		$soft     = array();
 		foreach ( $sizes as $i => $size ) {
 			$verdict = $verdicts[ $i ];
+			if ( array() !== $verdict->low_resolution ) {
+				$soft[] = new LowResolutionSize( $size, $verdict->low_resolution, ! $verdict->legal );
+			}
 			if ( $verdict->legal ) {
 				$legal_at[ $i ] = count( $legal );
 				$legal[]        = $size;
@@ -643,7 +647,7 @@ final class ProductLinker {
 			$refused ??= $size->described();
 			$reason  ??= $verdict->reason ?? InvalidReason::CHECK_FAILED;
 		}
-		return array( $legal, $legal_at, $reason, $refused );
+		return array( $legal, $legal_at, $reason, $refused, $soft );
 	}
 
 	/**

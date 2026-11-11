@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Admin;
 
 use Pixonaut\WooCommerce\Catalogue\InvalidDetail;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
+use Pixonaut\WooCommerce\Catalogue\LowResolutionSize;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
@@ -40,12 +41,14 @@ final class VariationSizeField {
 	public const CUSTOM = PostedSides::SIZE_CUSTOM;
 
 	/**
-	 * @param VariationSizes $sizes     Judges and stores the sizes.
-	 * @param Templates      $templates Renders the field.
+	 * @param VariationSizes             $sizes          Judges and stores the sizes.
+	 * @param Templates                  $templates      Renders the field.
+	 * @param LowResolutionWarnings|null $low_resolution Warns of images a size prints too soft; null for none.
 	 */
 	public function __construct(
 		private readonly VariationSizes $sizes,
 		private readonly Templates $templates,
+		private readonly ?LowResolutionWarnings $low_resolution = null,
 	) {
 	}
 
@@ -85,6 +88,7 @@ final class VariationSizeField {
 				'height'     => null === $size ? '' : (string) $size->height_mm,
 				'size_label' => null === $size || PrintSize::label_for( $size->width_mm, $size->height_mm ) === $size->label ? '' : $size->label,
 				'error'      => self::error( $own, $side, $config->blank_id, $variant, $value ),
+				'warnings'   => $this->warnings( $variation, $fields, $own, $side, count( $sides ) > 1 ),
 			);
 		}
 		return $this->templates->html(
@@ -95,6 +99,26 @@ final class VariationSizeField {
 				'sides'       => $rows,
 			)
 		);
+	}
+
+	/**
+	 * The warnings about images the size a side prints at, the variation's
+	 * own or its attribute value's, prints too soft, rendered; empty for none.
+	 *
+	 * @param WC_Product    $variation The variation.
+	 * @param PanelFields   $fields    Names the choices.
+	 * @param VariationSize $own       The variation's sizes.
+	 * @param Side          $side      The side.
+	 * @param bool          $named     Whether to name the side, of several.
+	 */
+	private function warnings( WC_Product $variation, PanelFields $fields, VariationSize $own, Side $side, bool $named ): string {
+		$images = $own->low_resolution( $side->key );
+		$size   = $own->sizes[ $side->key ]['size'] ?? null;
+		if ( null === $this->low_resolution || null === $size || array() === $images ) {
+			return '';
+		}
+		$refused = InvalidReason::LOW_RESOLUTION === $own->refused( $side->key );
+		return $this->low_resolution->html( $variation, $fields->name( PanelFields::LOW_RESOLUTION ), $side->key, $named ? $side->label : null, array( new LowResolutionSize( $size, $images, $refused ) ) );
 	}
 
 	/**

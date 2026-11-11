@@ -64,6 +64,10 @@ final class Settings {
 
 	public const SHOW_FIELD_VALUES = 'show_field_values';
 
+	public const LOW_RESOLUTION_WARNINGS = 'low_resolution_warnings';
+
+	public const LOW_RESOLUTION_QUIET_IMAGES = 'low_resolution_quiet_images';
+
 	public const LINE_PICTURE_VIEW = 'line_picture_view';
 
 	public const DEFAULT_APPROVAL_MODE = 'default_approval_mode';
@@ -274,6 +278,29 @@ final class Settings {
 					'title' => __( 'Use Pixonaut pictures as product images', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'Sets each personalised product’s and variation’s image to Pixonaut’s picture of it, its template on the blank, and draws it again when the product changes. A product can show its template’s showcase sets instead, chosen under Product images in its Pixonaut tab. An image you set yourself is kept. Off, each product gets back the image it had before.', 'pixonaut-for-woocommerce' ),
 				)
+			)
+		);
+		$this->register(
+			Setting::checkbox(
+				self::LOW_RESOLUTION_WARNINGS,
+				true,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant: whether a product's Pixonaut tab warns when a print size makes one of its template's images print below its recommended resolution. */
+					'title' => __( 'Warn about soft images', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'Warns in a product\'s Pixonaut tab when one of its print sizes makes an image in its template print below the resolution Pixonaut recommends, so it may look soft or pixelated. Off, the tab says nothing of it. A size the Pixonaut workspace refuses for it is still refused and says why: whether Pixonaut warns, refuses or says nothing is chosen in the workspace\'s settings in the Pixonaut studio.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::multiselect(
+				self::LOW_RESOLUTION_QUIET_IMAGES,
+				static fn ( string $asset_id ): bool => '' !== trim( $asset_id ),
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant: the images a product's Pixonaut tab no longer warns about. */
+					'title' => __( 'Images not warned about', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'The images you chose not to be warned about again in a product\'s Pixonaut tab, by their Pixonaut id. Remove one to be warned about it again.', 'pixonaut-for-woocommerce' ),
+				),
+				fn (): array => array_combine( $this->quiet_images(), $this->quiet_images() )
 			)
 		);
 		$this->register(
@@ -499,6 +526,17 @@ final class Settings {
 	public function get( string $key ): mixed {
 		$stored = $this->stored();
 		return $this->setting( $key )->resolve( $stored[ $key ] ?? null );
+	}
+
+	/**
+	 * The images a product's Pixonaut tab no longer warns about printing
+	 * below their recommended resolution, by Pixonaut asset id.
+	 *
+	 * @return list<string>
+	 */
+	public function quiet_images(): array {
+		$ids = $this->get( self::LOW_RESOLUTION_QUIET_IMAGES );
+		return is_array( $ids ) ? array_values( array_filter( $ids, 'is_string' ) ) : array();
 	}
 
 	/**

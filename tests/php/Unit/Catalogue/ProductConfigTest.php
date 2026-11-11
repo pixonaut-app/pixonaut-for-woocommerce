@@ -13,6 +13,7 @@ use LogicException;
 use Mockery;
 use Mockery\MockInterface;
 use Pixonaut\WooCommerce\Catalogue\FormGroups;
+use Pixonaut\WooCommerce\Api\Answers\LowResolutionImage;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\VariationSize;
@@ -195,7 +196,7 @@ final class ProductConfigTest extends TestCase {
 
 	public function test_a_side_saved_before_sizes_per_value_has_none(): void {
 		$document                           = self::v1_document();
-		$document['v']                      = ProductConfig::SCHEMA_VERSION - 1;
+		$document['v']                      = 14;
 		$document['sides'][0]['valueSizes'] = array(
 			'attribute' => 'pa_size',
 			'sizes'     => array(
@@ -207,6 +208,69 @@ final class ProductConfigTest extends TestCase {
 		);
 
 		$this->assertNull( ProductConfig::from_json( (string) wp_json_encode( $document ) )->sides[0]->value_sizes );
+	}
+
+	public function test_reads_and_writes_the_sizes_a_side_prints_an_image_too_soft_at(): void {
+		$document                              = self::v1_document();
+		$document['v']                         = ProductConfig::SCHEMA_VERSION;
+		$document['sides'][0]['lowResolution'] = array(
+			array(
+				'size'    => array(
+					'widthMm'  => 1000,
+					'heightMm' => 1000,
+					'label'    => 'Huge',
+				),
+				'images'  => array(
+					array(
+						'layerId'        => 'photo',
+						'assetId'        => 'ast_1',
+						'effectiveDpi'   => 121.9,
+						'recommendedDpi' => 300,
+					),
+					array( 'layerId' => 'broken' ),
+				),
+				'refused' => true,
+			),
+			array(
+				'size'   => array(
+					'widthMm'  => 500,
+					'heightMm' => 500,
+				),
+				'images' => array(),
+			),
+		);
+
+		$config = ProductConfig::from_json( (string) wp_json_encode( $document ) );
+		$sizes  = $config->sides[0]->low_resolution;
+
+		$this->assertCount( 1, $sizes, 'a size without a readable image is dropped' );
+		$this->assertEquals( new PrintSize( 1000, 1000, 'Huge' ), $sizes[0]->size );
+		$this->assertTrue( $sizes[0]->refused );
+		$this->assertEquals( array( new LowResolutionImage( 'photo', 'ast_1', 121.9, 300.0 ) ), $sizes[0]->images );
+		$this->assertEquals( $config, ProductConfig::from_json( $config->to_json() ) );
+	}
+
+	public function test_a_side_saved_before_low_resolution_sizes_knows_of_none(): void {
+		$document                              = self::v1_document();
+		$document['v']                         = 15;
+		$document['sides'][0]['lowResolution'] = array(
+			array(
+				'size'   => array(
+					'widthMm'  => 1000,
+					'heightMm' => 1000,
+				),
+				'images' => array(
+					array(
+						'layerId'        => 'photo',
+						'assetId'        => 'ast_1',
+						'effectiveDpi'   => 121.9,
+						'recommendedDpi' => 300,
+					),
+				),
+			),
+		);
+
+		$this->assertSame( array(), ProductConfig::from_json( (string) wp_json_encode( $document ) )->sides[0]->low_resolution );
 	}
 
 	public function test_a_side_saved_before_misfit_sizes_knows_of_none(): void {

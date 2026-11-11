@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Admin;
 
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Templates;
 use WC_Product;
 use WP_Post;
@@ -126,6 +127,10 @@ final class VariationPanel {
 		$this->variant->save( $variation, $posted[ PanelFields::VARIANT ] ?? null, $posted[ PanelFields::VARIANT_BLANK ] ?? null );
 		// After the variant: a size is judged for the variant the variation sells.
 		$this->size?->save( $variation, $posted );
+		// After the sizes, read again as stored: an accept is kept only for what is warned of now.
+		$fresh = wc_get_product( $variation->get_id() );
+		$fresh = $fresh instanceof WC_Product ? $fresh : $variation;
+		$this->panel->save_low_resolution( $fresh, $posted[ PanelFields::LOW_RESOLUTION ] ?? null, VariationSize::stored_on( $fresh ) );
 		ShowcaseField::save_variation( $variation, isset( $posted[ PanelFields::PICTURE_VIEW_LISTED ] ) ? $posted[ PanelFields::PICTURE_VIEW ] ?? null : null );
 	}
 

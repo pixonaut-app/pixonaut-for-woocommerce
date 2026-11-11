@@ -98,6 +98,12 @@ final class InvalidReason {
 	public const PRINT_SIZE_NOT_AREA = 'print_size_not_area';
 
 	/**
+	 * Pixonaut: an image the workspace put in the template prints below its
+	 * recommended resolution at the size, and the workspace refuses such sizes.
+	 */
+	public const LOW_RESOLUTION = 'low_resolution';
+
+	/**
 	 * A variation's template cannot be printed at its blank variant's print
 	 * area, or the variant is in none of the blank's rows of print areas.
 	 */
@@ -156,7 +162,7 @@ final class InvalidReason {
 	 * The refusals Pixonaut answers when it judges a print size
 	 * (`POST /v1/templates/{id}/print-size`), each a reason of its own.
 	 */
-	public const PIXONAUT_VERDICTS = array( self::TOO_LARGE, self::WRONG_RATIO, self::PRINT_SIZE_NOT_AREA );
+	public const PIXONAUT_VERDICTS = array( self::TOO_LARGE, self::WRONG_RATIO, self::PRINT_SIZE_NOT_AREA, self::LOW_RESOLUTION );
 
 	/**
 	 * Reasons that come with the error code Pixonaut answered, which says
@@ -351,6 +357,12 @@ final class InvalidReason {
 				return sprintf(
 					/* translators: %s: where the settings are, e.g. "the product's Pixonaut tab". */
 					__( 'The print position is printed across its whole print area, so the print size must be that area. Choose the print position’s size instead in %s.', 'pixonaut-for-woocommerce' ),
+					$place
+				);
+			case self::LOW_RESOLUTION:
+				return sprintf(
+					/* translators: %s: where the settings are, e.g. "the product's Pixonaut tab". */
+					__( 'An image in the template prints below its recommended resolution at this size, and the Pixonaut workspace refuses such sizes. Upscale the image in the Pixonaut studio, or choose a smaller print size in %s.', 'pixonaut-for-woocommerce' ),
 					$place
 				);
 			case self::VARIANT_SIZE_UNFIT:

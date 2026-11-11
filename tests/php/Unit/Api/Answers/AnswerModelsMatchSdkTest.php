@@ -15,6 +15,8 @@ use Pixonaut\WooCommerce\Api\Answers\EventsPage;
 use Pixonaut\WooCommerce\Api\Answers\Order;
 use Pixonaut\WooCommerce\Api\Answers\OrderDetail;
 use Pixonaut\WooCommerce\Api\Answers\OrderList;
+use Pixonaut\WooCommerce\Api\Answers\LowResolutionImage;
+use Pixonaut\WooCommerce\Api\Answers\PrintSizeVerdict;
 use Pixonaut\WooCommerce\Api\Answers\PrintSizeVerdicts;
 use Pixonaut\WooCommerce\Api\Answers\ShareLinkPage;
 use Pixonaut\WooCommerce\Api\Answers\WebhookEndpoint;
@@ -37,6 +39,8 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersUpdateRespons
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ShareLinksListResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesDesignerLinksCreateResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesPrintSizeValidateResponseOption3;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesPrintSizeValidateResponseOption3VerdictsItemFalse;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesPrintSizeValidateResponseOption3VerdictsItemTrue;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\WebhookEndpointsListResponseItem;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\WebhookEndpointsPingResponseFalse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\WebhookEndpointsPingResponseTrue;
@@ -107,6 +111,25 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 	);
 
 	/**
+	 * Fields an answer model reads ahead of the pinned SDK, which the spec
+	 * overlay stands in for, by model: each with the model of its items, the
+	 * SDK models that will have it, and the Pixonaut issue it awaits. Read only when Pixonaut sends them. Once
+	 * the pin brings a field, the match below takes it over and the entry
+	 * must go.
+	 *
+	 * @var array<class-string, array<string, array{items: class-string, sdk: list<class-string>, awaits: string}>>
+	 */
+	private const AWAITED = array(
+		PrintSizeVerdict::class => array(
+			'low_resolution' => array(
+				'items'  => LowResolutionImage::class,
+				'sdk'    => array( TemplatesPrintSizeValidateResponseOption3VerdictsItemTrue::class, TemplatesPrintSizeValidateResponseOption3VerdictsItemFalse::class ),
+				'awaits' => 'pixonaut-app/pixonaut#3432',
+			),
+		),
+	);
+
+	/**
 	 * Classes in the folder that are not answer models.
 	 *
 	 * @var list<class-string>
@@ -125,8 +148,21 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 			$this->match( $answer, $answers );
 		}
 
-		$unmatched = array_diff( self::models_in_folder(), array_keys( $this->matched ), self::NOT_MODELS );
+		$awaited   = array_merge( ...array_map( static fn ( array $fields ): array => array_column( $fields, 'items' ), array_values( self::AWAITED ) ) );
+		$unmatched = array_diff( self::models_in_folder(), array_keys( $this->matched ), self::NOT_MODELS, $awaited );
 		$this->assertSame( array(), array_values( $unmatched ), 'Every answer model is matched with an SDK model: list a new top-level one in ANSWERS.' );
+	}
+
+	public function test_an_awaited_field_is_not_in_the_pinned_sdk_yet(): void {
+		foreach ( self::AWAITED as $answer => $fields ) {
+			foreach ( $fields as $property => $awaited ) {
+				$field = lcfirst( str_replace( ' ', '', ucwords( str_replace( '_', ' ', $property ) ) ) );
+				foreach ( $awaited['sdk'] as $sdk_model ) {
+					$this->assertTrue( class_exists( $sdk_model ), "{$sdk_model} is an SDK model." );
+					$this->assertNull( self::parameter( $sdk_model, $field ), "{$sdk_model}::\${$field} is pinned now ({$awaited['awaits']}): remove {$answer}::\${$property} from AWAITED." );
+				}
+			}
+		}
 	}
 
 	public function test_a_field_of_another_type_fails_the_match(): void {
@@ -168,7 +204,7 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 	 */
 	private function match( string $answer, array $answers ): void {
 		$this->matched[ $answer ] = true;
-		$skip                     = self::NOT_FIELDS[ $answer ] ?? array();
+		$skip                     = array_merge( self::NOT_FIELDS[ $answer ] ?? array(), array_keys( self::AWAITED[ $answer ] ?? array() ) );
 		foreach ( self::constructor( $answer )->getParameters() as $parameter ) {
 			if ( in_array( $parameter->getName(), $skip, true ) ) {
 				continue;

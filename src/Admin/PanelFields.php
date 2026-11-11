@@ -93,6 +93,12 @@ final class PanelFields {
 
 	public const PICTURE_VIEW_LISTED = 'picture_view_listed';
 
+	/**
+	 * What the store manager chose on each warning about an image printed
+	 * too soft, by the warning's key.
+	 */
+	public const LOW_RESOLUTION = 'low_resolution';
+
 	public const NONCE = 'nonce';
 
 	/**
