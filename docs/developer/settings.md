@@ -163,6 +163,18 @@ Default: `true`.
 
 Default: `true`.
 
+### `low_resolution_warnings`
+
+**Warn about soft images** (checkbox). Warns in a product's Pixonaut tab when one of its print sizes makes an image in its template print below the resolution Pixonaut recommends, so it may look soft or pixelated. Off, the tab says nothing of it. A size the Pixonaut workspace refuses for it is still refused and says why: whether Pixonaut warns, refuses or says nothing is chosen in the workspace's settings in the Pixonaut studio.
+
+Default: `true`.
+
+### `low_resolution_quiet_images`
+
+**Images not warned about** (multiselect). The images you chose not to be warned about again in a product's Pixonaut tab, by their Pixonaut id. Remove one to be warned about it again.
+
+Default: `[]`.
+
 ### `show_field_values`
 
 **List the design's fields** (checkbox). Lists what the customer filled in under a personalised item in the cart, the checkout, their orders and the order emails, as the designer showed it. Off, the item shows only its name. The order screen in the admin always lists them.

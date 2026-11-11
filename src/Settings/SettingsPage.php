@@ -136,6 +136,10 @@ final class SettingsPage {
 				Settings::LINE_PICTURE_VIEW,
 				Settings::SHOW_FIELD_VALUES,
 			),
+			'pixonaut_wc_resolution'   => array(
+				Settings::LOW_RESOLUTION_WARNINGS,
+				Settings::LOW_RESOLUTION_QUIET_IMAGES,
+			),
 		),
 		self::APPROVAL   => array(
 			'pixonaut_wc_approval' => array(
@@ -165,22 +169,26 @@ final class SettingsPage {
 	 * @var array<string, array{on: string, equals?: string, above?: int, required?: bool}>
 	 */
 	private const DEPENDENT = array(
-		Settings::OPTION_GROUPS_POSITION    => array(
+		Settings::OPTION_GROUPS_POSITION      => array(
 			'on'      => Settings::OPTIONS_AS_GROUPS,
 			'checked' => true,
 		),
-		Settings::DESIGNER_ACCENT_COLOUR    => array(
+		Settings::DESIGNER_ACCENT_COLOUR      => array(
 			'on'       => Settings::DESIGNER_ACCENT,
 			'equals'   => Accent::CUSTOM,
 			'required' => true,
 		),
-		Settings::PROOF_REMINDER_AFTER_DAYS => array(
+		Settings::PROOF_REMINDER_AFTER_DAYS   => array(
 			'on'    => Settings::PROOF_REMINDERS,
 			'above' => 0,
 		),
-		Settings::PROOF_REMINDER_EVERY_DAYS => array(
+		Settings::PROOF_REMINDER_EVERY_DAYS   => array(
 			'on'    => Settings::PROOF_REMINDERS,
 			'above' => 0,
+		),
+		Settings::LOW_RESOLUTION_QUIET_IMAGES => array(
+			'on'      => Settings::LOW_RESOLUTION_WARNINGS,
+			'checked' => true,
 		),
 	);
 
@@ -576,6 +584,13 @@ final class SettingsPage {
 					/* translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how a personalised item shows in the cart, the checkout, orders and emails. */
 					'title' => __( 'Cart and orders', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'How a personalised item shows in the cart, the checkout, the customer’s orders and the order emails.', 'pixonaut-for-woocommerce' ),
+				);
+			case 'pixonaut_wc_resolution':
+				return array(
+					'type'  => 'title',
+					/* translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: warnings in a product's Pixonaut tab about images that print below their recommended resolution. */
+					'title' => __( 'Image resolution', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'Warnings in a product’s Pixonaut tab about images in its template that print below the resolution Pixonaut recommends at one of its print sizes.', 'pixonaut-for-woocommerce' ),
 				);
 			case 'pixonaut_wc_approval':
 				return array(

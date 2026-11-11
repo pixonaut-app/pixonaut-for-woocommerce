@@ -28,7 +28,7 @@ final class ProductConfig {
 
 	public const META_KEY = Schema::PRODUCT_CONFIG_META;
 
-	public const SCHEMA_VERSION = 15;
+	public const SCHEMA_VERSION = 16;
 
 	/**
 	 * Invalid reason of a document written by a newer plugin version.
@@ -868,6 +868,16 @@ final class ProductConfig {
 				foreach ( is_array( $data['sides'] ?? null ) ? $data['sides'] : array() as $index => $side ) {
 					if ( is_array( $side ) ) {
 						$side['valueSizes']      = null;
+						$data['sides'][ $index ] = $side;
+					}
+				}
+				return $data;
+			},
+			// Version 16 keeps the sizes at which a side's template prints an image below its recommended resolution; a side saved before knows of none until it is checked again.
+			15 => static function ( array $data ): array {
+				foreach ( is_array( $data['sides'] ?? null ) ? $data['sides'] : array() as $index => $side ) {
+					if ( is_array( $side ) ) {
+						$side['lowResolution']   = array();
 						$data['sides'][ $index ] = $side;
 					}
 				}

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Pixonaut\WooCommerce\Api\Answers\LowResolutionImage;
 use Pixonaut\WooCommerce\Schema;
 use WC_Product;
 
@@ -34,7 +35,7 @@ final class VariationSize {
 	public const SCHEMA_VERSION = 1;
 
 	/**
-	 * @param array<string, array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string}> $sizes The sizes by side key: the size, why Pixonaut refused it (null when it did not), what it was judged for (`basis()`), whether it is the variation's attribute value's size rather than its own, and the error code Pixonaut answered when it could not judge it.
+	 * @param array<string, array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string, soft?: list<LowResolutionImage>}> $sizes The sizes by side key: the size, why Pixonaut refused it (null when it did not), what it was judged for (`basis()`), whether it is the variation's attribute value's size rather than its own, the error code Pixonaut answered when it could not judge it, and the template's images that print below their recommended resolution at it.
 	 */
 	public function __construct( public readonly array $sizes = array() ) {
 	}
@@ -75,9 +76,21 @@ final class VariationSize {
 	}
 
 	/**
+	 * The template's images that print below their recommended resolution
+	 * at the size a side prints at, the variation's own or its attribute
+	 * value's; empty when none does, or there is none.
+	 *
+	 * @param string $key The side's key.
+	 * @return list<LowResolutionImage>
+	 */
+	public function low_resolution( string $key ): array {
+		return $this->sizes[ $key ]['soft'] ?? array();
+	}
+
+	/**
 	 * Whether an entry is the size of the variation's attribute value.
 	 *
-	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string} $entry An entry of `$sizes`.
+	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string, soft?: list<LowResolutionImage>} $entry An entry of `$sizes`.
 	 */
 	public static function is_value( array $entry ): bool {
 		return true === ( $entry['value'] ?? false );
@@ -287,6 +300,10 @@ final class VariationSize {
 				'basis'   => $entry['basis'],
 			) + ( true === ( $entry['value'] ?? null ) ? array( 'value' => true ) : array() )
 				+ ( is_string( $entry['code'] ?? null ) && '' !== $entry['code'] ? array( 'code' => $entry['code'] ) : array() );
+			$soft                   = LowResolutionImage::list_from_stored( $entry['lowResolution'] ?? null );
+			if ( array() !== $soft ) {
+				$sizes[ (string) $key ]['soft'] = $soft;
+			}
 		}
 		return new self( $sizes );
 	}
@@ -352,7 +369,8 @@ final class VariationSize {
 				'refused' => $entry['refused'],
 				'basis'   => $entry['basis'],
 			) + ( self::is_value( $entry ) ? array( 'value' => true ) : array() )
-				+ ( isset( $entry['code'] ) ? array( 'code' => $entry['code'] ) : array() );
+				+ ( isset( $entry['code'] ) ? array( 'code' => $entry['code'] ) : array() )
+				+ ( array() === ( $entry['soft'] ?? array() ) ? array() : array( 'lowResolution' => array_map( static fn ( LowResolutionImage $image ): array => $image->stored(), $entry['soft'] ) ) );
 		}
 		return array(
 			'v'     => self::SCHEMA_VERSION,

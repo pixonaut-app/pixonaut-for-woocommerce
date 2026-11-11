@@ -5038,6 +5038,122 @@
 			}
 		},
 		{
+			"pointer": "/paths/~1v1~1templates~1{id}~1print-size/post/responses/200/content/application~1json/schema/anyOf/0/properties/lowResolution",
+			"awaits": "pixonaut-app/pixonaut#3432",
+			"value": {
+				"description": "The images the workspace put in the template that print below their recommended resolution at the size. Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off.",
+				"items": {
+					"properties": {
+						"assetId": {
+							"type": "string"
+						},
+						"effectiveDpi": {
+							"description": "Pixels per inch along the edge that decides, at the size.",
+							"type": "number"
+						},
+						"layerId": {
+							"description": "The layer the image fills, or the artwork's own key for its image background.",
+							"type": "string"
+						},
+						"recommendedDpi": {
+							"description": "The resolution it is judged against: the template's minimum, else the workspace's.",
+							"type": "number"
+						}
+					},
+					"required": ["layerId", "assetId", "effectiveDpi", "recommendedDpi"],
+					"type": "object"
+				},
+				"type": "array"
+			}
+		},
+		{
+			"pointer": "/paths/~1v1~1templates~1{id}~1print-size/post/responses/200/content/application~1json/schema/anyOf/1/properties/lowResolution",
+			"awaits": "pixonaut-app/pixonaut#3432",
+			"value": {
+				"description": "The images the workspace put in the template that print below their recommended resolution at the size. Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off.",
+				"items": {
+					"properties": {
+						"assetId": {
+							"type": "string"
+						},
+						"effectiveDpi": {
+							"description": "Pixels per inch along the edge that decides, at the size.",
+							"type": "number"
+						},
+						"layerId": {
+							"description": "The layer the image fills, or the artwork's own key for its image background.",
+							"type": "string"
+						},
+						"recommendedDpi": {
+							"description": "The resolution it is judged against: the template's minimum, else the workspace's.",
+							"type": "number"
+						}
+					},
+					"required": ["layerId", "assetId", "effectiveDpi", "recommendedDpi"],
+					"type": "object"
+				},
+				"type": "array"
+			}
+		},
+		{
+			"pointer": "/paths/~1v1~1templates~1{id}~1print-size/post/responses/200/content/application~1json/schema/anyOf/2/properties/verdicts/items/oneOf/0/properties/lowResolution",
+			"awaits": "pixonaut-app/pixonaut#3432",
+			"value": {
+				"description": "The images the workspace put in the template that print below their recommended resolution at the size. Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off.",
+				"items": {
+					"properties": {
+						"assetId": {
+							"type": "string"
+						},
+						"effectiveDpi": {
+							"description": "Pixels per inch along the edge that decides, at the size.",
+							"type": "number"
+						},
+						"layerId": {
+							"description": "The layer the image fills, or the artwork's own key for its image background.",
+							"type": "string"
+						},
+						"recommendedDpi": {
+							"description": "The resolution it is judged against: the template's minimum, else the workspace's.",
+							"type": "number"
+						}
+					},
+					"required": ["layerId", "assetId", "effectiveDpi", "recommendedDpi"],
+					"type": "object"
+				},
+				"type": "array"
+			}
+		},
+		{
+			"pointer": "/paths/~1v1~1templates~1{id}~1print-size/post/responses/200/content/application~1json/schema/anyOf/2/properties/verdicts/items/oneOf/1/properties/lowResolution",
+			"awaits": "pixonaut-app/pixonaut#3432",
+			"value": {
+				"description": "The images the workspace put in the template that print below their recommended resolution at the size. Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off.",
+				"items": {
+					"properties": {
+						"assetId": {
+							"type": "string"
+						},
+						"effectiveDpi": {
+							"description": "Pixels per inch along the edge that decides, at the size.",
+							"type": "number"
+						},
+						"layerId": {
+							"description": "The layer the image fills, or the artwork's own key for its image background.",
+							"type": "string"
+						},
+						"recommendedDpi": {
+							"description": "The resolution it is judged against: the template's minimum, else the workspace's.",
+							"type": "number"
+						}
+					},
+					"required": ["layerId", "assetId", "effectiveDpi", "recommendedDpi"],
+					"type": "object"
+				},
+				"type": "array"
+			}
+		},
+		{
 			"pointer": "/webhooks/template.renamed",
 			"awaits": "pixonaut-app/pixonaut#3429",
 			"value": {

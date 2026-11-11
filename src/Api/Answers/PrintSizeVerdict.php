@@ -17,12 +17,17 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\UnexpectedResponse;
 final class PrintSizeVerdict {
 
 	/**
-	 * @param bool        $legal  `legal`.
-	 * @param string|null $reason `reason` a size is not legal; sent only with a size that is not.
+	 * @param bool                 $legal          `legal`.
+	 * @param string|null          $reason         `reason` a size is not legal; sent only with a size that is not.
+	 * @param LowResolutionImage[] $low_resolution `lowResolution`: the template's images that print below their
+	 *                                             recommended resolution at the size; empty when none does, and
+	 *                                             from a Pixonaut that does not judge them yet.
+	 * @phpstan-param list<LowResolutionImage> $low_resolution
 	 */
 	public function __construct(
 		public readonly bool $legal,
 		public readonly ?string $reason,
+		public readonly array $low_resolution = array(),
 	) {
 	}
 
@@ -34,6 +39,7 @@ final class PrintSizeVerdict {
 	 */
 	public static function from_answer( array $data, string $path = '$' ): self {
 		$legal = Read::bool( $data, 'legal', $path );
-		return new self( $legal, $legal ? null : Read::string( $data, 'reason', $path ) );
+		$soft  = array_key_exists( 'lowResolution', $data ) ? Read::objects( $data, 'lowResolution', $path, LowResolutionImage::from_answer( ... ) ) : array();
+		return new self( $legal, $legal ? null : Read::string( $data, 'reason', $path ), $soft );
 	}
 }

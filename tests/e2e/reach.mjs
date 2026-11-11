@@ -425,6 +425,14 @@ export const REACH = {
 		'assets/src/admin/catalogue-search.ts',
 		'assets/src/admin/sides.ts',
 	],
+	'low-resolution.spec.ts': [
+		'src/Admin/LowResolutionWarnings.php',
+		'src/Catalogue/LowResolutionSize.php',
+		'templates/admin/low-resolution-warnings.php',
+		'src/Admin/StudioPage.php',
+		'src/Catalogue/ProductLinker.php',
+		'src/Catalogue/InvalidReason.php',
+	],
 	'mcp-product-setup.spec.ts': [
 		...ABILITIES,
 		'src/Abilities/SetProductSetup.php',

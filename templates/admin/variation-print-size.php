@@ -14,10 +14,11 @@
  *
  * @var string $listed_name Posted with the sizes, so a form without them keeps the ones saved.
  * @var bool   $hidden      Whether the field is hidden: the variation overrides its whole setup.
- * @var list<array{label: string, name: string, id: string, inherited: string, custom: bool, width: string, height: string, size_label: string, error: string}> $sides
+ * @var list<array{label: string, name: string, id: string, inherited: string, custom: bool, width: string, height: string, size_label: string, error: string, warnings?: string}> $sides
  *                          Each side: its label, the base name of its fields, the id of its dropdown, what it prints at
  *                          as the product sells it, whether the variation has a size of its own, that size's width,
- *                          height and label, and why it cannot be printed (empty when it can).
+ *                          height and label, why it cannot be printed (empty when it can), and `admin/low-resolution-warnings.php`
+ *                          for the images its size prints below their recommended resolution (empty for none).
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -57,5 +58,6 @@ defined( 'ABSPATH' ) || exit;
 				<span class="pixonaut-field-error pixonaut-variation-size-error" role="alert"><?php echo esc_html( $pixonaut_side['error'] ); ?></span>
 			<?php endif; ?>
 		</p>
+		<?php echo $pixonaut_side['warnings'] ?? ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- rendered by admin/low-resolution-warnings.php, which escapes it. ?>
 	<?php endforeach; ?>
 </div>

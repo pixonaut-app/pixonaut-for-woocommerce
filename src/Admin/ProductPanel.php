@@ -133,6 +133,13 @@ final class ProductPanel {
 	private const OPTION_PREVIEW_WIDTH = 240;
 
 	/**
+	 * Warnings about images a side's sizes print too soft.
+	 *
+	 * @var LowResolutionWarnings
+	 */
+	private readonly LowResolutionWarnings $low_resolution;
+
+	/**
 	 * @param ProductLinker           $linker     Checks and builds the configuration.
 	 * @param LinkedBlank             $blank      Reads the linked blank's placements, views and printshop.
 	 * @param Notices                 $notices    Raises the invalid-product notice.
@@ -160,6 +167,26 @@ final class ProductPanel {
 		private readonly ?Connection $connection = null,
 		private readonly ?VariantPairing $pairing = null,
 	) {
+		$this->low_resolution = new LowResolutionWarnings( $settings, $templates );
+	}
+
+	/**
+	 * The warnings about images a side's sizes print too soft, which a
+	 * variation's own sizes show too.
+	 */
+	public function low_resolution(): LowResolutionWarnings {
+		return $this->low_resolution;
+	}
+
+	/**
+	 * Saves what was chosen on a product's or variation's warnings about
+	 * images printed too soft, for what it warns of as stored now.
+	 *
+	 * @param WC_Product $product The product or variation, as stored now.
+	 * @param mixed      $posted  The choices as posted, unslashed.
+	 */
+	public function save_low_resolution( WC_Product $product, mixed $posted ): void {
+		$this->low_resolution->save( $product, $posted );
 	}
 
 	public function register(): void {
@@ -421,7 +448,7 @@ final class ProductPanel {
 			'initial_view'     => $config->initial_view ?? '',
 			// The tile of the view of the design alone shows the template's preview.
 			'design_preview'   => null === $views || null === $this->showcases ? '' : $this->showcases->preview( $config ),
-			'sides'            => array_map( fn ( ?Side $side ): array => self::side_fields( $side, $product->is_type( 'variable' ) ) + $this->standing_options( $side, $product->get_id() ), array() === $config->sides ? array( null ) : $config->sides ),
+			'sides'            => array_map( fn ( ?Side $side ): array => self::side_fields( $side, $product->is_type( 'variable' ) ) + $this->standing_options( $side, $product->get_id() ) + array( 'low_resolution_html' => $this->low_resolution_html( $product, $config, $side, $fields ) ), array() === $config->sides ? array( null ) : $config->sides ),
 			'printshop'        => null === $config->blank_id ? null : $this->blank->printshop( $config->blank_id, $blank ),
 			// Pixonaut is still importing it from a printshop's catalogue: nothing to pick on it yet.
 			'importing'        => null !== $blank && LinkedBlank::IMPORTING === $blank['status'],
@@ -467,6 +494,23 @@ final class ProductPanel {
 	}
 
 	/**
+	 * A side's warnings about images its sizes print too soft, rendered;
+	 * empty for none, and in a variation that shows its product's sides,
+	 * whose warnings are the product's.
+	 *
+	 * @param WC_Product    $product The product or variation the fields are posted for.
+	 * @param ProductConfig $config  The configuration shown.
+	 * @param Side|null     $side    The side; null for a new one.
+	 * @param PanelFields   $fields  Where the fields are posted.
+	 */
+	private function low_resolution_html( WC_Product $product, ProductConfig $config, ?Side $side, PanelFields $fields ): string {
+		if ( null === $side || array() === $side->low_resolution || ( $product->is_type( 'variation' ) && ! ProductConfig::stored_on( $product )->override ) ) {
+			return '';
+		}
+		return $this->low_resolution->html( $product, $fields->name( PanelFields::LOW_RESOLUTION ), $side->key, count( $config->sides ) > 1 ? $side->label : null, $side->low_resolution );
+	}
+
+	/**
 	 * The catalogue search routes the fields' scripts ask.
 	 *
 	 * @return array<string, string>
@@ -507,6 +551,8 @@ final class ProductPanel {
 			}
 		}
 		$this->configure( $product, $posted );
+		$soft = $fields->name( PanelFields::LOW_RESOLUTION );
+		$this->save_low_resolution( $product, isset( $_POST[ $soft ] ) ? wp_unslash( $_POST[ $soft ] ) : null ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- LowResolutionWarnings::save() sanitises each choice.
 		$this->remember_open( $product, isset( $_POST[ self::OPEN_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::OPEN_FIELD ] ) ) : '' );
 		if ( $product->is_type( 'variable' ) ) {
 			$this->pairing?->save(

@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Pixonaut\WooCommerce\Admin\LowResolutionWarnings;
+use Pixonaut\WooCommerce\Api\Answers\LowResolutionImage;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use WC_Product;
@@ -27,9 +29,10 @@ final class VariationSizes {
 
 	/**
 	 * Pixonaut's verdicts in this run, by what was asked, so variations
-	 * sharing a value's size ask once.
+	 * sharing a value's size ask once: why it refused the size, and the
+	 * images that print below their recommended resolution at it.
 	 *
-	 * @var array<string, string|null>
+	 * @var array<string, array{0: string|null, 1: list<LowResolutionImage>}>
 	 */
 	private array $verdicts = array();
 
@@ -94,11 +97,11 @@ final class VariationSizes {
 			if ( $judged->to_array() === $stored->to_array() ) {
 				continue;
 			}
-			if ( null === $document ) {
-				// None was stored to write over: a size saved meanwhile is judged by its own save.
-				$judged->add_to( $fresh );
-			} else {
-				$judged->replace_on( $fresh, $document );
+			// With none stored to write over, a size saved meanwhile is judged by its own save.
+			$written = null === $document ? $judged->add_to( $fresh ) : $judged->replace_on( $fresh, $document );
+			if ( $written ) {
+				// Read again as stored: an accept is kept only for what the new verdicts warn of.
+				LowResolutionWarnings::prune( self::fresh( $fresh ) );
 			}
 		}
 		$this->failure = $failed;
@@ -145,9 +148,10 @@ final class VariationSizes {
 				continue;
 			}
 			$refused = InvalidReason::CHECK_FAILED;
+			$soft    = array();
 			if ( null === $failed ) {
 				try {
-					$refused = $this->refusal( $side, $config->blank_id, $variant, $size );
+					list( $refused, $soft ) = $this->refusal( $side, $config->blank_id, $variant, $size );
 				} catch ( ApiException $e ) {
 					$failed = $e;
 				}
@@ -161,7 +165,8 @@ final class VariationSizes {
 				'size'    => $size,
 				'refused' => $refused,
 				'basis'   => $basis,
-			) + $from + ( InvalidReason::CHECK_FAILED === $refused && null !== $failed ? array( 'code' => $failed->errorCode ) : array() );
+			) + $from + ( InvalidReason::CHECK_FAILED === $refused && null !== $failed ? array( 'code' => $failed->errorCode ) : array() )
+				+ ( array() === $soft ? array() : array( 'soft' => $soft ) );
 		}
 		return new VariationSize( $judged );
 	}
@@ -170,9 +175,9 @@ final class VariationSizes {
 	 * An entry judged before, marked as the variation's own size or its
 	 * attribute value's, as it is now.
 	 *
-	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string} $held The entry.
-	 * @param array{value?: true}                                                                      $from Marks an attribute value's size.
-	 * @return array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string}
+	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string, soft?: list<LowResolutionImage>} $held The entry.
+	 * @param array{value?: true}                                                                                                       $from Marks an attribute value's size.
+	 * @return array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string, soft?: list<LowResolutionImage>}
 	 */
 	private static function sourced( array $held, array $from ): array {
 		unset( $held['value'] );
@@ -191,28 +196,32 @@ final class VariationSizes {
 	}
 
 	/**
-	 * Why a size cannot be printed for a side of a variation; null when it can.
+	 * Why a size cannot be printed for a side of a variation, null when it
+	 * can, and the template's images that print below their recommended
+	 * resolution at it.
 	 *
 	 * @param Side        $side     The side.
 	 * @param string|null $blank_id The blank; null for none.
 	 * @param string|null $variant  The variant the variation sells.
 	 * @param PrintSize   $size     The size.
 	 *
+	 * @return array{0: string|null, 1: list<LowResolutionImage>}
+	 *
 	 * @throws ApiException When Pixonaut could not be asked.
 	 */
-	private function refusal( Side $side, ?string $blank_id, ?string $variant, PrintSize $size ): ?string {
+	private function refusal( Side $side, ?string $blank_id, ?string $variant, PrintSize $size ): array {
 		if ( null === $side->template_version ) {
-			return InvalidReason::MISSING_TEMPLATE;
+			return array( InvalidReason::MISSING_TEMPLATE, array() );
 		}
 		$on_row = array() !== $side->row_sizes;
 		if ( $on_row ) {
 			$row = $side->row_size_for( $variant );
 			if ( null === $row || null === $row->size ) {
-				return InvalidReason::VARIANT_SIZE_UNFIT;
+				return array( InvalidReason::VARIANT_SIZE_UNFIT, array() );
 			}
 			$refused = $row->refuses( $size );
 			if ( null !== $refused ) {
-				return $refused;
+				return array( $refused, array() );
 			}
 		}
 		$template  = (string) new TemplateId( $side->template_base_id, $side->template_version );
@@ -221,7 +230,7 @@ final class VariationSizes {
 		$asked     = (string) wp_json_encode( array( $template, $blank_id, $placement, $size->stored() ) );
 		if ( ! array_key_exists( $asked, $this->verdicts ) ) {
 			$verdict                  = $this->catalogue->check_print_sizes( $template, array( $size ), $blank_id, $placement )[0];
-			$this->verdicts[ $asked ] = $verdict->legal ? null : $verdict->reason ?? InvalidReason::CHECK_FAILED;
+			$this->verdicts[ $asked ] = array( $verdict->legal ? null : $verdict->reason ?? InvalidReason::CHECK_FAILED, $verdict->low_resolution );
 		}
 		return $this->verdicts[ $asked ];
 	}

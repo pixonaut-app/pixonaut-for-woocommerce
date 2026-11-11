@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-11T01:34:22+00:00\n"
+"POT-Creation-Date: 2026-11-11T01:47:29+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -47,8 +47,8 @@ msgstr ""
 #. translators: The plugin's item in the admin menu, shown to the merchant; the product name, keep it as it is.
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
-#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:189
-#: src/Settings/SettingsPage.php:237 templates/admin/product-variation.php:40
+#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:216
+#: src/Settings/SettingsPage.php:245 templates/admin/product-variation.php:40
 msgid "Pixonaut"
 msgstr "Pixonaut"
 
@@ -2926,17 +2926,17 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:343 src/Admin/ProductPanel.php:771
+#: src/Admin/LinkedBlank.php:343 src/Admin/ProductPanel.php:817
 msgid "Workspace default"
 msgstr "Standard des Arbeitsbereichs"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:345 src/Admin/ProductPanel.php:774
+#: src/Admin/LinkedBlank.php:345 src/Admin/ProductPanel.php:820
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Standard des Arbeitsbereichs (%s)"
 
-#: src/Admin/LinkedBlank.php:348 src/Admin/ProductPanel.php:786
+#: src/Admin/LinkedBlank.php:348 src/Admin/ProductPanel.php:832
 msgid "A printshop no longer connected to the workspace"
 msgstr "Eine Druckerei, die nicht mehr mit dem Arbeitsbereich verbunden ist"
 
@@ -2949,6 +2949,33 @@ msgstr "%s (aus der Kategorie des Rohlings)"
 #: src/Admin/LinkedBlank.php:454
 msgid "Pixonaut could not be asked which printshop this is."
 msgstr "Pixonaut konnte nicht gefragt werden, welche Druckerei das ist."
+
+#. translators: 1: a product side's name, e.g. "Front", 2: what is wrong with an image on it. Admin product page.
+#. translators: 1: where on the product, e.g. "Side “Front” at 300 × 400 mm", 2: what is wrong there and how to fix it.
+#: src/Admin/LowResolutionWarnings.php:116 src/Catalogue/InvalidReason.php:209
+#, php-format
+msgid "%1$s: %2$s"
+msgstr "%1$s: %2$s"
+
+#. translators: 1: the template layer the image fills, e.g. "photo", 2: its resolution in dots per inch at the size, e.g. "122", 3: the print size, e.g. "1000 × 1000 mm", 4: the resolution Pixonaut recommends, e.g. "300". Admin product page.
+#: src/Admin/LowResolutionWarnings.php:251
+#, php-format
+msgid ""
+"The image in “%1$s” prints at %2$s dpi at %3$s, below the %4$s dpi "
+"recommended, so Pixonaut does not sell this size."
+msgstr ""
+"Das Bild in «%1$s» hat bei %3$s nur %2$s dpi, weniger als die empfohlenen "
+"%4$s dpi, daher verkauft Pixonaut diese Grösse nicht."
+
+#. translators: 1: the template layer the image fills, e.g. "photo", 2: its resolution in dots per inch at the size, e.g. "122", 3: the print size, e.g. "1000 × 1000 mm", 4: the resolution Pixonaut recommends, e.g. "300". Admin product page.
+#: src/Admin/LowResolutionWarnings.php:259
+#, php-format
+msgid ""
+"The image in “%1$s” prints at %2$s dpi at %3$s, below the %4$s dpi "
+"recommended, so it may look soft."
+msgstr ""
+"Das Bild in «%1$s» hat bei %3$s nur %2$s dpi, weniger als die empfohlenen "
+"%4$s dpi, und kann daher unscharf wirken."
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the order waits for the printed items.
 #: src/Admin/OrderBox.php:281
@@ -3068,7 +3095,7 @@ msgstr ""
 
 #. translators: Link on the Plugins screen to the plugin's settings.
 #. translators: Item in the admin menu under Pixonaut, opening the plugin's settings.
-#: src/Admin/PluginLinks.php:40 src/Settings/SettingsPage.php:250
+#: src/Admin/PluginLinks.php:40 src/Settings/SettingsPage.php:258
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -3082,57 +3109,57 @@ msgstr "Dokumentation"
 msgid "Support"
 msgstr "Support"
 
-#: src/Admin/ProductPanel.php:406
+#: src/Admin/ProductPanel.php:433
 msgid ""
 "This variation cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Diese Variante kann erst gekauft werden, wenn ihre Pixonaut-Konfiguration "
 "korrigiert ist:"
 
-#: src/Admin/ProductPanel.php:407
+#: src/Admin/ProductPanel.php:434
 msgid ""
 "This product cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Dieses Produkt kann erst gekauft werden, wenn seine Pixonaut-Konfiguration "
 "korrigiert ist:"
 
-#: src/Admin/ProductPanel.php:412
+#: src/Admin/ProductPanel.php:439
 msgid "Customers design this variation with a Pixonaut template."
 msgstr "Kunden gestalten diese Variante mit einer Pixonaut-Vorlage."
 
-#: src/Admin/ProductPanel.php:413
+#: src/Admin/ProductPanel.php:440
 msgid "Customers design this product with a Pixonaut template."
 msgstr "Kunden gestalten dieses Produkt mit einer Pixonaut-Vorlage."
 
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:454 src/Admin/ProductPanel.php:687
+#: src/Admin/ProductPanel.php:481 src/Admin/ProductPanel.php:733
 msgid "As the product says"
 msgstr "Wie das Produkt es vorgibt"
 
 #. translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page.
-#: src/Admin/ProductPanel.php:456
+#: src/Admin/ProductPanel.php:483
 msgid "As the template says"
 msgstr "Wie die Vorlage es vorgibt"
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:704
+#: src/Admin/ProductPanel.php:750
 #, php-format
 msgid "Store setting: %s"
 msgstr "Shop-Einstellung: %s"
 
 #. translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page.
-#: src/Admin/ProductPanel.php:778
+#: src/Admin/ProductPanel.php:824
 #, php-format
 msgid "Workspace default (%s): prints only on a blank"
 msgstr "Standard des Arbeitsbereichs (%s): druckt nur auf einen Rohling"
 
-#: src/Admin/ProductPanel.php:783
+#: src/Admin/ProductPanel.php:829
 msgid "The printshop chosen before"
 msgstr "Die zuvor gewählte Druckerei"
 
 #. translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page.
-#: src/Admin/ProductPanel.php:785
+#: src/Admin/ProductPanel.php:831
 #, php-format
 msgid "%s (prints only on a blank)"
 msgstr "%s (druckt nur auf einen Rohling)"
@@ -3424,18 +3451,18 @@ msgid "%1$s × %2$s mm"
 msgstr "%1$s × %2$s mm"
 
 #. translators: 1: the product attribute whose value gives the print size, e.g. "Size"; 2: the print size, e.g. "30×40 cm". Option in a variation's print size dropdown: print the side at the size the product gives the variation's value of that attribute. Admin product page.
-#: src/Admin/VariationSizeField.php:164
+#: src/Admin/VariationSizeField.php:188
 #, php-format
 msgid "As its %1$s (%2$s)"
 msgstr "Wie ihr Wert für %1$s (%2$s)"
 
 #. translators: Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says, which gives no size this variation can be printed at. Admin product page.
-#: src/Admin/VariationSizeField.php:171
+#: src/Admin/VariationSizeField.php:195
 msgid "As the product (no size fits this variation)"
 msgstr "Wie das Produkt (keine Grösse passt zu dieser Variante)"
 
 #. translators: %s: the print sizes, e.g. "300 × 400 mm". Option in a variation's print size dropdown: print the side as the product's Pixonaut tab says. Admin product page.
-#: src/Admin/VariationSizeField.php:175
+#: src/Admin/VariationSizeField.php:199
 #, php-format
 msgid "As the product (%s)"
 msgstr "Wie das Produkt (%s)"
@@ -3869,33 +3896,27 @@ msgid "Side “%1$s” at %2$s"
 msgstr "Seite «%1$s», Druckgrösse %2$s"
 
 #. translators: Where a variation's Pixonaut settings are changed, used after "in" in messages such as "Choose a template in %s." Admin product page.
-#: src/Catalogue/InvalidReason.php:185
+#: src/Catalogue/InvalidReason.php:191
 msgid "the variation’s Pixonaut fields"
 msgstr "in den Pixonaut-Feldern der Variante"
 
 #. translators: Where a product's Pixonaut settings are changed, used after "in" in messages such as "Choose a template in %s." Admin product page.
-#: src/Catalogue/InvalidReason.php:187
+#: src/Catalogue/InvalidReason.php:193
 msgid "the product’s Pixonaut tab"
 msgstr "im Pixonaut-Tab des Produkts"
 
-#. translators: 1: where on the product, e.g. "Side “Front” at 300 × 400 mm", 2: what is wrong there and how to fix it.
-#: src/Catalogue/InvalidReason.php:203
-#, php-format
-msgid "%1$s: %2$s"
-msgstr "%1$s: %2$s"
-
-#: src/Catalogue/InvalidReason.php:251
+#: src/Catalogue/InvalidReason.php:257
 msgid "Pixonaut cannot print this configuration."
 msgstr "Pixonaut kann diese Konfiguration nicht drucken."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:255
+#: src/Catalogue/InvalidReason.php:261
 #, php-format
 msgid "No template is chosen. Choose one in %s."
 msgstr "Es ist keine Vorlage gewählt. Wählen Sie eine %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:261
+#: src/Catalogue/InvalidReason.php:267
 #, php-format
 msgid ""
 "No print position is chosen for where on the blank the design is printed. "
@@ -3905,7 +3926,7 @@ msgstr ""
 "gedruckt wird. Wählen Sie eine %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:267
+#: src/Catalogue/InvalidReason.php:273
 #, php-format
 msgid "The blank no longer exists in Pixonaut. Choose another blank in %s."
 msgstr ""
@@ -3913,7 +3934,7 @@ msgstr ""
 "Rohling."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:273
+#: src/Catalogue/InvalidReason.php:279
 #, php-format
 msgid ""
 "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or "
@@ -3923,7 +3944,7 @@ msgstr ""
 "wieder her oder wählen Sie %s einen anderen Rohling."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:279
+#: src/Catalogue/InvalidReason.php:285
 #, php-format
 msgid ""
 "The blank no longer has this print position, or Pixonaut cannot size a print "
@@ -3933,7 +3954,7 @@ msgstr ""
 "Druck dafür bemessen. Wählen Sie %s eine andere Druckposition."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:285
+#: src/Catalogue/InvalidReason.php:291
 #, php-format
 msgid ""
 "The template is not published in Pixonaut, or no longer exists. Publish it "
@@ -3944,7 +3965,7 @@ msgstr ""
 "Vorlage."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:291
+#: src/Catalogue/InvalidReason.php:297
 #, php-format
 msgid ""
 "The template is paused or deleted in Pixonaut. Make it live again in the "
@@ -3954,13 +3975,13 @@ msgstr ""
 "Pixonaut-Studio wieder live oder wählen Sie %s eine andere Vorlage."
 
 #. translators: 1: most sides a product can have, 2: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:297
+#: src/Catalogue/InvalidReason.php:303
 #, php-format
 msgid "A product has at most %1$d sides. Remove sides in %2$s."
 msgstr "Ein Produkt hat höchstens %1$d Seiten. Entfernen Sie Seiten %2$s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:304
+#: src/Catalogue/InvalidReason.php:310
 #, php-format
 msgid ""
 "Two sides use the same print position, and each print position can be one "
@@ -3971,7 +3992,7 @@ msgstr ""
 "Druckposition."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:310
+#: src/Catalogue/InvalidReason.php:316
 #, php-format
 msgid "Two sides have the same key. Give each side its own in %s."
 msgstr ""
@@ -3979,7 +4000,7 @@ msgstr ""
 "eigenen."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:316
+#: src/Catalogue/InvalidReason.php:322
 #, php-format
 msgid ""
 "A custom print size has no width or height, or one that is not above zero. "
@@ -3990,7 +4011,7 @@ msgstr ""
 "Werte in Millimetern ein."
 
 #. translators: 1: most print sizes one side can offer, 2: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:322
+#: src/Catalogue/InvalidReason.php:328
 #, php-format
 msgid ""
 "A side offers at most %1$d print sizes. Remove sizes under the side’s print "
@@ -4000,7 +4021,7 @@ msgstr ""
 "den Druckgrössen der Seite %2$s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:329
+#: src/Catalogue/InvalidReason.php:335
 #, php-format
 msgid ""
 "The side has no print size, and without a blank there is no print position "
@@ -4011,7 +4032,7 @@ msgstr ""
 "Millimetern hinzu oder wählen Sie einen Rohling."
 
 #. translators: %s: where the product's settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:335
+#: src/Catalogue/InvalidReason.php:341
 #, php-format
 msgid ""
 "Some variations have no print size. Add one in millimetres in %s, or one for "
@@ -4023,7 +4044,7 @@ msgstr ""
 "Pixonaut-Feldern jeder dieser Varianten eine hinzu."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:341
+#: src/Catalogue/InvalidReason.php:347
 #, php-format
 msgid ""
 "The print size is larger than the print position can print. Enter a smaller "
@@ -4033,7 +4054,7 @@ msgstr ""
 "%s eine kleinere Grösse ein oder wählen Sie die Grösse der Druckposition."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:347
+#: src/Catalogue/InvalidReason.php:353
 #, php-format
 msgid ""
 "The print size does not match the template’s aspect ratio. Enter a size at "
@@ -4044,7 +4065,7 @@ msgstr ""
 "der Druckposition."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:353
+#: src/Catalogue/InvalidReason.php:359
 #, php-format
 msgid ""
 "The print position is printed across its whole print area, so the print size "
@@ -4054,7 +4075,20 @@ msgstr ""
 "die Druckgrösse genau diesem Bereich entsprechen. Wählen Sie stattdessen %s "
 "die Grösse der Druckposition."
 
-#: src/Catalogue/InvalidReason.php:357
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:365
+#, php-format
+msgid ""
+"An image in the template prints below its recommended resolution at this "
+"size, and the Pixonaut workspace refuses such sizes. Upscale the image in "
+"the Pixonaut studio, or choose a smaller print size in %s."
+msgstr ""
+"Ein Bild der Vorlage wird in dieser Grösse unter seiner empfohlenen "
+"Auflösung gedruckt, und der Pixonaut-Arbeitsbereich lässt solche Grössen "
+"nicht zu. Skalieren Sie das Bild im Pixonaut-Studio hoch oder wählen Sie %s "
+"eine kleinere Druckgrösse."
+
+#: src/Catalogue/InvalidReason.php:369
 msgid ""
 "The template cannot be printed at the print area of this variation’s blank "
 "variant. Choose a template that fits, or another variant, in the variation’s "
@@ -4065,7 +4099,7 @@ msgstr ""
 "passende Vorlage oder eine andere Rohling-Variante, oder verkaufen Sie die "
 "Variante nicht mehr."
 
-#: src/Catalogue/InvalidReason.php:359
+#: src/Catalogue/InvalidReason.php:371
 msgid ""
 "The variation’s own print size has not been checked since the product "
 "changed. Update the product to check it again."
@@ -4074,7 +4108,7 @@ msgstr ""
 "Produkt nicht geprüft. Aktualisieren Sie das Produkt, um sie erneut zu "
 "prüfen."
 
-#: src/Catalogue/InvalidReason.php:361
+#: src/Catalogue/InvalidReason.php:373
 msgid ""
 "Pixonaut could not be reached to check the configuration. Check the "
 "connection on the Pixonaut settings page, then update the product."
@@ -4084,7 +4118,7 @@ msgstr ""
 "Produkt."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:365
+#: src/Catalogue/InvalidReason.php:377
 #, php-format
 msgid ""
 "Pixonaut would not make the design of a fixed-design side. Check the side’s "
@@ -4094,7 +4128,7 @@ msgstr ""
 "Vorlage, Druckposition und Druckgrösse der Seite und aktualisieren Sie dann "
 "das Produkt."
 
-#: src/Catalogue/InvalidReason.php:369
+#: src/Catalogue/InvalidReason.php:381
 msgid ""
 "Pixonaut would not make the design of a fixed-design side: the store may not "
 "create and approve designs. Check the connection’s permissions in the "
@@ -4105,7 +4139,7 @@ msgstr ""
 "Verbindung im Pixonaut-Studio und aktualisieren Sie dann das Produkt."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:373
+#: src/Catalogue/InvalidReason.php:385
 #, php-format
 msgid ""
 "The template of a fixed-design side does not fit the print position at any "
@@ -4117,7 +4151,7 @@ msgstr ""
 "passende Vorlage."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:379
+#: src/Catalogue/InvalidReason.php:391
 #, php-format
 msgid ""
 "The printshop prints only on a blank. Choose a blank, or a printshop that "
@@ -4126,7 +4160,7 @@ msgstr ""
 "Die Druckerei druckt nur auf einen Rohling. Wählen Sie %s einen Rohling oder "
 "eine Druckerei, die ohne Rohling druckt."
 
-#: src/Catalogue/InvalidReason.php:383
+#: src/Catalogue/InvalidReason.php:395
 msgid ""
 "The configuration was saved by a newer version of Pixonaut for WooCommerce. "
 "Update the plugin."
@@ -4135,13 +4169,13 @@ msgstr ""
 "WooCommerce gespeichert. Aktualisieren Sie das Plugin."
 
 #. translators: %s: why, and what to do, e.g. "Pixonaut was asked too often. Wait a minute, then update the product."
-#: src/Catalogue/InvalidReason.php:401
+#: src/Catalogue/InvalidReason.php:413
 #, php-format
 msgid "Pixonaut would not make the design of a fixed-design side. %s"
 msgstr "Pixonaut hat das Design einer festen Seite nicht erstellt. %s"
 
 #. translators: %s: the code Pixonaut answered, e.g. "too_small", kept as it is.
-#: src/Catalogue/InvalidReason.php:414
+#: src/Catalogue/InvalidReason.php:426
 #, php-format
 msgid ""
 "Pixonaut cannot print this configuration, and answered “%s”. Update Pixonaut "
@@ -6565,11 +6599,11 @@ msgstr ""
 "Sie WooCommerce, um es zu verwenden."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:110
+#: src/Settings/Settings.php:114
 msgid "Default layout"
 msgstr "Standard-Layout"
 
-#: src/Settings/Settings.php:111
+#: src/Settings/Settings.php:115
 msgid ""
 "How personalised products show the designer, unless a product overrides it."
 msgstr ""
@@ -6577,11 +6611,11 @@ msgstr ""
 "nicht anders festlegt."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:124
+#: src/Settings/Settings.php:128
 msgid "Designer language"
 msgstr "Sprache des Designers"
 
-#: src/Settings/Settings.php:125
+#: src/Settings/Settings.php:129
 msgid ""
 "The language of the designer on the product page, of Pixonaut’s designer the "
 "Personalise button opens, and of the proof pages customers approve their "
@@ -6597,11 +6631,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
 #. translators: Label of the dropdown choosing how the product page designer lays out its form. Admin product page.
-#: src/Settings/Settings.php:138 templates/admin/product-fields.php:234
+#: src/Settings/Settings.php:142 templates/admin/product-fields.php:234
 msgid "Form layout"
 msgstr "Formular-Layout"
 
-#: src/Settings/Settings.php:139
+#: src/Settings/Settings.php:143
 msgid ""
 "How the designer lays out its form, on the product page and in Pixonaut’s "
 "designer the Personalise button opens, unless a product overrides it: as the "
@@ -6613,11 +6647,11 @@ msgstr ""
 "auf einer Seite oder ein Schritt nach dem anderen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: each product option, such as Size or Colour, gets a group of its own in the designer's form.
-#: src/Settings/Settings.php:151
+#: src/Settings/Settings.php:155
 msgid "As its own group"
 msgstr "Als eigene Gruppe"
 
-#: src/Settings/Settings.php:152
+#: src/Settings/Settings.php:156
 msgid ""
 "Puts each of a product's options, such as Size or Colour, in a group of its "
 "own in the designer's form on the product page, named after the option, in "
@@ -6631,11 +6665,11 @@ msgstr ""
 "angeordnet wurden, behält sie."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the groups of a product's options come before or after the template's groups.
-#: src/Settings/Settings.php:163
+#: src/Settings/Settings.php:167
 msgid "Place of the option groups"
 msgstr "Position der Optionsgruppen"
 
-#: src/Settings/Settings.php:164
+#: src/Settings/Settings.php:168
 msgid ""
 "Whether the groups of a product's options come before or after the "
 "template's groups."
@@ -6645,11 +6679,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the designer's form numbers its groups.
 #. translators: Label of the dropdown choosing whether the designer's form numbers its groups. Admin product page.
-#: src/Settings/Settings.php:176 templates/admin/product-fields.php:239
+#: src/Settings/Settings.php:180 templates/admin/product-fields.php:239
 msgid "Group numbers"
 msgstr "Gruppennummern"
 
-#: src/Settings/Settings.php:177
+#: src/Settings/Settings.php:181
 msgid ""
 "Numbers the groups of the designer's form on the product page: 1 Photo, 2 "
 "Text on one page, Step 1 of 2 in steps. Off shows the group names with no "
@@ -6660,11 +6694,11 @@ msgstr ""
 "Gruppennamen ohne Nummern."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:188
+#: src/Settings/Settings.php:192
 msgid "Load other colours and views"
 msgstr "Andere Farben und Ansichten laden"
 
-#: src/Settings/Settings.php:189
+#: src/Settings/Settings.php:193
 msgid ""
 "Whether the designer loads a product's other colours, views and sides before "
 "the customer picks one, so they show at once. Choose In the background or "
@@ -6676,11 +6710,11 @@ msgstr ""
 "für Kunden, die meist am Smartphone einkaufen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:202
+#: src/Settings/Settings.php:206
 msgid "Designer accent colour"
 msgstr "Akzentfarbe des Designers"
 
-#: src/Settings/Settings.php:203
+#: src/Settings/Settings.php:207
 msgid ""
 "The colour the designer on the product page marks the chosen view, colour "
 "and option in, and draws its Next button in. None takes the accent colour of "
@@ -6693,11 +6727,11 @@ msgstr ""
 "eigenen Farben des Designers, wenn die Marke keine hat."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:214
+#: src/Settings/Settings.php:218
 msgid "Custom accent colour"
 msgstr "Eigene Akzentfarbe"
 
-#: src/Settings/Settings.php:215
+#: src/Settings/Settings.php:219
 msgid ""
 "The accent colour when Designer accent colour is A custom colour, e.g. "
 "#1e73be."
@@ -6706,11 +6740,11 @@ msgstr ""
 "steht, z. B. #1e73be."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:226
+#: src/Settings/Settings.php:230
 msgid "Show the print area's frame"
 msgstr "Rahmen des Druckbereichs anzeigen"
 
-#: src/Settings/Settings.php:227
+#: src/Settings/Settings.php:231
 msgid ""
 "Draws a thin grey frame on the preview around where the design can go, in "
 "the designer on the product page and in Pixonaut's designer the Personalise "
@@ -6723,12 +6757,12 @@ msgstr ""
 "das Design so auf dem Produktfoto, wie es gedruckt wird."
 
 #. translators: Title of a setting on the settings page, shown to the merchant. "Hosted page" is Pixonaut's designer page the Personalise button opens.
-#: src/Settings/Settings.php:237
+#: src/Settings/Settings.php:241
 msgid "Add to cart after approve in hosted page"
 msgstr "Nach der Freigabe auf der gehosteten Seite in den Warenkorb legen"
 
 #. translators: Help text of a setting on the settings page. "Approve and add to cart" and "Approve and go back" are the labels of the button on Pixonaut's designer page.
-#: src/Settings/Settings.php:239
+#: src/Settings/Settings.php:243
 msgid ""
 "For the Personalise button layout. Approving adds the product to the cart "
 "and opens its cart item's page, and Pixonaut's designer says Approve and add "
@@ -6742,11 +6776,11 @@ msgstr ""
 "zurück“."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: how the options of a product option such as a size show in the designer's form.
-#: src/Settings/Settings.php:250
+#: src/Settings/Settings.php:254
 msgid "Product options in the designer"
 msgstr "Produktoptionen im Designer"
 
-#: src/Settings/Settings.php:251
+#: src/Settings/Settings.php:255
 msgid ""
 "How the designer on the product page shows the options of a variable "
 "product, such as its sizes, when it draws them in its form. As the theme "
@@ -6764,11 +6798,11 @@ msgstr ""
 "kann, wird ausgegraut."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether a product option's swatches drawn as a colour or a picture show the option's name beside them.
-#: src/Settings/Settings.php:263
+#: src/Settings/Settings.php:267
 msgid "Show value names beside swatches"
 msgstr "Wertnamen neben den Schaltflächen anzeigen"
 
-#: src/Settings/Settings.php:264
+#: src/Settings/Settings.php:268
 msgid ""
 "With product options shown as swatches, a value Pixonaut draws as a colour "
 "or a picture shows its name beside it. Off, the swatch shows the colour or "
@@ -6788,11 +6822,11 @@ msgstr ""
 "ausblenden, auf seiner Bearbeitungsseite unter Produkte > Eigenschaften."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:274
+#: src/Settings/Settings.php:278
 msgid "Use Pixonaut pictures as product images"
 msgstr "Pixonaut-Bilder als Produktbilder verwenden"
 
-#: src/Settings/Settings.php:275
+#: src/Settings/Settings.php:279
 msgid ""
 "Sets each personalised product’s and variation’s image to Pixonaut’s picture "
 "of it, its template on the blank, and draws it again when the product "
@@ -6808,12 +6842,48 @@ msgstr ""
 "Ist die Option aus, bekommt jedes Produkt wieder das Bild, das es vorher "
 "hatte."
 
+#. translators: Title of a setting on the settings page, shown to the merchant: whether a product's Pixonaut tab warns when a print size makes one of its template's images print below its recommended resolution.
+#: src/Settings/Settings.php:289
+msgid "Warn about soft images"
+msgstr "Vor unscharfen Bildern warnen"
+
+#: src/Settings/Settings.php:290
+msgid ""
+"Warns in a product's Pixonaut tab when one of its print sizes makes an image "
+"in its template print below the resolution Pixonaut recommends, so it may "
+"look soft or pixelated. Off, the tab says nothing of it. A size the Pixonaut "
+"workspace refuses for it is still refused and says why: whether Pixonaut "
+"warns, refuses or says nothing is chosen in the workspace's settings in the "
+"Pixonaut studio."
+msgstr ""
+"Warnt im Pixonaut-Tab eines Produkts, wenn eine seiner Druckgrössen dazu "
+"führt, dass ein Bild seiner Vorlage unter der von Pixonaut empfohlenen "
+"Auflösung gedruckt wird und daher unscharf oder pixelig wirken kann. Ist die "
+"Option aus, sagt der Tab nichts dazu. Eine Grösse, die der Pixonaut-"
+"Arbeitsbereich für das Bild nicht zulässt, wird trotzdem abgelehnt, mit "
+"Begründung: Ob Pixonaut warnt, ablehnt oder nichts sagt, legen Sie in den "
+"Einstellungen des Arbeitsbereichs im Pixonaut-Studio fest."
+
+#. translators: Title of a setting on the settings page, shown to the merchant: the images a product's Pixonaut tab no longer warns about.
+#: src/Settings/Settings.php:300
+msgid "Images not warned about"
+msgstr "Bilder ohne Warnung"
+
+#: src/Settings/Settings.php:301
+msgid ""
+"The images you chose not to be warned about again in a product's Pixonaut "
+"tab, by their Pixonaut id. Remove one to be warned about it again."
+msgstr ""
+"Die Bilder, vor denen Sie im Pixonaut-Tab eines Produkts nicht mehr gewarnt "
+"werden möchten, nach ihrer Pixonaut-ID. Entfernen Sie ein Bild, um wieder "
+"davor gewarnt zu werden."
+
 #. translators: Title of a setting on the settings page, shown to the merchant; the fields are the ones the customer filled in to personalise the item.
-#: src/Settings/Settings.php:285
+#: src/Settings/Settings.php:312
 msgid "List the design's fields"
 msgstr "Felder des Designs auflisten"
 
-#: src/Settings/Settings.php:286
+#: src/Settings/Settings.php:313
 msgid ""
 "Lists what the customer filled in under a personalised item in the cart, the "
 "checkout, their orders and the order emails, as the designer showed it. Off, "
@@ -6827,11 +6897,11 @@ msgstr ""
 "listet sie immer auf."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: which view of the product the picture of a personalised item shows.
-#: src/Settings/Settings.php:297
+#: src/Settings/Settings.php:324
 msgid "Picture shows"
 msgstr "Bild zeigt"
 
-#: src/Settings/Settings.php:298
+#: src/Settings/Settings.php:325
 msgid ""
 "A personalised item shows the customer’s design on the product in the cart, "
 "the checkout, their orders and the order emails. This chooses the view of "
@@ -6845,11 +6915,11 @@ msgstr ""
 "Ansicht der Druckposition, in der das Produkt gezeigt wird."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:311
+#: src/Settings/Settings.php:338
 msgid "Default approval"
 msgstr "Standard-Freigabe"
 
-#: src/Settings/Settings.php:312
+#: src/Settings/Settings.php:339
 msgid ""
 "How customers approve their design before it is printed, unless a product "
 "overrides it."
@@ -6858,11 +6928,11 @@ msgstr ""
 "es nicht anders festlegt."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:326
+#: src/Settings/Settings.php:353
 msgid "Proof approval deadline (days)"
 msgstr "Frist für die Freigabe des Korrekturabzugs (Tage)"
 
-#: src/Settings/Settings.php:327
+#: src/Settings/Settings.php:354
 msgid ""
 "With proof by email, how many days the customer has to approve their proof. "
 "The link in the email works a week longer."
@@ -6872,11 +6942,11 @@ msgstr ""
 "länger."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:339
+#: src/Settings/Settings.php:366
 msgid "When no answer by the deadline"
 msgstr "Wenn bis zur Frist keine Antwort kommt"
 
-#: src/Settings/Settings.php:340
+#: src/Settings/Settings.php:367
 msgid ""
 "With proof by email, what happens to a design the customer neither approved "
 "nor rejected by the deadline."
@@ -6885,11 +6955,11 @@ msgstr ""
 "bis zur Frist weder freigegeben noch abgelehnt hat."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; what happens to an item whose design the customer rejected.
-#: src/Settings/Settings.php:353
+#: src/Settings/Settings.php:380
 msgid "On deny"
 msgstr "Bei Ablehnung"
 
-#: src/Settings/Settings.php:354
+#: src/Settings/Settings.php:381
 msgid ""
 "What happens to an item whose design the customer rejected, or which was "
 "denied at the deadline."
@@ -6898,11 +6968,11 @@ msgstr ""
 "das bei Fristablauf abgelehnt wurde."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:368
+#: src/Settings/Settings.php:395
 msgid "First proof reminder after (days)"
 msgstr "Erste Erinnerung an den Korrekturabzug nach (Tagen)"
 
-#: src/Settings/Settings.php:369
+#: src/Settings/Settings.php:396
 msgid ""
 "Days after the proof email that a customer who has not answered is reminded. "
 "Only reminders before the deadline are sent."
@@ -6912,20 +6982,20 @@ msgstr ""
 "Frist gesendet."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:382
+#: src/Settings/Settings.php:409
 msgid "Then remind every (days)"
 msgstr "Danach erinnern im Abstand von (Tagen)"
 
-#: src/Settings/Settings.php:383
+#: src/Settings/Settings.php:410
 msgid "Days between one proof reminder and the next."
 msgstr "Tage zwischen einer Erinnerung an den Korrekturabzug und der nächsten."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of reminders.
-#: src/Settings/Settings.php:396
+#: src/Settings/Settings.php:423
 msgid "Proof reminders at most"
 msgstr "Maximale Anzahl an Erinnerungen"
 
-#: src/Settings/Settings.php:397
+#: src/Settings/Settings.php:424
 msgid ""
 "How many reminders a customer gets at most; 0 sends none. The last one says "
 "when the deadline is and what happens then."
@@ -6934,11 +7004,11 @@ msgstr ""
 "gesendet. Die letzte nennt die Frist und was danach passiert."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut API.
-#: src/Settings/Settings.php:415
+#: src/Settings/Settings.php:442
 msgid "API base"
 msgstr "API-Basis"
 
-#: src/Settings/Settings.php:416
+#: src/Settings/Settings.php:443
 msgid ""
 "The Pixonaut API as the browser reaches it, e.g. a local Pixonaut. Empty "
 "uses Pixonaut’s own. The store’s key is sent to this address."
@@ -6948,11 +7018,11 @@ msgstr ""
 "wird an diese Adresse gesendet."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL WordPress uses for the Pixonaut API.
-#: src/Settings/Settings.php:425
+#: src/Settings/Settings.php:452
 msgid "Server-to-server API base"
 msgstr "Server-zu-Server-API-Basis"
 
-#: src/Settings/Settings.php:426
+#: src/Settings/Settings.php:453
 msgid ""
 "The Pixonaut API as WordPress itself reaches it, when that differs from the "
 "browser’s address (WordPress inside Docker, say). Empty uses the API base."
@@ -6962,11 +7032,11 @@ msgstr ""
 "wird die API-Basis verwendet."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut studio.
-#: src/Settings/Settings.php:435
+#: src/Settings/Settings.php:462
 msgid "Studio base"
 msgstr "Studio-Basis"
 
-#: src/Settings/Settings.php:436
+#: src/Settings/Settings.php:463
 msgid ""
 "The Pixonaut studio, where a connect is approved and the admin’s studio "
 "links lead. Empty uses Pixonaut’s own."
@@ -6976,11 +7046,11 @@ msgstr ""
 "Pixonaut verwendet."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the CDN the designer SDK loads from.
-#: src/Settings/Settings.php:445
+#: src/Settings/Settings.php:472
 msgid "CDN base"
 msgstr "CDN-Basis"
 
-#: src/Settings/Settings.php:446
+#: src/Settings/Settings.php:473
 msgid ""
 "Where the pinned designer SDK release loads from, e.g. Pixonaut’s staging "
 "CDN. The release’s integrity is still checked. Empty uses Pixonaut’s own."
@@ -6991,11 +7061,11 @@ msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the URL of a designer SDK script.
 #. translators: Label of the field for the SDK script's URL, in developer tools.
-#: src/Settings/Settings.php:455 templates/admin/developer-tools.php:111
+#: src/Settings/Settings.php:482 templates/admin/developer-tools.php:111
 msgid "SDK script"
 msgstr "SDK-Skript"
 
-#: src/Settings/Settings.php:456
+#: src/Settings/Settings.php:483
 msgid ""
 "Loads the designer SDK from this script, e.g. a local build, instead of the "
 "pinned release from the CDN base. Its integrity is not checked. Empty loads "
@@ -7006,11 +7076,11 @@ msgstr ""
 "geprüft. Ist das Feld leer, wird das festgelegte Release geladen."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on debug logging of the designer SDK.
-#: src/Settings/Settings.php:465
+#: src/Settings/Settings.php:492
 msgid "SDK debug"
 msgstr "SDK-Debug"
 
-#: src/Settings/Settings.php:466
+#: src/Settings/Settings.php:493
 msgid ""
 "Logs every designer mount and its failures to the browser console. On the "
 "storefront, only for logged-in store managers."
@@ -7020,65 +7090,65 @@ msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on a log of requests to Pixonaut.
 #. translators: Heading of the table of recent requests to Pixonaut, in developer tools.
-#: src/Settings/Settings.php:475 templates/admin/developer-tools.php:149
+#: src/Settings/Settings.php:502 templates/admin/developer-tools.php:149
 msgid "Request log"
 msgstr "Anfrageprotokoll"
 
-#: src/Settings/Settings.php:476
+#: src/Settings/Settings.php:503
 msgid "Records the last 50 requests to Pixonaut, without keys or tokens."
 msgstr ""
 "Speichert die letzten 50 Anfragen an Pixonaut, ohne Schlüssel oder Tokens."
 
-#: src/Settings/SettingsPage.php:235 src/Settings/SettingsPage.php:248
-#: src/Settings/SettingsPage.php:322
+#: src/Settings/SettingsPage.php:243 src/Settings/SettingsPage.php:256
+#: src/Settings/SettingsPage.php:330
 msgid "Pixonaut settings"
 msgstr "Pixonaut-Einstellungen"
 
-#: src/Settings/SettingsPage.php:293
+#: src/Settings/SettingsPage.php:301
 msgid "You are not allowed to change the Pixonaut settings."
 msgstr "Sie dürfen die Pixonaut-Einstellungen nicht ändern."
 
-#: src/Settings/SettingsPage.php:314
+#: src/Settings/SettingsPage.php:322
 msgid "Your settings have been saved."
 msgstr "Ihre Einstellungen wurden gespeichert."
 
-#: src/Settings/SettingsPage.php:338
+#: src/Settings/SettingsPage.php:346
 msgid "Save changes"
 msgstr "Änderungen speichern"
 
-#: src/Settings/SettingsPage.php:435
+#: src/Settings/SettingsPage.php:443
 msgid "The changes you made will be lost if you navigate away from this page."
 msgstr "Ihre Änderungen gehen verloren, wenn Sie diese Seite verlassen."
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the settings for the designer on the store's product pages.
-#: src/Settings/SettingsPage.php:538
+#: src/Settings/SettingsPage.php:546
 msgid "Storefront"
 msgstr "Shop"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: how customers approve their designs, and the proof emails.
-#: src/Settings/SettingsPage.php:541
+#: src/Settings/SettingsPage.php:549
 msgctxt "settings tab"
 msgid "Approval"
 msgstr "Freigabe"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: which releases of the plugin WordPress offers.
-#: src/Settings/SettingsPage.php:544
+#: src/Settings/SettingsPage.php:552
 msgctxt "settings tab"
 msgid "Updates"
 msgstr "Updates"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the store's connection to its Pixonaut workspace.
 #. translators: Heading of the Pixonaut connection card on the settings page.
-#: src/Settings/SettingsPage.php:547 templates/admin/connection-card.php:109
+#: src/Settings/SettingsPage.php:555 templates/admin/connection-card.php:109
 msgid "Connection"
 msgstr "Verbindung"
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how the designer on product pages looks and behaves.
-#: src/Settings/SettingsPage.php:563
+#: src/Settings/SettingsPage.php:571
 msgid "Product page designer"
 msgstr "Designer auf der Produktseite"
 
-#: src/Settings/SettingsPage.php:564
+#: src/Settings/SettingsPage.php:572
 msgid ""
 "How the designer looks and behaves on product pages. A product’s Pixonaut "
 "tab can change the layouts for that product."
@@ -7088,12 +7158,12 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the images of personalised products.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's images drawn by Pixonaut.
-#: src/Settings/SettingsPage.php:570
+#: src/Settings/SettingsPage.php:578
 #: templates/admin/product-showcase-images.php:58
 msgid "Product images"
 msgstr "Produktbilder"
 
-#: src/Settings/SettingsPage.php:571
+#: src/Settings/SettingsPage.php:579
 msgid ""
 "The image the shop, feeds, emails and search results show for a personalised "
 "product."
@@ -7102,11 +7172,11 @@ msgstr ""
 "personalisiertes Produkt zeigen."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how a personalised item shows in the cart, the checkout, orders and emails.
-#: src/Settings/SettingsPage.php:577
+#: src/Settings/SettingsPage.php:585
 msgid "Cart and orders"
 msgstr "Warenkorb und Bestellungen"
 
-#: src/Settings/SettingsPage.php:578
+#: src/Settings/SettingsPage.php:586
 msgid ""
 "How a personalised item shows in the cart, the checkout, the customer’s "
 "orders and the order emails."
@@ -7114,13 +7184,27 @@ msgstr ""
 "Wie ein personalisierter Artikel im Warenkorb, in der Kasse, in den "
 "Bestellungen des Kunden und in den Bestell-E-Mails angezeigt wird."
 
+#. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: warnings in a product's Pixonaut tab about images that print below their recommended resolution.
+#: src/Settings/SettingsPage.php:592
+msgid "Image resolution"
+msgstr "Bildauflösung"
+
+#: src/Settings/SettingsPage.php:593
+msgid ""
+"Warnings in a product’s Pixonaut tab about images in its template that print "
+"below the resolution Pixonaut recommends at one of its print sizes."
+msgstr ""
+"Warnungen im Pixonaut-Tab eines Produkts zu Bildern seiner Vorlage, die bei "
+"einer seiner Druckgrössen unter der von Pixonaut empfohlenen Auflösung "
+"gedruckt werden."
+
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how customers approve their design before it is printed.
 #. translators: Label of the dropdown choosing how customers approve their design (proof) before printing. Admin product page.
-#: src/Settings/SettingsPage.php:584 templates/admin/product-fields.php:244
+#: src/Settings/SettingsPage.php:599 templates/admin/product-fields.php:244
 msgid "Approval"
 msgstr "Freigabe"
 
-#: src/Settings/SettingsPage.php:585
+#: src/Settings/SettingsPage.php:600
 msgid ""
 "How customers approve their design before it is printed. A product’s "
 "Pixonaut tab can choose another way for that product."
@@ -7129,11 +7213,11 @@ msgstr ""
 "eines Produkts können Sie für dieses Produkt eine andere Freigabeart wählen."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the approval mode where customers approve a proof sent by email.
-#: src/Settings/SettingsPage.php:591
+#: src/Settings/SettingsPage.php:606
 msgid "Proof by email"
 msgstr "Korrekturabzug per E-Mail"
 
-#: src/Settings/SettingsPage.php:592
+#: src/Settings/SettingsPage.php:607
 msgid ""
 "For every product whose approval is Proof by email: how long customers have "
 "to answer, the reminders they get, and what happens when they do not approve."
@@ -7143,11 +7227,11 @@ msgstr ""
 "passiert, wenn sie nicht freigeben."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: which releases of this plugin WordPress offers.
-#: src/Settings/SettingsPage.php:598
+#: src/Settings/SettingsPage.php:613
 msgid "Plugin updates"
 msgstr "Plugin-Updates"
 
-#: src/Settings/SettingsPage.php:599
+#: src/Settings/SettingsPage.php:614
 msgid ""
 "Which releases of this plugin WordPress offers you on the Plugins and "
 "Updates screens."
@@ -7155,7 +7239,7 @@ msgstr ""
 "Welche Versionen dieses Plugins WordPress Ihnen auf den Seiten «Plugins» und "
 "«Aktualisierungen» anbietet."
 
-#: src/Settings/SettingsPage.php:620
+#: src/Settings/SettingsPage.php:635
 msgid ""
 "Designer accent colour is set to A custom colour: enter the colour, e.g. "
 "#1e73be."
@@ -8161,7 +8245,7 @@ msgstr ""
 #. translators: Button in developer tools that restores a field's default value; here Reset is a verb.
 #. translators: Link that puts an option whose layout was adjusted by hand back on the side's own layout. Admin product page.
 #: templates/admin/developer-tools.php:91
-#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:279
+#: templates/admin/developer-tools.php:115 templates/admin/product-side.php:280
 msgid "Reset"
 msgstr "Zurücksetzen"
 
@@ -8359,6 +8443,46 @@ msgstr "Geplant"
 #: templates/admin/developer-tools.php:268
 msgid "Hide developer tools"
 msgstr "Entwicklerwerkzeuge ausblenden"
+
+#. translators: Button on a warning about an image that prints below its recommended resolution: opens the image in the Pixonaut studio, where it is upscaled. Admin product page.
+#: templates/admin/low-resolution-warnings.php:29
+msgid "Upscale in Pixonaut"
+msgstr "In Pixonaut hochskalieren"
+
+#. translators: Link on a print size Pixonaut refuses because an image prints below its recommended resolution: opens the image in the Pixonaut studio, where its resolution can be accepted as it is. Admin product page.
+#: templates/admin/low-resolution-warnings.php:33
+msgid "Accept in Pixonaut"
+msgstr "In Pixonaut akzeptieren"
+
+#. translators: Screen reader label of the dropdown choosing what to do about an image that prints below its recommended resolution. Admin product page.
+#: templates/admin/low-resolution-warnings.php:36
+msgid "What to do about this image"
+msgstr "Was mit diesem Bild geschehen soll"
+
+#. translators: Option of the dropdown on a warning about an image printed below its recommended resolution: keep the warning. Admin product page.
+#: templates/admin/low-resolution-warnings.php:37
+msgid "Keep warning"
+msgstr "Weiter warnen"
+
+#. translators: Option of the dropdown on a warning about an image printed below its recommended resolution: accept it at this print size, which hides the warning. Admin product page.
+#: templates/admin/low-resolution-warnings.php:38
+msgid "Accept at this size"
+msgstr "In dieser Grösse akzeptieren"
+
+#. translators: Option of the dropdown on a warning about an image printed below its recommended resolution: never warn about this image again, on any product. Admin product page.
+#: templates/admin/low-resolution-warnings.php:40
+msgid "Don’t warn me again about this image"
+msgstr "Nicht mehr vor diesem Bild warnen"
+
+#. translators: Option of the dropdown on a warning about an image printed below its recommended resolution: never warn about any image again. Admin product page.
+#: templates/admin/low-resolution-warnings.php:41
+msgid "Don’t warn me again about any image"
+msgstr "Vor keinem Bild mehr warnen"
+
+#. translators: Hint beside the dropdown on a warning about an image printed below its recommended resolution. Admin product page.
+#: templates/admin/low-resolution-warnings.php:44
+msgid "Saved when you update the product."
+msgstr "Wird gespeichert, wenn Sie das Produkt aktualisieren."
 
 #. translators: Link that hides an admin notice, read by the merchant.
 #: templates/admin/notice.php:20
@@ -8719,7 +8843,7 @@ msgid "Options in the form"
 msgstr "Optionen im Formular"
 
 #. translators: Label of the dropdown choosing whether the designer's canvas keeps the template's proportions or takes the chosen print size's, asked as a question. Admin product page.
-#: templates/admin/product-fields.php:242 templates/admin/product-side.php:344
+#: templates/admin/product-fields.php:242 templates/admin/product-side.php:345
 msgid "When a print size has other proportions"
 msgstr "Wenn eine Druckgrösse andere Proportionen hat"
 
@@ -8947,26 +9071,26 @@ msgstr "Name, z. B. A3"
 
 #. translators: Screen reader label of the field naming a print size. Admin product page.
 #: templates/admin/product-side.php:59
-#: templates/admin/variation-print-size.php:54
+#: templates/admin/variation-print-size.php:55
 msgid "Label customers see"
 msgstr "Bezeichnung für Kunden"
 
 #. translators: Screen reader label of the custom print size's width field. Admin product page.
 #: templates/admin/product-side.php:60
-#: templates/admin/variation-print-size.php:47
+#: templates/admin/variation-print-size.php:48
 msgid "Width in millimetres"
 msgstr "Breite in Millimetern"
 
 #. translators: Screen reader label of the custom print size's height field. Admin product page.
 #: templates/admin/product-side.php:62
-#: templates/admin/variation-print-size.php:51
+#: templates/admin/variation-print-size.php:52
 msgid "Height in millimetres"
 msgstr "Höhe in Millimetern"
 
 #. translators: Unit after a custom print size's width and height: millimetres. Admin product page.
 #. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the height of that value's print size. Admin product page.
-#: templates/admin/product-side.php:63 templates/admin/product-side.php:187
-#: templates/admin/variation-print-size.php:53
+#: templates/admin/product-side.php:63 templates/admin/product-side.php:188
+#: templates/admin/variation-print-size.php:54
 msgid "mm"
 msgstr "mm"
 
@@ -9057,41 +9181,41 @@ msgstr ""
 "gewollt, lassen Sie es so; Kunden können das Produkt trotzdem kaufen."
 
 #. translators: Label of the list of print sizes customers choose from for a side. Admin product page.
-#: templates/admin/product-side.php:132
+#: templates/admin/product-side.php:133
 msgid "Print sizes"
 msgstr "Druckgrössen"
 
 #. translators: Column heading over the radio buttons marking the print size chosen when the designer opens. Short. Admin product page.
-#: templates/admin/product-side.php:135
+#: templates/admin/product-side.php:136
 msgid "Start"
 msgstr "Start"
 
 #. translators: Column heading over a side's print sizes. Admin product page.
-#: templates/admin/product-side.php:136
+#: templates/admin/product-side.php:137
 msgid "Size customers choose"
 msgstr "Grösse, die Kunden wählen"
 
 #. translators: Button that adds the print position's own size to a side's print sizes. Admin product page.
-#: templates/admin/product-side.php:148
+#: templates/admin/product-side.php:149
 msgid "Add the print position’s size"
 msgstr "Grösse der Druckposition hinzufügen"
 
 #. translators: Button that adds a print size entered in millimetres to a side. Admin product page.
-#: templates/admin/product-side.php:149
+#: templates/admin/product-side.php:150
 msgid "Add a size in mm"
 msgstr "Grösse in mm hinzufügen"
 
 #. translators: Label of the dropdown choosing the product attribute (such as Size) whose values each get a print size of their own. Admin product page.
-#: templates/admin/product-side.php:160
+#: templates/admin/product-side.php:161
 msgid "Print size by attribute"
 msgstr "Druckgrösse nach Attribut"
 
 #. translators: Option of the Print size by attribute dropdown: no attribute gives the print size. Admin product page.
-#: templates/admin/product-side.php:163
+#: templates/admin/product-side.php:164
 msgid "None"
 msgstr "Keins"
 
-#: templates/admin/product-side.php:169
+#: templates/admin/product-side.php:170
 msgid ""
 "Each variation prints at the size of its value, unless it has a print size "
 "of its own. Variations without either print at the print sizes above; when "
@@ -9103,49 +9227,49 @@ msgstr ""
 "nicht nötig."
 
 #. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the width of that value's print size. Admin product page.
-#: templates/admin/product-side.php:184
+#: templates/admin/product-side.php:185
 #, php-format
 msgid "%s: width in millimetres"
 msgstr "%s: Breite in Millimetern"
 
 #. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the height of that value's print size. Admin product page.
-#: templates/admin/product-side.php:186
+#: templates/admin/product-side.php:187
 #, php-format
 msgid "%s: height in millimetres"
 msgstr "%s: Höhe in Millimetern"
 
 #. translators: %s: an attribute's value, e.g. "30×40 cm". Screen reader label of the name customers see for that value's print size. Admin product page.
-#: templates/admin/product-side.php:188
+#: templates/admin/product-side.php:189
 #, php-format
 msgid "%s: label customers see"
 msgstr "%s: Bezeichnung für Kunden"
 
 #. translators: A closed section of a product side holding its less used settings. Admin product page.
-#: templates/admin/product-side.php:199
+#: templates/admin/product-side.php:200
 msgid "More for this side"
 msgstr "Mehr zu dieser Seite"
 
 #. translators: Label of the fields naming a product side and its key. Admin product page.
-#: templates/admin/product-side.php:205
+#: templates/admin/product-side.php:206
 msgid "Name"
 msgstr "Name"
 
 #. translators: Placeholder of the field naming a product side, which customers see. Admin product page.
-#: templates/admin/product-side.php:207
+#: templates/admin/product-side.php:208
 msgid "Name customers see, e.g. Front"
 msgstr "Name für Kunden, z. B. Vorderseite"
 
 #. translators: Placeholder of the field for a side's key, a short lowercase identifier. Admin product page.
-#: templates/admin/product-side.php:208
+#: templates/admin/product-side.php:209
 msgid "Key, e.g. front"
 msgstr "Schlüssel, z. B. front"
 
 #. translators: Screen reader label of the field for a side's key. Admin product page.
-#: templates/admin/product-side.php:208
+#: templates/admin/product-side.php:209
 msgid "Side key"
 msgstr "Schlüssel der Seite"
 
-#: templates/admin/product-side.php:210
+#: templates/admin/product-side.php:211
 msgid ""
 "Shown on the side’s tab in the designer. Empty, both follow the print "
 "position."
@@ -9154,11 +9278,11 @@ msgstr ""
 "Druckposition."
 
 #. translators: Checkbox on a product side; unticked, the side is a fixed design printed as the template is. Admin product page.
-#: templates/admin/product-side.php:217
+#: templates/admin/product-side.php:218
 msgid "Customers fill in the template"
 msgstr "Kunden füllen die Vorlage aus"
 
-#: templates/admin/product-side.php:220
+#: templates/admin/product-side.php:221
 msgid ""
 "Unticked, it is a fixed design: printed as the template is, made when you "
 "update the product."
@@ -9166,7 +9290,7 @@ msgstr ""
 "Ohne Haken ist es ein festes Design: so gedruckt, wie die Vorlage ist, und "
 "erstellt, wenn Sie das Produkt aktualisieren."
 
-#: templates/admin/product-side.php:223
+#: templates/admin/product-side.php:224
 msgid ""
 "This template offers fields to fill in. On a standing side customers do not "
 "get to fill them in: it is printed as the template is."
@@ -9174,7 +9298,7 @@ msgstr ""
 "Diese Vorlage bietet Felder zum Ausfüllen. Auf einer festen Seite können "
 "Kunden sie nicht ausfüllen: Sie wird so gedruckt, wie die Vorlage ist."
 
-#: templates/admin/product-side.php:226
+#: templates/admin/product-side.php:227
 msgid ""
 "This template offers nothing to fill in, so customers have nothing to "
 "personalise. Make the side standing to sell it as the template is."
@@ -9184,13 +9308,13 @@ msgstr ""
 "Vorlage ist."
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Label of a standing side's previews, one per value of that option. Admin product page.
-#: templates/admin/product-side.php:238
+#: templates/admin/product-side.php:239
 #, php-format
 msgid "Per %s"
 msgstr "Je %s"
 
 #. translators: %s: the option a blank's print areas change with, as the blank names it, e.g. "Size". Admin product page.
-#: templates/admin/product-side.php:244
+#: templates/admin/product-side.php:245
 #, php-format
 msgid ""
 "The print area changes with %s, so each of its values is printed from its "
@@ -9204,7 +9328,7 @@ msgstr ""
 "Hand an, wo es nötig ist: Ein angepasster Wert behält sein Layout, wenn sich "
 "die Seite ändert, bis Sie ihn zurücksetzen."
 
-#: templates/admin/product-side.php:247
+#: templates/admin/product-side.php:248
 msgid ""
 "The previews appear when you update the product. An adjusted value keeps its "
 "layout."
@@ -9213,28 +9337,28 @@ msgstr ""
 "angepasster Wert behält sein Layout."
 
 #. translators: 1: the option, e.g. "Size"; 2: its value, e.g. "XL". Alt text of a standing side's preview for one option. Admin product page.
-#: templates/admin/product-side.php:254
+#: templates/admin/product-side.php:255
 #, php-format
 msgid "%1$s %2$s: the design on the blank"
 msgstr "%1$s %2$s: das Design auf dem Rohling"
 
 #. translators: Badge beside an option's value whose layout the store manager adjusted by hand on a standing side. Admin product page.
-#: templates/admin/product-side.php:263
+#: templates/admin/product-side.php:264
 msgid "Adjusted"
 msgstr "Angepasst"
 
 #. translators: Under a standing side's preview for one option value: the side's print size does not fit that value's print area, so the design prints at the value's usual size. Admin product page.
-#: templates/admin/product-side.php:270
+#: templates/admin/product-side.php:271
 msgid "Usual size: the side's is too big"
 msgstr "Übliche Grösse: die der Seite ist zu gross"
 
 #. translators: Link that opens an option's adjusted layout on Pixonaut again, to adjust it once more. Admin product page.
-#: templates/admin/product-side.php:274
+#: templates/admin/product-side.php:275
 msgid "Adjust again"
 msgstr "Erneut anpassen"
 
 #. translators: %s: an option's value, e.g. "XL". Confirmation before the store manager resets the layout they adjusted by hand for that option. Admin product page.
-#: templates/admin/product-side.php:277
+#: templates/admin/product-side.php:278
 #, php-format
 msgid ""
 "Reset the layout of %s? It then follows the side again, and the layout you "
@@ -9244,12 +9368,12 @@ msgstr ""
 "angepasstes Layout wird nicht behalten."
 
 #. translators: Link that opens one option's design of a standing side on Pixonaut, to move and scale its artwork by hand. Admin product page.
-#: templates/admin/product-side.php:281
+#: templates/admin/product-side.php:282
 msgid "Adjust layout"
 msgstr "Layout anpassen"
 
 #. translators: %d: how many options a standing side has a preview of. Button that shows them all. Admin product page.
-#: templates/admin/product-side.php:290
+#: templates/admin/product-side.php:291
 #, php-format
 msgid "Show all %d"
 msgid_plural "Show all %d"
@@ -9257,43 +9381,43 @@ msgstr[0] "Alle %d anzeigen"
 msgstr[1] "Alle %d anzeigen"
 
 #. translators: Button that shows only the first of a standing side's option previews again. Admin product page.
-#: templates/admin/product-side.php:292
+#: templates/admin/product-side.php:293
 msgid "Show fewer"
 msgstr "Weniger anzeigen"
 
 #. translators: Label of the setting that keeps a product side on one version of its template. Admin product page.
-#: templates/admin/product-side.php:297
+#: templates/admin/product-side.php:298
 msgid "Template version"
 msgstr "Vorlagenversion"
 
 #. translators: Checkbox on a product side: keep the side on the template version picked beside it instead of moving to each new version published. Admin product page.
-#: templates/admin/product-side.php:301
+#: templates/admin/product-side.php:302
 msgid "Stay on one version"
 msgstr "Bei einer Version bleiben"
 
 #. translators: Option of a product side's template version picker: the template's latest published version. %d: its number, e.g. 3. Admin product page.
-#: templates/admin/product-side.php:304 templates/admin/product-side.php:315
+#: templates/admin/product-side.php:305 templates/admin/product-side.php:316
 #, php-format
 msgid "Version %d (current)"
 msgstr "Version %d (aktuell)"
 
 #. translators: Option of a product side's template version picker. %d: the version's number, e.g. 2. Admin product page.
-#: templates/admin/product-side.php:305 templates/admin/product-side.php:317
+#: templates/admin/product-side.php:306 templates/admin/product-side.php:318
 #, php-format
 msgid "Version %d"
 msgstr "Version %d"
 
-#: templates/admin/product-side.php:326
+#: templates/admin/product-side.php:327
 msgid "Unticked, the side follows each new version of the template."
 msgstr "Ohne Haken folgt die Seite jeder neuen Version der Vorlage."
 
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:334
+#: templates/admin/product-side.php:335
 msgid "Groups"
 msgstr "Gruppen"
 
 #. translators: Label of the setting that arranges the designer's form groups for one product side; a button that shows or hides it. Admin product page.
-#: templates/admin/product-side.php:335
+#: templates/admin/product-side.php:336
 msgid ""
 "The order and names of the groups customers see in the designer. Open to "
 "arrange them."
@@ -9301,7 +9425,7 @@ msgstr ""
 "Die Reihenfolge und die Namen der Gruppen, die Kunden im Designer sehen. "
 "Öffnen Sie die Einstellung, um sie anzuordnen."
 
-#: templates/admin/product-side.php:338
+#: templates/admin/product-side.php:339
 msgid ""
 "The order and names customers see in the designer on this product’s page. "
 "Drag groups and their fields to reorder them. A name changed here is this "
@@ -9315,7 +9439,7 @@ msgstr ""
 "angeordnet, folgt diese Seite nicht mehr den Optionen im Formular."
 
 #. translators: Option of a product side's canvas shape dropdown: the side draws its canvas as the product's own setting, under Store settings for this product, says. Admin product page.
-#: templates/admin/product-side.php:348
+#: templates/admin/product-side.php:349
 msgid "As the product’s store settings say"
 msgstr "Wie in den Shop-Einstellungen des Produkts festgelegt"
 
@@ -9682,28 +9806,28 @@ msgid "Variation image drawn on"
 msgstr "Variantenbild erstellt auf"
 
 #. translators: %s: the side's name, e.g. "Front". Label of a variation's print size field. Admin product page, variation options.
-#: templates/admin/variation-print-size.php:34
+#: templates/admin/variation-print-size.php:35
 #, php-format
 msgid "Print size: %s"
 msgstr "Druckgrösse: %s"
 
 #. translators: Option in a variation's print size dropdown: enter a width and height for this variation alone. Admin product page.
-#: templates/admin/variation-print-size.php:42
+#: templates/admin/variation-print-size.php:43
 msgid "Custom size for this variation"
 msgstr "Eigene Grösse für diese Variante"
 
 #. translators: Label of a custom print size's width field. Admin product page.
-#: templates/admin/variation-print-size.php:46
+#: templates/admin/variation-print-size.php:47
 msgid "Width"
 msgstr "Breite"
 
 #. translators: Label of a custom print size's height field. Admin product page.
-#: templates/admin/variation-print-size.php:50
+#: templates/admin/variation-print-size.php:51
 msgid "Height"
 msgstr "Höhe"
 
 #. translators: Placeholder of the field naming a print size, which customers see. Admin product page.
-#: templates/admin/variation-print-size.php:54
+#: templates/admin/variation-print-size.php:55
 msgid "Label, e.g. A4"
 msgstr "Bezeichnung, z. B. A4"
 

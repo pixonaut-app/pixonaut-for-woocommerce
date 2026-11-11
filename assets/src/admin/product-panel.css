@@ -880,6 +880,34 @@
 	display: none;
 }
 
+/* Images a side's sizes print too soft, each with what can be done. */
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+.pixonaut-low-resolution {
+	margin: 0 12px 9px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-low-resolution__row
+	+ .pixonaut-low-resolution__row {
+	border-top: 1px solid #f0f0f1;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-low-resolution__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 9px;
+}
+
+:is(#pixonaut_product_data, .pixonaut-variation-panel)
+	.pixonaut-low-resolution__actions
+	select {
+	width: auto;
+	margin: 0;
+}
+
 /* Groups: a heading and one line on what the group decides. */
 :is(#pixonaut_product_data, .pixonaut-variation-panel) .pixonaut-group__title {
 	margin: 12px 12px 2px;

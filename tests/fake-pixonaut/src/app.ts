@@ -13,6 +13,7 @@ import { registerCatalogueImportControl } from './control-catalogue-imports';
 import { registerDesignerPixelControl } from './control-designer-pixel';
 import { registerTemplateBackgroundControl } from './control-template-background';
 import { registerTemplateFieldKeyControl } from './control-template-field-key';
+import { registerTemplateLowResolutionControl } from './control-template-low-resolution';
 import { registerTemplateRatioControl } from './control-template-ratio';
 import { registerValueLooksControl } from './control-value-looks';
 import { registerCorrectionPage } from './correction-page';
@@ -255,6 +256,7 @@ export function createFake(options: FakeOptions = {}): Fake {
 	registerTemplateRatioControl(app, fake);
 	registerValueLooksControl(app, fake);
 	registerTemplateBackgroundControl(app, fake);
+	registerTemplateLowResolutionControl(app, fake);
 	registerTemplateFieldKeyControl(app, fake);
 	registerWebhookControl(app, fake);
 	registerMoveOrder(app, fake);

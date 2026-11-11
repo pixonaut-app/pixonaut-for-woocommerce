@@ -137,6 +137,13 @@ final class Schema {
 	const VARIATION_PRINT_SIZE_META = '_pixonaut_print_size';
 
 	/**
+	 * Product and variation meta holding the images the store manager
+	 * accepted at a size although they print below their recommended
+	 * resolution there, by side, size and picture.
+	 */
+	const LOW_RESOLUTION_ACCEPTED_META = '_pixonaut_low_resolution_accepted';
+
+	/**
 	 * Product meta noting the custom attributes it was moved off, so links
 	 * and cart lines naming one keep selecting the same value.
 	 */

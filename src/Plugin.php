@@ -463,7 +463,7 @@ final class Plugin {
 			$product_panel = $this->product_panel();
 			$product_panel->register();
 			( new LayoutAdjustments( $this->sdk(), new StandingRows( $this->catalogue(), $designs, $this->sdk(), new WcLogger() ), new WcLogger() ) )->register();
-			( new VariationPanel( $product_panel, $this->templates(), $this->variant_field(), $this->showcase_field(), new VariationSizeField( new VariationSizes( $this->catalogue() ), $this->templates() ) ) )->register();
+			( new VariationPanel( $product_panel, $this->templates(), $this->variant_field(), $this->showcase_field(), new VariationSizeField( new VariationSizes( $this->catalogue() ), $this->templates(), $product_panel->low_resolution() ) ) )->register();
 			( new PictureFields( $this->templates(), $this->settings() ) )->register();
 			$this->showcase_field()->register();
 			( new SplitListingFields( $this->templates() ) )->register();

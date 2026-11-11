@@ -31,6 +31,11 @@ final class StudioPage {
 	public const TEMPLATES = 'templates';
 
 	/**
+	 * The workspace's library of pictures.
+	 */
+	public const ASSETS = 'assets';
+
+	/**
 	 * The workspace's printshops, under its settings.
 	 */
 	public const PRINTSHOPS = 'settings/printshop';
@@ -47,6 +52,18 @@ final class StudioPage {
 			return '';
 		}
 		return untrailingslashit( Hosts::studio() ) . '/w/' . rawurlencode( $slug ) . '/' . $section . '/' . rawurlencode( $id );
+	}
+
+	/**
+	 * A library picture, open in the library's details pane, where it can be
+	 * upscaled or accepted as it is; empty when the workspace's slug is not
+	 * known yet.
+	 *
+	 * @param string $asset_id The picture.
+	 */
+	public static function asset( string $asset_id ): string {
+		$library = self::section( self::ASSETS );
+		return '' === $library ? '' : add_query_arg( 'asset', rawurlencode( $asset_id ), $library );
 	}
 
 	/**
