@@ -175,8 +175,10 @@ The e2e support plugin seeds what a storefront test needs without wp-admin:
 for a personalised product. `POST pixonaut-e2e/v1/customers` creates a
 customer account and answers its `{username, password}`, for `signIn()` in
 `tests/e2e/fixtures.ts`. `POST pixonaut-e2e/v1/split-products` with a short
-`key` makes a poster listed once per value of a global attribute, beside a
-plain product, in a category of their own under slugs ending in the key;
+`key` makes a poster listed once per value of a global attribute, its
+values' variations at different prices and the poster with a featured image
+and a gallery image (answered as `images`), beside a plain product, in a
+category of their own under slugs ending in the key;
 `DELETE` with the same key removes them. The `pixonaut_e2e_per_page` cookie
 sets how many products a page of the shop lists for one browser context.
 
