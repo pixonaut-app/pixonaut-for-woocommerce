@@ -30728,6 +30728,10 @@ export interface operations {
                                     };
                                 };
                                 name: string;
+                                /** @description The texture a stock photo's dye paints each value in, in place of its colour, by value: only the values that have one, such as a wooden frame's oak. Absent when none has one. */
+                                textures?: {
+                                    [key: string]: string;
+                                };
                                 /** @description Whether a product in each value is light or dark, by value: the tone set on its appearance, else its colour fill's, else light. Every value of `values` is named. On a variant of a dark value a template's on-dark values are used. */
                                 tones: {
                                     [key: string]: string;
@@ -30944,7 +30948,7 @@ export interface operations {
                                             kind: string;
                                         } | null;
                                     }[];
-                                    /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                    /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                     piece?: number;
                                     /** @description Where the print area sits on every photo of the view, in the original photo's pixels; null until it is marked. */
                                     placementRectPx: {
@@ -30991,6 +30995,13 @@ export interface operations {
                                     takesDye?: boolean;
                                     /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, the view's regions are laid in their rect or mesh. */
                                     uvPasses?: {
+                                        /** @description Rendered from the flat layout. */
+                                        fromFlatLayout?: {
+                                            /** @description Camera position. */
+                                            angle: string;
+                                            /** @description Hash of the parts. */
+                                            layoutKey: string;
+                                        };
                                         /** @description The multiply pass: the garment's shadows and folds. */
                                         multiplyAssetId: string;
                                         /** @description What lies in front of the print, drawn over it: hands, cords and hair. A scene's alone, and read only. */
@@ -30999,7 +31010,7 @@ export interface operations {
                                         pieceSizesMm?: {
                                             /** @description The piece's print height on the model, in mm. */
                                             heightMm: number;
-                                            /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                            /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                             piece: number;
                                             /** @description The piece's print width on the model, in mm. */
                                             widthMm: number;
@@ -31332,6 +31343,10 @@ export interface operations {
                                 };
                             };
                             name: string;
+                            /** @description The texture a stock photo's dye paints each value in, in place of its colour, by value: only the values that have one, such as a wooden frame's oak. Absent when none has one. */
+                            textures?: {
+                                [key: string]: string;
+                            };
                             /** @description Whether a product in each value is light or dark, by value: the tone set on its appearance, else its colour fill's, else light. Every value of `values` is named. On a variant of a dark value a template's on-dark values are used. */
                             tones: {
                                 [key: string]: string;
@@ -31548,7 +31563,7 @@ export interface operations {
                                         kind: string;
                                     } | null;
                                 }[];
-                                /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                 piece?: number;
                                 /** @description Where the print area sits on every photo of the view, in the original photo's pixels; null until it is marked. */
                                 placementRectPx: {
@@ -31595,6 +31610,13 @@ export interface operations {
                                 takesDye?: boolean;
                                 /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, the view's regions are laid in their rect or mesh. */
                                 uvPasses?: {
+                                    /** @description Rendered from the flat layout. */
+                                    fromFlatLayout?: {
+                                        /** @description Camera position. */
+                                        angle: string;
+                                        /** @description Hash of the parts. */
+                                        layoutKey: string;
+                                    };
                                     /** @description The multiply pass: the garment's shadows and folds. */
                                     multiplyAssetId: string;
                                     /** @description What lies in front of the print, drawn over it: hands, cords and hair. A scene's alone, and read only. */
@@ -31603,7 +31625,7 @@ export interface operations {
                                     pieceSizesMm?: {
                                         /** @description The piece's print height on the model, in mm. */
                                         heightMm: number;
-                                        /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                        /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                         piece: number;
                                         /** @description The piece's print width on the model, in mm. */
                                         widthMm: number;
@@ -31956,7 +31978,7 @@ export interface operations {
                                     /** @description The photo's width in pixels, so a host reserves the preview's shape before it loads; null while the photo has not finished uploading or its size is not known. */
                                     width: number | null;
                                 }[];
-                                /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                 piece?: number;
                                 /** @description The print size on the model of the piece the region's `printWindowMm` lies on, in mm. Present with a print window only. */
                                 pieceSizeMm?: {
@@ -32095,7 +32117,7 @@ export interface operations {
                                     /** @description The rows of control points, from the print's top edge. */
                                     points: number[][][];
                                 };
-                                /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                 piece?: number;
                                 /** @description The print size on the model of the piece the region's `printWindowMm` lies on, in mm. Present with a print window only. */
                                 pieceSizeMm?: {
@@ -32569,6 +32591,10 @@ export interface operations {
                                 } | null;
                             };
                             name: string;
+                            /** @description The texture a stock photo's dye paints each value in, in place of its colour, by value: only the values that have one. Absent when none has one. */
+                            textures?: {
+                                [key: string]: string;
+                            };
                             /** @description Whether a product in each value is light or dark, by value: the tone set on its appearance, else its colour fill's, else light. Every value of `values` is named. On a variant of a dark value a template's on-dark values are used. */
                             tones: {
                                 [key: string]: string;
@@ -46650,6 +46676,10 @@ export interface operations {
                                     };
                                 };
                                 name: string;
+                                /** @description The texture a stock photo's dye paints each value in, in place of its colour, by value: only the values that have one, such as a wooden frame's oak. Absent when none has one. */
+                                textures?: {
+                                    [key: string]: string;
+                                };
                                 /** @description Whether a product in each value is light or dark, by value: the tone set on its appearance, else its colour fill's, else light. Every value of `values` is named. On a variant of a dark value a template's on-dark values are used. */
                                 tones: {
                                     [key: string]: string;
@@ -46866,7 +46896,7 @@ export interface operations {
                                             kind: string;
                                         } | null;
                                     }[];
-                                    /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                    /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                     piece?: number;
                                     /** @description Where the print area sits on every photo of the view, in the original photo's pixels; null until it is marked. */
                                     placementRectPx: {
@@ -46913,6 +46943,13 @@ export interface operations {
                                     takesDye?: boolean;
                                     /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, the view's regions are laid in their rect or mesh. */
                                     uvPasses?: {
+                                        /** @description Rendered from the flat layout. */
+                                        fromFlatLayout?: {
+                                            /** @description Camera position. */
+                                            angle: string;
+                                            /** @description Hash of the parts. */
+                                            layoutKey: string;
+                                        };
                                         /** @description The multiply pass: the garment's shadows and folds. */
                                         multiplyAssetId: string;
                                         /** @description What lies in front of the print, drawn over it: hands, cords and hair. A scene's alone, and read only. */
@@ -46921,7 +46958,7 @@ export interface operations {
                                         pieceSizesMm?: {
                                             /** @description The piece's print height on the model, in mm. */
                                             heightMm: number;
-                                            /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                            /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                             piece: number;
                                             /** @description The piece's print width on the model, in mm. */
                                             widthMm: number;
@@ -47206,6 +47243,10 @@ export interface operations {
                                     };
                                 };
                                 name: string;
+                                /** @description The texture a stock photo's dye paints each value in, in place of its colour, by value: only the values that have one, such as a wooden frame's oak. Absent when none has one. */
+                                textures?: {
+                                    [key: string]: string;
+                                };
                                 /** @description Whether a product in each value is light or dark, by value: the tone set on its appearance, else its colour fill's, else light. Every value of `values` is named. On a variant of a dark value a template's on-dark values are used. */
                                 tones: {
                                     [key: string]: string;
@@ -47422,7 +47463,7 @@ export interface operations {
                                             kind: string;
                                         } | null;
                                     }[];
-                                    /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                    /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                     piece?: number;
                                     /** @description Where the print area sits on every photo of the view, in the original photo's pixels; null until it is marked. */
                                     placementRectPx: {
@@ -47469,6 +47510,13 @@ export interface operations {
                                     takesDye?: boolean;
                                     /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, the view's regions are laid in their rect or mesh. */
                                     uvPasses?: {
+                                        /** @description Rendered from the flat layout. */
+                                        fromFlatLayout?: {
+                                            /** @description Camera position. */
+                                            angle: string;
+                                            /** @description Hash of the parts. */
+                                            layoutKey: string;
+                                        };
                                         /** @description The multiply pass: the garment's shadows and folds. */
                                         multiplyAssetId: string;
                                         /** @description What lies in front of the print, drawn over it: hands, cords and hair. A scene's alone, and read only. */
@@ -47477,7 +47525,7 @@ export interface operations {
                                         pieceSizesMm?: {
                                             /** @description The piece's print height on the model, in mm. */
                                             heightMm: number;
-                                            /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                            /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                             piece: number;
                                             /** @description The piece's print width on the model, in mm. */
                                             widthMm: number;
@@ -48495,7 +48543,7 @@ export interface operations {
                             areas: {
                                 heightMm: number;
                                 key: string;
-                                /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                 piece: number;
                                 widthMm: number;
                             }[];
