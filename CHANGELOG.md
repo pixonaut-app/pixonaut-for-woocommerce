@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.4.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.3.0...v1.4.0) (2026-11-11)
+
+
+### Features
+
+* **admin:** put what a merchant changes first in the product panel ([#75](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/75)) ([056685c](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/056685cf3d0b328d7ed53fdf13bcd5181c67e764))
+* **admin:** rework a variation's own setup like the product panel ([#81](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/81)) ([abaf4d6](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/abaf4d6c3dbe2b52ec7bf8cc9f7d727e2a2729bb))
+* **admin:** say what is wrong, where, and how to fix it when a product cannot be sold ([#90](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/90)) ([b33b53e](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/b33b53eea787e4848349f3364b79555d6595d850))
+* **admin:** show what the shopper sees in the product panel's views and product images ([#78](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/78)) ([56e93b8](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/56e93b847070bc0a9b430327473c5ae9bef38704))
+* **admin:** warn when a print size takes an image below its recommended dpi ([#93](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/93)) ([5aff4b1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/5aff4b10aa4865e992bcb796d8b0c472d024043c))
+* **catalogue:** let an attribute and a product choose whether each value is listed as its own product ([#72](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/72)) ([1a8af5c](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/1a8af5c169420ca325e01a0105fac57d6ec3a798))
+* **catalogue:** link a side's template to the studio, and move references when a template's id changes ([#77](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/77)) ([500eae7](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/500eae74c6fbcd65c995e625d491185c331526c3))
+* **connection:** choose the store's print file form on the settings page ([#74](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/74)) ([e2ee2d8](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/e2ee2d839cc23ce51469c7f4d00aa76843813c46))
+* keep products on a paused or unpublished template out of the shop ([#71](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/71)) ([c8ab770](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/c8ab7702e946154ef9bf90e793310d1e36a03488))
+* link a product by picking the printshop's catalogue product ([#91](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/91)) ([e2dfad2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/e2dfad293e139dcdbbc9dba721d3f83d164fa538))
+* print a variation at its blank variant's area, and let it set its own size ([#73](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/73)) ([3e15525](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/3e15525e8fb9149b85bd584b29a39281d11cf3ea))
+* set a print size per attribute value, and need the product's only while used ([#83](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/83)) ([0d7d8ce](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/0d7d8cebb38eb591a9f295cfc58236f34cdfc1a9))
+* **shop-tools:** give product reads their validity and set a variation's print size ([#70](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/70)) ([3705a2a](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/3705a2aae42421602ff96dad5c7b9ee90b275d4a))
+* **storefront:** draw each attribute value's colour or picture in its swatch ([#88](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/88)) ([254a1a5](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/254a1a5918f9d9c7b25ef69cccc63abe1216179e))
+* **storefront:** give a split listing card its own title, image and from-price ([#97](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/97)) ([a80b2a5](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/a80b2a5e0b10a195d4185407e004224f2a9a2ab9))
+* **storefront:** list a split product once per value in the shop, opening with that value chosen ([#85](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/85)) ([36dd7c0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/36dd7c071d3317eb06e0b1e053fc736094a19465))
+
+
+### Bug Fixes
+
+* **catalogue:** mark the template rename exceptions as log text for Plugin Check ([#92](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/92)) ([2992f09](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/2992f090c58fa62381254b9fdb2f73dae3dd42e6))
+* **ci:** give each e2e site its own database port and recover from a partial WordPress clone ([#98](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/98)) ([7a31ec4](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/7a31ec406a370df6e7a28c23734eabb943c8246c))
+* **pictures:** start a drawing that waited for the lock once the drawing holding it is done ([#82](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/82)) ([457fe8b](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/457fe8bebe065ca3af4cd8170829da11eca415f6))
+* **storefront:** carry a product's groups to variations on other templates ([#80](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/80)) ([2ad85df](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/2ad85df16f50e3ff5288335eed4b7cdf3b5f8631))
+* **storefront:** lay out attribute rows in the designer's form the same on every theme ([#76](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/76)) ([c925a81](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/c925a817694c364e2db8307006ac02f799bd5010))
+* **storefront:** show the product's images and keep the buy row in place when the designer cannot load ([#86](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/86)) ([6035e02](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/6035e02c3f8f41552d230f102b7d7d6449252f0d))
+* **storefront:** switch a variation's template in the mounted designer ([#69](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/69)) ([0591800](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/05918003b12d3f9a9bf24ae91ce830329ee2ae70))
+
+
+### Performance Improvements
+
+* **ci:** run only the e2e specs a change reaches, and faster order specs ([#87](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/87)) ([ff4f5ca](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/ff4f5cad71f8281a6da530fc5c1545bbd7435391))
+* **ci:** run the e2e suite on parallel tests sites beside the other gate steps ([#95](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/95)) ([fd2dc12](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/fd2dc123fe8b63cf1d7a777d9b6d7b3b6c798c94))
+
 ## [1.3.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.2.0...v1.3.0) (2026-11-10)
 
 
