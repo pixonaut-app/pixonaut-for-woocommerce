@@ -7,6 +7,7 @@ import {
 	pick,
 	productPanel,
 	publish,
+	useOwnBlanks,
 } from '../products';
 
 // The product screen looks the same under every theme.
@@ -31,6 +32,7 @@ async function linkedTee(
 	await openPixonautTab(page);
 	const panel = productPanel(page);
 	await panel.getByLabel('Personalise').check();
+	await useOwnBlanks(page);
 	await pick(page, 'pixonaut_blank', 'tee', 'Fixture tee');
 	await linkSide(page, 0, 'Front');
 	await publish(page);
@@ -106,6 +108,7 @@ test('shows what depends on the blank as soon as it is picked', async ({
 		panel.getByLabel('Printshop', { exact: true }).locator('option'),
 	).not.toContainText(['Gelato']);
 
+	await useOwnBlanks(page);
 	await pick(page, 'pixonaut_blank', 'tee', 'Fixture tee');
 
 	await expect(panel.locator('.pixonaut-printshop-name')).toHaveText(

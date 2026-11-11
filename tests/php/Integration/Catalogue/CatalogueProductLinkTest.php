@@ -57,8 +57,8 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 		$this->products = new CatalogueProducts( new PrintshopCatalogue( $client ) );
 		remove_action( 'rest_api_init', array( $this->plugin->catalogue_products(), 'register_routes' ) );
 		$this->products->register();
-		$variant_field = $this->variant_field();
-		$this->panel   = new ProductPanel( $this->linker, new LinkedBlank( $this->catalogue, $this->cache ), $this->plugin->notices(), $this->plugin->templates(), $this->plugin->settings(), $this->plugin->file(), $variant_field, null, null, $this->plugin->proof_urls(), null, new VariantPairing( new ProductVariants( $this->catalogue, new VariantNotice( $this->plugin->notices() ) ), new LinkedBlank( $this->catalogue, $this->cache ), $variant_field, $this->plugin->templates() ) );
+		$variant_field             = $this->variant_field();
+		$this->panel               = new ProductPanel( $this->linker, new LinkedBlank( $this->catalogue, $this->cache ), $this->plugin->notices(), $this->plugin->templates(), $this->plugin->settings(), $this->plugin->file(), $variant_field, null, null, $this->plugin->proof_urls(), null, new VariantPairing( new ProductVariants( $this->catalogue, new VariantNotice( $this->plugin->notices() ) ), new LinkedBlank( $this->catalogue, $this->cache ), $variant_field, $this->plugin->templates() ) );
 		$GLOBALS['wp_rest_server'] = new \WP_REST_Server();
 		do_action( 'rest_api_init', $GLOBALS['wp_rest_server'] );
 		$this->variants->answer = self::poster_variants();
@@ -214,11 +214,11 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 			$parent->get_id(),
 			array(
 				VariantPairing::FIELD       => array(
-					$by['A2']         => 'v_30x40',
+					$by['A2']        => 'v_30x40',
 					$by['70×100 cm'] => '',
 				),
 				VariantPairing::DRAWN_FIELD => array(
-					$by['A2']         => '',
+					$by['A2']        => '',
 					$by['70×100 cm'] => '',
 				),
 				VariantPairing::BLANK_FIELD => self::BLANK_ID,
@@ -331,12 +331,12 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 	}
 
 	/**
-	 * @param WC_Product $parent The variable product.
+	 * @param WC_Product $variable The variable product.
 	 * @return array<string, int> Its variations' ids, by size.
 	 */
-	private function variations_of( WC_Product $parent ): array {
+	private function variations_of( WC_Product $variable ): array {
 		$by = array();
-		foreach ( $parent->get_children() as $child ) {
+		foreach ( $variable->get_children() as $child ) {
 			$variation = wc_get_product( $child );
 			$this->assertInstanceOf( WC_Product_Variation::class, $variation );
 			$by[ (string) $variation->get_attribute( self::AXIS ) ] = $child;

@@ -6,6 +6,7 @@ import {
 	pick,
 	productPanel,
 	publish,
+	useOwnBlanks,
 } from '../products';
 
 // The product screen looks the same under every theme.
@@ -25,6 +26,7 @@ test('a side follows its template until it is stuck to one version', async ({
 	await openPixonautTab(page);
 	const panel = productPanel(page);
 	await panel.getByLabel('Personalise').check();
+	await useOwnBlanks(page);
 	await pick(page, 'pixonaut_blank', 'tee', 'Fixture tee');
 	await linkSide(page, 0, 'Front');
 

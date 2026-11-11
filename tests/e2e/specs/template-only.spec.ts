@@ -7,7 +7,13 @@ import {
 	createProduct,
 	PERSONALISED,
 } from '../personalised';
-import { openPixonautTab, pick, productPanel, publish } from '../products';
+import {
+	openPixonautTab,
+	pick,
+	productPanel,
+	publish,
+	useOwnBlanks,
+} from '../products';
 
 /** mini-tee's artwork, which a print of it keeps the shape of. */
 const MINI_TEE_RATIO = { w: 280, h: 360 };
@@ -230,6 +236,7 @@ test('warns of a background that shows through on a product without a blank, and
 	await expect(warning).toBeVisible();
 
 	// With a blank it no longer applies.
+	await useOwnBlanks(page);
 	await pick(page, 'pixonaut_blank', 'tee', 'Fixture tee');
 	await expect(warning).toBeHidden();
 });

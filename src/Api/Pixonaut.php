@@ -121,7 +121,7 @@ final class Pixonaut {
 	 * @var array<string, array{method: string, path: string}>
 	 */
 	private const PENDING = array(
-		'printshopCatalogueProducts.list'         => array(
+		'printshopCatalogueProducts.list'        => array(
 			'method' => 'GET',
 			'path'   => '/v1/printshop-catalogue-products',
 		),

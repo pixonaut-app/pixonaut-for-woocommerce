@@ -98,7 +98,7 @@ final class VariantPairing {
 			if ( ! $variation instanceof WC_Product_Variation || ProductConfig::stored_on( $variation )->override ) {
 				continue;
 			}
-			$rows[] = $this->row( $variation, $blank_id, $named, $choices, $areas, $integration );
+			$rows[] = $this->row( $variation, $blank_id, $named, $choices, $areas );
 		}
 		if ( array() === $rows ) {
 			return '';
@@ -163,11 +163,10 @@ final class VariantPairing {
 	 * @param BlankVariant[]                                    $named       Its variants, named as matching names them.
 	 * @param array<string, string>                             $choices     The variants as listed, by ref.
 	 * @param array<string, array{width: float, height: float}> $areas       Each variant's print area, by ref.
-	 * @param string                                            $integration The print partner the blank is from.
 	 * @phpstan-param list<BlankVariant> $named
 	 * @return array{id: int, name: string, url: string, picked: string, matched: string, choices: array<string, string>, unpaired: bool, area: string}
 	 */
-	private function row( WC_Product_Variation $variation, string $blank_id, array $named, array $choices, array $areas, string $integration ): array {
+	private function row( WC_Product_Variation $variation, string $blank_id, array $named, array $choices, array $areas ): array {
 		$stored = ProductVariant::stored_on( $variation );
 		$stored = null !== $stored && $stored->blank_id === $blank_id && $stored->is_current( $variation )
 			? $stored

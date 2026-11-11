@@ -8,6 +8,7 @@ import {
 	productPanel,
 	publish,
 	publishLinkedProduct,
+	useOwnBlanks,
 	viewProduct,
 } from '../products';
 
@@ -81,6 +82,7 @@ test('saves two sides with their own print sizes and shows the printshop', async
 	await openPixonautTab(page);
 	const panel = productPanel(page);
 	await panel.getByLabel('Personalise').check();
+	await useOwnBlanks(page);
 	await pick(page, 'pixonaut_blank', 'tee', 'Fixture tee');
 	await linkSide(page, 0, 'Front');
 	await openSideMore(page, 0);
