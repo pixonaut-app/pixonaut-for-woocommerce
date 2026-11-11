@@ -99,7 +99,7 @@ final class LowResolutionWarnings {
 		$accepted = self::accepted_on( $product );
 		$rows     = array();
 		foreach ( $sizes as $size ) {
-			foreach ( $size->images as $image ) {
+			foreach ( self::softest( $size->images ) as $image ) {
 				$key = LowResolutionSize::key( $side, $size->size, $image );
 				if ( ! $size->refused && ( ! $warn || in_array( $image->asset_id, $quiet, true ) || in_array( $key, $accepted, true ) ) ) {
 					continue;
@@ -228,6 +228,25 @@ final class LowResolutionWarnings {
 				$size->described(),
 				$recommended
 			);
+	}
+
+	/**
+	 * One image per picture of a size, for a row each: a picture filling
+	 * several layers is one choice, named by the layer it prints softest in.
+	 *
+	 * @param LowResolutionImage[] $images The images at one size.
+	 * @phpstan-param list<LowResolutionImage> $images
+	 * @return list<LowResolutionImage>
+	 */
+	private static function softest( array $images ): array {
+		$by_asset = array();
+		foreach ( $images as $image ) {
+			$kept = $by_asset[ $image->asset_id ] ?? null;
+			if ( null === $kept || $image->effective_dpi < $kept->effective_dpi ) {
+				$by_asset[ $image->asset_id ] = $image;
+			}
+		}
+		return array_values( $by_asset );
 	}
 
 	/**

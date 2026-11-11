@@ -40,6 +40,14 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 	);
 
 	/**
+	 * The same picture in a second layer, where it prints softer.
+	 */
+	private const SOFTER_LAYER = array(
+		'layerId'      => 'backdrop',
+		'effectiveDpi' => 90.4,
+	) + self::SOFT;
+
+	/**
 	 * The posted name of the warnings' choices on a product.
 	 */
 	private const CHOICES = PanelFields::PRODUCT_PREFIX . PanelFields::LOW_RESOLUTION;
@@ -119,6 +127,21 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 		$this->assertStringContainsString( 'so Pixonaut does not sell this size', $html, 'shown with warnings off' );
 		$this->assertStringContainsString( 'Accept in Pixonaut', $html );
 		$this->assertStringNotContainsString( 'name="' . self::CHOICES, $html, 'nothing to accept in the store' );
+	}
+
+	public function test_a_picture_in_two_layers_is_one_warning_named_by_its_softest_layer(): void {
+		$product = $this->product();
+		$this->link( $product->get_id(), array( self::SOFT, self::SOFTER_LAYER ) );
+
+		$html = $this->html( $product->get_id() );
+		$this->assertSame( 1, substr_count( $html, 'name="' . self::CHOICES . '[' . self::key() . ']"' ), 'one choice for the picture' );
+		$this->assertStringContainsString( 'The image in “backdrop” prints at 90 dpi', $html );
+		$this->assertStringNotContainsString( 'The image in “photo”', $html );
+
+		$this->link( $product->get_id(), array( self::SOFT, self::SOFTER_LAYER ), array( self::key() => LowResolutionWarnings::ACCEPT ) );
+
+		$this->assertSame( array( self::key() ), LowResolutionWarnings::accepted_on( $this->reload( $product->get_id() ) ) );
+		$this->assertStringNotContainsString( 'pixonaut-low-resolution', $this->html( $product->get_id() ) );
 	}
 
 	public function test_a_size_refused_for_another_reason_warns_of_its_soft_images_as_any_other(): void {
