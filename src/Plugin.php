@@ -44,6 +44,7 @@ use Pixonaut\WooCommerce\Abilities\UnlinkProduct;
 use Pixonaut\WooCommerce\Abilities\UpdatePluginSettings;
 use Pixonaut\WooCommerce\Abilities\UseProductPicture;
 use Pixonaut\WooCommerce\Admin\BlankFields;
+use Pixonaut\WooCommerce\Admin\CatalogueProducts;
 use Pixonaut\WooCommerce\Admin\CatalogueSearch;
 use Pixonaut\WooCommerce\Admin\ConnectionScreen;
 use Pixonaut\WooCommerce\Admin\ConnectNotice;
@@ -63,6 +64,7 @@ use Pixonaut\WooCommerce\Admin\LayoutAdjustments;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Admin\StatusReport;
 use Pixonaut\WooCommerce\Admin\VariantField;
+use Pixonaut\WooCommerce\Admin\VariantPairing;
 use Pixonaut\WooCommerce\Admin\TrashedProducts;
 use Pixonaut\WooCommerce\Admin\VariantNotice;
 use Pixonaut\WooCommerce\Admin\VariationPanel;
@@ -86,6 +88,7 @@ use Pixonaut\WooCommerce\Api\DesignerLinks;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\Api\Pictures;
 use Pixonaut\WooCommerce\Api\Pixonaut;
+use Pixonaut\WooCommerce\Api\PrintshopCatalogue;
 use Pixonaut\WooCommerce\Api\RequestLog;
 use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
@@ -245,6 +248,8 @@ final class Plugin {
 	private ?CatalogueCache $catalogue_cache = null;
 
 	private ?CatalogueSearch $catalogue_search = null;
+
+	private ?CatalogueProducts $catalogue_products = null;
 
 	private ?BlankFields $blank_fields = null;
 
@@ -450,6 +455,7 @@ final class Plugin {
 			}
 		);
 		$this->catalogue_search()->register();
+		$this->catalogue_products()->register();
 		$this->blank_fields()->register();
 		$this->regenerate_pictures()->register();
 		$this->regenerate_now()->register();
@@ -679,6 +685,14 @@ final class Plugin {
 	}
 
 	/**
+	 * The admin's routes for a printshop's catalogue product picked in place of a blank.
+	 */
+	public function catalogue_products(): CatalogueProducts {
+		$this->catalogue_products ??= new CatalogueProducts( new PrintshopCatalogue( $this->sdk() ) );
+		return $this->catalogue_products;
+	}
+
+	/**
 	 * The product screen's read of a blank picked but not saved yet.
 	 */
 	public function blank_fields(): BlankFields {
@@ -718,7 +732,7 @@ final class Plugin {
 	}
 
 	public function product_panel(): ProductPanel {
-		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection() );
+		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection(), new VariantPairing( $this->product_variants(), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->variant_field(), $this->templates() ) );
 	}
 
 	/**

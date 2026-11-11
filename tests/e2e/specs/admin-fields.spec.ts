@@ -1,5 +1,11 @@
 import { expect, settingsPath, test, usePlainPermalinks } from '../fixtures';
-import { openPixonautTab, pick, productPanel, publish } from '../products';
+import {
+	openPixonautTab,
+	pick,
+	productPanel,
+	publish,
+	useOwnBlanks,
+} from '../products';
 
 /** The route the placement field's pictures come from. */
 const PLACEMENTS_ROUTE = /admin(%2F|\/)search(%2F|\/)placements/;
@@ -28,6 +34,7 @@ test('shows the configuration once Personalise is ticked, pictures in its picker
 	).toBeVisible();
 
 	// The blank picker shows each blank's photo beside its name.
+	await useOwnBlanks(page);
 	await page.locator('#pixonaut_blank + .select2-container').click();
 	await page
 		.locator(

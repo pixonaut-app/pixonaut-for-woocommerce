@@ -25,6 +25,7 @@
  * @var list<string>                            $open           The disclosures open when the product was last updated (`views`, `store`, `side-<index>`).
  * @var string                                  $open_field     The field posting the disclosures open, for the product's own fields; empty for a variation's.
  * @var array<string, string>                   $printshops     The printshops a product without a blank can choose, names by id; the empty id is the workspace's default.
+ * @var list<array{id: string, name: string}>  $catalogues     The printshops whose catalogue the blank can be picked from, such as Gelato; empty for a variation, or a workspace with none.
  *                                                              Empty when no printshop of the workspace prints without a blank.
  * @var string                                  $printshops_url The workspace's printshops in the Pixonaut studio; empty while not known.
  * @var string                                  $printshop_id   The printshop it chose, or empty for the workspace's default.
@@ -103,6 +104,21 @@ $pixonaut_setting = static function ( string $key, string $label, array $choices
 <?php endif; ?>
 <div class="options_group pixonaut-group">
 	<h4 class="pixonaut-group__title"><?php /* translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: what the product is printed on, and where. */ esc_html_e( 'Printing', 'pixonaut-for-woocommerce' ); ?></h4>
+	<?php if ( array() !== $catalogues ) : ?>
+		<p class="form-field pixonaut-blank-source-field">
+			<label for="<?php echo esc_attr( $ids['blank'] . '_source' ); ?>"><?php /* translators: Label of the field choosing where the Printed on picker searches: a printshop's catalogue, or the blanks in Pixonaut. Admin product page. */ esc_html_e( 'Choose from', 'pixonaut-for-woocommerce' ); ?></label>
+			<span class="pixonaut-field-control">
+				<select id="<?php echo esc_attr( $ids['blank'] . '_source' ); ?>" class="pixonaut-blank-source" style="width: 50%;">
+					<?php foreach ( $catalogues as $pixonaut_catalogue ) : ?>
+						<?php /* translators: %s: a printshop, such as Gelato. Choice of where the Printed on picker of the product edit page searches: the products the printshop sells. */ ?>
+						<option value="<?php echo esc_attr( $pixonaut_catalogue['id'] ); ?>" data-printshop="<?php echo esc_attr( $pixonaut_catalogue['name'] ); ?>"><?php echo esc_html( sprintf( __( '%s’s catalogue', 'pixonaut-for-woocommerce' ), $pixonaut_catalogue['name'] ) ); ?></option>
+					<?php endforeach; ?>
+					<option value="" <?php selected( '' !== $blank_id ); ?>><?php /* translators: Choice of where the Printed on picker of the product edit page searches: the blanks the workspace has in Pixonaut. */ esc_html_e( 'Your blanks in Pixonaut', 'pixonaut-for-woocommerce' ); ?></option>
+				</select>
+			</span>
+			<span class="description pixonaut-catalogue-hint" <?php echo '' === $blank_id ? '' : 'hidden'; ?>><?php esc_html_e( 'Pick the product as the printshop sells it: Pixonaut imports it as a blank, or uses the one already imported.', 'pixonaut-for-woocommerce' ); ?></span>
+		</p>
+	<?php endif; ?>
 	<p class="form-field">
 		<label for="<?php echo esc_attr( $ids['blank'] ); ?>"><?php /* translators: Label of the blank picker: what the product is printed on, a blank such as a T-shirt, or nothing. Admin product page. */ esc_html_e( 'Printed on', 'pixonaut-for-woocommerce' ); ?></label>
 		<span class="pixonaut-field-control">
@@ -114,6 +130,9 @@ $pixonaut_setting = static function ( string $key, string $label, array $choices
 			</select>
 		</span>
 		<span class="description pixonaut-without-blank" <?php echo '' === $blank_id ? '' : 'hidden'; ?>><?php esc_html_e( 'Without a blank, the design is printed by itself, such as a poster or a card.', 'pixonaut-for-woocommerce' ); ?></span>
+	</p>
+	<p class="form-field pixonaut-blank-import-failed" hidden>
+		<span class="pixonaut-field-error" role="alert"></span>
 	</p>
 	<p class="form-field pixonaut-blank-loading" hidden>
 		<span class="pixonaut-field-control pixonaut-blank-reading"><span class="spinner is-active"></span><?php esc_html_e( 'Reading the blank from Pixonaut…', 'pixonaut-for-woocommerce' ); ?></span>

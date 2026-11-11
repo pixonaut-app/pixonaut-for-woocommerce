@@ -15,6 +15,7 @@ import {
 	pickVariant,
 	productPanel,
 	publish,
+	useOwnBlanks,
 	viewProduct,
 } from '../products';
 
@@ -66,6 +67,7 @@ async function fixedTee(page: Page, fake: FakePixonaut): Promise<void> {
 	await openPixonautTab(page);
 	const panel = productPanel(page);
 	await panel.getByLabel('Personalise').check();
+	await useOwnBlanks(page);
 	await pick(page, 'pixonaut_blank', 'tee', 'Fixture tee');
 	await linkSide(page, 0, 'Front');
 	await openSideMore(page, 0);

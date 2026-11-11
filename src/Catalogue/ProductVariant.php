@@ -418,7 +418,12 @@ final class ProductVariant {
 	}
 
 	/**
-	 * Whether each option is one of the attributes, by label.
+	 * Whether each option is one of the attributes: the attribute of the
+	 * option's name with its label, or with a label naming the same size
+	 * (`Measurements`), "70×100 cm" for `28x40" / 70x100cm`. An option
+	 * naming a size that no attribute is named after matches the one
+	 * attribute naming that size, whatever it is called: a store's Format
+	 * is a printshop's Size.
 	 *
 	 * @param array<string, string> $options    Labels by axis.
 	 * @param array<string, string> $normalised Attribute labels by attribute name, `normalised()`.
@@ -426,7 +431,14 @@ final class ProductVariant {
 	private static function all_in( array $options, array $normalised ): bool {
 		foreach ( $options as $axis => $label ) {
 			$value = $normalised[ self::normalise( $axis ) ] ?? null;
-			if ( null === $value || self::normalise( $label ) !== $value ) {
+			if ( null === $value ) {
+				$sized = array_filter( $normalised, static fn ( string $attribute ): bool => Measurements::same( $label, $attribute ) );
+				if ( 1 !== count( $sized ) ) {
+					return false;
+				}
+				continue;
+			}
+			if ( self::normalise( $label ) !== $value && ! Measurements::same( $label, $value ) ) {
 				return false;
 			}
 		}

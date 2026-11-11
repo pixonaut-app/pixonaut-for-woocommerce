@@ -32,7 +32,10 @@ linked the same way, and each variation can override it (see
    Fields marked with a red asterisk are required: each side's
    **Template**, its **Print position** with a blank, and the width and height
    of a size in mm. One left empty says what is missing under it.
-4. Under **Printed on**, search for the blank by name and choose it. Each blank
+4. Under **Printed on**, search for the blank by name and choose it. A
+   product printed by a print partner such as Gelato is picked from the
+   partner's own catalogue instead: see
+   [Pick the printshop's product](#pick-the-printshops-product). Each blank
    is listed with its first photo. Only blanks with at least one print
    position are listed, and not one still being imported into Pixonaut or
    whose import failed. Its **Printshop** and **Variant** show at once, and
@@ -400,6 +403,33 @@ needs a blank cannot be bought: the tab says "The printshop prints only on a
 blank. Choose a blank, or a printshop that prints without one, in the
 product's Pixonaut tab."
 
+### Pick the printshop's product
+
+When your Pixonaut workspace has a print partner with a catalogue, such as
+Gelato or Printful, **Choose from** above **Printed on** lists each one's
+catalogue (*Gelato’s catalogue*) beside *Your blanks in Pixonaut*. It only
+changes what **Printed on** searches; nothing is saved. It starts on the
+first catalogue, or on your blanks when the product already has one.
+
+With a catalogue chosen, search **Printed on** for the product as the
+printshop sells it. Each is listed with its picture, how many variants it is
+sold in, and *Imported* when Pixonaut already has it as a blank. Choosing
+one links the product to that blank: the one it was imported as, else one
+Pixonaut imports for you there and then. You never make the blank first.
+
+An import takes a minute or two. Meanwhile the tab says *Importing Classic
+poster from Gelato into Pixonaut…* and reads the blank again by itself; once
+the import is done, its print positions, printshop and variants show. You can
+update the product meanwhile, but it cannot be bought until the import is
+done and its sides are set. When Pixonaut cannot import a product, such as
+one with nothing to print on, the tab says why under **Printed on**.
+
+Each variation is then paired with the printshop's variant its attributes
+name (see [Variant](#variant)), and prints at that variant's print area when
+its side is sold at the print position's size. A printshop whose workspace
+is the store's own (a custom printshop) has no catalogue: link its products
+as before.
+
 ### Variant
 
 A blank comes in variants, such as each colour in each size. Once a product
@@ -407,7 +437,12 @@ is saved on a blank, its **Pixonaut** tab shows the **Variant** it
 sells. By default it is found automatically, by option labels: the variant whose every
 option is one of the product's attributes, so `Color: Red, Size: M` matches
 a product with a **Color** attribute of only `Red` and a **Size** attribute
-of only `M`, case and spacing aside. When more than one variant matches,
+of only `M`, case and spacing aside. A size matches however it is written:
+`70×100 cm`, `70x100cm`, `700 x 1000 mm` and Gelato's `28x40" / 70x100cm`
+are one size (within a millimetre, either way round), as are `A4` and
+`210 × 297 mm`. A size option no attribute is named after matches the one
+attribute naming that size, so your **Format** finds the printshop's
+**Size**. When more than one variant matches,
 none is chosen. When the labels differ (your size "Medium" for the blank's
 `M`), or the product has no such attributes, pick the variant from the list
 and update the product. *Find automatically* finds it again, and once it has, the field reads
@@ -428,7 +463,12 @@ either: a product whose attributes were named before the blank had names in
 your site's language keeps its variant.
 
 A variable product's own **Pixonaut** tab has no **Variant** field:
-each variation is a variant of its own, picked below its attributes.
+each variation is a variant of its own. Under **Variants** the tab lists
+each variation with its variant and that variant's print area, the ones with
+no variant first, each saying "No Gelato variant found: pick one." Pick a
+variant there, or in the variation's own **Variant** field below its
+attributes (the same choice), and update the product. Past 50 variations the
+rest are under **Variations**.
 
 When you change the attributes of a product or variation matched by
 options, however you change them (the product screen, an import, or

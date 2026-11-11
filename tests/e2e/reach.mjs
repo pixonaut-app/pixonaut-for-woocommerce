@@ -285,6 +285,14 @@ export const REACH = {
 		'assets/src/storefront/field-values.ts',
 		...PROOF_ROUTE,
 	],
+	'catalogue-pick.spec.ts': [
+		'src/Admin/CatalogueProducts.php',
+		'src/Admin/VariantPairing.php',
+		'src/Api/PrintshopCatalogue.php',
+		'src/Catalogue/Measurements.php',
+		'templates/admin/product-variant-pairing.php',
+		'assets/src/admin/catalogue-pick.ts',
+	],
 	'checkbox-approval.spec.ts': [
 		'src/ApprovalMode.php',
 		'src/Cart/AddToCart.php',

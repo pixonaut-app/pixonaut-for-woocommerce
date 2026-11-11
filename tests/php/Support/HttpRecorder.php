@@ -87,6 +87,18 @@ final class HttpRecorder {
 	}
 
 	/**
+	 * Queues an answer without a body, which an operation's description may
+	 * allow though its schema names one.
+	 *
+	 * @param int $status Status.
+	 */
+	public function empty_body( int $status ): self {
+		$this->raw( $status, '', 'application/json' );
+		$this->script[ count( $this->script ) - 1 ]['checked'] = false;
+		return $this;
+	}
+
+	/**
 	 * Queues a request that gets no answer, as when the connection drops
 	 * after Pixonaut received it.
 	 *

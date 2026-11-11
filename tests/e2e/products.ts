@@ -19,6 +19,15 @@ export async function pick(
 		.click();
 }
 
+/** Makes Printed on search the workspace's blanks rather than a printshop's
+ *  catalogue, which a new product starts on when the workspace has one. */
+export async function useOwnBlanks(page: Page): Promise<void> {
+	const source = page.locator('.pixonaut-product-panel .pixonaut-blank-source');
+	if ((await source.count()) > 0) {
+		await source.selectOption({ label: 'Your blanks in Pixonaut' });
+	}
+}
+
 /** The fixture tee's variant a linked product sells unless told otherwise. */
 export const FIXTURE_VARIANT = 'Color: White, Size: S';
 
@@ -60,6 +69,7 @@ export async function publishLinkedProduct(
 	await openPixonautTab(page);
 	const panel = productPanel(page);
 	await panel.getByLabel('Personalise').check();
+	await useOwnBlanks(page);
 	await pick(page, 'pixonaut_blank', 'tee', 'Fixture tee');
 	await linkSide(page, 0, 'Front');
 	if (back) {

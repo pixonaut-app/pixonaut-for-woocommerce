@@ -68,6 +68,10 @@ import {
 	retryOrder,
 	updateOrder,
 } from './orders';
+import {
+	importCatalogueBlank,
+	listCatalogueProducts,
+} from './printshop-catalogue';
 import { createProof, readProofImage } from './proofs';
 import { deleteSession } from './sessions';
 import { createShareLink } from './share-links';
@@ -115,6 +119,9 @@ export const HANDLERS: Partial<Record<OperationKey, Handler>> = {
 	'POST /v1/templates/{id}/print-size': judgePrintSize,
 	'POST /v1/templates/{id}/designer-links': createDesignerLink,
 	'GET /v1/printshop-connections': listPrintshopConnections,
+	'GET /v1/printshop-catalogue-products': listCatalogueProducts,
+	'POST /v1/printshop-catalogue-products/{productId}/blank':
+		importCatalogueBlank,
 	'POST /v1/designs': commitDesign,
 	'POST /v1/designs/standing': findOrCreateStandingDesign,
 	'GET /v1/designs/{id}': readDesign,

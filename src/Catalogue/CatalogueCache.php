@@ -57,6 +57,16 @@ final class CatalogueCache {
 	}
 
 	/**
+	 * Drops one cached answer, so the next read asks Pixonaut again.
+	 *
+	 * @param string                $what Which answer.
+	 * @param array<string, string> $args What it was asked with.
+	 */
+	public function forget( string $what, array $args ): void {
+		delete_transient( $this->key( $what, $args ) );
+	}
+
+	/**
 	 * Drops every cached answer, by moving every key to a new generation;
 	 * the old answers expire on their own.
 	 */

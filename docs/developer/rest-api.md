@@ -15,7 +15,9 @@ pretty permalinks).
 |---|---|
 | `/pixonaut/v1` | GET |
 | `/pixonaut/v1/admin/blank-fields` | GET |
+| `/pixonaut/v1/admin/catalogue-products/blank` | POST |
 | `/pixonaut/v1/admin/search/blanks` | GET |
+| `/pixonaut/v1/admin/search/catalogue-products` | GET |
 | `/pixonaut/v1/admin/search/fitting-templates` | GET |
 | `/pixonaut/v1/admin/search/placements` | GET |
 | `/pixonaut/v1/admin/search/template` | GET |

@@ -115,7 +115,7 @@ function pageOf<T>(rows: T[], { page, pageSize }: Paging): T[] {
 }
 
 /** Whether `name` holds `q`, case aside; no `q` keeps every name. */
-function holds(name: string, q: string | null): boolean {
+export function holds(name: string, q: string | null): boolean {
 	return q === null || name.toLowerCase().includes(q.toLowerCase());
 }
 
@@ -326,7 +326,7 @@ function optionsOf(
 const PAINT_BY = null;
 
 /** A blank as the authoring reads answer it: every name as written. */
-function blankBody(blank: Blank): Record<string, unknown> {
+export function blankBody(blank: Blank): Record<string, unknown> {
 	return {
 		id: blank.id,
 		name: blank.name,
@@ -352,8 +352,7 @@ function blankBody(blank: Blank): Record<string, unknown> {
 		paintBy: PAINT_BY,
 		areasVaryBy: [...(blank.areasVaryBy ?? [])],
 		referenceRow: null,
-		// The fake imports nothing: every blank is whole.
-		status: 'ready',
+		status: blank.status ?? 'ready',
 		importFailure: null,
 	};
 }
@@ -675,6 +674,8 @@ export const listPrintshopConnections: Handler = (context) => {
 			adapter: p.adapter,
 			active: p.active,
 			isDefault: p.isDefault,
+			// A print partner's integration has a catalogue; the merchant's own printshop has none.
+			catalogue: p.adapter !== CUSTOM_ADAPTER,
 			asksOfDesigns: {
 				commitKeys: [],
 				needsBlank: p.adapter !== CUSTOM_ADAPTER,

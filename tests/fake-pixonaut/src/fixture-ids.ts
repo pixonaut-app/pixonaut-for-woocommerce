@@ -58,6 +58,13 @@ export const FIXTURE = {
 		bare: 'blank_tote',
 	},
 	printshop: { main: 'ps_main', other: 'ps_other', integrated: 'ps_gelato' },
+	/** The integrated printshop's catalogue, by product id. */
+	catalogue: {
+		/** A poster in three sizes, each its own print area. */
+		poster: 'gelato_poster',
+		/** A product with no print position: Pixonaut refuses to import it. */
+		unprintable: 'gelato_gift_card',
+	},
 	placement: { front: 'front', back: 'back' },
 	mockup: {
 		/** The front placement's photo, on every blank with placements. */
@@ -88,5 +95,9 @@ export const FIXTURE = {
 		hoodieBlackS: 'v_hoodie_black_s',
 		/** The tote's only variant. */
 		tote: 'v_tote',
+		/** The catalogue poster's sizes, as the printshop writes them. */
+		poster50x70: 'v_poster_50x70',
+		poster70x100: 'v_poster_70x100',
+		poster30x40: 'v_poster_30x40',
 	},
 } as const;

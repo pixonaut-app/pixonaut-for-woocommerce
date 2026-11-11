@@ -18,6 +18,19 @@ import {
 	showBlankParts,
 } from './blank-fields';
 import {
+	blankSearch,
+	catalogueSource,
+	IMPORT_POLL_MS,
+	importFailedIn,
+	importingIn,
+	MAX_IMPORT_POLLS,
+	pickCatalogueBlank,
+	searchesCatalogue,
+	showImportFailed,
+	showSourceHint,
+	showsImporting,
+} from './catalogue-pick';
+import {
 	ajaxOptions,
 	type SearchOption,
 	type SearchRequest,
@@ -848,12 +861,15 @@ export function initPanel(root: HTMLElement): void {
 	};
 	// The printshop, variant and views of a blank picked, read before the product is updated.
 	const reads = latestOnly();
-	const readBlank = (id: string) => {
+	// A blank Pixonaut is still importing is read again, quietly, until it is done.
+	const readBlank = (id: string, polls = 0) => {
 		if (root.dataset.blankFieldsUrl === undefined) {
 			return;
 		}
 		const read = reads.next();
-		showBlankLoading(root, true);
+		if (polls === 0) {
+			showBlankLoading(root, true);
+		}
 		void readBlankParts(root, id).then((parts: BlankParts | null) => {
 			if (!reads.isLatest(read)) {
 				return;
@@ -868,6 +884,23 @@ export function initPanel(root: HTMLElement): void {
 			showOpeningView(root);
 			showViewsSummary(root);
 			showBlankLoading(root, false);
+			if (importingIn(parts.blank_html)) {
+				if (polls < MAX_IMPORT_POLLS) {
+					window.setTimeout(() => {
+						if (blank.value === id && reads.isLatest(read)) {
+							readBlank(id, polls + 1);
+						}
+					}, IMPORT_POLL_MS);
+				}
+			} else if (polls > 0 && !importFailedIn(parts.blank_html)) {
+				// Imported: its placements are there now.
+				void placementsOf(panel.urls, panel.nonce, id).then((listed) => {
+					if (listed !== null && blank.value === id) {
+						fillAll(listed);
+						update();
+					}
+				});
+			}
 		});
 	};
 	// Without a blank nothing of the last one stays, nor a read still to answer.
@@ -929,40 +962,98 @@ export function initPanel(root: HTMLElement): void {
 		}
 	};
 	const showBlank = chosenThumbnail(blank);
-	searchField($, blank, panel.nonce, (q) => ({
-		url: panel.urls.blanks,
-		data: { q },
-	}))
-		.on('select2:select', (event) => {
-			const { id, placements: listed, thumbnail } = event.params.data;
-			showBlank(thumbnail ?? '');
-			fillAll(listed ?? []);
-			update();
-			readBlank(id);
-			// The pictures, once they come; the placements picked meanwhile stay.
-			void placementsOf(panel.urls, panel.nonce, id).then((pictured) => {
-				if (pictured !== null && blank.value === id) {
-					placements = pictured;
-					for (const select of root.querySelectorAll<HTMLSelectElement>(
-						'.pixonaut-side-placement',
-					)) {
-						addThumbnails(select, pictured);
-						chosenPlacements.get(select)?.(
-							select.selectedOptions[0]?.dataset.thumbnail ?? '',
-						);
-					}
-					// The placements' limits may have come with them.
-					checkPanel(root);
+	const source = catalogueSource(root);
+	// The blank the form posts: the last one picked, kept while a catalogue pick is answered.
+	let committed = blank.value;
+	source?.addEventListener('change', () => showSourceHint(root, source));
+	// A catalogue product picked stands for the blank Pixonaut has it as.
+	const pickProduct = (
+		connection: string,
+		product: string,
+		name: string,
+		thumbnail: string,
+	) => {
+		const read = reads.next();
+		showBlankLoading(root, true);
+		// Until Pixonaut answers, the form posts the blank it had, never the product's id.
+		const pending = blank.selectedOptions[0];
+		if (pending) {
+			pending.value = committed;
+		}
+		void pickCatalogueBlank(root, connection, product, name).then((picked) => {
+			if (!reads.isLatest(read) || blank.selectedOptions[0] !== pending) {
+				return;
+			}
+			if ('error' in picked) {
+				showImportFailed(root, picked.error);
+				$(blank).val('').trigger('change');
+				showBlank('');
+				forgetBlank();
+				fillAll([]);
+				update();
+				return;
+			}
+			// A new option, so selectWoo's own record of the pick names the blank, not the product.
+			pending?.remove();
+			const option = new Option(picked.text, picked.id, true, true);
+			option.dataset.thumbnail = thumbnail;
+			blank.append(option);
+			$(blank).trigger('change.select2');
+			pickBlank(picked.id, [], thumbnail);
+		});
+	};
+	const pickBlank = (id: string, listed: Placement[], thumbnail: string) => {
+		committed = id;
+		showBlank(thumbnail);
+		fillAll(listed);
+		update();
+		readBlank(id);
+		// The pictures, once they come; the placements picked meanwhile stay.
+		void placementsOf(panel.urls, panel.nonce, id).then((pictured) => {
+			if (pictured !== null && blank.value === id) {
+				placements = pictured;
+				for (const select of root.querySelectorAll<HTMLSelectElement>(
+					'.pixonaut-side-placement',
+				)) {
+					addThumbnails(select, pictured);
+					chosenPlacements.get(select)?.(
+						select.selectedOptions[0]?.dataset.thumbnail ?? '',
+					);
 				}
-			});
+				// The placements' limits may have come with them.
+				checkPanel(root);
+			}
+		});
+	};
+	searchField($, blank, panel.nonce, blankSearch(root, panel.urls, source))
+		.on('select2:select', (event) => {
+			const { id, placements: listed, thumbnail, text } = event.params.data;
+			showImportFailed(root, null);
+			if (searchesCatalogue(source) && source !== null) {
+				showBlank(thumbnail ?? '');
+				pickProduct(source.value, id, text, thumbnail ?? '');
+				return;
+			}
+			pickBlank(id, listed ?? [], thumbnail ?? '');
 		})
 		.on('select2:clear', () => {
+			committed = '';
+			showImportFailed(root, null);
 			showBlank('');
 			forgetBlank();
 			fillAll([]);
 			update();
 		});
-
+	if (showsImporting(root) && blank.value !== '') {
+		const importing = blank.value;
+		// Dropped when another blank is picked or read meanwhile.
+		const unread = reads.next();
+		window.setTimeout(() => {
+			if (blank.value === importing && reads.isLatest(unread)) {
+				readBlank(importing, 1);
+			}
+		}, IMPORT_POLL_MS);
+	}
 	for (const side of sideElements()) {
 		initSide(panel, side);
 	}

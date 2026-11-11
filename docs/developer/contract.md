@@ -114,7 +114,8 @@ its `pending` entry. With nothing awaited, the file holds `{ "entries": [] }`.
 
 `contracts/scenarios/` holds the exchanges a store has with Pixonaut, in
 order: connect (`POST /v1/connect/token`), narrow and ping the webhook
-endpoint, read the catalogue, personalise on the product page with the
+endpoint, read the catalogue, import a printshop's catalogue product as a
+blank, personalise on the product page with the
 publishable key (the blank's views, photos and variants, template, fonts,
 constraints, print size, an upload, proofs, an abandoned session), commit, approve and order a design (and be refused a second order of it),
 sell a fixed product from a standing design (found again, and ordered twice),
