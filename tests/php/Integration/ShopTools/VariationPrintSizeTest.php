@@ -24,6 +24,7 @@ use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Simple;
@@ -180,7 +181,7 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 	public function test_a_variation_following_a_product_without_a_blank_gets_its_own_print_size(): void {
 		$product   = $this->poster();
 		$variation = $this->variation( $product, 'Small' );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->succeed(
@@ -219,7 +220,7 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 			'basis'   => VariationSize::basis( self::side(), null, null ),
 		);
 		( new VariationSize( array( 'front' => $own ) ) )->save_to( $variation );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->succeed(
@@ -245,8 +246,9 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 			array(
 				'verdicts' => array(
 					array(
-						'legal'  => false,
-						'reason' => InvalidReason::WRONG_RATIO,
+						'legal'         => false,
+						'reason'        => InvalidReason::WRONG_RATIO,
+						'lowResolution' => array(),
 					),
 				),
 			)
@@ -297,7 +299,7 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 		$variation = $this->variation( $product, 'Small' );
 		$unused    = new Side( 'front', 'Front', null, null, self::OLD_TEMPLATE_BASE_ID, self::TEMPLATE_VERSION, null, 'Old poster', array( new PrintSize( self::PRODUCT_SIZE_MM, self::PRODUCT_SIZE_MM, '' ) ) );
 		( new ProductConfig( personalise: false, override: false, sides: array( $unused ) ) )->save_to( $variation );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 
 		$answer = $this->succeed(

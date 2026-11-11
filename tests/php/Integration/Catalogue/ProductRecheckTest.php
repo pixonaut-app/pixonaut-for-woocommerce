@@ -32,6 +32,7 @@ use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\PngFixture;
 use Pixonaut\WooCommerce\Tests\Support\ShopListing;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Signature;
 use Pixonaut\WooCommerce\Webhooks\EventStore;
 use Pixonaut\WooCommerce\Webhooks\Processor;
@@ -350,8 +351,9 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 			array(
 				'verdicts' => array(
 					array(
-						'legal'  => false,
-						'reason' => InvalidReason::TOO_LARGE,
+						'legal'         => false,
+						'reason'        => InvalidReason::TOO_LARGE,
+						'lowResolution' => array(),
 					),
 				),
 			)
@@ -572,8 +574,9 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 			array(
 				'verdicts' => array(
 					array(
-						'legal'  => false,
-						'reason' => InvalidReason::TOO_LARGE,
+						'legal'         => false,
+						'reason'        => InvalidReason::TOO_LARGE,
+						'lowResolution' => array(),
 					),
 				),
 			)
@@ -599,7 +602,7 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 		$products = 2;
 		for ( $i = 0; $i < $products; $i++ ) {
 			$this->recorder->json( 200, BlankFixture::answer() );
-			$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+			$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		}
 
 		do_action( 'pixonaut_wc_events_baseline_set', self::connection()->summary() );
@@ -630,7 +633,7 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 	public function test_a_template_only_products_sizes_are_checked_against_its_template_alone(): void {
 		$this->template_only( array( new PrintSize( DesignFixture::WIDTH_MM, DesignFixture::HEIGHT_MM, 'Large' ) ) );
 		$this->live_list( array( DesignFixture::TEMPLATE_BASE_ID => DesignFixture::LIVE_VERSION ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 
 		$this->deliver(
 			ProductRecheck::TEMPLATE_LIVE_CHANGED,
@@ -849,7 +852,7 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 	private function script_recheck( array $live ): void {
 		$this->live_list( $live );
 		$this->recorder->json( 200, BlankFixture::answer() );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 	}
 
 	/**

@@ -9,6 +9,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WC_Product_Attribute;
 
 /**
@@ -17,8 +18,6 @@ use WC_Product_Attribute;
  * as written when the blank has none in it or Pixonaut lacks the language.
  */
 final class ProductVariantLanguageTest extends ProductPanelTestCase {
-
-	private const LEGAL = array( 'legal' => true );
 
 	private const SWEDISH_LOCALE = 'sv_SE';
 
@@ -134,7 +133,7 @@ final class ProductVariantLanguageTest extends ProductPanelTestCase {
 		$product->set_attributes( array( $attribute ) );
 		$product->save();
 		$this->variants->languages = array();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$variant = ProductVariant::stored_on( $this->reload( $product->get_id() ) );
 		$this->assertInstanceOf( ProductVariant::class, $variant );

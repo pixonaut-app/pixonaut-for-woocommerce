@@ -9,6 +9,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
 use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 
 final class ProductViewsTest extends ProductPanelTestCase {
 
@@ -18,7 +19,7 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_the_product_is_shown_in_the_views_ticked_each_once(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array( 'view-front', 'view-back', 'view-front', '' ) ) ) );
 
@@ -27,9 +28,9 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_no_view_ticked_shows_every_view(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array( 'view-front' ) ) ) );
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array() ) ) );
 
@@ -38,9 +39,9 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_views_not_listed_keep_the_views_chosen_before(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array( 'view-front' ) ) ) );
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		// Pixonaut could not list them, so the panel posted none.
 		$this->save( $product->get_id() );
@@ -50,9 +51,9 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_views_ticked_under_another_blank_are_not_the_new_blanks(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array( 'view-front' ) ) ) );
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save(
 			$product->get_id(),
@@ -67,7 +68,7 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_the_designer_starts_on_the_view_chosen_among_those_ticked(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array( 'view-front', 'view-back' ), 'view-back' ) ) );
 
@@ -76,7 +77,7 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_a_starting_view_not_ticked_starts_on_the_first(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array( 'view-front' ), 'view-back' ) ) );
 
@@ -85,7 +86,7 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_with_no_view_ticked_any_view_can_start(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array(), 'view-back' ) ) );
 
@@ -94,9 +95,9 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_another_blank_drops_the_starting_view(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array(), 'view-back' ) ) );
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array( 'pixonaut_blank' => 'blank_other' ) );
 
@@ -105,7 +106,7 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_the_panel_lists_the_blanks_views_by_placement_with_the_chosen_ones_ticked(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array( 'view-back' ), 'view-back' ) ) );
 		$placements = array(
 			self::PLACEMENT_ID => 'Front',
@@ -132,7 +133,7 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_the_view_the_designer_opens_on_is_badged_and_named_in_the_summary(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array( 'view-front', 'view-back' ), 'view-back' ) ) );
 		$placements = array(
 			self::PLACEMENT_ID => 'Front',
@@ -150,7 +151,7 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_an_opening_view_the_blank_no_longer_has_badges_the_first_view(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array(), 'view-back' ) ) );
 		$this->recorder->json( 200, $this->blank() );
 		$this->recorder->json( 200, $this->mockups() );
@@ -173,7 +174,7 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_the_design_view_can_be_ticked_and_started_on(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array( self::VIEWS_FIELD => self::views( self::BLANK_ID, array( 'view-front', ProductConfig::DESIGN_VIEW ), ProductConfig::DESIGN_VIEW ) ) );
 
@@ -184,7 +185,7 @@ final class ProductViewsTest extends ProductPanelTestCase {
 
 	public function test_the_panel_says_when_pixonaut_cannot_list_the_views(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->recorder->json( 200, $this->blank() );
 		$this->recorder->json( 500, array( 'error' => 'internal_error' ) );

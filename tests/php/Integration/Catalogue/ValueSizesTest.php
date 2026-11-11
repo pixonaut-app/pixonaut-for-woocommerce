@@ -20,6 +20,7 @@ use Pixonaut\WooCommerce\Catalogue\ValueSizes;
 use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Catalogue\VariationSizes;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variable;
@@ -48,8 +49,6 @@ final class ValueSizesTest extends ProductPanelTestCase {
 	 */
 	private const SIDE_KEY = 'design';
 
-	private const LEGAL = array( 'legal' => true );
-
 	private VariationPanel $variations;
 
 	public function set_up(): void {
@@ -71,9 +70,9 @@ final class ValueSizesTest extends ProductPanelTestCase {
 	public function test_a_variable_product_whose_variations_all_have_a_size_of_their_own_needs_none(): void {
 		list( $parent, $small, $large ) = $this->poster();
 		$this->save_template_only( $parent );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $small, 0, '300', '400' );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $large, 1, '500', '700' );
 
 		$this->save_template_only( $parent );
@@ -90,7 +89,7 @@ final class ValueSizesTest extends ProductPanelTestCase {
 	public function test_a_variation_without_a_size_is_not_sold_and_the_product_says_so(): void {
 		list( $parent, $small, $large ) = $this->poster();
 		$this->save_template_only( $parent );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $small, 0, '300', '400' );
 
 		$this->save_template_only( $parent );
@@ -106,7 +105,7 @@ final class ValueSizesTest extends ProductPanelTestCase {
 	public function test_a_template_not_live_stops_variations_with_a_size_of_their_own(): void {
 		list( $parent, $small ) = $this->poster();
 		$this->save_template_only( $parent );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $small, 0, '300', '400' );
 
 		$this->save_template_only( $parent, array(), 'paused' );
@@ -150,14 +149,14 @@ final class ValueSizesTest extends ProductPanelTestCase {
 				)
 			)
 		);
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 
 		$this->save_variation( $small, 0, '210', '297' );
 
 		$this->assertSame( array( 210.0, 297.0 ), $this->sold_size( $small ) );
 		$this->assertSame( array( 500.0, 700.0 ), $this->sold_size( $large ) );
 
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $small, 0, null );
 
 		$this->assertSame( array( 300.0, 400.0 ), $this->sold_size( $small ), 'back to its value’s size' );
@@ -177,10 +176,11 @@ final class ValueSizesTest extends ProductPanelTestCase {
 			),
 			'live',
 			array(
-				self::LEGAL,
+				VerdictAnswers::LEGAL,
 				array(
-					'legal'  => false,
-					'reason' => InvalidReason::WRONG_RATIO,
+					'legal'         => false,
+					'reason'        => InvalidReason::WRONG_RATIO,
+					'lowResolution' => array(),
 				),
 			)
 		);
@@ -275,11 +275,11 @@ final class ValueSizesTest extends ProductPanelTestCase {
 	public function test_saving_the_last_variations_size_clears_the_products_notice(): void {
 		list( $parent, $small, $large ) = $this->poster();
 		$this->save_template_only( $parent );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $small, 0, '300', '400' );
 		$this->variations->saved( $parent->get_id() );
 		$this->assertArrayHasKey( InvalidProductNotice::key( $parent->get_id() ), $this->plugin->notices()->all() );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 
 		$this->save_variation( $large, 1, '500', '700' );
 		$this->variations->saved( $parent->get_id() );
@@ -309,8 +309,8 @@ final class ValueSizesTest extends ProductPanelTestCase {
 
 	public function test_on_a_blank_a_value_size_replaces_the_placements_default(): void {
 		list( $parent, $small, $large ) = $this->poster();
-		$this->script_link( self::LEGAL );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->script_link( VerdictAnswers::LEGAL );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 
 		$this->save( $parent->get_id(), array(), array( PostedSides::VALUE_SIZES => $this->value_sizes( array( self::SMALL => array( '200', '257.1', '' ) ) ) ) );
 
@@ -370,7 +370,7 @@ final class ValueSizesTest extends ProductPanelTestCase {
 		$this->script_template( $status );
 		$count = count( $value_sizes['rows'][ self::ATTRIBUTE_SLUG ] ?? array() );
 		for ( $i = 0; $i < $count; $i++ ) {
-			$this->recorder->json( 200, array( 'verdicts' => array( $verdicts[ $i ] ?? self::LEGAL ) ) );
+			$this->recorder->json( 200, array( 'verdicts' => array( $verdicts[ $i ] ?? VerdictAnswers::LEGAL ) ) );
 		}
 		$this->save(
 			$poster->get_id(),

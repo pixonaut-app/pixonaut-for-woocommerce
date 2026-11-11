@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\StandingRow;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 
 /**
  * A side set to standing is printed from the store's standing design,
@@ -40,7 +41,7 @@ final class ProductStandingTest extends StandingTestCase {
 
 	public function test_saving_a_standing_side_finds_its_approved_design_and_keeps_it_on_the_side(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_standing();
 
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
@@ -67,7 +68,7 @@ final class ProductStandingTest extends StandingTestCase {
 	public function test_saving_again_unchanged_finds_the_same_design(): void {
 		$product = $this->product();
 		foreach ( array( 1, 2 ) as $save ) {
-			$this->script_link( array( 'legal' => true ) );
+			$this->script_link( VerdictAnswers::LEGAL );
 			$this->script_standing();
 			$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
 		}
@@ -84,13 +85,13 @@ final class ProductStandingTest extends StandingTestCase {
 			self::PLACEMENT_ID => 'Front',
 			self::BACK_ID      => 'Back',
 		);
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_standing();
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
 
 		$this->recorder->json( 200, $this->blank( $placements ) );
 		$this->recorder->json( 200, $this->constraints( self::BACK_ID ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->script_standing( self::OTHER_STANDING_ID, self::BACK_ID );
 		$this->save(
@@ -108,7 +109,7 @@ final class ProductStandingTest extends StandingTestCase {
 
 	public function test_a_blank_whose_areas_vary_gets_a_design_per_row_of_the_variants_it_sells(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_s', 'des_row_m' ) );
 
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
@@ -147,11 +148,11 @@ final class ProductStandingTest extends StandingTestCase {
 
 	public function test_saving_again_keeps_every_row_in_step_with_the_side(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_s', 'des_row_m' ) );
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
 
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_s3', 'des_row_m3' ) );
 		$this->save(
 			$product->get_id(),
@@ -169,11 +170,11 @@ final class ProductStandingTest extends StandingTestCase {
 
 	public function test_saving_again_keeps_the_previews_of_designs_found_again_without_reading_them(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_s', 'des_row_m' ) );
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
 
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_s', 'des_row_m' ), 'known' );
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
 
@@ -185,7 +186,7 @@ final class ProductStandingTest extends StandingTestCase {
 
 	public function test_a_preview_pixonaut_would_not_give_is_logged_and_the_row_kept(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_s', 'des_row_m' ), 'fail' );
 
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
@@ -207,7 +208,7 @@ final class ProductStandingTest extends StandingTestCase {
 
 	public function test_a_refused_row_leaves_the_product_unsellable(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array() );
 		$this->recorder->json( 422, array( 'error' => self::CONSTRAINT_VIOLATION ) );
 
@@ -222,7 +223,7 @@ final class ProductStandingTest extends StandingTestCase {
 
 	public function test_the_panel_previews_each_rows_design_on_the_blank(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_s', 'des_row_m' ) );
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
 
@@ -238,7 +239,7 @@ final class ProductStandingTest extends StandingTestCase {
 
 	public function test_the_panel_shows_no_previews_for_a_side_with_one_design(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_standing();
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
 
@@ -247,7 +248,7 @@ final class ProductStandingTest extends StandingTestCase {
 
 	public function test_a_refused_standing_design_leaves_the_product_unsellable_with_a_notice(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->recorder->json( 422, array( 'error' => self::CONSTRAINT_VIOLATION ) );
 
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
@@ -274,7 +275,7 @@ final class ProductStandingTest extends StandingTestCase {
 
 	public function test_a_store_that_may_not_approve_designs_is_told_so(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->recorder->json( 403, array( 'error' => ErrorCode::FORBIDDEN ) );
 
 		$this->save( $product->get_id(), array(), array( 'mode' => Side::STANDING ) );
@@ -284,7 +285,7 @@ final class ProductStandingTest extends StandingTestCase {
 
 	public function test_a_personalised_side_asks_for_no_standing_design(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id() );
 
@@ -307,7 +308,7 @@ final class ProductStandingTest extends StandingTestCase {
 		);
 		foreach ( array( self::PLACEMENT_ID, self::BACK_ID ) as $placement ) {
 			$this->recorder->json( 200, $this->constraints( $placement ) );
-			$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+			$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		}
 		$this->script_template();
 		$this->script_standing();
@@ -368,7 +369,7 @@ final class ProductStandingTest extends StandingTestCase {
 	private function script_offering( bool $offers ): void {
 		$this->recorder->json( 200, $this->blank() );
 		$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'offersProperties' => $offers ) ), 'application/json' );
 	}
 

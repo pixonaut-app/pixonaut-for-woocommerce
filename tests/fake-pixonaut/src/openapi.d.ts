@@ -1008,7 +1008,7 @@ export interface paths {
         };
         /**
          * List the tenant's blanks
-         * @description A page of the tenant's blanks by name. `q` keeps the blanks whose name holds it, case aside; `hasPlacements=true` keeps the ones with a placement to print on; `printshop` keeps the ones that printshop connection makes; `category` the ones in that blank category. Each row carries its placements and views, its options and variant count, `optionsConfirmedAt`, its photo coverage and a `thumbnailUrl` of its first photo on the source it shows. A deleted blank is left out; `deleted=only` lists the deleted ones instead, newest first, each with when and by whom it was deleted.
+         * @description A page of the tenant's blanks by name. `q` keeps the blanks whose name holds it, case aside; `hasPlacements=true` keeps the ready ones with a placement to print on, leaving out one still importing or generating; `printshop` keeps the ones that printshop connection makes; `category` the ones in that blank category. Each row carries its placements and views, its options and variant count, `optionsConfirmedAt`, its photo coverage and a `thumbnailUrl` of its first photo on the source it shows. A deleted blank is left out; `deleted=only` lists the deleted ones instead, newest first, each with when and by whom it was deleted.
          */
         get: operations["blanks.list"];
         put?: never;
@@ -2141,7 +2141,7 @@ export interface paths {
         put?: never;
         /**
          * Print an approved design
-         * @description Makes the print files for an approved design. Answers `202` with the print as soon as it is reserved, and renders it after the answer: read it at `Location` until it is `completed` or `failed`, or wait for `print.completed` or `print.failed`. With `Prefer: wait` it answers once the print has rendered, `201` with its job ticket, or `render_failed`. A studio member or a connected store's integration key needs `prints:create`.
+         * @description Makes the print files for an approved design. Answers `202` with the print as soon as it is reserved, and renders it after the answer: read it at `Location` until it is `completed` or `failed`, or wait for `print.completed` or `print.failed`. With `Prefer: wait` it answers once the print has rendered, `201` with its job ticket, or `render_failed`. An image the workspace put in the design's template that prints below its recommended resolution is named in the print's `lowResolution`; when the workspace refuses such prints, the print is refused `409 low_resolution`, naming them, and nothing is written. A studio member or a connected store's integration key needs `prints:create`.
          */
         post: operations["prints.create"];
         delete?: never;
@@ -2250,6 +2250,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/printshop-catalogue-products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the printshop's catalogue
+         * @description One page of the connection's printshop catalogue, each product marked with whether this workspace imported it through that connection and, with `blanks:read`, as which blank.
+         */
+        get: operations["printshopCatalogueProducts.list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/printshop-catalogue-products/{productId}/blank": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import a catalogue product as a blank
+         * @description Writes the blank at once, `importing`, and answers with it and the job that fills in its variants and photos in the background, 202. The blank becomes `ready` when the job ends, or `failed` with `importFailure` saying why. An integration key is answered the blank already imported from the product through the connection, 200, when there is one that has not failed; the body may be empty. A failed import's blank keeps its name until a member removes it, so importing the product again under that name is refused `409 duplicate_name`.
+         */
+        post: operations["printshopCatalogueProducts.importBlank"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/printshop-connections": {
         parameters: {
             query?: never;
@@ -2259,7 +2299,7 @@ export interface paths {
         };
         /**
          * List the tenant's printshop connections
-         * @description Each connection's id, name, adapter, whether it is active and whether it is the tenant's default printshop, active first; a member is also answered its `counts`: the blanks it makes, its open orders and all its orders, `blanks` null without `blanks:read` and the order counts null without `orders:read`. `q` keeps the connections whose name holds it, case aside.
+         * @description Each connection's id, name, adapter, whether it is active, whether it is the tenant's default printshop and whether its printshop has a catalogue, active first; a member is also answered its `counts`: the blanks it makes, its open orders and all its orders, `blanks` null without `blanks:read` and the order counts null without `orders:read`. `q` keeps the connections whose name holds it, case aside.
          */
         get: operations["printshopConnections.list"];
         put?: never;
@@ -2593,7 +2633,7 @@ export interface paths {
         put?: never;
         /**
          * Check a print size against a template
-         * @description Judges `widthMm` × `heightMm` against the template's declared ratio and, when the body names a `blankId` and `placementId` (both or neither), against that placement's maximum print area. An illegal size is still a 200: the verdict says which check it failed. A body with `sizes` (up to 50) in place of one size judges each against the same placement, answering `verdicts` in the order asked. A named placement that does not resolve is refused with `unknown_placement` rather than judged without its bounds.
+         * @description Judges `widthMm` × `heightMm` against the template's declared ratio and, when the body names a `blankId` and `placementId` (both or neither), against that placement's maximum print area. An illegal size is still a 200: the verdict says which check it failed. Every verdict carries `lowResolution`, the images the workspace put in the template that print below their recommended resolution at the size; show it to the merchant, and to the shopper where the size is theirs to choose. When the workspace refuses such sizes, a size with any is illegal with `low_resolution`. A body with `sizes` (up to 50) in place of one size judges each against the same placement, answering `verdicts` in the order asked. A named placement that does not resolve is refused with `unknown_placement` rather than judged without its bounds.
          */
         post: operations["templates.printSize.validate"];
         delete?: never;
@@ -3589,6 +3629,49 @@ export interface webhooks {
             requestBody?: {
                 content: {
                     "application/json": components["schemas"]["DesignRejectedEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "design.unapproved": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** design.unapproved */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DesignUnapprovedEvent"];
                 };
             };
             responses: {
@@ -5373,6 +5456,49 @@ export interface webhooks {
         patch?: never;
         trace?: never;
     };
+    "template.low_resolution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** template.low_resolution */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TemplateLowResolutionEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "template.published": {
         parameters: {
             query?: never;
@@ -5398,6 +5524,52 @@ export interface webhooks {
             requestBody?: {
                 content: {
                     "application/json": components["schemas"]["TemplatePublishedEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "template.renamed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * template.renamed
+         * @description A published template's id was changed. `<oldId>@<version>` goes on reading the template under its new id, so a stored reference keeps working whether or not this arrives; new references use `newId`, and a store that receives it moves the ones it holds.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TemplateRenamedEvent"];
                 };
             };
             responses: {
@@ -5993,6 +6165,7 @@ export interface components {
             id: string;
             payload: {
                 designId: string;
+                remadePrintId?: string;
                 restoredFrom?: number;
                 revision: number;
             };
@@ -6062,6 +6235,28 @@ export interface components {
              * @enum {string}
              */
             via?: "automation";
+        };
+        DesignUnapprovedEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                designId: string;
+                printId: string;
+                revision: number;
+            };
+            /** @enum {string} */
+            type: "design.unapproved";
+            /** @description `automation` when one of your automations caused the event; absent otherwise. */
+            via?: string;
         };
         InkCreatedEvent: {
             /** @description The automation that caused the event, beside `via`. */
@@ -21371,6 +21566,43 @@ export interface components {
              */
             via?: "automation";
         };
+        TemplateLowResolutionEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                assetId: string;
+                effectiveDpi: number;
+                heightMm: number;
+                layerId: string;
+                /** @description Where the design came from: the door it was committed through. A duplicate's is whoever duplicated it. */
+                origin: {
+                    /** @description The designer link's id, the key's id, or the connected store's site address. Null for `studio`, and for a key set in the deployment's configuration rather than made in the workspace. */
+                    id: string | null;
+                    /** @description `link`: a designer link's page made it. `studio`: a member made it, in the studio or through an MCP key. `secret_key` and `publishable_key`: committed with one of your keys. `store`: committed by a connected store, with any key its site was given. */
+                    kind: string;
+                };
+                recommendedDpi: number;
+                source: {
+                    id: string | null;
+                    kind: string;
+                };
+                templateId: string;
+                widthMm: number;
+            };
+            /** @enum {string} */
+            type: "template.low_resolution";
+            /** @description `automation` when one of your automations caused the event; absent otherwise. */
+            via?: string;
+        };
         TemplatePublishedEvent: {
             /** @description The automation that caused the event, beside `via`. */
             automation?: {
@@ -21397,6 +21629,28 @@ export interface components {
              * @enum {string}
              */
             via?: "automation";
+        };
+        TemplateRenamedEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                newId: string;
+                oldId: string;
+                renamedAt: number;
+            };
+            /** @enum {string} */
+            type: "template.renamed";
+            /** @description `automation` when one of your automations caused the event; absent otherwise. */
+            via?: string;
         };
         TextMessagesLowEvent: {
             /** @description The automation that caused the event, beside `via`. */
@@ -23831,6 +24085,8 @@ export interface operations {
                             localizedNames: {
                                 [key: string]: string;
                             };
+                            /** @description Whether its resolution is accepted as it is: a template holding it is never warned about for printing it too soft. */
+                            lowResolutionAccepted: boolean;
                             mime: string;
                             name: string | null;
                             /** @description A link to a library picture's preview that opens with no key, for an hour or two. Null for an asset of another kind. */
@@ -24418,6 +24674,8 @@ export interface operations {
                         localizedNames: {
                             [key: string]: string;
                         };
+                        /** @description Whether its resolution is accepted as it is: a template holding it is never warned about for printing it too soft. */
+                        lowResolutionAccepted: boolean;
                         mime: string;
                         name: string | null;
                         /** @description A link to a library picture's preview that opens with no key, for an hour or two. Null for an asset of another kind. */
@@ -24631,6 +24889,8 @@ export interface operations {
                         nl?: string;
                         sv?: string;
                     };
+                    /** @description true accepts the picture's resolution as it is: a template holding it is never warned about, or refused, for printing it below its recommended resolution. false takes that back. */
+                    lowResolutionAccepted?: boolean;
                     /** @description The picture's new name; it cannot be empty. */
                     name?: string;
                     /**
@@ -24665,6 +24925,8 @@ export interface operations {
                         localizedNames: {
                             [key: string]: string;
                         };
+                        /** @description Whether its resolution is accepted as it is: a template holding it is never warned about for printing it too soft. */
+                        lowResolutionAccepted: boolean;
                         mime: string;
                         name: string | null;
                         /** @description `picture`, or `blank-photo` for a blank's product photo, which is in no category and counted in no category or tag. */
@@ -24746,6 +25008,8 @@ export interface operations {
                             localizedNames: {
                                 [key: string]: string;
                             };
+                            /** @description Whether its resolution is accepted as it is: a template holding it is never warned about for printing it too soft. */
+                            lowResolutionAccepted: boolean;
                             mime: string;
                             name: string | null;
                             /** @description `picture`, or `blank-photo` for a blank's product photo, which is in no category and counted in no category or tag. */
@@ -26082,7 +26346,7 @@ export interface operations {
                 /** @description Only the automations whose name or trigger holds this text, case aside. */
                 q?: string;
                 /** @description Only the automations that fire on this event. */
-                trigger?: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed";
+                trigger?: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution";
                 /** @description Only the automations that act at this printshop, by its id: a step names it, or a step orders at the blank's printshop and one of your blanks prints there. Each row then says which of its steps act there. */
                 printshop?: string;
             };
@@ -26416,7 +26680,7 @@ export interface operations {
                      * @default null
                      * @enum {string|null}
                      */
-                    trigger?: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | null;
+                    trigger?: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
                 };
             };
         };
@@ -26721,7 +26985,7 @@ export interface operations {
                      * @description The event it fires on; null for none yet, which fires on nothing. One with none cannot be enabled.
                      * @enum {string|null}
                      */
-                    trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | null;
+                    trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
                 };
             };
         };
@@ -27043,7 +27307,7 @@ export interface operations {
                          * @description The event it fires on; null for none yet, which fires on nothing. One with none cannot be enabled.
                          * @enum {string|null}
                          */
-                        trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | null;
+                        trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
                     };
                     /** @description The past event to test on, as the events found name it. */
                     eventId: string;
@@ -27338,7 +27602,7 @@ export interface operations {
                          * @description The event it fires on; null for none yet, which fires on nothing. One with none cannot be enabled.
                          * @enum {string|null}
                          */
-                        trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | null;
+                        trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
                     };
                     /** @description One event by its id, among older ones than the newest 20. */
                     eventId?: string;
@@ -27772,7 +28036,7 @@ export interface operations {
                      * @description The event it fires on; null for none yet, which fires on nothing. One with none cannot be enabled.
                      * @enum {string|null}
                      */
-                    trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | null;
+                    trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
                 };
             };
         };
@@ -30403,6 +30667,15 @@ export interface operations {
                                     userId: string;
                                 } | null;
                             } | null;
+                            /** @description The draw a blank generated with AI waits on while it is `generating`, or while it is `importing` the catalogue product it is made as; null for any other blank. */
+                            generation: {
+                                /** @description Where the draw's purchase stands, as the draw reads it. */
+                                decision: string;
+                                /** @description The draw of its photo: read, approve, deny or redraw it at `/v1/pixel/blank-photos/{id}`. Approving writes the photo into the blank and makes it `ready`; denying removes the blank. */
+                                drawId: string;
+                                /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
+                                photoAssetId: string | null;
+                            } | null;
                             id: string;
                             /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
                             importFailure: string | null;
@@ -30537,6 +30810,26 @@ export interface operations {
                                 dpi?: number;
                                 /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                                 fillColour?: string | null;
+                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box. Its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, the placement is printed as it lies. */
+                                flatLayout?: {
+                                    /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
+                                    parts: {
+                                        /** @description The part's height, in mm. */
+                                        heightMm: number;
+                                        /** @description The part's name: `Lid`, `Front`, `Glue tab`. */
+                                        name: string;
+                                        /** @description True for a panel, named for the face of the folded product it becomes; false for a glue tab, hidden once folded. The print covers glue tabs too. */
+                                        printed: boolean;
+                                        /** @description Which way is up on the part once folded, in quarter turns clockwise from the sheet's up: 2 for a flap that lies upside down on the sheet. */
+                                        up: 0 | 1 | 2 | 3;
+                                        /** @description The part's width, in mm. */
+                                        widthMm: number;
+                                        /** @description The part's left edge, in mm from the sheet's left. */
+                                        xMm: number;
+                                        /** @description The part's top edge, in mm from the sheet's top. */
+                                        yMm: number;
+                                    }[];
+                                } | null;
                                 /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                                 foldMm?: number;
                                 /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene whose item has no record draws nothing of the placement. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
@@ -30842,7 +31135,7 @@ export interface operations {
                                 } | null;
                                 viewId: string;
                             } | null;
-                            /** @description `importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `failed` when that import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise. */
+                            /** @description `importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `generating` for a blank generated with AI until its photo is approved: `generation` says whether it is drawing, waits for the decision, or drew nothing. `failed` when an import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise. */
                             status: string;
                             /** @description The stock item the blank's scenes photograph; null for none. */
                             stockItemKey: string | null;
@@ -30978,6 +31271,15 @@ export interface operations {
                                 userId: string;
                             } | null;
                         } | null;
+                        /** @description The draw a blank generated with AI waits on while it is `generating`, or while it is `importing` the catalogue product it is made as; null for any other blank. */
+                        generation: {
+                            /** @description Where the draw's purchase stands, as the draw reads it. */
+                            decision: string;
+                            /** @description The draw of its photo: read, approve, deny or redraw it at `/v1/pixel/blank-photos/{id}`. Approving writes the photo into the blank and makes it `ready`; denying removes the blank. */
+                            drawId: string;
+                            /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
+                            photoAssetId: string | null;
+                        } | null;
                         id: string;
                         /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
                         importFailure: string | null;
@@ -31112,6 +31414,26 @@ export interface operations {
                             dpi?: number;
                             /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                             fillColour?: string | null;
+                            /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box. Its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, the placement is printed as it lies. */
+                            flatLayout?: {
+                                /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
+                                parts: {
+                                    /** @description The part's height, in mm. */
+                                    heightMm: number;
+                                    /** @description The part's name: `Lid`, `Front`, `Glue tab`. */
+                                    name: string;
+                                    /** @description True for a panel, named for the face of the folded product it becomes; false for a glue tab, hidden once folded. The print covers glue tabs too. */
+                                    printed: boolean;
+                                    /** @description Which way is up on the part once folded, in quarter turns clockwise from the sheet's up: 2 for a flap that lies upside down on the sheet. */
+                                    up: 0 | 1 | 2 | 3;
+                                    /** @description The part's width, in mm. */
+                                    widthMm: number;
+                                    /** @description The part's left edge, in mm from the sheet's left. */
+                                    xMm: number;
+                                    /** @description The part's top edge, in mm from the sheet's top. */
+                                    yMm: number;
+                                }[];
+                            } | null;
                             /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                             foldMm?: number;
                             /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene whose item has no record draws nothing of the placement. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
@@ -31417,7 +31739,7 @@ export interface operations {
                             } | null;
                             viewId: string;
                         } | null;
-                        /** @description `importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `failed` when that import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise. */
+                        /** @description `importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `generating` for a blank generated with AI until its photo is approved: `generation` says whether it is drawing, waits for the decision, or drew nothing. `failed` when an import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise. */
                         status: string;
                         /** @description The stock item the blank's scenes photograph; null for none. */
                         stockItemKey: string | null;
@@ -31974,6 +32296,16 @@ export interface operations {
                 content: {
                     "application/json": {
                         items: {
+                            /** @description The images the workspace put in the template that print below their recommended resolution at this pairing's fitted size (`printWidthMm` × `printHeightMm`). Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off. */
+                            lowResolution: {
+                                assetId: string;
+                                /** @description Pixels per inch along the edge that decides, at the size. */
+                                effectiveDpi: number;
+                                /** @description The layer the image fills, or the artwork's own key for its image background. */
+                                layerId: string;
+                                /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                                recommendedDpi: number;
+                            }[];
                             name: string;
                             /** @description A link to the template's preview, as the template search gives one, opening with no key for an hour or two. Null for a draft never published, which has no version to draw. */
                             previewUrl: string | null;
@@ -32230,6 +32562,8 @@ export interface operations {
                                     assetId: string;
                                     /** @enum {string} */
                                     kind: "image";
+                                    /** @description The picture's type, as `url` serves it: `image/png`, `image/jpeg` or `image/webp`. */
+                                    mime: string;
                                     /** @description The picture, opened with no key. It stays valid for at least 30 days and at most 60, and any cache may keep it that long. */
                                     url: string;
                                 } | null;
@@ -38647,7 +38981,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: print_not_completed, print_needs_printshop, print_ticket_stale, print_superseded, print_files_deleted, design_erased, stale_update, design_already_ordered, printshop_paused, design_not_approved, idempotency_key_in_use */
+            /** @description Refused: print_not_completed, print_needs_printshop, print_ticket_stale, print_superseded, print_files_deleted, design_erased, stale_update, design_already_ordered, printshop_paused, design_not_approved, low_resolution, idempotency_key_in_use */
             409: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -38662,6 +38996,16 @@ export interface operations {
                         /** @description Always sent with `print_ticket_stale`. */
                         detail?: string;
                         error: string;
+                        /** @description The images the workspace put in the design's template that this print prints below their recommended resolution, as it was made. Empty when none did, when the image was accepted as it is, or when the workspace turned these warnings off. Always sent with `low_resolution`. */
+                        lowResolution?: {
+                            assetId: string;
+                            /** @description Pixels per inch along the edge that decides, at the size. */
+                            effectiveDpi: number;
+                            /** @description The layer the image fills, or the artwork's own key for its image background. */
+                            layerId: string;
+                            /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                            recommendedDpi: number;
+                        }[];
                         /** @description Always sent with `design_already_ordered`. */
                         orderId?: string;
                         /** @description Always sent with `printshop_paused`. */
@@ -44803,7 +45147,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: design_erased, design_not_approved, already_printed, idempotency_key_in_use */
+            /** @description Refused: design_erased, design_not_approved, already_printed, low_resolution, idempotency_key_in_use */
             409: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -44812,6 +45156,16 @@ export interface operations {
                 content: {
                     "application/json": {
                         error: string;
+                        /** @description The images the workspace put in the design's template that this print prints below their recommended resolution, as it was made. Empty when none did, when the image was accepted as it is, or when the workspace turned these warnings off. Always sent with `low_resolution`. */
+                        lowResolution?: {
+                            assetId: string;
+                            /** @description Pixels per inch along the edge that decides, at the size. */
+                            effectiveDpi: number;
+                            /** @description The layer the image fills, or the artwork's own key for its image background. */
+                            layerId: string;
+                            /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                            recommendedDpi: number;
+                        }[];
                     };
                 };
             };
@@ -45045,6 +45399,16 @@ export interface operations {
                         layeredFallback: string | null;
                         /** @description Why the print has no `layered_live_text` file: it was asked for one, or that form was fetched, and the file could not be made or its live text differed from the flat one past the tolerance. Null otherwise. */
                         liveTextFallback: string | null;
+                        /** @description The images the workspace put in the design's template that this print prints below their recommended resolution, as it was made. Empty when none did, when the image was accepted as it is, or when the workspace turned these warnings off. */
+                        lowResolution: {
+                            assetId: string;
+                            /** @description Pixels per inch along the edge that decides, at the size. */
+                            effectiveDpi: number;
+                            /** @description The layer the image fills, or the artwork's own key for its image background. */
+                            layerId: string;
+                            /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                            recommendedDpi: number;
+                        }[];
                         /** @description The print number its files are named after, such as `PR-2026-381042`. Null for a print made before numbers were kept that never completed. */
                         number: string | null;
                         /** @description Where an order placed for this print goes when it names no printshop: its blank's printshop, else the printshop its design was committed with, else the tenant's default. An order of a print on no blank whose design was committed with none may name one (`printshopId`), which goes before the default; a print on a blank always goes to the blank's. `null` when none of them names one, so an order naming none is refused. Absent when the print is not completed, the caller may not read orders, or it could not be worked out. */
@@ -45053,6 +45417,19 @@ export interface operations {
                             /** @description The merchant's own label for the connection. */
                             name: string;
                             /** @description `usable`, or why an order there is refused: `disconnected`, `unavailable` when its integration is no longer registered, or `paused` when the merchant paused it (an order there is refused `409 printshop_paused`). */
+                            status: string;
+                        } | null;
+                        /** @description The print's latest remake from upscales of its template's pictures printed too soft (`POST /v1/prints/{id}/remake`), or null when it was never remade. */
+                        remake: {
+                            createdAt: number;
+                            endedAt: number | null;
+                            /** @description Why it failed: `upscale_failed` when an upscale did not deliver, `order_sent` when an order holding the print reached its printshop first, or another refusal's code. */
+                            failure: string | null;
+                            /** @description The design revision the print was made from. */
+                            fromRevision: number;
+                            id: string;
+                            /** @description The design revision the remake wrote, once done. */
+                            revision: number | null;
                             status: string;
                         } | null;
                         status: string;
@@ -45985,6 +46362,1427 @@ export interface operations {
             };
         };
     };
+    "printshopCatalogueProducts.list": {
+        parameters: {
+            query: {
+                limit?: number;
+                offset?: number;
+                connectionId: string;
+                /** @description Only the products filed under this one of the partner's categories (GET /v1/printshop-connections/{id}/categories). */
+                categoryId?: string;
+                /** @description Only the products whose name holds this, ignoring case; blank is no search. `total` then counts the matches. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of the partner's products */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description How many products the whole catalogue holds, whatever the category and the search; null when the partner did not say or the count could not be read. */
+                        catalogueTotal: number | null;
+                        products: {
+                            brand: string | null;
+                            /** @description The partner category the product is filed under, which an import maps onto the workspace's blank categories; null when it names none. */
+                            categoryId: string | null;
+                            hasImportedBlank: boolean;
+                            /** @description What the product holds: how many colours, sizes and variants it is sold in; each null when the partner did not say. */
+                            holds: {
+                                colours: number | null;
+                                sizes: number | null;
+                                variants: number | null;
+                            };
+                            imageUrl: string | null;
+                            /** @description The blank it was imported as through this connection, the latest when there are several; null when it has not been. */
+                            importedBlankId: string | null;
+                            name: string;
+                            productId: string;
+                        }[];
+                        /** @description False when a search stopped before the end of the catalogue it searches, so `total` counts the matches among the products it read only. True with no search. */
+                        searchComplete: boolean;
+                        /** @description How many products an incomplete search read, from the first; null when the search was complete or there was none. */
+                        searchedProducts: number | null;
+                        /** @description How many products answer the query (the category and the search), across every page; null when the partner did not say. */
+                        total: number | null;
+                    };
+                };
+            };
+            /** @description Refused: invalid_input */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, feature_disabled, forbidden, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: connection_not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: no_credentials, sandbox_tenant */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: lookup_failed, db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: catalogue_unavailable */
+            502: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `catalogue_unavailable`. */
+                        reason?: string;
+                    };
+                };
+            };
+            /** @description Refused: catalogue_loading, catalogue_unavailable */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `catalogue_loading`, `catalogue_unavailable`. */
+                        reason?: string;
+                    };
+                };
+            };
+        };
+    };
+    "printshopCatalogueProducts.importBlank": {
+        parameters: {
+            query: {
+                connectionId: string;
+            };
+            header?: never;
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description The colours to fetch photos of, by name as the options read answers them; absent for every colour. A colour named here that the product does not have is ignored. */
+                    colours?: string[];
+                    /** @description As the library shows it. Omitted, the printshop's product name. */
+                    name?: string;
+                    /** @description Whether the printshop's photos are fetched as the blank's catalogue photos. True is refused where the printshop has no photo with a print area. Omitted, they are fetched if it has any. */
+                    printshopPhotos?: boolean;
+                    /** @description Stock photos, the scenes in the order they show, first in the blank's order and before the printshop's photos. They may photograph several stock items, each scene its own. On each of them, each placement with a role that item has a place for takes its default record; one with none shows on none of its scenes. */
+                    sceneIds?: string[];
+                    /** @description The views to fetch photos for, by the key the options read answers; absent for every view. */
+                    views?: string[];
+                } | null;
+            };
+        };
+        responses: {
+            /** @description The blank already imported from the product, to an integration key */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        blank: {
+                            /** @description The options the blank's print areas change with, such as Size, in option order; empty for one print area per placement. Each placement's `areas` names a row of these. */
+                            areasVaryBy: string[];
+                            /** @description The blank's option axes, such as Color and Size, in the order the shopper sees them. Empty for a blank with one variant. */
+                            axes: string[];
+                            /** @description The partner's product a bound blank (`partnerLocked`) is bound to, or null for a blank bound to none. Answered for one blank, never in a list. */
+                            boundProduct?: {
+                                /** @description The partner's own id of the product. */
+                                id: string;
+                                /** @description The product's name as the printshop last reported it: at import, then at each check for printshop changes. Null when the record of the import is gone. */
+                                name: string | null;
+                            } | null;
+                            categoryId: string | null;
+                            /** @description The blank this one was copied to its printshop from, or null. */
+                            copiedFrom: {
+                                /** @description The source blank's id, which may since have been deleted. */
+                                blankId: string;
+                                /** @description The source blank's name when it was copied. */
+                                name: string;
+                            } | null;
+                            createdAt: number;
+                            defaultPrintshopId: string;
+                            /** @description When and by whom the blank was deleted, or null for a blank that is not. A deleted blank is read-only: restore it to change it. */
+                            deleted: {
+                                /** @description When the blank was deleted, epoch ms. */
+                                at: number;
+                                /** @description The member who deleted it; null when a key did. */
+                                by: {
+                                    /** @description The member's name as it is now; null once unknown. */
+                                    name: string | null;
+                                    userId: string;
+                                } | null;
+                            } | null;
+                            /** @description The draw a blank generated with AI waits on while it is `generating`, or while it is `importing` the catalogue product it is made as; null for any other blank. */
+                            generation: {
+                                /** @description Where the draw's purchase stands, as the draw reads it. */
+                                decision: string;
+                                /** @description The draw of its photo: read, approve, deny or redraw it at `/v1/pixel/blank-photos/{id}`. Approving writes the photo into the blank and makes it `ready`; denying removes the blank. */
+                                drawId: string;
+                                /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
+                                photoAssetId: string | null;
+                            } | null;
+                            id: string;
+                            /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
+                            importFailure: string | null;
+                            machineProfileId: string | null;
+                            name: string;
+                            /** @description The blank's options with their values, in the order the shopper sees them, a value no variant uses yet included. `axes` is their names. */
+                            options: {
+                                /** @description How each value looks to a shopper, by value: a colour fill, an image, or null for none. Every value of `values` is named. */
+                                appearances: {
+                                    [key: string]: {
+                                        /** @description One `#rrggbb` colour, or two for a heather or two-tone, drawn half and half. */
+                                        colours: string[];
+                                        /** @enum {string} */
+                                        kind: "fill";
+                                        /** @description Whether a product in this value is light or dark, set by you. Absent, a colour fill's first colour decides (darker than mid grey is dark) and any other value is light. A template layer's on-dark value is used on a dark one. */
+                                        tone?: string;
+                                    } | {
+                                        /** @description An image in the workspace's asset library. */
+                                        assetId: string;
+                                        /** @enum {string} */
+                                        kind: "image";
+                                        /** @description Whether a product in this value is light or dark, set by you. Absent, a colour fill's first colour decides (darker than mid grey is dark) and any other value is light. A template layer's on-dark value is used on a dark one. */
+                                        tone?: string;
+                                    } | null;
+                                };
+                                /** @description The option's name per customer-facing language, by code: only the languages it has one in. A language left out reads `name`. */
+                                localizedNames?: {
+                                    da?: string;
+                                    de?: string;
+                                    en?: string;
+                                    es?: string;
+                                    fi?: string;
+                                    fr?: string;
+                                    nb?: string;
+                                    nl?: string;
+                                    sv?: string;
+                                };
+                                /** @description Each value's name per customer-facing language, by value: only the values that have one. A language left out reads the value itself. */
+                                localizedValues?: {
+                                    [key: string]: {
+                                        da?: string;
+                                        de?: string;
+                                        en?: string;
+                                        es?: string;
+                                        fi?: string;
+                                        fr?: string;
+                                        nb?: string;
+                                        nl?: string;
+                                        sv?: string;
+                                    };
+                                };
+                                name: string;
+                                /** @description Whether a product in each value is light or dark, by value: the tone set on its appearance, else its colour fill's, else light. Every value of `values` is named. On a variant of a dark value a template's on-dark values are used. */
+                                tones: {
+                                    [key: string]: string;
+                                };
+                                values: string[];
+                            }[];
+                            /** @description When the blank's options were confirmed: the merchant said it has one version, or added its first option. Null until then. A blank imported from a printshop's catalogue arrives confirmed. */
+                            optionsConfirmedAt: number | null;
+                            /** @description The blank's stored views and the scenes it shows as one ordered list, each saying its source: `stock` (a scene), `catalogue` (the printshop's photos) or `own` (the merchant's). The first with a photo is the blank's picture. Answered for one blank, never in a list. */
+                            order?: ({
+                                /** @description `catalogue` for the printshop's photos, `own` for the merchant's. */
+                                source: string;
+                                /** @description The stored view's id. */
+                                viewId: string;
+                            } | {
+                                /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
+                                row?: {
+                                    [key: string]: string;
+                                };
+                                /** @description The scene's id. */
+                                sceneId: string;
+                                /** @description A scene from the library. */
+                                source: string;
+                            })[];
+                            /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
+                            orderCount?: number;
+                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                            paintBy: string | null;
+                            partnerLocked: boolean;
+                            /** @description How much of the blank is photographed. Answered in a list. */
+                            photoCoverage?: {
+                                /** @description The blank's rows (each combination of the values of the options its photos change with; one for All) times its views. */
+                                cells: number;
+                                /** @description The cells with a photo, of their own row or a covering one. */
+                                filled: number;
+                            };
+                            /** @description The options the blank's photos change with, in option order: each photo belongs to one row, its values of these, and shows every variant with them. Empty is All: one photo per view shows every variant. */
+                            photosVaryBy: string[];
+                            /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
+                            placements: {
+                                /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, the placement has one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
+                                areas?: {
+                                    /** @description Bleed past the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
+                                    bleedMm?: number;
+                                    /** @description Print resolution on the row in dots per inch. Omitted, the placement's. */
+                                    dpi?: number;
+                                    /** @description How far in from the trim the product folds on the row, in millimetres. Omitted, the placement's. */
+                                    foldMm?: number;
+                                    /** @description The tallest print the row takes, in millimetres. */
+                                    heightMm: number;
+                                    /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description Safe area inside the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
+                                    safeAreaMm?: number;
+                                    /** @description Where on the product a print may go on the row, such as one phone model's camera opening: as the placement's `shape`, in fractions of the row's print area. Omitted, the placement's. */
+                                    shape?: {
+                                        /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                        cutByPrintShop?: boolean;
+                                        /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
+                                        dFrac: string;
+                                    };
+                                    /** @description The height a print gets on the row when none is chosen, in millimetres, at most heightMm. */
+                                    usualHeightMm: number;
+                                    /** @description The width a print gets on the row when none is chosen, in millimetres, at most widthMm. */
+                                    usualWidthMm: number;
+                                    /** @description The widest print the row takes, in millimetres. */
+                                    widthMm: number;
+                                }[];
+                                /** @description Bleed past the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
+                                bleedMm?: number;
+                                /** @description How a print covers the placement: `within`, a print of any size up to the maximum placed inside it, or `full`, a print that is the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's usual size is its area, and a request naming a smaller size is refused `print_size_not_area`. */
+                                coverage?: string;
+                                /** @description The height a print gets when none is chosen, in millimetres, at most maxHeightMm. */
+                                defaultHeightMm: number;
+                                /** @description The width a print gets when none is chosen, in millimetres, at most maxWidthMm. */
+                                defaultWidthMm: number;
+                                /** @description Print resolution in dots per inch. Omitted, its category's, else 300. */
+                                dpi?: number;
+                                /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
+                                fillColour?: string | null;
+                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box. Its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, the placement is printed as it lies. */
+                                flatLayout?: {
+                                    /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
+                                    parts: {
+                                        /** @description The part's height, in mm. */
+                                        heightMm: number;
+                                        /** @description The part's name: `Lid`, `Front`, `Glue tab`. */
+                                        name: string;
+                                        /** @description True for a panel, named for the face of the folded product it becomes; false for a glue tab, hidden once folded. The print covers glue tabs too. */
+                                        printed: boolean;
+                                        /** @description Which way is up on the part once folded, in quarter turns clockwise from the sheet's up: 2 for a flap that lies upside down on the sheet. */
+                                        up: 0 | 1 | 2 | 3;
+                                        /** @description The part's width, in mm. */
+                                        widthMm: number;
+                                        /** @description The part's left edge, in mm from the sheet's left. */
+                                        xMm: number;
+                                        /** @description The part's top edge, in mm from the sheet's top. */
+                                        yMm: number;
+                                    }[];
+                                } | null;
+                                /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
+                                foldMm?: number;
+                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene whose item has no record draws nothing of the placement. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
+                                garments?: {
+                                    /** @description The key of a garment area of the record's stock item. */
+                                    area: string;
+                                    /** @description The stock item the record is on, by its key. */
+                                    stockItem: string;
+                                    /** @description The print's width on the product, in mm. Its height follows from the placement's print area ratio. */
+                                    widthMm: number;
+                                    /** @description The print's left edge, in mm from the area's left. */
+                                    xMm: number;
+                                    /** @description The print's top edge, in mm from the area's top. */
+                                    yMm: number;
+                                }[];
+                                /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
+                                id: string;
+                                /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design then drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none. A placement linked with one no longer on the blank is linked with none. */
+                                linkWith?: {
+                                    /** @description Whether this placement's print is mirrored left to right when the two are linked. */
+                                    mirror: boolean;
+                                    /** @description The id of the blank's other placement it is linked with by default. */
+                                    placementId: string;
+                                } | null;
+                                /** @description The tallest print the placement takes, in millimetres. */
+                                maxHeightMm: number;
+                                /** @description The widest print the placement takes, in millimetres. */
+                                maxWidthMm: number;
+                                /** @description What it is called, such as Front or Back. */
+                                name: string;
+                                /** @description How this placement is printed, such as dtg or screen. Omitted, its category's. */
+                                printMethod?: string;
+                                /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a blank bound to its printshop's product takes it from the printshop. */
+                                required?: boolean;
+                                /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
+                                safeAreaMm?: number;
+                                /** @description Where on the product a print may go when that is not the whole rectangle: nothing is printed outside the outline or in a cut-out. Null or omitted, the whole rectangle. */
+                                shape?: {
+                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    cutByPrintShop?: boolean;
+                                    /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
+                                    dFrac: string;
+                                } | null;
+                                /** @description Printed as: the name the blank's printshop knows the placement by, on orders and job sheets. Null or omitted prints the placement's name. */
+                                shopName?: string | null;
+                                /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
+                                views: {
+                                    /** @description True on a view a blank bound to its printshop's product took from the printshop (its import, Add colours, model photos): its photo size and print area are the printshop's and cannot change by hand. Absent on a view the workspace added; a save that sends it is ignored. */
+                                    fromPrintshop?: boolean;
+                                    /** @description Unique within the blank. */
+                                    id: string;
+                                    /** @description What it is called, such as Flat or On model; unique among its placement's views of its kind, the printshop's or the merchant's, ignoring case. */
+                                    label: string;
+                                    /** @description What it is called per customer-facing language, by code; a language left out reads `label`. No two views of its placement and kind read the same in one language, ignoring case. */
+                                    localizedLabels?: {
+                                        da?: string;
+                                        de?: string;
+                                        en?: string;
+                                        es?: string;
+                                        fi?: string;
+                                        fr?: string;
+                                        nb?: string;
+                                        nl?: string;
+                                        sv?: string;
+                                    };
+                                    /** @description A library asset of the view's photo size: where it is light the print shows, where it is dark the print is hidden, as behind a sleeve or a fold. Absent hides nothing. */
+                                    maskAssetId?: string;
+                                    /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
+                                    mesh?: {
+                                        /**
+                                         * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                         * @enum {boolean}
+                                         */
+                                        cut?: true;
+                                        /** @description The rows of control points, from the print's top edge. */
+                                        points: number[][][];
+                                    };
+                                    /** @description The printshop's own key for the photo style the view was made from, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
+                                    partnerStyleKey?: string;
+                                    /** @description The pixel size every photo of the view has; null until the view holds a photo. */
+                                    photoSizePx: {
+                                        /** @description The photo's height, in pixels. */
+                                        heightPx: number;
+                                        /** @description The photo's width, in pixels. */
+                                        widthPx: number;
+                                    } | null;
+                                    /** @description The view's product photos, each the same size as the view. */
+                                    photos: {
+                                        /** @description The photo's asset id, as the assets feature returns it after an upload. */
+                                        assetId: string;
+                                        /** @description How far the photo's folds move the design, more than 0 and at most 1. null moves nothing. Omitted, its category's, else nothing. */
+                                        displacementStrength?: number | null;
+                                        /** @description The photo's id, unique within the blank: the `mockupId` a render and a mockup link name. */
+                                        id: string;
+                                        /** @description The photo's value of each `photosVaryBy` option; empty when there are none. One photo per row per view. */
+                                        row?: {
+                                            [key: string]: string;
+                                        };
+                                        /** @description How strongly the photo's light and shade carry onto the design, 0 (none) to 1 (all). Omitted, its category's, else the default strength. */
+                                        shadingStrength?: number;
+                                        /** @description How strongly the photo's fine detail, such as a weave or a grain, shows through the print, 0 (none) to 1 (all). Omitted, its category's, else, as for null, the default strength. */
+                                        textureStrength?: number | null;
+                                        /** @description The variants the photo shows, from its `row`. A write may name the row by these instead. */
+                                        variantRefs?: string[];
+                                        /** @description How the design wraps round the product. null lies it flat. Omitted, its category's, else flat. */
+                                        warp?: {
+                                            /** @description How far round the product the design wraps, more than 0 and at most 1. Flat is a null warp, not 0. */
+                                            curvature: number;
+                                            /** @description How much the design darkens toward the product's sides, 0 (none) to 1 (black at the edge). Omitted, none. */
+                                            edgeFalloff?: number;
+                                            /** @description The kind of wrap; `cylinder` is the only one. */
+                                            kind: string;
+                                        } | null;
+                                    }[];
+                                    /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                    piece?: number;
+                                    /** @description Where the print area sits on every photo of the view, in the original photo's pixels; null until it is marked. */
+                                    placementRectPx: {
+                                        /** @description The print area's height, in pixels. */
+                                        h: number;
+                                        /** @description The print area's width, in pixels. */
+                                        w: number;
+                                        /** @description The print area's left edge, in pixels from the photo's left. */
+                                        x: number;
+                                        /** @description The print area's top edge, in pixels from the photo's top. */
+                                        y: number;
+                                    } | null;
+                                    /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
+                                    position?: number;
+                                    /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
+                                    printWindowMm?: {
+                                        /** @description The window's height, in mm. */
+                                        heightMm: number;
+                                        /** @description The window's width, in mm. */
+                                        widthMm: number;
+                                        /** @description The window's left edge, in mm from the piece's left. */
+                                        xMm: number;
+                                        /** @description The window's top edge, in mm from the piece's top. */
+                                        yMm: number;
+                                    };
+                                    /** @description The scene this view shows. A scene's view is built from the blank's chosen scenes and is read only. */
+                                    sceneId?: string;
+                                    /** @description On a scene's view, its `position`, for a reader that orders scenes by it. */
+                                    scenePosition?: number;
+                                    /** @description Where the view's photos come from: `stock` (a scene from the library), `catalogue` (the printshop's) or `own` (the merchant's). Read only. */
+                                    source?: string;
+                                    /** @description The piece of the placement's print the region shows, in millimetres from the print's top-left corner, such as a roll's window; clamped to the print when the print is smaller. Absent, the region shows the whole print at the size of the render's variant. */
+                                    sourceWindowMm?: {
+                                        /** @description The window's height, in mm. */
+                                        heightMm: number;
+                                        /** @description The window's width, in mm. */
+                                        widthMm: number;
+                                        /** @description The window's left edge, in mm from the print's left. */
+                                        xMm: number;
+                                        /** @description The window's top edge, in mm from the print's top. */
+                                        yMm: number;
+                                    };
+                                    /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
+                                    takesDye?: boolean;
+                                    /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, the view's regions are laid in their rect or mesh. */
+                                    uvPasses?: {
+                                        /** @description The multiply pass: the garment's shadows and folds. */
+                                        multiplyAssetId: string;
+                                        /** @description What lies in front of the print, drawn over it: hands, cords and hair. A scene's alone, and read only. */
+                                        occluderAssetId?: string;
+                                        /** @description Each piece's print size on the model, as its `view.json` gives it: what a region's print window is placed on. Absent, no region of the view may name a print window. */
+                                        pieceSizesMm?: {
+                                            /** @description The piece's print height on the model, in mm. */
+                                            heightMm: number;
+                                            /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                            piece: number;
+                                            /** @description The piece's print width on the model, in mm. */
+                                            widthMm: number;
+                                        }[];
+                                        /** @description The pieces the UV pass marks, as its `view.json` lists them. */
+                                        pieces: number[];
+                                        /** @description The screen pass: the garment's highlights. */
+                                        screenAssetId: string;
+                                        /** @description The 16-bit UV pass: for each pixel, its piece (blue) and where across (red) and down (green) that piece's print it reads. */
+                                        uvAssetId: string;
+                                    };
+                                    /** @description On a scene's view, the photo a browser shows: the lighter file of the same picture. */
+                                    webPhotoAssetId?: string;
+                                    /** @description On a scene's view read at its preview tier, its files at the zoom tier. */
+                                    zoomTier?: {
+                                        /** @description The file saying where on the picture a print may show. */
+                                        maskAssetId: string;
+                                        /** @description The shading laid over the print, darkening it. */
+                                        multiplyAssetId: string;
+                                        /** @description What lies in front of the print, on a scene that has it. */
+                                        occluderAssetId?: string;
+                                        /** @description The scene's picture at this tier. */
+                                        photoAssetId: string;
+                                        /** @description How many pixels the scene's picture holds at this tier. */
+                                        photoSizePx: {
+                                            /** @description The picture's height at this tier, in pixels. */
+                                            heightPx: number;
+                                            /** @description The picture's width at this tier, in pixels. */
+                                            widthPx: number;
+                                        };
+                                        /** @description The highlights laid over the print, lightening it. */
+                                        screenAssetId: string;
+                                        /** @description The file saying where each pixel lands on the print. */
+                                        uvAssetId: string;
+                                    };
+                                }[];
+                            }[];
+                            /** @description The placements printed as a position that prints one size only at the blank's printshop whose default print size is another size: flagged, never refused, since an order of the position's size is still taken. Answered for one blank, never in a list. */
+                            placementsAtOtherSize?: {
+                                placementId: string;
+                                /** @description The printshop's position the placement is printed as. */
+                                position: string;
+                                /** @description The one size that position prints, in mm. */
+                                sizeMm: {
+                                    heightMm: number;
+                                    widthMm: number;
+                                };
+                            }[];
+                            /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, when such a design reads each placement's own print area. Required when the print areas start to change with an option on a blank that has designs or designer links, which keep their size at it. */
+                            referenceRow: {
+                                [key: string]: string;
+                            } | null;
+                            /** @description Each inheritable field resolved, with where it comes from: the printshop and machine, and every placement's and photo's printing fields and preview looks, in the order of `placements`. */
+                            resolved: {
+                                defaultPrintshopId: {
+                                    /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                    source: string;
+                                    value: string | null;
+                                };
+                                machineProfileId: {
+                                    /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                    source: string;
+                                    value: string | null;
+                                };
+                                placements: {
+                                    bleedMm: {
+                                        /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                        source: string;
+                                        value: number | null;
+                                    };
+                                    dpi: {
+                                        /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                        source: string;
+                                        value: number | null;
+                                    };
+                                    id: string;
+                                    /** @description The placement's photos, every view's in view order. */
+                                    mockups: {
+                                        displacementStrength: {
+                                            /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                            source: string;
+                                            value: number | null;
+                                        };
+                                        id: string;
+                                        shadingStrength: {
+                                            /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                            source: string;
+                                            value: number | null;
+                                        };
+                                        textureStrength: {
+                                            /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                            source: string;
+                                            value: number | null;
+                                        };
+                                        warp: {
+                                            /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                            source: string;
+                                            value: {
+                                                /** @description How far round the product the design wraps, more than 0 and at most 1. Flat is a null warp, not 0. */
+                                                curvature: number;
+                                                /** @description How much the design darkens toward the product's sides, 0 (none) to 1 (black at the edge). Omitted, none. */
+                                                edgeFalloff?: number;
+                                                /** @description The kind of wrap; `cylinder` is the only one. */
+                                                kind: string;
+                                            } | null;
+                                        };
+                                    }[];
+                                    printMethod: {
+                                        /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                        source: string;
+                                        value: string | null;
+                                    };
+                                    /** @description Printed as: the name the blank's printshop knows the placement by, on orders and job sheets. The placement's own shopName, else its name. */
+                                    printedAs: string;
+                                    /** @description Whether Printed as follows the placement's name: true while it has no shopName of its own. */
+                                    printedAsLinked: boolean;
+                                    safeAreaMm: {
+                                        /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                        source: string;
+                                        value: number | null;
+                                    };
+                                }[];
+                            };
+                            /** @description The first photo of the blank's first view of several placements that has one, in their order: the view, the photo (a mockup), its asset and the view's photo size. A blank whose views of one placement have no photo is pictured by it. Null for a blank with no such photo. Answered in a list. */
+                            sharedViewPhoto?: {
+                                assetId: string;
+                                mockupId: string;
+                                photoSizePx: {
+                                    /** @description The photo's height, in pixels. */
+                                    heightPx: number;
+                                    /** @description The photo's width, in pixels. */
+                                    widthPx: number;
+                                } | null;
+                                viewId: string;
+                            } | null;
+                            /** @description `importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `generating` for a blank generated with AI until its photo is approved: `generation` says whether it is drawing, waits for the decision, or drew nothing. `failed` when an import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise. */
+                            status: string;
+                            /** @description The stock item the blank's scenes photograph; null for none. */
+                            stockItemKey: string | null;
+                            /** @description A link to the blank's picture, opening with no key for an hour or two, so a list shows a picture of each blank: its first photo of a view of one placement, else `sharedViewPhoto`. Null for a blank with no photo. Answered in a list. */
+                            thumbnailUrl?: string | null;
+                            updatedAt: number;
+                            /** @description How many variants the blank has, deleted ones included. Answered in a list. */
+                            variantCount?: number;
+                            /** @description The blank's variants, retired ones included, with their printshop fields. Answered for one blank, never in a list. */
+                            variants?: {
+                                attributes: {
+                                    [key: string]: string | number | boolean;
+                                };
+                                options: {
+                                    [key: string]: string;
+                                };
+                                partnerKey: string | null;
+                                ref: string;
+                                retired: {
+                                    reason: string;
+                                } | null;
+                                updatedAt: number;
+                            }[];
+                        };
+                        job: {
+                            /** @description How many times it was taken to run, the current or last run included; a wait gives its run back. For a schedule, the runs that failed since the last that succeeded. */
+                            attempts: number;
+                            createdAt: number;
+                            finishedAt: number | null;
+                            id: string;
+                            /** @description What the job does, such as `print.render`. */
+                            kind: string;
+                            /** @description What it last failed with, as a code. */
+                            lastError: string | null;
+                            lastRunAt: number | null;
+                            /** @description Why a queued job waits: `continue`, it has more to do; `rate_limited`, the partner it asks refused it over its limit. */
+                            parkReason: string | null;
+                            /** @description When a queued job runs next (epoch ms). */
+                            runAt: number | null;
+                            state: string;
+                            /** @description The id of what the job works on, such as the print it renders. */
+                            subjectId: string | null;
+                        } | null;
+                    };
+                };
+            };
+            /** @description The blank, importing, and the job filling it in */
+            202: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        blank: {
+                            /** @description The options the blank's print areas change with, such as Size, in option order; empty for one print area per placement. Each placement's `areas` names a row of these. */
+                            areasVaryBy: string[];
+                            /** @description The blank's option axes, such as Color and Size, in the order the shopper sees them. Empty for a blank with one variant. */
+                            axes: string[];
+                            /** @description The partner's product a bound blank (`partnerLocked`) is bound to, or null for a blank bound to none. Answered for one blank, never in a list. */
+                            boundProduct?: {
+                                /** @description The partner's own id of the product. */
+                                id: string;
+                                /** @description The product's name as the printshop last reported it: at import, then at each check for printshop changes. Null when the record of the import is gone. */
+                                name: string | null;
+                            } | null;
+                            categoryId: string | null;
+                            /** @description The blank this one was copied to its printshop from, or null. */
+                            copiedFrom: {
+                                /** @description The source blank's id, which may since have been deleted. */
+                                blankId: string;
+                                /** @description The source blank's name when it was copied. */
+                                name: string;
+                            } | null;
+                            createdAt: number;
+                            defaultPrintshopId: string;
+                            /** @description When and by whom the blank was deleted, or null for a blank that is not. A deleted blank is read-only: restore it to change it. */
+                            deleted: {
+                                /** @description When the blank was deleted, epoch ms. */
+                                at: number;
+                                /** @description The member who deleted it; null when a key did. */
+                                by: {
+                                    /** @description The member's name as it is now; null once unknown. */
+                                    name: string | null;
+                                    userId: string;
+                                } | null;
+                            } | null;
+                            /** @description The draw a blank generated with AI waits on while it is `generating`, or while it is `importing` the catalogue product it is made as; null for any other blank. */
+                            generation: {
+                                /** @description Where the draw's purchase stands, as the draw reads it. */
+                                decision: string;
+                                /** @description The draw of its photo: read, approve, deny or redraw it at `/v1/pixel/blank-photos/{id}`. Approving writes the photo into the blank and makes it `ready`; denying removes the blank. */
+                                drawId: string;
+                                /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
+                                photoAssetId: string | null;
+                            } | null;
+                            id: string;
+                            /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
+                            importFailure: string | null;
+                            machineProfileId: string | null;
+                            name: string;
+                            /** @description The blank's options with their values, in the order the shopper sees them, a value no variant uses yet included. `axes` is their names. */
+                            options: {
+                                /** @description How each value looks to a shopper, by value: a colour fill, an image, or null for none. Every value of `values` is named. */
+                                appearances: {
+                                    [key: string]: {
+                                        /** @description One `#rrggbb` colour, or two for a heather or two-tone, drawn half and half. */
+                                        colours: string[];
+                                        /** @enum {string} */
+                                        kind: "fill";
+                                        /** @description Whether a product in this value is light or dark, set by you. Absent, a colour fill's first colour decides (darker than mid grey is dark) and any other value is light. A template layer's on-dark value is used on a dark one. */
+                                        tone?: string;
+                                    } | {
+                                        /** @description An image in the workspace's asset library. */
+                                        assetId: string;
+                                        /** @enum {string} */
+                                        kind: "image";
+                                        /** @description Whether a product in this value is light or dark, set by you. Absent, a colour fill's first colour decides (darker than mid grey is dark) and any other value is light. A template layer's on-dark value is used on a dark one. */
+                                        tone?: string;
+                                    } | null;
+                                };
+                                /** @description The option's name per customer-facing language, by code: only the languages it has one in. A language left out reads `name`. */
+                                localizedNames?: {
+                                    da?: string;
+                                    de?: string;
+                                    en?: string;
+                                    es?: string;
+                                    fi?: string;
+                                    fr?: string;
+                                    nb?: string;
+                                    nl?: string;
+                                    sv?: string;
+                                };
+                                /** @description Each value's name per customer-facing language, by value: only the values that have one. A language left out reads the value itself. */
+                                localizedValues?: {
+                                    [key: string]: {
+                                        da?: string;
+                                        de?: string;
+                                        en?: string;
+                                        es?: string;
+                                        fi?: string;
+                                        fr?: string;
+                                        nb?: string;
+                                        nl?: string;
+                                        sv?: string;
+                                    };
+                                };
+                                name: string;
+                                /** @description Whether a product in each value is light or dark, by value: the tone set on its appearance, else its colour fill's, else light. Every value of `values` is named. On a variant of a dark value a template's on-dark values are used. */
+                                tones: {
+                                    [key: string]: string;
+                                };
+                                values: string[];
+                            }[];
+                            /** @description When the blank's options were confirmed: the merchant said it has one version, or added its first option. Null until then. A blank imported from a printshop's catalogue arrives confirmed. */
+                            optionsConfirmedAt: number | null;
+                            /** @description The blank's stored views and the scenes it shows as one ordered list, each saying its source: `stock` (a scene), `catalogue` (the printshop's photos) or `own` (the merchant's). The first with a photo is the blank's picture. Answered for one blank, never in a list. */
+                            order?: ({
+                                /** @description `catalogue` for the printshop's photos, `own` for the merchant's. */
+                                source: string;
+                                /** @description The stored view's id. */
+                                viewId: string;
+                            } | {
+                                /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
+                                row?: {
+                                    [key: string]: string;
+                                };
+                                /** @description The scene's id. */
+                                sceneId: string;
+                                /** @description A scene from the library. */
+                                source: string;
+                            })[];
+                            /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
+                            orderCount?: number;
+                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                            paintBy: string | null;
+                            partnerLocked: boolean;
+                            /** @description How much of the blank is photographed. Answered in a list. */
+                            photoCoverage?: {
+                                /** @description The blank's rows (each combination of the values of the options its photos change with; one for All) times its views. */
+                                cells: number;
+                                /** @description The cells with a photo, of their own row or a covering one. */
+                                filled: number;
+                            };
+                            /** @description The options the blank's photos change with, in option order: each photo belongs to one row, its values of these, and shows every variant with them. Empty is All: one photo per view shows every variant. */
+                            photosVaryBy: string[];
+                            /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
+                            placements: {
+                                /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, the placement has one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
+                                areas?: {
+                                    /** @description Bleed past the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
+                                    bleedMm?: number;
+                                    /** @description Print resolution on the row in dots per inch. Omitted, the placement's. */
+                                    dpi?: number;
+                                    /** @description How far in from the trim the product folds on the row, in millimetres. Omitted, the placement's. */
+                                    foldMm?: number;
+                                    /** @description The tallest print the row takes, in millimetres. */
+                                    heightMm: number;
+                                    /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description Safe area inside the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
+                                    safeAreaMm?: number;
+                                    /** @description Where on the product a print may go on the row, such as one phone model's camera opening: as the placement's `shape`, in fractions of the row's print area. Omitted, the placement's. */
+                                    shape?: {
+                                        /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                        cutByPrintShop?: boolean;
+                                        /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
+                                        dFrac: string;
+                                    };
+                                    /** @description The height a print gets on the row when none is chosen, in millimetres, at most heightMm. */
+                                    usualHeightMm: number;
+                                    /** @description The width a print gets on the row when none is chosen, in millimetres, at most widthMm. */
+                                    usualWidthMm: number;
+                                    /** @description The widest print the row takes, in millimetres. */
+                                    widthMm: number;
+                                }[];
+                                /** @description Bleed past the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
+                                bleedMm?: number;
+                                /** @description How a print covers the placement: `within`, a print of any size up to the maximum placed inside it, or `full`, a print that is the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's usual size is its area, and a request naming a smaller size is refused `print_size_not_area`. */
+                                coverage?: string;
+                                /** @description The height a print gets when none is chosen, in millimetres, at most maxHeightMm. */
+                                defaultHeightMm: number;
+                                /** @description The width a print gets when none is chosen, in millimetres, at most maxWidthMm. */
+                                defaultWidthMm: number;
+                                /** @description Print resolution in dots per inch. Omitted, its category's, else 300. */
+                                dpi?: number;
+                                /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
+                                fillColour?: string | null;
+                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box. Its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, the placement is printed as it lies. */
+                                flatLayout?: {
+                                    /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
+                                    parts: {
+                                        /** @description The part's height, in mm. */
+                                        heightMm: number;
+                                        /** @description The part's name: `Lid`, `Front`, `Glue tab`. */
+                                        name: string;
+                                        /** @description True for a panel, named for the face of the folded product it becomes; false for a glue tab, hidden once folded. The print covers glue tabs too. */
+                                        printed: boolean;
+                                        /** @description Which way is up on the part once folded, in quarter turns clockwise from the sheet's up: 2 for a flap that lies upside down on the sheet. */
+                                        up: 0 | 1 | 2 | 3;
+                                        /** @description The part's width, in mm. */
+                                        widthMm: number;
+                                        /** @description The part's left edge, in mm from the sheet's left. */
+                                        xMm: number;
+                                        /** @description The part's top edge, in mm from the sheet's top. */
+                                        yMm: number;
+                                    }[];
+                                } | null;
+                                /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
+                                foldMm?: number;
+                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene whose item has no record draws nothing of the placement. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
+                                garments?: {
+                                    /** @description The key of a garment area of the record's stock item. */
+                                    area: string;
+                                    /** @description The stock item the record is on, by its key. */
+                                    stockItem: string;
+                                    /** @description The print's width on the product, in mm. Its height follows from the placement's print area ratio. */
+                                    widthMm: number;
+                                    /** @description The print's left edge, in mm from the area's left. */
+                                    xMm: number;
+                                    /** @description The print's top edge, in mm from the area's top. */
+                                    yMm: number;
+                                }[];
+                                /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
+                                id: string;
+                                /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design then drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none. A placement linked with one no longer on the blank is linked with none. */
+                                linkWith?: {
+                                    /** @description Whether this placement's print is mirrored left to right when the two are linked. */
+                                    mirror: boolean;
+                                    /** @description The id of the blank's other placement it is linked with by default. */
+                                    placementId: string;
+                                } | null;
+                                /** @description The tallest print the placement takes, in millimetres. */
+                                maxHeightMm: number;
+                                /** @description The widest print the placement takes, in millimetres. */
+                                maxWidthMm: number;
+                                /** @description What it is called, such as Front or Back. */
+                                name: string;
+                                /** @description How this placement is printed, such as dtg or screen. Omitted, its category's. */
+                                printMethod?: string;
+                                /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a blank bound to its printshop's product takes it from the printshop. */
+                                required?: boolean;
+                                /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
+                                safeAreaMm?: number;
+                                /** @description Where on the product a print may go when that is not the whole rectangle: nothing is printed outside the outline or in a cut-out. Null or omitted, the whole rectangle. */
+                                shape?: {
+                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    cutByPrintShop?: boolean;
+                                    /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
+                                    dFrac: string;
+                                } | null;
+                                /** @description Printed as: the name the blank's printshop knows the placement by, on orders and job sheets. Null or omitted prints the placement's name. */
+                                shopName?: string | null;
+                                /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
+                                views: {
+                                    /** @description True on a view a blank bound to its printshop's product took from the printshop (its import, Add colours, model photos): its photo size and print area are the printshop's and cannot change by hand. Absent on a view the workspace added; a save that sends it is ignored. */
+                                    fromPrintshop?: boolean;
+                                    /** @description Unique within the blank. */
+                                    id: string;
+                                    /** @description What it is called, such as Flat or On model; unique among its placement's views of its kind, the printshop's or the merchant's, ignoring case. */
+                                    label: string;
+                                    /** @description What it is called per customer-facing language, by code; a language left out reads `label`. No two views of its placement and kind read the same in one language, ignoring case. */
+                                    localizedLabels?: {
+                                        da?: string;
+                                        de?: string;
+                                        en?: string;
+                                        es?: string;
+                                        fi?: string;
+                                        fr?: string;
+                                        nb?: string;
+                                        nl?: string;
+                                        sv?: string;
+                                    };
+                                    /** @description A library asset of the view's photo size: where it is light the print shows, where it is dark the print is hidden, as behind a sleeve or a fold. Absent hides nothing. */
+                                    maskAssetId?: string;
+                                    /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
+                                    mesh?: {
+                                        /**
+                                         * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                         * @enum {boolean}
+                                         */
+                                        cut?: true;
+                                        /** @description The rows of control points, from the print's top edge. */
+                                        points: number[][][];
+                                    };
+                                    /** @description The printshop's own key for the photo style the view was made from, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
+                                    partnerStyleKey?: string;
+                                    /** @description The pixel size every photo of the view has; null until the view holds a photo. */
+                                    photoSizePx: {
+                                        /** @description The photo's height, in pixels. */
+                                        heightPx: number;
+                                        /** @description The photo's width, in pixels. */
+                                        widthPx: number;
+                                    } | null;
+                                    /** @description The view's product photos, each the same size as the view. */
+                                    photos: {
+                                        /** @description The photo's asset id, as the assets feature returns it after an upload. */
+                                        assetId: string;
+                                        /** @description How far the photo's folds move the design, more than 0 and at most 1. null moves nothing. Omitted, its category's, else nothing. */
+                                        displacementStrength?: number | null;
+                                        /** @description The photo's id, unique within the blank: the `mockupId` a render and a mockup link name. */
+                                        id: string;
+                                        /** @description The photo's value of each `photosVaryBy` option; empty when there are none. One photo per row per view. */
+                                        row?: {
+                                            [key: string]: string;
+                                        };
+                                        /** @description How strongly the photo's light and shade carry onto the design, 0 (none) to 1 (all). Omitted, its category's, else the default strength. */
+                                        shadingStrength?: number;
+                                        /** @description How strongly the photo's fine detail, such as a weave or a grain, shows through the print, 0 (none) to 1 (all). Omitted, its category's, else, as for null, the default strength. */
+                                        textureStrength?: number | null;
+                                        /** @description The variants the photo shows, from its `row`. A write may name the row by these instead. */
+                                        variantRefs?: string[];
+                                        /** @description How the design wraps round the product. null lies it flat. Omitted, its category's, else flat. */
+                                        warp?: {
+                                            /** @description How far round the product the design wraps, more than 0 and at most 1. Flat is a null warp, not 0. */
+                                            curvature: number;
+                                            /** @description How much the design darkens toward the product's sides, 0 (none) to 1 (black at the edge). Omitted, none. */
+                                            edgeFalloff?: number;
+                                            /** @description The kind of wrap; `cylinder` is the only one. */
+                                            kind: string;
+                                        } | null;
+                                    }[];
+                                    /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                    piece?: number;
+                                    /** @description Where the print area sits on every photo of the view, in the original photo's pixels; null until it is marked. */
+                                    placementRectPx: {
+                                        /** @description The print area's height, in pixels. */
+                                        h: number;
+                                        /** @description The print area's width, in pixels. */
+                                        w: number;
+                                        /** @description The print area's left edge, in pixels from the photo's left. */
+                                        x: number;
+                                        /** @description The print area's top edge, in pixels from the photo's top. */
+                                        y: number;
+                                    } | null;
+                                    /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
+                                    position?: number;
+                                    /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
+                                    printWindowMm?: {
+                                        /** @description The window's height, in mm. */
+                                        heightMm: number;
+                                        /** @description The window's width, in mm. */
+                                        widthMm: number;
+                                        /** @description The window's left edge, in mm from the piece's left. */
+                                        xMm: number;
+                                        /** @description The window's top edge, in mm from the piece's top. */
+                                        yMm: number;
+                                    };
+                                    /** @description The scene this view shows. A scene's view is built from the blank's chosen scenes and is read only. */
+                                    sceneId?: string;
+                                    /** @description On a scene's view, its `position`, for a reader that orders scenes by it. */
+                                    scenePosition?: number;
+                                    /** @description Where the view's photos come from: `stock` (a scene from the library), `catalogue` (the printshop's) or `own` (the merchant's). Read only. */
+                                    source?: string;
+                                    /** @description The piece of the placement's print the region shows, in millimetres from the print's top-left corner, such as a roll's window; clamped to the print when the print is smaller. Absent, the region shows the whole print at the size of the render's variant. */
+                                    sourceWindowMm?: {
+                                        /** @description The window's height, in mm. */
+                                        heightMm: number;
+                                        /** @description The window's width, in mm. */
+                                        widthMm: number;
+                                        /** @description The window's left edge, in mm from the print's left. */
+                                        xMm: number;
+                                        /** @description The window's top edge, in mm from the print's top. */
+                                        yMm: number;
+                                    };
+                                    /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
+                                    takesDye?: boolean;
+                                    /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, the view's regions are laid in their rect or mesh. */
+                                    uvPasses?: {
+                                        /** @description The multiply pass: the garment's shadows and folds. */
+                                        multiplyAssetId: string;
+                                        /** @description What lies in front of the print, drawn over it: hands, cords and hair. A scene's alone, and read only. */
+                                        occluderAssetId?: string;
+                                        /** @description Each piece's print size on the model, as its `view.json` gives it: what a region's print window is placed on. Absent, no region of the view may name a print window. */
+                                        pieceSizesMm?: {
+                                            /** @description The piece's print height on the model, in mm. */
+                                            heightMm: number;
+                                            /** @description A pattern piece of the view's UV pass, 1 to 254: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                            piece: number;
+                                            /** @description The piece's print width on the model, in mm. */
+                                            widthMm: number;
+                                        }[];
+                                        /** @description The pieces the UV pass marks, as its `view.json` lists them. */
+                                        pieces: number[];
+                                        /** @description The screen pass: the garment's highlights. */
+                                        screenAssetId: string;
+                                        /** @description The 16-bit UV pass: for each pixel, its piece (blue) and where across (red) and down (green) that piece's print it reads. */
+                                        uvAssetId: string;
+                                    };
+                                    /** @description On a scene's view, the photo a browser shows: the lighter file of the same picture. */
+                                    webPhotoAssetId?: string;
+                                    /** @description On a scene's view read at its preview tier, its files at the zoom tier. */
+                                    zoomTier?: {
+                                        /** @description The file saying where on the picture a print may show. */
+                                        maskAssetId: string;
+                                        /** @description The shading laid over the print, darkening it. */
+                                        multiplyAssetId: string;
+                                        /** @description What lies in front of the print, on a scene that has it. */
+                                        occluderAssetId?: string;
+                                        /** @description The scene's picture at this tier. */
+                                        photoAssetId: string;
+                                        /** @description How many pixels the scene's picture holds at this tier. */
+                                        photoSizePx: {
+                                            /** @description The picture's height at this tier, in pixels. */
+                                            heightPx: number;
+                                            /** @description The picture's width at this tier, in pixels. */
+                                            widthPx: number;
+                                        };
+                                        /** @description The highlights laid over the print, lightening it. */
+                                        screenAssetId: string;
+                                        /** @description The file saying where each pixel lands on the print. */
+                                        uvAssetId: string;
+                                    };
+                                }[];
+                            }[];
+                            /** @description The placements printed as a position that prints one size only at the blank's printshop whose default print size is another size: flagged, never refused, since an order of the position's size is still taken. Answered for one blank, never in a list. */
+                            placementsAtOtherSize?: {
+                                placementId: string;
+                                /** @description The printshop's position the placement is printed as. */
+                                position: string;
+                                /** @description The one size that position prints, in mm. */
+                                sizeMm: {
+                                    heightMm: number;
+                                    widthMm: number;
+                                };
+                            }[];
+                            /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, when such a design reads each placement's own print area. Required when the print areas start to change with an option on a blank that has designs or designer links, which keep their size at it. */
+                            referenceRow: {
+                                [key: string]: string;
+                            } | null;
+                            /** @description Each inheritable field resolved, with where it comes from: the printshop and machine, and every placement's and photo's printing fields and preview looks, in the order of `placements`. */
+                            resolved: {
+                                defaultPrintshopId: {
+                                    /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                    source: string;
+                                    value: string | null;
+                                };
+                                machineProfileId: {
+                                    /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                    source: string;
+                                    value: string | null;
+                                };
+                                placements: {
+                                    bleedMm: {
+                                        /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                        source: string;
+                                        value: number | null;
+                                    };
+                                    dpi: {
+                                        /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                        source: string;
+                                        value: number | null;
+                                    };
+                                    id: string;
+                                    /** @description The placement's photos, every view's in view order. */
+                                    mockups: {
+                                        displacementStrength: {
+                                            /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                            source: string;
+                                            value: number | null;
+                                        };
+                                        id: string;
+                                        shadingStrength: {
+                                            /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                            source: string;
+                                            value: number | null;
+                                        };
+                                        textureStrength: {
+                                            /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                            source: string;
+                                            value: number | null;
+                                        };
+                                        warp: {
+                                            /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                            source: string;
+                                            value: {
+                                                /** @description How far round the product the design wraps, more than 0 and at most 1. Flat is a null warp, not 0. */
+                                                curvature: number;
+                                                /** @description How much the design darkens toward the product's sides, 0 (none) to 1 (black at the edge). Omitted, none. */
+                                                edgeFalloff?: number;
+                                                /** @description The kind of wrap; `cylinder` is the only one. */
+                                                kind: string;
+                                            } | null;
+                                        };
+                                    }[];
+                                    printMethod: {
+                                        /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                        source: string;
+                                        value: string | null;
+                                    };
+                                    /** @description Printed as: the name the blank's printshop knows the placement by, on orders and job sheets. The placement's own shopName, else its name. */
+                                    printedAs: string;
+                                    /** @description Whether Printed as follows the placement's name: true while it has no shopName of its own. */
+                                    printedAsLinked: boolean;
+                                    safeAreaMm: {
+                                        /** @description Where the value comes from: the field's own, its blank category's, the workspace's default, or none (nothing sets it, and the built-in default applies). */
+                                        source: string;
+                                        value: number | null;
+                                    };
+                                }[];
+                            };
+                            /** @description The first photo of the blank's first view of several placements that has one, in their order: the view, the photo (a mockup), its asset and the view's photo size. A blank whose views of one placement have no photo is pictured by it. Null for a blank with no such photo. Answered in a list. */
+                            sharedViewPhoto?: {
+                                assetId: string;
+                                mockupId: string;
+                                photoSizePx: {
+                                    /** @description The photo's height, in pixels. */
+                                    heightPx: number;
+                                    /** @description The photo's width, in pixels. */
+                                    widthPx: number;
+                                } | null;
+                                viewId: string;
+                            } | null;
+                            /** @description `importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `generating` for a blank generated with AI until its photo is approved: `generation` says whether it is drawing, waits for the decision, or drew nothing. `failed` when an import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise. */
+                            status: string;
+                            /** @description The stock item the blank's scenes photograph; null for none. */
+                            stockItemKey: string | null;
+                            /** @description A link to the blank's picture, opening with no key for an hour or two, so a list shows a picture of each blank: its first photo of a view of one placement, else `sharedViewPhoto`. Null for a blank with no photo. Answered in a list. */
+                            thumbnailUrl?: string | null;
+                            updatedAt: number;
+                            /** @description How many variants the blank has, deleted ones included. Answered in a list. */
+                            variantCount?: number;
+                            /** @description The blank's variants, retired ones included, with their printshop fields. Answered for one blank, never in a list. */
+                            variants?: {
+                                attributes: {
+                                    [key: string]: string | number | boolean;
+                                };
+                                options: {
+                                    [key: string]: string;
+                                };
+                                partnerKey: string | null;
+                                ref: string;
+                                retired: {
+                                    reason: string;
+                                } | null;
+                                updatedAt: number;
+                            }[];
+                        };
+                        job: {
+                            /** @description How many times it was taken to run, the current or last run included; a wait gives its run back. For a schedule, the runs that failed since the last that succeeded. */
+                            attempts: number;
+                            createdAt: number;
+                            finishedAt: number | null;
+                            id: string;
+                            /** @description What the job does, such as `print.render`. */
+                            kind: string;
+                            /** @description What it last failed with, as a code. */
+                            lastError: string | null;
+                            lastRunAt: number | null;
+                            /** @description Why a queued job waits: `continue`, it has more to do; `rate_limited`, the partner it asks refused it over its limit. */
+                            parkReason: string | null;
+                            /** @description When a queued job runs next (epoch ms). */
+                            runAt: number | null;
+                            state: string;
+                            /** @description The id of what the job works on, such as the print it renders. */
+                            subjectId: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Refused: invalid_input */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, feature_disabled, forbidden, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: connection_not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: no_credentials, sandbox_tenant, duplicate_name */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: no_printable_placement, no_printshop_photos, stock_item_not_found, scene_not_found, scene_retired, stock_item_covers_no_placement, payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Sent with `payload_too_large`. */
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                        /** @description Always sent with `stock_item_not_found`, `scene_not_found`, `scene_retired`, `stock_item_covers_no_placement`. */
+                        reason?: string;
+                    };
+                };
+            };
+            /** @description Refused: lookup_failed, db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: import_failed */
+            502: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `import_failed`. */
+                        reason?: string;
+                    };
+                };
+            };
+            /** @description Refused: import_failed, lock_timeout */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `import_failed`. */
+                        reason?: string;
+                    };
+                };
+            };
+        };
+    };
     "printshopConnections.list": {
         parameters: {
             query?: {
@@ -45996,7 +47794,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The connections, active first, and the adapters available. A key is answered each connection's id, name, adapter, whether it is active and whether it is the default, and nothing else. */
+            /** @description The connections, active first, and the adapters available. A key is answered each connection's id, name, adapter, whether it is active, whether it is the default and whether it has a catalogue, and nothing else. */
             200: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -46089,6 +47887,8 @@ export interface operations {
                         connections: {
                             active: boolean;
                             adapter: string;
+                            /** @description Whether its printshop has a catalogue to browse and import from (GET /v1/printshop-catalogue-products). */
+                            catalogue: boolean;
                             id: string;
                             isDefault: boolean;
                             name: string;
@@ -48039,13 +49839,23 @@ export interface operations {
                         error: string;
                         /** @description The size's place in the side's menu. Always sent with `print_size_illegal`. */
                         index?: number;
+                        /** @description The images printed too soft, for `low_resolution`. Sent with `print_size_illegal`. */
+                        lowResolution?: {
+                            assetId: string;
+                            /** @description Pixels per inch along the edge that decides, at the size. */
+                            effectiveDpi: number;
+                            /** @description The layer the image fills, or the artwork's own key for its image background. */
+                            layerId: string;
+                            /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                            recommendedDpi: number;
+                        }[];
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
                         /** @description The longest name a link may have. Always sent with `share_link_name_too_long`. */
                         maxLength?: number;
                         /** @description Always sent with `placement_unfilled`. */
                         placement?: string;
-                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. Always sent with `print_size_illegal`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`. */
+                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. `low_resolution`: an image the workspace put in the template prints below its recommended resolution at it, and the workspace refuses such sizes. Always sent with `print_size_illegal`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`, `low_resolution`. */
                         reason?: string;
                         /** @description The side's key; null on a link with one side. Always sent with `print_size_illegal`. */
                         side?: string | null;
@@ -48149,6 +49959,23 @@ export interface operations {
                         };
                         /** @description The language the link's page is shown in, which its `url` names as `?lang=<locale>`; null when it names none, and the page is shown in the workspace's default language. */
                         locale: string | null;
+                        /** @description Each size a side offers that prints an image the workspace put in its template below its recommended resolution, judged as it is read: an image accepted since, or the workspace turning these warnings off, leaves it out. Empty when there is none. */
+                        lowResolution: {
+                            /** @description The size's place in the side's menu. */
+                            index: number;
+                            /** @description The images the workspace put in the template that print below their recommended resolution at the size. Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off. */
+                            lowResolution: {
+                                assetId: string;
+                                /** @description Pixels per inch along the edge that decides, at the size. */
+                                effectiveDpi: number;
+                                /** @description The layer the image fills, or the artwork's own key for its image background. */
+                                layerId: string;
+                                /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                                recommendedDpi: number;
+                            }[];
+                            /** @description The side's key; null on a link with one side. */
+                            side: string | null;
+                        }[];
                         /** @description The store's own product photos the design is shown on, in place of the blank's views. */
                         mockups?: {
                             /** @description How far the photo's folds move the design, above 0 and at most 1; absent or null, not at all. */
@@ -49784,6 +51611,23 @@ export interface operations {
                         id: string;
                         /** @description The language the link's page is shown in, which its `url` names as `?lang=<locale>`; null when it names none, and the page is shown in the workspace's default language. */
                         locale: string | null;
+                        /** @description Each size a side offers that prints an image the workspace put in its template below its recommended resolution, for the merchant to see. Absent when there is none, and when the workspace turned these warnings off. */
+                        lowResolution?: {
+                            /** @description The size's place in the side's menu. */
+                            index: number;
+                            /** @description The images the workspace put in the template that print below their recommended resolution at the size. Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off. */
+                            lowResolution: {
+                                assetId: string;
+                                /** @description Pixels per inch along the edge that decides, at the size. */
+                                effectiveDpi: number;
+                                /** @description The layer the image fills, or the artwork's own key for its image background. */
+                                layerId: string;
+                                /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                                recommendedDpi: number;
+                            }[];
+                            /** @description The side's key; null on a link with one side. */
+                            side: string | null;
+                        }[];
                         /** @description The workspace's name for the link. */
                         name: string | null;
                         /** @description Whether a designer link's page draws the placement frame around the shopper's picture at rest; false for every other link. */
@@ -49908,6 +51752,16 @@ export interface operations {
                         }[];
                         /** @description The size's place in the side's menu. Always sent with `print_size_illegal`. */
                         index?: number;
+                        /** @description The images printed too soft, for `low_resolution`. Sent with `print_size_illegal`. */
+                        lowResolution?: {
+                            assetId: string;
+                            /** @description Pixels per inch along the edge that decides, at the size. */
+                            effectiveDpi: number;
+                            /** @description The layer the image fills, or the artwork's own key for its image background. */
+                            layerId: string;
+                            /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                            recommendedDpi: number;
+                        }[];
                         /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `design_not_stitchable`, `design_unreadable`. */
                         machine?: string;
                         /** @description Always sent with `payload_too_large`. */
@@ -49918,7 +51772,7 @@ export interface operations {
                         placement?: string;
                         /** @description The size's place in the side's menu; null where it offers none. Always sent with `design_not_stitchable`, `design_unreadable`. */
                         printSizeIndex?: number | null;
-                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. Always sent with `print_size_illegal`, `design_not_stitchable`, `design_unreadable`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`. */
+                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. `low_resolution`: an image the workspace put in the template prints below its recommended resolution at it, and the workspace refuses such sizes. Always sent with `print_size_illegal`, `design_not_stitchable`, `design_unreadable`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`, `low_resolution`. */
                         reason?: string;
                         /** @description With `print_size_illegal`: The side's key; null on a link with one side. With `design_not_stitchable`: The side, by key; null for a link of one. With `design_unreadable`: The side, by key; null for a link of one. Always sent with `print_size_illegal`, `design_not_stitchable`, `design_unreadable`. */
                         side?: string | null;
@@ -49994,6 +51848,16 @@ export interface operations {
                             blankName: string;
                             defaultHeightMm: number;
                             defaultWidthMm: number;
+                            /** @description The images the workspace put in the template that print below their recommended resolution at this pairing's fitted size (`printWidthMm` × `printHeightMm`). Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off. */
+                            lowResolution: {
+                                assetId: string;
+                                /** @description Pixels per inch along the edge that decides, at the size. */
+                                effectiveDpi: number;
+                                /** @description The layer the image fills, or the artwork's own key for its image background. */
+                                layerId: string;
+                                /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                                recommendedDpi: number;
+                            }[];
                             maxHeightMm: number;
                             maxWidthMm: number;
                             placementId: string;
@@ -50130,17 +51994,57 @@ export interface operations {
                     "application/json": {
                         /** @enum {boolean} */
                         legal: true;
+                        /** @description The images the workspace put in the template that print below their recommended resolution at the size. Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off. */
+                        lowResolution: {
+                            assetId: string;
+                            /** @description Pixels per inch along the edge that decides, at the size. */
+                            effectiveDpi: number;
+                            /** @description The layer the image fills, or the artwork's own key for its image background. */
+                            layerId: string;
+                            /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                            recommendedDpi: number;
+                        }[];
                     } | {
                         /** @enum {boolean} */
                         legal: false;
+                        /** @description The images the workspace put in the template that print below their recommended resolution at the size. Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off. */
+                        lowResolution: {
+                            assetId: string;
+                            /** @description Pixels per inch along the edge that decides, at the size. */
+                            effectiveDpi: number;
+                            /** @description The layer the image fills, or the artwork's own key for its image background. */
+                            layerId: string;
+                            /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                            recommendedDpi: number;
+                        }[];
                         reason: string;
                     } | {
                         verdicts: ({
                             /** @enum {boolean} */
                             legal: true;
+                            /** @description The images the workspace put in the template that print below their recommended resolution at the size. Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off. */
+                            lowResolution: {
+                                assetId: string;
+                                /** @description Pixels per inch along the edge that decides, at the size. */
+                                effectiveDpi: number;
+                                /** @description The layer the image fills, or the artwork's own key for its image background. */
+                                layerId: string;
+                                /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                                recommendedDpi: number;
+                            }[];
                         } | {
                             /** @enum {boolean} */
                             legal: false;
+                            /** @description The images the workspace put in the template that print below their recommended resolution at the size. Empty when every image is at or above it, when the image was accepted as it is, or when the workspace turned these warnings off. */
+                            lowResolution: {
+                                assetId: string;
+                                /** @description Pixels per inch along the edge that decides, at the size. */
+                                effectiveDpi: number;
+                                /** @description The layer the image fills, or the artwork's own key for its image background. */
+                                layerId: string;
+                                /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
+                                recommendedDpi: number;
+                            }[];
                             reason: string;
                         })[];
                     };

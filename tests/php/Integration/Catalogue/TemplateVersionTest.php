@@ -11,6 +11,7 @@ use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 
 /**
  * A side follows its template's latest published version, or sticks to the
@@ -41,7 +42,7 @@ final class TemplateVersionTest extends ProductPanelTestCase {
 
 	public function test_a_followed_side_moves_to_a_published_version_and_keeps_its_setup(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array(), array( ProductPanel::FORM_GROUPS_FIELD => wp_slash( (string) wp_json_encode( self::ARRANGEMENT ) ) ) );
 		$saved = $this->side( $product->get_id() );
 		$this->assertFalse( $saved->pinned );
@@ -57,7 +58,7 @@ final class TemplateVersionTest extends ProductPanelTestCase {
 
 	public function test_a_side_stuck_to_a_version_stays_on_it_when_another_is_published(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array(), self::pinned( self::FIRST_VERSION ) );
 		$saved = $this->side( $product->get_id() );
 		$this->assertSame( array( self::FIRST_VERSION, true, self::SAVED_VERSION ), array( $saved->template_version, $saved->pinned, $saved->latest_version ) );
@@ -73,7 +74,7 @@ final class TemplateVersionTest extends ProductPanelTestCase {
 
 	public function test_the_panel_offers_every_version_and_marks_the_one_picked(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array(), self::pinned( self::FIRST_VERSION ) );
 		$this->recheck( $product->get_id(), self::PUBLISHED_VERSION );
 		$this->recorder->json( 200, $this->blank() );
@@ -95,10 +96,10 @@ final class TemplateVersionTest extends ProductPanelTestCase {
 
 	public function test_a_form_opened_before_a_version_was_published_does_not_move_the_side_back(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->recheck( $product->get_id(), self::PUBLISHED_VERSION );
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		// The form still names the version it was opened on.
 		$this->save( $product->get_id() );
@@ -109,10 +110,10 @@ final class TemplateVersionTest extends ProductPanelTestCase {
 
 	public function test_unsticking_a_side_moves_it_to_the_latest_version_and_still_accepts_the_one_it_left(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array(), self::pinned( self::FIRST_VERSION ) );
 		$this->recheck( $product->get_id(), self::PUBLISHED_VERSION );
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		// The template field names the latest version; the box is left unticked.
 		$this->save( $product->get_id(), array(), array( 'template' => self::BASE_ID . '@' . self::PUBLISHED_VERSION ) );
@@ -145,7 +146,7 @@ final class TemplateVersionTest extends ProductPanelTestCase {
 	private function recheck( int $product_id, int $live ): void {
 		$this->recorder->json( 200, $this->blank() );
 		$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$product = $this->reload( $product_id );
 		$this->linker->recheck( ProductConfig::stored_on( $product ), array( self::BASE_ID => $live ) )->save_to( $product );
 	}

@@ -26,6 +26,7 @@ use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WP_REST_Request;
 
 final class ProductLinkingTest extends ProductPanelTestCase {
@@ -307,6 +308,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 							'legal'  => false,
 							'reason' => 'too_large',
 						),
+						'lowResolution'  => array(),
 						'sizes'          => array(
 							'fits'    => array(),
 							'misfits' => array(),
@@ -341,7 +343,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_a_failed_blank_read_keeps_the_choice_for_the_next_update(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->recorder->json( 500, array( 'error' => 'internal_error' ) );
 
@@ -361,7 +363,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertSame( self::TEMPLATE_ID, $panel['sides'][0]['template_id'] );
 
 		// Pixonaut answers again: the same choice is checked and sold.
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->assertTrue( $this->reload( $product->get_id() )->is_purchasable() );
 	}
@@ -395,7 +397,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_the_panel_says_the_blank_is_deleted_before_the_product_is_checked_again(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->recorder->json( 200, BlankFixture::deleted() );
 		$this->recorder->json( 200, $this->mockups() );
@@ -409,7 +411,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_saving_a_linked_product_stores_the_checked_configuration(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id() );
 
@@ -455,8 +457,9 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$product = $this->product();
 		$this->script_link(
 			array(
-				'legal'  => false,
-				'reason' => InvalidReason::TOO_LARGE,
+				'legal'         => false,
+				'reason'        => InvalidReason::TOO_LARGE,
+				'lowResolution' => array(),
 			)
 		);
 
@@ -478,7 +481,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$this->assertStringContainsString( 'At ' . esc_html( (string) $config->invalid_detail->size ) . ': ', $notices[ $key ]['message'] );
 
 		// Fixed: the product can be bought again and the notice goes.
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->assertTrue( $this->reload( $product->get_id() )->is_purchasable() );
 		$this->assertFalse( $this->plugin->notices()->has( $key ) );
@@ -486,7 +489,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_a_template_only_products_sizes_are_checked_against_its_template_alone(): void {
 		$product = $this->product();
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->recorder->json( 200, self::printshops() );
 
@@ -520,7 +523,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_a_side_named_after_its_template_takes_the_templates_new_name(): void {
 		$product = $this->product();
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->recorder->json( 200, self::printshops() );
 
@@ -533,7 +536,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_a_typed_side_name_stays_when_the_template_is_renamed(): void {
 		$product = $this->product();
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->recorder->json( 200, self::printshops() );
 
@@ -569,7 +572,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_a_template_only_size_left_incomplete_keeps_the_product_from_selling(): void {
 		$product = $this->product();
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$side            = self::template_only_side();
 		$side['sizes'][] = array(
 			'kind'   => PostedSides::SIZE_CUSTOM,
@@ -593,8 +596,9 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 			array(
 				'verdicts' => array(
 					array(
-						'legal'  => false,
-						'reason' => InvalidReason::WRONG_RATIO,
+						'legal'         => false,
+						'reason'        => InvalidReason::WRONG_RATIO,
+						'lowResolution' => array(),
 					),
 				),
 			)
@@ -611,7 +615,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$product = $this->product();
 		$this->recorder->json( 200, $this->blank() );
 		$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template( 'paused' );
 
 		$this->save( $product->get_id() );
@@ -677,8 +681,9 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$product = $this->product();
 		$this->script_link(
 			array(
-				'legal'  => false,
-				'reason' => InvalidReason::WRONG_RATIO,
+				'legal'         => false,
+				'reason'        => InvalidReason::WRONG_RATIO,
+				'lowResolution' => array(),
 			)
 		);
 		$this->save( $product->get_id() );
@@ -697,7 +702,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 		$product = $this->product();
 		$filter  = static fn ( ProductConfig $config ): ProductConfig => $config->with_validity( false, 'held' );
 		add_filter( 'pixonaut_wc_catalogue_product_config', $filter );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->recorder->json( 200, self::printshops() );
 
@@ -709,7 +714,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_saving_stores_the_approval_mode_override(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array( ProductPanel::APPROVAL_MODE_FIELD => ApprovalMode::CHECKBOX ) );
 
@@ -719,7 +724,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 	public function test_the_store_default_or_an_unknown_mode_clears_the_override(): void {
 		$product = $this->product();
 		( new ProductConfig( personalise: true, approval_mode: ApprovalMode::CHECKBOX ) )->save_to( $product );
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array( ProductPanel::APPROVAL_MODE_FIELD => 'retired_mode' ) );
 
@@ -740,11 +745,11 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_saving_stores_the_layout_override_and_the_store_default_clears_it(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( ProductPanel::LAYOUT_FIELD => Layout::BUTTON ) );
 		$this->assertSame( Layout::BUTTON, ProductConfig::stored_on( $this->reload( $product->get_id() ) )->layout );
 
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( ProductPanel::LAYOUT_FIELD => '' ) );
 
 		$this->assertNull( ProductConfig::stored_on( $this->reload( $product->get_id() ) )->layout );
@@ -779,11 +784,11 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_saving_stores_the_form_layout_override_and_the_store_default_clears_it(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( ProductPanel::FORM_LAYOUT_FIELD => FormLayout::STEPS ) );
 		$this->assertSame( FormLayout::STEPS, ProductConfig::stored_on( $this->reload( $product->get_id() ) )->form_layout );
 
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( ProductPanel::FORM_LAYOUT_FIELD => 'carousel' ) );
 
 		$this->assertNull( ProductConfig::stored_on( $this->reload( $product->get_id() ) )->form_layout );
@@ -813,7 +818,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_the_panel_lists_the_blanks_placements_and_the_chosen_template(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->recorder->json( 200, $this->blank() );
 		$this->recorder->json( 200, $this->mockups() );
@@ -856,15 +861,15 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 	public function test_saving_stores_the_chosen_printshop_and_workspace_default_clears_it(): void {
 		$printshop = PanelFields::PRODUCT_PREFIX . PanelFields::PRINTSHOP;
 		$product   = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( $printshop => 'ps_other' ) );
 		$this->assertSame( 'ps_other', ProductConfig::stored_on( $this->reload( $product->get_id() ) )->printshop_id );
 
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->assertSame( 'ps_other', ProductConfig::stored_on( $this->reload( $product->get_id() ) )->printshop_id, 'a form without the field keeps it' );
 
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( $printshop => '' ) );
 		$this->assertNull( ProductConfig::stored_on( $this->reload( $product->get_id() ) )->printshop_id );
 	}
@@ -919,14 +924,14 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 			'pixonaut_blank'     => '',
 			'pixonaut_printshop' => self::INTEGRATED_ID,
 		);
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->recorder->json( 200, self::printshops() );
 		$this->save( $product->get_id(), $posted, self::template_only_side() );
 		$this->assertSame( InvalidReason::PRINTSHOP_NEEDS_BLANK, ProductConfig::stored_on( $this->reload( $product->get_id() ) )->invalid_reason );
 
 		$this->cache->flush();
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->recorder->json( 500, array( 'error' => 'db_error' ) );
 		$this->save( $product->get_id(), $posted, self::template_only_side() );
@@ -938,7 +943,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_the_sections_open_at_a_save_open_again_each_on_its_own(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( ProductPanel::OPEN_FIELD => 'store,side-0' ) );
 		$this->recorder->json( 200, $this->blank() );
 		$this->recorder->json( 200, $this->mockups() );
@@ -977,7 +982,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_a_product_without_a_blank_saved_on_a_printshop_that_needs_one_cannot_be_bought(): void {
 		$product = $this->product();
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 		$this->recorder->json( 200, self::printshops() );
 
@@ -1016,7 +1021,7 @@ final class ProductLinkingTest extends ProductPanelTestCase {
 
 	public function test_a_product_on_a_blank_shows_the_blanks_printshop_locked(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id() );
 		$this->recorder->json( 200, $this->blank() );
 		$this->recorder->json( 200, $this->mockups() );

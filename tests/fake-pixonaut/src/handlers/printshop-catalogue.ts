@@ -156,7 +156,7 @@ export const importCatalogueBlank: Handler = (context) => {
 function importAnswer(blank: Blank): Record<string, unknown> {
 	const finished = blank.status === 'importing' ? null : blank.updatedAt;
 	return {
-		blank: { ...blankBody(blank), generation: null },
+		blank: blankBody(blank),
 		job: {
 			id: `job_import_${blank.id}`,
 			kind: 'blank.import',

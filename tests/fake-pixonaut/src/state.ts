@@ -371,7 +371,7 @@ export type BlankNames = {
  *  or none, when it is drawn as its name. */
 export type ValueAppearance =
 	| { kind: 'fill'; colours: string[] }
-	| { kind: 'image'; assetId: string; url: string }
+	| { kind: 'image'; assetId: string; url: string; mime: string }
 	| null;
 
 export type Blank = {

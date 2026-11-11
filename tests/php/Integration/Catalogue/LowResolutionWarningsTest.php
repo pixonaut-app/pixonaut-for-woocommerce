@@ -16,6 +16,7 @@ use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Settings\SettingsPage;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 
 /**
  * A print size that makes one of the template's images print below its
@@ -202,8 +203,8 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 	 * @param array<string, string>               $choices    What was chosen on the warnings, by key.
 	 * @param array{legal: bool, reason?: string} $verdict  The verdict besides them.
 	 */
-	private function link( int $product_id, array $soft, array $choices = array(), array $verdict = array( 'legal' => true ) ): void {
-		$this->script_link( $verdict + array( 'lowResolution' => $soft ) );
+	private function link( int $product_id, array $soft, array $choices = array(), array $verdict = VerdictAnswers::LEGAL ): void {
+		$this->script_link( array( 'lowResolution' => $soft ) + $verdict );
 		$this->save( $product_id, array( self::CHOICES => $choices ) );
 	}
 

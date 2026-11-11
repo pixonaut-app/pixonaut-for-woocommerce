@@ -19,6 +19,7 @@ use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\FormGroupsMount;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WC_Product_Attribute;
 use WC_Product_Variable;
 use WC_Product_Variation;
@@ -80,7 +81,7 @@ final class ProductFormGroupsTest extends ProductPanelTestCase {
 
 	public function test_saves_a_sides_arrangement_and_shows_it_again(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array(), array( ProductPanel::FORM_GROUPS_FIELD => wp_slash( (string) wp_json_encode( self::ARRANGEMENT ) ) ) );
 
@@ -97,7 +98,7 @@ final class ProductFormGroupsTest extends ProductPanelTestCase {
 
 	public function test_keeps_the_slug_of_an_attribute_named_in_another_script(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$slug        = sanitize_title( '尺寸' );
 		$arrangement = array(
 			'groups' => array(
@@ -120,7 +121,7 @@ final class ProductFormGroupsTest extends ProductPanelTestCase {
 
 	public function test_a_side_never_arranged_saves_none(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array(), array( ProductPanel::FORM_GROUPS_FIELD => '' ) );
 

@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\StandingRow;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WP_REST_Request;
 
 /**
@@ -141,7 +142,7 @@ final class MisfitSizesTest extends StandingTestCase {
 
 	public function test_a_standing_side_sells_the_sizes_it_fits_and_names_the_one_it_does_not(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_s' ) );
 		$this->recorder->json( 422, self::MISFIT_REFUSAL );
 
@@ -158,7 +159,7 @@ final class MisfitSizesTest extends StandingTestCase {
 
 	public function test_a_standing_size_the_template_cannot_be_printed_at_cannot_be_bought(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array( 'des_row_s' ) );
 		$this->recorder->json( 422, self::MISFIT_REFUSAL );
 
@@ -170,7 +171,7 @@ final class MisfitSizesTest extends StandingTestCase {
 
 	public function test_a_standing_side_whose_template_fits_no_size_cannot_be_sold_and_says_why(): void {
 		$product = $this->product();
-		$this->script_link( array( 'legal' => true ) );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->script_rows( array() );
 		$this->recorder->json( 422, self::MISFIT_REFUSAL );
 		$this->recorder->json( 422, self::MISFIT_REFUSAL );
@@ -201,7 +202,7 @@ final class MisfitSizesTest extends StandingTestCase {
 			'misfits' => $misfits,
 		);
 		$this->recorder->json( 200, $constraints );
-		$this->recorder->json( 200, array( 'verdicts' => array( array( 'legal' => true ) ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 		$this->script_template();
 	}
 
@@ -244,6 +245,7 @@ final class MisfitSizesTest extends StandingTestCase {
 			'printWidthMm'   => self::PRINT_WIDTH_MM,
 			'printHeightMm'  => self::PRINT_HEIGHT_MM,
 			'verdict'        => array( 'legal' => true ),
+			'lowResolution'  => array(),
 			'sizes'          => array(
 				'fits'    => $fits,
 				'misfits' => $misfits,

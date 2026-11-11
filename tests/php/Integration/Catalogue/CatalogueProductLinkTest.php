@@ -24,6 +24,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductVariants;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\ScriptedClient;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variable;
@@ -38,8 +39,6 @@ use WP_REST_Response;
  * names, however the store wrote the size.
  */
 final class CatalogueProductLinkTest extends ProductPanelTestCase {
-
-	private const LEGAL = array( 'legal' => true );
 
 	private const PRODUCT_ID = 'gelato_poster';
 
@@ -245,7 +244,7 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 		$this->assertStringContainsString( '700 × 1000 mm', $html, 'each at its variant\'s print area' );
 		$this->assertStringContainsString( '500 × 700 mm', $html );
 
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save(
 			$parent->get_id(),
 			array(
@@ -358,7 +357,7 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 			$variation->save();
 		}
 		WC_Product_Variable::sync( $parent->get_id() );
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $parent->get_id() );
 		$saved = wc_get_product( $parent->get_id() );
 		$this->assertInstanceOf( WC_Product_Variable::class, $saved );

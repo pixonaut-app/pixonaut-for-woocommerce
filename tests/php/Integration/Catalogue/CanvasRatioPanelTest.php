@@ -11,10 +11,9 @@ use Pixonaut\WooCommerce\Admin\PanelFields;
 use Pixonaut\WooCommerce\Catalogue\CanvasRatio;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 
 final class CanvasRatioPanelTest extends ProductPanelTestCase {
-
-	private const LEGAL = array( 'legal' => true );
 
 	/**
 	 * A version of the tee template published after the one the product was saved on.
@@ -25,7 +24,7 @@ final class CanvasRatioPanelTest extends ProductPanelTestCase {
 
 	public function test_the_product_and_each_side_save_their_canvas_ratio(): void {
 		$product = $this->product();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array( self::CANVAS_RATIO_FIELD => CanvasRatio::TEMPLATE ), array( PostedSides::CANVAS_RATIO => CanvasRatio::PRINT_SIZE ) );
 
@@ -37,9 +36,9 @@ final class CanvasRatioPanelTest extends ProductPanelTestCase {
 
 	public function test_following_the_template_stores_no_choice(): void {
 		$product = $this->product();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( self::CANVAS_RATIO_FIELD => CanvasRatio::TEMPLATE ), array( PostedSides::CANVAS_RATIO => CanvasRatio::TEMPLATE ) );
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 
 		$this->save( $product->get_id(), array( self::CANVAS_RATIO_FIELD => CanvasRatio::FOLLOW ), array( PostedSides::CANVAS_RATIO => CanvasRatio::FOLLOW ) );
 
@@ -50,11 +49,11 @@ final class CanvasRatioPanelTest extends ProductPanelTestCase {
 
 	public function test_a_side_keeps_its_canvas_ratio_when_its_template_is_checked_again(): void {
 		$product = $this->product();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array(), array( PostedSides::CANVAS_RATIO => CanvasRatio::TEMPLATE ) );
 		$this->recorder->json( 200, $this->blank() );
 		$this->recorder->json( 200, $this->constraints( self::PLACEMENT_ID ) );
-		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL ) ) );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
 
 		$rechecked = $this->linker->recheck( ProductConfig::stored_on( $this->reload( $product->get_id() ) ), array( 'mini-tee' => self::PUBLISHED_VERSION ) );
 
@@ -65,7 +64,7 @@ final class CanvasRatioPanelTest extends ProductPanelTestCase {
 
 	public function test_the_fields_show_the_choices_saved(): void {
 		$product = $this->product();
-		$this->script_link( self::LEGAL );
+		$this->script_link( VerdictAnswers::LEGAL );
 		$this->save( $product->get_id(), array( self::CANVAS_RATIO_FIELD => CanvasRatio::PRINT_SIZE ), array( PostedSides::CANVAS_RATIO => CanvasRatio::TEMPLATE ) );
 		$this->recorder->json( 200, $this->blank() );
 		$this->recorder->json( 200, $this->mockups() );
