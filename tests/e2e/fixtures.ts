@@ -27,8 +27,9 @@ const CHECKOUT_COOKIE = 'pixonaut_e2e_checkout';
 const PERMALINKS_COOKIE = 'pixonaut_e2e_permalinks';
 
 /** The tests site as the fake reaches it: by its service name on wp-env's
- *  Docker network. */
-export const TESTS_SITE_ON_NETWORK = 'http://tests-wordpress';
+ *  Docker network. An extra e2e site (bin/e2e-sites.mjs) says its own. */
+export const TESTS_SITE_ON_NETWORK =
+	process.env.PIXONAUT_E2E_SITE_ON_NETWORK ?? 'http://tests-wordpress';
 
 /** The plugin's webhook receiver. */
 export const WEBHOOK_ROUTE = '/pixonaut/v1/webhook';

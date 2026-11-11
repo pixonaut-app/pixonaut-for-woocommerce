@@ -1,15 +1,7 @@
 import type { Page } from '@playwright/test';
-import {
-	expect,
-	type FakePixonaut,
-	test,
-	usePlainPermalinks,
-} from '../fixtures';
+import { expect, type FakePixonaut, test } from '../fixtures';
 import { type Line, openCheckouts, pay, readOrder, runJobs } from '../orders';
-import { publishLinkedProduct } from '../products';
-
-/** The button layout's name in the product panel. */
-const BUTTON_LAYOUT = 'Personalise button: opens the Pixonaut designer';
+import { createLinkedProduct } from '../products';
 
 /** The statuses the fake answered an operation with, in order. */
 async function statuses(
@@ -19,16 +11,6 @@ async function statuses(
 	return (await fake.requests())
 		.filter((r) => r.operation === operation)
 		.map((r) => r.status);
-}
-
-/** The published product's address, from its edit screen. */
-async function permalinkOf(admin: Page): Promise<string> {
-	const permalink = await admin
-		.locator('#wp-admin-bar-view a, #view-post-btn a')
-		.first()
-		.getAttribute('href');
-	expect(permalink).toBeTruthy();
-	return permalink ?? '';
 }
 
 /** Presses Personalise and waits for the fake's hosted designer. */
@@ -52,11 +34,14 @@ test('the Personalise button opens the hosted designer and adds the approved des
 	theme,
 }) => {
 	test.slow();
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(admin, `Button tee ${theme} ${Date.now()}`, '25', {
-		layout: BUTTON_LAYOUT,
-	});
-	const permalink = await permalinkOf(admin);
+	const permalink = await createLinkedProduct(
+		admin,
+		baseURL,
+		`Button tee ${theme} ${Date.now()}`,
+		{
+			layout: 'button',
+		},
+	);
 
 	// Cancelling in the designer returns to the product with nothing added.
 	await customer.goto(permalink);
@@ -92,15 +77,14 @@ test('front and back from one designer link make one cart line and one printshop
 }) => {
 	test.slow();
 	const checkoutUrls = await openCheckouts(request);
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(
+	const permalink = await createLinkedProduct(
 		admin,
+		baseURL,
 		`Two-sided button tee ${theme} ${Date.now()}`,
-		'30',
-		{ layout: BUTTON_LAYOUT, back: true },
+		{ layout: 'button', back: true },
 	);
 
-	await customer.goto(await permalinkOf(admin));
+	await customer.goto(permalink);
 	await openDesigner(customer, fake);
 	await customer.getByRole('link', { name: /^Approve and / }).click();
 	await customer

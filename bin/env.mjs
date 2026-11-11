@@ -139,3 +139,30 @@ export function composerInDocker(dir, readOnly = {}) {
 		COMPOSER_IMAGE,
 	];
 }
+
+/** World-writable: Apache runs as the host's user, and `wp-content` is
+ *  root's, inside a container that is thrown away. */
+const UPLOADS_MODE = '0777';
+
+/**
+ * Makes `wp-content/uploads` in each of `services` of a wp-env `project`,
+ * which WordPress cannot create in a `wp-content` it does not own.
+ *
+ * @param {string} project
+ * @param {string[]} services
+ */
+export function makeUploadsWritable(project, services) {
+	return services
+		.map((service) =>
+			spawn(dockerBin, [
+				'exec',
+				'--user',
+				'root',
+				`${project}-${service}-1`,
+				'sh',
+				'-c',
+				`mkdir -p wp-content/uploads && chmod ${UPLOADS_MODE} wp-content/uploads`,
+			]),
+		)
+		.every((exit) => exit === 0);
+}

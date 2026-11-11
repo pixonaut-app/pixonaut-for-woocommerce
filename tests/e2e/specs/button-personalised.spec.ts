@@ -6,13 +6,9 @@ import {
 	restUrl,
 	settingsPath,
 	test,
-	usePlainPermalinks,
 } from '../fixtures';
 import { connectFixtureStore, PERSONALISED } from '../personalised';
-import { publishLinkedProduct } from '../products';
-
-/** The button layout's name in the product panel. */
-const BUTTON_LAYOUT = 'Personalise button: opens the Pixonaut designer';
+import { createLinkedProduct } from '../products';
 
 /** A phone's width, where the row and the box must still fit. */
 const PHONE = { width: 390, height: 844 };
@@ -46,15 +42,6 @@ function designImage(page: Page): Locator {
 
 function quantity(page: Page): Locator {
 	return form(page).locator('input.qty');
-}
-
-async function permalinkOf(admin: Page): Promise<string> {
-	const permalink = await admin
-		.locator('#wp-admin-bar-view a, #view-post-btn a')
-		.first()
-		.getAttribute('href');
-	expect(permalink).toBeTruthy();
-	return permalink ?? '';
 }
 
 async function approveOnHostedDesigner(
@@ -96,11 +83,14 @@ test('coming back from the hosted page leaves the cart alone and shows the desig
 		'classic' | 'block',
 		string
 	>;
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(admin, `Row tee ${theme} ${Date.now()}`, '25', {
-		layout: BUTTON_LAYOUT,
-	});
-	const permalink = await permalinkOf(admin);
+	const permalink = await createLinkedProduct(
+		admin,
+		baseURL,
+		`Row tee ${theme} ${Date.now()}`,
+		{
+			layout: 'button',
+		},
+	);
 
 	// The button stands where Add to cart stands, in WooCommerce's classes.
 	await customer.goto(permalink);
@@ -281,11 +271,14 @@ test('a plain visit is fresh, and the address of a return shows another session 
 	browser,
 }) => {
 	test.slow();
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(admin, `Fresh tee ${theme} ${Date.now()}`, '25', {
-		layout: BUTTON_LAYOUT,
-	});
-	const permalink = await permalinkOf(admin);
+	const permalink = await createLinkedProduct(
+		admin,
+		baseURL,
+		`Fresh tee ${theme} ${Date.now()}`,
+		{
+			layout: 'button',
+		},
+	);
 	await customer.goto(permalink);
 	await approveOnHostedDesigner(customer, fake);
 	await expect(box(customer)).toBeVisible();
@@ -322,16 +315,15 @@ test('a return opened in another session waits for its button, and a foreign ret
 	browser,
 }) => {
 	test.slow();
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(
+	const permalink = await createLinkedProduct(
 		admin,
+		baseURL,
 		`Foreign tee ${theme} ${Date.now()}`,
-		'25',
 		{
-			layout: BUTTON_LAYOUT,
+			layout: 'button',
 		},
 	);
-	await customer.goto(await permalinkOf(admin));
+	await customer.goto(permalink);
 	await personalise(customer).click();
 	await customer.waitForURL(
 		(url) => url.origin === new URL(fake.baseURL).origin,
@@ -412,13 +404,14 @@ test('with the setting on, only the own trip adds: a foreign or reloaded return 
 		const cart = await page.context().request.get(restUrl('/wc/store/v1/cart'));
 		return (await cart.json()).items_count;
 	};
-	await usePlainPermalinks(admin, baseURL);
 	await setting(true);
 	try {
-		await publishLinkedProduct(admin, `Own tee ${theme} ${Date.now()}`, '25', {
-			layout: BUTTON_LAYOUT,
-		});
-		const product = await permalinkOf(admin);
+		const product = await createLinkedProduct(
+			admin,
+			baseURL,
+			`Own tee ${theme} ${Date.now()}`,
+			{ layout: 'button' },
+		);
 		await customer.goto(product);
 		await personalise(customer).click();
 		await customer.waitForURL(onFake);

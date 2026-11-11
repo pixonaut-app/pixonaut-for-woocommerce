@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { git, repoWithCommit, runScript, writeFiles } from './support/scripts';
 
 const ALL_STEPS = [
+	'Build assets and translations',
 	'Conflict markers',
 	'Biome',
 	'TypeScript',
@@ -22,15 +23,23 @@ const ALL_STEPS = [
 	'Release zip',
 	'Release zip (wordpress.org)',
 	'PHP integration (HPOS off, on)',
-	'Build assets for e2e',
 	'e2e (classic, block-primary, astra)',
 ];
 
-/** The dry run's lines: a step's name, then its e2e specs indented. */
-function dryRun(args: string[], cwd: string): string[] {
+/** The e2e step's line when it runs on the e2e sites. */
+const E2E_ON_SITES =
+	'e2e (classic, block-primary, astra) (on 4 e2e sites, beside the other steps)';
+
+/** The dry run's lines: a step's name, then its e2e specs indented. One
+ *  e2e site, unless `sites` says otherwise. */
+function dryRun(args: string[], cwd: string, sites = '1'): string[] {
 	const result = runScript('ci-local.mjs', [...args, '--dry-run'], {
 		cwd,
-		env: { CI_LOCAL_BASE: 'main' },
+		env: {
+			CI_LOCAL_BASE: 'main',
+			PIXONAUT_E2E_SITES: sites,
+			E2E_SITES_COUNT: '8',
+		},
 	});
 	expect(result.status, result.stderr).toBe(0);
 	return result.stdout.split('\n').filter(Boolean);
@@ -39,8 +48,10 @@ function dryRun(args: string[], cwd: string): string[] {
 /** A spec line's indent in the dry run. */
 const SPEC_INDENT = '  ';
 
-function steps(args: string[], cwd = process.cwd()): string[] {
-	return dryRun(args, cwd).filter((line) => !line.startsWith(SPEC_INDENT));
+function steps(args: string[], cwd = process.cwd(), sites?: string): string[] {
+	return dryRun(args, cwd, sites).filter(
+		(line) => !line.startsWith(SPEC_INDENT),
+	);
 }
 
 /** The e2e specs the dry run lists. */
@@ -78,6 +89,14 @@ function branchEditing(edited: string[], removed: string[] = []): string {
 describe('ci:local', () => {
 	it('runs every step without --affected', () => {
 		expect(steps([])).toEqual(ALL_STEPS);
+	});
+
+	it('starts the e2e step on the e2e sites right after the build when there are several', () => {
+		expect(steps([], process.cwd(), '4')).toEqual([
+			ALL_STEPS[0],
+			E2E_ON_SITES,
+			...ALL_STEPS.slice(1, -1),
+		]);
 	});
 
 	describe('--affected', () => {
@@ -126,26 +145,52 @@ describe('ci:local', () => {
 			const dir = branchChanging({ 'tests/e2e/specs/smoke.spec.ts': '' });
 
 			expect(steps(['--affected'], dir)).toEqual([
+				'Build assets and translations',
 				'Conflict markers',
 				'Biome',
 				'TypeScript',
-				'Build assets for e2e',
 				'e2e (classic, block-primary, astra)',
 			]);
 			expect(specs(['--affected'], dir)).toEqual(['smoke.spec.ts']);
+		});
+
+		it("runs a few specs on the checkout's own tests site, even with e2e sites", () => {
+			const dir = branchChanging({ 'tests/e2e/specs/smoke.spec.ts': '' });
+
+			expect(steps(['--affected'], dir, '4')).toContain(
+				'e2e (classic, block-primary, astra)',
+			);
+		});
+
+		it.each(['bin/e2e-sites.mjs', 'bin/fake-pixonaut.mjs'])(
+			'runs every e2e spec when %s changes',
+			(file) => {
+				const dir = branchChanging({ [file]: '' });
+
+				expect(specs(['--affected'], dir)).toEqual([]);
+				expect(steps(['--affected'], dir)).toContain(
+					'e2e (classic, block-primary, astra)',
+				);
+			},
+		);
+
+		it('runs every spec on the e2e sites when there are several', () => {
+			const dir = branchChanging({ 'playwright.config.ts': '' });
+
+			expect(steps(['--affected'], dir, '4')).toContain(E2E_ON_SITES);
 		});
 
 		it('builds the assets before the specs an edited script reaches', () => {
 			const dir = branchEditing(['assets/src/storefront/frame-shape.ts']);
 
 			expect(steps(['--affected'], dir)).toEqual([
+				'Build assets and translations',
 				'Conflict markers',
 				'Biome',
 				'TypeScript',
 				'JS unit',
 				'.pot freshness',
 				'Plugin Check',
-				'Build assets for e2e',
 				'e2e (classic, block-primary, astra)',
 			]);
 		});

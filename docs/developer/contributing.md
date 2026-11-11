@@ -20,6 +20,7 @@ and a maintainer's pass is attested on the pull request as a commit status.
 | `pnpm test:integration` | PHPUnit integration suite, HPOS off then on, then the `multisite` group on a multisite install |
 | `pnpm test:js` | Vitest |
 | `pnpm test:e2e` | Playwright, projects `classic` (Storefront) and `block-primary` (Twenty Twenty-Five) |
+| `pnpm test:e2e:parallel [specs]` | The same, split across extra tests sites run side by side ([testing](../testing/#running-in-parallel)) |
 | `pnpm test:e2e:compat` | Playwright, one project per theme and page builder combination; needs `WP_ENV_COMPAT=1` on `env:start` too; runs in the Nightly, not in `ci:local` |
 | `pnpm build` | `assets/src/` to `assets/build/` |
 | `pnpm i18n:pot` | Regenerates `languages/pixonaut-for-woocommerce.pot` |
@@ -87,11 +88,19 @@ Start wp-env first (`pnpm env:start`), then:
 pnpm ci:local
 ```
 
-It runs every step below, prints a pass or FAIL line for each with its time,
-and exits non-zero if any step failed.
+It runs every step below, prints a pass or FAIL line for each with its time
+and the gate's wall time, and exits non-zero if any step failed.
+
+The e2e step runs on extra tests sites, one shard of the suite on each
+(`pnpm test:e2e:parallel`, see [testing](../testing/#running-in-parallel)),
+in the background while the other steps run on the checkout's own wp-env;
+its output follows theirs. With `PIXONAUT_E2E_SITES=1`, or when
+`--affected` picks fewer than 8 spec files, it runs on the checkout's own
+tests site after the other steps instead.
 
 | Step | Command | Needs wp-env |
 |---|---|---|
+| Build assets and translations (the tests sites serve `assets/build/`) | `pnpm build && node bin/i18n-build.mjs` | |
 | Conflict markers | `pnpm check:conflicts` | |
 | Biome | `pnpm lint:js` | |
 | TypeScript | `pnpm typecheck` | |
@@ -108,11 +117,10 @@ and exits non-zero if any step failed.
 | Generated docs | `node bin/docs-generate.mjs --check` | yes |
 | Plugin Check | `pnpm plugin-check` | yes |
 | e2e, themes and page builders | `pnpm test:e2e:compat`: one project per combination in `tests/compat/combinations.json` ([testing](../testing/#themes-and-page-builders)) |
-| Release zip | `pnpm release:zip` | yes |
-| Release zip (wordpress.org), with its listing assets | `pnpm release:zip --flavor wporg` | yes |
+| Release zip | `pnpm release:zip --prebuilt` | yes |
+| Release zip (wordpress.org), with its listing assets | `pnpm release:zip --flavor wporg --prebuilt` | yes |
 | PHP integration, HPOS off then on, then the `multisite` group | `pnpm test:integration` | yes |
-| Build assets for e2e (the tests site serves `assets/build/`) | `pnpm build` | |
-| e2e, `classic`, `block-primary` and `astra` | `pnpm test:e2e` | yes |
+| e2e, `classic`, `block-primary` and `astra` | `pnpm test:e2e:parallel` | yes |
 
 The `block-secondary` e2e project is not part of the gate; run it with
 `pnpm test:e2e:secondary` after a change to the product page.
@@ -206,8 +214,11 @@ The e2e step runs only the specs the change reaches (`bin/ci-local-e2e.mjs`):
   one, or one removed along with its entry).
 
 Only the specs of `pnpm test:e2e`'s projects count: a change to
-`compatibility.spec.ts` alone runs no e2e step. The assets are built before
-the e2e step whenever it runs.
+`compatibility.spec.ts` alone runs no e2e step. The assets and translations
+are built first whenever the e2e step runs, and the release zips then take
+that build (`--prebuilt`) rather than rebuild `assets/build/` under the
+running specs. A change to `bin/e2e-sites.mjs` or `bin/fake-pixonaut.mjs`
+runs every spec.
 
 A new source file goes into `tests/e2e/reach.mjs` with the change that adds
 it: the JS unit suite fails while a shipped source is missing from it, and

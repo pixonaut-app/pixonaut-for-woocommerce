@@ -1,4 +1,7 @@
 import type { Page } from '@playwright/test';
+import { FIXTURE } from '../fake-pixonaut/src/fixture-ids';
+import { usePlainPermalinks } from './fixtures';
+import { createProduct } from './personalised';
 
 /** Picks `option` in a selectWoo field after typing `search` into it. */
 export async function pick(
@@ -158,4 +161,70 @@ export async function publish(page: Page): Promise<void> {
 /** The published product's page, from its edit screen. */
 export async function viewProduct(page: Page): Promise<void> {
 	await page.locator('#wp-admin-bar-view a, #view-post-btn a').first().click();
+}
+
+/** One side as the product screen saves it for publishLinkedProduct: the
+ *  fixture tee's `placement` with the T-shirt template, at the size the
+ *  placement suggests. */
+function linkedSide(key: 'front' | 'back', label: string) {
+	return {
+		key,
+		label,
+		placement: { id: FIXTURE.placement[key], name: label },
+		template: {
+			baseId: 'mini-tee',
+			version: 2,
+			name: 'T-shirt med tryck, framsida',
+			offersProperties: true,
+			latestVersion: 2,
+		},
+		printSizes: [
+			{
+				widthMm: 280,
+				heightMm: 360,
+				label: '280 × 360 mm',
+				placementDefault: true,
+			},
+		],
+	};
+}
+
+/** The blank variant publishLinkedProduct sells by default. */
+const LINKED_TEE_VARIANT = 'v_tee_white_s';
+
+/**
+ * A new product linked as publishLinkedProduct links it on the product
+ * screen, made through the tests site's support route rather than wp-admin:
+ * for a test about what happens to it after, not about linking. `approval`
+ * and `layout` are the stored values of the product's approval mode and
+ * layout, which otherwise follow the store's. Answers its address.
+ */
+export async function createLinkedProduct(
+	admin: Page,
+	baseURL: string | undefined,
+	name: string,
+	{
+		approval,
+		layout,
+		back = false,
+	}: {
+		approval?: 'proof_email' | 'checkbox';
+		layout?: 'button';
+		back?: boolean;
+	} = {},
+): Promise<string> {
+	await usePlainPermalinks(admin, baseURL);
+	const config = {
+		v: 15,
+		personalise: true,
+		blank: { id: FIXTURE.blank.tee, name: 'Fixture tee' },
+		sides: [
+			linkedSide('front', 'Front'),
+			...(back ? [linkedSide('back', 'Back')] : []),
+		],
+		layout: layout ?? null,
+		approvalMode: approval ?? null,
+		validity: { valid: true, reason: null },
+	};
+	return createProduct(admin.request, name, config, LINKED_TEE_VARIANT);
 }

@@ -5,7 +5,6 @@ import {
 	restUrl,
 	settingsPath,
 	test,
-	usePlainPermalinks,
 } from '../fixtures';
 import {
 	type CheckoutUrls,
@@ -16,13 +15,10 @@ import {
 	runJobs,
 	statuses,
 } from '../orders';
-import { publishLinkedProduct } from '../products';
+import { createLinkedProduct } from '../products';
 
 /** What the customer writes on the fixture tee's text layer. */
 const SLOGAN = 'Waiting for me';
-
-/** The proof-by-email approval mode's name in the product panel. */
-const PROOF_EMAIL_MODE = 'Proof by email after payment';
 
 /** A proof page's path on the fake, which stands in for Pixonaut's. */
 const PROOF_PAGE = /\/h\/proof\/[A-Za-z0-9_-]+/;
@@ -91,15 +87,11 @@ async function buyProofTee(
 		name: string;
 	},
 ): Promise<{ orderId: string; line: Line }> {
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(admin, name, '25', { approval: PROOF_EMAIL_MODE });
-	const permalink = await admin
-		.locator('#wp-admin-bar-view a, #view-post-btn a')
-		.first()
-		.getAttribute('href');
-	expect(permalink).toBeTruthy();
+	const permalink = await createLinkedProduct(admin, baseURL, name, {
+		approval: 'proof_email',
+	});
 
-	await customer.goto(permalink ?? '');
+	await customer.goto(permalink);
 	await expect(customer.locator('.pixonaut-preview *').first()).toBeVisible();
 	await customer.getByRole('textbox', { name: /Slogan/ }).fill(SLOGAN);
 	await customer

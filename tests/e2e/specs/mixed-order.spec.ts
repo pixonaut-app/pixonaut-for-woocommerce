@@ -1,7 +1,12 @@
-import { expect, type FakePixonaut, restUrl, test } from '../fixtures';
+import {
+	expect,
+	type FakePixonaut,
+	restUrl,
+	TESTS_SITE_ON_NETWORK,
+	test,
+} from '../fixtures';
 import {
 	type CheckoutUrls,
-	createLinkedProduct,
 	type Line,
 	openCheckouts,
 	pay,
@@ -10,10 +15,7 @@ import {
 	runJobs,
 	statuses,
 } from '../orders';
-
-/** The tests site as the fake reaches it: by its service name on wp-env's
- *  Docker network. */
-const TESTS_SITE_ON_NETWORK = 'http://tests-wordpress';
+import { createLinkedProduct } from '../products';
 
 /** The plugin's webhook receiver. */
 const WEBHOOK_ROUTE = '/pixonaut/v1/webhook';

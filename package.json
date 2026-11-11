@@ -36,6 +36,7 @@
 		"test:integration": "node bin/php.mjs --hpos=off vendor/bin/phpunit -c phpunit-integration.xml.dist && node bin/php.mjs --hpos=on vendor/bin/phpunit -c phpunit-integration.xml.dist && node bin/php.mjs --hpos=off env WP_MULTISITE=1 vendor/bin/phpunit -c phpunit-integration.xml.dist --group multisite",
 		"test:js": "vitest run",
 		"test:e2e": "playwright test --project=classic --project=block-primary --project=astra",
+		"test:e2e:parallel": "node bin/e2e-sites.mjs test --project=classic --project=block-primary --project=astra",
 		"test:e2e:secondary": "playwright test --project=block-secondary",
 		"test:e2e:compat": "WP_ENV_COMPAT=1 playwright test --project='compat-*'",
 		"i18n:pot": "node bin/i18n-pot.mjs",

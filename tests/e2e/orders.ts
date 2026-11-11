@@ -1,13 +1,11 @@
 import type { APIRequestContext, Page } from '@playwright/test';
-import { FIXTURE } from '../fake-pixonaut/src/fixture-ids';
 import {
 	expect,
 	type FakePixonaut,
 	restUrl,
 	usePlainPermalinks,
 } from './fixtures';
-import { createProduct } from './personalised';
-import { publishLinkedProduct } from './products';
+import { createLinkedProduct, publishLinkedProduct } from './products';
 
 /** The fulfilment job's Action Scheduler hook. */
 export const FULFIL_HOOK = 'pixonaut_fulfil_item';
@@ -169,55 +167,6 @@ async function payAtBlockCheckout(page: Page): Promise<void> {
 			timeout: PLACE_ORDER_ATTEMPT_MS,
 		});
 	}).toPass({ timeout: PLACE_ORDER_TIMEOUT_MS });
-}
-
-/** The configuration the product screen saves for publishLinkedProduct's
- *  defaults: the fixture tee's front with the T-shirt template, at the size
- *  the placement suggests. */
-const LINKED_TEE = {
-	v: 14,
-	personalise: true,
-	blank: { id: FIXTURE.blank.tee, name: 'Fixture tee' },
-	sides: [
-		{
-			key: 'front',
-			label: 'Front',
-			placement: { id: FIXTURE.placement.front, name: 'Front' },
-			template: {
-				baseId: 'mini-tee',
-				version: 2,
-				name: 'T-shirt med tryck, framsida',
-				offersProperties: true,
-				latestVersion: 2,
-			},
-			printSizes: [
-				{
-					widthMm: 280,
-					heightMm: 360,
-					label: '280 × 360 mm',
-					placementDefault: true,
-				},
-			],
-		},
-	],
-	validity: { valid: true, reason: null },
-};
-
-/** The blank variant publishLinkedProduct sells by default. */
-const LINKED_TEE_VARIANT = 'v_tee_white_s';
-
-/**
- * A new product linked as the product screen links it, made through the
- * tests site's support route rather than wp-admin: for a test about what
- * happens to it after, not about linking. Answers its address.
- */
-export async function createLinkedProduct(
-	admin: Page,
-	baseURL: string | undefined,
-	name: string,
-): Promise<string> {
-	await usePlainPermalinks(admin, baseURL);
-	return createProduct(admin.request, name, LINKED_TEE, LINKED_TEE_VARIANT);
 }
 
 /** The merchant links a new product; answers its address. */

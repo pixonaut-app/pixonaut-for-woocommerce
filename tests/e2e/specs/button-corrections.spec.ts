@@ -5,7 +5,6 @@ import {
 	restUrl,
 	TESTS_SITE_ON_NETWORK,
 	test,
-	usePlainPermalinks,
 	WEBHOOK_ROUTE,
 } from '../fixtures';
 import {
@@ -16,13 +15,7 @@ import {
 	runJobs,
 	statuses,
 } from '../orders';
-import { publishLinkedProduct } from '../products';
-
-/** The button layout's name in the product panel. */
-const BUTTON_LAYOUT = 'Personalise button: opens the Pixonaut designer';
-
-/** The proof-by-email approval mode's name in the product panel. */
-const PROOF_EMAIL_MODE = 'Proof by email after payment';
+import { createLinkedProduct } from '../products';
 
 /** A proof page's path on the fake, which stands in for Pixonaut's. */
 const PROOF_PAGE = /\/h\/proof\/[A-Za-z0-9_-]+/;
@@ -32,16 +25,6 @@ const CORRECTION_PAGE = /\/h\/correct\/[0-9a-f]+$/;
 
 /** The wording the customer corrects the design to. */
 const CORRECTED = 'Corrected on the hosted page';
-
-/** The published product's address, from its edit screen. */
-async function permalinkOf(admin: Page): Promise<string> {
-	const permalink = await admin
-		.locator('#wp-admin-bar-view a, #view-post-btn a')
-		.first()
-		.getAttribute('href');
-	expect(permalink).toBeTruthy();
-	return permalink ?? '';
-}
 
 /** Personalises the product on the hosted designer and adds it to the cart. */
 async function personaliseOnHostedDesigner(
@@ -115,14 +98,13 @@ test('a button product is corrected from its product page on the hosted correcti
 		'classic' | 'block',
 		string
 	>;
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(
+	const permalink = await createLinkedProduct(
 		admin,
+		baseURL,
 		`Corrected button tee ${theme} ${Date.now()}`,
-		'25',
-		{ layout: BUTTON_LAYOUT },
+		{ layout: 'button' },
 	);
-	await personaliseOnHostedDesigner(customer, await permalinkOf(admin));
+	await personaliseOnHostedDesigner(customer, permalink);
 
 	await customer.goto(cartUrls[checkout]);
 	const { line, image, name } = cartLine(customer);
@@ -175,14 +157,13 @@ test('a button product whose proof the customer asked to change is corrected on 
 		data: { url: `${TESTS_SITE_ON_NETWORK}${restUrl(WEBHOOK_ROUTE)}` },
 	});
 	expect(endpoint.ok()).toBe(true);
-	await usePlainPermalinks(admin, baseURL);
-	await publishLinkedProduct(
+	const permalink = await createLinkedProduct(
 		admin,
+		baseURL,
 		`Changes button tee ${theme} ${Date.now()}`,
-		'25',
-		{ layout: BUTTON_LAYOUT, approval: PROOF_EMAIL_MODE },
+		{ layout: 'button', approval: 'proof_email' },
 	);
-	await personaliseOnHostedDesigner(customer, await permalinkOf(admin));
+	await personaliseOnHostedDesigner(customer, permalink);
 	const orderId = await pay(customer, checkout, checkoutUrls);
 	await runJobs(request);
 	const [waiting] = (await readOrder(request, orderId)).lines as [Line];
