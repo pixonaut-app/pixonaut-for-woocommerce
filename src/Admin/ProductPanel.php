@@ -210,7 +210,7 @@ final class ProductPanel {
 				'fields_html'  => $this->not_connected_html() . $this->fields_html(
 					$panel + array(
 						'variant_html'    => $product_object->is_type( 'variable' ) ? '' : $this->variant->html( $product_object, PanelFields::product(), $this->integration( ProductConfig::stored_on( $product_object ) ) ),
-						'pairing_html'    => true === $panel['importing'] ? '' : $this->pairing_html( $product_object, ProductConfig::stored_on( $product_object ) ),
+						'pairing_html'    => true === $panel['importing'] || true === $panel['import_failed'] ? '' : $this->pairing_html( $product_object, ProductConfig::stored_on( $product_object ) ),
 						'images_html'     => null === $this->showcases ? '' : $this->showcases->html( $product_object ),
 						'regenerate_html' => null === $this->regenerate ? '' : $this->regenerate->html( $product_object ),
 					)
@@ -288,12 +288,13 @@ final class ProductPanel {
 		return $this->templates->html(
 			'admin/product-blank.php',
 			array(
-				'printshop'    => $panel['printshop'],
-				'variant_html' => is_string( $panel['variant_html'] ?? null ) ? $panel['variant_html'] : '',
-				'variable'     => true === $panel['variable'],
-				'importing'    => true === $panel['importing'],
-				'blank_name'   => '' !== $panel['blank_read_name'] ? $panel['blank_read_name'] : $panel['blank_name'],
-				'pairing_html' => is_string( $panel['pairing_html'] ?? null ) ? $panel['pairing_html'] : '',
+				'printshop'     => $panel['printshop'],
+				'variant_html'  => is_string( $panel['variant_html'] ?? null ) ? $panel['variant_html'] : '',
+				'variable'      => true === $panel['variable'],
+				'importing'     => true === $panel['importing'],
+				'import_failed' => true === $panel['import_failed'],
+				'blank_name'    => '' !== $panel['blank_read_name'] ? $panel['blank_read_name'] : $panel['blank_name'],
+				'pairing_html'  => is_string( $panel['pairing_html'] ?? null ) ? $panel['pairing_html'] : '',
 			)
 		);
 	}
@@ -326,7 +327,7 @@ final class ProductPanel {
 		$config                = $config->blank_id === $blank_id ? $config : $config->on_blank( $blank_id );
 		$panel                 = $this->panel( $product, $config );
 		$panel['variant_html'] = $product->is_type( 'variable' ) ? '' : $this->variant->html( $product, PanelFields::product(), $this->integration( $config ), $blank_id );
-		$panel['pairing_html'] = true === $panel['importing'] ? '' : $this->pairing_html( $product, $config );
+		$panel['pairing_html'] = true === $panel['importing'] || true === $panel['import_failed'] ? '' : $this->pairing_html( $product, $config );
 		return array(
 			'blank_html' => $this->blank_html( $panel ),
 			'views_html' => $this->views_html( $panel ),
@@ -424,6 +425,7 @@ final class ProductPanel {
 			'printshop'        => null === $config->blank_id ? null : $this->blank->printshop( $config->blank_id, $blank ),
 			// Pixonaut is still importing it from a printshop's catalogue: nothing to pick on it yet.
 			'importing'        => null !== $blank && LinkedBlank::IMPORTING === $blank['status'],
+			'import_failed'    => null !== $blank && LinkedBlank::IMPORT_FAILED === $blank['status'],
 			'blank_read_name'  => $blank['name'] ?? '',
 			'printshops'       => $this->printshops( $config ),
 			// A variation's own blank is picked among the workspace's blanks.

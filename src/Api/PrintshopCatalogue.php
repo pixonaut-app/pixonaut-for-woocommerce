@@ -50,9 +50,11 @@ final class PrintshopCatalogue {
 		$page   = max( 1, $page );
 		$answer = $this->list( $connection_id, $search, self::PAGE_SIZE, ( $page - 1 ) * self::PAGE_SIZE );
 		$total  = $answer['total'] ?? null;
+		$rows   = self::rows( $answer );
 		return array(
-			'rows' => self::rows( $answer ),
-			'more' => is_numeric( $total ) && $page * self::PAGE_SIZE < (int) $total,
+			'rows' => $rows,
+			// A printshop that does not say how many it has may have more after a full page.
+			'more' => is_numeric( $total ) ? $page * self::PAGE_SIZE < (int) $total : self::PAGE_SIZE === count( $rows ),
 		);
 	}
 

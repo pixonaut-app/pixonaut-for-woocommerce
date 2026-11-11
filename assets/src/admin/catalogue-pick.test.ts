@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
 	blankSearch,
 	catalogueSource,
+	importFailedIn,
 	importingIn,
 	pickCatalogueBlank,
 	searchesCatalogue,
@@ -190,5 +191,18 @@ describe('importingIn', () => {
 			importingIn('<p class="pixonaut-blank-importing" data-importing>'),
 		).toBe(true);
 		expect(importingIn('<p class="pixonaut-printshop-line">')).toBe(false);
+	});
+});
+
+describe('importFailedIn', () => {
+	it('tells a blank whose import failed by its parts', () => {
+		expect(
+			importFailedIn(
+				'<p class="pixonaut-blank-import-failed-state" data-import-failed>',
+			),
+		).toBe(true);
+		expect(
+			importFailedIn('<p class="pixonaut-blank-importing" data-importing>'),
+		).toBe(false);
 	});
 });

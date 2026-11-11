@@ -109,6 +109,11 @@ export function importingIn(blankHtml: string): boolean {
 	return blankHtml.includes('data-importing');
 }
 
+/** Whether the blank's parts say Pixonaut's import of it failed. */
+export function importFailedIn(blankHtml: string): boolean {
+	return blankHtml.includes('data-import-failed');
+}
+
 /** Whether the panel shows a blank Pixonaut is still importing. */
 export function showsImporting(root: ParentNode): boolean {
 	return root.querySelector('.pixonaut-blank-importing') !== null;

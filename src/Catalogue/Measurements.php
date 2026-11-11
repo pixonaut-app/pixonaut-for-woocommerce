@@ -75,11 +75,13 @@ final class Measurements {
 		$sizes = array();
 		if ( preg_match_all( self::PAIR, $label, $pairs, PREG_SET_ORDER ) > 0 ) {
 			foreach ( $pairs as $pair ) {
-				$unit = '' !== ( $pair[4] ?? '' ) ? $pair[4] : $pair[2];
-				if ( '' === $unit ) {
+				// Each number in its own unit; one written once, `70 x 100 cm`, is both's.
+				$first  = '' !== $pair[2] ? $pair[2] : ( $pair[4] ?? '' );
+				$second = '' !== ( $pair[4] ?? '' ) ? $pair[4] : $pair[2];
+				if ( '' === $first || '' === $second ) {
 					continue;
 				}
-				$sizes[] = array( self::number( $pair[1] ) * self::MM_PER_UNIT[ $unit ], self::number( $pair[3] ) * self::MM_PER_UNIT[ $unit ] );
+				$sizes[] = array( self::number( $pair[1] ) * self::MM_PER_UNIT[ $first ], self::number( $pair[3] ) * self::MM_PER_UNIT[ $second ] );
 			}
 		}
 		if ( preg_match_all( self::PAPER, $label, $papers ) > 0 ) {

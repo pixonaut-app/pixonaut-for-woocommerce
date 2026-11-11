@@ -21,6 +21,7 @@ import {
 	blankSearch,
 	catalogueSource,
 	IMPORT_POLL_MS,
+	importFailedIn,
 	importingIn,
 	MAX_IMPORT_POLLS,
 	pickCatalogueBlank,
@@ -891,7 +892,7 @@ export function initPanel(root: HTMLElement): void {
 						}
 					}, IMPORT_POLL_MS);
 				}
-			} else if (polls > 0) {
+			} else if (polls > 0 && !importFailedIn(parts.blank_html)) {
 				// Imported: its placements are there now.
 				void placementsOf(panel.urls, panel.nonce, id).then((listed) => {
 					if (listed !== null && blank.value === id) {
@@ -962,6 +963,8 @@ export function initPanel(root: HTMLElement): void {
 	};
 	const showBlank = chosenThumbnail(blank);
 	const source = catalogueSource(root);
+	// The blank the form posts: the last one picked, kept while a catalogue pick is answered.
+	let committed = blank.value;
 	source?.addEventListener('change', () => showSourceHint(root, source));
 	// A catalogue product picked stands for the blank Pixonaut has it as.
 	const pickProduct = (
@@ -972,8 +975,13 @@ export function initPanel(root: HTMLElement): void {
 	) => {
 		const read = reads.next();
 		showBlankLoading(root, true);
+		// Until Pixonaut answers, the form posts the blank it had, never the product's id.
+		const pending = blank.selectedOptions[0];
+		if (pending) {
+			pending.value = committed;
+		}
 		void pickCatalogueBlank(root, connection, product, name).then((picked) => {
-			if (!reads.isLatest(read) || blank.value !== product) {
+			if (!reads.isLatest(read) || blank.selectedOptions[0] !== pending) {
 				return;
 			}
 			if ('error' in picked) {
@@ -986,11 +994,7 @@ export function initPanel(root: HTMLElement): void {
 				return;
 			}
 			// A new option, so selectWoo's own record of the pick names the blank, not the product.
-			for (const option of [...blank.options]) {
-				if (option.value === product) {
-					option.remove();
-				}
-			}
+			pending?.remove();
 			const option = new Option(picked.text, picked.id, true, true);
 			option.dataset.thumbnail = thumbnail;
 			blank.append(option);
@@ -999,6 +1003,7 @@ export function initPanel(root: HTMLElement): void {
 		});
 	};
 	const pickBlank = (id: string, listed: Placement[], thumbnail: string) => {
+		committed = id;
 		showBlank(thumbnail);
 		fillAll(listed);
 		update();
@@ -1032,6 +1037,7 @@ export function initPanel(root: HTMLElement): void {
 			pickBlank(id, listed ?? [], thumbnail ?? '');
 		})
 		.on('select2:clear', () => {
+			committed = '';
 			showImportFailed(root, null);
 			showBlank('');
 			forgetBlank();
@@ -1039,7 +1045,14 @@ export function initPanel(root: HTMLElement): void {
 			update();
 		});
 	if (showsImporting(root) && blank.value !== '') {
-		window.setTimeout(() => readBlank(blank.value, 1), IMPORT_POLL_MS);
+		const importing = blank.value;
+		// Dropped when another blank is picked or read meanwhile.
+		const unread = reads.next();
+		window.setTimeout(() => {
+			if (blank.value === importing && reads.isLatest(unread)) {
+				readBlank(importing, 1);
+			}
+		}, IMPORT_POLL_MS);
 	}
 	for (const side of sideElements()) {
 		initSide(panel, side);

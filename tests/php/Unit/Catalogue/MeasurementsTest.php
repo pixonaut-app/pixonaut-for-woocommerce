@@ -16,6 +16,7 @@ final class MeasurementsTest extends TestCase {
 		$this->assertEqualsWithDelta( array( array( 711.2, 1016.0 ), array( 700.0, 1000.0 ) ), Measurements::of( '28x40" / 70x100cm' ), 0.01 );
 		$this->assertSame( array( array( 210.0, 297.0 ) ), Measurements::of( 'Poster A4' ) );
 		$this->assertEqualsWithDelta( array( array( 215.0, 279.4 ) ), Measurements::of( '21,5 × 27,94 cm' ), 0.01 );
+		$this->assertEqualsWithDelta( array( array( 500.0, 700.0 ) ), Measurements::of( '0.5 m × 70 cm' ), 0.01, 'each number in its own unit' );
 		$this->assertSame( array(), Measurements::of( 'Heather Forest' ) );
 		$this->assertSame( array(), Measurements::of( '70x100' ) );
 		$this->assertSame( array(), Measurements::of( '70x100 matte' ) );

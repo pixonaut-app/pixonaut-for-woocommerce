@@ -103,6 +103,28 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 		$this->assertStringContainsString( 'search=poster', $this->recorder->requests[0]['url'] );
 	}
 
+	public function test_a_catalogue_that_does_not_say_its_size_offers_another_page_after_a_full_one(): void {
+		wp_set_current_user( $this->user( 'shop_manager' ) );
+		$page             = self::catalogue( null );
+		$page['total']    = null;
+		$page['products'] = array_map(
+			static fn ( int $n ): array => array(
+				'productId' => 'gelato_' . $n,
+				'name'      => 'Poster ' . $n,
+			) + $page['products'][0],
+			range( 1, PrintshopCatalogue::PAGE_SIZE )
+		);
+		$this->recorder->json( 200, $page );
+
+		$response = $this->request(
+			'GET',
+			CatalogueProducts::SEARCH_ROUTE,
+			array( 'connection' => self::INTEGRATED_ID )
+		);
+
+		$this->assertSame( array( 'more' => true ), $response->get_data()['pagination'] );
+	}
+
 	public function test_a_product_not_imported_yet_is_imported_as_a_blank(): void {
 		wp_set_current_user( $this->user( 'shop_manager' ) );
 		$this->recorder->json( 202, self::imported( 'importing' ) );
@@ -183,6 +205,20 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 		$this->assertStringContainsString( 'data-importing', $parts['blank_html'] );
 		$this->assertStringContainsString( 'Importing Classic poster from Gelato into Pixonaut…', $parts['blank_html'] );
 		$this->assertStringNotContainsString( 'pixonaut-variant-pairing', $parts['blank_html'] );
+	}
+
+	public function test_a_blank_whose_import_failed_says_so_and_pairs_nothing(): void {
+		$parent = $this->poster_product( array( '50×70 cm' ) );
+		wp_set_current_user( $this->user( 'shop_manager' ) );
+		$this->recorder->json( 200, array( 'placements' => array() ) + self::poster_blank( 'failed' ) );
+		$this->recorder->json( 200, $this->mockups( array() ) );
+		$this->recorder->json( 200, self::printshops() );
+
+		$html = $this->blank_parts( $parent->get_id() )['blank_html'];
+
+		$this->assertStringContainsString( 'data-import-failed', $html );
+		$this->assertStringContainsString( 'Pixonaut could not import Classic poster from Gelato. Remove the blank in Pixonaut, then pick the product again.', $html );
+		$this->assertStringNotContainsString( 'pixonaut-variant-pairing', $html );
 	}
 
 	public function test_variations_pair_by_size_and_one_that_cannot_says_so_and_offers_the_variants(): void {

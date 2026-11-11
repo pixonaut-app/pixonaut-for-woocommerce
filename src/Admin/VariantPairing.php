@@ -92,26 +92,34 @@ final class VariantPairing {
 		}
 		$placement = $config->sides[0]->placement_id ?? null;
 		$areas     = null === $placement ? array() : $this->blank->variant_areas( $blank_id, $placement, $variants );
-		$rows      = array();
-		foreach ( $product->get_children() as $child ) {
+		$children  = array_map( 'intval', $product->get_children() );
+		// One query for every variation's post and meta, rather than one each.
+		_prime_post_caches( $children );
+		update_meta_cache( 'post', $children );
+		$sold = array();
+		foreach ( $children as $child ) {
 			$variation = wc_get_product( $child );
 			if ( ! $variation instanceof WC_Product_Variation || ProductConfig::stored_on( $variation )->override ) {
 				continue;
 			}
-			$rows[] = $this->row( $variation, $blank_id, $named, $choices, $areas );
+			$sold[] = array(
+				'variation' => $variation,
+				'variant'   => self::variant_of( $variation, $blank_id, $named ),
+			);
 		}
-		if ( array() === $rows ) {
+		if ( array() === $sold ) {
 			return '';
 		}
 		// The variations to see to first; otherwise in the product's order.
-		usort( $rows, static fn ( array $a, array $b ): int => (int) $b['unpaired'] <=> (int) $a['unpaired'] );
-		$paired = count( array_filter( $rows, static fn ( array $row ): bool => ! $row['unpaired'] ) );
+		usort( $sold, static fn ( array $a, array $b ): int => (int) ( null === $b['variant']->ref ) <=> (int) ( null === $a['variant']->ref ) );
+		$paired = count( array_filter( $sold, static fn ( array $one ): bool => null !== $one['variant']->ref ) );
+		$rows   = array_map( fn ( array $one ): array => $this->row( $one['variation'], $one['variant'], $choices, $areas ), array_slice( $sold, 0, self::MAX_ROWS ) );
 		return $this->templates->html(
 			'admin/product-variant-pairing.php',
 			array(
-				'rows'        => array_slice( $rows, 0, self::MAX_ROWS ),
-				'more'        => max( 0, count( $rows ) - self::MAX_ROWS ),
-				'total'       => count( $rows ),
+				'rows'        => $rows,
+				'more'        => max( 0, count( $sold ) - self::MAX_ROWS ),
+				'total'       => count( $sold ),
 				'paired'      => $paired,
 				'printshop'   => '' === $integration ? __( 'Blank', 'pixonaut-for-woocommerce' ) : $integration,
 				'blank_id'    => $blank_id,
@@ -156,21 +164,31 @@ final class VariantPairing {
 	}
 
 	/**
-	 * One variation's row.
+	 * The variant a variation sells on the blank: the one stored for it
+	 * while it is current, else the one its attributes match.
 	 *
-	 * @param WC_Product_Variation                              $variation   The variation.
-	 * @param string                                            $blank_id    The blank.
-	 * @param BlankVariant[]                                    $named       Its variants, named as matching names them.
-	 * @param array<string, string>                             $choices     The variants as listed, by ref.
-	 * @param array<string, array{width: float, height: float}> $areas       Each variant's print area, by ref.
+	 * @param WC_Product_Variation $variation The variation.
+	 * @param string               $blank_id  The blank.
+	 * @param BlankVariant[]       $named     Its variants, named as matching names them.
 	 * @phpstan-param list<BlankVariant> $named
-	 * @return array{id: int, name: string, url: string, picked: string, matched: string, choices: array<string, string>, unpaired: bool, area: string}
 	 */
-	private function row( WC_Product_Variation $variation, string $blank_id, array $named, array $choices, array $areas ): array {
+	private static function variant_of( WC_Product_Variation $variation, string $blank_id, array $named ): ProductVariant {
 		$stored = ProductVariant::stored_on( $variation );
-		$stored = null !== $stored && $stored->blank_id === $blank_id && $stored->is_current( $variation )
+		return null !== $stored && $stored->blank_id === $blank_id && $stored->is_current( $variation )
 			? $stored
 			: ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $variation ), $named );
+	}
+
+	/**
+	 * One variation's row.
+	 *
+	 * @param WC_Product_Variation                              $variation The variation.
+	 * @param ProductVariant                                    $stored    The variant it sells.
+	 * @param array<string, string>                             $choices   The variants as listed, by ref.
+	 * @param array<string, array{width: float, height: float}> $areas     Each variant's print area, by ref.
+	 * @return array{id: int, name: string, url: string, picked: string, matched: string, choices: array<string, string>, unpaired: bool, area: string}
+	 */
+	private function row( WC_Product_Variation $variation, ProductVariant $stored, array $choices, array $areas ): array {
 		if ( null !== $stored->pick && ! isset( $choices[ $stored->pick ] ) ) {
 			$choices[ $stored->pick ] = '' === $stored->label ? $stored->pick : $stored->label;
 		}

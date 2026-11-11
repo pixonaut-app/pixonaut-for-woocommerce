@@ -48,6 +48,15 @@ final class LinkedBlank {
 	private array $failed = array();
 
 	/**
+	 * The blanks read in this request that Pixonaut is still importing:
+	 * nothing read of them is kept, so the first read once the import is
+	 * done sees what it brought.
+	 *
+	 * @var array<string, true>
+	 */
+	private array $importing = array();
+
+	/**
 	 * Where a blank's printshop comes from, as Pixonaut resolves it: the
 	 * blank's own, its category's, the workspace's default, or none set.
 	 */
@@ -64,6 +73,12 @@ final class LinkedBlank {
 	 * catalogue: it has its name and nothing else yet.
 	 */
 	public const IMPORTING = 'importing';
+
+	/**
+	 * A blank's `status` once its import failed for good: it never gets
+	 * placements or variants, and is removed in Pixonaut.
+	 */
+	public const IMPORT_FAILED = 'failed';
 
 	private const SOURCES = array( self::SOURCE_OWN, self::SOURCE_CATEGORY, self::SOURCE_WORKSPACE, self::SOURCE_NONE );
 
@@ -100,6 +115,7 @@ final class LinkedBlank {
 		$status = is_string( $blank['status'] ?? null ) ? $blank['status'] : Catalogue::BLANK_READY;
 		if ( self::IMPORTING === $status ) {
 			// Its placements, views and variants come as the import ends: read them again then.
+			$this->importing[ $blank_id ] = true;
 			$this->forget( $blank_id );
 		}
 		$placements = array();
@@ -128,6 +144,17 @@ final class LinkedBlank {
 	}
 
 	/**
+	 * Drops what was just cached of a blank Pixonaut is still importing.
+	 *
+	 * @param string $blank_id The blank.
+	 */
+	private function forget_importing( string $blank_id ): void {
+		if ( isset( $this->importing[ $blank_id ] ) ) {
+			$this->forget( $blank_id );
+		}
+	}
+
+	/**
 	 * Drops what is cached of a blank, so the next read asks Pixonaut again.
 	 *
 	 * @param string $blank_id The blank.
@@ -153,6 +180,7 @@ final class LinkedBlank {
 		$args     = array( 'blank' => $blank_id ) + ( null === $language ? array() : array( 'lang' => $language ) );
 		try {
 			$placements = $this->remember( 'blank-mockups', $args, fn (): array => $this->catalogue->mockups( $blank_id, $language ) );
+			$this->forget_importing( $blank_id );
 		} catch ( ApiException $e ) {
 			return null;
 		}
@@ -197,6 +225,7 @@ final class LinkedBlank {
 		$args     = array( 'blank' => $blank_id ) + ( null === $language ? array() : array( 'lang' => $language ) );
 		try {
 			$placements = $this->remember( 'blank-mockups', $args, fn (): array => $this->catalogue->mockups( $blank_id, $language ) );
+			$this->forget_importing( $blank_id );
 		} catch ( ApiException $e ) {
 			return null;
 		}
@@ -219,6 +248,7 @@ final class LinkedBlank {
 		$args     = array( 'blank' => $blank_id ) + ( null === $language ? array() : array( 'lang' => $language ) );
 		try {
 			$placements = $this->remember( 'blank-mockups', $args, fn (): array => $this->catalogue->mockups( $blank_id, $language ) );
+			$this->forget_importing( $blank_id );
 		} catch ( ApiException $e ) {
 			return null;
 		}
@@ -365,6 +395,7 @@ final class LinkedBlank {
 	public function variant_areas( string $blank_id, string $placement_id, array $variants ): array {
 		try {
 			$blank = $this->remember( 'blank-areas', array( 'blank' => $blank_id ), fn (): array => $this->catalogue->blank( $blank_id ) );
+			$this->forget_importing( $blank_id );
 		} catch ( ApiException $e ) {
 			return array();
 		}
