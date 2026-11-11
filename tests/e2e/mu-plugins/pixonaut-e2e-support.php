@@ -178,6 +178,20 @@ add_filter( 'option_pixonaut_wc_settings', 'pixonaut_e2e_product_form' );
 add_filter( 'default_option_pixonaut_wc_settings', 'pixonaut_e2e_product_form' );
 
 /**
+ * Cookie that sets how many products a page of the shop lists for one
+ * browser context, so a test pages a short listing.
+ */
+const PIXONAUT_E2E_PER_PAGE_COOKIE = 'pixonaut_e2e_per_page';
+
+add_filter(
+	'loop_shop_per_page',
+	static function ( $per_page ) {
+		$cookie = isset( $_COOKIE[ PIXONAUT_E2E_PER_PAGE_COOKIE ] ) ? absint( $_COOKIE[ PIXONAUT_E2E_PER_PAGE_COOKIE ] ) : 0;
+		return $cookie > 0 ? $cookie : $per_page;
+	}
+);
+
+/**
  * Cookie that swaps the block theme's single product blocks for the secondary
  * pair, Add to Cart with Options and Product Gallery, for one browser context.
  */
@@ -621,6 +635,172 @@ add_action(
 						201
 					);
 				},
+			)
+		);
+
+		// A variable poster listed once per picture: global attributes `Bild`
+		// (Med bild, Utan bild) and `Storlek` (30x40, 50x70) under slugs of
+		// the test's own, the poster sold with a photo in both sizes and
+		// without one in 30x40 only, a plain vase beside it, both in a category
+		// of their own. DELETE removes them.
+		register_rest_route(
+			'pixonaut-e2e/v1',
+			'/split-products',
+			array(
+				array(
+					'methods'             => 'POST',
+					'permission_callback' => '__return_true',
+					'args'                => array(
+						// A short unique suffix for the attributes' and the category's slugs.
+						'key'      => array(
+							'type'     => 'string',
+							'required' => true,
+							'pattern'  => '^[a-z0-9]{1,16}$',
+						),
+						// A stored Pixonaut configuration document for the poster.
+						'pixonaut' => array(
+							'type' => 'object',
+						),
+					),
+					'callback'            => static function ( WP_REST_Request $request ) {
+						$key        = (string) $request['key'];
+						$taxonomies = array();
+						$attributes = array();
+						foreach ( array(
+							'bild'    => array( 'Med bild', 'Utan bild' ),
+							'storlek' => array( '30x40', '50x70' ),
+						) as $name => $values ) {
+							$slug = $name . $key;
+							$id   = wc_create_attribute(
+								array(
+									'name' => ucfirst( $name ),
+									'slug' => $slug,
+								)
+							);
+							if ( is_wp_error( $id ) ) {
+								return $id;
+							}
+							$taxonomy = wc_attribute_taxonomy_name( $slug );
+							// The attribute's taxonomy is registered on the next request's `init`; this one needs it now.
+							register_taxonomy( $taxonomy, array( 'product', 'product_variation' ) );
+							$terms = array();
+							foreach ( $values as $value ) {
+								$term = wp_insert_term( $value, $taxonomy );
+								if ( is_wp_error( $term ) ) {
+									return $term;
+								}
+								$terms[ sanitize_title( $value ) ] = (int) $term['term_id'];
+							}
+							$attribute = new WC_Product_Attribute();
+							$attribute->set_id( $id );
+							$attribute->set_name( $taxonomy );
+							$attribute->set_options( array_values( $terms ) );
+							$attribute->set_visible( true );
+							$attribute->set_variation( true );
+							$attributes[]        = $attribute;
+							$taxonomies[ $name ] = array(
+								'id'       => $id,
+								'taxonomy' => $taxonomy,
+							);
+						}
+						$category = wp_insert_term( 'Split ' . $key, 'product_cat' );
+						if ( is_wp_error( $category ) ) {
+							return $category;
+						}
+						$category_id = (int) $category['term_id'];
+
+						$poster = new WC_Product_Variable();
+						$poster->set_name( 'Split poster ' . $key );
+						$poster->set_status( 'publish' );
+						$poster->set_category_ids( array( $category_id ) );
+						$poster->set_attributes( $attributes );
+						$poster->save();
+						foreach ( array( array( 'med-bild', '30x40' ), array( 'med-bild', '50x70' ), array( 'utan-bild', '30x40' ) ) as list( $picture, $size ) ) {
+							$variation = new WC_Product_Variation();
+							$variation->set_parent_id( $poster->get_id() );
+							$variation->set_attributes(
+								array(
+									$taxonomies['bild']['taxonomy']    => $picture,
+									$taxonomies['storlek']['taxonomy'] => $size,
+								)
+							);
+							$variation->set_regular_price( '19.00' );
+							$variation->save();
+						}
+						WC_Product_Variable::sync( $poster->get_id() );
+						if ( is_array( $request['pixonaut'] ) ) {
+							\Pixonaut\WooCommerce\Catalogue\ProductConfig::from_json( (string) wp_json_encode( $request['pixonaut'] ) )->save_to( $poster );
+						}
+						$poster = wc_get_product( $poster->get_id() );
+						foreach ( $poster instanceof WC_Product ? $poster->get_children() : array() as $variation_id ) {
+							$variation = wc_get_product( $variation_id );
+							if ( $variation instanceof WC_Product ) {
+								pixonaut_e2e_pick_variant( $variation, null );
+							}
+						}
+						\Pixonaut\WooCommerce\Catalogue\SplitListing::set_attribute_default( $taxonomies['bild']['id'], true );
+
+						$vase = new WC_Product_Simple();
+						$vase->set_name( 'Split vase ' . $key );
+						$vase->set_status( 'publish' );
+						$vase->set_regular_price( '9.00' );
+						$vase->set_category_ids( array( $category_id ) );
+						$vase->save();
+
+						return new WP_REST_Response(
+							array(
+								'poster'     => array(
+									'id'        => $poster instanceof WC_Product ? $poster->get_id() : 0,
+									'permalink' => $poster instanceof WC_Product ? $poster->get_permalink() : '',
+								),
+								'vase'       => array(
+									'id'        => $vase->get_id(),
+									'permalink' => $vase->get_permalink(),
+								),
+								'category'   => get_term_link( $category_id, 'product_cat' ),
+								'taxonomies' => $taxonomies,
+							),
+							201
+						);
+					},
+				),
+				array(
+					'methods'             => 'DELETE',
+					'permission_callback' => '__return_true',
+					'args'                => array(
+						'key' => array(
+							'type'     => 'string',
+							'required' => true,
+							'pattern'  => '^[a-z0-9]{1,16}$',
+						),
+					),
+					'callback'            => static function ( WP_REST_Request $request ) {
+						$key      = (string) $request['key'];
+						$category = get_term_by( 'slug', 'split-' . $key, 'product_cat' );
+						if ( $category instanceof WP_Term ) {
+							$products = wc_get_products(
+								array(
+									'category' => array( $category->slug ),
+									'limit'    => -1,
+									'status'   => 'any',
+								)
+							);
+							foreach ( is_array( $products ) ? $products : array() as $product ) {
+								if ( $product instanceof WC_Product ) {
+									$product->delete( true );
+								}
+							}
+							wp_delete_term( $category->term_id, 'product_cat' );
+						}
+						foreach ( array( 'bild', 'storlek' ) as $name ) {
+							$id = wc_attribute_taxonomy_id_by_name( $name . $key );
+							if ( $id > 0 ) {
+								wc_delete_attribute( $id );
+							}
+						}
+						return new WP_REST_Response( null, 204 );
+					},
+				),
 			)
 		);
 

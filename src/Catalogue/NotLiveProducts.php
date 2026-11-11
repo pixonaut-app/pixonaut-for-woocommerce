@@ -140,13 +140,7 @@ final class NotLiveProducts {
 		if ( isset( $this->hidden[ $key ] ) ) {
 			return $this->hidden[ $key ];
 		}
-		// Only what is stored is cached: whether a product is personalised is filtered, per request.
-		$candidates = wp_cache_get( $key, self::CACHE_GROUP );
-		if ( ! is_array( $candidates ) ) {
-			$candidates = self::candidates();
-			wp_cache_set( $key, $candidates, self::CACHE_GROUP );
-		}
-		$candidates    = array_values( array_map( 'intval', $candidates ) );
+		$candidates    = self::candidate_ids();
 		$hidden        = array();
 		$this->finding = true;
 		try {
@@ -163,6 +157,24 @@ final class NotLiveProducts {
 		}
 		$this->hidden = array( $key => $hidden );
 		return $hidden;
+	}
+
+	/**
+	 * The products that may be left out, whole or in part: those whose
+	 * stored configuration, or one of whose variations' own, names a
+	 * template that is not live.
+	 *
+	 * @return list<int>
+	 */
+	public static function candidate_ids(): array {
+		$key = self::CACHE_KEY_PREFIX . wp_cache_get_last_changed( 'posts' );
+		// Only what is stored is cached: whether a product is personalised is filtered, per request.
+		$candidates = wp_cache_get( $key, self::CACHE_GROUP );
+		if ( ! is_array( $candidates ) ) {
+			$candidates = self::candidates();
+			wp_cache_set( $key, $candidates, self::CACHE_GROUP );
+		}
+		return array_values( array_map( 'intval', $candidates ) );
 	}
 
 	/**

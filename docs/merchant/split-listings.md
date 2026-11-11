@@ -37,6 +37,38 @@ be, the first in the product's order of attributes that is set to On wins;
 with none On, the first on Auto whose attribute is ticked. Only an attribute
 used for variations counts.
 
+## In the shop
+
+The shop page, its category, tag and attribute pages and the shop's product
+search show a card for each value of the attribute that a variation sells,
+in the order the attribute lists its values. A value with no variation, or
+only disabled ones, has no card. Classic themes and block themes (the
+Product Collection block on the shop's templates) both show them.
+
+- **Opening a card** opens the product with the card's value chosen, in the
+  product's form and in the designer. When every variation with that value
+  has the same value of another attribute too, such as a picture sold in one
+  size only, the card chooses that one as well.
+- **Counting and pages**: each card counts as a product, so "Showing 1–12 of
+  N" and the pages count cards.
+- **Categories and filters**: each card is in the product's categories and
+  tags. A filter by the attribute the product is listed by keeps only the
+  chosen values' cards; any other filter keeps or drops all of them, as it
+  would the product.
+- **Templates that are not live**: a value whose every variation is on a
+  paused or unpublished template has no card, as a product would have none;
+  a card chooses only among the variations on a live template.
+- **Elsewhere** the product is shown once: related products, up-sells,
+  cross-sells and a Product Collection block with its own products chosen.
+
+Each card shows the product's title, image and price.
+
+Products already set up this way when the plugin is updated get their
+cards within a few minutes of the update, from a background job.
+
+A trashed product or variation counts as gone, and a restored one counts
+again: a value whose only variations are in the trash has no card.
+
 ## Global attributes only
 
 Only global attributes, the ones added under **Products > Attributes**, have
