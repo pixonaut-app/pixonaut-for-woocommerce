@@ -9,12 +9,16 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
 use DOMDocument;
 use DOMXPath;
+use Pixonaut\WooCommerce\Admin\LowResolutionWarnings;
 use Pixonaut\WooCommerce\Admin\PanelFields;
 use Pixonaut\WooCommerce\Admin\VariationPanel;
 use Pixonaut\WooCommerce\Admin\VariationSizeField;
+use Pixonaut\WooCommerce\Api\Answers\LowResolutionImage;
 use Pixonaut\WooCommerce\Catalogue\InvalidDetail;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
+use Pixonaut\WooCommerce\Catalogue\LowResolutionSize;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
+use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Catalogue\VariationSizes;
@@ -125,6 +129,28 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$last    = end( $this->recorder->requests );
 		$checked = false === $last ? array() : json_decode( (string) $last['body'], true );
 		$this->assertSame( array( 'sizes' ), array_keys( $checked ), 'the ratio alone is asked: the area is the row’s' );
+	}
+
+	public function test_a_variations_own_size_printing_an_image_too_soft_is_warned_of_until_accepted(): void {
+		list( , $small ) = $this->linked( 'within' );
+		$soft            = array(
+			'layerId'        => 'photo',
+			'assetId'        => 'ast_photo',
+			'effectiveDpi'   => 150,
+			'recommendedDpi' => 300,
+		);
+		$this->recorder->json( 200, array( 'verdicts' => array( self::LEGAL + array( 'lowResolution' => array( $soft ) ) ) ) );
+
+		$this->save_variation( $small, 0, self::custom( '210', '270', 'A4-ish' ) );
+
+		$this->assertTrue( $this->reload_any( $small->get_id() )->is_purchasable() );
+		$this->assertStringContainsString( 'The image in “photo” prints at 150 dpi at A4-ish (210 × 270 mm)', $this->warnings( $small, 0 ) );
+
+		$key = LowResolutionSize::key( self::SIDE_KEY, new PrintSize( 210, 270, 'A4-ish' ), LowResolutionImage::from_answer( $soft ) );
+		$this->save_variation( $small, 0, self::custom( '210', '270', 'A4-ish' ), array( $key => LowResolutionWarnings::ACCEPT ) );
+
+		$this->assertSame( array( $key ), LowResolutionWarnings::accepted_on( $this->reload_any( $small->get_id() ) ) );
+		$this->assertSame( '', $this->warnings( $small, 0 ), 'the same size is not judged again, and its warning stays accepted' );
 	}
 
 	public function test_a_refused_size_stays_in_the_field_with_why_and_the_variation_is_not_sold(): void {
@@ -383,8 +409,9 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 	 * @param WC_Product           $variation The variation.
 	 * @param int                  $loop      Its place in the variations list.
 	 * @param array<string, mixed> $size      The size's fields.
+	 * @param array<string, string> $choices  What was chosen on its warnings about soft images, by key.
 	 */
-	private function save_variation( WC_Product $variation, int $loop, array $size ): void {
+	private function save_variation( WC_Product $variation, int $loop, array $size, array $choices = array() ): void {
 		wp_set_current_user( $this->user( 'administrator' ) );
 		$_POST = array(
 			PanelFields::VARIATION_FIELD => array(
@@ -393,6 +420,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 						PanelFields::NONCE             => wp_create_nonce( VariationPanel::NONCE_ACTION ),
 						PanelFields::PRINT_SIZE_LISTED => '1',
 						PanelFields::PRINT_SIZE        => array( self::SIDE_KEY => $size ),
+						PanelFields::LOW_RESOLUTION    => $choices,
 					)
 				),
 			),
@@ -434,6 +462,18 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 			'label'  => $value( 'label' ),
 			'error'  => trim( (string) $xpath->evaluate( 'string(//*[contains(@class, "pixonaut-variation-size-error")])' ) ),
 		);
+	}
+
+	/**
+	 * The warnings about soft images the variation's print size field shows; empty for none.
+	 *
+	 * @param WC_Product $variation The variation.
+	 * @param int        $loop      Its place in the variations list.
+	 */
+	private function warnings( WC_Product $variation, int $loop ): string {
+		$field = new VariationSizeField( new VariationSizes( $this->catalogue ), $this->plugin->templates(), $this->panel->low_resolution() );
+		$html  = $field->html( $this->reload_any( $variation->get_id() ), PanelFields::variation( $loop ), false );
+		return 1 === preg_match( '/<div class="inline notice notice-warning pixonaut-low-resolution">.*<\/div>/s', $html, $match ) ? $match[0] : '';
 	}
 
 	private function reload_any( int $product_id ): WC_Product {
