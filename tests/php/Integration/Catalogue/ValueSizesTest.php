@@ -188,6 +188,13 @@ final class ValueSizesTest extends ProductPanelTestCase {
 		$this->assertTrue( $this->reload_any( $small->get_id() )->is_purchasable() );
 		$this->assertFalse( $this->reload_any( $large->get_id() )->is_purchasable() );
 		$this->assertSame( InvalidReason::WRONG_RATIO, ProductConfig::config_for( $this->reload_any( $large->get_id() ) )->invalid_reason );
+
+		// The value's size is set on the product, so both the notice and the variation's field send the merchant there.
+		$product_tab = InvalidReason::place( false );
+		$this->assertStringContainsString( $product_tab, InvalidReason::stored( ProductConfig::config_for( $this->reload_any( $large->get_id() ) ) ) );
+		$field = ( new VariationSizeField( new VariationSizes( $this->catalogue ), $this->plugin->templates() ) )->html( $this->reload_any( $large->get_id() ), PanelFields::variation( 1 ), false );
+		$this->assertStringContainsString( esc_html( InvalidReason::message( InvalidReason::WRONG_RATIO ) ), $field );
+		$this->assertStringNotContainsString( esc_html( InvalidReason::place( true ) ), $field );
 	}
 
 	public function test_a_value_size_changed_without_a_new_check_is_not_sold(): void {
