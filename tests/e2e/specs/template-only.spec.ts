@@ -336,7 +336,7 @@ test('a template-only product is sold in the sizes entered on the product screen
 
 	// No size: saved, but not sold, and the screen says why.
 	await expect(page.locator('.pixonaut-notice')).toContainText(
-		'Add a print size in millimetres.',
+		'The side has no print size, and without a blank there is no print position to take one from. Add a size in millimetres in the product’s Pixonaut tab, or choose a blank.',
 	);
 
 	// The menu shows one empty size to fill in.
