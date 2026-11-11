@@ -637,7 +637,7 @@ final class ProductLinker {
 		foreach ( $sizes as $i => $size ) {
 			$verdict = $verdicts[ $i ];
 			if ( array() !== $verdict->low_resolution ) {
-				$soft[] = new LowResolutionSize( $size, $verdict->low_resolution, ! $verdict->legal );
+				$soft[] = new LowResolutionSize( $size, $verdict->low_resolution, ! $verdict->legal && InvalidReason::LOW_RESOLUTION === $verdict->reason );
 			}
 			if ( $verdict->legal ) {
 				$legal_at[ $i ] = count( $legal );

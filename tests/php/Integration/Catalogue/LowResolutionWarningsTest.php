@@ -121,6 +121,29 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 		$this->assertStringNotContainsString( 'name="' . self::CHOICES, $html, 'nothing to accept in the store' );
 	}
 
+	public function test_a_size_refused_for_another_reason_warns_of_its_soft_images_as_any_other(): void {
+		$product = $this->product();
+		$this->link(
+			$product->get_id(),
+			array( self::SOFT ),
+			array(),
+			array(
+				'legal'  => false,
+				'reason' => InvalidReason::WRONG_RATIO,
+			)
+		);
+
+		$this->assertFalse( ProductConfig::stored_on( $this->reload( $product->get_id() ) )->sides[0]->low_resolution[0]->refused );
+
+		$html = $this->html( $product->get_id() );
+		$this->assertStringContainsString( 'so it may look soft', $html );
+		$this->assertStringNotContainsString( 'so Pixonaut does not sell this size', $html );
+		$this->assertStringContainsString( 'name="' . self::CHOICES . '[' . self::key() . ']"', $html, 'the warning can be accepted' );
+
+		$this->plugin->settings()->set( Settings::LOW_RESOLUTION_WARNINGS, false );
+		$this->assertStringNotContainsString( 'pixonaut-low-resolution', $this->html( $product->get_id() ), 'not shown with warnings off' );
+	}
+
 	/**
 	 * Saves the product linked at the placement's size, Pixonaut answering
 	 * the soft images given.
