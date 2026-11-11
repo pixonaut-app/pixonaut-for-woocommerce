@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-11T00:38:14+00:00\n"
+"POT-Creation-Date: 2026-11-11T01:34:22+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -48,7 +48,7 @@ msgstr ""
 #. translators: The plugin's item in the admin menu, shown to the merchant; the product name, keep it as it is.
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
-#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:187
+#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:189
 #: src/Settings/SettingsPage.php:237 templates/admin/product-variation.php:40
 msgid "Pixonaut"
 msgstr "Pixonaut"
@@ -2494,14 +2494,57 @@ msgstr ""
 msgid "No such product."
 msgstr "Produkten finns inte."
 
-#: src/Admin/CatalogueSearch.php:239 src/Admin/CatalogueSearch.php:317
-msgid "Pixonaut could not be searched. Try again in a moment."
-msgstr "Det gick inte att söka i Pixonaut. Försök igen om en stund."
-
 #. translators: Message in the blank search on the product edit page, shown to the merchant.
+#: src/Admin/CatalogueProducts.php:148 src/Admin/CatalogueProducts.php:222
 #: src/Admin/CatalogueSearch.php:316
 msgid "Connect the store to Pixonaut to search its catalogue."
 msgstr "Anslut butiken till Pixonaut för att söka i dess katalog."
+
+#: src/Admin/CatalogueProducts.php:149 src/Admin/CatalogueSearch.php:239
+#: src/Admin/CatalogueSearch.php:317
+msgid "Pixonaut could not be searched. Try again in a moment."
+msgstr "Det gick inte att söka i Pixonaut. Försök igen om en stund."
+
+#. translators: %s: the name of a printshop's product, such as "Classic poster". Shown under the Printed on field of the product edit page.
+#: src/Admin/CatalogueProducts.php:201
+#, php-format
+msgid ""
+"Pixonaut already has a blank called %s. Choose it under Your blanks in "
+"Pixonaut, or rename it in Pixonaut and pick this product again."
+msgstr ""
+"Pixonaut har redan en grundprodukt som heter %s. Välj den under Dina "
+"grundprodukter i Pixonaut, eller byt namn på den i Pixonaut och välj den här "
+"produkten igen."
+
+#: src/Admin/CatalogueProducts.php:206
+msgid "Pixonaut cannot print on this product: it has no print position."
+msgstr ""
+"Pixonaut kan inte trycka på den här produkten: den har ingen tryckposition."
+
+#. translators: Shown under Printed on in the product edit page when a printshop's product could not be turned into a blank.
+#: src/Admin/CatalogueProducts.php:223 templates/admin/product-panel.php:32
+msgid "Pixonaut could not import this product. Try again in a moment."
+msgstr ""
+"Pixonaut kunde inte importera den här produkten. Försök igen om en stund."
+
+#. translators: Under a printshop's product in the catalogue picker of the product edit page: the printshop did not say how many variants it is sold in.
+#: src/Admin/CatalogueProducts.php:255
+msgid "Variants not stated"
+msgstr "Antal varianter okänt"
+
+#. translators: %d: how many variants, such as sizes, a printshop's product is sold in. Under the product in the catalogue picker of the product edit page.
+#: src/Admin/CatalogueProducts.php:257
+#, php-format
+msgid "%d variant"
+msgid_plural "%d variants"
+msgstr[0] "%d variant"
+msgstr[1] "%d varianter"
+
+#. translators: %s: how many variants the product is sold in, such as "30 variants". Under a printshop's product in the catalogue picker of the product edit page: Pixonaut already has it as a blank.
+#: src/Admin/CatalogueProducts.php:260
+#, php-format
+msgid "%s · Imported"
+msgstr "%s · Importerad"
 
 #: src/Admin/ConnectionScreen.php:497
 msgid "You are not allowed to change the Pixonaut connection."
@@ -2785,7 +2828,7 @@ msgid ""
 "The layout of %s could not be changed in Pixonaut. Try again in a moment."
 msgstr "Layouten för %s kunde inte ändras i Pixonaut. Försök igen om en stund."
 
-#: src/Admin/LinkedBlank.php:278
+#: src/Admin/LinkedBlank.php:337
 msgid ""
 "None set: Pixonaut cannot route this blank’s orders until a printshop is "
 "chosen."
@@ -2795,27 +2838,27 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:284 src/Admin/ProductPanel.php:734
+#: src/Admin/LinkedBlank.php:343 src/Admin/ProductPanel.php:771
 msgid "Workspace default"
 msgstr "Arbetsytans standard"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:286 src/Admin/ProductPanel.php:737
+#: src/Admin/LinkedBlank.php:345 src/Admin/ProductPanel.php:774
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Arbetsytans standard (%s)"
 
-#: src/Admin/LinkedBlank.php:289 src/Admin/ProductPanel.php:749
+#: src/Admin/LinkedBlank.php:348 src/Admin/ProductPanel.php:786
 msgid "A printshop no longer connected to the workspace"
 msgstr "Ett tryckeri som inte längre är anslutet till arbetsytan"
 
 #. translators: %s: the printshop the blank's category names.
-#: src/Admin/LinkedBlank.php:293
+#: src/Admin/LinkedBlank.php:352
 #, php-format
 msgid "%s (from the blank’s category)"
 msgstr "%s (från grundproduktens kategori)"
 
-#: src/Admin/LinkedBlank.php:326
+#: src/Admin/LinkedBlank.php:454
 msgid "Pixonaut could not be asked which printshop this is."
 msgstr "Det gick inte att fråga Pixonaut vilket tryckeri detta är."
 
@@ -2951,57 +2994,57 @@ msgstr "Dokumentation"
 msgid "Support"
 msgstr "Support"
 
-#: src/Admin/ProductPanel.php:383
+#: src/Admin/ProductPanel.php:406
 msgid ""
 "This variation cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Den här varianten kan inte köpas förrän dess Pixonaut-konfiguration har "
 "åtgärdats:"
 
-#: src/Admin/ProductPanel.php:384
+#: src/Admin/ProductPanel.php:407
 msgid ""
 "This product cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Den här produkten kan inte köpas förrän dess Pixonaut-konfiguration har "
 "åtgärdats:"
 
-#: src/Admin/ProductPanel.php:389
+#: src/Admin/ProductPanel.php:412
 msgid "Customers design this variation with a Pixonaut template."
 msgstr "Kunder designar den här varianten med en Pixonaut-mall."
 
-#: src/Admin/ProductPanel.php:390
+#: src/Admin/ProductPanel.php:413
 msgid "Customers design this product with a Pixonaut template."
 msgstr "Kunder designar den här produkten med en Pixonaut-mall."
 
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:425 src/Admin/ProductPanel.php:650
+#: src/Admin/ProductPanel.php:454 src/Admin/ProductPanel.php:687
 msgid "As the product says"
 msgstr "Som produkten anger"
 
 #. translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page.
-#: src/Admin/ProductPanel.php:427
+#: src/Admin/ProductPanel.php:456
 msgid "As the template says"
 msgstr "Som mallen anger"
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:667
+#: src/Admin/ProductPanel.php:704
 #, php-format
 msgid "Store setting: %s"
 msgstr "Butiksinställning: %s"
 
 #. translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page.
-#: src/Admin/ProductPanel.php:741
+#: src/Admin/ProductPanel.php:778
 #, php-format
 msgid "Workspace default (%s): prints only on a blank"
 msgstr "Arbetsytans standard (%s): trycker bara på en grundprodukt"
 
-#: src/Admin/ProductPanel.php:746
+#: src/Admin/ProductPanel.php:783
 msgid "The printshop chosen before"
 msgstr "Tryckeriet som valdes tidigare"
 
 #. translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page.
-#: src/Admin/ProductPanel.php:748
+#: src/Admin/ProductPanel.php:785
 #, php-format
 msgid "%s (prints only on a blank)"
 msgstr "%s (trycker bara på en grundprodukt)"
@@ -3182,7 +3225,7 @@ msgstr ""
 "Försök igen senare."
 
 #. translators: Option in the blank variant picker on the product edit page, shown to the merchant: find the variant from the product's own attributes.
-#: src/Admin/VariantField.php:109
+#: src/Admin/VariantField.php:109 src/Admin/VariantPairing.php:204
 msgid "Find automatically"
 msgstr "Hitta automatiskt"
 
@@ -3211,7 +3254,7 @@ msgid "%1$s variant: %2$s (found automatically)"
 msgstr "%1$s-variant: %2$s (hittades automatiskt)"
 
 #. translators: %s: the variant's options, e.g. "Color: Red, Size: M".
-#: src/Admin/VariantField.php:213
+#: src/Admin/VariantField.php:213 src/Admin/VariantPairing.php:91
 #, php-format
 msgid "%s (retired)"
 msgstr "%s (utgången)"
@@ -3221,7 +3264,9 @@ msgid "No blank variant found: pick one."
 msgstr "Ingen grundproduktvariant hittades: välj en."
 
 #. translators: %s: a print partner, such as Gelato, whose product the blank is. Shown under the blank variant picker on the product edit page.
+#. translators: %s: a printshop, such as Gelato, or "Blank". Under a variation's variant in the pairing table of the product edit page.
 #: src/Admin/VariantField.php:231
+#: templates/admin/product-variant-pairing.php:65
 #, php-format
 msgid "No %s variant found: pick one."
 msgstr "Ingen %s-variant hittades: välj en."
@@ -3273,6 +3318,23 @@ msgid ""
 msgstr ""
 "Kunder kan inte köpa alla varianter av %1$s: %2$s. Välj varianten i dess "
 "Pixonaut-fält."
+
+#: src/Admin/VariantPairing.php:124
+msgid "Blank"
+msgstr "Grundprodukt"
+
+#. translators: %s: the variant found from the variation's attributes, such as "28x40\" / 70x100cm". Option in the variant pairing table of the product edit page.
+#: src/Admin/VariantPairing.php:203
+#, php-format
+msgid "%s (found automatically)"
+msgstr "%s (hittades automatiskt)"
+
+#. translators: 1: a print area's width in mm; 2: its height in mm.
+#. translators: 1: width, 2: height, both in millimetres.
+#: src/Admin/VariantPairing.php:210 src/Catalogue/PrintSize.php:88
+#, php-format
+msgid "%1$s × %2$s mm"
+msgstr "%1$s × %2$s mm"
 
 #. translators: 1: the product attribute whose value gives the print size, e.g. "Size"; 2: the print size, e.g. "30×40 cm". Option in a variation's print size dropdown: print the side at the size the product gives the variation's value of that attribute. Admin product page.
 #: src/Admin/VariationSizeField.php:164
@@ -4140,12 +4202,6 @@ msgstr ""
 #, php-format
 msgid "%1$s (%2$s)"
 msgstr "%1$s (%2$s)"
-
-#. translators: 1: width, 2: height, both in millimetres.
-#: src/Catalogue/PrintSize.php:88
-#, php-format
-msgid "%1$s × %2$s mm"
-msgstr "%1$s × %2$s mm"
 
 #. translators: %s: link to the Pixonaut settings.
 #: src/Connection/Connection.php:444
@@ -5810,7 +5866,7 @@ msgstr ""
 
 #. translators: Accessible name of the tabs that switch between a product's sides, such as front and back, on the product page, read by screen readers.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's sides, such as front and back, each with its template.
-#: src/Labels.php:478 templates/admin/product-fields.php:153
+#: src/Labels.php:478 templates/admin/product-fields.php:172
 msgid "Sides"
 msgstr "Sidor"
 
@@ -6355,7 +6411,7 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
 #. translators: Label of the dropdown choosing how the product page designer lays out its form. Admin product page.
-#: src/Settings/Settings.php:138 templates/admin/product-fields.php:215
+#: src/Settings/Settings.php:138 templates/admin/product-fields.php:234
 msgid "Form layout"
 msgstr "Formulärlayout"
 
@@ -6403,7 +6459,7 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the designer's form numbers its groups.
 #. translators: Label of the dropdown choosing whether the designer's form numbers its groups. Admin product page.
-#: src/Settings/Settings.php:176 templates/admin/product-fields.php:220
+#: src/Settings/Settings.php:176 templates/admin/product-fields.php:239
 msgid "Group numbers"
 msgstr "Gruppnummer"
 
@@ -6860,7 +6916,7 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how customers approve their design before it is printed.
 #. translators: Label of the dropdown choosing how customers approve their design (proof) before printing. Admin product page.
-#: src/Settings/SettingsPage.php:584 templates/admin/product-fields.php:225
+#: src/Settings/SettingsPage.php:584 templates/admin/product-fields.php:244
 msgid "Approval"
 msgstr "Godkännande"
 
@@ -8255,59 +8311,107 @@ msgid "The printshop's order reference, if it gave one"
 msgstr "Tryckeriets beställningsreferens, om det angav någon"
 
 #. translators: Label of the printshop that makes the product's orders. Admin product page.
-#: templates/admin/product-blank.php:21 templates/admin/product-fields.php:123
+#: templates/admin/product-blank.php:25 templates/admin/product-fields.php:142
 msgid "Printshop"
 msgstr "Tryckeri"
 
 #. translators: Link to the Pixonaut studio where the merchant changes the blank's printshop. Admin product page.
-#: templates/admin/product-blank.php:25
+#: templates/admin/product-blank.php:29
 msgid "Change in Pixonaut"
 msgstr "Ändra i Pixonaut"
 
+#. translators: 1: a blank's name, such as "Classic poster"; 2: the printshop it is imported from, such as Gelato. Shown in the Pixonaut tab of the product edit page while Pixonaut imports the product.
+#: templates/admin/product-blank.php:38
+#, php-format
+msgid "Importing %1$s from %2$s into Pixonaut…"
+msgstr "Importerar %1$s från %2$s till Pixonaut…"
+
+#: templates/admin/product-blank.php:40
+msgid ""
+"This takes a minute or two. You can update the product meanwhile: its "
+"variants are paired once the import is done."
+msgstr ""
+"Det tar en minut eller två. Du kan uppdatera produkten under tiden: dess "
+"varianter kopplas till grundproduktvarianter när importen är klar."
+
+#. translators: 1: a blank's name, such as "Classic poster"; 2: the printshop it was imported from, such as Gelato. Shown in the Pixonaut tab of the product edit page when Pixonaut's import of the product failed.
+#: templates/admin/product-blank.php:45
+#, php-format
+msgid ""
+"Pixonaut could not import %1$s from %2$s. Remove the blank in Pixonaut, then "
+"pick the product again."
+msgstr ""
+"Pixonaut kunde inte importera %1$s från %2$s. Ta bort grundprodukten i "
+"Pixonaut och välj sedan produkten igen."
+
 #. translators: Label of the variant of the blank the product is printed on. Admin product page.
 #. translators: Label of the dropdown choosing which variant of the Pixonaut blank this product is printed on. Admin product page.
-#: templates/admin/product-blank.php:31 templates/admin/product-variant.php:26
+#: templates/admin/product-blank.php:50 templates/admin/product-variant.php:26
 msgid "Variant"
 msgstr "Grundproduktvariant"
 
 #. translators: Label of the variant of the blank the product is printed on. Admin product page.
-#: templates/admin/product-blank.php:32
+#: templates/admin/product-blank.php:51
 msgid "Each variation has its own, under Variations."
 msgstr "Varje variant har sin egen, under Varianter."
 
-#: templates/admin/product-fields.php:92
+#: templates/admin/product-fields.php:93
 msgctxt "checkbox on the product: customers personalise it"
 msgid "Personalise"
 msgstr "Personaliserbar"
 
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: what the product is printed on, and where.
-#: templates/admin/product-fields.php:105
+#: templates/admin/product-fields.php:106
 msgid "Printing"
 msgstr "Tryck"
 
+#. translators: Label of the field choosing where the Printed on picker searches: a printshop's catalogue, or the blanks in Pixonaut. Admin product page.
+#: templates/admin/product-fields.php:109
+msgid "Choose from"
+msgstr "Välj från"
+
+#. translators: %s: a printshop, such as Gelato. Choice of where the Printed on picker of the product edit page searches: the products the printshop sells.
+#: templates/admin/product-fields.php:114
+#, php-format
+msgid "%s’s catalogue"
+msgstr "%s-katalogen"
+
+#. translators: Choice of where the Printed on picker of the product edit page searches: the blanks the workspace has in Pixonaut.
+#: templates/admin/product-fields.php:116
+msgid "Your blanks in Pixonaut"
+msgstr "Dina grundprodukter i Pixonaut"
+
+#: templates/admin/product-fields.php:119
+msgid ""
+"Pick the product as the printshop sells it: Pixonaut imports it as a blank, "
+"or uses the one already imported."
+msgstr ""
+"Välj produkten så som tryckeriet säljer den: Pixonaut importerar den som en "
+"grundprodukt, eller använder den som redan har importerats."
+
 #. translators: Label of the blank picker: what the product is printed on, a blank such as a T-shirt, or nothing. Admin product page.
-#: templates/admin/product-fields.php:107
+#: templates/admin/product-fields.php:123
 msgid "Printed on"
 msgstr "Trycks på"
 
 #. translators: Placeholder of the blank picker: the product has no blank, only the design is printed. Admin product page.
-#: templates/admin/product-fields.php:109
+#: templates/admin/product-fields.php:125
 msgid "No blank: the design alone"
 msgstr "Ingen grundprodukt: bara designen"
 
-#: templates/admin/product-fields.php:116
+#: templates/admin/product-fields.php:132
 msgid ""
 "Without a blank, the design is printed by itself, such as a poster or a card."
 msgstr ""
 "Utan grundprodukt trycks bara designen, till exempel en affisch eller ett "
 "kort."
 
-#: templates/admin/product-fields.php:119
+#: templates/admin/product-fields.php:138
 msgid "Reading the blank from Pixonaut…"
 msgstr "Hämtar grundprodukten från Pixonaut…"
 
 #. translators: Shown in the Pixonaut tab of the product edit page when a blank just picked could not be read; updating the product saves the blank and reads it again.
-#: templates/admin/product-fields.php:120
+#: templates/admin/product-fields.php:139
 msgid ""
 "Pixonaut could not be reached to read this blank. Update the product to try "
 "again."
@@ -8315,37 +8419,37 @@ msgstr ""
 "Pixonaut kunde inte nås för att läsa grundprodukten. Uppdatera produkten för "
 "att försöka igen."
 
-#: templates/admin/product-fields.php:135
+#: templates/admin/product-fields.php:154
 msgid "Only printshops that print without a blank are listed."
 msgstr "Bara tryckerier som trycker utan grundprodukt visas."
 
-#: templates/admin/product-fields.php:138
+#: templates/admin/product-fields.php:157
 msgid "No printshop in your workspace prints without a blank."
 msgstr "Inget tryckeri i din arbetsyta trycker utan grundprodukt."
 
 #. translators: Link to the printshops of the Pixonaut studio, where the merchant adds one. Admin product page.
-#: templates/admin/product-fields.php:140
+#: templates/admin/product-fields.php:159
 msgid "Add one in Pixonaut"
 msgstr "Lägg till ett i Pixonaut"
 
 #. translators: Heading of the group of fields in the Pixonaut tab of the product edit page holding a product's only side: its template and the print sizes customers choose.
-#: templates/admin/product-fields.php:152
+#: templates/admin/product-fields.php:171
 msgid "Template and print sizes"
 msgstr "Mall och tryckstorlekar"
 
 #. translators: Button that adds a product side. Admin product page.
-#: templates/admin/product-fields.php:164
+#: templates/admin/product-fields.php:183
 msgid "Add side"
 msgstr "Lägg till sida"
 
 #. translators: %d: most sides a product can have.
-#: templates/admin/product-fields.php:170
+#: templates/admin/product-fields.php:189
 #, php-format
 msgid "Another print position, such as the back. Up to %d sides."
 msgstr "En till tryckposition, till exempel baksidan. Upp till %d sidor."
 
 #. translators: %d: most sides Pixonaut's designer is built for.
-#: templates/admin/product-fields.php:181
+#: templates/admin/product-fields.php:200
 #, php-format
 msgid ""
 "Pixonaut recommends at most %d sides. Each side is one more step in the "
@@ -8355,41 +8459,41 @@ msgstr ""
 "designverktyget och gör det långsammare på kundens enhet."
 
 #. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the Pixonaut settings page's choices, changed for this product alone.
-#: templates/admin/product-fields.php:198
+#: templates/admin/product-fields.php:217
 msgid "Store settings for this product"
 msgstr "Butiksinställningar för den här produkten"
 
 #. translators: Heading of a closed section in the Pixonaut tab of the product edit page: the Pixonaut settings page's choices, changed for this product alone.
-#: templates/admin/product-fields.php:199
-#: templates/admin/product-fields.php:203
+#: templates/admin/product-fields.php:218
+#: templates/admin/product-fields.php:222
 msgid "Follows the store’s settings"
 msgstr "Följer butikens inställningar"
 
 #. translators: %d: how many of the store's settings this product changes. Admin product page.
-#: templates/admin/product-fields.php:199
-#: templates/admin/product-fields.php:205
+#: templates/admin/product-fields.php:218
+#: templates/admin/product-fields.php:224
 #, php-format
 msgid "%d changed for this product"
 msgid_plural "%d changed for this product"
 msgstr[0] "%d ändrad för den här produkten"
 msgstr[1] "%d ändrade för den här produkten"
 
-#: templates/admin/product-fields.php:210
+#: templates/admin/product-fields.php:229
 msgid "Each follows the Pixonaut settings page until you change it here."
 msgstr "Var och en följer Pixonaut-inställningarna tills du ändrar den här."
 
 #. translators: Label of the dropdown choosing how customers open the designer on the product page. Admin product page.
-#: templates/admin/product-fields.php:213
+#: templates/admin/product-fields.php:232
 msgid "Layout"
 msgstr "Layout"
 
 #. translators: Label of the dropdown choosing where the product's options, such as Size or Colour, stand in the designer's form. Admin product page.
-#: templates/admin/product-fields.php:218
+#: templates/admin/product-fields.php:237
 msgid "Options in the form"
 msgstr "Alternativ i formuläret"
 
 #. translators: Label of the dropdown choosing whether the designer's canvas keeps the template's proportions or takes the chosen print size's, asked as a question. Admin product page.
-#: templates/admin/product-fields.php:223 templates/admin/product-side.php:344
+#: templates/admin/product-fields.php:242 templates/admin/product-side.php:344
 msgid "When a print size has other proportions"
 msgstr "När en tryckstorlek har andra proportioner"
 
@@ -8974,6 +9078,85 @@ msgstr ""
 #: templates/admin/product-side.php:348
 msgid "As the product’s store settings say"
 msgstr "Som produktens butiksinställningar anger"
+
+#. translators: Label of the table pairing each variation with a variant of the blank. Admin product page.
+#: templates/admin/product-variant-pairing.php:26
+msgid "Variants"
+msgstr "Grundproduktvarianter"
+
+#. translators: 1: how many variations; 2: a printshop, such as Gelato, or "Blank". Above the variant pairing table of the product edit page.
+#: templates/admin/product-variant-pairing.php:34
+#, php-format
+msgid "%1$d variation is paired with a %2$s variant."
+msgid_plural "All %1$d variations are paired with a %2$s variant."
+msgstr[0] "%1$d variant är kopplad till en %2$s-variant."
+msgstr[1] "Alla %1$d varianter är kopplade till en %2$s-variant."
+
+#. translators: 1: how many variations have a variant; 2: how many variations there are; 3: a printshop, such as Gelato, or "Blank". Above the variant pairing table of the product edit page.
+#: templates/admin/product-variant-pairing.php:36
+#, php-format
+msgid ""
+"%1$d of %2$d variation is paired with a %3$s variant. Pick one for the rest: "
+"they cannot be bought until then."
+msgid_plural ""
+"%1$d of %2$d variations are paired with a %3$s variant. Pick one for the "
+"rest: they cannot be bought until then."
+msgstr[0] ""
+"%1$d av %2$d variant är kopplad till en %3$s-variant. Välj en för de övriga: "
+"de kan inte köpas förrän dess."
+msgstr[1] ""
+"%1$d av %2$d varianter är kopplade till en %3$s-variant. Välj en för de "
+"övriga: de kan inte köpas förrän dess."
+
+#: templates/admin/product-variant-pairing.php:44
+msgid "Variation"
+msgstr "Variant"
+
+#. translators: %s: a printshop, such as Gelato, or "Blank". Column of the variant pairing table of the product edit page.
+#: templates/admin/product-variant-pairing.php:46
+#, php-format
+msgid "%s variant"
+msgstr "%s-variant"
+
+#: templates/admin/product-variant-pairing.php:47
+msgid "Print area"
+msgstr "Tryckyta"
+
+#. translators: 1: a printshop, such as Gelato, or "Blank"; 2: a variation's attributes, such as "Size: 70×100 cm".
+#: templates/admin/product-variant-pairing.php:57
+#, php-format
+msgid "%1$s variant for %2$s"
+msgstr "%1$s-variant för %2$s"
+
+#. translators: 1: a printshop, such as Gelato, or "Blank"; 2: a variation's attributes, such as "Size: 70×100 cm".
+#: templates/admin/product-variant-pairing.php:58
+msgid "Pick a variant"
+msgstr "Välj grundproduktvariant"
+
+#: templates/admin/product-variant-pairing.php:67
+msgid "Picked by you."
+msgstr "Vald av dig."
+
+#. translators: In the Print area column of the variant pairing table: a variation without a variant has no print area yet.
+#: templates/admin/product-variant-pairing.php:73
+msgid "None until paired"
+msgstr "Ingen förrän den kopplats"
+
+#. translators: %d: how many more variations are paired than the table shows. Under the variant pairing table of the product edit page.
+#: templates/admin/product-variant-pairing.php:85
+#, php-format
+msgid "And %d more, under Variations."
+msgid_plural "And %d more, under Variations."
+msgstr[0] "Och %d till, under Varianter."
+msgstr[1] "Och %d till, under Varianter."
+
+#: templates/admin/product-variant-pairing.php:87
+msgid ""
+"Each variation prints at its variant’s print area. A variation’s own Variant "
+"field, under Variations, is the same choice."
+msgstr ""
+"Varje variant trycks på sin grundproduktvariants tryckyta. Variantens eget "
+"fält Grundproduktvariant, under Varianter, är samma val."
 
 #. translators: Checkbox beside the blank variant dropdown on the product edit page: also list the variants the blank no longer sells.
 #: templates/admin/product-variant.php:36
