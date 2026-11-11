@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Catalogue\LowResolutionSize;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Settings\Settings;
+use Pixonaut\WooCommerce\Settings\SettingsPage;
 
 /**
  * A print size that makes one of the template's images print below its
@@ -102,6 +103,31 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 
 		$this->assertFalse( $this->plugin->settings()->get( Settings::LOW_RESOLUTION_WARNINGS ) );
 		$this->assertStringNotContainsString( 'pixonaut-low-resolution', $this->html( $product->get_id() ) );
+	}
+
+	public function test_only_a_store_manager_can_stop_warnings(): void {
+		$product = $this->product();
+		$this->link( $product->get_id(), array( self::SOFT ) );
+		$no_settings = static function ( array $allcaps ): array {
+			$allcaps[ SettingsPage::CAPABILITY ] = false;
+			return $allcaps;
+		};
+		add_filter( 'user_has_cap', $no_settings );
+
+		$this->link( $product->get_id(), array( self::SOFT ), array( self::key() => LowResolutionWarnings::QUIET_IMAGE ) );
+		$this->link( $product->get_id(), array( self::SOFT ), array( self::key() => LowResolutionWarnings::QUIET_ALL ) );
+
+		$this->assertSame( array(), $this->plugin->settings()->quiet_images() );
+		$this->assertTrue( $this->plugin->settings()->get( Settings::LOW_RESOLUTION_WARNINGS ) );
+		$html = $this->html( $product->get_id() );
+		$this->assertStringContainsString( 'value="' . LowResolutionWarnings::ACCEPT . '"', $html, 'a product editor can still accept' );
+		$this->assertStringNotContainsString( 'value="' . LowResolutionWarnings::QUIET_IMAGE . '"', $html );
+		$this->assertStringNotContainsString( 'value="' . LowResolutionWarnings::QUIET_ALL . '"', $html );
+
+		$this->link( $product->get_id(), array( self::SOFT ), array( self::key() => LowResolutionWarnings::ACCEPT ) );
+
+		$this->assertSame( array( self::key() ), LowResolutionWarnings::accepted_on( $this->reload( $product->get_id() ) ) );
+		remove_filter( 'user_has_cap', $no_settings );
 	}
 
 	public function test_a_size_refused_for_a_soft_image_says_why_and_offers_only_the_studio(): void {

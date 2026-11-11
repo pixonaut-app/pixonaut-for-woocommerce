@@ -16,6 +16,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
+use Pixonaut\WooCommerce\Settings\SettingsPage;
 use Pixonaut\WooCommerce\Templates;
 use WC_Product;
 
@@ -23,9 +24,10 @@ use WC_Product;
  * In a product's or variation's Pixonaut fields, a row for each image of a
  * side's template that prints below its recommended resolution at one of
  * the side's sizes, as Pixonaut last judged them: which image, at what
- * resolution, at which size. The store manager can accept it at that size,
- * stop warnings about the image or about every image, or open the picture
- * in the Pixonaut studio to upscale it; each is saved with the product.
+ * resolution, at which size. Whoever edits the product can accept it at
+ * that size or open the picture in the Pixonaut studio to upscale it; a
+ * store manager can also stop warnings about the image or about every
+ * image, which are store settings. Each is saved with the product.
  * Pixonaut drops an image from its answer once the template uses a picture
  * sharp enough, or the picture is accepted in the studio, so the row goes
  * with the next check. A size Pixonaut refused for its images always shows
@@ -91,12 +93,13 @@ final class LowResolutionWarnings {
 	 * @param string|null         $label   The side's name, put before each row; null on a product of one side.
 	 * @param LowResolutionSize[] $sizes   The side's sizes Pixonaut judged images too soft at.
 	 * @phpstan-param list<LowResolutionSize> $sizes
-	 * @return list<array{key: string, name: string, text: string, refused: bool, studio: string}>
+	 * @return list<array{key: string, name: string, text: string, refused: bool, quiet: bool, studio: string}>
 	 */
 	public function rows( WC_Product $product, string $name, string $side, ?string $label, array $sizes ): array {
 		$warn     = true === $this->settings->get( Settings::LOW_RESOLUTION_WARNINGS );
 		$quiet    = $this->settings->quiet_images();
 		$accepted = self::accepted_on( $product );
+		$can_mute = self::may_quiet();
 		$rows     = array();
 		foreach ( $sizes as $size ) {
 			foreach ( self::softest( $size->images ) as $image ) {
@@ -115,6 +118,7 @@ final class LowResolutionWarnings {
 						$text
 					),
 					'refused' => $size->refused,
+					'quiet'   => $can_mute,
 					'studio'  => StudioPage::asset( $image->asset_id ),
 				);
 			}
@@ -125,7 +129,8 @@ final class LowResolutionWarnings {
 	/**
 	 * Saves what the store manager chose on a product's or variation's rows.
 	 * Accepts are kept only for images still warned of now, so one whose
-	 * side, size or picture changed warns again.
+	 * side, size or picture changed warns again. Stopping warnings changes
+	 * the store's settings, so only a store manager can.
 	 *
 	 * @param WC_Product $product The product or variation, as stored now.
 	 * @param mixed      $posted  The rows' choices, by key, unslashed.
@@ -134,6 +139,7 @@ final class LowResolutionWarnings {
 		$current  = self::current_keys( $product );
 		$accepted = array_values( array_intersect( self::accepted_on( $product ), $current ) );
 		$quiet    = $this->settings->quiet_images();
+		$can_mute = self::may_quiet();
 		foreach ( is_array( $posted ) ? $posted : array() as $key => $choice ) {
 			$key = sanitize_text_field( (string) $key );
 			if ( ! in_array( $key, $current, true ) || ! is_string( $choice ) ) {
@@ -144,10 +150,14 @@ final class LowResolutionWarnings {
 					$accepted[] = $key;
 					break;
 				case self::QUIET_IMAGE:
-					$quiet[] = self::asset_of( $key );
+					if ( $can_mute ) {
+						$quiet[] = self::asset_of( $key );
+					}
 					break;
 				case self::QUIET_ALL:
-					$this->settings->set( Settings::LOW_RESOLUTION_WARNINGS, false );
+					if ( $can_mute ) {
+						$this->settings->set( Settings::LOW_RESOLUTION_WARNINGS, false );
+					}
 					break;
 			}
 		}
@@ -287,6 +297,14 @@ final class LowResolutionWarnings {
 			$product->update_meta_data( self::META_KEY, $accepted );
 		}
 		$product->save_meta_data();
+	}
+
+	/**
+	 * Whether the current user may stop warnings, a store setting: whoever
+	 * may change the plugin's settings.
+	 */
+	private static function may_quiet(): bool {
+		return current_user_can( SettingsPage::CAPABILITY );
 	}
 
 	/**
