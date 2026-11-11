@@ -17,10 +17,7 @@
 								"type": "string"
 							}
 						},
-						"required": [
-							"id",
-							"name"
-						],
+						"required": ["id", "name"],
 						"type": "object"
 					},
 					"createdAt": {
@@ -43,33 +40,20 @@
 								"type": "number"
 							}
 						},
-						"required": [
-							"oldId",
-							"newId",
-							"renamedAt"
-						],
+						"required": ["oldId", "newId", "renamedAt"],
 						"type": "object"
 					},
 					"type": {
-						"enum": [
-							"template.renamed"
-						],
+						"enum": ["template.renamed"],
 						"type": "string"
 					},
 					"via": {
 						"description": "`automation` when one of your automations caused the event; absent otherwise.",
 						"type": "string",
-						"x-extensible-enum": [
-							"automation"
-						]
+						"x-extensible-enum": ["automation"]
 					}
 				},
-				"required": [
-					"id",
-					"type",
-					"payload",
-					"createdAt"
-				],
+				"required": ["id", "type", "payload", "createdAt"],
 				"type": "object"
 			}
 		},
@@ -184,26 +168,17 @@
 										"properties": {
 											"catalogueTotal": {
 												"description": "How many products the whole catalogue holds, whatever the category and the search; null when the partner did not say or the count could not be read.",
-												"type": [
-													"number",
-													"null"
-												]
+												"type": ["number", "null"]
 											},
 											"products": {
 												"items": {
 													"properties": {
 														"brand": {
-															"type": [
-																"string",
-																"null"
-															]
+															"type": ["string", "null"]
 														},
 														"categoryId": {
 															"description": "The partner category the product is filed under, which an import maps onto the workspace's blank categories; null when it names none.",
-															"type": [
-																"string",
-																"null"
-															]
+															"type": ["string", "null"]
 														},
 														"hasImportedBlank": {
 															"type": "boolean"
@@ -213,45 +188,26 @@
 															"properties": {
 																"colours": {
 																	"minimum": 0,
-																	"type": [
-																		"integer",
-																		"null"
-																	]
+																	"type": ["integer", "null"]
 																},
 																"sizes": {
 																	"minimum": 0,
-																	"type": [
-																		"integer",
-																		"null"
-																	]
+																	"type": ["integer", "null"]
 																},
 																"variants": {
 																	"minimum": 0,
-																	"type": [
-																		"integer",
-																		"null"
-																	]
+																	"type": ["integer", "null"]
 																}
 															},
-															"required": [
-																"colours",
-																"sizes",
-																"variants"
-															],
+															"required": ["colours", "sizes", "variants"],
 															"type": "object"
 														},
 														"imageUrl": {
-															"type": [
-																"string",
-																"null"
-															]
+															"type": ["string", "null"]
 														},
 														"importedBlankId": {
 															"description": "The blank it was imported as through this connection, the latest when there are several; null when it has not been.",
-															"type": [
-																"string",
-																"null"
-															]
+															"type": ["string", "null"]
 														},
 														"name": {
 															"type": "string"
@@ -280,17 +236,11 @@
 											},
 											"searchedProducts": {
 												"description": "How many products an incomplete search read, from the first; null when the search was complete or there was none.",
-												"type": [
-													"number",
-													"null"
-												]
+												"type": ["number", "null"]
 											},
 											"total": {
 												"description": "How many products answer the query (the category and the search), across every page; null when the partner did not say.",
-												"type": [
-													"number",
-													"null"
-												]
+												"type": ["number", "null"]
 											}
 										},
 										"required": [
@@ -326,14 +276,10 @@
 										"properties": {
 											"error": {
 												"type": "string",
-												"x-extensible-enum": [
-													"invalid_input"
-												]
+												"x-extensible-enum": ["invalid_input"]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -360,14 +306,10 @@
 										"properties": {
 											"error": {
 												"type": "string",
-												"x-extensible-enum": [
-													"unauthorized"
-												]
+												"x-extensible-enum": ["unauthorized"]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -431,9 +373,7 @@
 												]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -460,14 +400,10 @@
 										"properties": {
 											"error": {
 												"type": "string",
-												"x-extensible-enum": [
-													"connection_not_found"
-												]
+												"x-extensible-enum": ["connection_not_found"]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -506,9 +442,7 @@
 												]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -541,15 +475,10 @@
 										"properties": {
 											"error": {
 												"type": "string",
-												"x-extensible-enum": [
-													"lookup_failed",
-													"db_error"
-												]
+												"x-extensible-enum": ["lookup_failed", "db_error"]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								},
@@ -583,18 +512,14 @@
 										"properties": {
 											"error": {
 												"type": "string",
-												"x-extensible-enum": [
-													"catalogue_unavailable"
-												]
+												"x-extensible-enum": ["catalogue_unavailable"]
 											},
 											"reason": {
 												"description": "Always sent with `catalogue_unavailable`.",
 												"type": "string"
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -639,9 +564,7 @@
 												"type": "string"
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -660,9 +583,7 @@
 						}
 					],
 					"summary": "List the printshop's catalogue",
-					"tags": [
-						"Catalogue"
-					]
+					"tags": ["Catalogue"]
 				}
 			}
 		},
@@ -745,10 +666,7 @@
 											"type": "array"
 										}
 									},
-									"type": [
-										"object",
-										"null"
-									]
+									"type": ["object", "null"]
 								}
 							}
 						},
@@ -926,26 +844,14 @@
 															},
 															"name": {
 																"description": "The product's name as the printshop last reported it: at import, then at each check for printshop changes. Null when the record of the import is gone.",
-																"type": [
-																	"string",
-																	"null"
-																]
+																"type": ["string", "null"]
 															}
 														},
-														"required": [
-															"id",
-															"name"
-														],
-														"type": [
-															"object",
-															"null"
-														]
+														"required": ["id", "name"],
+														"type": ["object", "null"]
 													},
 													"categoryId": {
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"copiedFrom": {
 														"description": "The blank this one was copied to its printshop from, or null.",
@@ -959,14 +865,8 @@
 																"type": "string"
 															}
 														},
-														"required": [
-															"blankId",
-															"name"
-														],
-														"type": [
-															"object",
-															"null"
-														]
+														"required": ["blankId", "name"],
+														"type": ["object", "null"]
 													},
 													"createdAt": {
 														"type": "number"
@@ -986,33 +886,18 @@
 																"properties": {
 																	"name": {
 																		"description": "The member's name as it is now; null once unknown.",
-																		"type": [
-																			"string",
-																			"null"
-																		]
+																		"type": ["string", "null"]
 																	},
 																	"userId": {
 																		"type": "string"
 																	}
 																},
-																"required": [
-																	"userId",
-																	"name"
-																],
-																"type": [
-																	"object",
-																	"null"
-																]
+																"required": ["userId", "name"],
+																"type": ["object", "null"]
 															}
 														},
-														"required": [
-															"at",
-															"by"
-														],
-														"type": [
-															"object",
-															"null"
-														]
+														"required": ["at", "by"],
+														"type": ["object", "null"]
 													},
 													"generation": {
 														"description": "The draw a blank generated with AI waits on while it is `generating`, or while it is `importing` the catalogue product it is made as; null for any other blank.",
@@ -1034,37 +919,21 @@
 															},
 															"photoAssetId": {
 																"description": "The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn.",
-																"type": [
-																	"string",
-																	"null"
-																]
+																"type": ["string", "null"]
 															}
 														},
-														"required": [
-															"drawId",
-															"decision",
-															"photoAssetId"
-														],
-														"type": [
-															"object",
-															"null"
-														]
+														"required": ["drawId", "decision", "photoAssetId"],
+														"type": ["object", "null"]
 													},
 													"id": {
 														"type": "string"
 													},
 													"importFailure": {
 														"description": "The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"machineProfileId": {
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"name": {
 														"type": "string"
@@ -1092,9 +961,7 @@
 																						"type": "array"
 																					},
 																					"kind": {
-																						"enum": [
-																							"fill"
-																						],
+																						"enum": ["fill"],
 																						"type": "string"
 																					},
 																					"tone": {
@@ -1106,10 +973,7 @@
 																						]
 																					}
 																				},
-																				"required": [
-																					"kind",
-																					"colours"
-																				],
+																				"required": ["kind", "colours"],
 																				"type": "object"
 																			},
 																			{
@@ -1122,9 +986,7 @@
 																						"type": "string"
 																					},
 																					"kind": {
-																						"enum": [
-																							"image"
-																						],
+																						"enum": ["image"],
 																						"type": "string"
 																					},
 																					"tone": {
@@ -1136,10 +998,7 @@
 																						]
 																					}
 																				},
-																				"required": [
-																					"kind",
-																					"assetId"
-																				],
+																				"required": ["kind", "assetId"],
 																				"type": "object"
 																			},
 																			{
@@ -1263,10 +1122,7 @@
 																"tones": {
 																	"additionalProperties": {
 																		"type": "string",
-																		"x-extensible-enum": [
-																			"light",
-																			"dark"
-																		]
+																		"x-extensible-enum": ["light", "dark"]
 																	},
 																	"description": "Whether a product in each value is light or dark, by value: the tone set on its appearance, else its colour fill's, else light. Every value of `values` is named. On a variant of a dark value a template's on-dark values are used.",
 																	"type": "object"
@@ -1292,10 +1148,7 @@
 													},
 													"optionsConfirmedAt": {
 														"description": "When the blank's options were confirmed: the merchant said it has one version, or added its first option. Null until then. A blank imported from a printshop's catalogue arrives confirmed.",
-														"type": [
-															"number",
-															"null"
-														]
+														"type": ["number", "null"]
 													},
 													"order": {
 														"description": "The blank's stored views and the scenes it shows as one ordered list, each saying its source: `stock` (a scene), `catalogue` (the printshop's photos) or `own` (the merchant's). The first with a photo is the blank's picture. Answered for one blank, never in a list.",
@@ -1307,20 +1160,14 @@
 																		"source": {
 																			"description": "`catalogue` for the printshop's photos, `own` for the merchant's.",
 																			"type": "string",
-																			"x-extensible-enum": [
-																				"catalogue",
-																				"own"
-																			]
+																			"x-extensible-enum": ["catalogue", "own"]
 																		},
 																		"viewId": {
 																			"description": "The stored view's id.",
 																			"type": "string"
 																		}
 																	},
-																	"required": [
-																		"source",
-																		"viewId"
-																	],
+																	"required": ["source", "viewId"],
 																	"type": "object"
 																},
 																{
@@ -1342,15 +1189,10 @@
 																		"source": {
 																			"description": "A scene from the library.",
 																			"type": "string",
-																			"x-extensible-enum": [
-																				"stock"
-																			]
+																			"x-extensible-enum": ["stock"]
 																		}
 																	},
-																	"required": [
-																		"source",
-																		"sceneId"
-																	],
+																	"required": ["source", "sceneId"],
 																	"type": "object"
 																}
 															]
@@ -1363,10 +1205,7 @@
 													},
 													"paintBy": {
 														"description": "The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"partnerLocked": {
 														"type": "boolean"
@@ -1383,10 +1222,7 @@
 																"type": "integer"
 															}
 														},
-														"required": [
-															"filled",
-															"cells"
-														],
+														"required": ["filled", "cells"],
 														"type": "object"
 													},
 													"photosVaryBy": {
@@ -1457,9 +1293,7 @@
 																						"type": "string"
 																					}
 																				},
-																				"required": [
-																					"dFrac"
-																				],
+																				"required": ["dFrac"],
 																				"type": "object"
 																			},
 																			"usualHeightMm": {
@@ -1499,10 +1333,7 @@
 																"coverage": {
 																	"description": "How a print covers the placement: `within`, a print of any size up to the maximum placed inside it, or `full`, a print that is the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's usual size is its area, and a request naming a smaller size is refused `print_size_not_area`.",
 																	"type": "string",
-																	"x-extensible-enum": [
-																		"within",
-																		"full"
-																	]
+																	"x-extensible-enum": ["within", "full"]
 																},
 																"defaultHeightMm": {
 																	"description": "The height a print gets when none is chosen, in millimetres, at most maxHeightMm.",
@@ -1523,10 +1354,7 @@
 																"fillColour": {
 																	"description": "The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none.",
 																	"pattern": "^#[0-9a-fA-F]{6}$",
-																	"type": [
-																		"string",
-																		"null"
-																	]
+																	"type": ["string", "null"]
 																},
 																"flatLayout": {
 																	"additionalProperties": false,
@@ -1555,27 +1383,19 @@
 																					"up": {
 																						"anyOf": [
 																							{
-																								"enum": [
-																									0
-																								],
+																								"enum": [0],
 																								"type": "number"
 																							},
 																							{
-																								"enum": [
-																									1
-																								],
+																								"enum": [1],
 																								"type": "number"
 																							},
 																							{
-																								"enum": [
-																									2
-																								],
+																								"enum": [2],
 																								"type": "number"
 																							},
 																							{
-																								"enum": [
-																									3
-																								],
+																								"enum": [3],
 																								"type": "number"
 																							}
 																						],
@@ -1613,13 +1433,8 @@
 																			"type": "array"
 																		}
 																	},
-																	"required": [
-																		"parts"
-																	],
-																	"type": [
-																		"object",
-																		"null"
-																	]
+																	"required": ["parts"],
+																	"type": ["object", "null"]
 																},
 																"foldMm": {
 																	"description": "How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold.",
@@ -1686,14 +1501,8 @@
 																			"type": "string"
 																		}
 																	},
-																	"required": [
-																		"placementId",
-																		"mirror"
-																	],
-																	"type": [
-																		"object",
-																		"null"
-																	]
+																	"required": ["placementId", "mirror"],
+																	"type": ["object", "null"]
 																},
 																"maxHeightMm": {
 																	"description": "The tallest print the placement takes, in millimetres.",
@@ -1752,21 +1561,13 @@
 																			"type": "string"
 																		}
 																	},
-																	"required": [
-																		"dFrac"
-																	],
-																	"type": [
-																		"object",
-																		"null"
-																	]
+																	"required": ["dFrac"],
+																	"type": ["object", "null"]
 																},
 																"shopName": {
 																	"description": "Printed as: the name the blank's printshop knows the placement by, on orders and job sheets. Null or omitted prints the placement's name.",
 																	"minLength": 1,
-																	"type": [
-																		"string",
-																		"null"
-																	]
+																	"type": ["string", "null"]
 																},
 																"views": {
 																	"description": "The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area.",
@@ -1850,9 +1651,7 @@
 																				"properties": {
 																					"cut": {
 																						"description": "The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.",
-																						"enum": [
-																							true
-																						],
+																						"enum": [true],
 																						"type": "boolean"
 																					},
 																					"points": {
@@ -1875,9 +1674,7 @@
 																						"type": "array"
 																					}
 																				},
-																				"required": [
-																					"points"
-																				],
+																				"required": ["points"],
 																				"type": "object"
 																			},
 																			"partnerStyleKey": {
@@ -1903,14 +1700,8 @@
 																						"type": "integer"
 																					}
 																				},
-																				"required": [
-																					"widthPx",
-																					"heightPx"
-																				],
-																				"type": [
-																					"object",
-																					"null"
-																				]
+																				"required": ["widthPx", "heightPx"],
+																				"type": ["object", "null"]
 																			},
 																			"photos": {
 																				"description": "The view's product photos, each the same size as the view.",
@@ -1926,10 +1717,7 @@
 																							"description": "How far the photo's folds move the design, more than 0 and at most 1. null moves nothing. Omitted, its category's, else nothing.",
 																							"exclusiveMinimum": 0,
 																							"maximum": 1,
-																							"type": [
-																								"number",
-																								"null"
-																							]
+																							"type": ["number", "null"]
 																						},
 																						"id": {
 																							"description": "The photo's id, unique within the blank: the `mockupId` a render and a mockup link name.",
@@ -1955,10 +1743,7 @@
 																							"description": "How strongly the photo's fine detail, such as a weave or a grain, shows through the print, 0 (none) to 1 (all). Omitted, its category's, else, as for null, the default strength.",
 																							"maximum": 1,
 																							"minimum": 0,
-																							"type": [
-																								"number",
-																								"null"
-																							]
+																							"type": ["number", "null"]
 																						},
 																						"variantRefs": {
 																							"description": "The variants the photo shows, from its `row`. A write may name the row by these instead.",
@@ -2006,10 +1791,7 @@
 																							]
 																						}
 																					},
-																					"required": [
-																						"id",
-																						"assetId"
-																					],
+																					"required": ["id", "assetId"],
 																					"type": "object"
 																				},
 																				"type": "array"
@@ -2049,16 +1831,8 @@
 																						"type": "integer"
 																					}
 																				},
-																				"required": [
-																					"x",
-																					"y",
-																					"w",
-																					"h"
-																				],
-																				"type": [
-																					"object",
-																					"null"
-																				]
+																				"required": ["x", "y", "w", "h"],
+																				"type": ["object", "null"]
 																			},
 																			"position": {
 																				"description": "The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only.",
@@ -2271,10 +2045,7 @@
 																								"type": "integer"
 																							}
 																						},
-																						"required": [
-																							"widthPx",
-																							"heightPx"
-																						],
+																						"required": ["widthPx", "heightPx"],
 																						"type": "object"
 																					},
 																					"screenAssetId": {
@@ -2343,18 +2114,11 @@
 																			"type": "number"
 																		}
 																	},
-																	"required": [
-																		"widthMm",
-																		"heightMm"
-																	],
+																	"required": ["widthMm", "heightMm"],
 																	"type": "object"
 																}
 															},
-															"required": [
-																"placementId",
-																"position",
-																"sizeMm"
-															],
+															"required": ["placementId", "position", "sizeMm"],
 															"type": "object"
 														},
 														"type": "array"
@@ -2364,10 +2128,7 @@
 															"type": "string"
 														},
 														"description": "The row a design that names none is made at, such as {\"Size\": \"M\"}; null for none, when such a design reads each placement's own print area. Required when the print areas start to change with an option on a blank that has designs or designer links, which keep their size at it.",
-														"type": [
-															"object",
-															"null"
-														]
+														"type": ["object", "null"]
 													},
 													"resolved": {
 														"description": "Each inheritable field resolved, with where it comes from: the printshop and machine, and every placement's and photo's printing fields and preview looks, in the order of `placements`.",
@@ -2385,16 +2146,10 @@
 																		]
 																	},
 																	"value": {
-																		"type": [
-																			"string",
-																			"null"
-																		]
+																		"type": ["string", "null"]
 																	}
 																},
-																"required": [
-																	"value",
-																	"source"
-																],
+																"required": ["value", "source"],
 																"type": "object"
 															},
 															"machineProfileId": {
@@ -2410,16 +2165,10 @@
 																		]
 																	},
 																	"value": {
-																		"type": [
-																			"string",
-																			"null"
-																		]
+																		"type": ["string", "null"]
 																	}
 																},
-																"required": [
-																	"value",
-																	"source"
-																],
+																"required": ["value", "source"],
 																"type": "object"
 															},
 															"placements": {
@@ -2440,16 +2189,10 @@
 																				"value": {
 																					"maximum": 50,
 																					"minimum": 0,
-																					"type": [
-																						"number",
-																						"null"
-																					]
+																					"type": ["number", "null"]
 																				}
 																			},
-																			"required": [
-																				"value",
-																				"source"
-																			],
+																			"required": ["value", "source"],
 																			"type": "object"
 																		},
 																		"dpi": {
@@ -2467,16 +2210,10 @@
 																				"value": {
 																					"exclusiveMinimum": 0,
 																					"maximum": 1200,
-																					"type": [
-																						"integer",
-																						"null"
-																					]
+																					"type": ["integer", "null"]
 																				}
 																			},
-																			"required": [
-																				"value",
-																				"source"
-																			],
+																			"required": ["value", "source"],
 																			"type": "object"
 																		},
 																		"id": {
@@ -2501,16 +2238,10 @@
 																							"value": {
 																								"exclusiveMinimum": 0,
 																								"maximum": 1,
-																								"type": [
-																									"number",
-																									"null"
-																								]
+																								"type": ["number", "null"]
 																							}
 																						},
-																						"required": [
-																							"value",
-																							"source"
-																						],
+																						"required": ["value", "source"],
 																						"type": "object"
 																					},
 																					"id": {
@@ -2531,16 +2262,10 @@
 																							"value": {
 																								"maximum": 1,
 																								"minimum": 0,
-																								"type": [
-																									"number",
-																									"null"
-																								]
+																								"type": ["number", "null"]
 																							}
 																						},
-																						"required": [
-																							"value",
-																							"source"
-																						],
+																						"required": ["value", "source"],
 																						"type": "object"
 																					},
 																					"textureStrength": {
@@ -2558,16 +2283,10 @@
 																							"value": {
 																								"maximum": 1,
 																								"minimum": 0,
-																								"type": [
-																									"number",
-																									"null"
-																								]
+																								"type": ["number", "null"]
 																							}
 																						},
-																						"required": [
-																							"value",
-																							"source"
-																						],
+																						"required": ["value", "source"],
 																						"type": "object"
 																					},
 																					"warp": {
@@ -2619,10 +2338,7 @@
 																								]
 																							}
 																						},
-																						"required": [
-																							"value",
-																							"source"
-																						],
+																						"required": ["value", "source"],
 																						"type": "object"
 																					}
 																				},
@@ -2650,10 +2366,7 @@
 																					]
 																				},
 																				"value": {
-																					"type": [
-																						"string",
-																						"null"
-																					],
+																					"type": ["string", "null"],
 																					"x-extensible-enum": [
 																						"digital",
 																						"large-format",
@@ -2671,10 +2384,7 @@
 																					]
 																				}
 																			},
-																			"required": [
-																				"value",
-																				"source"
-																			],
+																			"required": ["value", "source"],
 																			"type": "object"
 																		},
 																		"printedAs": {
@@ -2700,16 +2410,10 @@
 																				"value": {
 																					"maximum": 50,
 																					"minimum": 0,
-																					"type": [
-																						"number",
-																						"null"
-																					]
+																					"type": ["number", "null"]
 																				}
 																			},
-																			"required": [
-																				"value",
-																				"source"
-																			],
+																			"required": ["value", "source"],
 																			"type": "object"
 																		}
 																	},
@@ -2761,14 +2465,8 @@
 																		"type": "integer"
 																	}
 																},
-																"required": [
-																	"widthPx",
-																	"heightPx"
-																],
-																"type": [
-																	"object",
-																	"null"
-																]
+																"required": ["widthPx", "heightPx"],
+																"type": ["object", "null"]
 															},
 															"viewId": {
 																"type": "string"
@@ -2780,10 +2478,7 @@
 															"assetId",
 															"photoSizePx"
 														],
-														"type": [
-															"object",
-															"null"
-														]
+														"type": ["object", "null"]
 													},
 													"status": {
 														"description": "`importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `generating` for a blank generated with AI until its photo is approved: `generation` says whether it is drawing, waits for the decision, or drew nothing. `failed` when an import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise.",
@@ -2797,17 +2492,11 @@
 													},
 													"stockItemKey": {
 														"description": "The stock item the blank's scenes photograph; null for none.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"thumbnailUrl": {
 														"description": "A link to the blank's picture, opening with no key for an hour or two, so a list shows a picture of each blank: its first photo of a view of one placement, else `sharedViewPhoto`. Null for a blank with no photo. Answered in a list.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"updatedAt": {
 														"type": "number"
@@ -2846,10 +2535,7 @@
 																	"type": "object"
 																},
 																"partnerKey": {
-																	"type": [
-																		"string",
-																		"null"
-																	]
+																	"type": ["string", "null"]
 																},
 																"ref": {
 																	"minLength": 3,
@@ -2866,13 +2552,8 @@
 																			]
 																		}
 																	},
-																	"required": [
-																		"reason"
-																	],
-																	"type": [
-																		"object",
-																		"null"
-																	]
+																	"required": ["reason"],
+																	"type": ["object", "null"]
 																},
 																"updatedAt": {
 																	"type": "number"
@@ -2928,10 +2609,7 @@
 														"type": "integer"
 													},
 													"finishedAt": {
-														"type": [
-															"integer",
-															"null"
-														]
+														"type": ["integer", "null"]
 													},
 													"id": {
 														"type": "string"
@@ -2942,23 +2620,14 @@
 													},
 													"lastError": {
 														"description": "What it last failed with, as a code.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"lastRunAt": {
-														"type": [
-															"integer",
-															"null"
-														]
+														"type": ["integer", "null"]
 													},
 													"parkReason": {
 														"description": "Why a queued job waits: `continue`, it has more to do; `rate_limited`, the partner it asks refused it over its limit.",
-														"type": [
-															"string",
-															"null"
-														],
+														"type": ["string", "null"],
 														"x-extensible-enum": [
 															"continue",
 															"rate_limited",
@@ -2969,10 +2638,7 @@
 													},
 													"runAt": {
 														"description": "When a queued job runs next (epoch ms).",
-														"type": [
-															"integer",
-															"null"
-														]
+														"type": ["integer", "null"]
 													},
 													"state": {
 														"type": "string",
@@ -2986,10 +2652,7 @@
 													},
 													"subjectId": {
 														"description": "The id of what the job works on, such as the print it renders.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													}
 												},
 												"required": [
@@ -3005,16 +2668,10 @@
 													"createdAt",
 													"finishedAt"
 												],
-												"type": [
-													"object",
-													"null"
-												]
+												"type": ["object", "null"]
 											}
 										},
-										"required": [
-											"blank",
-											"job"
-										],
+										"required": ["blank", "job"],
 										"type": "object"
 									}
 								}
@@ -3113,26 +2770,14 @@
 															},
 															"name": {
 																"description": "The product's name as the printshop last reported it: at import, then at each check for printshop changes. Null when the record of the import is gone.",
-																"type": [
-																	"string",
-																	"null"
-																]
+																"type": ["string", "null"]
 															}
 														},
-														"required": [
-															"id",
-															"name"
-														],
-														"type": [
-															"object",
-															"null"
-														]
+														"required": ["id", "name"],
+														"type": ["object", "null"]
 													},
 													"categoryId": {
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"copiedFrom": {
 														"description": "The blank this one was copied to its printshop from, or null.",
@@ -3146,14 +2791,8 @@
 																"type": "string"
 															}
 														},
-														"required": [
-															"blankId",
-															"name"
-														],
-														"type": [
-															"object",
-															"null"
-														]
+														"required": ["blankId", "name"],
+														"type": ["object", "null"]
 													},
 													"createdAt": {
 														"type": "number"
@@ -3173,33 +2812,18 @@
 																"properties": {
 																	"name": {
 																		"description": "The member's name as it is now; null once unknown.",
-																		"type": [
-																			"string",
-																			"null"
-																		]
+																		"type": ["string", "null"]
 																	},
 																	"userId": {
 																		"type": "string"
 																	}
 																},
-																"required": [
-																	"userId",
-																	"name"
-																],
-																"type": [
-																	"object",
-																	"null"
-																]
+																"required": ["userId", "name"],
+																"type": ["object", "null"]
 															}
 														},
-														"required": [
-															"at",
-															"by"
-														],
-														"type": [
-															"object",
-															"null"
-														]
+														"required": ["at", "by"],
+														"type": ["object", "null"]
 													},
 													"generation": {
 														"description": "The draw a blank generated with AI waits on while it is `generating`, or while it is `importing` the catalogue product it is made as; null for any other blank.",
@@ -3221,37 +2845,21 @@
 															},
 															"photoAssetId": {
 																"description": "The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn.",
-																"type": [
-																	"string",
-																	"null"
-																]
+																"type": ["string", "null"]
 															}
 														},
-														"required": [
-															"drawId",
-															"decision",
-															"photoAssetId"
-														],
-														"type": [
-															"object",
-															"null"
-														]
+														"required": ["drawId", "decision", "photoAssetId"],
+														"type": ["object", "null"]
 													},
 													"id": {
 														"type": "string"
 													},
 													"importFailure": {
 														"description": "The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"machineProfileId": {
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"name": {
 														"type": "string"
@@ -3279,9 +2887,7 @@
 																						"type": "array"
 																					},
 																					"kind": {
-																						"enum": [
-																							"fill"
-																						],
+																						"enum": ["fill"],
 																						"type": "string"
 																					},
 																					"tone": {
@@ -3293,10 +2899,7 @@
 																						]
 																					}
 																				},
-																				"required": [
-																					"kind",
-																					"colours"
-																				],
+																				"required": ["kind", "colours"],
 																				"type": "object"
 																			},
 																			{
@@ -3309,9 +2912,7 @@
 																						"type": "string"
 																					},
 																					"kind": {
-																						"enum": [
-																							"image"
-																						],
+																						"enum": ["image"],
 																						"type": "string"
 																					},
 																					"tone": {
@@ -3323,10 +2924,7 @@
 																						]
 																					}
 																				},
-																				"required": [
-																					"kind",
-																					"assetId"
-																				],
+																				"required": ["kind", "assetId"],
 																				"type": "object"
 																			},
 																			{
@@ -3450,10 +3048,7 @@
 																"tones": {
 																	"additionalProperties": {
 																		"type": "string",
-																		"x-extensible-enum": [
-																			"light",
-																			"dark"
-																		]
+																		"x-extensible-enum": ["light", "dark"]
 																	},
 																	"description": "Whether a product in each value is light or dark, by value: the tone set on its appearance, else its colour fill's, else light. Every value of `values` is named. On a variant of a dark value a template's on-dark values are used.",
 																	"type": "object"
@@ -3479,10 +3074,7 @@
 													},
 													"optionsConfirmedAt": {
 														"description": "When the blank's options were confirmed: the merchant said it has one version, or added its first option. Null until then. A blank imported from a printshop's catalogue arrives confirmed.",
-														"type": [
-															"number",
-															"null"
-														]
+														"type": ["number", "null"]
 													},
 													"order": {
 														"description": "The blank's stored views and the scenes it shows as one ordered list, each saying its source: `stock` (a scene), `catalogue` (the printshop's photos) or `own` (the merchant's). The first with a photo is the blank's picture. Answered for one blank, never in a list.",
@@ -3494,20 +3086,14 @@
 																		"source": {
 																			"description": "`catalogue` for the printshop's photos, `own` for the merchant's.",
 																			"type": "string",
-																			"x-extensible-enum": [
-																				"catalogue",
-																				"own"
-																			]
+																			"x-extensible-enum": ["catalogue", "own"]
 																		},
 																		"viewId": {
 																			"description": "The stored view's id.",
 																			"type": "string"
 																		}
 																	},
-																	"required": [
-																		"source",
-																		"viewId"
-																	],
+																	"required": ["source", "viewId"],
 																	"type": "object"
 																},
 																{
@@ -3529,15 +3115,10 @@
 																		"source": {
 																			"description": "A scene from the library.",
 																			"type": "string",
-																			"x-extensible-enum": [
-																				"stock"
-																			]
+																			"x-extensible-enum": ["stock"]
 																		}
 																	},
-																	"required": [
-																		"source",
-																		"sceneId"
-																	],
+																	"required": ["source", "sceneId"],
 																	"type": "object"
 																}
 															]
@@ -3550,10 +3131,7 @@
 													},
 													"paintBy": {
 														"description": "The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"partnerLocked": {
 														"type": "boolean"
@@ -3570,10 +3148,7 @@
 																"type": "integer"
 															}
 														},
-														"required": [
-															"filled",
-															"cells"
-														],
+														"required": ["filled", "cells"],
 														"type": "object"
 													},
 													"photosVaryBy": {
@@ -3644,9 +3219,7 @@
 																						"type": "string"
 																					}
 																				},
-																				"required": [
-																					"dFrac"
-																				],
+																				"required": ["dFrac"],
 																				"type": "object"
 																			},
 																			"usualHeightMm": {
@@ -3686,10 +3259,7 @@
 																"coverage": {
 																	"description": "How a print covers the placement: `within`, a print of any size up to the maximum placed inside it, or `full`, a print that is the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's usual size is its area, and a request naming a smaller size is refused `print_size_not_area`.",
 																	"type": "string",
-																	"x-extensible-enum": [
-																		"within",
-																		"full"
-																	]
+																	"x-extensible-enum": ["within", "full"]
 																},
 																"defaultHeightMm": {
 																	"description": "The height a print gets when none is chosen, in millimetres, at most maxHeightMm.",
@@ -3710,10 +3280,7 @@
 																"fillColour": {
 																	"description": "The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none.",
 																	"pattern": "^#[0-9a-fA-F]{6}$",
-																	"type": [
-																		"string",
-																		"null"
-																	]
+																	"type": ["string", "null"]
 																},
 																"flatLayout": {
 																	"additionalProperties": false,
@@ -3742,27 +3309,19 @@
 																					"up": {
 																						"anyOf": [
 																							{
-																								"enum": [
-																									0
-																								],
+																								"enum": [0],
 																								"type": "number"
 																							},
 																							{
-																								"enum": [
-																									1
-																								],
+																								"enum": [1],
 																								"type": "number"
 																							},
 																							{
-																								"enum": [
-																									2
-																								],
+																								"enum": [2],
 																								"type": "number"
 																							},
 																							{
-																								"enum": [
-																									3
-																								],
+																								"enum": [3],
 																								"type": "number"
 																							}
 																						],
@@ -3800,13 +3359,8 @@
 																			"type": "array"
 																		}
 																	},
-																	"required": [
-																		"parts"
-																	],
-																	"type": [
-																		"object",
-																		"null"
-																	]
+																	"required": ["parts"],
+																	"type": ["object", "null"]
 																},
 																"foldMm": {
 																	"description": "How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold.",
@@ -3873,14 +3427,8 @@
 																			"type": "string"
 																		}
 																	},
-																	"required": [
-																		"placementId",
-																		"mirror"
-																	],
-																	"type": [
-																		"object",
-																		"null"
-																	]
+																	"required": ["placementId", "mirror"],
+																	"type": ["object", "null"]
 																},
 																"maxHeightMm": {
 																	"description": "The tallest print the placement takes, in millimetres.",
@@ -3939,21 +3487,13 @@
 																			"type": "string"
 																		}
 																	},
-																	"required": [
-																		"dFrac"
-																	],
-																	"type": [
-																		"object",
-																		"null"
-																	]
+																	"required": ["dFrac"],
+																	"type": ["object", "null"]
 																},
 																"shopName": {
 																	"description": "Printed as: the name the blank's printshop knows the placement by, on orders and job sheets. Null or omitted prints the placement's name.",
 																	"minLength": 1,
-																	"type": [
-																		"string",
-																		"null"
-																	]
+																	"type": ["string", "null"]
 																},
 																"views": {
 																	"description": "The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area.",
@@ -4037,9 +3577,7 @@
 																				"properties": {
 																					"cut": {
 																						"description": "The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.",
-																						"enum": [
-																							true
-																						],
+																						"enum": [true],
 																						"type": "boolean"
 																					},
 																					"points": {
@@ -4062,9 +3600,7 @@
 																						"type": "array"
 																					}
 																				},
-																				"required": [
-																					"points"
-																				],
+																				"required": ["points"],
 																				"type": "object"
 																			},
 																			"partnerStyleKey": {
@@ -4090,14 +3626,8 @@
 																						"type": "integer"
 																					}
 																				},
-																				"required": [
-																					"widthPx",
-																					"heightPx"
-																				],
-																				"type": [
-																					"object",
-																					"null"
-																				]
+																				"required": ["widthPx", "heightPx"],
+																				"type": ["object", "null"]
 																			},
 																			"photos": {
 																				"description": "The view's product photos, each the same size as the view.",
@@ -4113,10 +3643,7 @@
 																							"description": "How far the photo's folds move the design, more than 0 and at most 1. null moves nothing. Omitted, its category's, else nothing.",
 																							"exclusiveMinimum": 0,
 																							"maximum": 1,
-																							"type": [
-																								"number",
-																								"null"
-																							]
+																							"type": ["number", "null"]
 																						},
 																						"id": {
 																							"description": "The photo's id, unique within the blank: the `mockupId` a render and a mockup link name.",
@@ -4142,10 +3669,7 @@
 																							"description": "How strongly the photo's fine detail, such as a weave or a grain, shows through the print, 0 (none) to 1 (all). Omitted, its category's, else, as for null, the default strength.",
 																							"maximum": 1,
 																							"minimum": 0,
-																							"type": [
-																								"number",
-																								"null"
-																							]
+																							"type": ["number", "null"]
 																						},
 																						"variantRefs": {
 																							"description": "The variants the photo shows, from its `row`. A write may name the row by these instead.",
@@ -4193,10 +3717,7 @@
 																							]
 																						}
 																					},
-																					"required": [
-																						"id",
-																						"assetId"
-																					],
+																					"required": ["id", "assetId"],
 																					"type": "object"
 																				},
 																				"type": "array"
@@ -4236,16 +3757,8 @@
 																						"type": "integer"
 																					}
 																				},
-																				"required": [
-																					"x",
-																					"y",
-																					"w",
-																					"h"
-																				],
-																				"type": [
-																					"object",
-																					"null"
-																				]
+																				"required": ["x", "y", "w", "h"],
+																				"type": ["object", "null"]
 																			},
 																			"position": {
 																				"description": "The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only.",
@@ -4458,10 +3971,7 @@
 																								"type": "integer"
 																							}
 																						},
-																						"required": [
-																							"widthPx",
-																							"heightPx"
-																						],
+																						"required": ["widthPx", "heightPx"],
 																						"type": "object"
 																					},
 																					"screenAssetId": {
@@ -4530,18 +4040,11 @@
 																			"type": "number"
 																		}
 																	},
-																	"required": [
-																		"widthMm",
-																		"heightMm"
-																	],
+																	"required": ["widthMm", "heightMm"],
 																	"type": "object"
 																}
 															},
-															"required": [
-																"placementId",
-																"position",
-																"sizeMm"
-															],
+															"required": ["placementId", "position", "sizeMm"],
 															"type": "object"
 														},
 														"type": "array"
@@ -4551,10 +4054,7 @@
 															"type": "string"
 														},
 														"description": "The row a design that names none is made at, such as {\"Size\": \"M\"}; null for none, when such a design reads each placement's own print area. Required when the print areas start to change with an option on a blank that has designs or designer links, which keep their size at it.",
-														"type": [
-															"object",
-															"null"
-														]
+														"type": ["object", "null"]
 													},
 													"resolved": {
 														"description": "Each inheritable field resolved, with where it comes from: the printshop and machine, and every placement's and photo's printing fields and preview looks, in the order of `placements`.",
@@ -4572,16 +4072,10 @@
 																		]
 																	},
 																	"value": {
-																		"type": [
-																			"string",
-																			"null"
-																		]
+																		"type": ["string", "null"]
 																	}
 																},
-																"required": [
-																	"value",
-																	"source"
-																],
+																"required": ["value", "source"],
 																"type": "object"
 															},
 															"machineProfileId": {
@@ -4597,16 +4091,10 @@
 																		]
 																	},
 																	"value": {
-																		"type": [
-																			"string",
-																			"null"
-																		]
+																		"type": ["string", "null"]
 																	}
 																},
-																"required": [
-																	"value",
-																	"source"
-																],
+																"required": ["value", "source"],
 																"type": "object"
 															},
 															"placements": {
@@ -4627,16 +4115,10 @@
 																				"value": {
 																					"maximum": 50,
 																					"minimum": 0,
-																					"type": [
-																						"number",
-																						"null"
-																					]
+																					"type": ["number", "null"]
 																				}
 																			},
-																			"required": [
-																				"value",
-																				"source"
-																			],
+																			"required": ["value", "source"],
 																			"type": "object"
 																		},
 																		"dpi": {
@@ -4654,16 +4136,10 @@
 																				"value": {
 																					"exclusiveMinimum": 0,
 																					"maximum": 1200,
-																					"type": [
-																						"integer",
-																						"null"
-																					]
+																					"type": ["integer", "null"]
 																				}
 																			},
-																			"required": [
-																				"value",
-																				"source"
-																			],
+																			"required": ["value", "source"],
 																			"type": "object"
 																		},
 																		"id": {
@@ -4688,16 +4164,10 @@
 																							"value": {
 																								"exclusiveMinimum": 0,
 																								"maximum": 1,
-																								"type": [
-																									"number",
-																									"null"
-																								]
+																								"type": ["number", "null"]
 																							}
 																						},
-																						"required": [
-																							"value",
-																							"source"
-																						],
+																						"required": ["value", "source"],
 																						"type": "object"
 																					},
 																					"id": {
@@ -4718,16 +4188,10 @@
 																							"value": {
 																								"maximum": 1,
 																								"minimum": 0,
-																								"type": [
-																									"number",
-																									"null"
-																								]
+																								"type": ["number", "null"]
 																							}
 																						},
-																						"required": [
-																							"value",
-																							"source"
-																						],
+																						"required": ["value", "source"],
 																						"type": "object"
 																					},
 																					"textureStrength": {
@@ -4745,16 +4209,10 @@
 																							"value": {
 																								"maximum": 1,
 																								"minimum": 0,
-																								"type": [
-																									"number",
-																									"null"
-																								]
+																								"type": ["number", "null"]
 																							}
 																						},
-																						"required": [
-																							"value",
-																							"source"
-																						],
+																						"required": ["value", "source"],
 																						"type": "object"
 																					},
 																					"warp": {
@@ -4806,10 +4264,7 @@
 																								]
 																							}
 																						},
-																						"required": [
-																							"value",
-																							"source"
-																						],
+																						"required": ["value", "source"],
 																						"type": "object"
 																					}
 																				},
@@ -4837,10 +4292,7 @@
 																					]
 																				},
 																				"value": {
-																					"type": [
-																						"string",
-																						"null"
-																					],
+																					"type": ["string", "null"],
 																					"x-extensible-enum": [
 																						"digital",
 																						"large-format",
@@ -4858,10 +4310,7 @@
 																					]
 																				}
 																			},
-																			"required": [
-																				"value",
-																				"source"
-																			],
+																			"required": ["value", "source"],
 																			"type": "object"
 																		},
 																		"printedAs": {
@@ -4887,16 +4336,10 @@
 																				"value": {
 																					"maximum": 50,
 																					"minimum": 0,
-																					"type": [
-																						"number",
-																						"null"
-																					]
+																					"type": ["number", "null"]
 																				}
 																			},
-																			"required": [
-																				"value",
-																				"source"
-																			],
+																			"required": ["value", "source"],
 																			"type": "object"
 																		}
 																	},
@@ -4948,14 +4391,8 @@
 																		"type": "integer"
 																	}
 																},
-																"required": [
-																	"widthPx",
-																	"heightPx"
-																],
-																"type": [
-																	"object",
-																	"null"
-																]
+																"required": ["widthPx", "heightPx"],
+																"type": ["object", "null"]
 															},
 															"viewId": {
 																"type": "string"
@@ -4967,10 +4404,7 @@
 															"assetId",
 															"photoSizePx"
 														],
-														"type": [
-															"object",
-															"null"
-														]
+														"type": ["object", "null"]
 													},
 													"status": {
 														"description": "`importing` while the blank's import, from a printshop's catalogue or a CSV file, runs in the background: it has its name and nothing else yet. `generating` for a blank generated with AI until its photo is approved: `generation` says whether it is drawing, waits for the decision, or drew nothing. `failed` when an import failed for good (`importFailure` says why); remove it and import again. `ready` otherwise.",
@@ -4984,17 +4418,11 @@
 													},
 													"stockItemKey": {
 														"description": "The stock item the blank's scenes photograph; null for none.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"thumbnailUrl": {
 														"description": "A link to the blank's picture, opening with no key for an hour or two, so a list shows a picture of each blank: its first photo of a view of one placement, else `sharedViewPhoto`. Null for a blank with no photo. Answered in a list.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"updatedAt": {
 														"type": "number"
@@ -5033,10 +4461,7 @@
 																	"type": "object"
 																},
 																"partnerKey": {
-																	"type": [
-																		"string",
-																		"null"
-																	]
+																	"type": ["string", "null"]
 																},
 																"ref": {
 																	"minLength": 3,
@@ -5053,13 +4478,8 @@
 																			]
 																		}
 																	},
-																	"required": [
-																		"reason"
-																	],
-																	"type": [
-																		"object",
-																		"null"
-																	]
+																	"required": ["reason"],
+																	"type": ["object", "null"]
 																},
 																"updatedAt": {
 																	"type": "number"
@@ -5115,10 +4535,7 @@
 														"type": "integer"
 													},
 													"finishedAt": {
-														"type": [
-															"integer",
-															"null"
-														]
+														"type": ["integer", "null"]
 													},
 													"id": {
 														"type": "string"
@@ -5129,23 +4546,14 @@
 													},
 													"lastError": {
 														"description": "What it last failed with, as a code.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													},
 													"lastRunAt": {
-														"type": [
-															"integer",
-															"null"
-														]
+														"type": ["integer", "null"]
 													},
 													"parkReason": {
 														"description": "Why a queued job waits: `continue`, it has more to do; `rate_limited`, the partner it asks refused it over its limit.",
-														"type": [
-															"string",
-															"null"
-														],
+														"type": ["string", "null"],
 														"x-extensible-enum": [
 															"continue",
 															"rate_limited",
@@ -5156,10 +4564,7 @@
 													},
 													"runAt": {
 														"description": "When a queued job runs next (epoch ms).",
-														"type": [
-															"integer",
-															"null"
-														]
+														"type": ["integer", "null"]
 													},
 													"state": {
 														"type": "string",
@@ -5173,10 +4578,7 @@
 													},
 													"subjectId": {
 														"description": "The id of what the job works on, such as the print it renders.",
-														"type": [
-															"string",
-															"null"
-														]
+														"type": ["string", "null"]
 													}
 												},
 												"required": [
@@ -5195,10 +4597,7 @@
 												"type": "object"
 											}
 										},
-										"required": [
-											"blank",
-											"job"
-										],
+										"required": ["blank", "job"],
 										"type": "object"
 									}
 								}
@@ -5225,14 +4624,10 @@
 										"properties": {
 											"error": {
 												"type": "string",
-												"x-extensible-enum": [
-													"invalid_input"
-												]
+												"x-extensible-enum": ["invalid_input"]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -5259,14 +4654,10 @@
 										"properties": {
 											"error": {
 												"type": "string",
-												"x-extensible-enum": [
-													"unauthorized"
-												]
+												"x-extensible-enum": ["unauthorized"]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -5330,9 +4721,7 @@
 												]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -5359,14 +4748,10 @@
 										"properties": {
 											"error": {
 												"type": "string",
-												"x-extensible-enum": [
-													"connection_not_found"
-												]
+												"x-extensible-enum": ["connection_not_found"]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -5412,9 +4797,7 @@
 												]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -5505,9 +4888,7 @@
 												"type": "string"
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -5540,15 +4921,10 @@
 										"properties": {
 											"error": {
 												"type": "string",
-												"x-extensible-enum": [
-													"lookup_failed",
-													"db_error"
-												]
+												"x-extensible-enum": ["lookup_failed", "db_error"]
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								},
@@ -5582,18 +4958,14 @@
 										"properties": {
 											"error": {
 												"type": "string",
-												"x-extensible-enum": [
-													"import_failed"
-												]
+												"x-extensible-enum": ["import_failed"]
 											},
 											"reason": {
 												"description": "Always sent with `import_failed`.",
 												"type": "string"
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -5627,19 +4999,14 @@
 										"properties": {
 											"error": {
 												"type": "string",
-												"x-extensible-enum": [
-													"import_failed",
-													"lock_timeout"
-												]
+												"x-extensible-enum": ["import_failed", "lock_timeout"]
 											},
 											"reason": {
 												"description": "Always sent with `import_failed`.",
 												"type": "string"
 											}
 										},
-										"required": [
-											"error"
-										],
+										"required": ["error"],
 										"type": "object"
 									}
 								}
@@ -5658,9 +5025,7 @@
 						}
 					],
 					"summary": "Import a catalogue product as a blank",
-					"tags": [
-						"Catalogue"
-					]
+					"tags": ["Catalogue"]
 				}
 			}
 		},
@@ -5730,9 +5095,7 @@
 						}
 					},
 					"summary": "template.renamed",
-					"tags": [
-						"Webhooks"
-					]
+					"tags": ["Webhooks"]
 				}
 			}
 		},
@@ -5759,12 +5122,7 @@
 							"type": "number"
 						}
 					},
-					"required": [
-						"layerId",
-						"assetId",
-						"effectiveDpi",
-						"recommendedDpi"
-					],
+					"required": ["layerId", "assetId", "effectiveDpi", "recommendedDpi"],
 					"type": "object"
 				},
 				"type": "array"
@@ -5793,12 +5151,7 @@
 							"type": "number"
 						}
 					},
-					"required": [
-						"layerId",
-						"assetId",
-						"effectiveDpi",
-						"recommendedDpi"
-					],
+					"required": ["layerId", "assetId", "effectiveDpi", "recommendedDpi"],
 					"type": "object"
 				},
 				"type": "array"
@@ -5827,12 +5180,7 @@
 							"type": "number"
 						}
 					},
-					"required": [
-						"layerId",
-						"assetId",
-						"effectiveDpi",
-						"recommendedDpi"
-					],
+					"required": ["layerId", "assetId", "effectiveDpi", "recommendedDpi"],
 					"type": "object"
 				},
 				"type": "array"
@@ -5861,12 +5209,7 @@
 							"type": "number"
 						}
 					},
-					"required": [
-						"layerId",
-						"assetId",
-						"effectiveDpi",
-						"recommendedDpi"
-					],
+					"required": ["layerId", "assetId", "effectiveDpi", "recommendedDpi"],
 					"type": "object"
 				},
 				"type": "array"
