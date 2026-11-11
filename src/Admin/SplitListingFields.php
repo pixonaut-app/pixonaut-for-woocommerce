@@ -160,7 +160,7 @@ final class SplitListingFields {
 	/**
 	 * The row's values, each with its card's own title and image.
 	 *
-	 * @param WC_Product_Attribute                          $attribute A global attribute's row.
+	 * @param WC_Product_Attribute                         $attribute A global attribute's row.
 	 * @param array<int, array{title: string, image: int}> $looks     The product's cards' own titles and images.
 	 * @return list<array{term_id: int, name: string, title: string, image: int, image_url: string}>
 	 */

@@ -36,6 +36,10 @@ defined( 'ABSPATH' ) || exit;
 				<?php
 				$pixonaut_name = $field . '[' . $pixonaut_card['term_id'] . ']';
 				$pixonaut_id   = $id . '-' . $pixonaut_card['term_id'];
+				/* translators: %s: an attribute value, such as "With photo". Title of the media library window choosing the image of that value's card in the shop. */
+				$pixonaut_frame_title = sprintf( __( 'Image for “%s”', 'pixonaut-for-woocommerce' ), $pixonaut_card['name'] );
+				/* translators: Button of the media library window choosing the image of an attribute value's card in the shop. */
+				$pixonaut_frame_button = __( 'Use this image', 'pixonaut-for-woocommerce' );
 				?>
 				<div class="pixonaut-split-card">
 					<label class="pixonaut-split-card__label" for="<?php echo esc_attr( $pixonaut_id ); ?>-title">
@@ -48,10 +52,7 @@ defined( 'ABSPATH' ) || exit;
 					<div class="pixonaut-split-card__image">
 						<input type="hidden" class="pixonaut-split-card__image-id" name="<?php echo esc_attr( $pixonaut_name ); ?>[image]" value="<?php echo esc_attr( $pixonaut_card['image'] > 0 ? (string) $pixonaut_card['image'] : '' ); ?>" />
 						<img class="pixonaut-split-card__preview" src="<?php echo esc_url( $pixonaut_card['image_url'] ); ?>" alt=""<?php echo '' === $pixonaut_card['image_url'] ? ' hidden' : ''; ?> />
-						<button type="button" class="button pixonaut-split-card__choose"
-							data-frame-title="<?php echo esc_attr( sprintf( /* translators: %s: an attribute value, such as "With photo". Title of the media library window choosing the image of that value's card in the shop. */ __( 'Image for “%s”', 'pixonaut-for-woocommerce' ), $pixonaut_card['name'] ) ); ?>"
-							data-frame-button="<?php echo esc_attr__( 'Use this image', 'pixonaut-for-woocommerce' ); ?>"
-						>
+						<button type="button" class="button pixonaut-split-card__choose" data-frame-title="<?php echo esc_attr( $pixonaut_frame_title ); ?>" data-frame-button="<?php echo esc_attr( $pixonaut_frame_button ); ?>">
 							<?php
 							/* translators: %s: an attribute value, such as "With photo". Button opening the media library to choose the image of that value's card in the shop. */
 							echo esc_html( sprintf( __( 'Choose an image for “%s”', 'pixonaut-for-woocommerce' ), $pixonaut_card['name'] ) );
