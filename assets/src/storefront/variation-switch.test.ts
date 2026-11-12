@@ -616,6 +616,23 @@ describe('ProductDesigner on a variable product', () => {
 		expect(target.contains(row)).toBe(true);
 	});
 
+	it('gives the form’s parts back visible when a variation bought without a design is chosen before the side mounted again is shown', async () => {
+		const sdk = fakeSdk();
+		const hoodie = fakeDesigner();
+		hoodie.shown.mockReturnValue(new Promise<void>(() => undefined));
+		sdk.mount.mockResolvedValueOnce(sdk.designer).mockResolvedValue(hoodie);
+		const { form, container } = start({ sdk });
+		await settle();
+		const row = container.querySelector('.pixonaut-cart-row') as HTMLElement;
+		await choose(form, '13');
+
+		await choose(form, '15');
+
+		expect(hoodie.destroy).toHaveBeenCalledOnce();
+		expect(row.style.display).toBe('');
+		expect(form.querySelector('[inert]')).toBeNull();
+	});
+
 	it('approves again when a switch changed the template under the proof', async () => {
 		const { form, button, sdkDesigner } = start();
 		await settle();

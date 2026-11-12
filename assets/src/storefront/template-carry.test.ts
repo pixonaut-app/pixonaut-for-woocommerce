@@ -7,10 +7,12 @@ import { carryUnkeyedValues } from './template-carry';
 function designer(
 	fields: Array<{ layerId: string; prop: string }>,
 	values: Record<string, Record<string, unknown>> = {},
+	layers: object[] = [],
 ) {
 	const setValue = vi.fn();
 	const shown = {
 		getState: () => ({ templateId: 'mini-poster@1', values }),
+		getTemplate: () => ({ layers }),
 		getFormSchema: () => ({ steps: [{ fields }] }),
 		setValue,
 	} as unknown as PixonautDesigner;
@@ -48,5 +50,20 @@ describe('carryUnkeyedValues', () => {
 		});
 
 		expect(setValue.mock.calls).toEqual([['slogan', 'content', 'New']]);
+	});
+
+	it('leaves a field the new template keys to the SDK, which carried its key’s value', () => {
+		const { shown, setValue } = designer(
+			[{ layerId: 'slogan', prop: 'content' }],
+			{ $fields: { name: 'Ada' } },
+			[{ id: 'slogan', props: { content: { fieldKey: 'name' } } }],
+		);
+
+		carryUnkeyedValues(shown, {
+			slogan: { content: 'A caption' },
+			$fields: { name: 'Ada' },
+		});
+
+		expect(setValue).not.toHaveBeenCalled();
 	});
 });

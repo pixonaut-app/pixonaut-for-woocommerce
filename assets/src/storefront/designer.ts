@@ -683,8 +683,7 @@ export class ProductDesigner {
 		// One destroyed before it was shown lets its side's hold go.
 		for (const [side, mounted] of this.designers) {
 			if (mounted === designer) {
-				this.holds.get(side)?.release();
-				this.holds.delete(side);
+				this.releaseHold(side);
 			}
 		}
 		designer.destroy();
@@ -1171,9 +1170,8 @@ export class ProductDesigner {
 		this.holds.set(side, hold);
 		hold.place();
 		const release = () => {
-			hold.release();
 			if (this.holds.get(side) === hold) {
-				this.holds.delete(side);
+				this.releaseHold(side);
 			}
 		};
 		try {
@@ -1190,6 +1188,12 @@ export class ProductDesigner {
 			return;
 		}
 		void mounted.shown().then(release, release);
+	}
+
+	/** Lets go of what the side showed before it was mounted again. */
+	private releaseHold(side: string): void {
+		this.holds.get(side)?.release();
+		this.holds.delete(side);
 	}
 
 	/** The add-to-cart form's elements the side's designer may draw in its
@@ -1329,6 +1333,11 @@ export class ProductDesigner {
 			return;
 		}
 		const hidden = [...this.designers];
+		// A side mounted again and not shown yet gives its parts back
+		// visible: its designer goes before it is ever shown.
+		for (const [side] of hidden) {
+			this.releaseHold(side);
+		}
 		this.designers.clear();
 		this.approved.clear();
 		this.mounting = null;

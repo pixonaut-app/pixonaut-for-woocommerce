@@ -38,6 +38,7 @@ export type FakeDesigner = {
 	approve: ReturnType<typeof vi.fn>;
 	getState: ReturnType<typeof vi.fn>;
 	getFormSchema: ReturnType<typeof vi.fn>;
+	getTemplate: ReturnType<typeof vi.fn>;
 	getValue: ReturnType<typeof vi.fn>;
 	setLocked: ReturnType<typeof vi.fn>;
 	destroy: ReturnType<typeof vi.fn>;
@@ -103,6 +104,7 @@ export function fakeDesigner({
 		wasPreviewOpened: vi.fn(() => previewOpened),
 		getState: vi.fn().mockReturnValue({ templateId: 'mini-tee@2', values: {} }),
 		getFormSchema: vi.fn().mockReturnValue({ steps: [] }),
+		getTemplate: vi.fn().mockReturnValue({ layers: [] }),
 		getValue: vi.fn(),
 		setLocked: vi.fn(),
 		destroy: vi.fn(),

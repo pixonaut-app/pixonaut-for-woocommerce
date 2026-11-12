@@ -101,7 +101,8 @@ final class InlineProducts {
 		$switches = new VariationSwitches();
 		$sold     = $this->sold_by_blank( $variants );
 		$own      = $config->personalise ? $this->mounts( $product, $config, $sold[ (string) $config->blank_id ] ?? array() ) : null;
-		$entries  = array();
+		// Each variation that can switch the designer to it: `variation`, its `config`, `attributes` and `mounts`.
+		$entries = array();
 		foreach ( $variants as $variation_id => $variant ) {
 			$variation = wc_get_product( $variation_id );
 			if ( ! $variation instanceof WC_Product ) {
@@ -119,21 +120,27 @@ final class InlineProducts {
 				$switches->add_unavailable( $variation_id, $attributes );
 				continue;
 			}
-			$entries[ $variation_id ] = array( $variation, $variant, $attributes, $mounts );
+			$entries[ $variation_id ] = array(
+				'variation'  => $variation,
+				'config'     => $variant,
+				'attributes' => $attributes,
+				'mounts'     => $mounts,
+			);
 		}
 		// The page opens on the variation its address or the product's defaults choose: the
 		// sides mount with its options, so the page prints its form and preview.
-		$opening = $entries[ OpeningChoice::variation_among( $product, array_map( static fn ( array $entry ): WC_Product => $entry[0], $entries ) ) ] ?? null;
+		$opening = $entries[ OpeningChoice::variation_among( $product, array_map( static fn ( array $entry ): WC_Product => $entry['variation'], $entries ) ) ] ?? null;
 		if ( null !== $opening ) {
-			$switches->open_on( $opening[3] );
+			$switches->open_on( $opening['mounts'] );
 		}
 		if ( null !== $own ) {
 			$switches->add_mounts( $own, $config );
 		}
-		foreach ( $entries as $variation_id => list( $variation, $variant, $attributes, $mounts ) ) {
+		foreach ( $entries as $variation_id => $entry ) {
+			$variant      = $entry['config'];
 			$variant_mode = ApprovalMode::resolve( $variant->approval_mode, $this->settings );
-			$switches->add_mounts( $mounts, $variant );
-			$switches->add_personalised( $variation_id, $attributes, $mounts, $variant_mode, null === $variant->blank_id ? null : ProductVariant::sold_by( $variation, $variant ) );
+			$switches->add_mounts( $entry['mounts'], $variant );
+			$switches->add_personalised( $variation_id, $entry['attributes'], $entry['mounts'], $variant_mode, null === $variant->blank_id ? null : ProductVariant::sold_by( $entry['variation'], $variant ) );
 			if ( ApprovalMode::CHECKBOX === $variant_mode ) {
 				$mode = ApprovalMode::CHECKBOX;
 			}

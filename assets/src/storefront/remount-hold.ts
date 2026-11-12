@@ -9,8 +9,9 @@ export type RemountHold = {
 	 *  and hides the form's parts it gave back until the next one takes
 	 *  them. */
 	place(): void;
-	/** Lets go: the parts show again, the boxes size to what they hold, and
-	 *  a copy the next designer did not replace (its mount failed) goes. */
+	/** Lets go, once: the parts show again, the boxes size to what they
+	 *  hold, and a copy the next designer did not replace (its mount failed)
+	 *  goes. */
 	release(): void;
 };
 
@@ -42,6 +43,7 @@ export function holdShown(
 	);
 	const displays = new Map<HTMLElement, string>();
 	const placed: Node[] = [];
+	let released = false;
 	return {
 		place() {
 			for (const [target, copy] of copies) {
@@ -57,6 +59,11 @@ export function holdShown(
 			}
 		},
 		release() {
+			// Once: a later hold may have sized the same boxes since.
+			if (released) {
+				return;
+			}
+			released = true;
 			for (const [part, display] of displays) {
 				part.style.display = display;
 			}
