@@ -122,6 +122,59 @@ final class OpeningVariationTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'data-pixonaut-opening-choice', $html );
 	}
 
+	public function test_a_page_opened_on_a_variation_on_another_template_mounts_with_its_options(): void {
+		[ $product, $variations ]   = VariationSwitchesTest::variable(
+			VariationSwitchesTest::front(),
+			array(
+				'M' => null,
+				'P' => VariationSwitchesTest::front(
+					array(
+						'template' => 'mini-poster',
+						'version'  => 1,
+						'size'     => new PrintSize( 297.0, 210.0, 'A4 landscape' ),
+					)
+				),
+			)
+		);
+		$_REQUEST['attribute_size'] = 'P';
+		$this->go_to( (string) get_permalink( $product->get_id() ) );
+
+		$html     = $this->form_html( $product );
+		$mounts   = json_decode( self::data_attribute( $html, 'mounts' ), true );
+		$switches = json_decode( self::data_attribute( $html, 'variations' ), true );
+
+		$this->assertIsArray( $mounts );
+		$this->assertIsArray( $switches );
+		$this->assertSame( 'mini-poster@1', $mounts['front']['templateId'] );
+		$this->assertSame( 0, $mounts['front']['selectedPrintSizeIndex'] );
+		// The variation the page opens on switches to nothing: the side already shows it.
+		$opened = $switches[ $variations['P']->get_id() ]['sides']['front'];
+		$this->assertSame( 'mini-poster@1', $opened['templateId'] );
+		$this->assertSame( array( 0 ), $opened['printSizes'] );
+		$this->assertSame( 'mini-tee@2', $switches[ $variations['M']->get_id() ]['sides']['front']['templateId'] );
+	}
+
+	public function test_a_page_opened_on_no_variation_mounts_with_the_products_options(): void {
+		[ $product ] = VariationSwitchesTest::variable(
+			VariationSwitchesTest::front(),
+			array(
+				'M' => null,
+				'P' => VariationSwitchesTest::front(
+					array(
+						'template' => 'mini-poster',
+						'version'  => 1,
+					)
+				),
+			)
+		);
+		$this->go_to( (string) get_permalink( $product->get_id() ) );
+
+		$mounts = json_decode( self::data_attribute( $this->form_html( $product ), 'mounts' ), true );
+
+		$this->assertIsArray( $mounts );
+		$this->assertSame( 'mini-tee@2', $mounts['front']['templateId'] );
+	}
+
 	public function test_another_page_shows_the_products_range(): void {
 		$product = $this->sign( 'L' );
 		$this->go_to( home_url( '/' ) );

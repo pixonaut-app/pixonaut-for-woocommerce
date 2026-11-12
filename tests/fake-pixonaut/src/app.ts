@@ -15,6 +15,7 @@ import { registerTemplateBackgroundControl } from './control-template-background
 import { registerTemplateFieldKeyControl } from './control-template-field-key';
 import { registerTemplateLowResolutionControl } from './control-template-low-resolution';
 import { registerTemplateRatioControl } from './control-template-ratio';
+import { registerTemplateWithoutLayerControl } from './control-template-without-layer';
 import { registerValueLooksControl } from './control-value-looks';
 import { registerCorrectionPage } from './correction-page';
 import { registerHostedDesigner } from './designer';
@@ -258,6 +259,7 @@ export function createFake(options: FakeOptions = {}): Fake {
 	registerTemplateBackgroundControl(app, fake);
 	registerTemplateLowResolutionControl(app, fake);
 	registerTemplateFieldKeyControl(app, fake);
+	registerTemplateWithoutLayerControl(app, fake);
 	registerWebhookControl(app, fake);
 	registerMoveOrder(app, fake);
 	registerHoldOrder(app, fake);

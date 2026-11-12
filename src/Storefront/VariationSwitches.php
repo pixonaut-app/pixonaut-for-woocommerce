@@ -13,8 +13,9 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 
 /**
  * Collects a variable product's mount options and its variations. Each side
- * mounts once, with the print sizes of every configuration that has the
- * side, in the order the configurations are added; each variation names the
+ * mounts once, with the options of the variation the page opens on, else of
+ * the first configuration that has the side, and the print sizes of every
+ * configuration that has it, in the order the configurations are added; each variation names the
  * template, blank, placement, form layout, canvas and print sizes it switches a side to, by
  * index into those sizes, with the size and view the side starts on, so the storefront script switches the mounted
  * designer instead of mounting another, and the blank variant it shows the
@@ -36,12 +37,20 @@ final class VariationSwitches {
 	public const UNAVAILABLE = 'unavailable';
 
 	/**
-	 * The mount options of each side, from the first configuration that has
-	 * it, with the print sizes of all.
+	 * The mount options of each side, from the opening variation or the
+	 * first configuration that has it, with the print sizes of all.
 	 *
 	 * @var array<string, array<string, mixed>>
 	 */
 	private array $mounts = array();
+
+	/**
+	 * The sides in the order configurations add them, by side key; the
+	 * opening variation's options do not move a side.
+	 *
+	 * @var list<string>
+	 */
+	private array $order = array();
 
 	/**
 	 * Each side's name, by side key, from the first configuration that has it.
@@ -84,6 +93,9 @@ final class VariationSwitches {
 			$this->labels[ $side->key ] ??= $side->label;
 		}
 		foreach ( $mounts as $key => $options ) {
+			if ( ! in_array( (string) $key, $this->order, true ) ) {
+				$this->order[] = (string) $key;
+			}
 			if ( ! isset( $this->mounts[ $key ] ) ) {
 				$this->mounts[ $key ] = $options;
 				continue;
@@ -91,6 +103,20 @@ final class VariationSwitches {
 			foreach ( self::print_sizes( $options ) as $size ) {
 				$this->size_index( $key, $size );
 			}
+		}
+	}
+
+	/**
+	 * Mounts each side with the options of the variation the page opens on,
+	 * before any configuration is added: the page prints that variation's
+	 * template, form and preview, and nothing mounts again when the script
+	 * finds the variation chosen. Add the variation as any other afterwards.
+	 *
+	 * @param array<string, array<string, mixed>> $mounts The opening variation's mount options by side key.
+	 */
+	public function open_on( array $mounts ): void {
+		foreach ( $mounts as $key => $options ) {
+			$this->mounts[ $key ] ??= $options;
 		}
 	}
 
@@ -194,7 +220,12 @@ final class VariationSwitches {
 	 * @return array<string, array<string, mixed>>
 	 */
 	public function mounts(): array {
-		$mounts = $this->mounts;
+		$mounts = array();
+		foreach ( $this->order as $key ) {
+			if ( isset( $this->mounts[ $key ] ) ) {
+				$mounts[ $key ] = $this->mounts[ $key ];
+			}
+		}
 		foreach ( $this->sized as $key => $sized ) {
 			if ( $sized && isset( $mounts[ $key ] ) && ! isset( $mounts[ $key ]['showPickers'] ) ) {
 				$mounts[ $key ]['showPickers'] = array( 'size' => false );

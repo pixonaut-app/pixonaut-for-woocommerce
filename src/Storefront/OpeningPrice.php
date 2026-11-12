@@ -188,7 +188,7 @@ final class OpeningPrice {
 		$data_store           = WC_Data_Store::load( 'product' );
 		$variation_id         = (int) $data_store->find_matching_product_variation( $product, $chosen );
 		$variation            = $variation_id > 0 && isset( $followed[ $variation_id ] ) ? wc_get_product( $variation_id ) : null;
-		$this->opening[ $id ] = $variation instanceof WC_Product_Variation && self::offered( $variation ) ? $variation : null;
+		$this->opening[ $id ] = $variation instanceof WC_Product_Variation && OpeningChoice::offered( $variation ) ? $variation : null;
 		if ( null !== $this->opening[ $id ] ) {
 			$this->opening_choices[ $id ] = $chosen;
 		}
@@ -211,42 +211,14 @@ final class OpeningPrice {
 	}
 
 	/**
-	 * Whether the add-to-cart form offers the variation, as
-	 * `WC_Product_Variable::get_available_variations()` decides: a variation
-	 * out of stock while the store hides those, or one not visible, is left
-	 * out of the form, which then opens on none.
-	 *
-	 * @param WC_Product_Variation $variation A variation.
-	 */
-	private static function offered( WC_Product_Variation $variation ): bool {
-		if ( 'yes' === get_option( 'woocommerce_hide_out_of_stock_items' ) && ! $variation->is_in_stock() ) {
-			return false;
-		}
-		return $variation->exists() && $variation->variation_is_visible();
-	}
-
-	/**
-	 * The value the form opens each attribute on, by its field name, as
-	 * `wc_dropdown_variation_attribute_options()` chooses it: the request's,
-	 * else the product's default; null when one opens on no value.
+	 * The value the form opens each attribute on, by its field name; null
+	 * when one opens on no value.
 	 *
 	 * @param WC_Product $product A variable product.
 	 * @return array<string, string>|null
 	 */
 	private static function chosen_attributes( WC_Product $product ): ?array {
-		if ( ! $product instanceof \WC_Product_Variable ) {
-			return null;
-		}
-		$chosen = array();
-		foreach ( array_keys( $product->get_variation_attributes() ) as $name ) {
-			$field = 'attribute_' . sanitize_title( (string) $name );
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read as WooCommerce reads it to choose the option; nothing is changed.
-			$value = isset( $_REQUEST[ $field ] ) ? sanitize_text_field( wp_unslash( (string) $_REQUEST[ $field ] ) ) : $product->get_variation_default_attribute( (string) $name );
-			if ( '' === $value ) {
-				return null;
-			}
-			$chosen[ $field ] = $value;
-		}
-		return array() === $chosen ? null : $chosen;
+		$chosen = OpeningChoice::values( $product );
+		return array() === $chosen || in_array( '', $chosen, true ) ? null : $chosen;
 	}
 }

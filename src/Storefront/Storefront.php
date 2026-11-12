@@ -508,16 +508,44 @@ final class Storefront {
 				}
 				$same = ( $target['templateId'] ?? null ) === ( $mounts[ $side ]['templateId'] ?? null );
 				if ( $same ) {
-					$sides[ $side ] = self::with_groups( $target, FormGroupsMount::fitted( $target['formGroups'] ?? null, $groups[ $side ] ?? null ) );
+					$fitted         = FormGroupsMount::fitted( $target['formGroups'] ?? null, $groups[ $side ] ?? null );
+					$sides[ $side ] = self::with_groups( $target, $this->as_mounted( $mounts[ $side ], $fitted, $templates[ $side ] ?? null ) );
 					continue;
 				}
 				$other          = FormGroupsMount::needs_template( $target['formGroups'] ?? null ) && is_string( $target['templateId'] ?? null ) ? $this->server->template_read( $target['templateId'], $mounts[ $side ]['locale'] ?? null ) : null;
 				$carried        = null === $other ? $target['formGroups'] ?? null : FormGroupsMount::carried( $target['formGroups'], $templates[ $side ] ?? null, $other );
-				$sides[ $side ] = self::with_groups( $target, FormGroupsMount::fitted( $carried, null === $other ? null : array_column( TemplateForm::groups( $other ), 'id' ) ) );
+				$fitted         = FormGroupsMount::fitted( $carried, null === $other ? null : array_column( TemplateForm::groups( $other ), 'id' ) );
+				$sides[ $side ] = self::with_groups( $target, $this->as_mounted( $mounts[ $side ], $fitted, $other ?? $target['templateId'] ?? null ) );
 			}
 			$variations[ $id ]['sides'] = (object) $sides;
 		}
 		return array( $mounts, $variations );
+	}
+
+	/**
+	 * A variation side's arrangement, or the mounted one when the designer
+	 * shows that the same on the variation's template: a switch to the
+	 * variation then changes the template in the mounted designer rather
+	 * than mounting it again for an arrangement that only differs by what
+	 * the template lacks.
+	 *
+	 * @param array<string, mixed>      $mounted  The side's mount options.
+	 * @param array<string, mixed>|null $fitted   The variation's arrangement, fitted to its template.
+	 * @param mixed                     $template The variation's template as Pixonaut answered it, or its id to read it.
+	 * @return array<string, mixed>|null
+	 */
+	private function as_mounted( array $mounted, ?array $fitted, mixed $template ): ?array {
+		$arranged = is_array( $mounted['formGroups'] ?? null ) ? $mounted['formGroups'] : null;
+		if ( $arranged === $fitted || null === $arranged || null === $fitted ) {
+			return $fitted;
+		}
+		if ( is_string( $template ) ) {
+			$template = $this->server->template_read( $template, $mounted['locale'] ?? null );
+		}
+		if ( ! is_array( $template ) || array() === $template ) {
+			return $fitted;
+		}
+		return FormGroupsMount::shown_on( $arranged, $template ) === FormGroupsMount::shown_on( $fitted, $template ) ? $arranged : $fitted;
 	}
 
 	/**

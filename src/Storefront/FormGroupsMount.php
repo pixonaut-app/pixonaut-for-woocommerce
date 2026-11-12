@@ -180,6 +180,54 @@ final class FormGroupsMount {
 	}
 
 	/**
+	 * The form the designer shows on the template under the option: each
+	 * group it shows, in order, with its heading and its items. A group the
+	 * template lacks shows only when it has a title and an item, and a
+	 * field the template lacks is passed over, as the designer passes them
+	 * over; the template's groups the option does not name follow in its own
+	 * order either way, so they are left out. Two options with the same form
+	 * on a template show the same there, so the designer mounted with one
+	 * can switch to the template without mounting again. Null for none.
+	 *
+	 * @param mixed $option   The `formGroups` option, fitted to its template.
+	 * @param mixed $template The template as Pixonaut answered it.
+	 * @return list<array{0: string, 1: string, 2: list<mixed>}>|null
+	 */
+	public static function shown_on( mixed $option, mixed $template ): ?array {
+		if ( ! is_array( $option ) || ! is_array( $option['groups'] ?? null ) ) {
+			return null;
+		}
+		$labels  = array_column( TemplateForm::groups( $template ), 'label', 'id' );
+		$offered = array_column( array_merge( array(), ...array_column( TemplateForm::groups( $template ), 'fields' ) ), 'field' );
+		$placed  = array();
+		$shown   = array();
+		foreach ( $option['groups'] as $group ) {
+			if ( ! is_array( $group ) || ! is_string( $group['id'] ?? null ) ) {
+				continue;
+			}
+			$title = is_string( $group['title'] ?? null ) ? $group['title'] : null;
+			$own   = isset( $labels[ $group['id'] ] );
+			if ( null === $title && ! $own ) {
+				continue;
+			}
+			$items = array();
+			foreach ( is_array( $group['items'] ?? null ) ? $group['items'] : array() as $item ) {
+				$field = is_array( $item ) ? ( $item['field'] ?? null ) : null;
+				if ( ! is_string( $field ) ) {
+					$items[] = $item;
+				} elseif ( in_array( $field, $offered, true ) && ! in_array( $field, $placed, true ) ) {
+					$placed[] = $field;
+					$items[]  = $item;
+				}
+			}
+			if ( $own || array() !== $items ) {
+				$shown[] = array( $group['id'], $title ?? $labels[ $group['id'] ], $items );
+			}
+		}
+		return $shown;
+	}
+
+	/**
 	 * Whether the option holds the stand-in for the template's groups, so
 	 * fitting it needs them read.
 	 *
