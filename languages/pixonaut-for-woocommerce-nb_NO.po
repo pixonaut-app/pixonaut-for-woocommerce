@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-12T01:21:37+00:00\n"
+"POT-Creation-Date: 2026-11-12T01:57:04+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: nb_NO\n"
@@ -2874,8 +2874,28 @@ msgstr "Kunne ikke spørre Pixonaut hvilket trykkeri dette er."
 msgid "%1$s: %2$s"
 msgstr "%1$s: %2$s"
 
-#. translators: 1: the template layer the image fills, e.g. "photo", 2: its resolution in dots per inch at the size, e.g. "122", 3: the print size, e.g. "1000 × 1000 mm", 4: the resolution Pixonaut recommends, e.g. "300". Admin product page.
-#: src/Admin/LowResolutionWarnings.php:251
+#. translators: 1: an image's resolution in dots per inch at the size, e.g. "122", 2: the print size, e.g. "1000 × 1000 mm", 3: the resolution Pixonaut recommends, e.g. "300". Admin product page.
+#: src/Admin/LowResolutionWarnings.php:255
+#, php-format
+msgid ""
+"The image prints at %1$s dpi at %2$s, below the %3$s dpi recommended, so "
+"Pixonaut does not sell this size."
+msgstr ""
+"Bildet trykkes med %1$s dpi i %2$s, under anbefalte %3$s dpi, så Pixonaut "
+"selger ikke denne størrelsen."
+
+#. translators: 1: an image's resolution in dots per inch at the size, e.g. "122", 2: the print size, e.g. "1000 × 1000 mm", 3: the resolution Pixonaut recommends, e.g. "300". Admin product page.
+#: src/Admin/LowResolutionWarnings.php:262
+#, php-format
+msgid ""
+"The image prints at %1$s dpi at %2$s, below the %3$s dpi recommended, so it "
+"may look soft."
+msgstr ""
+"Bildet trykkes med %1$s dpi i %2$s, under anbefalte %3$s dpi, så det kan bli "
+"uskarpt."
+
+#. translators: 1: the image's name as the merchant knows it, from Pixonaut: a template layer's name, its form field's label, or Pixonaut's word for a picture or the background, in the Pixonaut workspace's language, not translated here, e.g. "Photo", 2: its resolution in dots per inch at the size, e.g. "122", 3: the print size, e.g. "1000 × 1000 mm", 4: the resolution Pixonaut recommends, e.g. "300". Admin product page.
+#: src/Admin/LowResolutionWarnings.php:271
 #, php-format
 msgid ""
 "The image in “%1$s” prints at %2$s dpi at %3$s, below the %4$s dpi "
@@ -2884,8 +2904,8 @@ msgstr ""
 "Bildet i «%1$s» trykkes med %2$s dpi i %3$s, under anbefalte %4$s dpi, så "
 "Pixonaut selger ikke denne størrelsen."
 
-#. translators: 1: the template layer the image fills, e.g. "photo", 2: its resolution in dots per inch at the size, e.g. "122", 3: the print size, e.g. "1000 × 1000 mm", 4: the resolution Pixonaut recommends, e.g. "300". Admin product page.
-#: src/Admin/LowResolutionWarnings.php:259
+#. translators: 1: the image's name as the merchant knows it, from Pixonaut: a template layer's name, its form field's label, or Pixonaut's word for a picture or the background, in the Pixonaut workspace's language, not translated here, e.g. "Photo", 2: its resolution in dots per inch at the size, e.g. "122", 3: the print size, e.g. "1000 × 1000 mm", 4: the resolution Pixonaut recommends, e.g. "300". Admin product page.
+#: src/Admin/LowResolutionWarnings.php:279
 #, php-format
 msgid ""
 "The image in “%1$s” prints at %2$s dpi at %3$s, below the %4$s dpi "
@@ -7057,7 +7077,7 @@ msgid "As swatches, like the designer's own choices"
 msgstr "Som knapper, slik designverktøyets egne valg vises"
 
 #. translators: Heading of the designer's group holding the product's options, such as Size or Colour, on the product page.
-#: src/Storefront/FormGroupsMount.php:271
+#: src/Storefront/FormGroupsMount.php:319
 msgctxt "designer group of the product options"
 msgid "Options"
 msgstr "Alternativer"

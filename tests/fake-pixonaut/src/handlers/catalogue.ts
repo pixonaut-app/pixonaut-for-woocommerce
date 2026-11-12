@@ -637,6 +637,7 @@ function lowResolutionAt(size: Box, setup: LowResolutionSetup | undefined) {
 			assetId: image.assetId,
 			effectiveDpi: image.widthPx / (size.widthMm / MM_PER_INCH),
 			recommendedDpi: setup?.recommendedDpi ?? 0,
+			...(image.label === undefined ? {} : { label: image.label }),
 		}))
 		.filter((image) => image.effectiveDpi < image.recommendedDpi);
 }

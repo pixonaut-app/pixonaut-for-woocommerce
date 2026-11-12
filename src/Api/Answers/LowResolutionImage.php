@@ -19,16 +19,18 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\UnexpectedResponse;
 final class LowResolutionImage {
 
 	/**
-	 * @param string $layer_id        `layerId`: the layer the image fills, or the artwork's own key for its image background.
-	 * @param string $asset_id        `assetId`: the library picture.
-	 * @param float  $effective_dpi   `effectiveDpi`: pixels per inch along the edge that decides, at the size.
-	 * @param float  $recommended_dpi `recommendedDpi`: the resolution it is judged against.
+	 * @param string      $layer_id        `layerId`: the layer the image fills, or the artwork's own key for its image background. An internal key, never shown.
+	 * @param string      $asset_id        `assetId`: the library picture.
+	 * @param float       $effective_dpi   `effectiveDpi`: pixels per inch along the edge that decides, at the size.
+	 * @param float       $recommended_dpi `recommendedDpi`: the resolution it is judged against.
+	 * @param string|null $label           `label`: the image as the merchant knows it (its layer's name, else its form field's label, else Pixonaut's word for a picture or the background, in the workspace's language); null when Pixonaut left it out, as it did before naming images.
 	 */
 	public function __construct(
 		public readonly string $layer_id,
 		public readonly string $asset_id,
 		public readonly float $effective_dpi,
 		public readonly float $recommended_dpi,
+		public readonly ?string $label = null,
 	) {
 	}
 
@@ -44,6 +46,7 @@ final class LowResolutionImage {
 			Read::string( $data, 'assetId', $path ),
 			Read::float( $data, 'effectiveDpi', $path ),
 			Read::float( $data, 'recommendedDpi', $path ),
+			self::named( Read::optional_string( $data, 'label', $path ) ),
 		);
 	}
 
@@ -63,11 +66,21 @@ final class LowResolutionImage {
 		if ( ! is_string( $layer ) || ! is_string( $asset ) || '' === $asset || ! is_numeric( $dpi ) || ! is_numeric( $aim ) ) {
 			return null;
 		}
-		return new self( $layer, $asset, (float) $dpi, (float) $aim );
+		$label = $data['label'] ?? null;
+		return new self( $layer, $asset, (float) $dpi, (float) $aim, self::named( is_string( $label ) ? $label : null ) );
 	}
 
 	/**
-	 * @return array{layerId: string, assetId: string, effectiveDpi: float, recommendedDpi: float}
+	 * A label worth showing: null for none or a blank one.
+	 *
+	 * @param string|null $label The label as answered or stored.
+	 */
+	private static function named( ?string $label ): ?string {
+		return null === $label || '' === trim( $label ) ? null : $label;
+	}
+
+	/**
+	 * @return array{layerId: string, assetId: string, effectiveDpi: float, recommendedDpi: float, label?: string}
 	 */
 	public function stored(): array {
 		return array(
@@ -75,7 +88,7 @@ final class LowResolutionImage {
 			'assetId'        => $this->asset_id,
 			'effectiveDpi'   => $this->effective_dpi,
 			'recommendedDpi' => $this->recommended_dpi,
-		);
+		) + ( null === $this->label ? array() : array( 'label' => $this->label ) );
 	}
 
 	/**

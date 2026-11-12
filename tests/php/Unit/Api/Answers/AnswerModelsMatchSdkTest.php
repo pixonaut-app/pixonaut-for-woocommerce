@@ -12,6 +12,7 @@ use Pixonaut\WooCommerce\Api\Answers\ConnectedStoreExchange;
 use Pixonaut\WooCommerce\Api\Answers\Design;
 use Pixonaut\WooCommerce\Api\Answers\DesignerLink;
 use Pixonaut\WooCommerce\Api\Answers\EventsPage;
+use Pixonaut\WooCommerce\Api\Answers\LowResolutionImage;
 use Pixonaut\WooCommerce\Api\Answers\Order;
 use Pixonaut\WooCommerce\Api\Answers\OrderDetail;
 use Pixonaut\WooCommerce\Api\Answers\OrderList;
@@ -107,6 +108,18 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 	);
 
 	/**
+	 * Fields an answer model reads ahead of the SDK, by model: agreed with
+	 * Pixonaut and read when present, not yet in the pinned SDK. An entry
+	 * fails once the SDK has the field, to be matched as any other.
+	 *
+	 * @var array<class-string, list<string>>
+	 */
+	private const AHEAD_OF_SDK = array(
+		// The image's readable name, pixonaut-app/pixonaut#3517.
+		LowResolutionImage::class => array( 'label' ),
+	);
+
+	/**
 	 * Classes in the folder that are not answer models.
 	 *
 	 * @var list<class-string>
@@ -169,8 +182,15 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 	private function match( string $answer, array $answers ): void {
 		$this->matched[ $answer ] = true;
 		$skip                     = self::NOT_FIELDS[ $answer ] ?? array();
+		$ahead                    = self::AHEAD_OF_SDK[ $answer ] ?? array();
 		foreach ( self::constructor( $answer )->getParameters() as $parameter ) {
 			if ( in_array( $parameter->getName(), $skip, true ) ) {
+				continue;
+			}
+			if ( in_array( $parameter->getName(), $ahead, true ) ) {
+				foreach ( array_merge( ...$answers ) as $sdk_model ) {
+					$this->assertNull( self::parameter( $sdk_model, $parameter->getName() ), "{$sdk_model}::\${$parameter->getName()} is in the SDK now: drop it from AHEAD_OF_SDK." );
+				}
 				continue;
 			}
 			$type = $parameter->getType();

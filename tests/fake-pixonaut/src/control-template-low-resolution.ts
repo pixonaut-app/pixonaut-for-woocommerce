@@ -1,6 +1,6 @@
 // `POST /__fake/templates/:id/low-resolution`: gives a template version
 // pictures a print size can print below their recommended resolution,
-// `{images: [{layerId, assetId, widthPx}], recommendedDpi, action}`, `action`
+// `{images: [{layerId, assetId, widthPx, label?}], recommendedDpi, action}`, `action`
 // being what the workspace does with such a size: `warn` names them on a
 // legal verdict, `refuse` refuses the size `low_resolution`. `{images: []}`
 // makes every image sharp enough again, as an upscale the template now uses
@@ -21,8 +21,9 @@ function isImage(
 	if (typeof value !== 'object' || value === null) {
 		return false;
 	}
-	const { layerId, assetId, widthPx } = value as Record<string, unknown>;
+	const { layerId, assetId, widthPx, label } = value as Record<string, unknown>;
 	return (
+		(label === undefined || typeof label === 'string') &&
 		typeof layerId === 'string' &&
 		typeof assetId === 'string' &&
 		typeof widthPx === 'number' &&
@@ -49,8 +50,9 @@ export function registerTemplateLowResolutionControl(
 			action = 'warn',
 		} = body.value;
 		if (!Array.isArray(images) || !images.every(isImage)) {
-			return refused('`images` is not a list of {layerId, assetId, widthPx}')
-				.response;
+			return refused(
+				'`images` is not a list of {layerId, assetId, widthPx, label?}',
+			).response;
 		}
 		if (typeof recommendedDpi !== 'number' || recommendedDpi <= 0) {
 			return refused('`recommendedDpi` is not a positive number').response;
