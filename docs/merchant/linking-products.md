@@ -205,15 +205,17 @@ until it has one.
 
 A template can hold images of your own, such as a photo or a logo from the
 Pixonaut library. The larger the print size, the fewer of an image's pixels
-fall on each inch: a 4800-pixel-wide photo printed 1000 mm wide has about
-122 dots per inch (dpi), and may look soft or pixelated. When you update the
+fall on each inch: a 4800-pixel-wide photo printed 1000 mm wide has about 122
+dots per inch (dpi), and may look soft or pixelated. When you update the
 product, Pixonaut also checks each print size against the resolution it
-recommends for the template's images. A size an image falls below it at gets
-a warning under the side, such as *The image in "photo" prints at 122 dpi at
-1000 × 1000 mm, below the 300 dpi recommended, so it may look soft*. On a
-product with more than one side, the warning starts with the side's name. A
-variation's own print size, or its attribute value's, is warned of under its
-**Print size** field in the same way.
+recommends for the template's images. A size an image falls below it at gets a
+warning under the side, such as *The image in "Photo" prints at 122 dpi at
+1000 × 1000 mm, below the 300 dpi recommended, so it may look soft*. The image
+is named by its layer's label in the template, its form field's label, or
+"Background" for the artwork's background. On a product with more than one
+side, the warning starts with the side's name. A variation's own print size,
+or its attribute value's, is warned of under its **Print size** field in the
+same way.
 
 The product can still be bought. On each warning you can:
 
