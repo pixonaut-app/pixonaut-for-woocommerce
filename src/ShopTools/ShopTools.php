@@ -14,6 +14,7 @@ use Pixonaut\WooCommerce\Abilities\Ability;
 use Pixonaut\WooCommerce\Abilities\GetProductPictureViews;
 use Pixonaut\WooCommerce\Abilities\LinkProduct;
 use Pixonaut\WooCommerce\Abilities\ProductLinks;
+use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
 use Pixonaut\WooCommerce\Abilities\SetVariationPrintSize;
 use Pixonaut\WooCommerce\Abilities\SetVariationVariants;
@@ -50,11 +51,13 @@ final class ShopTools {
 	 * @param Closure $showcases Makes what lists a template's showcase sets, once a call needs it.
 	 * @param Closure $views     Makes the ability that reads what a product's images are drawn on, once a call needs it.
 	 * @param Closure $print_size Makes the ability that sets a variation's print size, once a call needs it.
+	 * @param Closure $setup      Makes the ability that sets up a product or variation, once a call needs it.
 	 * @phpstan-param Closure(): ProductLinks $links
 	 * @phpstan-param Closure(): ProductVariants $variants
 	 * @phpstan-param Closure(): ShowcaseField $showcases
 	 * @phpstan-param Closure(): GetProductPictureViews $views
 	 * @phpstan-param Closure(): SetVariationPrintSize $print_size
+	 * @phpstan-param Closure(): SetProductSetup $setup
 	 */
 	public function __construct(
 		private readonly Closure $links,
@@ -62,6 +65,7 @@ final class ShopTools {
 		private readonly Closure $showcases,
 		private readonly Closure $views,
 		private readonly Closure $print_size,
+		private readonly Closure $setup,
 	) {
 	}
 
@@ -79,7 +83,7 @@ final class ShopTools {
 			}
 		}
 		$links = ( $this->links )();
-		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )() ) as $tool ) {
+		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )(), ( $this->setup )() ) as $tool ) {
 			$tools[ $tool->name() ] = $tool;
 		}
 		return $tools;

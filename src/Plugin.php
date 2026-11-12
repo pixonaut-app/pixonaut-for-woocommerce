@@ -389,7 +389,7 @@ final class Plugin {
 		$this->notices()->register();
 		$this->connection()->register();
 		$this->store_access()->register();
-		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size() ), new WcLogger() ) )->register();
+		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ) ), new WcLogger() ) )->register();
 		$this->workspace_settings()->register();
 		$this->webhook_processor()->register();
 		( new Receiver( $this->connection(), $this->intake(), new WcLogger() ) )->register();
@@ -496,7 +496,7 @@ final class Plugin {
 				$panel   = $this->product_panel();
 				$setup   = new ProductSetup( $this->settings() );
 				$links   = $this->product_links();
-				$fields  = new SetupFields( fn (): array => $this->catalogue()->live_versions() );
+				$fields  = $this->setup_fields();
 				$designs = new Designs( $this->sdk() );
 				$lines   = new LineView( $this->proof_urls() );
 				$connect = $this->sdk();
@@ -540,7 +540,15 @@ final class Plugin {
 	}
 
 	private function variation_print_size(): SetVariationPrintSize {
-		return new SetVariationPrintSize( $this->product_links(), new SetupFields( fn (): array => $this->catalogue()->live_versions() ) );
+		return new SetVariationPrintSize( $this->product_links(), $this->setup_fields() );
+	}
+
+	/**
+	 * Turns ability input into the product screen's setup fields, linking a
+	 * template given without its version to the live one.
+	 */
+	private function setup_fields(): SetupFields {
+		return new SetupFields( fn (): array => $this->catalogue()->live_versions() );
 	}
 
 	private function product_links(): ProductLinks {

@@ -75,13 +75,15 @@ offered to a user:
 | Linking a template | `link-product` |
 | Blank variants of variations | `set-variation-variants` |
 | A variation's print size | `set-variation-print-size` |
+| A variation's own setup | `set-product-setup`, always with a variation's id |
 | Showcase pictures | `set-product-showcase`, `get-product-picture-views` |
 | Orders, read only | `list-orders`, `get-order` |
 
 The product and variation tools answer as the store abilities of the same
 names ([Abilities](../abilities/)), and `list-products` gives each product as
 `get-product` does: each product and variation read carries
-`pixonaut_validity`, and each variation `pixonaut_variant`.
+`pixonaut_validity`, and each variation `pixonaut_variant` and
+`pixonaut_setup`.
 
 Pixonaut asks for changes to the switch with the webhook events
 `store_access.requested`, ignored once it was turned off in WordPress, and
