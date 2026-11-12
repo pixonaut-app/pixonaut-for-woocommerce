@@ -66,6 +66,11 @@ final class ProductSetup {
 	public const PICTURE_STATES = array( self::PICTURE_OFF, self::PICTURE_DRAWN, self::PICTURE_PENDING, self::PICTURE_FAILED, self::PICTURE_OWN_IMAGE, self::PICTURE_NONE );
 
 	/**
+	 * What `variation_setup()` gives of each side, in the terms `set-product-setup` takes.
+	 */
+	private const VARIATION_SIDE_FIELDS = array( 'template_id', 'template_pinned', 'placement_id', 'label', 'mode' );
+
+	/**
 	 * @param Settings $settings Says whether pictures are product images.
 	 */
 	public function __construct( private readonly Settings $settings ) {
@@ -319,6 +324,35 @@ final class ProductSetup {
 	public static function variation_variant( WC_Product $variation ): ?array {
 		$config = ProductConfig::config_for( $variation );
 		return $config->personalise ? self::variant( $variation, $config ) : null;
+	}
+
+	/**
+	 * Whether a variation has a setup of its own, and the blank and sides it
+	 * is sold under: its own when it has one, else its product's. Read from
+	 * what is stored, without asking Pixonaut. A side without a label of its
+	 * own gives none.
+	 *
+	 * @param WC_Product $variation A variation.
+	 * @return array{own_setup: bool, blank_id: string|null, sides: list<array<string, mixed>>}
+	 */
+	public static function variation_setup( WC_Product $variation ): array {
+		$own    = ProductConfig::stored_on( $variation );
+		$parent = wc_get_product( $variation->get_parent_id() );
+		$config = $own->override || ! $parent instanceof WC_Product ? $own : ProductConfig::stored_on( $parent );
+		return array(
+			'own_setup' => $own->override,
+			'blank_id'  => $config->blank_id,
+			'sides'     => array_map(
+				static function ( Side $side ): array {
+					$fields = array_intersect_key( SetupFields::side_of( $side ), array_flip( self::VARIATION_SIDE_FIELDS ) );
+					if ( '' === $fields['label'] ) {
+						unset( $fields['label'] );
+					}
+					return $fields;
+				},
+				array_values( $config->sides )
+			),
+		);
 	}
 
 	/**

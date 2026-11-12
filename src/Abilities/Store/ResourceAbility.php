@@ -52,6 +52,11 @@ final class ResourceAbility implements Ability {
 	public const VARIANT_FIELD = 'pixonaut_variant';
 
 	/**
+	 * The field a variation read gives the setup it is sold under in.
+	 */
+	public const SETUP_FIELD = 'pixonaut_setup';
+
+	/**
 	 * The field a product or variation read gives its validity in.
 	 */
 	public const VALIDITY_FIELD = 'pixonaut_validity';
@@ -282,7 +287,7 @@ final class ResourceAbility implements Ability {
 			$description .= ' ' . self::validity_description();
 		}
 		if ( self::VARIATION === $resource->key && $this->reads() ) {
-			$description .= ' ' . self::validity_description() . ' ' . __( 'Each variation also gives `pixonaut_variant`, the variant of its blank it is printed as: `ref` null and `problem` `unmapped` when it sells none, `retired` when the blank no longer sells it, `picked` when the store manager picked it rather than it being matched on the variation\'s attributes; null when it is not personalised on a blank.', 'pixonaut-for-woocommerce' );
+			$description .= ' ' . self::validity_description() . ' ' . __( 'Each variation also gives `pixonaut_variant`, the variant of its blank it is printed as: `ref` null and `problem` `unmapped` when it sells none, `retired` when the blank no longer sells it, `picked` when the store manager picked it rather than it being matched on the variation\'s attributes; null when it is not personalised on a blank.', 'pixonaut-for-woocommerce' ) . ' ' . __( 'And `pixonaut_setup`: `own_setup` true when the variation has a Pixonaut setup of its own, false when it follows its product; `blank_id` and `sides` (`template_id`, `template_pinned`, `placement_id`, `label`, `mode`) are those it is sold under, its product\'s when it follows it. Change it with `set-product-setup`.', 'pixonaut-for-woocommerce' );
 		}
 		return $description;
 	}
@@ -404,10 +409,10 @@ final class ResourceAbility implements Ability {
 	}
 
 	/**
-	 * A product as read, with its validity; a variation with its validity
-	 * and the blank variant it sells: null when it is not personalised on a
-	 * blank. Both from what is stored, as `ProductSetup` gives them. Any
-	 * other resource as read.
+	 * A product as read, with its validity; a variation with its validity,
+	 * the blank variant it sells (null when it is not personalised on a
+	 * blank) and the setup it is sold under. All from what is stored, as
+	 * `ProductSetup` gives them. Any other resource as read.
 	 *
 	 * @param mixed $item One item a read answered.
 	 * @return mixed
@@ -424,6 +429,7 @@ final class ResourceAbility implements Ability {
 		$item[ self::VALIDITY_FIELD ] = ProductSetup::validity( $product );
 		if ( $variation ) {
 			$item[ self::VARIANT_FIELD ] = ProductSetup::variation_variant( $product );
+			$item[ self::SETUP_FIELD ]   = ProductSetup::variation_setup( $product );
 		}
 		return $item;
 	}

@@ -104,7 +104,12 @@ is valid. `list-product-variations` and `get-product-variation` also add
 as, read from what is stored without asking Pixonaut: `ref`, `label`,
 `problem` and `picked` as `list-products` gives a variation's `variant`
 (`ref` null and `problem` `unmapped` when it sells none), or null when the
-variation is not personalised on a blank. Dates in an answer are RFC 3339 with their offset: a field
+variation is not personalised on a blank. They also add `pixonaut_setup`,
+the setup the variation is sold under: `{own_setup, blank_id, sides}`,
+`own_setup` false when it follows its product, whose `blank_id` and `sides`
+it then gives; each side as `set-product-setup` takes it, with only
+`template_id`, `template_pinned`, `placement_id`, `label` (absent without
+one of its own) and `mode`. Dates in an answer are RFC 3339 with their offset: a field
 ending in `_gmt` in UTC, any other in the site's timezone, where the route
 answers them without one.
 
