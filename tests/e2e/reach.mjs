@@ -721,6 +721,12 @@ export const REACH = {
 		'templates/admin/product-side.php',
 		'assets/src/admin/value-sizes.ts',
 	],
+	'variation-in-place.spec.ts': [
+		'src/Storefront/OpeningChoice.php',
+		'src/Storefront/FormGroupsMount.php',
+		'assets/src/storefront/remount-hold.ts',
+		'assets/src/storefront/template-carry.ts',
+	],
 	'variation-override.spec.ts': [
 		'src/Admin/VariationPanel.php',
 		'src/Admin/PanelFields.php',

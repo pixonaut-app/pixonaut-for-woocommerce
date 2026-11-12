@@ -467,12 +467,14 @@ final class Storefront {
 	/**
 	 * The mounts and the variations with each side's `formGroups` fitted to
 	 * the template the page read for that side (`FormGroupsMount::fitted()`).
-	 * A variation side on another template than the one read is read for
-	 * that template, and the product's groups are carried to it
-	 * (`FormGroupsMount::carried()`); without that read it shows the
-	 * template's own form, unless the product's options stand in groups of
-	 * their own, which every template takes. A correction has no read of its
-	 * own, so its template is read for its groups alone.
+	 * An arrangement is made for the template of the side in the designer's
+	 * configuration; a side mounted on another template (the variation the
+	 * page opens on) or a variation side on one is read for that template,
+	 * and the arrangement is carried to it (`FormGroupsMount::carried()`);
+	 * without that read it shows the template's own form, unless the
+	 * product's options stand in groups of their own, which every template
+	 * takes. A correction has no read of its own, so its template is read
+	 * for its groups alone.
 	 *
 	 * @param InlineDesigner                      $designer An available designer.
 	 * @param array<string, array<string, mixed>> $mounts   Mount options by side key.
@@ -487,6 +489,7 @@ final class Storefront {
 		$reads     = $this->reads( $designer );
 		$groups    = array();
 		$templates = array();
+		$sources   = array();
 		foreach ( $mounts as $side => $options ) {
 			$template           = ServerReads::decoded( $reads[ (string) $side ] ?? array() )['template'] ?? null;
 			$templates[ $side ] = $template;
@@ -494,8 +497,9 @@ final class Storefront {
 			if ( null === $template && isset( $options['formGroups'], $options['design'] ) ) {
 				$groups[ $side ] = $this->correction_groups( $designer, (string) $side, $options );
 			}
-			$fitted          = FormGroupsMount::fitted( $options['formGroups'] ?? null, $groups[ $side ] );
-			$mounts[ $side ] = self::with_groups( $options, $fitted );
+			$sources[ $side ] = $this->arrangement_source( $designer, (string) $side, $options['templateId'] ?? null );
+			$arranged         = $this->carried_to( $options['formGroups'] ?? null, $sources[ $side ], null, $options['templateId'] ?? null, $template, $options['locale'] ?? null );
+			$mounts[ $side ]  = self::with_groups( $options, FormGroupsMount::fitted( $arranged, $groups[ $side ] ) );
 		}
 		foreach ( $variations as $id => $variation ) {
 			if ( ! isset( $variation['sides'] ) || ! is_object( $variation['sides'] ) ) {
@@ -506,18 +510,83 @@ final class Storefront {
 				if ( ! is_array( $target ) ) {
 					continue;
 				}
-				$same = ( $target['templateId'] ?? null ) === ( $mounts[ $side ]['templateId'] ?? null );
-				if ( $same ) {
-					$sides[ $side ] = self::with_groups( $target, FormGroupsMount::fitted( $target['formGroups'] ?? null, $groups[ $side ] ?? null ) );
-					continue;
+				$mounted = ( $target['templateId'] ?? null ) === ( $mounts[ $side ]['templateId'] ?? null );
+				$to      = $mounted ? $templates[ $side ] ?? null : null;
+				if ( ! $mounted && FormGroupsMount::needs_template( $target['formGroups'] ?? null ) && is_string( $target['templateId'] ?? null ) ) {
+					$to = $this->server->template_read( $target['templateId'], $mounts[ $side ]['locale'] ?? null );
 				}
-				$other          = FormGroupsMount::needs_template( $target['formGroups'] ?? null ) && is_string( $target['templateId'] ?? null ) ? $this->server->template_read( $target['templateId'], $mounts[ $side ]['locale'] ?? null ) : null;
-				$carried        = null === $other ? $target['formGroups'] ?? null : FormGroupsMount::carried( $target['formGroups'], $templates[ $side ] ?? null, $other );
-				$sides[ $side ] = self::with_groups( $target, FormGroupsMount::fitted( $carried, null === $other ? null : array_column( TemplateForm::groups( $other ), 'id' ) ) );
+				$from           = ( $sources[ $side ] ?? null ) === ( $mounts[ $side ]['templateId'] ?? null ) ? $templates[ $side ] ?? null : null;
+				$arranged       = $this->carried_to( $target['formGroups'] ?? null, $sources[ $side ] ?? null, $from, $target['templateId'] ?? null, $to, $mounts[ $side ]['locale'] ?? null );
+				$template_ids   = null === $to ? null : array_column( TemplateForm::groups( $to ), 'id' );
+				$fitted         = FormGroupsMount::fitted( $arranged, $mounted ? $groups[ $side ] ?? null : $template_ids );
+				$sides[ $side ] = self::with_groups( $target, $this->as_mounted( $mounts[ $side ], $fitted, $to ?? $target['templateId'] ?? null ) );
 			}
 			$variations[ $id ]['sides'] = (object) $sides;
 		}
 		return array( $mounts, $variations );
+	}
+
+	/**
+	 * The id of the template a side's arrangement is made for: the side's in
+	 * the designer's configuration (the product's own, or the variation the
+	 * page shows), else the one it mounts with.
+	 *
+	 * @param InlineDesigner $designer An available designer.
+	 * @param string         $side     The side.
+	 * @param mixed          $mounted  The template id the side mounts with.
+	 */
+	private function arrangement_source( InlineDesigner $designer, string $side, mixed $mounted ): ?string {
+		foreach ( $designer->config->sides as $candidate ) {
+			if ( $candidate->key === $side && null !== $candidate->template_version ) {
+				return InlineProducts::template_id( $candidate );
+			}
+		}
+		return is_string( $mounted ) ? $mounted : null;
+	}
+
+	/**
+	 * An arrangement carried from the template it was made for to another,
+	 * as it stands when the two are the same or nothing needs reading.
+	 *
+	 * @param mixed       $option    The `formGroups` option.
+	 * @param string|null $source    The id of the template it was made for.
+	 * @param mixed       $from      That template as Pixonaut answered it; null to read it.
+	 * @param mixed       $target_id The id of the template it is shown on.
+	 * @param mixed       $target    That template as Pixonaut answered it; null when it was not read.
+	 * @param mixed       $locale    The mount's language.
+	 * @return mixed
+	 */
+	private function carried_to( mixed $option, ?string $source, mixed $from, mixed $target_id, mixed $target, mixed $locale ): mixed {
+		if ( null === $source || $source === $target_id || null === $target || ! FormGroupsMount::needs_template( $option ) ) {
+			return $option;
+		}
+		return FormGroupsMount::carried( $option, $from ?? $this->server->template_read( $source, $locale ), $target );
+	}
+
+	/**
+	 * A variation side's arrangement, or the mounted one when the designer
+	 * shows that the same on the variation's template: a switch to the
+	 * variation then changes the template in the mounted designer rather
+	 * than mounting it again for an arrangement that only differs by what
+	 * the template lacks.
+	 *
+	 * @param array<string, mixed>      $mounted  The side's mount options.
+	 * @param array<string, mixed>|null $fitted   The variation's arrangement, fitted to its template.
+	 * @param mixed                     $template The variation's template as Pixonaut answered it, or its id to read it.
+	 * @return array<string, mixed>|null
+	 */
+	private function as_mounted( array $mounted, ?array $fitted, mixed $template ): ?array {
+		$arranged = is_array( $mounted['formGroups'] ?? null ) ? $mounted['formGroups'] : null;
+		if ( $arranged === $fitted || null === $arranged || null === $fitted ) {
+			return $fitted;
+		}
+		if ( is_string( $template ) ) {
+			$template = $this->server->template_read( $template, $mounted['locale'] ?? null );
+		}
+		if ( ! is_array( $template ) || array() === $template ) {
+			return $fitted;
+		}
+		return FormGroupsMount::shown_on( $arranged, $template ) === FormGroupsMount::shown_on( $fitted, $template ) ? $arranged : $fitted;
 	}
 
 	/**

@@ -38,11 +38,14 @@ export type FakeDesigner = {
 	approve: ReturnType<typeof vi.fn>;
 	getState: ReturnType<typeof vi.fn>;
 	getFormSchema: ReturnType<typeof vi.fn>;
+	getTemplate: ReturnType<typeof vi.fn>;
 	getValue: ReturnType<typeof vi.fn>;
 	setLocked: ReturnType<typeof vi.fn>;
 	destroy: ReturnType<typeof vi.fn>;
 	setPrintSize: ReturnType<typeof vi.fn>;
 	setTemplate: ReturnType<typeof vi.fn>;
+	setValue: ReturnType<typeof vi.fn>;
+	shown: ReturnType<typeof vi.fn>;
 	setHostItemComplete: ReturnType<typeof vi.fn>;
 	reportPreviewOpened: Mock<() => void>;
 	wasPreviewOpened: Mock<() => boolean>;
@@ -101,11 +104,14 @@ export function fakeDesigner({
 		wasPreviewOpened: vi.fn(() => previewOpened),
 		getState: vi.fn().mockReturnValue({ templateId: 'mini-tee@2', values: {} }),
 		getFormSchema: vi.fn().mockReturnValue({ steps: [] }),
+		getTemplate: vi.fn().mockReturnValue({ layers: [] }),
 		getValue: vi.fn(),
 		setLocked: vi.fn(),
 		destroy: vi.fn(),
 		setPrintSize: vi.fn(),
 		setTemplate: vi.fn().mockResolvedValue(undefined),
+		setValue: vi.fn(),
+		shown: vi.fn().mockResolvedValue(undefined),
 		setHostItemComplete: vi.fn(),
 		getVariant: vi.fn(() => variant),
 		getVariants: vi.fn(() =>

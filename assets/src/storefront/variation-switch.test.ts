@@ -547,6 +547,92 @@ describe('ProductDesigner on a variable product', () => {
 		});
 	});
 
+	it('carries a value without a field key to the switched template by layer id', async () => {
+		const { form, sdkDesigner } = start();
+		await settle();
+		sdkDesigner.getState.mockReturnValue({
+			templateId: 'mini-tee@2',
+			values: { slogan: { content: 'Typed' } },
+		});
+		sdkDesigner.setTemplate.mockImplementation(() => {
+			sdkDesigner.getState.mockReturnValue({
+				templateId: 'mini-poster@1',
+				values: {},
+			});
+			sdkDesigner.getFormSchema.mockReturnValue({
+				steps: [{ fields: [{ layerId: 'slogan', prop: 'content' }] }],
+			});
+			return Promise.resolve();
+		});
+
+		await choose(form, '14');
+
+		expect(sdkDesigner.setValue).toHaveBeenCalledExactlyOnceWith(
+			'slogan',
+			'content',
+			'Typed',
+		);
+	});
+
+	it('keeps what the designer showed in its place until the side mounted again is shown', async () => {
+		const sdk = fakeSdk();
+		const hoodie = fakeDesigner();
+		let mounted = (_designer: unknown): void => undefined;
+		let shown = (): void => undefined;
+		hoodie.shown.mockReturnValue(
+			new Promise<void>((resolve) => {
+				shown = resolve;
+			}),
+		);
+		sdk.mount.mockResolvedValueOnce(sdk.designer).mockReturnValue(
+			new Promise((resolve) => {
+				mounted = resolve;
+			}),
+		);
+		const { form, container } = start({ sdk });
+		await settle();
+		const target = container.querySelector(
+			'#pixonaut-form-front',
+		) as HTMLElement;
+		const drawnForm = target.innerHTML;
+		const row = target.querySelector('.pixonaut-cart-row') as HTMLElement;
+
+		await choose(form, '13');
+
+		// Mounting again: the old form's copy stands in, the row at home hidden.
+		expect(target.innerHTML).not.toBe('');
+		expect((target.firstElementChild as HTMLElement).inert).toBe(true);
+		expect(target.textContent).toBe(
+			Object.assign(document.createElement('div'), { innerHTML: drawnForm })
+				.textContent,
+		);
+		expect(row.style.display).toBe('none');
+		mounted(hoodie);
+		await settle();
+		expect(row.style.display).toBe('none');
+		shown();
+		await settle();
+		expect(row.style.display).toBe('');
+		expect(target.contains(row)).toBe(true);
+	});
+
+	it('gives the form’s parts back visible when a variation bought without a design is chosen before the side mounted again is shown', async () => {
+		const sdk = fakeSdk();
+		const hoodie = fakeDesigner();
+		hoodie.shown.mockReturnValue(new Promise<void>(() => undefined));
+		sdk.mount.mockResolvedValueOnce(sdk.designer).mockResolvedValue(hoodie);
+		const { form, container } = start({ sdk });
+		await settle();
+		const row = container.querySelector('.pixonaut-cart-row') as HTMLElement;
+		await choose(form, '13');
+
+		await choose(form, '15');
+
+		expect(hoodie.destroy).toHaveBeenCalledOnce();
+		expect(row.style.display).toBe('');
+		expect(form.querySelector('[inert]')).toBeNull();
+	});
+
 	it('approves again when a switch changed the template under the proof', async () => {
 		const { form, button, sdkDesigner } = start();
 		await settle();

@@ -57,6 +57,7 @@ import {
 	refusalBody,
 	refusedFieldLabels,
 } from './refused-fields';
+import { holdShown, type RemountHold } from './remount-hold';
 import type { PixonautSdk } from './sdk-loader';
 import { mountSide, readServerReads } from './server-reads';
 import { type ProductMounts, readMounts, type SideOptions } from './settings';
@@ -72,6 +73,7 @@ import {
 import { SidePreloads } from './side-preload';
 import { SubmitHold } from './submit-hold';
 import { SideTabs } from './tabs';
+import { carryUnkeyedValues } from './template-carry';
 import type { ThemeMountOptions } from './theme-look';
 import { showVariant, startingVariant, variantRef } from './variant';
 import {
@@ -356,6 +358,10 @@ export class ProductDesigner {
 	/** The host items each side's designer was lent (`formGroups`), by
 	 *  side: the add-to-cart form's attribute fields, named by field. */
 	private readonly hosts = new Map<string, HostGroups>();
+
+	/** By side, what the designer showed before it was mounted again, held
+	 *  in place until the next one is shown. */
+	private readonly holds = new Map<string, RemountHold>();
 
 	/** By side, what takes away the swatches drawn for its designer. */
 	private readonly swatches = new Map<string, Array<() => void>>();
@@ -674,6 +680,12 @@ export class ProductDesigner {
 	/** Destroys a designer, and puts the form's parts it gave back where the
 	 *  form had them. */
 	private destroyDesigner(designer: PixonautDesigner): void {
+		// One destroyed before it was shown lets its side's hold go.
+		for (const [side, mounted] of this.designers) {
+			if (mounted === designer) {
+				this.releaseHold(side);
+			}
+		}
 		designer.destroy();
 		this.returnShopParts();
 	}
@@ -1090,9 +1102,11 @@ export class ProductDesigner {
 		designer: PixonautDesigner,
 		target: VariationSide,
 	): Promise<boolean> {
+		// An upload under way lands in the values carried over.
+		await designer.settled();
+		const before = designer.getState().values;
 		try {
 			await designer.setTemplate(target.templateId);
-			return true;
 		} catch (error) {
 			console.error(
 				'Pixonaut: the template could not be switched in place.',
@@ -1100,6 +1114,13 @@ export class ProductDesigner {
 			);
 			return false;
 		}
+		try {
+			carryUnkeyedValues(designer, before);
+		} catch (error) {
+			// The new template shows; a value it refused stays its own.
+			console.error('Pixonaut: a value could not be carried over.', error);
+		}
+		return true;
 	}
 
 	/**
@@ -1135,14 +1156,58 @@ export class ProductDesigner {
 		// An upload under way lands in the values the side mounts again with.
 		await designer.settled();
 		this.keptValues.set(side, designer.getState().values);
+		const hold = holdShown(
+			[
+				this.previewTarget(side),
+				this.formTarget(side),
+				...Object.values(this.viewsTarget(side)),
+			],
+			Object.values(this.markTarget(side)),
+			this.lendable(side),
+		);
 		this.destroyDesigner(designer);
 		this.designers.delete(side);
+		this.holds.set(side, hold);
+		hold.place();
+		const release = () => {
+			if (this.holds.get(side) === hold) {
+				this.releaseHold(side);
+			}
+		};
 		try {
 			await this.mountSide(sdk, side);
 			this.showVariation();
 		} catch (error) {
+			release();
 			this.mountFailed(id, side, error);
+			return;
 		}
+		const mounted = this.designers.get(side);
+		if (mounted === undefined) {
+			release();
+			return;
+		}
+		void mounted.shown().then(release, release);
+	}
+
+	/** Lets go of what the side showed before it was mounted again. */
+	private releaseHold(side: string): void {
+		this.holds.get(side)?.release();
+		this.holds.delete(side);
+	}
+
+	/** The add-to-cart form's elements the side's designer may draw in its
+	 *  form: the option fields, the cart row and the attribute fields lent
+	 *  to its groups. */
+	private lendable(side: string): HTMLElement[] {
+		const parts = this.shopParts ?? null;
+		const hosts = this.hosts.get(side);
+		return [
+			...(parts === null
+				? []
+				: [parts.options, parts.cartRow, ...parts.homes.keys()]),
+			...(hosts === undefined ? [] : lentElements(hosts)),
+		].filter((part): part is HTMLElement => part !== null);
 	}
 
 	/**
@@ -1268,6 +1333,11 @@ export class ProductDesigner {
 			return;
 		}
 		const hidden = [...this.designers];
+		// A side mounted again and not shown yet gives its parts back
+		// visible: its designer goes before it is ever shown.
+		for (const [side] of hidden) {
+			this.releaseHold(side);
+		}
 		this.designers.clear();
 		this.approved.clear();
 		this.mounting = null;
