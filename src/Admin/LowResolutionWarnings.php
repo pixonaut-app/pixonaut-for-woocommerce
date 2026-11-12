@@ -236,7 +236,10 @@ final class LowResolutionWarnings {
 	}
 
 	/**
-	 * What a row says of one image at one size.
+	 * What a row says of one image at one size. The image is named as the
+	 * merchant knows it, by the label Pixonaut gives it; an answer or a
+	 * stored verdict from before Pixonaut named images says "the image"
+	 * rather than show its layer's internal key.
 	 *
 	 * @param LowResolutionImage $image   The image.
 	 * @param PrintSize          $size    The size.
@@ -245,19 +248,36 @@ final class LowResolutionWarnings {
 	public static function text( LowResolutionImage $image, PrintSize $size, bool $refused ): string {
 		$dpi         = number_format_i18n( $image->effective_dpi, self::DPI_DECIMALS );
 		$recommended = number_format_i18n( $image->recommended_dpi, self::DPI_DECIMALS );
+		if ( null === $image->label ) {
+			return $refused
+				? sprintf(
+					/* translators: 1: an image's resolution in dots per inch at the size, e.g. "122", 2: the print size, e.g. "1000 × 1000 mm", 3: the resolution Pixonaut recommends, e.g. "300". Admin product page. */
+					__( 'The image prints at %1$s dpi at %2$s, below the %3$s dpi recommended, so Pixonaut does not sell this size.', 'pixonaut-for-woocommerce' ),
+					$dpi,
+					$size->described(),
+					$recommended
+				)
+				: sprintf(
+					/* translators: 1: an image's resolution in dots per inch at the size, e.g. "122", 2: the print size, e.g. "1000 × 1000 mm", 3: the resolution Pixonaut recommends, e.g. "300". Admin product page. */
+					__( 'The image prints at %1$s dpi at %2$s, below the %3$s dpi recommended, so it may look soft.', 'pixonaut-for-woocommerce' ),
+					$dpi,
+					$size->described(),
+					$recommended
+				);
+		}
 		return $refused
 			? sprintf(
-				/* translators: 1: the template layer the image fills, e.g. "photo", 2: its resolution in dots per inch at the size, e.g. "122", 3: the print size, e.g. "1000 × 1000 mm", 4: the resolution Pixonaut recommends, e.g. "300". Admin product page. */
+				/* translators: 1: the image's name as the merchant knows it, from Pixonaut: a template layer's name, its form field's label, or Pixonaut's word for a picture or the background, in the Pixonaut workspace's language, not translated here, e.g. "Photo", 2: its resolution in dots per inch at the size, e.g. "122", 3: the print size, e.g. "1000 × 1000 mm", 4: the resolution Pixonaut recommends, e.g. "300". Admin product page. */
 				__( 'The image in “%1$s” prints at %2$s dpi at %3$s, below the %4$s dpi recommended, so Pixonaut does not sell this size.', 'pixonaut-for-woocommerce' ),
-				$image->layer_id,
+				$image->label,
 				$dpi,
 				$size->described(),
 				$recommended
 			)
 			: sprintf(
-				/* translators: 1: the template layer the image fills, e.g. "photo", 2: its resolution in dots per inch at the size, e.g. "122", 3: the print size, e.g. "1000 × 1000 mm", 4: the resolution Pixonaut recommends, e.g. "300". Admin product page. */
+				/* translators: 1: the image's name as the merchant knows it, from Pixonaut: a template layer's name, its form field's label, or Pixonaut's word for a picture or the background, in the Pixonaut workspace's language, not translated here, e.g. "Photo", 2: its resolution in dots per inch at the size, e.g. "122", 3: the print size, e.g. "1000 × 1000 mm", 4: the resolution Pixonaut recommends, e.g. "300". Admin product page. */
 				__( 'The image in “%1$s” prints at %2$s dpi at %3$s, below the %4$s dpi recommended, so it may look soft.', 'pixonaut-for-woocommerce' ),
-				$image->layer_id,
+				$image->label,
 				$dpi,
 				$size->described(),
 				$recommended

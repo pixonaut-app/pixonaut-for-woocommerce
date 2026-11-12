@@ -8,7 +8,12 @@ import {
 import { openPixonautTab, pick, productPanel, publish } from '../products';
 
 /** A picture 4800 px wide: 174 dpi across 700 mm. */
-const PHOTO = { layerId: 'photo', assetId: 'ast_photo', widthPx: 4800 };
+const PHOTO = {
+	layerId: 'photo',
+	assetId: 'ast_photo',
+	widthPx: 4800,
+	label: 'Photo',
+};
 
 /** The T-shirt template's 280:360 shape 700 mm wide, where the photo prints too soft. */
 const LARGE = { width: '700', height: '900', label: 'Large' };
@@ -54,7 +59,7 @@ test('a print size that prints an image too soft is warned of until accepted, an
 	const warnings = side.locator('.pixonaut-low-resolution__row');
 	await expect(warnings).toHaveCount(1);
 	await expect(warnings).toContainText(
-		'The image in “photo” prints at 174 dpi at Large (700 × 900 mm), below the 300 dpi recommended',
+		'The image in “Photo” prints at 174 dpi at Large (700 × 900 mm), below the 300 dpi recommended',
 	);
 	await expect(
 		warnings.getByRole('link', { name: 'Upscale in Pixonaut' }),

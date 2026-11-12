@@ -102,6 +102,14 @@ describe('POST /__fake/templates/:id/low-resolution', () => {
 		).toBe(true);
 	});
 
+	it('answers an image’s label when it has one', async () => {
+		await setLowResolution({ images: [{ ...PHOTO, label: 'Photo' }] });
+
+		const [image] = (await judge(HUGE)).lowResolution;
+
+		expect(image).toMatchObject({ layerId: 'photo', label: 'Photo' });
+	});
+
 	it('forgets it with no images, and at the next reset', async () => {
 		await setLowResolution({ images: [PHOTO] });
 		await setLowResolution({ images: [] });
@@ -115,6 +123,10 @@ describe('POST /__fake/templates/:id/low-resolution', () => {
 	it('refuses what is no setup, and a template it lacks', async () => {
 		const broken = await setLowResolution({ images: [{ layerId: 'x' }] });
 		expect(broken.ok).toBe(false);
+		const badLabel = await setLowResolution({
+			images: [{ ...PHOTO, label: 1 }],
+		});
+		expect(badLabel.ok).toBe(false);
 		const unknownAction = await setLowResolution({
 			images: [],
 			action: 'ban',

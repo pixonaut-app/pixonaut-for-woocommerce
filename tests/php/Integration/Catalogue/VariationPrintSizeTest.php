@@ -137,13 +137,14 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 			'assetId'        => 'ast_photo',
 			'effectiveDpi'   => 150,
 			'recommendedDpi' => 300,
+			'label'          => 'Photo',
 		);
 		$this->recorder->json( 200, array( 'verdicts' => array( array( 'lowResolution' => array( $soft ) ) + VerdictAnswers::LEGAL ) ) );
 
 		$this->save_variation( $small, 0, self::custom( '210', '270', 'A4-ish' ) );
 
 		$this->assertTrue( $this->reload_any( $small->get_id() )->is_purchasable() );
-		$this->assertStringContainsString( 'The image in “photo” prints at 150 dpi at A4-ish (210 × 270 mm)', $this->warnings( $small, 0 ) );
+		$this->assertStringContainsString( 'The image in “Photo” prints at 150 dpi at A4-ish (210 × 270 mm)', $this->warnings( $small, 0 ) );
 
 		$key = LowResolutionSize::key( self::SIDE_KEY, new PrintSize( 210, 270, 'A4-ish' ), LowResolutionImage::from_answer( $soft ) );
 		$this->save_variation( $small, 0, self::custom( '210', '270', 'A4-ish' ), array( $key => LowResolutionWarnings::ACCEPT ) );

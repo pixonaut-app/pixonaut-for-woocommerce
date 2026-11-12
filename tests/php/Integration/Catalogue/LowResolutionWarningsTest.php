@@ -32,6 +32,11 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 	private const LAYER_ID = 'photo';
 
 	/**
+	 * The image as the merchant knows it: its layer's label.
+	 */
+	private const LABEL = 'Photo';
+
+	/**
 	 * What Pixonaut answers of the image at the placement's size.
 	 */
 	private const SOFT = array(
@@ -39,6 +44,7 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 		'assetId'        => self::ASSET_ID,
 		'effectiveDpi'   => 121.9,
 		'recommendedDpi' => 300,
+		'label'          => self::LABEL,
 	);
 
 	/**
@@ -46,8 +52,20 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 	 */
 	private const SOFTER_LAYER = array(
 		'layerId'      => 'backdrop',
+		'label'        => 'Backdrop',
 		'effectiveDpi' => 90.4,
 	) + self::SOFT;
+
+	/**
+	 * The image as Pixonaut answered before it named images: no `label`,
+	 * and the artwork background's internal key as its layer.
+	 */
+	private const UNNAMED = array(
+		'layerId'        => '$artwork',
+		'assetId'        => self::ASSET_ID,
+		'effectiveDpi'   => 121.9,
+		'recommendedDpi' => 300,
+	);
 
 	/**
 	 * The posted name of the warnings' choices on a product.
@@ -66,12 +84,36 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 
 		$side = ProductConfig::stored_on( $this->reload( $product->get_id() ) )->sides[0];
 		$this->assertTrue( ProductConfig::stored_on( $this->reload( $product->get_id() ) )->valid, 'a size Pixonaut warns of is sold' );
-		$this->assertEquals( array( new LowResolutionSize( new PrintSize( self::PRINT_WIDTH_MM, self::PRINT_HEIGHT_MM, '280 × 360 mm', true ), array( new LowResolutionImage( self::LAYER_ID, self::ASSET_ID, 121.9, 300.0 ) ) ) ), $side->low_resolution );
+		$this->assertEquals( array( new LowResolutionSize( new PrintSize( self::PRINT_WIDTH_MM, self::PRINT_HEIGHT_MM, '280 × 360 mm', true ), array( new LowResolutionImage( self::LAYER_ID, self::ASSET_ID, 121.9, 300.0, self::LABEL ) ) ) ), $side->low_resolution );
 
 		$html = $this->html( $product->get_id() );
-		$this->assertStringContainsString( 'The image in “photo” prints at 122 dpi at 280 × 360 mm, below the 300 dpi recommended', $html );
+		$this->assertStringContainsString( 'The image in “Photo” prints at 122 dpi at 280 × 360 mm, below the 300 dpi recommended', $html );
 		$this->assertStringContainsString( 'assets?asset=' . self::ASSET_ID, $html, 'Upscale opens the picture in the studio' );
 		$this->assertStringContainsString( 'name="' . self::CHOICES . '[' . self::key() . ']"', $html );
+	}
+
+	public function test_an_answer_without_a_label_names_no_internal_key(): void {
+		$product = $this->product();
+		$this->link( $product->get_id(), array( self::UNNAMED ) );
+
+		$html = $this->html( $product->get_id() );
+		$this->assertStringContainsString( 'The image prints at 122 dpi at 280 × 360 mm, below the 300 dpi recommended, so it may look soft.', $html );
+		$this->assertStringNotContainsString( '$artwork', $html );
+	}
+
+	public function test_a_verdict_stored_before_images_were_named_names_no_internal_key(): void {
+		$product = $this->product();
+		$this->link( $product->get_id(), array( self::SOFT ) );
+		$stored = $this->reload( $product->get_id() );
+		$config = json_decode( (string) $stored->get_meta( ProductConfig::META_KEY, true ), true );
+		$this->assertIsArray( $config );
+		$this->assertSame( self::LABEL, $config['sides'][0]['lowResolution'][0]['images'][0]['label'] ?? null, 'the label is kept with the verdict' );
+		$stored->update_meta_data( ProductConfig::META_KEY, (string) wp_json_encode( self::without_labels( $config ) ) );
+		$stored->save_meta_data();
+
+		$html = $this->html( $product->get_id() );
+		$this->assertStringContainsString( 'The image prints at 122 dpi at 280 × 360 mm', $html );
+		$this->assertStringNotContainsString( '“' . self::LAYER_ID . '”', $html );
 	}
 
 	public function test_accepting_an_image_hides_it_at_that_size_until_it_is_no_longer_warned_of(): void {
@@ -162,8 +204,8 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 
 		$html = $this->html( $product->get_id() );
 		$this->assertSame( 1, substr_count( $html, 'name="' . self::CHOICES . '[' . self::key() . ']"' ), 'one choice for the picture' );
-		$this->assertStringContainsString( 'The image in “backdrop” prints at 90 dpi', $html );
-		$this->assertStringNotContainsString( 'The image in “photo”', $html );
+		$this->assertStringContainsString( 'The image in “Backdrop” prints at 90 dpi', $html );
+		$this->assertStringNotContainsString( 'The image in “Photo”', $html );
 
 		$this->link( $product->get_id(), array( self::SOFT, self::SOFTER_LAYER ), array( self::key() => LowResolutionWarnings::ACCEPT ) );
 
@@ -206,6 +248,20 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 	private function link( int $product_id, array $soft, array $choices = array(), array $verdict = VerdictAnswers::LEGAL ): void {
 		$this->script_link( array( 'lowResolution' => $soft ) + $verdict );
 		$this->save( $product_id, array( self::CHOICES => $choices ) );
+	}
+
+	/**
+	 * Stored data with every image's `label` removed, as a verdict stored
+	 * before Pixonaut named images was kept.
+	 *
+	 * @param array<mixed> $data Stored data.
+	 * @return array<mixed>
+	 */
+	private static function without_labels( array $data ): array {
+		if ( isset( $data['assetId'] ) ) {
+			unset( $data['label'] );
+		}
+		return array_map( static fn ( mixed $value ): mixed => is_array( $value ) ? self::without_labels( $value ) : $value, $data );
 	}
 
 	private function html( int $product_id ): string {
