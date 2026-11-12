@@ -8,7 +8,7 @@ function drawn() {
 	document.body.innerHTML = `
 		<form id="cart">
 			<div id="pixonaut-preview-front"><div class="stage" id="stage"><canvas width="4" height="4"></canvas></div></div>
-			<div id="pixonaut-form-front"><label for="f1">Name</label><input id="f1" name="pixonaut_name" data-pixonaut-field="name:content" value="Ada"><div id="row"><button name="add-to-cart">Add</button></div></div>
+			<div id="pixonaut-form-front"><label for="f1">Name</label><input id="f1" name="pixonaut_name" data-pixonaut-field="name:content" value="Ada"><div id="row"><select name="attribute_size"><option value="">Choose</option><option value="Tee">Tee</option></select><button name="add-to-cart">Add</button></div></div>
 			<div id="home"></div>
 			<div id="pixonaut-mark-front"></div>
 		</form>`;
@@ -30,6 +30,7 @@ describe('holdShown', () => {
 
 	it('shows an inert copy that names nothing in the emptied targets, and the lent part hidden at home', () => {
 		const { preview, form, row, home, mark } = drawn();
+		(row.querySelector('select') as HTMLSelectElement).value = 'Tee';
 		const hold = holdShown([preview, form], [mark], [row]);
 		// The designer is destroyed: it empties its targets and gives the
 		// part back.
@@ -43,6 +44,7 @@ describe('holdShown', () => {
 		expect(copy.inert).toBe(true);
 		expect(copy.getAttribute('aria-hidden')).toBe('true');
 		expect(form.querySelector('input')?.value).toBe('Ada');
+		expect(form.querySelector('select')?.value).toBe('Tee');
 		expect(
 			form.querySelectorAll('[id], [name], [for], [data-pixonaut-field]'),
 		).toHaveLength(0);
@@ -58,7 +60,8 @@ describe('holdShown', () => {
 	it('lets go: the part shows, the mark sizes freely and a copy nothing replaced goes', () => {
 		const { preview, form, row, home, mark } = drawn();
 		row.style.display = 'flex';
-		const hold = holdShown([preview, form], [mark], [row]);
+		// A part named twice is hidden, and shown again, once.
+		const hold = holdShown([preview, form], [mark], [row, row]);
 		preview.replaceChildren();
 		form.replaceChildren();
 		home.append(row);

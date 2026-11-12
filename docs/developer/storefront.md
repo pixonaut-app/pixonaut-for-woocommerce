@@ -921,10 +921,14 @@ name. The printed swatches carry the same markup.
 
 A variable product shows the inline designer while the product, or one of
 its enabled variations, is personalised on the inline layout. Each side
-mounts once, from the product's configuration (or, when the product itself
-is not personalised, that of its first variation personalised on the inline
+mounts once, from the configuration of the variation the page opens on
+(the first personalised one holding every attribute value the request's
+`attribute_*` parameters, else the product's defaults, choose, such as a
+split card's link), else the product's (or, when the product itself is not
+personalised, that of its first variation personalised on the inline
 layout), with the print sizes of every variation that has the side in one
-`printSizes` menu. The
+`printSizes` menu. The page so prints the opening variation's template,
+form and preview, and nothing mounts again once the script finds it chosen. The
 script mounts the sides the chosen variation has (every side before one is
 chosen), and a side another variation adds once that variation is chosen.
 `.pixonaut-form` carries `data-pixonaut-variations`, by variation id:
@@ -951,7 +955,10 @@ it, else moves to its `selectedPrintSizeIndex`; a side not mounted yet mounts
 on the variation's. `variants` the side's
 `variants` on the variation's blank, `layout` the variation's form layout
 (absent when the template chooses), `formGroups` its arrangement (absent
-for none, see [Arranged groups](#arranged-groups)), `drawAtTemplateRatio`
+for none, see [Arranged groups](#arranged-groups); a variation on another
+template whose arrangement the designer shows the same as the mounted one
+there, its groups and fields that template lacks being passed over, carries
+the mounted one), `drawAtTemplateRatio`
 its canvas shape (absent when the template decides), and `variant` is the
 ref of the blank variant the variation is sold as (absent when it has none).
 `plain` is a
@@ -969,8 +976,8 @@ chosen variation it then:
 | The variation differs by | The designer |
 | --- | --- |
 | print size only | `setPrintSize(index)`, unless the size the designer shows (its `getState().printSize`, which the customer may have picked) is one of the variation's |
-| template, and perhaps print size | `setTemplate(templateId)`, then `setPrintSize(index)` as above: the preview, form and view strip keep their place while the new template draws, and a value on a field key both templates share carries over. When `setTemplate()` rejects, the designer is mounted again as in the next row |
-| blank, placement, `placements`, `views`, `variants`, form layout, `formGroups` or `drawAtTemplateRatio` | is destroyed and mounted again with `initialValues` from its `getState().values`, read once its `settled()` resolved, and the variation's variant as `initialVariant` |
+| template, and perhaps print size | `setTemplate(templateId)`, then `setPrintSize(index)` as above: the preview, form and view strip keep their place while the new template draws. A value on a field key both templates share carries over, and so does one on a field of the same layer id the new template's form offers, with `setValue()`. When `setTemplate()` rejects, the designer is mounted again as in the next row |
+| blank, placement, `placements`, `views`, `variants`, form layout, `formGroups` or `drawAtTemplateRatio` | is destroyed and mounted again with `initialValues` from its `getState().values`, read once its `settled()` resolved, and the variation's variant as `initialVariant`. Until the new designer is shown, an inert copy of what the old one showed (each canvas drawn in) stands in its preview, form and view strip, each keeping at least its height, and the form's parts it drew wait hidden: the page neither collapses nor jumps |
 
 and then shows the variation's variant (see [Views and variants](#views-and-variants)).
 

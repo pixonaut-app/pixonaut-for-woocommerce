@@ -20,8 +20,9 @@ export type RemountHold = {
  * its layout and its picture while the next one mounts: a split mount
  * keeps what the host printed in its targets until its preview is drawn,
  * as it does for the server's printed form. The copy is inert, with each
- * canvas's pixels drawn into its own. `sized` keep their height alone (the
- * "Powered by" mark, which the SDK draws beside what it finds), and
+ * canvas's pixels drawn into its own, and each target keeps at least the
+ * height it had. `sized` keep their height alone (the "Powered by" mark,
+ * which the SDK draws beside what it finds), and
  * `parts`, the add-to-cart form's own elements the designer drew in its
  * form, are shown in the copy and hidden where they go back to meanwhile.
  */
@@ -31,11 +32,13 @@ export function holdShown(
 	parts: readonly HTMLElement[],
 ): RemountHold {
 	const copies = targets.map((target) => [target, copyOf(target)] as const);
-	const heights = sized.map(
+	// Every box keeps at least its height too: the copy can lay out shorter
+	// than the designer it copies, which styles its own parts as it draws.
+	const heights = [...targets, ...sized].map(
 		(element) => [element, element.getBoundingClientRect().height] as const,
 	);
-	const shown = parts.filter((part) =>
-		targets.some((target) => target.contains(part)),
+	const shown = new Set(
+		parts.filter((part) => targets.some((target) => target.contains(part))),
 	);
 	const displays = new Map<HTMLElement, string>();
 	const placed: Node[] = [];
@@ -80,6 +83,20 @@ function copyOf(target: HTMLElement): Node[] {
 	});
 	sources.forEach((source, index) => {
 		drawCanvas(source, drawn[index]);
+	});
+	// A select's choice is not copied with it.
+	const chosen = [...target.querySelectorAll('select')];
+	const copied = copies.flatMap((node) => {
+		if (node instanceof HTMLSelectElement) {
+			return [node];
+		}
+		return node instanceof Element ? [...node.querySelectorAll('select')] : [];
+	});
+	chosen.forEach((select, index) => {
+		const copy = copied[index];
+		if (copy !== undefined) {
+			copy.selectedIndex = select.selectedIndex;
+		}
 	});
 	for (const node of copies) {
 		if (!(node instanceof HTMLElement)) {
