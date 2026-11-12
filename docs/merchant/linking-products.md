@@ -211,8 +211,10 @@ product, Pixonaut also checks each print size against the resolution it
 recommends for the template's images. A size an image falls below it at gets a
 warning under the side, such as *The image in "Photo" prints at 122 dpi at
 1000 × 1000 mm, below the 300 dpi recommended, so it may look soft*. The image
-is named by its layer's label in the template, its form field's label, or
-"Background" for the artwork's background. On a product with more than one
+is named by its layer's name in the template, else its form field's label,
+else Pixonaut's word for a picture or the background, in your Pixonaut
+workspace's language. When Pixonaut gives no name, the warning says *The image
+prints at …* instead. On a product with more than one
 side, the warning starts with the side's name. A variation's own print size,
 or its attribute value's, is warned of under its **Print size** field in the
 same way.
