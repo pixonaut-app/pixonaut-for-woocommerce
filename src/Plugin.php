@@ -543,6 +543,10 @@ final class Plugin {
 		return new SetVariationPrintSize( $this->product_links(), $this->setup_fields() );
 	}
 
+	/**
+	 * Turns ability input into the product screen's setup fields, linking a
+	 * template given without its version to the live one.
+	 */
 	private function setup_fields(): SetupFields {
 		return new SetupFields( fn (): array => $this->catalogue()->live_versions() );
 	}
