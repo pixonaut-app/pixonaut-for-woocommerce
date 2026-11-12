@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-11T03:06:50+00:00\n"
+"POT-Creation-Date: 2026-11-12T01:21:37+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -1149,31 +1149,31 @@ msgstr ""
 "ord; null när alla gör det. Ange en variants `variant` med `set-product-"
 "setup`."
 
-#: src/Abilities/ProductSetup.php:117
+#: src/Abilities/ProductSetup.php:122
 msgid "Whether it is linked to a template, personalised or not."
 msgstr "Om den är kopplad till en mall, personaliserad eller inte."
 
-#: src/Abilities/ProductSetup.php:121
+#: src/Abilities/ProductSetup.php:126
 msgid "Whether customers personalise it."
 msgstr "Om kunder personaliserar den."
 
-#: src/Abilities/ProductSetup.php:125 src/Abilities/ProductSetup.php:299
+#: src/Abilities/ProductSetup.php:130 src/Abilities/ProductSetup.php:304
 msgid ""
 "False when Pixonaut found a problem: it cannot be bought until it is fixed."
 msgstr ""
 "False när Pixonaut har hittat ett problem: den går inte att köpa förrän "
 "problemet är åtgärdat."
 
-#: src/Abilities/ProductSetup.php:129
+#: src/Abilities/ProductSetup.php:134
 msgid "Why it cannot be bought, in words; null when it can."
 msgstr "Varför den inte går att köpa, i ord; null när den går att köpa."
 
-#: src/Abilities/ProductSetup.php:133
+#: src/Abilities/ProductSetup.php:138
 msgid "The blank it is printed on; null for a template-only product."
 msgstr ""
 "Grundprodukten som den trycks på; null för en produkt med bara en mall."
 
-#: src/Abilities/ProductSetup.php:136
+#: src/Abilities/ProductSetup.php:141
 msgid ""
 "The blank's variant it sells: `ref` null and `problem` `unmapped` when none "
 "matches, `retired` when the blank no longer sells it. Null without a blank, "
@@ -1183,19 +1183,19 @@ msgstr ""
 "när ingen matchar, `retired` när grundprodukten inte längre säljer den. Null "
 "utan grundprodukt, och för en variabel produkt, vars varianter anger var sin."
 
-#: src/Abilities/ProductSetup.php:139
+#: src/Abilities/ProductSetup.php:144
 msgid ""
 "The product page layout it overrides the store's with; null for the store's."
 msgstr ""
 "Produktsidans layout som den använder i stället för butikens; null för "
 "butikens."
 
-#: src/Abilities/ProductSetup.php:143
+#: src/Abilities/ProductSetup.php:148
 msgid "The form layout it overrides the store's with; null for the store's."
 msgstr ""
 "Formulärlayouten som den använder i stället för butikens; null för butikens."
 
-#: src/Abilities/ProductSetup.php:147
+#: src/Abilities/ProductSetup.php:152
 msgid ""
 "Where it overrides the store on its options in the form: `on_top`, `first` "
 "or `last`; null for the store's."
@@ -1203,7 +1203,7 @@ msgstr ""
 "Om den åsidosätter butikens inställning för var dess alternativ står i "
 "formuläret: `on_top`, `first` eller `last`; null för butikens."
 
-#: src/Abilities/ProductSetup.php:151
+#: src/Abilities/ProductSetup.php:156
 msgid ""
 "Whether it overrides the store on numbering the form's groups: `on` or "
 "`off`; null for the store's."
@@ -1211,22 +1211,22 @@ msgstr ""
 "Om den åsidosätter butikens inställning för numrering av formulärets "
 "grupper: `on` eller `off`; null för butikens."
 
-#: src/Abilities/ProductSetup.php:155
+#: src/Abilities/ProductSetup.php:160
 msgid "The proof approval it overrides the store's with; null for the store's."
 msgstr ""
 "Godkännandesättet för korrektur som den använder i stället för butikens; "
 "null för butikens."
 
-#: src/Abilities/ProductSetup.php:159 src/Abilities/SetProductSetup.php:89
+#: src/Abilities/ProductSetup.php:164 src/Abilities/SetProductSetup.php:89
 msgid "The blank's views the designer shows, by id; empty for all."
 msgstr ""
 "Grundproduktens vyer som designverktyget visar, efter id; tom för alla."
 
-#: src/Abilities/ProductSetup.php:164
+#: src/Abilities/ProductSetup.php:169
 msgid "The view the designer starts on; null for the first."
 msgstr "Vyn som designverktyget öppnas på; null för den första."
 
-#: src/Abilities/ProductSetup.php:168
+#: src/Abilities/ProductSetup.php:173
 msgid ""
 "The printshop a product without a blank sends its orders to; null for the "
 "workspace's default."
@@ -1234,11 +1234,11 @@ msgstr ""
 "Tryckeriet som en produkt utan grundprodukt skickar sina beställningar till; "
 "null för arbetsytans standardtryckeri."
 
-#: src/Abilities/ProductSetup.php:170 src/Abilities/SetProductSetup.php:86
+#: src/Abilities/ProductSetup.php:175 src/Abilities/SetProductSetup.php:86
 msgid "empty for the template's own setting"
 msgstr "tom för mallens egen inställning"
 
-#: src/Abilities/ProductSetup.php:173
+#: src/Abilities/ProductSetup.php:178
 msgid ""
 "The template's showcase sets its product images are drawn with, set with "
 "`set-product-showcase`; a variation gives its product's."
@@ -1246,7 +1246,7 @@ msgstr ""
 "Mallens exempelset som produktbilderna ritas med, valda med `set-product-"
 "showcase`; en variant anger produktens."
 
-#: src/Abilities/ProductSetup.php:185
+#: src/Abilities/ProductSetup.php:190
 msgid ""
 "The view of the blank it is drawn on, set with `set-product-picture-view`; "
 "absent for the one the product page starts on."
@@ -1254,21 +1254,21 @@ msgstr ""
 "Vyn av grundprodukten som den ritas på, angiven med `set-product-picture-"
 "view`; saknas för den som produktsidan visar först."
 
-#: src/Abilities/ProductSetup.php:189
+#: src/Abilities/ProductSetup.php:194
 msgid ""
 "The view's photo it is drawn on; absent for its photo of the variant sold."
 msgstr ""
 "Fotot av vyn som den ritas på; saknas för vyns foto av grundproduktvarianten "
 "som säljs."
 
-#: src/Abilities/ProductSetup.php:201
+#: src/Abilities/ProductSetup.php:206
 msgid ""
 "The template version it is linked to, e.g. `mini-tee@2`; null without a "
 "template."
 msgstr ""
 "Mallversionen som den är kopplad till, t.ex. `mini-tee@2`; null utan mall."
 
-#: src/Abilities/ProductSetup.php:205
+#: src/Abilities/ProductSetup.php:210
 msgid ""
 "True when the side stays on its template version; false when it follows the "
 "template's latest published version."
@@ -1276,11 +1276,11 @@ msgstr ""
 "True när sidan stannar på sin mallversion; false när den följer mallens "
 "senast publicerade version."
 
-#: src/Abilities/ProductSetup.php:209
+#: src/Abilities/ProductSetup.php:214
 msgid "Where on the blank it is printed; null without a blank."
 msgstr "Var på grundprodukten den trycks; null utan grundprodukt."
 
-#: src/Abilities/ProductSetup.php:215
+#: src/Abilities/ProductSetup.php:220
 msgid ""
 "A standing side on a blank whose print areas change with an option: the "
 "design each option is printed from, and whether its layout was adjusted by "
@@ -1291,11 +1291,11 @@ msgstr ""
 "har justerats för hand, vilket `reset-standing-layout` ångrar. Tom för alla "
 "andra sidor."
 
-#: src/Abilities/ProductSetup.php:222
+#: src/Abilities/ProductSetup.php:227
 msgid "The option's values, e.g. \"XL\"."
 msgstr "Alternativets värden, t.ex. \"XL\"."
 
-#: src/Abilities/ProductSetup.php:234
+#: src/Abilities/ProductSetup.php:239
 msgid ""
 "Where its Pixonaut picture, shown as its image, stands: `drawn`, `pending` "
 "to be drawn, `failed` and to be tried again, `own_image` when the store "
@@ -1308,7 +1308,7 @@ msgstr ""
 "`none` när det inte finns något att rita den från, eller `off` när butiken "
 "inte använder bilderna eller den inte är personaliserad."
 
-#: src/Abilities/ProductSetup.php:256
+#: src/Abilities/ProductSetup.php:261
 msgid ""
 "Whether the store manager picked it rather than it being matched on the "
 "product's attributes."
@@ -1316,7 +1316,7 @@ msgstr ""
 "Om butiksägaren har valt den i stället för att den har matchats mot "
 "produktens attribut."
 
-#: src/Abilities/ProductSetup.php:302
+#: src/Abilities/ProductSetup.php:307
 msgid ""
 "Why not, as a code such as `too_large` or `template_not_live`; null when "
 "valid."
@@ -1324,7 +1324,7 @@ msgstr ""
 "Varför inte, som en kod, t.ex. `too_large` eller `template_not_live`; null "
 "när den är giltig."
 
-#: src/Abilities/ProductSetup.php:305
+#: src/Abilities/ProductSetup.php:310
 msgid "Why not, in words, as the product screen says it; null when valid."
 msgstr ""
 "Varför inte, i ord, så som produktens redigeringssida visar det; null när "
@@ -2038,49 +2038,49 @@ msgid "The store has no such kind of thing."
 msgstr "Butiken har ingen sådan typ av objekt."
 
 #. translators: %s: the input fields a store ability needs, e.g. "product_id, id".
-#: src/Abilities/Store/ResourceAbility.php:154
+#: src/Abilities/Store/ResourceAbility.php:159
 #, php-format
 msgid "Name %s."
 msgstr "Ange %s."
 
 #. translators: %s: a kind of thing in the store, plural, e.g. "product categories". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:242
+#: src/Abilities/Store/ResourceAbility.php:247
 #, php-format
 msgid "List %s"
 msgstr "Lista %s"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:244
+#: src/Abilities/Store/ResourceAbility.php:249
 #, php-format
 msgid "Read %s"
 msgstr "Visa %s"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:246
+#: src/Abilities/Store/ResourceAbility.php:251
 #, php-format
 msgid "Create %s"
 msgstr "Skapa %s"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category", or several, e.g. "shipping zone locations". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:248
+#: src/Abilities/Store/ResourceAbility.php:253
 #, php-format
 msgid "Update %s"
 msgstr "Uppdatera %s"
 
 #. translators: %s: a kind of thing in the store, e.g. "product category". Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/Store/ResourceAbility.php:250
+#: src/Abilities/Store/ResourceAbility.php:255
 #, php-format
 msgid "Delete %s"
 msgstr "Ta bort %s"
 
 #. translators: 1: a few field names, e.g. "name, slug, parent"; 2: the name of the ability that describes every field.
-#: src/Abilities/Store/ResourceAbility.php:259
+#: src/Abilities/Store/ResourceAbility.php:264
 #, php-format
 msgid "Fields include %1$s; %2$s gives every field."
 msgstr "Fälten omfattar bland annat %1$s; %2$s anger alla fält."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:265
+#: src/Abilities/Store/ResourceAbility.php:270
 #, php-format
 msgid ""
 "Lists the store's %1$s through the REST route %2$s. `query` takes the "
@@ -2092,13 +2092,13 @@ msgstr ""
 "vissa fält."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:267
+#: src/Abilities/Store/ResourceAbility.php:272
 #, php-format
 msgid "Reads one of the store's %1$s by its id through the REST route %2$s."
 msgstr "Läser en av butikens %1$s utifrån dess id via REST-routen %2$s."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:269
+#: src/Abilities/Store/ResourceAbility.php:274
 #, php-format
 msgid ""
 "Creates one of the store's %1$s through the REST route %2$s, with `fields` "
@@ -2108,7 +2108,7 @@ msgstr ""
 "form routen tar emot dem."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "shipping zone locations"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:272
+#: src/Abilities/Store/ResourceAbility.php:277
 #, php-format
 msgid ""
 "Replaces the %1$s through the REST route %2$s with `items`, the whole new "
@@ -2118,7 +2118,7 @@ msgstr ""
 "utelämnas tas bort."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:274
+#: src/Abilities/Store/ResourceAbility.php:279
 #, php-format
 msgid ""
 "Changes one of the store's %1$s through the REST route %2$s, with only the "
@@ -2128,7 +2128,7 @@ msgstr ""
 "ska ändras."
 
 #. translators: 1: a kind of thing in the store, plural, e.g. "product categories"; 2: a REST API route.
-#: src/Abilities/Store/ResourceAbility.php:276
+#: src/Abilities/Store/ResourceAbility.php:281
 #, php-format
 msgid ""
 "Deletes one of the store's %1$s through the REST route %2$s. With `force` it "
@@ -2137,11 +2137,11 @@ msgstr ""
 "Tar bort en av butikens %1$s via REST-routen %2$s. Med `force` raderas den "
 "permanent där routen annars skulle flytta den till papperskorgen."
 
-#: src/Abilities/Store/ResourceAbility.php:279
+#: src/Abilities/Store/ResourceAbility.php:284
 msgid "The store downloads the file from `fields.source_url`, a public URL."
 msgstr "Butiken laddar ner filen från `fields.source_url`, en offentlig URL."
 
-#: src/Abilities/Store/ResourceAbility.php:285
+#: src/Abilities/Store/ResourceAbility.php:290
 msgid ""
 "Each variation also gives `pixonaut_variant`, the variant of its blank it is "
 "printed as: `ref` null and `problem` `unmapped` when it sells none, "
@@ -2155,37 +2155,51 @@ msgstr ""
 "butiksägaren har valt den i stället för att den matchats mot variantens "
 "attribut; null när den inte är personaliserad på en grundprodukt."
 
-#: src/Abilities/Store/ResourceAbility.php:303
+#: src/Abilities/Store/ResourceAbility.php:290
+msgid ""
+"And `pixonaut_setup`: `own_setup` true when the variation has a Pixonaut "
+"setup of its own, false when it follows its product; `blank_id` and `sides` "
+"(`template_id`, `template_pinned`, `placement_id`, `label`, `mode`) are "
+"those it is sold under, its product's when it follows it. Change it with "
+"`set-product-setup`."
+msgstr ""
+"Och `pixonaut_setup`: `own_setup` true när varianten har egna Pixonaut-"
+"inställningar, false när den följer sin produkt; `blank_id` och `sides` "
+"(`template_id`, `template_pinned`, `placement_id`, `label`, `mode`) är de "
+"som den säljs med, produktens när den följer den. Ändra dem med `set-"
+"product-setup`."
+
+#: src/Abilities/Store/ResourceAbility.php:308
 msgid "The route's query parameters, e.g. search, page and per_page."
 msgstr "Routens frågeparametrar, t.ex. search, page och per_page."
 
-#: src/Abilities/Store/ResourceAbility.php:312
+#: src/Abilities/Store/ResourceAbility.php:317
 msgid "The whole new list."
 msgstr "Hela den nya listan."
 
-#: src/Abilities/Store/ResourceAbility.php:324
+#: src/Abilities/Store/ResourceAbility.php:329
 msgid "The fields as the route takes them."
 msgstr "Fälten i den form routen tar emot dem."
 
-#: src/Abilities/Store/ResourceAbility.php:325
+#: src/Abilities/Store/ResourceAbility.php:330
 msgid "Only the fields to change, as the route takes them."
 msgstr "Bara de fält som ska ändras, i den form routen tar emot dem."
 
-#: src/Abilities/Store/ResourceAbility.php:333
+#: src/Abilities/Store/ResourceAbility.php:338
 msgid "Delete it for good rather than move it to the trash."
 msgstr "Radera permanent i stället för att flytta till papperskorgen."
 
-#: src/Abilities/Store/ResourceAbility.php:354
+#: src/Abilities/Store/ResourceAbility.php:359
 msgid "Dates and times are RFC 3339, with their offset."
 msgstr "Datum och tider anges enligt RFC 3339, med sin tidsförskjutning."
 
 #. translators: 1: a REST API route; 2: a sentence on how dates are written.
-#: src/Abilities/Store/ResourceAbility.php:359
+#: src/Abilities/Store/ResourceAbility.php:364
 #, php-format
 msgid "What the REST route %1$s answers, without its links. %2$s"
 msgstr "Vad REST-routen %1$s svarar, utan dess länkar. %2$s"
 
-#: src/Abilities/Store/ResourceAbility.php:435
+#: src/Abilities/Store/ResourceAbility.php:441
 msgid ""
 "Each also gives `pixonaut_validity`: `valid` false when its Pixonaut setup "
 "has a problem and it cannot be bought until it is fixed, with the `reason` "
@@ -2197,22 +2211,22 @@ msgstr ""
 "åtgärdat, med orsaken som kod i `reason` och texten som produktens "
 "redigeringssida visar för den i `message`, båda null när den är giltig."
 
-#: src/Abilities/Store/ResourceAbility.php:469
+#: src/Abilities/Store/ResourceAbility.php:475
 msgid "The store refused it."
 msgstr "Butiken avvisade det."
 
-#: src/Abilities/Store/ResourceAbility.php:485
+#: src/Abilities/Store/ResourceAbility.php:491
 msgid "Give the file's public URL as fields.source_url."
 msgstr "Ange filens offentliga URL som fields.source_url."
 
 #. translators: %s: the largest file the store takes, e.g. "64 MB".
-#: src/Abilities/Store/ResourceAbility.php:496
+#: src/Abilities/Store/ResourceAbility.php:502
 #, php-format
 msgid "The file is larger than the store takes, at most %s."
 msgstr "Filen är större än butiken tar emot, högst %s."
 
 #. translators: %d: the HTTP status the file's URL answered with.
-#: src/Abilities/Store/ResourceAbility.php:532
+#: src/Abilities/Store/ResourceAbility.php:538
 #, php-format
 msgid "The file could not be downloaded: its URL answered %d."
 msgstr "Det gick inte att ladda ner filen: dess URL svarade %d."
@@ -9498,7 +9512,10 @@ msgid ""
 "A card without a title of its own shows the product’s. Without an image of "
 "its own, it shows the image of the value’s first variation that has one, "
 "else the product’s. Save attributes to add a row for a value you just added."
-msgstr "Ett kort utan egen titel visar produktens. Utan egen bild visar det bilden från värdets första variant som har en, annars produktens. Spara attribut för att lägga till en rad för ett värde du just har lagt till."
+msgstr ""
+"Ett kort utan egen titel visar produktens. Utan egen bild visar det bilden "
+"från värdets första variant som har en, annars produktens. Spara attribut "
+"för att lägga till en rad för ett värde du just har lagt till."
 
 #. translators: %s: an attribute value, such as "With photo". Title of the media library window choosing the image of that value's card in the shop.
 #: templates/admin/split-card-looks.php:40

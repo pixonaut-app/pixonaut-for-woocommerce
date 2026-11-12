@@ -108,8 +108,7 @@ variation is not personalised on a blank. They also add `pixonaut_setup`,
 the setup the variation is sold under: `{own_setup, blank_id, sides}`,
 `own_setup` false when it follows its product, whose `blank_id` and `sides`
 it then gives; each side as `set-product-setup` takes it, with only
-`template_id`, `template_pinned`, `placement_id`, `label` (absent without
-one of its own) and `mode`. Dates in an answer are RFC 3339 with their offset: a field
+`template_id`, `template_pinned`, `placement_id`, `label` and `mode`. Dates in an answer are RFC 3339 with their offset: a field
 ending in `_gmt` in UTC, any other in the site's timezone, where the route
 answers them without one.
 

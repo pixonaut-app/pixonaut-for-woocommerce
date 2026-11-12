@@ -197,6 +197,7 @@ final class VariationSetupShopToolsTest extends WP_UnitTestCase {
 			'blank_id'  => self::BLANK_ID,
 			'sides'     => array(
 				array(
+					'label'           => 'Front',
 					'mode'            => Side::STANDING,
 					'template_id'     => 'mini-tee@2',
 					'template_pinned' => true,

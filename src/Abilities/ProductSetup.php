@@ -329,8 +329,7 @@ final class ProductSetup {
 	/**
 	 * Whether a variation has a setup of its own, and the blank and sides it
 	 * is sold under: its own when it has one, else its product's. Read from
-	 * what is stored, without asking Pixonaut. A side without a label of its
-	 * own gives none.
+	 * what is stored, without asking Pixonaut.
 	 *
 	 * @param WC_Product $variation A variation.
 	 * @return array{own_setup: bool, blank_id: string|null, sides: list<array<string, mixed>>}
@@ -343,14 +342,8 @@ final class ProductSetup {
 			'own_setup' => $own->override,
 			'blank_id'  => $config->blank_id,
 			'sides'     => array_map(
-				static function ( Side $side ): array {
-					$fields = array_intersect_key( SetupFields::side_of( $side ), array_flip( self::VARIATION_SIDE_FIELDS ) );
-					if ( '' === $fields['label'] ) {
-						unset( $fields['label'] );
-					}
-					return $fields;
-				},
-				array_values( $config->sides )
+				static fn ( Side $side ): array => array_intersect_key( SetupFields::side_of( $side ), array_flip( self::VARIATION_SIDE_FIELDS ) ),
+				$config->sides
 			),
 		);
 	}
