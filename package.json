@@ -1,6 +1,6 @@
 {
 	"name": "pixonaut-for-woocommerce",
-	"version": "1.4.0",
+	"version": "1.5.0",
 	"private": true,
 	"description": "Connects a WooCommerce store to Pixonaut: personalised products, proofs and printshop orders.",
 	"license": "GPL-2.0-or-later",
