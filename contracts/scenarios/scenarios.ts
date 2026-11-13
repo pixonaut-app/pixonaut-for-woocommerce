@@ -26,21 +26,11 @@ export type Found = {
 	proofToken?: string;
 };
 
-/** The event types the store's endpoint receives (`Endpoint::EVENT_TYPES`). */
+/** The event types the store's endpoint receives and its pull asks for
+ *  (`Endpoint::EVENT_TYPES`). */
 function eventTypes(session: Session): string[] {
 	return session.contract.consumed.webhooks.filter(
 		(type) => type !== 'webhook.ping',
-	);
-}
-
-/** The types among them Pixonaut only delivers to the endpoint, which the
- *  event stream refuses to be asked for (`Endpoint::WEBHOOK_ONLY_TYPES`). */
-const WEBHOOK_ONLY_TYPES: readonly string[] = ['template.renamed'];
-
-/** The event types the store pulls from the stream (`EventsPull`). */
-function pulledEventTypes(session: Session): string[] {
-	return eventTypes(session).filter(
-		(type) => !WEBHOOK_ONLY_TYPES.includes(type),
 	);
 }
 
@@ -964,7 +954,7 @@ export const SCENARIOS: Scenario[] = [
 		name: 'read the event stream',
 		async run(session) {
 			await session.call('GET /v1/events', {
-				query: { types: pulledEventTypes(session).join(',') },
+				query: { types: eventTypes(session).join(',') },
 			});
 		},
 	},

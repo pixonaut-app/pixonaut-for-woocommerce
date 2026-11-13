@@ -6,7 +6,7 @@
 	"require": {
 		"php": ">=8.1",
 		"nyholm/psr7": "^1.8",
-		"pixonaut/pixonaut-php": "^5.0",
+		"pixonaut/pixonaut-php": "^6.0",
 		"yahnis-elsts/plugin-update-checker": "^5.7"
 	},
 	"require-dev": {
