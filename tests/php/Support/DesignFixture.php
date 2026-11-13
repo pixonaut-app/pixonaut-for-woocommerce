@@ -65,6 +65,7 @@ final class DesignFixture {
 				'proofRevision'        => 1,
 				'proofVariant'         => null,
 				'proofViewId'          => null,
+				'pickedColours'        => null,
 				'garmentTone'          => 'light',
 				'revision'             => 1,
 				'duplicatedFrom'       => null,

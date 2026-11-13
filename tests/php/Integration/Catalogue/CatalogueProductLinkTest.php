@@ -429,7 +429,9 @@ final class CatalogueProductLinkTest extends ProductPanelTestCase {
 			'status'     => $status,
 			'generation' => null,
 		) + BlankFixture::answer( array(), self::INTEGRATED_ID );
-		return array(
+		// Only an import that was started says what it could not measure.
+		$started = 'importing' === $status ? array( 'productModelMissing' => array() ) : array();
+		return $started + array(
 			'blank' => $blank,
 			'job'   => array(
 				'id'         => 'job_1',

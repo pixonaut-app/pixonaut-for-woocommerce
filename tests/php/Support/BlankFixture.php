@@ -158,6 +158,9 @@ final class BlankFixture {
 			'paintBy'            => null,
 			'areasVaryBy'        => array(),
 			'referenceRow'       => null,
+			// One product for every variant, measured nowhere.
+			'modelVariesBy'      => array(),
+			'productModels'      => array(),
 			'status'             => Catalogue::BLANK_READY,
 			'importFailure'      => null,
 			// A blank drawn with AI waits on its draw; this one is not.

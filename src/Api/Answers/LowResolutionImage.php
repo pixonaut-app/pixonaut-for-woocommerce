@@ -23,7 +23,7 @@ final class LowResolutionImage {
 	 * @param string      $asset_id        `assetId`: the library picture.
 	 * @param float       $effective_dpi   `effectiveDpi`: pixels per inch along the edge that decides, at the size.
 	 * @param float       $recommended_dpi `recommendedDpi`: the resolution it is judged against.
-	 * @param string|null $label           `label`: the image as the merchant knows it (its layer's name, else its form field's label, else Pixonaut's word for a picture or the background, in the workspace's language); null when Pixonaut left it out, as it did before naming images.
+	 * @param string|null $label           `label`: the image as the merchant knows it (its layer's name, else its form field's label, else Pixonaut's word for a picture or the background, in the workspace's language); null for a blank one, and for an image kept before Pixonaut named them.
 	 */
 	public function __construct(
 		public readonly string $layer_id,

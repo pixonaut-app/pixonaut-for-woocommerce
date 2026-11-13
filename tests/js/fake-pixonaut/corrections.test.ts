@@ -300,6 +300,24 @@ describe('correction proofs and PATCH', () => {
 		expect(fake.violations).toEqual([]);
 	});
 
+	it('keeps the colours the design was committed in', async () => {
+		const id = await seed();
+		const seeded = findDesign(fake.state, id, MAIN.id);
+		if (seeded === undefined) {
+			throw new Error(`No design ${id}.`);
+		}
+		seeded.proof.pickedColours = { Colour: '#1b2a4a' };
+
+		const response = await patch(id, { proofToken: await correctionProof(id) });
+
+		expect(response.status).toBe(200);
+		expect(await design(id)).toMatchObject({
+			revision: 2,
+			pickedColours: { Colour: '#1b2a4a' },
+		});
+		expect(fake.violations).toEqual([]);
+	});
+
 	it('keeps the variant and view the design was previewed on', async () => {
 		const id = await seed();
 		const seeded = findDesign(fake.state, id, MAIN.id);

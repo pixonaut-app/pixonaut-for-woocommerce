@@ -156,6 +156,30 @@ describe('POST /v1/proofs', () => {
 		});
 	});
 
+	it('keeps the colours the customer picked, which the design reads back', async () => {
+		const pickedColours = { Colour: '#1b2a4a' };
+		const { proofToken } = await (
+			await proof({ ...onBack, pickedColours })
+		).json();
+
+		const { designId } = await (await commit(proofToken)).json();
+		const design = await send(fake, `/v1/designs/${designId}`, {
+			headers: bearer(MAIN.integrationKey),
+		});
+		expect(await design.json()).toMatchObject({ pickedColours });
+		expect(fake.violations).toEqual([]);
+	});
+
+	it('reads a design nobody picked a colour for with none', async () => {
+		const { proofToken } = await (await proof(onBack)).json();
+
+		const { designId } = await (await commit(proofToken)).json();
+		const design = await send(fake, `/v1/designs/${designId}`, {
+			headers: bearer(MAIN.integrationKey),
+		});
+		expect(await design.json()).toMatchObject({ pickedColours: null });
+	});
+
 	it('keeps a previewed variant unchecked, and reads none back as null', async () => {
 		const named = await (
 			await proof({ ...onBack, variant: 'v_not_on_the_blank' })

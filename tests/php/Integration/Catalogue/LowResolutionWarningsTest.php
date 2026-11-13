@@ -57,14 +57,15 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 	) + self::SOFT;
 
 	/**
-	 * The image as Pixonaut answered before it named images: no `label`,
-	 * and the artwork background's internal key as its layer.
+	 * An image whose label says nothing, on the artwork background's
+	 * internal key as its layer.
 	 */
 	private const UNNAMED = array(
 		'layerId'        => '$artwork',
 		'assetId'        => self::ASSET_ID,
 		'effectiveDpi'   => 121.9,
 		'recommendedDpi' => 300,
+		'label'          => ' ',
 	);
 
 	/**
@@ -92,7 +93,7 @@ final class LowResolutionWarningsTest extends ProductPanelTestCase {
 		$this->assertStringContainsString( 'name="' . self::CHOICES . '[' . self::key() . ']"', $html );
 	}
 
-	public function test_an_answer_without_a_label_names_no_internal_key(): void {
+	public function test_an_answer_with_a_blank_label_names_no_internal_key(): void {
 		$product = $this->product();
 		$this->link( $product->get_id(), array( self::UNNAMED ) );
 

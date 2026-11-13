@@ -46,6 +46,10 @@ export type Proof = {
 	 *  request named it; null when it named none. Never checked against the
 	 *  blank: it is for display only. */
 	variant: string | null;
+	/** The colours the customer picked, `#rrggbb` by option name, for the
+	 *  values that take any colour; null when the request named none. Its
+	 *  design keeps them. */
+	pickedColours: Record<string, string> | null;
 	/** The view the customer previewed the proof in, by id; null when the
 	 *  request named none. */
 	viewId: string | null;
@@ -79,6 +83,8 @@ export type ProofRequest = {
 	printSize?: Box | null;
 	/** Absent: none previewed. */
 	variant?: string | null;
+	/** Absent: none picked. */
+	pickedColours?: Record<string, string> | null;
 	viewId?: string | null;
 	lifetimeMs?: number;
 	/** Absent: none, as a proof minted by a test fills no layer. */
@@ -139,6 +145,7 @@ export function mintProof(
 		placementId,
 		printSize,
 		variant: request.variant ?? null,
+		pickedColours: request.pickedColours ?? null,
 		viewId: request.viewId ?? null,
 		values,
 		language: isHostedLocale(request.language)

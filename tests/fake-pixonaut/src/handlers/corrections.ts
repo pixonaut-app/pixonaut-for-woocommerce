@@ -176,7 +176,8 @@ export const readDesigner: Handler = (context) => {
 	if (!editable(design)) {
 		return refusal(CONFLICT_STATUS, 'not_editable');
 	}
-	const { template, values, blankId, placementId } = design.proof;
+	const { template, values, blankId, placementId, variant, pickedColours } =
+		design.proof;
 	return {
 		status: 200,
 		body: {
@@ -186,6 +187,9 @@ export const readDesigner: Handler = (context) => {
 			// The pair the design was made on, which a mount naming another refuses.
 			blankId,
 			placementId,
+			// What the customer last saw it in, which the mount opens on.
+			variant,
+			pickedColours,
 		},
 	};
 };
@@ -254,6 +258,8 @@ export function mintCorrectionProof(
 		printSize: current.printSize,
 		// A correction is previewed where the customer last saw the design.
 		variant: current.variant,
+		// A correction keeps the colours the design was committed in.
+		pickedColours: current.pickedColours,
 		viewId: current.viewId,
 		// The design keeps every value, so the next correction starts from them.
 		values: correctedValues(current.values, values),

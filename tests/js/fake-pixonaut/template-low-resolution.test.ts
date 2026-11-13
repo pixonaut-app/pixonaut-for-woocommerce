@@ -55,6 +55,7 @@ describe('POST /__fake/templates/:id/low-resolution', () => {
 			{
 				layerId: 'photo',
 				assetId: 'ast_photo',
+				label: 'Picture',
 				effectiveDpi: expect.closeTo(121.92, DPI_DIGITS),
 				recommendedDpi: 300,
 			},
