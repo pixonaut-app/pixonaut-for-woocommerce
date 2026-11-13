@@ -2495,6 +2495,9 @@ export declare type PreloadItem = {
     /** The variant it is the photo of; undefined for the default photo. */
     variant: string | undefined;
     url: string;
+    /** The files its print is drawn through, loaded with it: its regions'
+     *  masks and its UV passes. Absent on a photo with none. */
+    layers?: readonly string[];
     estimatedBytes: number;
 } | {
     kind: "side";
