@@ -82,6 +82,7 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 		'assetId'        => 'ast_photo',
 		'effectiveDpi'   => 121.9,
 		'recommendedDpi' => 300,
+		'label'          => 'Photo',
 	);
 
 	private int $sequence = 0;

@@ -108,14 +108,14 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 	);
 
 	/**
-	 * Fields an answer model reads ahead of the SDK, by model: agreed with
-	 * Pixonaut and read when present, not yet in the pinned SDK. An entry
-	 * fails once the SDK has the field, to be matched as any other.
+	 * Fields every answer sends that a model still lets be null, by model:
+	 * the model is also read back from what the store kept, and a value kept
+	 * before Pixonaut sent the field has none. Matched as never null.
 	 *
 	 * @var array<class-string, list<string>>
 	 */
-	private const AHEAD_OF_SDK = array(
-		// The image's readable name, pixonaut-app/pixonaut#3517.
+	private const NULL_ONLY_WHEN_STORED = array(
+		// An image kept with a product's size before Pixonaut named images.
 		LowResolutionImage::class => array( 'label' ),
 	);
 
@@ -182,20 +182,18 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 	private function match( string $answer, array $answers ): void {
 		$this->matched[ $answer ] = true;
 		$skip                     = self::NOT_FIELDS[ $answer ] ?? array();
-		$ahead                    = self::AHEAD_OF_SDK[ $answer ] ?? array();
 		foreach ( self::constructor( $answer )->getParameters() as $parameter ) {
 			if ( in_array( $parameter->getName(), $skip, true ) ) {
 				continue;
 			}
-			if ( in_array( $parameter->getName(), $ahead, true ) ) {
-				foreach ( array_merge( ...$answers ) as $sdk_model ) {
-					$this->assertNull( self::parameter( $sdk_model, $parameter->getName() ), "{$sdk_model}::\${$parameter->getName()} is in the SDK now: drop it from AHEAD_OF_SDK." );
-				}
-				continue;
-			}
 			$type = $parameter->getType();
 			$this->assertInstanceOf( ReflectionNamedType::class, $type, "{$answer}::\${$parameter->getName()} has one type." );
-			$this->match_field( $answer, $parameter->getName(), $type->getName(), $type->allowsNull(), self::list_items( $parameter, self::ANSWERS_NAMESPACE ), $answers );
+			$nullable = $type->allowsNull();
+			if ( in_array( $parameter->getName(), self::NULL_ONLY_WHEN_STORED[ $answer ] ?? array(), true ) ) {
+				$this->assertTrue( $nullable, "{$answer}::\${$parameter->getName()} never is null: drop it from NULL_ONLY_WHEN_STORED." );
+				$nullable = false;
+			}
+			$this->match_field( $answer, $parameter->getName(), $type->getName(), $nullable, self::list_items( $parameter, self::ANSWERS_NAMESPACE ), $answers );
 		}
 	}
 

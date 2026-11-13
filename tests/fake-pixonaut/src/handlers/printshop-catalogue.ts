@@ -149,7 +149,11 @@ export const importCatalogueBlank: Handler = (context) => {
 		importedFrom: { connectionId: connection.id, productId: product.productId },
 	};
 	context.state.blanks.set(id, blank);
-	return { status: 202, body: importAnswer(blank) };
+	return {
+		status: 202,
+		// The fake's products name no kind a picture is drawn from: nothing to ask.
+		body: { ...importAnswer(blank), productModelMissing: [] },
+	};
 };
 
 /** The import's answer: the blank and the job filling it in. */

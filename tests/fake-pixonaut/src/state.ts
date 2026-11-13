@@ -281,9 +281,8 @@ export type TemplateVersion = {
 
 /** Images a print size judges against their recommended resolution. */
 export type LowResolutionSetup = {
-	/** `label`, when given, is answered beside `layerId`, as Pixonaut does
-	 *  since it names its pictures (pixonaut#3517); left out, the answer is
-	 *  an older one without it. */
+	/** `label` is what the merchant knows the image by, answered beside
+	 *  `layerId`; left out, the answer names it a picture. */
 	images: {
 		layerId: string;
 		assetId: string;

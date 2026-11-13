@@ -184,6 +184,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/s/{sha256}/thumbnail/{bakeKey}/{dye}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch a small picture of a product in a setting
+         * @description A small picture of a product drawn into a setting, through the link `GET /v1/blanks/{id}/mockups` answers as a setting's photo's `thumbnailUrl`: at most 256 pixels on its longer side, with the product's frame painted in its own material and colour where it has one. The link's last part is the revision the frame is painted at; a link is used as it was answered, and one of another revision is not found. No key is needed, and any cache may keep it for good: a link names one picture.
+         */
+        get: operations["scenes.bakes.thumbnail.get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/t/{id}/mockup.png": {
         parameters: {
             query?: never;
@@ -1028,7 +1048,7 @@ export interface paths {
         };
         /**
          * Read a blank
-         * @description One blank with its placements and variants, its chosen scenes, and its views and scenes as one ordered list (`order`), each with its source. A deleted blank is read too, with when and by whom it was deleted, so an order placed on it can show it.
+         * @description One blank with its placements and variants, its chosen scenes, and its views and scenes as one ordered list (`order`), each with its source, where its pictures stand in each setting it is bound to (`settingBakes`), and which of its rows each held scene it shows does not show (`heldScenes`). A deleted blank is read too, with when and by whom it was deleted, so an order placed on it can show it.
          */
         get: operations["blanks.get"];
         put?: never;
@@ -2359,7 +2379,7 @@ export interface paths {
         };
         /**
          * List the library's scenes
-         * @description The scenes a blank may show, Pixonaut's and the workspace's own, by stock item, then by setting, person and pose (the selects a stock photo is chosen by), each with a link to its picture and to the passes it is drawn through, all needing no key, and the stock items a blank may choose: each with a scene in the library. A retired scene is not listed.
+         * @description The scenes a blank may show, Pixonaut's and the workspace's own, by stock item, then by setting, person and pose (the selects a stock photo is chosen by), each with a link to its picture and to the passes it is drawn through, all needing no key, and the stock items a blank may choose: each with a scene in the library. The list is narrowed by kind, setting, person, pose, stock item and how a product may sit; `facets` answers the settings, people and poses left to choose, each counted over the scenes the rest of the query keeps. When a query naming a setting or a person matches no scene, `canMake` says what composing one would cost. A scene of kind `setting` is a photo with no product in it: it has no stock item and no passes, is listed after the scenes that have one, and a blank shows it at one of its anchors. A scene of kind `studio-style` has no photo at all, so no picture: its `geometry.studio` holds its backdrop, light and cameras, and a blank is bound to it from one of those cameras. A scene whose `cutOut` is true is a garment alone, shown only laid over a studio style. A scene that was measured holds its `geometry`. A retired scene is not listed.
          */
         get: operations["scenes.list"];
         put?: never;
@@ -22414,6 +22434,69 @@ export interface operations {
             };
         };
     };
+    "scenes.bakes.thumbnail.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sha256: string;
+                bakeKey: string;
+                dye: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The picture */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                };
+            };
+            /** @description Not modified: the `If-None-Match` etag still holds */
+            304: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No stored picture has this photo, or the link is of another revision (plain text) */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refused: rate_limited */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description The request failed unexpectedly. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
     "templates.mockup.get": {
         parameters: {
             query: {
@@ -30682,13 +30765,53 @@ export interface operations {
                                 /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
                                 photoAssetId: string | null;
                             } | null;
+                            /** @description The blank's rows on each held scene it shows, a scene with its product in a hand, in the blank's order: how many rows the scene shows, and which it does not and why. A scene limited to some option values answers for the rows with those values alone. Empty for a blank that shows no held scene, or deleted. Answered for one blank, never in a list. */
+                            heldScenes?: {
+                                /** @description The shape class the hand in the scene's photo holds: one product kind between two diameters and heights, in millimetres. */
+                                held: {
+                                    kind: string;
+                                    /** @description The largest product the grip holds. */
+                                    maxMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                    /** @description The smallest product the grip holds. */
+                                    minMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                };
+                                /** @description The scene's label. */
+                                label: string;
+                                /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
+                                refused: {
+                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    refusal: string;
+                                    /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description The refs of the variants with the row's values, of those the scene is of: the ones with no photo on it. */
+                                    variantRefs: string[];
+                                }[];
+                                /** @description The held scene's id. */
+                                sceneId: string;
+                                /** @description How many of the blank's rows the scene shows. */
+                                shown: number;
+                                /** @description The refs of the variants the scene is of, shown or refused: every variant of the blank, a retired one too, or those with the option values the scene is limited to. Empty for a blank with no variants. */
+                                variantRefs: string[];
+                            }[];
                             id: string;
                             /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
                             importFailure: string | null;
                             machineProfileId: string | null;
+                            /** @description The options the blank's product changes with, such as Size; empty for one product for every variant. */
+                            modelVariesBy: string[];
                             name: string;
                             /** @description The blank's options with their values, in the order the shopper sees them, a value no variant uses yet included. `axes` is their names. */
                             options: {
+                                /** @description The values the shopper picks any colour for with a colour picker, their colour fill the one shown until they do: only on a blank made by a custom printshop. Absent when none does. */
+                                anyColour?: string[];
                                 /** @description How each value looks to a shopper, by value: a colour fill, an image, or null for none. Every value of `values` is named. */
                                 appearances: {
                                     [key: string]: {
@@ -30753,6 +30876,12 @@ export interface operations {
                                 /** @description The stored view's id. */
                                 viewId: string;
                             } | {
+                                /** @description For a setting, a scene with no product in it: the key of its anchor the product is placed at. Required for one, and left out for any other scene. */
+                                anchor?: string;
+                                /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
+                                camera?: string;
+                                /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
+                                cutOut?: string;
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
@@ -30919,14 +31048,14 @@ export interface operations {
                                     };
                                     /** @description The printshop's own key for the view's photo style, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
                                     partnerStyleKey?: string;
-                                    /** @description The pixel size every photo of the view has; null until the view holds a photo. */
+                                    /** @description Its photos' pixel size, unless one has its own; null with no photo. */
                                     photoSizePx: {
                                         /** @description The photo's height, in pixels. */
                                         heightPx: number;
                                         /** @description The photo's width, in pixels. */
                                         widthPx: number;
                                     } | null;
-                                    /** @description The view's product photos, each the same size as the view. */
+                                    /** @description The view's product photos. */
                                     photos: {
                                         /** @description The photo's asset id, as the assets feature returns it after an upload. */
                                         assetId: string;
@@ -30934,6 +31063,24 @@ export interface operations {
                                         displacementStrength?: number | null;
                                         /** @description The photo's id, unique within the blank: the `mockupId` a render and a mockup link name. */
                                         id: string;
+                                        /** @description Own pixel size; absent, the view's. */
+                                        photoSizePx?: {
+                                            /** @description The photo's height, in pixels. */
+                                            heightPx: number;
+                                            /** @description The photo's width, in pixels. */
+                                            widthPx: number;
+                                        };
+                                        /** @description Own print rect; absent, the view's. */
+                                        placementRectPx?: {
+                                            /** @description The print area's height, in pixels. */
+                                            h: number;
+                                            /** @description The print area's width, in pixels. */
+                                            w: number;
+                                            /** @description The print area's left edge, in pixels from the photo's left. */
+                                            x: number;
+                                            /** @description The print area's top edge, in pixels from the photo's top. */
+                                            y: number;
+                                        };
                                         /** @description The photo's value of each `photosVaryBy` option; empty when there are none. One photo per row per view. */
                                         row?: {
                                             [key: string]: string;
@@ -30956,7 +31103,7 @@ export interface operations {
                                     }[];
                                     /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                     piece?: number;
-                                    /** @description Where the print area sits on every photo of the view, in the original photo's pixels; null until it is marked. */
+                                    /** @description Where the print area sits on its photos, unless one has its own, in the original photo's pixels; null until marked. */
                                     placementRectPx: {
                                         /** @description The print area's height, in pixels. */
                                         h: number;
@@ -31065,6 +31212,158 @@ export interface operations {
                                     widthMm: number;
                                 };
                             }[];
+                            /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
+                            productModels: {
+                                /** @description What the product is, by kind. */
+                                model: {
+                                    /** @description The sheet's height, in millimetres. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A flat sheet, such as a poster.
+                                     * @enum {string}
+                                     */
+                                    kind: "flat-sheet";
+                                    /** @description The sheet's width, in millimetres. */
+                                    widthMm: number;
+                                } | {
+                                    /** @description The sheet's height, in millimetres. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A sheet in a frame, such as a framed poster.
+                                     * @enum {string}
+                                     */
+                                    kind: "framed-sheet";
+                                    /**
+                                     * @description Its frame, and its mat and glass when it has them.
+                                     * @default []
+                                     */
+                                    parts: ({
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description How far it stands off the wall, in millimetres. */
+                                        depthMm: number;
+                                        /** @description How far it covers the sheet's edge, in millimetres. */
+                                        lipMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /** @description Its face's width, from outer to inner edge, in millimetres. */
+                                        profileWidthMm: number;
+                                        /**
+                                         * @description The frame round a sheet.
+                                         * @enum {string}
+                                         */
+                                        role: "frame";
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description The mat between frame and print.
+                                         * @enum {string}
+                                         */
+                                        role: "mat";
+                                        /** @description How far it reaches in from the frame on each side, in millimetres. */
+                                        widthMm: number;
+                                    } | {
+                                        /**
+                                         * @description The glass over a framed sheet.
+                                         * @enum {string}
+                                         */
+                                        role: "glass";
+                                    })[];
+                                    /** @description The sheet's width, in millimetres. */
+                                    widthMm: number;
+                                } | {
+                                    /** @description Its diameter at the base, in millimetres. */
+                                    baseDiameterMm: number;
+                                    /** @description Its height, in millimetres. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A cylinder, straight or tapered, such as a mug.
+                                     * @enum {string}
+                                     */
+                                    kind: "cylinder";
+                                    /**
+                                     * @description Its handle, lid, straw and finish, each when it has one. Omitted, none.
+                                     * @default []
+                                     */
+                                    parts: ({
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description Its height, in millimetres. */
+                                        heightMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description A cylinder's handle.
+                                         * @enum {string}
+                                         */
+                                        role: "handle";
+                                        /** @description Its thickness, in millimetres. */
+                                        thicknessMm: number;
+                                        /** @description How far it stands out, in millimetres. */
+                                        widthMm: number;
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description Its height above the rim, in millimetres. */
+                                        heightMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description A cylinder's lid.
+                                         * @enum {string}
+                                         */
+                                        role: "lid";
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description Its diameter, in millimetres. */
+                                        diameterMm: number;
+                                        /** @description Its length, in millimetres. */
+                                        lengthMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description A cylinder's straw.
+                                         * @enum {string}
+                                         */
+                                        role: "straw";
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description What a cylinder's body is made of.
+                                         * @enum {string}
+                                         */
+                                        role: "finish";
+                                    })[];
+                                    /** @description The band round its side that takes the print. */
+                                    printBand: {
+                                        /** @description The band's height, in millimetres. */
+                                        heightMm: number;
+                                        /** @description From the top down to the band, in millimetres. */
+                                        topMm: number;
+                                    };
+                                    /** @description Its diameter at the top, in millimetres. */
+                                    topDiameterMm: number;
+                                } | {
+                                    /** @description Which garment it is cut as. */
+                                    cut: string;
+                                    /**
+                                     * @description A garment.
+                                     * @enum {string}
+                                     */
+                                    kind: "garment-cut";
+                                };
+                                /** @description A value for each `modelVariesBy` option, by option name; {} for none. */
+                                row: {
+                                    [key: string]: string;
+                                };
+                            }[];
                             /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
                             referenceRow: {
                                 [key: string]: string;
@@ -31140,6 +31439,28 @@ export interface operations {
                                     };
                                 }[];
                             };
+                            /** @description Where the blank's pictures stand in each setting it is bound to, in the blank's order: how many of its rows are drawn there, and which are not and why. Empty for a blank bound to no setting, or deleted. Answered for one blank, never in a list. */
+                            settingBakes?: {
+                                /** @description The anchor of the setting the blank's product sits at. */
+                                anchorKey: string;
+                                /** @description The setting's label. */
+                                label: string;
+                                /** @description How many of the blank's rows are drawn in the setting. */
+                                ready: number;
+                                /** @description The setting's id. */
+                                sceneId: string;
+                                /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
+                                waiting: {
+                                    /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
+                                    refusal: string | null;
+                                    /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description Where its drawing stands: `queued` is not drawn yet, `failed` is drawn again at the next run, `refused` is never drawn as the blank and the setting are. */
+                                    state: string;
+                                }[];
+                            }[];
                             /** @description The first photo of the blank's first view of several placements that has one, in their order: the view, the photo (a mockup), its asset and the view's photo size. A blank whose views of one placement have no photo is pictured by it. Null for a blank with no such photo. Answered in a list. */
                             sharedViewPhoto?: {
                                 assetId: string;
@@ -31297,13 +31618,53 @@ export interface operations {
                             /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
                             photoAssetId: string | null;
                         } | null;
+                        /** @description The blank's rows on each held scene it shows, a scene with its product in a hand, in the blank's order: how many rows the scene shows, and which it does not and why. A scene limited to some option values answers for the rows with those values alone. Empty for a blank that shows no held scene, or deleted. Answered for one blank, never in a list. */
+                        heldScenes?: {
+                            /** @description The shape class the hand in the scene's photo holds: one product kind between two diameters and heights, in millimetres. */
+                            held: {
+                                kind: string;
+                                /** @description The largest product the grip holds. */
+                                maxMm: {
+                                    diameter: number;
+                                    height: number;
+                                };
+                                /** @description The smallest product the grip holds. */
+                                minMm: {
+                                    diameter: number;
+                                    height: number;
+                                };
+                            };
+                            /** @description The scene's label. */
+                            label: string;
+                            /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
+                            refused: {
+                                /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                refusal: string;
+                                /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                row: {
+                                    [key: string]: string;
+                                };
+                                /** @description The refs of the variants with the row's values, of those the scene is of: the ones with no photo on it. */
+                                variantRefs: string[];
+                            }[];
+                            /** @description The held scene's id. */
+                            sceneId: string;
+                            /** @description How many of the blank's rows the scene shows. */
+                            shown: number;
+                            /** @description The refs of the variants the scene is of, shown or refused: every variant of the blank, a retired one too, or those with the option values the scene is limited to. Empty for a blank with no variants. */
+                            variantRefs: string[];
+                        }[];
                         id: string;
                         /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
                         importFailure: string | null;
                         machineProfileId: string | null;
+                        /** @description The options the blank's product changes with, such as Size; empty for one product for every variant. */
+                        modelVariesBy: string[];
                         name: string;
                         /** @description The blank's options with their values, in the order the shopper sees them, a value no variant uses yet included. `axes` is their names. */
                         options: {
+                            /** @description The values the shopper picks any colour for with a colour picker, their colour fill the one shown until they do: only on a blank made by a custom printshop. Absent when none does. */
+                            anyColour?: string[];
                             /** @description How each value looks to a shopper, by value: a colour fill, an image, or null for none. Every value of `values` is named. */
                             appearances: {
                                 [key: string]: {
@@ -31368,6 +31729,12 @@ export interface operations {
                             /** @description The stored view's id. */
                             viewId: string;
                         } | {
+                            /** @description For a setting, a scene with no product in it: the key of its anchor the product is placed at. Required for one, and left out for any other scene. */
+                            anchor?: string;
+                            /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
+                            camera?: string;
+                            /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
+                            cutOut?: string;
                             /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                             row?: {
                                 [key: string]: string;
@@ -31534,14 +31901,14 @@ export interface operations {
                                 };
                                 /** @description The printshop's own key for the view's photo style, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
                                 partnerStyleKey?: string;
-                                /** @description The pixel size every photo of the view has; null until the view holds a photo. */
+                                /** @description Its photos' pixel size, unless one has its own; null with no photo. */
                                 photoSizePx: {
                                     /** @description The photo's height, in pixels. */
                                     heightPx: number;
                                     /** @description The photo's width, in pixels. */
                                     widthPx: number;
                                 } | null;
-                                /** @description The view's product photos, each the same size as the view. */
+                                /** @description The view's product photos. */
                                 photos: {
                                     /** @description The photo's asset id, as the assets feature returns it after an upload. */
                                     assetId: string;
@@ -31549,6 +31916,24 @@ export interface operations {
                                     displacementStrength?: number | null;
                                     /** @description The photo's id, unique within the blank: the `mockupId` a render and a mockup link name. */
                                     id: string;
+                                    /** @description Own pixel size; absent, the view's. */
+                                    photoSizePx?: {
+                                        /** @description The photo's height, in pixels. */
+                                        heightPx: number;
+                                        /** @description The photo's width, in pixels. */
+                                        widthPx: number;
+                                    };
+                                    /** @description Own print rect; absent, the view's. */
+                                    placementRectPx?: {
+                                        /** @description The print area's height, in pixels. */
+                                        h: number;
+                                        /** @description The print area's width, in pixels. */
+                                        w: number;
+                                        /** @description The print area's left edge, in pixels from the photo's left. */
+                                        x: number;
+                                        /** @description The print area's top edge, in pixels from the photo's top. */
+                                        y: number;
+                                    };
                                     /** @description The photo's value of each `photosVaryBy` option; empty when there are none. One photo per row per view. */
                                     row?: {
                                         [key: string]: string;
@@ -31571,7 +31956,7 @@ export interface operations {
                                 }[];
                                 /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                 piece?: number;
-                                /** @description Where the print area sits on every photo of the view, in the original photo's pixels; null until it is marked. */
+                                /** @description Where the print area sits on its photos, unless one has its own, in the original photo's pixels; null until marked. */
                                 placementRectPx: {
                                     /** @description The print area's height, in pixels. */
                                     h: number;
@@ -31680,6 +32065,158 @@ export interface operations {
                                 widthMm: number;
                             };
                         }[];
+                        /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
+                        productModels: {
+                            /** @description What the product is, by kind. */
+                            model: {
+                                /** @description The sheet's height, in millimetres. */
+                                heightMm: number;
+                                /**
+                                 * @description A flat sheet, such as a poster.
+                                 * @enum {string}
+                                 */
+                                kind: "flat-sheet";
+                                /** @description The sheet's width, in millimetres. */
+                                widthMm: number;
+                            } | {
+                                /** @description The sheet's height, in millimetres. */
+                                heightMm: number;
+                                /**
+                                 * @description A sheet in a frame, such as a framed poster.
+                                 * @enum {string}
+                                 */
+                                kind: "framed-sheet";
+                                /**
+                                 * @description Its frame, and its mat and glass when it has them.
+                                 * @default []
+                                 */
+                                parts: ({
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description How far it stands off the wall, in millimetres. */
+                                    depthMm: number;
+                                    /** @description How far it covers the sheet's edge, in millimetres. */
+                                    lipMm: number;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /** @description Its face's width, from outer to inner edge, in millimetres. */
+                                    profileWidthMm: number;
+                                    /**
+                                     * @description The frame round a sheet.
+                                     * @enum {string}
+                                     */
+                                    role: "frame";
+                                } | {
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /**
+                                     * @description The mat between frame and print.
+                                     * @enum {string}
+                                     */
+                                    role: "mat";
+                                    /** @description How far it reaches in from the frame on each side, in millimetres. */
+                                    widthMm: number;
+                                } | {
+                                    /**
+                                     * @description The glass over a framed sheet.
+                                     * @enum {string}
+                                     */
+                                    role: "glass";
+                                })[];
+                                /** @description The sheet's width, in millimetres. */
+                                widthMm: number;
+                            } | {
+                                /** @description Its diameter at the base, in millimetres. */
+                                baseDiameterMm: number;
+                                /** @description Its height, in millimetres. */
+                                heightMm: number;
+                                /**
+                                 * @description A cylinder, straight or tapered, such as a mug.
+                                 * @enum {string}
+                                 */
+                                kind: "cylinder";
+                                /**
+                                 * @description Its handle, lid, straw and finish, each when it has one. Omitted, none.
+                                 * @default []
+                                 */
+                                parts: ({
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description Its height, in millimetres. */
+                                    heightMm: number;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /**
+                                     * @description A cylinder's handle.
+                                     * @enum {string}
+                                     */
+                                    role: "handle";
+                                    /** @description Its thickness, in millimetres. */
+                                    thicknessMm: number;
+                                    /** @description How far it stands out, in millimetres. */
+                                    widthMm: number;
+                                } | {
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description Its height above the rim, in millimetres. */
+                                    heightMm: number;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /**
+                                     * @description A cylinder's lid.
+                                     * @enum {string}
+                                     */
+                                    role: "lid";
+                                } | {
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description Its diameter, in millimetres. */
+                                    diameterMm: number;
+                                    /** @description Its length, in millimetres. */
+                                    lengthMm: number;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /**
+                                     * @description A cylinder's straw.
+                                     * @enum {string}
+                                     */
+                                    role: "straw";
+                                } | {
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /**
+                                     * @description What a cylinder's body is made of.
+                                     * @enum {string}
+                                     */
+                                    role: "finish";
+                                })[];
+                                /** @description The band round its side that takes the print. */
+                                printBand: {
+                                    /** @description The band's height, in millimetres. */
+                                    heightMm: number;
+                                    /** @description From the top down to the band, in millimetres. */
+                                    topMm: number;
+                                };
+                                /** @description Its diameter at the top, in millimetres. */
+                                topDiameterMm: number;
+                            } | {
+                                /** @description Which garment it is cut as. */
+                                cut: string;
+                                /**
+                                 * @description A garment.
+                                 * @enum {string}
+                                 */
+                                kind: "garment-cut";
+                            };
+                            /** @description A value for each `modelVariesBy` option, by option name; {} for none. */
+                            row: {
+                                [key: string]: string;
+                            };
+                        }[];
                         /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
                         referenceRow: {
                             [key: string]: string;
@@ -31755,6 +32292,28 @@ export interface operations {
                                 };
                             }[];
                         };
+                        /** @description Where the blank's pictures stand in each setting it is bound to, in the blank's order: how many of its rows are drawn there, and which are not and why. Empty for a blank bound to no setting, or deleted. Answered for one blank, never in a list. */
+                        settingBakes?: {
+                            /** @description The anchor of the setting the blank's product sits at. */
+                            anchorKey: string;
+                            /** @description The setting's label. */
+                            label: string;
+                            /** @description How many of the blank's rows are drawn in the setting. */
+                            ready: number;
+                            /** @description The setting's id. */
+                            sceneId: string;
+                            /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
+                            waiting: {
+                                /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
+                                refusal: string | null;
+                                /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                row: {
+                                    [key: string]: string;
+                                };
+                                /** @description Where its drawing stands: `queued` is not drawn yet, `failed` is drawn again at the next run, `refused` is never drawn as the blank and the setting are. */
+                                state: string;
+                            }[];
+                        }[];
                         /** @description The first photo of the blank's first view of several placements that has one, in their order: the view, the photo (a mockup), its asset and the view's photo size. A blank whose views of one placement have no photo is pictured by it. Null for a blank with no such photo. Answered in a list. */
                         sharedViewPhoto?: {
                             assetId: string;
@@ -31916,6 +32475,27 @@ export interface operations {
                                 dFrac: string;
                             };
                             views: {
+                                /** @description On a studio style's view, the camera of the style it is seen from: a blank shows one style once for each camera, and this says which this view is. */
+                                camera?: string;
+                                /** @description On a scene's view, the setting, person and pose its scene is chosen by, which a reader groups a product's views with. */
+                                facets?: {
+                                    /** @description Who is in the scene; null for a scene nobody is in. */
+                                    person: {
+                                        /** @description The value, the same on every scene that names it. */
+                                        key: string;
+                                        /** @description Its words, for a heading or a caption. */
+                                        label: string;
+                                    } | null;
+                                    /** @description How the product is shown, as the scene names it. */
+                                    pose: string;
+                                    /** @description Where the scene is photographed. Views of one setting share its `key`. */
+                                    setting: {
+                                        /** @description The value, the same on every scene that names it. */
+                                        key: string;
+                                        /** @description Its words, for a heading or a caption. */
+                                        label: string;
+                                    };
+                                };
                                 id: string;
                                 label: string;
                                 /** @description The region's mask, the view's photo size, opened with no key: where it is light the print shows, where it is dark the print is hidden. Absent hides nothing. Valid as long as a photo's `url`. */
@@ -31951,7 +32531,7 @@ export interface operations {
                                             h: number;
                                             w: number;
                                         };
-                                        /** @description Where the print area sits on every photo of the view, in the original photo's pixels; null until it is marked. */
+                                        /** @description Where the print sits on the photo, in its original pixels. */
                                         placementRectPx: {
                                             /** @description The print area's height, in pixels. */
                                             h: number;
@@ -31978,6 +32558,85 @@ export interface operations {
                                             kind: string;
                                         } | null;
                                     } | null;
+                                    /** @description On a view showing a setting, this photo's own picture and files: the product of the variants it names, drawn into the setting, with the print window of their own print area. A photo carrying it has no `mount`: it is drawn through these alone. Absent on every other photo. */
+                                    photoScene?: {
+                                        /** @description What the picture was drawn from: two photos with one key are one picture. */
+                                        bakeKey: string;
+                                        /** @description Whether the product is drawn from its own measures, at true size. False for an estimate. */
+                                        exact: boolean;
+                                        /** @description The photo's mask, opened with no key. */
+                                        maskUrl: string;
+                                        photoSizePx: {
+                                            h: number;
+                                            w: number;
+                                        };
+                                        /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                        piece?: number;
+                                        /** @description The print size on the model of the piece the region's `printWindowMm` lies on, in mm. Present with a print window only. */
+                                        pieceSizeMm?: {
+                                            heightMm: number;
+                                            widthMm: number;
+                                        };
+                                        /** @description Where the print is read on the photo: the whole of it, through the photo's own `uvPassUrls` and `maskUrl`. */
+                                        placementRectPx: {
+                                            /** @description The print area's height, in pixels. */
+                                            h: number;
+                                            /** @description The print area's width, in pixels. */
+                                            w: number;
+                                            /** @description The print area's left edge, in pixels from the photo's left. */
+                                            x: number;
+                                            /** @description The print area's top edge, in pixels from the photo's top. */
+                                            y: number;
+                                        };
+                                        /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on a cup's side: the print fills it at the window's size, the product plain outside it. It lies inside its piece, whose size the view must give. Absent, the whole piece. */
+                                        printWindowMm?: {
+                                            /** @description The window's height, in mm. */
+                                            heightMm: number;
+                                            /** @description The window's width, in mm. */
+                                            widthMm: number;
+                                            /** @description The window's left edge, in mm from the piece's left. */
+                                            xMm: number;
+                                            /** @description The window's top edge, in mm from the piece's top. */
+                                            yMm: number;
+                                        };
+                                        /** @description The setting the product is in. */
+                                        sceneId: string;
+                                        /** @description A small picture of the photo, opened with no key: the product in the setting, its frame painted in its own material where it has one. For a list or a picker; a print is drawn through the photo and its passes. */
+                                        thumbnailUrl: string;
+                                        /** @description The photo, opened with no key. */
+                                        url: string;
+                                        uvPassUrls: {
+                                            /** @description The multiply pass: the product's shadows and folds. */
+                                            multiply: string;
+                                            /** @description What lies in front of the print, drawn over it: hands, cords and hair. Absent when nothing does. */
+                                            occluder?: string;
+                                            /** @description The screen pass: the product's highlights. */
+                                            screen: string;
+                                            /** @description The 16-bit UV pass: for each pixel, its piece (blue) and where across (red) and down (green) that piece's print it reads. */
+                                            uv: string;
+                                        };
+                                        /** @description On a scene's view, its files at the zoom tier: the same view with more pixels, for a preview zoomed past this one's. Each is as large as `photoSizePx`, and a region covers the whole of it. */
+                                        zoomTier?: {
+                                            /** @description The mask at this tier, opened with no key. */
+                                            maskUrl: string;
+                                            photoSizePx: {
+                                                heightPx: number;
+                                                widthPx: number;
+                                            };
+                                            /** @description The photo at this tier, opened with no key. */
+                                            url: string;
+                                            uvPassUrls: {
+                                                multiply: string;
+                                                occluder?: string;
+                                                screen: string;
+                                                uv: string;
+                                            };
+                                        };
+                                    };
+                                    /** @description The option values a scene's photo is limited to, by option name: it shows only the variants in `variantRefs`, and no other variant has a photo on this view. Absent on a photo limited to none. */
+                                    row?: {
+                                        [key: string]: string;
+                                    };
                                     thumbnailUrl: string;
                                     /** @description The refs of the blank's variants the photo shows, so a designer picks a view's photo of the variant chosen. Empty when it names none: on a blank with no Color axis a photo shows every variant. */
                                     variantRefs: string[];
@@ -32066,6 +32725,27 @@ export interface operations {
                         }[];
                         /** @description The blank's views of several placements, in order: each region with its placement, rect, mesh, window and mask, and each photo with its variants and its looks per region. */
                         views: {
+                            /** @description On a studio style's view, the camera of the style it is seen from: a blank shows one style once for each camera, and this says which this view is. */
+                            camera?: string;
+                            /** @description On a scene's view, the setting, person and pose its scene is chosen by, which a reader groups a product's views with. */
+                            facets?: {
+                                /** @description Who is in the scene; null for a scene nobody is in. */
+                                person: {
+                                    /** @description The value, the same on every scene that names it. */
+                                    key: string;
+                                    /** @description Its words, for a heading or a caption. */
+                                    label: string;
+                                } | null;
+                                /** @description How the product is shown, as the scene names it. */
+                                pose: string;
+                                /** @description Where the scene is photographed. Views of one setting share its `key`. */
+                                setting: {
+                                    /** @description The value, the same on every scene that names it. */
+                                    key: string;
+                                    /** @description Its words, for a heading or a caption. */
+                                    label: string;
+                                };
+                            };
                             /** @description The view's id, unique within the blank. */
                             id: string;
                             label: string;
@@ -32081,6 +32761,84 @@ export interface operations {
                                 height: number;
                                 /** @description The photo's id, unique within the blank. */
                                 id: string;
+                                /** @description On a view showing a setting, this photo's own picture and files: the product of the variants it names, drawn into the setting, with a print window per placement. The view's own `regions` then mark no rect, and each is drawn through these alone. Absent on every other photo. */
+                                photoScene?: {
+                                    /** @description What the picture was drawn from: two photos with one key are one picture. */
+                                    bakeKey: string;
+                                    /** @description Whether the product is drawn from its own measures, at true size. False for an estimate. */
+                                    exact: boolean;
+                                    /** @description The photo's mask, opened with no key. */
+                                    maskUrl: string;
+                                    photoSizePx: {
+                                        h: number;
+                                        w: number;
+                                    };
+                                    /** @description The placements this photo carries a print of, in the order they are drawn, each with the window of its own print area. */
+                                    regions: {
+                                        /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
+                                        piece?: number;
+                                        /** @description The print size on the model of the piece the region's `printWindowMm` lies on, in mm. Present with a print window only. */
+                                        pieceSizeMm?: {
+                                            heightMm: number;
+                                            widthMm: number;
+                                        };
+                                        /** @description The placement whose print the region shows. */
+                                        placementId: string;
+                                        /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on a cup's side: the print fills it at the window's size, the product plain outside it. It lies inside its piece, whose size the view must give. Absent, the whole piece. */
+                                        printWindowMm?: {
+                                            /** @description The window's height, in mm. */
+                                            heightMm: number;
+                                            /** @description The window's width, in mm. */
+                                            widthMm: number;
+                                            /** @description The window's left edge, in mm from the piece's left. */
+                                            xMm: number;
+                                            /** @description The window's top edge, in mm from the piece's top. */
+                                            yMm: number;
+                                        };
+                                        /** @description Where the print is read on the photo: the whole of it, through the photo's own `uvPassUrls` and `maskUrl`. */
+                                        rectPx: {
+                                            /** @description The print area's height, in pixels. */
+                                            h: number;
+                                            /** @description The print area's width, in pixels. */
+                                            w: number;
+                                            /** @description The print area's left edge, in pixels from the photo's left. */
+                                            x: number;
+                                            /** @description The print area's top edge, in pixels from the photo's top. */
+                                            y: number;
+                                        };
+                                    }[];
+                                    /** @description The setting the product is in. */
+                                    sceneId: string;
+                                    /** @description A small picture of the photo, opened with no key: the product in the setting, its frame painted in its own material where it has one. For a list or a picker; a print is drawn through the photo and its passes. */
+                                    thumbnailUrl: string;
+                                    uvPassUrls: {
+                                        /** @description The multiply pass: the product's shadows and folds. */
+                                        multiply: string;
+                                        /** @description What lies in front of the print, drawn over it: hands, cords and hair. Absent when nothing does. */
+                                        occluder?: string;
+                                        /** @description The screen pass: the product's highlights. */
+                                        screen: string;
+                                        /** @description The 16-bit UV pass: for each pixel, its piece (blue) and where across (red) and down (green) that piece's print it reads. */
+                                        uv: string;
+                                    };
+                                    /** @description On a scene's view, its files at the zoom tier: the same view with more pixels, for a preview zoomed past this one's. Each is as large as `photoSizePx`, and a region covers the whole of it. */
+                                    zoomTier?: {
+                                        /** @description The mask at this tier, opened with no key. */
+                                        maskUrl: string;
+                                        photoSizePx: {
+                                            heightPx: number;
+                                            widthPx: number;
+                                        };
+                                        /** @description The photo at this tier, opened with no key. */
+                                        url: string;
+                                        uvPassUrls: {
+                                            multiply: string;
+                                            occluder?: string;
+                                            screen: string;
+                                            uv: string;
+                                        };
+                                    };
+                                };
                                 /** @description The photo's looks in each region it sets any for; a region left out takes the defaults. */
                                 regions: {
                                     /** @description How far the photo's folds move the design, more than 0 and at most 1. null moves nothing. Omitted, its category's, else nothing. */
@@ -32101,6 +32859,10 @@ export interface operations {
                                         kind: string;
                                     } | null;
                                 }[];
+                                /** @description The option values a scene's photo is limited to, by option name: it shows only the variants in `variantRefs`, and no other variant has a photo on this view. Absent on a photo limited to none. */
+                                row?: {
+                                    [key: string]: string;
+                                };
                                 /** @description The photo, opened with no key. It stays valid for at least 30 days and at most 60, and any cache may keep it that long; it stops opening once the view no longer shows that photo. */
                                 url: string;
                                 /** @description The refs of the blank's variants the photo shows. Empty when it names none: on a blank with no Color axis a photo shows every variant. */
@@ -32143,7 +32905,7 @@ export interface operations {
                                     /** @description The window's top edge, in mm from the piece's top. */
                                     yMm: number;
                                 };
-                                /** @description Where the region's print sits on every photo, in the photo's original pixels; null while it is not marked. */
+                                /** @description Where the region's print sits on every photo, in the photo's original pixels; null while it is not marked, and on a view showing a setting, whose photos each say where under `photoScene`. */
                                 rectPx: {
                                     /** @description The print area's height, in pixels. */
                                     h: number;
@@ -32329,6 +33091,8 @@ export interface operations {
                                 assetId: string;
                                 /** @description Pixels per inch along the edge that decides, at the size. */
                                 effectiveDpi: number;
+                                /** @description What the merchant knows the image by: the layer's name, else its form field's label, else the form's word for the background picture or a picture, in the workspace's language. Never an internal key. */
+                                label: string;
                                 /** @description The layer the image fills, or the artwork's own key for its image background. */
                                 layerId: string;
                                 /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -32579,6 +33343,8 @@ export interface operations {
                         axes: string[];
                         /** @description The blank's options in that order, each with its values and how each value looks: a designer draws an option whose values have appearances as swatches. */
                         options: {
+                            /** @description The values the shopper picks any colour for with a colour picker, their colour fill the one shown until they do: only on a blank made by a custom printshop. Absent when none does. */
+                            anyColour?: string[];
                             /** @description Each value's appearance, by value: every value is named. */
                             appearances: {
                                 [key: string]: {
@@ -32610,6 +33376,13 @@ export interface operations {
                         /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, and a dyeable stock photo takes the first option with colours. */
                         paintBy: string | null;
                         variants: {
+                            /** @description How the frame of its product looks, from the frame part of its row's product model. Absent on a product with no frame part. */
+                            frame?: {
+                                /** @description Its colour, `#rrggbb`. */
+                                hex: string;
+                                /** @description The texture it is painted in; absent, its flat colour. */
+                                texture?: string;
+                            };
                             options: {
                                 [key: string]: string;
                             };
@@ -33987,6 +34760,10 @@ export interface operations {
                 } & {
                     /** @description The variant whose colour the design is drawn in, by ref (`v_…`), when it is not the one `variant` names: on a dark colour each layer takes its on-dark value. It sizes nothing. A proof keeps it as `proofVariant`, so its commit is drawn in the same colour. Absent, `variant`'s colour; a ref the blank has no variant of draws as on a light product. */
                     garmentVariant?: string;
+                    /** @description The colours the shopper picked, by option name, `#rrggbb` each, such as `{"Colour": "#1b2a4a"}`, for a value of the blank that takes any colour: the product is drawn, and its tone judged, in the pick. A design keeps them, and its order is made in them; a pick for a value that takes no colour is kept and not used. Absent, each such value is its own colour. */
+                    pickedColours?: {
+                        [key: string]: string;
+                    };
                 } & {
                     /** @description Lays the design as a repeat of its template across the print area. Null, or absent, places it once. Through a designer link, a repeat the link offers, or null where its shopper may turn the repeat off; absent there, the link's own start. */
                     repeat?: {
@@ -34349,6 +35126,10 @@ export interface operations {
                     garmentVariant?: string;
                     /** @description The name of the blank's panel layout the design is drawn on. */
                     layout: string;
+                    /** @description The colours the shopper picked, by option name, `#rrggbb` each, such as `{"Colour": "#1b2a4a"}`, for a value of the blank that takes any colour: the product is drawn, and its tone judged, in the pick. A design keeps them, and its order is made in them; a pick for a value that takes no colour is kept and not used. Absent, each such value is its own colour. */
+                    pickedColours?: {
+                        [key: string]: string;
+                    };
                     /** @description Whether the customer opened the design's preview before ticking your approval checkbox, as the SDK's `wasPreviewOpened()` says, kept on the design as `previewOpened`. It is for your own tracking: nothing else in Pixonaut depends on it, so report it honestly. Leave it out when your store has no approval checkbox: the design then says this does not apply, or yes when the proof you commit came from a hosted designer's approve. */
                     previewOpened?: boolean;
                     /** @description Lays the design as a repeat of its template across the print area. Null, or absent, places it once. Through a designer link, a repeat the link offers, or null where its shopper may turn the repeat off; absent there, the link's own start. */
@@ -34956,6 +35737,10 @@ export interface operations {
                         };
                         /** @description When the design's own personal data was erased (`POST /v1/designs/{id}/erase-personal-data`), or null. An erased design's document holds none of the text or pictures its customer put in, and nothing more is printed, ordered or corrected from it. */
                         personalDataErasedAt: number | null;
+                        /** @description The colours the shopper picked, by option name, `#rrggbb` each, such as `{"Colour": "#1b2a4a"}`, as the design was committed: a value of its blank that takes any colour is made in its pick. Null when none was picked. */
+                        pickedColours: {
+                            [key: string]: string;
+                        } | null;
                         /** @description A link to a drawing of the design's current revision, as `GET /v1/designs/{id}/revisions/{revision}/image` draws it, that opens with no key for an hour or two. It opens that revision alone, and stops opening once the design's personal data is erased. Null once it was. */
                         pictureUrl: string | null;
                         /** @description The placement on the blank this design was fitted to when it was made; null whenever `blankId` is. Kept while the blank is, so it may name a placement since removed from the blank: the print box frozen into the document is what prints. */
@@ -36406,6 +37191,10 @@ export interface operations {
                         optionLabels?: {
                             [key: string]: string;
                         };
+                        /** @description The colours the shopper picked, by option name, as the design was committed, which a designer opened on it shows the product in; null when none was picked. A correction keeps them. */
+                        pickedColours: {
+                            [key: string]: string;
+                        } | null;
                         /** @description Whether the designer offers the customer Pixel (`POST /v1/pixel/designer`): the template has Pixel for customers on and the workspace has not turned it off. A round may still be refused, as that route says. */
                         pixel: boolean;
                         /** @description The placement on `blankId` the design was fitted to; null whenever `blankId` is. */
@@ -36428,6 +37217,8 @@ export interface operations {
                         }[];
                         status: string;
                         template: components["schemas"]["ResolvedTemplate"];
+                        /** @description The variant of `blankId` the design's proof was drawn in, by ref, as `GET /v1/designs/{id}` answers `proofVariant`, which a designer opened on it shows unless told another; null when it named none. */
+                        variant: string | null;
                         /** @description The template's workspace's default language, one of `en`, `sv`, `de`, `fr`, `es`, `nl`, `da`, `nb`, `fi`: what the SDK designer is shown in when its mount names no `locale`. */
                         workspaceLanguage: string;
                     };
@@ -36722,6 +37513,10 @@ export interface operations {
                         };
                         /** @description When the design's own personal data was erased (`POST /v1/designs/{id}/erase-personal-data`), or null. An erased design's document holds none of the text or pictures its customer put in, and nothing more is printed, ordered or corrected from it. */
                         personalDataErasedAt: number | null;
+                        /** @description The colours the shopper picked, by option name, `#rrggbb` each, such as `{"Colour": "#1b2a4a"}`, as the design was committed: a value of its blank that takes any colour is made in its pick. Null when none was picked. */
+                        pickedColours: {
+                            [key: string]: string;
+                        } | null;
                         /** @description The placement on the blank this design was fitted to when it was made; null whenever `blankId` is. Kept while the blank is, so it may name a placement since removed from the blank: the print box frozen into the document is what prints. */
                         placementId: string | null;
                         /** @description Whether the customer saw the proof before approving. `true` when they approved on a deciding proof page, which showed them that revision's proof, whatever the commit said, and when they approved in a hosted designer and the commit said nothing. On an approval by a store's key or with consent, what the caller committing it said, from the SDK's `wasPreviewOpened()`. `null` means this does not apply: a review time ran out, or a member or an automation approved it with no consent, so no customer approved, short of what a hosted designer's customer already answered. A correction, a rejection and a request for changes set it back to `null`. It is for the merchant's own tracking: nothing else in Pixonaut depends on it, and a caller should report it honestly. */
@@ -38619,6 +39414,15 @@ export interface operations {
                             updatedAt: number;
                             /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
                             variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
                                 /** @description Each declared field, in the printshop's order, as it was sent. */
                                 fields: {
                                     name: string;
@@ -38630,6 +39434,10 @@ export interface operations {
                                     [key: string]: string;
                                 };
                                 ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
                             } | null;
                             /** @description The variant the order names; `null` as `blankId` is. */
                             variantRef: string | null;
@@ -38940,6 +39748,15 @@ export interface operations {
                         updatedAt: number;
                         /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
                         variant: {
+                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                            colours?: {
+                                [key: string]: {
+                                    /** @description The colour to make the value in, `#rrggbb`. */
+                                    colour: string;
+                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                    from: string;
+                                };
+                            };
                             /** @description Each declared field, in the printshop's order, as it was sent. */
                             fields: {
                                 name: string;
@@ -38951,6 +39768,10 @@ export interface operations {
                                 [key: string]: string;
                             };
                             ref: string;
+                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                            unusedPicks?: {
+                                [key: string]: string;
+                            };
                         } | null;
                         /** @description The variant the order names; `null` as `blankId` is. */
                         variantRef: string | null;
@@ -39033,6 +39854,8 @@ export interface operations {
                             assetId: string;
                             /** @description Pixels per inch along the edge that decides, at the size. */
                             effectiveDpi: number;
+                            /** @description What the merchant knows the image by, as the template's own judgement answers it. Absent on a print made before prints recorded it. */
+                            label?: string;
                             /** @description The layer the image fills, or the artwork's own key for its image background. */
                             layerId: string;
                             /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -39453,6 +40276,15 @@ export interface operations {
                         updatedAt: number;
                         /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
                         variant: {
+                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                            colours?: {
+                                [key: string]: {
+                                    /** @description The colour to make the value in, `#rrggbb`. */
+                                    colour: string;
+                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                    from: string;
+                                };
+                            };
                             /** @description Each declared field, in the printshop's order, as it was sent. */
                             fields: {
                                 name: string;
@@ -39464,6 +40296,10 @@ export interface operations {
                                 [key: string]: string;
                             };
                             ref: string;
+                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                            unusedPicks?: {
+                                [key: string]: string;
+                            };
                         } | null;
                         /** @description The variant the order names; `null` as `blankId` is. */
                         variantRef: string | null;
@@ -39737,6 +40573,15 @@ export interface operations {
                         updatedAt: number;
                         /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
                         variant: {
+                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                            colours?: {
+                                [key: string]: {
+                                    /** @description The colour to make the value in, `#rrggbb`. */
+                                    colour: string;
+                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                    from: string;
+                                };
+                            };
                             /** @description Each declared field, in the printshop's order, as it was sent. */
                             fields: {
                                 name: string;
@@ -39748,6 +40593,10 @@ export interface operations {
                                 [key: string]: string;
                             };
                             ref: string;
+                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                            unusedPicks?: {
+                                [key: string]: string;
+                            };
                         } | null;
                         /** @description The variant the order names; `null` as `blankId` is. */
                         variantRef: string | null;
@@ -40040,6 +40889,15 @@ export interface operations {
                         updatedAt: number;
                         /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
                         variant: {
+                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                            colours?: {
+                                [key: string]: {
+                                    /** @description The colour to make the value in, `#rrggbb`. */
+                                    colour: string;
+                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                    from: string;
+                                };
+                            };
                             /** @description Each declared field, in the printshop's order, as it was sent. */
                             fields: {
                                 name: string;
@@ -40051,6 +40909,10 @@ export interface operations {
                                 [key: string]: string;
                             };
                             ref: string;
+                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                            unusedPicks?: {
+                                [key: string]: string;
+                            };
                         } | null;
                         /** @description The variant the order names; `null` as `blankId` is. */
                         variantRef: string | null;
@@ -40488,6 +41350,15 @@ export interface operations {
                         updatedAt: number;
                         /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
                         variant: {
+                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                            colours?: {
+                                [key: string]: {
+                                    /** @description The colour to make the value in, `#rrggbb`. */
+                                    colour: string;
+                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                    from: string;
+                                };
+                            };
                             /** @description Each declared field, in the printshop's order, as it was sent. */
                             fields: {
                                 name: string;
@@ -40499,6 +41370,10 @@ export interface operations {
                                 [key: string]: string;
                             };
                             ref: string;
+                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                            unusedPicks?: {
+                                [key: string]: string;
+                            };
                         } | null;
                         /** @description The variant the order names; `null` as `blankId` is. */
                         variantRef: string | null;
@@ -40807,6 +41682,15 @@ export interface operations {
                         updatedAt: number;
                         /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
                         variant: {
+                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                            colours?: {
+                                [key: string]: {
+                                    /** @description The colour to make the value in, `#rrggbb`. */
+                                    colour: string;
+                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                    from: string;
+                                };
+                            };
                             /** @description Each declared field, in the printshop's order, as it was sent. */
                             fields: {
                                 name: string;
@@ -40818,6 +41702,10 @@ export interface operations {
                                 [key: string]: string;
                             };
                             ref: string;
+                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                            unusedPicks?: {
+                                [key: string]: string;
+                            };
                         } | null;
                         /** @description The variant the order names; `null` as `blankId` is. */
                         variantRef: string | null;
@@ -41252,6 +42140,26 @@ export interface operations {
                              * @description Where the shipment is followed: an https address.
                              */
                             url?: string;
+                        } | null;
+                        /** @description The variant the order is made in, as it was placed: its options, and the colour each is made in whose value lets the shopper pick any colour. `null` for an order of prints on no blank. */
+                        variant: {
+                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                            colours?: {
+                                [key: string]: {
+                                    /** @description The colour to make the value in, `#rrggbb`. */
+                                    colour: string;
+                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                    from: string;
+                                };
+                            };
+                            /** @description The variant's value of each option, by option name. */
+                            options: {
+                                [key: string]: string;
+                            };
+                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                            unusedPicks?: {
+                                [key: string]: string;
+                            };
                         } | null;
                     };
                 };
@@ -41693,6 +42601,26 @@ export interface operations {
                              * @description Where the shipment is followed: an https address.
                              */
                             url?: string;
+                        } | null;
+                        /** @description The variant the order is made in, as it was placed: its options, and the colour each is made in whose value lets the shopper pick any colour. `null` for an order of prints on no blank. */
+                        variant: {
+                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                            colours?: {
+                                [key: string]: {
+                                    /** @description The colour to make the value in, `#rrggbb`. */
+                                    colour: string;
+                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                    from: string;
+                                };
+                            };
+                            /** @description The variant's value of each option, by option name. */
+                            options: {
+                                [key: string]: string;
+                            };
+                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                            unusedPicks?: {
+                                [key: string]: string;
+                            };
                         } | null;
                     };
                 };
@@ -42705,6 +43633,15 @@ export interface operations {
                         updatedAt: number;
                         /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
                         variant: {
+                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                            colours?: {
+                                [key: string]: {
+                                    /** @description The colour to make the value in, `#rrggbb`. */
+                                    colour: string;
+                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                    from: string;
+                                };
+                            };
                             /** @description Each declared field, in the printshop's order, as it was sent. */
                             fields: {
                                 name: string;
@@ -42716,6 +43653,10 @@ export interface operations {
                                 [key: string]: string;
                             };
                             ref: string;
+                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                            unusedPicks?: {
+                                [key: string]: string;
+                            };
                         } | null;
                         /** @description The variant the order names; `null` as `blankId` is. */
                         variantRef: string | null;
@@ -43005,6 +43946,7 @@ export interface operations {
                                     };
                                     estimate?: {
                                         availableCredits: number;
+                                        buys?: string;
                                         credits: number;
                                     };
                                     input?: unknown;
@@ -43113,6 +44055,7 @@ export interface operations {
                                             id: string;
                                             /** @enum {string} */
                                             kind: "scene_candidate";
+                                            preview?: number;
                                             slot: number;
                                         };
                                         /** @enum {string} */
@@ -43262,6 +44205,7 @@ export interface operations {
                                     };
                                     estimate?: {
                                         availableCredits: number;
+                                        buys?: string;
                                         credits: number;
                                     };
                                     input?: unknown;
@@ -43370,6 +44314,7 @@ export interface operations {
                                             id: string;
                                             /** @enum {string} */
                                             kind: "scene_candidate";
+                                            preview?: number;
                                             slot: number;
                                         };
                                         /** @enum {string} */
@@ -43483,6 +44428,7 @@ export interface operations {
                                     };
                                     estimate?: {
                                         availableCredits: number;
+                                        buys?: string;
                                         credits: number;
                                     };
                                     input?: unknown;
@@ -43591,6 +44537,7 @@ export interface operations {
                                             id: string;
                                             /** @enum {string} */
                                             kind: "scene_candidate";
+                                            preview?: number;
                                             slot: number;
                                         };
                                         /** @enum {string} */
@@ -43763,6 +44710,7 @@ export interface operations {
                                     };
                                     estimate?: {
                                         availableCredits: number;
+                                        buys?: string;
                                         credits: number;
                                     };
                                     input?: unknown;
@@ -43871,6 +44819,7 @@ export interface operations {
                                             id: string;
                                             /** @enum {string} */
                                             kind: "scene_candidate";
+                                            preview?: number;
                                             slot: number;
                                         };
                                         /** @enum {string} */
@@ -44211,6 +45160,7 @@ export interface operations {
                                     };
                                     estimate?: {
                                         availableCredits: number;
+                                        buys?: string;
                                         credits: number;
                                     };
                                     input?: unknown;
@@ -44319,6 +45269,7 @@ export interface operations {
                                             id: string;
                                             /** @enum {string} */
                                             kind: "scene_candidate";
+                                            preview?: number;
                                             slot: number;
                                         };
                                         /** @enum {string} */
@@ -45193,6 +46144,8 @@ export interface operations {
                             assetId: string;
                             /** @description Pixels per inch along the edge that decides, at the size. */
                             effectiveDpi: number;
+                            /** @description What the merchant knows the image by, as the template's own judgement answers it. Absent on a print made before prints recorded it. */
+                            label?: string;
                             /** @description The layer the image fills, or the artwork's own key for its image background. */
                             layerId: string;
                             /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -45436,6 +46389,8 @@ export interface operations {
                             assetId: string;
                             /** @description Pixels per inch along the edge that decides, at the size. */
                             effectiveDpi: number;
+                            /** @description What the merchant knows the image by, as the template's own judgement answers it. Absent on a print made before prints recorded it. */
+                            label?: string;
                             /** @description The layer the image fills, or the artwork's own key for its image background. */
                             layerId: string;
                             /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -46167,6 +47122,15 @@ export interface operations {
                         updatedAt: number;
                         /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
                         variant: {
+                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                            colours?: {
+                                [key: string]: {
+                                    /** @description The colour to make the value in, `#rrggbb`. */
+                                    colour: string;
+                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                    from: string;
+                                };
+                            };
                             /** @description Each declared field, in the printshop's order, as it was sent. */
                             fields: {
                                 name: string;
@@ -46178,6 +47142,10 @@ export interface operations {
                                 [key: string]: string;
                             };
                             ref: string;
+                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                            unusedPicks?: {
+                                [key: string]: string;
+                            };
                         } | null;
                         /** @description The variant the order names; `null` as `blankId` is. */
                         variantRef: string | null;
@@ -46572,7 +47540,7 @@ export interface operations {
                     name?: string;
                     /** @description Whether the printshop's photos are fetched as the blank's catalogue photos. True is refused where the printshop has no photo with a print area. Omitted, they are fetched if it has any. */
                     printshopPhotos?: boolean;
-                    /** @description Stock photos, the scenes in the order they show, first in the blank's order and before the printshop's photos. They may photograph several stock items, each scene its own. On each of them, each placement with a role that item has a place for takes its default record; one with none shows on none of its scenes. */
+                    /** @description Stock photos, the scenes in the order they show, first in the blank's order and before the printshop's photos. They may photograph several stock items, each scene its own; two of one stock item, setting, person and pose are refused `scene_view_repeated`, unless each is held in a hand. On each of them, each placement with a role that item has a place for takes its default record; one with none shows on none of its scenes. */
                     sceneIds?: string[];
                     /** @description The views to fetch photos for, by the key the options read answers; absent for every view. */
                     views?: string[];
@@ -46630,13 +47598,53 @@ export interface operations {
                                 /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
                                 photoAssetId: string | null;
                             } | null;
+                            /** @description The blank's rows on each held scene it shows, a scene with its product in a hand, in the blank's order: how many rows the scene shows, and which it does not and why. A scene limited to some option values answers for the rows with those values alone. Empty for a blank that shows no held scene, or deleted. Answered for one blank, never in a list. */
+                            heldScenes?: {
+                                /** @description The shape class the hand in the scene's photo holds: one product kind between two diameters and heights, in millimetres. */
+                                held: {
+                                    kind: string;
+                                    /** @description The largest product the grip holds. */
+                                    maxMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                    /** @description The smallest product the grip holds. */
+                                    minMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                };
+                                /** @description The scene's label. */
+                                label: string;
+                                /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
+                                refused: {
+                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    refusal: string;
+                                    /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description The refs of the variants with the row's values, of those the scene is of: the ones with no photo on it. */
+                                    variantRefs: string[];
+                                }[];
+                                /** @description The held scene's id. */
+                                sceneId: string;
+                                /** @description How many of the blank's rows the scene shows. */
+                                shown: number;
+                                /** @description The refs of the variants the scene is of, shown or refused: every variant of the blank, a retired one too, or those with the option values the scene is limited to. Empty for a blank with no variants. */
+                                variantRefs: string[];
+                            }[];
                             id: string;
                             /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
                             importFailure: string | null;
                             machineProfileId: string | null;
+                            /** @description The options the blank's product changes with, such as Size; empty for one product for every variant. */
+                            modelVariesBy: string[];
                             name: string;
                             /** @description The blank's options with their values, in the order the shopper sees them, a value no variant uses yet included. `axes` is their names. */
                             options: {
+                                /** @description The values the shopper picks any colour for with a colour picker, their colour fill the one shown until they do: only on a blank made by a custom printshop. Absent when none does. */
+                                anyColour?: string[];
                                 /** @description How each value looks to a shopper, by value: a colour fill, an image, or null for none. Every value of `values` is named. */
                                 appearances: {
                                     [key: string]: {
@@ -46701,6 +47709,12 @@ export interface operations {
                                 /** @description The stored view's id. */
                                 viewId: string;
                             } | {
+                                /** @description For a setting, a scene with no product in it: the key of its anchor the product is placed at. Required for one, and left out for any other scene. */
+                                anchor?: string;
+                                /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
+                                camera?: string;
+                                /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
+                                cutOut?: string;
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
@@ -46867,14 +47881,14 @@ export interface operations {
                                     };
                                     /** @description The printshop's own key for the view's photo style, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
                                     partnerStyleKey?: string;
-                                    /** @description The pixel size every photo of the view has; null until the view holds a photo. */
+                                    /** @description Its photos' pixel size, unless one has its own; null with no photo. */
                                     photoSizePx: {
                                         /** @description The photo's height, in pixels. */
                                         heightPx: number;
                                         /** @description The photo's width, in pixels. */
                                         widthPx: number;
                                     } | null;
-                                    /** @description The view's product photos, each the same size as the view. */
+                                    /** @description The view's product photos. */
                                     photos: {
                                         /** @description The photo's asset id, as the assets feature returns it after an upload. */
                                         assetId: string;
@@ -46882,6 +47896,24 @@ export interface operations {
                                         displacementStrength?: number | null;
                                         /** @description The photo's id, unique within the blank: the `mockupId` a render and a mockup link name. */
                                         id: string;
+                                        /** @description Own pixel size; absent, the view's. */
+                                        photoSizePx?: {
+                                            /** @description The photo's height, in pixels. */
+                                            heightPx: number;
+                                            /** @description The photo's width, in pixels. */
+                                            widthPx: number;
+                                        };
+                                        /** @description Own print rect; absent, the view's. */
+                                        placementRectPx?: {
+                                            /** @description The print area's height, in pixels. */
+                                            h: number;
+                                            /** @description The print area's width, in pixels. */
+                                            w: number;
+                                            /** @description The print area's left edge, in pixels from the photo's left. */
+                                            x: number;
+                                            /** @description The print area's top edge, in pixels from the photo's top. */
+                                            y: number;
+                                        };
                                         /** @description The photo's value of each `photosVaryBy` option; empty when there are none. One photo per row per view. */
                                         row?: {
                                             [key: string]: string;
@@ -46904,7 +47936,7 @@ export interface operations {
                                     }[];
                                     /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                     piece?: number;
-                                    /** @description Where the print area sits on every photo of the view, in the original photo's pixels; null until it is marked. */
+                                    /** @description Where the print area sits on its photos, unless one has its own, in the original photo's pixels; null until marked. */
                                     placementRectPx: {
                                         /** @description The print area's height, in pixels. */
                                         h: number;
@@ -47013,6 +48045,158 @@ export interface operations {
                                     widthMm: number;
                                 };
                             }[];
+                            /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
+                            productModels: {
+                                /** @description What the product is, by kind. */
+                                model: {
+                                    /** @description The sheet's height, in millimetres. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A flat sheet, such as a poster.
+                                     * @enum {string}
+                                     */
+                                    kind: "flat-sheet";
+                                    /** @description The sheet's width, in millimetres. */
+                                    widthMm: number;
+                                } | {
+                                    /** @description The sheet's height, in millimetres. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A sheet in a frame, such as a framed poster.
+                                     * @enum {string}
+                                     */
+                                    kind: "framed-sheet";
+                                    /**
+                                     * @description Its frame, and its mat and glass when it has them.
+                                     * @default []
+                                     */
+                                    parts: ({
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description How far it stands off the wall, in millimetres. */
+                                        depthMm: number;
+                                        /** @description How far it covers the sheet's edge, in millimetres. */
+                                        lipMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /** @description Its face's width, from outer to inner edge, in millimetres. */
+                                        profileWidthMm: number;
+                                        /**
+                                         * @description The frame round a sheet.
+                                         * @enum {string}
+                                         */
+                                        role: "frame";
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description The mat between frame and print.
+                                         * @enum {string}
+                                         */
+                                        role: "mat";
+                                        /** @description How far it reaches in from the frame on each side, in millimetres. */
+                                        widthMm: number;
+                                    } | {
+                                        /**
+                                         * @description The glass over a framed sheet.
+                                         * @enum {string}
+                                         */
+                                        role: "glass";
+                                    })[];
+                                    /** @description The sheet's width, in millimetres. */
+                                    widthMm: number;
+                                } | {
+                                    /** @description Its diameter at the base, in millimetres. */
+                                    baseDiameterMm: number;
+                                    /** @description Its height, in millimetres. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A cylinder, straight or tapered, such as a mug.
+                                     * @enum {string}
+                                     */
+                                    kind: "cylinder";
+                                    /**
+                                     * @description Its handle, lid, straw and finish, each when it has one. Omitted, none.
+                                     * @default []
+                                     */
+                                    parts: ({
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description Its height, in millimetres. */
+                                        heightMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description A cylinder's handle.
+                                         * @enum {string}
+                                         */
+                                        role: "handle";
+                                        /** @description Its thickness, in millimetres. */
+                                        thicknessMm: number;
+                                        /** @description How far it stands out, in millimetres. */
+                                        widthMm: number;
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description Its height above the rim, in millimetres. */
+                                        heightMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description A cylinder's lid.
+                                         * @enum {string}
+                                         */
+                                        role: "lid";
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description Its diameter, in millimetres. */
+                                        diameterMm: number;
+                                        /** @description Its length, in millimetres. */
+                                        lengthMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description A cylinder's straw.
+                                         * @enum {string}
+                                         */
+                                        role: "straw";
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description What a cylinder's body is made of.
+                                         * @enum {string}
+                                         */
+                                        role: "finish";
+                                    })[];
+                                    /** @description The band round its side that takes the print. */
+                                    printBand: {
+                                        /** @description The band's height, in millimetres. */
+                                        heightMm: number;
+                                        /** @description From the top down to the band, in millimetres. */
+                                        topMm: number;
+                                    };
+                                    /** @description Its diameter at the top, in millimetres. */
+                                    topDiameterMm: number;
+                                } | {
+                                    /** @description Which garment it is cut as. */
+                                    cut: string;
+                                    /**
+                                     * @description A garment.
+                                     * @enum {string}
+                                     */
+                                    kind: "garment-cut";
+                                };
+                                /** @description A value for each `modelVariesBy` option, by option name; {} for none. */
+                                row: {
+                                    [key: string]: string;
+                                };
+                            }[];
                             /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
                             referenceRow: {
                                 [key: string]: string;
@@ -47088,6 +48272,28 @@ export interface operations {
                                     };
                                 }[];
                             };
+                            /** @description Where the blank's pictures stand in each setting it is bound to, in the blank's order: how many of its rows are drawn there, and which are not and why. Empty for a blank bound to no setting, or deleted. Answered for one blank, never in a list. */
+                            settingBakes?: {
+                                /** @description The anchor of the setting the blank's product sits at. */
+                                anchorKey: string;
+                                /** @description The setting's label. */
+                                label: string;
+                                /** @description How many of the blank's rows are drawn in the setting. */
+                                ready: number;
+                                /** @description The setting's id. */
+                                sceneId: string;
+                                /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
+                                waiting: {
+                                    /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
+                                    refusal: string | null;
+                                    /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description Where its drawing stands: `queued` is not drawn yet, `failed` is drawn again at the next run, `refused` is never drawn as the blank and the setting are. */
+                                    state: string;
+                                }[];
+                            }[];
                             /** @description The first photo of the blank's first view of several placements that has one, in their order: the view, the photo (a mockup), its asset and the view's photo size. A blank whose views of one placement have no photo is pictured by it. Null for a blank with no such photo. Answered in a list. */
                             sharedViewPhoto?: {
                                 assetId: string;
@@ -47197,13 +48403,53 @@ export interface operations {
                                 /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
                                 photoAssetId: string | null;
                             } | null;
+                            /** @description The blank's rows on each held scene it shows, a scene with its product in a hand, in the blank's order: how many rows the scene shows, and which it does not and why. A scene limited to some option values answers for the rows with those values alone. Empty for a blank that shows no held scene, or deleted. Answered for one blank, never in a list. */
+                            heldScenes?: {
+                                /** @description The shape class the hand in the scene's photo holds: one product kind between two diameters and heights, in millimetres. */
+                                held: {
+                                    kind: string;
+                                    /** @description The largest product the grip holds. */
+                                    maxMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                    /** @description The smallest product the grip holds. */
+                                    minMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                };
+                                /** @description The scene's label. */
+                                label: string;
+                                /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
+                                refused: {
+                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    refusal: string;
+                                    /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description The refs of the variants with the row's values, of those the scene is of: the ones with no photo on it. */
+                                    variantRefs: string[];
+                                }[];
+                                /** @description The held scene's id. */
+                                sceneId: string;
+                                /** @description How many of the blank's rows the scene shows. */
+                                shown: number;
+                                /** @description The refs of the variants the scene is of, shown or refused: every variant of the blank, a retired one too, or those with the option values the scene is limited to. Empty for a blank with no variants. */
+                                variantRefs: string[];
+                            }[];
                             id: string;
                             /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
                             importFailure: string | null;
                             machineProfileId: string | null;
+                            /** @description The options the blank's product changes with, such as Size; empty for one product for every variant. */
+                            modelVariesBy: string[];
                             name: string;
                             /** @description The blank's options with their values, in the order the shopper sees them, a value no variant uses yet included. `axes` is their names. */
                             options: {
+                                /** @description The values the shopper picks any colour for with a colour picker, their colour fill the one shown until they do: only on a blank made by a custom printshop. Absent when none does. */
+                                anyColour?: string[];
                                 /** @description How each value looks to a shopper, by value: a colour fill, an image, or null for none. Every value of `values` is named. */
                                 appearances: {
                                     [key: string]: {
@@ -47268,6 +48514,12 @@ export interface operations {
                                 /** @description The stored view's id. */
                                 viewId: string;
                             } | {
+                                /** @description For a setting, a scene with no product in it: the key of its anchor the product is placed at. Required for one, and left out for any other scene. */
+                                anchor?: string;
+                                /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
+                                camera?: string;
+                                /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
+                                cutOut?: string;
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
@@ -47434,14 +48686,14 @@ export interface operations {
                                     };
                                     /** @description The printshop's own key for the view's photo style, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
                                     partnerStyleKey?: string;
-                                    /** @description The pixel size every photo of the view has; null until the view holds a photo. */
+                                    /** @description Its photos' pixel size, unless one has its own; null with no photo. */
                                     photoSizePx: {
                                         /** @description The photo's height, in pixels. */
                                         heightPx: number;
                                         /** @description The photo's width, in pixels. */
                                         widthPx: number;
                                     } | null;
-                                    /** @description The view's product photos, each the same size as the view. */
+                                    /** @description The view's product photos. */
                                     photos: {
                                         /** @description The photo's asset id, as the assets feature returns it after an upload. */
                                         assetId: string;
@@ -47449,6 +48701,24 @@ export interface operations {
                                         displacementStrength?: number | null;
                                         /** @description The photo's id, unique within the blank: the `mockupId` a render and a mockup link name. */
                                         id: string;
+                                        /** @description Own pixel size; absent, the view's. */
+                                        photoSizePx?: {
+                                            /** @description The photo's height, in pixels. */
+                                            heightPx: number;
+                                            /** @description The photo's width, in pixels. */
+                                            widthPx: number;
+                                        };
+                                        /** @description Own print rect; absent, the view's. */
+                                        placementRectPx?: {
+                                            /** @description The print area's height, in pixels. */
+                                            h: number;
+                                            /** @description The print area's width, in pixels. */
+                                            w: number;
+                                            /** @description The print area's left edge, in pixels from the photo's left. */
+                                            x: number;
+                                            /** @description The print area's top edge, in pixels from the photo's top. */
+                                            y: number;
+                                        };
                                         /** @description The photo's value of each `photosVaryBy` option; empty when there are none. One photo per row per view. */
                                         row?: {
                                             [key: string]: string;
@@ -47471,7 +48741,7 @@ export interface operations {
                                     }[];
                                     /** @description A pattern piece of the view's UV pass, 1 to 253: the region's print is read through the pixels the pass marks with it, in place of a mesh. */
                                     piece?: number;
-                                    /** @description Where the print area sits on every photo of the view, in the original photo's pixels; null until it is marked. */
+                                    /** @description Where the print area sits on its photos, unless one has its own, in the original photo's pixels; null until marked. */
                                     placementRectPx: {
                                         /** @description The print area's height, in pixels. */
                                         h: number;
@@ -47580,6 +48850,158 @@ export interface operations {
                                     widthMm: number;
                                 };
                             }[];
+                            /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
+                            productModels: {
+                                /** @description What the product is, by kind. */
+                                model: {
+                                    /** @description The sheet's height, in millimetres. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A flat sheet, such as a poster.
+                                     * @enum {string}
+                                     */
+                                    kind: "flat-sheet";
+                                    /** @description The sheet's width, in millimetres. */
+                                    widthMm: number;
+                                } | {
+                                    /** @description The sheet's height, in millimetres. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A sheet in a frame, such as a framed poster.
+                                     * @enum {string}
+                                     */
+                                    kind: "framed-sheet";
+                                    /**
+                                     * @description Its frame, and its mat and glass when it has them.
+                                     * @default []
+                                     */
+                                    parts: ({
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description How far it stands off the wall, in millimetres. */
+                                        depthMm: number;
+                                        /** @description How far it covers the sheet's edge, in millimetres. */
+                                        lipMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /** @description Its face's width, from outer to inner edge, in millimetres. */
+                                        profileWidthMm: number;
+                                        /**
+                                         * @description The frame round a sheet.
+                                         * @enum {string}
+                                         */
+                                        role: "frame";
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description The mat between frame and print.
+                                         * @enum {string}
+                                         */
+                                        role: "mat";
+                                        /** @description How far it reaches in from the frame on each side, in millimetres. */
+                                        widthMm: number;
+                                    } | {
+                                        /**
+                                         * @description The glass over a framed sheet.
+                                         * @enum {string}
+                                         */
+                                        role: "glass";
+                                    })[];
+                                    /** @description The sheet's width, in millimetres. */
+                                    widthMm: number;
+                                } | {
+                                    /** @description Its diameter at the base, in millimetres. */
+                                    baseDiameterMm: number;
+                                    /** @description Its height, in millimetres. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A cylinder, straight or tapered, such as a mug.
+                                     * @enum {string}
+                                     */
+                                    kind: "cylinder";
+                                    /**
+                                     * @description Its handle, lid, straw and finish, each when it has one. Omitted, none.
+                                     * @default []
+                                     */
+                                    parts: ({
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description Its height, in millimetres. */
+                                        heightMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description A cylinder's handle.
+                                         * @enum {string}
+                                         */
+                                        role: "handle";
+                                        /** @description Its thickness, in millimetres. */
+                                        thicknessMm: number;
+                                        /** @description How far it stands out, in millimetres. */
+                                        widthMm: number;
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description Its height above the rim, in millimetres. */
+                                        heightMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description A cylinder's lid.
+                                         * @enum {string}
+                                         */
+                                        role: "lid";
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description Its diameter, in millimetres. */
+                                        diameterMm: number;
+                                        /** @description Its length, in millimetres. */
+                                        lengthMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description A cylinder's straw.
+                                         * @enum {string}
+                                         */
+                                        role: "straw";
+                                    } | {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /**
+                                         * @description What a cylinder's body is made of.
+                                         * @enum {string}
+                                         */
+                                        role: "finish";
+                                    })[];
+                                    /** @description The band round its side that takes the print. */
+                                    printBand: {
+                                        /** @description The band's height, in millimetres. */
+                                        heightMm: number;
+                                        /** @description From the top down to the band, in millimetres. */
+                                        topMm: number;
+                                    };
+                                    /** @description Its diameter at the top, in millimetres. */
+                                    topDiameterMm: number;
+                                } | {
+                                    /** @description Which garment it is cut as. */
+                                    cut: string;
+                                    /**
+                                     * @description A garment.
+                                     * @enum {string}
+                                     */
+                                    kind: "garment-cut";
+                                };
+                                /** @description A value for each `modelVariesBy` option, by option name; {} for none. */
+                                row: {
+                                    [key: string]: string;
+                                };
+                            }[];
                             /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
                             referenceRow: {
                                 [key: string]: string;
@@ -47655,6 +49077,28 @@ export interface operations {
                                     };
                                 }[];
                             };
+                            /** @description Where the blank's pictures stand in each setting it is bound to, in the blank's order: how many of its rows are drawn there, and which are not and why. Empty for a blank bound to no setting, or deleted. Answered for one blank, never in a list. */
+                            settingBakes?: {
+                                /** @description The anchor of the setting the blank's product sits at. */
+                                anchorKey: string;
+                                /** @description The setting's label. */
+                                label: string;
+                                /** @description How many of the blank's rows are drawn in the setting. */
+                                ready: number;
+                                /** @description The setting's id. */
+                                sceneId: string;
+                                /** @description The rows not drawn in the setting, in the variants' order: their variants do not show it. */
+                                waiting: {
+                                    /** @description The rule that refused it, such as `footprint_exceeds_anchor` for a product larger than the room the setting has; null unless `state` is `refused`. */
+                                    refusal: string | null;
+                                    /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description Where its drawing stands: `queued` is not drawn yet, `failed` is drawn again at the next run, `refused` is never drawn as the blank and the setting are. */
+                                    state: string;
+                                }[];
+                            }[];
                             /** @description The first photo of the blank's first view of several placements that has one, in their order: the view, the photo (a mockup), its asset and the view's photo size. A blank whose views of one placement have no photo is pictured by it. Null for a blank with no such photo. Answered in a list. */
                             sharedViewPhoto?: {
                                 assetId: string;
@@ -47711,6 +49155,17 @@ export interface operations {
                             /** @description The id of what the job works on, such as the print it renders. */
                             subjectId: string | null;
                         };
+                        /** @description The measures of the product the printshop's data does not give, each with the question to ask the merchant. While any is listed the blank is imported without product models, and its pictures in a setting need them: ask, and once it is `ready` send the answers to `POST /v1/blanks/{id}/product-model-proposal`, which reads what is missing again and answers the models to write with `PATCH /v1/blanks/{id}`. Empty when the import writes them, or the printshop's data names no kind of product a picture is drawn from. */
+                        productModelMissing: {
+                            /** @description The question that gets it. */
+                            ask: string;
+                            /** @description The product model's field, as a measure of a draft's product names it: `topDiameterMm`, `parts.frame.depthMm`. */
+                            field: string;
+                            /** @description The row it is missing on, by option name; {} for one. */
+                            row: {
+                                [key: string]: string;
+                            };
+                        }[];
                     };
                 };
             };
@@ -47776,7 +49231,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: no_printable_placement, no_printshop_photos, stock_item_not_found, scene_not_found, scene_retired, stock_item_covers_no_placement, payload_too_large */
+            /** @description Refused: no_printable_placement, no_printshop_photos, stock_item_not_found, scene_not_found, scene_retired, scene_view_repeated, stock_item_covers_no_placement, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -47789,7 +49244,7 @@ export interface operations {
                         error: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
-                        /** @description Always sent with `stock_item_not_found`, `scene_not_found`, `scene_retired`, `stock_item_covers_no_placement`. */
+                        /** @description Always sent with `stock_item_not_found`, `scene_not_found`, `scene_retired`, `scene_view_repeated`, `stock_item_covers_no_placement`. */
                         reason?: string;
                     };
                 };
@@ -48056,6 +49511,10 @@ export interface operations {
                 } & {
                     /** @description The variant whose colour the design is drawn in, by ref (`v_…`), when it is not the one `variant` names: on a dark colour each layer takes its on-dark value. It sizes nothing. A proof keeps it as `proofVariant`, so its commit is drawn in the same colour. Absent, `variant`'s colour; a ref the blank has no variant of draws as on a light product. */
                     garmentVariant?: string;
+                    /** @description The colours the shopper picked, by option name, `#rrggbb` each, such as `{"Colour": "#1b2a4a"}`, for a value of the blank that takes any colour: the product is drawn, and its tone judged, in the pick. A design keeps them, and its order is made in them; a pick for a value that takes no colour is kept and not used. Absent, each such value is its own colour. */
+                    pickedColours?: {
+                        [key: string]: string;
+                    };
                 } & {
                     /** @description Lays the design as a repeat of its template across the print area. Null, or absent, places it once. Through a designer link, a repeat the link offers, or null where its shopper may turn the repeat off; absent there, the link's own start. */
                     repeat?: {
@@ -48267,6 +49726,10 @@ export interface operations {
                     garmentVariant?: string;
                     /** @description The name of the blank's panel layout the design is drawn on. */
                     layout: string;
+                    /** @description The colours the shopper picked, by option name, `#rrggbb` each, such as `{"Colour": "#1b2a4a"}`, for a value of the blank that takes any colour: the product is drawn, and its tone judged, in the pick. A design keeps them, and its order is made in them; a pick for a value that takes no colour is kept and not used. Absent, each such value is its own colour. */
+                    pickedColours?: {
+                        [key: string]: string;
+                    };
                     /** @description Lays the design as a repeat of its template across the print area. Null, or absent, places it once. Through a designer link, a repeat the link offers, or null where its shopper may turn the repeat off; absent there, the link's own start. */
                     repeat?: {
                         /**
@@ -48486,8 +49949,20 @@ export interface operations {
     "scenes.list": {
         parameters: {
             query?: {
-                /** @description Only this stock item's scenes, by its key. */
+                /** @description Only this stock item's scenes, by its key: no setting, which shows none. */
                 stockItem?: string;
+                /** @description Only scenes of this kind. */
+                kind?: "product" | "setting" | "studio-style";
+                /** @description Only scenes of this setting, by its key as `facets` answers it. A value no scene has answers no scenes. */
+                setting?: string;
+                /** @description Only scenes of this person, by its key as `facets` answers it. A value no scene has answers no scenes. */
+                person?: string;
+                /** @description Only scenes of this pose, by its key as `facets` answers it. A value no scene has answers no scenes. */
+                pose?: string;
+                /** @description Only scenes with an anchor a product may sit at this way. */
+                accepts?: "hangs-on-wall" | "stands" | "lies-flat" | "held" | "worn";
+                /** @description A blank's id: each scene then says, in `offers`, which of that blank's rows it can show. It narrows nothing. */
+                forBlank?: string;
             };
             header?: never;
             path?: never;
@@ -48503,12 +49978,158 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @description Set when the query names a setting or a person and no scene matches: the scene asked for can be composed, at this price. Null otherwise. */
+                        canMake: {
+                            /** @description What composing the scene would cost. */
+                            credits: number;
+                        } | null;
+                        /** @description The settings, people and poses the list can be narrowed by, each with how many scenes have it: a facet's values are counted with every other part of the query applied, and its own left out. */
+                        facets: {
+                            people: {
+                                /** @description How many scenes have it. */
+                                count: number;
+                                /** @description The value, as a scene holds it. */
+                                key: string;
+                                /** @description Its words: the library's for a setting, person or pose it names, and the value itself for a workspace's own description. */
+                                label: string;
+                            }[];
+                            poses: {
+                                /** @description How many scenes have it. */
+                                count: number;
+                                /** @description The value, as a scene holds it. */
+                                key: string;
+                                /** @description Its words: the library's for a setting, person or pose it names, and the value itself for a workspace's own description. */
+                                label: string;
+                            }[];
+                            settings: {
+                                /** @description How many scenes have it. */
+                                count: number;
+                                /** @description The value, as a scene holds it. */
+                                key: string;
+                                /** @description Its words: the library's for a setting, person or pose it names, and the value itself for a workspace's own description. */
+                                label: string;
+                            }[];
+                        };
                         scenes: {
                             /** @description The keys of the garment areas the scene shows truthfully. */
                             areas: string[];
+                            /** @description Whether this is a garment cut-out: a photo of the garment alone with nothing round it, which a blank shows only laid over a studio style, never as a scene of its own. */
+                            cutOut: boolean;
+                            /** @description What the scene's photo was measured to hold: its camera, and the anchors a product can be placed at, each a support plane with its scale, light and shadow. Every pixel number is at its `sizePx`. Null for a scene with none. */
+                            geometry: {
+                                anchors: {
+                                    accepts: string[];
+                                    /** @description The most room a product has on the plane. */
+                                    footprintMm: {
+                                        height: number;
+                                        width: number;
+                                    };
+                                    key: string;
+                                    light: {
+                                        /** @description The ambient light's linear red, green and blue. */
+                                        ambient: number[];
+                                        azimuthDeg: number;
+                                        elevationDeg: number;
+                                        /** @description 0 for a hard point light, 1 for light from everywhere. */
+                                        softness: number;
+                                    };
+                                    /** @description Whether something of the photo lies in front of the anchor, held in the scene's occluder. */
+                                    occluded: boolean;
+                                    plane: {
+                                        /** @description The homography from millimetres on the plane to the photo's pixels, a 3 x 3 matrix row by row: `[x, y, w] = M · [mmX, mmY, 1]`, and the pixel is `(x / w, y / w)`. */
+                                        mmToPx: number[];
+                                        /** @description Where the plane's (0, 0) mm is in the photo. */
+                                        originPx: {
+                                            x: number;
+                                            y: number;
+                                        };
+                                        /** @description The photo's pixels to a millimetre on the plane, at `originPx`. */
+                                        pxPerMm: number;
+                                    };
+                                    reviewed: {
+                                        kind: string;
+                                        maxMm: {
+                                            height: number;
+                                            width: number;
+                                        };
+                                        minMm: {
+                                            height: number;
+                                            width: number;
+                                        };
+                                        /** @description The parts the product it passed with may have. */
+                                        parts: string[];
+                                    }[];
+                                    shadowCatcher: {
+                                        blurMm: number;
+                                        /** @description How much of the plane's light a full shadow takes. */
+                                        strength: number;
+                                    };
+                                }[];
+                                camera: {
+                                    focalPx: number;
+                                    principalPx: {
+                                        x: number;
+                                        y: number;
+                                    };
+                                    rollDeg: number;
+                                    tiltDeg: number;
+                                };
+                                /** @description The shape class a hand in the photo holds, on a scene with its product in the photo. */
+                                held?: {
+                                    kind: string;
+                                    /** @description The largest product the grip holds. */
+                                    maxMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                    /** @description The smallest product the grip holds. */
+                                    minMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                };
+                                /** @description The size of the photo every pixel number here was measured on. */
+                                sizePx: {
+                                    height: number;
+                                    width: number;
+                                };
+                                /** @description For a studio style, which has no photo: the backdrop, light, shadow and named cameras its pictures are drawn from. */
+                                studio?: {
+                                    backdrop: {
+                                        /** @description The backdrop's colour where its wall is lit, as #rrggbb. */
+                                        colour: string;
+                                        /** @description The radius of the curve the floor turns up into the wall by, in mm; 0 for a floor that meets its wall in a corner. */
+                                        sweepMm: number;
+                                    };
+                                    cameras: {
+                                        /** @description How far round the product the camera stands, from its front towards its right: 0 its front, 90 its right side, 180 its back. */
+                                        azimuthDeg: number;
+                                        /** @description How far above level the camera stands, looking down at the product; below zero, under it and looking up. */
+                                        elevationDeg: number;
+                                        key: string;
+                                    }[];
+                                    /** @description The share of the picture a product is framed to fill: its bounding box is this share of the picture's width or of its height, whichever it reaches first. */
+                                    fill: number;
+                                    light: {
+                                        /** @description The ambient light's linear red, green and blue. */
+                                        ambient: number[];
+                                        azimuthDeg: number;
+                                        elevationDeg: number;
+                                        /** @description 0 for a hard point light, 1 for light from everywhere. */
+                                        softness: number;
+                                    };
+                                    shadow: {
+                                        blurMm: number;
+                                        /** @description How much of the plane's light a full shadow takes. */
+                                        strength: number;
+                                    };
+                                };
+                            } | null;
                             /** @description Whether a person is in the scene. */
                             hasPerson: boolean;
                             id: string;
+                            /** @description What the scene is: `product`, a photo with a stock item in it; `setting`, a photo with no product and anchors to place one at; or `studio-style`, a studio look with no photo. */
+                            kind: string;
                             label: string;
                             /** @description The passes the preview picture is drawn through, each its size: where a garment area's print lands, and how a colour paints its grey base. Null when the scene has no preview passes. */
                             layerUrls: {
@@ -48521,6 +50142,30 @@ export interface operations {
                                 /** @description The 16-bit UV pass: for each pixel, its garment area's piece (blue) and where across (red) and down (green) that piece it reads. */
                                 uv: string;
                             } | null;
+                            /** @description With `forBlank`: which rows of that blank the scene can show, a setting an anchor at a time, and a garment cut-out a studio style at a time. Empty for a scene no blank can show. */
+                            offers?: {
+                                /** @description The anchor of a setting the rows are judged at; null for a scene with a product of its own. */
+                                anchor: string | null;
+                                rows: {
+                                    /** @description The refusal as one plain sentence, to say as it is; null when the row is shown. */
+                                    reason: string | null;
+                                    /** @description Why the scene does not show the row, or null when it does: `no_product_model`, the row says no product; `kind_not_accepted`, the scene takes no product of that kind; `footprint_exceeds_anchor`, the product is larger than the anchor's room; `size_outside_reviewed_range`, no product of that size was looked at there; `angle_unsupported`, the camera looks too far up or down; `no_drawer`, nothing draws the kind yet; `shape_outside_grip`, the scene's photo holds a product of another kind or size in a hand. */
+                                    refusal: string | null;
+                                    /** @description A row of the blank's product: its values of the options its product changes with. Empty for a product that changes with none. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                }[];
+                                /** @description For a garment cut-out, the studio style it is laid over: the blank is bound to that style from this camera, with this scene as its `cutOut`. Null for any other scene. */
+                                studio: {
+                                    /** @description The camera of the style the picture is bound from: the one the cut-out's pose names. */
+                                    camera: string;
+                                    /** @description The studio style's name. */
+                                    label: string;
+                                    /** @description The studio style's id. */
+                                    sceneId: string;
+                                } | null;
+                            }[];
                             /** @description Who is in the scene, or `none`: one of the selects a stock item's scenes are chosen by. */
                             person: string;
                             /** @description Whether a composition from this scene may describe a new person: the scene's person can be replaced. Never a workspace's own scene. */
@@ -48536,8 +50181,8 @@ export interface operations {
                             pose: string;
                             /** @description Where the scene is photographed, such as `studio` or `street`: one of the selects a stock item's scenes are chosen by. */
                             setting: string;
-                            /** @description The stock item the scene shows. */
-                            stockItem: string;
+                            /** @description The stock item the scene shows. Null unless the scene is a `product`: no other kind has a product in it. */
+                            stockItem: string | null;
                             /** @description Whether this is a studio scene: the product alone, on a plain ground. */
                             studio: boolean;
                             /** @description Whether a variant's colour paints the scene's grey base. One that does not shows a material that is the point, such as bare metal, on every variant as photographed. */
@@ -48555,6 +50200,153 @@ export interface operations {
                             }[];
                             family: string;
                             key: string;
+                            /** @description What kind of product the stock item is. */
+                            kind?: string;
+                            /** @description The product a blank that says none of its own is taken to be, in millimetres. */
+                            model?: {
+                                /** @description The sheet's height, in millimetres. */
+                                heightMm: number;
+                                /**
+                                 * @description A flat sheet, such as a poster.
+                                 * @enum {string}
+                                 */
+                                kind: "flat-sheet";
+                                /** @description The sheet's width, in millimetres. */
+                                widthMm: number;
+                            } | {
+                                /** @description The sheet's height, in millimetres. */
+                                heightMm: number;
+                                /**
+                                 * @description A sheet in a frame, such as a framed poster.
+                                 * @enum {string}
+                                 */
+                                kind: "framed-sheet";
+                                /**
+                                 * @description Its frame, and its mat and glass when it has them.
+                                 * @default []
+                                 */
+                                parts: ({
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description How far it stands off the wall, in millimetres. */
+                                    depthMm: number;
+                                    /** @description How far it covers the sheet's edge, in millimetres. */
+                                    lipMm: number;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /** @description Its face's width, from outer to inner edge, in millimetres. */
+                                    profileWidthMm: number;
+                                    /**
+                                     * @description The frame round a sheet.
+                                     * @enum {string}
+                                     */
+                                    role: "frame";
+                                } | {
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /**
+                                     * @description The mat between frame and print.
+                                     * @enum {string}
+                                     */
+                                    role: "mat";
+                                    /** @description How far it reaches in from the frame on each side, in millimetres. */
+                                    widthMm: number;
+                                } | {
+                                    /**
+                                     * @description The glass over a framed sheet.
+                                     * @enum {string}
+                                     */
+                                    role: "glass";
+                                })[];
+                                /** @description The sheet's width, in millimetres. */
+                                widthMm: number;
+                            } | {
+                                /** @description Its diameter at the base, in millimetres. */
+                                baseDiameterMm: number;
+                                /** @description Its height, in millimetres. */
+                                heightMm: number;
+                                /**
+                                 * @description A cylinder, straight or tapered, such as a mug.
+                                 * @enum {string}
+                                 */
+                                kind: "cylinder";
+                                /**
+                                 * @description Its handle, lid, straw and finish, each when it has one. Omitted, none.
+                                 * @default []
+                                 */
+                                parts: ({
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description Its height, in millimetres. */
+                                    heightMm: number;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /**
+                                     * @description A cylinder's handle.
+                                     * @enum {string}
+                                     */
+                                    role: "handle";
+                                    /** @description Its thickness, in millimetres. */
+                                    thicknessMm: number;
+                                    /** @description How far it stands out, in millimetres. */
+                                    widthMm: number;
+                                } | {
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description Its height above the rim, in millimetres. */
+                                    heightMm: number;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /**
+                                     * @description A cylinder's lid.
+                                     * @enum {string}
+                                     */
+                                    role: "lid";
+                                } | {
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description Its diameter, in millimetres. */
+                                    diameterMm: number;
+                                    /** @description Its length, in millimetres. */
+                                    lengthMm: number;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /**
+                                     * @description A cylinder's straw.
+                                     * @enum {string}
+                                     */
+                                    role: "straw";
+                                } | {
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /**
+                                     * @description What a cylinder's body is made of.
+                                     * @enum {string}
+                                     */
+                                    role: "finish";
+                                })[];
+                                /** @description The band round its side that takes the print. */
+                                printBand: {
+                                    /** @description The band's height, in millimetres. */
+                                    heightMm: number;
+                                    /** @description From the top down to the band, in millimetres. */
+                                    topMm: number;
+                                };
+                                /** @description Its diameter at the top, in millimetres. */
+                                topDiameterMm: number;
+                            } | {
+                                /** @description Which garment it is cut as. */
+                                cut: string;
+                                /**
+                                 * @description A garment.
+                                 * @enum {string}
+                                 */
+                                kind: "garment-cut";
+                            };
                             name: string;
                         }[];
                     };
@@ -48583,6 +50375,18 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
                     };
                 };
             };
@@ -49898,6 +51702,8 @@ export interface operations {
                             assetId: string;
                             /** @description Pixels per inch along the edge that decides, at the size. */
                             effectiveDpi: number;
+                            /** @description What the merchant knows the image by: the layer's name, else its form field's label, else the form's word for the background picture or a picture, in the workspace's language. Never an internal key. */
+                            label: string;
                             /** @description The layer the image fills, or the artwork's own key for its image background. */
                             layerId: string;
                             /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -50022,6 +51828,8 @@ export interface operations {
                                 assetId: string;
                                 /** @description Pixels per inch along the edge that decides, at the size. */
                                 effectiveDpi: number;
+                                /** @description What the merchant knows the image by: the layer's name, else its form field's label, else the form's word for the background picture or a picture, in the workspace's language. Never an internal key. */
+                                label: string;
                                 /** @description The layer the image fills, or the artwork's own key for its image background. */
                                 layerId: string;
                                 /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -51674,6 +53482,8 @@ export interface operations {
                                 assetId: string;
                                 /** @description Pixels per inch along the edge that decides, at the size. */
                                 effectiveDpi: number;
+                                /** @description What the merchant knows the image by: the layer's name, else its form field's label, else the form's word for the background picture or a picture, in the workspace's language. Never an internal key. */
+                                label: string;
                                 /** @description The layer the image fills, or the artwork's own key for its image background. */
                                 layerId: string;
                                 /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -51811,6 +53621,8 @@ export interface operations {
                             assetId: string;
                             /** @description Pixels per inch along the edge that decides, at the size. */
                             effectiveDpi: number;
+                            /** @description What the merchant knows the image by: the layer's name, else its form field's label, else the form's word for the background picture or a picture, in the workspace's language. Never an internal key. */
+                            label: string;
                             /** @description The layer the image fills, or the artwork's own key for its image background. */
                             layerId: string;
                             /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -51907,6 +53719,8 @@ export interface operations {
                                 assetId: string;
                                 /** @description Pixels per inch along the edge that decides, at the size. */
                                 effectiveDpi: number;
+                                /** @description What the merchant knows the image by: the layer's name, else its form field's label, else the form's word for the background picture or a picture, in the workspace's language. Never an internal key. */
+                                label: string;
                                 /** @description The layer the image fills, or the artwork's own key for its image background. */
                                 layerId: string;
                                 /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -52053,6 +53867,8 @@ export interface operations {
                             assetId: string;
                             /** @description Pixels per inch along the edge that decides, at the size. */
                             effectiveDpi: number;
+                            /** @description What the merchant knows the image by: the layer's name, else its form field's label, else the form's word for the background picture or a picture, in the workspace's language. Never an internal key. */
+                            label: string;
                             /** @description The layer the image fills, or the artwork's own key for its image background. */
                             layerId: string;
                             /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -52066,6 +53882,8 @@ export interface operations {
                             assetId: string;
                             /** @description Pixels per inch along the edge that decides, at the size. */
                             effectiveDpi: number;
+                            /** @description What the merchant knows the image by: the layer's name, else its form field's label, else the form's word for the background picture or a picture, in the workspace's language. Never an internal key. */
+                            label: string;
                             /** @description The layer the image fills, or the artwork's own key for its image background. */
                             layerId: string;
                             /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -52081,6 +53899,8 @@ export interface operations {
                                 assetId: string;
                                 /** @description Pixels per inch along the edge that decides, at the size. */
                                 effectiveDpi: number;
+                                /** @description What the merchant knows the image by: the layer's name, else its form field's label, else the form's word for the background picture or a picture, in the workspace's language. Never an internal key. */
+                                label: string;
                                 /** @description The layer the image fills, or the artwork's own key for its image background. */
                                 layerId: string;
                                 /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -52094,6 +53914,8 @@ export interface operations {
                                 assetId: string;
                                 /** @description Pixels per inch along the edge that decides, at the size. */
                                 effectiveDpi: number;
+                                /** @description What the merchant knows the image by: the layer's name, else its form field's label, else the form's word for the background picture or a picture, in the workspace's language. Never an internal key. */
+                                label: string;
                                 /** @description The layer the image fills, or the artwork's own key for its image background. */
                                 layerId: string;
                                 /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
@@ -52249,6 +54071,10 @@ export interface operations {
                 } & {
                     /** @description The variant whose colour the design is drawn in, by ref (`v_…`), when it is not the one `variant` names: on a dark colour each layer takes its on-dark value. It sizes nothing. A proof keeps it as `proofVariant`, so its commit is drawn in the same colour. Absent, `variant`'s colour; a ref the blank has no variant of draws as on a light product. */
                     garmentVariant?: string;
+                    /** @description The colours the shopper picked, by option name, `#rrggbb` each, such as `{"Colour": "#1b2a4a"}`, for a value of the blank that takes any colour: the product is drawn, and its tone judged, in the pick. A design keeps them, and its order is made in them; a pick for a value that takes no colour is kept and not used. Absent, each such value is its own colour. */
+                    pickedColours?: {
+                        [key: string]: string;
+                    };
                 } & {
                     /** @description Lays the design as a repeat of its template across the print area. Null, or absent, places it once. Through a designer link, a repeat the link offers, or null where its shopper may turn the repeat off; absent there, the link's own start. */
                     repeat?: {

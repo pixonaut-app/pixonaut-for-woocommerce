@@ -160,6 +160,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 			'assetId'        => 'ast_photo',
 			'effectiveDpi'   => 150,
 			'recommendedDpi' => 300,
+			'label'          => 'Photo',
 		);
 		$this->recorder->json( 200, array( 'verdicts' => array( array( 'lowResolution' => array( $soft ) ) + VerdictAnswers::LEGAL ) ) );
 		$this->save_variation( $small, 0, self::custom( '210', '270', 'A4-ish' ) );

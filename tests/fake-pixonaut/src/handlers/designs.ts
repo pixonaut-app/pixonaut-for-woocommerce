@@ -86,6 +86,7 @@ function designBody(
 		proofRevision: design.revision,
 		proofVariant: proof.variant,
 		proofViewId: proof.viewId,
+		pickedColours: proof.pickedColours,
 		// The fake draws every design as a template draws it for light garments.
 		garmentTone: 'light',
 		revision: design.revision,

@@ -22,6 +22,8 @@ type ProofBody = {
 	heightMm?: number;
 	/** Kept with the proof for display, never checked against the blank. */
 	variant?: string;
+	/** Kept with the proof, and with the design committed from it. */
+	pickedColours?: Record<string, string>;
 	viewId?: string;
 };
 
@@ -136,6 +138,7 @@ export const createProof: Handler = (context) => {
 		// Without a placement nothing fits a size: the proof keeps none.
 		printSize: named ?? (blankId === undefined ? null : undefined),
 		variant: request.variant ?? null,
+		pickedColours: request.pickedColours ?? null,
 		viewId: request.viewId ?? null,
 		values: request.values,
 		sessionId: sessionOf(context.headers),

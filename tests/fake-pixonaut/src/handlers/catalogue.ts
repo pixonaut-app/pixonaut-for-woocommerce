@@ -353,6 +353,9 @@ export function blankBody(blank: Blank): Record<string, unknown> {
 		paintBy: PAINT_BY,
 		areasVaryBy: [...(blank.areasVaryBy ?? [])],
 		referenceRow: null,
+		// The fake's blanks are one product for every variant, measured nowhere.
+		modelVariesBy: [],
+		productModels: [],
 		status: blank.status ?? 'ready',
 		importFailure: null,
 		// The fake draws no blank with AI.
@@ -628,6 +631,10 @@ export const listFittingTemplates: Handler = (context) => {
 /** Millimetres in an inch, which a resolution in dots per inch is measured along. */
 const MM_PER_INCH = 25.4;
 
+/** What an image is called when a test gave it no label: Pixonaut's word
+ *  for a picture the merchant named nowhere. */
+const UNNAMED_IMAGE_LABEL = 'Picture';
+
 /** The images `size` prints below their recommended resolution, each
  *  judged along its width alone, which the fake's images fill. */
 function lowResolutionAt(size: Box, setup: LowResolutionSetup | undefined) {
@@ -637,7 +644,7 @@ function lowResolutionAt(size: Box, setup: LowResolutionSetup | undefined) {
 			assetId: image.assetId,
 			effectiveDpi: image.widthPx / (size.widthMm / MM_PER_INCH),
 			recommendedDpi: setup?.recommendedDpi ?? 0,
-			...(image.label === undefined ? {} : { label: image.label }),
+			label: image.label ?? UNNAMED_IMAGE_LABEL,
 		}))
 		.filter((image) => image.effectiveDpi < image.recommendedDpi);
 }

@@ -185,6 +185,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/s/{sha256}/thumbnail/{bakeKey}/{dye}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch a small picture of a product in a setting
+         * @description A small picture of a product drawn into a setting, through the link `GET /v1/blanks/{id}/mockups` answers as a setting's photo's `thumbnailUrl`: at most 256 pixels on its longer side, with the product's frame painted in its own material and colour where it has one. The link's last part is the revision the frame is painted at; a link is used as it was answered, and one of another revision is not found. No key is needed, and any cache may keep it for good: a link names one picture.
+         */
+        get: operations["scenes.bakes.thumbnail.get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/t/{id}/mockup.png": {
         parameters: {
             query?: never;
@@ -2360,7 +2380,7 @@ export interface paths {
         };
         /**
          * List the library's scenes
-         * @description The scenes a blank may show, Pixonaut's and the workspace's own, by stock item, then by setting, person and pose (the selects a stock photo is chosen by), each with a link to its picture and to the passes it is drawn through, all needing no key, and the stock items a blank may choose: each with a scene in the library. The list is narrowed by kind, setting, person, pose, stock item and how a product may sit; `facets` answers the settings, people and poses left to choose, each counted over the scenes the rest of the query keeps. When a query naming a setting or a person matches no scene, `canMake` says what composing one would cost. A scene of kind `setting` is a photo with no product in it: it has no stock item and no passes, is listed after the scenes that have one, and a blank shows it at one of its anchors. A scene of kind `studio-style` has no photo at all, so no picture: its `geometry.studio` holds its backdrop, light and cameras, and a blank is bound to it from one of those cameras. A scene that was measured holds its `geometry`. A retired scene is not listed.
+         * @description The scenes a blank may show, Pixonaut's and the workspace's own, by stock item, then by setting, person and pose (the selects a stock photo is chosen by), each with a link to its picture and to the passes it is drawn through, all needing no key, and the stock items a blank may choose: each with a scene in the library. The list is narrowed by kind, setting, person, pose, stock item and how a product may sit; `facets` answers the settings, people and poses left to choose, each counted over the scenes the rest of the query keeps. When a query naming a setting or a person matches no scene, `canMake` says what composing one would cost. A scene of kind `setting` is a photo with no product in it: it has no stock item and no passes, is listed after the scenes that have one, and a blank shows it at one of its anchors. A scene of kind `studio-style` has no photo at all, so no picture: its `geometry.studio` holds its backdrop, light and cameras, and a blank is bound to it from one of those cameras. A scene whose `cutOut` is true is a garment alone, shown only laid over a studio style. A scene that was measured holds its `geometry`. A retired scene is not listed.
          */
         get: operations["scenes.list"];
         put?: never;
@@ -22415,6 +22435,69 @@ export interface operations {
             };
         };
     };
+    "scenes.bakes.thumbnail.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sha256: string;
+                bakeKey: string;
+                dye: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The picture */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                };
+            };
+            /** @description Not modified: the `If-None-Match` etag still holds */
+            304: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No stored picture has this photo, or the link is of another revision (plain text) */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refused: rate_limited */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description The request failed unexpectedly. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
     "templates.mockup.get": {
         parameters: {
             query: {
@@ -30798,6 +30881,8 @@ export interface operations {
                                 anchor?: string;
                                 /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
                                 camera?: string;
+                                /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
+                                cutOut?: string;
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
@@ -31649,6 +31734,8 @@ export interface operations {
                             anchor?: string;
                             /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
                             camera?: string;
+                            /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
+                            cutOut?: string;
                             /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                             row?: {
                                 [key: string]: string;
@@ -32515,6 +32602,8 @@ export interface operations {
                                         };
                                         /** @description The setting the product is in. */
                                         sceneId: string;
+                                        /** @description A small picture of the photo, opened with no key: the product in the setting, its frame painted in its own material where it has one. For a list or a picker; a print is drawn through the photo and its passes. */
+                                        thumbnailUrl: string;
                                         /** @description The photo, opened with no key. */
                                         url: string;
                                         uvPassUrls: {
@@ -32721,6 +32810,8 @@ export interface operations {
                                     }[];
                                     /** @description The setting the product is in. */
                                     sceneId: string;
+                                    /** @description A small picture of the photo, opened with no key: the product in the setting, its frame painted in its own material where it has one. For a list or a picker; a print is drawn through the photo and its passes. */
+                                    thumbnailUrl: string;
                                     uvPassUrls: {
                                         /** @description The multiply pass: the product's shadows and folds. */
                                         multiply: string;
@@ -47623,6 +47714,8 @@ export interface operations {
                                 anchor?: string;
                                 /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
                                 camera?: string;
+                                /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
+                                cutOut?: string;
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
@@ -48426,6 +48519,8 @@ export interface operations {
                                 anchor?: string;
                                 /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
                                 camera?: string;
+                                /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
+                                cutOut?: string;
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
@@ -49919,6 +50014,8 @@ export interface operations {
                         scenes: {
                             /** @description The keys of the garment areas the scene shows truthfully. */
                             areas: string[];
+                            /** @description Whether this is a garment cut-out: a photo of the garment alone with nothing round it, which a blank shows only laid over a studio style, never as a scene of its own. */
+                            cutOut: boolean;
                             /** @description What the scene's photo was measured to hold: its camera, and the anchors a product can be placed at, each a support plane with its scale, light and shadow. Every pixel number is at its `sizePx`. Null for a scene with none. */
                             geometry: {
                                 anchors: {
@@ -50046,7 +50143,7 @@ export interface operations {
                                 /** @description The 16-bit UV pass: for each pixel, its garment area's piece (blue) and where across (red) and down (green) that piece it reads. */
                                 uv: string;
                             } | null;
-                            /** @description With `forBlank`: which rows of that blank the scene can show, a setting an anchor at a time. Empty for a scene no blank can show. */
+                            /** @description With `forBlank`: which rows of that blank the scene can show, a setting an anchor at a time, and a garment cut-out a studio style at a time. Empty for a scene no blank can show. */
                             offers?: {
                                 /** @description The anchor of a setting the rows are judged at; null for a scene with a product of its own. */
                                 anchor: string | null;
@@ -50060,6 +50157,15 @@ export interface operations {
                                         [key: string]: string;
                                     };
                                 }[];
+                                /** @description For a garment cut-out, the studio style it is laid over: the blank is bound to that style from this camera, with this scene as its `cutOut`. Null for any other scene. */
+                                studio: {
+                                    /** @description The camera of the style the picture is bound from: the one the cut-out's pose names. */
+                                    camera: string;
+                                    /** @description The studio style's name. */
+                                    label: string;
+                                    /** @description The studio style's id. */
+                                    sceneId: string;
+                                } | null;
                             }[];
                             /** @description Who is in the scene, or `none`: one of the selects a stock item's scenes are chosen by. */
                             person: string;

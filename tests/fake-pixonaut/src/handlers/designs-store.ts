@@ -104,6 +104,7 @@ export function seedDesign(
 		placementId: seed.placementId ?? null,
 		printSize: null,
 		variant: null,
+		pickedColours: null,
 		viewId: null,
 		expiresAt: now,
 		values: {},
