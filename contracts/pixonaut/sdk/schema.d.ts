@@ -1029,7 +1029,7 @@ export interface paths {
         };
         /**
          * Read a blank
-         * @description One blank with its placements and variants, its chosen scenes, and its views and scenes as one ordered list (`order`), each with its source, and where its pictures stand in each setting it is bound to (`settingBakes`). A deleted blank is read too, with when and by whom it was deleted, so an order placed on it can show it.
+         * @description One blank with its placements and variants, its chosen scenes, and its views and scenes as one ordered list (`order`), each with its source, where its pictures stand in each setting it is bound to (`settingBakes`), and which of its rows each held scene it shows does not show (`heldScenes`). A deleted blank is read too, with when and by whom it was deleted, so an order placed on it can show it.
          */
         get: operations["blanks.get"];
         put?: never;
@@ -2360,7 +2360,7 @@ export interface paths {
         };
         /**
          * List the library's scenes
-         * @description The scenes a blank may show, Pixonaut's and the workspace's own, by stock item, then by setting, person and pose (the selects a stock photo is chosen by), each with a link to its picture and to the passes it is drawn through, all needing no key, and the stock items a blank may choose: each with a scene in the library. The list is narrowed by kind, setting, person, pose, stock item and how a product may sit; `facets` answers the settings, people and poses left to choose, each counted over the scenes the rest of the query keeps. When a query naming a setting or a person matches no scene, `canMake` says what composing one would cost. A scene of kind `setting` is a photo with no product in it: it has no stock item and no passes, is listed after the scenes that have one, and a blank shows it at one of its anchors. A scene that was measured holds its `geometry`. A retired scene is not listed.
+         * @description The scenes a blank may show, Pixonaut's and the workspace's own, by stock item, then by setting, person and pose (the selects a stock photo is chosen by), each with a link to its picture and to the passes it is drawn through, all needing no key, and the stock items a blank may choose: each with a scene in the library. The list is narrowed by kind, setting, person, pose, stock item and how a product may sit; `facets` answers the settings, people and poses left to choose, each counted over the scenes the rest of the query keeps. When a query naming a setting or a person matches no scene, `canMake` says what composing one would cost. A scene of kind `setting` is a photo with no product in it: it has no stock item and no passes, is listed after the scenes that have one, and a blank shows it at one of its anchors. A scene of kind `studio-style` has no photo at all, so no picture: its `geometry.studio` holds its backdrop, light and cameras, and a blank is bound to it from one of those cameras. A scene that was measured holds its `geometry`. A retired scene is not listed.
          */
         get: operations["scenes.list"];
         put?: never;
@@ -30683,6 +30683,42 @@ export interface operations {
                                 /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
                                 photoAssetId: string | null;
                             } | null;
+                            /** @description The blank's rows on each held scene it shows, a scene with its product in a hand, in the blank's order: how many rows the scene shows, and which it does not and why. A scene limited to some option values answers for the rows with those values alone. Empty for a blank that shows no held scene, or deleted. Answered for one blank, never in a list. */
+                            heldScenes?: {
+                                /** @description The shape class the hand in the scene's photo holds: one product kind between two diameters and heights, in millimetres. */
+                                held: {
+                                    kind: string;
+                                    /** @description The largest product the grip holds. */
+                                    maxMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                    /** @description The smallest product the grip holds. */
+                                    minMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                };
+                                /** @description The scene's label. */
+                                label: string;
+                                /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
+                                refused: {
+                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    refusal: string;
+                                    /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description The refs of the variants with the row's values, of those the scene is of: the ones with no photo on it. */
+                                    variantRefs: string[];
+                                }[];
+                                /** @description The held scene's id. */
+                                sceneId: string;
+                                /** @description How many of the blank's rows the scene shows. */
+                                shown: number;
+                                /** @description The refs of the variants the scene is of, shown or refused: every variant of the blank, a retired one too, or those with the option values the scene is limited to. Empty for a blank with no variants. */
+                                variantRefs: string[];
+                            }[];
                             id: string;
                             /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
                             importFailure: string | null;
@@ -30760,6 +30796,8 @@ export interface operations {
                             } | {
                                 /** @description For a setting, a scene with no product in it: the key of its anchor the product is placed at. Required for one, and left out for any other scene. */
                                 anchor?: string;
+                                /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
+                                camera?: string;
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
@@ -31496,6 +31534,42 @@ export interface operations {
                             /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
                             photoAssetId: string | null;
                         } | null;
+                        /** @description The blank's rows on each held scene it shows, a scene with its product in a hand, in the blank's order: how many rows the scene shows, and which it does not and why. A scene limited to some option values answers for the rows with those values alone. Empty for a blank that shows no held scene, or deleted. Answered for one blank, never in a list. */
+                        heldScenes?: {
+                            /** @description The shape class the hand in the scene's photo holds: one product kind between two diameters and heights, in millimetres. */
+                            held: {
+                                kind: string;
+                                /** @description The largest product the grip holds. */
+                                maxMm: {
+                                    diameter: number;
+                                    height: number;
+                                };
+                                /** @description The smallest product the grip holds. */
+                                minMm: {
+                                    diameter: number;
+                                    height: number;
+                                };
+                            };
+                            /** @description The scene's label. */
+                            label: string;
+                            /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
+                            refused: {
+                                /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                refusal: string;
+                                /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                row: {
+                                    [key: string]: string;
+                                };
+                                /** @description The refs of the variants with the row's values, of those the scene is of: the ones with no photo on it. */
+                                variantRefs: string[];
+                            }[];
+                            /** @description The held scene's id. */
+                            sceneId: string;
+                            /** @description How many of the blank's rows the scene shows. */
+                            shown: number;
+                            /** @description The refs of the variants the scene is of, shown or refused: every variant of the blank, a retired one too, or those with the option values the scene is limited to. Empty for a blank with no variants. */
+                            variantRefs: string[];
+                        }[];
                         id: string;
                         /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
                         importFailure: string | null;
@@ -31573,6 +31647,8 @@ export interface operations {
                         } | {
                             /** @description For a setting, a scene with no product in it: the key of its anchor the product is placed at. Required for one, and left out for any other scene. */
                             anchor?: string;
+                            /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
+                            camera?: string;
                             /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                             row?: {
                                 [key: string]: string;
@@ -32313,6 +32389,8 @@ export interface operations {
                                 dFrac: string;
                             };
                             views: {
+                                /** @description On a studio style's view, the camera of the style it is seen from: a blank shows one style once for each camera, and this says which this view is. */
+                                camera?: string;
                                 /** @description On a scene's view, the setting, person and pose its scene is chosen by, which a reader groups a product's views with. */
                                 facets?: {
                                     /** @description Who is in the scene; null for a scene nobody is in. */
@@ -32559,6 +32637,8 @@ export interface operations {
                         }[];
                         /** @description The blank's views of several placements, in order: each region with its placement, rect, mesh, window and mask, and each photo with its variants and its looks per region. */
                         views: {
+                            /** @description On a studio style's view, the camera of the style it is seen from: a blank shows one style once for each camera, and this says which this view is. */
+                            camera?: string;
                             /** @description On a scene's view, the setting, person and pose its scene is chosen by, which a reader groups a product's views with. */
                             facets?: {
                                 /** @description Who is in the scene; null for a scene nobody is in. */
@@ -43776,6 +43856,7 @@ export interface operations {
                                     };
                                     estimate?: {
                                         availableCredits: number;
+                                        buys?: string;
                                         credits: number;
                                     };
                                     input?: unknown;
@@ -43884,6 +43965,7 @@ export interface operations {
                                             id: string;
                                             /** @enum {string} */
                                             kind: "scene_candidate";
+                                            preview?: number;
                                             slot: number;
                                         };
                                         /** @enum {string} */
@@ -44033,6 +44115,7 @@ export interface operations {
                                     };
                                     estimate?: {
                                         availableCredits: number;
+                                        buys?: string;
                                         credits: number;
                                     };
                                     input?: unknown;
@@ -44141,6 +44224,7 @@ export interface operations {
                                             id: string;
                                             /** @enum {string} */
                                             kind: "scene_candidate";
+                                            preview?: number;
                                             slot: number;
                                         };
                                         /** @enum {string} */
@@ -44254,6 +44338,7 @@ export interface operations {
                                     };
                                     estimate?: {
                                         availableCredits: number;
+                                        buys?: string;
                                         credits: number;
                                     };
                                     input?: unknown;
@@ -44362,6 +44447,7 @@ export interface operations {
                                             id: string;
                                             /** @enum {string} */
                                             kind: "scene_candidate";
+                                            preview?: number;
                                             slot: number;
                                         };
                                         /** @enum {string} */
@@ -44534,6 +44620,7 @@ export interface operations {
                                     };
                                     estimate?: {
                                         availableCredits: number;
+                                        buys?: string;
                                         credits: number;
                                     };
                                     input?: unknown;
@@ -44642,6 +44729,7 @@ export interface operations {
                                             id: string;
                                             /** @enum {string} */
                                             kind: "scene_candidate";
+                                            preview?: number;
                                             slot: number;
                                         };
                                         /** @enum {string} */
@@ -44982,6 +45070,7 @@ export interface operations {
                                     };
                                     estimate?: {
                                         availableCredits: number;
+                                        buys?: string;
                                         credits: number;
                                     };
                                     input?: unknown;
@@ -45090,6 +45179,7 @@ export interface operations {
                                             id: string;
                                             /** @enum {string} */
                                             kind: "scene_candidate";
+                                            preview?: number;
                                             slot: number;
                                         };
                                         /** @enum {string} */
@@ -47360,7 +47450,7 @@ export interface operations {
                     name?: string;
                     /** @description Whether the printshop's photos are fetched as the blank's catalogue photos. True is refused where the printshop has no photo with a print area. Omitted, they are fetched if it has any. */
                     printshopPhotos?: boolean;
-                    /** @description Stock photos, the scenes in the order they show, first in the blank's order and before the printshop's photos. They may photograph several stock items, each scene its own; two of one stock item, setting, person and pose are refused `scene_view_repeated`. On each of them, each placement with a role that item has a place for takes its default record; one with none shows on none of its scenes. */
+                    /** @description Stock photos, the scenes in the order they show, first in the blank's order and before the printshop's photos. They may photograph several stock items, each scene its own; two of one stock item, setting, person and pose are refused `scene_view_repeated`, unless each is held in a hand. On each of them, each placement with a role that item has a place for takes its default record; one with none shows on none of its scenes. */
                     sceneIds?: string[];
                     /** @description The views to fetch photos for, by the key the options read answers; absent for every view. */
                     views?: string[];
@@ -47418,6 +47508,42 @@ export interface operations {
                                 /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
                                 photoAssetId: string | null;
                             } | null;
+                            /** @description The blank's rows on each held scene it shows, a scene with its product in a hand, in the blank's order: how many rows the scene shows, and which it does not and why. A scene limited to some option values answers for the rows with those values alone. Empty for a blank that shows no held scene, or deleted. Answered for one blank, never in a list. */
+                            heldScenes?: {
+                                /** @description The shape class the hand in the scene's photo holds: one product kind between two diameters and heights, in millimetres. */
+                                held: {
+                                    kind: string;
+                                    /** @description The largest product the grip holds. */
+                                    maxMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                    /** @description The smallest product the grip holds. */
+                                    minMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                };
+                                /** @description The scene's label. */
+                                label: string;
+                                /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
+                                refused: {
+                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    refusal: string;
+                                    /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description The refs of the variants with the row's values, of those the scene is of: the ones with no photo on it. */
+                                    variantRefs: string[];
+                                }[];
+                                /** @description The held scene's id. */
+                                sceneId: string;
+                                /** @description How many of the blank's rows the scene shows. */
+                                shown: number;
+                                /** @description The refs of the variants the scene is of, shown or refused: every variant of the blank, a retired one too, or those with the option values the scene is limited to. Empty for a blank with no variants. */
+                                variantRefs: string[];
+                            }[];
                             id: string;
                             /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
                             importFailure: string | null;
@@ -47495,6 +47621,8 @@ export interface operations {
                             } | {
                                 /** @description For a setting, a scene with no product in it: the key of its anchor the product is placed at. Required for one, and left out for any other scene. */
                                 anchor?: string;
+                                /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
+                                camera?: string;
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
@@ -48183,6 +48311,42 @@ export interface operations {
                                 /** @description The photo the draw drew for its first view drawn, in the library, to show while it waits to be decided; null before one is drawn. */
                                 photoAssetId: string | null;
                             } | null;
+                            /** @description The blank's rows on each held scene it shows, a scene with its product in a hand, in the blank's order: how many rows the scene shows, and which it does not and why. A scene limited to some option values answers for the rows with those values alone. Empty for a blank that shows no held scene, or deleted. Answered for one blank, never in a list. */
+                            heldScenes?: {
+                                /** @description The shape class the hand in the scene's photo holds: one product kind between two diameters and heights, in millimetres. */
+                                held: {
+                                    kind: string;
+                                    /** @description The largest product the grip holds. */
+                                    maxMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                    /** @description The smallest product the grip holds. */
+                                    minMm: {
+                                        diameter: number;
+                                        height: number;
+                                    };
+                                };
+                                /** @description The scene's label. */
+                                label: string;
+                                /** @description The rows the scene does not show, in the variants' order: their variants have no photo on it. */
+                                refused: {
+                                    /** @description The rule that refuses it: `shape_outside_grip` for a product of another kind or a size the grip does not close round, `no_product_model` for a row with no product model. */
+                                    refusal: string;
+                                    /** @description The row: its values of the options the blank's product changes with (`modelVariesBy`). Empty for a blank with one product. */
+                                    row: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description The refs of the variants with the row's values, of those the scene is of: the ones with no photo on it. */
+                                    variantRefs: string[];
+                                }[];
+                                /** @description The held scene's id. */
+                                sceneId: string;
+                                /** @description How many of the blank's rows the scene shows. */
+                                shown: number;
+                                /** @description The refs of the variants the scene is of, shown or refused: every variant of the blank, a retired one too, or those with the option values the scene is limited to. Empty for a blank with no variants. */
+                                variantRefs: string[];
+                            }[];
                             id: string;
                             /** @description The code a failed import failed with, such as `partner_failed` or `storage_quota_exceeded`; null unless `status` is `failed`. */
                             importFailure: string | null;
@@ -48260,6 +48424,8 @@ export interface operations {
                             } | {
                                 /** @description For a setting, a scene with no product in it: the key of its anchor the product is placed at. Required for one, and left out for any other scene. */
                                 anchor?: string;
+                                /** @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from. */
+                                camera?: string;
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
@@ -49830,6 +49996,37 @@ export interface operations {
                                 sizePx: {
                                     height: number;
                                     width: number;
+                                };
+                                /** @description For a studio style, which has no photo: the backdrop, light, shadow and named cameras its pictures are drawn from. */
+                                studio?: {
+                                    backdrop: {
+                                        /** @description The backdrop's colour where its wall is lit, as #rrggbb. */
+                                        colour: string;
+                                        /** @description The radius of the curve the floor turns up into the wall by, in mm; 0 for a floor that meets its wall in a corner. */
+                                        sweepMm: number;
+                                    };
+                                    cameras: {
+                                        /** @description How far round the product the camera stands, from its front towards its right: 0 its front, 90 its right side, 180 its back. */
+                                        azimuthDeg: number;
+                                        /** @description How far above level the camera stands, looking down at the product; below zero, under it and looking up. */
+                                        elevationDeg: number;
+                                        key: string;
+                                    }[];
+                                    /** @description The share of the picture a product is framed to fill: its bounding box is this share of the picture's width or of its height, whichever it reaches first. */
+                                    fill: number;
+                                    light: {
+                                        /** @description The ambient light's linear red, green and blue. */
+                                        ambient: number[];
+                                        azimuthDeg: number;
+                                        elevationDeg: number;
+                                        /** @description 0 for a hard point light, 1 for light from everywhere. */
+                                        softness: number;
+                                    };
+                                    shadow: {
+                                        blurMm: number;
+                                        /** @description How much of the plane's light a full shadow takes. */
+                                        strength: number;
+                                    };
                                 };
                             } | null;
                             /** @description Whether a person is in the scene. */
