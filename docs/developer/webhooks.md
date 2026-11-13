@@ -75,11 +75,9 @@ firewall dropped it. So every 15 minutes a recurring job
 `GET /v1/events?after=<cursor>&types=<types>`, following `nextCursor` until it
 is null, and hands every event to the same intake as a delivery: an event
 that came both ways is handled once. `types` is every webhook the plugin
-consumes but `webhook.ping` and those Pixonaut only delivers to the
-endpoint (`Endpoint::WEBHOOK_ONLY_TYPES`, now `template.renamed`), which the
-stream answers `400 invalid_event_type` for: `Endpoint::EVENT_TYPES`, as the
-endpoint is narrowed to, but never filtered, so a filtered type the pull would
-be refused for cannot stop it.
+consumes but `webhook.ping`: `Endpoint::EVENT_TYPES`, as the endpoint is
+narrowed to, but never filtered, so a filtered type the pull would be refused
+for cannot stop it.
 
 - **Cursor.** The option `pixonaut_wc_events_cursor` holds the id of the
   last event pulled, with the `connection_id` of the connection it belongs
@@ -576,10 +574,10 @@ handles it without asking Pixonaut anything:
   queued again later, from the start, 60 seconds later and doubling, up to 5
   attempts in all (`TemplateRename::MAX_ATTEMPTS`); a job that cannot be
   queued fails the one that queues it, which is tried again.
-- **Missed.** `GET /v1/events` does not list `template.renamed` yet
-  (pixonaut-app/pixonaut#3451). A store that missed the delivery keeps the
-  old id, which Pixonaut goes on answering, but a design made from then on
-  names the new one and is refused at add to cart until the event is handled.
+- **Missed.** A store that missed the delivery keeps the old id, which
+  Pixonaut goes on answering, but a design made from then on names the new
+  one and is refused at add to cart until the event is handled: the
+  [pull](#pulling-the-event-stream) brings it within 15 minutes.
 
 ### Designer links changed in Pixonaut
 

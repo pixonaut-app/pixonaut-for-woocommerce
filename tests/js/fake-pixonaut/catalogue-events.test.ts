@@ -118,13 +118,12 @@ describe('template changes', () => {
 		const newId = 'mini-tee-pandas';
 		await changed('templates/rename', { template: LIVE_BASE, newId });
 
-		expect(fake.webhooks.events(MAIN.id).at(-1)).toMatchObject({
-			type: 'template.renamed',
-			payload: { oldId: LIVE_BASE, newId, renamedAt: expect.any(Number) },
-		});
-		expect(await pulled(), 'the pull leaves out a webhook-only type').toEqual(
-			[],
-		);
+		expect(await pulled()).toMatchObject([
+			{
+				type: 'template.renamed',
+				payload: { oldId: LIVE_BASE, newId, renamedAt: expect.any(Number) },
+			},
+		]);
 		expect(await liveTemplates()).toMatchObject({ [newId]: LIVE_VERSION });
 		expect(await liveTemplates()).not.toHaveProperty(LIVE_BASE);
 		for (const id of [FIXTURE.template.live, `${newId}@${LIVE_VERSION}`]) {
@@ -134,7 +133,7 @@ describe('template changes', () => {
 		}
 	});
 
-	it("refuses an id another template has, or none, and a pull asking for the rename's type", async () => {
+	it("refuses an id another template has, or none, and answers a pull asking for the rename's type", async () => {
 		for (const newId of [PAUSED_BASE, undefined, `${LIVE_BASE}-2@1`]) {
 			expect(
 				(await control('templates/rename', { template: LIVE_BASE, newId }))
@@ -144,8 +143,8 @@ describe('template changes', () => {
 		const asked = await send(fake, '/v1/events?types=template.renamed', {
 			headers: bearer(MAIN.integrationKey),
 		});
-		expect(asked.status).toBe(400);
-		expect(await asked.json()).toMatchObject({ error: 'invalid_event_type' });
+		expect(asked.status).toBe(200);
+		expect(await asked.json()).toMatchObject({ events: [] });
 	});
 
 	it('refuses a template it does not have', async () => {

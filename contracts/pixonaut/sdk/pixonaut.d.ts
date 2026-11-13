@@ -286,6 +286,9 @@ export declare interface DesignerEvents {
     variant: {
         ref: string;
     };
+    /** The shopper picked another colour for an option's value that takes
+     *  any colour (`setPickedColour()`). */
+    pickedColour: PickedColour;
     /** The preview took another shape, width over height: a photo of another
      *  shape was placed, or a print size drawn at another shape landed. Heard
      *  once the designer is `shown`, a host that frames the preview follows
@@ -437,6 +440,15 @@ export declare class DesignerProduct {
     /** The variant shown, as `setVariant()` or `initialVariant` named it;
      *  undefined before. */
     getVariant(): string | undefined;
+    /** The colours the shopper picked, `#rrggbb` by option name, for the
+     *  values that take any colour (`anyColour` in `getOptions()`); a design
+     *  opened again starts from the ones it was committed with. */
+    getPickedColours(): Record<string, string>;
+    /** Pick `colour`, `#rrggbb`, for `option`'s value that takes any colour:
+     *  the preview is dyed and toned in it, and `approve()` and `commit()`
+     *  send it. `on("pickedColour")` reports it. A `TypeError` for another
+     *  colour, and for an option with no value that takes any colour. */
+    setPickedColour(option: string, colour: string): void;
     /** Show view `viewId` behind the design; one on another placement
      *  switches the editor to that placement, and to the template the product
      *  prints there, keeping the customer's values as `setTemplate()` does.
@@ -1948,6 +1960,17 @@ declare type PathParams = Record<string, string | number>;
  *  id → that layer's props. */
 declare type PayloadValues = Record<string, Record<string, unknown>>;
 
+/** One pick, as `on("pickedColour")` hears it. */
+export declare interface PickedColour {
+    /** The option it is for, by name. */
+    option: string;
+    /** The colour picked, `#rrggbb` in lower case. */
+    colour: string;
+}
+
+/** The shopper's picks, by option name: one `#rrggbb` each. */
+declare type PickedColours = Readonly<Record<string, string>>;
+
 /** The pickers `showPickers` draws above the form, each on its own: `false`
  *  leaves that one out, for a host drawing its own. Omitted, it is drawn. */
 export declare interface PickerVisibility {
@@ -2640,6 +2663,9 @@ export declare interface ProductOptionValue {
     value: string;
     /** How it looks; null when the blank gives it no appearance. */
     appearance: OptionValueAppearance | null;
+    /** The shopper picks this value's colour (`setPickedColour()`): its fill
+     *  is the colour shown until they pick. Absent for a fixed colour. */
+    anyColour?: true;
 }
 
 /** One placement a product sells, and the template it prints there. */
@@ -2714,11 +2740,28 @@ export declare interface ProductView {
      *  artwork alone on a transparency checker, whose `renderView()` picture
      *  is the artwork on a transparent ground. */
     kind: "photo" | "design";
-    /** Whether it is a stock scene, whose print is an estimate: never true to exact
-     *  placement or size. The designer says nothing about it; telling shoppers is
-     *  the host's to do, or not. False for a printshop's or the merchant's own
-     *  photo, and for the Design view. */
+    /** Whether its picture is an estimate: a stock scene with its product in
+     *  the photo, never true to exact placement or size. The designer says
+     *  nothing about it; telling shoppers is the host's to do, or not. False
+     *  for a product drawn into a setting from its own measures in the variant
+     *  shown, which is exact, for a printshop's or the merchant's own photo,
+     *  and for the Design view. */
     estimated: boolean;
+    /** Where its scene is photographed: `key` is the same on every view of
+     *  that setting, `label` its words. Null for a view that shows no scene:
+     *  the merchant's own or a printshop's photo, a storefront photo, and the
+     *  Design view. */
+    setting: ViewFacet | null;
+    /** Who is in its scene, as `setting` names where; null for a scene nobody
+     *  is in, and for a view that shows no scene. */
+    person: ViewFacet | null;
+    /** How its scene shows the product, as the scene names it, such as
+     *  `"front"`; null for a view that shows no scene. */
+    pose: string | null;
+    /** What a host groups views by: its setting's key. `getViews()` lists the
+     *  views of one group side by side. Null for a view that shows no scene,
+     *  which belongs to no group. */
+    group: string | null;
 }
 
 declare interface ProfileTables {
@@ -3339,6 +3382,13 @@ declare interface StoredDesign {
     /** Whether the member may upload a picture of their own. False hides the
      *  upload button; the template's presets are still offered. */
     uploads: boolean;
+    /** The colours the shopper picked, by option name, as the design's read
+     *  answers them: the preview and a commit again start from them. */
+    pickedColours?: PickedColours | null;
+    /** The variant the design's proof was drawn in, by ref, as the design's
+     *  read answers it: the views open on it unless `initialVariant` names
+     *  one. */
+    variant?: string | null;
 }
 
 /** Mounted on a stored design: the studio's session, the design, and no
@@ -3730,6 +3780,14 @@ export declare type VariantUnavailableReason =
 /** This SDK's release. The wasm it boots must report the same one. */
 export declare const version: string;
 
+/** A setting or a person a view's scene is chosen by. */
+export declare interface ViewFacet {
+    /** The value, the same on every view that names it. */
+    key: string;
+    /** Its words, for a heading or a caption. */
+    label: string;
+}
+
 /** The view, variant and preview words `SdkMessages` carries. */
 export declare interface ViewMessages {
     /** The views' heading. One key, where the size picker needs three: the
@@ -3760,6 +3818,9 @@ export declare interface ViewMessages {
      *  panel is another shape than the template (#2785); interpolates
      *  {value}. */
     "variants.misfit": string;
+    /** The colour well beside an option's value that takes any colour: its
+     *  name, for a screen reader; interpolates {option}. */
+    "variants.pick-colour": string;
     "preview.alt": string;
     /** Over the preview's space until its first view is drawn (#2482). */
     "preview.loading": string;

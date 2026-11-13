@@ -16,19 +16,11 @@ export const EVENTS_LOOKED_THROUGH = 1000;
 /** Separates the types in `types`. */
 const TYPES_SEPARATOR = ',';
 
-/** The types Pixonaut only delivers to webhooks: the pull neither answers
- *  them nor takes them in `types` (pixonaut-app/pixonaut#3451). */
-export const WEBHOOK_ONLY_TYPES: ReadonlySet<string> = new Set([
-	'template.renamed',
-]);
-
 /** The event types the pull answers: the reference's webhooks, but the
- *  ping and those only delivered to webhooks. */
+ *  ping. */
 function eventTypes(contract: Contract): Set<string> {
 	return new Set(
-		Object.keys(contract.spec.webhooks).filter(
-			(type) => type !== PING_TYPE && !WEBHOOK_ONLY_TYPES.has(type),
-		),
+		Object.keys(contract.spec.webhooks).filter((type) => type !== PING_TYPE),
 	);
 }
 
@@ -64,11 +56,7 @@ export const listEvents: Handler = (context) => {
 	let looked = 0;
 	for (const event of window) {
 		looked += 1;
-		if (
-			wanted === null
-				? !WEBHOOK_ONLY_TYPES.has(event.type)
-				: wanted.has(event.type)
-		) {
+		if (wanted === null || wanted.has(event.type)) {
 			events.push(event);
 			if (events.length === limit) {
 				break;

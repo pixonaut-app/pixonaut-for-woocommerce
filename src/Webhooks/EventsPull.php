@@ -344,7 +344,7 @@ final class EventsPull {
 	 * @throws ApiException When Pixonaut refused (`unknown_event` for an `after` it does not know) or could not be reached.
 	 */
 	private function page( ?string $after ): array {
-		$page = EventsPage::get( $this->api, $after, implode( ',', array_diff( Endpoint::EVENT_TYPES, Endpoint::WEBHOOK_ONLY_TYPES ) ) );
+		$page = EventsPage::get( $this->api, $after, implode( ',', Endpoint::EVENT_TYPES ) );
 		return array(
 			'events'      => $page->events,
 			'next_cursor' => '' !== $page->next_cursor ? $page->next_cursor : null,

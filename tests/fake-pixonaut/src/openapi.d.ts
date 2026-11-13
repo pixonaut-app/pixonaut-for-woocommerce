@@ -21647,10 +21647,16 @@ export interface components {
                 oldId: string;
                 renamedAt: number;
             };
-            /** @enum {string} */
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             type: "template.renamed";
-            /** @description `automation` when one of your automations caused the event; absent otherwise. */
-            via?: string;
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
         };
         TextMessagesLowEvent: {
             /** @description The automation that caused the event, beside `via`. */
@@ -30758,7 +30764,7 @@ export interface operations {
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
-                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, and a dyeable stock photo takes the first option with colours. */
                             paintBy: string | null;
                             partnerLocked: boolean;
                             /** @description How much of the blank is photographed. Answered in a list. */
@@ -30770,9 +30776,9 @@ export interface operations {
                             };
                             /** @description The options the blank's photos change with, in option order: each photo belongs to one row, its values of these, and shows every variant with them. Empty is All: one photo per view shows every variant. */
                             photosVaryBy: string[];
-                            /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
+                            /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list. */
                             placements: {
-                                /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, the placement has one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
+                                /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
                                 areas?: {
                                     /** @description Bleed past the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
                                     bleedMm?: number;
@@ -30790,7 +30796,7 @@ export interface operations {
                                     safeAreaMm?: number;
                                     /** @description Where on the product a print may go on the row, such as one phone model's camera opening: as the placement's `shape`, in fractions of the row's print area. Omitted, the placement's. */
                                     shape?: {
-                                        /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                        /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                         cutByPrintShop?: boolean;
                                         /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                         dFrac: string;
@@ -30804,7 +30810,7 @@ export interface operations {
                                 }[];
                                 /** @description Bleed past the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 bleedMm?: number;
-                                /** @description How a print covers the placement: `within`, a print of any size up to the maximum placed inside it, or `full`, a print that is the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's usual size is its area, and a request naming a smaller size is refused `print_size_not_area`. */
+                                /** @description How a print covers the placement: `within`, any size up to the maximum, placed inside it, or `full`, the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's size is its area; a smaller one is refused `print_size_not_area`. */
                                 coverage?: string;
                                 /** @description The height a print gets when none is chosen, in millimetres, at most maxHeightMm. */
                                 defaultHeightMm: number;
@@ -30814,7 +30820,7 @@ export interface operations {
                                 dpi?: number;
                                 /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                                 fillColour?: string | null;
-                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box. Its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, the placement is printed as it lies. */
+                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box: its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, it is printed as it lies. */
                                 flatLayout?: {
                                     /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
                                     parts: {
@@ -30836,7 +30842,7 @@ export interface operations {
                                 } | null;
                                 /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                                 foldMm?: number;
-                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene whose item has no record draws nothing of the placement. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
+                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene item with no record draws none of it. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
                                 garments?: {
                                     /** @description The key of a garment area of the record's stock item. */
                                     area: string;
@@ -30851,7 +30857,7 @@ export interface operations {
                                 }[];
                                 /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                                 id: string;
-                                /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design then drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none. A placement linked with one no longer on the blank is linked with none. */
+                                /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none, as when the linked one leaves the blank. */
                                 linkWith?: {
                                     /** @description Whether this placement's print is mirrored left to right when the two are linked. */
                                     mirror: boolean;
@@ -30866,13 +30872,13 @@ export interface operations {
                                 name: string;
                                 /** @description How this placement is printed, such as dtg or screen. Omitted, its category's. */
                                 printMethod?: string;
-                                /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a blank bound to its printshop's product takes it from the printshop. */
+                                /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a printshop-bound blank takes it from the printshop. */
                                 required?: boolean;
                                 /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 safeAreaMm?: number;
                                 /** @description Where on the product a print may go when that is not the whole rectangle: nothing is printed outside the outline or in a cut-out. Null or omitted, the whole rectangle. */
                                 shape?: {
-                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                     cutByPrintShop?: boolean;
                                     /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                     dFrac: string;
@@ -30881,7 +30887,7 @@ export interface operations {
                                 shopName?: string | null;
                                 /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
                                 views: {
-                                    /** @description True on a view a blank bound to its printshop's product took from the printshop (its import, Add colours, model photos): its photo size and print area are the printshop's and cannot change by hand. Absent on a view the workspace added; a save that sends it is ignored. */
+                                    /** @description True on a view a printshop-bound blank took from its printshop (import, Add colours, model photos): its photo size and print area are the printshop's, not changed by hand. Absent on a view the workspace added; sending it is ignored. */
                                     fromPrintshop?: boolean;
                                     /** @description Unique within the blank. */
                                     id: string;
@@ -30901,17 +30907,17 @@ export interface operations {
                                     };
                                     /** @description A library asset of the view's photo size: where it is light the print shows, where it is dark the print is hidden, as behind a sleeve or a fold. Absent hides nothing. */
                                     maskAssetId?: string;
-                                    /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
+                                    /** @description Control points the print is laid through or, marked cut, cut to: rows from its top edge, points from its left, as [x, y] in the photo's original pixels; 2 to 33 along each side. Absent, the print is laid in the rect. */
                                     mesh?: {
                                         /**
-                                         * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                         * @description The points draw a shape the print is cut to, not a mesh it bends through: the print is laid flat over the box the points span, filling it at its own proportions, and cut away outside the outer points' shape. Absent, it is warped through the mesh.
                                          * @enum {boolean}
                                          */
                                         cut?: true;
                                         /** @description The rows of control points, from the print's top edge. */
                                         points: number[][][];
                                     };
-                                    /** @description The printshop's own key for the photo style the view was made from, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
+                                    /** @description The printshop's own key for the view's photo style, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
                                     partnerStyleKey?: string;
                                     /** @description The pixel size every photo of the view has; null until the view holds a photo. */
                                     photoSizePx: {
@@ -30963,7 +30969,7 @@ export interface operations {
                                     } | null;
                                     /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
                                     position?: number;
-                                    /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
+                                    /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on a cup's side: the print fills it at the window's size, the product plain outside it. It lies inside its piece, whose size the view must give. Absent, the whole piece. */
                                     printWindowMm?: {
                                         /** @description The window's height, in mm. */
                                         heightMm: number;
@@ -30993,7 +30999,7 @@ export interface operations {
                                     };
                                     /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
                                     takesDye?: boolean;
-                                    /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, the view's regions are laid in their rect or mesh. */
+                                    /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, regions are laid in their rect or mesh. */
                                     uvPasses?: {
                                         /** @description Rendered from the flat layout. */
                                         fromFlatLayout?: {
@@ -31059,7 +31065,7 @@ export interface operations {
                                     widthMm: number;
                                 };
                             }[];
-                            /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, when such a design reads each placement's own print area. Required when the print areas start to change with an option on a blank that has designs or designer links, which keep their size at it. */
+                            /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
                             referenceRow: {
                                 [key: string]: string;
                             } | null;
@@ -31373,7 +31379,7 @@ export interface operations {
                         })[];
                         /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                         orderCount?: number;
-                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, and a dyeable stock photo takes the first option with colours. */
                         paintBy: string | null;
                         partnerLocked: boolean;
                         /** @description How much of the blank is photographed. Answered in a list. */
@@ -31385,9 +31391,9 @@ export interface operations {
                         };
                         /** @description The options the blank's photos change with, in option order: each photo belongs to one row, its values of these, and shows every variant with them. Empty is All: one photo per view shows every variant. */
                         photosVaryBy: string[];
-                        /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
+                        /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list. */
                         placements: {
-                            /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, the placement has one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
+                            /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
                             areas?: {
                                 /** @description Bleed past the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
                                 bleedMm?: number;
@@ -31405,7 +31411,7 @@ export interface operations {
                                 safeAreaMm?: number;
                                 /** @description Where on the product a print may go on the row, such as one phone model's camera opening: as the placement's `shape`, in fractions of the row's print area. Omitted, the placement's. */
                                 shape?: {
-                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                     cutByPrintShop?: boolean;
                                     /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                     dFrac: string;
@@ -31419,7 +31425,7 @@ export interface operations {
                             }[];
                             /** @description Bleed past the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                             bleedMm?: number;
-                            /** @description How a print covers the placement: `within`, a print of any size up to the maximum placed inside it, or `full`, a print that is the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's usual size is its area, and a request naming a smaller size is refused `print_size_not_area`. */
+                            /** @description How a print covers the placement: `within`, any size up to the maximum, placed inside it, or `full`, the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's size is its area; a smaller one is refused `print_size_not_area`. */
                             coverage?: string;
                             /** @description The height a print gets when none is chosen, in millimetres, at most maxHeightMm. */
                             defaultHeightMm: number;
@@ -31429,7 +31435,7 @@ export interface operations {
                             dpi?: number;
                             /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                             fillColour?: string | null;
-                            /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box. Its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, the placement is printed as it lies. */
+                            /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box: its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, it is printed as it lies. */
                             flatLayout?: {
                                 /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
                                 parts: {
@@ -31451,7 +31457,7 @@ export interface operations {
                             } | null;
                             /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                             foldMm?: number;
-                            /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene whose item has no record draws nothing of the placement. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
+                            /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene item with no record draws none of it. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
                             garments?: {
                                 /** @description The key of a garment area of the record's stock item. */
                                 area: string;
@@ -31466,7 +31472,7 @@ export interface operations {
                             }[];
                             /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                             id: string;
-                            /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design then drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none. A placement linked with one no longer on the blank is linked with none. */
+                            /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none, as when the linked one leaves the blank. */
                             linkWith?: {
                                 /** @description Whether this placement's print is mirrored left to right when the two are linked. */
                                 mirror: boolean;
@@ -31481,13 +31487,13 @@ export interface operations {
                             name: string;
                             /** @description How this placement is printed, such as dtg or screen. Omitted, its category's. */
                             printMethod?: string;
-                            /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a blank bound to its printshop's product takes it from the printshop. */
+                            /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a printshop-bound blank takes it from the printshop. */
                             required?: boolean;
                             /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                             safeAreaMm?: number;
                             /** @description Where on the product a print may go when that is not the whole rectangle: nothing is printed outside the outline or in a cut-out. Null or omitted, the whole rectangle. */
                             shape?: {
-                                /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                 cutByPrintShop?: boolean;
                                 /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                 dFrac: string;
@@ -31496,7 +31502,7 @@ export interface operations {
                             shopName?: string | null;
                             /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
                             views: {
-                                /** @description True on a view a blank bound to its printshop's product took from the printshop (its import, Add colours, model photos): its photo size and print area are the printshop's and cannot change by hand. Absent on a view the workspace added; a save that sends it is ignored. */
+                                /** @description True on a view a printshop-bound blank took from its printshop (import, Add colours, model photos): its photo size and print area are the printshop's, not changed by hand. Absent on a view the workspace added; sending it is ignored. */
                                 fromPrintshop?: boolean;
                                 /** @description Unique within the blank. */
                                 id: string;
@@ -31516,17 +31522,17 @@ export interface operations {
                                 };
                                 /** @description A library asset of the view's photo size: where it is light the print shows, where it is dark the print is hidden, as behind a sleeve or a fold. Absent hides nothing. */
                                 maskAssetId?: string;
-                                /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
+                                /** @description Control points the print is laid through or, marked cut, cut to: rows from its top edge, points from its left, as [x, y] in the photo's original pixels; 2 to 33 along each side. Absent, the print is laid in the rect. */
                                 mesh?: {
                                     /**
-                                     * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                     * @description The points draw a shape the print is cut to, not a mesh it bends through: the print is laid flat over the box the points span, filling it at its own proportions, and cut away outside the outer points' shape. Absent, it is warped through the mesh.
                                      * @enum {boolean}
                                      */
                                     cut?: true;
                                     /** @description The rows of control points, from the print's top edge. */
                                     points: number[][][];
                                 };
-                                /** @description The printshop's own key for the photo style the view was made from, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
+                                /** @description The printshop's own key for the view's photo style, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
                                 partnerStyleKey?: string;
                                 /** @description The pixel size every photo of the view has; null until the view holds a photo. */
                                 photoSizePx: {
@@ -31578,7 +31584,7 @@ export interface operations {
                                 } | null;
                                 /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
                                 position?: number;
-                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
+                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on a cup's side: the print fills it at the window's size, the product plain outside it. It lies inside its piece, whose size the view must give. Absent, the whole piece. */
                                 printWindowMm?: {
                                     /** @description The window's height, in mm. */
                                     heightMm: number;
@@ -31608,7 +31614,7 @@ export interface operations {
                                 };
                                 /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
                                 takesDye?: boolean;
-                                /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, the view's regions are laid in their rect or mesh. */
+                                /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, regions are laid in their rect or mesh. */
                                 uvPasses?: {
                                     /** @description Rendered from the flat layout. */
                                     fromFlatLayout?: {
@@ -31674,7 +31680,7 @@ export interface operations {
                                 widthMm: number;
                             };
                         }[];
-                        /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, when such a design reads each placement's own print area. Required when the print areas start to change with an option on a blank that has designs or designer links, which keep their size at it. */
+                        /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
                         referenceRow: {
                             [key: string]: string;
                         } | null;
@@ -31872,7 +31878,7 @@ export interface operations {
                                 };
                                 /** @description Where on the product a print may go on the row, such as one phone model's camera opening, as the placement's `shape` is. A preview of a variant at this row clips the print to it and draws it as a guide. Absent, the placement's. */
                                 shape?: {
-                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                     cutByPrintShop?: boolean;
                                     /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                     dFrac: string;
@@ -31904,7 +31910,7 @@ export interface operations {
                             safeAreaMm: number;
                             /** @description Where on the product a print may go: the outline, then each cut-out, in fractions of the print area, filled even-odd. A preview clips the print to it and draws it as a guide. Absent when the whole rectangle is printed. */
                             shape?: {
-                                /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                 cutByPrintShop?: boolean;
                                 /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                 dFrac: string;
@@ -31914,10 +31920,10 @@ export interface operations {
                                 label: string;
                                 /** @description The region's mask, the view's photo size, opened with no key: where it is light the print shows, where it is dark the print is hidden. Absent hides nothing. Valid as long as a photo's `url`. */
                                 maskUrl?: string;
-                                /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
+                                /** @description Control points the print is laid through or, marked cut, cut to: rows from its top edge, points from its left, as [x, y] in the photo's original pixels; 2 to 33 along each side. Absent, the print is laid in the rect. */
                                 mesh?: {
                                     /**
-                                     * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                     * @description The points draw a shape the print is cut to, not a mesh it bends through: the print is laid flat over the box the points span, filling it at its own proportions, and cut away outside the outer points' shape. Absent, it is warped through the mesh.
                                      * @enum {boolean}
                                      */
                                     cut?: true;
@@ -31998,7 +32004,7 @@ export interface operations {
                                 } | null;
                                 /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
                                 position?: number;
-                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
+                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on a cup's side: the print fills it at the window's size, the product plain outside it. It lies inside its piece, whose size the view must give. Absent, the whole piece. */
                                 printWindowMm?: {
                                     /** @description The window's height, in mm. */
                                     heightMm: number;
@@ -32107,10 +32113,10 @@ export interface operations {
                             regions: {
                                 /** @description The region's mask, the view's photo size, opened with no key: where it is light the print shows, where it is dark the print is hidden. Absent hides nothing. Valid as long as a photo's `url`. */
                                 maskUrl?: string;
-                                /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
+                                /** @description Control points the print is laid through or, marked cut, cut to: rows from its top edge, points from its left, as [x, y] in the photo's original pixels; 2 to 33 along each side. Absent, the print is laid in the rect. */
                                 mesh?: {
                                     /**
-                                     * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                     * @description The points draw a shape the print is cut to, not a mesh it bends through: the print is laid flat over the box the points span, filling it at its own proportions, and cut away outside the outer points' shape. Absent, it is warped through the mesh.
                                      * @enum {boolean}
                                      */
                                     cut?: true;
@@ -32126,7 +32132,7 @@ export interface operations {
                                 };
                                 /** @description The placement whose print the region shows. */
                                 placementId: string;
-                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
+                                /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on a cup's side: the print fills it at the window's size, the product plain outside it. It lies inside its piece, whose size the view must give. Absent, the whole piece. */
                                 printWindowMm?: {
                                     /** @description The window's height, in mm. */
                                     heightMm: number;
@@ -32601,7 +32607,7 @@ export interface operations {
                             };
                             values: string[];
                         }[];
-                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, and a dyeable stock photo takes the first option with colours. */
                         paintBy: string | null;
                         variants: {
                             options: {
@@ -38185,7 +38191,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** @description The events, in the order they were recorded, each in the envelope its type's webhook delivery carries, with the payload that type sends. */
-                        events: (components["schemas"]["StoreAccessOffEvent"] | components["schemas"]["StoreAccessRequestedEvent"] | components["schemas"]["DesignCommittedEvent"] | components["schemas"]["DesignApprovalScheduledEvent"] | components["schemas"]["DesignApprovedEvent"] | components["schemas"]["DesignRejectedEvent"] | components["schemas"]["DesignDeletedEvent"] | components["schemas"]["DesignPersonalDataErasedEvent"] | components["schemas"]["DesignChangesRequestedEvent"] | components["schemas"]["DesignDeliveryCapturedEvent"] | components["schemas"]["DesignEditedEvent"] | components["schemas"]["DesignDuplicatedEvent"] | components["schemas"]["PrintCreatedEvent"] | components["schemas"]["PrintCompletedEvent"] | components["schemas"]["PrintFailedEvent"] | components["schemas"]["TemplatePublishedEvent"] | components["schemas"]["TemplateLiveChangedEvent"] | components["schemas"]["TemplateDeletedEvent"] | components["schemas"]["OrderCreatedEvent"] | components["schemas"]["OrderSubmittedEvent"] | components["schemas"]["OrderStatusChangedEvent"] | components["schemas"]["OrderFailedEvent"] | components["schemas"]["OrderCancelledEvent"] | components["schemas"]["OrderReroutedEvent"] | components["schemas"]["OrderDeliveryChangedEvent"] | components["schemas"]["OrderHeldEvent"] | components["schemas"]["OrderReleasedEvent"] | components["schemas"]["OrderTrackingAddedEvent"] | components["schemas"]["OrderTrackingChangedEvent"] | components["schemas"]["BlankDriftedEvent"] | components["schemas"]["BlankCreatedEvent"] | components["schemas"]["BlankUpdatedEvent"] | components["schemas"]["BlankDeletedEvent"] | components["schemas"]["BlankRestoredEvent"] | components["schemas"]["InkCreatedEvent"] | components["schemas"]["InkUpdatedEvent"] | components["schemas"]["InkDeletedEvent"] | components["schemas"]["PaletteCreatedEvent"] | components["schemas"]["PaletteUpdatedEvent"] | components["schemas"]["PaletteDeletedEvent"] | components["schemas"]["ShapeCreatedEvent"] | components["schemas"]["ShapeUpdatedEvent"] | components["schemas"]["ShapeDeletedEvent"] | components["schemas"]["AssetCreatedEvent"] | components["schemas"]["AssetUpdatedEvent"] | components["schemas"]["AssetDeletedEvent"] | components["schemas"]["PrintshopConnectedEvent"] | components["schemas"]["PrintshopDisconnectedEvent"] | components["schemas"]["PrintshopUpdatedEvent"] | components["schemas"]["PrintshopReconnectedEvent"] | components["schemas"]["PrintshopDeletedEvent"] | components["schemas"]["PrintshopRestoredEvent"] | components["schemas"]["RunStartedEvent"] | components["schemas"]["RunCompletedEvent"] | components["schemas"]["RunFailedEvent"] | components["schemas"]["RunExhaustedEvent"] | components["schemas"]["RunCancelledEvent"] | components["schemas"]["CreditsLowEvent"] | components["schemas"]["TextMessagesLowEvent"] | components["schemas"]["OrderBalanceEmptyEvent"] | components["schemas"]["ShareLinkRevokedEvent"] | components["schemas"]["ShareLinkRegeneratedEvent"])[];
+                        events: (components["schemas"]["StoreAccessOffEvent"] | components["schemas"]["StoreAccessRequestedEvent"] | components["schemas"]["DesignCommittedEvent"] | components["schemas"]["DesignApprovalScheduledEvent"] | components["schemas"]["DesignApprovedEvent"] | components["schemas"]["DesignRejectedEvent"] | components["schemas"]["DesignDeletedEvent"] | components["schemas"]["DesignPersonalDataErasedEvent"] | components["schemas"]["DesignChangesRequestedEvent"] | components["schemas"]["DesignDeliveryCapturedEvent"] | components["schemas"]["DesignEditedEvent"] | components["schemas"]["DesignDuplicatedEvent"] | components["schemas"]["PrintCreatedEvent"] | components["schemas"]["PrintCompletedEvent"] | components["schemas"]["PrintFailedEvent"] | components["schemas"]["TemplatePublishedEvent"] | components["schemas"]["TemplateLiveChangedEvent"] | components["schemas"]["TemplateDeletedEvent"] | components["schemas"]["TemplateRenamedEvent"] | components["schemas"]["OrderCreatedEvent"] | components["schemas"]["OrderSubmittedEvent"] | components["schemas"]["OrderStatusChangedEvent"] | components["schemas"]["OrderFailedEvent"] | components["schemas"]["OrderCancelledEvent"] | components["schemas"]["OrderReroutedEvent"] | components["schemas"]["OrderDeliveryChangedEvent"] | components["schemas"]["OrderHeldEvent"] | components["schemas"]["OrderReleasedEvent"] | components["schemas"]["OrderTrackingAddedEvent"] | components["schemas"]["OrderTrackingChangedEvent"] | components["schemas"]["BlankDriftedEvent"] | components["schemas"]["BlankCreatedEvent"] | components["schemas"]["BlankUpdatedEvent"] | components["schemas"]["BlankDeletedEvent"] | components["schemas"]["BlankRestoredEvent"] | components["schemas"]["InkCreatedEvent"] | components["schemas"]["InkUpdatedEvent"] | components["schemas"]["InkDeletedEvent"] | components["schemas"]["PaletteCreatedEvent"] | components["schemas"]["PaletteUpdatedEvent"] | components["schemas"]["PaletteDeletedEvent"] | components["schemas"]["ShapeCreatedEvent"] | components["schemas"]["ShapeUpdatedEvent"] | components["schemas"]["ShapeDeletedEvent"] | components["schemas"]["AssetCreatedEvent"] | components["schemas"]["AssetUpdatedEvent"] | components["schemas"]["AssetDeletedEvent"] | components["schemas"]["PrintshopConnectedEvent"] | components["schemas"]["PrintshopDisconnectedEvent"] | components["schemas"]["PrintshopUpdatedEvent"] | components["schemas"]["PrintshopReconnectedEvent"] | components["schemas"]["PrintshopDeletedEvent"] | components["schemas"]["PrintshopRestoredEvent"] | components["schemas"]["RunStartedEvent"] | components["schemas"]["RunCompletedEvent"] | components["schemas"]["RunFailedEvent"] | components["schemas"]["RunExhaustedEvent"] | components["schemas"]["RunCancelledEvent"] | components["schemas"]["CreditsLowEvent"] | components["schemas"]["TextMessagesLowEvent"] | components["schemas"]["OrderBalanceEmptyEvent"] | components["schemas"]["ShareLinkRevokedEvent"] | components["schemas"]["ShareLinkRegeneratedEvent"])[];
                         /** @description Pass it as `after` for the next page. Null when nothing more is available yet: continue from the last event's id later. A pull looks through at most 1000 events, so with `types` a page can be short, or empty, with a cursor that still moves on. */
                         nextCursor: string | null;
                     };
@@ -41054,7 +41060,7 @@ export interface operations {
                                     };
                                     safeAreaMm?: number;
                                     shape?: {
-                                        /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                        /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                         cutByPrintShop?: boolean;
                                         /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                         dFrac: string;
@@ -41196,7 +41202,7 @@ export interface operations {
                                 };
                                 safeAreaMm?: number;
                                 shape?: {
-                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                     cutByPrintShop?: boolean;
                                     /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                     dFrac: string;
@@ -41495,7 +41501,7 @@ export interface operations {
                                     };
                                     safeAreaMm?: number;
                                     shape?: {
-                                        /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                        /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                         cutByPrintShop?: boolean;
                                         /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                         dFrac: string;
@@ -41637,7 +41643,7 @@ export interface operations {
                                 };
                                 safeAreaMm?: number;
                                 shape?: {
-                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                     cutByPrintShop?: boolean;
                                     /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                     dFrac: string;
@@ -45085,7 +45091,7 @@ export interface operations {
                                 };
                                 safeAreaMm?: number;
                                 shape?: {
-                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                     cutByPrintShop?: boolean;
                                     /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                     dFrac: string;
@@ -45408,7 +45414,7 @@ export interface operations {
                                 };
                                 safeAreaMm?: number;
                                 shape?: {
-                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                     cutByPrintShop?: boolean;
                                     /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                     dFrac: string;
@@ -46706,7 +46712,7 @@ export interface operations {
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
-                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, and a dyeable stock photo takes the first option with colours. */
                             paintBy: string | null;
                             partnerLocked: boolean;
                             /** @description How much of the blank is photographed. Answered in a list. */
@@ -46718,9 +46724,9 @@ export interface operations {
                             };
                             /** @description The options the blank's photos change with, in option order: each photo belongs to one row, its values of these, and shows every variant with them. Empty is All: one photo per view shows every variant. */
                             photosVaryBy: string[];
-                            /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
+                            /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list. */
                             placements: {
-                                /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, the placement has one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
+                                /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
                                 areas?: {
                                     /** @description Bleed past the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
                                     bleedMm?: number;
@@ -46738,7 +46744,7 @@ export interface operations {
                                     safeAreaMm?: number;
                                     /** @description Where on the product a print may go on the row, such as one phone model's camera opening: as the placement's `shape`, in fractions of the row's print area. Omitted, the placement's. */
                                     shape?: {
-                                        /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                        /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                         cutByPrintShop?: boolean;
                                         /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                         dFrac: string;
@@ -46752,7 +46758,7 @@ export interface operations {
                                 }[];
                                 /** @description Bleed past the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 bleedMm?: number;
-                                /** @description How a print covers the placement: `within`, a print of any size up to the maximum placed inside it, or `full`, a print that is the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's usual size is its area, and a request naming a smaller size is refused `print_size_not_area`. */
+                                /** @description How a print covers the placement: `within`, any size up to the maximum, placed inside it, or `full`, the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's size is its area; a smaller one is refused `print_size_not_area`. */
                                 coverage?: string;
                                 /** @description The height a print gets when none is chosen, in millimetres, at most maxHeightMm. */
                                 defaultHeightMm: number;
@@ -46762,7 +46768,7 @@ export interface operations {
                                 dpi?: number;
                                 /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                                 fillColour?: string | null;
-                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box. Its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, the placement is printed as it lies. */
+                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box: its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, it is printed as it lies. */
                                 flatLayout?: {
                                     /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
                                     parts: {
@@ -46784,7 +46790,7 @@ export interface operations {
                                 } | null;
                                 /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                                 foldMm?: number;
-                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene whose item has no record draws nothing of the placement. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
+                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene item with no record draws none of it. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
                                 garments?: {
                                     /** @description The key of a garment area of the record's stock item. */
                                     area: string;
@@ -46799,7 +46805,7 @@ export interface operations {
                                 }[];
                                 /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                                 id: string;
-                                /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design then drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none. A placement linked with one no longer on the blank is linked with none. */
+                                /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none, as when the linked one leaves the blank. */
                                 linkWith?: {
                                     /** @description Whether this placement's print is mirrored left to right when the two are linked. */
                                     mirror: boolean;
@@ -46814,13 +46820,13 @@ export interface operations {
                                 name: string;
                                 /** @description How this placement is printed, such as dtg or screen. Omitted, its category's. */
                                 printMethod?: string;
-                                /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a blank bound to its printshop's product takes it from the printshop. */
+                                /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a printshop-bound blank takes it from the printshop. */
                                 required?: boolean;
                                 /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 safeAreaMm?: number;
                                 /** @description Where on the product a print may go when that is not the whole rectangle: nothing is printed outside the outline or in a cut-out. Null or omitted, the whole rectangle. */
                                 shape?: {
-                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                     cutByPrintShop?: boolean;
                                     /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                     dFrac: string;
@@ -46829,7 +46835,7 @@ export interface operations {
                                 shopName?: string | null;
                                 /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
                                 views: {
-                                    /** @description True on a view a blank bound to its printshop's product took from the printshop (its import, Add colours, model photos): its photo size and print area are the printshop's and cannot change by hand. Absent on a view the workspace added; a save that sends it is ignored. */
+                                    /** @description True on a view a printshop-bound blank took from its printshop (import, Add colours, model photos): its photo size and print area are the printshop's, not changed by hand. Absent on a view the workspace added; sending it is ignored. */
                                     fromPrintshop?: boolean;
                                     /** @description Unique within the blank. */
                                     id: string;
@@ -46849,17 +46855,17 @@ export interface operations {
                                     };
                                     /** @description A library asset of the view's photo size: where it is light the print shows, where it is dark the print is hidden, as behind a sleeve or a fold. Absent hides nothing. */
                                     maskAssetId?: string;
-                                    /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
+                                    /** @description Control points the print is laid through or, marked cut, cut to: rows from its top edge, points from its left, as [x, y] in the photo's original pixels; 2 to 33 along each side. Absent, the print is laid in the rect. */
                                     mesh?: {
                                         /**
-                                         * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                         * @description The points draw a shape the print is cut to, not a mesh it bends through: the print is laid flat over the box the points span, filling it at its own proportions, and cut away outside the outer points' shape. Absent, it is warped through the mesh.
                                          * @enum {boolean}
                                          */
                                         cut?: true;
                                         /** @description The rows of control points, from the print's top edge. */
                                         points: number[][][];
                                     };
-                                    /** @description The printshop's own key for the photo style the view was made from, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
+                                    /** @description The printshop's own key for the view's photo style, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
                                     partnerStyleKey?: string;
                                     /** @description The pixel size every photo of the view has; null until the view holds a photo. */
                                     photoSizePx: {
@@ -46911,7 +46917,7 @@ export interface operations {
                                     } | null;
                                     /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
                                     position?: number;
-                                    /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
+                                    /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on a cup's side: the print fills it at the window's size, the product plain outside it. It lies inside its piece, whose size the view must give. Absent, the whole piece. */
                                     printWindowMm?: {
                                         /** @description The window's height, in mm. */
                                         heightMm: number;
@@ -46941,7 +46947,7 @@ export interface operations {
                                     };
                                     /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
                                     takesDye?: boolean;
-                                    /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, the view's regions are laid in their rect or mesh. */
+                                    /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, regions are laid in their rect or mesh. */
                                     uvPasses?: {
                                         /** @description Rendered from the flat layout. */
                                         fromFlatLayout?: {
@@ -47007,7 +47013,7 @@ export interface operations {
                                     widthMm: number;
                                 };
                             }[];
-                            /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, when such a design reads each placement's own print area. Required when the print areas start to change with an option on a blank that has designs or designer links, which keep their size at it. */
+                            /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
                             referenceRow: {
                                 [key: string]: string;
                             } | null;
@@ -47273,7 +47279,7 @@ export interface operations {
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
-                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, while a stock photo that takes a dye is painted in the first option with colours. */
+                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, and a dyeable stock photo takes the first option with colours. */
                             paintBy: string | null;
                             partnerLocked: boolean;
                             /** @description How much of the blank is photographed. Answered in a list. */
@@ -47285,9 +47291,9 @@ export interface operations {
                             };
                             /** @description The options the blank's photos change with, in option order: each photo belongs to one row, its values of these, and shows every variant with them. Empty is All: one photo per view shows every variant. */
                             photosVaryBy: string[];
-                            /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list, so send every placement to keep. */
+                            /** @description The blank's placements: the areas a design is printed into. An update replaces the whole list. */
                             placements: {
-                                /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, the placement has one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
+                                /** @description The placement's print area per row of the blank's `areasVaryBy` options, such as one per size; omitted or empty, one print area, its own. maxWidthMm and maxHeightMm are then the widest and tallest row. */
                                 areas?: {
                                     /** @description Bleed past the trim on the row, in millimetres, 0 to 50. Omitted, the placement's. */
                                     bleedMm?: number;
@@ -47305,7 +47311,7 @@ export interface operations {
                                     safeAreaMm?: number;
                                     /** @description Where on the product a print may go on the row, such as one phone model's camera opening: as the placement's `shape`, in fractions of the row's print area. Omitted, the placement's. */
                                     shape?: {
-                                        /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                        /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                         cutByPrintShop?: boolean;
                                         /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                         dFrac: string;
@@ -47319,7 +47325,7 @@ export interface operations {
                                 }[];
                                 /** @description Bleed past the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 bleedMm?: number;
-                                /** @description How a print covers the placement: `within`, a print of any size up to the maximum placed inside it, or `full`, a print that is the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's usual size is its area, and a request naming a smaller size is refused `print_size_not_area`. */
+                                /** @description How a print covers the placement: `within`, any size up to the maximum, placed inside it, or `full`, the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's size is its area; a smaller one is refused `print_size_not_area`. */
                                 coverage?: string;
                                 /** @description The height a print gets when none is chosen, in millimetres, at most maxHeightMm. */
                                 defaultHeightMm: number;
@@ -47329,7 +47335,7 @@ export interface operations {
                                 dpi?: number;
                                 /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                                 fillColour?: string | null;
-                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box. Its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, the placement is printed as it lies. */
+                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box: its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, it is printed as it lies. */
                                 flatLayout?: {
                                     /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
                                     parts: {
@@ -47351,7 +47357,7 @@ export interface operations {
                                 } | null;
                                 /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                                 foldMm?: number;
-                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene whose item has no record draws nothing of the placement. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
+                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene item with no record draws none of it. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
                                 garments?: {
                                     /** @description The key of a garment area of the record's stock item. */
                                     area: string;
@@ -47366,7 +47372,7 @@ export interface operations {
                                 }[];
                                 /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                                 id: string;
-                                /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design then drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none. A placement linked with one no longer on the blank is linked with none. */
+                                /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none, as when the linked one leaves the blank. */
                                 linkWith?: {
                                     /** @description Whether this placement's print is mirrored left to right when the two are linked. */
                                     mirror: boolean;
@@ -47381,13 +47387,13 @@ export interface operations {
                                 name: string;
                                 /** @description How this placement is printed, such as dtg or screen. Omitted, its category's. */
                                 printMethod?: string;
-                                /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a blank bound to its printshop's product takes it from the printshop. */
+                                /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a printshop-bound blank takes it from the printshop. */
                                 required?: boolean;
                                 /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 safeAreaMm?: number;
                                 /** @description Where on the product a print may go when that is not the whole rectangle: nothing is printed outside the outline or in a cut-out. Null or omitted, the whole rectangle. */
                                 shape?: {
-                                    /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                    /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                     cutByPrintShop?: boolean;
                                     /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                     dFrac: string;
@@ -47396,7 +47402,7 @@ export interface operations {
                                 shopName?: string | null;
                                 /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
                                 views: {
-                                    /** @description True on a view a blank bound to its printshop's product took from the printshop (its import, Add colours, model photos): its photo size and print area are the printshop's and cannot change by hand. Absent on a view the workspace added; a save that sends it is ignored. */
+                                    /** @description True on a view a printshop-bound blank took from its printshop (import, Add colours, model photos): its photo size and print area are the printshop's, not changed by hand. Absent on a view the workspace added; sending it is ignored. */
                                     fromPrintshop?: boolean;
                                     /** @description Unique within the blank. */
                                     id: string;
@@ -47416,17 +47422,17 @@ export interface operations {
                                     };
                                     /** @description A library asset of the view's photo size: where it is light the print shows, where it is dark the print is hidden, as behind a sleeve or a fold. Absent hides nothing. */
                                     maskAssetId?: string;
-                                    /** @description Control points the print is laid through or, marked cut, cut to, rows from its top edge and points from its left, as [x, y] in the photo's original pixels; at least 2 and at most 33 along each side. Absent, the print is laid in the rect. */
+                                    /** @description Control points the print is laid through or, marked cut, cut to: rows from its top edge, points from its left, as [x, y] in the photo's original pixels; 2 to 33 along each side. Absent, the print is laid in the rect. */
                                     mesh?: {
                                         /**
-                                         * @description The points draw a shape to cut the print to rather than a mesh to bend it through: the print is laid flat over the box the points span, at its own proportions and filling it, and everything outside the shape the outer points draw is cut away. Absent, the print is warped through the mesh.
+                                         * @description The points draw a shape the print is cut to, not a mesh it bends through: the print is laid flat over the box the points span, filling it at its own proportions, and cut away outside the outer points' shape. Absent, it is warped through the mesh.
                                          * @enum {boolean}
                                          */
                                         cut?: true;
                                         /** @description The rows of control points, from the print's top edge. */
                                         points: number[][][];
                                     };
-                                    /** @description The printshop's own key for the photo style the view was made from, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
+                                    /** @description The printshop's own key for the view's photo style, such as a model or lifestyle style; absent on a view made by hand or imported with the product. */
                                     partnerStyleKey?: string;
                                     /** @description The pixel size every photo of the view has; null until the view holds a photo. */
                                     photoSizePx: {
@@ -47478,7 +47484,7 @@ export interface operations {
                                     } | null;
                                     /** @description The view's place in the blank's one list of views and scenes, from 0. The first with a photo is the blank's picture. Read only. */
                                     position?: number;
-                                    /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on the side of a cup: the print fills it at the window's size, and the product shows plain outside it. It lies inside its piece and needs the piece's size on the view. Absent, the whole piece. */
+                                    /** @description The part of the region's piece its print covers, in millimetres on the piece's unwrapped surface from its top-left corner, such as a square on a cup's side: the print fills it at the window's size, the product plain outside it. It lies inside its piece, whose size the view must give. Absent, the whole piece. */
                                     printWindowMm?: {
                                         /** @description The window's height, in mm. */
                                         heightMm: number;
@@ -47508,7 +47514,7 @@ export interface operations {
                                     };
                                     /** @description On a scene's view, whether a variant's colour recolours it. One that takes none shows only the variants of its colour. */
                                     takesDye?: boolean;
-                                    /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, the view's regions are laid in their rect or mesh. */
+                                    /** @description The maps the view was rendered with from a 3D model of the product, each the view's photo size; a region naming a piece is drawn through them. Absent, regions are laid in their rect or mesh. */
                                     uvPasses?: {
                                         /** @description Rendered from the flat layout. */
                                         fromFlatLayout?: {
@@ -47574,7 +47580,7 @@ export interface operations {
                                     widthMm: number;
                                 };
                             }[];
-                            /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, when such a design reads each placement's own print area. Required when the print areas start to change with an option on a blank that has designs or designer links, which keep their size at it. */
+                            /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
                             referenceRow: {
                                 [key: string]: string;
                             } | null;
@@ -51158,7 +51164,7 @@ export interface operations {
                             safeAreaMm: number;
                             /** @description Where on the product a print may go, when not the whole rectangle: the outline, then each cut-out, in fractions of the print box, filled even-odd. A live preview clips the design to it and draws it as a guide, as the proof and the print file are cut to it. */
                             shape?: {
-                                /** @description True when the print shop cuts the product to this shape: the outline and the cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
                                 cutByPrintShop?: boolean;
                                 /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
                                 dFrac: string;
