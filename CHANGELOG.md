@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.4.0...v1.5.0) (2026-11-13)
+
+
+### Features
+
+* **contracts:** pin Pixonaut API 5.0.0 and SDK 0.39.1, and pull lost template renames ([#112](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/112)) ([91b0072](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/91b0072bcd8a985d6d5293be9f57b62e887a4ee8))
+* **shop-tools:** set a variation's own setup and give it on variation reads ([#110](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/110)) ([bf73010](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/bf73010bbb0f2548e5838b9fcd2178c878c00895))
+
+
+### Bug Fixes
+
+* **admin:** name a low-resolution image by its label, never its layer key ([#107](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/107)) ([126f867](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/126f86740f77bc3f94f6e1dda5f241012042fc2b))
+* **storefront:** switch variations in place when the form shows the same, and open on the chosen variation ([#108](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/108)) ([101761e](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/101761e2207745c633486b34a4f38273fccd6fd6))
+
 ## [1.4.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.3.0...v1.4.0) (2026-11-11)
 
 

@@ -4,7 +4,7 @@
  * Plugin URI:           https://github.com/pixonaut-app/pixonaut-for-woocommerce/blob/main/docs/merchant/index.md
  * Description:          Personalised products for WooCommerce through Pixonaut: customers design on the product page, paid lines become printshop orders.
  * x-release-please-start-version
- * Version:              1.4.0
+ * Version:              1.5.0
  * x-release-please-end
  * Requires at least:    6.9
  * Tested up to:         7.1
