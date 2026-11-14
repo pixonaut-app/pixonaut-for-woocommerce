@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.6.5...v1.7.0) (2026-11-14)
+
+
+### Features
+
+* **pricing:** price products from the printshop's cost by a margin rule ([#126](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/126)) ([7a40ea5](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/7a40ea5cdbdf246a9870f79d39a1e402b07f7c13))
+
 ## [1.6.5](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.6.4...v1.6.5) (2026-11-14)
 
 
