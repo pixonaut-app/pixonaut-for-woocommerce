@@ -62,6 +62,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_option( \Pixonaut\WooCommerce\Schema::REQUEST_LOG_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::PICTURE_GENERATION_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::PICTURES_BACKFILL_OPTION );
+		delete_option( \Pixonaut\WooCommerce\Schema::EXCHANGE_RATES_OPTION );
 		// Cached catalogue answers and proof images expire on their own; this removes the ones still waiting to.
 		foreach ( array( \Pixonaut\WooCommerce\Schema::CATALOGUE_CACHE_PREFIX, \Pixonaut\WooCommerce\Schema::PROOF_CACHE_PREFIX ) as $pixonaut_wc_cache_prefix ) {
 			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery

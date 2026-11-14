@@ -183,6 +183,12 @@ final class Schema {
 	const PICTURE_VIEW_META = '_pixonaut_picture_view';
 
 	/**
+	 * Option holding the exchange rates last read, their day and when they
+	 * were read: converts a printshop's costs to the store's currency.
+	 */
+	const EXCHANGE_RATES_OPTION = 'pixonaut_wc_exchange_rates';
+
+	/**
 	 * Product and variation meta holding what its price follows: the
 	 * printshop cost last read for it, the price the pricing rule last set,
 	 * and what the rule suggests now. JSON.

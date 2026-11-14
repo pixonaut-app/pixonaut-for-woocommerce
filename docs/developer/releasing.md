@@ -210,8 +210,9 @@ attached.
 `readme.txt` exists only in the zip. It is generated from:
 
 - `readme.src.txt`: the title, tags, licence, descriptions, FAQ and the
-  **External services** section, which names the Pixonaut API and the SDK on
-  `cdn.pixonaut.app` separately: what each is for, what is sent, and when.
+  **External services** section, which names the Pixonaut API, the SDK on
+  `cdn.pixonaut.app` and the European Central Bank's exchange rates
+  separately: what each is for, what is sent, and when.
   Edit this file to change the readme.
 - The plugin header: `Requires at least`, `Tested up to`, `Requires PHP`, and
   `Version` as `Stable tag`.

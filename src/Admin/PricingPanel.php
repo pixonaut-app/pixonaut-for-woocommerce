@@ -286,12 +286,13 @@ final class PricingPanel {
 	 */
 	public static function flag_texts(): array {
 		return array(
-			PriceState::FLAG_MARGIN   => __( 'The margin left the tolerance.', 'pixonaut-for-woocommerce' ),
-			PriceState::FLAG_NO_COST  => __( 'The printshop publishes no price for it, so the rule cannot price it.', 'pixonaut-for-woocommerce' ),
-			PriceState::FLAG_UNREAD   => __( 'No cost is read for it yet. Refresh the costs in a moment; if it stays so, pair it with a blank variant.', 'pixonaut-for-woocommerce' ),
-			PriceState::FLAG_CURRENCY => __( 'The cost is in another currency than your store’s, so the rule cannot price it.', 'pixonaut-for-woocommerce' ),
-			PriceState::FLAG_NO_STEP  => __( 'No price step lies between the lowest and the highest price.', 'pixonaut-for-woocommerce' ),
-			PriceState::FLAG_SALE     => __( 'The rule’s price is not above the sale price. Change or remove the sale price first.', 'pixonaut-for-woocommerce' ),
+			PriceState::FLAG_MARGIN     => __( 'The margin left the tolerance.', 'pixonaut-for-woocommerce' ),
+			PriceState::FLAG_NO_COST    => __( 'The printshop publishes no price for it, so the rule cannot price it.', 'pixonaut-for-woocommerce' ),
+			PriceState::FLAG_UNREAD     => __( 'No cost is read for it yet. Refresh the costs in a moment; if it stays so, pair it with a blank variant.', 'pixonaut-for-woocommerce' ),
+			PriceState::FLAG_CURRENCY   => __( 'The cost is in a currency with no exchange rate to your store’s, so the rule cannot price it.', 'pixonaut-for-woocommerce' ),
+			PriceState::FLAG_RATE_STALE => __( 'The exchange rate is over a week old and could not be updated, so the rule does not price it.', 'pixonaut-for-woocommerce' ),
+			PriceState::FLAG_NO_STEP    => __( 'No price step lies between the lowest and the highest price.', 'pixonaut-for-woocommerce' ),
+			PriceState::FLAG_SALE       => __( 'The rule’s price is not above the sale price. Change or remove the sale price first.', 'pixonaut-for-woocommerce' ),
 		);
 	}
 
@@ -334,15 +335,27 @@ final class PricingPanel {
 				self::money( $cost->product, $cost->currency ),
 				self::money( $cost->shipping, $cost->shipping_currency )
 			);
+		} elseif ( null !== $cost && null !== $cost->product && '' !== $row->rate_date ) {
+			$parts = self::money( $cost->product, $cost->currency );
+		}
+		if ( '' !== $row->rate_date ) {
+			$parts = sprintf(
+				/* translators: 1: a cost as the printshop charges it, in its own currency, such as "€16.71 + €3.00 shipping"; 2: the day of the exchange rate, such as 2026-11-14; 3: the currency buffer in percent, such as 3. Under a converted cost in the Prices table of the product edit page. */
+				__( '%1$s (rate %2$s, +%3$s %%)', 'pixonaut-for-woocommerce' ),
+				$parts,
+				$row->rate_date,
+				$row->buffer
+			);
 		}
 		return array(
 			'id'         => $row->id,
 			'label'      => $row->label,
 			'cost'       => match ( true ) {
-				null !== $row->cost_total => self::money( $row->cost_total ),
-				// In another currency the product and its shipping are not added up.
-				null !== $cost && null !== $cost->product => null === $cost->shipping ? self::money( $cost->product, $cost->currency ) : $parts,
-				default => '',
+				null === $row->cost_total && null !== $cost && null !== $cost->product => '' === $parts ? self::money( $cost->product, $cost->currency ) : $parts,
+				null === $row->cost_total => '',
+				/* translators: %s: a cost converted to the store's currency, such as 192 kr. In the Prices table of the product edit page: the amount is approximate. */
+				'' !== $row->rate_date => sprintf( __( '≈ %s', 'pixonaut-for-woocommerce' ), self::money( $row->cost_total ) ),
+				default => self::money( $row->cost_total ),
 			},
 			'cost_parts' => null === $row->cost_total ? '' : $parts,
 			'price'      => null === $row->price ? '' : self::money( $row->price ),

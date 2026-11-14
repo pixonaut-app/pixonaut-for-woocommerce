@@ -64,6 +64,7 @@ final class SettingsTest extends TestCase {
 		$this->assertSame( '', $settings->get( Settings::PRICE_MIN ) );
 		$this->assertSame( '', $settings->get( Settings::PRICE_MAX ) );
 		$this->assertFalse( $settings->get( Settings::PRICE_AUTOMATIC ) );
+		$this->assertSame( '3', $settings->get( Settings::PRICE_CURRENCY_BUFFER ) );
 		$this->assertSame( PriceRule::PARTS, array_keys( Settings::PRICE_RULE ) );
 	}
 

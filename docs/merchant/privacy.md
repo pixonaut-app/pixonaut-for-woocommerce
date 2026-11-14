@@ -35,6 +35,11 @@ Data** and **Tools > Erase Personal Data**, for both.
     customer types, and the photos and design it applies to, sent from the
     customer's browser when they use it.
 
+The plugin also reads the European Central Bank's public exchange rates, at
+most once a day and only while a printshop's cost is in another currency
+than your store's ([Prices from the printshop's cost](../pricing/#costs-in-another-currency)).
+Nothing about your store or its customers is sent with that request.
+
 The plugin's readme lists the same under **External services**.
 
 ## Suggested privacy policy text

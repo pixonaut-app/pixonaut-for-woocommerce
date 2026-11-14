@@ -61,9 +61,15 @@ final class PriceState {
 	public const FLAG_UNREAD = 'unread';
 
 	/**
-	 * The cost is in another currency than the store's.
+	 * The cost is in a currency no exchange rate is known for.
 	 */
 	public const FLAG_CURRENCY = 'currency';
+
+	/**
+	 * The cost is in another currency, and the exchange rates are over a
+	 * week old.
+	 */
+	public const FLAG_RATE_STALE = 'rate_stale';
 
 	/**
 	 * No price step lies between the rule's minimum and maximum.
@@ -85,6 +91,9 @@ final class PriceState {
 	 * @param int|null         $checked_at When its cost was last asked for, a Unix time; null when it never was.
 	 * @param string|null      $blank_id   The blank whose variant the cost is of.
 	 * @param string|null      $ref        The blank variant the cost is of.
+	 * @param int|null         $total      The cost in the store's currency when it was last read, in thousandths: a
+	 *                                     later read with another total, because the printshop's price or the
+	 *                                     exchange rate moved, is a cost that changed.
 	 */
 	public function __construct(
 		public readonly ?VariantCost $cost = null,
@@ -96,6 +105,7 @@ final class PriceState {
 		public readonly ?int $checked_at = null,
 		public readonly ?string $blank_id = null,
 		public readonly ?string $ref = null,
+		public readonly ?int $total = null,
 	) {
 	}
 
@@ -133,9 +143,10 @@ final class PriceState {
 	 * @param int              $now      The time, a Unix time.
 	 * @param string|null      $blank_id The blank whose variant the cost is of.
 	 * @param string|null      $ref      The blank variant the cost is of.
+	 * @param int|null         $total    The cost in the store's currency, in thousandths.
 	 */
-	public function with_cost( ?VariantCost $cost, int $now, ?string $blank_id, ?string $ref ): self {
-		return new self( $cost, $this->follows, $this->rule_price, $this->rule_at, $this->suggested, $this->flag, $now, $blank_id, $ref );
+	public function with_cost( ?VariantCost $cost, int $now, ?string $blank_id, ?string $ref, ?int $total ): self {
+		return new self( $cost, $this->follows, $this->rule_price, $this->rule_at, $this->suggested, $this->flag, $now, $blank_id, $ref, $total );
 	}
 
 	/**
@@ -145,7 +156,7 @@ final class PriceState {
 	 * @param int $now   The time, a Unix time.
 	 */
 	public function priced( int $price, int $now ): self {
-		return new self( $this->cost, true, $price, $now, null, null, $this->checked_at, $this->blank_id, $this->ref );
+		return new self( $this->cost, true, $price, $now, null, null, $this->checked_at, $this->blank_id, $this->ref, $this->total );
 	}
 
 	/**
@@ -155,7 +166,7 @@ final class PriceState {
 	 * @param int|null    $suggested The price the rule would set.
 	 */
 	public function with_flag( ?string $flag = null, ?int $suggested = null ): self {
-		return new self( $this->cost, $this->follows, $this->rule_price, $this->rule_at, $suggested, $flag, $this->checked_at, $this->blank_id, $this->ref );
+		return new self( $this->cost, $this->follows, $this->rule_price, $this->rule_at, $suggested, $flag, $this->checked_at, $this->blank_id, $this->ref, $this->total );
 	}
 
 	/**
@@ -179,7 +190,8 @@ final class PriceState {
 			is_string( $data['flag'] ?? null ) ? $data['flag'] : null,
 			is_int( $data['checkedAt'] ?? null ) ? $data['checkedAt'] : null,
 			is_string( $data['blankId'] ?? null ) ? $data['blankId'] : null,
-			is_string( $data['ref'] ?? null ) ? $data['ref'] : null
+			is_string( $data['ref'] ?? null ) ? $data['ref'] : null,
+			Amount::parse( $data['total'] ?? null )
 		);
 	}
 
@@ -212,6 +224,7 @@ final class PriceState {
 			'checkedAt' => $this->checked_at,
 			'blankId'   => $this->blank_id,
 			'ref'       => $this->ref,
+			'total'     => null === $this->total ? null : Amount::decimal( $this->total ),
 		);
 	}
 }

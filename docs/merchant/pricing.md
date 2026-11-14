@@ -31,6 +31,7 @@ product. The plugin never changes a price you set yourself.
   price off these steps.
 - **Lowest price** and **Highest price**: the rule never sets a price below
   or above them. Empty for no limit.
+- **Currency buffer (%)**: see [Costs in another currency](#costs-in-another-currency).
 - **Automatic price changes**: see [When a cost changes](#when-a-cost-changes).
 
 Steps and limits count on the price as you enter prices in WooCommerce,
@@ -65,9 +66,34 @@ the sale price first.
 A row the rule cannot price says why, and keeps the price it has:
 
 - the printshop publishes no price for it;
-- its cost is in another currency than your store's (costs are never
-  converted);
+- its cost is in a currency there is no exchange rate for, or the exchange
+  rate is over a week old (see [Costs in another currency](#costs-in-another-currency));
 - no price step lies between the lowest and the highest price.
+
+## Costs in another currency
+
+A printshop charges in its own billing currency, which Pixonaut reports as
+it is. When that is not your store's currency, the plugin converts the cost:
+
+- with the European Central Bank's euro reference rate of the day (a rate
+  between two other currencies goes through the euro), read once a day;
+- plus the **Currency buffer (%)** from **Pixonaut > Settings > Prices**, 3 %
+  unless you change it: what your card or bank takes for the exchange, and
+  what the rate may move between the sale and the printshop's charge.
+
+The **Cost** column then shows both: the converted cost, marked ≈, and under
+it the printshop's own amounts with the rate's day and the buffer, such as
+"€16.71 + €3.00 shipping (rate 2026-11-13, +3 %)".
+
+An exchange rate that moves is a cost that moves: a price is kept while its
+margin stays within the tolerance, and flagged or changed once it leaves it,
+as below.
+
+When the rates cannot be read, the last ones are used, and the day shown
+says how old they are. Once they are over a week old the rule prices nothing
+with them: prices that follow the rule are flagged instead, until rates can
+be read again. A cost in a currency the European Central Bank publishes no
+rate for is never converted.
 
 ## When a cost changes
 

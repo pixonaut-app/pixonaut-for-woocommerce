@@ -287,6 +287,12 @@ Default: empty.
 
 Default: empty.
 
+### `price_currency_buffer`
+
+**Currency buffer (%)** (text). A printshop charges in its own currency. A cost in another currency than your store’s is converted with the European Central Bank’s daily reference rate, and this percentage is added to it: what your card or bank takes for the exchange, and what the rate may move between the sale and the charge.
+
+Default: `3`.
+
 ### `price_automatic`
 
 **Automatic price changes** (checkbox). When a printshop changes what it charges, set the prices that follow the rule and whose margin left the tolerance to the rule’s price, and log each change under WooCommerce > Status > Logs. Off, such a price is flagged on the products list with the price the rule suggests, for you to apply.

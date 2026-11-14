@@ -12,20 +12,11 @@ namespace Pixonaut\WooCommerce\Pricing;
 /**
  * A blank variant's cost as `GET /v1/blanks/{id}/variants/costs` answers
  * it: the product's price and the cheapest shipping to a region, each in
- * its currency, and when Pixonaut read them. A printshop that publishes no
- * price gives none, and a cost is then never guessed.
+ * its currency (the printshop's billing currency, never converted), and
+ * when Pixonaut read them. A printshop that publishes no price gives none,
+ * and a cost is then never guessed.
  */
 final class VariantCost {
-
-	/**
-	 * The printshop publishes no price for the variant.
-	 */
-	public const NO_PRICE = 'no_price';
-
-	/**
-	 * The cost is in another currency than the store's.
-	 */
-	public const OTHER_CURRENCY = 'other_currency';
 
 	/**
 	 * @param int|null    $product           The product's price in thousandths; null when the printshop publishes none.
@@ -71,44 +62,6 @@ final class VariantCost {
 			);
 		}
 		return $costs;
-	}
-
-	/**
-	 * Why the cost cannot price anything in a store: `NO_PRICE`,
-	 * `OTHER_CURRENCY` when the product or its shipping is charged in
-	 * another currency than the store's, or null when it can.
-	 *
-	 * @param string $store_currency The store's currency.
-	 */
-	public function problem( string $store_currency ): ?string {
-		if ( null === $this->product ) {
-			return self::NO_PRICE;
-		}
-		if ( $this->currency !== $store_currency || ( null !== $this->shipping && $this->shipping_currency !== $store_currency ) ) {
-			return self::OTHER_CURRENCY;
-		}
-		return null;
-	}
-
-	/**
-	 * The product and its shipping together, in thousandths; null when the
-	 * cost has a `problem()` in the store.
-	 *
-	 * @param string $store_currency The store's currency.
-	 */
-	public function total( string $store_currency ): ?int {
-		return null === $this->product || null !== $this->problem( $store_currency ) ? null : $this->product + ( $this->shipping ?? 0 );
-	}
-
-	/**
-	 * Whether another cost charges the same.
-	 *
-	 * @param self|null $other The other cost.
-	 */
-	public function charges_as( ?self $other ): bool {
-		return null !== $other
-			&& $this->product === $other->product && $this->currency === $other->currency
-			&& $this->shipping === $other->shipping && $this->shipping_currency === $other->shipping_currency;
 	}
 
 	/**

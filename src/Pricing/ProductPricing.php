@@ -55,10 +55,11 @@ final class ProductPricing {
 	private array $read = array();
 
 	/**
-	 * @param VariantCosts    $costs    Reads the costs from Pixonaut.
-	 * @param Settings        $settings The store's rule, and whether prices change automatically.
-	 * @param LoggerInterface $logger   Logs each price the rule sets.
-	 * @param Closure         $clock    `fn(): int`, the time now.
+	 * @param VariantCosts    $costs     Reads the costs from Pixonaut.
+	 * @param Settings        $settings  The store's rule, and whether prices change automatically.
+	 * @param LoggerInterface $logger    Logs each price the rule sets.
+	 * @param Closure         $clock     `fn(): int`, the time now.
+	 * @param CostConverter   $converter Turns a cost into the store's currency.
 	 * @phpstan-param Closure(): int $clock
 	 */
 	public function __construct(
@@ -66,6 +67,7 @@ final class ProductPricing {
 		private readonly Settings $settings,
 		private readonly LoggerInterface $logger,
 		private readonly Closure $clock,
+		private readonly CostConverter $converter,
 	) {
 	}
 
@@ -170,15 +172,15 @@ final class ProductPricing {
 	 * @return list<PriceRow>
 	 */
 	public function rows( WC_Product $product ): array {
-		$rule     = $this->rule_for( $product );
-		$currency = get_woocommerce_currency();
+		$rule = $this->rule_for( $product );
 		return array_map(
-			static function ( WC_Product $item ) use ( $rule, $currency ): PriceRow {
+			function ( WC_Product $item ) use ( $rule ): PriceRow {
 				$state    = PriceState::stored_on( $item );
 				$price    = Amount::parse( $item->get_regular_price( 'edit' ) );
 				$standing = $state->standing( $price );
 				$known    = self::known_cost( $item, $state );
-				$cost     = $known?->total( $currency );
+				$store    = $this->converter->in_store( $known );
+				$cost     = $store->total;
 				$tax      = PriceTax::of( $item );
 				$wants    = null === $cost ? null : $rule->price_for( $cost, $tax );
 				return new PriceRow(
@@ -195,10 +197,12 @@ final class ProductPricing {
 						null === $state->checked_at || PriceState::BY_HAND === $standing => null,
 						PriceState::FOLLOWS === $standing => $state->flag,
 						// Never applied: what would stop the rule from setting it.
-						default => self::blocker( $item, $known, $currency, $wants ),
+						default => self::blocker( $item, $store, $wants ),
 					},
 					$state->rule_at,
-					$state->checked_at
+					$state->checked_at,
+					$store->rate_date,
+					$store->buffer
 				);
 			},
 			self::items( $product )
@@ -223,6 +227,8 @@ final class ProductPricing {
 			list( $blank_id, $ref )  = self::sold( $item );
 			$read[ $item->get_id() ] = array( $blank_id, $ref, null === $blank_id || null === $ref ? null : ( $this->of_blank( $blank_id, $region )[ $ref ] ?? null ) );
 		}
+		// A cost in another currency is converted at the day's rate, read only when one is.
+		$this->converter->refresh_for( array_column( $read, 2 ) );
 		$now     = ( $this->clock )();
 		$changed = array();
 		foreach ( $read as $id => list( $blank_id, $ref, $listed ) ) {
@@ -231,14 +237,15 @@ final class ProductPricing {
 			if ( null === $item ) {
 				continue;
 			}
-			$state  = PriceState::stored_on( $item );
-			$before = $state->cost_of( $blank_id, $ref, $region );
+			$state = PriceState::stored_on( $item );
 			// A variant Pixonaut has not read yet, or no longer lists, keeps the cost last read for it.
-			$cost = $listed ?? $before;
-			if ( null !== $cost && ! $cost->charges_as( $before ) ) {
+			$cost  = $listed ?? $state->cost_of( $blank_id, $ref, $region );
+			$total = $this->converter->in_store( $cost )->total;
+			// Another cost in the store's currency: the printshop's price moved, or the exchange rate did.
+			if ( null !== $total && $total !== $state->total ) {
 				$changed[] = $id;
 			}
-			$state->with_cost( $cost, $now, $blank_id, $ref )->save_to( $item );
+			$state->with_cost( $cost, $now, $blank_id, $ref, $total )->save_to( $item );
 		}
 		return $this->settle( self::fresh( $product->get_id() ) ?? $product, $changed );
 	}
@@ -285,7 +292,6 @@ final class ProductPricing {
 	 */
 	public function settle( WC_Product $product, array $changed = array() ): int {
 		$rule      = $this->rule_for( $product );
-		$currency  = get_woocommerce_currency();
 		$automatic = true === $this->settings->get( Settings::PRICE_AUTOMATIC );
 		$set       = 0;
 		foreach ( self::items( $product ) as $item ) {
@@ -299,8 +305,8 @@ final class ProductPricing {
 				$state->with_flag()->save_to( $item );
 				continue;
 			}
-			$known = self::known_cost( $item, $state );
-			$cost  = $known?->total( $currency );
+			$store = $this->converter->in_store( self::known_cost( $item, $state ) );
+			$cost  = $store->total;
 			$tax   = PriceTax::of( $item );
 			if ( null !== $cost && null !== $price && $rule->holds( $price, $cost, $tax ) ) {
 				$state->with_flag()->save_to( $item );
@@ -311,7 +317,7 @@ final class ProductPricing {
 				continue;
 			}
 			$wants = null === $cost ? null : $rule->price_for( $cost, $tax );
-			$flag  = self::blocker( $item, $known, $currency, $wants ) ?? PriceState::FLAG_MARGIN;
+			$flag  = self::blocker( $item, $store, $wants ) ?? PriceState::FLAG_MARGIN;
 			// At the minimum or maximum already: the rule has no other price for it.
 			( $wants === $price ? $state->with_flag() : $state->with_flag( $flag, $wants ) )->save_to( $item );
 		}
@@ -361,12 +367,11 @@ final class ProductPricing {
 		if ( null === $item || $item->get_regular_price( 'edit' ) !== $read->get_regular_price( 'edit' ) || PriceState::stored_on( $item )->to_array() !== $state->to_array() ) {
 			return false;
 		}
-		$currency = get_woocommerce_currency();
-		$known    = self::known_cost( $item, $state );
-		$cost     = $known?->total( $currency );
-		$before   = Amount::parse( $item->get_regular_price( 'edit' ) );
-		$wants    = null === $cost ? null : $rule->price_for( $cost, PriceTax::of( $item ) );
-		$blocker  = self::blocker( $item, $known, $currency, $wants );
+		$store   = $this->converter->in_store( self::known_cost( $item, $state ) );
+		$cost    = $store->total;
+		$before  = Amount::parse( $item->get_regular_price( 'edit' ) );
+		$wants   = null === $cost ? null : $rule->price_for( $cost, PriceTax::of( $item ) );
+		$blocker = self::blocker( $item, $store, $wants );
 		if ( null === $cost || null === $wants || null !== $blocker ) {
 			$state->with_flag( $blocker, $wants )->save_to( $item );
 			return false;
@@ -502,38 +507,19 @@ final class ProductPricing {
 	 * the sale price, which WooCommerce would then no longer take. Null
 	 * when it can.
 	 *
-	 * @param WC_Product       $item     The product or variation.
-	 * @param VariantCost|null $cost     Its cost.
-	 * @param string           $currency The store's currency.
-	 * @param int|null         $wants    The price the rule has for the cost.
+	 * @param WC_Product $item  The product or variation.
+	 * @param StoreCost  $cost  Its cost in the store's currency.
+	 * @param int|null   $wants The price the rule has for the cost.
 	 */
-	private static function blocker( WC_Product $item, ?VariantCost $cost, string $currency, ?int $wants ): ?string {
-		$flag = self::cost_flag( $cost, $currency );
-		if ( null !== $flag ) {
-			return $flag;
+	private static function blocker( WC_Product $item, StoreCost $cost, ?int $wants ): ?string {
+		if ( null !== $cost->flag ) {
+			return $cost->flag;
 		}
 		if ( null === $wants ) {
 			return PriceState::FLAG_NO_STEP;
 		}
 		$sale = Amount::parse( $item->get_sale_price( 'edit' ) );
 		return null !== $sale && $wants <= $sale ? PriceState::FLAG_SALE : null;
-	}
-
-	/**
-	 * Why a cost prices nothing, as a flag; null when it does.
-	 *
-	 * @param VariantCost|null $cost     The cost.
-	 * @param string           $currency The store's currency.
-	 */
-	private static function cost_flag( ?VariantCost $cost, string $currency ): ?string {
-		if ( null === $cost ) {
-			return PriceState::FLAG_UNREAD;
-		}
-		return match ( $cost->problem( $currency ) ) {
-			VariantCost::NO_PRICE       => PriceState::FLAG_NO_COST,
-			VariantCost::OTHER_CURRENCY => PriceState::FLAG_CURRENCY,
-			default                     => null,
-		};
 	}
 
 	/**

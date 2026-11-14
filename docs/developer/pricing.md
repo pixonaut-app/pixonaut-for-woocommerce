@@ -17,8 +17,18 @@ variant, and the plugin prices from that by a rule. The merchant's side is in
 integration key and the shop's base country, and reads each row as a
 `Pricing\VariantCost`: the product's price and the cheapest shipping, each
 with its currency. A variant the printshop publishes no price for has a cost
-without one. A cost in another currency than the store's is never converted:
-it prices nothing.
+without one.
+
+Pixonaut reports the printshop's billing currency. `Pricing\CostConverter`
+turns a cost into the store's currency (`Pricing\StoreCost`): a part charged
+in another currency is multiplied by the day's rate and by the store's
+`price_currency_buffer`. `Pricing\ExchangeRates` reads the European Central
+Bank's euro reference rates (`eurofxref-daily.xml`) at most once a day, and
+only when a cost needs converting, and keeps them in the
+`pixonaut_wc_exchange_rates` option. A read that fails keeps the last rates
+and is tried again an hour later; rates over a week old convert nothing
+(`PriceState::FLAG_RATE_STALE`), as does a currency without a rate
+(`FLAG_CURRENCY`).
 
 Money is counted in thousandths of a currency unit, as integers
 (`Pricing\Amount`), from the decimal strings Pixonaut answers to the decimal
@@ -51,7 +61,9 @@ the price the rule last set, and what the rule would change now.
 
 - `refresh()` reads the costs, one request per blank, then stores them and
   settles the prices; a read that fails stores nothing. A variant Pixonaut
-  has not read yet keeps the cost last read for it. A stored cost counts only
+  has not read yet keeps the cost last read for it. A cost whose total in
+  the store's currency is another than at the last read has changed, whether
+  the printshop's price moved or the exchange rate did. A stored cost counts only
   while the product still sells the same variant of the same blank and the
   shop is in the same country.
 - Before a price or a state is written it is read again from the database:

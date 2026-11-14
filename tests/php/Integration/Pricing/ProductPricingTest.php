@@ -280,21 +280,6 @@ final class ProductPricingTest extends PricingTestCase {
 		$this->assertSame( 0, ProductPricing::flagged( $product() ) );
 	}
 
-	public function test_a_cost_in_another_currency_prices_nothing(): void {
-		$this->store_rule();
-		$id = $this->simple_product( 'v_mug', '300' );
-		$this->script_costs( array( 'v_mug' => '16.70' ), null, 'XTS' );
-
-		$this->pricing->refresh( $this->product( $id ) );
-		$this->assertSame( 0, $this->pricing->apply( $this->product( $id ) ) );
-
-		$this->assertSame( '300', $this->price( $id ) );
-		$row = $this->row( $id );
-		$this->assertSame( PriceState::FLAG_CURRENCY, $row->flag );
-		$this->assertNull( $row->margin );
-		$this->assertNull( $row->suggested );
-	}
-
 	public function test_a_product_changes_parts_of_the_stores_rule(): void {
 		$this->store_rule();
 		$id = $this->simple_product( 'v_mug', '' );

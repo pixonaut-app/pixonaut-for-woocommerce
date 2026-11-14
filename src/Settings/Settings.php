@@ -99,6 +99,14 @@ final class Settings {
 
 	public const PRICE_AUTOMATIC = 'price_automatic';
 
+	public const PRICE_CURRENCY_BUFFER = 'price_currency_buffer';
+
+	/**
+	 * Percent added to a cost converted from another currency, unless the
+	 * store sets another: what a card or bank usually takes for the exchange.
+	 */
+	public const DEFAULT_CURRENCY_BUFFER = '3';
+
 	/**
 	 * The settings holding the store's pricing rule, by the rule's part.
 	 */
@@ -524,6 +532,17 @@ final class Settings {
 					/* translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the highest price the pricing rule sets. */
 					'title' => __( 'Highest price', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'The rule never sets a price above this. Empty for no limit.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::decimal(
+				self::PRICE_CURRENCY_BUFFER,
+				self::DEFAULT_CURRENCY_BUFFER,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant; the value is a percentage added to a cost converted from another currency. */
+					'title' => __( 'Currency buffer (%)', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'A printshop charges in its own currency. A cost in another currency than your store’s is converted with the European Central Bank’s daily reference rate, and this percentage is added to it: what your card or bank takes for the exchange, and what the rate may move between the sale and the charge.', 'pixonaut-for-woocommerce' ),
 				)
 			)
 		);

@@ -156,7 +156,9 @@ use Pixonaut\WooCommerce\Fulfilment\OrderTrackingChanged;
 use Pixonaut\WooCommerce\Fulfilment\Shipments;
 use Pixonaut\WooCommerce\Migrations\MigrationRunner;
 use Pixonaut\WooCommerce\Migrations\Migrations;
+use Pixonaut\WooCommerce\Pricing\CostConverter;
 use Pixonaut\WooCommerce\Pricing\CostRefresh;
+use Pixonaut\WooCommerce\Pricing\ExchangeRates;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
 use Pixonaut\WooCommerce\Privacy\LineErasure;
 use Pixonaut\WooCommerce\Privacy\PersonalDataEraser;
@@ -736,7 +738,7 @@ final class Plugin {
 	 * Prices products from what the printshop charges for them.
 	 */
 	public function product_pricing(): ProductPricing {
-		$this->product_pricing ??= new ProductPricing( new VariantCosts( $this->sdk() ), $this->settings(), new WcLogger(), static fn (): int => time() );
+		$this->product_pricing ??= new ProductPricing( new VariantCosts( $this->sdk() ), $this->settings(), new WcLogger(), static fn (): int => time(), new CostConverter( new ExchangeRates( static fn (): int => time() ), $this->settings() ) );
 		return $this->product_pricing;
 	}
 

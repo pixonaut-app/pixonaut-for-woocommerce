@@ -12,34 +12,21 @@ use Pixonaut\WooCommerce\Tests\Unit\TestCase;
 
 final class VariantCostTest extends TestCase {
 
-	public function test_a_cost_is_the_product_and_its_shipping(): void {
+	public function test_a_cost_is_a_product_price_and_its_shipping_each_in_its_currency(): void {
 		$costs = VariantCost::list_from( array( self::row( 'v_a3', '167.10', '65.50' ) ) );
 
 		$this->assertSame( array( 'v_a3' ), array_keys( $costs ) );
-		$this->assertSame( 232600, $costs['v_a3']->total( 'SEK' ) );
-		$this->assertNull( $costs['v_a3']->problem( 'SEK' ) );
+		$this->assertSame( array( 167100, 'SEK', 65500, 'SEK' ), array( $costs['v_a3']->product, $costs['v_a3']->currency, $costs['v_a3']->shipping, $costs['v_a3']->shipping_currency ) );
 		$this->assertSame( 'SE', $costs['v_a3']->region );
 	}
 
-	public function test_a_variant_without_shipping_costs_its_product(): void {
-		$cost = VariantCost::list_from( array( self::row( 'v_a3', '167.10', null ) ) )['v_a3'];
+	public function test_a_variant_without_shipping_or_without_a_published_price_has_none(): void {
+		$unshipped   = VariantCost::list_from( array( self::row( 'v_a3', '167.10', null ) ) )['v_a3'];
+		$unpublished = VariantCost::list_from( array( self::row( 'v_a3', null, '65.50' ) ) )['v_a3'];
 
-		$this->assertSame( 167100, $cost->total( 'SEK' ) );
-	}
-
-	public function test_a_variant_the_printshop_publishes_no_price_for_has_no_cost(): void {
-		$cost = VariantCost::list_from( array( self::row( 'v_a3', null, '65.50' ) ) )['v_a3'];
-
-		$this->assertSame( VariantCost::NO_PRICE, $cost->problem( 'SEK' ) );
-		$this->assertNull( $cost->total( 'SEK' ) );
-	}
-
-	public function test_a_cost_in_another_currency_is_never_converted(): void {
-		$cost = VariantCost::list_from( array( self::row( 'v_a3', '16.71', '6.55', 'EUR' ) ) )['v_a3'];
-
-		$this->assertSame( VariantCost::OTHER_CURRENCY, $cost->problem( 'SEK' ) );
-		$this->assertNull( $cost->total( 'SEK' ) );
-		$this->assertSame( 23260, $cost->total( 'EUR' ) );
+		$this->assertNull( $unshipped->shipping );
+		$this->assertSame( '', $unshipped->shipping_currency );
+		$this->assertNull( $unpublished->product );
 	}
 
 	public function test_entries_without_a_variant_are_left_out_and_a_price_that_is_no_amount_is_none(): void {
@@ -63,17 +50,16 @@ final class VariantCostTest extends TestCase {
 		);
 
 		$this->assertSame( array( 'v_odd' ), array_keys( $costs ) );
-		$this->assertSame( VariantCost::NO_PRICE, $costs['v_odd']->problem( 'SEK' ) );
+		$this->assertNull( $costs['v_odd']->product );
 	}
 
 	public function test_a_cost_is_stored_and_read_back(): void {
-		$cost = VariantCost::list_from( array( self::row( 'v_a3', '167.10', '65.50' ) ) )['v_a3'];
+		$cost = VariantCost::list_from( array( self::row( 'v_a3', '16.71', '6.55', 'eur' ) ) )['v_a3'];
 		$read = VariantCost::from_array( $cost->to_array() );
 
-		$this->assertTrue( $cost->charges_as( $read ) );
-		$this->assertSame( $cost->to_array(), $read?->to_array() );
-		$this->assertFalse( $cost->charges_as( VariantCost::list_from( array( self::row( 'v_a3', '170', '65.50' ) ) )['v_a3'] ) );
-		$this->assertFalse( $cost->charges_as( null ) );
+		$this->assertSame( 'EUR', $cost->currency );
+		$this->assertEquals( $cost, $read );
+		$this->assertNull( VariantCost::from_array( 'nothing' ) );
 	}
 
 	/**

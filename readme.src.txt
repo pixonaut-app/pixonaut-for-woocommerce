@@ -61,7 +61,7 @@ Yes, when the template has showcase sets in Pixonaut: named sets of example valu
 
 == External services ==
 
-This plugin relies on two services run by Pixonaut. Neither is contacted until you connect the store to Pixonaut.
+This plugin relies on two services run by Pixonaut, and on the European Central Bank's exchange rates. None is contacted until you connect the store to Pixonaut.
 
 = Pixonaut API =
 
@@ -108,3 +108,14 @@ The designer shows a "Powered by Pixonaut" link to https://pixonaut.app under th
 
 Pixonaut terms of service: https://pixonaut.app/terms
 Pixonaut privacy policy: https://pixonaut.app/privacy
+
+= European Central Bank, euro foreign exchange reference rates =
+
+When you price a product from its printshop's cost and the printshop charges in another currency than your store's, the plugin converts the cost with the European Central Bank's daily reference rates.
+
+What is sent: nothing about your store, its products or its customers. Your server requests the public file https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml, so the European Central Bank sees your server's IP address, as any website it visits does.
+
+When it is sent: from your server, at most once a day, and only while a product's printshop cost is in another currency than your store's.
+
+European Central Bank disclaimer and copyright: https://www.ecb.europa.eu/services/disclaimer/html/index.en.html
+European Central Bank privacy statement: https://www.ecb.europa.eu/services/data-protection/privacy-statements/html/index.en.html

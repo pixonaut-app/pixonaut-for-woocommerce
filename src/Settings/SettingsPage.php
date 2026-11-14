@@ -165,6 +165,7 @@ final class SettingsPage {
 				Settings::PRICE_ENDING,
 				Settings::PRICE_MIN,
 				Settings::PRICE_MAX,
+				Settings::PRICE_CURRENCY_BUFFER,
 				Settings::PRICE_AUTOMATIC,
 			),
 		),

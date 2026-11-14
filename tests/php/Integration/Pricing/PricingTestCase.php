@@ -16,6 +16,8 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Pricing\Amount;
+use Pixonaut\WooCommerce\Pricing\CostConverter;
+use Pixonaut\WooCommerce\Pricing\ExchangeRates;
 use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
 use Pixonaut\WooCommerce\Settings\Settings;
@@ -57,17 +59,83 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 
 	protected ProductPricing $pricing;
 
+	/**
+	 * The time now, which a test moves.
+	 *
+	 * @var int
+	 */
+	protected int $now = self::NOW;
+
+	/**
+	 * What the exchange rate source answers: each currency's rate against
+	 * the euro; null for no answer.
+	 *
+	 * @var array<string, string>|null
+	 */
+	protected ?array $rates = null;
+
+	/**
+	 * The day the rates answered are of.
+	 *
+	 * @var string
+	 */
+	protected string $rates_date = '2026-11-13';
+
+	/**
+	 * How often the exchange rate source was asked.
+	 *
+	 * @var int
+	 */
+	protected int $rate_reads = 0;
+
 	public function set_up(): void {
 		parent::set_up();
 		$this->logger   = new RecordingLogger();
 		$this->recorder = ( new HttpRecorder( self::BASE_URL ) )->start();
 		$this->plugin   = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
 		$client         = ( new Pixonaut( ScriptedClient::credentials(), new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
-		$this->pricing  = new ProductPricing( new VariantCosts( $client ), $this->plugin->settings(), $this->logger, static fn (): int => self::NOW );
+		$this->now      = self::NOW;
+		$this->pricing  = new ProductPricing( new VariantCosts( $client ), $this->plugin->settings(), $this->logger, fn (): int => $this->now, new CostConverter( new ExchangeRates( fn (): int => $this->now ), $this->plugin->settings() ) );
+		add_filter( 'pre_http_request', array( $this, 'answer_rates' ), 10, 3 );
+	}
+
+	/**
+	 * Answers the exchange rate source as the test set it up: the day's
+	 * rates, or no answer.
+	 *
+	 * @param mixed                $preempt An earlier filter's answer.
+	 * @param array<string, mixed> $args    The request.
+	 * @param string               $url     Its address.
+	 * @return mixed
+	 */
+	public function answer_rates( mixed $preempt, array $args, string $url ): mixed {
+		if ( ExchangeRates::SOURCE_URL !== $url ) {
+			return $preempt;
+		}
+		++$this->rate_reads;
+		if ( null === $this->rates ) {
+			return new \WP_Error( 'http_request_failed', 'cURL error 28: Operation timed out' );
+		}
+		$cubes = '';
+		foreach ( $this->rates as $currency => $rate ) {
+			$cubes .= sprintf( "<Cube currency='%s' rate='%s'/>", $currency, $rate );
+		}
+		return array(
+			'headers'  => array( 'content-type' => 'text/xml' ),
+			'body'     => sprintf( '<?xml version="1.0" encoding="UTF-8"?><gesmes:Envelope><Cube><Cube time=\'%s\'>%s</Cube></Cube></gesmes:Envelope>', $this->rates_date, $cubes ),
+			'response' => array(
+				'code'    => 200,
+				'message' => 'OK',
+			),
+			'cookies'  => array(),
+			'filename' => null,
+		);
 	}
 
 	public function tear_down(): void {
 		$this->recorder->stop();
+		remove_filter( 'pre_http_request', array( $this, 'answer_rates' ), 10 );
+		delete_option( ExchangeRates::OPTION );
 		delete_option( Settings::OPTION );
 		parent::tear_down();
 	}
