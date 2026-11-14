@@ -1169,7 +1169,7 @@ export interface paths {
         };
         /**
          * Read a blank's variant costs at its printshop
-         * @description What the blank's printshop charges for each variant on sale, and for shipping one to a country, as the printshop publishes it: a store prices its products from these. Each amount is in the currency the printshop bills the connected account in, which each amount names, and is never converted: the read takes a country and no currency, so amounts for one country may be in another's currency. Pixonaut holds no selling price, margin or tax. Costs are read from the printshop in the background, when a blank is imported or re-synced and once a day: a region asked for the first time is read within moments, and until then the list holds only the variants already read, so a variant missing from it has not been read yet, and `complete` is false until none is missing. A variant whose printshop publishes no price is listed with `product` null, as is every variant of a blank no printshop is bound to, and of a country its printshop prices only with more of an address than a country: Printful prices the United States, Canada, Australia, Japan and Brazil by state. A region nobody asks for in 30 days is no longer kept read, except the workspace's own.
+         * @description What the blank's printshop charges for each variant on sale, and for shipping one to a country, as the printshop publishes it: a store prices its products from these. Each amount is in the currency the printshop bills the connected account in, which each amount names, and is never converted: the read takes a country and no currency, so amounts for one country may be in another's currency. Pixonaut holds no selling price, margin or tax. Costs are read from the printshop in the background, when a blank is imported or re-synced and once a day: a region asked for the first time is read within moments, and until then the list holds only the variants already read, so a variant missing from it has not been read yet, and `complete` is false until none is missing. A variant whose printshop publishes no price is listed with `product` null, as is every variant of a blank no printshop is bound to, and of a country its printshop prices only for a recipient it knows more of than a cost names: Printful prices an order to Brazil only with the recipient's tax number. Where a printshop prices a country by state, as Printful does the United States, Canada, Australia and Japan, the cost is the one for a state of it, which differs between states in tax alone, and a cost holds no tax. A region nobody asks for in 30 days is no longer kept read, except the workspace's own.
          */
         get: operations["blanks.variants.costs"];
         put?: never;
@@ -31410,6 +31410,8 @@ export interface operations {
                             }[];
                             /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
                             productModels: {
+                                /** @description The model's fields its printshop's data gave, each named as a measure names it (`depthMm`, `parts.frame.depthMm`). Omitted, none. */
+                                fromPrintshop?: string[];
                                 /** @description What the product is, by kind. */
                                 model: {
                                     /** @description The sheet's height, in millimetres. */
@@ -32311,6 +32313,8 @@ export interface operations {
                         }[];
                         /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
                         productModels: {
+                            /** @description The model's fields its printshop's data gave, each named as a measure names it (`depthMm`, `parts.frame.depthMm`). Omitted, none. */
+                            fromPrintshop?: string[];
                             /** @description What the product is, by kind. */
                             model: {
                                 /** @description The sheet's height, in millimetres. */
@@ -48480,6 +48484,8 @@ export interface operations {
                             }[];
                             /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
                             productModels: {
+                                /** @description The model's fields its printshop's data gave, each named as a measure names it (`depthMm`, `parts.frame.depthMm`). Omitted, none. */
+                                fromPrintshop?: string[];
                                 /** @description What the product is, by kind. */
                                 model: {
                                     /** @description The sheet's height, in millimetres. */
@@ -49333,6 +49339,8 @@ export interface operations {
                             }[];
                             /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
                             productModels: {
+                                /** @description The model's fields its printshop's data gave, each named as a measure names it (`depthMm`, `parts.frame.depthMm`). Omitted, none. */
+                                fromPrintshop?: string[];
                                 /** @description What the product is, by kind. */
                                 model: {
                                     /** @description The sheet's height, in millimetres. */
@@ -50554,6 +50562,8 @@ export interface operations {
                             geometry: {
                                 anchors: {
                                     accepts: string[];
+                                    /** @description How far above its room the plane goes on bare, in millimetres: what a product hangs from, a cord and its nail, may rise into it. Absent, no further. */
+                                    bareAboveMm?: number;
                                     /** @description The most room a product has on the plane. */
                                     footprintMm: {
                                         height: number;
