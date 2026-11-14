@@ -89,6 +89,8 @@ export const listCatalogueProducts: Handler = (context) => {
 					imageUrl: null,
 					categoryId: null,
 					holds: { colours: null, sizes: null, variants: product.variantCount },
+					// The fake's printshop says no kind of product, as most do.
+					productKind: null,
 					hasImportedBlank: imported !== undefined,
 					importedBlankId: imported?.id ?? null,
 				};
