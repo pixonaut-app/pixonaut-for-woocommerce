@@ -1160,6 +1160,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/blanks/{id}/variants/costs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a blank's variant costs at its printshop
+         * @description What the blank's printshop charges for each variant on sale, and for shipping one to a country, as the printshop publishes it: a store prices its products from these. Each amount is in the currency the printshop bills the connected account in, which each amount names, and is never converted: the read takes a country and no currency, so amounts for one country may be in another's currency. Pixonaut holds no selling price, margin or tax. Costs are read from the printshop in the background, when a blank is imported or re-synced and once a day: a region asked for the first time is read within moments, and until then the list holds only the variants already read, so a variant missing from it has not been read yet. A variant whose printshop publishes no price is listed with `product` null, as is every variant of a blank no printshop is bound to. A region nobody asks for in 30 days is no longer kept read, except the workspace's own.
+         */
+        get: operations["blanks.variants.costs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/blanks/{id}/views/{viewId}/mockup.png": {
         parameters: {
             query?: never;
@@ -3197,6 +3217,49 @@ export interface webhooks {
             requestBody?: {
                 content: {
                     "application/json": components["schemas"]["BlankUpdatedEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "blank.variant_cost_changed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** blank.variant_cost_changed */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BlankVariantCostChangedEvent"];
                 };
             };
             responses: {
@@ -5951,6 +6014,54 @@ export interface components {
              * @enum {string}
              */
             type: "blank.updated";
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
+        };
+        BlankVariantCostChangedEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                blankId: string;
+                product: {
+                    from: {
+                        amount: string;
+                        currency: string;
+                    } | null;
+                    to: {
+                        amount: string;
+                        currency: string;
+                    } | null;
+                };
+                region: string;
+                shipping: {
+                    from: {
+                        amount: string;
+                        currency: string;
+                    } | null;
+                    to: {
+                        amount: string;
+                        currency: string;
+                    } | null;
+                };
+                variant: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "blank.variant_cost_changed";
             /**
              * @description `automation` when one of your automations caused the event; absent otherwise.
              * @enum {string}
@@ -31308,6 +31419,25 @@ export interface operations {
                                      * @enum {string}
                                      */
                                     kind: "flat-sheet";
+                                    /** @description Its hanger, when it hangs from one. Omitted, none. */
+                                    parts?: {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description The cord's rise above the top rail, in millimetres; 0, none. */
+                                        cordRiseMm: number;
+                                        /** @description How far a rail stands off the wall, in millimetres. */
+                                        depthMm: number;
+                                        /** @description How far a rail covers the sheet's edge, in millimetres. */
+                                        lipMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /** @description A rail's height, in millimetres. */
+                                        railHeightMm: number;
+                                        /** @description A rail's length, in millimetres. */
+                                        railLengthMm: number;
+                                        /** @description A sheet's hanger: a rail top and bottom, and a cord. */
+                                        role: string;
+                                    }[];
                                     /** @description The sheet's width, in millimetres. */
                                     widthMm: number;
                                 } | {
@@ -32172,6 +32302,25 @@ export interface operations {
                                  * @enum {string}
                                  */
                                 kind: "flat-sheet";
+                                /** @description Its hanger, when it hangs from one. Omitted, none. */
+                                parts?: {
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description The cord's rise above the top rail, in millimetres; 0, none. */
+                                    cordRiseMm: number;
+                                    /** @description How far a rail stands off the wall, in millimetres. */
+                                    depthMm: number;
+                                    /** @description How far a rail covers the sheet's edge, in millimetres. */
+                                    lipMm: number;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /** @description A rail's height, in millimetres. */
+                                    railHeightMm: number;
+                                    /** @description A rail's length, in millimetres. */
+                                    railLengthMm: number;
+                                    /** @description A sheet's hanger: a rail top and bottom, and a cord. */
+                                    role: string;
+                                }[];
                                 /** @description The sheet's width, in millimetres. */
                                 widthMm: number;
                             } | {
@@ -33561,6 +33710,122 @@ export interface operations {
             };
             /** @description Refused: rate_limited */
             429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
+    "blanks.variants.costs": {
+        parameters: {
+            query?: {
+                /** @description The country the costs are for, as a two-letter ISO 3166-1 code in capitals, such as `SE`. Omitted, the workspace's own cost region: the one its settings pick, else the country its orders are delivered to. */
+                region?: string;
+                /** @description Only this variant's cost, by its `ref`. */
+                variant?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Each read variant's cost in the region */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        costs: {
+                            /** @description When a read last found another product or shipping amount than the one held, as an ISO 8601 time; null while the first read still stands. */
+                            changedAt: string | null;
+                            /** @description What the printshop charges for the variant, printed with the blank's default print: its main side, by one print method. Further print areas and other print methods are not included. null when the printshop publishes no price for it. */
+                            product: {
+                                /** @description The amount as a decimal string with the currency's own decimals, such as `167.10`. */
+                                amount: string;
+                                /** @description The amount's currency, as its ISO 4217 code, such as `SEK`. */
+                                currency: string;
+                            } | null;
+                            /** @description When the printshop was last asked, as an ISO 8601 time; for a blank no printshop is bound to, when the variant was last changed. */
+                            readAt: string;
+                            /** @description The country the cost is for. */
+                            region: string;
+                            /** @description The cheapest way the printshop ships one of the variant to the region. null when the printshop publishes none. */
+                            shipping: {
+                                /** @description The amount as a decimal string with the currency's own decimals, such as `167.10`. */
+                                amount: string;
+                                /** @description The amount's currency, as its ISO 4217 code, such as `SEK`. */
+                                currency: string;
+                            } | null;
+                            /** @description The variant's `ref`. */
+                            variant: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unknown_region, cost_region_unset, invalid_query */
+            422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
                     [name: string]: unknown;
@@ -39093,7 +39358,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** @description The events, in the order they were recorded, each in the envelope its type's webhook delivery carries, with the payload that type sends. */
-                        events: (components["schemas"]["StoreAccessOffEvent"] | components["schemas"]["StoreAccessRequestedEvent"] | components["schemas"]["DesignCommittedEvent"] | components["schemas"]["DesignApprovalScheduledEvent"] | components["schemas"]["DesignApprovedEvent"] | components["schemas"]["DesignRejectedEvent"] | components["schemas"]["DesignDeletedEvent"] | components["schemas"]["DesignPersonalDataErasedEvent"] | components["schemas"]["DesignChangesRequestedEvent"] | components["schemas"]["DesignDeliveryCapturedEvent"] | components["schemas"]["DesignEditedEvent"] | components["schemas"]["DesignDuplicatedEvent"] | components["schemas"]["PrintCreatedEvent"] | components["schemas"]["PrintCompletedEvent"] | components["schemas"]["PrintFailedEvent"] | components["schemas"]["TemplatePublishedEvent"] | components["schemas"]["TemplateLiveChangedEvent"] | components["schemas"]["TemplateDeletedEvent"] | components["schemas"]["TemplateRenamedEvent"] | components["schemas"]["OrderCreatedEvent"] | components["schemas"]["OrderSubmittedEvent"] | components["schemas"]["OrderStatusChangedEvent"] | components["schemas"]["OrderFailedEvent"] | components["schemas"]["OrderCancelledEvent"] | components["schemas"]["OrderReroutedEvent"] | components["schemas"]["OrderDeliveryChangedEvent"] | components["schemas"]["OrderHeldEvent"] | components["schemas"]["OrderReleasedEvent"] | components["schemas"]["OrderTrackingAddedEvent"] | components["schemas"]["OrderTrackingChangedEvent"] | components["schemas"]["BlankDriftedEvent"] | components["schemas"]["BlankCreatedEvent"] | components["schemas"]["BlankUpdatedEvent"] | components["schemas"]["BlankDeletedEvent"] | components["schemas"]["BlankRestoredEvent"] | components["schemas"]["InkCreatedEvent"] | components["schemas"]["InkUpdatedEvent"] | components["schemas"]["InkDeletedEvent"] | components["schemas"]["PaletteCreatedEvent"] | components["schemas"]["PaletteUpdatedEvent"] | components["schemas"]["PaletteDeletedEvent"] | components["schemas"]["ShapeCreatedEvent"] | components["schemas"]["ShapeUpdatedEvent"] | components["schemas"]["ShapeDeletedEvent"] | components["schemas"]["AssetCreatedEvent"] | components["schemas"]["AssetUpdatedEvent"] | components["schemas"]["AssetDeletedEvent"] | components["schemas"]["PrintshopConnectedEvent"] | components["schemas"]["PrintshopDisconnectedEvent"] | components["schemas"]["PrintshopUpdatedEvent"] | components["schemas"]["PrintshopReconnectedEvent"] | components["schemas"]["PrintshopDeletedEvent"] | components["schemas"]["PrintshopRestoredEvent"] | components["schemas"]["RunStartedEvent"] | components["schemas"]["RunCompletedEvent"] | components["schemas"]["RunFailedEvent"] | components["schemas"]["RunExhaustedEvent"] | components["schemas"]["RunCancelledEvent"] | components["schemas"]["CreditsLowEvent"] | components["schemas"]["TextMessagesLowEvent"] | components["schemas"]["OrderBalanceEmptyEvent"] | components["schemas"]["ShareLinkRevokedEvent"] | components["schemas"]["ShareLinkRegeneratedEvent"])[];
+                        events: (components["schemas"]["StoreAccessOffEvent"] | components["schemas"]["StoreAccessRequestedEvent"] | components["schemas"]["DesignCommittedEvent"] | components["schemas"]["DesignApprovalScheduledEvent"] | components["schemas"]["DesignApprovedEvent"] | components["schemas"]["DesignRejectedEvent"] | components["schemas"]["DesignDeletedEvent"] | components["schemas"]["DesignPersonalDataErasedEvent"] | components["schemas"]["DesignChangesRequestedEvent"] | components["schemas"]["DesignDeliveryCapturedEvent"] | components["schemas"]["DesignEditedEvent"] | components["schemas"]["DesignDuplicatedEvent"] | components["schemas"]["PrintCreatedEvent"] | components["schemas"]["PrintCompletedEvent"] | components["schemas"]["PrintFailedEvent"] | components["schemas"]["TemplatePublishedEvent"] | components["schemas"]["TemplateLiveChangedEvent"] | components["schemas"]["TemplateDeletedEvent"] | components["schemas"]["TemplateRenamedEvent"] | components["schemas"]["OrderCreatedEvent"] | components["schemas"]["OrderSubmittedEvent"] | components["schemas"]["OrderStatusChangedEvent"] | components["schemas"]["OrderFailedEvent"] | components["schemas"]["OrderCancelledEvent"] | components["schemas"]["OrderReroutedEvent"] | components["schemas"]["OrderDeliveryChangedEvent"] | components["schemas"]["OrderHeldEvent"] | components["schemas"]["OrderReleasedEvent"] | components["schemas"]["OrderTrackingAddedEvent"] | components["schemas"]["OrderTrackingChangedEvent"] | components["schemas"]["BlankDriftedEvent"] | components["schemas"]["BlankCreatedEvent"] | components["schemas"]["BlankUpdatedEvent"] | components["schemas"]["BlankDeletedEvent"] | components["schemas"]["BlankRestoredEvent"] | components["schemas"]["BlankVariantCostChangedEvent"] | components["schemas"]["InkCreatedEvent"] | components["schemas"]["InkUpdatedEvent"] | components["schemas"]["InkDeletedEvent"] | components["schemas"]["PaletteCreatedEvent"] | components["schemas"]["PaletteUpdatedEvent"] | components["schemas"]["PaletteDeletedEvent"] | components["schemas"]["ShapeCreatedEvent"] | components["schemas"]["ShapeUpdatedEvent"] | components["schemas"]["ShapeDeletedEvent"] | components["schemas"]["AssetCreatedEvent"] | components["schemas"]["AssetUpdatedEvent"] | components["schemas"]["AssetDeletedEvent"] | components["schemas"]["PrintshopConnectedEvent"] | components["schemas"]["PrintshopDisconnectedEvent"] | components["schemas"]["PrintshopUpdatedEvent"] | components["schemas"]["PrintshopReconnectedEvent"] | components["schemas"]["PrintshopDeletedEvent"] | components["schemas"]["PrintshopRestoredEvent"] | components["schemas"]["RunStartedEvent"] | components["schemas"]["RunCompletedEvent"] | components["schemas"]["RunFailedEvent"] | components["schemas"]["RunExhaustedEvent"] | components["schemas"]["RunCancelledEvent"] | components["schemas"]["CreditsLowEvent"] | components["schemas"]["TextMessagesLowEvent"] | components["schemas"]["OrderBalanceEmptyEvent"] | components["schemas"]["ShareLinkRevokedEvent"] | components["schemas"]["ShareLinkRegeneratedEvent"])[];
                         /** @description Pass it as `after` for the next page. Null when nothing more is available yet: continue from the last event's id later. A pull looks through at most 1000 events, so with `types` a page can be short, or empty, with a cursor that still moves on. */
                         nextCursor: string | null;
                     };
@@ -47643,6 +47908,11 @@ export interface operations {
                 "application/json": {
                     /** @description The colours to fetch photos of, by name as the options read answers them; absent for every colour. A colour named here that the product does not have is ignored. */
                     colours?: string[];
+                    /**
+                     * @description Which garment the product is, as the merchant says: ask, never read it from the product's name. With it the blank's product model is a garment of that cut, and with no scenes named it starts on a studio picture, that cut's front cut-out over a studio style. Unread where the printshop's data says what the product is.
+                     * @enum {string}
+                     */
+                    garmentCut?: "tee" | "hoodie" | "pullover-hoodie" | "sweatshirt";
                     /** @description As the library shows it. Omitted, the printshop's product name. */
                     name?: string;
                     /** @description Whether the printshop's photos are fetched as the blank's catalogue photos. True is refused where the printshop has no photo with a print area. Omitted, they are fetched if it has any. */
@@ -48179,6 +48449,25 @@ export interface operations {
                                      * @enum {string}
                                      */
                                     kind: "flat-sheet";
+                                    /** @description Its hanger, when it hangs from one. Omitted, none. */
+                                    parts?: {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description The cord's rise above the top rail, in millimetres; 0, none. */
+                                        cordRiseMm: number;
+                                        /** @description How far a rail stands off the wall, in millimetres. */
+                                        depthMm: number;
+                                        /** @description How far a rail covers the sheet's edge, in millimetres. */
+                                        lipMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /** @description A rail's height, in millimetres. */
+                                        railHeightMm: number;
+                                        /** @description A rail's length, in millimetres. */
+                                        railLengthMm: number;
+                                        /** @description A sheet's hanger: a rail top and bottom, and a cord. */
+                                        role: string;
+                                    }[];
                                     /** @description The sheet's width, in millimetres. */
                                     widthMm: number;
                                 } | {
@@ -48995,6 +49284,25 @@ export interface operations {
                                      * @enum {string}
                                      */
                                     kind: "flat-sheet";
+                                    /** @description Its hanger, when it hangs from one. Omitted, none. */
+                                    parts?: {
+                                        /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                        colour?: string;
+                                        /** @description The cord's rise above the top rail, in millimetres; 0, none. */
+                                        cordRiseMm: number;
+                                        /** @description How far a rail stands off the wall, in millimetres. */
+                                        depthMm: number;
+                                        /** @description How far a rail covers the sheet's edge, in millimetres. */
+                                        lipMm: number;
+                                        /** @description What it is made of. */
+                                        material: string;
+                                        /** @description A rail's height, in millimetres. */
+                                        railHeightMm: number;
+                                        /** @description A rail's length, in millimetres. */
+                                        railLengthMm: number;
+                                        /** @description A sheet's hanger: a rail top and bottom, and a cord. */
+                                        role: string;
+                                    }[];
                                     /** @description The sheet's width, in millimetres. */
                                     widthMm: number;
                                 } | {
@@ -50370,6 +50678,25 @@ export interface operations {
                                  * @enum {string}
                                  */
                                 kind: "flat-sheet";
+                                /** @description Its hanger, when it hangs from one. Omitted, none. */
+                                parts?: {
+                                    /** @description Its colour, as #rrggbb; only for painted-wood, metal, plastic, glazed-ceramic. Omitted, the material's own. */
+                                    colour?: string;
+                                    /** @description The cord's rise above the top rail, in millimetres; 0, none. */
+                                    cordRiseMm: number;
+                                    /** @description How far a rail stands off the wall, in millimetres. */
+                                    depthMm: number;
+                                    /** @description How far a rail covers the sheet's edge, in millimetres. */
+                                    lipMm: number;
+                                    /** @description What it is made of. */
+                                    material: string;
+                                    /** @description A rail's height, in millimetres. */
+                                    railHeightMm: number;
+                                    /** @description A rail's length, in millimetres. */
+                                    railLengthMm: number;
+                                    /** @description A sheet's hanger: a rail top and bottom, and a cord. */
+                                    role: string;
+                                }[];
                                 /** @description The sheet's width, in millimetres. */
                                 widthMm: number;
                             } | {

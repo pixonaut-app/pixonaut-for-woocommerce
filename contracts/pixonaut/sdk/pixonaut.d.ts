@@ -1698,6 +1698,8 @@ declare function operations({ json, raw }: Reads): {
             get: (id: string, placementId: string) => Promise<AnswerOf<"/v1/blanks/{id}/placements/{placementId}/preview-tables">>;
         };
         variants: {
+            /** Read a blank's variant costs at its printshop */
+            costs: (id: string, query?: QueryOf<"/v1/blanks/{id}/variants/costs">) => Promise<AnswerOf<"/v1/blanks/{id}/variants/costs">>;
             /** List a blank's variants */
             list: (id: string, query?: QueryOf<"/v1/blanks/{id}/variants">) => Promise<AnswerOf<"/v1/blanks/{id}/variants">>;
         };

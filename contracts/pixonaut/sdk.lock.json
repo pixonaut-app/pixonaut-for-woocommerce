@@ -1,13 +1,13 @@
 {
-	"version": "0.41.0",
-	"release": "sdk-v0.41.0",
+	"version": "0.41.1",
+	"release": "sdk-v0.41.1",
 	"released": "2026-11-14",
-	"baseUrl": "https://cdn.pixonaut.app/sdk/0.41.0/",
+	"baseUrl": "https://cdn.pixonaut.app/sdk/0.41.1/",
 	"script": "pixonaut.iife.js",
-	"integrity": "sha384-Cjzx7jsqT1WP8zG6Ynr04SeCSeezwki8fWtk4fEeVOyUOrHlSb+IqBmj8oH9eFhK",
+	"integrity": "sha384-wuyR/kMvZrrWl5/i4WT6ficPVQlcycSlvuVlnb1j3C+khKtoBVBpbU7m9J0g+qLR",
 	"types": {
-		"pixonaut.d.ts": "sha384-IUU6BIfzE/434hVMgwdyBxOl+DA1oUcLdHCpexeKPkWI8idBukFc/b2mjNjxhst9",
-		"schema.d.ts": "sha384-pIVthz11fnHUSIEc9dhIfRwfUgwbm70PK2JN29PzaH9vN+gKWbWqWEcqhSsy2gUg",
+		"pixonaut.d.ts": "sha384-xIPJchvzI801ub1uKAB1uybTRVoEoHs4mNN50O4ynjO2rmzTHl8bQMB08Q2uOf37",
+		"schema.d.ts": "sha384-1NSyk8tIZCcATd9dTGoPDGT6lfsjG+7EaAO2lPQy112tOh2x2L925dy9O3GuFcZS",
 		"LICENSE-MIT": "sha384-GfDAhGWC7TWUdEi3V+S/ssif42F4il3RjyDHMVf9SUI377mMrcZUwUu5N1m1IJrx"
 	}
 }
