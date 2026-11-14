@@ -31409,6 +31409,8 @@ export interface operations {
                             }[];
                             /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
                             productModels: {
+                                /** @description The model's fields its printshop's data gave, each named as a measure names it (`depthMm`, `parts.frame.depthMm`). Omitted, none. */
+                                fromPrintshop?: string[];
                                 /** @description What the product is, by kind. */
                                 model: {
                                     /** @description The sheet's height, in millimetres. */
@@ -32310,6 +32312,8 @@ export interface operations {
                         }[];
                         /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
                         productModels: {
+                            /** @description The model's fields its printshop's data gave, each named as a measure names it (`depthMm`, `parts.frame.depthMm`). Omitted, none. */
+                            fromPrintshop?: string[];
                             /** @description What the product is, by kind. */
                             model: {
                                 /** @description The sheet's height, in millimetres. */
@@ -48479,6 +48483,8 @@ export interface operations {
                             }[];
                             /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
                             productModels: {
+                                /** @description The model's fields its printshop's data gave, each named as a measure names it (`depthMm`, `parts.frame.depthMm`). Omitted, none. */
+                                fromPrintshop?: string[];
                                 /** @description What the product is, by kind. */
                                 model: {
                                     /** @description The sheet's height, in millimetres. */
@@ -49332,6 +49338,8 @@ export interface operations {
                             }[];
                             /** @description What the product is, per row of the blank's `modelVariesBy` options, such as a poster's sheet per size. A row left out has no model. */
                             productModels: {
+                                /** @description The model's fields its printshop's data gave, each named as a measure names it (`depthMm`, `parts.frame.depthMm`). Omitted, none. */
+                                fromPrintshop?: string[];
                                 /** @description What the product is, by kind. */
                                 model: {
                                     /** @description The sheet's height, in millimetres. */
