@@ -184,6 +184,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/s/{sha256}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch a small picture of a scene
+         * @description A scene's photo small, through the link `GET /v1/scenes` answers as a scene's `thumbnailUrl`: at most 256 pixels on its longer side, a JPEG, or a PNG where the photo has transparency. For a list or a picker, which shows a scene far smaller than its `pictureUrl`. No key is needed, and any cache may keep it for good: a link names one picture.
+         */
+        get: operations["scenes.thumbnail.get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/s/{sha256}/thumbnail/{bakeKey}/{dye}": {
         parameters: {
             query?: never;
@@ -22403,6 +22423,68 @@ export interface operations {
                 content?: never;
             };
             /** @description No layer of the library has this hash (plain text) */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refused: rate_limited */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description The request failed unexpectedly. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
+    "scenes.thumbnail.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sha256: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The picture */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                };
+            };
+            /** @description Not modified: the `If-None-Match` etag still holds */
+            304: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No scene's photo has this hash (plain text) */
             404: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -47546,6 +47628,20 @@ export interface operations {
                     printshopPhotos?: boolean;
                     /** @description Stock photos, the scenes in the order they show, first in the blank's order and before the printshop's photos. They may photograph several stock items, each scene its own; two of one stock item, setting, person and pose are refused `scene_view_repeated`, unless each is held in a hand. On each of them, each placement with a role that item has a place for takes its default record; one with none shows on none of its scenes. */
                     sceneIds?: string[];
+                    /** @description The library's pictures of the blank in order, after `sceneIds`, each a scene from list_scenes: a setting, such as a wall for a poster, at one of its anchors (left out where it has one), or a studio style from one of its cameras, both with the blank's own product drawn in at true size from its product model, or a stock photo by its id alone. A size no setting was checked with shows on none. Omitted, the blank takes the library's own for what its printshop's data says the product is: first a studio picture, the library's base studio style from its front, which is the blank's picture; then `sceneIds`; then a sheet on every wall and a cylinder on every table. [] for none of them. */
+                    scenes?: {
+                        /** @description For a setting: the key of its anchor the product is placed at. Left out, a setting with one anchor is bound there. */
+                        anchor?: string;
+                        /**
+                         * @description For a studio style, a scene with no photo: the key of its camera the product is seen from, as the scene's `geometry.studio.cameras` lists them. Required for one, and left out for any other scene. A style is listed once for each camera it is shown from.
+                         * @enum {string}
+                         */
+                        camera?: "front" | "back" | "side" | "from-above";
+                        /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
+                        cutOut?: string;
+                        /** @description A scene's id, as list_scenes returns it. */
+                        sceneId: string;
+                    }[];
                     /** @description The views to fetch photos for, by the key the options read answers; absent for every view. */
                     views?: string[];
                 } | null;
@@ -49971,6 +50067,12 @@ export interface operations {
                 accepts?: "hangs-on-wall" | "stands" | "lies-flat" | "held" | "worn";
                 /** @description A blank's id: each scene then says, in `offers`, which of that blank's rows it can show. It narrows nothing. */
                 forBlank?: string;
+                /** @description A product kind, for a product that is no blank yet or to list only what fits a blank's: only scenes that can show a product of this kind (a setting with an anchor it sits at, a studio style with a camera it is drawn from, a garment's cut-out and a scene photographing a stock item of the kind), each saying where in `offers`. Sizes are judged only with `forBlank`. */
+                forKind?: "flat-sheet" | "framed-sheet" | "cylinder" | "garment-cut";
+                /** @description With `forKind=garment-cut`, the garment's cut: only scenes and cut-outs of that garment. Left out, every garment's. */
+                forCut?: "tee" | "hoodie" | "pullover-hoodie" | "sweatshirt";
+                /** @description `picker`: the list as a picker reads it once, to narrow by product, setting, person and pose itself with no further request. It is lighter: no scene says its `geometry` or its `layerUrls` (both null) and no refused row its `reason`. `forKind` then narrows nothing: every scene is listed with every place it can show a product, each place saying in `fitsKind` whether a product of that kind fits there, and `makeCredits` says what composing a scene would cost. Left out, the whole list. */
+                view?: "picker";
             };
             header?: never;
             path?: never;
@@ -50018,6 +50120,8 @@ export interface operations {
                                 label: string;
                             }[];
                         };
+                        /** @description With `view=picker`: what composing a scene the list does not hold would cost, which `canMake` says only for the query asked. */
+                        makeCredits?: number;
                         scenes: {
                             /** @description The keys of the garment areas the scene shows truthfully. */
                             areas: string[];
@@ -50152,12 +50256,16 @@ export interface operations {
                                 /** @description The 16-bit UV pass: for each pixel, its garment area's piece (blue) and where across (red) and down (green) that piece it reads. */
                                 uv: string;
                             } | null;
-                            /** @description With `forBlank`: which rows of that blank the scene can show, a setting an anchor at a time, and a garment cut-out a studio style at a time. Empty for a scene no blank can show. */
+                            /** @description With `forBlank`: which rows of that blank the scene can show, a setting an anchor at a time, a studio style a camera at a time, and a garment cut-out a studio style at a time. Empty for a scene no blank can show. With `forKind`: only the places a product of that kind can be shown at, and, with no `forBlank`, each with one row of no option values, shown. */
                             offers?: {
                                 /** @description The anchor of a setting the rows are judged at; null for a scene with a product of its own. */
                                 anchor: string | null;
+                                /** @description For a studio style, the camera of it the rows are judged from: the blank is bound to the style from this camera. Null for any other scene. */
+                                camera: string | null;
+                                /** @description With `view=picker` and `forKind`: whether a product of that kind can be shown at this place. Absent otherwise. */
+                                fitsKind?: boolean;
                                 rows: {
-                                    /** @description The refusal as one plain sentence, to say as it is; null when the row is shown. */
+                                    /** @description The refusal as one plain sentence, to say as it is; null when the row is shown, and with `view=picker`, whose reader words the refusal itself. */
                                     reason: string | null;
                                     /** @description Why the scene does not show the row, or null when it does: `no_product_model`, the row says no product; `kind_not_accepted`, the scene takes no product of that kind; `footprint_exceeds_anchor`, the product is larger than the anchor's room; `size_outside_reviewed_range`, no product of that size was looked at there; `angle_unsupported`, the camera looks too far up or down; `no_drawer`, nothing draws the kind yet; `shape_outside_grip`, the scene's photo holds a product of another kind or size in a hand. */
                                     refusal: string | null;
@@ -50197,6 +50305,8 @@ export interface operations {
                             studio: boolean;
                             /** @description Whether a variant's colour paints the scene's grey base. One that does not shows a material that is the point, such as bare metal, on every variant as photographed. */
                             takesDye: boolean;
+                            /** @description A link to the scene's picture small, for a list or a picker: at most 256 pixels on its longer side, opening with no key. Null when the scene has no picture. */
+                            thumbnailUrl: string | null;
                             /** @description Whether the scene is this workspace's own, composed from a stock scene, rather than Pixonaut's. */
                             workspace: boolean;
                         }[];
