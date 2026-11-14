@@ -31432,7 +31432,16 @@ export interface operations {
                                         /** @description From the top down to the band, in millimetres. */
                                         topMm: number;
                                     };
-                                    /** @description Its diameter at the top, in millimetres. */
+                                    /** @description A bottle's shoulder and neck, within its height. Omitted, none. */
+                                    profile?: {
+                                        /** @description Its neck's diameter, in millimetres. */
+                                        neckDiameterMm: number;
+                                        /** @description Its neck's height, up to its top, in millimetres. */
+                                        neckHeightMm: number;
+                                        /** @description Its shoulder's height, from its straight side up to its neck, in millimetres. */
+                                        shoulderHeightMm: number;
+                                    };
+                                    /** @description Its diameter at the top of its straight side, in millimetres. */
                                     topDiameterMm: number;
                                 } | {
                                     /** @description Which garment it is cut as. */
@@ -32287,7 +32296,16 @@ export interface operations {
                                     /** @description From the top down to the band, in millimetres. */
                                     topMm: number;
                                 };
-                                /** @description Its diameter at the top, in millimetres. */
+                                /** @description A bottle's shoulder and neck, within its height. Omitted, none. */
+                                profile?: {
+                                    /** @description Its neck's diameter, in millimetres. */
+                                    neckDiameterMm: number;
+                                    /** @description Its neck's height, up to its top, in millimetres. */
+                                    neckHeightMm: number;
+                                    /** @description Its shoulder's height, from its straight side up to its neck, in millimetres. */
+                                    shoulderHeightMm: number;
+                                };
+                                /** @description Its diameter at the top of its straight side, in millimetres. */
                                 topDiameterMm: number;
                             } | {
                                 /** @description Which garment it is cut as. */
@@ -48283,7 +48301,16 @@ export interface operations {
                                         /** @description From the top down to the band, in millimetres. */
                                         topMm: number;
                                     };
-                                    /** @description Its diameter at the top, in millimetres. */
+                                    /** @description A bottle's shoulder and neck, within its height. Omitted, none. */
+                                    profile?: {
+                                        /** @description Its neck's diameter, in millimetres. */
+                                        neckDiameterMm: number;
+                                        /** @description Its neck's height, up to its top, in millimetres. */
+                                        neckHeightMm: number;
+                                        /** @description Its shoulder's height, from its straight side up to its neck, in millimetres. */
+                                        shoulderHeightMm: number;
+                                    };
+                                    /** @description Its diameter at the top of its straight side, in millimetres. */
                                     topDiameterMm: number;
                                 } | {
                                     /** @description Which garment it is cut as. */
@@ -49090,7 +49117,16 @@ export interface operations {
                                         /** @description From the top down to the band, in millimetres. */
                                         topMm: number;
                                     };
-                                    /** @description Its diameter at the top, in millimetres. */
+                                    /** @description A bottle's shoulder and neck, within its height. Omitted, none. */
+                                    profile?: {
+                                        /** @description Its neck's diameter, in millimetres. */
+                                        neckDiameterMm: number;
+                                        /** @description Its neck's height, up to its top, in millimetres. */
+                                        neckHeightMm: number;
+                                        /** @description Its shoulder's height, from its straight side up to its neck, in millimetres. */
+                                        shoulderHeightMm: number;
+                                    };
+                                    /** @description Its diameter at the top of its straight side, in millimetres. */
                                     topDiameterMm: number;
                                 } | {
                                     /** @description Which garment it is cut as. */
@@ -50456,7 +50492,16 @@ export interface operations {
                                     /** @description From the top down to the band, in millimetres. */
                                     topMm: number;
                                 };
-                                /** @description Its diameter at the top, in millimetres. */
+                                /** @description A bottle's shoulder and neck, within its height. Omitted, none. */
+                                profile?: {
+                                    /** @description Its neck's diameter, in millimetres. */
+                                    neckDiameterMm: number;
+                                    /** @description Its neck's height, up to its top, in millimetres. */
+                                    neckHeightMm: number;
+                                    /** @description Its shoulder's height, from its straight side up to its neck, in millimetres. */
+                                    shoulderHeightMm: number;
+                                };
+                                /** @description Its diameter at the top of its straight side, in millimetres. */
                                 topDiameterMm: number;
                             } | {
                                 /** @description Which garment it is cut as. */
