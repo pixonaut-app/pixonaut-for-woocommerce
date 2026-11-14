@@ -151,8 +151,9 @@ plugin is listed there and wordpress.org delivers its updates:
   plugin file. wordpress.org's upload scan refuses `Tested up to` there
   (`plugin_header_tested_up_to_not_allowed`); `readme.txt` still carries it,
   read from the header in the repository.
-- The translations' `.po` sources are left out: WordPress loads only the
-  compiled `.mo` and `.l10n.php` files, and without them the zip fits
+- The translations' `.po` sources and the `.pot` template are left out:
+  WordPress loads only the compiled `.mo` and `.l10n.php` files, and without
+  them the zip fits
   wordpress.org's 10 MB upload limit for a new plugin, which the build
   enforces.
 - The allowlist check fails if any of them is left, and Plugin Check runs

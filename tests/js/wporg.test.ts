@@ -188,12 +188,15 @@ describe('wordpress.org listing assets', () => {
 describe('wordpress.org flavor zip', () => {
 	const po = 'languages/pixonaut-for-woocommerce-sv_SE.po';
 
-	it('leaves the translations sources out: WordPress loads the compiled files', () => {
+	it('leaves the translations sources and their template out: WordPress loads the compiled files', () => {
 		expect(leftOut(po, 'wporg')).toBe(true);
 		expect(
 			leftOut('languages/pixonaut-for-woocommerce-sv_SE.mo', 'wporg'),
 		).toBe(false);
 		expect(leftOut('languages/pixonaut-for-woocommerce.pot', 'wporg')).toBe(
+			true,
+		);
+		expect(leftOut('languages/pixonaut-for-woocommerce.pot', 'github')).toBe(
 			false,
 		);
 		expect(leftOut(po, 'github')).toBe(false);
