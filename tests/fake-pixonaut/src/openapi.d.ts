@@ -30780,6 +30780,8 @@ export interface operations {
                                         diameter: number;
                                         height: number;
                                     };
+                                    /** @description The parts the product in the photo has beside its body. Stated, the scene shows no product with a part its photo lacks. */
+                                    parts?: string[];
                                 };
                                 /** @description The scene's label. */
                                 label: string;
@@ -31633,6 +31635,8 @@ export interface operations {
                                     diameter: number;
                                     height: number;
                                 };
+                                /** @description The parts the product in the photo has beside its body. Stated, the scene shows no product with a part its photo lacks. */
+                                parts?: string[];
                             };
                             /** @description The scene's label. */
                             label: string;
@@ -47613,6 +47617,8 @@ export interface operations {
                                         diameter: number;
                                         height: number;
                                     };
+                                    /** @description The parts the product in the photo has beside its body. Stated, the scene shows no product with a part its photo lacks. */
+                                    parts?: string[];
                                 };
                                 /** @description The scene's label. */
                                 label: string;
@@ -48418,6 +48424,8 @@ export interface operations {
                                         diameter: number;
                                         height: number;
                                     };
+                                    /** @description The parts the product in the photo has beside its body. Stated, the scene shows no product with a part its photo lacks. */
+                                    parts?: string[];
                                 };
                                 /** @description The scene's label. */
                                 label: string;
@@ -50087,6 +50095,8 @@ export interface operations {
                                         diameter: number;
                                         height: number;
                                     };
+                                    /** @description The parts the product in the photo has beside its body. Stated, the scene shows no product with a part its photo lacks. */
+                                    parts?: string[];
                                 };
                                 /** @description The size of the photo every pixel number here was measured on. */
                                 sizePx: {
