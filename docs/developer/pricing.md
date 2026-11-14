@@ -49,7 +49,13 @@ is no rule.
 variation it prices: the cost last read, whether the rule was applied to it,
 the price the rule last set, and what the rule would change now.
 
-- `refresh()` reads the costs, one request per blank, and settles the prices.
+- `refresh()` reads the costs, one request per blank, then stores them and
+  settles the prices; a read that fails stores nothing. A variant Pixonaut
+  has not read yet keeps the cost last read for it. A stored cost counts only
+  while the product still sells the same variant of the same blank and the
+  shop is in the same country.
+- Before a price or a state is written it is read again from the database:
+  one the store manager changed while Pixonaut was asked is left to them.
 - `apply()` sets regular prices to the rule's price, and from then on they
   follow the rule. Sale prices are never set.
 - `settle()` looks only at prices that follow the rule. One the rule holds is

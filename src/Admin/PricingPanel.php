@@ -161,8 +161,9 @@ final class PricingPanel {
 		try {
 			switch ( $request['action'] ) {
 				case self::REFRESH:
-					$this->pricing->refresh( $product );
-					$message = __( 'The costs are read.', 'pixonaut-for-woocommerce' );
+					// With automatic price changes on, reading the costs may set prices.
+					$changed = $this->pricing->refresh( $product );
+					$message = 0 === $changed ? __( 'The costs are read.', 'pixonaut-for-woocommerce' ) : '';
 					break;
 				case self::APPLY:
 					if ( is_array( $request['rule'] ) ) {
@@ -170,9 +171,9 @@ final class PricingPanel {
 					}
 					if ( null === $ids ) {
 						// Every price is set from what the printshop charges now.
-						$this->pricing->refresh( $product );
+						$changed = $this->pricing->refresh( $product );
 					}
-					$changed = $this->pricing->apply( $product, $ids );
+					$changed += $this->pricing->apply( self::reread( $product ), $ids );
 					break;
 				default:
 					$changed = $this->pricing->apply( $product, $ids ?? array(), true );
@@ -184,8 +185,7 @@ final class PricingPanel {
 			}
 			return new WP_Error( 'pixonaut_wc_costs_unread', __( 'Pixonaut could not be reached to read the printshop’s costs. Try again in a moment.', 'pixonaut-for-woocommerce' ), array( 'status' => self::BAD_GATEWAY ) );
 		}
-		$fresh  = wc_get_product( $product->get_id() );
-		$fresh  = $fresh instanceof WC_Product ? $fresh : $product;
+		$fresh  = self::reread( $product );
 		$prices = array();
 		$read   = 0;
 		foreach ( $this->pricing->rows( $fresh ) as $row ) {
@@ -207,6 +207,16 @@ final class PricingPanel {
 				'prices'  => $prices,
 			)
 		);
+	}
+
+	/**
+	 * The product as stored after an action changed it.
+	 *
+	 * @param WC_Product $product The product as read before.
+	 */
+	private static function reread( WC_Product $product ): WC_Product {
+		$fresh = wc_get_product( $product->get_id() );
+		return $fresh instanceof WC_Product ? $fresh : $product;
 	}
 
 	/**

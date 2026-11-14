@@ -69,18 +69,20 @@ function setBusy(root: HTMLElement, busy: boolean): void {
 function showPrices(doc: Document, root: HTMLElement, answer: Answer): void {
 	const rows = root.querySelectorAll<HTMLElement>('.pixonaut-prices__row');
 	const field = doc.querySelector<HTMLInputElement>(SIMPLE_PRICE_FIELD);
+	// Only a price the action set: one the store manager typed and has not saved stays.
+	if (answer.changed === 0) {
+		return;
+	}
 	if (root.hasAttribute('data-simple') && rows.length === 1 && field) {
 		field.value = answer.prices[rows[0].dataset.item ?? ''] ?? field.value;
 		return;
 	}
-	if (answer.changed > 0) {
-		const jQuery = (
-			window as {
-				jQuery?: (selector: string) => { trigger(event: string): unknown };
-			}
-		).jQuery;
-		jQuery?.(VARIATIONS_PANEL).trigger('reload');
-	}
+	const jQuery = (
+		window as {
+			jQuery?: (selector: string) => { trigger(event: string): unknown };
+		}
+	).jQuery;
+	jQuery?.(VARIATIONS_PANEL).trigger('reload');
 }
 
 /** Asks the route for an action, and draws the section it answers. */
@@ -128,8 +130,15 @@ export async function act(
 		setBusy(root, false);
 		return;
 	}
-	// The section stays as open as it was.
+	// The section stays as open as it was, and keeps what was typed in its
+	// rule's fields, which only Apply and saving the product store.
 	next.toggleAttribute('open', root.hasAttribute('open'));
+	const typed = rule(root);
+	for (const input of next.querySelectorAll<HTMLInputElement>(
+		'.pixonaut-prices__input',
+	)) {
+		input.value = typed[input.dataset.part ?? ''] ?? input.value;
+	}
 	root.replaceWith(next);
 	say(next, answer.message);
 	showPrices(next.ownerDocument, next, answer);

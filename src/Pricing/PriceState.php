@@ -83,6 +83,8 @@ final class PriceState {
 	 * @param int|null         $suggested  The price the rule would set now when it is another than the price it has.
 	 * @param string|null      $flag       Why it needs the store manager, a `FLAG_` constant; null when it does not.
 	 * @param int|null         $checked_at When its cost was last asked for, a Unix time; null when it never was.
+	 * @param string|null      $blank_id   The blank whose variant the cost is of.
+	 * @param string|null      $ref        The blank variant the cost is of.
 	 */
 	public function __construct(
 		public readonly ?VariantCost $cost = null,
@@ -92,6 +94,8 @@ final class PriceState {
 		public readonly ?int $suggested = null,
 		public readonly ?string $flag = null,
 		public readonly ?int $checked_at = null,
+		public readonly ?string $blank_id = null,
+		public readonly ?string $ref = null,
 	) {
 	}
 
@@ -109,13 +113,29 @@ final class PriceState {
 	}
 
 	/**
+	 * The cost last read, while it is the cost of what the product sells
+	 * now: of the same variant of the same blank, shipped to the same
+	 * country. A product paired with another variant since, or a shop that
+	 * moved, has no cost until its own is read.
+	 *
+	 * @param string|null $blank_id The blank it is sold on now.
+	 * @param string|null $ref      The blank variant it sells now.
+	 * @param string      $region   The country shipping is priced to now.
+	 */
+	public function cost_of( ?string $blank_id, ?string $ref, string $region ): ?VariantCost {
+		return null !== $this->cost && null !== $ref && $this->blank_id === $blank_id && $this->ref === $ref && $this->cost->region === $region ? $this->cost : null;
+	}
+
+	/**
 	 * The state once its cost was asked for.
 	 *
-	 * @param VariantCost|null $cost The cost read; null while Pixonaut listed none for it.
-	 * @param int              $now  The time, a Unix time.
+	 * @param VariantCost|null $cost     The cost read; null while Pixonaut listed none for it.
+	 * @param int              $now      The time, a Unix time.
+	 * @param string|null      $blank_id The blank whose variant the cost is of.
+	 * @param string|null      $ref      The blank variant the cost is of.
 	 */
-	public function with_cost( ?VariantCost $cost, int $now ): self {
-		return new self( $cost, $this->follows, $this->rule_price, $this->rule_at, $this->suggested, $this->flag, $now );
+	public function with_cost( ?VariantCost $cost, int $now, ?string $blank_id, ?string $ref ): self {
+		return new self( $cost, $this->follows, $this->rule_price, $this->rule_at, $this->suggested, $this->flag, $now, $blank_id, $ref );
 	}
 
 	/**
@@ -125,7 +145,7 @@ final class PriceState {
 	 * @param int $now   The time, a Unix time.
 	 */
 	public function priced( int $price, int $now ): self {
-		return new self( $this->cost, true, $price, $now, null, null, $this->checked_at );
+		return new self( $this->cost, true, $price, $now, null, null, $this->checked_at, $this->blank_id, $this->ref );
 	}
 
 	/**
@@ -135,7 +155,7 @@ final class PriceState {
 	 * @param int|null    $suggested The price the rule would set.
 	 */
 	public function with_flag( ?string $flag = null, ?int $suggested = null ): self {
-		return new self( $this->cost, $this->follows, $this->rule_price, $this->rule_at, $suggested, $flag, $this->checked_at );
+		return new self( $this->cost, $this->follows, $this->rule_price, $this->rule_at, $suggested, $flag, $this->checked_at, $this->blank_id, $this->ref );
 	}
 
 	/**
@@ -157,7 +177,9 @@ final class PriceState {
 			is_int( $data['ruleAt'] ?? null ) ? $data['ruleAt'] : null,
 			Amount::parse( $data['suggested'] ?? null ),
 			is_string( $data['flag'] ?? null ) ? $data['flag'] : null,
-			is_int( $data['checkedAt'] ?? null ) ? $data['checkedAt'] : null
+			is_int( $data['checkedAt'] ?? null ) ? $data['checkedAt'] : null,
+			is_string( $data['blankId'] ?? null ) ? $data['blankId'] : null,
+			is_string( $data['ref'] ?? null ) ? $data['ref'] : null
 		);
 	}
 
@@ -188,6 +210,8 @@ final class PriceState {
 			'suggested' => null === $this->suggested ? null : Amount::decimal( $this->suggested ),
 			'flag'      => $this->flag,
 			'checkedAt' => $this->checked_at,
+			'blankId'   => $this->blank_id,
+			'ref'       => $this->ref,
 		);
 	}
 }

@@ -13,6 +13,7 @@ use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
+use Pixonaut\WooCommerce\Settings\Settings;
 use WC_Product_Simple;
 use WP_Error;
 use WP_REST_Request;
@@ -128,6 +129,21 @@ final class PricingPanelTest extends PricingTestCase {
 		$this->assertStringContainsString( 'value="60"', $answer['html'] );
 		$this->assertStringContainsString( 'Follows the rule, set ', $answer['html'] );
 		$this->assertStringContainsString( 'Following the pricing rule', $answer['html'] );
+	}
+
+	public function test_reading_the_costs_reports_the_prices_it_changed_by_itself(): void {
+		$this->store_rule();
+		$this->plugin->settings()->set( Settings::PRICE_AUTOMATIC, true );
+		$id = $this->simple_product( 'v_mug', '' );
+		$this->script_costs( array( 'v_mug' => '200' ) );
+		$this->act( $id, PricingPanel::APPLY );
+		$this->script_costs( array( 'v_mug' => '155' ) );
+
+		$answer = $this->act( $id, PricingPanel::REFRESH );
+
+		$this->assertSame( 1, $answer['changed'], 'the product form is told to show the new price' );
+		$this->assertSame( '1 price set.', $answer['message'] );
+		$this->assertSame( array( $id => '309' ), $answer['prices'] );
 	}
 
 	public function test_a_price_edited_by_hand_follows_the_rule_again_on_request(): void {

@@ -156,7 +156,7 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 				'variant'   => (string) $ref,
 				'product'   => $money( $product ),
 				'shipping'  => null === $product ? null : $money( $shipping ),
-				'region'    => 'SE',
+				'region'    => (string) WC()->countries->get_base_country(),
 				'readAt'    => '2026-11-14T06:00:00.000Z',
 				'changedAt' => null,
 			);

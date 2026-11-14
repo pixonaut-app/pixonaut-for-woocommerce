@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Pricing;
 
+use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Pricing\Amount;
 use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Pricing\PriceRow;
@@ -351,6 +352,67 @@ final class ProductPricingTest extends PricingTestCase {
 
 		$this->assertSame( '500', $this->price( $id ) );
 		$this->assertSame( PriceState::FLAG_SALE, $this->row( $id )->flag );
+	}
+
+	public function test_a_variation_paired_with_another_variant_is_not_priced_from_the_cost_of_the_one_before(): void {
+		$this->store_rule();
+		$ids     = $this->variable_product( array( 'v_a3' => '' ) );
+		$product = fn () => $this->parent_of( $ids['v_a3'] );
+		$this->script_costs( array( 'v_a3' => '200' ) );
+		$this->pricing->refresh( $product() );
+		$this->pricing->apply( $product() );
+
+		// It now sells a variant Pixonaut has read no cost for yet.
+		( new ProductVariant( self::BLANK_ID, 'v_a2', 'v_a2', 'Size: A2' ) )->save_to( $this->product( $ids['v_a3'] ) );
+		$this->assertNull( $this->row( $ids['v_a3'] )->cost_total, 'before any read' );
+		$this->script_costs( array() );
+		$this->pricing->refresh( $product() );
+		$this->pricing->apply( $product(), array( $ids['v_a3'] ) );
+
+		$this->assertSame( '399', $this->price( $ids['v_a3'] ) );
+		$this->assertNull( $this->row( $ids['v_a3'] )->cost_total );
+		$this->assertSame( PriceState::FLAG_UNREAD, $this->row( $ids['v_a3'] )->flag );
+	}
+
+	public function test_a_suggestion_not_above_the_sale_price_says_so_and_offers_nothing_to_apply(): void {
+		$this->store_rule();
+		$id = $this->simple_product( 'v_mug', '' );
+		$this->script_costs( array( 'v_mug' => '200' ) );
+		$this->pricing->refresh( $this->product( $id ) );
+		$this->pricing->apply( $this->product( $id ) );
+		$product = $this->product( $id );
+		$product->set_sale_price( '350' );
+		$product->save();
+
+		// The rule would now set 309, under the sale price.
+		$this->script_costs( array( 'v_mug' => '155' ) );
+		$this->pricing->refresh( $this->product( $id ) );
+
+		$this->assertSame( PriceState::FLAG_SALE, $this->row( $id )->flag );
+		$this->assertSame( '399', $this->price( $id ) );
+	}
+
+	public function test_a_price_edited_while_the_costs_are_read_is_kept(): void {
+		$this->store_rule();
+		$this->plugin->settings()->set( Settings::PRICE_AUTOMATIC, true );
+		$id = $this->simple_product( 'v_mug', '' );
+		$this->script_costs( array( 'v_mug' => '200' ) );
+		$this->pricing->refresh( $this->product( $id ) );
+		$this->pricing->apply( $this->product( $id ) );
+		$this->script_costs( array( 'v_mug' => '155' ) );
+		// The store manager saves another price while Pixonaut is asked.
+		$meanwhile = function ( $preempt ) use ( $id, &$meanwhile ) {
+			remove_filter( 'pre_http_request', $meanwhile, 5 );
+			$this->edit_price( $id, '450' );
+			return $preempt;
+		};
+		add_filter( 'pre_http_request', $meanwhile, 5 );
+
+		$changed = $this->pricing->refresh( $this->product( $id ) );
+
+		$this->assertSame( 0, $changed );
+		$this->assertSame( '450', $this->price( $id ) );
+		$this->assertSame( PriceState::BY_HAND, $this->row( $id )->standing );
 	}
 
 	public function test_costs_that_cannot_be_read_keep_what_is_stored(): void {

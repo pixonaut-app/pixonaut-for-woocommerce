@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use WC_Cache_Helper;
 use WC_Product;
 use WC_Product_Variation;
 
@@ -176,13 +177,14 @@ final class ProductPricing {
 				$state    = PriceState::stored_on( $item );
 				$price    = Amount::parse( $item->get_regular_price( 'edit' ) );
 				$standing = $state->standing( $price );
-				$cost     = $state->cost?->total( $currency );
+				$known    = self::known_cost( $item, $state );
+				$cost     = $known?->total( $currency );
 				$tax      = PriceTax::of( $item );
 				$wants    = null === $cost ? null : $rule->price_for( $cost, $tax );
 				return new PriceRow(
 					$item->get_id(),
 					self::label( $item ),
-					$state->cost,
+					$known,
 					$cost,
 					$price,
 					null === $cost || null === $price ? null : PriceRule::margin_of( $price, $cost, $tax ),
@@ -193,7 +195,7 @@ final class ProductPricing {
 						null === $state->checked_at || PriceState::BY_HAND === $standing => null,
 						PriceState::FOLLOWS === $standing => $state->flag,
 						// Never applied: what would stop the rule from setting it.
-						default => self::blocker( $item, $state->cost, $currency, $wants ),
+						default => self::blocker( $item, $known, $currency, $wants ),
 					},
 					$state->rule_at,
 					$state->checked_at
@@ -205,28 +207,40 @@ final class ProductPricing {
 
 	/**
 	 * Reads a product's costs from Pixonaut again, and settles its prices
-	 * that follow the rule: kept, changed or flagged.
+	 * that follow the rule: kept, changed or flagged. Every cost is read
+	 * before any is stored, so a read that fails stores nothing.
 	 *
 	 * @param WC_Product $product A simple or variable product.
+	 * @return int How many prices were changed, which only happens when the store changes prices automatically.
 	 * @throws ApiException When Pixonaut could not be asked; what is stored is kept.
 	 */
-	public function refresh( WC_Product $product ): void {
+	public function refresh( WC_Product $product ): int {
 		// What an earlier refresh read, in a job working through several products, may be stale.
 		$this->read = array();
-		$region     = (string) WC()->countries->get_base_country();
-		$now        = ( $this->clock )();
-		$changed    = array();
+		$region     = self::region();
+		$read       = array();
 		foreach ( self::items( $product ) as $item ) {
-			$variant = ProductVariant::sold_on( $item, ProductConfig::config_for( $item ) );
-			$state   = PriceState::stored_on( $item );
-			// A variant Pixonaut has not read yet, or no longer lists, keeps the cost last read.
-			$cost = null === $variant || null === $variant->ref ? null : ( $this->of_blank( $variant->blank_id, $region )[ $variant->ref ] ?? $state->cost );
-			if ( null !== $cost && ! $cost->charges_as( $state->cost ) ) {
-				$changed[] = $item->get_id();
-			}
-			$state->with_cost( $cost, $now )->save_to( $item );
+			list( $blank_id, $ref )  = self::sold( $item );
+			$read[ $item->get_id() ] = array( $blank_id, $ref, null === $blank_id || null === $ref ? null : ( $this->of_blank( $blank_id, $region )[ $ref ] ?? null ) );
 		}
-		$this->settle( $product, $changed );
+		$now     = ( $this->clock )();
+		$changed = array();
+		foreach ( $read as $id => list( $blank_id, $ref, $listed ) ) {
+			// Read again: the store manager may have priced it while Pixonaut was asked.
+			$item = self::fresh( $id );
+			if ( null === $item ) {
+				continue;
+			}
+			$state  = PriceState::stored_on( $item );
+			$before = $state->cost_of( $blank_id, $ref, $region );
+			// A variant Pixonaut has not read yet, or no longer lists, keeps the cost last read for it.
+			$cost = $listed ?? $before;
+			if ( null !== $cost && ! $cost->charges_as( $before ) ) {
+				$changed[] = $id;
+			}
+			$state->with_cost( $cost, $now, $blank_id, $ref )->save_to( $item );
+		}
+		return $this->settle( self::fresh( $product->get_id() ) ?? $product, $changed );
 	}
 
 	/**
@@ -267,11 +281,13 @@ final class ProductPricing {
 	 * @param WC_Product $product A simple or variable product.
 	 * @param int[]      $changed The product or variations whose cost just changed.
 	 * @phpstan-param list<int> $changed
+	 * @return int How many prices were changed.
 	 */
-	public function settle( WC_Product $product, array $changed = array() ): void {
+	public function settle( WC_Product $product, array $changed = array() ): int {
 		$rule      = $this->rule_for( $product );
 		$currency  = get_woocommerce_currency();
 		$automatic = true === $this->settings->get( Settings::PRICE_AUTOMATIC );
+		$set       = 0;
 		foreach ( self::items( $product ) as $item ) {
 			$state = PriceState::stored_on( $item );
 			$price = Amount::parse( $item->get_regular_price( 'edit' ) );
@@ -283,22 +299,24 @@ final class ProductPricing {
 				$state->with_flag()->save_to( $item );
 				continue;
 			}
-			$cost = $state->cost?->total( $currency );
-			$tax  = PriceTax::of( $item );
+			$known = self::known_cost( $item, $state );
+			$cost  = $known?->total( $currency );
+			$tax   = PriceTax::of( $item );
 			if ( null !== $cost && null !== $price && $rule->holds( $price, $cost, $tax ) ) {
 				$state->with_flag()->save_to( $item );
 				continue;
 			}
 			if ( $automatic && in_array( $item->get_id(), $changed, true ) ) {
-				$this->price( $item, $state, $rule );
+				$set += $this->price( $item, $state, $rule ) ? 1 : 0;
 				continue;
 			}
 			$wants = null === $cost ? null : $rule->price_for( $cost, $tax );
-			$flag  = self::cost_flag( $state->cost, $currency ) ?? ( null === $wants ? PriceState::FLAG_NO_STEP : PriceState::FLAG_MARGIN );
+			$flag  = self::blocker( $item, $known, $currency, $wants ) ?? PriceState::FLAG_MARGIN;
 			// At the minimum or maximum already: the rule has no other price for it.
 			( $wants === $price ? $state->with_flag() : $state->with_flag( $flag, $wants ) )->save_to( $item );
 		}
 		$this->watch( $product );
+		return $set;
 	}
 
 	/**
@@ -329,19 +347,26 @@ final class ProductPricing {
 
 	/**
 	 * Sets one price to the rule's, and has it follow the rule from now on;
-	 * a price the rule has none for is left as it stands, and flagged.
+	 * a price the rule has none for is left as it stands, and flagged. A
+	 * price or state that is no longer what the caller read, because the
+	 * store manager saved the product meanwhile, is left to them.
 	 *
-	 * @param WC_Product $item  The product or variation.
-	 * @param PriceState $state Its state.
+	 * @param WC_Product $read  The product or variation, as the caller read it.
+	 * @param PriceState $state Its state, as the caller read it.
 	 * @param PriceRule  $rule  The rule.
 	 * @return bool Whether the price changed.
 	 */
-	private function price( WC_Product $item, PriceState $state, PriceRule $rule ): bool {
+	private function price( WC_Product $read, PriceState $state, PriceRule $rule ): bool {
+		$item = self::fresh( $read->get_id() );
+		if ( null === $item || $item->get_regular_price( 'edit' ) !== $read->get_regular_price( 'edit' ) || PriceState::stored_on( $item )->to_array() !== $state->to_array() ) {
+			return false;
+		}
 		$currency = get_woocommerce_currency();
-		$cost     = $state->cost?->total( $currency );
+		$known    = self::known_cost( $item, $state );
+		$cost     = $known?->total( $currency );
 		$before   = Amount::parse( $item->get_regular_price( 'edit' ) );
 		$wants    = null === $cost ? null : $rule->price_for( $cost, PriceTax::of( $item ) );
-		$blocker  = self::blocker( $item, $state->cost, $currency, $wants );
+		$blocker  = self::blocker( $item, $known, $currency, $wants );
 		if ( null === $cost || null === $wants || null !== $blocker ) {
 			$state->with_flag( $blocker, $wants )->save_to( $item );
 			return false;
@@ -372,6 +397,54 @@ final class ProductPricing {
 	}
 
 	/**
+	 * The blank and the blank variant a product or variation sells now;
+	 * nulls when it sells none.
+	 *
+	 * @param WC_Product $item The product or variation.
+	 * @return array{0: string|null, 1: string|null}
+	 */
+	private static function sold( WC_Product $item ): array {
+		$variant = ProductVariant::sold_on( $item, ProductConfig::config_for( $item ) );
+		return null === $variant ? array( null, null ) : array( $variant->blank_id, $variant->ref );
+	}
+
+	/**
+	 * The cost stored for a product or variation, while it is the cost of
+	 * the variant it sells now, shipped to the shop's country.
+	 *
+	 * @param WC_Product $item  The product or variation.
+	 * @param PriceState $state Its state.
+	 */
+	private static function known_cost( WC_Product $item, PriceState $state ): ?VariantCost {
+		if ( null === $state->cost ) {
+			return null;
+		}
+		list( $blank_id, $ref ) = self::sold( $item );
+		return $state->cost_of( $blank_id, $ref, self::region() );
+	}
+
+	/**
+	 * The country shipping is priced to: the shop's.
+	 */
+	private static function region(): string {
+		return (string) WC()->countries->get_base_country();
+	}
+
+	/**
+	 * A product or variation as stored now, whatever this request read of
+	 * it before.
+	 *
+	 * @param int $id The product or variation.
+	 */
+	private static function fresh( int $id ): ?WC_Product {
+		wp_cache_delete( (string) $id, 'post_meta' );
+		clean_post_cache( $id );
+		WC_Cache_Helper::invalidate_cache_group( 'object_' . $id );
+		$product = wc_get_product( $id );
+		return $product instanceof WC_Product ? $product : null;
+	}
+
+	/**
 	 * Notes on the product whether any of its prices follows the rule, and
 	 * how many the rule flags; a product none of whose prices follow it is
 	 * not watched.
@@ -379,9 +452,14 @@ final class ProductPricing {
 	 * @param WC_Product $product A simple or variable product.
 	 */
 	private function watch( WC_Product $product ): void {
+		// Read again: a price set above was written to the product as stored, not as the caller read it.
+		$fresh = self::fresh( $product->get_id() );
+		if ( null === $fresh ) {
+			return;
+		}
 		$follow  = 0;
 		$flagged = 0;
-		foreach ( self::items( $product ) as $item ) {
+		foreach ( self::items( $fresh ) as $item ) {
 			$state    = PriceState::stored_on( $item );
 			$follows  = PriceState::FOLLOWS === $state->standing( Amount::parse( $item->get_regular_price( 'edit' ) ) );
 			$follow  += $state->follows ? 1 : 0;
@@ -393,9 +471,7 @@ final class ProductPricing {
 				'flagged' => $flagged,
 			)
 		);
-		// Read again: an item saved above may be the product itself.
-		$fresh = wc_get_product( $product->get_id() );
-		if ( ! $fresh instanceof WC_Product || $fresh->get_meta( self::WATCH_META_KEY, true ) === $json ) {
+		if ( $fresh->get_meta( self::WATCH_META_KEY, true ) === $json ) {
 			return;
 		}
 		if ( '' === $json ) {

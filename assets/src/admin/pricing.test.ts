@@ -124,6 +124,32 @@ describe('the Prices section', () => {
 		).toBe('249');
 	});
 
+	it('leaves a typed price and typed rule fields alone when it only reads costs', async () => {
+		mount(section({ simple: true }));
+		const price = document.querySelector<HTMLInputElement>('#_regular_price');
+		const margin = root().querySelector<HTMLInputElement>(
+			'[data-part="margin"]',
+		);
+		if (!price || !margin) {
+			throw new Error('no fields');
+		}
+		price.value = '180';
+		margin.value = '62';
+		answering({
+			html: section({ simple: true }),
+			message: 'The costs are read.',
+			changed: 0,
+			prices: { 7: '100' },
+		});
+
+		await act(root(), 'refresh', { nonce: NONCE });
+
+		expect(price.value).toBe('180');
+		expect(
+			root().querySelector<HTMLInputElement>('[data-part="margin"]')?.value,
+		).toBe('62');
+	});
+
 	it("loads a variable product's variations again once a price changed", async () => {
 		mount(section());
 		const trigger = vi.fn();
