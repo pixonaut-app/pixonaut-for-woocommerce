@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.7.2...v1.8.0) (2026-11-14)
+
+
+### Features
+
+* **contracts:** read a workspace that sells a canvas: pin Pixonaut API 8.0.0 and SDK 0.41.2 ([#136](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/136)) ([ba86951](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/ba86951e5f3b7a2e317560944df5727c063ee772))
+
 ## [1.7.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.7.1...v1.7.2) (2026-11-14)
 
 
