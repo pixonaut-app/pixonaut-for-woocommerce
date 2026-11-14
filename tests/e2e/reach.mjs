@@ -513,6 +513,14 @@ export const REACH = {
 		'assets/src/storefront/preview-fit.ts',
 		'assets/src/storefront/frame-shape.ts',
 	],
+	'pricing.spec.ts': [
+		'src/Pricing/',
+		'src/Api/VariantCosts.php',
+		'src/Admin/PricingPanel.php',
+		'src/Admin/PricingList.php',
+		'templates/admin/product-prices.php',
+		'assets/src/admin/pricing.ts',
+	],
 	'printed-form.spec.ts': [
 		'src/Storefront/FormControl.php',
 		'src/Storefront/OpeningPrice.php',

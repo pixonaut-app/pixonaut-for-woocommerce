@@ -183,6 +183,26 @@ final class Schema {
 	const PICTURE_VIEW_META = '_pixonaut_picture_view';
 
 	/**
+	 * Product and variation meta holding what its price follows: the
+	 * printshop cost last read for it, the price the pricing rule last set,
+	 * and what the rule suggests now. JSON.
+	 */
+	const PRICE_META = '_pixonaut_price';
+
+	/**
+	 * Product meta holding the parts of the store's pricing rule the product
+	 * changes, by part. JSON.
+	 */
+	const PRICE_RULE_META = '_pixonaut_price_rule';
+
+	/**
+	 * Product meta on each product with a price that follows the pricing
+	 * rule: finds the products whose costs are read again, and counts the
+	 * prices the rule would change. JSON.
+	 */
+	const PRICE_WATCH_META = '_pixonaut_price_watch';
+
+	/**
 	 * Product and variation meta, `yes` when it showed its own image rather
 	 * than its Pixonaut picture. No longer written: `ReplaceKeptImages` turns
 	 * it into `PRODUCT_PREVIOUS_IMAGE_META`.

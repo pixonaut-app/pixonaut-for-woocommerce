@@ -15,6 +15,7 @@ Pixonaut for WooCommerce connects your store to a Pixonaut workspace. You link p
 * Proof thumbnails in the cart, checkout, emails and order screens.
 * Product images drawn by Pixonaut: the template on the blank, or filled in with the template's showcase sets as the product image and gallery.
 * Paid lines become printshop orders; their status and tracking come back to the WooCommerce order.
+* Prices set from what the printshop charges, by a target margin on price steps, and flagged or changed when a cost moves.
 * Works with WooCommerce's order storage (HPOS) and the Cart and Checkout blocks.
 
 A Pixonaut account is required.

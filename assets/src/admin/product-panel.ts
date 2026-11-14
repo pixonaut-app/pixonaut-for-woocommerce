@@ -46,6 +46,7 @@ import {
 } from './disclosures';
 import { setFieldError } from './field-error';
 import { initPictureCards } from './picture-cards';
+import { initPricing } from './pricing';
 import {
 	describeLimit,
 	overLimit,
@@ -1128,6 +1129,7 @@ domReady(() => {
 		initPanel(panel);
 		initRetiredVariants(panel);
 		initRegeneratePictures(panel, { nonce: panel.dataset.restNonce ?? '' });
+		initPricing(panel, { nonce: panel.dataset.restNonce ?? '' });
 	}
 	// WooCommerce loads the variations, a page at a time, after the screen.
 	window

@@ -152,6 +152,7 @@ final class ProductPanel {
 	 * @param ProofUrls|null          $proofs     Signs the previews of a standing side's options; null to show them without.
 	 * @param Connection|null         $connection While the store is not connected, the panel says how to connect it; null never says.
 	 * @param VariantPairing|null     $pairing    Shows and saves each variation's blank variant in a variable product's panel; null shows a line pointing at Variations.
+	 * @param PricingPanel|null       $pricing    Renders the Prices section; null for none.
 	 */
 	public function __construct(
 		private readonly ProductLinker $linker,
@@ -166,6 +167,7 @@ final class ProductPanel {
 		private readonly ?ProofUrls $proofs = null,
 		private readonly ?Connection $connection = null,
 		private readonly ?VariantPairing $pairing = null,
+		private readonly ?PricingPanel $pricing = null,
 	) {
 		$this->low_resolution = new LowResolutionWarnings( $settings, $templates );
 	}
@@ -240,6 +242,7 @@ final class ProductPanel {
 						'pairing_html'    => true === $panel['importing'] || true === $panel['import_failed'] ? '' : $this->pairing_html( $product_object, ProductConfig::stored_on( $product_object ) ),
 						'images_html'     => null === $this->showcases ? '' : $this->showcases->html( $product_object ),
 						'regenerate_html' => null === $this->regenerate ? '' : $this->regenerate->html( $product_object ),
+						'pricing_html'    => null === $this->pricing ? '' : $this->pricing->html( $product_object, in_array( PricingPanel::DISCLOSURE, is_array( $panel['open'] ) ? $panel['open'] : array(), true ) ),
 					)
 				),
 				'search_urls'  => self::search_urls(),

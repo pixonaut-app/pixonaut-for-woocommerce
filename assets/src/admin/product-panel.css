@@ -1676,3 +1676,171 @@
 		display: none;
 	}
 }
+
+/* Prices: the product's parts of the pricing rule in a row, then each
+   variation's cost, price and margin. */
+#pixonaut_product_data .pixonaut-prices {
+	border-top: 1px solid #eee;
+}
+
+#pixonaut_product_data .pixonaut-prices__rule {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 8px 12px;
+	margin: 0 12px 8px;
+	padding: 0;
+	border: 0;
+}
+
+#pixonaut_product_data .pixonaut-prices__part {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+}
+
+#pixonaut_product_data .pixonaut-prices__part label {
+	float: none;
+	width: auto;
+	margin: 0;
+	font-weight: 600;
+}
+
+#pixonaut_product_data .pixonaut-prices__input {
+	float: none;
+	width: 100%;
+	margin: 0;
+}
+
+#pixonaut_product_data .pixonaut-prices__rule-hint {
+	grid-column: 1 / -1;
+	margin: 0;
+	padding: 0;
+}
+
+#pixonaut_product_data .pixonaut-prices__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 0 12px 8px;
+	padding: 0;
+}
+
+#pixonaut_product_data .pixonaut-prices__spinner {
+	float: none;
+	margin: 0;
+}
+
+#pixonaut_product_data .pixonaut-prices__status.is-error {
+	color: #d63638;
+}
+
+#pixonaut_product_data .pixonaut-prices__no-rule {
+	margin: 0 12px 8px;
+	padding: 0;
+}
+
+#pixonaut_product_data .pixonaut-prices__scroll {
+	max-height: 480px;
+	margin: 0 12px 12px;
+	overflow: auto;
+	border: 1px solid #c3c4c7;
+}
+
+#pixonaut_product_data .pixonaut-prices__table {
+	border: 0;
+}
+
+#pixonaut_product_data .pixonaut-prices__table thead th {
+	position: sticky;
+	top: 0;
+	background: #f6f7f7;
+	font-weight: 600;
+}
+
+#pixonaut_product_data .pixonaut-prices__table :is(th, td) {
+	vertical-align: top;
+}
+
+#pixonaut_product_data .pixonaut-prices__name {
+	font-weight: 400;
+}
+
+#pixonaut_product_data .pixonaut-prices__number {
+	text-align: right;
+	white-space: nowrap;
+}
+
+#pixonaut_product_data .pixonaut-prices__parts {
+	display: block;
+	font-size: 12px;
+}
+
+#pixonaut_product_data .pixonaut-prices__rule-cell > * {
+	display: block;
+}
+
+#pixonaut_product_data .pixonaut-prices__rule-cell > .button-link {
+	display: inline;
+}
+
+#pixonaut_product_data .pixonaut-prices__standing {
+	color: #646970;
+}
+
+#pixonaut_product_data .pixonaut-prices__flag {
+	color: #996800;
+}
+
+#pixonaut_product_data .pixonaut-prices__suggested {
+	font-weight: 600;
+}
+
+/* On a narrow screen each variation is a block: its name, then each figure
+   beside what it is. */
+@media screen and (max-width: 782px) {
+	/* Two parts of the rule a row: the six fit one screen with the buttons. */
+	#pixonaut_product_data .pixonaut-prices__rule {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	#pixonaut_product_data .pixonaut-prices__table thead {
+		display: none;
+	}
+
+	#pixonaut_product_data .pixonaut-prices__table :is(tbody, tr, th, td) {
+		display: block;
+	}
+
+	#pixonaut_product_data .pixonaut-prices__row {
+		padding: 8px 0;
+	}
+
+	#pixonaut_product_data .pixonaut-prices__row :is(th, td) {
+		padding: 2px 10px;
+	}
+
+	#pixonaut_product_data .pixonaut-prices__name {
+		font-weight: 600;
+	}
+
+	#pixonaut_product_data .pixonaut-prices__row td {
+		display: grid;
+		grid-template-columns: 96px 1fr;
+		gap: 0 8px;
+		text-align: left;
+		white-space: normal;
+	}
+
+	#pixonaut_product_data .pixonaut-prices__row td::before {
+		grid-row: 1 / span 4;
+		color: #646970;
+		content: attr(data-label);
+	}
+
+	#pixonaut_product_data .pixonaut-prices__row td > * {
+		grid-column: 2;
+	}
+}

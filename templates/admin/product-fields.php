@@ -7,7 +7,7 @@
  * Field names, classes and the `data-` attributes are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.4.0
+ * @version 1.7.0
  *
  * @var array{personalise: string, blank: string, layout: string, form_layout: string, approval_mode: string, views: string, printshop: string, canvas_ratio: string, option_groups: string, group_numbers: string} $names Each field's posted name.
  * @var array{personalise: string, blank: string, layout: string, form_layout: string, approval_mode: string, initial_view: string, printshop: string, canvas_ratio: string, option_groups: string, group_numbers: string} $ids Each field's id.
@@ -45,6 +45,7 @@
  * @var array<string, string>                   $canvas_ratios  The choices' names, by choice; the empty one follows the template.
  * @var string                                  $images_html    The product images field, rendered from `admin/product-showcase-images.php`; empty for a variation, or without a template.
  * @var string                                  $regenerate_html The Regenerate product image button, rendered from `admin/product-regenerate.php`; empty for a variation, or a product that shows no Pixonaut picture.
+ * @var string                                  $pricing_html   The Prices section, rendered from `admin/product-prices.php`; empty for a variation, or a product without a blank.
  * @var array<string, string>                   $approval_modes Approval mode names by mode; the empty mode is the store's default.
  */
 
@@ -211,6 +212,8 @@ $pixonaut_setting = static function ( string $key, string $label, array $choices
 <div class="pixonaut-views-disclosure pixonaut-with-blank" <?php echo '' === $blank_id ? 'hidden' : ''; ?>>
 	<?php echo $views_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in admin/product-views.php. ?>
 </div>
+
+<?php echo $pricing_html ?? ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in admin/product-prices.php. ?>
 
 <details class="pixonaut-group pixonaut-disclosure pixonaut-store-settings" data-disclosure="store" <?php echo $pixonaut_store_changed > 0 || in_array( 'store', $open, true ) ? 'open' : ''; ?>>
 	<summary>

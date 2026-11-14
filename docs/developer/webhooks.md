@@ -469,6 +469,8 @@ that use the template or blank (`Catalogue\ProductRecheck`), as does
 `pixonaut_wc_events_baseline_set` for every one with a configuration. A
 product or variation saved outside the product screen with attributes its
 variant was not matched on queues its re-check too (`Catalogue\VariantWatch`).
+A product checked again that has a price following the pricing rule has its
+printshop costs read again too ([Prices from costs](../pricing/#following-the-rule)).
 
 - **Finding them.** Product and variation meta indexes what each stored
   configuration uses: `_pixonaut_template` (one row per template base id) and

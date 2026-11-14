@@ -13,6 +13,7 @@ use Pixonaut\WooCommerce\Admin\ConnectionScreen;
 use Pixonaut\WooCommerce\Admin\DeveloperTools;
 use Pixonaut\WooCommerce\Admin\Notices;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Pricing\Amount;
 use Pixonaut\WooCommerce\Storefront\Accent;
 use Pixonaut\WooCommerce\Updates\UpdateChannel;
 use WC_Admin_Settings;
@@ -49,6 +50,8 @@ final class SettingsPage {
 	public const STOREFRONT = 'storefront';
 
 	public const APPROVAL = 'approval';
+
+	public const PRICES = 'prices';
 
 	public const UPDATES = 'updates';
 
@@ -152,6 +155,17 @@ final class SettingsPage {
 				Settings::PROOF_REMINDER_EVERY_DAYS,
 				Settings::PROOF_NO_ANSWER,
 				Settings::PROOF_ON_DENY,
+			),
+		),
+		self::PRICES     => array(
+			'pixonaut_wc_prices' => array(
+				Settings::PRICE_MARGIN,
+				Settings::PRICE_TOLERANCE,
+				Settings::PRICE_STEP,
+				Settings::PRICE_ENDING,
+				Settings::PRICE_MIN,
+				Settings::PRICE_MAX,
+				Settings::PRICE_AUTOMATIC,
 			),
 		),
 		self::UPDATES    => array(
@@ -306,20 +320,37 @@ final class SettingsPage {
 	/**
 	 * Saves a tab's settings, then keeps the custom accent colour it had
 	 * when Designer accent colour is A custom colour and no valid colour
-	 * was entered, and says what is missing.
+	 * was entered, and says what is missing. Likewise it keeps the ending
+	 * the pricing rule had when the one entered is not below the step.
 	 *
 	 * @param string $tab One of tabs().
 	 */
 	public function save( string $tab ): void {
 		self::load_wc_settings();
 		$before = $this->settings->get( Settings::DESIGNER_ACCENT_COLOUR );
+		$ending = $this->settings->get( Settings::PRICE_ENDING );
 		WC_Admin_Settings::save_fields( $this->fields( $tab ) );
+		if ( self::PRICES === $tab && ! $this->ending_is_below_step() ) {
+			$this->settings->set( Settings::PRICE_ENDING, $ending );
+			WC_Admin_Settings::add_error( __( 'Prices end in an amount below the price step: with a step of 10, anything from 0 up to 9.99. The ending you had is kept.', 'pixonaut-for-woocommerce' ) );
+			return;
+		}
 		if ( self::STOREFRONT === $tab && Accent::CUSTOM === $this->settings->get( Settings::DESIGNER_ACCENT ) && '' === $this->settings->get( Settings::DESIGNER_ACCENT_COLOUR ) ) {
 			$this->settings->set( Settings::DESIGNER_ACCENT_COLOUR, $before );
 			WC_Admin_Settings::add_error( self::missing_colour() );
 			return;
 		}
 		WC_Admin_Settings::add_message( __( 'Your settings have been saved.', 'pixonaut-for-woocommerce' ) );
+	}
+
+	/**
+	 * Whether the ending the pricing rule's prices have is below its step,
+	 * as stored: a step of nothing counts as one unit, as the rule reads it.
+	 */
+	private function ending_is_below_step(): bool {
+		$step   = Amount::parse( $this->settings->get( Settings::PRICE_STEP ) );
+		$ending = Amount::parse( $this->settings->get( Settings::PRICE_ENDING ) ) ?? 0;
+		return $ending < ( null === $step || 0 === $step ? Amount::PER_UNIT : $step );
 	}
 
 	public function render(): void {
@@ -547,6 +578,9 @@ final class SettingsPage {
 			case self::APPROVAL:
 				/* translators: Tab of the Pixonaut settings page, shown to the merchant: how customers approve their designs, and the proof emails. */
 				return _x( 'Approval', 'settings tab', 'pixonaut-for-woocommerce' );
+			case self::PRICES:
+				/* translators: Tab of the Pixonaut settings page, shown to the merchant: the rule that prices products from what the printshop charges. */
+				return _x( 'Prices', 'settings tab', 'pixonaut-for-woocommerce' );
 			case self::UPDATES:
 				/* translators: Tab of the Pixonaut settings page, shown to the merchant: which releases of the plugin WordPress offers. */
 				return _x( 'Updates', 'settings tab', 'pixonaut-for-woocommerce' );
@@ -605,6 +639,13 @@ final class SettingsPage {
 					/* translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the approval mode where customers approve a proof sent by email. */
 					'title' => __( 'Proof by email', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'For every product whose approval is Proof by email: how long customers have to answer, the reminders they get, and what happens when they do not approve.', 'pixonaut-for-woocommerce' ),
+				);
+			case 'pixonaut_wc_prices':
+				return array(
+					'type'  => 'title',
+					/* translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the rule that prices products from what the printshop charges for them. */
+					'title' => __( 'Pricing rule', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'Prices a product from what the printshop charges for it. Apply the rule in a product’s Pixonaut tab, under Prices; from then on its prices follow the rule. A product can change any part of the rule for itself.', 'pixonaut-for-woocommerce' ),
 				);
 			case 'pixonaut_wc_updates':
 				return array(

@@ -126,6 +126,41 @@ final class SettingsPageTest extends WP_UnitTestCase {
 		$this->assertSame( array(), $this->errors() );
 	}
 
+	public function test_the_prices_tab_saves_the_pricing_rule(): void {
+		$this->assertContains( SettingsPage::PRICES, ( new SettingsPage( $this->settings() ) )->tabs() );
+
+		$this->save(
+			array(
+				Settings::PRICE_MARGIN    => '49,5',
+				Settings::PRICE_STEP      => '5',
+				Settings::PRICE_ENDING    => '4.99',
+				Settings::PRICE_AUTOMATIC => '1',
+			),
+			SettingsPage::PRICES
+		);
+
+		$this->assertSame( '49.5', $this->settings()->get( Settings::PRICE_MARGIN ) );
+		$this->assertSame( '5', $this->settings()->get( Settings::PRICE_STEP ) );
+		$this->assertSame( '4.99', $this->settings()->get( Settings::PRICE_ENDING ) );
+		$this->assertTrue( $this->settings()->get( Settings::PRICE_AUTOMATIC ) );
+		$this->assertSame( array(), $this->errors() );
+	}
+
+	public function test_an_ending_that_is_not_below_the_price_step_is_refused_and_the_one_before_kept(): void {
+		$this->settings()->set( Settings::PRICE_ENDING, '9' );
+
+		$this->save(
+			array(
+				Settings::PRICE_STEP   => '5',
+				Settings::PRICE_ENDING => '9',
+			),
+			SettingsPage::PRICES
+		);
+
+		$this->assertSame( '5', $this->settings()->get( Settings::PRICE_STEP ) );
+		$this->assertSame( array( 'Prices end in an amount below the price step: with a step of 10, anything from 0 up to 9.99. The ending you had is kept.' ), $this->errors() );
+	}
+
 	public function test_saving_a_tab_leaves_the_other_tabs_settings_as_they_were(): void {
 		$this->settings()->set( Settings::PRINT_AREA_FRAME, true );
 

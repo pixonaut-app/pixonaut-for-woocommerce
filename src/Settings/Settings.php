@@ -20,6 +20,7 @@ use Pixonaut\WooCommerce\DesignerLanguage;
 use Pixonaut\WooCommerce\FormLayout;
 use Pixonaut\WooCommerce\Layout;
 use Pixonaut\WooCommerce\OptionGroups;
+use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Storefront\Accent;
 use Pixonaut\WooCommerce\Storefront\AttributeOptions;
@@ -83,6 +84,32 @@ final class Settings {
 	public const PROOF_REMINDER_EVERY_DAYS = 'proof_reminder_every_days';
 
 	public const PROOF_REMINDERS = 'proof_reminders';
+
+	public const PRICE_MARGIN = 'price_margin';
+
+	public const PRICE_TOLERANCE = 'price_tolerance';
+
+	public const PRICE_STEP = 'price_step';
+
+	public const PRICE_ENDING = 'price_ending';
+
+	public const PRICE_MIN = 'price_min';
+
+	public const PRICE_MAX = 'price_max';
+
+	public const PRICE_AUTOMATIC = 'price_automatic';
+
+	/**
+	 * The settings holding the store's pricing rule, by the rule's part.
+	 */
+	public const PRICE_RULE = array(
+		PriceRule::MARGIN    => self::PRICE_MARGIN,
+		PriceRule::TOLERANCE => self::PRICE_TOLERANCE,
+		PriceRule::STEP      => self::PRICE_STEP,
+		PriceRule::ENDING    => self::PRICE_ENDING,
+		PriceRule::MIN       => self::PRICE_MIN,
+		PriceRule::MAX       => self::PRICE_MAX,
+	);
 
 	public const API_BASE = 'api_base';
 
@@ -426,7 +453,91 @@ final class Settings {
 				)
 			)
 		);
+		$this->register_prices();
 		$this->register_developer_tools();
+	}
+
+	/**
+	 * The store's pricing rule, and whether prices change by themselves.
+	 */
+	private function register_prices(): void {
+		$this->register(
+			Setting::decimal(
+				self::PRICE_MARGIN,
+				'',
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant; the value is a percentage. The margin is the share of a product's price, excluding VAT, left after the printshop's cost. */
+					'title' => __( 'Target margin (%)', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'The share of a price, excluding VAT, that is left after what the printshop charges for the product and its shipping. With 50, a product that costs 167 is priced at 334 excluding VAT. Empty, no price follows its cost unless a product sets a margin of its own.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::decimal(
+				self::PRICE_TOLERANCE,
+				PriceRule::DEFAULT_TOLERANCE,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant; the value is a number of percentage points either side of the target margin. */
+					'title' => __( 'Tolerance (percentage points)', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'How far a margin may drift from the target, either way, before the price moves. With a target of 50 and a tolerance of 10, a price is kept while its margin is between 40 and 60.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::decimal(
+				self::PRICE_STEP,
+				PriceRule::DEFAULT_STEP,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the distance between two prices the pricing rule may set. */
+					'title' => __( 'Price step', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'The distance between two prices the rule may set: 10 for every ten, 5 for every five, 1 for whole amounts.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::decimal(
+				self::PRICE_ENDING,
+				PriceRule::DEFAULT_ENDING,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money below the price step: what each price the pricing rule sets ends in. */
+					'title' => __( 'Prices end in', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'What every price the rule sets ends in, below the step: with a step of 10, ending in 9 gives 379, 389, 399; ending in 0 gives 380, 390, 400.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::decimal(
+				self::PRICE_MIN,
+				'',
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the lowest price the pricing rule sets. */
+					'title' => __( 'Lowest price', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'The rule never sets a price below this. Empty for no limit.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::decimal(
+				self::PRICE_MAX,
+				'',
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the highest price the pricing rule sets. */
+					'title' => __( 'Highest price', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'The rule never sets a price above this. Empty for no limit.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::checkbox(
+				self::PRICE_AUTOMATIC,
+				false,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant: whether the plugin changes prices by itself when a printshop's cost changes. */
+					'title' => __( 'Automatic price changes', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'When a printshop changes what it charges, set the prices that follow the rule and whose margin left the tolerance to the rule’s price, and log each change under WooCommerce > Status > Logs. Off, such a price is flagged on the products list with the price the rule suggests, for you to apply.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
 	}
 
 	/**

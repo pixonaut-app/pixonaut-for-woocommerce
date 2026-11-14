@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Settings;
 
 use Closure;
+use Pixonaut\WooCommerce\Pricing\PriceRule;
 
 /**
  * A setting's key, default, how a stored value is checked, and the field the
@@ -136,6 +137,37 @@ final class Setting {
 				'type'    => 'integer',
 				'minimum' => $min,
 				'maximum' => $max,
+			)
+		);
+	}
+
+	/**
+	 * A number that is not negative, with decimals, or empty for none,
+	 * shown as a text field: a store may write its decimals with a comma.
+	 * It reads as a string with a point, as `PriceRule::part()` writes it.
+	 *
+	 * @param string  $key      Key in the settings option.
+	 * @param string  $fallback Default value; empty for none.
+	 * @param Closure $field    Builds the field: `title`, optionally `desc`.
+	 * @phpstan-param Closure(): array<string, mixed> $field
+	 */
+	public static function decimal( string $key, string $fallback, Closure $field ): self {
+		return new self(
+			$key,
+			$fallback,
+			PriceRule::is_part( ... ),
+			static fn (): array => array(
+				'type'              => 'text',
+				'css'               => 'width: 6em;',
+				'custom_attributes' => array( 'inputmode' => 'decimal' ),
+			) + $field(),
+			static fn ( mixed $value ): string => PriceRule::part( (string) $value ),
+			self::GENERAL,
+			null,
+			static fn (): array => array(
+				'type'    => 'string',
+				// Empty for none.
+				'pattern' => '^(\\d+([.,]\\d+)?)?$',
 			)
 		);
 	}

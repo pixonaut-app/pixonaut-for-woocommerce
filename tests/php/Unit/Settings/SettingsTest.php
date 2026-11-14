@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Features;
 use Pixonaut\WooCommerce\FormLayout;
 use Pixonaut\WooCommerce\Layout;
 use Pixonaut\WooCommerce\Settings\Setting;
+use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\Accent;
 use Pixonaut\WooCommerce\Storefront\AttributeOptions;
@@ -51,6 +52,34 @@ final class SettingsTest extends TestCase {
 		$this->assertSame( 2, $settings->get( Settings::PROOF_REMINDER_AFTER_DAYS ) );
 		$this->assertSame( 2, $settings->get( Settings::PROOF_REMINDER_EVERY_DAYS ) );
 		$this->assertSame( 2, $settings->get( Settings::PROOF_REMINDERS ) );
+	}
+
+	public function test_the_pricing_rule_is_off_until_a_target_margin_is_set(): void {
+		$settings = new Settings();
+
+		$this->assertSame( '', $settings->get( Settings::PRICE_MARGIN ) );
+		$this->assertSame( '10', $settings->get( Settings::PRICE_TOLERANCE ) );
+		$this->assertSame( '10', $settings->get( Settings::PRICE_STEP ) );
+		$this->assertSame( '9', $settings->get( Settings::PRICE_ENDING ) );
+		$this->assertSame( '', $settings->get( Settings::PRICE_MIN ) );
+		$this->assertSame( '', $settings->get( Settings::PRICE_MAX ) );
+		$this->assertFalse( $settings->get( Settings::PRICE_AUTOMATIC ) );
+		$this->assertSame( PriceRule::PARTS, array_keys( Settings::PRICE_RULE ) );
+	}
+
+	public function test_a_part_of_the_pricing_rule_reads_with_a_point_and_anything_else_as_the_default(): void {
+		$this->options[ Settings::OPTION ] = array(
+			Settings::PRICE_MARGIN    => ' 49,5 ',
+			Settings::PRICE_TOLERANCE => 'wide',
+			Settings::PRICE_STEP      => '-5',
+			Settings::PRICE_MIN       => '',
+		);
+		$settings                          = new Settings();
+
+		$this->assertSame( '49.5', $settings->get( Settings::PRICE_MARGIN ) );
+		$this->assertSame( '10', $settings->get( Settings::PRICE_TOLERANCE ) );
+		$this->assertSame( '10', $settings->get( Settings::PRICE_STEP ) );
+		$this->assertSame( '', $settings->get( Settings::PRICE_MIN ) );
 	}
 
 	public function test_proof_reminders_fit_within_the_longest_deadline(): void {
