@@ -17,6 +17,9 @@ use Pixonaut\WooCommerce\Abilities\ActOnOrderLine;
 use Pixonaut\WooCommerce\Abilities\ChangeDeliveryAddress;
 use Pixonaut\WooCommerce\Abilities\ConnectionAction;
 use Pixonaut\WooCommerce\Abilities\ConnectionStatus;
+use Pixonaut\WooCommerce\Admin\PricingList;
+use Pixonaut\WooCommerce\Admin\PricingPanel;
+use Pixonaut\WooCommerce\Api\VariantCosts;
 use Pixonaut\WooCommerce\Bridge\Discovery;
 use Pixonaut\WooCommerce\Bridge\Status;
 use Pixonaut\WooCommerce\Abilities\GetProductPictureViews;
@@ -153,6 +156,10 @@ use Pixonaut\WooCommerce\Fulfilment\OrderTrackingChanged;
 use Pixonaut\WooCommerce\Fulfilment\Shipments;
 use Pixonaut\WooCommerce\Migrations\MigrationRunner;
 use Pixonaut\WooCommerce\Migrations\Migrations;
+use Pixonaut\WooCommerce\Pricing\CostConverter;
+use Pixonaut\WooCommerce\Pricing\CostRefresh;
+use Pixonaut\WooCommerce\Pricing\ExchangeRates;
+use Pixonaut\WooCommerce\Pricing\ProductPricing;
 use Pixonaut\WooCommerce\Privacy\LineErasure;
 use Pixonaut\WooCommerce\Privacy\PersonalDataEraser;
 use Pixonaut\WooCommerce\Privacy\PersonalDataExporter;
@@ -195,6 +202,7 @@ use Pixonaut\WooCommerce\Webhooks\EventStore;
 use Pixonaut\WooCommerce\Webhooks\Intake;
 use Pixonaut\WooCommerce\Webhooks\Processor;
 use Pixonaut\WooCommerce\Webhooks\Receiver;
+use WC_Product;
 
 /**
  * Wires the plugin into WordPress. Modules are constructed here by hand.
@@ -262,6 +270,10 @@ final class Plugin {
 
 
 	private ?ProductRecheck $product_recheck = null;
+
+	private ?ProductPricing $product_pricing = null;
+
+	private ?CostRefresh $cost_refresh = null;
 
 	private ?TemplateRename $template_rename = null;
 
@@ -460,7 +472,10 @@ final class Plugin {
 		$this->blank_fields()->register();
 		$this->regenerate_pictures()->register();
 		$this->regenerate_now()->register();
+		$this->cost_refresh()->register();
+		$this->pricing_panel()->register();
 		if ( is_admin() ) {
+			( new PricingList( $this->product_pricing() ) )->register();
 			$product_panel = $this->product_panel();
 			$product_panel->register();
 			( new LayoutAdjustments( $this->sdk(), new StandingRows( $this->catalogue(), $designs, $this->sdk(), new WcLogger() ), new WcLogger() ) )->register();
@@ -715,8 +730,33 @@ final class Plugin {
 	 * Re-checks products when their templates or blanks change.
 	 */
 	public function product_recheck(): ProductRecheck {
-		$this->product_recheck ??= new ProductRecheck( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), $this->catalogue(), new InvalidProductNotice( $this->notices() ), new WcLogger(), $this->product_variants(), $this->designer_links() );
+		$this->product_recheck ??= new ProductRecheck( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), $this->catalogue(), new InvalidProductNotice( $this->notices() ), new WcLogger(), $this->product_variants(), $this->designer_links(), fn ( WC_Product $product ) => $this->cost_refresh()->rechecked( $product ) );
 		return $this->product_recheck;
+	}
+
+	/**
+	 * Prices products from what the printshop charges for them.
+	 */
+	public function product_pricing(): ProductPricing {
+		$this->product_pricing ??= new ProductPricing( new VariantCosts( $this->sdk() ), $this->settings(), new WcLogger(), static fn (): int => time(), new CostConverter( new ExchangeRates( static fn (): int => time() ), $this->settings() ) );
+		return $this->product_pricing;
+	}
+
+	/**
+	 * Reads the costs of priced products again, daily and after a re-check.
+	 */
+	public function cost_refresh(): CostRefresh {
+		$connection           = $this->active_connection();
+		$this->cost_refresh ??= new CostRefresh( $this->product_pricing(), static fn (): bool => null !== $connection(), new WcLogger() );
+		return $this->cost_refresh;
+	}
+
+	/**
+	 * The Prices section of a product's Pixonaut tab, and its route.
+	 */
+	public function pricing_panel(): PricingPanel {
+		$connection = $this->active_connection();
+		return new PricingPanel( $this->product_pricing(), $this->templates(), static fn (): bool => null !== $connection() );
 	}
 
 	/**
@@ -743,7 +783,7 @@ final class Plugin {
 	}
 
 	public function product_panel(): ProductPanel {
-		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection(), new VariantPairing( $this->product_variants(), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->variant_field(), $this->templates() ) );
+		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection(), new VariantPairing( $this->product_variants(), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->variant_field(), $this->templates() ), $this->pricing_panel() );
 	}
 
 	/**

@@ -23,6 +23,8 @@ first shipped order.
   to a blank, its sides, views and variant, a template and print sizes.
 - [Listing each value as its own product](./split-listings/): one card
   per value of an attribute, such as with and without a photo.
+- [Prices from the printshop's cost](./pricing/): a target margin, price
+  steps and limits, and what happens when a printshop changes its price.
 - [Product page layouts](./layouts/): how customers personalise a product
   on its page, and what they see when they cannot.
 - [Approval modes](./approval-modes/): how customers approve their design
@@ -83,7 +85,8 @@ products ([Link a product](./linking-products/)). Links to the old
 
 The other tabs hold the settings, grouped by what they decide:
 **Storefront** has **Product page designer**, **Approval** has **Approval**
-and **Proof by email**, and **Updates** has the update channel. Each field
+and **Proof by email**, **Prices** has the pricing rule, and **Updates** has
+the update channel. Each field
 has its description under it, and each tab saves its own settings. A setting that only applies while another has a certain
 value shows, indented under it, only then: **Custom accent colour** while
 **Designer accent colour** is *A custom colour*, and the reminder intervals
@@ -103,6 +106,10 @@ colour keeps the colour it had and says what is missing.
   **On deny** and the three proof reminder settings: what happens with
   proof by email when the customer does not answer, or rejects the proof.
   See [Reminders and the deadline](./approval-modes/#reminders-and-the-deadline).
+- **Target margin (%)** and the rest of the pricing rule, and **Automatic
+  price changes**: how products are priced from what the printshop charges.
+  Nothing is priced until a margin is set and applied on a product. See
+  [Prices from the printshop's cost](./pricing/).
 - **Updates**: stable releases only, or beta releases too. See
   [Updates](./updates/), which also explains how to turn updates on.
 

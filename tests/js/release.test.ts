@@ -42,7 +42,6 @@ function wporgListing(...extra: string[]): string[] {
 		`${ROOT_DIR}templates/admin/notice.php`,
 		`${ROOT_DIR}assets/build/storefront.js`,
 		`${ROOT_DIR}assets/build/storefront.asset.php`,
-		`${ROOT_DIR}languages/pixonaut-for-woocommerce.pot`,
 		`${ROOT_DIR}vendor/composer/autoload_static.php`,
 		...extra,
 	];

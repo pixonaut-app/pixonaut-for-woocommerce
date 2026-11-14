@@ -36,11 +36,12 @@ const UPDATE_URI_LINE = /^[ \t]*\*[ \t]*Update URI:.*\r?\n/m;
 const TESTED_UP_TO_LINE = /^[ \t]*\*[ \t]*Tested up to:.*\r?\n/m;
 
 /**
- * A translation's source, which WordPress never loads: it reads the compiled
- * `.mo` and `.l10n.php` files. The wporg flavor leaves them out to stay under
- * the submission form's upload limit; the repository keeps them.
+ * A translation's source or the template translators start from, which
+ * WordPress never loads: it reads the compiled `.mo` and `.l10n.php` files.
+ * The wporg flavor leaves them out to stay under the submission form's
+ * upload limit; the repository keeps them.
  */
-const TRANSLATION_SOURCE = /^languages\/[^/]+\.po$/;
+const TRANSLATION_SOURCE = /^languages\/[^/]+\.pot?$/;
 
 /** The largest zip wordpress.org's plugin submission form takes: 10 MB. */
 export const WPORG_UPLOAD_LIMIT_BYTES = 10 * 1024 * 1024;

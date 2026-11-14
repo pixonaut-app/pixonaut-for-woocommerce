@@ -13,13 +13,19 @@ use RecursiveIteratorIterator;
 
 /**
  * Only `Api` talks to Pixonaut, and inside it only the transport makes HTTP
- * requests.
+ * requests. The one other request the plugin makes reads exchange rates.
  */
 final class HttpBoundaryTest extends TestCase {
 
 	private const PLUGIN_ROOT = __DIR__ . '/../../../..';
 
 	private const TRANSPORT = 'src/Api/WpHttpTransport.php';
+
+	/**
+	 * The one request that is not to Pixonaut: the European Central Bank's
+	 * public exchange rates, which no SDK stands before.
+	 */
+	private const EXCHANGE_RATES = 'src/Pricing/ExchangeRates.php';
 
 	/**
 	 * Calls that make an HTTP request from PHP. `WP_Http` counts only when
@@ -30,7 +36,7 @@ final class HttpBoundaryTest extends TestCase {
 	public function test_only_the_transport_makes_http_requests(): void {
 		$offenders = array();
 		foreach ( $this->php_files() as $file ) {
-			if ( self::TRANSPORT === $file ) {
+			if ( in_array( $file, array( self::TRANSPORT, self::EXCHANGE_RATES ), true ) ) {
 				continue;
 			}
 			if ( 1 === preg_match( self::HTTP_CALLS, (string) file_get_contents( self::PLUGIN_ROOT . '/' . $file ) ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local file.

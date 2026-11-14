@@ -1,0 +1,88 @@
+<?php
+/**
+ * @package Pixonaut\WooCommerce
+ */
+
+declare(strict_types=1);
+
+namespace Pixonaut\WooCommerce\Tests\Unit\Pricing;
+
+use Pixonaut\WooCommerce\Pricing\VariantCost;
+use Pixonaut\WooCommerce\Tests\Unit\TestCase;
+
+final class VariantCostTest extends TestCase {
+
+	public function test_a_cost_is_a_product_price_and_its_shipping_each_in_its_currency(): void {
+		$costs = VariantCost::list_from( array( self::row( 'v_a3', '167.10', '65.50' ) ) );
+
+		$this->assertSame( array( 'v_a3' ), array_keys( $costs ) );
+		$this->assertSame( array( 167100, 'SEK', 65500, 'SEK' ), array( $costs['v_a3']->product, $costs['v_a3']->currency, $costs['v_a3']->shipping, $costs['v_a3']->shipping_currency ) );
+		$this->assertSame( 'SE', $costs['v_a3']->region );
+	}
+
+	public function test_a_variant_without_shipping_or_without_a_published_price_has_none(): void {
+		$unshipped   = VariantCost::list_from( array( self::row( 'v_a3', '167.10', null ) ) )['v_a3'];
+		$unpublished = VariantCost::list_from( array( self::row( 'v_a3', null, '65.50' ) ) )['v_a3'];
+
+		$this->assertNull( $unshipped->shipping );
+		$this->assertSame( '', $unshipped->shipping_currency );
+		$this->assertNull( $unpublished->product );
+	}
+
+	public function test_entries_without_a_variant_are_left_out_and_a_price_that_is_no_amount_is_none(): void {
+		$costs = VariantCost::list_from(
+			array(
+				'not a row',
+				array(
+					'product' => array(
+						'amount'   => '1',
+						'currency' => 'SEK',
+					),
+				),
+				array(
+					'variant' => 'v_odd',
+					'product' => array(
+						'amount'   => 'free',
+						'currency' => 'SEK',
+					),
+				),
+			)
+		);
+
+		$this->assertSame( array( 'v_odd' ), array_keys( $costs ) );
+		$this->assertNull( $costs['v_odd']->product );
+	}
+
+	public function test_a_cost_is_stored_and_read_back(): void {
+		$cost = VariantCost::list_from( array( self::row( 'v_a3', '16.71', '6.55', 'eur' ) ) )['v_a3'];
+		$read = VariantCost::from_array( $cost->to_array() );
+
+		$this->assertSame( 'EUR', $cost->currency );
+		$this->assertEquals( $cost, $read );
+		$this->assertNull( VariantCost::from_array( 'nothing' ) );
+	}
+
+	/**
+	 * A row of the answer's `costs`.
+	 *
+	 * @param string      $variant  The variant's ref.
+	 * @param string|null $product  Its product price; null for none.
+	 * @param string|null $shipping Its shipping; null for none.
+	 * @param string      $currency The currency of both.
+	 * @return array<string, mixed>
+	 */
+	private static function row( string $variant, ?string $product, ?string $shipping, string $currency = 'SEK' ): array {
+		$money = static fn ( ?string $amount ): ?array => null === $amount ? null : array(
+			'amount'   => $amount,
+			'currency' => $currency,
+		);
+		return array(
+			'variant'   => $variant,
+			'product'   => $money( $product ),
+			'shipping'  => $money( $shipping ),
+			'region'    => 'SE',
+			'readAt'    => '2026-11-14T06:00:00.000Z',
+			'changedAt' => null,
+		);
+	}
+}

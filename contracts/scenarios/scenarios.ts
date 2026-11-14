@@ -58,6 +58,10 @@ const CUT_OUT_READ = [200, 404];
 /** A picture's copy in threads: made before or none to make, made now, or
  *  refused where the workspace has no embroidery. */
 const THREAD_COPY = [200, 201, 403];
+/** The country the scenarios read printshop costs for. */
+const COST_REGION = 'SE';
+/** A blank's costs: read, or refused for a country the target has none for. */
+const COSTS_READ = [200, 422];
 /** A catalogue import is written at once and filled in in the background. */
 const ACCEPTED = 202;
 /** A product imported before is answered with its blank, not imported again. */
@@ -325,6 +329,13 @@ export const SCENARIOS: Scenario[] = [
 				const variants = (
 					await session.call('GET /v1/blanks/{id}/variants', { params: { id } })
 				).body.variants as { ref: string; retired: unknown }[];
+				// What the printshop charges for each variant, shipped to a country:
+				// read, or refused for a country no printshop of the target ships to.
+				await session.call('GET /v1/blanks/{id}/variants/costs', {
+					params: { id },
+					query: { region: COST_REGION },
+					expect: COSTS_READ,
+				});
 				const [token] = mockupImageTokens(mockups);
 				if (token !== undefined) {
 					await session.call('GET /i/{token}', {

@@ -62,6 +62,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_option( \Pixonaut\WooCommerce\Schema::REQUEST_LOG_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::PICTURE_GENERATION_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::PICTURES_BACKFILL_OPTION );
+		delete_option( \Pixonaut\WooCommerce\Schema::EXCHANGE_RATES_OPTION );
 		// Cached catalogue answers and proof images expire on their own; this removes the ones still waiting to.
 		foreach ( array( \Pixonaut\WooCommerce\Schema::CATALOGUE_CACHE_PREFIX, \Pixonaut\WooCommerce\Schema::PROOF_CACHE_PREFIX ) as $pixonaut_wc_cache_prefix ) {
 			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
@@ -156,6 +157,10 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_SHOWCASE_IMAGES_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PICTURE_VIEW_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_KEEPS_IMAGE_META );
+		// Prices the rule set stay as they are: they are the products' own prices now.
+		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRICE_META );
+		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRICE_RULE_META );
+		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRICE_WATCH_META );
 		// Pixonaut withdrew the links when the store disconnected, or does when it is removed in the studio.
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::DESIGNER_LINKS_META );
 

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Closure;
 use LogicException;
 use Pixonaut\WooCommerce\Admin\InvalidProductNotice;
 use Pixonaut\WooCommerce\Admin\LowResolutionWarnings;
@@ -124,6 +125,8 @@ final class ProductRecheck {
 	 * @param LoggerInterface      $logger  Logs a re-check that failed and a job that could not be queued.
 	 * @param ProductVariants      $variants Resolves each variation's blank variant again.
 	 * @param KeptDesignerLinks    $links   Forgets the designer links Pixonaut no longer lists.
+	 * @param Closure|null         $rechecked `fn( WC_Product ): void`, told each product or variation checked again; null tells nobody.
+	 * @phpstan-param (Closure(WC_Product): void)|null $rechecked
 	 */
 	public function __construct(
 		private readonly ProductLinker $linker,
@@ -132,6 +135,7 @@ final class ProductRecheck {
 		private readonly LoggerInterface $logger,
 		private readonly ProductVariants $variants,
 		private readonly KeptDesignerLinks $links,
+		private readonly ?Closure $rechecked = null,
 	) {
 	}
 
@@ -339,6 +343,10 @@ final class ProductRecheck {
 			$this->variants->refresh( $product );
 		} catch ( ApiException $e ) {
 			return false;
+		}
+		// What the printshop charges may have changed with the blank.
+		if ( null !== $this->rechecked ) {
+			( $this->rechecked )( $product );
 		}
 		return true;
 	}

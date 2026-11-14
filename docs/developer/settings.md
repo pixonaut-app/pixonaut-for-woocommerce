@@ -251,6 +251,54 @@ Default: `2`.
 
 Default: `2`.
 
+### `price_margin`
+
+**Target margin (%)** (text). The share of a price, excluding VAT, that is left after what the printshop charges for the product and its shipping. With 50, a product that costs 167 is priced at 334 excluding VAT. Empty, no price follows its cost unless a product sets a margin of its own.
+
+Default: empty.
+
+### `price_tolerance`
+
+**Tolerance (percentage points)** (text). How far a margin may drift from the target, either way, before the price moves. With a target of 50 and a tolerance of 10, a price is kept while its margin is between 40 and 60.
+
+Default: `10`.
+
+### `price_step`
+
+**Price step** (text). The distance between two prices the rule may set: 10 for every ten, 5 for every five, 1 for whole amounts.
+
+Default: `10`.
+
+### `price_ending`
+
+**Prices end in** (text). What every price the rule sets ends in, below the step: with a step of 10, ending in 9 gives 379, 389, 399; ending in 0 gives 380, 390, 400.
+
+Default: `9`.
+
+### `price_min`
+
+**Lowest price** (text). The rule never sets a price below this. Empty for no limit.
+
+Default: empty.
+
+### `price_max`
+
+**Highest price** (text). The rule never sets a price above this. Empty for no limit.
+
+Default: empty.
+
+### `price_currency_buffer`
+
+**Currency buffer (%)** (text). A printshop charges in its own currency. A cost in another currency than your store’s is converted with the European Central Bank’s daily reference rate, and this percentage is added to it: what your card or bank takes for the exchange, and what the rate may move between the sale and the charge.
+
+Default: `3`.
+
+### `price_automatic`
+
+**Automatic price changes** (checkbox). When a printshop changes what it charges, set the prices that follow the rule and whose margin left the tolerance to the rule’s price, and log each change under WooCommerce > Status > Logs. Off, such a price is flagged on the products list with the price the rule suggests, for you to apply.
+
+Default: `false`.
+
 ### `api_base`
 
 **API base** (url). The Pixonaut API as the browser reaches it, e.g. a local Pixonaut. Empty uses Pixonaut’s own. The store’s key is sent to this address.

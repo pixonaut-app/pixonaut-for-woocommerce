@@ -365,6 +365,16 @@ export type Variant = {
 	retired: VariantRetirement | null;
 };
 
+/** What a printshop charges for a variant: the product's price and the
+ *  cheapest shipping, as decimal strings (null for none published) in one
+ *  currency, and when the cost last changed, epoch ms. */
+export type VariantCost = {
+	product: string | null;
+	shipping: string | null;
+	currency: string;
+	changedAt: number | null;
+};
+
 /** A blank's names in one language, each by what it names as written:
  *  option names by axis, option values by axis and value, view labels by
  *  view id. One left out is read as written. */
@@ -405,6 +415,9 @@ export type Blank = {
 	/** A look given a value by a test, by axis and value as written, over
 	 *  the fixture's colour fills (`POST /__fake/blanks/:id/value-looks`). */
 	valueLooks?: Record<string, Record<string, ValueAppearance>>;
+	/** A cost given a variant by a test, by ref, over the fixture's costs
+	 *  (`POST /__fake/blanks/:id/costs`). */
+	costs?: Record<string, VariantCost>;
 	createdAt: number;
 	updatedAt: number;
 	/** When the blank was deleted, epoch ms; null while it is not. A

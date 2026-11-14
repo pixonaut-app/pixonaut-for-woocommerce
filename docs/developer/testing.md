@@ -468,6 +468,7 @@ adds others.
 | `POST /__fake/blanks/update` | `{blank, removePlacement?, variant?, retired?, store?}` | Updates the blank, removing `removePlacement` when named, and retiring the variant `variant` (a ref) for `retired` (`retired` or `no_longer_sold`), or selling it again when `retired` is `null`. Emits `blank.updated` `{blankId, fields}`, `fields` naming `placements` and `variants` as changed |
 | `POST /__fake/blanks/delete` | `{blank, store?}` | Deletes the blank (read by id with `deleted` set, left out of `GET /v1/blanks`), emits `blank.deleted` `{blankId, blankName}`; refused for a blank already deleted |
 | `POST /__fake/blanks/restore` | `{blank, store?}` | Restores a deleted blank, emits `blank.restored` `{blankId, blankName}`; refused for a blank not deleted |
+| `POST /__fake/blanks/<id>/costs` | `{costs: {<variant ref>: {product, shipping?, currency?}}}` | Sets what the printshop charges for the variants named, as `GET /v1/blanks/{id}/variants/costs` then answers them: `product` a decimal string, or `null` for a variant without a published price. A variant left out keeps its cost; every fixture variant has one, in USD, rising with its place in the blank |
 
 Pixonaut sends template and blank events to every store of the workspace;
 the fake's catalogue routes send them to the store named (the main one by

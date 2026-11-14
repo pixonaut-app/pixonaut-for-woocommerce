@@ -17,6 +17,7 @@ import { registerTemplateLowResolutionControl } from './control-template-low-res
 import { registerTemplateRatioControl } from './control-template-ratio';
 import { registerTemplateWithoutLayerControl } from './control-template-without-layer';
 import { registerValueLooksControl } from './control-value-looks';
+import { registerVariantCostsControl } from './control-variant-costs';
 import { registerCorrectionPage } from './correction-page';
 import { registerHostedDesigner } from './designer';
 import { createFaults, DEFAULT_TIMEOUT_FAULT_MS, type Faults } from './faults';
@@ -256,6 +257,7 @@ export function createFake(options: FakeOptions = {}): Fake {
 	registerDesignerPixelControl(app, fake);
 	registerTemplateRatioControl(app, fake);
 	registerValueLooksControl(app, fake);
+	registerVariantCostsControl(app, fake);
 	registerTemplateBackgroundControl(app, fake);
 	registerTemplateLowResolutionControl(app, fake);
 	registerTemplateFieldKeyControl(app, fake);

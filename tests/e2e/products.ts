@@ -121,6 +121,11 @@ export async function openStoreSettings(page: Page): Promise<void> {
 	await open(page, 'details.pixonaut-store-settings');
 }
 
+/** Opens the tab's Prices. */
+export async function openPrices(page: Page): Promise<void> {
+	await open(page, 'details.pixonaut-prices');
+}
+
 /** Opens the tab's Views on the product page. */
 export async function openViews(page: Page): Promise<void> {
 	await open(page, 'details.pixonaut-views-section');

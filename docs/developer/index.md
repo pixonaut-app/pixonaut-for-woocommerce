@@ -31,6 +31,8 @@ What the plugin does for a store, and how a merchant sets it up, is in the
 - [Webhooks](./webhooks/): receiving, verifying and handling Pixonaut's
   events.
 - [Abilities](./abilities/): the abilities an MCP client runs on the store.
+- [Prices from costs](./pricing/): reading printshop costs, the pricing
+  rule, what follows it, and the daily cost job.
 - [Bridge functions](./bridge/): the functions another plugin reads the
   connection and abilities with.
 - [Product page](./storefront/): the inline designer's markup, its
@@ -92,6 +94,7 @@ not recorded and it runs again. What it throws decides what the store sees:
 | Option | `pixonaut_wc_webhook_ping` | The outcome of the last test request to the webhook endpoint, `{delivered, error, at}` ([Webhooks](./webhooks/#the-endpoint)) |
 | Option | `pixonaut_wc_events_cursor`, `pixonaut_wc_events_baseline` | The event stream's cursor, and how far setting the first one has paged ([Webhooks](./webhooks/)) |
 | Option | `pixonaut_wc_template_renames` | Each template id Pixonaut changed, mapped to the one it became ([Webhooks](./webhooks/#a-templates-id-changed-in-pixonaut)) |
+| Option | `pixonaut_wc_exchange_rates` | The European Central Bank's euro reference rates last read, their day, and when they were read and last tried (`{v, date, rates, read_at, tried_at}`); converts printshop costs to the store's currency ([Prices from costs](./pricing/#reading-costs)) |
 | Option | `pixonaut_wc_request_log` | The developer tools' request log, the last 50 requests newest first ([Developer tools](./developer-tools/#request-log)) |
 | Option | `pixonaut_wc_split_attributes` | The ids of the global attributes whose values are listed as their own products by default ([Listing each value as its own product](../merchant/split-listings/)) |
 | Option | `pixonaut_wc_catalogue_generation` | The generation every cached catalogue answer's key carries; raising it drops them all |
@@ -105,6 +108,9 @@ not recorded and it runs again. What it throws decides what the store sees:
 | Product meta | `_pixonaut_split_card` | The values a split product is listed by, one row per term id in the product's order of values, which the shop's listings join to show a card each (`Catalogue\SplitCards`, [Listing each value as its own product](../merchant/split-listings/#in-the-shop)) |
 | Product meta | `_pixonaut_split_card_looks` | Each value's card's own title and image, by term id, set on the product's Attributes tab (`Catalogue\SplitCardLooks`, [Listing each value as its own product](../merchant/split-listings/#each-values-card)) |
 | Product and variation meta | `_pixonaut_variant` | The blank variant it sells: the store manager's pick, the ref resolved, the attribute labels a match was made from, and what Pixonaut last said of it (options, retirement, views with a photo), versioned JSON |
+| Product and variation meta | `_pixonaut_price` | The printshop cost last read for it, whether its price follows the pricing rule, the price the rule last set and when, and what the rule suggests now, versioned JSON ([Prices from costs](./pricing/)) |
+| Product meta | `_pixonaut_price_rule` | The parts of the store's pricing rule the product changes, by part, JSON |
+| Product meta | `_pixonaut_price_watch` | On a product with a price that follows the pricing rule: how many of its prices the rule flags, versioned JSON; finds the products whose costs are read again |
 | Order item meta | `_pixonaut_line` | The line's fulfilment state, the Pixonaut ids, refs and keys it used, and the requests it may send again, versioned JSON |
 | Order item meta | `_pixonaut_order_id` | The line's Pixonaut order id, kept in step with `_pixonaut_line` |
 | Order item meta | `_pixonaut_design_id` | Each of the design ids the customer committed for the line, one row per side, kept in step with `_pixonaut_line`; a standing side's design is not indexed, as many lines share it |

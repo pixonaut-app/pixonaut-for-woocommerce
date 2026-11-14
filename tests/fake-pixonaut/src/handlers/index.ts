@@ -79,6 +79,7 @@ import { findOrCreateStandingDesign } from './standing-designs';
 import { readTemplateMockup, readTemplatePreview } from './template-images';
 import { readTemplate, readTemplateConstraints } from './templates';
 import type { Handler } from './types';
+import { listVariantCosts } from './variant-costs';
 import {
 	listWebhooks,
 	pingWebhook,
@@ -101,6 +102,7 @@ export const HANDLERS: Partial<Record<OperationKey, Handler>> = {
 	'GET /v1/blanks/{id}': readBlank,
 	'GET /v1/blanks/{id}/mockups': listBlankMockups,
 	'GET /v1/blanks/{id}/variants': listBlankVariants,
+	'GET /v1/blanks/{id}/variants/costs': listVariantCosts,
 	'GET /v1/blanks/{id}/placements/{placementId}/fitting-templates':
 		listFittingTemplates,
 	'GET /v1/blanks/{id}/placements/{placementId}/preview-tables':
