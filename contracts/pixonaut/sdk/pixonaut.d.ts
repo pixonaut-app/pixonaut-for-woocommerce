@@ -2730,6 +2730,11 @@ export declare interface ProductView {
      *  hidden, and `setView()` refuses it. The Design view needs none, and is
      *  always true. */
     hasPhoto: boolean;
+    /** Whether it has a photo of any variant offered: a view that is false
+     *  here never shows, whichever variant is chosen, while one that is true
+     *  with `hasPhoto` false waits for another variant, such as a wall that
+     *  takes other sizes of the poster. The Design view is always true. */
+    hasPhotoOfAnyVariant: boolean;
     /** The url of its photo of the variant shown; null without one, and for
      *  the Design view. A variant whose photo of a view is the same url, in
      *  the same `dye`, changes nothing that view shows. */
