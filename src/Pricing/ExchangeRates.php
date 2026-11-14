@@ -20,8 +20,8 @@ use Pixonaut\WooCommerce\Schema;
  *
  * The rates are kept in an option and read again once a day, when a
  * product's costs are refreshed. When they cannot be read, the last ones
- * are kept and used for up to a week; past that they are stale, and nothing
- * is converted with them.
+ * are kept and used until the day they are of is a week ago; past that they
+ * are stale, and nothing is converted with them.
  */
 final class ExchangeRates {
 
@@ -50,7 +50,7 @@ final class ExchangeRates {
 	private const RETRY_SECONDS = 3600;
 
 	/**
-	 * How old the last rates read may be and still convert: a week.
+	 * How long after the day they are of rates still convert: a week.
 	 */
 	public const STALE_SECONDS = 604800;
 
@@ -68,6 +68,11 @@ final class ExchangeRates {
 	 * The day the list is of: `<Cube time='2026-11-13'>`.
 	 */
 	private const DATE_PATTERN = '/time=[\'"](\d{4}-\d{2}-\d{2})[\'"]/';
+
+	/**
+	 * How the ECB's list ends: one without it was cut short.
+	 */
+	private const END_OF_FILE = '</gesmes:Envelope>';
 
 	/**
 	 * @param Closure $clock `fn(): int`, the time now.
@@ -94,7 +99,9 @@ final class ExchangeRates {
 				$rates[ $rate[1] ] = $rate[2];
 			}
 		}
-		if ( array() === $rates || 1 !== preg_match( self::DATE_PATTERN, $body, $date ) ) {
+		// Kept whole or not at all: a file cut short, or with a rate of nothing, replaces no rate that converts.
+		$whole = str_contains( $body, self::END_OF_FILE ) && array() === array_filter( $rates, static fn ( string $rate ): bool => (float) $rate <= 0 );
+		if ( ! $whole || array() === $rates || 1 !== preg_match( self::DATE_PATTERN, $body, $date ) || false === strtotime( $date[1] . ' UTC' ) ) {
 			update_option( self::OPTION, array( 'tried_at' => $now ) + $kept, false );
 			return;
 		}
@@ -125,18 +132,21 @@ final class ExchangeRates {
 			return null;
 		}
 		$rates = array( self::BASE => '1' ) + $kept['rates'];
-		if ( ! isset( $rates[ $from ], $rates[ $to ] ) || (float) $rates[ $from ] <= 0 ) {
+		if ( ! isset( $rates[ $from ], $rates[ $to ] ) || (float) $rates[ $from ] <= 0 || (float) $rates[ $to ] <= 0 ) {
 			return null;
 		}
 		return (float) $rates[ $to ] / (float) $rates[ $from ];
 	}
 
 	/**
-	 * Whether rates were read once and the last read is over a week old.
+	 * Whether rates are kept and the day they are of is over a week ago:
+	 * by the day the ECB published them, not the day they were read, so an
+	 * old list answered again is as old as it says.
 	 */
 	public function is_stale(): bool {
 		$kept = self::kept();
-		return array() !== $kept['rates'] && ( $this->clock )() - $kept['read_at'] > self::STALE_SECONDS;
+		$day  = strtotime( $kept['date'] . ' UTC' );
+		return array() !== $kept['rates'] && ( false === $day || ( $this->clock )() - $day > self::STALE_SECONDS );
 	}
 
 	/**

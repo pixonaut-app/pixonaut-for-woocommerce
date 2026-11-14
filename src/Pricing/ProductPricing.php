@@ -223,12 +223,16 @@ final class ProductPricing {
 		$this->read = array();
 		$region     = self::region();
 		$read       = array();
+		$converts   = array();
 		foreach ( self::items( $product ) as $item ) {
 			list( $blank_id, $ref )  = self::sold( $item );
-			$read[ $item->get_id() ] = array( $blank_id, $ref, null === $blank_id || null === $ref ? null : ( $this->of_blank( $blank_id, $region )[ $ref ] ?? null ) );
+			$listed                  = null === $blank_id || null === $ref ? null : ( $this->of_blank( $blank_id, $region )[ $ref ] ?? null );
+			$read[ $item->get_id() ] = array( $blank_id, $ref, $listed );
+			// A cost kept from an earlier read is converted again too.
+			$converts[] = $listed ?? PriceState::stored_on( $item )->cost_of( $blank_id, $ref, $region );
 		}
 		// A cost in another currency is converted at the day's rate, read only when one is.
-		$this->converter->refresh_for( array_column( $read, 2 ) );
+		$this->converter->refresh_for( $converts );
 		$now     = ( $this->clock )();
 		$changed = array();
 		foreach ( $read as $id => list( $blank_id, $ref, $listed ) ) {

@@ -47,9 +47,10 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 	protected const AXIS = 'Size';
 
 	/**
-	 * The time the rule sets a price at.
+	 * The time the rule sets a price at: 2026-11-14 06:00 UTC, the day after
+	 * the rates the source answers.
 	 */
-	protected const NOW = 1794000000;
+	protected const NOW = 1794636000;
 
 	protected HttpRecorder $recorder;
 
@@ -80,6 +81,13 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 	 * @var string
 	 */
 	protected string $rates_date = '2026-11-13';
+
+	/**
+	 * Whether the source's answer ends before its file does.
+	 *
+	 * @var bool
+	 */
+	protected bool $rates_cut_short = false;
 
 	/**
 	 * How often the exchange rate source was asked.
@@ -122,7 +130,7 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 		}
 		return array(
 			'headers'  => array( 'content-type' => 'text/xml' ),
-			'body'     => sprintf( '<?xml version="1.0" encoding="UTF-8"?><gesmes:Envelope><Cube><Cube time=\'%s\'>%s</Cube></Cube></gesmes:Envelope>', $this->rates_date, $cubes ),
+			'body'     => sprintf( '<?xml version="1.0" encoding="UTF-8"?><gesmes:Envelope><Cube><Cube time=\'%s\'>%s</Cube></Cube>%s', $this->rates_date, $cubes, $this->rates_cut_short ? '' : '</gesmes:Envelope>' ),
 			'response' => array(
 				'code'    => 200,
 				'message' => 'OK',

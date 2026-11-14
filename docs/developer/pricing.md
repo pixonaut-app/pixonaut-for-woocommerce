@@ -26,7 +26,7 @@ in another currency is multiplied by the day's rate and by the store's
 Bank's euro reference rates (`eurofxref-daily.xml`) at most once a day, and
 only when a cost needs converting, and keeps them in the
 `pixonaut_wc_exchange_rates` option. A read that fails keeps the last rates
-and is tried again an hour later; rates over a week old convert nothing
+and is tried again an hour later, as does a file cut short or with a rate of nothing; rates whose day is over a week ago convert nothing
 (`PriceState::FLAG_RATE_STALE`), as does a currency without a rate
 (`FLAG_CURRENCY`).
 

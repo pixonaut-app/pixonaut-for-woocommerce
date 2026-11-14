@@ -157,13 +157,60 @@ final class CurrencyConversionTest extends PricingTestCase {
 		$this->assertSame( 1, ProductPricing::flagged( $this->product( $id ) ) );
 
 		// Once a rate is read again, the cost prices it again.
-		$this->rates = array( 'SEK' => '11.50' );
-		$this->now  += DAY_IN_SECONDS;
+		$this->next_day( array( 'SEK' => '11.50' ) );
 		$this->script_costs( array( 'v_mug' => '16.71' ), '3', 'EUR' );
 		$this->pricing->refresh( $this->product( $id ) );
 
 		$this->assertNull( $this->row( $id )->flag );
 		$this->assertSame( 0, ProductPricing::flagged( $this->product( $id ) ) );
+	}
+
+	public function test_rates_are_as_old_as_the_day_they_are_of_however_recently_they_were_answered(): void {
+		$this->store_rule();
+		$id = $this->simple_product( 'v_mug', '300' );
+		// The source answers, but with a list of ten days ago.
+		$this->rates_date = gmdate( 'Y-m-d', $this->now - 10 * DAY_IN_SECONDS );
+		$this->script_costs( array( 'v_mug' => '16.71' ), null, 'EUR' );
+
+		$this->pricing->refresh( $this->product( $id ) );
+
+		$this->assertNull( $this->row( $id )->cost_total );
+		$this->assertSame( PriceState::FLAG_RATE_STALE, $this->row( $id )->flag );
+	}
+
+	public function test_a_cost_kept_from_an_earlier_read_is_converted_at_the_new_days_rate(): void {
+		$this->store_rule();
+		$id = $this->simple_product( 'v_mug', '' );
+		$this->applied_at_euro_cost( $id );
+
+		// Pixonaut leaves the variant out; its cost is kept, and the rate still moves.
+		$this->next_day( array( 'SEK' => '14.80' ) );
+		$this->script_costs( array() );
+		$this->pricing->refresh( $this->product( $id ) );
+
+		$this->assertSame( 2, $this->rate_reads );
+		$this->assertSame( PriceState::FLAG_MARGIN, $this->row( $id )->flag );
+	}
+
+	public function test_a_rate_file_cut_short_or_with_a_rate_of_nothing_replaces_no_rate(): void {
+		$rates = new ExchangeRates( fn (): int => $this->now );
+		$rates->refresh();
+
+		$this->next_day( array( 'SEK' => '9.00' ) );
+		$this->rates_cut_short = true;
+		$rates->refresh();
+		$this->assertSame( 11.5, $rates->rate( 'EUR', self::STORE ) );
+
+		$this->next_day(
+			array(
+				'SEK' => '0',
+				'USD' => '1.15',
+			)
+		);
+		$this->rates_cut_short = false;
+		$rates->refresh();
+		$this->assertSame( 11.5, $rates->rate( 'EUR', self::STORE ) );
+		$this->assertSame( '2026-11-13', $rates->date() );
 	}
 
 	public function test_a_currency_without_a_rate_prices_nothing(): void {
@@ -214,8 +261,9 @@ final class CurrencyConversionTest extends PricingTestCase {
 	 * @param array<string, string> $rates Each currency's rate against the euro.
 	 */
 	private function next_day( array $rates ): void {
-		$this->now  += DAY_IN_SECONDS + 1;
-		$this->rates = $rates;
+		$this->now       += DAY_IN_SECONDS + 1;
+		$this->rates      = $rates;
+		$this->rates_date = gmdate( 'Y-m-d', $this->now - DAY_IN_SECONDS );
 	}
 
 	/**
