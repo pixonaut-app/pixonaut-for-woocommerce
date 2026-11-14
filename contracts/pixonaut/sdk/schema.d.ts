@@ -1169,7 +1169,7 @@ export interface paths {
         };
         /**
          * Read a blank's variant costs at its printshop
-         * @description What the blank's printshop charges for each variant on sale, and for shipping one to a country, as the printshop publishes it: a store prices its products from these. Each amount is in the currency the printshop bills the connected account in, which each amount names, and is never converted: the read takes a country and no currency, so amounts for one country may be in another's currency. Pixonaut holds no selling price, margin or tax. Costs are read from the printshop in the background, when a blank is imported or re-synced and once a day: a region asked for the first time is read within moments, and until then the list holds only the variants already read, so a variant missing from it has not been read yet. A variant whose printshop publishes no price is listed with `product` null, as is every variant of a blank no printshop is bound to. A region nobody asks for in 30 days is no longer kept read, except the workspace's own.
+         * @description What the blank's printshop charges for each variant on sale, and for shipping one to a country, as the printshop publishes it: a store prices its products from these. Each amount is in the currency the printshop bills the connected account in, which each amount names, and is never converted: the read takes a country and no currency, so amounts for one country may be in another's currency. Pixonaut holds no selling price, margin or tax. Costs are read from the printshop in the background, when a blank is imported or re-synced and once a day: a region asked for the first time is read within moments, and until then the list holds only the variants already read, so a variant missing from it has not been read yet, and `complete` is false until none is missing. A variant whose printshop publishes no price is listed with `product` null, as is every variant of a blank no printshop is bound to. A region nobody asks for in 30 days is no longer kept read, except the workspace's own.
          */
         get: operations["blanks.variants.costs"];
         put?: never;
@@ -31490,6 +31490,24 @@ export interface operations {
                                     /** @description The sheet's width, in millimetres. */
                                     widthMm: number;
                                 } | {
+                                    /** @description How far its face stands off the wall, mm. */
+                                    depthMm: number;
+                                    /** @description What its sides show: the print, the face mirrored, a colour. */
+                                    edge: string;
+                                    /** @description Its sides' colour, #rrggbb; only for `colour`. */
+                                    edgeColour?: string;
+                                    /** @description Its face's height, mm. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A canvas: a print stretched round a frame.
+                                     * @enum {string}
+                                     */
+                                    kind: "canvas";
+                                    /** @description Its face's width, mm. */
+                                    widthMm: number;
+                                    /** @description How far its print reaches past the face, each side, mm. */
+                                    wrapMm: number;
+                                } | {
                                     /** @description Its diameter at the base, in millimetres. */
                                     baseDiameterMm: number;
                                     /** @description Its height, in millimetres. */
@@ -32372,6 +32390,24 @@ export interface operations {
                                 })[];
                                 /** @description The sheet's width, in millimetres. */
                                 widthMm: number;
+                            } | {
+                                /** @description How far its face stands off the wall, mm. */
+                                depthMm: number;
+                                /** @description What its sides show: the print, the face mirrored, a colour. */
+                                edge: string;
+                                /** @description Its sides' colour, #rrggbb; only for `colour`. */
+                                edgeColour?: string;
+                                /** @description Its face's height, mm. */
+                                heightMm: number;
+                                /**
+                                 * @description A canvas: a print stretched round a frame.
+                                 * @enum {string}
+                                 */
+                                kind: "canvas";
+                                /** @description Its face's width, mm. */
+                                widthMm: number;
+                                /** @description How far its print reaches past the face, each side, mm. */
+                                wrapMm: number;
                             } | {
                                 /** @description Its diameter at the base, in millimetres. */
                                 baseDiameterMm: number;
@@ -33759,6 +33795,8 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @description Whether every variant on sale has been read for the region, so no variant is missing from `costs` for not being read yet. false from when a region is first asked for until its last variant is read, and while a variant put on sale since waits for its read. It tells of the whole region, also when `variant` narrows the list. Always true for a blank no printshop is bound to. */
+                        complete: boolean;
                         costs: {
                             /** @description When a read last found another product or shipping amount than the one held, as an ISO 8601 time; null while the first read still stands. */
                             changedAt: string | null;
@@ -48520,6 +48558,24 @@ export interface operations {
                                     /** @description The sheet's width, in millimetres. */
                                     widthMm: number;
                                 } | {
+                                    /** @description How far its face stands off the wall, mm. */
+                                    depthMm: number;
+                                    /** @description What its sides show: the print, the face mirrored, a colour. */
+                                    edge: string;
+                                    /** @description Its sides' colour, #rrggbb; only for `colour`. */
+                                    edgeColour?: string;
+                                    /** @description Its face's height, mm. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A canvas: a print stretched round a frame.
+                                     * @enum {string}
+                                     */
+                                    kind: "canvas";
+                                    /** @description Its face's width, mm. */
+                                    widthMm: number;
+                                    /** @description How far its print reaches past the face, each side, mm. */
+                                    wrapMm: number;
+                                } | {
                                     /** @description Its diameter at the base, in millimetres. */
                                     baseDiameterMm: number;
                                     /** @description Its height, in millimetres. */
@@ -49354,6 +49410,24 @@ export interface operations {
                                     })[];
                                     /** @description The sheet's width, in millimetres. */
                                     widthMm: number;
+                                } | {
+                                    /** @description How far its face stands off the wall, mm. */
+                                    depthMm: number;
+                                    /** @description What its sides show: the print, the face mirrored, a colour. */
+                                    edge: string;
+                                    /** @description Its sides' colour, #rrggbb; only for `colour`. */
+                                    edgeColour?: string;
+                                    /** @description Its face's height, mm. */
+                                    heightMm: number;
+                                    /**
+                                     * @description A canvas: a print stretched round a frame.
+                                     * @enum {string}
+                                     */
+                                    kind: "canvas";
+                                    /** @description Its face's width, mm. */
+                                    widthMm: number;
+                                    /** @description How far its print reaches past the face, each side, mm. */
+                                    wrapMm: number;
                                 } | {
                                     /** @description Its diameter at the base, in millimetres. */
                                     baseDiameterMm: number;
@@ -50415,7 +50489,7 @@ export interface operations {
                 /** @description A blank's id: each scene then says, in `offers`, which of that blank's rows it can show. It narrows nothing. */
                 forBlank?: string;
                 /** @description A product kind, for a product that is no blank yet or to list only what fits a blank's: only scenes that can show a product of this kind (a setting with an anchor it sits at, a studio style with a camera it is drawn from, a garment's cut-out and a scene photographing a stock item of the kind), each saying where in `offers`. Sizes are judged only with `forBlank`. */
-                forKind?: "flat-sheet" | "framed-sheet" | "cylinder" | "garment-cut";
+                forKind?: "flat-sheet" | "framed-sheet" | "canvas" | "cylinder" | "garment-cut";
                 /** @description With `forKind=garment-cut`, the garment's cut: only scenes and cut-outs of that garment. Left out, every garment's. */
                 forCut?: "tee" | "hoodie" | "pullover-hoodie" | "sweatshirt";
                 /** @description `picker`: the list as a picker reads it once, to narrow by product, setting, person and pose itself with no further request. It is lighter: no scene says its `geometry` or its `layerUrls` (both null) and no refused row its `reason`. `forKind` then narrows nothing: every scene is listed with every place it can show a product, each place saying in `fitsKind` whether a product of that kind fits there, and `makeCredits` says what composing a scene would cost. Left out, the whole list. */
@@ -50748,6 +50822,24 @@ export interface operations {
                                 })[];
                                 /** @description The sheet's width, in millimetres. */
                                 widthMm: number;
+                            } | {
+                                /** @description How far its face stands off the wall, mm. */
+                                depthMm: number;
+                                /** @description What its sides show: the print, the face mirrored, a colour. */
+                                edge: string;
+                                /** @description Its sides' colour, #rrggbb; only for `colour`. */
+                                edgeColour?: string;
+                                /** @description Its face's height, mm. */
+                                heightMm: number;
+                                /**
+                                 * @description A canvas: a print stretched round a frame.
+                                 * @enum {string}
+                                 */
+                                kind: "canvas";
+                                /** @description Its face's width, mm. */
+                                widthMm: number;
+                                /** @description How far its print reaches past the face, each side, mm. */
+                                wrapMm: number;
                             } | {
                                 /** @description Its diameter at the base, in millimetres. */
                                 baseDiameterMm: number;

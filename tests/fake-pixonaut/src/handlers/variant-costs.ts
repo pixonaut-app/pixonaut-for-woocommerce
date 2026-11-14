@@ -43,7 +43,8 @@ export function costOf(blank: Blank, ref: string): VariantCost {
 }
 
 /** `GET /v1/blanks/{id}/variants/costs`: every variant's cost with shipping
- *  to `region`, a variant without a published price with `product` null;
+ *  to `region`, every variant read (`complete`), a variant without a
+ *  published price with `product` null;
  *  refused `unknown_region` for a region no printshop ships to. */
 export const listVariantCosts: Handler = (context): HandlerResult => {
 	const blank = tenantBlank(context, context.params.id ?? '');
@@ -58,6 +59,8 @@ export const listVariantCosts: Handler = (context): HandlerResult => {
 	return {
 		status: 200,
 		body: {
+			// The fake holds every variant's cost at once, so a read is whole.
+			complete: true,
 			costs: blank.variants.map((variant) => {
 				const cost = costOf(blank, variant.ref);
 				const money = (amount: string | null) =>
