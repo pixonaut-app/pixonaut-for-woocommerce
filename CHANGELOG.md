@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.7.1...v1.7.2) (2026-11-14)
+
+
+### Bug Fixes
+
+* **contracts:** pin Pixonaut API 7.3.0 and SDK 0.41.1 ([#134](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/134)) ([54217fe](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/54217fe08022a7d774dc7ee97c26d000707f976a))
+
 ## [1.7.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.7.0...v1.7.1) (2026-11-14)
 
 
