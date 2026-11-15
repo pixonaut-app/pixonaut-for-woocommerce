@@ -26,8 +26,8 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/set-product-showcase` | Sets which of its template's showcase sets a product's images are drawn with | `edit_product` on that product |
 | `pixonaut-for-woocommerce/get-product-picture-views` | What a product's or variation's images are drawn on, the views and photos of its side's placement, and the showcase sets a product can show | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/set-product-picture-view` | Sets the view and photo one image of a product or variation is drawn on, or flat | `edit_product` on that product (and on a variation's product) |
-| `pixonaut-for-woocommerce/get-product-split-listing` | Whether each global attribute of a product lists its values as their own products, and each value's card's own title and image | `edit_product` on that product |
-| `pixonaut-for-woocommerce/set-product-split-listing` | Sets a product's "Show each value as its own product" choice per global attribute, and each value's card's own title and image | `edit_product` on that product |
+| `pixonaut-for-woocommerce/get-product-split-listing` | Whether each global attribute of a product lists its values as their own products, each value's card's own title and image, and the cards it is listed as now, combinations included | `edit_product` on that product |
+| `pixonaut-for-woocommerce/set-product-split-listing` | Sets a product's "Show each value as its own product" choice per global attribute, and each value's or combination's card's own title and image | `edit_product` on that product |
 | `pixonaut-for-woocommerce/move-product-template` | Moves a product and its variations' own setups to another template version, keeping their sides | `edit_product` on that product |
 | `pixonaut-for-woocommerce/use-product-picture` | Puts the Pixonaut picture back in place of the store manager's own image | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/reset-standing-layout` | Undoes the layout adjusted by hand for one option of a standing side | `edit_product` on that product (and on a variation's product) |
@@ -373,18 +373,26 @@ each with its card's own `title` (empty for the product's) and `image` (`id`
 and `src`; null for the value's picture or the product's); `listed_by_all`,
 the attributes the product is listed by now, in its order of attributes,
 empty when it is listed once; and `listed_by`, the first of them, null when
-it is listed once. A product listed by several has a card per combination
-of their values; a combination's own title and image are set on the
-product's Attributes tab, not by these abilities, whose `values` are those
-of one attribute.
-`set-product-split-listing` sets them: each attribute listed takes a `choice`
-and `values`, each a `term_id` with a `title`, an `image`, or both. An image
+it is listed once; and `cards`, the cards the product is listed as now, in
+its order of values: one per value, or, for a product listed by several
+attributes, one per combination of their values that a variation sells. Each
+has its values' `term_ids`, in the product's order of attributes, its `name`
+(the values' names), and its own `title` and `image`, as a value's. The card
+of the variations no listed attribute applies to shows the product as itself
+and is not among them.
+`set-product-split-listing` sets them, by `attributes`, `cards` or both:
+each attribute listed takes a `choice` and `values`, each a `term_id` with a
+`title`, an `image`, or both; each card listed is named by its `term_ids`,
+in any order, and takes a `title`, an `image`, or both, which is how a
+combination's card is set. A card's values are values the product has, at
+most one of an attribute; one the product is not listed as now is kept
+until it is. An image
 is `id`, an image of the media library, or `src`, a public URL the store
 copies into it anew on each call (at most the size the store takes for an
 upload); null takes the card's own image off, and an empty title its
 own title. Only what is given changes. An attribute that is not a global
-attribute of the product, a value the product does not have, or an image
-that is none refuses the whole call, and an image a refused call copied is
+attribute of the product, a value the product does not have, a card named
+twice, or an image that is none refuses the whole call, and an image a refused call copied is
 deleted again. The answer is the read's.
 
 `set-product-showcase` sets the showcase sets of the product's template its

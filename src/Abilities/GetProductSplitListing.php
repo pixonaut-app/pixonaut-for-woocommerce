@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
+use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use WC_Product;
 use WC_Product_Attribute;
@@ -19,8 +20,9 @@ use WP_Error;
 /**
  * Reads, for each global attribute of a product, whether its values are
  * listed as their own products and each value's card's own title and image,
- * as the product's Attributes tab shows them. Whoever may edit the product
- * may read it.
+ * and each card the product is listed as now, a combination of values when
+ * it is listed by several attributes, as the product's Attributes tab shows
+ * them. Whoever may edit the product may read it.
  */
 final class GetProductSplitListing implements Ability {
 
@@ -32,7 +34,7 @@ final class GetProductSplitListing implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Read which values a product lists as their own products', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Reads, for each global attribute of a simple or variable product, its "Show each value as its own product" choice (`auto` follows the attribute\'s own setting, `attribute_default`), whether that lists its values as their own products, and each value\'s card\'s own title and image. `listed_by` is the attribute the product is listed by now; null when it is listed once. Set them with `set-product-split-listing`.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Reads, for each global attribute of a simple or variable product, its "Show each value as its own product" choice (`auto` follows the attribute\'s own setting, `attribute_default`), whether that lists its values as their own products, and each value\'s card\'s own title and image. `listed_by` is the attribute the product is listed by now; null when it is listed once. `cards` are the cards it is listed as now: one per value, or, listed by several attributes, one per combination of their values that a variation sells, each with its values\' `term_ids` and its own title and image. Set them with `set-product-split-listing`.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -106,7 +108,39 @@ final class GetProductSplitListing implements Ability {
 			'listed_by'     => $listed_by[0] ?? null,
 			'listed_by_all' => $listed_by,
 			'attributes'    => $attributes,
+			'cards'         => self::cards( $product, $looks ),
 		);
+	}
+
+	/**
+	 * The cards a product is listed as now, in its order of values, each
+	 * with its values and its own title and image. The card of the
+	 * variations no listed attribute applies to shows the product as itself
+	 * and is left out.
+	 *
+	 * @param WC_Product                                          $product A product.
+	 * @param array<int|string, array{title: string, image: int}> $looks   Its cards' own titles and images, by card key.
+	 * @return list<array{term_ids: list<int>, name: string, title: string, image: array{id: int, src: string}|null}>
+	 */
+	private static function cards( WC_Product $product, array $looks ): array {
+		$cards = array();
+		foreach ( SplitCards::keys( $product ) as $key ) {
+			$term_ids = SplitCards::card_terms( $product, $key );
+			if ( array() === $term_ids ) {
+				continue;
+			}
+			$look    = $looks[ $key ] ?? array(
+				'title' => '',
+				'image' => 0,
+			);
+			$cards[] = array(
+				'term_ids' => $term_ids,
+				'name'     => SplitCards::name( $term_ids ),
+				'title'    => $look['title'],
+				'image'    => self::image( $look['image'] ),
+			);
+		}
+		return $cards;
 	}
 
 	/**
@@ -196,6 +230,29 @@ final class GetProductSplitListing implements Ability {
 											),
 										),
 									),
+								),
+							),
+						),
+					),
+				),
+				'cards'         => array(
+					'type'        => 'array',
+					'description' => __( 'The cards the product is listed as now: one per value, or one per combination of values when it is listed by several attributes. Empty when it is listed once.', 'pixonaut-for-woocommerce' ),
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'term_ids' => array(
+								'type'        => 'array',
+								'description' => __( 'The term ids of the card\'s values, one of each attribute the product is listed by that applies to it, in the product\'s order of attributes.', 'pixonaut-for-woocommerce' ),
+								'items'       => array( 'type' => 'integer' ),
+							),
+							'name'     => array( 'type' => 'string' ),
+							'title'    => array( 'type' => 'string' ),
+							'image'    => array(
+								'type'       => array( 'object', 'null' ),
+								'properties' => array(
+									'id'  => array( 'type' => 'integer' ),
+									'src' => array( 'type' => 'string' ),
 								),
 							),
 						),

@@ -14,6 +14,7 @@ use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variation;
 use WP_Post;
+use WP_Term;
 
 /**
  * A product listed by one of its attributes (`SplitListing`) is shown once
@@ -369,6 +370,24 @@ final class SplitCards {
 	 */
 	public static function term_ids( string $key ): array {
 		return self::NO_VALUE === $key || ! self::is_key( $key ) ? array() : array_map( 'intval', explode( self::KEY_SEPARATOR, $key ) );
+	}
+
+	/**
+	 * What a card is called beside its fields: its values' names, in the
+	 * order given; a value whose term is gone is left out.
+	 *
+	 * @param int[] $term_ids The card's values.
+	 * @phpstan-param list<int> $term_ids
+	 */
+	public static function name( array $term_ids ): string {
+		$names = array();
+		foreach ( $term_ids as $term_id ) {
+			$term = get_term( $term_id );
+			if ( $term instanceof WP_Term ) {
+				$names[] = $term->name;
+			}
+		}
+		return implode( ', ', $names );
 	}
 
 	/**

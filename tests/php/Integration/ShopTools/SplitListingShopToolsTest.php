@@ -9,12 +9,15 @@ namespace Pixonaut\WooCommerce\Tests\Integration\ShopTools;
 
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
+use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
+use WC_Product_Variable;
+use WC_Product_Variation;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -52,6 +55,18 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 	private const PICTURE = 'Bild';
 
 	private const SIZE = 'Storlek';
+
+	/**
+	 * With the next, the attributes a poster is listed by a combination of.
+	 */
+	private const PERSONALISED = 'Personalisering';
+
+	private const FRAMING = 'Inramning';
+
+	/**
+	 * Added to a term's id, the id of no term the fixtures make.
+	 */
+	private const NO_SUCH_TERM_OFFSET = 1000;
 
 	private const CARD_URL = 'https://pictures.example/cards/med-bild.png';
 
@@ -476,6 +491,234 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 		}
 		$this->assertSame( array(), ProductConfig::stored_on( $this->reload( $poster ) )->split_listing );
 		$this->assertSame( array(), SplitCardLooks::stored_on( $poster->get_id() ) );
+	}
+
+	public function test_it_reads_a_card_per_combination_of_a_product_listed_by_two_attributes(): void {
+		$poster = $this->framed_poster();
+		$image  = $this->image();
+		SplitCardLooks::save(
+			$poster->get_id(),
+			array(
+				SplitCards::key( array( $this->term( 'med-egen-bild' ), $this->term( 'ek-ram' ) ) ) => array(
+					'title' => 'Poster med din bild i ekram',
+					'image' => $image,
+				),
+			)
+		);
+
+		$read = $this->succeed( self::GET, array( 'product_id' => $poster->get_id() ) );
+
+		$this->assertSame(
+			array(
+				array(
+					'term_ids' => array( $this->term( 'med-egen-bild' ), $this->term( 'ek-ram' ) ),
+					'name'     => 'Med egen bild, Ek-ram',
+					'title'    => 'Poster med din bild i ekram',
+					'image'    => array(
+						'id'  => $image,
+						'src' => wp_get_attachment_url( $image ),
+					),
+				),
+				array(
+					'term_ids' => array( $this->term( 'med-egen-bild' ), $this->term( 'ingen' ) ),
+					'name'     => 'Med egen bild, Ingen',
+					'title'    => '',
+					'image'    => null,
+				),
+				array(
+					'term_ids' => array( $this->term( 'utan-egen-bild' ), $this->term( 'ingen' ) ),
+					'name'     => 'Utan egen bild, Ingen',
+					'title'    => '',
+					'image'    => null,
+				),
+			),
+			$read['cards'],
+			'one per combination a variation sells, a value\'s by its name'
+		);
+	}
+
+	public function test_a_product_listed_by_one_attribute_has_a_card_per_value_and_one_listed_once_has_none(): void {
+		$poster = $this->poster();
+		$this->assertSame( array(), $this->succeed( self::GET, array( 'product_id' => $poster->get_id() ) )['cards'] );
+
+		ProductConfig::stored_on( $poster )->with_split_listing( array( $this->attributes[ self::PICTURE ] => SplitListing::ON ) )->save_to( $poster );
+
+		$this->assertSame(
+			array( array( $this->term( 'med-bild' ) ), array( $this->term( 'utan-bild' ) ) ),
+			array_column( $this->succeed( self::GET, array( 'product_id' => $poster->get_id() ) )['cards'], 'term_ids' )
+		);
+	}
+
+	public function test_it_sets_a_combination_cards_title_and_image_by_its_values(): void {
+		$poster = $this->framed_poster();
+		$image  = $this->image();
+		$framed = array( $this->term( 'med-egen-bild' ), $this->term( 'ek-ram' ) );
+		$bare   = array( $this->term( 'utan-egen-bild' ), $this->term( 'ingen' ) );
+		SplitCardLooks::save( $poster->get_id(), array( SplitCards::key( $bare ) => array( 'title' => 'Poster' ) ) );
+
+		$set = $this->succeed(
+			self::SET,
+			array(
+				'product_id' => $poster->get_id(),
+				'cards'      => array(
+					array(
+						// In any order.
+						'term_ids' => array_reverse( $framed ),
+						'title'    => 'Poster med din bild i ekram',
+						'image'    => array( 'id' => $image ),
+					),
+				),
+			)
+		);
+
+		$this->assertSame( array( 'Poster med din bild i ekram', '', 'Poster' ), array_column( $set['cards'], 'title' ) );
+		$this->assertSame( $image, $set['cards'][0]['image']['id'] );
+		$this->assertSame( $set, $this->succeed( self::GET, array( 'product_id' => $poster->get_id() ) ), 'the read answers the same' );
+		$this->assertSame(
+			array(
+				'title' => 'Poster med din bild i ekram',
+				'image' => $image,
+			),
+			SplitCardLooks::of( $poster->get_id(), SplitCards::key( $framed ) )
+		);
+
+		$cleared = $this->succeed(
+			self::SET,
+			array(
+				'product_id' => $poster->get_id(),
+				'cards'      => array(
+					array(
+						'term_ids' => $framed,
+						'title'    => '',
+					),
+					array(
+						'term_ids' => $bare,
+						'title'    => '',
+					),
+				),
+			)
+		);
+
+		$this->assertSame( array( '', '', '' ), array_column( $cleared['cards'], 'title' ) );
+		$this->assertSame( $image, $cleared['cards'][0]['image']['id'], 'an image left out is kept' );
+	}
+
+	public function test_it_sets_the_choices_and_the_combination_cards_in_one_call(): void {
+		$poster = $this->framed_poster( array() );
+		$framed = array( $this->term( 'med-egen-bild' ), $this->term( 'ek-ram' ) );
+
+		$set = $this->succeed(
+			self::SET,
+			array(
+				'product_id' => $poster->get_id(),
+				'attributes' => array(
+					array(
+						'attribute_id' => $this->attributes[ self::PERSONALISED ],
+						'choice'       => SplitListing::ON,
+					),
+					array(
+						'attribute_id' => $this->attributes[ self::FRAMING ],
+						'choice'       => SplitListing::ON,
+					),
+				),
+				'cards'      => array(
+					array(
+						'term_ids' => $framed,
+						'title'    => 'Poster med din bild i ekram',
+					),
+				),
+			)
+		);
+
+		$this->assertSame( array( $this->attributes[ self::PERSONALISED ], $this->attributes[ self::FRAMING ] ), $set['listed_by_all'] );
+		$this->assertSame( array( 'Poster med din bild i ekram', '', '' ), array_column( $set['cards'], 'title' ) );
+	}
+
+	public function test_a_card_that_does_not_fit_refuses_the_whole_call(): void {
+		$poster   = $this->framed_poster();
+		$with     = $this->term( 'med-egen-bild' );
+		$oak      = $this->term( 'ek-ram' );
+		$card     = static fn ( array $term_ids ): array => array(
+			'term_ids' => $term_ids,
+			'title'    => 'Poster',
+		);
+		$refusals = array(
+			'has no value'              => array( 'cards' => array( $card( array( $with, $oak ) ), $card( array( $with, $oak + self::NO_SUCH_TERM_OFFSET ) ) ) ),
+			'one value of an attribute' => array( 'cards' => array( $card( array( $with, $this->term( 'utan-egen-bild' ) ) ) ) ),
+			'is listed twice'           => array( 'cards' => array( $card( array( $with, $oak ) ), $card( array( $oak, $with ) ) ) ),
+			'`attributes`, `cards`'     => array(),
+		);
+		foreach ( $refusals as $why => $input ) {
+			$answer = $this->call( self::SET, array( 'product_id' => $poster->get_id() ) + $input );
+
+			$this->assertSame( self::UNPROCESSABLE, $answer->get_status(), $why );
+			$this->assertStringContainsString( $why, $answer->get_data()['message'] );
+			$this->assertSame( array(), SplitCardLooks::stored_on( $poster->get_id() ), $why );
+		}
+
+		$twice = $this->call(
+			self::SET,
+			array(
+				'product_id' => $poster->get_id(),
+				'attributes' => array(
+					array(
+						'attribute_id' => $this->attributes[ self::PERSONALISED ],
+						'values'       => array(
+							array(
+								'term_id' => $with,
+								'title'   => 'Poster',
+							),
+						),
+					),
+				),
+				'cards'      => array( $card( array( $with ) ) ),
+			)
+		);
+		$this->assertSame( self::UNPROCESSABLE, $twice->get_status() );
+		$this->assertStringContainsString( 'is listed twice', $twice->get_data()['message'], 'a value\'s card named on its attribute and among the cards' );
+	}
+
+	/**
+	 * A poster personalised or not (`Personalisering`: Med egen bild, Utan egen bild)
+	 * and bare or framed (`Inramning`: Ingen, Ek-ram), sold with a photo
+	 * both ways and without one bare only.
+	 *
+	 * @param array<string, string>|null $choices Its choices by attribute name; both on when null.
+	 */
+	private function framed_poster( ?array $choices = null ): WC_Product {
+		$this->attribute( self::PERSONALISED, array( 'Med egen bild', 'Utan egen bild' ) );
+		$this->attribute( self::FRAMING, array( 'Ingen', 'Ek-ram' ) );
+		$product = new WC_Product_Variable();
+		$product->set_name( 'Poster' );
+		$product->set_status( 'publish' );
+		$product->set_attributes( array( $this->product_attribute( self::PERSONALISED ), $this->product_attribute( self::FRAMING ) ) );
+		$product->save();
+		foreach ( array( array( 'med-egen-bild', 'ingen' ), array( 'med-egen-bild', 'ek-ram' ), array( 'utan-egen-bild', 'ingen' ) ) as list( $personalised, $framing ) ) {
+			$variation = new WC_Product_Variation();
+			$variation->set_parent_id( $product->get_id() );
+			$variation->set_attributes(
+				array(
+					wc_attribute_taxonomy_name( self::PERSONALISED ) => $personalised,
+					wc_attribute_taxonomy_name( self::FRAMING ) => $framing,
+				)
+			);
+			$variation->set_regular_price( '10' );
+			$variation->save();
+		}
+		WC_Product_Variable::sync( $product->get_id() );
+		$choices ??= array(
+			self::PERSONALISED => SplitListing::ON,
+			self::FRAMING      => SplitListing::ON,
+		);
+		$by_id     = array();
+		foreach ( $choices as $name => $choice ) {
+			$by_id[ $this->attributes[ $name ] ] = $choice;
+		}
+		$fresh = $this->reload( $product );
+		if ( array() !== $by_id ) {
+			ProductConfig::stored_on( $fresh )->with_split_listing( $by_id )->save_to( $fresh );
+		}
+		return $this->reload( $fresh );
 	}
 
 	public function test_it_refuses_a_product_that_is_none(): void {
