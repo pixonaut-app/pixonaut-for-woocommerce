@@ -862,6 +862,14 @@ several sides, or without the form, the attribute items are left out, with
 any group of the product's own they leave empty, and the variation fields
 stay in the form.
 
+An attribute that does not apply to the form's choices (see
+[Attributes that do not apply](#attributes-that-do-not-apply)) is
+left out the same way: its row stays in the add-to-cart form, hidden, and a
+group it leaves empty is not drawn, so the groups after it take its number.
+The SDK numbers its groups as it mounts, so the script mounts the side again,
+on the customer's values and, in a form in steps, on the step they were on,
+each time a row gets or loses `data-pixonaut-not-applicable`.
+
 ### Swatches
 
 With the `attribute_options` setting on `swatches` (see

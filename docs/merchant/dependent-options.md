@@ -40,6 +40,9 @@ Put the attribute the others depend on first in the product's
   matches the choices sets it. With **None** chosen, the three others are
   gone; with **Hanger**, only the hanger colour shows.
 - An option that shows again starts empty, for the customer to choose.
+- Where the designer's form shows each option in a
+  [group of its own](../layouts/#product-options-as-their-own-groups), the group of an option that does not
+  apply is gone too, and the groups after it are numbered again.
 
 The cart, the checkout, the order and its emails list only the options that
 applied. Orders placed before the plugin did this keep what they listed.

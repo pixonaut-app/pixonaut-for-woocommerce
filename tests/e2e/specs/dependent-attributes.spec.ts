@@ -1,7 +1,7 @@
 import type { APIRequestContext, Locator, Page } from '@playwright/test';
 import { expect, restUrl, test } from '../fixtures';
 import { openCheckouts, pay } from '../orders';
-import { addToCartButton } from '../personalised';
+import { addToCartButton, PERSONALISED } from '../personalised';
 
 /** Most digits of the clock a unique slug takes: attribute slugs are short. */
 const SLUG_CLOCK_DIGITS = 8;
@@ -34,11 +34,12 @@ async function withPoster(
 	request: APIRequestContext,
 	split: Attribute[],
 	run: (poster: Poster) => Promise<void>,
+	pixonaut?: object,
 ): Promise<void> {
 	const key = String(Date.now()).slice(-SLUG_CLOCK_DIGITS);
 	const response = await request.post(
 		restUrl('/pixonaut-e2e/v1/dependent-poster'),
-		{ data: { key, split } },
+		{ data: { key, split, pixonaut } },
 	);
 	expect(response.status()).toBe(201);
 	try {
@@ -203,3 +204,84 @@ test('a category lists a card per real combination, which opens on it', async ({
 		);
 	});
 });
+
+/** The first configuration version with a place for the option groups. */
+const OPTION_GROUPS_VERSION = 12;
+
+/** The fixture template's groups, in its order. */
+const TEMPLATE_STEPS = ['Ladda upp motiv', 'Text'];
+
+const DESIGNER_HEADINGS =
+	'#pixonaut-form-front [data-testid="pixonaut-form"] > h3';
+
+const numbered = (steps: string[]) =>
+	steps.map((step, index) => `${index + 1}. ${step}`);
+
+for (const viewport of [
+	{ width: 1280, height: 800 },
+	{ width: 390, height: 844 },
+]) {
+	test(`the designer shows a numbered group only for the options that apply to the choice, at ${viewport.width}px`, async ({
+		connectedStore: page,
+		request,
+		baseURL,
+	}, testInfo) => {
+		await page.context().addCookies([
+			{
+				name: 'pixonaut_e2e_product_form',
+				value: 'as_groups=yes&place=last',
+				url: baseURL ?? '',
+			},
+		]);
+		await page.setViewportSize(viewport);
+		await withPoster(
+			request,
+			[],
+			async (poster) => {
+				await page.goto(poster.permalink);
+				const headings = page.locator(DESIGNER_HEADINGS);
+				await expect(headings).toHaveText(
+					numbered([
+						...TEMPLATE_STEPS,
+						'Inramning',
+						'Hängarfärg',
+						'Ramfärg',
+						'Canvasdjup',
+					]),
+				);
+
+				await choose(page, poster, 'inramning', 'hangare');
+				await expect(headings).toHaveText(
+					numbered([...TEMPLATE_STEPS, 'Inramning', 'Hängarfärg']),
+				);
+				await expectShown(page, poster, ['inramning', 'hangarfarg']);
+				await testInfo.attach(`hanger-${viewport.width}`, {
+					body: await page.screenshot({ fullPage: true }),
+					contentType: 'image/png',
+				});
+
+				// The group of the option that applies now takes the number of
+				// the one that no longer does.
+				await choose(page, poster, 'inramning', 'canvas');
+				await expect(headings).toHaveText(
+					numbered([...TEMPLATE_STEPS, 'Inramning', 'Canvasdjup']),
+				);
+				await expectShown(page, poster, ['inramning', 'canvasdjup']);
+
+				await choose(page, poster, 'inramning', 'ingen');
+				await expect(headings).toHaveText(
+					numbered([...TEMPLATE_STEPS, 'Inramning']),
+				);
+				await expectShown(page, poster, ['inramning']);
+				await expect(page.locator('form [name="variation_id"]')).toHaveValue(
+					String(poster.variations.ingen),
+				);
+				await testInfo.attach(`bare-${viewport.width}`, {
+					body: await page.screenshot({ fullPage: true }),
+					contentType: 'image/png',
+				});
+			},
+			{ ...PERSONALISED, v: OPTION_GROUPS_VERSION },
+		);
+	});
+}

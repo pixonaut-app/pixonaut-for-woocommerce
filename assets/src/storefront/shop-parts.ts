@@ -65,7 +65,14 @@ export type ShopParts = {
 	 *  (`returnShopParts()`): the option fields, and each attribute's field
 	 *  put in a slot of its own. */
 	homes: Map<HTMLElement, Comment>;
+	/** Where each part with a home stood when it was taken, for a home the
+	 *  page removed. */
+	places: Map<HTMLElement, PartPlace>;
 };
+
+/** A part's parent, and the parent's elements in order, as the first of
+ *  them was taken. */
+type PartPlace = { parent: Element; siblings: Element[] };
 
 /** The form container, with the parts already gathered from it. */
 type GatheredContainer = HTMLElement & {
@@ -130,7 +137,14 @@ function gatherParts(
 	container.after(cartRow);
 	const rowParts = [...parts, ...following];
 	cartRow.append(...rowParts);
-	return { options, cartRow, rowParts, container, homes: new Map() };
+	return {
+		options,
+		cartRow,
+		rowParts,
+		container,
+		homes: new Map(),
+		places: new Map(),
+	};
 }
 
 /** The cart row, holding its parts again, after the form container as it
@@ -226,12 +240,45 @@ export function printShopParts(
 			name === OPTIONS_SLOT ? parts.options : attributePart(form, name);
 		if (part !== null) {
 			const home = target.ownerDocument.createComment('');
+			rememberPlace(parts, part);
 			part.before(home);
 			parts.homes.set(part, home);
 			slot.append(part);
 		}
 	}
 	return [...parts.homes.keys()].filter((part) => inSlot(part));
+}
+
+/**
+ * Notes where `part` stands before it is taken to a slot. Kept with the
+ * parts, which the script printed inline and the storefront script share.
+ */
+function rememberPlace(parts: ShopParts, part: HTMLElement): void {
+	const parent = part.parentElement;
+	if (parent === null) {
+		return;
+	}
+	// The parent's elements as its first part was taken, before any left.
+	const siblings =
+		[...parts.places.values()].find((place) => place.parent === parent)
+			?.siblings ?? Array.from(parent.children);
+	parts.places.set(part, { parent, siblings });
+}
+
+/**
+ * Puts `part` back among the elements it stood with, in their order, for a
+ * part whose home is gone: the block form draws its attributes again as it
+ * starts, which removes the comment left in a taken one's place.
+ */
+function putInPlace(parts: ShopParts, part: HTMLElement): void {
+	const place = parts.places.get(part);
+	if (place === undefined || !place.parent.isConnected) {
+		return;
+	}
+	const next = place.siblings
+		.slice(place.siblings.indexOf(part) + 1)
+		.find((sibling) => sibling.parentElement === place.parent);
+	place.parent.insertBefore(part, next ?? null);
 }
 
 /** Whether `part` stands in a slot of the printed form. */
@@ -290,9 +337,14 @@ export function returnShopParts(
 	};
 	for (const [part, home] of parts.homes) {
 		if (away(part)) {
-			home.after(part);
-			home.remove();
+			if (home.isConnected) {
+				home.after(part);
+				home.remove();
+			} else {
+				putInPlace(parts, part);
+			}
 			parts.homes.delete(part);
+			parts.places.delete(part);
 		}
 	}
 	// Beside the form container is where the row was gathered, without a slot

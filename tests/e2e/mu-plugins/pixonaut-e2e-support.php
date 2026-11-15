@@ -821,7 +821,8 @@ add_action(
 		// each colour (15.00), framed in each colour (20.00) and on canvas in
 		// each depth (30.00), each variation setting only the option of its
 		// own extra, in a category of its own. `split` names the attributes
-		// the poster is listed by. DELETE removes them.
+		// the poster is listed by; `pixonaut` is its stored configuration,
+		// every variation then personalised. DELETE removes them.
 		register_rest_route(
 			'pixonaut-e2e/v1',
 			'/dependent-poster',
@@ -831,17 +832,21 @@ add_action(
 					'permission_callback' => '__return_true',
 					'args'                => array(
 						// A short unique suffix for the attributes' and the category's slugs.
-						'key'   => array(
+						'key'      => array(
 							'type'     => 'string',
 							'required' => true,
 							'pattern'  => '^[a-z0-9]{1,16}$',
 						),
-						'split' => array(
+						'split'    => array(
 							'type'  => 'array',
 							'items' => array(
 								'type' => 'string',
 								'enum' => array( 'inramning', 'hangarfarg', 'ramfarg', 'canvasdjup' ),
 							),
+						),
+						// A stored Pixonaut configuration document for the poster.
+						'pixonaut' => array(
+							'type' => 'object',
 						),
 					),
 					'callback'            => static function ( WP_REST_Request $request ) {
@@ -927,6 +932,15 @@ add_action(
 						$poster = wc_get_product( $poster->get_id() );
 						if ( array() !== $split && $poster instanceof WC_Product ) {
 							\Pixonaut\WooCommerce\Catalogue\ProductConfig::stored_on( $poster )->with_split_listing( $split )->save_to( $poster );
+						}
+						if ( is_array( $request['pixonaut'] ) && $poster instanceof WC_Product ) {
+							\Pixonaut\WooCommerce\Catalogue\ProductConfig::from_json( (string) wp_json_encode( $request['pixonaut'] ) )->save_to( $poster );
+							foreach ( $poster->get_children() as $variation_id ) {
+								$variation = wc_get_product( $variation_id );
+								if ( $variation instanceof WC_Product ) {
+									pixonaut_e2e_pick_variant( $variation, null );
+								}
+							}
 						}
 
 						return new WP_REST_Response(

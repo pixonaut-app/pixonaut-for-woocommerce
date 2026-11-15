@@ -4,6 +4,7 @@ import type {
 	FormGroupItem,
 	FormGroups,
 } from '../types/sdk';
+import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
 import { attributePart } from './shop-parts';
 import { chosenValue } from './variations';
 
@@ -36,6 +37,9 @@ const ATTRIBUTE_FIELD_PREFIX = 'attribute_';
 export type HostGroups = {
 	formGroups: FormGroups;
 	hosts: string[];
+	/** The fields of the attributes left out for not applying to the form's
+	 *  choices (`inapplicableHosts()`). */
+	inapplicable: string[];
 };
 
 const isAttribute = (item: ArrangedItem): item is { attribute: string } =>
@@ -45,14 +49,17 @@ const isAttribute = (item: ArrangedItem): item is { attribute: string } =>
  * `arranged` as the designer takes it. With `form`, each attribute item is
  * that attribute's part of the form, moved into the group; without it, or
  * for an attribute the form has no field of, the item is left out, with a
- * group of the product's own that it leaves empty. An attribute in a group
- * of its own is marked so (`OWN_STEP_ATTRIBUTE`).
+ * group of the product's own that it leaves empty. So is an attribute that
+ * does not apply to the form's choices, which has nothing to pick: the
+ * designer numbers the groups it is given, so those after it move up. An
+ * attribute in a group of its own is marked so (`OWN_STEP_ATTRIBUTE`).
  */
 export function hostGroups(
 	arranged: ArrangedGroups,
 	form: HTMLFormElement | null,
 ): HostGroups {
 	const hosts: string[] = [];
+	const inapplicable = form === null ? [] : inapplicableHosts(arranged, form);
 	const groups: FormGroup[] = [];
 	for (const group of arranged.groups) {
 		const items: FormGroupItem[] = [];
@@ -63,6 +70,9 @@ export function hostGroups(
 				continue;
 			}
 			const name = ATTRIBUTE_FIELD_PREFIX + item.attribute;
+			if (inapplicable.includes(name)) {
+				continue;
+			}
 			const element = form === null ? null : attributePart(form, name);
 			if (element !== null) {
 				element.toggleAttribute(OWN_STEP_ATTRIBUTE, ownStep);
@@ -74,7 +84,33 @@ export function hostGroups(
 			groups.push({ ...group, items });
 		}
 	}
-	return { formGroups: { groups }, hosts };
+	return { formGroups: { groups }, hosts, inapplicable };
+}
+
+/**
+ * The fields of the attributes `arranged` places that do not apply to the
+ * choices made in `form`, in the order it places them: those whose row
+ * `hideInapplicableAttributes()` hides.
+ */
+export function inapplicableHosts(
+	arranged: ArrangedGroups,
+	form: HTMLFormElement,
+): string[] {
+	const fields = Array.from(
+		form.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
+			'input, select',
+		),
+	);
+	return arranged.groups
+		.flatMap((group) => group.items)
+		.filter(isAttribute)
+		.map((item) => ATTRIBUTE_FIELD_PREFIX + item.attribute)
+		.filter(
+			(name) =>
+				fields
+					.find((field) => field.name === name)
+					?.closest(`[${NOT_APPLICABLE_ATTRIBUTE}]`) != null,
+		);
 }
 
 /** Whether the host item `host` is complete: its field holds a choice. */
@@ -83,7 +119,9 @@ export function hostComplete(form: HTMLFormElement, host: string): boolean {
 }
 
 /** The form's parts `groups` lends the designer. */
-export function lentElements(groups: HostGroups): HTMLElement[] {
+export function lentElements(
+	groups: Pick<HostGroups, 'formGroups'>,
+): HTMLElement[] {
 	return groups.formGroups.groups.flatMap((group) =>
 		group.items.flatMap((item) => ('host' in item ? [item.element] : [])),
 	);

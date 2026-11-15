@@ -274,6 +274,44 @@ describe('returnShopParts', () => {
 		expect(slotOf('cart')).toBeNull();
 	});
 
+	it('puts an attribute back among the others, in their order, when the form removed the mark of its place', () => {
+		const attribute = (name: string) =>
+			`<div class="wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute"><input type="hidden" name="${name}"></div>`;
+		const { form, container, gathered } = parts(`
+			<form class="cart">
+				<div class="wp-block-woocommerce-add-to-cart-with-options-variation-selector">${attribute('attribute_colour')}${attribute('attribute_size')}${attribute('attribute_depth')}</div>
+				<div class="pixonaut-form">
+					<div id="pixonaut-form-front" class="pixonaut-form__side"><div class="pixonaut-form__placeholder">${['attribute_size', 'attribute_colour', 'attribute_depth', 'cart'].map(slot).join('')}</div></div>
+				</div>
+				<button type="submit">Add to cart</button>
+			</form>`);
+		const shop = gathered as NonNullable<typeof gathered>;
+		const selector = shop.options as HTMLElement;
+		const fields = () =>
+			Array.from(selector.querySelectorAll('input'), (field) => field.name);
+		printShopParts(
+			shop,
+			document.querySelector('#pixonaut-form-front') as HTMLElement,
+			form,
+		);
+		expect(fields()).toEqual([]);
+		// The block form draws its attributes again as it starts: the
+		// comments in the taken ones' places go.
+		selector.replaceChildren();
+		// The designer keeps the depth.
+		const kept = slotOf('attribute_depth')?.firstElementChild;
+
+		returnShopParts(shop, container, new Set([kept]));
+		expect(fields()).toEqual(['attribute_colour', 'attribute_size']);
+
+		returnShopParts(shop, container);
+		expect(fields()).toEqual([
+			'attribute_colour',
+			'attribute_size',
+			'attribute_depth',
+		]);
+	});
+
 	it('gathers the cart row again for the next designer', () => {
 		const { form, container, gathered } = printedPage();
 		const shop = gathered as NonNullable<typeof gathered>;

@@ -335,6 +335,7 @@ export const REACH = {
 		'assets/src/storefront/applicable-attributes.ts',
 		'assets/src/storefront/applicable-form.ts',
 		'assets/src/storefront/applicable-index.ts',
+		'assets/src/storefront/form-groups.ts',
 		'assets/src/storefront/theme-fields.ts',
 		'src/Cart/InapplicableAttributes.php',
 		'src/Catalogue/ApplicableAttributes.php',

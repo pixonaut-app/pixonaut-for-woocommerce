@@ -6,6 +6,7 @@ import type {
 	ProductPlacement,
 	SplitMountOptions,
 } from '../types/sdk';
+import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
 import { CheckboxApproval } from './approval';
 import { removePrintedSwatches } from './attribute-swatches';
 import {
@@ -34,6 +35,7 @@ import {
 	type HostGroups,
 	hostComplete,
 	hostGroups,
+	inapplicableHosts,
 	lentElements,
 } from './form-groups';
 import {
@@ -731,6 +733,54 @@ export class ProductDesigner {
 				this.completeHosts(side, designer);
 			}
 		});
+		// An attribute's row is marked as it stops applying to the choices,
+		// and unmarked as it applies again.
+		new MutationObserver(() => this.fitHosts()).observe(form, {
+			attributeFilter: [NOT_APPLICABLE_ATTRIBUTE],
+			subtree: true,
+		});
+	}
+
+	/**
+	 * After every switch under way, which may have mounted a side as it
+	 * should be: mounts again each side whose groups hold an attribute that
+	 * no longer applies to the form's choices, or leave out one that applies
+	 * again. The designer would draw the group of an attribute with nothing
+	 * to pick as an empty step, and numbers its groups only as it mounts.
+	 */
+	private fitHosts(): void {
+		this.switching = this.switching
+			.then(() => this.mountMisfits())
+			.catch((error: unknown) => {
+				console.error(
+					'Pixonaut: the option groups could not be drawn again.',
+					error,
+				);
+			});
+	}
+
+	private async mountMisfits(): Promise<void> {
+		// A side mounting now is in no designer's name yet.
+		await this.mounting;
+		const form = this.form;
+		const sdk = this.sdk;
+		if (form === null || sdk === null) {
+			return;
+		}
+		for (const [side, groups] of [...this.hosts]) {
+			const designer = this.designers.get(side);
+			const arranged = arrangedOf(this.mounts[side]);
+			if (
+				designer === undefined ||
+				arranged === undefined ||
+				sameList(groups.inapplicable, inapplicableHosts(arranged, form))
+			) {
+				continue;
+			}
+			const step = designer.getStep()?.groupId;
+			await this.remount(this.variation, side, designer, sdk);
+			showStep(this.designers.get(side), step);
+		}
 	}
 
 	/** Tells `designer` which of its host items hold a choice: Next waits for
@@ -2188,7 +2238,21 @@ function sameList(
 	return JSON.stringify(first ?? []) === JSON.stringify(second ?? []);
 }
 
-/** Resolves once the current task, and any event it is dispatching, ends. */
+/** Shows the step of group `groupId` in a form laid out in steps, which a
+ *  designer mounted again opens on its first; nothing when it has no such
+ *  step. */
+function showStep(
+	designer: PixonautDesigner | undefined,
+	groupId: string | undefined,
+): void {
+	const index =
+		designer?.getStep()?.steps.findIndex((step) => step.groupId === groupId) ??
+		-1;
+	if (index >= 0) {
+		designer?.setStep(index);
+	}
+}
+
 /** The side's arrangement as the server prints it, which the SDK's own
  *  option type does not describe: attribute items stand in for the form's
  *  fields until `hostGroups()` lends them. */
