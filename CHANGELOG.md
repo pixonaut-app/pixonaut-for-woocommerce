@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.9.1...v1.9.2) (2026-11-15)
+
+
+### Bug Fixes
+
+* **abilities:** a card's image given by its URL is copied in a background job, so a call naming many answers at once ([#160](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/160)) ([24e7286](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/24e72866e486598808f2416994fc7c1de154e592))
+* **contracts:** pin Pixonaut API 9.1.0 ([#161](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/161)) ([d420d5e](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/d420d5e394f36c4e11370f87fe9f8263dd9e2ed1))
+
 ## [1.9.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.9.0...v1.9.1) (2026-11-15)
 
 
