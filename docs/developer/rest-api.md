@@ -80,7 +80,7 @@ offered to a user:
 | Showcase pictures | `set-product-showcase`, `get-product-picture-views` |
 | Listing each value as its own product | `get-product-split-listing`, `set-product-split-listing` |
 | Pricing settings | `get-pricing-settings`, `update-pricing-settings` |
-| A product's prices | `get-product-prices`, `price-product` |
+| A product's prices | `get-product-prices`, `price-product`, `set-product-price-changes` |
 | Orders, read only | `list-orders`, `get-order` |
 
 The product and variation tools answer as the store abilities of the same

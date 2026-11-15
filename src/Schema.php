@@ -215,6 +215,13 @@ final class Schema {
 	const PRICE_RULE_META = '_pixonaut_price_rule';
 
 	/**
+	 * Product and variation meta, `always` or `never`, on one whose prices
+	 * change by themselves, or never do, whatever the store's switch says;
+	 * a variation's answers its product's. Absent on one that follows.
+	 */
+	const PRICE_AUTOMATIC_META = '_pixonaut_price_automatic';
+
+	/**
 	 * Product meta on each product with a price that follows the pricing
 	 * rule: finds the products whose costs are read again, and counts the
 	 * prices the rule would change. JSON.

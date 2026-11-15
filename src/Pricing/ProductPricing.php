@@ -31,9 +31,11 @@ use WC_Product_Variation;
  *   from then on the price follows the rule.
  * - When a cost is read again, a price that follows the rule and whose
  *   margin is still within the tolerance is kept. One whose margin left it
- *   is set to the step nearest the target when the store changes prices
+ *   is set to the step nearest the target when its prices change
  *   automatically and its cost changed; otherwise the new price is only
- *   suggested, and the product is flagged on the products list.
+ *   suggested, and the product is flagged on the products list. The store
+ *   says whether prices change automatically, unless the product or the
+ *   variation says so for itself (`PriceChanges`).
  * - A price edited by hand after the rule set it is kept, by Apply too,
  *   until it is given back to the rule.
  *
@@ -168,6 +170,23 @@ final class ProductPricing {
 	}
 
 	/**
+	 * Whether the store changes prices by itself when a cost changes.
+	 */
+	public function store_automatic(): bool {
+		return true === $this->settings->get( Settings::PRICE_AUTOMATIC );
+	}
+
+	/**
+	 * Whether a product's prices change by themselves when a cost changes:
+	 * what the product says for itself, else the store's switch.
+	 *
+	 * @param WC_Product $product A simple or variable product.
+	 */
+	public function automatic_for( WC_Product $product ): bool {
+		return PriceChanges::automatic( $product, $this->store_automatic() );
+	}
+
+	/**
 	 * What a product prices: itself, or each of a variable product's
 	 * variations.
 	 *
@@ -189,9 +208,10 @@ final class ProductPricing {
 	 * @return list<PriceRow>
 	 */
 	public function rows( WC_Product $product ): array {
-		$rule = $this->rule_for( $product );
+		$rule      = $this->rule_for( $product );
+		$automatic = $this->automatic_for( $product );
 		return array_map(
-			function ( WC_Product $item ) use ( $rule ): PriceRow {
+			function ( WC_Product $item ) use ( $rule, $automatic ): PriceRow {
 				$state    = PriceState::stored_on( $item );
 				$price    = Amount::parse( $item->get_regular_price( 'edit' ) );
 				$standing = $state->standing( $price );
@@ -219,7 +239,9 @@ final class ProductPricing {
 					$state->rule_at,
 					$state->checked_at,
 					$store->rate_date,
-					$store->buffer
+					$store->buffer,
+					self::automatic_of( $item, $automatic ),
+					PriceChanges::setting( $item )
 				);
 			},
 			self::items( $product )
@@ -232,7 +254,7 @@ final class ProductPricing {
 	 * before any is stored, so a read that fails stores nothing.
 	 *
 	 * @param WC_Product $product A simple or variable product.
-	 * @return int How many prices were changed, which only happens when the store changes prices automatically.
+	 * @return int How many prices were changed, which only happens for prices that change automatically.
 	 * @throws ApiException When Pixonaut could not be asked; what is stored is kept.
 	 */
 	public function refresh( WC_Product $product ): int {
@@ -334,6 +356,7 @@ final class ProductPricing {
 		$region     = self::region();
 		$rule       = null === $own ? $this->rule_for( $product ) : $this->rule_with( $own );
 		$items      = self::items( $product );
+		$automatic  = $this->automatic_for( $product );
 		$costs      = array();
 		foreach ( $items as $item ) {
 			list( $blank_id, $ref ) = self::sold( $item );
@@ -343,7 +366,7 @@ final class ProductPricing {
 		}
 		$this->converter->refresh_for( array_values( $costs ) );
 		return array_map(
-			function ( WC_Product $item ) use ( $rule, $costs, $ids, $release ): PriceRow {
+			function ( WC_Product $item ) use ( $rule, $costs, $ids, $release, $automatic ): PriceRow {
 				$state    = PriceState::stored_on( $item );
 				$price    = Amount::parse( $item->get_regular_price( 'edit' ) );
 				$standing = $state->standing( $price );
@@ -369,7 +392,9 @@ final class ProductPricing {
 					$state->rule_at,
 					$state->checked_at,
 					$store->rate_date,
-					$store->buffer
+					$store->buffer,
+					self::automatic_of( $item, $automatic ),
+					PriceChanges::setting( $item )
 				);
 			},
 			$items
@@ -379,8 +404,8 @@ final class ProductPricing {
 	/**
 	 * Settles the prices of a product that follow the rule, from the costs
 	 * stored: one within the tolerance is kept; one outside it is set to
-	 * the rule's price when the store changes prices automatically and its
-	 * cost just changed, else the rule's price is suggested.
+	 * the rule's price when its prices change automatically and its cost
+	 * just changed, else the rule's price is suggested.
 	 *
 	 * @param WC_Product $product A simple or variable product.
 	 * @param int[]      $changed The product or variations whose cost just changed.
@@ -389,7 +414,7 @@ final class ProductPricing {
 	 */
 	public function settle( WC_Product $product, array $changed = array() ): int {
 		$rule      = $this->rule_for( $product );
-		$automatic = true === $this->settings->get( Settings::PRICE_AUTOMATIC );
+		$automatic = $this->automatic_for( $product );
 		$set       = 0;
 		foreach ( self::items( $product ) as $item ) {
 			$state = PriceState::stored_on( $item );
@@ -409,8 +434,8 @@ final class ProductPricing {
 				$state->with_flag()->save_to( $item );
 				continue;
 			}
-			if ( $automatic && in_array( $item->get_id(), $changed, true ) ) {
-				$set += $this->price( $item, $state, $rule ) ? 1 : 0;
+			if ( self::automatic_of( $item, $automatic ) && in_array( $item->get_id(), $changed, true ) ) {
+				$set += $this->price( $item, $state, $rule, true ) ? 1 : 0;
 				continue;
 			}
 			$wants = null === $cost ? null : $rule->price_for( $cost, $tax );
@@ -452,16 +477,22 @@ final class ProductPricing {
 	 * Sets one price to the rule's, and has it follow the rule from now on;
 	 * a price the rule has none for is left as it stands, and flagged. A
 	 * price or state that is no longer what the caller read, because the
-	 * store manager saved the product meanwhile, is left to them.
+	 * store manager saved the product meanwhile, is left to them. So is a
+	 * price that would change by itself once its product or variation was
+	 * set, meanwhile, to never change that way.
 	 *
-	 * @param WC_Product $read  The product or variation, as the caller read it.
-	 * @param PriceState $state Its state, as the caller read it.
-	 * @param PriceRule  $rule  The rule.
+	 * @param WC_Product $read      The product or variation, as the caller read it.
+	 * @param PriceState $state     Its state, as the caller read it.
+	 * @param PriceRule  $rule      The rule.
+	 * @param bool       $by_itself Whether the price changes by itself, rather than because the store manager applied the rule.
 	 * @return bool Whether the price changed.
 	 */
-	private function price( WC_Product $read, PriceState $state, PriceRule $rule ): bool {
+	private function price( WC_Product $read, PriceState $state, PriceRule $rule, bool $by_itself = false ): bool {
 		$item = self::fresh( $read->get_id() );
 		if ( null === $item || $item->get_regular_price( 'edit' ) !== $read->get_regular_price( 'edit' ) || PriceState::stored_on( $item )->to_array() !== $state->to_array() ) {
+			return false;
+		}
+		if ( $by_itself && ! $this->still_automatic( $item ) ) {
 			return false;
 		}
 		$store   = $this->converter->in_store( self::known_cost( $item, $state ) );
@@ -496,6 +527,28 @@ final class ProductPricing {
 		}
 		$state->priced( $wants, ( $this->clock )() )->save_to( $item );
 		return $wants !== $before;
+	}
+
+	/**
+	 * Whether a price still changes by itself, as stored now: its product
+	 * or variation may have been set to never since the caller read them.
+	 *
+	 * @param WC_Product $item The product or variation, as stored now.
+	 */
+	private function still_automatic( WC_Product $item ): bool {
+		$product = $item->is_type( 'variation' ) ? self::fresh( $item->get_parent_id() ) : $item;
+		return null !== $product && self::automatic_of( $item, $this->automatic_for( $product ) );
+	}
+
+	/**
+	 * Whether the price of one of a product's items changes by itself: what
+	 * a variation says for itself, else what its product does.
+	 *
+	 * @param WC_Product $item    The product itself, or one of its variations.
+	 * @param bool       $product Whether the product's prices change by themselves.
+	 */
+	private static function automatic_of( WC_Product $item, bool $product ): bool {
+		return $item->is_type( 'variation' ) ? PriceChanges::automatic( $item, $product ) : $product;
 	}
 
 	/**

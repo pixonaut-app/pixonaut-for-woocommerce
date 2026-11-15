@@ -13,6 +13,7 @@ use Closure;
 use Pixonaut\WooCommerce\Api\VariantCosts;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Pricing\Amount;
+use Pixonaut\WooCommerce\Pricing\PriceChanges;
 use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Pricing\PriceRow;
 use Pixonaut\WooCommerce\Pricing\PriceState;
@@ -30,12 +31,14 @@ use WP_REST_Server;
  * **Prices**, a section of the Pixonaut tab of a product personalised on a
  * blank: each variation (a simple product has one row) with what the
  * printshop charges for it, its price and its margin, the parts of the
- * store's pricing rule the product changes, and the buttons that read the
+ * store's pricing rule the product changes, whether its prices change by
+ * themselves, and the buttons that read the
  * costs again, apply the rule, apply one suggested price, and give a price
  * edited by hand back to the rule.
  *
  * The buttons post to `ROUTE`, which answers the section drawn again. The
- * rule's parts are saved with the product, and with Apply.
+ * rule's parts and the choice for automatic price changes are saved with
+ * the product, and with Apply.
  */
 final class PricingPanel {
 
@@ -65,6 +68,12 @@ final class PricingPanel {
 	 * The posted field holding the parts of the rule the product changes.
 	 */
 	public const FIELD = 'pixonaut_price_rule';
+
+	/**
+	 * The posted field holding whether the product's prices change by
+	 * themselves: one of `PriceChanges::OF_PRODUCT`.
+	 */
+	public const CHANGES_FIELD = 'pixonaut_price_automatic';
 
 	/**
 	 * The disclosure's name among the tab's open ones.
@@ -118,21 +127,25 @@ final class PricingPanel {
 				'callback'            => array( $this, 'act' ),
 				'permission_callback' => static fn ( WP_REST_Request $request ): bool => current_user_can( 'edit_post', (int) $request['product'] ),
 				'args'                => array(
-					'action' => array(
+					'action'  => array(
 						'type'     => 'string',
 						'required' => true,
 						'enum'     => self::ACTIONS,
 					),
-					'ids'    => array(
+					'ids'     => array(
 						'type'  => 'array',
 						'items' => array(
 							'type'    => 'integer',
 							'minimum' => 1,
 						),
 					),
-					'rule'   => array(
+					'rule'    => array(
 						'type'                 => 'object',
 						'additionalProperties' => array( 'type' => 'string' ),
+					),
+					'changes' => array(
+						'type' => 'string',
+						'enum' => PriceChanges::OF_PRODUCT,
 					),
 				),
 			)
@@ -142,7 +155,8 @@ final class PricingPanel {
 	/**
 	 * POST ROUTE: reads the costs again (`refresh`), sets every price or the
 	 * ones in `ids` to the rule's (`apply`, which first stores the parts of
-	 * the rule sent as `rule`), or gives the prices in `ids` back to the
+	 * the rule sent as `rule` and the choice for automatic price changes sent
+	 * as `changes`), or gives the prices in `ids` back to the
 	 * rule (`follow`). Answers `{html, message, changed, prices}`: the section
 	 * drawn again, what to say happened, how many prices changed, and each regular price by product or
 	 * variation id, as the product form shows it.
@@ -161,17 +175,21 @@ final class PricingPanel {
 		try {
 			switch ( $request['action'] ) {
 				case self::REFRESH:
-					// With automatic price changes on, reading the costs may set prices.
+					// With automatic price changes on for the product, reading the costs may set prices.
 					$changed = $this->pricing->refresh( $product );
 					$message = 0 === $changed ? __( 'The costs are read.', 'pixonaut-for-woocommerce' ) : '';
 					break;
 				case self::APPLY:
+					// Every price is set from what the printshop charges now. Read first: a read that fails stores no rule and no choice.
+					$moved = null === $ids ? $this->pricing->read_costs( $product ) : null;
 					if ( is_array( $request['rule'] ) ) {
-						$this->pricing->save_own_parts( $product, $request['rule'] );
+						$this->pricing->save_own_parts( self::reread( $product ), $request['rule'] );
 					}
-					if ( null === $ids ) {
-						// Every price is set from what the printshop charges now.
-						$changed = $this->pricing->refresh( $product );
+					if ( is_string( $request['changes'] ) ) {
+						PriceChanges::save( self::reread( $product ), $request['changes'] );
+					}
+					if ( null !== $moved ) {
+						$changed = $this->pricing->settle( self::reread( $product ), $moved );
 					}
 					$changed += $this->pricing->apply( self::reread( $product ), $ids );
 					break;
@@ -220,8 +238,8 @@ final class PricingPanel {
 	}
 
 	/**
-	 * Stores the parts of the rule the product changes, as its form posted
-	 * them, and settles its prices: one edited in the form is kept by hand.
+	 * Stores the parts of the rule the product changes and its choice for
+	 * automatic price changes, as its form posted them, and settles its prices: one edited in the form is kept by hand.
 	 *
 	 * @param int $product_id The product saved.
 	 */
@@ -237,6 +255,10 @@ final class PricingPanel {
 		$posted = isset( $_POST[ self::FIELD ] ) ? wp_unslash( $_POST[ self::FIELD ] ) : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- each part is checked as a number.
 		if ( is_array( $posted ) ) {
 			$this->pricing->save_own_parts( $product, array_filter( $posted, 'is_string' ) );
+		}
+		$changes = isset( $_POST[ self::CHANGES_FIELD ] ) ? sanitize_key( wp_unslash( $_POST[ self::CHANGES_FIELD ] ) ) : '';
+		if ( PriceChanges::allows( $product, $changes ) ) {
+			PriceChanges::save( self::reread( $product ), $changes );
 		}
 		// A price changed in the form is one edited by hand; a rule changed may suggest other prices.
 		if ( '' !== $product->get_meta( ProductPricing::WATCH_META_KEY, true ) ) {
@@ -260,21 +282,24 @@ final class PricingPanel {
 		return $this->templates->html(
 			'admin/product-prices.php',
 			array(
-				'url'        => rest_url( Plugin::REST_NAMESPACE . '/products/' . $product->get_id() . '/prices' ),
-				'field'      => self::FIELD,
-				'open'       => $open,
-				'rule_set'   => $rule->is_set(),
-				'own_parts'  => ProductPricing::own_parts( $product ),
-				'store'      => $this->pricing->store_parts(),
-				'rows'       => array_map( self::row( ... ), $rows ),
-				'unread'     => array() !== $rows && array() === array_filter( $rows, static fn ( PriceRow $row ): bool => null !== $row->checked_at ),
-				'flagged'    => count( array_filter( $rows, static fn ( PriceRow $row ): bool => PriceState::FOLLOWS === $row->standing && null !== $row->flag ) ),
-				'following'  => count( array_filter( $rows, static fn ( PriceRow $row ): bool => PriceState::OWN !== $row->standing ) ),
-				'variable'   => $product->is_type( 'variable' ),
-				'settings'   => SettingsPage::url( SettingsPage::PRICES ),
-				'tax_note'   => wc_tax_enabled() && wc_prices_include_tax(),
-				'parts'      => self::part_labels(),
-				'flag_texts' => self::flag_texts(),
+				'url'             => rest_url( Plugin::REST_NAMESPACE . '/products/' . $product->get_id() . '/prices' ),
+				'field'           => self::FIELD,
+				'changes_field'   => self::CHANGES_FIELD,
+				'changes'         => PriceChanges::setting( $product ),
+				'changes_options' => self::changes_options( $this->pricing->store_automatic() ),
+				'open'            => $open,
+				'rule_set'        => $rule->is_set(),
+				'own_parts'       => ProductPricing::own_parts( $product ),
+				'store'           => $this->pricing->store_parts(),
+				'rows'            => array_map( self::row( ... ), $rows ),
+				'unread'          => array() !== $rows && array() === array_filter( $rows, static fn ( PriceRow $row ): bool => null !== $row->checked_at ),
+				'flagged'         => count( array_filter( $rows, static fn ( PriceRow $row ): bool => PriceState::FOLLOWS === $row->standing && null !== $row->flag ) ),
+				'following'       => count( array_filter( $rows, static fn ( PriceRow $row ): bool => PriceState::OWN !== $row->standing ) ),
+				'variable'        => $product->is_type( 'variable' ),
+				'settings'        => SettingsPage::url( SettingsPage::PRICES ),
+				'tax_note'        => wc_tax_enabled() && wc_prices_include_tax(),
+				'parts'           => self::part_labels(),
+				'flag_texts'      => self::flag_texts(),
 			)
 		);
 	}
@@ -293,6 +318,27 @@ final class PricingPanel {
 			PriceState::FLAG_RATE_STALE => __( 'The exchange rate is over a week old and could not be updated, so the rule does not price it.', 'pixonaut-for-woocommerce' ),
 			PriceState::FLAG_NO_STEP    => __( 'No price step lies between the lowest and the highest price.', 'pixonaut-for-woocommerce' ),
 			PriceState::FLAG_SALE       => __( 'The rule’s price is not above the sale price. Change or remove the sale price first.', 'pixonaut-for-woocommerce' ),
+		);
+	}
+
+	/**
+	 * What a product's automatic price changes can be set to, each with
+	 * what the store manager reads, by value.
+	 *
+	 * @param bool $store Whether the store changes prices by itself.
+	 * @return array<string, string>
+	 */
+	private static function changes_options( bool $store ): array {
+		return array(
+			PriceChanges::STORE  => $store
+				/* translators: Option of the Automatic price changes field in the Prices section of the product edit page: the product does as the store's setting says, which is on. */
+				? __( 'As the store: on', 'pixonaut-for-woocommerce' )
+				/* translators: Option of the Automatic price changes field in the Prices section of the product edit page: the product does as the store's setting says, which is off. */
+				: __( 'As the store: off', 'pixonaut-for-woocommerce' ),
+			/* translators: Option of the Automatic price changes field in the Prices section of the product edit page: this product's prices change by themselves, whatever the store's setting says. */
+			PriceChanges::ALWAYS => _x( 'Always', 'automatic price changes', 'pixonaut-for-woocommerce' ),
+			/* translators: Option of the Automatic price changes field in the Prices section of the product edit page: this product's prices never change by themselves, whatever the store's setting says. */
+			PriceChanges::NEVER  => _x( 'Never', 'automatic price changes', 'pixonaut-for-woocommerce' ),
 		);
 	}
 
@@ -323,7 +369,7 @@ final class PricingPanel {
 	 * shows prices.
 	 *
 	 * @param PriceRow $row The row.
-	 * @return array{id: int, label: string, cost: string, cost_parts: string, price: string, margin: string, suggested: string, standing: string, flag: string|null, rule_at: string}
+	 * @return array{id: int, label: string, cost: string, cost_parts: string, price: string, margin: string, suggested: string, standing: string, flag: string|null, rule_at: string, changes: string}
 	 */
 	public static function row( PriceRow $row ): array {
 		$cost  = $row->cost;
@@ -368,6 +414,7 @@ final class PricingPanel {
 			'standing'   => $row->standing,
 			'flag'       => $row->flag,
 			'rule_at'    => null === $row->rule_at ? '' : (string) wp_date( (string) get_option( 'date_format' ), $row->rule_at ),
+			'changes'    => $row->changes,
 		);
 	}
 

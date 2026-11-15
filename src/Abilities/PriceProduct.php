@@ -13,7 +13,6 @@ use Closure;
 use Pixonaut\WooCommerce\Pricing\PriceRow;
 use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
-use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use WC_Product;
 use WP_Error;
@@ -44,14 +43,10 @@ final class PriceProduct implements Ability {
 	private const UNPROCESSABLE = 422;
 
 	/**
-	 * @param Closure  $pricing  Gives what reads the costs and prices by the rule, once a call needs it.
-	 * @param Settings $settings Whether prices change by themselves.
+	 * @param Closure $pricing Gives what reads the costs and prices by the rule, once a call needs it.
 	 * @phpstan-param Closure(): ProductPricing $pricing
 	 */
-	public function __construct(
-		private readonly Closure $pricing,
-		private readonly Settings $settings,
-	) {
+	public function __construct( private readonly Closure $pricing ) {
 	}
 
 	public function name(): string {
@@ -62,7 +57,7 @@ final class PriceProduct implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Price a product by the pricing rule', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Reads the printshop\'s costs of a product printed on a blank again, and sets the regular price of each variation (a simple product has one) to the rule\'s: the price step nearest the target margin, within the lowest and highest price. A price it sets follows the rule from then on. `only` unpriced leaves every variation that has a price alone; `variation_ids` names the ones to price. A price edited by hand after the rule set it is kept unless `release_held`. `rule` stores the parts of the rule this product changes, first. With `dry_run` nothing is stored on the product: the answer gives the prices it would set. Each price answers `before`, `price` and `changed`; one the rule cannot set keeps its price and says why in `flag`. No other price is set, whatever the store changes by itself. `changed` counts every price that changed; `prices` is a page of them, `page` and `per_page` choosing which. Refused without a target margin.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Reads the printshop\'s costs of a product printed on a blank again, and sets the regular price of each variation (a simple product has one) to the rule\'s: the price step nearest the target margin, within the lowest and highest price. A price it sets follows the rule from then on. `only` unpriced leaves every variation that has a price alone; `variation_ids` names the ones to price. A price edited by hand after the rule set it is kept unless `release_held`. `rule` stores the parts of the rule this product changes, first. With `dry_run` nothing is stored on the product: the answer gives the prices it would set. Each price answers `before`, `price` and `changed`; one the rule cannot set keeps its price and says why in `flag`. No other price is set, whatever changes by itself. `changed` counts every price that changed; `prices` is a page of them, `page` and `per_page` choosing which. Refused without a target margin.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -184,7 +179,7 @@ final class PriceProduct implements Ability {
 			},
 			$rows
 		);
-		return GetProductPrices::product_values( $pricing, $this->settings, $product->get_id(), $own, true ) + array(
+		return GetProductPrices::product_values( $pricing, $product, $own, true ) + array(
 			'dry_run' => $dry_run,
 			'changed' => count( array_filter( array_column( $prices, 'changed' ) ) ),
 		) + ProductPrices::page( $prices, $input );

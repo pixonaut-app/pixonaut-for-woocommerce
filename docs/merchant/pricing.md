@@ -39,7 +39,9 @@ including tax or not (**WooCommerce > Settings > Tax**). The margin always
 counts on the price excluding VAT, at your shop's base address.
 
 A product can change any part of the rule for itself, in its **Prices**
-section: an empty field there follows the store's, shown in grey.
+section: an empty field there follows the store's, shown in grey. It can
+also say whether its own prices change by themselves: see
+[One product at a time](#one-product-at-a-time).
 
 ## Pricing a product
 
@@ -118,6 +120,24 @@ What happens then is your choice, under **Automatic price changes**:
 
 Only prices you applied the rule to change this way. A product you never
 pressed **Apply** on keeps its prices whatever the setting.
+
+### One product at a time
+
+The setting is for the whole store. A product can answer it for itself, with
+**Automatic price changes** in its **Prices** section:
+
+- **As the store** (the default): the product does what the store's setting
+  says, on or off.
+- **Always**: the plugin sets this product's prices itself when a cost
+  changes, also with the store's setting off.
+- **Never**: this product's prices are only flagged with the price the rule
+  suggests, also with the store's setting on. Use it for products whose
+  prices you set yourself.
+
+The choice is saved with the product, and when you press **Apply**. A single
+variation can answer its product the same way: ask Pixel, Pixonaut's
+assistant, to set it. Its row then says **Automatic price changes: always**
+or **never**.
 
 ## A price you edit by hand
 

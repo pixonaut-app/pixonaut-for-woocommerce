@@ -150,6 +150,46 @@ describe('the Prices section', () => {
 		).toBe('62');
 	});
 
+	it('sends the choice for automatic price changes with apply, and keeps one not stored yet when it only reads costs', async () => {
+		const withChoice = (chosen: string) =>
+			section().replace(
+				'<button',
+				`<select class="pixonaut-prices__changes">${['store', 'always', 'never']
+					.map(
+						(value) =>
+							`<option value="${value}" ${value === chosen ? 'selected' : ''}>${value}</option>`,
+					)
+					.join('')}</select><button`,
+			);
+		const choice = () =>
+			root().querySelector<HTMLSelectElement>('.pixonaut-prices__changes');
+		mount(withChoice('store'));
+		const select = choice();
+		if (!select) {
+			throw new Error('no choice');
+		}
+		select.value = 'never';
+		const fetch = answering({
+			html: withChoice('store'),
+			message: 'The costs are read.',
+			changed: 0,
+			prices: { 7: '100' },
+		});
+
+		await act(root(), 'refresh', { nonce: NONCE });
+
+		expect(sent(fetch)).toEqual({ action: 'refresh' });
+		expect(choice()?.value).toBe('never');
+
+		await act(root(), 'apply', { nonce: NONCE });
+
+		expect(sent(fetch, 1)).toEqual({
+			action: 'apply',
+			rule: { margin: '50', step: '' },
+			changes: 'never',
+		});
+	});
+
 	it("loads a variable product's variations again once a price changed", async () => {
 		mount(section());
 		const trigger = vi.fn();

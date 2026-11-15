@@ -11,6 +11,7 @@ use Pixonaut\WooCommerce\Admin\PricingList;
 use Pixonaut\WooCommerce\Admin\PricingPanel;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Pricing\PriceChanges;
 use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
 use Pixonaut\WooCommerce\Settings\Settings;
@@ -213,6 +214,72 @@ final class PricingPanelTest extends PricingTestCase {
 		$this->assertSame( '', ProductPricing::own_parts( $this->product( $id ) )[ PriceRule::MARGIN ] );
 		$this->assertSame( 0, ProductPricing::flagged( $this->product( $id ) ), 'a price edited by hand is no longer flagged' );
 		$this->assertSame( '280', $this->price( $id ) );
+	}
+
+	public function test_the_section_offers_automatic_price_changes_and_saving_or_applying_stores_the_choice(): void {
+		$this->store_rule();
+		$this->plugin->settings()->set( Settings::PRICE_AUTOMATIC, true );
+		$id = $this->simple_product( 'v_mug', '' );
+
+		$html = $this->panel->html( $this->product( $id ), true );
+		$this->assertStringContainsString( 'name="' . PricingPanel::CHANGES_FIELD . '"', $html );
+		$this->assertMatchesRegularExpression( '/<option value="store"\s+selected=\'selected\'>As the store: on</', $html );
+
+		$_POST[ ProductPanel::NONCE_FIELD ]   = wp_create_nonce( ProductPanel::NONCE_ACTION );
+		$_POST[ PricingPanel::CHANGES_FIELD ] = PriceChanges::NEVER;
+		$this->panel->save( $id );
+		$this->assertSame( PriceChanges::NEVER, PriceChanges::setting( $this->product( $id ) ) );
+		$this->assertMatchesRegularExpression( '/<option value="never"\s+selected=\'selected\'>/', $this->panel->html( $this->product( $id ), true ) );
+
+		// Never: reading a cost that left the tolerance sets no price, with the store's switch on.
+		$this->script_costs( array( 'v_mug' => '200' ) );
+		$this->act( $id, PricingPanel::APPLY );
+		$this->script_costs( array( 'v_mug' => '155' ) );
+		$kept = $this->act( $id, PricingPanel::REFRESH );
+		$this->assertSame( 0, $kept['changed'] );
+		$this->assertSame( array( $id => '399' ), $kept['prices'] );
+
+		$_POST[ PricingPanel::CHANGES_FIELD ] = 'sometimes';
+		$this->panel->save( $id );
+		$this->assertSame( PriceChanges::NEVER, PriceChanges::setting( $this->product( $id ) ), 'a value that is none of the choices changes nothing' );
+
+		$this->script_costs( array( 'v_mug' => '155' ) );
+		$request = self::request( $id, PricingPanel::APPLY );
+		$request->set_param( 'changes', PriceChanges::STORE );
+		$this->assertInstanceOf( WP_REST_Response::class, $this->panel->act( $request ) );
+		$this->assertSame( PriceChanges::STORE, PriceChanges::setting( $this->product( $id ) ), 'Apply stores the choice with the rule' );
+	}
+
+	public function test_an_apply_whose_costs_cannot_be_read_stores_neither_the_rule_nor_the_choice(): void {
+		$this->store_rule();
+		$id = $this->simple_product( 'v_mug', '300' );
+		$this->recorder->fail();
+		$this->recorder->fail();
+		$this->recorder->fail();
+		$request = self::request( $id, PricingPanel::APPLY, null, array( PriceRule::MARGIN => '60' ) );
+		$request->set_param( 'changes', PriceChanges::ALWAYS );
+
+		$answer = $this->panel->act( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $answer );
+		$this->assertSame( PriceChanges::STORE, PriceChanges::setting( $this->product( $id ) ) );
+		$this->assertSame( '', ProductPricing::own_parts( $this->product( $id ) )[ PriceRule::MARGIN ] );
+	}
+
+	public function test_a_variation_that_answers_its_product_says_so_on_its_row(): void {
+		$this->store_rule();
+		$ids = $this->variable_product(
+			array(
+				'v_a3' => '250',
+				'v_a4' => '250',
+			)
+		);
+		PriceChanges::save( $this->product( $ids['v_a4'] ), PriceChanges::NEVER );
+
+		$html = $this->panel->html( $this->parent_of( $ids['v_a3'] ), true );
+
+		$this->assertSame( 1, substr_count( $html, 'Automatic price changes: never' ) );
+		$this->assertStringNotContainsString( 'Automatic price changes: always', $html );
 	}
 
 	public function test_saving_without_the_panels_nonce_stores_nothing(): void {

@@ -13,10 +13,12 @@ use Pixonaut\WooCommerce\Abilities\GetProductPrices;
 use Pixonaut\WooCommerce\Abilities\PriceProduct;
 use Pixonaut\WooCommerce\Abilities\ProductPrices;
 use Pixonaut\WooCommerce\Abilities\ReadPricingSettings;
+use Pixonaut\WooCommerce\Abilities\SetProductPriceChanges;
 use Pixonaut\WooCommerce\Abilities\UpdatePricingSettings;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
+use Pixonaut\WooCommerce\Pricing\PriceChanges;
 use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Pricing\PriceState;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
@@ -38,6 +40,7 @@ final class PricingAbilitiesTest extends PricingTestCase {
 		Abilities::NAMESPACE . '/' . UpdatePricingSettings::NAME,
 		Abilities::NAMESPACE . '/' . GetProductPrices::NAME,
 		Abilities::NAMESPACE . '/' . PriceProduct::NAME,
+		Abilities::NAMESPACE . '/' . SetProductPriceChanges::NAME,
 	);
 
 	private const SECRET = 'a-store-credential';
@@ -54,14 +57,17 @@ final class PricingAbilitiesTest extends PricingTestCase {
 
 	private PriceProduct $price;
 
+	private SetProductPriceChanges $changes;
+
 	public function set_up(): void {
 		parent::set_up();
 		$settings              = $this->plugin->settings();
 		$pricing               = fn (): ProductPricing => $this->pricing;
 		$this->read_settings   = new ReadPricingSettings( $settings );
 		$this->update_settings = new UpdatePricingSettings( $settings );
-		$this->read            = new GetProductPrices( $pricing, $settings );
-		$this->price           = new PriceProduct( $pricing, $settings );
+		$this->read            = new GetProductPrices( $pricing );
+		$this->price           = new PriceProduct( $pricing );
+		$this->changes         = new SetProductPriceChanges( $pricing );
 	}
 
 	public function tear_down(): void {
@@ -314,6 +320,124 @@ final class PricingAbilitiesTest extends PricingTestCase {
 		$this->assertSame( PriceState::FLAG_MARGIN, $by_id[ $ids['v_a3'] ]['flag'] );
 	}
 
+	public function test_a_products_automatic_price_changes_are_read_and_set_for_it_and_for_a_variation(): void {
+		$this->store_rule();
+		$ids        = $this->variable_product(
+			array(
+				'v_a3' => '120',
+				'v_a4' => '120',
+			)
+		);
+		$product_id = $this->parent_of( $ids['v_a3'] )->get_id();
+
+		$before = $this->read->execute( array( 'product_id' => $product_id ) );
+		$this->assertIsArray( $before );
+		$this->assertFalse( $before['automatic'] );
+		$this->assertSame( PriceChanges::STORE, $before['price_changes'] );
+		$this->assertSame( PriceChanges::PRODUCT, $before['prices'][0]['price_changes'] );
+
+		$set = $this->changes->execute(
+			array(
+				'product_id'    => $product_id,
+				'price_changes' => PriceChanges::ALWAYS,
+				'variations'    => array(
+					array(
+						'id'            => $ids['v_a4'],
+						'price_changes' => PriceChanges::NEVER,
+					),
+				),
+			)
+		);
+
+		$this->assertIsArray( $set );
+		$this->assertTrue( $set['automatic'], 'always, with the store\'s switch off' );
+		$this->assertSame( PriceChanges::ALWAYS, $set['price_changes'] );
+		$rows = array_column( $set['prices'], null, 'id' );
+		$this->assertTrue( $rows[ $ids['v_a3'] ]['automatic'] );
+		$this->assertSame( PriceChanges::PRODUCT, $rows[ $ids['v_a3'] ]['price_changes'] );
+		$this->assertFalse( $rows[ $ids['v_a4'] ]['automatic'] );
+		$this->assertSame( PriceChanges::NEVER, $rows[ $ids['v_a4'] ]['price_changes'] );
+		$this->assertSame( '120', $this->price( $ids['v_a3'] ), 'no price is set' );
+		$this->assertSame( $set, $this->read->execute( array( 'product_id' => $product_id ) ) );
+
+		// What is left out keeps what it has; a variation follows its product again.
+		$kept = $this->changes->execute(
+			array(
+				'product_id' => $product_id,
+				'variations' => array(
+					array(
+						'id'            => $ids['v_a4'],
+						'price_changes' => PriceChanges::PRODUCT,
+					),
+				),
+			)
+		);
+		$this->assertIsArray( $kept );
+		$this->assertSame( PriceChanges::ALWAYS, $kept['price_changes'] );
+		$this->assertTrue( array_column( $kept['prices'], 'automatic', 'id' )[ $ids['v_a4'] ] );
+
+		$store = $this->changes->execute(
+			array(
+				'product_id'    => $product_id,
+				'price_changes' => PriceChanges::STORE,
+			)
+		);
+		$this->assertIsArray( $store );
+		$this->assertFalse( $store['automatic'] );
+		$this->plugin->settings()->set( Settings::PRICE_AUTOMATIC, true );
+		$on = $this->read->execute( array( 'product_id' => $product_id ) );
+		$this->assertIsArray( $on );
+		$this->assertTrue( $on['automatic'], 'a product that follows the store reads its switch' );
+	}
+
+	public function test_automatic_price_changes_refuse_another_products_variation_and_a_value_of_the_other_level(): void {
+		$this->store_rule();
+		$ids        = $this->variable_product( array( 'v_a3' => '120' ) );
+		$other      = $this->variable_product( array( 'v_a4' => '120' ) );
+		$product_id = $this->parent_of( $ids['v_a3'] )->get_id();
+
+		$foreign = $this->changes->execute(
+			array(
+				'product_id'    => $product_id,
+				'price_changes' => PriceChanges::NEVER,
+				'variations'    => array(
+					array(
+						'id'            => $other['v_a4'],
+						'price_changes' => PriceChanges::NEVER,
+					),
+				),
+			)
+		);
+		$level   = $this->changes->execute(
+			array(
+				'product_id'    => $product_id,
+				'price_changes' => PriceChanges::PRODUCT,
+			)
+		);
+		$store   = $this->changes->execute(
+			array(
+				'product_id' => $product_id,
+				'variations' => array(
+					array(
+						'id'            => $ids['v_a3'],
+						'price_changes' => PriceChanges::STORE,
+					),
+				),
+			)
+		);
+		$off     = $this->changes->execute( array( 'product_id' => $ids['v_a3'] ) );
+
+		$this->assertInstanceOf( WP_Error::class, $foreign );
+		$this->assertSame( 'pixonaut_wc_ability_unknown_variation', $foreign->get_error_code() );
+		$this->assertSame( PriceChanges::STORE, PriceChanges::setting( $this->product( $product_id ) ), 'a refused call stores nothing' );
+		$this->assertInstanceOf( WP_Error::class, $level );
+		$this->assertSame( 'pixonaut_wc_ability_price_changes', $level->get_error_code() );
+		$this->assertInstanceOf( WP_Error::class, $store );
+		$this->assertSame( 'pixonaut_wc_ability_price_changes', $store->get_error_code() );
+		$this->assertInstanceOf( WP_Error::class, $off );
+		$this->assertSame( ProductPrices::NOT_PRICED, $off->get_error_code() );
+	}
+
 	public function test_costs_that_cannot_be_read_store_no_rule_given_with_the_pricing(): void {
 		$this->store_rule();
 		$ids        = $this->variable_product( array( 'v_a3' => '120' ) );
@@ -493,12 +617,14 @@ final class PricingAbilitiesTest extends PricingTestCase {
 		$this->assertFalse( $may( $this->update_settings, array() ) );
 		$this->assertFalse( $may( $this->read, $input ) );
 		$this->assertFalse( $may( $this->price, $input ) );
+		$this->assertFalse( $may( $this->changes, $input ) );
 
 		wp_set_current_user( $this->user( 'administrator' ) );
 		$this->assertTrue( $may( $this->read_settings, array() ) );
 		$this->assertTrue( $may( $this->update_settings, array() ) );
 		$this->assertTrue( $may( $this->read, $input ) );
 		$this->assertTrue( $may( $this->price, $input ) );
+		$this->assertTrue( $may( $this->changes, $input ) );
 	}
 
 	public function test_pixonaut_reaches_them_as_shop_tools(): void {
@@ -545,11 +671,20 @@ final class PricingAbilitiesTest extends PricingTestCase {
 		$switched = $this->call( UpdatePricingSettings::NAME, array( Settings::PRICE_AUTOMATIC => true ) );
 		$prices   = $this->call( GetProductPrices::NAME, array( 'product_id' => $this->parent_of( $ids['v_a3'] )->get_id() ) );
 		$refused  = $this->call( PriceProduct::NAME, array( 'product_id' => $ids['v_a3'] ) );
+		$never    = $this->call(
+			SetProductPriceChanges::NAME,
+			array(
+				'product_id'    => $this->parent_of( $ids['v_a3'] )->get_id(),
+				'price_changes' => PriceChanges::NEVER,
+			)
+		);
 
 		$this->assertSame( '50', $settings['result'][ Settings::PRICE_MARGIN ] ?? null, (string) wp_json_encode( $settings ) );
 		$this->assertTrue( $switched['result'][ Settings::PRICE_AUTOMATIC ] ?? null );
 		$this->assertSame( '120', $prices['result']['prices'][0]['price'] ?? null, (string) wp_json_encode( $prices ) );
 		$this->assertSame( 'invalid_input', $refused['code'] ?? null, 'a variation is priced through its product' );
+		$this->assertFalse( $never['result']['automatic'] ?? null, (string) wp_json_encode( $never ) );
+		$this->assertSame( PriceChanges::NEVER, $never['result']['price_changes'] ?? null );
 	}
 
 	/**

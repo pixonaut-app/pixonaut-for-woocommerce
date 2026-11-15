@@ -42,7 +42,7 @@ final class UpdatePricingSettings implements Ability {
 			'label'               => __( 'Change the pricing settings', 'pixonaut-for-woocommerce' ),
 			'description'         => sprintf(
 				/* translators: 1: the name of the ability that reads the pricing settings, 2: the name of the ability that prices a product. */
-				__( 'Changes the pricing settings given, by their keys as %1$s reads them; the others keep their values. `price_automatic` switches automatic price changes on or off: on, a price that follows the rule is set to the rule\'s price when its cost changes and its margin left the tolerance; off, the new price is only suggested. `price_ending` must be below `price_step`. Changing the rule changes no price by itself: price a product with %2$s. Answers with every pricing setting.', 'pixonaut-for-woocommerce' ),
+				__( 'Changes the pricing settings given, by their keys as %1$s reads them; the others keep their values. `price_automatic` switches automatic price changes on or off: on, a price that follows the rule is set to the rule\'s price when its cost changes and its margin left the tolerance; off, the new price is only suggested; a product or variation set to always or never keeps to that, whatever the switch says. `price_ending` must be below `price_step`. Changing the rule changes no price by itself: price a product with %2$s. Answers with every pricing setting.', 'pixonaut-for-woocommerce' ),
 				Abilities::tool( ReadPricingSettings::NAME ),
 				Abilities::tool( PriceProduct::NAME )
 			),

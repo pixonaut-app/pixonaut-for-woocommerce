@@ -11,6 +11,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Pricing\Amount;
 use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Pricing\PriceRow;
+use Pixonaut\WooCommerce\Pricing\PriceChanges;
 use Pixonaut\WooCommerce\Pricing\PriceState;
 use Pixonaut\WooCommerce\Pricing\PriceTax;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
@@ -139,6 +140,143 @@ final class ProductPricingTest extends PricingTestCase {
 		$this->assertCount( 1, $this->logger->entries, 'each change is logged' );
 		$this->assertStringContainsString( 'to 309, from 399: cost 155, margin 49.8 %', $this->logger->entries[0]['message'] );
 		$this->assertSame( $ids['v_a3'], $this->logger->entries[0]['context']['product_id'] );
+	}
+
+	public function test_a_product_set_to_never_keeps_its_prices_with_the_stores_switch_on(): void {
+		$this->store_rule();
+		$this->plugin->settings()->set( Settings::PRICE_AUTOMATIC, true );
+		$held     = $this->simple_product( 'v_mug', '' );
+		$followed = $this->simple_product( 'v_mug', '' );
+		foreach ( array( $held, $followed ) as $id ) {
+			$this->script_costs( array( 'v_mug' => '200' ) );
+			$this->pricing->refresh( $this->product( $id ) );
+			$this->pricing->apply( $this->product( $id ) );
+		}
+		PriceChanges::save( $this->product( $held ), PriceChanges::NEVER );
+		$this->logger->entries = array();
+
+		foreach ( array( $held, $followed ) as $id ) {
+			$this->script_costs( array( 'v_mug' => '155' ) );
+			$this->pricing->refresh( $this->product( $id ) );
+		}
+
+		$this->assertSame( '399', $this->price( $held ), 'never: kept, though the store changes prices by itself' );
+		$this->assertSame( PriceState::FLAG_MARGIN, $this->row( $held )->flag );
+		$this->assertSame( self::amount( '309' ), $this->row( $held )->suggested, 'the price is suggested instead' );
+		$this->assertSame( 1, ProductPricing::flagged( $this->product( $held ) ) );
+		$this->assertFalse( $this->row( $held )->automatic );
+		$this->assertSame( '309', $this->price( $followed ), 'a product that follows the store is repriced' );
+		$this->assertTrue( $this->row( $followed )->automatic );
+		$this->assertCount( 1, $this->logger->entries );
+	}
+
+	public function test_a_product_set_to_always_is_repriced_with_the_stores_switch_off(): void {
+		$this->store_rule();
+		$always   = $this->simple_product( 'v_mug', '' );
+		$followed = $this->simple_product( 'v_mug', '' );
+		foreach ( array( $always, $followed ) as $id ) {
+			$this->script_costs( array( 'v_mug' => '200' ) );
+			$this->pricing->refresh( $this->product( $id ) );
+			$this->pricing->apply( $this->product( $id ) );
+		}
+		PriceChanges::save( $this->product( $always ), PriceChanges::ALWAYS );
+		$this->logger->entries = array();
+
+		foreach ( array( $always, $followed ) as $id ) {
+			$this->script_costs( array( 'v_mug' => '155' ) );
+			$this->pricing->refresh( $this->product( $id ) );
+		}
+
+		$this->assertSame( '309', $this->price( $always ), 'always: repriced, though the store only suggests' );
+		$this->assertNull( $this->row( $always )->flag );
+		$this->assertSame( 0, ProductPricing::flagged( $this->product( $always ) ) );
+		$this->assertSame( '399', $this->price( $followed ), 'a product that follows the store is only flagged' );
+		$this->assertSame( self::amount( '309' ), $this->row( $followed )->suggested );
+		$this->assertCount( 1, $this->logger->entries, 'the change is logged' );
+
+		// Back to the store's switch: the next cost change is only suggested.
+		PriceChanges::save( $this->product( $always ), PriceChanges::STORE );
+		$this->assertSame( '', $this->product( $always )->get_meta( PriceChanges::META_KEY, true ), 'a product that follows the store stores nothing' );
+		$this->script_costs( array( 'v_mug' => '200' ) );
+		$this->pricing->refresh( $this->product( $always ) );
+		$this->assertSame( '309', $this->price( $always ) );
+		$this->assertSame( self::amount( '399' ), $this->row( $always )->suggested );
+	}
+
+	public function test_a_variation_answers_its_product_on_automatic_price_changes(): void {
+		$this->store_rule();
+		$ids     = $this->variable_product(
+			array(
+				'v_a3' => '',
+				'v_a4' => '',
+				'v_a5' => '',
+			)
+		);
+		$product = fn () => $this->parent_of( $ids['v_a3'] );
+		$costs   = static fn ( string $cost ): array => array(
+			'v_a3' => $cost,
+			'v_a4' => $cost,
+			'v_a5' => $cost,
+		);
+		$this->script_costs( $costs( '200' ) );
+		$this->pricing->refresh( $product() );
+		$this->pricing->apply( $product() );
+
+		// The product always changes its prices; one variation never does.
+		PriceChanges::save( $product(), PriceChanges::ALWAYS );
+		PriceChanges::save( $this->product( $ids['v_a4'] ), PriceChanges::NEVER );
+		$this->script_costs( $costs( '155' ) );
+		$this->pricing->refresh( $product() );
+
+		$this->assertSame( '309', $this->price( $ids['v_a3'] ) );
+		$this->assertSame( '399', $this->price( $ids['v_a4'] ), 'the variation set to never is kept' );
+		$this->assertSame( '309', $this->price( $ids['v_a5'] ) );
+		$this->assertSame( PriceChanges::PRODUCT, $this->row( $ids['v_a3'] )->changes );
+		$this->assertSame( PriceChanges::NEVER, $this->row( $ids['v_a4'] )->changes );
+		$this->assertFalse( $this->row( $ids['v_a4'] )->automatic );
+
+		// The product never does; one variation always does.
+		PriceChanges::save( $product(), PriceChanges::NEVER );
+		PriceChanges::save( $this->product( $ids['v_a5'] ), PriceChanges::ALWAYS );
+		$this->script_costs( $costs( '200' ) );
+		$this->pricing->refresh( $product() );
+
+		$this->assertSame( '309', $this->price( $ids['v_a3'] ), 'follows its product: kept' );
+		$this->assertSame( '399', $this->price( $ids['v_a4'] ) );
+		$this->assertSame( '399', $this->price( $ids['v_a5'] ), 'the variation set to always is repriced' );
+		$this->assertTrue( $this->row( $ids['v_a5'] )->automatic );
+	}
+
+	public function test_a_product_set_to_never_while_its_prices_are_settled_keeps_the_ones_not_yet_set(): void {
+		$this->store_rule();
+		$this->plugin->settings()->set( Settings::PRICE_AUTOMATIC, true );
+		$ids     = $this->variable_product(
+			array(
+				'v_a3' => '',
+				'v_a4' => '',
+			)
+		);
+		$product = fn () => $this->parent_of( $ids['v_a3'] );
+		$costs   = static fn ( string $cost ): array => array(
+			'v_a3' => $cost,
+			'v_a4' => $cost,
+		);
+		$this->script_costs( $costs( '200' ) );
+		$this->pricing->refresh( $product() );
+		$this->pricing->apply( $product() );
+
+		// The store manager sets the product to never once the first price was set.
+		$never = function () use ( $product ): void {
+			PriceChanges::save( $product(), PriceChanges::NEVER );
+		};
+		add_action( 'woocommerce_update_product_variation', $never );
+		$this->script_costs( $costs( '155' ) );
+		$set = $this->pricing->refresh( $product() );
+		remove_action( 'woocommerce_update_product_variation', $never );
+
+		$this->assertSame( 1, $set );
+		$this->assertSame( '309', $this->price( $ids['v_a3'] ) );
+		$this->assertSame( '399', $this->price( $ids['v_a4'] ), 'not set once the product says never' );
 	}
 
 	public function test_a_price_the_rule_never_set_is_not_changed_by_itself(): void {
