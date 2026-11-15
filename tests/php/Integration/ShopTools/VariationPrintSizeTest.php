@@ -468,7 +468,7 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 		$this->assertSame( self::VALID, $answer['pixonaut_validity'] );
 		$asked = array_values( array_filter( $this->recorder->requests, static fn ( array $request ): bool => str_contains( $request['url'], '/print-size' ) ) );
 		$this->assertCount( 1, $asked );
-		$this->assertSame( array( 'sizes' ), array_keys( json_decode( (string) $asked[0]['body'], true ) ), 'the template\'s ratio alone is asked: the area is the row\'s' );
+		$this->assertSame( array( 'sizes', 'blankId', 'placementId' ), array_keys( json_decode( (string) $asked[0]['body'], true ) ), 'asked with the placement: Pixonaut judges the size at the row whose area it is' );
 		$this->assertTrue( ProductConfig::stored_on( $this->reload( $large ) )->override );
 		$this->assertFalse( ProductConfig::is_stored_on( $this->reload( $small ) ), 'only that variation' );
 	}

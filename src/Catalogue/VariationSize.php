@@ -254,7 +254,8 @@ final class VariationSize {
 		$start = null;
 		foreach ( $side->print_sizes as $at => $size ) {
 			if ( ! $size->placement_default ) {
-				$refused = $full ? ( null === $row ? InvalidReason::VARIANT_SIZE_UNFIT : $row->refuses( $size ) ) : null;
+				// A row whose own size is not sold takes no size entered either: the template cannot be printed at its area, though another row of the same area may take it.
+				$refused = $full ? ( null === $row ? InvalidReason::VARIANT_SIZE_UNFIT : $row->refuses( $size ) ?? ( null === $row->size ? InvalidReason::VARIANT_SIZE_UNFIT : null ) ) : null;
 				if ( null === $refused ) {
 					$start   = $at === $side->start_size ? count( $sizes ) : $start;
 					$sizes[] = $size;

@@ -597,7 +597,7 @@ final class ProductLinker {
 			// Printed across its whole area, with an area per row, a print is its row's area: the placement's own box, the widest and tallest of its rows, is the area of no size.
 			$on_rows = null !== $varying && array() !== $rows && PrintAreas::covers_area( $varying, $placement_id );
 			list( $legal, $legal_at, $refused, $refused_size, $soft ) = $on_rows
-				? $this->judged_on_rows( (string) $template, $sizes, $rows )
+				? $this->judged_on_rows( (string) $template, $sizes, $rows, $blank_id, $placement_id )
 				: $this->judged( (string) $template, $sizes, $blank_id, $placement_id );
 			$misfits = $held;
 			if ( Side::STANDING !== $input->mode ) {
@@ -642,13 +642,15 @@ final class ProductLinker {
 	 * while one of them is; a row whose size Pixonaut refuses, as for an
 	 * image printing too soft at it, sells nothing. A size entered is
 	 * judged here against the rows' areas, and one a row takes is asked
-	 * about too. Pixonaut is asked for the template alone, as it may judge
-	 * a size naming the placement against the widest and tallest of its
-	 * rows.
+	 * about too. Pixonaut is asked with the placement and no row: it judges
+	 * a size there against the area of each row the blank sells, and reads
+	 * where the row folds, so a canvas is judged by its face.
 	 *
-	 * @param string      $template_id `<baseId>@<version>`.
-	 * @param PrintSize[] $sizes       The sizes to judge.
-	 * @param RowSize[]   $rows        What the side prints at per row; a row refused loses its size.
+	 * @param string      $template_id  `<baseId>@<version>`.
+	 * @param PrintSize[] $sizes        The sizes to judge.
+	 * @param RowSize[]   $rows         What the side prints at per row; a row refused loses its size.
+	 * @param string      $blank_id     The blank.
+	 * @param string      $placement_id The side's placement.
 	 * @phpstan-param list<PrintSize> $sizes
 	 * @phpstan-param list<RowSize> $rows
 	 * @phpstan-param-out list<RowSize> $rows
@@ -656,7 +658,7 @@ final class ProductLinker {
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
-	private function judged_on_rows( string $template_id, array $sizes, array &$rows ): array {
+	private function judged_on_rows( string $template_id, array $sizes, array &$rows, string $blank_id, string $placement_id ): array {
 		$verdicts = array();
 		$asked    = array();
 		// Where each size asked of Pixonaut is in `$sizes`.
@@ -683,7 +685,7 @@ final class ProductLinker {
 			}
 		}
 		$all      = array_merge( $asked, array_values( $of_rows ) );
-		$answered = array() === $all ? array() : $this->catalogue->check_print_sizes( $template_id, $all, null, null );
+		$answered = array() === $all ? array() : $this->catalogue->check_print_sizes( $template_id, $all, $blank_id, $placement_id );
 		foreach ( $asked_at as $at => $i ) {
 			$verdicts[ $i ] = $answered[ $at ];
 		}

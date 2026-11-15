@@ -93,7 +93,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$this->assertTrue( ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) )->valid );
 		$asked = $this->print_size_bodies();
 		$this->assertCount( 1, $asked );
-		$this->assertSame( array( 'sizes' ), array_keys( $asked[0] ), 'no placement is named: its own box is the area of no size' );
+		$this->assertSame( array( 'sizes', 'blankId', 'placementId' ), array_keys( $asked[0] ), 'the placement is named with no row: Pixonaut judges each size at the row whose area it is, and reads where that row folds' );
 		$this->assertSame( array( array( 300, 400 ), array( 508, 711.2 ) ), array_map( static fn ( array $size ): array => array( $size['widthMm'], $size['heightMm'] ), $asked[0]['sizes'] ) );
 	}
 
@@ -111,7 +111,7 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$this->assertSame( InvalidReason::VARIANT_SIZE_UNFIT, ProductConfig::config_for( $this->reload_any( $large->get_id() ) )->invalid_reason );
 	}
 
-	public function test_a_size_entered_that_is_a_rows_area_is_asked_for_its_ratio_alone_and_sold_on_that_row(): void {
+	public function test_a_size_entered_that_is_a_rows_area_is_asked_about_with_the_placement_and_sold_on_that_row(): void {
 		list( $parent, $small, $large ) = $this->linked( 'full' );
 		$this->recorder->requests       = array();
 		$this->script_varying_save( 'full', array(), true );
@@ -121,12 +121,23 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$this->assertTrue( ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) )->valid );
 		$asked = $this->print_size_bodies();
 		$this->assertCount( 1, $asked );
-		$this->assertSame( array( 'sizes' ), array_keys( $asked[0] ), 'the area is a row’s, judged here' );
+		$this->assertSame( array( 'sizes', 'blankId', 'placementId' ), array_keys( $asked[0] ), 'asked with the placement, as a row’s own size is' );
 		$this->assertSame( array( 300.0, 400.0 ), $this->sold_size( $small ) );
 		$this->assertTrue( $this->reload_any( $small->get_id() )->is_purchasable() );
 		$of_large = ProductConfig::config_for( $this->reload_any( $large->get_id() ) );
 		$this->assertFalse( $of_large->valid, 'another row’s area is not printed on this one' );
 		$this->assertSame( InvalidReason::PRINT_SIZE_NOT_AREA, $of_large->invalid_reason );
+	}
+
+	public function test_a_size_entered_that_is_the_area_of_a_row_the_template_misfits_is_not_sold_on_that_row(): void {
+		list( $parent, , $large ) = $this->linked( 'full', array( self::LARGE ) );
+		// Pixonaut takes the size where some row of that area takes it; this row is named a misfit.
+		$this->script_varying_save( 'full', array( self::LARGE ), true );
+
+		$this->save( $parent->get_id(), array(), array( 'sizes' => array( self::entered( '508', '711.2' ) ) ) );
+
+		$this->assertFalse( $this->reload_any( $large->get_id() )->is_purchasable() );
+		$this->assertSame( InvalidReason::VARIANT_SIZE_UNFIT, ProductConfig::config_for( $this->reload_any( $large->get_id() ) )->invalid_reason );
 	}
 
 	public function test_a_size_entered_that_is_no_rows_area_is_refused_without_asking(): void {
