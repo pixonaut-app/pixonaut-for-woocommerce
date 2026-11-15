@@ -24,10 +24,12 @@ use WP_Post;
  * values as the choice): a poster sold bare, or with a hanger in a colour,
  * listed by both has a card for the bare one and one per hanger colour.
  *
- * A card is named by its key: its values' term ids in the product's order
- * of attributes, joined by commas, so a card of one value is that term's
- * id; `NO_VALUE` for the card of the variations none of the attributes
- * applies to, which shows the product as itself. The keys are kept as meta
+ * A card is named by its key: its values' term ids, lowest first, joined by
+ * commas, so a card of one value is that term's id, and a combination keeps
+ * its key when the product's attributes change places; `NO_VALUE` for the
+ * card of the variations none of the attributes applies to, which shows the
+ * product as itself. A product whose combinations would come to more than
+ * `MAX_CARDS` cards is listed once. The keys are kept as meta
  * rows on the product, one per card in the product's order of values, so
  * the shop's listings can join them and count, page and sort the cards in
  * SQL. They are written again whenever what they come from changes: the
@@ -51,6 +53,14 @@ final class SplitCards {
 	 * The key of the card of the variations no listed attribute applies to.
 	 */
 	public const NO_VALUE = '0';
+
+	/**
+	 * The most cards a product is listed as. Each value of an attribute a
+	 * variation leaves unset multiplies its combinations, so a product with
+	 * a few such attributes would otherwise fill the shop, and the memory
+	 * its cards are worked out in.
+	 */
+	public const MAX_CARDS = 250;
 
 	/**
 	 * In place of a value's place among its attribute's values, for an
@@ -131,6 +141,14 @@ final class SplitCards {
 	 * @var array<int, array<string, list<int>>>
 	 */
 	private static array $cards = array();
+
+	/**
+	 * Products' cards' values, by product id and card key: term ids in the
+	 * product's order of attributes; worked out with the cards.
+	 *
+	 * @var array<int, array<string, list<int>>>
+	 */
+	private static array $card_terms = array();
 
 	/**
 	 * Cards' link values, by product id and card key, read once a request.
@@ -329,23 +347,25 @@ final class SplitCards {
 	 * @param int $product_id A product.
 	 */
 	private static function forget( int $product_id ): void {
-		unset( self::$variations[ $product_id ], self::$offers[ $product_id ], self::$cards[ $product_id ], self::$links[ $product_id ] );
+		unset( self::$variations[ $product_id ], self::$offers[ $product_id ], self::$cards[ $product_id ], self::$card_terms[ $product_id ], self::$links[ $product_id ] );
 	}
 
 	/**
-	 * A card's key: its term ids joined, `NO_VALUE` for none.
+	 * A card's key: its term ids, lowest first, joined; `NO_VALUE` for none.
 	 *
-	 * @param int[] $term_ids Its values, in the product's order of attributes.
+	 * @param int[] $term_ids Its values, in any order.
 	 */
 	public static function key( array $term_ids ): string {
-		return array() === $term_ids ? self::NO_VALUE : implode( self::KEY_SEPARATOR, array_map( 'intval', $term_ids ) );
+		$term_ids = array_map( 'intval', $term_ids );
+		sort( $term_ids );
+		return array() === $term_ids ? self::NO_VALUE : implode( self::KEY_SEPARATOR, $term_ids );
 	}
 
 	/**
 	 * The values of a card, from its key.
 	 *
 	 * @param string $key A card's key.
-	 * @return list<int> Term ids, in the product's order of attributes; empty for `NO_VALUE`.
+	 * @return list<int> Term ids, lowest first; empty for `NO_VALUE`.
 	 */
 	public static function term_ids( string $key ): array {
 		return self::NO_VALUE === $key || ! self::is_key( $key ) ? array() : array_map( 'intval', explode( self::KEY_SEPARATOR, $key ) );
@@ -384,8 +404,22 @@ final class SplitCards {
 	}
 
 	/**
+	 * The values of one of a product's cards, in the product's order of
+	 * attributes; empty for a card it does not have, and for `NO_VALUE`.
+	 *
+	 * @param WC_Product $product A product.
+	 * @param string     $key     The card's key.
+	 * @return list<int> Term ids.
+	 */
+	public static function card_terms( WC_Product $product, string $key ): array {
+		self::cards( $product );
+		return self::$card_terms[ $product->get_id() ][ $key ] ?? array();
+	}
+
+	/**
 	 * A product's cards: the enabled variations each sells, by its key, in
-	 * the product's order of values.
+	 * the product's order of values. None for a product that would have
+	 * more than `MAX_CARDS`.
 	 *
 	 * @param WC_Product $product A product.
 	 * @return array<string, list<int>> Variation ids by card key.
@@ -401,13 +435,19 @@ final class SplitCards {
 		}
 		$cards = array();
 		$order = array();
+		$held  = array();
 		if ( array() !== $terms ) {
 			$variations = self::variations( $product_id );
 			$fields     = ApplicableAttributes::fields( $product );
 			$sold       = array_values( $variations );
 			foreach ( $variations as $variation_id => $values ) {
-				$hidden = ApplicableAttributes::hidden( $fields, $sold, $values );
-				foreach ( self::combinations( $terms, $values, $hidden ) as $positions ) {
+				$hidden       = ApplicableAttributes::hidden( $fields, $sold, $values );
+				$combinations = self::combinations( $terms, $values, $hidden );
+				if ( null === $combinations ) {
+					$cards = array();
+					break;
+				}
+				foreach ( $combinations as $positions ) {
 					$term_ids = array();
 					foreach ( $positions as $field => $position ) {
 						$term_id = array_values( $terms[ $field ] )[ $position ] ?? null;
@@ -418,11 +458,17 @@ final class SplitCards {
 					$key             = self::key( $term_ids );
 					$cards[ $key ][] = $variation_id;
 					$order[ $key ]   = array_values( $positions );
+					$held[ $key ]    = $term_ids;
+				}
+				if ( count( $cards ) > self::MAX_CARDS ) {
+					$cards = array();
+					break;
 				}
 			}
 			// In the order of each attribute's values, a card without a value of one first.
 			uksort( $cards, static fn ( int|string $first, int|string $second ): int => $order[ $first ] <=> $order[ $second ] );
 		}
+		self::$card_terms[ $product_id ] = array_intersect_key( $held, $cards );
 		// PHP turns a key of digits into an integer.
 		self::$cards[ $product_id ] = $cards;
 		return $cards;
@@ -433,14 +479,15 @@ final class SplitCards {
 	 * each as the place of its value among every attribute's values:
 	 * `NOT_APPLYING` for an attribute that does not apply to the variation,
 	 * and one combination per value of an attribute it sells any value of.
-	 * None when it holds a value its attribute does not list.
+	 * None when it holds a value its attribute does not list; null when
+	 * they would be more than `MAX_CARDS`.
 	 *
 	 * @param array<string, array<string, int>> $terms  Each listed attribute's term ids by slug, in its order of values, by field.
 	 * @param array<string, string>             $values The variation's values by field.
 	 * @param string[]                          $hidden The fields that do not apply to the variation.
-	 * @return list<array<string, int>> Places by field.
+	 * @return list<array<string, int>>|null Places by field.
 	 */
-	private static function combinations( array $terms, array $values, array $hidden ): array {
+	private static function combinations( array $terms, array $values, array $hidden ): ?array {
 		$combinations = array( array() );
 		foreach ( $terms as $field => $ids ) {
 			$value = $values[ $field ] ?? '';
@@ -452,6 +499,9 @@ final class SplitCards {
 				$places = array( self::NOT_APPLYING );
 			} else {
 				$places = array_keys( $slugs );
+			}
+			if ( count( $combinations ) * count( $places ) > self::MAX_CARDS ) {
+				return null;
 			}
 			$next = array();
 			foreach ( $combinations as $combination ) {

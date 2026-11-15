@@ -279,5 +279,7 @@ describe('hideInapplicableAttributes on the block form', () => {
 
 		expect(clicks.mock.calls.length).toBe(tried);
 		expect(tried).toBeGreaterThan(1);
+		// The fields it could not fill are the customer's to fill.
+		expect(hiddenRows()).toEqual([]);
 	});
 });

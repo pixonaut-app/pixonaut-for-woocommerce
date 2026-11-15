@@ -117,7 +117,10 @@ final class ApplicableAttributes {
 	}
 
 	/**
-	 * The values of each variation the product's form offers, by field.
+	 * The values of each enabled variation of the product, by field. One
+	 * out of stock counts too, though the form leaves it out while the
+	 * store hides those: which attributes a product's variations set does
+	 * not change with its stock.
 	 *
 	 * @param WC_Product $product A product.
 	 * @return list<array<string, string>>
@@ -126,10 +129,11 @@ final class ApplicableAttributes {
 		if ( ! $product instanceof WC_Product_Variable ) {
 			return array();
 		}
-		$ids = array_map( 'intval', $product->get_visible_children() );
-		// Every variation's attributes in one read.
-		update_meta_cache( 'post', $ids );
-		return array_map( static fn ( int $id ): array => array_map( 'strval', wc_get_product_variation_attributes( $id ) ), array_values( $ids ) );
+		$ids = array_values( array_map( 'intval', $product->get_children() ) );
+		// Every variation's status and attributes in one read each.
+		_prime_post_caches( $ids, false, true );
+		$enabled = array_values( array_filter( $ids, static fn ( int $id ): bool => 'publish' === get_post_status( $id ) ) );
+		return array_map( static fn ( int $id ): array => array_map( 'strval', wc_get_product_variation_attributes( $id ) ), $enabled );
 	}
 
 	/**

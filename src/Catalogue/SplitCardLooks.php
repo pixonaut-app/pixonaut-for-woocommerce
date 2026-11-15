@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Catalogue;
 
 use Pixonaut\WooCommerce\Schema;
+use WC_Product;
+use WC_Product_Attribute;
 
 /**
  * A product listed by its attributes (`SplitCards`) shows a card per value,
@@ -18,7 +20,8 @@ use Pixonaut\WooCommerce\Schema;
  * title, and its variations' own picture or the product's
  * (`Storefront\SplitCardFaces`). They are kept by the card's key on the
  * product (a value's term id, or a combination's joined), so they stay with
- * their value when the product is listed by another attribute and back.
+ * their card when the product is listed by another attribute and back, until
+ * the product loses one of the card's values.
  */
 final class SplitCardLooks {
 
@@ -69,6 +72,44 @@ final class SplitCardLooks {
 		}
 		// update_post_meta() unslashes what it stores.
 		update_post_meta( $product_id, self::META, wp_slash( $looks ) );
+	}
+
+	/**
+	 * Changes the titles and images of some of a product's cards, keeping
+	 * those of every other card: a card listed here with neither loses its
+	 * own.
+	 *
+	 * @param int                 $product_id A product.
+	 * @param array<mixed, mixed> $changed   Each changed card's `title` and `image`, by card key.
+	 */
+	public static function change( int $product_id, array $changed ): void {
+		$looks = self::stored_on( $product_id );
+		foreach ( $changed as $key => $look ) {
+			if ( SplitCards::is_key( $key ) ) {
+				$looks[ $key ] = $look;
+			}
+		}
+		self::save( $product_id, $looks );
+	}
+
+	/**
+	 * Drops the titles and images of the cards holding a value the product
+	 * no longer has, as after one of its attributes or values was removed.
+	 *
+	 * @param WC_Product $product A product.
+	 */
+	public static function forget_removed_values( WC_Product $product ): void {
+		$looks = self::stored_on( $product->get_id() );
+		if ( array() === $looks ) {
+			return;
+		}
+		$term_ids = array();
+		foreach ( $product->get_attributes() as $attribute ) {
+			if ( $attribute instanceof WC_Product_Attribute && $attribute->is_taxonomy() ) {
+				$term_ids = array_merge( $term_ids, array_map( 'intval', $attribute->get_options() ) );
+			}
+		}
+		self::save( $product->get_id(), array_filter( $looks, static fn ( int|string $key ): bool => array() === array_diff( SplitCards::term_ids( (string) $key ), $term_ids ), ARRAY_FILTER_USE_KEY ) );
 	}
 
 	/**

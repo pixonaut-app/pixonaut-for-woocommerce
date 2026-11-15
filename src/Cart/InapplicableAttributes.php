@@ -41,32 +41,17 @@ final class InapplicableAttributes {
 	 */
 	private const ORDER_LINE_ARGS = 3;
 
-	/**
-	 * Whether the cart id is being worked out again without the hidden attributes.
-	 *
-	 * @var bool
-	 */
-	private bool $generating = false;
-
-	/**
-	 * The id WooCommerce worked out without the hidden attributes, before any filter.
-	 *
-	 * @var string
-	 */
-	private string $without_hidden = '';
-
 	public function register(): void {
-		// First, so every other filter of the id runs once, on the id without the hidden attributes.
+		// First, so every other filter of the id works on the id without the hidden attributes.
 		add_filter( 'woocommerce_cart_id', array( $this, 'cart_id' ), PHP_INT_MIN, self::CART_ID_ARGS );
 		add_filter( 'woocommerce_add_cart_item', array( $this, 'cart_line' ) );
 		add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'order_line' ), 10, self::ORDER_LINE_ARGS );
 	}
 
 	/**
-	 * The id of a cart line, as WooCommerce works it out without the
-	 * attributes its choice hides. WooCommerce is asked for that id again,
-	 * and what it worked out before any filter is taken: the other filters
-	 * of the id then run on it once, after this one.
+	 * The id of a cart line, worked out without the attributes its choice
+	 * hides. The other filters of the id follow this one, and are passed
+	 * the choice as it was sent.
 	 *
 	 * @param mixed $cart_id        The id WooCommerce worked out.
 	 * @param mixed $product_id     The product.
@@ -76,26 +61,42 @@ final class InapplicableAttributes {
 	 * @return mixed
 	 */
 	public function cart_id( mixed $cart_id, mixed $product_id = 0, mixed $variation_id = 0, mixed $variation = array(), mixed $cart_item_data = array() ): mixed {
-		if ( $this->generating ) {
-			$this->without_hidden = is_string( $cart_id ) ? $cart_id : '';
-			return $cart_id;
-		}
-		if ( ! is_array( $variation ) || ! is_numeric( $product_id ) || ! function_exists( 'WC' ) || null === WC()->cart ) {
+		if ( ! is_array( $variation ) || ! is_numeric( $product_id ) ) {
 			return $cart_id;
 		}
 		$applying = self::applying( (int) $product_id, $variation );
 		if ( $applying === $variation ) {
 			return $cart_id;
 		}
-		$this->generating = true;
-		try {
-			WC()->cart->generate_cart_id( (int) $product_id, is_numeric( $variation_id ) ? (int) $variation_id : 0, $applying, is_array( $cart_item_data ) ? $cart_item_data : array() );
-		} finally {
-			$this->generating = false;
+		return self::unfiltered_id( $product_id, $variation_id, $applying, $cart_item_data );
+	}
+
+	/**
+	 * A cart line's id before any filter, as `WC_Cart::generate_cart_id()`
+	 * works it out: asking WooCommerce for it from inside its filter would
+	 * run every other filter of the id twice. A test holds the two equal.
+	 *
+	 * @param mixed               $product_id     The product.
+	 * @param mixed               $variation_id   The variation.
+	 * @param array<mixed, mixed> $variation      The chosen `attribute_*` values.
+	 * @param mixed               $cart_item_data The line's other data.
+	 */
+	public static function unfiltered_id( mixed $product_id, mixed $variation_id, array $variation, mixed $cart_item_data ): string {
+		$parts = array( $product_id );
+		if ( $variation_id ) {
+			$parts[] = $variation_id;
 		}
-		$without_hidden       = $this->without_hidden;
-		$this->without_hidden = '';
-		return '' === $without_hidden ? $cart_id : $without_hidden;
+		foreach ( array( $variation, is_array( $cart_item_data ) ? $cart_item_data : array() ) as $data ) {
+			if ( array() === $data ) {
+				continue;
+			}
+			$part = '';
+			foreach ( $data as $key => $value ) {
+				$part .= trim( (string) $key ) . trim( is_array( $value ) || is_object( $value ) ? http_build_query( $value ) : (string) $value );
+			}
+			$parts[] = $part;
+		}
+		return md5( implode( '_', $parts ) );
 	}
 
 	/**

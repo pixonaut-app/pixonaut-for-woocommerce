@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Cart;
 
+use Pixonaut\WooCommerce\Cart\InapplicableAttributes;
 use Pixonaut\WooCommerce\Tests\Support\DependentPosters;
 use WC_Order;
 use WC_Order_Item_Product;
@@ -52,6 +53,20 @@ final class InapplicableAttributesTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Values by the poster's `attribute_*` fields.
+	 *
+	 * @param array<string, string> $values Values by attribute name.
+	 * @return array<string, string>
+	 */
+	private function fields( array $values ): array {
+		$fields = array();
+		foreach ( $values as $name => $value ) {
+			$fields[ self::poster_field( $name ) ] = $value;
+		}
+		return $fields;
+	}
+
+	/**
 	 * Adds one of the poster's variations with the values the form sent.
 	 *
 	 * @param string                $variation One of the keys of `$poster_sold`.
@@ -59,11 +74,7 @@ final class InapplicableAttributesTest extends WP_UnitTestCase {
 	 * @return string The cart line's key.
 	 */
 	private function add( string $variation, array $sent ): string {
-		$values = array();
-		foreach ( $sent as $name => $slug ) {
-			$values[ self::poster_field( $name ) ] = $slug;
-		}
-		$key = WC()->cart->add_to_cart( $this->poster->get_id(), 1, $this->poster_variations[ $variation ]->get_id(), $values );
+		$key = WC()->cart->add_to_cart( $this->poster->get_id(), 1, $this->poster_variations[ $variation ]->get_id(), $this->fields( $sent ) );
 		$this->assertIsString( $key, implode( ' ', array_column( wc_get_notices( 'error' ), 'notice' ) ) );
 		return $key;
 	}
@@ -141,21 +152,69 @@ final class InapplicableAttributesTest extends WP_UnitTestCase {
 	}
 
 	public function test_another_filter_of_the_cart_id_runs_once_on_the_id_without_them(): void {
-		$marked = static fn ( string $cart_id ): string => 'marked-' . $cart_id;
+		$runs   = 0;
+		$marked = static function ( string $cart_id ) use ( &$runs ): string {
+			++$runs;
+			return 'marked-' . $cart_id;
+		};
 		add_filter( 'woocommerce_cart_id', $marked );
-		$sent   = array(
+		$sent = array(
 			'Inramning'  => 'ingen',
 			'Hangarfarg' => 'ek',
 			'Ramfarg'    => 'svart',
 			'Canvasdjup' => '2-cm',
 		);
 
-		$first  = $this->add( 'ingen', $sent );
-		$second = $this->add( 'ingen', array( 'Hangarfarg' => 'svart' ) + $sent );
+		$first = WC()->cart->generate_cart_id( $this->poster->get_id(), $this->poster_variations['ingen']->get_id(), $this->fields( $sent ) );
 		remove_filter( 'woocommerce_cart_id', $marked );
 
-		$this->assertSame( $first, $second );
+		$this->assertSame( 1, $runs );
 		$this->assertSame( 'marked-' . WC()->cart->generate_cart_id( $this->poster->get_id(), $this->poster_variations['ingen']->get_id(), array( self::poster_field( 'Inramning' ) => 'ingen' ) ), $first );
+	}
+
+	public function test_the_id_is_worked_out_as_woocommerce_does(): void {
+		$variation = $this->fields(
+			array(
+				'Inramning'  => 'hangare',
+				'Hangarfarg' => ' ek ',
+			)
+		);
+		$data      = array(
+			'note'   => ' engraved ',
+			'design' => array(
+				'sides' => array( 'front' => 'dsn_1' ),
+				'count' => 2,
+			),
+			'object' => (object) array( 'a' => 'b' ),
+		);
+
+		foreach ( array( array( 7, 9, $variation, $data ), array( 7, 0, array(), array() ), array( 7, 9, $variation, array() ), array( 7, 0, array(), $data ) ) as list( $product_id, $variation_id, $chosen, $other ) ) {
+			$this->assertSame( WC()->cart->generate_cart_id( $product_id, $variation_id, $chosen, $other ), InapplicableAttributes::unfiltered_id( $product_id, $variation_id, $chosen, $other ) );
+		}
+	}
+
+	public function test_a_variation_out_of_stock_still_says_which_attributes_it_sets(): void {
+		update_option( 'woocommerce_hide_out_of_stock_items', 'yes' );
+		foreach ( array( 'hangare-ek', 'hangare-svart' ) as $with_hanger ) {
+			$this->poster_variations[ $with_hanger ]->set_stock_status( 'outofstock' );
+			$this->poster_variations[ $with_hanger ]->save();
+		}
+		$poster = wc_get_product( $this->poster->get_id() );
+		$this->assertInstanceOf( WC_Product_Variable::class, $poster );
+		$this->assertNotContains( $this->poster_variations['hangare-ek']->get_id(), $poster->get_visible_children() );
+
+		$key = $this->add(
+			'ingen',
+			array(
+				'Inramning'  => 'ingen',
+				'Hangarfarg' => 'ek',
+				'Ramfarg'    => 'svart',
+				'Canvasdjup' => '2-cm',
+			)
+		);
+		delete_option( 'woocommerce_hide_out_of_stock_items' );
+
+		$this->assertSame( array( self::poster_field( 'Inramning' ) => 'ingen' ), WC()->cart->get_cart()[ $key ]['variation'], 'the hanger colour does not turn into a free choice while every hanger is sold out' );
 	}
 
 	public function test_a_free_choice_stays_on_the_line(): void {

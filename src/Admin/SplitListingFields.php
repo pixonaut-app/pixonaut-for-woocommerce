@@ -170,7 +170,7 @@ final class SplitListingFields {
 	 */
 	private static function cards( WC_Product_Attribute $attribute, ?WC_Product $product ): array {
 		$looks  = null === $product ? array() : SplitCardLooks::stored_on( $product->get_id() );
-		$listed = null === $product ? array() : array_map( array( SplitCards::class, 'term_ids' ), SplitCards::keys( $product ) );
+		$listed = null === $product ? array() : array_map( static fn ( string $key ): array => SplitCards::card_terms( $product, $key ), SplitCards::keys( $product ) );
 		$cards  = array();
 		foreach ( $attribute->get_terms() ?? array() as $term ) {
 			$holding = array_values( array_filter( $listed, static fn ( array $term_ids ): bool => in_array( $term->term_id, $term_ids, true ) ) );
@@ -207,8 +207,9 @@ final class SplitListingFields {
 
 	/**
 	 * Saves the rows' choices with the product, then drops those of the
-	 * attributes it no longer has: with its last global attribute removed,
-	 * no row, and so no choice, is posted.
+	 * attributes it no longer has, and the cards' titles and images of the
+	 * values it no longer has: with its last global attribute removed, no
+	 * row, and so no choice, is posted.
 	 *
 	 * @param int $product_id The product.
 	 */
@@ -217,6 +218,7 @@ final class SplitListingFields {
 		$product = wc_get_product( $product_id );
 		if ( $product instanceof WC_Product ) {
 			SplitListing::forget_removed_attributes( $product );
+			SplitCardLooks::forget_removed_values( $product );
 		}
 	}
 
@@ -241,9 +243,9 @@ final class SplitListingFields {
 
 	/**
 	 * Stores the posted rows' choices and cards' titles and images on the
-	 * product; the attributes and values no row names lose theirs. Nothing
-	 * is stored when the rows were not posted, or when they are what is
-	 * stored.
+	 * product; an attribute no row names loses its choice, and a card no row
+	 * drew keeps its title and image. Nothing is stored when the rows were
+	 * not posted, or when they are what is stored.
 	 *
 	 * @param int                 $product_id The product.
 	 * @param array<mixed, mixed> $posted    The posted form, slashed.
@@ -266,7 +268,8 @@ final class SplitListingFields {
 			}
 		}
 		$looks = is_array( $posted[ self::CARD_FIELD ] ?? null ) ? $posted[ self::CARD_FIELD ] : array();
-		SplitCardLooks::save( $product_id, wp_unslash( $looks ) );
+		// Only the cards the rows drew are posted: a card the product is not listed by now keeps its own.
+		SplitCardLooks::change( $product_id, wp_unslash( $looks ) );
 		$config = ProductConfig::stored_on( $product );
 		if ( SplitListing::choices_from( $choices ) === $config->split_listing ) {
 			return;

@@ -45,7 +45,8 @@ cards "None", "Hanger, Oak", "Hanger, Black" and "Frame": none for a
 combination no variation sells, such as a bare poster in a hanger colour.
 
 A variation that leaves a listed attribute on **Any** is in the card of
-each of its values. When the attribute does not apply to the variation (it
+each of its values, so each such attribute multiplies the cards. A product
+that would have more than 250 cards is listed once instead. When the attribute does not apply to the variation (it
 is one of the
 [options that depend on each other](../dependent-options/)), the variation
 has no value of it instead: the bare poster's card is "None" alone. When no
@@ -107,7 +108,10 @@ gets its fields once the attributes are saved.
 
 A product listed by more than one attribute has the fields of each
 combination's card ("Hanger, Oak") on the row of the combination's last
-attribute, once the product is saved with both turned on.
+attribute, once the product is saved with both turned on. A card keeps its
+title and image while the product is listed another way, and when its
+attributes change places; it loses them when the product loses one of its
+values.
 
 A title and an image belong to the value, so they come back when the
 product is listed by that attribute again.

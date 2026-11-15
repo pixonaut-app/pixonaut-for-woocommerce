@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Templates;
 use Pixonaut\WooCommerce\Tests\Support\DependentPosters;
 use WC_Product;
+use WC_Product_Attribute;
 use WC_Product_Variable;
 use WC_Query;
 use WP_UnitTestCase;
@@ -222,6 +223,130 @@ final class SplitCombinationCardsTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Title for “Svart”', $frame, 'an attribute the product is not listed by keeps a row per value' );
 	}
 
+	public function test_a_combinations_card_keeps_its_title_when_the_attributes_change_places(): void {
+		$this->list_by( 'Inramning', 'Hangarfarg' );
+		$oak = $this->key(
+			array(
+				'Inramning'  => 'hangare',
+				'Hangarfarg' => 'ek',
+			)
+		);
+		SplitCardLooks::save( $this->poster->get_id(), array( $oak => array( 'title' => 'Poster on an oak hanger' ) ) );
+		$product    = $this->fresh();
+		$attributes = $product->get_attributes();
+		$colour     = $attributes['pa_hangarfarg'];
+		$framing    = $attributes['pa_inramning'];
+		$colour->set_position( 0 );
+		$framing->set_position( 1 );
+		$product->set_attributes( array( $colour, $framing, $attributes['pa_ramfarg'], $attributes['pa_canvasdjup'] ) );
+		$product->save();
+
+		$this->assertContains( $oak, $this->stored_keys() );
+		$this->assertSame( array( $this->poster_term( 'Hangarfarg', 'ek' ), $this->poster_term( 'Inramning', 'hangare' ) ), SplitCards::card_terms( $this->fresh(), $oak ), 'in the order of the attributes now' );
+		$this->assertContains( 'Poster on an oak hanger', $this->shop()['titles'] );
+	}
+
+	public function test_a_card_the_product_is_not_listed_by_now_keeps_its_title_through_a_save(): void {
+		$this->list_by( 'Inramning', 'Hangarfarg' );
+		$oak    = $this->key(
+			array(
+				'Inramning'  => 'hangare',
+				'Hangarfarg' => 'ek',
+			)
+		);
+		$canvas = $this->key( array( 'Inramning' => 'canvas' ) );
+		$hanger = $this->key( array( 'Inramning' => 'hangare' ) );
+		SplitCardLooks::save(
+			$this->poster->get_id(),
+			array(
+				$oak    => array( 'title' => 'Oak' ),
+				$hanger => array( 'title' => 'Any hanger' ),
+			)
+		);
+
+		// As the rows of a product listed by both post: the hanger's own card is not drawn.
+		SplitCardLooks::change(
+			$this->poster->get_id(),
+			array(
+				$canvas => array( 'title' => 'Canvas' ),
+				$oak    => array(
+					'title' => '',
+					'image' => '',
+				),
+			)
+		);
+
+		$this->assertEquals(
+			array(
+				$canvas => array(
+					'title' => 'Canvas',
+					'image' => 0,
+				),
+				$hanger => array(
+					'title' => 'Any hanger',
+					'image' => 0,
+				),
+			),
+			SplitCardLooks::stored_on( $this->poster->get_id() ),
+			'the card cleared loses its title, the one not posted keeps it'
+		);
+	}
+
+	public function test_a_card_loses_its_title_once_the_product_loses_one_of_its_values(): void {
+		$oak    = $this->key(
+			array(
+				'Inramning'  => 'hangare',
+				'Hangarfarg' => 'ek',
+			)
+		);
+		$canvas = $this->key( array( 'Inramning' => 'canvas' ) );
+		SplitCardLooks::save(
+			$this->poster->get_id(),
+			array(
+				$oak    => array( 'title' => 'Oak' ),
+				$canvas => array( 'title' => 'Canvas' ),
+			)
+		);
+		$product    = $this->fresh();
+		$attributes = $product->get_attributes();
+		unset( $attributes['pa_hangarfarg'] );
+		$product->set_attributes( $attributes );
+		$product->save();
+
+		SplitCardLooks::forget_removed_values( $this->fresh() );
+
+		$this->assertSame( array( $canvas ), array_map( 'strval', array_keys( SplitCardLooks::stored_on( $this->poster->get_id() ) ) ) );
+	}
+
+	public function test_a_product_with_more_combinations_than_the_shop_lists_is_listed_once(): void {
+		// Every variation sells any hanger colour, frame colour and canvas depth: two cards each, eight in all.
+		foreach ( $this->poster_variations as $variation ) {
+			$variation->set_attributes( array( 'pa_inramning' => $variation->get_attributes()['pa_inramning'] ) );
+			$variation->save();
+		}
+		$this->list_by( 'Hangarfarg', 'Ramfarg', 'Canvasdjup' );
+		$this->assertCount( 8, $this->stored_keys() );
+
+		$terms = array();
+		for ( $value = 0; $value <= SplitCards::MAX_CARDS / 4; $value++ ) {
+			$term = wp_insert_term( 'Depth ' . $value, 'pa_canvasdjup' );
+			$this->assertIsArray( $term );
+			$terms[] = (int) $term['term_id'];
+		}
+		$product    = $this->fresh();
+		$attributes = $product->get_attributes();
+		// A copy: the product takes the attribute it already holds as unchanged.
+		$this->assertInstanceOf( WC_Product_Attribute::class, $attributes['pa_canvasdjup'] );
+		$depth = clone $attributes['pa_canvasdjup'];
+		$depth->set_options( array_merge( $depth->get_options(), $terms ) );
+		$attributes['pa_canvasdjup'] = $depth;
+		$product->set_attributes( $attributes );
+		$product->save();
+
+		$this->assertSame( array(), $this->stored_keys() );
+		$this->assertSame( 1, $this->shop()['found'] );
+	}
+
 	public function test_a_deleted_value_takes_its_combinations_cards_with_it(): void {
 		$this->list_by( 'Inramning', 'Hangarfarg' );
 		$ek = $this->poster_term( 'Hangarfarg', 'ek' );
@@ -234,8 +359,8 @@ final class SplitCombinationCardsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_key_is_its_values_term_ids(): void {
-		$this->assertSame( '12,7', SplitCards::key( array( 12, 7 ) ) );
-		$this->assertSame( array( 12, 7 ), SplitCards::term_ids( '12,7' ) );
+		$this->assertSame( '7,12', SplitCards::key( array( 12, 7 ) ), 'lowest first, whatever the order of the attributes' );
+		$this->assertSame( array( 7, 12 ), SplitCards::term_ids( '7,12' ) );
 		$this->assertSame( SplitCards::NO_VALUE, SplitCards::key( array() ) );
 		$this->assertSame( array(), SplitCards::term_ids( SplitCards::NO_VALUE ) );
 		foreach ( array( '', '12,', ',12', '012', '1,0', '1 OR 1=1', null, 1.5 ) as $not_a_key ) {

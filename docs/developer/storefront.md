@@ -1079,9 +1079,11 @@ with a hanger has a hanger colour only on its hanger variations.
 On the page of a product with such an attribute, and only there,
 `Storefront\ApplicableAttributeForm` loads `assets/build/applicable-attributes.js`
 with `window.pixonautApplicableAttributes`: the product's id, its
-`attribute_*` fields in order, and the distinct values of the variations its
-form offers, since WooCommerce's form holds no variations above its
-threshold for loading them on demand. The script applies the same rule
+`attribute_*` fields in order, and the distinct values of its enabled
+variations, since WooCommerce's form holds no variations above its
+threshold for loading them on demand. A variation out of stock counts too,
+though the form leaves it out while the store hides those: what a product's
+variations set does not change with its stock. The script applies the same rule
 (`applicable-attributes.ts`; both suites answer the cases in
 `tests/fixtures/applicable-attributes.json`) to WooCommerce's classic form
 and to its Add to Cart + Options block after every choice:
@@ -1098,8 +1100,9 @@ and copies it to the cart line. `Cart\InapplicableAttributes` drops the
 hidden attributes' values, by the same rule with the line's values as the
 choices: from the line as it joins the cart (`woocommerce_add_cart_item`),
 from the cart id (`woocommerce_cart_id`, at the earliest priority, so the
-same choice is one line whatever filled the hidden fields and other
-filters of the id run once), and from the order line as it is made
+same choice is one line whatever filled the hidden fields; the other
+filters of the id follow, and are passed the choice as it was sent), and
+from the order line as it is made
 (`woocommerce_checkout_create_order_line_item`), which covers a line carted
 before. Carts already in customers' sessions and existing orders are left
 as they are.

@@ -68,6 +68,10 @@ export function hideInapplicableAttributes(
 		} else if (retries < MAX_RETRIES) {
 			retries += 1;
 			timer = setTimeout(apply, RETRY_MS);
+		} else {
+			// The form asks for a value of every field: one that took none
+			// is shown, for the customer to give it.
+			showUnfilled(form, rules);
 		}
 	};
 	const now = followChoices(form, () => {
@@ -90,9 +94,7 @@ function applyOnce(
 	form: HTMLFormElement,
 	rules: ApplicableAttributes,
 ): boolean {
-	const fields = themeFields(form).filter(
-		(field) => field.name !== null && rules.fields.includes(field.name),
-	);
+	const fields = attributeFields(form, rules);
 	const chosen: AttributeValues = {};
 	for (const field of fields) {
 		chosen[field.name as string] = chosenValue(field);
@@ -117,6 +119,32 @@ function applyOnce(
 	}
 	keepResetLinkShown(form, fields);
 	return settled;
+}
+
+/** Shows again each hidden attribute whose field holds no value. */
+function showUnfilled(
+	form: HTMLFormElement,
+	rules: ApplicableAttributes,
+): void {
+	for (const field of attributeFields(form, rules)) {
+		const row = rowOf(field);
+		if (
+			row.hasAttribute(NOT_APPLICABLE_ATTRIBUTE) &&
+			chosenValue(field) === ''
+		) {
+			show(row);
+		}
+	}
+}
+
+/** The form's fields of the product's attributes. */
+function attributeFields(
+	form: HTMLFormElement,
+	rules: ApplicableAttributes,
+): ThemeField[] {
+	return themeFields(form).filter(
+		(field) => field.name !== null && rules.fields.includes(field.name),
+	);
 }
 
 function chosenValue(field: ThemeField): string {
