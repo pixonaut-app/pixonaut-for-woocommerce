@@ -129,6 +129,17 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$this->assertSame( InvalidReason::PRINT_SIZE_NOT_AREA, $of_large->invalid_reason );
 	}
 
+	public function test_a_size_entered_that_is_the_area_of_a_row_the_template_misfits_is_not_sold_on_that_row(): void {
+		list( $parent, , $large ) = $this->linked( 'full', array( self::LARGE ) );
+		// Pixonaut takes the size where some row of that area takes it; this row is named a misfit.
+		$this->script_varying_save( 'full', array( self::LARGE ), true );
+
+		$this->save( $parent->get_id(), array(), array( 'sizes' => array( self::entered( '508', '711.2' ) ) ) );
+
+		$this->assertFalse( $this->reload_any( $large->get_id() )->is_purchasable() );
+		$this->assertSame( InvalidReason::VARIANT_SIZE_UNFIT, ProductConfig::config_for( $this->reload_any( $large->get_id() ) )->invalid_reason );
+	}
+
 	public function test_a_size_entered_that_is_no_rows_area_is_refused_without_asking(): void {
 		list( $parent )           = $this->linked( 'full' );
 		$this->recorder->requests = array();
