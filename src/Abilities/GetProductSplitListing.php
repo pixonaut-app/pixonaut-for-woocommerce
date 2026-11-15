@@ -148,8 +148,8 @@ final class GetProductSplitListing implements Ability {
 		return array(
 			'type'       => 'object',
 			'properties' => array(
-				'product_id' => array( 'type' => 'integer' ),
-				'listed_by'  => array(
+				'product_id'    => array( 'type' => 'integer' ),
+				'listed_by'     => array(
 					'type'        => array( 'integer', 'null' ),
 					'description' => __( 'The id of the attribute the product is listed by, one card per value; null when it is listed once. Only a variable product is listed by an attribute, one used for its variations.', 'pixonaut-for-woocommerce' ),
 				),
@@ -157,7 +157,7 @@ final class GetProductSplitListing implements Ability {
 					'type'  => 'array',
 					'items' => array( 'type' => 'integer' ),
 				),
-				'attributes' => array(
+				'attributes'    => array(
 					'type'  => 'array',
 					'items' => array(
 						'type'       => 'object',
