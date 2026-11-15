@@ -141,7 +141,10 @@ for (const source of [...SOURCES, ...COMPOSER_FILES]) {
 	});
 }
 
-for (const file of filesUnder(STAGE).filter((path) => leftOut(path, flavor))) {
+const staged = new Set(filesUnder(STAGE));
+for (const file of [...staged].filter((path) =>
+	leftOut(path, flavor, staged),
+)) {
 	rmSync(join(STAGE, file));
 }
 

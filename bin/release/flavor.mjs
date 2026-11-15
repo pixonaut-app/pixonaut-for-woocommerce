@@ -43,6 +43,25 @@ const TESTED_UP_TO_LINE = /^[ \t]*\*[ \t]*Tested up to:.*\r?\n/m;
  */
 const TRANSLATION_SOURCE = /^languages\/[^/]+\.pot?$/;
 
+/**
+ * A translation compiled to `.mo`. WordPress 6.5 and later, all the plugin
+ * runs on, load the `.l10n.php` file beside it in its place, and so does the
+ * plugin where it reads a translation itself (`FileTranslations`): the wporg
+ * flavor leaves a `.mo` with such a file out, for the same upload limit.
+ */
+const MO_FILE = /^(languages\/[^/]+)\.mo$/;
+
+/**
+ * The `.l10n.php` file that serves a `.mo` file's strings; undefined for
+ * any other path.
+ *
+ * @param {string} path Relative to the plugin directory.
+ */
+function phpFileOf(path) {
+	const stem = path.match(MO_FILE)?.[1];
+	return stem === undefined ? undefined : `${stem}.l10n.php`;
+}
+
 /** The largest zip wordpress.org's plugin submission form takes: 10 MB. */
 export const WPORG_UPLOAD_LIMIT_BYTES = 10 * 1024 * 1024;
 
@@ -86,11 +105,19 @@ export function zipName(version, flavor) {
 /**
  * Whether a staged file stays out of a flavor's zip.
  *
- * @param {string} path Relative to the plugin directory.
- * @param {string} flavor
+ * @param {string}      path   Relative to the plugin directory.
+ * @param {string}      flavor
+ * @param {Set<string>} files  Every staged file, as `path` is given.
  */
-export function leftOut(path, flavor) {
-	return flavor === WPORG_FLAVOR && TRANSLATION_SOURCE.test(path);
+export function leftOut(path, flavor, files) {
+	if (flavor !== WPORG_FLAVOR) {
+		return false;
+	}
+	const phpFile = phpFileOf(path);
+	return (
+		TRANSLATION_SOURCE.test(path) ||
+		(phpFile !== undefined && files.has(phpFile))
+	);
 }
 
 /**
@@ -189,8 +216,13 @@ export function flavorProblems(files, flavor, rootDir) {
 		) {
 			return [`${rootDir}${path}: update checker in the ${flavor} flavor`];
 		}
-		return leftOut(path, flavor)
+		if (!leftOut(path, flavor, files)) {
+			return [];
+		}
+		return TRANSLATION_SOURCE.test(path)
 			? [`${rootDir}${path}: translation source in the ${flavor} flavor`]
-			: [];
+			: [
+					`${rootDir}${path}: a .mo file beside its .l10n.php in the ${flavor} flavor`,
+				];
 	});
 }
