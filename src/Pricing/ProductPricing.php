@@ -236,6 +236,20 @@ final class ProductPricing {
 	 * @throws ApiException When Pixonaut could not be asked; what is stored is kept.
 	 */
 	public function refresh( WC_Product $product ): int {
+		$changed = $this->read_costs( $product );
+		return $this->settle( self::fresh( $product->get_id() ) ?? $product, $changed );
+	}
+
+	/**
+	 * Reads a product's costs from Pixonaut again and stores them, setting
+	 * and flagging no price: `settle()` does that. Every cost is read before
+	 * any is stored, so a read that fails stores nothing.
+	 *
+	 * @param WC_Product $product A simple or variable product.
+	 * @return list<int> The product or variations whose cost in the store's currency changed.
+	 * @throws ApiException When Pixonaut could not be asked; what is stored is kept.
+	 */
+	public function read_costs( WC_Product $product ): array {
 		// What an earlier refresh read, in a job working through several products, may be stale.
 		$this->read = array();
 		$region     = self::region();
@@ -268,7 +282,7 @@ final class ProductPricing {
 			}
 			$state->with_cost( $cost, $now, $blank_id, $ref, $total )->save_to( $item );
 		}
-		return $this->settle( self::fresh( $product->get_id() ) ?? $product, $changed );
+		return $changed;
 	}
 
 	/**

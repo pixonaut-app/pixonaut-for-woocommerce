@@ -561,17 +561,23 @@ with the product's `own_rule` over it, and `rule_set`), `automatic`, and in
 printshop's `cost` in its own currency, `cost_total` in the store's,
 `margin`, `suggested`, `standing` (`own`, `follows` or `by_hand`), and `flag`
 with its `flag_message`. Money is a decimal string; a time is ISO 8601.
+`prices` is a page of the rows: `page` and `per_page` (25 unless given, at
+most 100) choose which, and `total` and `pages` count them all.
 
 `price-product` does what Apply does there, through
-`ProductPricing::refresh()` and `apply()`: it reads the costs from Pixonaut
+`ProductPricing::read_costs()` and `apply()`: it reads the costs from Pixonaut
 again and sets each price to the rule's, which follows the rule from then
-on. `only: "unpriced"` prices the variations without a regular price and
+on. It sets no price it was not asked to: one that follows the rule and was
+not chosen is only flagged with the price suggested, also while the store
+changes prices automatically. `only: "unpriced"` prices the variations without a regular price and
 leaves the others; `variation_ids` names the ones to price. A price edited
 by hand is kept unless `release_held`. `rule` replaces the parts of the rule
-the product changes, before pricing. With `dry_run` it reads the costs and
+the product changes, once the costs are read: a read that fails stores no
+rule. With `dry_run` it reads the costs and
 answers the prices it would set, storing nothing on the product or its
 variations. Each row adds `before` and `changed` to what `get-product-prices`
-gives. It is refused without a target margin (`pixonaut_wc_no_price_rule`),
+gives; `changed` beside them counts every price that changed, whichever
+page of rows the answer lists. It is refused without a target margin (`pixonaut_wc_no_price_rule`),
 for a product that is not on a blank (`pixonaut_wc_not_priced`), and when
 Pixonaut cannot give the costs (`pixonaut_wc_costs_unread`,
 `pixonaut_wc_costs_no_region`); a price the rule cannot set keeps its value

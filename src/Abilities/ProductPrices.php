@@ -50,6 +50,16 @@ final class ProductPrices {
 	private const TIME_FORMAT = 'Y-m-d\TH:i:s\Z';
 
 	/**
+	 * How many prices an answer lists unless it is asked for another number.
+	 */
+	public const PER_PAGE = 25;
+
+	/**
+	 * The most prices an answer lists.
+	 */
+	public const PER_PAGE_MAX = 100;
+
+	/**
 	 * The product named in the input, when it is one prices follow costs
 	 * on: a simple or variable product personalised on a blank.
 	 *
@@ -179,6 +189,67 @@ final class ProductPrices {
 					'description' => __( 'When its cost was last asked for; null when it never was.', 'pixonaut-for-woocommerce' ),
 				),
 			) + $more,
+		);
+	}
+
+	/**
+	 * The input that chooses which prices an answer lists.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function paging_schema(): array {
+		return array(
+			'page'     => array(
+				'type'        => 'integer',
+				'minimum'     => 1,
+				'default'     => 1,
+				'description' => __( 'Which page of the prices the answer lists; it changes nothing about which are priced.', 'pixonaut-for-woocommerce' ),
+			),
+			'per_page' => array(
+				'type'    => 'integer',
+				'minimum' => 1,
+				'maximum' => self::PER_PAGE_MAX,
+				'default' => self::PER_PAGE,
+			),
+		);
+	}
+
+	/**
+	 * One page of an answer's prices, with how many there are in all.
+	 *
+	 * @param list<array<string, mixed>> $prices Every price.
+	 * @param mixed                      $input  The ability's input, with `page` and `per_page`.
+	 * @return array{prices: list<array<string, mixed>>, total: int, page: int, pages: int}
+	 */
+	public static function page( array $prices, mixed $input ): array {
+		$per_page = min( self::PER_PAGE_MAX, max( 1, Abilities::integer( $input, 'per_page', self::PER_PAGE ) ) );
+		$page     = max( 1, Abilities::integer( $input, 'page', 1 ) );
+		return array(
+			'prices' => array_slice( $prices, ( $page - 1 ) * $per_page, $per_page ),
+			'total'  => count( $prices ),
+			'page'   => $page,
+			'pages'  => (int) ceil( count( $prices ) / $per_page ),
+		);
+	}
+
+	/**
+	 * The schema of `page()`.
+	 *
+	 * @param array<string, array<string, mixed>> $more Properties an ability adds to each price.
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function page_schema( array $more = array() ): array {
+		return array(
+			'prices' => array(
+				'type'  => 'array',
+				'items' => self::row_schema( $more ),
+			),
+			'total'  => array(
+				'type'        => 'integer',
+				'description' => __( 'How many prices the product has, on every page.', 'pixonaut-for-woocommerce' ),
+			),
+			'page'   => array( 'type' => 'integer' ),
+			'pages'  => array( 'type' => 'integer' ),
 		);
 	}
 

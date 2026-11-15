@@ -62,7 +62,7 @@ final class PriceProduct implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Price a product by the pricing rule', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Reads the printshop\'s costs of a product printed on a blank again, and sets the regular price of each variation (a simple product has one) to the rule\'s: the price step nearest the target margin, within the lowest and highest price. A price it sets follows the rule from then on. `only` unpriced leaves every variation that has a price alone; `variation_ids` names the ones to price. A price edited by hand after the rule set it is kept unless `release_held`. `rule` stores the parts of the rule this product changes, first. With `dry_run` nothing is stored on the product: the answer gives the prices it would set. Each price answers `before`, `price` and `changed`; one the rule cannot set keeps its price and says why in `flag`. Refused without a target margin.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Reads the printshop\'s costs of a product printed on a blank again, and sets the regular price of each variation (a simple product has one) to the rule\'s: the price step nearest the target margin, within the lowest and highest price. A price it sets follows the rule from then on. `only` unpriced leaves every variation that has a price alone; `variation_ids` names the ones to price. A price edited by hand after the rule set it is kept unless `release_held`. `rule` stores the parts of the rule this product changes, first. With `dry_run` nothing is stored on the product: the answer gives the prices it would set. Each price answers `before`, `price` and `changed`; one the rule cannot set keeps its price and says why in `flag`. No other price is set, whatever the store changes by itself. `changed` counts every price that changed; `prices` is a page of them, `page` and `per_page` choosing which. Refused without a target margin.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -95,7 +95,7 @@ final class PriceProduct implements Ability {
 						'type'    => 'boolean',
 						'default' => false,
 					),
-				),
+				) + ProductPrices::paging_schema(),
 				'required'             => array( 'product_id' ),
 				'additionalProperties' => false,
 			),
@@ -107,18 +107,14 @@ final class PriceProduct implements Ability {
 						'type'        => 'integer',
 						'description' => __( 'How many prices changed, or would.', 'pixonaut-for-woocommerce' ),
 					),
-					'prices'  => array(
-						'type'  => 'array',
-						'items' => ProductPrices::row_schema(
-							array(
-								'before'  => array(
-									'type'        => array( 'string', 'null' ),
-									'description' => __( 'The regular price it had; null for none.', 'pixonaut-for-woocommerce' ),
-								),
-								'changed' => array( 'type' => 'boolean' ),
-							)
+				) + ProductPrices::page_schema(
+					array(
+						'before'  => array(
+							'type'        => array( 'string', 'null' ),
+							'description' => __( 'The regular price it had; null for none.', 'pixonaut-for-woocommerce' ),
 						),
-					),
+						'changed' => array( 'type' => 'boolean' ),
+					)
 				),
 			),
 			'execute_callback'    => array( $this, 'execute' ),
@@ -132,7 +128,7 @@ final class PriceProduct implements Ability {
 	}
 
 	/**
-	 * @param mixed $input `product_id`, and optionally `only`, `variation_ids`, `release_held`, `rule` and `dry_run`.
+	 * @param mixed $input `product_id`, and optionally `only`, `variation_ids`, `release_held`, `rule`, `dry_run`, `page` and `per_page`.
 	 * @return array<string, mixed>|WP_Error
 	 */
 	public function execute( mixed $input = null ): array|WP_Error {
@@ -165,12 +161,14 @@ final class PriceProduct implements Ability {
 			if ( $dry_run ) {
 				$rows = $pricing->preview( $product, $ids, $release, $own );
 			} else {
+				// Every price is set from what the printshop charges now. Read first: a read that fails stores no rule.
+				$pricing->read_costs( $product );
 				if ( isset( $input['rule'] ) ) {
-					$pricing->save_own_parts( $product, $own );
+					$pricing->save_own_parts( self::reread( $product ), $own );
 				}
-				// Every price is set from what the printshop charges now.
-				$pricing->refresh( self::reread( $product ) );
 				$pricing->apply( self::reread( $product ), $ids, $release );
+				// The prices not chosen are only flagged: none of them is set, whatever the store changes by itself.
+				$pricing->settle( self::reread( $product ) );
 				$rows = $pricing->rows( self::reread( $product ) );
 			}
 		} catch ( ApiException $e ) {
@@ -189,8 +187,7 @@ final class PriceProduct implements Ability {
 		return GetProductPrices::product_values( $pricing, $this->settings, $product->get_id(), $own, true ) + array(
 			'dry_run' => $dry_run,
 			'changed' => count( array_filter( array_column( $prices, 'changed' ) ) ),
-			'prices'  => $prices,
-		);
+		) + ProductPrices::page( $prices, $input );
 	}
 
 	/**

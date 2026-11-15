@@ -257,6 +257,123 @@ final class PricingAbilitiesTest extends PricingTestCase {
 		$this->assertSame( '399', $this->price( $ids['v_a3'] ) );
 	}
 
+	public function test_pricing_some_variations_sets_no_other_price_though_the_store_changes_prices_by_itself(): void {
+		$this->store_rule();
+		$this->plugin->settings()->set( Settings::PRICE_AUTOMATIC, true );
+		$ids = $this->variable_product(
+			array(
+				'v_a3' => '',
+				'v_a4' => '',
+			)
+		);
+		$product_id = $this->parent_of( $ids['v_a3'] )->get_id();
+		$this->script_costs(
+			array(
+				'v_a3' => '200',
+				'v_a4' => '100',
+			)
+		);
+		$this->price->execute(
+			array(
+				'product_id'    => $product_id,
+				'variation_ids' => array( $ids['v_a3'] ),
+			)
+		);
+		$this->assertSame( '399', $this->price( $ids['v_a3'] ) );
+		$this->edit_price( $ids['v_a4'], '' );
+
+		// The cost of the priced variation leaves the tolerance while the other is priced.
+		$costs = array(
+			'v_a3' => '300',
+			'v_a4' => '100',
+		);
+		$this->script_costs( $costs );
+		$tried = $this->price->execute(
+			array(
+				'product_id' => $product_id,
+				'only'       => PriceProduct::UNPRICED,
+				'dry_run'    => true,
+			)
+		);
+		$this->script_costs( $costs );
+		$priced = $this->price->execute(
+			array(
+				'product_id' => $product_id,
+				'only'       => PriceProduct::UNPRICED,
+			)
+		);
+
+		$this->assertIsArray( $tried );
+		$this->assertIsArray( $priced );
+		$this->assertSame( '399', $this->price( $ids['v_a3'] ), 'a price not chosen is not set' );
+		$this->assertSame( '199', $this->price( $ids['v_a4'] ) );
+		$this->assertSame( 1, $priced['changed'] );
+		$this->assertSame( array_column( $tried['prices'], 'price', 'id' ), array_column( $priced['prices'], 'price', 'id' ), 'the dry run answered what the pricing did' );
+		$by_id = array_column( $priced['prices'], null, 'id' );
+		$this->assertSame( '599', $by_id[ $ids['v_a3'] ]['suggested'], 'its new price is suggested' );
+		$this->assertSame( PriceState::FLAG_MARGIN, $by_id[ $ids['v_a3'] ]['flag'] );
+	}
+
+	public function test_costs_that_cannot_be_read_store_no_rule_given_with_the_pricing(): void {
+		$this->store_rule();
+		$ids        = $this->variable_product( array( 'v_a3' => '120' ) );
+		$product_id = $this->parent_of( $ids['v_a3'] )->get_id();
+		$this->recorder->json( 500, array( 'error' => 'db_error' ) );
+
+		$answer = $this->price->execute(
+			array(
+				'product_id' => $product_id,
+				'rule'       => array( PriceRule::MARGIN => '60' ),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $answer );
+		$this->assertSame( '', ProductPricing::own_parts( $this->product( $product_id ) )[ PriceRule::MARGIN ] );
+		$this->assertSame( '120', $this->price( $ids['v_a3'] ) );
+	}
+
+	public function test_an_answer_lists_a_page_of_the_prices_and_counts_them_all(): void {
+		$this->store_rule();
+		$ids = $this->variable_product(
+			array(
+				'v_a2' => '',
+				'v_a3' => '',
+				'v_a4' => '',
+			)
+		);
+		$product_id = $this->parent_of( $ids['v_a3'] )->get_id();
+		$this->script_costs(
+			array(
+				'v_a2' => '300',
+				'v_a3' => '200',
+				'v_a4' => '100',
+			)
+		);
+
+		$priced = $this->price->execute(
+			array(
+				'product_id' => $product_id,
+				'per_page'   => 2,
+			)
+		);
+		$second = $this->read->execute(
+			array(
+				'product_id' => $product_id,
+				'per_page'   => 2,
+				'page'       => 2,
+			)
+		);
+
+		$this->assertIsArray( $priced );
+		$this->assertIsArray( $second );
+		$this->assertSame( 3, $priced['changed'], 'every price is set, whichever page is listed' );
+		$this->assertSame( array( $ids['v_a2'], $ids['v_a3'] ), array_column( $priced['prices'], 'id' ) );
+		$this->assertSame( array( 3, 1, 2 ), array( $priced['total'], $priced['page'], $priced['pages'] ) );
+		$this->assertSame( array( $ids['v_a4'] ), array_column( $second['prices'], 'id' ) );
+		$this->assertSame( '199', $second['prices'][0]['price'] );
+		$this->assertSame( array( 3, 2, 2 ), array( $second['total'], $second['page'], $second['pages'] ) );
+	}
+
 	public function test_a_rule_given_is_the_products_own_and_a_dry_run_does_not_store_it(): void {
 		$this->store_rule();
 		$ids        = $this->variable_product( array( 'v_a3' => '' ) );
