@@ -693,6 +693,15 @@ export declare interface FillProperty {
     fallback: string;
 }
 
+/** A print area printed edge to edge on a product that folds, such as a
+ *  canvas round its frame: its size, and how far in from each edge the
+ *  product folds. What lies inside the fold is seen from the front. */
+export declare interface FoldedPrintArea {
+    widthMm: number;
+    heightMm: number;
+    foldMm: number;
+}
+
 /** One face of a family: the weight it draws, its style when it is italic
  *  (a face storing none is upright), and its TTF's sha256. */
 declare interface FontFaceRef {
@@ -1203,8 +1212,15 @@ export declare type LinkPreset = (typeof LINK_PRESETS)[number];
  * A design that `repeats` lays its tile across whatever size it prints at,
  * so no size is held to the template's shape: the api judges a repeated
  * design's size by its placement alone (`printSizeIllegalReason`).
+ *
+ * `printArea` is the print area the design is shown on, where it folds: a
+ * canvas's print is its face with its wrap on every side, and the api takes
+ * a template there that fits the face (`shapeFitsPlacement`). So a size that
+ * is that area is judged by the part of it inside the fold too. Only that
+ * size: the area takes no other, and one that is not it is judged by its own
+ * shape, as with no area known.
  */
-export declare function markPrintSizes(template: SizeConstrainedTemplate, options: readonly PrintSizeOption[], selectedIndex: number, repeats?: boolean): PrintSizeChoice[];
+export declare function markPrintSizes(template: SizeConstrainedTemplate, options: readonly PrintSizeOption[], selectedIndex: number, repeats?: boolean, printArea?: FoldedPrintArea): PrintSizeChoice[];
 
 /** One of the consumer's own product photos, shown as a view.
  *
