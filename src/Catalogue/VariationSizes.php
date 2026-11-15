@@ -224,9 +224,11 @@ final class VariationSizes {
 				return array( $refused, array() );
 			}
 		}
-		$template  = (string) new TemplateId( $side->template_base_id, $side->template_version );
-		$blank_id  = $on_row ? null : $blank_id;
-		$placement = $on_row ? null : $side->placement_id;
+		$template = (string) new TemplateId( $side->template_base_id, $side->template_version );
+		// On a row the size is the row's to take, judged above. Printed across its area it is asked about with the placement, which Pixonaut judges against the area of each row the blank sells: it reads where the row folds there, so a canvas is judged by its face. Placed within its area, the template alone is asked, as a placement named with no row is judged at its reference row.
+		$named     = ! $on_row || $side->row_sizes[0]->full;
+		$blank_id  = $named ? $blank_id : null;
+		$placement = $named ? $side->placement_id : null;
 		$asked     = (string) wp_json_encode( array( $template, $blank_id, $placement, $size->stored() ) );
 		if ( ! array_key_exists( $asked, $this->verdicts ) ) {
 			$verdict                  = $this->catalogue->check_print_sizes( $template, array( $size ), $blank_id, $placement )[0];

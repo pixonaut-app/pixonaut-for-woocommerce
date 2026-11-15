@@ -369,7 +369,10 @@ final class Catalogue {
 	/**
 	 * `POST /v1/templates/{id}/print-size {sizes[], blankId, placementId}`:
 	 * judges every size against the template's ratio and, with a blank, the
-	 * placement's largest print area, in one call.
+	 * placement's print area, in one call: where a print is its row's whole
+	 * area, the area of each row the blank sells. Only with the placement
+	 * does Pixonaut know where a product folds, so a canvas is judged by its
+	 * face.
 	 *
 	 * @param string      $template_id  `<baseId>@<version>`.
 	 * @param PrintSize[] $sizes        Sizes to judge, at least one.
