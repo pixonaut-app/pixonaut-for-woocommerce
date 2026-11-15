@@ -7,11 +7,13 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Abilities;
 
+use ActionScheduler;
 use Pixonaut\WooCommerce\Abilities\GetProductSplitListing;
 use Pixonaut\WooCommerce\Abilities\SetProductSplitListing;
 use Pixonaut\WooCommerce\Catalogue\SplitCardImageCopies;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
@@ -43,6 +45,11 @@ final class SplitCardImageCopiesTest extends WP_UnitTestCase {
 	 * As many cards as the product that showed the store's time running out had.
 	 */
 	private const MANY_CARDS = 22;
+
+	/**
+	 * A job of the plugin's own queued the usual way, as a product's picture to draw is.
+	 */
+	private const A_PICTURE_JOB = 'pixonaut_wc_tests_picture';
 
 	private const HOST = 'https://pictures.example/cards/';
 
@@ -131,6 +138,29 @@ final class SplitCardImageCopiesTest extends WP_UnitTestCase {
 		$this->assertCount( self::MANY_CARDS, array_unique( $images ), 'each card has an image of its own' );
 		$this->assertEqualsCanonicalizing( $images, array_diff( $this->attachments(), $before ), 'and the media library has no other new one' );
 		$this->assertSame( array(), SplitCardImageCopies::stored_on( $product->get_id() ) );
+	}
+
+	public function test_a_copy_is_claimed_before_a_picture_queued_earlier(): void {
+		$product = $this->product_of_many_cards();
+		$term    = $this->motifs( $product )[0];
+		$picture = as_enqueue_async_action( self::A_PICTURE_JOB, array( $product->get_id() ), Schema::ACTION_GROUP );
+
+		$this->set(
+			$product,
+			array(
+				array(
+					'term_ids' => array( $term ),
+					'image'    => array( 'src' => self::HOST . 'first.png' ),
+				),
+			)
+		);
+
+		$store   = ActionScheduler::store();
+		$claimed = $store->stake_claim( 1 );
+		$ids     = array_map( 'intval', $claimed->get_actions() );
+		$store->release_claim( $claimed );
+		$this->assertSame( ActionSchedulerRunner::pending( SplitCardImageCopies::HOOK ), $ids, 'the queue takes the copy first' );
+		$this->assertNotContains( $picture, $ids );
 	}
 
 	public function test_a_copy_that_fails_leaves_nothing_in_the_media_library_and_says_why(): void {
