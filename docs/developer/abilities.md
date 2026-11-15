@@ -324,7 +324,16 @@ checks it; one Pixonaut cannot print (or no width and height above zero)
 is refused with `pixonaut_wc_invalid_print_size`, the reason's code in the
 error's data as `reason`, and nothing is saved. A size that could not be
 checked, Pixonaut being unreachable, is saved as the panel saves it, to be
-checked again. The answer gives `variation_id`, `pixonaut_validity` and
+checked again. On a blank whose placement is printed across its whole area
+and has a print area per size, the size must be the print area of the
+variation's blank variant: another is refused `print_size_not_area` or
+`too_large`, and a variation whose variant has no print area there
+`variant_size_unfit`. `clear` true, in place of `width_mm` and `height_mm`, takes the
+variation's own size off: a size it was given while following its product is
+dropped (one its attribute value gives it is the product's, and stays), and a setup of its own on a blank sells its side at the placement's
+size again, its blank variant's print area where those change with an
+option. A setup of its own without a blank has no placement size to take and
+is refused. The answer gives `variation_id`, `pixonaut_validity` and
 `pixonaut_variant`, as the variation reads give them.
 
 `set-variation-variants` sets the variant of several variations of one

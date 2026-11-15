@@ -232,7 +232,9 @@ final class VariationSize {
 	/**
 	 * A side with its placement's default replaced by what it prints at on
 	 * the variant's row. A variant in no row, or in one the template cannot
-	 * be printed at, sells nothing at the default.
+	 * be printed at, sells nothing at the default. On a row printed across
+	 * its whole area a print is that area, so a size entered that is not it
+	 * is another row's and is not sold; a side left with none says why.
 	 *
 	 * @param Side        $side    A personalised side.
 	 * @param string|null $variant The variant sold.
@@ -244,18 +246,41 @@ final class VariationSize {
 		}
 		$sizes = array();
 		$row   = $side->row_size_for( $variant );
-		foreach ( $side->print_sizes as $size ) {
+		// Printed across its whole area, a print is its row's area: a size entered is sold on the row it is the area of alone.
+		$full = $side->row_sizes[0]->full;
+		// Why the first size entered is not sold on this row.
+		$other = null;
+		// Where the size the side starts on is among those kept; null once it is not kept.
+		$start = null;
+		foreach ( $side->print_sizes as $at => $size ) {
 			if ( ! $size->placement_default ) {
-				$sizes[] = $size;
+				$refused = $full ? ( null === $row ? InvalidReason::VARIANT_SIZE_UNFIT : $row->refuses( $size ) ) : null;
+				if ( null === $refused ) {
+					$start   = $at === $side->start_size ? count( $sizes ) : $start;
+					$sizes[] = $size;
+				}
+				$other ??= $refused;
 				continue;
 			}
 			if ( null === $row?->size ) {
 				$reason ??= InvalidReason::VARIANT_SIZE_UNFIT;
 				continue;
 			}
+			$start   = $at === $side->start_size ? count( $sizes ) : $start;
 			$sizes[] = $row->size;
 		}
-		return $sizes === $side->print_sizes ? $side : $side->with( $side->template_version, $side->previous_version, $sizes, null );
+		if ( array() === $sizes ) {
+			$reason ??= $other;
+		}
+		return $sizes === $side->print_sizes ? $side : $side->with( $side->template_version, $side->previous_version, $sizes, null, $start ?? 0 );
+	}
+
+	/**
+	 * A copy without the sizes that are the variation's own: those its
+	 * attribute values give it are kept, with their verdicts.
+	 */
+	public function without_own(): self {
+		return new self( array_filter( $this->sizes, array( self::class, 'is_value' ) ) );
 	}
 
 	/**

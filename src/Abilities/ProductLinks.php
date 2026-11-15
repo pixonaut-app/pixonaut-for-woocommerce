@@ -214,6 +214,17 @@ final class ProductLinks {
 	}
 
 	/**
+	 * Takes off the print sizes a variation was given without a setup of
+	 * its own, so it is sold at its product's again. The sizes its
+	 * attribute values give it are the product's, and stay.
+	 *
+	 * @param WC_Product $variation The variation.
+	 */
+	public function clear_variation_sizes( WC_Product $variation ): void {
+		VariationSize::stored_on( $variation )->without_own()->save_to( $variation );
+	}
+
+	/**
 	 * Drops the print sizes a variation was given without overriding, once
 	 * it overrides its whole setup, as its panel does: the overriding setup
 	 * has its own sizes, which they would otherwise replace.

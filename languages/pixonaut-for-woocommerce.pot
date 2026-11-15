@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-15T14:18:23+00:00\n"
+"POT-Creation-Date: 2026-11-15T14:36:23+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -513,7 +513,7 @@ msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr ""
 
 #: src/Abilities/ListProducts.php:133
-#: src/Abilities/ProductLinks.php:265
+#: src/Abilities/ProductLinks.php:276
 msgid "Whether customers can buy it now, its blank variants and WooCommerce's own checks included."
 msgstr ""
 
@@ -716,11 +716,11 @@ msgstr ""
 msgid "No simple or variable product or variation has this id."
 msgstr ""
 
-#: src/Abilities/ProductLinks.php:261
+#: src/Abilities/ProductLinks.php:272
 msgid "For a variation, whether it has a setup of its own rather than following its product's, whose setup it then gives; false for a product."
 msgstr ""
 
-#: src/Abilities/ProductLinks.php:269
+#: src/Abilities/ProductLinks.php:280
 msgid "Which of the product's variations sell no variant of the blank, in words; null when each does. Set a variation's `variant` with `set-product-setup`."
 msgstr ""
 
@@ -1173,7 +1173,7 @@ msgid "The sizes customers choose between, in millimetres, in order; empty or le
 msgstr ""
 
 #: src/Abilities/SetupFields.php:209
-#: src/Abilities/SetVariationPrintSize.php:90
+#: src/Abilities/SetVariationPrintSize.php:92
 msgid "The name customers see, e.g. \"A3\"; left out for the millimetres."
 msgstr ""
 
@@ -1210,29 +1210,41 @@ msgid "No live template has the id \"%s\"."
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetVariationPrintSize.php:71
+#: src/Abilities/SetVariationPrintSize.php:73
 msgid "Set a variation's print size"
 msgstr ""
 
-#: src/Abilities/SetVariationPrintSize.php:72
-msgid "Gives one variation its own print size, in millimetres, on a product with or without a blank: the variation gets a setup of its own, starting from the one it has, whose one side is sold in that size alone. Pixonaut checks the size as the variation's Pixonaut panel does; a size it cannot print is refused with the reason, and nothing is saved. The answer gives the variation's validity and blank variant now."
+#: src/Abilities/SetVariationPrintSize.php:74
+msgid "Gives one variation its own print size, in millimetres, on a product with or without a blank: the variation gets a setup of its own, starting from the one it has, whose one side is sold in that size alone. Pixonaut checks the size as the variation's Pixonaut panel does; a size it cannot print is refused with the reason, and nothing is saved. On a blank whose print areas change with an option, the size is checked against the print area of the variation's blank variant. With `clear` true and no size, takes the variation's own size off instead: it is sold at its placement's size again, its blank variant's print area where those change with an option. The answer gives the variation's validity and blank variant now."
 msgstr ""
 
-#: src/Abilities/SetVariationPrintSize.php:101
+#: src/Abilities/SetVariationPrintSize.php:96
+msgid "True, in place of `width_mm` and `height_mm`, to take the variation's own print size off."
+msgstr ""
+
+#: src/Abilities/SetVariationPrintSize.php:107
 #: src/Abilities/SetVariationVariants.php:108
 msgid "The blank's variant the variation sells; null when it is not personalised on a blank."
 msgstr ""
 
-#: src/Abilities/SetVariationPrintSize.php:131
+#: src/Abilities/SetVariationPrintSize.php:137
 msgid "No variation has this id."
 msgstr ""
 
-#: src/Abilities/SetVariationPrintSize.php:142
+#: src/Abilities/SetVariationPrintSize.php:143
+msgid "Give a size or `clear`, not both."
+msgstr ""
+
+#: src/Abilities/SetVariationPrintSize.php:157
 msgid "The variation has several sides, each with its own print sizes: set them with set-product-setup."
 msgstr ""
 
-#: src/Abilities/SetVariationPrintSize.php:146
+#: src/Abilities/SetVariationPrintSize.php:161
 msgid "The variation is not personalised with a template. Link its product first."
+msgstr ""
+
+#: src/Abilities/SetVariationPrintSize.php:164
+msgid "The variation has a setup of its own without a blank, so there is no placement whose size it could take: give it a size, or make it follow its product again with set-product-setup."
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.

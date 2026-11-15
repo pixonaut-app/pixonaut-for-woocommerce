@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-15T14:18:23+00:00\n"
+"POT-Creation-Date: 2026-11-15T14:36:23+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: nb_NO\n"
@@ -643,11 +643,11 @@ msgid ""
 "them with `set-product-split-listing`."
 msgstr ""
 "Viser, for hvert globalt attributt på et enkelt eller variabelt produkt, "
-"valget for «Vis hver verdi som sitt eget produkt» (`auto` følger attributtets "
-"egen innstilling, `attribute_default`), om valget viser verdiene som egne "
-"produkter, og kortets egen tittel og eget bilde for hver verdi. `listed_by` "
-"er attributtet produktet nå vises delt opp etter; null når det vises én gang. "
-"Velg dem med `set-product-split-listing`."
+"valget for «Vis hver verdi som sitt eget produkt» (`auto` følger "
+"attributtets egen innstilling, `attribute_default`), om valget viser "
+"verdiene som egne produkter, og kortets egen tittel og eget bilde for hver "
+"verdi. `listed_by` er attributtet produktet nå vises delt opp etter; null "
+"når det vises én gang. Velg dem med `set-product-split-listing`."
 
 #: src/Abilities/GetProductSplitListing.php:152
 msgid ""
@@ -655,9 +655,9 @@ msgid ""
 "when it is listed once. Only a variable product is listed by an attribute, "
 "one used for its variations."
 msgstr ""
-"Id-en til attributtet produktet vises delt opp etter, med ett kort per verdi; "
-"null når det vises én gang. Bare et variabelt produkt kan vises delt opp "
-"etter et attributt, og bare etter et attributt det bruker for variantene "
+"Id-en til attributtet produktet vises delt opp etter, med ett kort per "
+"verdi; null når det vises én gang. Bare et variabelt produkt kan vises delt "
+"opp etter et attributt, og bare etter et attributt det bruker for variantene "
 "sine."
 
 #: src/Abilities/GetProductSplitListing.php:167
@@ -846,7 +846,7 @@ msgstr "Siden, fra 1."
 msgid "The page of each variable product's variations, from 1, %d to a page."
 msgstr "Siden med variantene til hvert variable produkt, fra 1, %d per side."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:265
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:276
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -1181,7 +1181,7 @@ msgstr "Den `before` som henter neste side; null når det ikke finnes noen."
 msgid "No simple or variable product or variation has this id."
 msgstr "Ingen enkle eller variable produkter eller varianter har denne id-en."
 
-#: src/Abilities/ProductLinks.php:261
+#: src/Abilities/ProductLinks.php:272
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -1189,7 +1189,7 @@ msgstr ""
 "For en variant: om den har sitt eget oppsett i stedet for å følge "
 "produktets, som den da oppgir; false for et produkt."
 
-#: src/Abilities/ProductLinks.php:269
+#: src/Abilities/ProductLinks.php:280
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -1810,14 +1810,14 @@ msgid ""
 "as `get-product-split-listing` gives it."
 msgstr ""
 "Angir, for hvert oppført globalt attributt på et enkelt eller variabelt "
-"produkt, valget for «Vis hver verdi som sitt eget produkt» (`on`, `off` eller "
-"`auto` for å følge attributtets egen innstilling) og kortets egen tittel og "
-"eget bilde for hver oppført verdi, slik fanen Egenskaper på produktet gjør. "
-"Bare det som oppgis, endres: et attributt, en verdi, en tittel eller et bilde "
-"som utelates, forblir som det er. En tom tittel eller et bilde som er null, "
-"gir kortet produktets tittel eller bilde igjen. Ingenting lagres med mindre "
-"alt som er oppført, er gyldig. Svaret er det produktet har nå, slik `get-"
-"product-split-listing` gir det."
+"produkt, valget for «Vis hver verdi som sitt eget produkt» (`on`, `off` "
+"eller `auto` for å følge attributtets egen innstilling) og kortets egen "
+"tittel og eget bilde for hver oppført verdi, slik fanen Egenskaper på "
+"produktet gjør. Bare det som oppgis, endres: et attributt, en verdi, en "
+"tittel eller et bilde som utelates, forblir som det er. En tom tittel eller "
+"et bilde som er null, gir kortet produktets tittel eller bilde igjen. "
+"Ingenting lagres med mindre alt som er oppført, er gyldig. Svaret er det "
+"produktet har nå, slik `get-product-split-listing` gir det."
 
 #: src/Abilities/SetProductSplitListing.php:67
 msgid "One of the product's global attributes, by id."
@@ -1968,7 +1968,7 @@ msgstr ""
 "`placement_default` true er denne standardstørrelsen. Uten basisprodukt må "
 "hver passe til malens sideforhold."
 
-#: src/Abilities/SetupFields.php:209 src/Abilities/SetVariationPrintSize.php:90
+#: src/Abilities/SetupFields.php:209 src/Abilities/SetVariationPrintSize.php:92
 msgid "The name customers see, e.g. \"A3\"; left out for the millimetres."
 msgstr "Navnet kundene ser, f.eks. «A3»; utelatt for millimetermålene."
 
@@ -2029,18 +2029,30 @@ msgid "No live template has the id \"%s\"."
 msgstr "Ingen aktiv mal har id-en «%s»."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetVariationPrintSize.php:71
+#: src/Abilities/SetVariationPrintSize.php:73
 msgid "Set a variation's print size"
 msgstr "Angi trykkstørrelsen til en variant"
 
-#: src/Abilities/SetVariationPrintSize.php:72
+#: src/Abilities/SetVariationPrintSize.php:74
+#, fuzzy
+#| msgid ""
+#| "Gives one variation its own print size, in millimetres, on a product with "
+#| "or without a blank: the variation gets a setup of its own, starting from "
+#| "the one it has, whose one side is sold in that size alone. Pixonaut "
+#| "checks the size as the variation's Pixonaut panel does; a size it cannot "
+#| "print is refused with the reason, and nothing is saved. The answer gives "
+#| "the variation's validity and blank variant now."
 msgid ""
 "Gives one variation its own print size, in millimetres, on a product with or "
 "without a blank: the variation gets a setup of its own, starting from the "
 "one it has, whose one side is sold in that size alone. Pixonaut checks the "
 "size as the variation's Pixonaut panel does; a size it cannot print is "
-"refused with the reason, and nothing is saved. The answer gives the "
-"variation's validity and blank variant now."
+"refused with the reason, and nothing is saved. On a blank whose print areas "
+"change with an option, the size is checked against the print area of the "
+"variation's blank variant. With `clear` true and no size, takes the "
+"variation's own size off instead: it is sold at its placement's size again, "
+"its blank variant's print area where those change with an option. The answer "
+"gives the variation's validity and blank variant now."
 msgstr ""
 "Gir én variant sin egen trykkstørrelse i millimeter, på et produkt med eller "
 "uten basisprodukt: varianten får sitt eget oppsett, ut fra det den har, der "
@@ -2049,7 +2061,13 @@ msgstr ""
 "kan trykkes, avvises med årsaken, og ingenting lagres. Svaret oppgir "
 "deretter gyldigheten og basisproduktvarianten til varianten."
 
-#: src/Abilities/SetVariationPrintSize.php:101
+#: src/Abilities/SetVariationPrintSize.php:96
+msgid ""
+"True, in place of `width_mm` and `height_mm`, to take the variation's own "
+"print size off."
+msgstr ""
+
+#: src/Abilities/SetVariationPrintSize.php:107
 #: src/Abilities/SetVariationVariants.php:108
 msgid ""
 "The blank's variant the variation sells; null when it is not personalised on "
@@ -2058,11 +2076,15 @@ msgstr ""
 "Basisproduktvarianten varianten selger; null når den ikke er personalisert "
 "på et basisprodukt."
 
-#: src/Abilities/SetVariationPrintSize.php:131
+#: src/Abilities/SetVariationPrintSize.php:137
 msgid "No variation has this id."
 msgstr "Ingen varianter har denne id-en."
 
-#: src/Abilities/SetVariationPrintSize.php:142
+#: src/Abilities/SetVariationPrintSize.php:143
+msgid "Give a size or `clear`, not both."
+msgstr ""
+
+#: src/Abilities/SetVariationPrintSize.php:157
 msgid ""
 "The variation has several sides, each with its own print sizes: set them "
 "with set-product-setup."
@@ -2070,11 +2092,18 @@ msgstr ""
 "Varianten har flere sider, hver med egne trykkstørrelser: angi dem med set-"
 "product-setup."
 
-#: src/Abilities/SetVariationPrintSize.php:146
+#: src/Abilities/SetVariationPrintSize.php:161
 msgid ""
 "The variation is not personalised with a template. Link its product first."
 msgstr ""
 "Varianten er ikke personalisert med en mal. Knytt først produktet til en mal."
+
+#: src/Abilities/SetVariationPrintSize.php:164
+msgid ""
+"The variation has a setup of its own without a blank, so there is no "
+"placement whose size it could take: give it a size, or make it follow its "
+"product again with set-product-setup."
+msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetVariationVariants.php:56

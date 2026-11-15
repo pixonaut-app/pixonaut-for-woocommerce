@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Pixonaut\WooCommerce\Api\Answers\PrintSizeVerdict;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Api\Designs;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
@@ -592,14 +593,17 @@ final class ProductLinker {
 				$checked_at[ $entered ] = count( $sizes );
 				$sizes[]                = $size;
 			}
-			list( $legal, $legal_at, $refused, $refused_size, $soft ) = $this->judged( (string) $template, $sizes, $blank_id, $placement_id );
+			$rows = null !== $varying && Side::STANDING !== $input->mode ? $this->row_sizes( (string) $template, $blank_id, $varying, $placement_id ) : array();
+			// Printed across its whole area, with an area per row, a print is its row's area: the placement's own box, the widest and tallest of its rows, is the area of no size.
+			$on_rows = null !== $varying && array() !== $rows && PrintAreas::covers_area( $varying, $placement_id );
+			list( $legal, $legal_at, $refused, $refused_size, $soft ) = $on_rows
+				? $this->judged_on_rows( (string) $template, $sizes, $rows )
+				: $this->judged( (string) $template, $sizes, $blank_id, $placement_id );
 			$misfits = $held;
-			$rows    = array();
 			if ( Side::STANDING !== $input->mode ) {
 				$misfits = null !== $varying && array() !== $legal
 					? MisfitSizes::of( self::placement_of( $this->constraints( (string) $template, $blank_id, $placement_id ) )['sizes'] ?? null )
 					: array();
-				$rows    = null !== $varying ? $this->row_sizes( (string) $template, $blank_id, $varying, $placement_id ) : array();
 			}
 		} catch ( ApiException $e ) {
 			// Nothing unchecked is sold; the menu waits for the next save.
@@ -610,7 +614,7 @@ final class ProductLinker {
 			return array( $sized( $legal, true )->with_misfit_sizes( $misfits )->with_row_sizes( $rows )->with_low_resolution( $soft ), $reason ?? $refused, null === $reason ? InvalidDetail::of( null, $refused_size ) : null );
 		}
 		// A placement with an area per row, none of which any variant sold can be printed at, sells nothing at the default.
-		$unfit = null !== $varying && Side::STANDING !== $input->mode && array() === $rows && array() !== PrintAreas::areas( $varying, $placement_id ) ? InvalidReason::VARIANT_SIZE_UNFIT : null;
+		$unfit = null !== $varying && Side::STANDING !== $input->mode && ! self::any_fits( $rows ) && array() !== PrintAreas::areas( $varying, $placement_id ) ? InvalidReason::VARIANT_SIZE_UNFIT : null;
 		// A starting size Pixonaut cannot print leaves the first legal one to start on.
 		return array( $sized( $legal, false, $legal_at[ $checked_at[ $input->start ] ?? -1 ] ?? 0 )->with_misfit_sizes( $misfits )->with_row_sizes( $rows )->with_low_resolution( $soft ), $reason ?? $unfit, null );
 	}
@@ -628,7 +632,136 @@ final class ProductLinker {
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function judged( string $template_id, array $sizes, ?string $blank_id, ?string $placement_id ): array {
-		$verdicts = array() === $sizes ? array() : $this->catalogue->check_print_sizes( $template_id, $sizes, $blank_id, $placement_id );
+		return self::kept( $sizes, array() === $sizes ? array() : $this->catalogue->check_print_sizes( $template_id, $sizes, $blank_id, $placement_id ) );
+	}
+
+	/**
+	 * Sizes judged on a placement printed across its whole area, with an
+	 * area per row. The placement's default is each variation's own row's
+	 * size: the rows' sizes are asked about in its place, and it is sold
+	 * while one of them is; a row whose size Pixonaut refuses, as for an
+	 * image printing too soft at it, sells nothing. A size entered is
+	 * judged here against the rows' areas, and one a row takes is asked
+	 * about too. Pixonaut is asked for the template alone, as it may judge
+	 * a size naming the placement against the widest and tallest of its
+	 * rows.
+	 *
+	 * @param string      $template_id `<baseId>@<version>`.
+	 * @param PrintSize[] $sizes       The sizes to judge.
+	 * @param RowSize[]   $rows        What the side prints at per row; a row refused loses its size.
+	 * @phpstan-param list<PrintSize> $sizes
+	 * @phpstan-param list<RowSize> $rows
+	 * @phpstan-param-out list<RowSize> $rows
+	 * @return array{0: list<PrintSize>, 1: array<int, int>, 2: string|null, 3: string|null, 4: list<LowResolutionSize>} As `judged()`.
+	 *
+	 * @throws ApiException When Pixonaut refused or could not be reached.
+	 */
+	private function judged_on_rows( string $template_id, array $sizes, array &$rows ): array {
+		$verdicts = array();
+		$asked    = array();
+		// Where each size asked of Pixonaut is in `$sizes`.
+		$asked_at = array();
+		$defaults = array();
+		foreach ( $sizes as $i => $size ) {
+			if ( $size->placement_default ) {
+				$defaults[] = $i;
+				continue;
+			}
+			$refused = self::refused_by_rows( $rows, $size );
+			if ( null !== $refused ) {
+				$verdicts[ $i ] = new PrintSizeVerdict( false, $refused );
+				continue;
+			}
+			$asked_at[] = $i;
+			$asked[]    = $size;
+		}
+		// The rows' own sizes, asked about after the sizes entered, where the default is sold.
+		$of_rows = array();
+		foreach ( array() === $defaults ? array() : $rows as $at => $row ) {
+			if ( null !== $row->size ) {
+				$of_rows[ $at ] = $row->size;
+			}
+		}
+		$all      = array_merge( $asked, array_values( $of_rows ) );
+		$answered = array() === $all ? array() : $this->catalogue->check_print_sizes( $template_id, $all, null, null );
+		foreach ( $asked_at as $at => $i ) {
+			$verdicts[ $i ] = $answered[ $at ];
+		}
+		// The rows Pixonaut refused, without their size, by their place in `$rows`.
+		$unsold  = array();
+		$soft    = array();
+		$sold    = array() === $of_rows;
+		$refused = null;
+		foreach ( array_keys( $of_rows ) as $nth => $at ) {
+			$verdict = $answered[ count( $asked ) + $nth ];
+			$row     = $rows[ $at ];
+			if ( array() !== $verdict->low_resolution && null !== $row->size ) {
+				$soft[] = new LowResolutionSize( $row->size, $verdict->low_resolution, ! $verdict->legal && InvalidReason::LOW_RESOLUTION === $verdict->reason );
+			}
+			if ( $verdict->legal ) {
+				$sold = true;
+				continue;
+			}
+			$refused     ??= $verdict->reason ?? InvalidReason::CHECK_FAILED;
+			$unsold[ $at ] = new RowSize( $row->row, $row->variants, $row->width_mm, $row->height_mm, $row->full, null );
+		}
+		$rows = array_values( array_replace( $rows, $unsold ) );
+		foreach ( $defaults as $i ) {
+			$verdicts[ $i ] = new PrintSizeVerdict( $sold, $sold ? null : $refused );
+		}
+		ksort( $verdicts );
+		$kept    = self::kept( $sizes, array_values( $verdicts ) );
+		$kept[4] = array_merge( $kept[4], $soft );
+		return $kept;
+	}
+
+	/**
+	 * Why no row of a placement printed across its whole area takes a size,
+	 * or null when one does: a size a row is large enough for is not too
+	 * large, as Pixonaut says of a size judged against several areas.
+	 *
+	 * @param RowSize[] $rows The rows.
+	 * @param PrintSize $size The size.
+	 * @phpstan-param list<RowSize> $rows
+	 */
+	private static function refused_by_rows( array $rows, PrintSize $size ): ?string {
+		$nearest = null;
+		foreach ( $rows as $row ) {
+			$refused = $row->refuses( $size );
+			if ( null === $refused ) {
+				return null;
+			}
+			$nearest = InvalidReason::PRINT_SIZE_NOT_AREA === $nearest ? $nearest : $refused;
+		}
+		return $nearest;
+	}
+
+	/**
+	 * Whether the template can be printed at a row.
+	 *
+	 * @param RowSize[] $rows The rows.
+	 * @phpstan-param list<RowSize> $rows
+	 */
+	private static function any_fits( array $rows ): bool {
+		foreach ( $rows as $row ) {
+			if ( null !== $row->size ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * The legal sizes of those judged, kept in order, with why the first
+	 * refused one was.
+	 *
+	 * @param PrintSize[]        $sizes    The sizes judged.
+	 * @param PrintSizeVerdict[] $verdicts Each one's verdict, in the same order.
+	 * @phpstan-param list<PrintSize> $sizes
+	 * @phpstan-param list<PrintSizeVerdict> $verdicts
+	 * @return array{0: list<PrintSize>, 1: array<int, int>, 2: string|null, 3: string|null, 4: list<LowResolutionSize>} As `judged()`.
+	 */
+	private static function kept( array $sizes, array $verdicts ): array {
 		$legal    = array();
 		$legal_at = array();
 		$reason   = null;
