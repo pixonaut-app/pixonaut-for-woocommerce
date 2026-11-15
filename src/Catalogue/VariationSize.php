@@ -246,12 +246,17 @@ final class VariationSize {
 		}
 		$sizes = array();
 		$row   = $side->row_size_for( $variant );
-		// Why the first size entered is not the row's.
+		// Printed across its whole area, a print is its row's area: a size entered is sold on the row it is the area of alone.
+		$full = $side->row_sizes[0]->full;
+		// Why the first size entered is not sold on this row.
 		$other = null;
-		foreach ( $side->print_sizes as $size ) {
+		// Where the size the side starts on is among those kept; null once it is not kept.
+		$start = null;
+		foreach ( $side->print_sizes as $at => $size ) {
 			if ( ! $size->placement_default ) {
-				$refused = true === $row?->full ? $row->refuses( $size ) : null;
+				$refused = $full ? ( null === $row ? InvalidReason::VARIANT_SIZE_UNFIT : $row->refuses( $size ) ) : null;
 				if ( null === $refused ) {
+					$start   = $at === $side->start_size ? count( $sizes ) : $start;
 					$sizes[] = $size;
 				}
 				$other ??= $refused;
@@ -261,12 +266,21 @@ final class VariationSize {
 				$reason ??= InvalidReason::VARIANT_SIZE_UNFIT;
 				continue;
 			}
+			$start   = $at === $side->start_size ? count( $sizes ) : $start;
 			$sizes[] = $row->size;
 		}
 		if ( array() === $sizes ) {
 			$reason ??= $other;
 		}
-		return $sizes === $side->print_sizes ? $side : $side->with( $side->template_version, $side->previous_version, $sizes, null );
+		return $sizes === $side->print_sizes ? $side : $side->with( $side->template_version, $side->previous_version, $sizes, null, $start ?? 0 );
+	}
+
+	/**
+	 * A copy without the sizes that are the variation's own: those its
+	 * attribute values give it are kept, with their verdicts.
+	 */
+	public function without_own(): self {
+		return new self( array_filter( $this->sizes, array( self::class, 'is_value' ) ) );
 	}
 
 	/**

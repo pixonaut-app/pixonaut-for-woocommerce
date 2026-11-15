@@ -215,12 +215,13 @@ final class ProductLinks {
 
 	/**
 	 * Takes off the print sizes a variation was given without a setup of
-	 * its own, so it is sold at its product's again.
+	 * its own, so it is sold at its product's again. The sizes its
+	 * attribute values give it are the product's, and stay.
 	 *
 	 * @param WC_Product $variation The variation.
 	 */
 	public function clear_variation_sizes( WC_Product $variation ): void {
-		self::drop_own_sizes( $variation );
+		VariationSize::stored_on( $variation )->without_own()->save_to( $variation );
 	}
 
 	/**

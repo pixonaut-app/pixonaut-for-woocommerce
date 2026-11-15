@@ -209,15 +209,21 @@ final class SetVariationPrintSize implements Ability {
 	 * Why the size is not the print area of the variation's blank variant,
 	 * on a placement printed across its whole area with an area per row;
 	 * null when it is, or on any other placement. The setup's own check
-	 * finds only that some row takes the size.
+	 * finds only that some row takes the size. A variation whose variant
+	 * is in no row, or that has none, has no area to print it on.
 	 *
 	 * @param WC_Product    $variation The variation.
 	 * @param ProductConfig $checked   Its setup, checked.
 	 * @param PrintSize     $size      The size.
 	 */
 	private static function refused_on_row( WC_Product $variation, ProductConfig $checked, PrintSize $size ): ?string {
-		$row = ( $checked->sides[0] ?? null )?->row_size_for( ProductVariant::sold_by( $variation, $checked ) );
-		return true === $row?->full ? $row->refuses( $size ) : null;
+		$side = $checked->sides[0] ?? null;
+		if ( null === $side || array() === $side->row_sizes || ! $side->row_sizes[0]->full ) {
+			return null;
+		}
+		$row = $side->row_size_for( ProductVariant::sold_by( $variation, $checked ) );
+		// A variant in no row has no print area on the placement.
+		return null === $row ? InvalidReason::VARIANT_SIZE_UNFIT : $row->refuses( $size );
 	}
 
 	/**

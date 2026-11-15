@@ -502,9 +502,51 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 		$this->assertTrue( $own->sides[0]->print_sizes[0]->placement_default, 'its side is sold at the placement\'s size' );
 		$sold = ProductConfig::config_for( $this->reload( $large ) )->sides[0]->print_sizes[0];
 		$this->assertSame( self::ROW_AREAS[ self::LARGE_ROW ], array( $sold->width_mm, $sold->height_mm ), 'which is its row\'s area' );
-		foreach ( $this->recorder->requests as $request ) {
-			$this->assertStringNotContainsString( '/print-size', $request['url'] );
-		}
+	}
+
+	public function test_a_variation_whose_variant_has_no_print_area_takes_no_size(): void {
+		list( , $large ) = $this->poster_on_rows();
+		( new ProductVariant( self::BLANK_ID, 'v_other', 'v_other', '50x70' ) )->save_to( $large );
+		$variants = $this->row_variants()->start();
+		$this->script_row_check();
+
+		$answer = $this->call(
+			array(
+				'variation_id' => $large->get_id(),
+				'width_mm'     => self::ROW_AREAS[ self::LARGE_ROW ][0],
+				'height_mm'    => self::ROW_AREAS[ self::LARGE_ROW ][1],
+			)
+		);
+		$variants->stop();
+
+		$this->assertSame( 422, $answer->get_status(), (string) wp_json_encode( $answer->get_data() ) );
+		$this->assertSame( InvalidReason::VARIANT_SIZE_UNFIT, $answer->get_data()['reason'] );
+		$this->assertFalse( ProductConfig::is_stored_on( $this->reload( $large ) ) );
+	}
+
+	public function test_clear_keeps_the_size_a_variations_attribute_value_gives_it(): void {
+		$product   = $this->poster();
+		$variation = $this->variation( $product, 'Small' );
+		$entry     = static fn ( array $more ): array => array(
+			'size'    => new PrintSize( self::WIDTH_MM, self::HEIGHT_MM, self::LABEL ),
+			'refused' => null,
+			'basis'   => 'judged',
+		) + $more;
+		( new VariationSize(
+			array(
+				'front' => $entry( array( 'value' => true ) ),
+				'back'  => $entry( array() ),
+			)
+		) )->save_to( $variation );
+
+		$this->succeed(
+			array(
+				'variation_id' => $variation->get_id(),
+				'clear'        => true,
+			)
+		);
+
+		$this->assertSame( array( 'front' ), array_keys( VariationSize::stored_on( $this->reload( $variation ) )->sizes ) );
 	}
 
 	/**
@@ -648,9 +690,9 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 	 * reads: the blank, the template's constraints on its front, the verdict
 	 * of a size asked about, and the template.
 	 *
-	 * @param bool $asks Whether a size is asked about.
+	 * @param bool $entered Whether the setup checked is sold at a size entered, in place of the placement's.
 	 */
-	private function script_row_check( bool $asks = true ): void {
+	private function script_row_check( bool $entered = true ): void {
 		$blank                              = BlankFixture::answer();
 		$blank['areasVaryBy']               = array( 'Size' );
 		$blank['placements'][0]['coverage'] = 'full';
@@ -695,9 +737,8 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 				),
 			)
 		);
-		if ( $asks ) {
-			$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
-		}
+		// A size entered is asked about alone; the placement's default as each row's own area.
+		$this->recorder->json( 200, array( 'verdicts' => array_fill( 0, $entered ? 1 : count( self::ROW_AREAS ), VerdictAnswers::LEGAL ) ) );
 		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 	}
 

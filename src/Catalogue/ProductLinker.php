@@ -637,29 +637,34 @@ final class ProductLinker {
 
 	/**
 	 * Sizes judged on a placement printed across its whole area, with an
-	 * area per row: the placement's default is each variation's own row's
-	 * size, so it is sold unasked; a size entered is judged here against
-	 * the rows' areas, and one a row takes is asked of Pixonaut for the
-	 * template's ratio alone, as Pixonaut may judge a size naming the
-	 * placement against the widest and tallest of its rows.
+	 * area per row. The placement's default is each variation's own row's
+	 * size: the rows' sizes are asked about in its place, and it is sold
+	 * while one of them is; a row whose size Pixonaut refuses, as for an
+	 * image printing too soft at it, sells nothing. A size entered is
+	 * judged here against the rows' areas, and one a row takes is asked
+	 * about too. Pixonaut is asked for the template alone, as it may judge
+	 * a size naming the placement against the widest and tallest of its
+	 * rows.
 	 *
 	 * @param string      $template_id `<baseId>@<version>`.
 	 * @param PrintSize[] $sizes       The sizes to judge.
-	 * @param RowSize[]   $rows        What the side prints at per row.
+	 * @param RowSize[]   $rows        What the side prints at per row; a row refused loses its size.
 	 * @phpstan-param list<PrintSize> $sizes
 	 * @phpstan-param list<RowSize> $rows
+	 * @phpstan-param-out list<RowSize> $rows
 	 * @return array{0: list<PrintSize>, 1: array<int, int>, 2: string|null, 3: string|null, 4: list<LowResolutionSize>} As `judged()`.
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
-	private function judged_on_rows( string $template_id, array $sizes, array $rows ): array {
+	private function judged_on_rows( string $template_id, array $sizes, array &$rows ): array {
 		$verdicts = array();
 		$asked    = array();
 		// Where each size asked of Pixonaut is in `$sizes`.
 		$asked_at = array();
+		$defaults = array();
 		foreach ( $sizes as $i => $size ) {
 			if ( $size->placement_default ) {
-				$verdicts[ $i ] = new PrintSizeVerdict( true, null );
+				$defaults[] = $i;
 				continue;
 			}
 			$refused = self::refused_by_rows( $rows, $size );
@@ -670,11 +675,44 @@ final class ProductLinker {
 			$asked_at[] = $i;
 			$asked[]    = $size;
 		}
-		foreach ( array() === $asked ? array() : $this->catalogue->check_print_sizes( $template_id, $asked, null, null ) as $at => $verdict ) {
-			$verdicts[ $asked_at[ $at ] ] = $verdict;
+		// The rows' own sizes, asked about after the sizes entered, where the default is sold.
+		$of_rows = array();
+		foreach ( array() === $defaults ? array() : $rows as $at => $row ) {
+			if ( null !== $row->size ) {
+				$of_rows[ $at ] = $row->size;
+			}
+		}
+		$all      = array_merge( $asked, array_values( $of_rows ) );
+		$answered = array() === $all ? array() : $this->catalogue->check_print_sizes( $template_id, $all, null, null );
+		foreach ( $asked_at as $at => $i ) {
+			$verdicts[ $i ] = $answered[ $at ];
+		}
+		// The rows Pixonaut refused, without their size, by their place in `$rows`.
+		$unsold  = array();
+		$soft    = array();
+		$sold    = array() === $of_rows;
+		$refused = null;
+		foreach ( array_keys( $of_rows ) as $nth => $at ) {
+			$verdict = $answered[ count( $asked ) + $nth ];
+			$row     = $rows[ $at ];
+			if ( array() !== $verdict->low_resolution && null !== $row->size ) {
+				$soft[] = new LowResolutionSize( $row->size, $verdict->low_resolution, ! $verdict->legal && InvalidReason::LOW_RESOLUTION === $verdict->reason );
+			}
+			if ( $verdict->legal ) {
+				$sold = true;
+				continue;
+			}
+			$refused     ??= $verdict->reason ?? InvalidReason::CHECK_FAILED;
+			$unsold[ $at ] = new RowSize( $row->row, $row->variants, $row->width_mm, $row->height_mm, $row->full, null );
+		}
+		$rows = array_values( array_replace( $rows, $unsold ) );
+		foreach ( $defaults as $i ) {
+			$verdicts[ $i ] = new PrintSizeVerdict( $sold, $sold ? null : $refused );
 		}
 		ksort( $verdicts );
-		return self::kept( $sizes, array_values( $verdicts ) );
+		$kept    = self::kept( $sizes, array_values( $verdicts ) );
+		$kept[4] = array_merge( $kept[4], $soft );
+		return $kept;
 	}
 
 	/**
