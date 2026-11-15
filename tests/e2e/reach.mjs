@@ -111,9 +111,16 @@ export const NO_SPEC = [
 	'src/Abilities/ConnectionAction.php',
 	'src/Abilities/ConnectionStatus.php',
 	'src/Abilities/GetProductPictureViews.php',
+<<<<<<< HEAD
 	'src/Abilities/GetProductSplitListing.php',
+=======
+	'src/Abilities/GetProductPrices.php',
+>>>>>>> 73e00509 (feat(abilities): read and change the pricing settings, and price a product by the rule)
 	'src/Abilities/LinkProduct.php',
 	'src/Abilities/ListTemplates.php',
+	'src/Abilities/PriceProduct.php',
+	'src/Abilities/ProductPrices.php',
+	'src/Abilities/ReadPricingSettings.php',
 	'src/Abilities/RecheckProducts.php',
 	'src/Abilities/ResetStandingLayout.php',
 	'src/Abilities/SetProductPictureView.php',
@@ -121,6 +128,7 @@ export const NO_SPEC = [
 	'src/Abilities/SetVariationPrintSize.php',
 	'src/Abilities/SetVariationVariants.php',
 	'src/Abilities/UnlinkProduct.php',
+	'src/Abilities/UpdatePricingSettings.php',
 	'src/Abilities/UseProductPicture.php',
 	'assets/src/admin/use-picture.ts',
 	// Emails no spec reads; the PHP suites render them.

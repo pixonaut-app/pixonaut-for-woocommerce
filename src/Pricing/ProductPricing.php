@@ -147,7 +147,24 @@ final class ProductPricing {
 	 * @param WC_Product $product The product.
 	 */
 	public function rule_for( WC_Product $product ): PriceRule {
-		return PriceRule::from_parts( array_filter( self::own_parts( $product ), static fn ( string $part ): bool => '' !== $part ) + $this->store_parts() );
+		return $this->rule_with( self::own_parts( $product ) );
+	}
+
+	/**
+	 * The rule a product that changed these parts would be priced by: the
+	 * store's, with them. A part that is not a number is left to the store.
+	 *
+	 * @param array<string, mixed> $own The parts a product changes, by part, as written.
+	 */
+	public function rule_with( array $own ): PriceRule {
+		$parts = array();
+		foreach ( PriceRule::PARTS as $part ) {
+			$written = $own[ $part ] ?? '';
+			if ( PriceRule::is_part( $written ) && '' !== PriceRule::part( $written ) ) {
+				$parts[ $part ] = PriceRule::part( $written );
+			}
+		}
+		return PriceRule::from_parts( $parts + $this->store_parts() );
 	}
 
 	/**
@@ -281,6 +298,68 @@ final class ProductPricing {
 		}
 		$this->watch( $product );
 		return $changed;
+	}
+
+	/**
+	 * Each of a product's prices as `apply()` would leave it, from the costs
+	 * Pixonaut has now, with nothing stored on the product or its
+	 * variations: a price the rule would set reads as set and following the
+	 * rule, one it would leave reads as it stands, with what stops the rule
+	 * as its flag.
+	 *
+	 * @param WC_Product                $product A simple or variable product.
+	 * @param int[]|null                $ids     The product or variations to price; null for all.
+	 * @param bool                      $release Whether a price edited by hand is given back to the rule.
+	 * @param array<string, mixed>|null $own     The parts of the rule the product would change; null for the ones it has.
+	 * @phpstan-param list<int>|null $ids
+	 * @return list<PriceRow>
+	 * @throws ApiException When Pixonaut could not be asked.
+	 */
+	public function preview( WC_Product $product, ?array $ids = null, bool $release = false, ?array $own = null ): array {
+		$this->read = array();
+		$region     = self::region();
+		$rule       = null === $own ? $this->rule_for( $product ) : $this->rule_with( $own );
+		$items      = self::items( $product );
+		$costs      = array();
+		foreach ( $items as $item ) {
+			list( $blank_id, $ref ) = self::sold( $item );
+			$listed                 = null === $blank_id || null === $ref ? null : ( $this->of_blank( $blank_id, $region )[ $ref ] ?? null );
+			// A variant Pixonaut does not list keeps the cost last read for it, as a refresh keeps it.
+			$costs[ $item->get_id() ] = $listed ?? PriceState::stored_on( $item )->cost_of( $blank_id, $ref, $region );
+		}
+		$this->converter->refresh_for( array_values( $costs ) );
+		return array_map(
+			function ( WC_Product $item ) use ( $rule, $costs, $ids, $release ): PriceRow {
+				$state    = PriceState::stored_on( $item );
+				$price    = Amount::parse( $item->get_regular_price( 'edit' ) );
+				$standing = $state->standing( $price );
+				$known    = $costs[ $item->get_id() ];
+				$store    = $this->converter->in_store( $known );
+				$cost     = $store->total;
+				$tax      = PriceTax::of( $item );
+				$wants    = null === $cost ? null : $rule->price_for( $cost, $tax );
+				$blocker  = self::blocker( $item, $store, $wants );
+				$tried    = $rule->is_set() && ( null === $ids || in_array( $item->get_id(), $ids, true ) ) && ( $release || PriceState::BY_HAND !== $standing );
+				$sets     = $tried && null !== $wants && null === $blocker;
+				$after    = $sets ? $wants : $price;
+				return new PriceRow(
+					$item->get_id(),
+					self::label( $item ),
+					$known,
+					$cost,
+					$after,
+					null === $cost || null === $after ? null : PriceRule::margin_of( $after, $cost, $tax ),
+					$sets || $wants === $price ? null : $wants,
+					$sets ? PriceState::FOLLOWS : $standing,
+					$tried ? $blocker : null,
+					$state->rule_at,
+					$state->checked_at,
+					$store->rate_date,
+					$store->buffer
+				);
+			},
+			$items
+		);
 	}
 
 	/**

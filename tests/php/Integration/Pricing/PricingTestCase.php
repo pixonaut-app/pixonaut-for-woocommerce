@@ -237,7 +237,13 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 				'changedAt' => null,
 			);
 		}
-		$this->recorder->json( 200, array( 'costs' => $costs ) );
+		$this->recorder->json(
+			200,
+			array(
+				'costs'    => $costs,
+				'complete' => true,
+			)
+		);
 	}
 
 	/**

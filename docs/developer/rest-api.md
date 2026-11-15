@@ -79,6 +79,8 @@ offered to a user:
 | A variation's own setup | `set-product-setup`, always with a variation's id |
 | Showcase pictures | `set-product-showcase`, `get-product-picture-views` |
 | Listing each value as its own product | `get-product-split-listing`, `set-product-split-listing` |
+| Pricing settings | `get-pricing-settings`, `update-pricing-settings` |
+| A product's prices | `get-product-prices`, `price-product` |
 | Orders, read only | `list-orders`, `get-order` |
 
 The product and variation tools answer as the store abilities of the same
