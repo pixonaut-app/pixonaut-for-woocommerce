@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-15T15:57:59+00:00\n"
+"POT-Creation-Date: 2026-11-15T16:50:46+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -3527,18 +3527,18 @@ msgid "Deprecated in Pixonaut for WooCommerce %s."
 msgstr ""
 
 #. translators: Option in the designer language setting, shown to the merchant: use the default language set in the Pixonaut workspace.
-#: src/DesignerLanguage.php:110
+#: src/DesignerLanguage.php:109
 msgid "Pixonaut workspace default"
 msgstr ""
 
 #. translators: Option in the designer language setting, shown to the merchant. %s: the workspace's default language, named in that language, e.g. Deutsch.
-#: src/DesignerLanguage.php:112
+#: src/DesignerLanguage.php:111
 #, php-format
 msgid "Pixonaut workspace default (%s)"
 msgstr ""
 
 #. translators: Option in the designer language setting, shown to the merchant: use the site's language.
-#: src/DesignerLanguage.php:114
+#: src/DesignerLanguage.php:113
 msgid "Follow the site"
 msgstr ""
 

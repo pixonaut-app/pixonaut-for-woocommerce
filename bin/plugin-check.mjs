@@ -76,6 +76,18 @@ function isDirectory(path) {
 }
 
 /**
+ * Whether an ignored path is skipped as a directory: one that is a
+ * directory, or one that is not there yet. A test run beside the check can
+ * make its report directory (`test-results`) while the check reads the tree,
+ * and a path skipped only as a file would then be checked.
+ *
+ * @param {string} path Relative to the checkout.
+ */
+function skippedAsDirectory(path) {
+	return isDirectory(path) || !existsSync(join(root, path));
+}
+
+/**
  * wp-env's working directory for this checkout: the one under WP_ENV_HOME
  * whose docker-compose.yml mounts this checkout. (`wp-env install-path`
  * prints nothing when its output is not a terminal.)
@@ -158,7 +170,7 @@ function target(installPath, releaseDir, flavor) {
 		plugin: basename(root),
 		args: [
 			`--ignore-codes=${ignoredCodes.join(',')}`,
-			`--exclude-directories=${ignored.filter(isDirectory).join(',')}`,
+			`--exclude-directories=${ignored.filter(skippedAsDirectory).join(',')}`,
 			`--exclude-files=${ignored.filter((path) => !isDirectory(path)).join(',')}`,
 		],
 		remove: () => {},
