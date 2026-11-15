@@ -404,7 +404,9 @@ answers no image, or one too large) leaves nothing in the media library:
 set again. `image_copy` is null once the card shows the image, and for a
 card given none. A URL the card waits for, or shows the copy of, is not
 copied again when it is given again; another URL, an `id` or null replaces
-the copy it waits for.
+the copy it waits for, as does the store manager changing the card's image
+on the product's Attributes tab. A card of a value the product has lost
+gets no image.
 
 `set-product-showcase` sets the showcase sets of the product's template its
 images are drawn with (`images`: `id` and `kind`, `mockup` on the blank's

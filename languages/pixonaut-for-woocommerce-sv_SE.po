@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-15T18:49:25+00:00\n"
+"POT-Creation-Date: 2026-11-15T19:34:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -721,13 +721,13 @@ msgstr ""
 "Läser, för varje globalt attribut hos en enkel eller variabel produkt, dess "
 "val för \"Visa varje värde som en egen produkt\" (`auto` följer attributets "
 "egen inställning, `attribute_default`), om valet gör att värdena visas som "
-"egna produkter, och den egna titeln och bilden på varje värdes kort, med "
-"den bild det väntar på (`image_copy`). `listed_by` är attributet som "
-"produkten just nu visas uppdelad efter; null när den visas en gång. `cards` "
-"är korten som produkten visas som just nu: ett per värde eller, när den "
-"visas uppdelad efter flera attribut, ett per kombination av deras värden "
-"som en variant säljer, vart och ett med sina värdens `term_ids` och sin "
-"egen titel och bild. Ange dem med `set-product-split-listing`."
+"egna produkter, och den egna titeln och bilden på varje värdes kort, med den "
+"bild det väntar på (`image_copy`). `listed_by` är attributet som produkten "
+"just nu visas uppdelad efter; null när den visas en gång. `cards` är korten "
+"som produkten visas som just nu: ett per värde eller, när den visas uppdelad "
+"efter flera attribut, ett per kombination av deras värden som en variant "
+"säljer, vart och ett med sina värdens `term_ids` och sin egen titel och "
+"bild. Ange dem med `set-product-split-listing`."
 
 #: src/Abilities/GetProductSplitListing.php:206
 msgid ""
@@ -736,10 +736,10 @@ msgid ""
 "it does within minutes, or `failed`, with why in `reason`. Null once the "
 "card shows it, and when it was given none."
 msgstr ""
-"Bilden som kortet får via en URL och som inte visas ännu: `src`, URL:en, "
-"och `state`, `waiting` medan butiken kopierar in den i mediebiblioteket, "
-"vilket sker inom några minuter, eller `failed`, med orsaken i `reason`. "
-"Null när kortet visar den, och när det inte fick någon."
+"Bilden som kortet får via en URL och som inte visas ännu: `src`, URL:en, och "
+"`state`, `waiting` medan butiken kopierar in den i mediebiblioteket, vilket "
+"sker inom några minuter, eller `failed`, med orsaken i `reason`. Null när "
+"kortet visar den, och när det inte fick någon."
 
 #: src/Abilities/GetProductSplitListing.php:228
 msgid ""
@@ -2183,20 +2183,20 @@ msgid ""
 msgstr ""
 "Anger, för varje listat globalt attribut hos en enkel eller variabel "
 "produkt, dess val för \"Visa varje värde som en egen produkt\" (`on`, `off` "
-"eller `auto` för att följa attributets egen inställning) och den egna "
-"titeln och bilden på varje listat värdes kort, på samma sätt som produktens "
-"flik Attribut. `cards` anger titel och bild för de kort som pekas ut med "
-"sina värdens `term_ids`: på en produkt som visas uppdelad efter flera "
-"attribut är ett kort en kombination, ett värde för varje attribut, så som "
-"`get-product-split-listing` listar dem. Ange `attributes`, `cards` eller "
-"båda. Bara det som anges ändras: ett attribut, ett värde, ett kort, en "
-"titel eller en bild som utelämnas förblir som det är. En tom titel eller en "
-"bild som är null ger kortet produktens titel eller bild igen. Ingenting "
-"sparas om inte allt som listas är giltigt. En bild som anges med `src` "
-"kopieras efter att anropet har besvarats: tills dess behåller kortet den "
-"bild det hade, och dess `image_copy` anger att det väntar, eller varför "
-"kopieringen misslyckades. Svaret är det som produkten har nu, så som "
-"`get-product-split-listing` ger det."
+"eller `auto` för att följa attributets egen inställning) och den egna titeln "
+"och bilden på varje listat värdes kort, på samma sätt som produktens flik "
+"Attribut. `cards` anger titel och bild för de kort som pekas ut med sina "
+"värdens `term_ids`: på en produkt som visas uppdelad efter flera attribut är "
+"ett kort en kombination, ett värde för varje attribut, så som `get-product-"
+"split-listing` listar dem. Ange `attributes`, `cards` eller båda. Bara det "
+"som anges ändras: ett attribut, ett värde, ett kort, en titel eller en bild "
+"som utelämnas förblir som det är. En tom titel eller en bild som är null ger "
+"kortet produktens titel eller bild igen. Ingenting sparas om inte allt som "
+"listas är giltigt. En bild som anges med `src` kopieras efter att anropet "
+"har besvarats: tills dess behåller kortet den bild det hade, och dess "
+"`image_copy` anger att det väntar, eller varför kopieringen misslyckades. "
+"Svaret är det som produkten har nu, så som `get-product-split-listing` ger "
+"det."
 
 #: src/Abilities/SetProductSplitListing.php:73
 msgid "One of the product's global attributes, by id."
@@ -2229,7 +2229,7 @@ msgstr ""
 "offentlig URL som butiken kopierar in dit efter att anropet har besvarats; "
 "null för värdets bild eller produktens."
 
-#: src/Abilities/SetProductSplitListing.php:226
+#: src/Abilities/SetProductSplitListing.php:232
 msgid ""
 "The product's Pixonaut configuration comes from a newer version of the "
 "plugin, so it is not changed. Update the plugin."
@@ -2237,12 +2237,12 @@ msgstr ""
 "Produktens Pixonaut-konfiguration kommer från en nyare version av tillägget, "
 "så den ändras inte. Uppdatera tillägget."
 
-#: src/Abilities/SetProductSplitListing.php:242
+#: src/Abilities/SetProductSplitListing.php:248
 msgid "Give `attributes`, `cards` or both."
 msgstr "Ange `attributes`, `cards` eller båda."
 
 #. translators: %d: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:253
+#: src/Abilities/SetProductSplitListing.php:259
 #, php-format
 msgid ""
 "The product has no global attribute %d. Only a global attribute's values can "
@@ -2252,37 +2252,37 @@ msgstr ""
 "kan visas som egna produkter."
 
 #. translators: %d: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:257
+#: src/Abilities/SetProductSplitListing.php:263
 #, php-format
 msgid "Attribute %d is listed twice."
 msgstr "Attribut %d finns med två gånger."
 
 #. translators: %s: a card's values' term ids, e.g. "12,15". Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:276
+#: src/Abilities/SetProductSplitListing.php:282
 #, php-format
 msgid "Card %s is listed twice."
 msgstr "Kort %s finns med två gånger."
 
 #. translators: 1: a value's term id; 2: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:305
+#: src/Abilities/SetProductSplitListing.php:311
 #, php-format
 msgid "The product has no value %1$d of attribute %2$d."
 msgstr "Produkten har inget värde %1$d för attribut %2$d."
 
 #. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:309
+#: src/Abilities/SetProductSplitListing.php:315
 #, php-format
 msgid "Value %d is listed twice."
 msgstr "Värde %d finns med två gånger."
 
 #. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:344
+#: src/Abilities/SetProductSplitListing.php:350
 #, php-format
 msgid "The product has no value %d of a global attribute."
 msgstr "Produkten har inget värde %d för något globalt attribut."
 
 #. translators: 1, 2: two values' term ids; 3: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:348
+#: src/Abilities/SetProductSplitListing.php:354
 #, php-format
 msgid ""
 "A card takes one value of an attribute: %1$d and %2$d are both of attribute "
@@ -2291,24 +2291,24 @@ msgstr ""
 "Ett kort har ett värde per attribut: %1$d och %2$d hör båda till attribut "
 "%3$d."
 
-#: src/Abilities/SetProductSplitListing.php:353
+#: src/Abilities/SetProductSplitListing.php:359
 msgid "Name a card by at least one of its values."
 msgstr "Peka ut ett kort med minst ett av dess värden."
 
 #. translators: %s: a card's values' term ids, e.g. "12" or "12,15". Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:396
+#: src/Abilities/SetProductSplitListing.php:402
 #, php-format
 msgid "Give the image of card %s as either `id` or `src`."
 msgstr "Ange bilden för kort %s antingen som `id` eller som `src`."
 
 #. translators: %d: an attachment's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:401
+#: src/Abilities/SetProductSplitListing.php:407
 #, php-format
 msgid "The media library has no image %d."
 msgstr "Mediabiblioteket har ingen bild med id %d."
 
 #. translators: %s: a card's values' term ids, e.g. "12" or "12,15". Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:407
+#: src/Abilities/SetProductSplitListing.php:413
 #, php-format
 msgid "The image of card %s is not a public URL."
 msgstr "Bilden för kort %s är ingen offentlig URL."
@@ -2821,7 +2821,7 @@ msgstr "Ange filens offentliga URL som fields.source_url."
 
 #. translators: %s: the largest file the store takes, e.g. "64 MB".
 #: src/Abilities/Store/ResourceAbility.php:502
-#: src/Catalogue/SplitCardImageCopies.php:222
+#: src/Catalogue/SplitCardImageCopies.php:263
 #, php-format
 msgid "The file is larger than the store takes, at most %s."
 msgstr "Filen är större än butiken tar emot, högst %s."
@@ -4073,22 +4073,22 @@ msgid "%1$s, photo %2$d"
 msgstr "%1$s, foto %2$d"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is on.
-#: src/Admin/SplitListingFields.php:285
+#: src/Admin/SplitListingFields.php:307
 msgid "Auto: on, as the attribute is"
 msgstr "Auto: på, som attributet"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is off.
-#: src/Admin/SplitListingFields.php:287
+#: src/Admin/SplitListingFields.php:309
 msgid "Auto: off, as the attribute is"
 msgstr "Auto: av, som attributet"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it on, whatever the attribute's setting.
-#: src/Admin/SplitListingFields.php:289
+#: src/Admin/SplitListingFields.php:311
 msgid "On for this product"
 msgstr "På för den här produkten"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it off, whatever the attribute's setting.
-#: src/Admin/SplitListingFields.php:291
+#: src/Admin/SplitListingFields.php:313
 msgid "Off for this product"
 msgstr "Av för den här produkten"
 
@@ -5102,7 +5102,7 @@ msgstr ""
 msgid "%1$s (%2$s)"
 msgstr "%1$s (%2$s)"
 
-#: src/Catalogue/SplitCardImageCopies.php:253
+#: src/Catalogue/SplitCardImageCopies.php:294
 msgid "The card's image could not be copied from its URL."
 msgstr "Det gick inte att kopiera kortets bild från dess URL."
 

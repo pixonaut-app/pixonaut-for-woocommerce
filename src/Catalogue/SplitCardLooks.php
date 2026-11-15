@@ -28,6 +28,52 @@ final class SplitCardLooks {
 	public const META = Schema::PRODUCT_SPLIT_CARD_LOOKS_META;
 
 	/**
+	 * Prefix of the MySQL lock one product's cards' titles, images and
+	 * waiting image copies are changed under.
+	 */
+	private const LOCK_PREFIX = 'pixonaut_split_card_looks_';
+
+	/**
+	 * How long a change waits for another one of the same product's cards.
+	 */
+	private const LOCK_WAIT_SECONDS = 5;
+
+	/**
+	 * What MySQL's `GET_LOCK()` answers once the lock is taken.
+	 */
+	private const LOCK_TAKEN = '1';
+
+	/**
+	 * Runs a change to a product's cards' titles, images or waiting image
+	 * copies alone: each is kept as one meta value for all the product's
+	 * cards, read and written whole, so two changes at once, as two cards'
+	 * copy jobs or a job beside a request, would each write over the other's.
+	 * The change reads what is stored once it holds the lock, whatever the
+	 * request read before. A change still running after the wait is taken
+	 * to be stuck, and this one runs beside it.
+	 *
+	 * @template T
+	 * @param int           $product_id A product.
+	 * @param callable(): T $change     The change: it reads, then writes.
+	 * @return T What the change returned.
+	 */
+	public static function alone( int $product_id, callable $change ): mixed {
+		global $wpdb;
+		$lock = self::LOCK_PREFIX . md5( $wpdb->prefix . $product_id );
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a lock, never cached.
+		$taken = self::LOCK_TAKEN === $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', $lock, self::LOCK_WAIT_SECONDS ) );
+		try {
+			wp_cache_delete( (string) $product_id, 'post_meta' );
+			return $change();
+		} finally {
+			if ( $taken ) {
+				$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock ) );
+			}
+		}
+		// phpcs:enable
+	}
+
+	/**
 	 * A product's cards' own titles and images, by card key; a card with
 	 * neither is left out.
 	 *
@@ -103,13 +149,24 @@ final class SplitCardLooks {
 		if ( array() === $looks ) {
 			return;
 		}
+		self::save( $product->get_id(), array_filter( $looks, static fn ( int|string $key ): bool => self::has_values_of( $product, $key ), ARRAY_FILTER_USE_KEY ) );
+	}
+
+	/**
+	 * Whether a product has every value of a card: a card of a value it
+	 * lost takes no title or image.
+	 *
+	 * @param WC_Product $product A product.
+	 * @param int|string $key     The card's key.
+	 */
+	public static function has_values_of( WC_Product $product, int|string $key ): bool {
 		$term_ids = array();
 		foreach ( $product->get_attributes() as $attribute ) {
 			if ( $attribute instanceof WC_Product_Attribute && $attribute->is_taxonomy() ) {
 				$term_ids = array_merge( $term_ids, array_map( 'intval', $attribute->get_options() ) );
 			}
 		}
-		self::save( $product->get_id(), array_filter( $looks, static fn ( int|string $key ): bool => array() === array_diff( SplitCards::term_ids( (string) $key ), $term_ids ), ARRAY_FILTER_USE_KEY ) );
+		return array() === array_diff( SplitCards::term_ids( (string) $key ), $term_ids );
 	}
 
 	/**

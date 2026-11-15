@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Catalogue;
 
 use Pixonaut\WooCommerce\Schema;
+use WC_Product;
 use WP_Error;
 
 /**
@@ -95,7 +96,9 @@ final class SplitCardImageCopies {
 	/**
 	 * Changes which copies a product's cards wait for: a card given a URL
 	 * waits for its copy, in a job of its own, unless it waits for that URL
-	 * already; a card given null waits for none.
+	 * already and its job is still to run; a card given null waits for
+	 * none. A copy whose job could not be queued is one that failed. Run it
+	 * inside `SplitCardLooks::alone()`.
 	 *
 	 * @param int                            $product_id A product.
 	 * @param array<int|string, string|null> $changed    Each changed card's URL, or null for no copy, by card key.
@@ -104,37 +107,51 @@ final class SplitCardImageCopies {
 		if ( array() === $changed ) {
 			return;
 		}
-		$copies = self::fresh( $product_id );
-		$queued = array();
+		$copies = self::stored_on( $product_id );
 		foreach ( $changed as $key => $url ) {
 			if ( null === $url ) {
 				unset( $copies[ $key ] );
 				continue;
 			}
 			$waiting = $copies[ $key ] ?? null;
-			if ( null !== $waiting && self::WAITING === $waiting['state'] && $waiting['src'] === $url ) {
+			if ( null !== $waiting && self::WAITING === $waiting['state'] && $waiting['src'] === $url && as_has_scheduled_action( self::HOOK, self::job( $product_id, $key, $waiting['token'] ), Schema::ACTION_GROUP ) ) {
 				continue;
 			}
 			$token          = wp_generate_uuid4();
+			$queued         = 0 !== as_enqueue_async_action( self::HOOK, self::job( $product_id, $key, $token ), Schema::ACTION_GROUP );
 			$copies[ $key ] = array(
 				'src'    => $url,
 				'token'  => $token,
-				'state'  => self::WAITING,
-				'reason' => '',
+				'state'  => $queued ? self::WAITING : self::FAILED,
+				'reason' => $queued ? '' : self::not_copied( '' )->get_error_message(),
 			);
-			$queued[ $key ] = $token;
 		}
 		self::save( $product_id, $copies );
-		foreach ( $queued as $key => $token ) {
-			as_enqueue_async_action( self::HOOK, array( $product_id, (string) $key, $token ), Schema::ACTION_GROUP );
+	}
+
+	/**
+	 * Drops the copies of the cards holding a value the product no longer
+	 * has, as after one of its attributes or values was removed: their jobs
+	 * then do nothing. Run it inside `SplitCardLooks::alone()`.
+	 *
+	 * @param WC_Product $product A product.
+	 */
+	public static function forget_removed_values( WC_Product $product ): void {
+		$copies = self::stored_on( $product->get_id() );
+		$kept   = array_filter( $copies, static fn ( int|string $key ): bool => SplitCardLooks::has_values_of( $product, $key ), ARRAY_FILTER_USE_KEY );
+		if ( $kept !== $copies ) {
+			self::save( $product->get_id(), $kept );
 		}
 	}
 
 	/**
 	 * Copies one card's image into the media library and gives it to the
 	 * card, keeping the card's title. A copy that is no longer the card's
-	 * does nothing, and one replaced or dropped while it downloaded leaves
-	 * no image behind.
+	 * does nothing, and one replaced or dropped while it downloaded, or
+	 * whose card the product lost a value of, leaves no image behind. The
+	 * download runs beside other changes to the product's cards; what it
+	 * made is given to the card alone (`SplitCardLooks::alone()`), against
+	 * what is stored then.
 	 *
 	 * @param int    $product_id The product.
 	 * @param string $key        The card's key.
@@ -145,32 +162,56 @@ final class SplitCardImageCopies {
 		if ( null === $copy || $copy['token'] !== $token || self::WAITING !== $copy['state'] ) {
 			return;
 		}
-		$image  = self::downloaded( $copy['src'], $product_id );
-		$copies = self::fresh( $product_id );
-		if ( ( $copies[ $key ]['token'] ?? null ) !== $token ) {
-			if ( ! $image instanceof WP_Error ) {
-				wp_delete_attachment( $image, true );
-			}
-			return;
-		}
-		if ( $image instanceof WP_Error ) {
-			$copies[ $key ]['state']  = self::FAILED;
-			$copies[ $key ]['reason'] = $image->get_error_message();
-			self::save( $product_id, $copies );
-			return;
-		}
-		update_post_meta( $image, self::SOURCE_META, wp_slash( $copy['src'] ) );
-		SplitCardLooks::change(
+		$image = self::downloaded( $copy['src'], $product_id );
+		$given = SplitCardLooks::alone(
 			$product_id,
-			array(
-				$key => array(
-					'title' => SplitCardLooks::of( $product_id, $key )['title'],
-					'image' => $image,
-				),
-			)
+			static function () use ( $product_id, $key, $token, $image ): bool {
+				$copies = self::stored_on( $product_id );
+				if ( ( $copies[ $key ]['token'] ?? null ) !== $token ) {
+					return false;
+				}
+				$product = wc_get_product( $product_id );
+				if ( ! $product instanceof WC_Product || ! SplitCardLooks::has_values_of( $product, $key ) ) {
+					unset( $copies[ $key ] );
+					self::save( $product_id, $copies );
+					return false;
+				}
+				if ( $image instanceof WP_Error ) {
+					$copies[ $key ]['state']  = self::FAILED;
+					$copies[ $key ]['reason'] = $image->get_error_message();
+					self::save( $product_id, $copies );
+					return false;
+				}
+				update_post_meta( $image, self::SOURCE_META, wp_slash( $copies[ $key ]['src'] ) );
+				SplitCardLooks::change(
+					$product_id,
+					array(
+						$key => array(
+							'title' => SplitCardLooks::of( $product_id, $key )['title'],
+							'image' => $image,
+						),
+					)
+				);
+				unset( $copies[ $key ] );
+				self::save( $product_id, $copies );
+				return true;
+			}
 		);
-		unset( $copies[ $key ] );
-		self::save( $product_id, $copies );
+		if ( ! $given && ! $image instanceof WP_Error ) {
+			wp_delete_attachment( $image, true );
+		}
+	}
+
+	/**
+	 * A copy's job's arguments.
+	 *
+	 * @param int        $product_id The product.
+	 * @param int|string $key        The card's key.
+	 * @param string     $token      The copy's token.
+	 * @return array{int, string, string}
+	 */
+	private static function job( int $product_id, int|string $key, string $token ): array {
+		return array( $product_id, (string) $key, $token );
 	}
 
 	/**

@@ -292,6 +292,141 @@ final class SplitCardImageCopiesTest extends WP_UnitTestCase {
 		$this->assertSame( $before, $this->attachments() );
 	}
 
+	public function test_a_copy_keeps_what_another_request_stored_since_this_one_read(): void {
+		$product           = $this->product_of_many_cards();
+		list( $one, $two ) = $this->motifs( $product );
+		$this->set(
+			$product,
+			array(
+				array(
+					'term_ids' => array( $one ),
+					'image'    => array( 'src' => self::HOST . 'one.png' ),
+				),
+			)
+		);
+		// Another request stores a second card's copy and title, as this one's cache does not know.
+		$this->meanwhile = function () use ( $product, $one, $two ): void {
+			$this->meanwhile = null;
+			$copies          = SplitCardImageCopies::stored_on( $product->get_id() );
+			$copies[ $two ]  = array( 'token' => 'other' ) + $copies[ $one ];
+			$this->store_behind_the_cache( $product->get_id(), SplitCardImageCopies::META, $copies );
+			$this->store_behind_the_cache( $product->get_id(), SplitCardLooks::META, array( $two => array( 'title' => 'Two' ) ) );
+		};
+
+		ActionSchedulerRunner::run_once( SplitCardImageCopies::HOOK );
+
+		$this->assertSame( array( $two ), array_keys( SplitCardImageCopies::stored_on( $product->get_id() ) ), 'the other card still waits' );
+		$looks = SplitCardLooks::stored_on( $product->get_id() );
+		$this->assertSame( 'Two', $looks[ $two ]['title'] ?? null, 'and keeps its title' );
+		$this->assertGreaterThan( 0, $looks[ $one ]['image'] ?? 0 );
+	}
+
+	public function test_a_copy_whose_job_cannot_be_queued_fails_and_is_queued_when_given_again(): void {
+		$product = $this->product_of_many_cards();
+		$term    = $this->motifs( $product )[0];
+		$card    = array(
+			array(
+				'term_ids' => array( $term ),
+				'image'    => array( 'src' => self::HOST . 'queued.png' ),
+			),
+		);
+		$refuse  = static fn (): int => 0;
+		add_filter( 'pre_as_enqueue_async_action', $refuse );
+
+		$set = $this->set( $product, $card );
+
+		remove_filter( 'pre_as_enqueue_async_action', $refuse );
+		$this->assertSame( SplitCardImageCopies::FAILED, $this->values( $set )[0]['image_copy']['state'] );
+		$this->assertNotSame( '', $this->values( $set )[0]['image_copy']['reason'] );
+
+		$again = $this->set( $product, $card );
+
+		$this->assertSame( SplitCardImageCopies::WAITING, $this->values( $again )[0]['image_copy']['state'] );
+		$this->assertCount( 1, ActionSchedulerRunner::pending( SplitCardImageCopies::HOOK ) );
+	}
+
+	public function test_a_card_waiting_for_a_copy_whose_job_is_gone_gets_a_new_one(): void {
+		$product = $this->product_of_many_cards();
+		$term    = $this->motifs( $product )[0];
+		$card    = array(
+			array(
+				'term_ids' => array( $term ),
+				'image'    => array( 'src' => self::HOST . 'lost.png' ),
+			),
+		);
+		$this->set( $product, $card );
+		as_unschedule_all_actions( SplitCardImageCopies::HOOK );
+
+		$this->set( $product, $card );
+
+		$this->assertSame( 1, ActionSchedulerRunner::run_pending( SplitCardImageCopies::HOOK ) );
+		$this->assertIsArray( $this->values( $this->read( $product ) )[0]['image'] );
+	}
+
+	/**
+	 * @dataProvider when_the_value_is_removed
+	 *
+	 * @param bool $during Whether the product loses the value while the picture downloads, not before.
+	 */
+	public function test_a_card_of_a_value_the_product_lost_gets_no_image( bool $during ): void {
+		$product = $this->product_of_many_cards();
+		$term    = $this->motifs( $product )[0];
+		$before  = $this->attachments();
+		$this->set(
+			$product,
+			array(
+				array(
+					'term_ids' => array( $term ),
+					'image'    => array( 'src' => self::HOST . 'removed.png' ),
+				),
+			)
+		);
+		$remove = function () use ( $product, $term ): void {
+			$this->meanwhile = null;
+			$attribute       = $this->product_attribute( self::MOTIF );
+			$attribute->set_options( array_values( array_diff( array_map( 'intval', $attribute->get_options() ), array( $term ) ) ) );
+			$fresh = wc_get_product( $product->get_id() );
+			$this->assertInstanceOf( WC_Product::class, $fresh );
+			$fresh->set_attributes( array( $attribute ) );
+			$fresh->save();
+		};
+		if ( $during ) {
+			$this->meanwhile = $remove;
+		} else {
+			$remove();
+		}
+
+		ActionSchedulerRunner::run_pending( SplitCardImageCopies::HOOK );
+
+		$this->assertSame( array(), SplitCardLooks::stored_on( $product->get_id() ) );
+		$this->assertSame( array(), SplitCardImageCopies::stored_on( $product->get_id() ) );
+		$this->assertSame( $before, $this->attachments() );
+	}
+
+	/**
+	 * @return array<string, array{bool}>
+	 */
+	public static function when_the_value_is_removed(): array {
+		return array(
+			'before its job runs'         => array( false ),
+			'while its picture downloads' => array( true ),
+		);
+	}
+
+	/**
+	 * Stores a product's meta as another request would: this request's
+	 * cache of it is left as it was.
+	 *
+	 * @param int          $product_id A product.
+	 * @param string       $key        The meta key.
+	 * @param array<mixed> $value      Its value.
+	 */
+	private function store_behind_the_cache( int $product_id, string $key, array $value ): void {
+		$cached = wp_cache_get( (string) $product_id, 'post_meta' );
+		update_post_meta( $product_id, $key, wp_slash( $value ) );
+		wp_cache_set( (string) $product_id, $cached, 'post_meta' );
+	}
+
 	/**
 	 * The picture host: a one-pixel PNG for any picture but the gone one.
 	 *

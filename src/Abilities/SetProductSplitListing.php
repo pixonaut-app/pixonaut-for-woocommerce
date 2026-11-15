@@ -193,28 +193,34 @@ final class SetProductSplitListing implements Ability {
 				return self::newer_configuration();
 			}
 		}
-		$looks  = SplitCardLooks::stored_on( $product->get_id() );
-		$copies = array();
-		foreach ( $changes['looks'] as $key => $look ) {
-			$before = $looks[ $key ] ?? array(
-				'title' => '',
-				'image' => 0,
-			);
-			$image  = $look['image'] ?? null;
-			if ( is_string( $image ) ) {
-				// The card keeps its image until the copy is made; one copied from this URL already is the copy.
-				$copies[ $key ] = SplitCardImageCopies::copied_from( $before['image'], $image ) ? null : $image;
-				$image          = null;
-			} elseif ( null !== $image ) {
-				$copies[ $key ] = null;
+		$product_id = $product->get_id();
+		SplitCardLooks::alone(
+			$product_id,
+			static function () use ( $product_id, $changes ): void {
+				$looks  = SplitCardLooks::stored_on( $product_id );
+				$copies = array();
+				foreach ( $changes['looks'] as $key => $look ) {
+					$before = $looks[ $key ] ?? array(
+						'title' => '',
+						'image' => 0,
+					);
+					$image  = $look['image'] ?? null;
+					if ( is_string( $image ) ) {
+						// The card keeps its image until the copy is made; one copied from this URL already is the copy.
+						$copies[ $key ] = SplitCardImageCopies::copied_from( $before['image'], $image ) ? null : $image;
+						$image          = null;
+					} elseif ( null !== $image ) {
+						$copies[ $key ] = null;
+					}
+					$looks[ $key ] = array(
+						'title' => $look['title'] ?? $before['title'],
+						'image' => $image ?? $before['image'],
+					);
+				}
+				SplitCardLooks::save( $product_id, $looks );
+				SplitCardImageCopies::change( $product_id, $copies );
 			}
-			$looks[ $key ] = array(
-				'title' => $look['title'] ?? $before['title'],
-				'image' => $image ?? $before['image'],
-			);
-		}
-		SplitCardLooks::save( $product->get_id(), $looks );
-		SplitCardImageCopies::change( $product->get_id(), $copies );
+		);
 		$saved = wc_get_product( $product->get_id() );
 		return GetProductSplitListing::answer( $saved instanceof WC_Product ? $saved : $product );
 	}

@@ -9,6 +9,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Admin;
 
 use Pixonaut\WooCommerce\Admin\SplitListingFields;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\SplitCardImageCopies;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Templates;
@@ -238,6 +239,82 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 		);
 		do_action( 'woocommerce_process_product_meta', $product->get_id() );
 		$this->assertSame( array(), get_post_meta( $product->get_id(), SplitCardLooks::META, false ), 'nothing is kept once every card has neither' );
+	}
+
+	public function test_a_card_whose_image_the_store_manager_changes_no_longer_waits_for_a_copy(): void {
+		$product = $this->poster();
+		$image   = $this->image();
+		$with    = $this->term( 'med-bild' );
+		$without = $this->term( 'utan-bild' );
+		$waiting = static fn ( string $file ): array => array(
+			'src'    => 'https://pictures.example/' . $file,
+			'token'  => $file,
+			'state'  => SplitCardImageCopies::WAITING,
+			'reason' => '',
+		);
+		update_post_meta(
+			$product->get_id(),
+			SplitCardImageCopies::META,
+			array(
+				$with    => $waiting( 'with.png' ),
+				$without => $waiting( 'without.png' ),
+			)
+		);
+		$_POST   = wp_slash(
+			$this->nonced(
+				array(
+					'attribute_names'                 => array( 'pa_bild' ),
+					SplitListingFields::PRODUCT_FIELD => array( 'on' ),
+					SplitListingFields::CARD_FIELD    => array(
+						$with    => array(
+							'title' => '',
+							'image' => (string) $image,
+						),
+						$without => array(
+							'title' => 'Only a title',
+							'image' => '',
+						),
+					),
+				)
+			)
+		);
+
+		do_action( 'woocommerce_process_product_meta', $product->get_id() );
+
+		$this->assertSame( array( $without ), array_keys( SplitCardImageCopies::stored_on( $product->get_id() ) ), 'a card whose image was left as it was still waits' );
+		SplitCardImageCopies::copy( $product->get_id(), (string) $with, 'with.png' );
+		$this->assertSame( $image, SplitCardLooks::of( $product->get_id(), $with )['image'], 'the job of the copy it waited for leaves the chosen image' );
+	}
+
+	public function test_a_product_saved_without_a_value_forgets_the_copy_its_card_waited_for(): void {
+		$product = $this->poster();
+		$with    = $this->term( 'med-bild' );
+		update_post_meta(
+			$product->get_id(),
+			SplitCardImageCopies::META,
+			array(
+				$with => array(
+					'src'    => 'https://pictures.example/with.png',
+					'token'  => 'with.png',
+					'state'  => SplitCardImageCopies::WAITING,
+					'reason' => '',
+				),
+			)
+		);
+		$product->set_attributes( array( $this->product_attribute( self::SIZE, true ) ) );
+		$product->save();
+		$_POST = wp_slash(
+			$this->nonced(
+				array(
+					'attribute_names'                 => array( 'pa_posterstorlek' ),
+					SplitListingFields::PRODUCT_FIELD => array( 'auto' ),
+				)
+			)
+		);
+
+		do_action( 'woocommerce_process_product_meta', $product->get_id() );
+
+		$this->assertSame( array(), SplitCardImageCopies::stored_on( $product->get_id() ) );
 	}
 
 	public function test_the_save_attributes_button_saves_the_cards(): void {
