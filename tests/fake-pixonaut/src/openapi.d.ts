@@ -1068,7 +1068,7 @@ export interface paths {
         };
         /**
          * Read a blank
-         * @description One blank with its placements and variants, its chosen scenes, and its views and scenes as one ordered list (`order`), each with its source, where its pictures stand in each setting it is bound to (`settingBakes`), and which of its rows each held scene it shows does not show (`heldScenes`). A deleted blank is read too, with when and by whom it was deleted, so an order placed on it can show it.
+         * @description One blank with its placements and variants, its chosen scenes, and its views and scenes as one ordered list (`order`), each with its source, where its pictures stand in each setting it is bound to (`settingBakes`) and whether a job is drawing them (`bakesJob`), and which of its rows each held scene it shows does not show (`heldScenes`). A deleted blank is read too, with when and by whom it was deleted, so an order placed on it can show it.
          */
         get: operations["blanks.get"];
         put?: never;
@@ -2693,7 +2693,7 @@ export interface paths {
         put?: never;
         /**
          * Check a print size against a template
-         * @description Judges `widthMm` × `heightMm` against the template's declared ratio and, when the body names a `blankId` and `placementId` (both or neither), against that placement's maximum print area. An illegal size is still a 200: the verdict says which check it failed. Every verdict carries `lowResolution`, the images the workspace put in the template that print below their recommended resolution at the size; show it to the merchant, and to the shopper where the size is theirs to choose. When the workspace refuses such sizes, a size with any is illegal with `low_resolution`. A body with `sizes` (up to 50) in place of one size judges each against the same placement, answering `verdicts` in the order asked. A named placement that does not resolve is refused with `unknown_placement` rather than judged without its bounds.
+         * @description Judges `widthMm` × `heightMm` against the template's declared ratio and, when the body names a `blankId` and `placementId` (both or neither), against that placement's print area. On a blank whose print areas change with an option, `variant` or `variantRow` names the size the print is for, and each size is judged against that row's area; naming neither, a size on a placement printed across its whole area is legal when it is the area of a size the blank sells, and on any other placement it is judged against the blank's reference size, else the largest. A row the placement has no area for, and such a placement on a blank that sells none of its sizes, is refused with `unknown_placement`. An illegal size is still a 200: the verdict says which check it failed. Every verdict carries `lowResolution`, the images the workspace put in the template that print below their recommended resolution at the size; show it to the merchant, and to the shopper where the size is theirs to choose. When the workspace refuses such sizes, a size with any is illegal with `low_resolution`. A body with `sizes` (up to 50) in place of one size judges each against the same placement, answering `verdicts` in the order asked. A named placement that does not resolve is refused with `unknown_placement` rather than judged without its bounds.
          */
         post: operations["templates.printSize.validate"];
         delete?: never;
@@ -30921,6 +30921,8 @@ export interface operations {
                             areasVaryBy: string[];
                             /** @description The blank's option axes, such as Color and Size, in the order the shopper sees them. Empty for a blank with one variant. */
                             axes: string[];
+                            /** @description Where the job that draws the blank's `queued` and `failed` pictures (`settingBakes`) stands: `queued` is waiting its turn or its next try, `running` is drawing now, `failed` gave up after its last try and starts again at the next write of the blank. Null when no job is drawing: the blank is bound to no setting, or its job ended. Answered for one blank, never in a list. */
+                            bakesJob?: string | null;
                             /** @description The partner's product a bound blank (`partnerLocked`) is bound to, or null for a blank bound to none. Answered for one blank, never in a list. */
                             boundProduct?: {
                                 /** @description The partner's own id of the product. */
@@ -31052,6 +31054,8 @@ export interface operations {
                                     };
                                 };
                                 name: string;
+                                /** @description The values the printshop newly offered at a re-sync of the blank, which arrived off sale: marked new until the blank's options are next saved. Absent when there is none. */
+                                newValues?: string[];
                                 /** @description The texture a stock photo's dye paints each value in, in place of its colour, by value: only the values that have one, such as a wooden frame's oak. Absent when none has one. */
                                 textures?: {
                                     [key: string]: string;
@@ -31824,6 +31828,8 @@ export interface operations {
                         areasVaryBy: string[];
                         /** @description The blank's option axes, such as Color and Size, in the order the shopper sees them. Empty for a blank with one variant. */
                         axes: string[];
+                        /** @description Where the job that draws the blank's `queued` and `failed` pictures (`settingBakes`) stands: `queued` is waiting its turn or its next try, `running` is drawing now, `failed` gave up after its last try and starts again at the next write of the blank. Null when no job is drawing: the blank is bound to no setting, or its job ended. Answered for one blank, never in a list. */
+                        bakesJob?: string | null;
                         /** @description The partner's product a bound blank (`partnerLocked`) is bound to, or null for a blank bound to none. Answered for one blank, never in a list. */
                         boundProduct?: {
                             /** @description The partner's own id of the product. */
@@ -31955,6 +31961,8 @@ export interface operations {
                                 };
                             };
                             name: string;
+                            /** @description The values the printshop newly offered at a re-sync of the blank, which arrived off sale: marked new until the blank's options are next saved. Absent when there is none. */
+                            newValues?: string[];
                             /** @description The texture a stock photo's dye paints each value in, in place of its colour, by value: only the values that have one, such as a wooden frame's oak. Absent when none has one. */
                             textures?: {
                                 [key: string]: string;
@@ -48003,6 +48011,8 @@ export interface operations {
                             areasVaryBy: string[];
                             /** @description The blank's option axes, such as Color and Size, in the order the shopper sees them. Empty for a blank with one variant. */
                             axes: string[];
+                            /** @description Where the job that draws the blank's `queued` and `failed` pictures (`settingBakes`) stands: `queued` is waiting its turn or its next try, `running` is drawing now, `failed` gave up after its last try and starts again at the next write of the blank. Null when no job is drawing: the blank is bound to no setting, or its job ended. Answered for one blank, never in a list. */
+                            bakesJob?: string | null;
                             /** @description The partner's product a bound blank (`partnerLocked`) is bound to, or null for a blank bound to none. Answered for one blank, never in a list. */
                             boundProduct?: {
                                 /** @description The partner's own id of the product. */
@@ -48134,6 +48144,8 @@ export interface operations {
                                     };
                                 };
                                 name: string;
+                                /** @description The values the printshop newly offered at a re-sync of the blank, which arrived off sale: marked new until the blank's options are next saved. Absent when there is none. */
+                                newValues?: string[];
                                 /** @description The texture a stock photo's dye paints each value in, in place of its colour, by value: only the values that have one, such as a wooden frame's oak. Absent when none has one. */
                                 textures?: {
                                     [key: string]: string;
@@ -48858,6 +48870,8 @@ export interface operations {
                             areasVaryBy: string[];
                             /** @description The blank's option axes, such as Color and Size, in the order the shopper sees them. Empty for a blank with one variant. */
                             axes: string[];
+                            /** @description Where the job that draws the blank's `queued` and `failed` pictures (`settingBakes`) stands: `queued` is waiting its turn or its next try, `running` is drawing now, `failed` gave up after its last try and starts again at the next write of the blank. Null when no job is drawing: the blank is bound to no setting, or its job ended. Answered for one blank, never in a list. */
+                            bakesJob?: string | null;
                             /** @description The partner's product a bound blank (`partnerLocked`) is bound to, or null for a blank bound to none. Answered for one blank, never in a list. */
                             boundProduct?: {
                                 /** @description The partner's own id of the product. */
@@ -48989,6 +49003,8 @@ export interface operations {
                                     };
                                 };
                                 name: string;
+                                /** @description The values the printshop newly offered at a re-sync of the blank, which arrived off sale: marked new until the blank's options are next saved. Absent when there is none. */
+                                newValues?: string[];
                                 /** @description The texture a stock photo's dye paints each value in, in place of its colour, by value: only the values that have one, such as a wooden frame's oak. Absent when none has one. */
                                 textures?: {
                                     [key: string]: string;
@@ -50713,6 +50729,13 @@ export interface operations {
                                     row: {
                                         [key: string]: string;
                                     };
+                                }[];
+                                /** @description With `view=picker`, at a setting's anchor: the outline the product would have in the setting's photo, corner by corner, each a share of the photo's width and height from its top left. It is of the first row shown there; with no `forBlank`, whose product has no measures, it is the room the anchor has for a product. Absent where no row is shown, and for any other scene. */
+                                standIn?: {
+                                    /** @description Its share of the photo's width. */
+                                    x: number;
+                                    /** @description Its share of the photo's height. */
+                                    y: number;
                                 }[];
                                 /** @description For a garment cut-out, the studio style it is laid over: the blank is bound to that style from this camera, with this scene as its `cutOut`. Null for any other scene. */
                                 studio: {
@@ -54446,6 +54469,12 @@ export interface operations {
                     blankId?: string;
                     heightMm: number;
                     placementId?: string;
+                    /** @description A variant of the blank, by ref (`v_…`): on a blank whose print areas change with an option, each size is judged against that variant's print area. A ref the blank has no variant of is refused with `variant_not_of_blank`. On any other blank it is not checked. */
+                    variant?: string;
+                    /** @description The size the print is for, as the blank's option values, such as `{"Size": "40x50"}`, in place of `variant`: a value of each option the blank's print areas change with, and nothing else, or it is refused with `variant_row_invalid`. Ignored on a blank whose print areas change with nothing. */
+                    variantRow?: {
+                        [key: string]: string;
+                    };
                     widthMm: number;
                 } | {
                     blankId?: string;
@@ -54454,6 +54483,12 @@ export interface operations {
                         heightMm: number;
                         widthMm: number;
                     }[];
+                    /** @description A variant of the blank, by ref (`v_…`): on a blank whose print areas change with an option, each size is judged against that variant's print area. A ref the blank has no variant of is refused with `variant_not_of_blank`. On any other blank it is not checked. */
+                    variant?: string;
+                    /** @description The size the print is for, as the blank's option values, such as `{"Size": "40x50"}`, in place of `variant`: a value of each option the blank's print areas change with, and nothing else, or it is refused with `variant_row_invalid`. Ignored on a blank whose print areas change with nothing. */
+                    variantRow?: {
+                        [key: string]: string;
+                    };
                 };
             };
         };
@@ -54582,7 +54617,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: invalid_body, unknown_placement, payload_too_large */
+            /** @description Refused: invalid_body, unknown_placement, variant_not_of_blank, variant_row_invalid, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -54595,8 +54630,10 @@ export interface operations {
                         error: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
-                        /** @description Always sent with `invalid_body`. */
+                        /** @description Always sent with `invalid_body`, `variant_not_of_blank`, `variant_row_invalid`. */
                         reason?: string;
+                        /** @description Always sent with `variant_not_of_blank`. */
+                        variant?: string;
                     };
                 };
             };
