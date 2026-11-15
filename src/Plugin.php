@@ -13,6 +13,7 @@ use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use Closure;
 use LogicException;
 use Pixonaut\WooCommerce\Abilities\Abilities;
+use Pixonaut\WooCommerce\Abilities\Ability;
 use Pixonaut\WooCommerce\Abilities\ActOnOrderLine;
 use Pixonaut\WooCommerce\Abilities\ChangeDeliveryAddress;
 use Pixonaut\WooCommerce\Abilities\ConnectionAction;
@@ -23,6 +24,7 @@ use Pixonaut\WooCommerce\Api\VariantCosts;
 use Pixonaut\WooCommerce\Bridge\Discovery;
 use Pixonaut\WooCommerce\Bridge\Status;
 use Pixonaut\WooCommerce\Abilities\GetProductPictureViews;
+use Pixonaut\WooCommerce\Abilities\GetProductPrices;
 use Pixonaut\WooCommerce\Abilities\GetProductSplitListing;
 use Pixonaut\WooCommerce\Abilities\LinkProduct;
 use Pixonaut\WooCommerce\Abilities\ListProducts;
@@ -31,9 +33,11 @@ use Pixonaut\WooCommerce\Abilities\ListTemplates;
 use Pixonaut\WooCommerce\Abilities\MoveProductAttribute;
 use Pixonaut\WooCommerce\Abilities\MoveProductTemplate;
 use Pixonaut\WooCommerce\Abilities\PersonalisedOrders;
+use Pixonaut\WooCommerce\Abilities\PriceProduct;
 use Pixonaut\WooCommerce\Abilities\ProductLinks;
 use Pixonaut\WooCommerce\Abilities\ProductSetup;
 use Pixonaut\WooCommerce\Abilities\ReadPluginSettings;
+use Pixonaut\WooCommerce\Abilities\ReadPricingSettings;
 use Pixonaut\WooCommerce\Abilities\RecheckProducts;
 use Pixonaut\WooCommerce\Abilities\RegenerateProductPictures;
 use Pixonaut\WooCommerce\Abilities\ResetStandingLayout;
@@ -47,6 +51,7 @@ use Pixonaut\WooCommerce\Abilities\SetupFields;
 use Pixonaut\WooCommerce\Abilities\Store\StoreResources;
 use Pixonaut\WooCommerce\Abilities\UnlinkProduct;
 use Pixonaut\WooCommerce\Abilities\UpdatePluginSettings;
+use Pixonaut\WooCommerce\Abilities\UpdatePricingSettings;
 use Pixonaut\WooCommerce\Abilities\UseProductPicture;
 use Pixonaut\WooCommerce\Admin\BlankFields;
 use Pixonaut\WooCommerce\Admin\CatalogueProducts;
@@ -403,7 +408,7 @@ final class Plugin {
 		$this->notices()->register();
 		$this->connection()->register();
 		$this->store_access()->register();
-		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ) ), new WcLogger() ) )->register();
+		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ), fn (): array => $this->pricing_abilities() ), new WcLogger() ) )->register();
 		$this->workspace_settings()->register();
 		$this->webhook_processor()->register();
 		( new Receiver( $this->connection(), $this->intake(), new WcLogger() ) )->register();
@@ -543,6 +548,7 @@ final class Plugin {
 					new RecheckProducts( $this->connection(), $this->catalogue_cache(), $this->product_recheck() ),
 					new ReadPluginSettings( $this->settings() ),
 					new UpdatePluginSettings( $this->settings() ),
+					...$this->pricing_abilities(),
 					$status,
 					...array_map(
 						fn ( string $action ): ConnectionAction => new ConnectionAction( $action, $this->connection(), $connect, $this->webhook_endpoint(), $this->workspace_settings(), $status ),
@@ -551,6 +557,22 @@ final class Plugin {
 					...StoreResources::abilities(),
 				);
 			}
+		);
+	}
+
+	/**
+	 * The abilities that read and change the pricing settings and a
+	 * product's prices.
+	 *
+	 * @return list<Ability>
+	 */
+	private function pricing_abilities(): array {
+		$pricing = fn (): ProductPricing => $this->product_pricing();
+		return array(
+			new ReadPricingSettings( $this->settings() ),
+			new UpdatePricingSettings( $this->settings() ),
+			new GetProductPrices( $pricing, $this->settings() ),
+			new PriceProduct( $pricing, $this->settings() ),
 		);
 	}
 

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-15T14:36:23+00:00\n"
+"POT-Creation-Date: 2026-11-15T14:48:20+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -631,6 +631,75 @@ msgstr ""
 "Pohjatuotteen versiot, joita kuva esittää; tyhjä, kun se esittää kaikkia."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetProductPrices.php:48
+msgid "Read a product's prices and costs"
+msgstr "Lue tuotteen hinnat ja kustannukset"
+
+#. translators: %s: the name of the ability that prices a product.
+#: src/Abilities/GetProductPrices.php:51
+#, php-format
+msgid ""
+"Lists each variation of a product printed on a blank (a simple product has "
+"one row) with what the printshop charges for it, that cost in the store's "
+"currency, its regular price and margin, how its price stands to the pricing "
+"rule (`standing`), the price the rule suggests when it is another, and what "
+"stops the rule (`flag`). Also the rule the product is priced by: the "
+"store's, with the parts the product changes (`own_rule`). The costs are the "
+"ones last read: `checked_at` null means never. %s reads them again, and with "
+"`dry_run` answers the prices it would set, changing nothing. `prices` is a "
+"page of the rows, `page` and `per_page` choosing which; `total` counts them "
+"all."
+msgstr ""
+"Luettelee pohjatuotteelle painettavan tuotteen jokaisen muunnelman "
+"(yksinkertaisella tuotteella on yksi rivi): mitä painotalo siitä veloittaa, "
+"tämä kustannus kaupan valuutassa, sen normaalihinta ja kate, miten sen hinta "
+"suhtautuu hinnoittelusääntöön (`standing`), säännön ehdottama hinta, kun se "
+"on eri, ja mikä estää sääntöä (`flag`). Lisäksi sääntö, jolla tuote "
+"hinnoitellaan: kaupan sääntö ja ne osat, joita tuote muuttaa (`own_rule`). "
+"Kustannukset ovat viimeksi luetut: `checked_at` null tarkoittaa, ettei "
+"koskaan. %s lukee ne uudelleen ja vastaa `dry_run`-valinnalla hinnat, jotka "
+"se asettaisi, muuttamatta mitään. `prices` on yksi sivu riveistä, ja `page` "
+"ja `per_page` valitsevat, mikä; `total` laskee ne kaikki."
+
+#: src/Abilities/GetProductPrices.php:60 src/Abilities/PriceProduct.php:72
+msgid "A simple or variable product; never a variation."
+msgstr "Yksinkertainen tuote tai muunnelmatuote; ei koskaan muunnelma."
+
+#: src/Abilities/GetProductPrices.php:125
+msgid "The store's currency, which prices and `cost_total` are in."
+msgstr "Kaupan valuutta, jossa hinnat ja `cost_total` ovat."
+
+#: src/Abilities/GetProductPrices.php:130
+msgid ""
+"Whether there is a rule to price by: false without a target margin, and "
+"nothing is then priced."
+msgstr ""
+"Onko sääntöä, jolla hinnoitella: false ilman tavoitekatetta, eikä silloin "
+"hinnoitella mitään."
+
+#: src/Abilities/GetProductPrices.php:132
+msgid ""
+"The rule the product is priced by: margin and tolerance in percent, step, "
+"ending, min and max as amounts; empty for none."
+msgstr ""
+"Sääntö, jolla tuote hinnoitellaan: kate ja toleranssi prosentteina, askel, "
+"pääte, alin ja ylin hinta summina; tyhjä, kun sellaista ei ole."
+
+#: src/Abilities/GetProductPrices.php:133
+msgid ""
+"The parts of the rule the product changes; a part it leaves to the store is "
+"empty."
+msgstr ""
+"Säännön osat, joita tuote muuttaa; osa, jonka se jättää kaupalle, on tyhjä."
+
+#: src/Abilities/GetProductPrices.php:136
+msgid ""
+"Whether the store changes prices that follow the rule by itself when a cost "
+"changes."
+msgstr ""
+"Muuttaako kauppa sääntöä noudattavia hintoja itse, kun kustannus muuttuu."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductSplitListing.php:34
 msgid "Read which values a product lists as their own products"
 msgstr "Lue, mitkä tuotteen arvot näytetään omina tuotteinaan"
@@ -1196,6 +1265,88 @@ msgstr "Montako tilausta vastaa hakua kaikilla sivuilla yhteensä."
 msgid "The `before` that asks for the next page; null when there is none."
 msgstr "`before`, jolla saa seuraavan sivun; null, kun sellaista ei ole."
 
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/PriceProduct.php:64
+msgid "Price a product by the pricing rule"
+msgstr "Hinnoittele tuote hinnoittelusäännöllä"
+
+#: src/Abilities/PriceProduct.php:65
+msgid ""
+"Reads the printshop's costs of a product printed on a blank again, and sets "
+"the regular price of each variation (a simple product has one) to the "
+"rule's: the price step nearest the target margin, within the lowest and "
+"highest price. A price it sets follows the rule from then on. `only` "
+"unpriced leaves every variation that has a price alone; `variation_ids` "
+"names the ones to price. A price edited by hand after the rule set it is "
+"kept unless `release_held`. `rule` stores the parts of the rule this product "
+"changes, first. With `dry_run` nothing is stored on the product: the answer "
+"gives the prices it would set. Each price answers `before`, `price` and "
+"`changed`; one the rule cannot set keeps its price and says why in `flag`. "
+"No other price is set, whatever the store changes by itself. `changed` "
+"counts every price that changed; `prices` is a page of them, `page` and "
+"`per_page` choosing which. Refused without a target margin."
+msgstr ""
+"Lukee pohjatuotteelle painettavan tuotteen painotalokustannukset uudelleen "
+"ja asettaa jokaisen muunnelman normaalihinnan (yksinkertaisella tuotteella "
+"on yksi) säännön mukaiseksi: tavoitekatetta lähimpään hinta-askeleeseen "
+"alimman ja ylimmän hinnan rajoissa. Näin asetettu hinta noudattaa siitä "
+"lähtien sääntöä. `only` unpriced jättää rauhaan jokaisen muunnelman, jolla "
+"on hinta; `variation_ids` nimeää hinnoiteltavat muunnelmat. Hinta, jota on "
+"muokattu käsin säännön asetettua sen, säilytetään, ellei `release_held` ole "
+"annettu. `rule` tallentaa ensin ne säännön osat, joita tämä tuote muuttaa. "
+"Kun `dry_run` on annettu, tuotteeseen ei tallenneta mitään: vastaus antaa "
+"hinnat, jotka asetettaisiin. Jokainen hinta vastaa kentillä `before`, "
+"`price` ja `changed`; hinta, jota sääntö ei voi asettaa, säilyy ennallaan, "
+"ja syy kerrotaan kentässä `flag`. Muita hintoja ei aseteta, muuttipa kauppa "
+"itse mitä tahansa. `changed` laskee jokaisen muuttuneen hinnan; `prices` on "
+"yksi sivu niistä, ja `page` ja `per_page` valitsevat, mikä. Hylätään ilman "
+"tavoitekatetta."
+
+#: src/Abilities/PriceProduct.php:81
+msgid ""
+"The variations to price, or the product's own id for a simple product; left "
+"out for all."
+msgstr ""
+"Hinnoiteltavat muunnelmat tai yksinkertaisen tuotteen oma id; jätetään pois, "
+"kun hinnoitellaan kaikki."
+
+#: src/Abilities/PriceProduct.php:91
+msgid ""
+"Whether a price edited by hand after the rule set it is given back to the "
+"rule."
+msgstr ""
+"Palautetaanko säännölle hinta, jota on muokattu käsin säännön asetettua sen."
+
+#: src/Abilities/PriceProduct.php:93
+msgid ""
+"The parts of the rule this product changes, replacing the ones it has: "
+"margin and tolerance in percent, step, ending, min and max as amounts. A "
+"part left out or empty is left to the store."
+msgstr ""
+"Säännön osat, joita tämä tuote muuttaa; ne korvaavat tuotteen nykyiset: kate "
+"ja toleranssi prosentteina, askel, pääte, alin ja ylin hinta summina. Pois "
+"jätetty tai tyhjä osa jätetään kaupalle."
+
+#: src/Abilities/PriceProduct.php:108
+msgid "How many prices changed, or would."
+msgstr "Montako hintaa muuttui tai muuttuisi."
+
+#: src/Abilities/PriceProduct.php:114
+msgid "The regular price it had; null for none."
+msgstr "Sen aiempi normaalihinta; null, kun sitä ei ollut."
+
+#. translators: %s: a part of the pricing rule, e.g. margin.
+#: src/Abilities/PriceProduct.php:210
+#, php-format
+msgid "The rule's %s is not a number."
+msgstr "Säännön osa %s ei ole luku."
+
+#. translators: %s: one or more ids, e.g. 12, 15.
+#: src/Abilities/PriceProduct.php:234
+#, php-format
+msgid "The product has no variation with this id: %s."
+msgstr "Tuotteella ei ole muunnelmaa tällä id:llä: %s."
+
 #: src/Abilities/ProductLinks.php:104
 msgid "No simple or variable product or variation has this id."
 msgstr ""
@@ -1218,6 +1369,137 @@ msgstr ""
 "Mitkä tuotteen muunnelmat eivät myy mitään pohjatuotteen versiota, "
 "sanallisesti; null, kun kaikki myyvät. Aseta muunnelman `variant` kyvyllä "
 "`set-product-setup`."
+
+#: src/Abilities/ProductPrices.php:71
+msgid ""
+"No simple or variable product printed on a blank has this id, so there is no "
+"printshop cost to price from. A variation is priced through its product."
+msgstr ""
+"Millään pohjatuotteelle painettavalla yksinkertaisella tuotteella tai "
+"muunnelmatuotteella ei ole tätä id:tä, joten ei ole painotalon kustannusta, "
+"josta hinnan voisi laskea. Muunnelma hinnoitellaan tuotteensa kautta."
+
+#: src/Abilities/ProductPrices.php:80
+msgid ""
+"No target margin is set, for the store or for this product, so there is no "
+"rule to price by. Set one first."
+msgstr ""
+"Tavoitekatetta ei ole asetettu kaupalle eikä tälle tuotteelle, joten ei ole "
+"sääntöä, jolla hinnoitella. Aseta se ensin."
+
+#. translators: %s: a country code, such as SE.
+#: src/Abilities/ProductPrices.php:91
+#, php-format
+msgid "Pixonaut has no printshop costs for the shop's country (%s)."
+msgstr "Pixonautilla ei ole painotalon kustannuksia kaupan maalle (%s)."
+
+#: src/Abilities/ProductPrices.php:93
+msgid ""
+"Pixonaut could not be reached to read the printshop's costs. Try again in a "
+"moment."
+msgstr ""
+"Pixonautiin ei saatu yhteyttä painotalon kustannusten lukemiseksi. Yritä "
+"hetken kuluttua uudelleen."
+
+#: src/Abilities/ProductPrices.php:144
+msgid "The variation, or the product itself when it has none."
+msgstr "Muunnelma tai itse tuote, kun sillä ei ole muunnelmia."
+
+#: src/Abilities/ProductPrices.php:147
+msgid ""
+"Its regular price, as the store enters prices, including tax or not; null "
+"for none."
+msgstr ""
+"Sen normaalihinta siinä muodossa kuin kauppa syöttää hinnat, veroineen tai "
+"ilman; null, kun sitä ei ole."
+
+#: src/Abilities/ProductPrices.php:150
+msgid ""
+"What the printshop charges, in its own currency, as last read; null when no "
+"cost is known for the blank variant it sells."
+msgstr ""
+"Mitä painotalo veloittaa omassa valuutassaan viimeksi luetun mukaan; null, "
+"kun sen myymälle pohjatuotteen versiolle ei tunneta kustannusta."
+
+#: src/Abilities/ProductPrices.php:152
+msgid "The product; null when the printshop publishes no price."
+msgstr "Tuote; null, kun painotalo ei ilmoita hintaa."
+
+#: src/Abilities/ProductPrices.php:154
+msgid "The cheapest shipping to the shop's country; null when none is known."
+msgstr "Halvin toimitus kaupan maahan; null, kun sellaista ei tunneta."
+
+#: src/Abilities/ProductPrices.php:159
+msgid ""
+"The product and its shipping in the store's currency, converted with the "
+"currency buffer added when charged in another; null when they price nothing."
+msgstr ""
+"Tuote ja sen toimitus kaupan valuutassa, muunnettuna ja valuuttapuskuri "
+"lisättynä, kun ne veloitetaan muussa valuutassa; null, kun niistä ei voi "
+"laskea hintaa."
+
+#: src/Abilities/ProductPrices.php:162
+msgid ""
+"The day of the exchange rate the cost was converted with; null when it was "
+"not converted."
+msgstr ""
+"Sen valuuttakurssin päivä, jolla kustannus muunnettiin; null, kun sitä ei "
+"muunnettu."
+
+#: src/Abilities/ProductPrices.php:166
+msgid ""
+"The currency buffer added to what was converted, in percent; null when "
+"nothing was."
+msgstr ""
+"Muunnettuun summaan lisätty valuuttapuskuri prosentteina; null, kun mitään "
+"ei muunnettu."
+
+#: src/Abilities/ProductPrices.php:170
+msgid "The share of the price excluding tax left after the cost, in percent."
+msgstr "Verottomasta hinnasta kustannuksen jälkeen jäävä osuus prosentteina."
+
+#: src/Abilities/ProductPrices.php:172
+msgid "The price the rule would set, when it is another than the price it has."
+msgstr "Hinta, jonka sääntö asettaisi, kun se on eri kuin nykyinen hinta."
+
+#: src/Abilities/ProductPrices.php:176
+msgid ""
+"own: the rule was never applied to it. follows: its price is the one the "
+"rule set. by_hand: its price was edited after the rule set it, and is held "
+"until it is given back to the rule."
+msgstr ""
+"own: sääntöä ei ole koskaan sovellettu siihen. follows: sen hinta on säännön "
+"asettama. by_hand: sen hintaa muokattiin säännön asetettua sen, ja hinta "
+"säilytetään, kunnes se palautetaan säännölle."
+
+#: src/Abilities/ProductPrices.php:180
+msgid ""
+"Why the rule cannot price it or suggests another price: margin, no_cost, "
+"unread, currency, rate_stale, no_step or sale; null when nothing does."
+msgstr ""
+"Miksi sääntö ei voi hinnoitella sitä tai ehdottaa toista hintaa: margin, "
+"no_cost, unread, currency, rate_stale, no_step tai sale; null, kun estettä "
+"ei ole."
+
+#: src/Abilities/ProductPrices.php:185
+msgid "When the rule last set its price."
+msgstr "Milloin sääntö viimeksi asetti sen hinnan."
+
+#: src/Abilities/ProductPrices.php:189
+msgid "When its cost was last asked for; null when it never was."
+msgstr "Milloin sen kustannusta viimeksi kysyttiin; null, kun ei koskaan."
+
+#: src/Abilities/ProductPrices.php:206
+msgid ""
+"Which page of the prices the answer lists; it changes nothing about which "
+"are priced."
+msgstr ""
+"Minkä sivun hinnoista vastaus luettelee; se ei muuta sitä, mitkä "
+"hinnoitellaan."
+
+#: src/Abilities/ProductPrices.php:249
+msgid "How many prices the product has, on every page."
+msgstr "Montako hintaa tuotteella on kaikilla sivuilla yhteensä."
 
 #: src/Abilities/ProductSetup.php:122
 msgid "Whether it is linked to a template, personalised or not."
@@ -1421,6 +1703,43 @@ msgstr ""
 "korostusvärin, painoalueen kehyksen, tuotekuvat, suunnitelman kentät ja "
 "kuvan ostoskorissa, oletushyväksynnän sekä vedosten määräajat ja "
 "muistutukset."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/ReadPricingSettings.php:53
+msgid "Read the pricing settings"
+msgstr "Lue hinnoitteluasetukset"
+
+#: src/Abilities/ReadPricingSettings.php:54
+msgid ""
+"Gives the store's pricing rule, by which prices follow the printshop's "
+"costs: the target margin, the tolerance around it, the price step and what "
+"prices end in, the lowest and highest price, the currency buffer added to a "
+"cost converted from another currency, and whether prices change by "
+"themselves when a cost changes. Amounts and percentages are decimal strings, "
+"empty for none. Without a target margin the store has no rule. Also the "
+"store's currency, and whether prices are entered including tax."
+msgstr ""
+"Antaa kaupan hinnoittelusäännön, jolla hinnat seuraavat painotalon "
+"kustannuksia: tavoitekate, toleranssi sen ympärillä, hinta-askel ja hintojen "
+"pääte, alin ja ylin hinta, valuuttapuskuri, joka lisätään toisesta "
+"valuutasta muunnettuun kustannukseen, ja muuttuvatko hinnat itsestään, kun "
+"kustannus muuttuu. Summat ja prosentit ovat desimaalimerkkijonoja, tyhjiä, "
+"kun arvoa ei ole. Ilman tavoitekatetta kaupalla ei ole sääntöä. Lisäksi "
+"kaupan valuutta ja se, syötetäänkö hinnat veroineen."
+
+#: src/Abilities/ReadPricingSettings.php:130
+msgid "The currency prices are in, as its code."
+msgstr "Valuutta, jossa hinnat ovat, koodina."
+
+#: src/Abilities/ReadPricingSettings.php:134
+msgid ""
+"Whether prices are entered including tax. The price step, ending, lowest and "
+"highest price count on the price as entered; the margin counts on it "
+"excluding tax."
+msgstr ""
+"Syötetäänkö hinnat veroineen. Hinta-askel, pääte sekä alin ja ylin hinta "
+"koskevat hintaa sellaisena kuin se syötetään; kate lasketaan verottomasta "
+"hinnasta."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/RecheckProducts.php:45
@@ -2688,7 +3007,9 @@ msgid "The Pixonaut settings have no setting %s."
 msgstr "Pixonautin asetuksissa ei ole asetusta %s."
 
 #. translators: %s: the key of a setting, e.g. default_layout.
+#. translators: %s: the key of a setting, e.g. price_margin.
 #: src/Abilities/UpdatePluginSettings.php:73
+#: src/Abilities/UpdatePricingSettings.php:78
 #, php-format
 msgid "The setting %s does not take that value."
 msgstr "Asetus %s ei hyväksy tätä arvoa."
@@ -2700,6 +3021,46 @@ msgid ""
 msgstr ""
 "Mukautettu korostusväri vaatii värin: anna designer_accent_colour, esim. "
 "#1e73be."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/UpdatePricingSettings.php:42
+msgid "Change the pricing settings"
+msgstr "Muuta hinnoitteluasetuksia"
+
+#. translators: 1: the name of the ability that reads the pricing settings, 2: the name of the ability that prices a product.
+#: src/Abilities/UpdatePricingSettings.php:45
+#, php-format
+msgid ""
+"Changes the pricing settings given, by their keys as %1$s reads them; the "
+"others keep their values. `price_automatic` switches automatic price changes "
+"on or off: on, a price that follows the rule is set to the rule's price when "
+"its cost changes and its margin left the tolerance; off, the new price is "
+"only suggested. `price_ending` must be below `price_step`. Changing the rule "
+"changes no price by itself: price a product with %2$s. Answers with every "
+"pricing setting."
+msgstr ""
+"Muuttaa annetut hinnoitteluasetukset niiden avaimilla, sellaisina kuin %1$s "
+"ne lukee; muut säilyttävät arvonsa. `price_automatic` kytkee automaattiset "
+"hinnanmuutokset päälle tai pois: päällä sääntöä noudattava hinta asetetaan "
+"säännön hintaan, kun sen kustannus muuttuu ja kate on toleranssin "
+"ulkopuolella; pois päältä uutta hintaa vain ehdotetaan. Arvon `price_ending` "
+"on oltava pienempi kuin `price_step`. Säännön muuttaminen ei itsessään muuta "
+"yhtään hintaa: tuote hinnoitellaan kyvyllä %2$s. Vastaa kaikilla "
+"hinnoitteluasetuksilla."
+
+#. translators: %s: the key of a setting, e.g. price_margin.
+#: src/Abilities/UpdatePricingSettings.php:74
+#, php-format
+msgid "The pricing settings have no setting %s."
+msgstr "Hinnoitteluasetuksissa ei ole asetusta %s."
+
+#: src/Abilities/UpdatePricingSettings.php:85
+msgid ""
+"Prices end in an amount below the price step: with a step of 10, anything "
+"from 0 up to 9.99."
+msgstr ""
+"Hintojen pääte on hinta-askelta pienempi summa: kun askel on 10, mikä "
+"tahansa arvo väliltä 0–9.99."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/UseProductPicture.php:40
@@ -11050,9 +11411,6 @@ msgstr[1] "%s näkymää"
 
 #~ msgid "Choose a placement"
 #~ msgstr "Valitse painokohta"
-
-#~ msgid "Where on the blank this side is printed."
-#~ msgstr "Kohta pohjatuotteessa, johon tämä puoli painetaan."
 
 #~ msgid ""
 #~ "What customers fill in. With a blank, only templates that fit the "

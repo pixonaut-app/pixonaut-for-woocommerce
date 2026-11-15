@@ -38,6 +38,10 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/recheck-products` | Clears the cached catalogue and re-checks every linked product, as Recheck products does | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/get-plugin-settings` | Every setting on the Pixonaut settings page, by its key | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/update-plugin-settings` | Changes the settings given, as saving the settings page does | `manage_woocommerce` |
+| `pixonaut-for-woocommerce/get-pricing-settings` | The store's pricing rule, currency buffer and whether prices change by themselves, with the store's currency | `manage_woocommerce` |
+| `pixonaut-for-woocommerce/update-pricing-settings` | Changes the pricing settings given, as saving the Prices tab does | `manage_woocommerce` |
+| `pixonaut-for-woocommerce/get-product-prices` | Each variation of a product on a blank with its printshop cost, price, margin and how it stands to the pricing rule | `edit_product` on that product |
+| `pixonaut-for-woocommerce/price-product` | Reads a product's costs again and sets its prices to the rule's: all, the ones without a price or the ones named; `dry_run` changes nothing | `edit_product` on that product |
 | `pixonaut-for-woocommerce/get-connection-status` | Whether the store is connected, to which workspace and environment, whether the connection is paused, its origins, the last webhook test and the workspace's brands and settings | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/choose-brand` | Chooses the workspace brand the store's pages are drawn in | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/allow-www` | Allows the site's `www.` counterpart on the publishable key, or takes it away | `manage_woocommerce` |
@@ -538,6 +542,46 @@ write of the option, so what follows a change (the product pictures drawn
 again, or the images put back) runs once. A value a setting does not take
 is refused, rather than stored as the default; a custom accent colour needs
 `designer_accent_colour`, as on the page.
+
+## Prices
+
+`get-pricing-settings` gives the settings of the Prices tab by their keys
+(`price_margin`, `price_tolerance`, `price_step`, `price_ending`,
+`price_min`, `price_max`, `price_currency_buffer`, `price_automatic`), with
+the store's `currency` and `prices_include_tax`. `update-pricing-settings`
+takes any of the settings and changes only those; an ending that is not
+below the step is refused, as on the page. `price_automatic` is the switch
+for automatic price changes. Changing the rule sets no price.
+
+`get-product-prices` takes the `product_id` of a simple or variable product
+personalised on a blank, and answers what the Prices section of its Pixonaut
+tab lists, from what is stored: the rule it is priced by (`rule`, the store's
+with the product's `own_rule` over it, and `rule_set`), `automatic`, and in
+`prices` one row per variation (a simple product has one): `price`, the
+printshop's `cost` in its own currency, `cost_total` in the store's,
+`margin`, `suggested`, `standing` (`own`, `follows` or `by_hand`), and `flag`
+with its `flag_message`. Money is a decimal string; a time is ISO 8601.
+`prices` is a page of the rows: `page` and `per_page` (25 unless given, at
+most 100) choose which, and `total` and `pages` count them all.
+
+`price-product` does what Apply does there, through
+`ProductPricing::read_costs()` and `apply()`: it reads the costs from Pixonaut
+again and sets each price to the rule's, which follows the rule from then
+on. It sets no price it was not asked to: one that follows the rule and was
+not chosen is only flagged with the price suggested, also while the store
+changes prices automatically. `only: "unpriced"` prices the variations without a regular price and
+leaves the others; `variation_ids` names the ones to price. A price edited
+by hand is kept unless `release_held`. `rule` replaces the parts of the rule
+the product changes, once the costs are read: a read that fails stores no
+rule. With `dry_run` it reads the costs and
+answers the prices it would set, storing nothing on the product or its
+variations. Each row adds `before` and `changed` to what `get-product-prices`
+gives; `changed` beside them counts every price that changed, whichever
+page of rows the answer lists. It is refused without a target margin (`pixonaut_wc_no_price_rule`),
+for a product that is not on a blank (`pixonaut_wc_not_priced`), and when
+Pixonaut cannot give the costs (`pixonaut_wc_costs_unread`,
+`pixonaut_wc_costs_no_region`); a price the rule cannot set keeps its value
+and says why in `flag`.
 
 ## Pictures and the catalogue
 
