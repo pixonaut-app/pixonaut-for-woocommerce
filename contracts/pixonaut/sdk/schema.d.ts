@@ -47967,7 +47967,7 @@ export interface operations {
                     printshopPhotos?: boolean;
                     /** @description Stock photos, the scenes in the order they show, first in the blank's order and before the printshop's photos. They may photograph several stock items, each scene its own; two of one stock item, setting, person and pose are refused `scene_view_repeated`, unless each is held in a hand. On each of them, each placement with a role that item has a place for takes its default record; one with none shows on none of its scenes. */
                     sceneIds?: string[];
-                    /** @description The library's pictures of the blank in order, after `sceneIds`, each a scene from list_scenes: a setting, such as a wall for a poster, at one of its anchors (left out where it has one), or a studio style from one of its cameras, both with the blank's own product drawn in at true size from its product model, or a stock photo by its id alone. A size no setting was checked with shows on none. Omitted, the blank takes the library's own for what its printshop's data says the product is: first a studio picture, the library's base studio style from its front, which is the blank's picture; then `sceneIds`; then a sheet on every wall and a cylinder on every table. [] for none of them. */
+                    /** @description The library's pictures of the blank in order, after `sceneIds`, each a scene from list_scenes: a setting, such as a wall for a poster, at one of its anchors (left out where it has one), or a studio style from one of its cameras, both with the blank's own product drawn in at true size from its product model, or a stock photo by its id alone. A size no setting was checked with shows on none. Two of one setting, person and pose are each limited with `row` to a colour the other does not show. Omitted, the blank takes the library's own for what its printshop's data says the product is: first a studio picture, the library's base studio style from its front, which is the blank's picture; then `sceneIds`; then a sheet on every wall and a cylinder on every table. [] for none of them. */
                     scenes?: {
                         /** @description For a setting: the key of its anchor the product is placed at. Left out, a setting with one anchor is bound there. */
                         anchor?: string;
@@ -47978,6 +47978,10 @@ export interface operations {
                         camera?: "front" | "back" | "side" | "from-above";
                         /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
                         cutOut?: string;
+                        /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
+                        row?: {
+                            [key: string]: string;
+                        };
                         /** @description A scene's id, as list_scenes returns it. */
                         sceneId: string;
                     }[];
@@ -49770,7 +49774,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: no_printable_placement, no_printshop_photos, stock_item_not_found, scene_not_found, scene_retired, scene_view_repeated, stock_item_covers_no_placement, payload_too_large */
+            /** @description Refused: no_printable_placement, no_printshop_photos, stock_item_not_found, scene_not_found, scene_retired, scene_row_invalid, scene_view_repeated, stock_item_covers_no_placement, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -49783,7 +49787,7 @@ export interface operations {
                         error: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
-                        /** @description Always sent with `stock_item_not_found`, `scene_not_found`, `scene_retired`, `scene_view_repeated`, `stock_item_covers_no_placement`. */
+                        /** @description Always sent with `stock_item_not_found`, `scene_not_found`, `scene_retired`, `scene_row_invalid`, `scene_view_repeated`, `stock_item_covers_no_placement`. */
                         reason?: string;
                     };
                 };
