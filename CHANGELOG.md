@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.9.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.8.3...v1.9.0) (2026-11-15)
+
+
+### Features
+
+* **abilities:** read and change the pricing settings, and price a product by the rule ([#149](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/149)) ([4552a17](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/4552a176e2ef2ccf77539f8ecf4d34f672994cd6))
+* **abilities:** read and set a combination card's title and image by its values ([#153](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/153)) ([c190ab3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/c190ab3d70bc04d1daf357e0bb98baf28a453eb1)), closes [#152](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/152)
+* **abilities:** read and set which of a product's values are listed as their own products, and each value's card ([#147](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/147)) ([02dcd6d](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/02dcd6d03797dc77ac7184de509b3eae6c6dcb9f))
+* **storefront:** hide the attributes that do not apply to the shopper's choices, and list a card per real combination ([#150](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/150)) ([73b6345](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/73b6345649768565e419ac5770b1fdee675cd819)), closes [#146](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/146)
+
+
+### Bug Fixes
+
+* **catalogue:** a size on a placement printed across its area is judged against its row's area ([#148](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/148)) ([3d781d3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/3d781d3a5259d8742db1dde679fc3026416c1782)), closes [#145](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/145)
+* **contracts:** pin Pixonaut API 9.0.0 ([#155](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/155)) ([385147e](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/385147e241c9ffc3cd32fb8366cba51207b6b826))
+* **release:** the wordpress.org zip leaves out each .mo file with a .l10n.php beside it ([#154](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/154)) ([862a060](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/862a0601dd420d992ae41f25c345c77429039b62))
+
 ## [1.8.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.8.2...v1.8.3) (2026-11-15)
 
 
