@@ -188,21 +188,26 @@ describe('wordpress.org listing assets', () => {
 describe('wordpress.org flavor zip', () => {
 	const po = 'languages/pixonaut-for-woocommerce-sv_SE.po';
 
+	const mo = 'languages/pixonaut-for-woocommerce-sv_SE.mo';
+	const php = 'languages/pixonaut-for-woocommerce-sv_SE.l10n.php';
+	const pot = 'languages/pixonaut-for-woocommerce.pot';
+	const staged = new Set([po, mo, php, pot]);
+
 	it('leaves the translations sources and their template out: WordPress loads the compiled files', () => {
-		expect(leftOut(po, 'wporg')).toBe(true);
-		expect(
-			leftOut('languages/pixonaut-for-woocommerce-sv_SE.mo', 'wporg'),
-		).toBe(false);
-		expect(leftOut('languages/pixonaut-for-woocommerce.pot', 'wporg')).toBe(
-			true,
-		);
-		expect(leftOut('languages/pixonaut-for-woocommerce.pot', 'github')).toBe(
-			false,
-		);
-		expect(leftOut(po, 'github')).toBe(false);
+		expect(leftOut(po, 'wporg', staged)).toBe(true);
+		expect(leftOut(pot, 'wporg', staged)).toBe(true);
+		expect(leftOut(php, 'wporg', staged)).toBe(false);
+		expect(leftOut(pot, 'github', staged)).toBe(false);
+		expect(leftOut(po, 'github', staged)).toBe(false);
 	});
 
-	it('fails a wporg zip holding a translation source', () => {
+	it('leaves a .mo file out when its .l10n.php is there, which WordPress loads in its place', () => {
+		expect(leftOut(mo, 'wporg', staged)).toBe(true);
+		expect(leftOut(mo, 'wporg', new Set([po, mo]))).toBe(false);
+		expect(leftOut(mo, 'github', staged)).toBe(false);
+	});
+
+	it('fails a wporg zip holding a translation source, or a .mo file beside its .l10n.php', () => {
 		const entries = [
 			ROOT_DIR,
 			...[
@@ -214,13 +219,14 @@ describe('wordpress.org flavor zip', () => {
 				'composer.json',
 				'vendor/autoload.php',
 				po,
-				'languages/pixonaut-for-woocommerce-sv_SE.mo',
-				'languages/pixonaut-for-woocommerce-sv_SE.l10n.php',
+				mo,
+				php,
 			].map((path) => `${ROOT_DIR}${path}`),
 		];
 
 		expect(zipProblems(entries, [], 'wporg')).toEqual([
 			`${ROOT_DIR}${po}: translation source in the wporg flavor`,
+			`${ROOT_DIR}${mo}: a .mo file beside its .l10n.php in the wporg flavor`,
 		]);
 	});
 

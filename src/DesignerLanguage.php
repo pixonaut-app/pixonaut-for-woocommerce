@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce;
 
 use Closure;
-use MO;
 use NOOP_Translations;
 use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
 use Pixonaut\WooCommerce\Settings\Settings;
@@ -192,16 +191,16 @@ final class DesignerLanguage {
 
 	/**
 	 * The plugin's translations for a locale, from where WordPress would
-	 * load them (`WP_LANG_DIR/plugins`, else the plugin's `languages`).
+	 * load them (`WP_LANG_DIR/plugins`, else the plugin's `languages`), and
+	 * from the file it would: the `.l10n.php`, else the `.mo`.
 	 *
 	 * @param string $locale A WordPress locale.
 	 */
-	private static function translations( string $locale ): MO|NOOP_Translations {
+	private static function translations( string $locale ): NOOP_Translations {
 		global $wp_textdomain_registry;
 		$path = $wp_textdomain_registry instanceof WP_Textdomain_Registry ? $wp_textdomain_registry->get( Plugin::TEXT_DOMAIN, $locale ) : false;
 		$file = is_string( $path ) ? $path . Plugin::TEXT_DOMAIN . '-' . $locale . '.mo' : '';
-		$mo   = new MO();
-		return '' !== $file && is_readable( $file ) && $mo->import_from_file( $file ) ? $mo : new NOOP_Translations();
+		return FileTranslations::beside( $file ) ?? new NOOP_Translations();
 	}
 
 	/**

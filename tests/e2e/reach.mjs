@@ -34,6 +34,7 @@ export const NO_SPEC = [
 	'src/Milliseconds.php',
 	'src/DeprecatedHooks.php',
 	'src/DesignerLanguage.php', // no spec switches language
+	'src/FileTranslations.php', // read by DesignerLanguage alone
 	'src/Settings/Setting.php', // every spec sets some setting
 	'src/Settings/Settings.php',
 	'src/Admin/Notices.php', // the notice store; specs about a notice list its raiser
