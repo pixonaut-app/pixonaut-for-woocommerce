@@ -4,6 +4,7 @@ import {
 	offerInitialViews,
 	PERSONALISED_MODE,
 	STANDING_MODE,
+	searchProduct,
 	showBackgroundWarning,
 	showMisfitWarning,
 	showModeWarnings,
@@ -239,6 +240,20 @@ describe('showBackgroundWarning', () => {
 			).toBe(!shown);
 		},
 	);
+});
+
+describe('searchProduct', () => {
+	it("is the product on the product's tab", () => {
+		expect(searchProduct({ dataset: { productId: '235' } })).toBe('235');
+	});
+
+	it("is the variation in a variation's fields", () => {
+		expect(searchProduct({ dataset: { searchProductId: '240' } })).toBe('240');
+	});
+
+	it('is none on a panel naming neither', () => {
+		expect(searchProduct({ dataset: {} })).toBe('');
+	});
 });
 
 describe('showMisfitWarning', () => {

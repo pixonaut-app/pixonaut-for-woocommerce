@@ -248,29 +248,15 @@ final class MisfitSizesTest extends StandingTestCase {
 		$product = $this->product();
 		$this->script_varying_link( array() );
 		$this->save( $product->get_id(), array( 'pixonaut_variant' => 'v_xl' ) );
-		$this->recorder->json(
-			200,
+		$this->script_search(
 			array(
-				'items'    => array(
-					self::fitting_template( 'mini-tee@2', 'Mini tee', array( 'S' ), array( 'M', 'XL' ) ),
-					self::fitting_template( 'tote@1', 'Tote', array( 'XL' ), array( 'S', 'M' ) ),
-				),
-				'total'    => 2,
-				'page'     => 1,
-				'pageSize' => Catalogue::SEARCH_PAGE_SIZE,
+				self::fitting_template( 'mini-tee@2', 'Mini tee', array( 'S' ), array( 'M', 'XL' ) ),
+				self::fitting_template( 'tote@1', 'Tote', array( 'XL' ), array( 'S', 'M' ) ),
 			)
 		);
 		$this->recorder->json( 200, $this->varying_blank( array( self::AREAS_VARY_BY ) ) );
 
-		$request = new WP_REST_Request( 'GET', '/' . Plugin::REST_NAMESPACE . CatalogueSearch::FITTING_TEMPLATES_ROUTE );
-		$request->set_query_params(
-			array(
-				'blank'     => self::BLANK_ID,
-				'placement' => self::PLACEMENT_ID,
-				'product'   => (string) $product->get_id(),
-			)
-		);
-		$results = rest_get_server()->dispatch( $request )->get_data()['results'];
+		$results = $this->search_for( $product->get_id() );
 
 		$this->assertSame( array( 'XL' ), $results[0]['misfits'] );
 		$this->assertSame( 'Cannot print at XL', $results[0]['note'] );
@@ -294,6 +280,80 @@ final class MisfitSizesTest extends StandingTestCase {
 		$this->assertFalse( $config->valid );
 		$this->assertSame( InvalidReason::NO_FITTING_SIZE, $config->invalid_reason );
 		$this->assertSame( array( 'S', 'M' ), $config->sides[0]->misfit_sizes );
+	}
+
+	public function test_the_template_search_of_a_variation_names_only_the_size_that_variation_sells(): void {
+		$poster = $this->poster( array( array( '30x40', 'Vertical' ), array( '30x40', 'Horizontal' ) ) );
+		$this->script_varying_link( array(), self::POSTER_OPTIONS );
+		$this->save( $poster->get_id() );
+		$upright = $poster->get_children()[0];
+		$this->script_search( array( self::fitting_template( 'mini-tee@2', 'Mini tee', array(), array( '30x40 / Vertical', '30x40 / Horizontal' ) ) ) );
+		$this->recorder->json( 200, $this->varying_blank( self::POSTER_OPTIONS ) );
+
+		$results = $this->search_for( $upright );
+
+		$this->assertSame( array( '30x40 / Vertical' ), $results[0]['misfits'], 'it follows its product, on the blank searched' );
+	}
+
+	public function test_the_template_search_names_every_size_for_a_product_the_user_may_not_edit(): void {
+		$product = $this->product();
+		$this->script_varying_link( array() );
+		$this->save( $product->get_id(), array( 'pixonaut_variant' => 'v_xl' ) );
+		wp_update_post(
+			array(
+				'ID'          => $product->get_id(),
+				'post_status' => 'private',
+			)
+		);
+		$this->script_search( array( self::fitting_template( 'mini-tee@2', 'Mini tee', array( 'S' ), array( 'M', 'XL' ) ) ) );
+		$role = get_role( 'contributor' );
+		$this->assertNotNull( $role );
+		$role->add_cap( CatalogueSearch::CAPABILITY );
+
+		try {
+			$results = $this->search_for( $product->get_id(), 'contributor' );
+		} finally {
+			$role->remove_cap( CatalogueSearch::CAPABILITY );
+		}
+
+		$this->assertSame( array( 'M', 'XL' ), $results[0]['misfits'], 'what another author\'s product sells is not told' );
+	}
+
+	/**
+	 * Scripts Pixonaut's answer to a search of the templates that fit the placement.
+	 *
+	 * @param list<array<string, mixed>> $items The templates.
+	 */
+	private function script_search( array $items ): void {
+		$this->recorder->json(
+			200,
+			array(
+				'items'    => $items,
+				'total'    => count( $items ),
+				'page'     => 1,
+				'pageSize' => Catalogue::SEARCH_PAGE_SIZE,
+			)
+		);
+	}
+
+	/**
+	 * What the template search answers for a product or variation.
+	 *
+	 * @param int    $product_id The product or variation.
+	 * @param string $role       Who searches.
+	 * @return list<array<string, mixed>>
+	 */
+	private function search_for( int $product_id, string $role = 'shop_manager' ): array {
+		wp_set_current_user( $this->user( $role ) );
+		$request = new WP_REST_Request( 'GET', '/' . Plugin::REST_NAMESPACE . CatalogueSearch::FITTING_TEMPLATES_ROUTE );
+		$request->set_query_params(
+			array(
+				'blank'     => self::BLANK_ID,
+				'placement' => self::PLACEMENT_ID,
+				'product'   => (string) $product_id,
+			)
+		);
+		return rest_get_server()->dispatch( $request )->get_data()['results'];
 	}
 
 	/**

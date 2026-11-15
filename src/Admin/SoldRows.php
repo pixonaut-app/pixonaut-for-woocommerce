@@ -44,28 +44,26 @@ final class SoldRows {
 	}
 
 	/**
-	 * The misfit sizes of a template the product sells under a setup, in
-	 * the order given. All of them when the rows it sells cannot be told:
+	 * The misfit sizes of a template among the rows a product sells, in the
+	 * order given. All of them when the rows it sells cannot be told:
 	 * Pixonaut cannot be asked, or the blank's print areas change with no
 	 * option.
 	 *
-	 * @param WC_Product    $product A product or variation.
-	 * @param ProductConfig $config  The setup shown for it, on the blank the misfits are of.
 	 * @param string[]      $misfits The rows the template cannot be printed at, as `MisfitSizes::value()` names them.
+	 * @param string[]|null $sold    The rows the product sells, as `of()` tells them.
 	 * @phpstan-param list<string> $misfits
+	 * @phpstan-param list<string>|null $sold
 	 * @return list<string>
 	 */
-	public function misfits( WC_Product $product, ProductConfig $config, array $misfits ): array {
-		if ( array() === $misfits ) {
-			return array();
-		}
-		$sold = $this->of( $product, $config );
+	public static function among( array $misfits, ?array $sold ): array {
 		return null === $sold ? $misfits : array_values( array_intersect( $misfits, $sold ) );
 	}
 
 	/**
 	 * The rows the product sells under a setup, each named as Pixonaut
 	 * names it among a template's misfits; null when they cannot be told.
+	 * Reads each of a variable product's variations: ask once for a page or
+	 * an answer, not once for each template judged.
 	 *
 	 * @param WC_Product    $product A product or variation.
 	 * @param ProductConfig $config  The setup shown for it.
@@ -84,10 +82,10 @@ final class SoldRows {
 		} catch ( ApiException $e ) {
 			return null;
 		}
-		$sold = self::variants_sold( $product, $config );
+		$sold = array_flip( self::variants_sold( $product, $config ) );
 		$rows = array();
 		foreach ( $variants as $variant ) {
-			$row = in_array( $variant->ref, $sold, true ) ? self::row( $variant, $varies_by ) : null;
+			$row = isset( $sold[ $variant->ref ] ) ? self::row( $variant, $varies_by ) : null;
 			if ( null !== $row ) {
 				$rows[ MisfitSizes::value( $row ) ] = true;
 			}

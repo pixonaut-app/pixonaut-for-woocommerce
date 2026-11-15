@@ -93,6 +93,7 @@ final class VariationPanel {
 				'override_id'   => $fields->id( PanelFields::OVERRIDE ),
 				'override'      => $own->override,
 				'max_sides'     => PostedSides::MAX_SIDES,
+				'variation_id'  => $product->get_id(),
 				'fields_html'   => $this->panel->fields_html( $this->panel->panel( $product, self::own_or_inherited( $product ), $fields ) ),
 				'search_urls'   => ProductPanel::search_urls(),
 				'rest_nonce'    => wp_create_nonce( 'wp_rest' ),

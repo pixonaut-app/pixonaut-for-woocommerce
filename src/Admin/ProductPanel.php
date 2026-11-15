@@ -406,6 +406,7 @@ final class ProductPanel {
 		$blank    = null === $config->blank_id ? null : $this->blank->read( $config->blank_id );
 		$views    = null === $config->blank_id ? null : $this->blank->views( $config->blank_id );
 		$pictures = LinkedBlank::placement_thumbnails( $views );
+		$sold     = $this->rows_sold( $product, $config );
 
 		return array(
 			'names'            => array(
@@ -453,7 +454,7 @@ final class ProductPanel {
 			'initial_view'     => $config->initial_view ?? '',
 			// The tile of the view of the design alone shows the template's preview.
 			'design_preview'   => null === $views || null === $this->showcases ? '' : $this->showcases->preview( $config ),
-			'sides'            => array_map( fn ( ?Side $side ): array => self::side_fields( $side, $product->is_type( 'variable' ), $this->misfits_sold( $product, $config, $side ) ) + $this->standing_options( $side, $product->get_id() ) + array( 'low_resolution_html' => $this->low_resolution_html( $product, $config, $side, $fields ) ), array() === $config->sides ? array( null ) : $config->sides ),
+			'sides'            => array_map( fn ( ?Side $side ): array => self::side_fields( $side, $product->is_type( 'variable' ), SoldRows::among( $side->misfit_sizes ?? array(), $sold ) ) + $this->standing_options( $side, $product->get_id() ) + array( 'low_resolution_html' => $this->low_resolution_html( $product, $config, $side, $fields ) ), array() === $config->sides ? array( null ) : $config->sides ),
 			'printshop'        => null === $config->blank_id ? null : $this->blank->printshop( $config->blank_id, $blank ),
 			// Pixonaut is still importing it from a printshop's catalogue: nothing to pick on it yet.
 			'importing'        => null !== $blank && LinkedBlank::IMPORTING === $blank['status'],
@@ -516,17 +517,22 @@ final class ProductPanel {
 	}
 
 	/**
-	 * The blank's sizes a side's template cannot be printed at that the
-	 * product sells: the side's warning names no size nothing is sold at.
+	 * The rows of its blank the product sells, which the misfit warnings of
+	 * its sides name alone; null to name every row a template misfits, as
+	 * when the rows sold cannot be told. Not asked for while no side has a
+	 * misfit size.
 	 *
 	 * @param WC_Product    $product The product or variation the fields are for.
 	 * @param ProductConfig $config  The configuration shown.
-	 * @param Side|null     $side    One of its sides; null for an empty one.
-	 * @return list<string>
+	 * @return list<string>|null
 	 */
-	private function misfits_sold( WC_Product $product, ProductConfig $config, ?Side $side ): array {
-		$misfits = $side->misfit_sizes ?? array();
-		return null === $this->sold_rows ? $misfits : $this->sold_rows->misfits( $product, $config, $misfits );
+	private function rows_sold( WC_Product $product, ProductConfig $config ): ?array {
+		foreach ( $config->sides as $side ) {
+			if ( array() !== $side->misfit_sizes ) {
+				return $this->sold_rows?->of( $product, $config );
+			}
+		}
+		return null;
 	}
 
 	/**

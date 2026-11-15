@@ -604,6 +604,14 @@ function initSize(row: HTMLElement, onRemove: () => void): void {
 	show();
 }
 
+/**
+ * The product or variation a panel's template search is for: a variation's
+ * fields name the variation, the product's tab the product.
+ */
+export function searchProduct(root: Pick<HTMLElement, 'dataset'>): string {
+	return root.dataset.searchProductId ?? root.dataset.productId ?? '';
+}
+
 type Panel = {
 	$: JQuery;
 	nonce: string;
@@ -925,7 +933,7 @@ export function initPanel(root: HTMLElement): void {
 		$,
 		nonce: root.dataset.restNonce ?? '',
 		urls: searchUrls(root),
-		product: root.dataset.productId ?? '',
+		product: searchProduct(root),
 		blank,
 		onChange: () => {
 			if (sideElements().length === 0) {
