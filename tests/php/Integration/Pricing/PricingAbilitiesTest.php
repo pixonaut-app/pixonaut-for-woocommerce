@@ -260,7 +260,7 @@ final class PricingAbilitiesTest extends PricingTestCase {
 	public function test_pricing_some_variations_sets_no_other_price_though_the_store_changes_prices_by_itself(): void {
 		$this->store_rule();
 		$this->plugin->settings()->set( Settings::PRICE_AUTOMATIC, true );
-		$ids = $this->variable_product(
+		$ids        = $this->variable_product(
 			array(
 				'v_a3' => '',
 				'v_a4' => '',
@@ -334,7 +334,7 @@ final class PricingAbilitiesTest extends PricingTestCase {
 
 	public function test_an_answer_lists_a_page_of_the_prices_and_counts_them_all(): void {
 		$this->store_rule();
-		$ids = $this->variable_product(
+		$ids        = $this->variable_product(
 			array(
 				'v_a2' => '',
 				'v_a3' => '',
