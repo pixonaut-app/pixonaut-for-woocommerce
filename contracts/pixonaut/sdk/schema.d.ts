@@ -32725,6 +32725,8 @@ export interface operations {
                         placements: {
                             /** @description The placement's print area per row of the options the blank's print areas change with (`areasVaryBy` on the variants read): a design on a variant is printed at the area of that variant's row, at its usual size when none is chosen, and cut to the row's shape. Empty when the area is the same at every size. */
                             areas: {
+                                /** @description How far in from the print's edge the product folds on the row, where that is the row's own, as a canvas on a thicker frame folds further in; 0 for a row that does not fold on a placement that does. Absent, the placement's. */
+                                foldMm?: number;
                                 heightMm: number;
                                 row: {
                                     [key: string]: string;
@@ -32747,6 +32749,8 @@ export interface operations {
                             defaultWidthMm: number;
                             /** @description The colour, `#rrggbb`, a view of several placements shows in this placement's region while it has no print. Absent when the placement names none. */
                             fillColour?: string;
+                            /** @description How far in from the print's edge the product folds, in millimetres, on one that folds, such as a canvas round its frame: a designer draws the fold over the design. Absent on a product that does not fold. */
+                            foldMm?: number;
                             id: string;
                             /** @description The placement it is linked with by default, and whether its print is mirrored then: a designer linking the blank's suggested groups joins the two. Absent when it suggests none. */
                             linkWith?: {

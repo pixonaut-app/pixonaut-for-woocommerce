@@ -1168,7 +1168,7 @@ export interface paths {
         };
         /**
          * Read a blank's variant costs at its printshop
-         * @description What the blank's printshop charges for each variant on sale, and for shipping one to a country, as the printshop publishes it: a store prices its products from these. Each amount is in the currency the printshop bills the connected account in, which each amount names, and is never converted: the read takes a country and no currency, so amounts for one country may be in another's currency. Pixonaut holds no selling price, margin or tax. Costs are read from the printshop in the background, when a blank is imported or re-synced and once a day: a region asked for the first time is read within moments, and until then the list holds only the variants already read, so a variant missing from it has not been read yet, and `complete` is false until none is missing. A variant whose printshop publishes no price is listed with `product` null, as is every variant of a blank no printshop is bound to, and of a country its printshop prices only with more of an address than a country: Printful prices the United States, Canada, Australia, Japan and Brazil by state. A region nobody asks for in 30 days is no longer kept read, except the workspace's own.
+         * @description What the blank's printshop charges for each variant on sale, and for shipping one to a country, as the printshop publishes it: a store prices its products from these. Each amount is in the currency the printshop bills the connected account in, which each amount names, and is never converted: the read takes a country and no currency, so amounts for one country may be in another's currency. Pixonaut holds no selling price, margin or tax. Costs are read from the printshop in the background, when a blank is imported or re-synced and once a day: a region asked for the first time is read within moments, and until then the list holds only the variants already read, so a variant missing from it has not been read yet, and `complete` is false until none is missing. A variant whose printshop publishes no price is listed with `product` null, as is every variant of a blank no printshop is bound to, and of a country its printshop prices only for a recipient it knows more of than a cost names: Printful prices an order to Brazil only with the recipient's tax number. Where a printshop prices a country by state, as Printful does the United States, Canada, Australia and Japan, the cost is the one for a state of it, which differs between states in tax alone, and a cost holds no tax. A region nobody asks for in 30 days is no longer kept read, except the workspace's own.
          */
         get: operations["blanks.variants.costs"];
         put?: never;
@@ -32724,6 +32724,8 @@ export interface operations {
                         placements: {
                             /** @description The placement's print area per row of the options the blank's print areas change with (`areasVaryBy` on the variants read): a design on a variant is printed at the area of that variant's row, at its usual size when none is chosen, and cut to the row's shape. Empty when the area is the same at every size. */
                             areas: {
+                                /** @description How far in from the print's edge the product folds on the row, where that is the row's own, as a canvas on a thicker frame folds further in; 0 for a row that does not fold on a placement that does. Absent, the placement's. */
+                                foldMm?: number;
                                 heightMm: number;
                                 row: {
                                     [key: string]: string;
@@ -32746,6 +32748,8 @@ export interface operations {
                             defaultWidthMm: number;
                             /** @description The colour, `#rrggbb`, a view of several placements shows in this placement's region while it has no print. Absent when the placement names none. */
                             fillColour?: string;
+                            /** @description How far in from the print's edge the product folds, in millimetres, on one that folds, such as a canvas round its frame: a designer draws the fold over the design. Absent on a product that does not fold. */
+                            foldMm?: number;
                             id: string;
                             /** @description The placement it is linked with by default, and whether its print is mirrored then: a designer linking the blank's suggested groups joins the two. Absent when it suggests none. */
                             linkWith?: {
@@ -50561,6 +50565,8 @@ export interface operations {
                             geometry: {
                                 anchors: {
                                     accepts: string[];
+                                    /** @description How far above its room the plane goes on bare, in millimetres: what a product hangs from, a cord and its nail, may rise into it. Absent, no further. */
+                                    bareAboveMm?: number;
                                     /** @description The most room a product has on the plane. */
                                     footprintMm: {
                                         height: number;
