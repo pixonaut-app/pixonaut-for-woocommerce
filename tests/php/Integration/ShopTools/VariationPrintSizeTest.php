@@ -15,6 +15,8 @@ use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\ProductVariant;
+use Pixonaut\WooCommerce\Catalogue\RowSize;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -22,8 +24,10 @@ use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
+use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
+use Pixonaut\WooCommerce\Tests\Support\VariantsAnswer;
 use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use WC_Product;
 use WC_Product_Attribute;
@@ -69,6 +73,28 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 	 * The size the product sells before a variation is given its own.
 	 */
 	private const PRODUCT_SIZE_MM = 200.0;
+
+	private const BLANK_ID = DesignFixture::BLANK_ID;
+
+	private const SMALL_ROW = '30x40';
+
+	private const LARGE_ROW = '40x50';
+
+	/**
+	 * The print area of each size of the poster on a blank, in millimetres.
+	 */
+	private const ROW_AREAS = array(
+		self::SMALL_ROW => array( 300.0, 400.0 ),
+		self::LARGE_ROW => array( 400.0, 500.0 ),
+	);
+
+	/**
+	 * The blank's variant of each size.
+	 */
+	private const ROW_REFS = array(
+		self::SMALL_ROW => 'v_small',
+		self::LARGE_ROW => 'v_large',
+	);
 
 	/**
 	 * What a valid product or variation reads as.
@@ -359,6 +385,128 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 		$this->assertSame( array(), $this->recorder->requests );
 	}
 
+	public function test_clear_takes_off_a_size_a_variation_following_its_product_was_given(): void {
+		$product   = $this->poster();
+		$variation = $this->variation( $product, 'Small' );
+		$own       = array(
+			'size'    => new PrintSize( self::WIDTH_MM, self::HEIGHT_MM, self::LABEL ),
+			'refused' => null,
+			'basis'   => 'judged',
+		);
+		( new VariationSize( array( 'front' => $own ) ) )->save_to( $variation );
+
+		$answer = $this->succeed(
+			array(
+				'variation_id' => $variation->get_id(),
+				'clear'        => true,
+			)
+		);
+
+		$this->assertSame( $variation->get_id(), $answer['variation_id'] );
+		$this->assertSame( self::VALID, $answer['pixonaut_validity'] );
+		$this->assertSame( array(), VariationSize::stored_on( $this->reload( $variation ) )->sizes );
+		$this->assertFalse( ProductConfig::is_stored_on( $this->reload( $variation ) ), 'it gets no setup of its own' );
+		$this->assertSame( array(), $this->recorder->requests, 'no call to Pixonaut' );
+	}
+
+	public function test_clear_with_a_size_or_on_a_setup_without_a_blank_is_bad_input(): void {
+		$product   = $this->poster();
+		$variation = $this->variation( $product, 'Small' );
+
+		$both = $this->call(
+			array(
+				'variation_id' => $variation->get_id(),
+				'width_mm'     => self::WIDTH_MM,
+				'height_mm'    => self::HEIGHT_MM,
+				'clear'        => true,
+			)
+		);
+		( new ProductConfig( personalise: true, override: true, sides: array( self::side() ) ) )->save_to( $variation );
+		$no_placement = $this->call(
+			array(
+				'variation_id' => $variation->get_id(),
+				'clear'        => true,
+			)
+		);
+
+		$this->assertSame( 422, $both->get_status() );
+		$this->assertSame( 'invalid_input', $both->get_data()['code'] );
+		$this->assertSame( 422, $no_placement->get_status() );
+		$this->assertSame( 'invalid_input', $no_placement->get_data()['code'] );
+		$this->assertSame( self::PRODUCT_SIZE_MM, ProductConfig::stored_on( $this->reload( $variation ) )->sides[0]->print_sizes[0]->width_mm, 'its own setup is kept' );
+		$this->assertSame( array(), $this->recorder->requests );
+	}
+
+	public function test_on_a_placement_printed_across_its_area_a_variation_takes_its_own_rows_area_alone(): void {
+		list( $small, $large ) = $this->poster_on_rows();
+		$variants              = $this->row_variants()->start();
+
+		// Another row's area is refused here, once the setup's own check found a row that takes it.
+		$this->script_row_check();
+		$other = $this->call(
+			array(
+				'variation_id' => $large->get_id(),
+				'width_mm'     => self::ROW_AREAS[ self::SMALL_ROW ][0],
+				'height_mm'    => self::ROW_AREAS[ self::SMALL_ROW ][1],
+			)
+		);
+		$this->assertSame( 422, $other->get_status(), (string) wp_json_encode( $other->get_data() ) );
+		$this->assertSame( InvalidReason::PRINT_SIZE_NOT_AREA, $other->get_data()['reason'] );
+		$this->assertFalse( ProductConfig::is_stored_on( $this->reload( $large ) ), 'nothing is saved' );
+
+		$this->recorder->requests = array();
+		$this->script_row_check();
+		$answer = $this->succeed(
+			array(
+				'variation_id' => $large->get_id(),
+				'width_mm'     => self::ROW_AREAS[ self::LARGE_ROW ][0],
+				'height_mm'    => self::ROW_AREAS[ self::LARGE_ROW ][1],
+			)
+		);
+		$variants->stop();
+
+		$this->assertSame( self::VALID, $answer['pixonaut_validity'] );
+		$asked = array_values( array_filter( $this->recorder->requests, static fn ( array $request ): bool => str_contains( $request['url'], '/print-size' ) ) );
+		$this->assertCount( 1, $asked );
+		$this->assertSame( array( 'sizes' ), array_keys( json_decode( (string) $asked[0]['body'], true ) ), 'the template\'s ratio alone is asked: the area is the row\'s' );
+		$this->assertTrue( ProductConfig::stored_on( $this->reload( $large ) )->override );
+		$this->assertFalse( ProductConfig::is_stored_on( $this->reload( $small ) ), 'only that variation' );
+	}
+
+	public function test_clear_puts_a_variation_with_its_own_setup_back_at_its_rows_area(): void {
+		list( , $large ) = $this->poster_on_rows();
+		$variants        = $this->row_variants()->start();
+		$this->script_row_check();
+		$this->succeed(
+			array(
+				'variation_id' => $large->get_id(),
+				'width_mm'     => self::ROW_AREAS[ self::LARGE_ROW ][0],
+				'height_mm'    => self::ROW_AREAS[ self::LARGE_ROW ][1],
+				'label'        => self::LABEL,
+			)
+		);
+		$this->assertSame( self::LABEL, ProductConfig::config_for( $this->reload( $large ) )->sides[0]->print_sizes[0]->label );
+
+		$this->recorder->requests = array();
+		$this->script_row_check( false );
+		$answer = $this->succeed(
+			array(
+				'variation_id' => $large->get_id(),
+				'clear'        => true,
+			)
+		);
+		$variants->stop();
+
+		$this->assertSame( self::VALID, $answer['pixonaut_validity'] );
+		$own = ProductConfig::stored_on( $this->reload( $large ) );
+		$this->assertTrue( $own->sides[0]->print_sizes[0]->placement_default, 'its side is sold at the placement\'s size' );
+		$sold = ProductConfig::config_for( $this->reload( $large ) )->sides[0]->print_sizes[0];
+		$this->assertSame( self::ROW_AREAS[ self::LARGE_ROW ], array( $sold->width_mm, $sold->height_mm ), 'which is its row\'s area' );
+		foreach ( $this->recorder->requests as $request ) {
+			$this->assertStringNotContainsString( '/print-size', $request['url'] );
+		}
+	}
+
 	/**
 	 * @return array<string, array{0: string}>
 	 */
@@ -452,6 +600,105 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 		$product->save();
 		( $config ?? new ProductConfig( personalise: true, sides: array( self::side() ) ) )->save_to( $product );
 		return $product;
+	}
+
+	/**
+	 * A variable poster on a blank whose front is printed across its whole
+	 * area, 300 × 400 mm in one size and 400 × 500 mm in the other, sold at
+	 * the placement's size, each variation paired with its size's variant.
+	 *
+	 * @return array{WC_Product_Variation, WC_Product_Variation} The small and the large variation.
+	 */
+	private function poster_on_rows(): array {
+		$rows = array();
+		foreach ( self::ROW_AREAS as $size => list( $width, $height ) ) {
+			$rows[] = new RowSize( array( 'Size' => $size ), array( self::ROW_REFS[ $size ] ), $width, $height, true, new PrintSize( $width, $height, PrintSize::label_for( $width, $height ) ) );
+		}
+		$default = new PrintSize( self::ROW_AREAS[ self::LARGE_ROW ][0], self::ROW_AREAS[ self::LARGE_ROW ][1], '', true );
+		$side    = ( new Side( DesignFixture::PLACEMENT_ID, 'Front', DesignFixture::PLACEMENT_ID, 'Front', self::TEMPLATE_BASE_ID, self::TEMPLATE_VERSION, null, 'Mini poster', array( $default ) ) )->with_row_sizes( $rows );
+		$product = $this->poster( new ProductConfig( personalise: true, blank_id: self::BLANK_ID, blank_name: 'Poster', sides: array( $side ) ) );
+		$made    = array();
+		foreach ( array_keys( self::ROW_AREAS ) as $size ) {
+			$variation = $this->variation( $product, self::SMALL_ROW === $size ? 'Small' : 'Large' );
+			( new ProductVariant( self::BLANK_ID, self::ROW_REFS[ $size ], self::ROW_REFS[ $size ], $size ) )->save_to( $variation );
+			$made[] = $variation;
+		}
+		return array( $made[0], $made[1] );
+	}
+
+	/**
+	 * Answers every read of the blank's variants: one per size.
+	 */
+	private function row_variants(): VariantsAnswer {
+		$rows = array();
+		foreach ( self::ROW_REFS as $size => $ref ) {
+			$rows[] = array(
+				'ref'     => $ref,
+				'options' => array( 'Size' => $size ),
+			);
+		}
+		$variants                        = new VariantsAnswer();
+		$variants->answer                = BlankFixture::variants( $rows, array( 'Size' ) );
+		$variants->answer['areasVaryBy'] = array( 'Size' );
+		return $variants;
+	}
+
+	/**
+	 * Scripts what a check of a variation's setup on the poster's blank
+	 * reads: the blank, the template's constraints on its front, the verdict
+	 * of a size asked about, and the template.
+	 *
+	 * @param bool $asks Whether a size is asked about.
+	 */
+	private function script_row_check( bool $asks = true ): void {
+		$blank                              = BlankFixture::answer();
+		$blank['areasVaryBy']               = array( 'Size' );
+		$blank['placements'][0]['coverage'] = 'full';
+		$blank['placements'][0]['areas']    = array();
+		foreach ( self::ROW_AREAS as $size => list( $width, $height ) ) {
+			$blank['placements'][0]['areas'][] = array(
+				'row'           => array( 'Size' => $size ),
+				'widthMm'       => $width,
+				'heightMm'      => $height,
+				'usualWidthMm'  => $width,
+				'usualHeightMm' => $height,
+			);
+		}
+		$this->recorder->json( 200, $blank );
+		$this->recorder->json(
+			200,
+			array(
+				'templateId'     => self::TEMPLATE_BASE_ID . '@' . self::TEMPLATE_VERSION,
+				'ratio'          => array(
+					'w' => 3,
+					'h' => 4,
+				),
+				'ratioTolerance' => 0.1,
+				'fit'            => 'contain',
+				'placement'      => array(
+					'blankId'            => self::BLANK_ID,
+					'placementId'        => DesignFixture::PLACEMENT_ID,
+					'maxWidthMm'         => self::ROW_AREAS[ self::LARGE_ROW ][0],
+					'maxHeightMm'        => self::ROW_AREAS[ self::LARGE_ROW ][1],
+					'defaultWidthMm'     => self::ROW_AREAS[ self::LARGE_ROW ][0],
+					'defaultHeightMm'    => self::ROW_AREAS[ self::LARGE_ROW ][1],
+					'printWidthMm'       => self::ROW_AREAS[ self::LARGE_ROW ][0],
+					'printHeightMm'      => self::ROW_AREAS[ self::LARGE_ROW ][1],
+					'bleedMm'            => 3,
+					'safeAreaMm'         => 5,
+					'cmykPreviewProfile' => 'ISOcoated_v2_eci',
+					'coverage'           => 'full',
+					'sizes'              => array(
+						'fits'    => array_keys( self::ROW_AREAS ),
+						'misfits' => array(),
+					),
+				),
+			)
+		);
+		if ( $asks ) {
+			$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
+		}
+		$this->recorder->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
 	}
 
 	/**

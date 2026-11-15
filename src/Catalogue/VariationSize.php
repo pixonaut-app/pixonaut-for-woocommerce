@@ -232,7 +232,9 @@ final class VariationSize {
 	/**
 	 * A side with its placement's default replaced by what it prints at on
 	 * the variant's row. A variant in no row, or in one the template cannot
-	 * be printed at, sells nothing at the default.
+	 * be printed at, sells nothing at the default. On a row printed across
+	 * its whole area a print is that area, so a size entered that is not it
+	 * is another row's and is not sold; a side left with none says why.
 	 *
 	 * @param Side        $side    A personalised side.
 	 * @param string|null $variant The variant sold.
@@ -244,9 +246,15 @@ final class VariationSize {
 		}
 		$sizes = array();
 		$row   = $side->row_size_for( $variant );
+		// Why the first size entered is not the row's.
+		$other = null;
 		foreach ( $side->print_sizes as $size ) {
 			if ( ! $size->placement_default ) {
-				$sizes[] = $size;
+				$refused = true === $row?->full ? $row->refuses( $size ) : null;
+				if ( null === $refused ) {
+					$sizes[] = $size;
+				}
+				$other ??= $refused;
 				continue;
 			}
 			if ( null === $row?->size ) {
@@ -254,6 +262,9 @@ final class VariationSize {
 				continue;
 			}
 			$sizes[] = $row->size;
+		}
+		if ( array() === $sizes ) {
+			$reason ??= $other;
 		}
 		return $sizes === $side->print_sizes ? $side : $side->with( $side->template_version, $side->previous_version, $sizes, null );
 	}

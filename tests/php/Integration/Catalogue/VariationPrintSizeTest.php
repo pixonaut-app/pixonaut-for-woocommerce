@@ -87,6 +87,49 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$this->assertTrue( $this->reload_any( $large->get_id() )->is_purchasable() );
 	}
 
+	public function test_a_product_on_a_placement_printed_across_its_area_is_not_judged_at_the_placements_own_box(): void {
+		list( $parent ) = $this->linked( 'full' );
+
+		$this->assertTrue( ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) )->valid );
+		foreach ( $this->recorder->requests as $request ) {
+			$this->assertStringNotContainsString( '/print-size', $request['url'], 'the widest and tallest of the rows is the area of no size' );
+		}
+	}
+
+	public function test_a_size_entered_that_is_a_rows_area_is_asked_for_its_ratio_alone_and_sold_on_that_row(): void {
+		list( $parent, $small, $large ) = $this->linked( 'full' );
+		$this->recorder->requests       = array();
+		$this->script_varying_save( 'full', array(), true );
+
+		$this->save( $parent->get_id(), array(), array( 'sizes' => array( self::entered( '300', '400' ) ) ) );
+
+		$this->assertTrue( ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) )->valid );
+		$asked = array_values( array_filter( $this->recorder->requests, static fn ( array $request ): bool => str_contains( $request['url'], '/print-size' ) ) );
+		$this->assertCount( 1, $asked );
+		$this->assertSame( array( 'sizes' ), array_keys( json_decode( (string) $asked[0]['body'], true ) ), 'the area is a row’s, judged here' );
+		$this->assertSame( array( 300.0, 400.0 ), $this->sold_size( $small ) );
+		$this->assertTrue( $this->reload_any( $small->get_id() )->is_purchasable() );
+		$of_large = ProductConfig::config_for( $this->reload_any( $large->get_id() ) );
+		$this->assertFalse( $of_large->valid, 'another row’s area is not printed on this one' );
+		$this->assertSame( InvalidReason::PRINT_SIZE_NOT_AREA, $of_large->invalid_reason );
+	}
+
+	public function test_a_size_entered_that_is_no_rows_area_is_refused_without_asking(): void {
+		list( $parent )           = $this->linked( 'full' );
+		$this->recorder->requests = array();
+		// The blank and the constraints are read; nothing is asked about the size.
+		$this->script_varying_save( 'full' );
+
+		$this->save( $parent->get_id(), array(), array( 'sizes' => array( self::entered( '350', '450' ) ) ) );
+
+		$config = ProductConfig::stored_on( $this->reload_any( $parent->get_id() ) );
+		$this->assertFalse( $config->valid );
+		$this->assertSame( InvalidReason::PRINT_SIZE_NOT_AREA, $config->invalid_reason );
+		foreach ( $this->recorder->requests as $request ) {
+			$this->assertStringNotContainsString( '/print-size', $request['url'] );
+		}
+	}
+
 	public function test_a_variation_prints_at_its_template_fitted_into_its_variants_usual_box(): void {
 		list( , $small ) = $this->linked( 'within' );
 
@@ -363,6 +406,22 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 	}
 
 	/**
+	 * A size entered in the product's size menu.
+	 *
+	 * @param string $width  Width in millimetres.
+	 * @param string $height Height in millimetres.
+	 * @return array<string, string>
+	 */
+	private static function entered( string $width, string $height ): array {
+		return array(
+			'kind'   => PostedSides::SIZE_CUSTOM,
+			'width'  => $width,
+			'height' => $height,
+			'label'  => '',
+		);
+	}
+
+	/**
 	 * The variable product with a small and a large variation, linked on
 	 * the varying blank at the placement's default.
 	 *
@@ -402,8 +461,9 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 	 *
 	 * @param string   $coverage `full` or `within`.
 	 * @param string[] $misfits  The sizes the template cannot be printed at.
+	 * @param bool     $asks     Whether a size entered is asked of Pixonaut on a `full` placement.
 	 */
-	private function script_varying_save( string $coverage, array $misfits = array() ): void {
+	private function script_varying_save( string $coverage, array $misfits = array(), bool $asks = false ): void {
 		$blank                              = $this->blank();
 		$blank['areasVaryBy']               = array( self::AREAS_VARY_BY );
 		$blank['placements'][0]['coverage'] = $coverage;
@@ -424,7 +484,10 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 			'misfits' => $misfits,
 		);
 		$this->recorder->json( 200, $constraints );
-		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
+		// Printed across its whole area, the default is each row's own area, sold unasked.
+		if ( 'full' !== $coverage || $asks ) {
+			$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
+		}
 		$this->script_template();
 	}
 
