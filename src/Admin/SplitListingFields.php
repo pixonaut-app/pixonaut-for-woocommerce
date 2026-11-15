@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Admin;
 
 use LogicException;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\SplitCardImageCopies;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
@@ -208,7 +209,13 @@ final class SplitListingFields {
 		$product = wc_get_product( $product_id );
 		if ( $product instanceof WC_Product ) {
 			SplitListing::forget_removed_attributes( $product );
-			SplitCardLooks::forget_removed_values( $product );
+			SplitCardLooks::alone(
+				$product_id,
+				static function () use ( $product ): void {
+					SplitCardLooks::forget_removed_values( $product );
+					SplitCardImageCopies::forget_removed_values( $product );
+				}
+			);
 		}
 	}
 
@@ -259,7 +266,22 @@ final class SplitListingFields {
 		}
 		$looks = is_array( $posted[ self::CARD_FIELD ] ?? null ) ? $posted[ self::CARD_FIELD ] : array();
 		// Only the cards the rows drew are posted: a card the product is not listed by now keeps its own.
-		SplitCardLooks::change( $product_id, wp_unslash( $looks ) );
+		SplitCardLooks::alone(
+			$product_id,
+			static function () use ( $product_id, $looks ): void {
+				$before = SplitCardLooks::stored_on( $product_id );
+				SplitCardLooks::change( $product_id, wp_unslash( $looks ) );
+				$after = SplitCardLooks::stored_on( $product_id );
+				// A card whose image the store manager changed no longer waits for the copy of another.
+				$changed = array();
+				foreach ( array_keys( $before + $after ) as $key ) {
+					if ( ( $before[ $key ]['image'] ?? 0 ) !== ( $after[ $key ]['image'] ?? 0 ) ) {
+						$changed[ $key ] = null;
+					}
+				}
+				SplitCardImageCopies::change( $product_id, $changed );
+			}
+		);
 		$config = ProductConfig::stored_on( $product );
 		if ( SplitListing::choices_from( $choices ) === $config->split_listing ) {
 			return;

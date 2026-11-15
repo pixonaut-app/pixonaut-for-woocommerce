@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-15T15:45:27+00:00\n"
+"POT-Creation-Date: 2026-11-15T19:34:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -700,34 +700,47 @@ msgstr ""
 "Muuttaako kauppa sääntöä noudattavia hintoja itse, kun kustannus muuttuu."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/GetProductSplitListing.php:36
+#: src/Abilities/GetProductSplitListing.php:37
 msgid "Read which values a product lists as their own products"
 msgstr "Lue, mitkä tuotteen arvot näytetään omina tuotteinaan"
 
-#: src/Abilities/GetProductSplitListing.php:37
+#: src/Abilities/GetProductSplitListing.php:38
 msgid ""
 "Reads, for each global attribute of a simple or variable product, its \"Show "
 "each value as its own product\" choice (`auto` follows the attribute's own "
 "setting, `attribute_default`), whether that lists its values as their own "
-"products, and each value's card's own title and image. `listed_by` is the "
-"attribute the product is listed by now; null when it is listed once. `cards` "
-"are the cards it is listed as now: one per value, or, listed by several "
-"attributes, one per combination of their values that a variation sells, each "
-"with its values' `term_ids` and its own title and image. Set them with `set-"
-"product-split-listing`."
+"products, and each value's card's own title and image, with the image it "
+"waits for (`image_copy`). `listed_by` is the attribute the product is listed "
+"by now; null when it is listed once. `cards` are the cards it is listed as "
+"now: one per value, or, listed by several attributes, one per combination of "
+"their values that a variation sells, each with its values' `term_ids` and "
+"its own title and image. Set them with `set-product-split-listing`."
 msgstr ""
 "Lukee yksinkertaisen tuotteen tai muunnelmatuotteen jokaisesta yleisestä "
 "ominaisuudesta sen ”Näytä jokainen arvo omana tuotteenaan” -valinnan (`auto` "
 "noudattaa ominaisuuden omaa asetusta, `attribute_default`), sen, näytetäänkö "
 "arvot valinnan mukaan omina tuotteinaan, sekä kunkin arvon kortin oman "
-"otsikon ja kuvan. `listed_by` on ominaisuus, jonka arvoittain tuote nyt "
-"näytetään; null, kun tuote näytetään kerran. `cards` ovat kortit, joina "
-"tuote nyt näytetään: yksi arvoa kohden tai, kun tuote näytetään usean "
-"ominaisuuden arvoittain, yksi kutakin sellaista niiden arvojen yhdistelmää "
-"kohden, jota jokin muunnelma myy; kullakin on arvojensa `term_ids` sekä oma "
-"otsikko ja kuva. Aseta ne kyvyllä `set-product-split-listing`."
+"otsikon ja kuvan sekä kuvan, jota se odottaa (`image_copy`). `listed_by` on "
+"ominaisuus, jonka arvoittain tuote nyt näytetään; null, kun tuote näytetään "
+"kerran. `cards` ovat kortit, joina tuote nyt näytetään: yksi arvoa kohden "
+"tai, kun tuote näytetään usean ominaisuuden arvoittain, yksi kutakin "
+"sellaista niiden arvojen yhdistelmää kohden, jota jokin muunnelma myy; "
+"kullakin on arvojensa `term_ids` sekä oma otsikko ja kuva. Aseta ne kyvyllä "
+"`set-product-split-listing`."
 
-#: src/Abilities/GetProductSplitListing.php:188
+#: src/Abilities/GetProductSplitListing.php:206
+msgid ""
+"The image the card is given by a URL and does not show yet: `src`, the URL, "
+"and `state`, `waiting` while the store copies it into the media library, as "
+"it does within minutes, or `failed`, with why in `reason`. Null once the "
+"card shows it, and when it was given none."
+msgstr ""
+"Kuva, jonka kortti saa URL-osoitteella ja jota se ei vielä näytä: `src`, URL-"
+"osoite, ja `state`, `waiting`, kun kauppa kopioi sen mediakirjastoon, mikä "
+"tapahtuu minuuteissa, tai `failed`, jolloin syy on kentässä `reason`. Null, "
+"kun kortti näyttää kuvan ja kun sille ei annettu kuvaa."
+
+#: src/Abilities/GetProductSplitListing.php:228
 msgid ""
 "The id of the attribute the product is listed by, one card per value; null "
 "when it is listed once. Only a variable product is listed by an attribute, "
@@ -738,12 +751,12 @@ msgstr ""
 "näyttää ominaisuuden arvoittain, ja vain sellaisen ominaisuuden, jota se "
 "käyttää muunnelmiinsa."
 
-#: src/Abilities/GetProductSplitListing.php:207
+#: src/Abilities/GetProductSplitListing.php:247
 msgid ""
 "Whether the attribute lists its values as their own products by default."
 msgstr "Näytetäänkö ominaisuuden arvot oletuksena omina tuotteinaan."
 
-#: src/Abilities/GetProductSplitListing.php:211
+#: src/Abilities/GetProductSplitListing.php:251
 msgid ""
 "What the choice comes to: whether the product lists each value of this "
 "attribute as its own product."
@@ -751,11 +764,11 @@ msgstr ""
 "Mihin valinta johtaa: näyttääkö tuote tämän ominaisuuden jokaisen arvon "
 "omana tuotteenaan."
 
-#: src/Abilities/GetProductSplitListing.php:222
+#: src/Abilities/GetProductSplitListing.php:262
 msgid "The card's own title; empty when it shows the product's."
 msgstr "Kortin oma otsikko; tyhjä, kun kortti näyttää tuotteen otsikon."
 
-#: src/Abilities/GetProductSplitListing.php:226
+#: src/Abilities/GetProductSplitListing.php:266
 msgid ""
 "The card's own image, by its attachment id and URL; null when it shows the "
 "value's picture or the product's."
@@ -763,7 +776,7 @@ msgstr ""
 "Kortin oma kuva sen liitteen id:n ja URL:n mukaan; null, kun kortti näyttää "
 "arvon tai tuotteen kuvan."
 
-#: src/Abilities/GetProductSplitListing.php:240
+#: src/Abilities/GetProductSplitListing.php:281
 msgid ""
 "The cards the product is listed as now: one per value, or one per "
 "combination of values when it is listed by several attributes. Empty when it "
@@ -773,7 +786,7 @@ msgstr ""
 "yhdistelmää kohden, kun tuote näytetään usean ominaisuuden arvoittain. "
 "Tyhjä, kun tuote näytetään kerran."
 
-#: src/Abilities/GetProductSplitListing.php:246
+#: src/Abilities/GetProductSplitListing.php:287
 msgid ""
 "The term ids of the card's values, one of each attribute the product is "
 "listed by that applies to it, in the product's order of attributes."
@@ -2175,11 +2188,11 @@ msgid "none"
 msgstr "ei yhtään"
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductSplitListing.php:57
+#: src/Abilities/SetProductSplitListing.php:55
 msgid "Set which values a product lists as their own products"
 msgstr "Aseta, mitkä tuotteen arvot näytetään omina tuotteinaan"
 
-#: src/Abilities/SetProductSplitListing.php:58
+#: src/Abilities/SetProductSplitListing.php:56
 msgid ""
 "Sets, for each global attribute of a simple or variable product listed, its "
 "\"Show each value as its own product\" choice (`on`, `off`, or `auto` to "
@@ -2190,8 +2203,11 @@ msgid ""
 "product-split-listing` lists them. Give `attributes`, `cards` or both. Only "
 "what is given changes: an attribute, value, card, title or image left out "
 "keeps what it has. An empty title or a null image gives the card the "
-"product's own again. Nothing is saved unless everything listed fits. The "
-"answer is what the product has now, as `get-product-split-listing` gives it."
+"product's own again. Nothing is saved unless everything listed fits. An "
+"image given by `src` is copied after the call has answered: until then the "
+"card keeps the image it had, and its `image_copy` says it is waiting, or why "
+"the copy failed. The answer is what the product has now, as `get-product-"
+"split-listing` gives it."
 msgstr ""
 "Asettaa yksinkertaisen tuotteen tai muunnelmatuotteen jokaiselle luetellulle "
 "yleiselle ominaisuudelle ”Näytä jokainen arvo omana tuotteenaan” -valinnan "
@@ -2204,24 +2220,27 @@ msgstr ""
 "Anna `attributes`, `cards` tai molemmat. Vain annettu muuttuu: pois jätetty "
 "ominaisuus, arvo, kortti, otsikko tai kuva säilyy ennallaan. Tyhjä otsikko "
 "tai null-kuva palauttaa kortille tuotteen otsikon tai kuvan. Mitään ei "
-"tallenneta, ellei kaikki lueteltu ole kelvollista. Vastaus on se, mitä "
+"tallenneta, ellei kaikki lueteltu ole kelvollista. Kuva, joka annetaan "
+"`src`:llä, kopioidaan sen jälkeen, kun kutsuun on vastattu: siihen asti "
+"kortti säilyttää kuvan, joka sillä oli, ja sen `image_copy` kertoo, että "
+"kuvaa odotetaan, tai miksi kopiointi epäonnistui. Vastaus on se, mitä "
 "tuotteella nyt on, samassa muodossa kuin `get-product-split-listing` sen "
 "antaa."
 
-#: src/Abilities/SetProductSplitListing.php:75
+#: src/Abilities/SetProductSplitListing.php:73
 msgid "One of the product's global attributes, by id."
 msgstr "Yksi tuotteen yleisistä ominaisuuksista id:n mukaan."
 
-#: src/Abilities/SetProductSplitListing.php:90
+#: src/Abilities/SetProductSplitListing.php:88
 msgid "One of the values the product has of the attribute, by its term id."
 msgstr "Yksi tuotteen arvoista tälle ominaisuudelle termin id:n mukaan."
 
-#: src/Abilities/SetProductSplitListing.php:94
-#: src/Abilities/SetProductSplitListing.php:125
+#: src/Abilities/SetProductSplitListing.php:92
+#: src/Abilities/SetProductSplitListing.php:123
 msgid "The card's own title; empty for the product's."
 msgstr "Kortin oma otsikko; tyhjä, jos käytetään tuotteen otsikkoa."
 
-#: src/Abilities/SetProductSplitListing.php:117
+#: src/Abilities/SetProductSplitListing.php:115
 msgid ""
 "The card's values, by term id: values the product has, at most one of an "
 "attribute, in any order."
@@ -2229,17 +2248,17 @@ msgstr ""
 "Kortin arvot termin id:n mukaan: tuotteella olevia arvoja, enintään yksi "
 "ominaisuutta kohden, missä tahansa järjestyksessä."
 
-#: src/Abilities/SetProductSplitListing.php:157
+#: src/Abilities/SetProductSplitListing.php:155
 msgid ""
 "The card's own image: `id`, an image of the media library, or `src`, a "
-"public URL the store copies into it; null for the value's picture or the "
-"product's."
+"public URL the store copies into it after the call has answered; null for "
+"the value's picture or the product's."
 msgstr ""
 "Kortin oma kuva: `id`, mediakirjaston kuva, tai `src`, julkinen URL, josta "
-"kauppa kopioi kuvan mediakirjastoon; null, jos käytetään arvon tai tuotteen "
-"kuvaa."
+"kauppa kopioi kuvan mediakirjastoon sen jälkeen, kun kutsuun on vastattu; "
+"null, jos käytetään arvon tai tuotteen kuvaa."
 
-#: src/Abilities/SetProductSplitListing.php:234
+#: src/Abilities/SetProductSplitListing.php:232
 msgid ""
 "The product's Pixonaut configuration comes from a newer version of the "
 "plugin, so it is not changed. Update the plugin."
@@ -2247,12 +2266,12 @@ msgstr ""
 "Tuotteen Pixonaut-määritys on peräisin lisäosan uudemmasta versiosta, joten "
 "sitä ei muuteta. Päivitä lisäosa."
 
-#: src/Abilities/SetProductSplitListing.php:262
+#: src/Abilities/SetProductSplitListing.php:248
 msgid "Give `attributes`, `cards` or both."
 msgstr "Anna `attributes`, `cards` tai molemmat."
 
 #. translators: %d: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:273
+#: src/Abilities/SetProductSplitListing.php:259
 #, php-format
 msgid ""
 "The product has no global attribute %d. Only a global attribute's values can "
@@ -2262,37 +2281,37 @@ msgstr ""
 "voidaan näyttää omina tuotteinaan."
 
 #. translators: %d: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:277
+#: src/Abilities/SetProductSplitListing.php:263
 #, php-format
 msgid "Attribute %d is listed twice."
 msgstr "Ominaisuus %d on luettelossa kahdesti."
 
 #. translators: %s: a card's values' term ids, e.g. "12,15". Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:296
+#: src/Abilities/SetProductSplitListing.php:282
 #, php-format
 msgid "Card %s is listed twice."
 msgstr "Kortti %s on luettelossa kahdesti."
 
 #. translators: 1: a value's term id; 2: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:325
+#: src/Abilities/SetProductSplitListing.php:311
 #, php-format
 msgid "The product has no value %1$d of attribute %2$d."
 msgstr "Tuotteella ei ole ominaisuuden %2$d arvoa %1$d."
 
 #. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:329
+#: src/Abilities/SetProductSplitListing.php:315
 #, php-format
 msgid "Value %d is listed twice."
 msgstr "Arvo %d on luettelossa kahdesti."
 
 #. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:364
+#: src/Abilities/SetProductSplitListing.php:350
 #, php-format
 msgid "The product has no value %d of a global attribute."
 msgstr "Tuotteella ei ole minkään yleisen ominaisuuden arvoa %d."
 
 #. translators: 1, 2: two values' term ids; 3: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:368
+#: src/Abilities/SetProductSplitListing.php:354
 #, php-format
 msgid ""
 "A card takes one value of an attribute: %1$d and %2$d are both of attribute "
@@ -2301,38 +2320,27 @@ msgstr ""
 "Kortilla on yksi arvo ominaisuutta kohden: %1$d ja %2$d ovat molemmat "
 "ominaisuuden %3$d arvoja."
 
-#: src/Abilities/SetProductSplitListing.php:373
+#: src/Abilities/SetProductSplitListing.php:359
 msgid "Name a card by at least one of its values."
 msgstr "Nimeä kortti vähintään yhdellä sen arvoista."
 
 #. translators: %s: a card's values' term ids, e.g. "12" or "12,15". Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:416
+#: src/Abilities/SetProductSplitListing.php:402
 #, php-format
 msgid "Give the image of card %s as either `id` or `src`."
 msgstr "Anna kortin %s kuva joko kentässä `id` tai kentässä `src`."
 
 #. translators: %d: an attachment's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:421
+#: src/Abilities/SetProductSplitListing.php:407
 #, php-format
 msgid "The media library has no image %d."
 msgstr "Mediakirjastossa ei ole kuvaa, jonka id on %d."
 
 #. translators: %s: a card's values' term ids, e.g. "12" or "12,15". Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:427
+#: src/Abilities/SetProductSplitListing.php:413
 #, php-format
 msgid "The image of card %s is not a public URL."
 msgstr "Kortin %s kuva ei ole julkinen URL."
-
-#. translators: %s: the largest file the store takes, e.g. "64 MB".
-#: src/Abilities/SetProductSplitListing.php:453
-#: src/Abilities/Store/ResourceAbility.php:502
-#, php-format
-msgid "The file is larger than the store takes, at most %s."
-msgstr "Tiedosto on suurempi kuin kauppa ottaa vastaan, enintään %s."
-
-#: src/Abilities/SetProductSplitListing.php:484
-msgid "The card's image could not be copied from its URL."
-msgstr "Kortin kuvaa ei voitu kopioida sen URL:stä."
 
 #: src/Abilities/SetupFields.php:165
 msgid ""
@@ -2846,6 +2854,13 @@ msgstr "Kauppa kieltäytyi."
 #: src/Abilities/Store/ResourceAbility.php:491
 msgid "Give the file's public URL as fields.source_url."
 msgstr "Anna tiedoston julkinen URL kentässä fields.source_url."
+
+#. translators: %s: the largest file the store takes, e.g. "64 MB".
+#: src/Abilities/Store/ResourceAbility.php:502
+#: src/Catalogue/SplitCardImageCopies.php:263
+#, php-format
+msgid "The file is larger than the store takes, at most %s."
+msgstr "Tiedosto on suurempi kuin kauppa ottaa vastaan, enintään %s."
 
 #. translators: %d: the HTTP status the file's URL answered with.
 #: src/Abilities/Store/ResourceAbility.php:538
@@ -4097,22 +4112,22 @@ msgid "%1$s, photo %2$d"
 msgstr "%1$s, kuva %2$d"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is on.
-#: src/Admin/SplitListingFields.php:285
+#: src/Admin/SplitListingFields.php:307
 msgid "Auto: on, as the attribute is"
 msgstr "Auto: käytössä, kuten ominaisuudessa"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is off.
-#: src/Admin/SplitListingFields.php:287
+#: src/Admin/SplitListingFields.php:309
 msgid "Auto: off, as the attribute is"
 msgstr "Auto: pois käytöstä, kuten ominaisuudessa"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it on, whatever the attribute's setting.
-#: src/Admin/SplitListingFields.php:289
+#: src/Admin/SplitListingFields.php:311
 msgid "On for this product"
 msgstr "Käytössä tälle tuotteelle"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it off, whatever the attribute's setting.
-#: src/Admin/SplitListingFields.php:291
+#: src/Admin/SplitListingFields.php:313
 msgid "Off for this product"
 msgstr "Pois käytöstä tälle tuotteelle"
 
@@ -5122,6 +5137,10 @@ msgstr ""
 msgid "%1$s (%2$s)"
 msgstr "%1$s (%2$s)"
 
+#: src/Catalogue/SplitCardImageCopies.php:294
+msgid "The card's image could not be copied from its URL."
+msgstr "Kortin kuvaa ei voitu kopioida sen URL:stä."
+
 #. translators: %s: link to the Pixonaut settings.
 #: src/Connection/Connection.php:444
 #, php-format
@@ -5183,18 +5202,18 @@ msgid "Deprecated in Pixonaut for WooCommerce %s."
 msgstr "Vanhentunut Pixonaut for WooCommerce -versiosta %s alkaen."
 
 #. translators: Option in the designer language setting, shown to the merchant: use the default language set in the Pixonaut workspace.
-#: src/DesignerLanguage.php:110
+#: src/DesignerLanguage.php:109
 msgid "Pixonaut workspace default"
 msgstr "Pixonaut-työtilan oletuskieli"
 
 #. translators: Option in the designer language setting, shown to the merchant. %s: the workspace's default language, named in that language, e.g. Deutsch.
-#: src/DesignerLanguage.php:112
+#: src/DesignerLanguage.php:111
 #, php-format
 msgid "Pixonaut workspace default (%s)"
 msgstr "Pixonaut-työtilan oletuskieli (%s)"
 
 #. translators: Option in the designer language setting, shown to the merchant: use the site's language.
-#: src/DesignerLanguage.php:114
+#: src/DesignerLanguage.php:113
 msgid "Follow the site"
 msgstr "Sivuston kielen mukaan"
 

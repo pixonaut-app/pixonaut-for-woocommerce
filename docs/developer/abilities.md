@@ -388,12 +388,25 @@ combination's card is set. A card's values are values the product has, at
 most one of an attribute; one the product is not listed as now is kept
 until it is. An image
 is `id`, an image of the media library, or `src`, a public URL the store
-copies into it anew on each call (at most the size the store takes for an
+copies into it (at most the size the store takes for an
 upload); null takes the card's own image off, and an empty title its
 own title. Only what is given changes. An attribute that is not a global
 attribute of the product, a value the product does not have, a card named
-twice, or an image that is none refuses the whole call, and an image a refused call copied is
-deleted again. The answer is the read's.
+twice, or an image that is none refuses the whole call. The answer is the read's.
+
+An image given by `src` is copied after the call has answered, in a
+background job per card, so a call may name every card of a product at once.
+Until its job has run, within minutes, the card keeps the image it had, and
+its `image_copy`, on the value's row and the card's in both answers, holds
+the URL as `src` and `state` `waiting`. A copy that cannot be made (the URL
+answers no image, or one too large) leaves nothing in the media library:
+`state` is then `failed` and `reason` says why, until the card's image is
+set again. `image_copy` is null once the card shows the image, and for a
+card given none. A URL the card waits for, or shows the copy of, is not
+copied again when it is given again; another URL, an `id` or null replaces
+the copy it waits for, as does the store manager changing the card's image
+on the product's Attributes tab. A card of a value the product has lost
+gets no image.
 
 `set-product-showcase` sets the showcase sets of the product's template its
 images are drawn with (`images`: `id` and `kind`, `mockup` on the blank's

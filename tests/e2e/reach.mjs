@@ -672,6 +672,7 @@ export const REACH = {
 	'smoke.spec.ts': ['pixonaut-for-woocommerce.php', 'src/Requirements.php'],
 	'split-listings.spec.ts': [
 		'src/Admin/SplitListingFields.php',
+		'src/Catalogue/SplitCardImageCopies.php',
 		'src/Catalogue/SplitCardLooks.php',
 		'src/Catalogue/SplitCards.php',
 		'src/Catalogue/SplitListing.php',

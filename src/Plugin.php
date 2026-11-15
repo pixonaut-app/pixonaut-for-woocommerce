@@ -109,6 +109,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
 use Pixonaut\WooCommerce\Catalogue\Purchasability;
+use Pixonaut\WooCommerce\Catalogue\SplitCardImageCopies;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Catalogue\StandingRows;
@@ -465,6 +466,7 @@ final class Plugin {
 		( new NotLiveProducts() )->register();
 		( new UnavailableProduct( $this->labels() ) )->register();
 		SplitCards::register();
+		SplitCardImageCopies::register();
 		$this->product_recheck()->register();
 		$this->template_rename()->register();
 		( new VariantWatch( $this->product_recheck() ) )->register();

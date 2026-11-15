@@ -8,12 +8,14 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\ShopTools;
 
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\SplitCardImageCopies;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
 use WC_Product_Variable;
@@ -69,13 +71,6 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 	private const NO_SUCH_TERM_OFFSET = 1000;
 
 	private const CARD_URL = 'https://pictures.example/cards/med-bild.png';
-
-	/**
-	 * A card picture's URL that answers nothing.
-	 */
-	private const GONE_URL = 'https://pictures.example/cards/gone.png';
-
-	private const GONE = 404;
 
 	/**
 	 * A one-pixel PNG, as a card's picture's URL answers it.
@@ -135,10 +130,11 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 		$this->assertFalse( $picture['own_products'] );
 		$this->assertSame(
 			array(
-				'term_id' => $this->term( 'med-bild' ),
-				'name'    => 'Med bild',
-				'title'   => '',
-				'image'   => null,
+				'term_id'    => $this->term( 'med-bild' ),
+				'name'       => 'Med bild',
+				'title'      => '',
+				'image'      => null,
+				'image_copy' => null,
 			),
 			$picture['values'][0]
 		);
@@ -320,9 +316,10 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 		$this->assertSame( array( $this->attributes[ self::SIZE ] => SplitListing::OFF ), ProductConfig::stored_on( $this->reload( $poster ) )->split_listing, 'auto follows the attribute again' );
 	}
 
-	public function test_it_copies_a_cards_image_from_its_url_into_the_media_library(): void {
+	public function test_a_cards_image_given_by_its_url_waits_for_its_copy(): void {
 		$poster = $this->poster();
 		$this->serve_card_picture();
+		$before = $this->attachments();
 
 		$set = $this->succeed(
 			self::SET,
@@ -342,45 +339,26 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 			)
 		);
 
-		$image = $set['attributes'][0]['values'][0]['image'];
-		$this->assertIsArray( $image );
-		$this->assertTrue( wp_attachment_is_image( $image['id'] ) );
-		$this->assertSame( $poster->get_id(), wp_get_post_parent_id( $image['id'] ) );
-		$this->assertSame( $image['id'], SplitCardLooks::of( $poster->get_id(), $this->term( 'med-bild' ) )['image'] );
-	}
-
-	public function test_an_image_copied_by_a_refused_call_is_deleted_again(): void {
-		$poster = $this->poster();
-		$this->serve_card_picture();
-		$before = $this->attachments();
-
-		$answer = $this->call(
-			self::SET,
+		$card = $set['attributes'][0]['values'][0];
+		$this->assertNull( $card['image'], 'the card keeps what it had until the copy is made' );
+		$this->assertSame(
 			array(
-				'product_id' => $poster->get_id(),
-				'attributes' => array(
-					array(
-						'attribute_id' => $this->attributes[ self::PICTURE ],
-						'choice'       => SplitListing::ON,
-						'values'       => array(
-							array(
-								'term_id' => $this->term( 'med-bild' ),
-								'image'   => array( 'src' => self::CARD_URL ),
-							),
-							array(
-								'term_id' => $this->term( 'utan-bild' ),
-								'image'   => array( 'src' => self::GONE_URL ),
-							),
-						),
-					),
-				),
-			)
+				'src'    => self::CARD_URL,
+				'state'  => SplitCardImageCopies::WAITING,
+				'reason' => '',
+			),
+			$card['image_copy']
 		);
+		$this->assertSame( $before, $this->attachments(), 'the call itself downloads nothing' );
 
-		$this->assertSame( self::UNPROCESSABLE, $answer->get_status(), (string) wp_json_encode( $answer->get_data() ) );
-		$this->assertSame( $before, $this->attachments(), 'the first image is not left in the media library' );
-		$this->assertSame( array(), ProductConfig::stored_on( $this->reload( $poster ) )->split_listing );
-		$this->assertSame( array(), SplitCardLooks::stored_on( $poster->get_id() ) );
+		$this->assertSame( 1, ActionSchedulerRunner::run_pending( SplitCardImageCopies::HOOK ) );
+
+		$card = $this->succeed( self::GET, array( 'product_id' => $poster->get_id() ) )['attributes'][0]['values'][0];
+		$this->assertNull( $card['image_copy'] );
+		$this->assertIsArray( $card['image'] );
+		$this->assertTrue( wp_attachment_is_image( $card['image']['id'] ) );
+		$this->assertSame( $poster->get_id(), wp_get_post_parent_id( $card['image']['id'] ) );
+		$this->assertSame( $card['image']['id'], SplitCardLooks::of( $poster->get_id(), $this->term( 'med-bild' ) )['image'] );
 	}
 
 	public function test_a_configuration_from_a_newer_plugin_version_is_refused_before_an_image_is_copied(): void {
@@ -411,6 +389,7 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 
 		$this->assertSame( self::UNPROCESSABLE, $answer->get_status(), (string) wp_json_encode( $answer->get_data() ) );
 		$this->assertSame( $before, $this->attachments() );
+		$this->assertSame( array(), ActionSchedulerRunner::pending( SplitCardImageCopies::HOOK ), 'no copy is queued' );
 		$this->assertSame( $newer, get_post_meta( $poster->get_id(), ProductConfig::META_KEY, true ) );
 		$this->assertSame( array(), SplitCardLooks::stored_on( $poster->get_id() ) );
 	}
@@ -511,25 +490,28 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 		$this->assertSame(
 			array(
 				array(
-					'term_ids' => array( $this->term( 'med-egen-bild' ), $this->term( 'ek-ram' ) ),
-					'name'     => 'Med egen bild, Ek-ram',
-					'title'    => 'Poster med din bild i ekram',
-					'image'    => array(
+					'term_ids'   => array( $this->term( 'med-egen-bild' ), $this->term( 'ek-ram' ) ),
+					'name'       => 'Med egen bild, Ek-ram',
+					'title'      => 'Poster med din bild i ekram',
+					'image'      => array(
 						'id'  => $image,
 						'src' => wp_get_attachment_url( $image ),
 					),
+					'image_copy' => null,
 				),
 				array(
-					'term_ids' => array( $this->term( 'med-egen-bild' ), $this->term( 'ingen' ) ),
-					'name'     => 'Med egen bild, Ingen',
-					'title'    => '',
-					'image'    => null,
+					'term_ids'   => array( $this->term( 'med-egen-bild' ), $this->term( 'ingen' ) ),
+					'name'       => 'Med egen bild, Ingen',
+					'title'      => '',
+					'image'      => null,
+					'image_copy' => null,
 				),
 				array(
-					'term_ids' => array( $this->term( 'utan-egen-bild' ), $this->term( 'ingen' ) ),
-					'name'     => 'Utan egen bild, Ingen',
-					'title'    => '',
-					'image'    => null,
+					'term_ids'   => array( $this->term( 'utan-egen-bild' ), $this->term( 'ingen' ) ),
+					'name'       => 'Utan egen bild, Ingen',
+					'title'      => '',
+					'image'      => null,
+					'image_copy' => null,
 				),
 			),
 			$read['cards'],
@@ -749,18 +731,6 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 		add_filter(
 			'pre_http_request',
 			static function ( $response, array $args, string $url ) {
-				if ( self::GONE_URL === $url ) {
-					return array(
-						'headers'  => array(),
-						'body'     => '',
-						'response' => array(
-							'code'    => self::GONE,
-							'message' => 'Not Found',
-						),
-						'cookies'  => array(),
-						'filename' => $args['filename'] ?? null,
-					);
-				}
 				if ( self::CARD_URL !== $url ) {
 					return $response;
 				}

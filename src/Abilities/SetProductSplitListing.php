@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Abilities;
 
 use LogicException;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\SplitCardImageCopies;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
@@ -26,8 +27,10 @@ use WP_Http;
  * a combination of values are, as the product's Attributes tab does. Only
  * what is named changes. Every
  * attribute, value and image is checked before anything is saved: one that
- * does not fit refuses the whole call. Whoever may edit the product may set
- * them.
+ * does not fit refuses the whole call. An image given by its URL is copied
+ * into the media library after the call has answered, a job per card
+ * (`SplitCardImageCopies`), so a call naming many answers at once. Whoever
+ * may edit the product may set them.
  */
 final class SetProductSplitListing implements Ability {
 
@@ -42,11 +45,6 @@ final class SetProductSplitListing implements Ability {
 	 */
 	private const MAX_CARDS = 500;
 
-	/**
-	 * How long the store waits for a card's image to download, in seconds.
-	 */
-	private const DOWNLOAD_TIMEOUT_SECONDS = 30;
-
 	public function name(): string {
 		return 'set-product-split-listing';
 	}
@@ -55,7 +53,7 @@ final class SetProductSplitListing implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Set which values a product lists as their own products', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Sets, for each global attribute of a simple or variable product listed, its "Show each value as its own product" choice (`on`, `off`, or `auto` to follow the attribute\'s own setting) and each listed value\'s card\'s own title and image, as the product\'s Attributes tab does. `cards` sets the title and image of the cards named by their values\' `term_ids`: one of a product listed by several attributes is a combination, one value of each, as `get-product-split-listing` lists them. Give `attributes`, `cards` or both. Only what is given changes: an attribute, value, card, title or image left out keeps what it has. An empty title or a null image gives the card the product\'s own again. Nothing is saved unless everything listed fits. The answer is what the product has now, as `get-product-split-listing` gives it.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Sets, for each global attribute of a simple or variable product listed, its "Show each value as its own product" choice (`on`, `off`, or `auto` to follow the attribute\'s own setting) and each listed value\'s card\'s own title and image, as the product\'s Attributes tab does. `cards` sets the title and image of the cards named by their values\' `term_ids`: one of a product listed by several attributes is a combination, one value of each, as `get-product-split-listing` lists them. Give `attributes`, `cards` or both. Only what is given changes: an attribute, value, card, title or image left out keeps what it has. An empty title or a null image gives the card the product\'s own again. Nothing is saved unless everything listed fits. An image given by `src` is copied after the call has answered: until then the card keeps the image it had, and its `image_copy` says it is waiting, or why the copy failed. The answer is what the product has now, as `get-product-split-listing` gives it.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -140,8 +138,8 @@ final class SetProductSplitListing implements Ability {
 			'annotations'         => array(
 				'readonly'    => false,
 				'destructive' => true,
-				// An image given by `src` is copied into the media library anew on each call.
-				'idempotent'  => false,
+				// A card waiting for the URL given, or showing the image copied from it, is left as it is.
+				'idempotent'  => true,
 			),
 		);
 	}
@@ -154,7 +152,7 @@ final class SetProductSplitListing implements Ability {
 	private static function image_schema(): array {
 		return array(
 			'type'                 => array( 'object', 'null' ),
-			'description'          => __( 'The card\'s own image: `id`, an image of the media library, or `src`, a public URL the store copies into it; null for the value\'s picture or the product\'s.', 'pixonaut-for-woocommerce' ),
+			'description'          => __( 'The card\'s own image: `id`, an image of the media library, or `src`, a public URL the store copies into it after the call has answered; null for the value\'s picture or the product\'s.', 'pixonaut-for-woocommerce' ),
 			'properties'           => array(
 				'id'  => array(
 					'type'    => 'integer',
@@ -184,21 +182,6 @@ final class SetProductSplitListing implements Ability {
 		if ( ! ProductConfig::writable_on( $product ) ) {
 			return self::newer_configuration();
 		}
-		// The images are copied before anything stored is read, so a change made meanwhile is kept.
-		$imported = array();
-		$images   = array();
-		foreach ( $changes['looks'] as $key => $look ) {
-			$image = $look['image'] ?? null;
-			if ( is_string( $image ) ) {
-				$image = self::downloaded( $image, $product->get_id() );
-				if ( $image instanceof WP_Error ) {
-					self::forget( $imported );
-					return $image;
-				}
-				$imported[] = $image;
-			}
-			$images[ $key ] = $image;
-		}
 		$fresh   = wc_get_product( $product->get_id() );
 		$product = $fresh instanceof WC_Product ? $fresh : $product;
 		$config  = ProductConfig::stored_on( $product );
@@ -207,22 +190,37 @@ final class SetProductSplitListing implements Ability {
 			try {
 				$config->with_split_listing( $choices )->save_to( $product );
 			} catch ( LogicException $e ) {
-				self::forget( $imported );
 				return self::newer_configuration();
 			}
 		}
-		$looks = SplitCardLooks::stored_on( $product->get_id() );
-		foreach ( $changes['looks'] as $key => $look ) {
-			$before        = $looks[ $key ] ?? array(
-				'title' => '',
-				'image' => 0,
-			);
-			$looks[ $key ] = array(
-				'title' => $look['title'] ?? $before['title'],
-				'image' => $images[ $key ] ?? $before['image'],
-			);
-		}
-		SplitCardLooks::save( $product->get_id(), $looks );
+		$product_id = $product->get_id();
+		SplitCardLooks::alone(
+			$product_id,
+			static function () use ( $product_id, $changes ): void {
+				$looks  = SplitCardLooks::stored_on( $product_id );
+				$copies = array();
+				foreach ( $changes['looks'] as $key => $look ) {
+					$before = $looks[ $key ] ?? array(
+						'title' => '',
+						'image' => 0,
+					);
+					$image  = $look['image'] ?? null;
+					if ( is_string( $image ) ) {
+						// The card keeps its image until the copy is made; one copied from this URL already is the copy.
+						$copies[ $key ] = SplitCardImageCopies::copied_from( $before['image'], $image ) ? null : $image;
+						$image          = null;
+					} elseif ( null !== $image ) {
+						$copies[ $key ] = null;
+					}
+					$looks[ $key ] = array(
+						'title' => $look['title'] ?? $before['title'],
+						'image' => $image ?? $before['image'],
+					);
+				}
+				SplitCardLooks::save( $product_id, $looks );
+				SplitCardImageCopies::change( $product_id, $copies );
+			}
+		);
 		$saved = wc_get_product( $product->get_id() );
 		return GetProductSplitListing::answer( $saved instanceof WC_Product ? $saved : $product );
 	}
@@ -232,18 +230,6 @@ final class SetProductSplitListing implements Ability {
 	 */
 	private static function newer_configuration(): WP_Error {
 		return new WP_Error( 'pixonaut_wc_ability_newer_configuration', __( 'The product\'s Pixonaut configuration comes from a newer version of the plugin, so it is not changed. Update the plugin.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::CONFLICT ) );
-	}
-
-	/**
-	 * Deletes the images a refused call copied into the media library.
-	 *
-	 * @param int[] $attachment_ids The attachments the call made.
-	 * @phpstan-param list<int> $attachment_ids
-	 */
-	private static function forget( array $attachment_ids ): void {
-		foreach ( $attachment_ids as $attachment_id ) {
-			wp_delete_attachment( $attachment_id, true );
-		}
 	}
 
 	/**
@@ -427,61 +413,5 @@ final class SetProductSplitListing implements Ability {
 			return new WP_Error( 'pixonaut_wc_ability_card_image', sprintf( __( 'The image of card %s is not a public URL.', 'pixonaut-for-woocommerce' ), $key ) );
 		}
 		return $src;
-	}
-
-	/**
-	 * Copies an image into the media library, attached to the product.
-	 * WordPress's `download_url()` downloads it, which refuses a URL of the
-	 * store's own network and names the file for its type when its URL
-	 * names none.
-	 *
-	 * @param string $url        The image's public URL.
-	 * @param int    $product_id The product whose card shows it.
-	 * @return int|WP_Error The attachment's id.
-	 */
-	private static function downloaded( string $url, int $product_id ): int|WP_Error {
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		require_once ABSPATH . 'wp-admin/includes/media.php';
-		require_once ABSPATH . 'wp-admin/includes/image.php';
-		$file = download_url( $url, self::DOWNLOAD_TIMEOUT_SECONDS );
-		if ( is_wp_error( $file ) ) {
-			return self::not_copied( $file->get_error_message() );
-		}
-		if ( (int) filesize( $file ) > wp_max_upload_size() ) {
-			wp_delete_file( $file );
-			/* translators: %s: the largest file the store takes, e.g. "64 MB". */
-			return self::not_copied( sprintf( __( 'The file is larger than the store takes, at most %s.', 'pixonaut-for-woocommerce' ), size_format( wp_max_upload_size() ) ) );
-		}
-		$name = sanitize_file_name( wp_basename( (string) wp_parse_url( $url, PHP_URL_PATH ) ) );
-		if ( '' === pathinfo( $name, PATHINFO_EXTENSION ) ) {
-			// `download_url()` gave the file the extension of the type it was answered with.
-			$name = ( '' === $name ? 'card' : $name ) . '.' . pathinfo( $file, PATHINFO_EXTENSION );
-		}
-		$attachment_id = media_handle_sideload(
-			array(
-				'name'     => $name,
-				'tmp_name' => $file,
-			),
-			$product_id
-		);
-		if ( is_wp_error( $attachment_id ) || $attachment_id < 1 ) {
-			wp_delete_file( $file );
-			return self::not_copied( is_wp_error( $attachment_id ) ? $attachment_id->get_error_message() : '' );
-		}
-		if ( ! wp_attachment_is_image( $attachment_id ) ) {
-			wp_delete_attachment( $attachment_id, true );
-			return self::not_copied( '' );
-		}
-		return $attachment_id;
-	}
-
-	/**
-	 * The refusal when a card's image could not be copied from its URL.
-	 *
-	 * @param string $reason WordPress's reason; empty when it gave none.
-	 */
-	private static function not_copied( string $reason ): WP_Error {
-		$refusal = __( 'The card\'s image could not be copied from its URL.', 'pixonaut-for-woocommerce' );
-		return new WP_Error( 'pixonaut_wc_ability_card_image_download', '' === $reason ? $refusal : $refusal . ' ' . $reason, array( 'status' => WP_Http::BAD_REQUEST ) );
 	}
 }

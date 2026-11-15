@@ -163,6 +163,19 @@ final class Schema {
 	const PRODUCT_SPLIT_CARD_LOOKS_META = '_pixonaut_split_card_looks';
 
 	/**
+	 * Product meta holding the images a split product's cards wait for,
+	 * copied from their URLs in the background, and those that could not be
+	 * copied: by card key, the URL, the copy's token, its state and why it
+	 * failed.
+	 */
+	const PRODUCT_SPLIT_CARD_IMAGE_COPIES_META = '_pixonaut_split_card_image_copies';
+
+	/**
+	 * Attachment meta holding the URL a card's image was copied from.
+	 */
+	const ATTACHMENT_CARD_IMAGE_SOURCE_META = '_pixonaut_card_image_source';
+
+	/**
 	 * Product and variation meta recording its Pixonaut picture: the
 	 * attachment, and what it was drawn from.
 	 */

@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\SplitCardImageCopies;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
@@ -34,7 +35,7 @@ final class GetProductSplitListing implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Read which values a product lists as their own products', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Reads, for each global attribute of a simple or variable product, its "Show each value as its own product" choice (`auto` follows the attribute\'s own setting, `attribute_default`), whether that lists its values as their own products, and each value\'s card\'s own title and image. `listed_by` is the attribute the product is listed by now; null when it is listed once. `cards` are the cards it is listed as now: one per value, or, listed by several attributes, one per combination of their values that a variation sells, each with its values\' `term_ids` and its own title and image. Set them with `set-product-split-listing`.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Reads, for each global attribute of a simple or variable product, its "Show each value as its own product" choice (`auto` follows the attribute\'s own setting, `attribute_default`), whether that lists its values as their own products, and each value\'s card\'s own title and image, with the image it waits for (`image_copy`). `listed_by` is the attribute the product is listed by now; null when it is listed once. `cards` are the cards it is listed as now: one per value, or, listed by several attributes, one per combination of their values that a variation sells, each with its values\' `term_ids` and its own title and image. Set them with `set-product-split-listing`.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -76,6 +77,7 @@ final class GetProductSplitListing implements Ability {
 	public static function answer( WC_Product $product ): array {
 		$config     = ProductConfig::stored_on( $product );
 		$looks      = SplitCardLooks::stored_on( $product->get_id() );
+		$copies     = SplitCardImageCopies::stored_on( $product->get_id() );
 		$listed_by  = array_map( static fn ( WC_Product_Attribute $attribute ): int => $attribute->get_id(), SplitListing::attributes_of( $product ) );
 		$attributes = array();
 		foreach ( self::global_attributes( $product ) as $attribute ) {
@@ -86,10 +88,11 @@ final class GetProductSplitListing implements Ability {
 					'image' => 0,
 				);
 				$values[] = array(
-					'term_id' => $term->term_id,
-					'name'    => $term->name,
-					'title'   => $look['title'],
-					'image'   => self::image( $look['image'] ),
+					'term_id'    => $term->term_id,
+					'name'       => $term->name,
+					'title'      => $look['title'],
+					'image'      => self::image( $look['image'] ),
+					'image_copy' => self::image_copy( $copies[ $term->term_id ] ?? null ),
 				);
 			}
 			$attributes[] = array(
@@ -108,7 +111,7 @@ final class GetProductSplitListing implements Ability {
 			'listed_by'     => $listed_by[0] ?? null,
 			'listed_by_all' => $listed_by,
 			'attributes'    => $attributes,
-			'cards'         => self::cards( $product, $looks ),
+			'cards'         => self::cards( $product, $looks, $copies ),
 		);
 	}
 
@@ -118,11 +121,12 @@ final class GetProductSplitListing implements Ability {
 	 * variations no listed attribute applies to shows the product as itself
 	 * and is left out.
 	 *
-	 * @param WC_Product                                          $product A product.
-	 * @param array<int|string, array{title: string, image: int}> $looks   Its cards' own titles and images, by card key.
-	 * @return list<array{term_ids: list<int>, name: string, title: string, image: array{id: int, src: string}|null}>
+	 * @param WC_Product                                                           $product A product.
+	 * @param array<int|string, array{title: string, image: int}>                  $looks   Its cards' own titles and images, by card key.
+	 * @param array<int|string, array{src: string, state: string, reason: string}> $copies The images its cards wait for, by card key.
+	 * @return list<array{term_ids: list<int>, name: string, title: string, image: array{id: int, src: string}|null, image_copy: array{src: string, state: string, reason: string}|null}>
 	 */
-	private static function cards( WC_Product $product, array $looks ): array {
+	private static function cards( WC_Product $product, array $looks, array $copies ): array {
 		$cards = array();
 		foreach ( SplitCards::keys( $product ) as $key ) {
 			$term_ids = SplitCards::card_terms( $product, $key );
@@ -134,10 +138,11 @@ final class GetProductSplitListing implements Ability {
 				'image' => 0,
 			);
 			$cards[] = array(
-				'term_ids' => $term_ids,
-				'name'     => SplitCards::name( $term_ids ),
-				'title'    => $look['title'],
-				'image'    => self::image( $look['image'] ),
+				'term_ids'   => $term_ids,
+				'name'       => SplitCards::name( $term_ids ),
+				'title'      => $look['title'],
+				'image'      => self::image( $look['image'] ),
+				'image_copy' => self::image_copy( $copies[ $key ] ?? null ),
 			);
 		}
 		return $cards;
@@ -173,6 +178,41 @@ final class GetProductSplitListing implements Ability {
 			'id'  => $attachment_id,
 			'src' => $src,
 		) : null;
+	}
+
+	/**
+	 * The image a card waits for, or could not get; null when it waits for
+	 * none.
+	 *
+	 * @param array{src: string, state: string, reason: string}|null $copy The card's copy, as `SplitCardImageCopies` keeps it.
+	 * @return array{src: string, state: string, reason: string}|null
+	 */
+	private static function image_copy( ?array $copy ): ?array {
+		return null === $copy ? null : array(
+			'src'    => $copy['src'],
+			'state'  => $copy['state'],
+			'reason' => $copy['reason'],
+		);
+	}
+
+	/**
+	 * What a card's `image_copy` answers, on a value's row and on a card's.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function image_copy_schema(): array {
+		return array(
+			'type'        => array( 'object', 'null' ),
+			'description' => __( 'The image the card is given by a URL and does not show yet: `src`, the URL, and `state`, `waiting` while the store copies it into the media library, as it does within minutes, or `failed`, with why in `reason`. Null once the card shows it, and when it was given none.', 'pixonaut-for-woocommerce' ),
+			'properties'  => array(
+				'src'    => array( 'type' => 'string' ),
+				'state'  => array(
+					'type' => 'string',
+					'enum' => array( SplitCardImageCopies::WAITING, SplitCardImageCopies::FAILED ),
+				),
+				'reason' => array( 'type' => 'string' ),
+			),
+		);
 	}
 
 	/**
@@ -215,13 +255,13 @@ final class GetProductSplitListing implements Ability {
 								'items' => array(
 									'type'       => 'object',
 									'properties' => array(
-										'term_id' => array( 'type' => 'integer' ),
-										'name'    => array( 'type' => 'string' ),
-										'title'   => array(
+										'term_id'    => array( 'type' => 'integer' ),
+										'name'       => array( 'type' => 'string' ),
+										'title'      => array(
 											'type'        => 'string',
 											'description' => __( 'The card\'s own title; empty when it shows the product\'s.', 'pixonaut-for-woocommerce' ),
 										),
-										'image'   => array(
+										'image'      => array(
 											'type'        => array( 'object', 'null' ),
 											'description' => __( 'The card\'s own image, by its attachment id and URL; null when it shows the value\'s picture or the product\'s.', 'pixonaut-for-woocommerce' ),
 											'properties'  => array(
@@ -229,6 +269,7 @@ final class GetProductSplitListing implements Ability {
 												'src' => array( 'type' => 'string' ),
 											),
 										),
+										'image_copy' => self::image_copy_schema(),
 									),
 								),
 							),
@@ -241,20 +282,21 @@ final class GetProductSplitListing implements Ability {
 					'items'       => array(
 						'type'       => 'object',
 						'properties' => array(
-							'term_ids' => array(
+							'term_ids'   => array(
 								'type'        => 'array',
 								'description' => __( 'The term ids of the card\'s values, one of each attribute the product is listed by that applies to it, in the product\'s order of attributes.', 'pixonaut-for-woocommerce' ),
 								'items'       => array( 'type' => 'integer' ),
 							),
-							'name'     => array( 'type' => 'string' ),
-							'title'    => array( 'type' => 'string' ),
-							'image'    => array(
+							'name'       => array( 'type' => 'string' ),
+							'title'      => array( 'type' => 'string' ),
+							'image'      => array(
 								'type'       => array( 'object', 'null' ),
 								'properties' => array(
 									'id'  => array( 'type' => 'integer' ),
 									'src' => array( 'type' => 'string' ),
 								),
 							),
+							'image_copy' => self::image_copy_schema(),
 						),
 					),
 				),
