@@ -608,6 +608,8 @@ type Panel = {
 	$: JQuery;
 	nonce: string;
 	urls: ReturnType<typeof searchUrls>;
+	/** The id of the product the panel is of; empty when it names none. */
+	product: string;
 	blank: HTMLSelectElement;
 	/** After a side or size row was added or removed. */
 	onChange: () => void;
@@ -738,7 +740,13 @@ function initSide(panel: Panel, side: HTMLElement): void {
 	// selectWoo announces a pick through jQuery, which native listeners miss.
 	placementField($, placement).on('change', clearTemplate);
 	searchField($, template, panel.nonce, (q) =>
-		templateSearch(panel.urls, panel.blank.value, placement.value, q),
+		templateSearch(
+			panel.urls,
+			panel.blank.value,
+			placement.value,
+			q,
+			panel.product,
+		),
 	)
 		.on('select2:select', (event) => {
 			standingOptionsChanged(side);
@@ -917,6 +925,7 @@ export function initPanel(root: HTMLElement): void {
 		$,
 		nonce: root.dataset.restNonce ?? '',
 		urls: searchUrls(root),
+		product: root.dataset.productId ?? '',
 		blank,
 		onChange: () => {
 			if (sideElements().length === 0) {

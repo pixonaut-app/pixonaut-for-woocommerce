@@ -133,17 +133,42 @@ final class SearchResults {
 			if ( true !== ( $verdict['legal'] ?? null ) || null === $id || null === TemplateId::parse( $id ) ) {
 				continue;
 			}
-			$misfits   = MisfitSizes::of( $item['sizes'] ?? null );
 			$options[] = array(
 				'id'        => $id,
 				'text'      => self::text( $item['name'] ?? null ) ?? $id,
 				'thumbnail' => self::text( $item['previewUrl'] ?? null ) ?? '',
-				'misfits'   => $misfits,
-				'note'      => MisfitSizes::note( $misfits ),
-				'warning'   => MisfitSizes::warning( $misfits ),
-			);
+			) + self::misfit_fields( MisfitSizes::of( $item['sizes'] ?? null ) );
 		}
 		return $options;
+	}
+
+	/**
+	 * A fitting-templates item naming other sizes it cannot be printed at
+	 * than it did: those a product sells, of those the blank has.
+	 *
+	 * @param array<string, mixed> $option  The item.
+	 * @param string[]             $misfits The sizes.
+	 * @phpstan-param list<string> $misfits
+	 * @return array<string, mixed>
+	 */
+	public static function naming_misfits( array $option, array $misfits ): array {
+		return array_merge( $option, self::misfit_fields( $misfits ) );
+	}
+
+	/**
+	 * What a fitting-templates item says of the sizes it cannot be printed
+	 * at: the sizes, and the note and the warning that name them.
+	 *
+	 * @param string[] $misfits The sizes.
+	 * @phpstan-param list<string> $misfits
+	 * @return array{misfits: list<string>, note: string, warning: string}
+	 */
+	private static function misfit_fields( array $misfits ): array {
+		return array(
+			'misfits' => $misfits,
+			'note'    => MisfitSizes::note( $misfits ),
+			'warning' => MisfitSizes::warning( $misfits ),
+		);
 	}
 
 	private static function text( mixed $value ): ?string {

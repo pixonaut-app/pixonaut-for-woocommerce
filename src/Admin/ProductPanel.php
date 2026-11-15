@@ -153,6 +153,7 @@ final class ProductPanel {
 	 * @param Connection|null         $connection While the store is not connected, the panel says how to connect it; null never says.
 	 * @param VariantPairing|null     $pairing    Shows and saves each variation's blank variant in a variable product's panel; null shows a line pointing at Variations.
 	 * @param PricingPanel|null       $pricing    Renders the Prices section; null for none.
+	 * @param SoldRows|null           $sold_rows  Tells the rows of the blank the product sells, the only ones a side's misfit warning names; null names every row its template misfits.
 	 */
 	public function __construct(
 		private readonly ProductLinker $linker,
@@ -168,6 +169,7 @@ final class ProductPanel {
 		private readonly ?Connection $connection = null,
 		private readonly ?VariantPairing $pairing = null,
 		private readonly ?PricingPanel $pricing = null,
+		private readonly ?SoldRows $sold_rows = null,
 	) {
 		$this->low_resolution = new LowResolutionWarnings( $settings, $templates );
 	}
@@ -451,7 +453,7 @@ final class ProductPanel {
 			'initial_view'     => $config->initial_view ?? '',
 			// The tile of the view of the design alone shows the template's preview.
 			'design_preview'   => null === $views || null === $this->showcases ? '' : $this->showcases->preview( $config ),
-			'sides'            => array_map( fn ( ?Side $side ): array => self::side_fields( $side, $product->is_type( 'variable' ) ) + $this->standing_options( $side, $product->get_id() ) + array( 'low_resolution_html' => $this->low_resolution_html( $product, $config, $side, $fields ) ), array() === $config->sides ? array( null ) : $config->sides ),
+			'sides'            => array_map( fn ( ?Side $side ): array => self::side_fields( $side, $product->is_type( 'variable' ), $this->misfits_sold( $product, $config, $side ) ) + $this->standing_options( $side, $product->get_id() ) + array( 'low_resolution_html' => $this->low_resolution_html( $product, $config, $side, $fields ) ), array() === $config->sides ? array( null ) : $config->sides ),
 			'printshop'        => null === $config->blank_id ? null : $this->blank->printshop( $config->blank_id, $blank ),
 			// Pixonaut is still importing it from a printshop's catalogue: nothing to pick on it yet.
 			'importing'        => null !== $blank && LinkedBlank::IMPORTING === $blank['status'],
@@ -511,6 +513,20 @@ final class ProductPanel {
 			return '';
 		}
 		return $this->low_resolution->html( $product, $fields->name( PanelFields::LOW_RESOLUTION ), $side->key, count( $config->sides ) > 1 ? $side->label : null, $side->low_resolution );
+	}
+
+	/**
+	 * The blank's sizes a side's template cannot be printed at that the
+	 * product sells: the side's warning names no size nothing is sold at.
+	 *
+	 * @param WC_Product    $product The product or variation the fields are for.
+	 * @param ProductConfig $config  The configuration shown.
+	 * @param Side|null     $side    One of its sides; null for an empty one.
+	 * @return list<string>
+	 */
+	private function misfits_sold( WC_Product $product, ProductConfig $config, ?Side $side ): array {
+		$misfits = $side->misfit_sizes ?? array();
+		return null === $this->sold_rows ? $misfits : $this->sold_rows->misfits( $product, $config, $misfits );
 	}
 
 	/**
@@ -962,9 +978,11 @@ final class ProductPanel {
 	 *
 	 * @param Side|null $side     A stored side.
 	 * @param bool      $variable Whether it is a variable product's.
+	 * @param string[]  $misfits  The blank's sizes its template cannot be printed at that its warning names.
+	 * @phpstan-param list<string> $misfits
 	 * @return array{key: string, label: string, title: string, placement_id: string, template_id: string, template_name: string, pinned: bool, version: int, versions: list<int>, mode: string, offers_properties: bool|null, misfit_warning: string, form_groups: string, canvas_ratio: string, sizes: list<array{kind: string, width: string, height: string, label: string, start: bool}>, value_sizes: array{attribute: string, sizes: array<string, array{width: string, height: string, label: string}>}}
 	 */
-	private static function side_fields( ?Side $side, bool $variable = false ): array {
+	private static function side_fields( ?Side $side, bool $variable = false, array $misfits = array() ): array {
 		$sizes = array();
 		$menu  = null === $side ? array() : $side->pending_sizes ?? $side->print_sizes;
 		$start = null !== $side && $side->start_size < count( $menu ) ? $side->start_size : 0;
@@ -991,7 +1009,7 @@ final class ProductPanel {
 			'versions'          => null === $side ? array() : $side->versions(),
 			'mode'              => $side->mode ?? Side::PERSONALISED,
 			'offers_properties' => $side?->offers_properties,
-			'misfit_warning'    => MisfitSizes::warning( $side->misfit_sizes ?? array() ),
+			'misfit_warning'    => MisfitSizes::warning( $misfits ),
 			'form_groups'       => null === $side?->form_groups ? '' : (string) wp_json_encode( $side->form_groups->to_array() ),
 			'canvas_ratio'      => CanvasRatio::posted( $side?->draw_at_template_ratio ),
 			// A variable product's variations may each have a size, so a side without a blank saved without one shows none to fill in.

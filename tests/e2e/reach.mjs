@@ -154,6 +154,7 @@ export const NO_SPEC = [
 const PRODUCT_PANEL = [
 	'src/Admin/ProductPanel.php',
 	'src/Admin/PanelFields.php',
+	'src/Admin/SoldRows.php',
 	'templates/admin/product-panel.php',
 	'templates/admin/product-fields.php',
 	'templates/admin/product-side.php',
