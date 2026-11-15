@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.9.0...v1.9.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* **catalogue:** a size on a blank printed across an area per row is checked with its placement, so a canvas is judged by its face ([#158](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/158)) ([368ae23](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/368ae23e9487438881d4749c5ba5a771192b32a8))
+* **contracts:** pin Pixonaut SDK 0.42.0 ([#157](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/157)) ([8078b49](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/8078b49dc847ba0e53e6f582fc887434a8cc75bb))
+
 ## [1.9.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.8.3...v1.9.0) (2026-11-15)
 
 
