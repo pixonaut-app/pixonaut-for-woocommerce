@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Catalogue\PictureImage;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
+use Pixonaut\WooCommerce\Catalogue\SharedPictures;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\StandingRow;
@@ -442,9 +443,11 @@ final class ProductSetup {
 	}
 
 	/**
-	 * What the picture the product has now was drawn with, from the record
-	 * of its last drawing: a showcase set unless none is chosen or the set
-	 * was not its template's; null when its image is not a Pixonaut picture.
+	 * What the picture the product has now was drawn with, as recorded on
+	 * the picture itself, so it holds while another is about to be drawn
+	 * and for every product sharing it; null when its image is not a
+	 * Pixonaut picture. A picture drawn before that was recorded is taken to
+	 * show the product's first set, unless the set was gone.
 	 *
 	 * @param WC_Product $product A product or variation.
 	 */
@@ -453,7 +456,11 @@ final class ProductSetup {
 		if ( ! ProductPictures::applies( $this->settings, $product ) || PictureImage::is_own( $product ) || 0 === $stored['attachment'] ) {
 			return null;
 		}
-		$set = ShowcaseImages::on( $product )[0]['id'] ?? null;
-		return null === $set || in_array( $set, $stored['gone'], true ) ? self::DRAWN_WITH_DEFAULTS : self::DRAWN_WITH_SHOWCASE;
+		$showcase = SharedPictures::showcase_of( $stored['attachment'] );
+		if ( null === $showcase ) {
+			$set      = ShowcaseImages::on( $product )[0]['id'] ?? null;
+			$showcase = null === $set || in_array( $set, $stored['gone'], true ) ? '' : $set;
+		}
+		return '' === $showcase ? self::DRAWN_WITH_DEFAULTS : self::DRAWN_WITH_SHOWCASE;
 	}
 }

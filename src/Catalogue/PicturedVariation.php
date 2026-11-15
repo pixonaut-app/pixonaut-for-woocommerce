@@ -34,8 +34,11 @@ final class PicturedVariation {
 		}
 		$defaults = array_filter( array_map( 'strval', $product->get_default_attributes() ), static fn ( string $value ): bool => '' !== $value );
 		$first    = null;
-		foreach ( ProductConfig::sold_variations( $product ) as list( $variation, $config ) ) {
-			if ( ! $variation instanceof WC_Product_Variation || ! self::bought( $variation, $config ) ) {
+		// One at a time: the first that agrees ends the search, however many the product has.
+		foreach ( $product->get_children() as $child_id ) {
+			$variation = wc_get_product( $child_id );
+			// A disabled variation is stored as private.
+			if ( ! $variation instanceof WC_Product_Variation || ProductConfig::PUBLIC_STATUS !== $variation->get_status() || ! self::bought( $variation, ProductConfig::config_for( $product, $variation ) ) ) {
 				continue;
 			}
 			if ( self::agrees( $variation, $defaults ) ) {
@@ -69,7 +72,7 @@ final class PicturedVariation {
 	 * offers it (it has a price, and is not hidden out of stock), and it
 	 * sells a variant of its blank when it has one.
 	 *
-	 * @param WC_Product_Variation $variation An enabled variation.
+	 * @param WC_Product_Variation $variation A variation.
 	 * @param ProductConfig        $config    The configuration it is sold under.
 	 */
 	private static function bought( WC_Product_Variation $variation, ProductConfig $config ): bool {

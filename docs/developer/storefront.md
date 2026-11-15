@@ -285,7 +285,9 @@ the setting is turned off, the remembered image is put back, unless the
 store manager set another one since.
 
 The attachment is recorded in the product's `_pixonaut_picture` meta, and
-carries `_pixonaut_picture_of` with the product's id; only such an
+carries `_pixonaut_picture_of` with the product's id, and
+`_pixonaut_picture_showcase` with the showcase set it was drawn with (empty
+for the template's defaults), which `picture_shows` reads; only such an
 attachment is deleted, when the product is no longer personalised, is
 deleted, or gets a new picture, or when the setting is turned off.
 Uninstalling the plugin puts each product's remembered image back before it

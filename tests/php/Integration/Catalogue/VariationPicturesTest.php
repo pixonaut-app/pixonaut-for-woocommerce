@@ -217,6 +217,54 @@ final class VariationPicturesTest extends WP_UnitTestCase {
 		$this->assertSame( ProductSetup::DRAWN_WITH_DEFAULTS, $this->picture_shows( $product ) );
 	}
 
+	public function test_what_a_picture_shows_holds_until_another_is_drawn(): void {
+		$product = $this->tee();
+		$red     = $this->variation( $product, 'Red', 'v_red' );
+		$this->answer_pictures( 1 );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+
+		ShowcaseImages::save( $this->reload( $product ), array( self::ANNA ) );
+
+		$this->assertSame( ProductSetup::DRAWN_WITH_DEFAULTS, $this->picture_shows( $red ), 'The set is not drawn yet.' );
+		$this->recorder->fail();
+		$this->recorder->fail();
+		ActionSchedulerRunner::run_pending( PictureQueue::VARIATIONS_ACTION );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+		$this->assertSame( ProductSetup::DRAWN_WITH_DEFAULTS, $this->picture_shows( $product ), 'Pixonaut could not draw it.' );
+	}
+
+	public function test_a_set_pixonaut_no_longer_has_shows_the_defaults_on_every_product_sharing_the_picture(): void {
+		$product = $this->tee();
+		ShowcaseImages::save( $product, array( self::ANNA ) );
+		$red = $this->variation( $product, 'Red', 'v_red' );
+		$this->recorder->json( 404, array( 'error' => 'showcase_not_found' ) );
+		$this->answer_pictures( 1 );
+
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+
+		$this->assertSame( (int) $this->reload( $red )->get_image_id(), (int) $this->reload( $product )->get_image_id() );
+		$this->assertSame( ProductSetup::DRAWN_WITH_DEFAULTS, $this->picture_shows( $product ) );
+		$this->assertSame( ProductSetup::DRAWN_WITH_DEFAULTS, $this->picture_shows( $red ) );
+	}
+
+	public function test_a_set_of_another_template_gone_before_it_is_drawn_shows_the_defaults(): void {
+		$variation = $this->variation_on_another_template();
+		$this->answer_sets(
+			array(
+				array(
+					'id'   => 'showcase-first',
+					'name' => 'Leo',
+				),
+			)
+		);
+		$this->recorder->json( 404, array( 'error' => 'showcase_not_found' ) );
+		$this->answer_pictures( 1 );
+
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+
+		$this->assertSame( ProductSetup::DRAWN_WITH_DEFAULTS, $this->picture_shows( $variation ) );
+	}
+
 	public function test_the_upgrade_checks_every_products_picture_again(): void {
 		$product = $this->tee();
 		$red     = $this->variation( $product, 'Red', 'v_red' );

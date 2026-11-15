@@ -255,7 +255,7 @@ final class ProductPictures {
 				PictureQueue::schedule( $product->get_id() );
 				return;
 			}
-			$attachment = null === $drawing['png'] ? $drawing['attachment'] : SharedPictures::attach( $product, $drawing['png'], (string) $drawing['key'] );
+			$attachment = null === $drawing['png'] ? $drawing['attachment'] : SharedPictures::attach( $product, $drawing['png'], (string) $drawing['key'], $drawing['showcase'] );
 			if ( 0 === $attachment && null !== $drawing['png'] ) {
 				$this->logger->warning( sprintf( 'The picture of product #%d could not be saved to the media library.', $product->get_id() ), array( 'product_id' => $product->get_id() ) );
 				self::unattach( $product, $slots, $stored );
@@ -319,7 +319,7 @@ final class ProductPictures {
 	 * @param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $stored  Its recorded pictures.
 	 * @param bool                                                                                                                                                                 $own     Whether its image is the store manager's own, which is kept.
 	 *
-	 * @return list<array{key: string|null, attachment: int, png: string|null, gone: string|null, shared: bool}>
+	 * @return list<array{key: string|null, attachment: int, png: string|null, gone: string|null, shared: bool, showcase: string|null}> `showcase` is the set a PNG was drawn with.
 	 *
 	 * @throws ApiException When Pixonaut could not draw one.
 	 */
@@ -354,6 +354,7 @@ final class ProductPictures {
 					'png'        => null,
 					'gone'       => $gone,
 					'shared'     => false,
+					'showcase'   => null,
 				);
 				continue;
 			}
@@ -364,6 +365,7 @@ final class ProductPictures {
 				'png'        => null,
 				'gone'       => 0 === $shared ? null : $gone,
 				'shared'     => 0 !== $shared,
+				'showcase'   => null,
 			);
 			if ( 0 === $shared ) {
 				$wanted[ $index ] = $source;
@@ -397,6 +399,7 @@ final class ProductPictures {
 					'png'        => $pngs[ $index ],
 					'gone'       => $again[ $index ]['showcase'] ?? null,
 					'shared'     => false,
+					'showcase'   => isset( $again[ $index ] ) ? null : $wanted[ $index ]['showcase'] ?? null,
 				)
 				: $drawing;
 		}
