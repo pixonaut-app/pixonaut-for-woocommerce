@@ -1,0 +1,169 @@
+{
+	"products": {
+		"poster": {
+			"about": "A poster sold bare, with a hanger, framed or on canvas; each extra has an option of its own.",
+			"fields": [
+				"attribute_pa_inramning",
+				"attribute_pa_hangarfarg",
+				"attribute_pa_ramfarg",
+				"attribute_pa_canvasdjup"
+			],
+			"variations": [
+				{ "attribute_pa_inramning": "ingen" },
+				{ "attribute_pa_inramning": "hangare", "attribute_pa_hangarfarg": "ek" },
+				{
+					"attribute_pa_inramning": "hangare",
+					"attribute_pa_hangarfarg": "svart"
+				},
+				{ "attribute_pa_inramning": "ram", "attribute_pa_ramfarg": "svart" },
+				{ "attribute_pa_inramning": "ram", "attribute_pa_ramfarg": "vit" },
+				{ "attribute_pa_inramning": "canvas", "attribute_pa_canvasdjup": "2cm" },
+				{ "attribute_pa_inramning": "canvas", "attribute_pa_canvasdjup": "4cm" }
+			]
+		},
+		"anyColour": {
+			"about": "One variation per size, any colour: the colour is the shopper's free choice.",
+			"fields": ["attribute_pa_size", "attribute_pa_colour"],
+			"variations": [
+				{ "attribute_pa_size": "s", "attribute_pa_colour": "" },
+				{ "attribute_pa_size": "m", "attribute_pa_colour": "" }
+			]
+		},
+		"catchAll": {
+			"about": "Red has a price of its own, every other colour shares one variation.",
+			"fields": ["attribute_pa_colour"],
+			"variations": [
+				{ "attribute_pa_colour": "red" },
+				{ "attribute_pa_colour": "" }
+			]
+		},
+		"chain": {
+			"about": "A frame has a colour, and only a custom colour has a code.",
+			"fields": [
+				"attribute_pa_frame",
+				"attribute_pa_colour",
+				"attribute_pa_code"
+			],
+			"variations": [
+				{ "attribute_pa_frame": "none" },
+				{ "attribute_pa_frame": "wood", "attribute_pa_colour": "oak" },
+				{
+					"attribute_pa_frame": "wood",
+					"attribute_pa_colour": "custom",
+					"attribute_pa_code": "ral-9005"
+				},
+				{
+					"attribute_pa_frame": "wood",
+					"attribute_pa_colour": "custom",
+					"attribute_pa_code": "ral-9010"
+				}
+			]
+		},
+		"dependentFirst": {
+			"about": "The hanger colour stands before the option it depends on.",
+			"fields": ["attribute_pa_hangarfarg", "attribute_pa_inramning"],
+			"variations": [
+				{ "attribute_pa_inramning": "ingen" },
+				{ "attribute_pa_inramning": "hangare", "attribute_pa_hangarfarg": "ek" }
+			]
+		}
+	},
+	"cases": [
+		{
+			"name": "nothing chosen shows every attribute",
+			"product": "poster",
+			"chosen": {},
+			"hidden": []
+		},
+		{
+			"name": "a bare poster has no option of an extra",
+			"product": "poster",
+			"chosen": { "attribute_pa_inramning": "ingen" },
+			"hidden": [
+				"attribute_pa_hangarfarg",
+				"attribute_pa_ramfarg",
+				"attribute_pa_canvasdjup"
+			]
+		},
+		{
+			"name": "a hanger shows only its colour",
+			"product": "poster",
+			"chosen": { "attribute_pa_inramning": "hangare" },
+			"hidden": ["attribute_pa_ramfarg", "attribute_pa_canvasdjup"]
+		},
+		{
+			"name": "a hidden attribute's value does not count",
+			"product": "poster",
+			"chosen": {
+				"attribute_pa_inramning": "hangare",
+				"attribute_pa_hangarfarg": "ek",
+				"attribute_pa_ramfarg": "vit",
+				"attribute_pa_canvasdjup": "4cm"
+			},
+			"hidden": ["attribute_pa_ramfarg", "attribute_pa_canvasdjup"]
+		},
+		{
+			"name": "a value filling a hidden field hides nothing more",
+			"product": "poster",
+			"chosen": {
+				"attribute_pa_inramning": "ingen",
+				"attribute_pa_hangarfarg": "ek",
+				"attribute_pa_ramfarg": "svart",
+				"attribute_pa_canvasdjup": "2cm"
+			},
+			"hidden": [
+				"attribute_pa_hangarfarg",
+				"attribute_pa_ramfarg",
+				"attribute_pa_canvasdjup"
+			]
+		},
+		{
+			"name": "an attribute no variation sets stays a free choice",
+			"product": "anyColour",
+			"chosen": { "attribute_pa_size": "s" },
+			"hidden": []
+		},
+		{
+			"name": "an attribute one variation sets and a catch-all leaves open stays shown",
+			"product": "catchAll",
+			"chosen": {},
+			"hidden": []
+		},
+		{
+			"name": "a shown attribute's choice hides the one after it",
+			"product": "chain",
+			"chosen": { "attribute_pa_frame": "wood", "attribute_pa_colour": "oak" },
+			"hidden": ["attribute_pa_code"]
+		},
+		{
+			"name": "a shown attribute's choice shows the one after it",
+			"product": "chain",
+			"chosen": {
+				"attribute_pa_frame": "wood",
+				"attribute_pa_colour": "custom"
+			},
+			"hidden": []
+		},
+		{
+			"name": "a hidden attribute's value does not show the one after it",
+			"product": "chain",
+			"chosen": {
+				"attribute_pa_frame": "none",
+				"attribute_pa_colour": "custom"
+			},
+			"hidden": ["attribute_pa_colour", "attribute_pa_code"]
+		},
+		{
+			"name": "the choice on an attribute every variation sets counts wherever it stands",
+			"product": "dependentFirst",
+			"chosen": { "attribute_pa_inramning": "ingen" },
+			"hidden": ["attribute_pa_hangarfarg"]
+		},
+		{
+			"name": "a choice no variation matches hides nothing",
+			"product": "dependentFirst",
+			"chosen": { "attribute_pa_inramning": "canvas" },
+			"hidden": []
+		}
+	]
+}
