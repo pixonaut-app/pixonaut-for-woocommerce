@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-15T14:13:12+00:00\n"
+"POT-Creation-Date: 2026-11-15T14:18:23+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -663,9 +663,9 @@ msgstr ""
 "elección para “Mostrar cada valor como un producto propio” (`auto` sigue el "
 "ajuste propio del atributo, `attribute_default`), si con ella sus valores "
 "aparecen como productos propios, y el título y la imagen propios de la "
-"tarjeta de cada valor. `listed_by` es el atributo por el que aparece ahora "
-"el producto; null cuando aparece una sola vez. Se establecen con `set-"
-"product-split-listing`."
+"tarjeta de cada valor. `listed_by` es el atributo por el que aparece ahora el "
+"producto; null cuando aparece una sola vez. Se establecen con `set-product-"
+"split-listing`."
 
 #: src/Abilities/GetProductSplitListing.php:152
 msgid ""
@@ -673,10 +673,9 @@ msgid ""
 "when it is listed once. Only a variable product is listed by an attribute, "
 "one used for its variations."
 msgstr ""
-"El identificador del atributo por el que aparece el producto, con una "
-"tarjeta por valor; null cuando aparece una sola vez. Solo un producto "
-"variable puede aparecer por un atributo, y solo por uno que use para sus "
-"variaciones."
+"El identificador del atributo por el que aparece el producto, con una tarjeta "
+"por valor; null cuando aparece una sola vez. Solo un producto variable puede "
+"aparecer por un atributo, y solo por uno que use para sus variaciones."
 
 #: src/Abilities/GetProductSplitListing.php:167
 msgid ""
@@ -1863,11 +1862,11 @@ msgid "none"
 msgstr "ninguno"
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductSplitListing.php:43
+#: src/Abilities/SetProductSplitListing.php:48
 msgid "Set which values a product lists as their own products"
 msgstr "Establecer qué valores de un producto aparecen como productos propios"
 
-#: src/Abilities/SetProductSplitListing.php:44
+#: src/Abilities/SetProductSplitListing.php:49
 msgid ""
 "Sets, for each global attribute of a simple or variable product listed, its "
 "\"Show each value as its own product\" choice (`on`, `off`, or `auto` to "
@@ -1883,36 +1882,36 @@ msgstr ""
 "(`on`, `off` o `auto` para seguir el ajuste propio del atributo) y el título "
 "y la imagen propios de la tarjeta de cada valor indicado, igual que la "
 "pestaña Atributos del producto. Solo cambia lo que se indica: un atributo, "
-"valor, título o imagen que se omita se queda como está. Un título vacío o "
-"una imagen null devuelve a la tarjeta el título o la imagen del producto. No "
-"se guarda nada a menos que todo lo indicado sea válido. La respuesta es lo "
-"que tiene ahora el producto, tal como lo da `get-product-split-listing`."
+"valor, título o imagen que se omita se queda como está. Un título vacío o una "
+"imagen null devuelve a la tarjeta el título o la imagen del producto. No se "
+"guarda nada a menos que todo lo indicado sea válido. La respuesta es lo que "
+"tiene ahora el producto, tal como lo da `get-product-split-listing`."
 
-#: src/Abilities/SetProductSplitListing.php:62
+#: src/Abilities/SetProductSplitListing.php:67
 msgid "One of the product's global attributes, by id."
 msgstr "Uno de los atributos globales del producto, por identificador."
 
-#: src/Abilities/SetProductSplitListing.php:77
+#: src/Abilities/SetProductSplitListing.php:82
 msgid "One of the values the product has of the attribute, by its term id."
 msgstr ""
 "Uno de los valores que tiene el producto para el atributo, por el "
 "identificador de su término."
 
-#: src/Abilities/SetProductSplitListing.php:81
+#: src/Abilities/SetProductSplitListing.php:86
 msgid "The card's own title; empty for the product's."
 msgstr "El título propio de la tarjeta; vacío para el del producto."
 
-#: src/Abilities/SetProductSplitListing.php:85
+#: src/Abilities/SetProductSplitListing.php:90
 msgid ""
 "The card's own image: `id`, an image of the media library, or `src`, a "
 "public URL the store copies into it; null for the value's picture or the "
 "product's."
 msgstr ""
 "La imagen propia de la tarjeta: `id`, una imagen de la biblioteca de medios, "
-"o `src`, una URL pública que la tienda copia en ella; null para la imagen "
-"del valor o la del producto."
+"o `src`, una URL pública que la tienda copia en ella; null para la imagen del "
+"valor o la del producto."
 
-#: src/Abilities/SetProductSplitListing.php:158
+#: src/Abilities/SetProductSplitListing.php:190
 msgid ""
 "The product's Pixonaut configuration comes from a newer version of the "
 "plugin, so it is not changed. Update the plugin."
@@ -1921,7 +1920,7 @@ msgstr ""
 "del plugin, así que no se cambia. Actualiza el plugin."
 
 #. translators: %d: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:185
+#: src/Abilities/SetProductSplitListing.php:224
 #, php-format
 msgid ""
 "The product has no global attribute %d. Only a global attribute's values can "
@@ -1931,42 +1930,53 @@ msgstr ""
 "atributo global pueden aparecer como productos propios."
 
 #. translators: %d: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:189
+#: src/Abilities/SetProductSplitListing.php:228
 #, php-format
 msgid "Attribute %d is listed twice."
 msgstr "El atributo %d aparece dos veces."
 
 #. translators: 1: a value's term id; 2: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:222
+#: src/Abilities/SetProductSplitListing.php:261
 #, php-format
 msgid "The product has no value %1$d of attribute %2$d."
 msgstr "El producto no tiene ningún valor %1$d del atributo %2$d."
 
 #. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:226
+#: src/Abilities/SetProductSplitListing.php:265
 #, php-format
 msgid "Value %d is listed twice."
 msgstr "El valor %d aparece dos veces."
 
 #. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:259
+#: src/Abilities/SetProductSplitListing.php:298
 #, php-format
 msgid "Give the image of value %d as either `id` or `src`."
 msgstr ""
 "Indica la imagen del valor %d con `id` o con `src`, solo uno de los dos."
 
 #. translators: %d: an attachment's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:264
+#: src/Abilities/SetProductSplitListing.php:303
 #, php-format
 msgid "The media library has no image %d."
 msgstr ""
 "La biblioteca de medios no tiene ninguna imagen con el identificador %d."
 
 #. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:270
+#: src/Abilities/SetProductSplitListing.php:309
 #, php-format
 msgid "The image of value %d is not a public URL."
 msgstr "La imagen del valor %d no es una URL pública."
+
+#. translators: %s: the largest file the store takes, e.g. "64 MB".
+#: src/Abilities/SetProductSplitListing.php:335
+#: src/Abilities/Store/ResourceAbility.php:502
+#, php-format
+msgid "The file is larger than the store takes, at most %s."
+msgstr "El archivo es más grande de lo que admite la tienda: como máximo %s."
+
+#: src/Abilities/SetProductSplitListing.php:366
+msgid "The card's image could not be copied from its URL."
+msgstr "No se pudo copiar la imagen de la tarjeta desde su URL."
 
 #: src/Abilities/SetupFields.php:165
 msgid ""
@@ -2462,12 +2472,6 @@ msgstr "La tienda lo rechazó."
 #: src/Abilities/Store/ResourceAbility.php:491
 msgid "Give the file's public URL as fields.source_url."
 msgstr "Indica la URL pública del archivo en fields.source_url."
-
-#. translators: %s: the largest file the store takes, e.g. "64 MB".
-#: src/Abilities/Store/ResourceAbility.php:502
-#, php-format
-msgid "The file is larger than the store takes, at most %s."
-msgstr "El archivo es más grande de lo que admite la tienda: como máximo %s."
 
 #. translators: %d: the HTTP status the file's URL answered with.
 #: src/Abilities/Store/ResourceAbility.php:538

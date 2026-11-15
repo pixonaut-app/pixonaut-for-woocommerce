@@ -33,6 +33,11 @@ final class SetProductSplitListing implements Ability {
 	 */
 	private const MAX_ROWS = 100;
 
+	/**
+	 * How long the store waits for a card's image to download, in seconds.
+	 */
+	private const DOWNLOAD_TIMEOUT_SECONDS = 30;
+
 	public function name(): string {
 		return 'set-product-split-listing';
 	}
@@ -112,7 +117,8 @@ final class SetProductSplitListing implements Ability {
 			'annotations'         => array(
 				'readonly'    => false,
 				'destructive' => true,
-				'idempotent'  => true,
+				// An image given by `src` is copied into the media library anew on each call.
+				'idempotent'  => false,
 			),
 		);
 	}
@@ -131,36 +137,69 @@ final class SetProductSplitListing implements Ability {
 		if ( $changes instanceof WP_Error ) {
 			return $changes;
 		}
-		$looks = SplitCardLooks::stored_on( $product->get_id() );
+		if ( ! ProductConfig::writable_on( $product ) ) {
+			return self::newer_configuration();
+		}
+		// The images are copied before anything stored is read, so a change made meanwhile is kept.
+		$imported = array();
+		$images   = array();
 		foreach ( $changes['looks'] as $term_id => $look ) {
 			$image = $look['image'] ?? null;
 			if ( is_string( $image ) ) {
 				$image = self::downloaded( $image, $product->get_id() );
 				if ( $image instanceof WP_Error ) {
+					self::forget( $imported );
 					return $image;
 				}
+				$imported[] = $image;
 			}
-			$before            = $looks[ $term_id ] ?? array(
-				'title' => '',
-				'image' => 0,
-			);
-			$looks[ $term_id ] = array(
-				'title' => $look['title'] ?? $before['title'],
-				'image' => $image ?? $before['image'],
-			);
+			$images[ $term_id ] = $image;
 		}
+		$fresh   = wc_get_product( $product->get_id() );
+		$product = $fresh instanceof WC_Product ? $fresh : $product;
 		$config  = ProductConfig::stored_on( $product );
 		$choices = $changes['choices'] + $config->split_listing;
 		if ( SplitListing::choices_from( $choices ) !== $config->split_listing ) {
 			try {
 				$config->with_split_listing( $choices )->save_to( $product );
 			} catch ( LogicException $e ) {
-				return new WP_Error( 'pixonaut_wc_ability_newer_configuration', __( 'The product\'s Pixonaut configuration comes from a newer version of the plugin, so it is not changed. Update the plugin.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::CONFLICT ) );
+				self::forget( $imported );
+				return self::newer_configuration();
 			}
+		}
+		$looks = SplitCardLooks::stored_on( $product->get_id() );
+		foreach ( $changes['looks'] as $term_id => $look ) {
+			$before            = $looks[ $term_id ] ?? array(
+				'title' => '',
+				'image' => 0,
+			);
+			$looks[ $term_id ] = array(
+				'title' => $look['title'] ?? $before['title'],
+				'image' => $images[ $term_id ] ?? $before['image'],
+			);
 		}
 		SplitCardLooks::save( $product->get_id(), $looks );
 		$saved = wc_get_product( $product->get_id() );
 		return GetProductSplitListing::answer( $saved instanceof WC_Product ? $saved : $product );
+	}
+
+	/**
+	 * The refusal when the product's configuration is a newer plugin version's.
+	 */
+	private static function newer_configuration(): WP_Error {
+		return new WP_Error( 'pixonaut_wc_ability_newer_configuration', __( 'The product\'s Pixonaut configuration comes from a newer version of the plugin, so it is not changed. Update the plugin.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::CONFLICT ) );
+	}
+
+	/**
+	 * Deletes the images a refused call copied into the media library.
+	 *
+	 * @param int[] $attachment_ids The attachments the call made.
+	 * @phpstan-param list<int> $attachment_ids
+	 */
+	private static function forget( array $attachment_ids ): void {
+		foreach ( $attachment_ids as $attachment_id ) {
+			wp_delete_attachment( $attachment_id, true );
+		}
 	}
 
 	/**
@@ -273,18 +312,58 @@ final class SetProductSplitListing implements Ability {
 	}
 
 	/**
-	 * Copies an image into the media library, as WooCommerce's REST API does
-	 * a product's, attached to the product.
+	 * Copies an image into the media library, attached to the product.
+	 * WordPress's `download_url()` downloads it, which refuses a URL of the
+	 * store's own network and names the file for its type when its URL
+	 * names none.
 	 *
 	 * @param string $url        The image's public URL.
 	 * @param int    $product_id The product whose card shows it.
 	 * @return int|WP_Error The attachment's id.
 	 */
 	private static function downloaded( string $url, int $product_id ): int|WP_Error {
-		$upload = wc_rest_upload_image_from_url( esc_url_raw( $url ) );
-		if ( is_wp_error( $upload ) ) {
-			return new WP_Error( 'pixonaut_wc_ability_card_image_download', $upload->get_error_message(), array( 'status' => WP_Http::BAD_REQUEST ) );
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		$file = download_url( $url, self::DOWNLOAD_TIMEOUT_SECONDS );
+		if ( is_wp_error( $file ) ) {
+			return self::not_copied( $file->get_error_message() );
 		}
-		return wc_rest_set_uploaded_image_as_attachment( $upload, $product_id );
+		if ( (int) filesize( $file ) > wp_max_upload_size() ) {
+			wp_delete_file( $file );
+			/* translators: %s: the largest file the store takes, e.g. "64 MB". */
+			return self::not_copied( sprintf( __( 'The file is larger than the store takes, at most %s.', 'pixonaut-for-woocommerce' ), size_format( wp_max_upload_size() ) ) );
+		}
+		$name = sanitize_file_name( wp_basename( (string) wp_parse_url( $url, PHP_URL_PATH ) ) );
+		if ( '' === pathinfo( $name, PATHINFO_EXTENSION ) ) {
+			// `download_url()` gave the file the extension of the type it was answered with.
+			$name = ( '' === $name ? 'card' : $name ) . '.' . pathinfo( $file, PATHINFO_EXTENSION );
+		}
+		$attachment_id = media_handle_sideload(
+			array(
+				'name'     => $name,
+				'tmp_name' => $file,
+			),
+			$product_id
+		);
+		if ( is_wp_error( $attachment_id ) || $attachment_id < 1 ) {
+			wp_delete_file( $file );
+			return self::not_copied( is_wp_error( $attachment_id ) ? $attachment_id->get_error_message() : '' );
+		}
+		if ( ! wp_attachment_is_image( $attachment_id ) ) {
+			wp_delete_attachment( $attachment_id, true );
+			return self::not_copied( '' );
+		}
+		return $attachment_id;
+	}
+
+	/**
+	 * The refusal when a card's image could not be copied from its URL.
+	 *
+	 * @param string $reason WordPress's reason; empty when it gave none.
+	 */
+	private static function not_copied( string $reason ): WP_Error {
+		$refusal = __( 'The card\'s image could not be copied from its URL.', 'pixonaut-for-woocommerce' );
+		return new WP_Error( 'pixonaut_wc_ability_card_image_download', '' === $reason ? $refusal : $refusal . ' ' . $reason, array( 'status' => WP_Http::BAD_REQUEST ) );
 	}
 }

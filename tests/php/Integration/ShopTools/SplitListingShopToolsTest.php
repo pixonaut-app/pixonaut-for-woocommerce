@@ -56,6 +56,13 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 	private const CARD_URL = 'https://pictures.example/cards/med-bild.png';
 
 	/**
+	 * A card picture's URL that answers nothing.
+	 */
+	private const GONE_URL = 'https://pictures.example/cards/gone.png';
+
+	private const GONE = 404;
+
+	/**
 	 * A one-pixel PNG, as a card's picture's URL answers it.
 	 */
 	private const PIXEL_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
@@ -315,6 +322,72 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 		$this->assertSame( $image['id'], SplitCardLooks::of( $poster->get_id(), $this->term( 'med-bild' ) )['image'] );
 	}
 
+	public function test_an_image_copied_by_a_refused_call_is_deleted_again(): void {
+		$poster = $this->poster();
+		$this->serve_card_picture();
+		$before = $this->attachments();
+
+		$answer = $this->call(
+			self::SET,
+			array(
+				'product_id' => $poster->get_id(),
+				'attributes' => array(
+					array(
+						'attribute_id' => $this->attributes[ self::PICTURE ],
+						'choice'       => SplitListing::ON,
+						'values'       => array(
+							array(
+								'term_id' => $this->term( 'med-bild' ),
+								'image'   => array( 'src' => self::CARD_URL ),
+							),
+							array(
+								'term_id' => $this->term( 'utan-bild' ),
+								'image'   => array( 'src' => self::GONE_URL ),
+							),
+						),
+					),
+				),
+			)
+		);
+
+		$this->assertSame( self::UNPROCESSABLE, $answer->get_status(), (string) wp_json_encode( $answer->get_data() ) );
+		$this->assertSame( $before, $this->attachments(), 'the first image is not left in the media library' );
+		$this->assertSame( array(), ProductConfig::stored_on( $this->reload( $poster ) )->split_listing );
+		$this->assertSame( array(), SplitCardLooks::stored_on( $poster->get_id() ) );
+	}
+
+	public function test_a_configuration_from_a_newer_plugin_version_is_refused_before_an_image_is_copied(): void {
+		$poster = $this->poster();
+		$this->serve_card_picture();
+		$newer = (string) wp_json_encode( array( 'v' => ProductConfig::SCHEMA_VERSION + 1 ) );
+		update_post_meta( $poster->get_id(), ProductConfig::META_KEY, wp_slash( $newer ) );
+		$before = $this->attachments();
+
+		$answer = $this->call(
+			self::SET,
+			array(
+				'product_id' => $poster->get_id(),
+				'attributes' => array(
+					array(
+						'attribute_id' => $this->attributes[ self::PICTURE ],
+						'choice'       => SplitListing::ON,
+						'values'       => array(
+							array(
+								'term_id' => $this->term( 'med-bild' ),
+								'image'   => array( 'src' => self::CARD_URL ),
+							),
+						),
+					),
+				),
+			)
+		);
+
+		$this->assertSame( self::UNPROCESSABLE, $answer->get_status(), (string) wp_json_encode( $answer->get_data() ) );
+		$this->assertSame( $before, $this->attachments() );
+		$this->assertSame( $newer, get_post_meta( $poster->get_id(), ProductConfig::META_KEY, true ) );
+		$this->assertSame( array(), SplitCardLooks::stored_on( $poster->get_id() ) );
+	}
+
 	public function test_it_saves_nothing_when_one_row_does_not_fit(): void {
 		$poster  = $this->poster();
 		$picture = $this->attributes[ self::PICTURE ];
@@ -421,6 +494,18 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 		add_filter(
 			'pre_http_request',
 			static function ( $response, array $args, string $url ) {
+				if ( self::GONE_URL === $url ) {
+					return array(
+						'headers'  => array(),
+						'body'     => '',
+						'response' => array(
+							'code'    => self::GONE,
+							'message' => 'Not Found',
+						),
+						'cookies'  => array(),
+						'filename' => $args['filename'] ?? null,
+					);
+				}
 				if ( self::CARD_URL !== $url ) {
 					return $response;
 				}
@@ -444,6 +529,25 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 			self::FIRST,
 			3
 		);
+	}
+
+	/**
+	 * The ids of every attachment the media library has.
+	 *
+	 * @return list<int>
+	 */
+	private function attachments(): array {
+		$ids = get_posts(
+			array(
+				'post_type'   => 'attachment',
+				'post_status' => 'any',
+				'numberposts' => -1,
+				'fields'      => 'ids',
+				'orderby'     => 'ID',
+				'order'       => 'ASC',
+			)
+		);
+		return array_values( array_map( 'intval', $ids ) );
 	}
 
 	/**

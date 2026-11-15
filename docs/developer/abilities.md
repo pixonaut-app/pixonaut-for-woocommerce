@@ -363,10 +363,12 @@ attribute the product is listed by now, null when it is listed once.
 `set-product-split-listing` sets them: each attribute listed takes a `choice`
 and `values`, each a `term_id` with a `title`, an `image`, or both. An image
 is `id`, an image of the media library, or `src`, a public URL the store
-copies into it; null takes the card's own image off, and an empty title its
+copies into it anew on each call (at most the size the store takes for an
+upload); null takes the card's own image off, and an empty title its
 own title. Only what is given changes. An attribute that is not a global
 attribute of the product, a value the product does not have, or an image
-that is none refuses the whole call. The answer is the read's.
+that is none refuses the whole call, and an image a refused call copied is
+deleted again. The answer is the read's.
 
 `set-product-showcase` sets the showcase sets of the product's template its
 images are drawn with (`images`: `id` and `kind`, `mockup` on the blank's
