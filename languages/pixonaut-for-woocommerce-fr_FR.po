@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-15T14:48:20+00:00\n"
+"POT-Creation-Date: 2026-11-15T15:45:27+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -727,28 +727,35 @@ msgstr ""
 "lorsqu'un coût change."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/GetProductSplitListing.php:34
+#: src/Abilities/GetProductSplitListing.php:36
 msgid "Read which values a product lists as their own products"
 msgstr "Consulter les valeurs qu'un produit liste comme des produits à part"
 
-#: src/Abilities/GetProductSplitListing.php:35
+#: src/Abilities/GetProductSplitListing.php:37
 msgid ""
 "Reads, for each global attribute of a simple or variable product, its \"Show "
 "each value as its own product\" choice (`auto` follows the attribute's own "
 "setting, `attribute_default`), whether that lists its values as their own "
 "products, and each value's card's own title and image. `listed_by` is the "
-"attribute the product is listed by now; null when it is listed once. Set "
-"them with `set-product-split-listing`."
+"attribute the product is listed by now; null when it is listed once. `cards` "
+"are the cards it is listed as now: one per value, or, listed by several "
+"attributes, one per combination of their values that a variation sells, each "
+"with its values' `term_ids` and its own title and image. Set them with `set-"
+"product-split-listing`."
 msgstr ""
 "Consulte, pour chaque attribut global d'un produit simple ou variable, son "
 "choix pour « Afficher chaque valeur comme un produit à part » (`auto` suit "
 "le réglage propre de l'attribut, `attribute_default`), si ce choix liste ses "
 "valeurs comme des produits à part, ainsi que le titre et l'image propres de "
 "la carte de chaque valeur. `listed_by` est l'attribut selon lequel le "
-"produit est actuellement listé ; null s'il est listé une seule fois. "
-"Définissez-les avec `set-product-split-listing`."
+"produit est actuellement listé ; null s'il est listé une seule fois. `cards` "
+"donne les cartes sous lesquelles il est actuellement listé : une par valeur "
+"ou, s'il est listé selon plusieurs attributs, une par combinaison de leurs "
+"valeurs que vend une variation, chacune avec les `term_ids` de ses valeurs "
+"ainsi que son titre et son image propres. Définissez-les avec "
+"`set-product-split-listing`."
 
-#: src/Abilities/GetProductSplitListing.php:152
+#: src/Abilities/GetProductSplitListing.php:188
 msgid ""
 "The id of the attribute the product is listed by, one card per value; null "
 "when it is listed once. Only a variable product is listed by an attribute, "
@@ -759,13 +766,13 @@ msgstr ""
 "être listé selon un attribut, et seulement selon un attribut utilisé pour "
 "ses variations."
 
-#: src/Abilities/GetProductSplitListing.php:167
+#: src/Abilities/GetProductSplitListing.php:207
 msgid ""
 "Whether the attribute lists its values as their own products by default."
 msgstr ""
 "Indique si l'attribut liste par défaut ses valeurs comme des produits à part."
 
-#: src/Abilities/GetProductSplitListing.php:171
+#: src/Abilities/GetProductSplitListing.php:211
 msgid ""
 "What the choice comes to: whether the product lists each value of this "
 "attribute as its own product."
@@ -773,18 +780,37 @@ msgstr ""
 "Ce à quoi revient le choix : si le produit liste chaque valeur de cet "
 "attribut comme un produit à part."
 
-#: src/Abilities/GetProductSplitListing.php:182
+#: src/Abilities/GetProductSplitListing.php:222
 msgid "The card's own title; empty when it shows the product's."
 msgstr ""
 "Le titre propre de la carte ; vide quand elle affiche celui du produit."
 
-#: src/Abilities/GetProductSplitListing.php:186
+#: src/Abilities/GetProductSplitListing.php:226
 msgid ""
 "The card's own image, by its attachment id and URL; null when it shows the "
 "value's picture or the product's."
 msgstr ""
 "L'image propre de la carte, par l'identifiant et l'URL de son fichier "
 "joint ; null quand elle affiche l'image de la valeur ou celle du produit."
+
+#: src/Abilities/GetProductSplitListing.php:240
+msgid ""
+"The cards the product is listed as now: one per value, or one per "
+"combination of values when it is listed by several attributes. Empty when it "
+"is listed once."
+msgstr ""
+"Les cartes sous lesquelles le produit est actuellement listé : une par "
+"valeur, ou une par combinaison de valeurs lorsqu'il est listé selon "
+"plusieurs attributs. Vide s'il est listé une seule fois."
+
+#: src/Abilities/GetProductSplitListing.php:246
+msgid ""
+"The term ids of the card's values, one of each attribute the product is "
+"listed by that applies to it, in the product's order of attributes."
+msgstr ""
+"Les identifiants de terme des valeurs de la carte : une valeur pour chaque "
+"attribut selon lequel le produit est listé et qui s'applique à la carte, "
+"dans l'ordre des attributs du produit."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -1348,8 +1374,8 @@ msgid ""
 "The variations to price, or the product's own id for a simple product; left "
 "out for all."
 msgstr ""
-"Les variations dont le prix doit être fixé, ou l'identifiant du produit "
-"lui-même pour un produit simple ; omis pour toutes."
+"Les variations dont le prix doit être fixé, ou l'identifiant du produit lui-"
+"même pour un produit simple ; omis pour toutes."
 
 #: src/Abilities/PriceProduct.php:91
 msgid ""
@@ -2211,46 +2237,63 @@ msgid "none"
 msgstr "aucun"
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetProductSplitListing.php:48
+#: src/Abilities/SetProductSplitListing.php:57
 msgid "Set which values a product lists as their own products"
 msgstr "Définir les valeurs qu'un produit liste comme des produits à part"
 
-#: src/Abilities/SetProductSplitListing.php:49
+#: src/Abilities/SetProductSplitListing.php:58
 msgid ""
 "Sets, for each global attribute of a simple or variable product listed, its "
 "\"Show each value as its own product\" choice (`on`, `off`, or `auto` to "
 "follow the attribute's own setting) and each listed value's card's own title "
-"and image, as the product's Attributes tab does. Only what is given changes: "
-"an attribute, value, title or image left out keeps what it has. An empty "
-"title or a null image gives the card the product's own again. Nothing is "
-"saved unless everything listed fits. The answer is what the product has now, "
-"as `get-product-split-listing` gives it."
+"and image, as the product's Attributes tab does. `cards` sets the title and "
+"image of the cards named by their values' `term_ids`: one of a product "
+"listed by several attributes is a combination, one value of each, as `get-"
+"product-split-listing` lists them. Give `attributes`, `cards` or both. Only "
+"what is given changes: an attribute, value, card, title or image left out "
+"keeps what it has. An empty title or a null image gives the card the "
+"product's own again. Nothing is saved unless everything listed fits. The "
+"answer is what the product has now, as `get-product-split-listing` gives it."
 msgstr ""
 "Définit, pour chaque attribut global listé d'un produit simple ou variable, "
 "son choix pour « Afficher chaque valeur comme un produit à part » (`on`, "
 "`off`, ou `auto` pour suivre le réglage propre de l'attribut) ainsi que le "
 "titre et l'image propres de la carte de chaque valeur listée, comme le fait "
-"l'onglet Attributs du produit. Seul ce qui est fourni change : un attribut, "
-"une valeur, un titre ou une image omis reste tel quel. Un titre vide ou une "
-"image null redonne à la carte le titre ou l'image du produit. Rien n'est "
-"enregistré tant que tout ce qui est listé n'est pas valide. La réponse donne "
-"ce que le produit a désormais, tel que le donne `get-product-split-listing`."
+"l'onglet Attributs du produit. `cards` définit le titre et l'image des "
+"cartes, désignées par les `term_ids` de leurs valeurs : pour un produit "
+"listé selon plusieurs attributs, une carte est une combinaison, une valeur "
+"de chacun, telle que les liste `get-product-split-listing`. Indiquez "
+"`attributes`, `cards` ou les deux. Seul ce qui est fourni change : un "
+"attribut, une valeur, une carte, un titre ou une image omis reste tel quel. "
+"Un titre vide ou une image null redonne à la carte le titre ou l'image du "
+"produit. Rien n'est enregistré tant que tout ce qui est listé n'est pas "
+"valide. La réponse donne ce que le produit a désormais, tel que le donne "
+"`get-product-split-listing`."
 
-#: src/Abilities/SetProductSplitListing.php:67
+#: src/Abilities/SetProductSplitListing.php:75
 msgid "One of the product's global attributes, by id."
 msgstr "L'un des attributs globaux du produit, par identifiant."
 
-#: src/Abilities/SetProductSplitListing.php:82
+#: src/Abilities/SetProductSplitListing.php:90
 msgid "One of the values the product has of the attribute, by its term id."
 msgstr ""
 "L'une des valeurs que le produit a pour l'attribut, par l'identifiant de son "
 "terme."
 
-#: src/Abilities/SetProductSplitListing.php:86
+#: src/Abilities/SetProductSplitListing.php:94
+#: src/Abilities/SetProductSplitListing.php:125
 msgid "The card's own title; empty for the product's."
 msgstr "Le titre propre de la carte ; vide pour celui du produit."
 
-#: src/Abilities/SetProductSplitListing.php:90
+#: src/Abilities/SetProductSplitListing.php:117
+msgid ""
+"The card's values, by term id: values the product has, at most one of an "
+"attribute, in any order."
+msgstr ""
+"Les valeurs de la carte, par identifiant de terme : des valeurs que le "
+"produit possède, une au plus par attribut, dans n'importe quel ordre."
+
+#: src/Abilities/SetProductSplitListing.php:157
 msgid ""
 "The card's own image: `id`, an image of the media library, or `src`, a "
 "public URL the store copies into it; null for the value's picture or the "
@@ -2260,7 +2303,7 @@ msgstr ""
 "une URL publique que la boutique y copie ; null pour l'image de la valeur ou "
 "celle du produit."
 
-#: src/Abilities/SetProductSplitListing.php:190
+#: src/Abilities/SetProductSplitListing.php:234
 msgid ""
 "The product's Pixonaut configuration comes from a newer version of the "
 "plugin, so it is not changed. Update the plugin."
@@ -2268,8 +2311,12 @@ msgstr ""
 "La configuration Pixonaut du produit provient d'une version plus récente de "
 "l'extension ; elle n'est donc pas modifiée. Mettez à jour l'extension."
 
+#: src/Abilities/SetProductSplitListing.php:262
+msgid "Give `attributes`, `cards` or both."
+msgstr "Indiquez `attributes`, `cards` ou les deux."
+
 #. translators: %d: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:224
+#: src/Abilities/SetProductSplitListing.php:273
 #, php-format
 msgid ""
 "The product has no global attribute %d. Only a global attribute's values can "
@@ -2279,50 +2326,76 @@ msgstr ""
 "global peuvent être listées comme des produits à part."
 
 #. translators: %d: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:228
+#: src/Abilities/SetProductSplitListing.php:277
 #, php-format
 msgid "Attribute %d is listed twice."
 msgstr "L'attribut %d est listé deux fois."
 
+#. translators: %s: a card's values' term ids, e.g. "12,15". Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductSplitListing.php:296
+#, php-format
+msgid "Card %s is listed twice."
+msgstr "La carte %s est listée deux fois."
+
 #. translators: 1: a value's term id; 2: an attribute's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:261
+#: src/Abilities/SetProductSplitListing.php:325
 #, php-format
 msgid "The product has no value %1$d of attribute %2$d."
 msgstr "Le produit n'a pas de valeur %1$d pour l'attribut %2$d."
 
 #. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:265
+#: src/Abilities/SetProductSplitListing.php:329
 #, php-format
 msgid "Value %d is listed twice."
 msgstr "La valeur %d est listée deux fois."
 
 #. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:298
+#: src/Abilities/SetProductSplitListing.php:364
 #, php-format
-msgid "Give the image of value %d as either `id` or `src`."
-msgstr "Indiquez l'image de la valeur %d soit par `id`, soit par `src`."
+msgid "The product has no value %d of a global attribute."
+msgstr "Le produit n'a pas de valeur %d appartenant à un attribut global."
+
+#. translators: 1, 2: two values' term ids; 3: an attribute's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductSplitListing.php:368
+#, php-format
+msgid ""
+"A card takes one value of an attribute: %1$d and %2$d are both of attribute "
+"%3$d."
+msgstr ""
+"Une carte ne prend qu'une valeur par attribut : %1$d et %2$d appartiennent "
+"toutes deux à l'attribut %3$d."
+
+#: src/Abilities/SetProductSplitListing.php:373
+msgid "Name a card by at least one of its values."
+msgstr "Désignez chaque carte par au moins une de ses valeurs."
+
+#. translators: %s: a card's values' term ids, e.g. "12" or "12,15". Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductSplitListing.php:416
+#, php-format
+msgid "Give the image of card %s as either `id` or `src`."
+msgstr "Indiquez l'image de la carte %s soit par `id`, soit par `src`."
 
 #. translators: %d: an attachment's id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:303
+#: src/Abilities/SetProductSplitListing.php:421
 #, php-format
 msgid "The media library has no image %d."
 msgstr "La médiathèque ne contient aucune image d'identifiant %d."
 
-#. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
-#: src/Abilities/SetProductSplitListing.php:309
+#. translators: %s: a card's values' term ids, e.g. "12" or "12,15". Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductSplitListing.php:427
 #, php-format
-msgid "The image of value %d is not a public URL."
-msgstr "L'image de la valeur %d n'est pas une URL publique."
+msgid "The image of card %s is not a public URL."
+msgstr "L'image de la carte %s n'est pas une URL publique."
 
 #. translators: %s: the largest file the store takes, e.g. "64 MB".
-#: src/Abilities/SetProductSplitListing.php:335
+#: src/Abilities/SetProductSplitListing.php:453
 #: src/Abilities/Store/ResourceAbility.php:502
 #, php-format
 msgid "The file is larger than the store takes, at most %s."
 msgstr ""
 "Le fichier est plus volumineux que ce que la boutique accepte, %s au maximum."
 
-#: src/Abilities/SetProductSplitListing.php:366
+#: src/Abilities/SetProductSplitListing.php:484
 msgid "The card's image could not be copied from its URL."
 msgstr "L'image de la carte n'a pas pu être copiée depuis son URL."
 
@@ -2464,14 +2537,6 @@ msgid "Set a variation's print size"
 msgstr "Définir la taille d'impression d'une variation"
 
 #: src/Abilities/SetVariationPrintSize.php:74
-#, fuzzy
-#| msgid ""
-#| "Gives one variation its own print size, in millimetres, on a product with "
-#| "or without a blank: the variation gets a setup of its own, starting from "
-#| "the one it has, whose one side is sold in that size alone. Pixonaut "
-#| "checks the size as the variation's Pixonaut panel does; a size it cannot "
-#| "print is refused with the reason, and nothing is saved. The answer gives "
-#| "the variation's validity and blank variant now."
 msgid ""
 "Gives one variation its own print size, in millimetres, on a product with or "
 "without a blank: the variation gets a setup of its own, starting from the "
@@ -2489,14 +2554,22 @@ msgstr ""
 "configuration, à partir de celle qu'elle a, dont l'unique face est vendue "
 "dans cette seule taille. Pixonaut vérifie la taille comme le fait le panneau "
 "Pixonaut de la variation ; une taille qu'il ne peut pas imprimer est refusée "
-"avec la raison, et rien n'est enregistré. La réponse indique ensuite la "
-"validité et la variante du produit vierge de la variation."
+"avec la raison, et rien n'est enregistré. Sur un produit vierge dont les "
+"zones d'impression changent selon une option, la taille est vérifiée par "
+"rapport à la zone d'impression de la variante du produit vierge de la "
+"variation. Avec `clear` à true et sans taille, retire au contraire la taille "
+"propre de la variation : elle est de nouveau vendue à la taille de son "
+"emplacement, ou à celle de la zone d'impression de sa variante du produit "
+"vierge lorsque ces zones changent selon une option. La réponse indique "
+"ensuite la validité et la variante du produit vierge de la variation."
 
 #: src/Abilities/SetVariationPrintSize.php:96
 msgid ""
 "True, in place of `width_mm` and `height_mm`, to take the variation's own "
 "print size off."
 msgstr ""
+"True, à la place de `width_mm` et `height_mm`, pour retirer la taille "
+"d'impression propre de la variation."
 
 #: src/Abilities/SetVariationPrintSize.php:107
 #: src/Abilities/SetVariationVariants.php:108
@@ -2513,7 +2586,7 @@ msgstr "Aucune variation n'a cet identifiant."
 
 #: src/Abilities/SetVariationPrintSize.php:143
 msgid "Give a size or `clear`, not both."
-msgstr ""
+msgstr "Indiquez une taille ou `clear`, pas les deux."
 
 #: src/Abilities/SetVariationPrintSize.php:157
 msgid ""
@@ -2536,6 +2609,9 @@ msgid ""
 "placement whose size it could take: give it a size, or make it follow its "
 "product again with set-product-setup."
 msgstr ""
+"La variation a sa propre configuration sans produit vierge ; il n'y a donc "
+"aucun emplacement dont elle pourrait reprendre la taille : donnez-lui une "
+"taille, ou faites-lui de nouveau suivre son produit avec set-product-setup."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetVariationVariants.php:56
@@ -4127,22 +4203,22 @@ msgid "%1$s, photo %2$d"
 msgstr "%1$s, photo %2$d"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is on.
-#: src/Admin/SplitListingFields.php:270
+#: src/Admin/SplitListingFields.php:285
 msgid "Auto: on, as the attribute is"
 msgstr "Auto : activé, comme l'attribut"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is off.
-#: src/Admin/SplitListingFields.php:272
+#: src/Admin/SplitListingFields.php:287
 msgid "Auto: off, as the attribute is"
 msgstr "Auto : désactivé, comme l'attribut"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it on, whatever the attribute's setting.
-#: src/Admin/SplitListingFields.php:274
+#: src/Admin/SplitListingFields.php:289
 msgid "On for this product"
 msgstr "Activé pour ce produit"
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it off, whatever the attribute's setting.
-#: src/Admin/SplitListingFields.php:276
+#: src/Admin/SplitListingFields.php:291
 msgid "Off for this product"
 msgstr "Désactivé pour ce produit"
 
@@ -10823,11 +10899,11 @@ msgstr ""
 "ainsi."
 
 #. translators: Heading over a title and an image field per value of an attribute, on the attribute's row in the product's Attributes tab.
-#: templates/admin/split-card-looks.php:29
+#: templates/admin/split-card-looks.php:31
 msgid "Each value’s card in the shop"
 msgstr "Carte de chaque valeur dans la boutique"
 
-#: templates/admin/split-card-looks.php:33
+#: templates/admin/split-card-looks.php:35
 msgid ""
 "A card without a title of its own shows the product’s. Without an image of "
 "its own, it shows the image of the value’s first variation that has one, "
@@ -10839,30 +10915,30 @@ msgstr ""
 "pour une valeur que vous venez d’ajouter."
 
 #. translators: %s: an attribute value, such as "With photo". Title of the media library window choosing the image of that value's card in the shop.
-#: templates/admin/split-card-looks.php:40
+#: templates/admin/split-card-looks.php:42
 #, php-format
 msgid "Image for “%s”"
 msgstr "Image pour « %s »"
 
 #. translators: Button of the media library window choosing the image of an attribute value's card in the shop.
-#: templates/admin/split-card-looks.php:42
+#: templates/admin/split-card-looks.php:44
 msgid "Use this image"
 msgstr "Utiliser cette image"
 
 #. translators: %s: an attribute value, such as "With photo". Label of the field for the title of that value's card in the shop.
-#: templates/admin/split-card-looks.php:48
+#: templates/admin/split-card-looks.php:50
 #, php-format
 msgid "Title for “%s”"
 msgstr "Titre pour « %s »"
 
 #. translators: %s: an attribute value, such as "With photo". Button opening the media library to choose the image of that value's card in the shop.
-#: templates/admin/split-card-looks.php:58
+#: templates/admin/split-card-looks.php:60
 #, php-format
 msgid "Choose an image for “%s”"
 msgstr "Choisir une image pour « %s »"
 
 #. translators: %s: an attribute value, such as "With photo". Link removing the image of that value's card in the shop, which then shows its default image.
-#: templates/admin/split-card-looks.php:64
+#: templates/admin/split-card-looks.php:66
 #, php-format
 msgid "Remove the image for “%s”"
 msgstr "Supprimer l’image pour « %s »"

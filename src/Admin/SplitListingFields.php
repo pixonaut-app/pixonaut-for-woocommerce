@@ -185,7 +185,7 @@ final class SplitListingFields {
 				$url     = $look['image'] > 0 ? wp_get_attachment_image_url( $look['image'], self::PREVIEW_SIZE ) : false;
 				$cards[] = array(
 					'key'       => $key,
-					'name'      => implode( ', ', array_filter( array_map( array( self::class, 'term_name' ), $term_ids ) ) ),
+					'name'      => SplitCards::name( $term_ids ),
 					'title'     => $look['title'],
 					'image'     => $look['image'],
 					'image_url' => is_string( $url ) ? $url : '',
@@ -193,16 +193,6 @@ final class SplitListingFields {
 			}
 		}
 		return $cards;
-	}
-
-	/**
-	 * A value's name; empty once its term is gone.
-	 *
-	 * @param int $term_id A term.
-	 */
-	private static function term_name( int $term_id ): string {
-		$term = get_term( $term_id );
-		return $term instanceof \WP_Term ? $term->name : '';
 	}
 
 	/**
