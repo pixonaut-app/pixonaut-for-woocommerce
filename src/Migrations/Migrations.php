@@ -30,6 +30,7 @@ final class Migrations {
 			new ForgetMemberLinks(),
 			new ForgetAddAfterApprove(),
 			new WriteSplitCards(),
+			new WriteCombinationCards(),
 		);
 	}
 }

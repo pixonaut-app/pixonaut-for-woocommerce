@@ -1,6 +1,6 @@
 ---
 title: Listing each value as its own product
-description: Show a variable product once per value of one of its attributes, such as with and without a photo, its other options inside each.
+description: Show a variable product once per value of one of its attributes, such as with and without a photo, or per combination of the values of several, its other options inside each.
 sidebar:
   order: 4
 ---
@@ -32,10 +32,27 @@ it to the next one:
 A new product starts on Auto. Save the product, or use **Save attributes**,
 to keep the choice. Screen readers read Auto as a mixed checkbox.
 
-Only one attribute per product is listed this way. When more than one would
-be, the first in the product's order of attributes that is set to On wins;
-with none On, the first on Auto whose attribute is ticked. Only an attribute
-used for variations counts.
+Only an attribute used for variations counts. A product with an attribute
+set to On is listed by the attributes it set to On; with none On, by those
+on Auto whose attribute is ticked.
+
+## More than one attribute
+
+A product listed by more than one attribute has a card per combination of
+their values that a variation sells. A poster with **Framing** (None,
+Hanger, Frame) and **Hanger colour** (Oak, Black), listed by both, has the
+cards "None", "Hanger, Oak", "Hanger, Black" and "Frame": none for a
+combination no variation sells, such as a bare poster in a hanger colour.
+
+A variation that leaves a listed attribute on **Any** is in the card of
+each of its values. When the attribute does not apply to the variation (it
+is one of the
+[options that depend on each other](../dependent-options/)), the variation
+has no value of it instead: the bare poster's card is "None" alone. When no
+listed attribute applies to a variation, as for the bare and the framed
+poster of a product listed by **Hanger colour** only, those variations
+share one card, which shows the product's own title and opens it with
+nothing chosen.
 
 ## In the shop
 
@@ -52,9 +69,9 @@ Product Collection block on the shop's templates) both show them.
 - **Counting and pages**: each card counts as a product, so "Showing 1–12 of
   N" and the pages count cards.
 - **Categories and filters**: each card is in the product's categories and
-  tags. A filter by the attribute the product is listed by keeps only the
-  chosen values' cards; any other filter keeps or drops all of them, as it
-  would the product.
+  tags. A filter by an attribute the product is listed by keeps only the
+  cards with a chosen value; any other filter keeps or drops all of them,
+  as it would the product.
 - **Templates that are not live**: a value whose every variation is on a
   paused or unpublished template has no card, as a product would have none;
   a card chooses only among the variations on a live template.
@@ -88,6 +105,10 @@ attribute's values:
 Save the product, or use **Save attributes**. A value added to the row
 gets its fields once the attributes are saved.
 
+A product listed by more than one attribute has the fields of each
+combination's card ("Hanger, Oak") on the row of the combination's last
+attribute, once the product is saved with both turned on.
+
 A title and an image belong to the value, so they come back when the
 product is listed by that attribute again.
 
@@ -104,7 +125,10 @@ each card; the cards themselves, their links and their count are the same
 in every theme.
 
 Products already set up this way when the plugin is updated get their
-cards within a few minutes of the update, from a background job.
+cards within a few minutes of the update, from a background job. Until
+then, a product whose cards the update changes (one with more than one
+attribute turned on, which earlier versions listed by the first alone) is
+shown as itself.
 
 A trashed product or variation counts as gone, and a restored one counts
 again: a value whose only variations are in the trash has no card.

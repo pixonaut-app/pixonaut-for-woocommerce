@@ -161,3 +161,45 @@ test('an order of a bare poster carries no option of an extra', async ({
 		await expect(received).not.toContainText(EXTRA_OPTIONS);
 	});
 });
+
+test('a category lists a card per real combination, which opens on it', async ({
+	page,
+	request,
+}) => {
+	await withPoster(request, ['inramning', 'hangarfarg'], async (poster) => {
+		const framing = field(poster, 'inramning');
+		const colour = field(poster, 'hangarfarg');
+
+		await page.goto(poster.category);
+		// A classic theme's cards and a Product Collection's.
+		const cards = page.locator('main li.product');
+		await expect(cards).toHaveCount(5);
+		const chosen = await cards.evaluateAll((items) =>
+			items.map((item) =>
+				Object.fromEntries(
+					[
+						...new URL(
+							(item.querySelector('a[href]') as HTMLAnchorElement).href,
+						).searchParams,
+					].filter(([name]) => name.startsWith('attribute_')),
+				),
+			),
+		);
+		// In the order WooCommerce lists the values; no card for a bare poster
+		// with a hanger colour, nor for a hanger without one.
+		expect(chosen).toEqual([
+			{ [framing]: 'canvas' },
+			{ [framing]: 'hangare', [colour]: 'ek' },
+			{ [framing]: 'hangare', [colour]: 'svart' },
+			{ [framing]: 'ingen' },
+			{ [framing]: 'ram' },
+		]);
+
+		await cards.nth(1).locator('a[href]').first().click();
+		await expectShown(page, poster, ['inramning', 'hangarfarg']);
+		await expect(page.locator(`form [name="${colour}"]`)).toHaveValue('ek');
+		await expect(page.locator('form [name="variation_id"]')).toHaveValue(
+			String(poster.variations['hangare-ek']),
+		);
+	});
+});

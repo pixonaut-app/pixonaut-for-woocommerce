@@ -48,15 +48,25 @@ final class InapplicableAttributes {
 	 */
 	private bool $generating = false;
 
+	/**
+	 * The id WooCommerce worked out without the hidden attributes, before any filter.
+	 *
+	 * @var string
+	 */
+	private string $without_hidden = '';
+
 	public function register(): void {
-		add_filter( 'woocommerce_cart_id', array( $this, 'cart_id' ), 10, self::CART_ID_ARGS );
+		// First, so every other filter of the id runs once, on the id without the hidden attributes.
+		add_filter( 'woocommerce_cart_id', array( $this, 'cart_id' ), PHP_INT_MIN, self::CART_ID_ARGS );
 		add_filter( 'woocommerce_add_cart_item', array( $this, 'cart_line' ) );
 		add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'order_line' ), 10, self::ORDER_LINE_ARGS );
 	}
 
 	/**
 	 * The id of a cart line, as WooCommerce works it out without the
-	 * attributes its choice hides.
+	 * attributes its choice hides. WooCommerce is asked for that id again,
+	 * and what it worked out before any filter is taken: the other filters
+	 * of the id then run on it once, after this one.
 	 *
 	 * @param mixed $cart_id        The id WooCommerce worked out.
 	 * @param mixed $product_id     The product.
@@ -66,7 +76,11 @@ final class InapplicableAttributes {
 	 * @return mixed
 	 */
 	public function cart_id( mixed $cart_id, mixed $product_id = 0, mixed $variation_id = 0, mixed $variation = array(), mixed $cart_item_data = array() ): mixed {
-		if ( $this->generating || ! is_array( $variation ) || ! is_numeric( $product_id ) || ! function_exists( 'WC' ) || null === WC()->cart ) {
+		if ( $this->generating ) {
+			$this->without_hidden = is_string( $cart_id ) ? $cart_id : '';
+			return $cart_id;
+		}
+		if ( ! is_array( $variation ) || ! is_numeric( $product_id ) || ! function_exists( 'WC' ) || null === WC()->cart ) {
 			return $cart_id;
 		}
 		$applying = self::applying( (int) $product_id, $variation );
@@ -75,10 +89,13 @@ final class InapplicableAttributes {
 		}
 		$this->generating = true;
 		try {
-			return WC()->cart->generate_cart_id( (int) $product_id, is_numeric( $variation_id ) ? (int) $variation_id : 0, $applying, is_array( $cart_item_data ) ? $cart_item_data : array() );
+			WC()->cart->generate_cart_id( (int) $product_id, is_numeric( $variation_id ) ? (int) $variation_id : 0, $applying, is_array( $cart_item_data ) ? $cart_item_data : array() );
 		} finally {
 			$this->generating = false;
 		}
+		$without_hidden       = $this->without_hidden;
+		$this->without_hidden = '';
+		return '' === $without_hidden ? $cart_id : $without_hidden;
 	}
 
 	/**

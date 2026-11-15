@@ -13,6 +13,7 @@ namespace Pixonaut\WooCommerce\Admin;
 use LogicException;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
+use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Templates;
 use WC_Product;
@@ -140,7 +141,7 @@ final class SplitListingFields {
 				'nonce_field' => wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD, false, false ),
 			)
 		);
-		$cards = self::cards( $attribute, null === $product ? array() : SplitCardLooks::stored_on( $product->get_id() ) );
+		$cards = self::cards( $attribute, $product );
 		if ( array() === $cards ) {
 			return;
 		}
@@ -158,29 +159,50 @@ final class SplitListingFields {
 	}
 
 	/**
-	 * The row's values, each with its card's own title and image.
+	 * The row's cards, each with its own title and image: one per value, or,
+	 * for a product listed by several attributes, the combinations that end
+	 * with the value, so each of the product's cards is on one row. A value
+	 * whose every card goes on with another attribute's value has none here.
 	 *
-	 * @param WC_Product_Attribute                         $attribute A global attribute's row.
-	 * @param array<int, array{title: string, image: int}> $looks     The product's cards' own titles and images.
-	 * @return list<array{term_id: int, name: string, title: string, image: int, image_url: string}>
+	 * @param WC_Product_Attribute $attribute A global attribute's row.
+	 * @param WC_Product|null      $product   The product on screen; null before it is saved.
+	 * @return list<array{key: string, name: string, title: string, image: int, image_url: string}>
 	 */
-	private static function cards( WC_Product_Attribute $attribute, array $looks ): array {
-		$cards = array();
+	private static function cards( WC_Product_Attribute $attribute, ?WC_Product $product ): array {
+		$looks  = null === $product ? array() : SplitCardLooks::stored_on( $product->get_id() );
+		$listed = null === $product ? array() : array_map( array( SplitCards::class, 'term_ids' ), SplitCards::keys( $product ) );
+		$cards  = array();
 		foreach ( $attribute->get_terms() ?? array() as $term ) {
-			$look    = $looks[ $term->term_id ] ?? array(
-				'title' => '',
-				'image' => 0,
-			);
-			$url     = $look['image'] > 0 ? wp_get_attachment_image_url( $look['image'], self::PREVIEW_SIZE ) : false;
-			$cards[] = array(
-				'term_id'   => $term->term_id,
-				'name'      => $term->name,
-				'title'     => $look['title'],
-				'image'     => $look['image'],
-				'image_url' => is_string( $url ) ? $url : '',
-			);
+			$holding = array_values( array_filter( $listed, static fn ( array $term_ids ): bool => in_array( $term->term_id, $term_ids, true ) ) );
+			$ending  = array_values( array_filter( $holding, static fn ( array $term_ids ): bool => end( $term_ids ) === $term->term_id ) );
+			// A value in no card now, as while the product is listed once, keeps the fields of its own card.
+			foreach ( array() === $holding ? array( array( $term->term_id ) ) : $ending as $term_ids ) {
+				$key     = SplitCards::key( $term_ids );
+				$look    = $looks[ $key ] ?? array(
+					'title' => '',
+					'image' => 0,
+				);
+				$url     = $look['image'] > 0 ? wp_get_attachment_image_url( $look['image'], self::PREVIEW_SIZE ) : false;
+				$cards[] = array(
+					'key'       => $key,
+					'name'      => implode( ', ', array_filter( array_map( array( self::class, 'term_name' ), $term_ids ) ) ),
+					'title'     => $look['title'],
+					'image'     => $look['image'],
+					'image_url' => is_string( $url ) ? $url : '',
+				);
+			}
 		}
 		return $cards;
+	}
+
+	/**
+	 * A value's name; empty once its term is gone.
+	 *
+	 * @param int $term_id A term.
+	 */
+	private static function term_name( int $term_id ): string {
+		$term = get_term( $term_id );
+		return $term instanceof \WP_Term ? $term->name : '';
 	}
 
 	/**

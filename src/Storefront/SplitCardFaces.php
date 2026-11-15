@@ -56,11 +56,11 @@ final class SplitCardFaces {
 	 * @return mixed
 	 */
 	public function title( mixed $title, mixed $post_id = 0 ): mixed {
-		$term_id = is_numeric( $post_id ) ? $this->card_of( (int) $post_id ) : 0;
-		if ( 0 === $term_id ) {
+		$key = is_numeric( $post_id ) ? $this->card_of( (int) $post_id ) : null;
+		if ( null === $key ) {
 			return $title;
 		}
-		$own = SplitCardLooks::of( (int) $post_id, $term_id )['title'];
+		$own = SplitCardLooks::of( (int) $post_id, $key )['title'];
 		return '' === $own ? $title : esc_html( $own );
 	}
 
@@ -72,15 +72,15 @@ final class SplitCardFaces {
 	 * @return mixed
 	 */
 	public function image( mixed $image_id, mixed $product ): mixed {
-		$term_id = $product instanceof WC_Product ? $this->card_of( $product->get_id() ) : 0;
-		if ( ! $product instanceof WC_Product || 0 === $term_id ) {
+		$key = $product instanceof WC_Product ? $this->card_of( $product->get_id() ) : null;
+		if ( ! $product instanceof WC_Product || null === $key ) {
 			return $image_id;
 		}
-		$own = SplitCardLooks::of( $product->get_id(), $term_id )['image'];
+		$own = SplitCardLooks::of( $product->get_id(), $key )['image'];
 		if ( $own > 0 && wp_attachment_is_image( $own ) ) {
 			return $own;
 		}
-		foreach ( SplitCards::card_variations( $product, $term_id ) as $variation_id ) {
+		foreach ( SplitCards::card_variations( $product, $key ) as $variation_id ) {
 			$variation = wc_get_product( $variation_id );
 			$image     = $variation instanceof WC_Product ? (int) $variation->get_image_id( 'edit' ) : 0;
 			if ( $image > 0 ) {
@@ -98,14 +98,14 @@ final class SplitCardFaces {
 	 * @return mixed
 	 */
 	public function price( mixed $html, mixed $product ): mixed {
-		$term_id = $product instanceof WC_Product ? $this->card_of( $product->get_id() ) : 0;
-		if ( ! $product instanceof WC_Product || 0 === $term_id ) {
+		$key = $product instanceof WC_Product ? $this->card_of( $product->get_id() ) : null;
+		if ( ! $product instanceof WC_Product || null === $key ) {
 			return $html;
 		}
 		$lowest       = null;
 		$lowest_price = 0.0;
 		$highest      = 0.0;
-		foreach ( SplitCards::card_variations( $product, $term_id ) as $variation_id ) {
+		foreach ( SplitCards::card_variations( $product, $key ) as $variation_id ) {
 			$variation = wc_get_product( $variation_id );
 			if ( ! $variation instanceof WC_Product || '' === $variation->get_price() ) {
 				continue;
@@ -127,13 +127,13 @@ final class SplitCardFaces {
 	}
 
 	/**
-	 * The value of the card a loop shows now, when it is one of the
-	 * product's; 0 otherwise.
+	 * The key of the card a loop shows now, when it is one of the
+	 * product's; null otherwise.
 	 *
 	 * @param int $product_id A product.
 	 */
-	private function card_of( int $product_id ): int {
+	private function card_of( int $product_id ): ?string {
 		$current = $this->listings->current();
-		return null !== $current && $current[0] === $product_id ? $current[1] : 0;
+		return null !== $current && $current[0] === $product_id ? $current[1] : null;
 	}
 }

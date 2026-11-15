@@ -140,6 +140,24 @@ final class InapplicableAttributesTest extends WP_UnitTestCase {
 		$this->assertSame( 2, WC()->cart->get_cart()[ $first ]['quantity'] );
 	}
 
+	public function test_another_filter_of_the_cart_id_runs_once_on_the_id_without_them(): void {
+		$marked = static fn ( string $cart_id ): string => 'marked-' . $cart_id;
+		add_filter( 'woocommerce_cart_id', $marked );
+		$sent   = array(
+			'Inramning'  => 'ingen',
+			'Hangarfarg' => 'ek',
+			'Ramfarg'    => 'svart',
+			'Canvasdjup' => '2-cm',
+		);
+
+		$first  = $this->add( 'ingen', $sent );
+		$second = $this->add( 'ingen', array( 'Hangarfarg' => 'svart' ) + $sent );
+		remove_filter( 'woocommerce_cart_id', $marked );
+
+		$this->assertSame( $first, $second );
+		$this->assertSame( 'marked-' . WC()->cart->generate_cart_id( $this->poster->get_id(), $this->poster_variations['ingen']->get_id(), array( self::poster_field( 'Inramning' ) => 'ingen' ) ), $first );
+	}
+
 	public function test_a_free_choice_stays_on_the_line(): void {
 		// Every variation leaves the frame colour unset: it is the shopper's to choose.
 		foreach ( array( 'ram-svart', 'ram-vit' ) as $framed ) {
