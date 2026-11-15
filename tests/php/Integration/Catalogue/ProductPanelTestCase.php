@@ -12,6 +12,7 @@ use Pixonaut\WooCommerce\Admin\CatalogueSearch;
 use Pixonaut\WooCommerce\Admin\LinkedBlank;
 use Pixonaut\WooCommerce\Admin\Notices;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
+use Pixonaut\WooCommerce\Admin\SoldRows;
 use Pixonaut\WooCommerce\Admin\VariantField;
 use Pixonaut\WooCommerce\Admin\VariantNotice;
 use Pixonaut\WooCommerce\Api\Catalogue;
@@ -103,9 +104,10 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 		$client          = ( new Pixonaut( ScriptedClient::credentials(), new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
 		$this->catalogue = new Catalogue( $client );
 		$this->cache     = new CatalogueCache( $this->plugin->connection_store() );
-		$this->search    = new CatalogueSearch( $this->catalogue, $this->cache );
+		$sold_rows       = new SoldRows( new LinkedBlank( $this->catalogue, $this->cache ), new ProductVariants( $this->catalogue, new VariantNotice( $this->plugin->notices() ) ) );
+		$this->search    = new CatalogueSearch( $this->catalogue, $this->cache, $sold_rows );
 		$this->linker    = new ProductLinker( $this->catalogue, new Designs( $client ), $client, $this->logger );
-		$this->panel     = new ProductPanel( $this->linker, new LinkedBlank( $this->catalogue, $this->cache ), $this->plugin->notices(), $this->plugin->templates(), $this->plugin->settings(), $this->plugin->file(), $this->variant_field(), null, null, $this->plugin->proof_urls() );
+		$this->panel     = new ProductPanel( $this->linker, new LinkedBlank( $this->catalogue, $this->cache ), $this->plugin->notices(), $this->plugin->templates(), $this->plugin->settings(), $this->plugin->file(), $this->variant_field(), null, null, $this->plugin->proof_urls(), sold_rows: $sold_rows );
 
 		ConnectionAnswers::keep_tenant_slug();
 

@@ -30,6 +30,18 @@ describe('templateSearch', () => {
 			data: { q: 'tee', blank: 'blank_tee', placement: 'front' },
 		});
 	});
+
+	it('names the product, so the search judges the sizes it sells', () => {
+		expect(templateSearch(URLS, 'blank_tee', 'front', 'tee', '235')).toEqual({
+			url: URLS.fittingTemplates,
+			data: {
+				q: 'tee',
+				blank: 'blank_tee',
+				placement: 'front',
+				product: '235',
+			},
+		});
+	});
 });
 
 describe('searchUrls', () => {

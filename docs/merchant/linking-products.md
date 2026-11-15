@@ -358,15 +358,20 @@ template search or update the product.
 On a blank whose print area changes with the size, such as a cut-and-sewn
 garment printed panel to panel, a template can fit some sizes only: its
 shape matches the S panel and not the wider XL one. Pixonaut checks each
-size of the blank against the template.
+size of the blank against the template. The tab names only the sizes the
+product sells: those of its own blank variant, or of its variations' when
+it has variations. A poster sold upright only is never warned about the
+blank's landscape sizes. A variation with a setup of its own is judged by
+that setup, in its own Pixonaut fields, not by the product's template.
 
 - Under **Template**, the search lists such a template with the sizes it
   cannot be printed at under its name, such as *Cannot print at XL and
   3XL*. Choosing it shows the same warning on the side.
 - Once you update the product, the side keeps saying which sizes they are
-  until you choose a template that fits every size, or the template changes
-  so that it does. Each check of the product, on update or when the
-  template or blank changes in Pixonaut, reads them again.
+  until you choose a template that fits every size you sell, stop selling
+  them, or the template changes so that it fits. Each check of the product,
+  on update or when the template or blank changes in Pixonaut, reads them
+  again.
 - On a [fixed design](#fixed-designs), those sizes get no design and
   their variants cannot be bought; the sizes the template fits still sell.
   Stop selling the misfit sizes, for example by removing those variations,

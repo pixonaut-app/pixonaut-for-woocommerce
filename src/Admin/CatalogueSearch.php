@@ -13,9 +13,11 @@ use Closure;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
+use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\SearchResults;
 use Pixonaut\WooCommerce\Catalogue\TemplateForm;
 use Pixonaut\WooCommerce\Plugin;
+use WC_Product;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -68,10 +70,12 @@ final class CatalogueSearch {
 	/**
 	 * @param Catalogue      $catalogue Pixonaut's catalogue.
 	 * @param CatalogueCache $cache     Keeps answers for a few minutes.
+	 * @param SoldRows|null  $sold_rows Tells the rows of a blank a product sells, the only ones a fitting template's misfits name for it; null names every row.
 	 */
 	public function __construct(
 		private readonly Catalogue $catalogue,
 		private readonly CatalogueCache $cache,
+		private readonly ?SoldRows $sold_rows = null,
 	) {
 	}
 
@@ -134,6 +138,10 @@ final class CatalogueSearch {
 					'page'      => $page,
 					'blank'     => $id,
 					'placement' => $id,
+					'product'   => array(
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
 				),
 			)
 		);
@@ -210,11 +218,11 @@ final class CatalogueSearch {
 	 * @phpstan-param WP_REST_Request<array<string, mixed>> $request
 	 */
 	public function fitting_templates( WP_REST_Request $request ): WP_REST_Response|WP_Error {
-		$args = self::args( $request ) + array(
+		$args     = self::args( $request ) + array(
 			'blank'     => (string) $request->get_param( 'blank' ),
 			'placement' => (string) $request->get_param( 'placement' ),
 		);
-		return $this->answer(
+		$response = $this->answer(
 			'fitting-templates',
 			$args,
 			function () use ( $args ): array {
@@ -223,6 +231,43 @@ final class CatalogueSearch {
 				return self::page( SearchResults::fitting_templates( $found['rows'] ), $found['more'] );
 			}
 		);
+		$product  = wc_get_product( absint( $request->get_param( 'product' ) ) );
+		return $response instanceof WP_REST_Response && $product instanceof WC_Product ? $this->for_product( $response, $product, $args['blank'] ) : $response;
+	}
+
+	/**
+	 * A fitting-templates answer for a product set up on the blank: each
+	 * template names, of the sizes it cannot be printed at, only those the
+	 * product sells. A variation that follows its product is judged under
+	 * its product's setup. The answer as it is for a product set up on
+	 * another blank, whose variants are not of this one, and for a product
+	 * the user may not edit.
+	 *
+	 * @param WP_REST_Response $response The answer naming every misfit size of the blank.
+	 * @param WC_Product       $product  The product or variation the search is for.
+	 * @param string           $blank_id The blank searched.
+	 */
+	private function for_product( WP_REST_Response $response, WC_Product $product, string $blank_id ): WP_REST_Response {
+		$answer = $response->get_data();
+		if ( null === $this->sold_rows || ! current_user_can( 'edit_post', $product->get_id() ) || ! is_array( $answer ) || ! is_array( $answer['results'] ?? null ) ) {
+			return $response;
+		}
+		$config = ProductConfig::stored_on( $product );
+		$parent = $product->is_type( 'variation' ) && ! $config->override ? wc_get_product( $product->get_parent_id() ) : null;
+		$config = $parent instanceof WC_Product ? ProductConfig::stored_on( $parent ) : $config;
+		if ( $config->blank_id !== $blank_id ) {
+			return $response;
+		}
+		// Told once: it reads each of the product's variations.
+		$sold = $this->sold_rows->of( $product, $config );
+		foreach ( $answer['results'] as $index => $option ) {
+			if ( is_array( $option ) && is_array( $option['misfits'] ?? null ) ) {
+				$misfits                     = SoldRows::among( array_values( array_filter( $option['misfits'], 'is_string' ) ), $sold );
+				$answer['results'][ $index ] = SearchResults::naming_misfits( $option, $misfits );
+			}
+		}
+		$response->set_data( $answer );
+		return $response;
 	}
 
 	/**

@@ -31,16 +31,24 @@ export type SearchUrls = {
 
 /**
  * Where the template field searches: the templates that fit the placement
- * once a blank and placement are chosen, else every live template.
+ * once a blank and placement are chosen, else every live template. Naming
+ * the product has the fitting templates say which sizes they cannot be
+ * printed at among those the product sells, rather than every size of the
+ * blank.
  */
 export function templateSearch(
 	urls: SearchUrls,
 	blank: string,
 	placement: string,
 	q: string,
+	product = '',
 ): { url: string; data: Record<string, string> } {
 	if (blank !== '' && placement !== '') {
-		return { url: urls.fittingTemplates, data: { q, blank, placement } };
+		const data = { q, blank, placement };
+		return {
+			url: urls.fittingTemplates,
+			data: product === '' ? data : { ...data, product },
+		};
 	}
 	return { url: urls.templates, data: { q } };
 }

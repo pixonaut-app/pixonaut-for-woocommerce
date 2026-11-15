@@ -382,6 +382,24 @@ final class LinkedBlank {
 	}
 
 	/**
+	 * The options the blank's print areas change with (`areasVaryBy`, such
+	 * as Size), in Pixonaut's order; none on a blank whose placements have
+	 * one area each.
+	 *
+	 * @param string $blank_id The blank.
+	 * @return list<string>|null Null when Pixonaut cannot be asked.
+	 */
+	public function varies_by( string $blank_id ): ?array {
+		try {
+			$blank = $this->remember( 'blank-areas', array( 'blank' => $blank_id ), fn (): array => $this->catalogue->blank( $blank_id ) );
+			$this->forget_importing( $blank_id );
+		} catch ( ApiException $e ) {
+			return null;
+		}
+		return array_values( array_filter( is_array( $blank['areasVaryBy'] ?? null ) ? $blank['areasVaryBy'] : array(), 'is_string' ) );
+	}
+
+	/**
 	 * Each variant's print area on a placement, in mm: its row's area on a
 	 * blank whose print areas change with an option (`areasVaryBy`), else
 	 * the placement's own. A variant with none named is left out.

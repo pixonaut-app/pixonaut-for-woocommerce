@@ -604,10 +604,20 @@ function initSize(row: HTMLElement, onRemove: () => void): void {
 	show();
 }
 
+/**
+ * The product or variation a panel's template search is for: a variation's
+ * fields name the variation, the product's tab the product.
+ */
+export function searchProduct(root: Pick<HTMLElement, 'dataset'>): string {
+	return root.dataset.searchProductId ?? root.dataset.productId ?? '';
+}
+
 type Panel = {
 	$: JQuery;
 	nonce: string;
 	urls: ReturnType<typeof searchUrls>;
+	/** The id of the product the panel is of; empty when it names none. */
+	product: string;
 	blank: HTMLSelectElement;
 	/** After a side or size row was added or removed. */
 	onChange: () => void;
@@ -738,7 +748,13 @@ function initSide(panel: Panel, side: HTMLElement): void {
 	// selectWoo announces a pick through jQuery, which native listeners miss.
 	placementField($, placement).on('change', clearTemplate);
 	searchField($, template, panel.nonce, (q) =>
-		templateSearch(panel.urls, panel.blank.value, placement.value, q),
+		templateSearch(
+			panel.urls,
+			panel.blank.value,
+			placement.value,
+			q,
+			panel.product,
+		),
 	)
 		.on('select2:select', (event) => {
 			standingOptionsChanged(side);
@@ -917,6 +933,7 @@ export function initPanel(root: HTMLElement): void {
 		$,
 		nonce: root.dataset.restNonce ?? '',
 		urls: searchUrls(root),
+		product: searchProduct(root),
 		blank,
 		onChange: () => {
 			if (sideElements().length === 0) {

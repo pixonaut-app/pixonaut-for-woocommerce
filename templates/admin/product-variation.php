@@ -6,7 +6,7 @@
  * Field names, classes and the `data-` attributes are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.4.0
+ * @version 1.9.4
  *
  * @var string                $nonce_name     Name of the panel's nonce field.
  * @var string                $nonce          The nonce.
@@ -14,6 +14,7 @@
  * @var string                $override_id    Its id.
  * @var bool                  $override       Whether the variation uses its own configuration.
  * @var int                   $max_sides      Most sides a variation has.
+ * @var int                   $variation_id   The variation, which its template search is for.
  * @var string                $fields_html    The variation's fields, rendered from `admin/product-fields.php`.
  * @var array<string, string> $search_urls    `templates`, `blanks`, `fitting-templates`, `placements`, `template` REST URLs.
  * @var string                $rest_nonce     Nonce for the REST routes.
@@ -34,6 +35,7 @@ defined( 'ABSPATH' ) || exit;
 	data-fitting-templates-url="<?php echo esc_url( $search_urls['fitting-templates'] ); ?>"
 	data-placements-url="<?php echo esc_url( $search_urls['placements'] ); ?>"
 	data-template-url="<?php echo esc_url( $search_urls['template'] ); ?>"
+	data-search-product-id="<?php echo esc_attr( (string) $variation_id ); ?>"
 	data-rest-nonce="<?php echo esc_attr( $rest_nonce ); ?>"
 	data-max-sides="<?php echo esc_attr( (string) $max_sides ); ?>">
 	<input type="hidden" name="<?php echo esc_attr( $nonce_name ); ?>" value="<?php echo esc_attr( $nonce ); ?>" />

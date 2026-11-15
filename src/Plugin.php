@@ -68,6 +68,7 @@ use Pixonaut\WooCommerce\Admin\PictureFields;
 use Pixonaut\WooCommerce\Admin\RegenerateNow;
 use Pixonaut\WooCommerce\Admin\RegeneratePictures;
 use Pixonaut\WooCommerce\Admin\ShowcaseField;
+use Pixonaut\WooCommerce\Admin\SoldRows;
 use Pixonaut\WooCommerce\Admin\SplitListingFields;
 use Pixonaut\WooCommerce\Admin\SwatchNamesField;
 use Pixonaut\WooCommerce\Admin\LayoutAdjustments;
@@ -738,7 +739,7 @@ final class Plugin {
 	 * The admin's catalogue search routes.
 	 */
 	public function catalogue_search(): CatalogueSearch {
-		$this->catalogue_search ??= new CatalogueSearch( $this->catalogue(), $this->catalogue_cache() );
+		$this->catalogue_search ??= new CatalogueSearch( $this->catalogue(), $this->catalogue_cache(), $this->sold_rows() );
 		return $this->catalogue_search;
 	}
 
@@ -815,7 +816,14 @@ final class Plugin {
 	}
 
 	public function product_panel(): ProductPanel {
-		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection(), new VariantPairing( $this->product_variants(), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->variant_field(), $this->templates() ), $this->pricing_panel() );
+		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection(), new VariantPairing( $this->product_variants(), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->variant_field(), $this->templates() ), $this->pricing_panel(), $this->sold_rows() );
+	}
+
+	/**
+	 * Tells the rows of its blank a product sells.
+	 */
+	private function sold_rows(): SoldRows {
+		return new SoldRows( new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->product_variants() );
 	}
 
 	/**
