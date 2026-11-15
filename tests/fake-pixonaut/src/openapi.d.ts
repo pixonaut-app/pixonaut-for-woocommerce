@@ -73,7 +73,7 @@ export interface paths {
         };
         /**
          * Fetch a catalogue image
-         * @description A library picture's preview, a drawing of a design's revision, a blank mockup's photo, the image an option value is drawn as, a photo of a view of several placements, a view's or region's mask, or a published template's preview, through the link a read of blanks, templates, assets or designs answered with (`thumbnailUrl`, `previewUrl`, an asset's or a design's `pictureUrl`, a showcase's `previewUrl`, a mockup's `mount.url`, an image appearance's `url`, a view's photo `url` or region `maskUrl`). The token in the path is signed by the api; no key is needed, so an image element can load it. A thumbnail, preview or picture link expires within two hours and only the caller's browser may cache it. A `mount.url`, an appearance's `url`, a view's photo `url` or a `maskUrl` stays valid for at least 30 days and at most 60, and any cache may keep it until then; it stops opening once the mockup's photo is replaced. A link to a mockup the blank no longer has, to a version no longer published, or to a design whose personal data was erased, does not open; a design's link opens the revision it was minted for alone, drawn as that revision's image is; a showcase's link naming a set the version does not hold is 404 `showcase_not_found`.
+         * @description A library picture's preview, a drawing of a design's revision, a blank mockup's photo, the image an option value is drawn as, a photo of a view of several placements, a view's or region's mask, a published template's preview, or a published template drawn on a blank's photo, through the link a read of blanks, templates, assets or designs answered with (`thumbnailUrl`, `previewUrl`, an asset's, a design's or a template mockup's `pictureUrl`, a showcase's `previewUrl`, a mockup's `mount.url`, an image appearance's `url`, a view's photo `url` or region `maskUrl`). The token in the path is signed by the api; no key is needed, so an image element can load it. A thumbnail, preview or picture link expires within two hours and only the caller's browser may cache it. A `mount.url`, an appearance's `url`, a view's photo `url` or a `maskUrl` stays valid for at least 30 days and at most 60, and any cache may keep it until then; it stops opening once the mockup's photo is replaced. A link to a mockup the blank no longer has, to a version no longer published, or to a design whose personal data was erased, does not open; a design's link opens the revision it was minted for alone, drawn as that revision's image is; a showcase's link naming a set the version does not hold is 404 `showcase_not_found`.
          */
         get: operations["catalogueImages.get"];
         put?: never;
@@ -233,7 +233,7 @@ export interface paths {
         };
         /**
          * Render a template on a product photo
-         * @description The published template `id` (`baseId@version`) drawn into the print area a blank placement's mockup photo marks, as a PNG a storefront shows. A draft, an unknown blank, placement or mockup, and a mockup whose photo is gone are all 404, so the route says nothing about which of them is missing. `size` caps the long edge in pixels. `showcase` draws one of the template's showcases in place of its defaults, cached as the defaults are; an id the template holds no showcase under is 404 `showcase_not_found`. Naming neither `mockupId` nor `viewId` draws on the placement's first view. A studio member reads it with their session, in the workspace the `x-tenant-id` header names, holding `templates:read`.
+         * @description The published template `id` (`baseId@version`) drawn into the print area a blank placement's mockup photo marks, as a PNG a storefront shows. A draft, an unknown blank, placement or mockup, and a mockup whose photo is gone are all 404, so the route says nothing about which of them is missing. `size` caps the long edge in pixels. `showcase` draws one of the template's showcases in place of its defaults, cached as the defaults are; an id the template holds no showcase under is 404 `showcase_not_found`. Naming neither `mockupId` nor `viewId` draws on the placement's first view, or with a `variant` its first view showing that variant: on a blank shown in a setting, the variant's own picture there. A studio member reads it with their session, in the workspace the `x-tenant-id` header names, holding `templates:read`.
          */
         get: operations["templates.mockup.get"];
         put?: never;
@@ -22110,7 +22110,7 @@ export interface operations {
                     "text/plain": string;
                 };
             };
-            /** @description Refused: asset_map_too_large, design_doc_unreadable */
+            /** @description Refused: asset_map_too_large, design_doc_unreadable, mockup_rect_unusable, mockup_rect_outside_photo, mockup_placed_box_empty, photo_decode_failed, mockup_mesh_unusable, mockup_cut_unusable, mockup_mask_decode_failed, mockup_uv_decode_failed, mockup_uv_pass_mismatch, unknown_variant, variant_retired, variant_has_no_photo, mockup_mask_unreadable, mockup_uv_unreadable */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -22123,6 +22123,16 @@ export interface operations {
                         error: string;
                         /** @description Always sent with `asset_map_too_large`. */
                         maxBytes?: number;
+                        /** @description Always sent with `unknown_variant`, `variant_retired`, `variant_has_no_photo`. */
+                        reason?: string;
+                        /** @description Always sent with `unknown_variant`. */
+                        ref?: string;
+                        /** @description With `variant_retired`: The retired variant's ref. With `variant_has_no_photo`: The variant's ref. Always sent with `variant_retired`, `variant_has_no_photo`. */
+                        variant?: string;
+                        /** @description The view's label. Always sent with `variant_has_no_photo`. */
+                        view?: string;
+                        /** @description Always sent with `variant_has_no_photo`. */
+                        viewId?: string;
                     };
                 };
             };
@@ -22150,7 +22160,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: template_defaults_invalid, db_error, render_failed. A request that failed unexpectedly answers as text instead. */
+            /** @description Refused: template_defaults_invalid, db_error, render_failed, artwork_decode_failed, encode_failed, downscale_size_overflow, input_too_large, mockup_warp_unreadable, mockup_mesh_unreadable, mockup_cut_unreadable, mockup_uv_view_missing, composite_failed. A request that failed unexpectedly answers as text instead. */
             500: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -22163,7 +22173,7 @@ export interface operations {
                     "text/plain": "Internal Server Error";
                 };
             };
-            /** @description Refused: print_box_unavailable, assets_unavailable, preview_unavailable */
+            /** @description Refused: print_box_unavailable, assets_unavailable, preview_unavailable, asset_store_unavailable */
             503: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -22228,7 +22238,7 @@ export interface operations {
                     "text/plain": string;
                 };
             };
-            /** @description Refused: asset_map_too_large, design_doc_unreadable */
+            /** @description Refused: asset_map_too_large, design_doc_unreadable, mockup_rect_unusable, mockup_rect_outside_photo, mockup_placed_box_empty, photo_decode_failed, mockup_mesh_unusable, mockup_cut_unusable, mockup_mask_decode_failed, mockup_uv_decode_failed, mockup_uv_pass_mismatch, unknown_variant, variant_retired, variant_has_no_photo, mockup_mask_unreadable, mockup_uv_unreadable */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -22241,6 +22251,16 @@ export interface operations {
                         error: string;
                         /** @description Always sent with `asset_map_too_large`. */
                         maxBytes?: number;
+                        /** @description Always sent with `unknown_variant`, `variant_retired`, `variant_has_no_photo`. */
+                        reason?: string;
+                        /** @description Always sent with `unknown_variant`. */
+                        ref?: string;
+                        /** @description With `variant_retired`: The retired variant's ref. With `variant_has_no_photo`: The variant's ref. Always sent with `variant_retired`, `variant_has_no_photo`. */
+                        variant?: string;
+                        /** @description The view's label. Always sent with `variant_has_no_photo`. */
+                        view?: string;
+                        /** @description Always sent with `variant_has_no_photo`. */
+                        viewId?: string;
                     };
                 };
             };
@@ -22268,7 +22288,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: template_defaults_invalid, db_error, render_failed. A request that failed unexpectedly answers as text instead. */
+            /** @description Refused: template_defaults_invalid, db_error, render_failed, artwork_decode_failed, encode_failed, downscale_size_overflow, input_too_large, mockup_warp_unreadable, mockup_mesh_unreadable, mockup_cut_unreadable, mockup_uv_view_missing, composite_failed. A request that failed unexpectedly answers as text instead. */
             500: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -22281,7 +22301,7 @@ export interface operations {
                     "text/plain": "Internal Server Error";
                 };
             };
-            /** @description Refused: print_box_unavailable, assets_unavailable, preview_unavailable */
+            /** @description Refused: print_box_unavailable, assets_unavailable, preview_unavailable, asset_store_unavailable */
             503: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -22701,7 +22721,7 @@ export interface operations {
                 mockupId?: string;
                 /** @description One of the placement's views: the render uses its photo of `variant`, else its default photo. Name it or `mockupId`, not both. */
                 viewId?: string;
-                /** @description A variant ref of the blank, with `viewId`: the render uses the view's photo that shows it. */
+                /** @description A variant ref of the blank: with `viewId`, the render uses the view's photo that shows it; with no photo named, that of the placement's first view showing it. */
                 variant?: string;
                 /** @description The long edge in pixels, clamped to the sizes the api renders. */
                 size?: string;
@@ -33697,7 +33717,7 @@ export interface operations {
                             retired: {
                                 reason: string;
                             } | null;
-                            /** @description The views it has a photo in, in the blank's order: each view whose photo of its row shows it. */
+                            /** @description The views it has a photo in, in the blank's order: each view whose photo of its row shows it, a scene or a setting the blank is shown in included. */
                             views: {
                                 label: string;
                                 placementId: string;
@@ -44468,6 +44488,7 @@ export interface operations {
                                             kind: "template_mockup";
                                             mockupId?: string;
                                             placementId: string;
+                                            variant?: string;
                                             viewId?: string;
                                         } | {
                                             id: string;
@@ -44727,6 +44748,7 @@ export interface operations {
                                             kind: "template_mockup";
                                             mockupId?: string;
                                             placementId: string;
+                                            variant?: string;
                                             viewId?: string;
                                         } | {
                                             id: string;
@@ -44950,6 +44972,7 @@ export interface operations {
                                             kind: "template_mockup";
                                             mockupId?: string;
                                             placementId: string;
+                                            variant?: string;
                                             viewId?: string;
                                         } | {
                                             id: string;
@@ -45232,6 +45255,7 @@ export interface operations {
                                             kind: "template_mockup";
                                             mockupId?: string;
                                             placementId: string;
+                                            variant?: string;
                                             viewId?: string;
                                         } | {
                                             id: string;
@@ -45682,6 +45706,7 @@ export interface operations {
                                             kind: "template_mockup";
                                             mockupId?: string;
                                             placementId: string;
+                                            variant?: string;
                                             viewId?: string;
                                         } | {
                                             id: string;
