@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.9.2...v1.9.3) (2026-11-15)
+
+
+### Bug Fixes
+
+* **abilities:** a card's image copy runs ahead of the plugin's other background jobs ([#163](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/163)) ([7ab082b](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/7ab082b49a58dc3135d0f25f40eeb1cca148ce27))
+
 ## [1.9.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.9.1...v1.9.2) (2026-11-15)
 
 
