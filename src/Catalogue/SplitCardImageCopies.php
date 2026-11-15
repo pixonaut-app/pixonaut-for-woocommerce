@@ -51,6 +51,14 @@ final class SplitCardImageCopies {
 	private const DOWNLOAD_TIMEOUT_SECONDS = 30;
 
 	/**
+	 * Where a copy's job stands in the queue: ahead of the plugin's other
+	 * jobs, queued at Action Scheduler's default of 10. A store manager
+	 * waits for a card's image, and the queue may hold its products'
+	 * pictures to draw by the hundred, a minute each.
+	 */
+	private const PRIORITY = 5;
+
+	/**
 	 * The job's arguments: the product, the card's key and the copy's token.
 	 */
 	private const HOOK_ARGUMENTS = 3;
@@ -118,7 +126,7 @@ final class SplitCardImageCopies {
 				continue;
 			}
 			$token          = wp_generate_uuid4();
-			$queued         = 0 !== as_enqueue_async_action( self::HOOK, self::job( $product_id, $key, $token ), Schema::ACTION_GROUP );
+			$queued         = 0 !== as_enqueue_async_action( self::HOOK, self::job( $product_id, $key, $token ), Schema::ACTION_GROUP, false, self::PRIORITY );
 			$copies[ $key ] = array(
 				'src'    => $url,
 				'token'  => $token,

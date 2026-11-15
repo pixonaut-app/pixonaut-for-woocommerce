@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-15T19:34:12+00:00\n"
+"POT-Creation-Date: 2026-11-15T20:51:21+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: da_DK\n"
@@ -2835,7 +2835,7 @@ msgstr "Angiv filens offentlige URL som fields.source_url."
 
 #. translators: %s: the largest file the store takes, e.g. "64 MB".
 #: src/Abilities/Store/ResourceAbility.php:502
-#: src/Catalogue/SplitCardImageCopies.php:263
+#: src/Catalogue/SplitCardImageCopies.php:271
 #, php-format
 msgid "The file is larger than the store takes, at most %s."
 msgstr "Filen er større, end webshoppen tager imod, højst %s."
@@ -5111,7 +5111,7 @@ msgstr ""
 msgid "%1$s (%2$s)"
 msgstr "%1$s (%2$s)"
 
-#: src/Catalogue/SplitCardImageCopies.php:294
+#: src/Catalogue/SplitCardImageCopies.php:302
 msgid "The card's image could not be copied from its URL."
 msgstr "Kortets billede kunne ikke kopieres fra dets URL."
 

@@ -396,7 +396,8 @@ twice, or an image that is none refuses the whole call. The answer is the read's
 
 An image given by `src` is copied after the call has answered, in a
 background job per card, so a call may name every card of a product at once.
-Until its job has run, within minutes, the card keeps the image it had, and
+Its job runs ahead of the plugin's other background jobs, such as the
+products' pictures being drawn. Until it has run, within minutes, the card keeps the image it had, and
 its `image_copy`, on the value's row and the card's in both answers, holds
 the URL as `src` and `state` `waiting`. A copy that cannot be made (the URL
 answers no image, or one too large) leaves nothing in the media library:
