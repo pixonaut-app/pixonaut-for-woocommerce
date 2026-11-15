@@ -10,14 +10,20 @@
 			],
 			"variations": [
 				{ "attribute_pa_inramning": "ingen" },
-				{ "attribute_pa_inramning": "hangare", "attribute_pa_hangarfarg": "ek" },
+				{
+					"attribute_pa_inramning": "hangare",
+					"attribute_pa_hangarfarg": "ek"
+				},
 				{
 					"attribute_pa_inramning": "hangare",
 					"attribute_pa_hangarfarg": "svart"
 				},
 				{ "attribute_pa_inramning": "ram", "attribute_pa_ramfarg": "svart" },
 				{ "attribute_pa_inramning": "ram", "attribute_pa_ramfarg": "vit" },
-				{ "attribute_pa_inramning": "canvas", "attribute_pa_canvasdjup": "2cm" },
+				{
+					"attribute_pa_inramning": "canvas",
+					"attribute_pa_canvasdjup": "2cm"
+				},
 				{ "attribute_pa_inramning": "canvas", "attribute_pa_canvasdjup": "4cm" }
 			]
 		},
