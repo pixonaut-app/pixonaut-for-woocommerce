@@ -18,6 +18,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use Pixonaut\WooCommerce\Catalogue\TemplateId;
+use Pixonaut\WooCommerce\Catalogue\TemplateShowcases;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Settings\SettingsPage;
 use Pixonaut\WooCommerce\Templates;
@@ -413,7 +414,7 @@ final class ShowcaseField {
 	 * @throws ApiException When Pixonaut could not be asked.
 	 */
 	public function listed( string $template ): array {
-		return $this->cache->remember( 'template-showcases', array( 'id' => $template ), fn (): array => $this->catalogue->template_showcases( $template ) );
+		return ( new TemplateShowcases( $this->catalogue, $this->cache ) )->listed( $template );
 	}
 
 	/**

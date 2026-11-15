@@ -29,6 +29,8 @@ use WC_Product;
  * with several showcase sets chosen has a picture per set: the first is its
  * image, the others lead its gallery (`PictureGallery`). A set Pixonaut no
  * longer has is drawn with the template's defaults, and recorded as gone.
+ * A variable product's own picture is the one of a variation it sells
+ * (`PicturedVariation`).
  * A picture is drawn once per source: a variation drawn from what another
  * of its product's family already has a picture of shows that picture
  * (`SharedPictures`).
@@ -539,8 +541,11 @@ final class ProductPictures {
 	 * What the picture depends on, as stored: the configuration of the
 	 * product (and of a variation's product), which holds each side's
 	 * template version, its variant, the showcase sets chosen when there are
-	 * any, the view and photo chosen when there is one, the generation `redraw_all()` moves, and the product's own that
-	 * `regenerate()` moves. Null when neither is configured.
+	 * any, the view and photo chosen when there is one, the variation a
+	 * variable product is drawn as, the template of a variation set up on
+	 * another than its product's while sets are chosen, the generation
+	 * `redraw_all()` moves, and the product's own that `regenerate()` moves.
+	 * Null when neither is configured.
 	 *
 	 * @param WC_Product $product A product or variation.
 	 */
@@ -566,6 +571,16 @@ final class ProductPictures {
 		if ( array() !== $views ) {
 			// Likewise only when chosen.
 			$parts[] = array( 'picture_view' => $views );
+		}
+		$drawn_as = PicturedVariation::document_on( $product );
+		if ( null !== $drawn_as ) {
+			// A variable product's picture is the one of a variation it sells.
+			$parts[] = array( 'drawn_as' => $drawn_as );
+		}
+		$template = null === $showcase ? null : TemplateShowcases::other_template( $product );
+		if ( null !== $template ) {
+			// A variation on another template than its product's is drawn with that template's set.
+			$parts[] = array( 'showcase_template' => $template );
 		}
 		return md5( (string) wp_json_encode( self::drawn_under( $product, $parts ) ) );
 	}

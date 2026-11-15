@@ -187,6 +187,9 @@ final class RegeneratePicturesTest extends WP_UnitTestCase {
 		$override   = new ProductConfig( personalise: true, blank_id: null, sides: self::config( null, DesignFixture::LIVE_VERSION - 1 )->sides, override: true );
 		$own_config = wc_get_product( $product->get_children()[0] );
 		$this->assertInstanceOf( WC_Product::class, $own_config );
+		// Without a price customers cannot buy it, so the product's picture is not drawn as it.
+		$own_config->set_regular_price( '' );
+		$own_config->save();
 		$override->save_to( $own_config );
 		$this->recorder->raw( 200, self::png(), 'image/png' );
 		$this->recorder->raw( 200, self::png(), 'image/png' );

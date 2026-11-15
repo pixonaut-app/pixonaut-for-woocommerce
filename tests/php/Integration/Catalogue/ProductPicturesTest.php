@@ -106,18 +106,17 @@ final class ProductPicturesTest extends WP_UnitTestCase {
 		$variation->set_regular_price( '20' );
 		$variation->save();
 		DesignFixture::sell_variant( $variation );
-		// The variable product's picture first, on its placement's first photographed view.
-		$this->recorder->json( 200, BlankFixture::mockups( Hosts::server_api() ) );
-		$this->recorder->raw( 200, self::png(), 'image/png' );
+		// The variable product's picture is the variation's: drawn once, for the variant it sells.
 		$this->recorder->raw( 200, self::png(), 'image/png' );
 
 		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
 
-		$this->assertStringContainsString( '&variant=' . BlankFixture::VARIANT_REF . '&', $this->recorder->requests[2]['url'] );
+		$this->assertCount( 1, $this->recorder->requests );
+		$this->assertStringContainsString( '&variant=' . BlankFixture::VARIANT_REF . '&', $this->recorder->requests[0]['url'] );
 		$picture = $this->reload( $variation )->get_image_id();
 		$this->assertNotSame( 0, $picture );
 		$this->assertSame( $picture, get_post_thumbnail_id( $variation->get_id() ) );
-		$this->assertNotSame( $picture, get_post_thumbnail_id( $product->get_id() ) );
+		$this->assertSame( $picture, get_post_thumbnail_id( $product->get_id() ) );
 		$parent = wc_get_product( $product->get_id() );
 		$this->assertInstanceOf( WC_Product_Variable::class, $parent );
 		$available = $parent->get_available_variation( $this->reload( $variation ) );

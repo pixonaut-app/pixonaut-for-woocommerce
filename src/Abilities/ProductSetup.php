@@ -63,6 +63,17 @@ final class ProductSetup {
 	 */
 	public const PICTURE_NONE = 'none';
 
+	/**
+	 * The picture shows a showcase set's example values.
+	 */
+	public const DRAWN_WITH_SHOWCASE = 'showcase';
+
+	/**
+	 * The picture shows the template's own defaults: no set is chosen, or
+	 * its template has none of them.
+	 */
+	public const DRAWN_WITH_DEFAULTS = 'template_defaults';
+
 	public const PICTURE_STATES = array( self::PICTURE_OFF, self::PICTURE_DRAWN, self::PICTURE_PENDING, self::PICTURE_FAILED, self::PICTURE_OWN_IMAGE, self::PICTURE_NONE );
 
 	/**
@@ -106,6 +117,7 @@ final class ProductSetup {
 			'sides'           => array_map( array( self::class, 'side' ), $config->sides ),
 			'showcase_images' => ShowcaseImages::on( $product ),
 			'picture'         => $this->picture( $product ),
+			'picture_shows'   => $this->picture_shows( $product ),
 		);
 	}
 
@@ -238,6 +250,11 @@ final class ProductSetup {
 				'type'        => 'string',
 				'description' => __( 'Where its Pixonaut picture, shown as its image, stands: `drawn`, `pending` to be drawn, `failed` and to be tried again, `own_image` when the store manager\'s image is kept, `none` with nothing to draw it from, or `off` when the store does not use the pictures or it is not personalised.', 'pixonaut-for-woocommerce' ),
 				'enum'        => self::PICTURE_STATES,
+			),
+			'picture_shows'   => array(
+				'type'        => array( 'string', 'null' ),
+				'description' => __( 'What the Pixonaut picture it has now shows: `showcase` for a showcase set\'s example values, `template_defaults` for the template\'s own placeholders (no set is chosen, or its template has none of them). While `picture` is `pending` it is the picture about to be replaced. Null when it has no Pixonaut picture as its image.', 'pixonaut-for-woocommerce' ),
+				'enum'        => array( self::DRAWN_WITH_SHOWCASE, self::DRAWN_WITH_DEFAULTS, null ),
 			),
 		);
 	}
@@ -422,5 +439,21 @@ final class ProductSetup {
 			return self::PICTURE_FAILED;
 		}
 		return $stored['attachment'] > 0 ? self::PICTURE_DRAWN : self::PICTURE_NONE;
+	}
+
+	/**
+	 * What the picture the product has now was drawn with, from the record
+	 * of its last drawing: a showcase set unless none is chosen or the set
+	 * was not its template's; null when its image is not a Pixonaut picture.
+	 *
+	 * @param WC_Product $product A product or variation.
+	 */
+	private function picture_shows( WC_Product $product ): ?string {
+		$stored = ProductPictures::stored( $product );
+		if ( ! ProductPictures::applies( $this->settings, $product ) || PictureImage::is_own( $product ) || 0 === $stored['attachment'] ) {
+			return null;
+		}
+		$set = ShowcaseImages::on( $product )[0]['id'] ?? null;
+		return null === $set || in_array( $set, $stored['gone'], true ) ? self::DRAWN_WITH_DEFAULTS : self::DRAWN_WITH_SHOWCASE;
 	}
 }

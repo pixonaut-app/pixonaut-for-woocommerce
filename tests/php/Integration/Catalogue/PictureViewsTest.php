@@ -163,8 +163,9 @@ final class PictureViewsTest extends WP_UnitTestCase {
 	public function test_a_variations_own_photo_is_drawn_whatever_its_variant(): void {
 		$variation = $this->variation();
 		PictureView::save( $variation, self::photo() );
-		$this->answer_mockups( array( 'v_other' ) );
+		// Its product's picture first, drawn for the variant the variation sells.
 		$this->recorder->raw( 200, self::png(), 'image/png' );
+		$this->answer_mockups( array( 'v_other' ) );
 		$this->recorder->raw( 200, self::png(), 'image/png' );
 
 		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );

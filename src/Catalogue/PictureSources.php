@@ -16,15 +16,21 @@ use WC_Product;
 /**
  * A product's picture is its first side's template on the first view of its
  * placement the product is shown in, from the photo of its blank variant, or
- * the template's own preview when it has no blank. With showcase sets chosen
- * (`ShowcaseImages`), there is one picture per set, each drawn with its set,
- * on the photo or flat as chosen; a variation has one, with the first set.
- * The store manager may choose the view and photo of each, or of the picture
- * drawn without a set (`PictureView`); a variation may choose its own, else
- * it follows its product's for its image. A choice the blank no longer has
- * is drawn as without one.
+ * the template's own preview when it has no blank. A variable product's is
+ * drawn as the variation it stands for (`PicturedVariation`): that
+ * variation's template, blank and variant, so it never shows a variant the
+ * product does not sell. With showcase sets chosen (`ShowcaseImages`), there
+ * is one picture per set, each drawn with its set, on the photo or flat as
+ * chosen; a variation has one, with the first set, and one on another
+ * template than its product's, with that template's set
+ * (`TemplateShowcases`). The store manager may choose the view and photo of
+ * each, or of the picture drawn without a set (`PictureView`); a variation
+ * may choose its own, else it follows its product's for its image. A choice
+ * the blank no longer has is drawn as without one.
  */
 final class PictureSources {
+
+	private readonly TemplateShowcases $showcases;
 
 	/**
 	 * @param Catalogue      $catalogue Reads the blank's views.
@@ -34,6 +40,7 @@ final class PictureSources {
 		private readonly Catalogue $catalogue,
 		private readonly CatalogueCache $cache,
 	) {
+		$this->showcases = new TemplateShowcases( $catalogue, $cache );
 	}
 
 	/**
@@ -46,14 +53,18 @@ final class PictureSources {
 	 *
 	 * @return list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string}>
 	 *
-	 * @throws ApiException When the blank's views cannot be read.
+	 * @throws ApiException When the blank's views or the template's sets cannot be read.
 	 */
 	public function of( WC_Product $product ): array {
-		$images = ShowcaseImages::on( $product );
+		$chooser = $product;
+		// A variable product is drawn as one of the variations it sells.
+		$product = PicturedVariation::of( $chooser ) ?? $chooser;
+		$images  = ShowcaseImages::on( $chooser );
 		// A variation has one image, and no gallery.
-		$images  = $product->is_type( 'variation' ) ? array_slice( $images, 0, 1 ) : $images;
-		$own     = $product->is_type( 'variation' ) ? PictureView::on( $product ) : null;
-		$choices = array() === $images ? array( self::followed( $product ) ?? array( 'kind' => PictureView::MOCKUP ) ) : $images;
+		$images  = $chooser->is_type( 'variation' ) ? array_slice( $images, 0, 1 ) : $images;
+		$images  = $this->showcases->drawn_on( $product, $images );
+		$own     = $chooser->is_type( 'variation' ) ? PictureView::on( $chooser ) : null;
+		$choices = array() === $images ? array( self::followed( $chooser ) ?? array( 'kind' => PictureView::MOCKUP ) ) : $images;
 		// Flat pictures alone need nothing of the blank, so its views are not read for them.
 		$on_photo = null !== $own || in_array( PictureView::MOCKUP, array_column( $choices, 'kind' ), true );
 		$source   = $this->source( $product, $on_photo );
@@ -62,7 +73,7 @@ final class PictureSources {
 		}
 		$sources = array();
 		foreach ( $choices as $choice ) {
-			$drawn     = $this->chosen( $product, $source, $own ?? $choice, null !== $own || ! $product->is_type( 'variation' ) );
+			$drawn     = $this->chosen( $product, $source, $own ?? $choice, null !== $own || ! $chooser->is_type( 'variation' ) );
 			$sources[] = $drawn + ( isset( $choice['id'] ) ? array( 'showcase' => $choice['id'] ) : array() );
 		}
 		return $sources;
@@ -85,7 +96,7 @@ final class PictureSources {
 	 * What a picture is drawn from under a choice: flat, on the view and
 	 * photo it names while the blank has them, else as without a choice.
 	 *
-	 * @param WC_Product                                                                                        $product A product or variation.
+	 * @param WC_Product                                                                                        $product A product or variation, or the variation a variable product is drawn as.
 	 * @param array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null} $source  What it is drawn from without a choice.
 	 * @param array{kind: string, view?: string, photo?: string}                                                $choice  The choice.
 	 * @param bool                                                                                              $own     Whether the choice is the picture's own, rather than one it follows.
@@ -137,7 +148,7 @@ final class PictureSources {
 	 * What the product's picture is drawn from with the template's defaults;
 	 * null when the product shows none.
 	 *
-	 * @param WC_Product $product  A product or variation.
+	 * @param WC_Product $product  A product or variation, or the variation a variable product is drawn as.
 	 * @param bool       $on_photo Whether it is drawn on the blank's photo when it can be; false for the template alone.
 	 *
 	 * @return array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null}|null
@@ -154,7 +165,7 @@ final class PictureSources {
 		if ( ! $on_photo || null === $config->blank_id || null === $side->placement_id ) {
 			return array( 'template' => $template );
 		}
-		// A variable product stands for all its variations: it has no variant.
+		// A variable product selling no variation stands for none: it has no variant.
 		$variant = $product->is_type( 'variable' ) ? null : ProductVariant::sold_on( $product, $config );
 		$view    = null === $variant ? self::first_shown( $config, $this->photographed_views( $config->blank_id, $side->placement_id ) ) : $variant->first_view( $side->placement_id, $config );
 		if ( null === $view ) {

@@ -20,7 +20,8 @@ use WC_Product;
  * Queues `ProductPictures`' job for a product or variation whose picture
  * depends on something that changed: its configuration, its variant, its
  * image, its showcase sets, the view and photo chosen or its generation (each a post meta, written through the meta API or directly, which
- * clears the post's cache), its picture deleted from the media library, and
+ * clears the post's cache), a variable product's when one of its variations
+ * changed, its picture deleted from the media library, and
  * every configured product when the setting is turned on or off, when every
  * picture is drawn again, and after the upgrade that made pictures product
  * images. A product is queued only when the job has something to do for it.
@@ -81,6 +82,13 @@ final class PictureQueue {
 	private array $queued = array();
 
 	/**
+	 * Variable products one of whose variations changed in this request, by id.
+	 *
+	 * @var array<int, true>
+	 */
+	private array $parents = array();
+
+	/**
 	 * @param Settings      $settings Says whether pictures are product images.
 	 * @param \Closure|null $clock    `fn(): int` Unix time; `time()` when null.
 	 */
@@ -101,6 +109,7 @@ final class PictureQueue {
 		}
 		// A direct write, as `ProductConfig::replace_on()`, clears the post's cache.
 		add_action( 'clean_post_cache', array( $this, 'changed' ) );
+		add_action( 'shutdown', array( $this, 'parents_changed' ) );
 		add_action( 'update_option_' . Settings::OPTION, array( $this, 'settings_changed' ), 10, self::OPTION_ARGS );
 		add_action( 'add_option_' . Settings::OPTION, array( $this, 'settings_added' ), 10, self::OPTION_ARGS );
 		add_action( 'action_scheduler_init', array( $this, 'queue_backfill' ) );
@@ -150,8 +159,28 @@ final class PictureQueue {
 			return;
 		}
 		$this->queue_if_due( $product );
+		if ( $product->is_type( 'variation' ) ) {
+			// Its product's picture may be drawn as it: checked once, after every change of the request.
+			$this->parents[ $product->get_parent_id() ] = true;
+		}
 		if ( $product->is_type( 'variable' ) && null !== ProductConfig::document_on( $product ) && did_action( 'action_scheduler_init' ) && ! self::waiting( self::VARIATIONS_ACTION, $post_id ) ) {
 			as_enqueue_async_action( self::VARIATIONS_ACTION, array( $post_id ), ProductPictures::GROUP );
+		}
+	}
+
+	/**
+	 * Queues the variable products whose picture is due after their
+	 * variations changed: the one a product is drawn as (`PicturedVariation`)
+	 * may be another now, or set up otherwise.
+	 */
+	public function parents_changed(): void {
+		$parents       = array_keys( $this->parents );
+		$this->parents = array();
+		foreach ( $parents as $parent_id ) {
+			$parent = self::fresh( $parent_id );
+			if ( null !== $parent ) {
+				$this->queue_if_due( $parent );
+			}
 		}
 	}
 
