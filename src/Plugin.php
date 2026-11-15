@@ -23,6 +23,7 @@ use Pixonaut\WooCommerce\Api\VariantCosts;
 use Pixonaut\WooCommerce\Bridge\Discovery;
 use Pixonaut\WooCommerce\Bridge\Status;
 use Pixonaut\WooCommerce\Abilities\GetProductPictureViews;
+use Pixonaut\WooCommerce\Abilities\GetProductSplitListing;
 use Pixonaut\WooCommerce\Abilities\LinkProduct;
 use Pixonaut\WooCommerce\Abilities\ListProducts;
 use Pixonaut\WooCommerce\Abilities\LineView;
@@ -39,6 +40,7 @@ use Pixonaut\WooCommerce\Abilities\ResetStandingLayout;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
+use Pixonaut\WooCommerce\Abilities\SetProductSplitListing;
 use Pixonaut\WooCommerce\Abilities\SetVariationPrintSize;
 use Pixonaut\WooCommerce\Abilities\SetVariationVariants;
 use Pixonaut\WooCommerce\Abilities\SetupFields;
@@ -528,6 +530,8 @@ final class Plugin {
 					new SetProductShowcase( $links, $this->showcase_field() ),
 					$views,
 					new SetProductPictureView( $views ),
+					new GetProductSplitListing(),
+					new SetProductSplitListing(),
 					new MoveProductTemplate( $links, $fields ),
 					new MoveProductAttribute( new WcLogger() ),
 					new UseProductPicture( $links, $this->settings() ),

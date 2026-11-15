@@ -239,6 +239,18 @@ final class ProductConfig {
 	}
 
 	/**
+	 * Whether a configuration can be stored on a product or variation: not
+	 * while the one stored comes from a newer plugin version, which
+	 * `save_to()` refuses to overwrite.
+	 *
+	 * @param WC_Product $product A product or variation.
+	 */
+	public static function writable_on( WC_Product $product ): bool {
+		$raw = self::document_on( $product );
+		return null === $raw || self::stored_version( $raw ) <= self::SCHEMA_VERSION;
+	}
+
+	/**
 	 * Stores the configuration on a product or variation. When it cannot be
 	 * encoded, to_json() throws a RuntimeException and the stored one is kept.
 	 *

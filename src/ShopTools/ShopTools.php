@@ -12,10 +12,12 @@ namespace Pixonaut\WooCommerce\ShopTools;
 use Closure;
 use Pixonaut\WooCommerce\Abilities\Ability;
 use Pixonaut\WooCommerce\Abilities\GetProductPictureViews;
+use Pixonaut\WooCommerce\Abilities\GetProductSplitListing;
 use Pixonaut\WooCommerce\Abilities\LinkProduct;
 use Pixonaut\WooCommerce\Abilities\ProductLinks;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
+use Pixonaut\WooCommerce\Abilities\SetProductSplitListing;
 use Pixonaut\WooCommerce\Abilities\SetVariationPrintSize;
 use Pixonaut\WooCommerce\Abilities\SetVariationVariants;
 use Pixonaut\WooCommerce\Abilities\Store\ResourceAbility;
@@ -83,7 +85,7 @@ final class ShopTools {
 			}
 		}
 		$links = ( $this->links )();
-		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )(), ( $this->setup )() ) as $tool ) {
+		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )(), ( $this->setup )(), new GetProductSplitListing(), new SetProductSplitListing() ) as $tool ) {
 			$tools[ $tool->name() ] = $tool;
 		}
 		return $tools;
