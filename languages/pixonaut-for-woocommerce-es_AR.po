@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-15T14:18:23+00:00\n"
+"POT-Creation-Date: 2026-11-15T14:36:23+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -663,9 +663,9 @@ msgstr ""
 "elección para “Mostrar cada valor como un producto propio” (`auto` sigue el "
 "ajuste propio del atributo, `attribute_default`), si con ella sus valores "
 "aparecen como productos propios, y el título y la imagen propios de la "
-"tarjeta de cada valor. `listed_by` es el atributo por el que aparece ahora el "
-"producto; null cuando aparece una sola vez. Se establecen con `set-product-"
-"split-listing`."
+"tarjeta de cada valor. `listed_by` es el atributo por el que aparece ahora "
+"el producto; null cuando aparece una sola vez. Se establecen con `set-"
+"product-split-listing`."
 
 #: src/Abilities/GetProductSplitListing.php:152
 msgid ""
@@ -673,9 +673,10 @@ msgid ""
 "when it is listed once. Only a variable product is listed by an attribute, "
 "one used for its variations."
 msgstr ""
-"El identificador del atributo por el que aparece el producto, con una tarjeta "
-"por valor; null cuando aparece una sola vez. Solo un producto variable puede "
-"aparecer por un atributo, y solo por uno que use para sus variaciones."
+"El identificador del atributo por el que aparece el producto, con una "
+"tarjeta por valor; null cuando aparece una sola vez. Solo un producto "
+"variable puede aparecer por un atributo, y solo por uno que use para sus "
+"variaciones."
 
 #: src/Abilities/GetProductSplitListing.php:167
 msgid ""
@@ -873,7 +874,7 @@ msgstr ""
 "La página de las variaciones de cada producto variable, empezando por 1, %d "
 "por página."
 
-#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:265
+#: src/Abilities/ListProducts.php:133 src/Abilities/ProductLinks.php:276
 msgid ""
 "Whether customers can buy it now, its blank variants and WooCommerce's own "
 "checks included."
@@ -1225,7 +1226,7 @@ msgstr ""
 "Ningún producto simple o variable ni ninguna variación tiene este "
 "identificador."
 
-#: src/Abilities/ProductLinks.php:261
+#: src/Abilities/ProductLinks.php:272
 msgid ""
 "For a variation, whether it has a setup of its own rather than following its "
 "product's, whose setup it then gives; false for a product."
@@ -1234,7 +1235,7 @@ msgstr ""
 "seguir la de su producto, cuya configuración da entonces; false para un "
 "producto."
 
-#: src/Abilities/ProductLinks.php:269
+#: src/Abilities/ProductLinks.php:280
 msgid ""
 "Which of the product's variations sell no variant of the blank, in words; "
 "null when each does. Set a variation's `variant` with `set-product-setup`."
@@ -1882,10 +1883,10 @@ msgstr ""
 "(`on`, `off` o `auto` para seguir el ajuste propio del atributo) y el título "
 "y la imagen propios de la tarjeta de cada valor indicado, igual que la "
 "pestaña Atributos del producto. Solo cambia lo que se indica: un atributo, "
-"valor, título o imagen que se omita se queda como está. Un título vacío o una "
-"imagen null devuelve a la tarjeta el título o la imagen del producto. No se "
-"guarda nada a menos que todo lo indicado sea válido. La respuesta es lo que "
-"tiene ahora el producto, tal como lo da `get-product-split-listing`."
+"valor, título o imagen que se omita se queda como está. Un título vacío o "
+"una imagen null devuelve a la tarjeta el título o la imagen del producto. No "
+"se guarda nada a menos que todo lo indicado sea válido. La respuesta es lo "
+"que tiene ahora el producto, tal como lo da `get-product-split-listing`."
 
 #: src/Abilities/SetProductSplitListing.php:67
 msgid "One of the product's global attributes, by id."
@@ -1908,8 +1909,8 @@ msgid ""
 "product's."
 msgstr ""
 "La imagen propia de la tarjeta: `id`, una imagen de la biblioteca de medios, "
-"o `src`, una URL pública que la tienda copia en ella; null para la imagen del "
-"valor o la del producto."
+"o `src`, una URL pública que la tienda copia en ella; null para la imagen "
+"del valor o la del producto."
 
 #: src/Abilities/SetProductSplitListing.php:190
 msgid ""
@@ -2042,7 +2043,7 @@ msgstr ""
 "con `placement_default` true es ese tamaño predeterminado. Sin producto "
 "base, cada uno debe coincidir con la relación de aspecto de la plantilla."
 
-#: src/Abilities/SetupFields.php:209 src/Abilities/SetVariationPrintSize.php:90
+#: src/Abilities/SetupFields.php:209 src/Abilities/SetVariationPrintSize.php:92
 msgid "The name customers see, e.g. \"A3\"; left out for the millimetres."
 msgstr ""
 "El nombre que ven los clientes, p. ej., “A3”; se omite para mostrar los "
@@ -2110,18 +2111,30 @@ msgid "No live template has the id \"%s\"."
 msgstr "Ninguna plantilla activa tiene el identificador “%s”."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetVariationPrintSize.php:71
+#: src/Abilities/SetVariationPrintSize.php:73
 msgid "Set a variation's print size"
 msgstr "Establecer el tamaño de impresión de una variación"
 
-#: src/Abilities/SetVariationPrintSize.php:72
+#: src/Abilities/SetVariationPrintSize.php:74
+#, fuzzy
+#| msgid ""
+#| "Gives one variation its own print size, in millimetres, on a product with "
+#| "or without a blank: the variation gets a setup of its own, starting from "
+#| "the one it has, whose one side is sold in that size alone. Pixonaut "
+#| "checks the size as the variation's Pixonaut panel does; a size it cannot "
+#| "print is refused with the reason, and nothing is saved. The answer gives "
+#| "the variation's validity and blank variant now."
 msgid ""
 "Gives one variation its own print size, in millimetres, on a product with or "
 "without a blank: the variation gets a setup of its own, starting from the "
 "one it has, whose one side is sold in that size alone. Pixonaut checks the "
 "size as the variation's Pixonaut panel does; a size it cannot print is "
-"refused with the reason, and nothing is saved. The answer gives the "
-"variation's validity and blank variant now."
+"refused with the reason, and nothing is saved. On a blank whose print areas "
+"change with an option, the size is checked against the print area of the "
+"variation's blank variant. With `clear` true and no size, takes the "
+"variation's own size off instead: it is sold at its placement's size again, "
+"its blank variant's print area where those change with an option. The answer "
+"gives the variation's validity and blank variant now."
 msgstr ""
 "Da a una variación su propio tamaño de impresión, en milímetros, en un "
 "producto con o sin producto base: la variación pasa a tener configuración "
@@ -2131,7 +2144,13 @@ msgstr ""
 "guarda nada. La respuesta indica después la validez y la variante del "
 "producto base de la variación."
 
-#: src/Abilities/SetVariationPrintSize.php:101
+#: src/Abilities/SetVariationPrintSize.php:96
+msgid ""
+"True, in place of `width_mm` and `height_mm`, to take the variation's own "
+"print size off."
+msgstr ""
+
+#: src/Abilities/SetVariationPrintSize.php:107
 #: src/Abilities/SetVariationVariants.php:108
 msgid ""
 "The blank's variant the variation sells; null when it is not personalised on "
@@ -2140,11 +2159,15 @@ msgstr ""
 "La variante del producto base que vende la variación; null si no está "
 "personalizada sobre un producto base."
 
-#: src/Abilities/SetVariationPrintSize.php:131
+#: src/Abilities/SetVariationPrintSize.php:137
 msgid "No variation has this id."
 msgstr "Ninguna variación tiene este identificador."
 
-#: src/Abilities/SetVariationPrintSize.php:142
+#: src/Abilities/SetVariationPrintSize.php:143
+msgid "Give a size or `clear`, not both."
+msgstr ""
+
+#: src/Abilities/SetVariationPrintSize.php:157
 msgid ""
 "The variation has several sides, each with its own print sizes: set them "
 "with set-product-setup."
@@ -2152,12 +2175,19 @@ msgstr ""
 "La variación tiene varias caras, cada una con sus propios tamaños de "
 "impresión: establecelas con set-product-setup."
 
-#: src/Abilities/SetVariationPrintSize.php:146
+#: src/Abilities/SetVariationPrintSize.php:161
 msgid ""
 "The variation is not personalised with a template. Link its product first."
 msgstr ""
 "La variación no está personalizada con una plantilla. Vinculá primero su "
 "producto a una plantilla."
+
+#: src/Abilities/SetVariationPrintSize.php:164
+msgid ""
+"The variation has a setup of its own without a blank, so there is no "
+"placement whose size it could take: give it a size, or make it follow its "
+"product again with set-product-setup."
+msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetVariationVariants.php:56
