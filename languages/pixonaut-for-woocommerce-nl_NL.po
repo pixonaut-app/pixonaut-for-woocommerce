@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-14T17:21:09+00:00\n"
+"POT-Creation-Date: 2026-11-15T14:13:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -645,6 +645,65 @@ msgid "The blank variants the photo shows; empty for every one."
 msgstr ""
 "De varianten van het blanco product die de foto toont; leeg voor alle "
 "varianten."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetProductSplitListing.php:34
+msgid "Read which values a product lists as their own products"
+msgstr "Opvragen welke waarden een product als eigen producten toont"
+
+#: src/Abilities/GetProductSplitListing.php:35
+msgid ""
+"Reads, for each global attribute of a simple or variable product, its \"Show "
+"each value as its own product\" choice (`auto` follows the attribute's own "
+"setting, `attribute_default`), whether that lists its values as their own "
+"products, and each value's card's own title and image. `listed_by` is the "
+"attribute the product is listed by now; null when it is listed once. Set "
+"them with `set-product-split-listing`."
+msgstr ""
+"Vraagt voor elk globaal attribuut van een simpel of variabel product de "
+"keuze voor “Elke waarde als eigen product tonen” op (`auto` volgt de eigen "
+"instelling van het attribuut, `attribute_default`), of de waarden daarmee "
+"als eigen producten worden getoond, en de eigen titel en afbeelding van de "
+"kaart van elke waarde. `listed_by` is het attribuut waarnaar het product nu "
+"per waarde wordt getoond; null als het één keer wordt getoond. Stel ze in "
+"met `set-product-split-listing`."
+
+#: src/Abilities/GetProductSplitListing.php:152
+msgid ""
+"The id of the attribute the product is listed by, one card per value; null "
+"when it is listed once. Only a variable product is listed by an attribute, "
+"one used for its variations."
+msgstr ""
+"De ID van het attribuut waarnaar het product per waarde wordt getoond, met "
+"één kaart per waarde; null als het één keer wordt getoond. Alleen een "
+"variabel product kan zo worden getoond, en alleen naar een attribuut dat het "
+"voor zijn variaties gebruikt."
+
+#: src/Abilities/GetProductSplitListing.php:167
+msgid ""
+"Whether the attribute lists its values as their own products by default."
+msgstr "Of het attribuut zijn waarden standaard als eigen producten toont."
+
+#: src/Abilities/GetProductSplitListing.php:171
+msgid ""
+"What the choice comes to: whether the product lists each value of this "
+"attribute as its own product."
+msgstr ""
+"Waar de keuze op neerkomt: of het product elke waarde van dit attribuut als "
+"eigen product toont."
+
+#: src/Abilities/GetProductSplitListing.php:182
+msgid "The card's own title; empty when it shows the product's."
+msgstr ""
+"De eigen titel van de kaart; leeg als de kaart die van het product toont."
+
+#: src/Abilities/GetProductSplitListing.php:186
+msgid ""
+"The card's own image, by its attachment id and URL; null when it shows the "
+"value's picture or the product's."
+msgstr ""
+"De eigen afbeelding van de kaart, met de ID en URL van de bijlage; null als "
+"de kaart de afbeelding van de waarde of die van het product toont."
 
 #: src/Abilities/LineView.php:45
 msgid "Where the line stands."
@@ -1799,6 +1858,111 @@ msgstr "Het sjabloon heeft geen voorbeeldset “%1$s”. Het heeft: %2$s."
 msgctxt "showcase sets a template offers"
 msgid "none"
 msgstr "geen"
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetProductSplitListing.php:43
+msgid "Set which values a product lists as their own products"
+msgstr "Instellen welke waarden een product als eigen producten toont"
+
+#: src/Abilities/SetProductSplitListing.php:44
+msgid ""
+"Sets, for each global attribute of a simple or variable product listed, its "
+"\"Show each value as its own product\" choice (`on`, `off`, or `auto` to "
+"follow the attribute's own setting) and each listed value's card's own title "
+"and image, as the product's Attributes tab does. Only what is given changes: "
+"an attribute, value, title or image left out keeps what it has. An empty "
+"title or a null image gives the card the product's own again. Nothing is "
+"saved unless everything listed fits. The answer is what the product has now, "
+"as `get-product-split-listing` gives it."
+msgstr ""
+"Stelt voor elk opgegeven globaal attribuut van een simpel of variabel "
+"product de keuze voor “Elke waarde als eigen product tonen” in (`on`, `off` "
+"of `auto` om de eigen instelling van het attribuut te volgen) en de eigen "
+"titel en afbeelding van de kaart van elke opgegeven waarde, zoals het "
+"tabblad Attributen van het product dat doet. Alleen wat wordt opgegeven "
+"verandert: een attribuut, waarde, titel of afbeelding die wordt weggelaten, "
+"blijft zoals die is. Een lege titel of een afbeelding null geeft de kaart "
+"weer de titel of afbeelding van het product. Er wordt niets opgeslagen "
+"tenzij alles wat is opgegeven klopt. Het antwoord is wat het product nu "
+"heeft, zoals `get-product-split-listing` dat geeft."
+
+#: src/Abilities/SetProductSplitListing.php:62
+msgid "One of the product's global attributes, by id."
+msgstr "Een van de globale attributen van het product, op ID."
+
+#: src/Abilities/SetProductSplitListing.php:77
+msgid "One of the values the product has of the attribute, by its term id."
+msgstr ""
+"Een van de waarden die het product van het attribuut heeft, op de ID van de "
+"term."
+
+#: src/Abilities/SetProductSplitListing.php:81
+msgid "The card's own title; empty for the product's."
+msgstr "De eigen titel van de kaart; leeg voor die van het product."
+
+#: src/Abilities/SetProductSplitListing.php:85
+msgid ""
+"The card's own image: `id`, an image of the media library, or `src`, a "
+"public URL the store copies into it; null for the value's picture or the "
+"product's."
+msgstr ""
+"De eigen afbeelding van de kaart: `id`, een afbeelding uit de "
+"mediabibliotheek, of `src`, een openbare URL die de winkel daarin kopieert; "
+"null voor de afbeelding van de waarde of die van het product."
+
+#: src/Abilities/SetProductSplitListing.php:158
+msgid ""
+"The product's Pixonaut configuration comes from a newer version of the "
+"plugin, so it is not changed. Update the plugin."
+msgstr ""
+"De Pixonaut-configuratie van het product komt van een nieuwere versie van de "
+"plugin, dus die wordt niet gewijzigd. Werk de plugin bij."
+
+#. translators: %d: an attribute's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductSplitListing.php:185
+#, php-format
+msgid ""
+"The product has no global attribute %d. Only a global attribute's values can "
+"be listed as their own products."
+msgstr ""
+"Het product heeft geen globaal attribuut %d. Alleen de waarden van een "
+"globaal attribuut kunnen als eigen producten worden getoond."
+
+#. translators: %d: an attribute's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductSplitListing.php:189
+#, php-format
+msgid "Attribute %d is listed twice."
+msgstr "Attribuut %d staat er twee keer in."
+
+#. translators: 1: a value's term id; 2: an attribute's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductSplitListing.php:222
+#, php-format
+msgid "The product has no value %1$d of attribute %2$d."
+msgstr "Het product heeft geen waarde %1$d van attribuut %2$d."
+
+#. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductSplitListing.php:226
+#, php-format
+msgid "Value %d is listed twice."
+msgstr "Waarde %d staat er twee keer in."
+
+#. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductSplitListing.php:259
+#, php-format
+msgid "Give the image of value %d as either `id` or `src`."
+msgstr "Geef de afbeelding van waarde %d op met óf `id`, óf `src`."
+
+#. translators: %d: an attachment's id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductSplitListing.php:264
+#, php-format
+msgid "The media library has no image %d."
+msgstr "De mediabibliotheek heeft geen afbeelding met ID %d."
+
+#. translators: %d: a value's term id. Why an AI assistant's change to the store was refused.
+#: src/Abilities/SetProductSplitListing.php:270
+#, php-format
+msgid "The image of value %d is not a public URL."
+msgstr "De afbeelding van waarde %d is geen openbare URL."
 
 #: src/Abilities/SetupFields.php:165
 msgid ""

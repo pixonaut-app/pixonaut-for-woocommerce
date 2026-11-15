@@ -26,6 +26,8 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/set-product-showcase` | Sets which of its template's showcase sets a product's images are drawn with | `edit_product` on that product |
 | `pixonaut-for-woocommerce/get-product-picture-views` | What a product's or variation's images are drawn on, the views and photos of its side's placement, and the showcase sets a product can show | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/set-product-picture-view` | Sets the view and photo one image of a product or variation is drawn on, or flat | `edit_product` on that product (and on a variation's product) |
+| `pixonaut-for-woocommerce/get-product-split-listing` | Whether each global attribute of a product lists its values as their own products, and each value's card's own title and image | `edit_product` on that product |
+| `pixonaut-for-woocommerce/set-product-split-listing` | Sets a product's "Show each value as its own product" choice per global attribute, and each value's card's own title and image | `edit_product` on that product |
 | `pixonaut-for-woocommerce/move-product-template` | Moves a product and its variations' own setups to another template version, keeping their sides | `edit_product` on that product |
 | `pixonaut-for-woocommerce/use-product-picture` | Puts the Pixonaut picture back in place of the store manager's own image | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/reset-standing-layout` | Undoes the layout adjusted by hand for one option of a standing side | `edit_product` on that product (and on a variation's product) |
@@ -348,6 +350,23 @@ personalised (a link kept while personalisation is off is left as it is), to
 id for its live version, after which they follow its latest version, or
 another template. Everything else the side has is kept, and each setup is
 saved and checked again; when one cannot be worked out, nothing is saved.
+
+`get-product-split-listing` reads what the product's Attributes tab shows
+for [listing each value as its own product](../../merchant/split-listings/):
+`attributes`, each global attribute of the product with its `choice`
+(`auto`, `on` or `off`), the attribute's own setting (`attribute_default`),
+whether the product is listed by it (`own_products`: by one attribute at
+most, `listed_by`), and its `values`, each with its
+card's own `title` (empty for the product's) and `image` (`id` and `src`;
+null for the value's picture or the product's); and `listed_by`, the
+attribute the product is listed by now, null when it is listed once.
+`set-product-split-listing` sets them: each attribute listed takes a `choice`
+and `values`, each a `term_id` with a `title`, an `image`, or both. An image
+is `id`, an image of the media library, or `src`, a public URL the store
+copies into it; null takes the card's own image off, and an empty title its
+own title. Only what is given changes. An attribute that is not a global
+attribute of the product, a value the product does not have, or an image
+that is none refuses the whole call. The answer is the read's.
 
 `set-product-showcase` sets the showcase sets of the product's template its
 images are drawn with (`images`: `id` and `kind`, `mockup` on the blank's

@@ -71,7 +71,11 @@ final class AbilitiesTest extends WP_UnitTestCase {
 
 	private const CHANGE_DELIVERY = Abilities::NAMESPACE . '/change-delivery-address';
 
-	private const ALL = array( self::LIST_TEMPLATES, self::LIST_PRODUCTS, self::LINK_PRODUCT, self::UNLINK_PRODUCT, self::LIST_ORDERS, self::ACT_ON_LINE, self::CHANGE_DELIVERY, self::CONNECTION_STATUS, ...ProductSetupAbilitiesTest::WRITES, MoveProductAttributeTest::MOVE, StoreAdminAbilitiesTest::READ_SETTINGS, ...StoreAdminAbilitiesTest::WRITES, PictureViewAbilitiesTest::GET, PictureViewAbilitiesTest::SET, SetVariationVariantsTest::ABILITY, VariationPrintSizeTest::ABILITY );
+	private const GET_SPLIT_LISTING = Abilities::NAMESPACE . '/get-product-split-listing';
+
+	private const SET_SPLIT_LISTING = Abilities::NAMESPACE . '/set-product-split-listing';
+
+	private const ALL = array( self::GET_SPLIT_LISTING, self::SET_SPLIT_LISTING, self::LIST_TEMPLATES, self::LIST_PRODUCTS, self::LINK_PRODUCT, self::UNLINK_PRODUCT, self::LIST_ORDERS, self::ACT_ON_LINE, self::CHANGE_DELIVERY, self::CONNECTION_STATUS, ...ProductSetupAbilitiesTest::WRITES, MoveProductAttributeTest::MOVE, StoreAdminAbilitiesTest::READ_SETTINGS, ...StoreAdminAbilitiesTest::WRITES, PictureViewAbilitiesTest::GET, PictureViewAbilitiesTest::SET, SetVariationVariantsTest::ABILITY, VariationPrintSizeTest::ABILITY );
 
 	private const TEMPLATE_ID = 'mini-tee@2';
 
