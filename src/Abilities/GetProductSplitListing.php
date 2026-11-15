@@ -74,7 +74,7 @@ final class GetProductSplitListing implements Ability {
 	public static function answer( WC_Product $product ): array {
 		$config     = ProductConfig::stored_on( $product );
 		$looks      = SplitCardLooks::stored_on( $product->get_id() );
-		$listed_by  = SplitListing::attribute_of( $product );
+		$listed_by  = array_map( static fn ( WC_Product_Attribute $attribute ): int => $attribute->get_id(), SplitListing::attributes_of( $product ) );
 		$attributes = array();
 		foreach ( self::global_attributes( $product ) as $attribute ) {
 			$values = array();
@@ -95,15 +95,17 @@ final class GetProductSplitListing implements Ability {
 				'name'              => wc_attribute_label( $attribute->get_name(), $product ),
 				'choice'            => SplitListing::choice( $config, $attribute->get_id() ),
 				'attribute_default' => SplitListing::attribute_default( $attribute->get_id() ),
-				// A product is listed by one attribute at most, whatever the others' choices.
-				'own_products'      => null !== $listed_by && $listed_by->get_id() === $attribute->get_id(),
+				// Its choice alone does not say: an attribute on Auto is not listed by while the product turned another on itself.
+				'own_products'      => in_array( $attribute->get_id(), $listed_by, true ),
 				'values'            => $values,
 			);
 		}
 		return array(
-			'product_id' => $product->get_id(),
-			'listed_by'  => null === $listed_by ? null : $listed_by->get_id(),
-			'attributes' => $attributes,
+			'product_id'    => $product->get_id(),
+			// The first of them, as before a product could be listed by several.
+			'listed_by'     => $listed_by[0] ?? null,
+			'listed_by_all' => $listed_by,
+			'attributes'    => $attributes,
 		);
 	}
 
@@ -150,6 +152,10 @@ final class GetProductSplitListing implements Ability {
 				'listed_by'  => array(
 					'type'        => array( 'integer', 'null' ),
 					'description' => __( 'The id of the attribute the product is listed by, one card per value; null when it is listed once. Only a variable product is listed by an attribute, one used for its variations.', 'pixonaut-for-woocommerce' ),
+				),
+				'listed_by_all' => array(
+					'type'  => 'array',
+					'items' => array( 'type' => 'integer' ),
 				),
 				'attributes' => array(
 					'type'  => 'array',
