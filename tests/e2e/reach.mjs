@@ -111,11 +111,8 @@ export const NO_SPEC = [
 	'src/Abilities/ConnectionAction.php',
 	'src/Abilities/ConnectionStatus.php',
 	'src/Abilities/GetProductPictureViews.php',
-<<<<<<< HEAD
-	'src/Abilities/GetProductSplitListing.php',
-=======
 	'src/Abilities/GetProductPrices.php',
->>>>>>> 73e00509 (feat(abilities): read and change the pricing settings, and price a product by the rule)
+	'src/Abilities/GetProductSplitListing.php',
 	'src/Abilities/LinkProduct.php',
 	'src/Abilities/ListTemplates.php',
 	'src/Abilities/PriceProduct.php',
