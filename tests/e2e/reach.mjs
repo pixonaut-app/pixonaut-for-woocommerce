@@ -224,6 +224,7 @@ export const REACH = {
 	],
 	'attribute-swatches.spec.ts': [
 		'assets/src/storefront/attribute-swatches.ts',
+		'assets/src/storefront/theme-fields.ts',
 		'assets/src/storefront/attribute-swatches.css',
 		'assets/src/storefront/swatch-looks.ts',
 		'src/Storefront/AttributeOptions.php',
@@ -326,6 +327,16 @@ export const REACH = {
 		'src/Connection/WorkspaceSettings.php',
 		'src/Connection/PrintFileForm.php',
 		'src/Webhooks/Endpoint.php',
+	],
+	'dependent-attributes.spec.ts': [
+		'assets/src/storefront/applicable-attributes.ts',
+		'assets/src/storefront/applicable-form.ts',
+		'assets/src/storefront/applicable-index.ts',
+		'assets/src/storefront/theme-fields.ts',
+		'src/Cart/InapplicableAttributes.php',
+		'src/Catalogue/ApplicableAttributes.php',
+		'src/Catalogue/SplitCards.php',
+		'src/Storefront/ApplicableAttributeForm.php',
 	],
 	'designer-pixel.spec.ts': [
 		'src/Storefront/Sdk.php',

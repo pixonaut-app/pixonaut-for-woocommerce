@@ -17,7 +17,8 @@ use WC_Product_Attribute;
 /**
  * A variable product can be listed once per value of one of its attributes
  * ("Med bild" and "Utan bild" as two cards), its other attributes (sizes)
- * staying inside each card. A global attribute turns this on by default for
+ * staying inside each card, or once per combination of the values of
+ * several. A global attribute turns this on by default for
  * the products using it; each product follows that (Auto), or turns it on or
  * off for itself. The product's choices are kept in its `ProductConfig`.
  *
@@ -131,33 +132,34 @@ final class SplitListing {
 	}
 
 	/**
-	 * The attribute a variable product is listed by, one card per value; null
-	 * when it is listed once. Only a global attribute used for variations
-	 * splits, and only one per product: the first the product turned on
-	 * itself, else the first on Auto whose attribute is on, in the product's
-	 * order of attributes.
+	 * The attributes a variable product is listed by, in its order of
+	 * attributes; none when it is listed once. Only a global attribute used
+	 * for variations splits: those the product turned on itself, else those
+	 * on Auto whose attribute is on. With more than one, the product is
+	 * listed once per combination of their values (`SplitCards`).
 	 *
 	 * @param WC_Product $product A product.
+	 * @return list<WC_Product_Attribute>
 	 */
-	public static function attribute_of( WC_Product $product ): ?WC_Product_Attribute {
+	public static function attributes_of( WC_Product $product ): array {
 		if ( ! $product->is_type( 'variable' ) ) {
-			return null;
+			return array();
 		}
 		$config    = ProductConfig::stored_on( $product );
-		$following = null;
+		$chosen    = array();
+		$following = array();
 		foreach ( $product->get_attributes() as $attribute ) {
 			if ( ! $attribute instanceof WC_Product_Attribute || ! $attribute->is_taxonomy() || ! $attribute->get_variation() ) {
 				continue;
 			}
 			$choice = self::choice( $config, $attribute->get_id() );
 			if ( self::ON === $choice ) {
-				return $attribute;
-			}
-			if ( null === $following && self::AUTO === $choice && self::attribute_default( $attribute->get_id() ) ) {
-				$following = $attribute;
+				$chosen[] = $attribute;
+			} elseif ( self::AUTO === $choice && self::attribute_default( $attribute->get_id() ) ) {
+				$following[] = $attribute;
 			}
 		}
-		return $following;
+		return array() === $chosen ? $following : $chosen;
 	}
 
 	/**

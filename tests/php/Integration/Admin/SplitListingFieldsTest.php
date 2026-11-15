@@ -319,6 +319,28 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 		$this->assertSame( $picture, $this->split_by( $product ), 'On whatever the attribute says' );
 	}
 
+	public function test_a_product_is_listed_by_every_attribute_it_turned_on_else_every_one_on_auto(): void {
+		$product = $this->poster();
+		$picture = $this->attributes[ self::PICTURE ];
+		$size    = $this->attributes[ self::SIZE ];
+		$ids     = fn (): array => array_map( static fn ( WC_Product_Attribute $attribute ): int => $attribute->get_id(), SplitListing::attributes_of( $this->fresh( $product ) ) );
+
+		SplitListing::set_attribute_default( $picture, true );
+		SplitListing::set_attribute_default( $size, true );
+		$this->assertSame( array( $picture, $size ), $ids(), 'both on Auto, in the product\'s order of attributes' );
+
+		$this->choose(
+			$product,
+			array(
+				$picture => SplitListing::ON,
+				$size    => SplitListing::ON,
+			)
+		);
+		SplitListing::set_attribute_default( $picture, false );
+		SplitListing::set_attribute_default( $size, false );
+		$this->assertSame( array( $picture, $size ), $ids(), 'both turned on by the product' );
+	}
+
 	public function test_only_a_variable_products_variation_attribute_splits(): void {
 		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
 		$simple = new WC_Product_Simple();
@@ -457,12 +479,14 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The id of the attribute the product is listed by, as stored now; null for none.
+	 * The id of the one attribute the product is listed by, as stored now; null for none.
 	 *
 	 * @param WC_Product $product The product.
 	 */
 	private function split_by( WC_Product $product ): ?int {
-		return SplitListing::attribute_of( $this->fresh( $product ) )?->get_id();
+		$attributes = SplitListing::attributes_of( $this->fresh( $product ) );
+		$this->assertLessThanOrEqual( 1, count( $attributes ) );
+		return array() === $attributes ? null : $attributes[0]->get_id();
 	}
 
 	private function stored( WC_Product $product ): ProductConfig {

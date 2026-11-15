@@ -3,19 +3,21 @@
  * Each value's card in the shop, under the "Show each value as its own
  * product" control on a global attribute's row in the product's Attributes
  * tab: a title and an image of its own. Shown while the row's choice lists
- * the attribute's values as their own products.
+ * the attribute's values as their own products. A product listed by
+ * several attributes has a card per combination of their values, on the row
+ * of the combination's last value.
  *
  * Override by copying to yourtheme/woocommerce/pixonaut/admin/split-card-looks.php.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.4.0
+ * @version 1.9.0
  *
- * @var string $field             The posted titles' and images' name, before `[<term id>][title]` and `[<term id>][image]`.
+ * @var string $field             The posted titles' and images' name, before `[<card key>][title]` and `[<card key>][image]`.
  * @var string $id                The row's id, which each field's id starts with.
  * @var bool   $shown             Whether the row's choice lists the values as their own products now.
  * @var bool   $attribute_default Whether the attribute lists its values as their own products by default.
  * @var string $product_title     The product's title, which a card without its own shows.
- * @var array<int, array{term_id: int, name: string, title: string, image: int, image_url: string}> $cards Each of the row's values.
+ * @var array<int, array{key: string, name: string, title: string, image: int, image_url: string}> $cards Each of the row's cards: its key (a value's term id, or a combination's joined by commas) and its values' names.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -34,8 +36,8 @@ defined( 'ABSPATH' ) || exit;
 			</p>
 			<?php foreach ( $cards as $pixonaut_card ) : ?>
 				<?php
-				$pixonaut_name = $field . '[' . $pixonaut_card['term_id'] . ']';
-				$pixonaut_id   = $id . '-' . $pixonaut_card['term_id'];
+				$pixonaut_name = $field . '[' . $pixonaut_card['key'] . ']';
+				$pixonaut_id   = $id . '-' . $pixonaut_card['key'];
 				/* translators: %s: an attribute value, such as "With photo". Title of the media library window choosing the image of that value's card in the shop. */
 				$pixonaut_frame_title = sprintf( __( 'Image for “%s”', 'pixonaut-for-woocommerce' ), $pixonaut_card['name'] );
 				/* translators: Button of the media library window choosing the image of an attribute value's card in the shop. */

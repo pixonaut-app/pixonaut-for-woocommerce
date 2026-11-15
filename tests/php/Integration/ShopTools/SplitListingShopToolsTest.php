@@ -141,7 +141,7 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 		$this->assertTrue( $read['attributes'][0]['own_products'] );
 	}
 
-	public function test_only_the_attribute_the_product_is_listed_by_lists_its_values(): void {
+	public function test_a_product_is_listed_by_every_attribute_it_turned_on(): void {
 		$poster = $this->poster();
 		ProductConfig::stored_on( $poster )->with_split_listing(
 			array(
@@ -153,8 +153,20 @@ final class SplitListingShopToolsTest extends WP_UnitTestCase {
 		$read = $this->succeed( self::GET, array( 'product_id' => $poster->get_id() ) );
 
 		$this->assertSame( $this->attributes[ self::PICTURE ], $read['listed_by'], 'the first in the product\'s order' );
+		$this->assertSame( array( $this->attributes[ self::PICTURE ], $this->attributes[ self::SIZE ] ), $read['listed_by_all'] );
 		$this->assertSame( array( SplitListing::ON, SplitListing::ON ), array_column( $read['attributes'], 'choice' ) );
-		$this->assertSame( array( true, false ), array_column( $read['attributes'], 'own_products' ) );
+		$this->assertSame( array( true, true ), array_column( $read['attributes'], 'own_products' ) );
+	}
+
+	public function test_an_attribute_on_auto_lists_nothing_while_the_product_turned_another_on(): void {
+		$poster = $this->poster();
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		ProductConfig::stored_on( $poster )->with_split_listing( array( $this->attributes[ self::SIZE ] => SplitListing::ON ) )->save_to( $poster );
+
+		$read = $this->succeed( self::GET, array( 'product_id' => $poster->get_id() ) );
+
+		$this->assertSame( array( $this->attributes[ self::SIZE ] ), $read['listed_by_all'] );
+		$this->assertSame( array( false, true ), array_column( $read['attributes'], 'own_products' ) );
 	}
 
 	public function test_it_sets_the_choice_and_the_cards_and_answers_what_the_product_now_has(): void {

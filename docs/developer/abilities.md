@@ -368,11 +368,15 @@ saved and checked again; when one cannot be worked out, nothing is saved.
 for [listing each value as its own product](../../merchant/split-listings/):
 `attributes`, each global attribute of the product with its `choice`
 (`auto`, `on` or `off`), the attribute's own setting (`attribute_default`),
-whether the product is listed by it (`own_products`: by one attribute at
-most, `listed_by`), and its `values`, each with its
-card's own `title` (empty for the product's) and `image` (`id` and `src`;
-null for the value's picture or the product's); and `listed_by`, the
-attribute the product is listed by now, null when it is listed once.
+whether the product is listed by it (`own_products`), and its `values`,
+each with its card's own `title` (empty for the product's) and `image` (`id`
+and `src`; null for the value's picture or the product's); `listed_by_all`,
+the attributes the product is listed by now, in its order of attributes,
+empty when it is listed once; and `listed_by`, the first of them, null when
+it is listed once. A product listed by several has a card per combination
+of their values; a combination's own title and image are set on the
+product's Attributes tab, not by these abilities, whose `values` are those
+of one attribute.
 `set-product-split-listing` sets them: each attribute listed takes a `choice`
 and `values`, each a `term_id` with a `title`, an `image`, or both. An image
 is `id`, an image of the media library, or `src`, a public URL the store

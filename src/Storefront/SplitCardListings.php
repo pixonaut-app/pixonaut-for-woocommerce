@@ -19,7 +19,8 @@ use WP_Query;
 
 /**
  * The shop, its category, tag and attribute pages and product search list
- * a split product (`SplitCards`) once per value. Their main query joins the
+ * a split product (`SplitCards`) once per card: a value of the attribute it
+ * is listed by, or a combination of the values of several. Their main query joins the
  * product's card rows, so it returns the product once per card, and the
  * count, the pages and the sorting take each card as a product: a classic
  * theme's loop and a block theme's Product Collection, which inherits that
@@ -27,9 +28,12 @@ use WP_Query;
  * Product Collection with a query of its own, the admin's) lists a product
  * once.
  *
- * Each card links to the product with its value chosen. A filter by the
- * split attribute keeps only the cards of the chosen values, and a value
- * whose variations are all on a template that is not live has no card.
+ * Each card links to the product with its values chosen. A filter by an
+ * attribute the product is listed by keeps only the cards holding a chosen
+ * value, and a card whose variations are all on a template that is not
+ * live is left out. A card row that names no card of the product any more
+ * (rows written before the product's cards changed, until they are
+ * written again) shows the product as itself, and has its rows written.
  */
 final class SplitCardListings {
 
@@ -50,24 +54,34 @@ final class SplitCardListings {
 	private const CLAUSES_PRIORITY = 100;
 
 	/**
-	 * Each listed post's card value, by the post object the listing holds.
+	 * The key no card has: a product listed once.
+	 */
+	private const NO_CARD = '';
+
+	/**
+	 * In a block's key, between the term ids of a card's key.
+	 */
+	private const BLOCK_KEY_SEPARATOR = '-';
+
+	/**
+	 * Each listed post's card key, by the post object the listing holds.
 	 *
-	 * @var WeakMap<WP_Post, int>
+	 * @var WeakMap<WP_Post, string>
 	 */
 	private WeakMap $cards;
 
 	/**
-	 * The product and value of the card being shown, while one is.
+	 * The product and key of the card being shown, while one is.
 	 *
-	 * @var array{0: int, 1: int}|null
+	 * @var array{0: int, 1: string}|null
 	 */
 	private ?array $current = null;
 
 	/**
-	 * The cards a Product Template block has shown so far, in order, a value
-	 * of 0 for a product listed once.
+	 * The cards a Product Template block has shown so far, in order, `NO_CARD`
+	 * for a product listed once.
 	 *
-	 * @var list<array{0: int, 1: int}>
+	 * @var list<array{0: int, 1: string}>
 	 */
 	private array $shown = array();
 
@@ -112,24 +126,26 @@ final class SplitCardListings {
 		$clauses['groupby'] = '' === trim( (string) ( $clauses['groupby'] ?? '' ) ) ? '' : $clauses['groupby'] . ", {$alias}.meta_id";
 		$clauses['orderby'] = '' === trim( (string) ( $clauses['orderby'] ?? '' ) ) ? "{$alias}.meta_id ASC" : $clauses['orderby'] . ", {$alias}.meta_id ASC";
 		$clauses['where']   = ( $clauses['where'] ?? '' ) . self::filtered_cards();
-		foreach ( self::not_live_cards() as $product_id => $term_ids ) {
-			$clauses['where'] .= " AND NOT ( {$wpdb->posts}.ID = " . $product_id . " AND {$alias}.meta_value IN ( '" . implode( "', '", $term_ids ) . "' ) )";
+		foreach ( self::not_live_cards() as $product_id => $keys ) {
+			$clauses['where'] .= " AND NOT ( {$wpdb->posts}.ID = " . $product_id . " AND {$alias}.meta_value IN ( '" . implode( "', '", array_map( 'esc_sql', $keys ) ) . "' ) )";
 		}
 		return $clauses;
 	}
 
 	/**
-	 * The condition a filtered listing keeps a card by: its value is one a
-	 * filter chose, or of an attribute no filter is on. A product listed
-	 * once has no value and is kept. Empty without a filter.
+	 * The condition a filtered listing keeps a card by, for each attribute
+	 * a filter is on: the card holds a value the filter chose, or none of
+	 * the product's cards holds a value of that attribute, so the product
+	 * is not listed by it. A product listed once has no card and is kept.
+	 * Empty without a filter.
 	 */
 	private static function filtered_cards(): string {
-		$taxonomies = array();
-		$chosen     = array();
+		global $wpdb;
+		$alias = self::ALIAS;
+		$where = '';
 		foreach ( WC_Query::get_layered_nav_chosen_attributes() as $taxonomy => $filter ) {
-			$slugs        = is_array( $filter['terms'] ?? null ) ? array_values( array_map( 'strval', $filter['terms'] ) ) : array();
-			$taxonomies[] = (string) $taxonomy;
-			$ids          = array() === $slugs ? array() : get_terms(
+			$slugs = is_array( $filter['terms'] ?? null ) ? array_values( array_map( 'strval', $filter['terms'] ) ) : array();
+			$ids   = array() === $slugs ? array() : get_terms(
 				array(
 					'taxonomy'   => (string) $taxonomy,
 					'slug'       => $slugs,
@@ -137,33 +153,27 @@ final class SplitCardListings {
 					'fields'     => 'ids',
 				)
 			);
-			$chosen       = array_merge( $chosen, is_array( $ids ) ? array_map( 'intval', $ids ) : array() );
+			$ids   = is_array( $ids ) ? array_values( array_unique( array_map( 'intval', $ids ) ) ) : array();
+			// A key is the set of its term ids. No chosen id names a term: no card holds one.
+			$holds_chosen = array() === $ids ? '1 = 0' : implode( ' OR ', array_fill( 0, count( $ids ), "FIND_IN_SET( %d, {$alias}.meta_value )" ) );
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- table names, a constant alias and a placeholder per value.
+			$kept = $wpdb->prepare(
+				" AND ( {$alias}.meta_value IS NULL OR {$holds_chosen} OR NOT EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS listed INNER JOIN {$wpdb->term_taxonomy} AS held ON FIND_IN_SET( held.term_id, listed.meta_value ) WHERE listed.post_id = {$wpdb->posts}.ID AND listed.meta_key = %s AND held.taxonomy = %s ) )",
+				...$ids,
+				...array( SplitCards::META, (string) $taxonomy )
+			);
+			// phpcs:enable
+			$where .= is_string( $kept ) ? $kept : '';
 		}
-		if ( array() === $taxonomies ) {
-			return '';
-		}
-		global $wpdb;
-		$alias = self::ALIAS;
-		// The chosen ids are none when no slug names a term: a 0 keeps the list valid and matches no term.
-		$chosen      = array() === $chosen ? array( 0 ) : array_values( array_unique( $chosen ) );
-		$in_filtered = implode( ', ', array_fill( 0, count( $taxonomies ), '%s' ) );
-		$is_chosen   = implode( ', ', array_fill( 0, count( $chosen ), '%d' ) );
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- table names, a constant alias and a placeholder per value.
-		$where = $wpdb->prepare(
-			" AND ( {$alias}.meta_value IS NULL OR {$alias}.meta_value NOT IN ( SELECT term_id FROM {$wpdb->term_taxonomy} WHERE taxonomy IN ( {$in_filtered} ) ) OR {$alias}.meta_value IN ( {$is_chosen} ) )",
-			...$taxonomies,
-			...$chosen
-		);
-		// phpcs:enable
-		return is_string( $where ) ? $where : '';
+		return $where;
 	}
 
 	/**
-	 * The cards left out because each variation offered with their value
-	 * is on a template that is not live, by product. Only the products
+	 * The cards left out because each variation offered in them is on a
+	 * template that is not live, by product. Only the products
 	 * `NotLiveProducts` names as candidates are read.
 	 *
-	 * @return array<int, list<int>> Term ids by product id.
+	 * @return array<int, list<string>> Card keys by product id.
 	 */
 	private static function not_live_cards(): array {
 		$candidates = NotLiveProducts::candidate_ids();
@@ -176,17 +186,17 @@ final class SplitCardListings {
 			if ( array() === get_post_meta( $product_id, SplitCards::META, false ) ) {
 				continue;
 			}
-			$product  = wc_get_product( $product_id );
-			$term_ids = $product instanceof WC_Product ? SplitCards::not_live_values( $product ) : array();
-			if ( array() !== $term_ids ) {
-				$cards[ $product_id ] = $term_ids;
+			$product = wc_get_product( $product_id );
+			$keys    = $product instanceof WC_Product ? SplitCards::not_live_cards( $product ) : array();
+			if ( array() !== $keys ) {
+				$cards[ $product_id ] = $keys;
 			}
 		}
 		return $cards;
 	}
 
 	/**
-	 * Keeps each listed post's card value beside it, off the post: WordPress
+	 * Keeps each listed post's card key beside it, off the post: WordPress
 	 * caches the post object, which other queries share.
 	 *
 	 * @param mixed $posts The posts found.
@@ -201,10 +211,10 @@ final class SplitCardListings {
 			if ( ! $post instanceof WP_Post || ! property_exists( $post, self::FIELD ) ) {
 				continue;
 			}
-			$term_id = (int) $post->{self::FIELD};
+			$key = $post->{self::FIELD};
 			unset( $post->{self::FIELD} );
-			if ( $term_id > 0 ) {
-				$this->cards[ $post ] = $term_id;
+			if ( SplitCards::is_key( $key ) ) {
+				$this->cards[ $post ] = (string) $key;
 			}
 		}
 		return $posts;
@@ -226,16 +236,37 @@ final class SplitCardListings {
 		if ( ! $post instanceof WP_Post ) {
 			return;
 		}
-		$term_id       = $this->cards[ $post ] ?? 0;
-		$this->current = $term_id > 0 ? array( $post->ID, $term_id ) : null;
-		$this->shown[] = array( $post->ID, $term_id );
+		$key           = $this->current_key( $post );
+		$this->current = self::NO_CARD === $key ? null : array( $post->ID, $key );
+		$this->shown[] = array( $post->ID, $key );
 	}
 
 	/**
-	 * The product and value of the card a loop shows now; null while it
+	 * The key of a listed post's card that is one of its product's cards
+	 * now; `NO_CARD` for a product listed once. A row naming a card the
+	 * product no longer has is from before its cards changed: the product's
+	 * rows are written again, and it is shown as itself this once.
+	 *
+	 * @param WP_Post $post A listed post.
+	 */
+	private function current_key( WP_Post $post ): string {
+		$key = $this->cards[ $post ] ?? self::NO_CARD;
+		if ( self::NO_CARD === $key ) {
+			return $key;
+		}
+		$product = wc_get_product( $post->ID );
+		if ( $product instanceof WC_Product && SplitCards::has_card( $product, $key ) ) {
+			return $key;
+		}
+		SplitCards::write( $post->ID );
+		return self::NO_CARD;
+	}
+
+	/**
+	 * The product and key of the card a loop shows now; null while it
 	 * shows none.
 	 *
-	 * @return array{0: int, 1: int}|null
+	 * @return array{0: int, 1: string}|null
 	 */
 	public function current(): ?array {
 		return $this->current;
@@ -249,7 +280,7 @@ final class SplitCardListings {
 	}
 
 	/**
-	 * A card's links to its product, with its value chosen.
+	 * A card's links to its product, with its values chosen.
 	 *
 	 * @param mixed $url  The product's address.
 	 * @param mixed $post The product.
@@ -299,7 +330,7 @@ final class SplitCardListings {
 				foreach ( $shown as $index => $card ) {
 					if ( $card[0] === (int) $found[1] ) {
 						unset( $shown[ $index ] );
-						return 0 === $card[1] ? $found[0] : 'data-wp-key="product-item-' . $card[0] . '-' . $card[1] . '"';
+						return self::NO_CARD === $card[1] ? $found[0] : 'data-wp-key="product-item-' . $card[0] . '-' . str_replace( SplitCards::KEY_SEPARATOR, self::BLOCK_KEY_SEPARATOR, $card[1] ) . '"';
 					}
 				}
 				return $found[0];

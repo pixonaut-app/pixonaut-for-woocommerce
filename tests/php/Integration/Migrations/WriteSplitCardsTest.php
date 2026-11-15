@@ -9,6 +9,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Migrations;
 
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Migrations\Migrations;
+use Pixonaut\WooCommerce\Migrations\WriteCombinationCards;
 use Pixonaut\WooCommerce\Migrations\WriteSplitCards;
 use WP_UnitTestCase;
 
@@ -33,9 +34,15 @@ final class WriteSplitCardsTest extends WP_UnitTestCase {
 		$this->assertTrue( as_has_scheduled_action( SplitCards::ALL_HOOK, array( 0 ) ) );
 	}
 
-	public function test_it_is_the_last_migration(): void {
-		$all = Migrations::all();
+	public function test_the_cards_are_asked_for_again_for_the_products_listed_by_several_attributes(): void {
+		( new WriteCombinationCards() )->up();
 
-		$this->assertInstanceOf( WriteSplitCards::class, end( $all ) );
+		$this->assertSame( SplitCards::BACKFILL_PENDING, get_option( SplitCards::BACKFILL_OPTION ) );
+	}
+
+	public function test_both_are_migrations_in_order(): void {
+		$classes = array_map( 'get_class', Migrations::all() );
+
+		$this->assertSame( array( WriteSplitCards::class, WriteCombinationCards::class ), array_values( array_intersect( $classes, array( WriteSplitCards::class, WriteCombinationCards::class ) ) ) );
 	}
 }

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-15T14:48:20+00:00\n"
+"POT-Creation-Date: 2026-11-15T15:04:40+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -429,23 +429,23 @@ msgstr ""
 msgid "Reads, for each global attribute of a simple or variable product, its \"Show each value as its own product\" choice (`auto` follows the attribute's own setting, `attribute_default`), whether that lists its values as their own products, and each value's card's own title and image. `listed_by` is the attribute the product is listed by now; null when it is listed once. Set them with `set-product-split-listing`."
 msgstr ""
 
-#: src/Abilities/GetProductSplitListing.php:152
+#: src/Abilities/GetProductSplitListing.php:154
 msgid "The id of the attribute the product is listed by, one card per value; null when it is listed once. Only a variable product is listed by an attribute, one used for its variations."
 msgstr ""
 
-#: src/Abilities/GetProductSplitListing.php:167
+#: src/Abilities/GetProductSplitListing.php:173
 msgid "Whether the attribute lists its values as their own products by default."
 msgstr ""
 
-#: src/Abilities/GetProductSplitListing.php:171
+#: src/Abilities/GetProductSplitListing.php:177
 msgid "What the choice comes to: whether the product lists each value of this attribute as its own product."
 msgstr ""
 
-#: src/Abilities/GetProductSplitListing.php:182
+#: src/Abilities/GetProductSplitListing.php:188
 msgid "The card's own title; empty when it shows the product's."
 msgstr ""
 
-#: src/Abilities/GetProductSplitListing.php:186
+#: src/Abilities/GetProductSplitListing.php:192
 msgid "The card's own image, by its attachment id and URL; null when it shows the value's picture or the product's."
 msgstr ""
 
@@ -2734,22 +2734,22 @@ msgid "%1$s, photo %2$d"
 msgstr ""
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is on.
-#: src/Admin/SplitListingFields.php:270
+#: src/Admin/SplitListingFields.php:295
 msgid "Auto: on, as the attribute is"
 msgstr ""
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is off.
-#: src/Admin/SplitListingFields.php:272
+#: src/Admin/SplitListingFields.php:297
 msgid "Auto: off, as the attribute is"
 msgstr ""
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it on, whatever the attribute's setting.
-#: src/Admin/SplitListingFields.php:274
+#: src/Admin/SplitListingFields.php:299
 msgid "On for this product"
 msgstr ""
 
 #. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it off, whatever the attribute's setting.
-#: src/Admin/SplitListingFields.php:276
+#: src/Admin/SplitListingFields.php:301
 msgid "Off for this product"
 msgstr ""
 
@@ -7575,39 +7575,39 @@ msgid "A variable product using this attribute for its variations is listed once
 msgstr ""
 
 #. translators: Heading over a title and an image field per value of an attribute, on the attribute's row in the product's Attributes tab.
-#: templates/admin/split-card-looks.php:29
+#: templates/admin/split-card-looks.php:31
 msgid "Each value’s card in the shop"
 msgstr ""
 
-#: templates/admin/split-card-looks.php:33
+#: templates/admin/split-card-looks.php:35
 msgid "A card without a title of its own shows the product’s. Without an image of its own, it shows the image of the value’s first variation that has one, else the product’s. Save attributes to add a row for a value you just added."
 msgstr ""
 
 #. translators: %s: an attribute value, such as "With photo". Title of the media library window choosing the image of that value's card in the shop.
-#: templates/admin/split-card-looks.php:40
+#: templates/admin/split-card-looks.php:42
 #, php-format
 msgid "Image for “%s”"
 msgstr ""
 
 #. translators: Button of the media library window choosing the image of an attribute value's card in the shop.
-#: templates/admin/split-card-looks.php:42
+#: templates/admin/split-card-looks.php:44
 msgid "Use this image"
 msgstr ""
 
 #. translators: %s: an attribute value, such as "With photo". Label of the field for the title of that value's card in the shop.
-#: templates/admin/split-card-looks.php:48
+#: templates/admin/split-card-looks.php:50
 #, php-format
 msgid "Title for “%s”"
 msgstr ""
 
 #. translators: %s: an attribute value, such as "With photo". Button opening the media library to choose the image of that value's card in the shop.
-#: templates/admin/split-card-looks.php:58
+#: templates/admin/split-card-looks.php:60
 #, php-format
 msgid "Choose an image for “%s”"
 msgstr ""
 
 #. translators: %s: an attribute value, such as "With photo". Link removing the image of that value's card in the shop, which then shows its default image.
-#: templates/admin/split-card-looks.php:64
+#: templates/admin/split-card-looks.php:66
 #, php-format
 msgid "Remove the image for “%s”"
 msgstr ""

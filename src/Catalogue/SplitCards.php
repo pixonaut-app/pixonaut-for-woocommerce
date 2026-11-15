@@ -17,19 +17,61 @@ use WP_Post;
 
 /**
  * A product listed by one of its attributes (`SplitListing`) is shown once
- * per value of it that a variation sells. The values are kept as meta rows
- * on the product, one per value in the product's order, so the shop's
- * listings can join them and count, page and sort the cards in SQL. They
- * are written again whenever what they come from changes: the product or a
- * variation saved, trashed, restored or deleted, the product's choice or
- * the attribute's default changed.
+ * per value of it that a variation sells; one listed by several, once per
+ * combination of their values that a variation sells. An attribute a
+ * variation leaves unset counts for each of its values, unless it does not
+ * apply to that variation (`ApplicableAttributes`, the variation's own
+ * values as the choice): a poster sold bare, or with a hanger in a colour,
+ * listed by both has a card for the bare one and one per hanger colour.
  *
- * A card opens the product with its value chosen, and with each other
+ * A card is named by its key: its values' term ids, lowest first, joined by
+ * commas, so a card of one value is that term's id, and a combination keeps
+ * its key when the product's attributes change places; `NO_VALUE` for the
+ * card of the variations none of the attributes applies to, which shows the
+ * product as itself. A product whose combinations would come to more than
+ * `MAX_CARDS` cards is listed once. The keys are kept as meta
+ * rows on the product, one per card in the product's order of values, so
+ * the shop's listings can join them and count, page and sort the cards in
+ * SQL. They are written again whenever what they come from changes: the
+ * product or a variation saved, trashed, restored or deleted, the
+ * product's choice or the attribute's default changed.
+ *
+ * A card opens the product with its values chosen, and with each other
  * attribute's value that the card's variations all share.
  */
 final class SplitCards {
 
 	public const META = Schema::PRODUCT_SPLIT_CARD_META;
+
+	/**
+	 * Between the term ids of a card's key. MySQL's `FIND_IN_SET()` reads
+	 * a key as the set of its ids.
+	 */
+	public const KEY_SEPARATOR = ',';
+
+	/**
+	 * The key of the card of the variations no listed attribute applies to.
+	 */
+	public const NO_VALUE = '0';
+
+	/**
+	 * The most cards a product is listed as. Each value of an attribute a
+	 * variation leaves unset multiplies its combinations, so a product with
+	 * a few such attributes would otherwise fill the shop, and the memory
+	 * its cards are worked out in.
+	 */
+	public const MAX_CARDS = 250;
+
+	/**
+	 * In place of a value's place among its attribute's values, for an
+	 * attribute that does not apply: before the first value.
+	 */
+	private const NOT_APPLYING = -1;
+
+	/**
+	 * What a card's key looks like.
+	 */
+	private const KEY_PATTERN = '/^(0|[1-9]\d*(,[1-9]\d*)*)$/';
 
 	/**
 	 * Products whose cards are written now when an attribute's default
@@ -79,9 +121,9 @@ final class SplitCards {
 	private const AFTER_WOOCOMMERCE_RESTORE = 20;
 
 	/**
-	 * Variations' attributes by product id, read once a request.
+	 * Variations' attributes by product id and variation id, read once a request.
 	 *
-	 * @var array<int, list<array<string, string>>>
+	 * @var array<int, array<int, array<string, string>>>
 	 */
 	private static array $variations = array();
 
@@ -93,9 +135,25 @@ final class SplitCards {
 	private static array $offers = array();
 
 	/**
-	 * Cards' link values, by product id and term id, read once a request.
+	 * Products' cards, by product id: each card's variations by its key, in
+	 * the product's order of values; worked out once a request.
 	 *
-	 * @var array<int, array<int, array<string, string>>>
+	 * @var array<int, array<string, list<int>>>
+	 */
+	private static array $cards = array();
+
+	/**
+	 * Products' cards' values, by product id and card key: term ids in the
+	 * product's order of attributes; worked out with the cards.
+	 *
+	 * @var array<int, array<string, list<int>>>
+	 */
+	private static array $card_terms = array();
+
+	/**
+	 * Cards' link values, by product id and card key, read once a request.
+	 *
+	 * @var array<int, array<string, array<string, string>>>
 	 */
 	private static array $links = array();
 
@@ -210,12 +268,20 @@ final class SplitCards {
 	}
 
 	/**
-	 * Forgets a deleted value's cards.
+	 * Forgets a deleted value's card, and writes again the cards of the
+	 * products that list a combination holding it.
 	 *
 	 * @param mixed $term_id The deleted term.
 	 */
 	public static function term_deleted( mixed $term_id ): void {
-		delete_metadata( 'post', 0, self::META, (string) (int) $term_id, true );
+		global $wpdb;
+		$term_id = (int) $term_id;
+		delete_metadata( 'post', 0, self::META, (string) $term_id, true );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the products whose card keys hold the id, which no meta query finds; read when a term is deleted.
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND FIND_IN_SET( %d, meta_value )", self::META, $term_id ) );
+		foreach ( $ids as $product_id ) {
+			self::write( (int) $product_id );
+		}
 	}
 
 	/**
@@ -240,7 +306,7 @@ final class SplitCards {
 	}
 
 	/**
-	 * Sets a product's card rows to the values it is listed by now: none
+	 * Sets a product's card rows to the cards it is listed by now: none
 	 * when it is listed once. Nothing is written when they are unchanged.
 	 *
 	 * @param int $product_id A product.
@@ -260,14 +326,14 @@ final class SplitCards {
 		try {
 			self::forget( $product_id );
 			$product = $product_id > 0 ? wc_get_product( $product_id ) : null;
-			$values  = $product instanceof WC_Product ? self::values( $product ) : array();
-			$stored  = array_map( 'intval', get_post_meta( $product_id, self::META, false ) );
-			if ( $stored === $values ) {
+			$keys    = $product instanceof WC_Product ? self::keys( $product ) : array();
+			$stored  = array_map( 'strval', get_post_meta( $product_id, self::META, false ) );
+			if ( $stored === $keys ) {
 				return;
 			}
 			delete_post_meta( $product_id, self::META );
-			foreach ( $values as $term_id ) {
-				add_post_meta( $product_id, self::META, (string) $term_id );
+			foreach ( $keys as $key ) {
+				add_post_meta( $product_id, self::META, $key );
 			}
 		} finally {
 			$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock ) );
@@ -281,69 +347,227 @@ final class SplitCards {
 	 * @param int $product_id A product.
 	 */
 	private static function forget( int $product_id ): void {
-		unset( self::$variations[ $product_id ], self::$offers[ $product_id ], self::$links[ $product_id ] );
+		unset( self::$variations[ $product_id ], self::$offers[ $product_id ], self::$cards[ $product_id ], self::$card_terms[ $product_id ], self::$links[ $product_id ] );
 	}
 
 	/**
-	 * The term ids a product is listed by, one card each, in its order of
-	 * values: those of its split attribute that an enabled variation sells.
-	 * Empty when it is listed once.
+	 * A card's key: its term ids, lowest first, joined; `NO_VALUE` for none.
+	 *
+	 * @param int[] $term_ids Its values, in any order.
+	 */
+	public static function key( array $term_ids ): string {
+		$term_ids = array_map( 'intval', $term_ids );
+		sort( $term_ids );
+		return array() === $term_ids ? self::NO_VALUE : implode( self::KEY_SEPARATOR, $term_ids );
+	}
+
+	/**
+	 * The values of a card, from its key.
+	 *
+	 * @param string $key A card's key.
+	 * @return list<int> Term ids, lowest first; empty for `NO_VALUE`.
+	 */
+	public static function term_ids( string $key ): array {
+		return self::NO_VALUE === $key || ! self::is_key( $key ) ? array() : array_map( 'intval', explode( self::KEY_SEPARATOR, $key ) );
+	}
+
+	/**
+	 * Whether a stored or posted value is a card's key.
+	 *
+	 * @param mixed $key A value.
+	 */
+	public static function is_key( mixed $key ): bool {
+		return ( is_string( $key ) || is_int( $key ) ) && 1 === preg_match( self::KEY_PATTERN, (string) $key );
+	}
+
+	/**
+	 * The keys of the cards a product is listed by, in its order of
+	 * values: one per combination of its listed attributes' values that an
+	 * enabled variation sells. Empty when it is listed once.
 	 *
 	 * @param WC_Product $product A product.
-	 * @return list<int>
+	 * @return list<string>
 	 */
-	public static function values( WC_Product $product ): array {
-		$attribute = SplitListing::attribute_of( $product );
-		if ( null === $attribute ) {
-			return array();
+	public static function keys( WC_Product $product ): array {
+		return array_map( 'strval', array_keys( self::cards( $product ) ) );
+	}
+
+	/**
+	 * Whether a key names one of the product's cards now. A stored row may
+	 * not, until the product's cards are written again.
+	 *
+	 * @param WC_Product $product A product.
+	 * @param string     $key     A card's key.
+	 */
+	public static function has_card( WC_Product $product, string $key ): bool {
+		return isset( self::cards( $product )[ $key ] );
+	}
+
+	/**
+	 * The values of one of a product's cards, in the product's order of
+	 * attributes; empty for a card it does not have, and for `NO_VALUE`.
+	 *
+	 * @param WC_Product $product A product.
+	 * @param string     $key     The card's key.
+	 * @return list<int> Term ids.
+	 */
+	public static function card_terms( WC_Product $product, string $key ): array {
+		self::cards( $product );
+		return self::$card_terms[ $product->get_id() ][ $key ] ?? array();
+	}
+
+	/**
+	 * A product's cards: the enabled variations each sells, by its key, in
+	 * the product's order of values. None for a product that would have
+	 * more than `MAX_CARDS`.
+	 *
+	 * @param WC_Product $product A product.
+	 * @return array<string, list<int>> Variation ids by card key.
+	 */
+	private static function cards( WC_Product $product ): array {
+		$product_id = $product->get_id();
+		if ( isset( self::$cards[ $product_id ] ) ) {
+			return self::$cards[ $product_id ];
 		}
-		$key  = self::field( $attribute );
-		$sold = array();
-		foreach ( self::variations( $product->get_id() ) as $variation ) {
-			$sold[] = $variation[ $key ] ?? '';
+		$terms = array();
+		foreach ( SplitListing::attributes_of( $product ) as $attribute ) {
+			$terms[ self::field( $attribute ) ] = self::terms( $attribute );
 		}
-		$values = array();
+		$cards = array();
+		$order = array();
+		$held  = array();
+		if ( array() !== $terms ) {
+			$variations = self::variations( $product_id );
+			$fields     = ApplicableAttributes::fields( $product );
+			$sold       = array_values( $variations );
+			foreach ( $variations as $variation_id => $values ) {
+				$hidden       = ApplicableAttributes::hidden( $fields, $sold, $values );
+				$combinations = self::combinations( $terms, $values, $hidden );
+				if ( null === $combinations ) {
+					$cards = array();
+					break;
+				}
+				foreach ( $combinations as $positions ) {
+					$term_ids = array();
+					foreach ( $positions as $field => $position ) {
+						$term_id = array_values( $terms[ $field ] )[ $position ] ?? null;
+						if ( null !== $term_id ) {
+							$term_ids[] = $term_id;
+						}
+					}
+					$key             = self::key( $term_ids );
+					$cards[ $key ][] = $variation_id;
+					$order[ $key ]   = array_values( $positions );
+					$held[ $key ]    = $term_ids;
+				}
+				if ( count( $cards ) > self::MAX_CARDS ) {
+					$cards = array();
+					break;
+				}
+			}
+			// In the order of each attribute's values, a card without a value of one first.
+			uksort( $cards, static fn ( int|string $first, int|string $second ): int => $order[ $first ] <=> $order[ $second ] );
+		}
+		self::$card_terms[ $product_id ] = array_intersect_key( $held, $cards );
+		// PHP turns a key of digits into an integer.
+		self::$cards[ $product_id ] = $cards;
+		return $cards;
+	}
+
+	/**
+	 * The combinations of the listed attributes' values a variation sells,
+	 * each as the place of its value among every attribute's values:
+	 * `NOT_APPLYING` for an attribute that does not apply to the variation,
+	 * and one combination per value of an attribute it sells any value of.
+	 * None when it holds a value its attribute does not list; null when
+	 * they would be more than `MAX_CARDS`.
+	 *
+	 * @param array<string, array<string, int>> $terms  Each listed attribute's term ids by slug, in its order of values, by field.
+	 * @param array<string, string>             $values The variation's values by field.
+	 * @param string[]                          $hidden The fields that do not apply to the variation.
+	 * @return list<array<string, int>>|null Places by field.
+	 */
+	private static function combinations( array $terms, array $values, array $hidden ): ?array {
+		$combinations = array( array() );
+		foreach ( $terms as $field => $ids ) {
+			$value = $values[ $field ] ?? '';
+			$slugs = array_map( 'strval', array_keys( $ids ) );
+			if ( '' !== $value ) {
+				$place  = array_search( $value, $slugs, true );
+				$places = false === $place ? array() : array( $place );
+			} elseif ( in_array( $field, $hidden, true ) ) {
+				$places = array( self::NOT_APPLYING );
+			} else {
+				$places = array_keys( $slugs );
+			}
+			if ( count( $combinations ) * count( $places ) > self::MAX_CARDS ) {
+				return null;
+			}
+			$next = array();
+			foreach ( $combinations as $combination ) {
+				foreach ( $places as $place ) {
+					$next[] = $combination + array( $field => $place );
+				}
+			}
+			$combinations = $next;
+		}
+		return $combinations;
+	}
+
+	/**
+	 * A listed attribute's term ids by slug, in its order of values on the product.
+	 *
+	 * @param WC_Product_Attribute $attribute A global attribute of a product.
+	 * @return array<string, int>
+	 */
+	private static function terms( WC_Product_Attribute $attribute ): array {
+		$terms = array();
 		foreach ( $attribute->get_options() as $term_id ) {
 			$term = get_term( (int) $term_id, $attribute->get_name() );
-			if ( $term instanceof \WP_Term && ( in_array( $term->slug, $sold, true ) || in_array( '', $sold, true ) ) ) {
-				$values[] = $term->term_id;
+			if ( $term instanceof \WP_Term ) {
+				$terms[ $term->slug ] = $term->term_id;
 			}
 		}
-		return $values;
+		return $terms;
 	}
 
 	/**
-	 * The query parameters a card's link chooses its value with: the split
-	 * attribute's, and each other variation attribute's that every variation
-	 * offered with the value on a live template shares. Empty when the product is not listed by an
-	 * attribute holding the term.
+	 * The query parameters a card's link chooses its values with: each
+	 * listed attribute's, and each other variation attribute's that every
+	 * variation offered in the card on a live template shares. Empty when
+	 * the product has no such card.
 	 *
 	 * @param WC_Product $product A product.
-	 * @param int        $term_id The card's value.
+	 * @param string     $key     The card's key.
 	 * @return array<string, string> Values by `attribute_<name>` field.
 	 */
-	public static function link_values( WC_Product $product, int $term_id ): array {
-		self::$links[ $product->get_id() ][ $term_id ] ??= self::read_link_values( $product, $term_id );
-		return self::$links[ $product->get_id() ][ $term_id ];
+	public static function link_values( WC_Product $product, string $key ): array {
+		self::$links[ $product->get_id() ][ $key ] ??= self::read_link_values( $product, $key );
+		return self::$links[ $product->get_id() ][ $key ];
 	}
 
 	/**
 	 * Works out `link_values()`.
 	 *
 	 * @param WC_Product $product A product.
-	 * @param int        $term_id The card's value.
+	 * @param string     $key     The card's key.
 	 * @return array<string, string> Values by `attribute_<name>` field.
 	 */
-	private static function read_link_values( WC_Product $product, int $term_id ): array {
-		$attribute = SplitListing::attribute_of( $product );
-		$term      = null === $attribute ? null : get_term( $term_id, $attribute->get_name() );
-		if ( null === $attribute || ! $term instanceof \WP_Term ) {
+	private static function read_link_values( WC_Product $product, string $key ): array {
+		if ( ! self::has_card( $product, $key ) ) {
 			return array();
 		}
-		$matching = array_map( static fn ( array $offer ): array => $offer['attributes'], self::card_offers( $product, $term_id ) );
-		$chosen   = array( self::field( $attribute ) => $term->slug );
+		$chosen = array();
+		$held   = self::term_ids( $key );
+		foreach ( SplitListing::attributes_of( $product ) as $attribute ) {
+			$slug = array_search( current( array_intersect( $held, self::terms( $attribute ) ) ), self::terms( $attribute ), true );
+			if ( false !== $slug ) {
+				$chosen[ self::field( $attribute ) ] = (string) $slug;
+			}
+		}
+		$matching = array_map( static fn ( array $offer ): array => $offer['attributes'], self::card_offers( $product, $key ) );
 		foreach ( $product->get_attributes() as $other ) {
-			if ( ! $other instanceof WC_Product_Attribute || ! $other->get_variation() || $other->get_name() === $attribute->get_name() ) {
+			if ( ! $other instanceof WC_Product_Attribute || ! $other->get_variation() || isset( $chosen[ self::field( $other ) ] ) ) {
 				continue;
 			}
 			$field  = self::field( $other );
@@ -356,64 +580,50 @@ final class SplitCards {
 	}
 
 	/**
-	 * The variations a card sells: those WooCommerce offers with its value
-	 * on a live template, in the product's order of variations.
+	 * The variations a card sells: those WooCommerce offers in it on a
+	 * live template, in the product's order of variations.
 	 *
 	 * @param WC_Product $product A product listed by an attribute.
-	 * @param int        $term_id The card's value.
+	 * @param string     $key     The card's key.
 	 * @return list<int> Variation ids.
 	 */
-	public static function card_variations( WC_Product $product, int $term_id ): array {
-		return array_map( static fn ( array $offer ): int => $offer['id'], self::card_offers( $product, $term_id ) );
+	public static function card_variations( WC_Product $product, string $key ): array {
+		return array_map( static fn ( array $offer ): int => $offer['id'], self::card_offers( $product, $key ) );
 	}
 
 	/**
 	 * The offers of `card_variations()`.
 	 *
 	 * @param WC_Product $product A product listed by an attribute.
-	 * @param int        $term_id The card's value.
+	 * @param string     $key     The card's key.
 	 * @return list<array{id: int, attributes: array<string, string>, offered: bool, live: bool}>
 	 */
-	private static function card_offers( WC_Product $product, int $term_id ): array {
-		$attribute = SplitListing::attribute_of( $product );
-		$term      = null === $attribute ? null : get_term( $term_id, $attribute->get_name() );
-		if ( null === $attribute || ! $term instanceof \WP_Term ) {
-			return array();
-		}
-		$key = self::field( $attribute );
+	private static function card_offers( WC_Product $product, string $key ): array {
+		$sold = self::cards( $product )[ $key ] ?? array();
 		return array_values(
 			array_filter(
 				self::offers( $product ),
-				static fn ( array $offer ): bool => $offer['offered'] && $offer['live'] && in_array( $offer['attributes'][ $key ] ?? '', array( '', $term->slug ), true )
+				static fn ( array $offer ): bool => $offer['offered'] && $offer['live'] && in_array( $offer['id'], $sold, true )
 			)
 		);
 	}
 
 	/**
-	 * The values among a product's cards that the shop leaves out: those
-	 * whose every variation WooCommerce offers is on a template that is not
-	 * live, as `NotLiveProducts` leaves out a whole product. A value with no
-	 * variation offered at all keeps its card, as a product would.
+	 * The cards of a product that the shop leaves out: those whose every
+	 * variation WooCommerce offers is on a template that is not live, as
+	 * `NotLiveProducts` leaves out a whole product. A card with no
+	 * variation offered at all is kept, as a product would be.
 	 *
 	 * @param WC_Product $product A product listed by an attribute.
-	 * @return list<int> Term ids.
+	 * @return list<string> Card keys.
 	 */
-	public static function not_live_values( WC_Product $product ): array {
-		$attribute = SplitListing::attribute_of( $product );
-		if ( null === $attribute ) {
-			return array();
-		}
-		$key    = self::field( $attribute );
+	public static function not_live_cards( WC_Product $product ): array {
 		$offers = self::offers( $product );
 		$hidden = array();
-		foreach ( self::values( $product ) as $term_id ) {
-			$term = get_term( $term_id, $attribute->get_name() );
-			if ( ! $term instanceof \WP_Term ) {
-				continue;
-			}
-			$shown = array_filter( $offers, static fn ( array $offer ): bool => $offer['offered'] && in_array( $offer['attributes'][ $key ] ?? '', array( '', $term->slug ), true ) );
+		foreach ( self::cards( $product ) as $key => $sold ) {
+			$shown = array_filter( $offers, static fn ( array $offer ): bool => $offer['offered'] && in_array( $offer['id'], $sold, true ) );
 			if ( array() !== $shown && array() === array_filter( $shown, static fn ( array $offer ): bool => $offer['live'] ) ) {
-				$hidden[] = $term_id;
+				$hidden[] = (string) $key;
 			}
 		}
 		return $hidden;
@@ -460,10 +670,10 @@ final class SplitCards {
 
 	/**
 	 * The attribute values of a product's enabled variations, `''` for one
-	 * selling any value.
+	 * it leaves unset.
 	 *
 	 * @param int $product_id A variable product.
-	 * @return list<array<string, string>> Values by `attribute_<name>` field, one entry per variation.
+	 * @return array<int, array<string, string>> Values by `attribute_<name>` field, by variation id, in the product's order of variations.
 	 */
 	private static function variations( int $product_id ): array {
 		if ( isset( self::$variations[ $product_id ] ) ) {
@@ -487,8 +697,8 @@ final class SplitCards {
 				$by_variation[ $id ][ $row->field ] = (string) $row->value;
 			}
 		}
-		self::$variations[ $product_id ] = array_values( $by_variation );
-		return self::$variations[ $product_id ];
+		self::$variations[ $product_id ] = $by_variation;
+		return $by_variation;
 	}
 
 	/**

@@ -253,18 +253,38 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_product_templates_cards_get_keys_of_their_own(): void {
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		$poster = $this->poster();
+		$mug    = $this->simple( 'Uggla' );
+		$with   = $this->term( 'med-bild' );
+		$none   = $this->term( 'utan-bild' );
 		$this->listings->start_template( null, array( 'blockName' => 'woocommerce/product-template' ) );
-		$first = new \WP_Post( (object) array( 'ID' => 7 ) );
-		$again = new \WP_Post( (object) array( 'ID' => 7 ) );
-		$other = new \WP_Post( (object) array( 'ID' => 9 ) );
-		$this->set_cards( array( array( $first, 11 ), array( $again, 12 ) ) );
+		$first = new \WP_Post( (object) array( 'ID' => $poster->get_id() ) );
+		$again = new \WP_Post( (object) array( 'ID' => $poster->get_id() ) );
+		$other = new \WP_Post( (object) array( 'ID' => $mug->get_id() ) );
+		$this->set_cards( array( array( $first, (string) $with ), array( $again, (string) $none ) ) );
 		foreach ( array( $first, $again, $other ) as $post ) {
 			$this->listings->enter( $post );
 		}
+		$item = 'product-item-' . $poster->get_id();
 
-		$keyed = $this->listings->keys( '<li data-wp-key="product-item-7"></li><li data-wp-key="product-item-7"></li><li data-wp-key="product-item-9"></li>' );
+		$keyed = $this->listings->keys( '<li data-wp-key="' . $item . '"></li><li data-wp-key="' . $item . '"></li><li data-wp-key="product-item-' . $mug->get_id() . '"></li>' );
 
-		$this->assertSame( '<li data-wp-key="product-item-7-11"></li><li data-wp-key="product-item-7-12"></li><li data-wp-key="product-item-9"></li>', $keyed );
+		$this->assertSame( '<li data-wp-key="' . $item . '-' . $with . '"></li><li data-wp-key="' . $item . '-' . $none . '"></li><li data-wp-key="product-item-' . $mug->get_id() . '"></li>', $keyed );
+	}
+
+	public function test_a_row_naming_no_card_of_the_product_shows_it_as_itself_and_is_written_again(): void {
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		$poster = $this->poster();
+		// As rows written before the product's cards changed.
+		delete_post_meta( $poster->get_id(), SplitCards::META );
+		add_post_meta( $poster->get_id(), SplitCards::META, (string) $this->term( '30x40' ) );
+
+		$stale = $this->shop();
+
+		$this->assertSame( array( (string) get_permalink( $poster->get_id() ) ), $stale['links'], 'the row names a size, which the product is not listed by' );
+		$this->assertSame( array( $this->term( 'med-bild' ), $this->term( 'utan-bild' ) ), $this->cards( $poster ), 'its rows are written again' );
+		$this->assertSame( 2, $this->shop()['found'] );
 	}
 
 	/**
@@ -300,12 +320,12 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	/**
 	 * Gives posts card values as a listing's results would.
 	 *
-	 * @param list<array{0: \WP_Post, 1: int}> $cards Each post and its value.
+	 * @param list<array{0: \WP_Post, 1: string}> $cards Each post and its card's key.
 	 */
 	private function set_cards( array $cards ): void {
 		$map = ( fn (): \WeakMap => $this->cards )->call( $this->listings );
-		foreach ( $cards as list( $post, $term_id ) ) {
-			$map[ $post ] = $term_id;
+		foreach ( $cards as list( $post, $key ) ) {
+			$map[ $post ] = $key;
 		}
 	}
 

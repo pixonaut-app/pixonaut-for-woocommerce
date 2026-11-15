@@ -814,6 +814,173 @@ add_action(
 			)
 		);
 
+		// A variable poster whose options depend on each other: global
+		// attributes `Inramning` (Ingen, Hängare, Ram, Canvas), `Hängarfärg`
+		// (Ek, Svart), `Ramfärg` (Svart, Vit) and `Canvasdjup` (2 cm, 4 cm)
+		// under slugs of the test's own, sold bare (10.00), with a hanger in
+		// each colour (15.00), framed in each colour (20.00) and on canvas in
+		// each depth (30.00), each variation setting only the option of its
+		// own extra, in a category of its own. `split` names the attributes
+		// the poster is listed by. DELETE removes them.
+		register_rest_route(
+			'pixonaut-e2e/v1',
+			'/dependent-poster',
+			array(
+				array(
+					'methods'             => 'POST',
+					'permission_callback' => '__return_true',
+					'args'                => array(
+						// A short unique suffix for the attributes' and the category's slugs.
+						'key'   => array(
+							'type'     => 'string',
+							'required' => true,
+							'pattern'  => '^[a-z0-9]{1,16}$',
+						),
+						'split' => array(
+							'type'  => 'array',
+							'items' => array(
+								'type' => 'string',
+								'enum' => array( 'inramning', 'hangarfarg', 'ramfarg', 'canvasdjup' ),
+							),
+						),
+					),
+					'callback'            => static function ( WP_REST_Request $request ) {
+						$key        = (string) $request['key'];
+						$taxonomies = array();
+						$attributes = array();
+						foreach ( array(
+							'inramning'  => array( 'Inramning', array( 'Ingen', 'Hängare', 'Ram', 'Canvas' ) ),
+							'hangarfarg' => array( 'Hängarfärg', array( 'Ek', 'Svart' ) ),
+							'ramfarg'    => array( 'Ramfärg', array( 'Svart', 'Vit' ) ),
+							'canvasdjup' => array( 'Canvasdjup', array( '2 cm', '4 cm' ) ),
+						) as $name => list( $label, $values ) ) {
+							$slug = $name . $key;
+							$id   = wc_create_attribute(
+								array(
+									'name' => $label,
+									'slug' => $slug,
+								)
+							);
+							if ( is_wp_error( $id ) ) {
+								return $id;
+							}
+							$taxonomy = wc_attribute_taxonomy_name( $slug );
+							// The attribute's taxonomy is registered on the next request's `init`; this one needs it now.
+							register_taxonomy( $taxonomy, array( 'product', 'product_variation' ) );
+							$terms = array();
+							foreach ( $values as $value ) {
+								$term = wp_insert_term( $value, $taxonomy );
+								if ( is_wp_error( $term ) ) {
+									return $term;
+								}
+								$terms[] = (int) $term['term_id'];
+							}
+							$attribute = new WC_Product_Attribute();
+							$attribute->set_id( $id );
+							$attribute->set_name( $taxonomy );
+							$attribute->set_options( $terms );
+							$attribute->set_visible( true );
+							$attribute->set_variation( true );
+							$attributes[]        = $attribute;
+							$taxonomies[ $name ] = array(
+								'id'       => $id,
+								'taxonomy' => $taxonomy,
+							);
+						}
+						$category = wp_insert_term( 'Dependent ' . $key, 'product_cat' );
+						if ( is_wp_error( $category ) ) {
+							return $category;
+						}
+
+						$poster = new WC_Product_Variable();
+						$poster->set_name( 'Dependent poster ' . $key );
+						$poster->set_status( 'publish' );
+						$poster->set_category_ids( array( (int) $category['term_id'] ) );
+						$poster->set_attributes( $attributes );
+						$poster->save();
+						$variations = array();
+						foreach ( array(
+							array( 'ingen', null, null, '10.00' ),
+							array( 'hangare', 'hangarfarg', 'ek', '15.00' ),
+							array( 'hangare', 'hangarfarg', 'svart', '15.00' ),
+							array( 'ram', 'ramfarg', 'svart', '20.00' ),
+							array( 'ram', 'ramfarg', 'vit', '20.00' ),
+							array( 'canvas', 'canvasdjup', '2-cm', '30.00' ),
+							array( 'canvas', 'canvasdjup', '4-cm', '30.00' ),
+						) as list( $framing, $option, $value, $price ) ) {
+							$set = array( wc_attribute_taxonomy_name( 'inramning' . $key ) => $framing );
+							if ( null !== $option ) {
+								$set[ wc_attribute_taxonomy_name( $option . $key ) ] = $value;
+							}
+							$variation = new WC_Product_Variation();
+							$variation->set_parent_id( $poster->get_id() );
+							$variation->set_attributes( $set );
+							$variation->set_regular_price( $price );
+							$variation->save();
+							$variations[ null === $value ? $framing : $framing . '-' . $value ] = $variation->get_id();
+						}
+						WC_Product_Variable::sync( $poster->get_id() );
+						$split = array();
+						foreach ( is_array( $request['split'] ) ? $request['split'] : array() as $name ) {
+							$split[ wc_attribute_taxonomy_id_by_name( $name . $key ) ] = \Pixonaut\WooCommerce\Catalogue\SplitListing::ON;
+						}
+						$poster = wc_get_product( $poster->get_id() );
+						if ( array() !== $split && $poster instanceof WC_Product ) {
+							\Pixonaut\WooCommerce\Catalogue\ProductConfig::stored_on( $poster )->with_split_listing( $split )->save_to( $poster );
+						}
+
+						return new WP_REST_Response(
+							array(
+								'id'         => $poster instanceof WC_Product ? $poster->get_id() : 0,
+								'permalink'  => $poster instanceof WC_Product ? $poster->get_permalink() : '',
+								'category'   => get_term_link( (int) $category['term_id'], 'product_cat' ),
+								'taxonomies' => $taxonomies,
+								'variations' => $variations,
+							),
+							201
+						);
+					},
+				),
+				array(
+					'methods'             => 'DELETE',
+					'permission_callback' => '__return_true',
+					'args'                => array(
+						'key' => array(
+							'type'     => 'string',
+							'required' => true,
+							'pattern'  => '^[a-z0-9]{1,16}$',
+						),
+					),
+					'callback'            => static function ( WP_REST_Request $request ) {
+						$key      = (string) $request['key'];
+						$category = get_term_by( 'slug', 'dependent-' . $key, 'product_cat' );
+						if ( $category instanceof WP_Term ) {
+							$products = wc_get_products(
+								array(
+									'category' => array( $category->slug ),
+									'limit'    => -1,
+									'status'   => 'any',
+								)
+							);
+							foreach ( is_array( $products ) ? $products : array() as $product ) {
+								if ( $product instanceof WC_Product ) {
+									$product->delete( true );
+								}
+							}
+							wp_delete_term( $category->term_id, 'product_cat' );
+						}
+						foreach ( array( 'inramning', 'hangarfarg', 'ramfarg', 'canvasdjup' ) as $name ) {
+							$id = wc_attribute_taxonomy_id_by_name( $name . $key );
+							if ( $id > 0 ) {
+								wc_delete_attribute( $id );
+							}
+						}
+						return new WP_REST_Response( null, 204 );
+					},
+				),
+			)
+		);
+
 		// Forgets the Pixonaut configuration of every product and variation,
 		// so the products earlier tests linked drop out of what a catalogue
 		// change re-checks: the tests site keeps them from run to run.
