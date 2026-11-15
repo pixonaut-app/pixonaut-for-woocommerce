@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-15T14:36:23+00:00\n"
+"POT-Creation-Date: 2026-11-15T14:48:20+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -653,6 +653,80 @@ msgid "The blank variants the photo shows; empty for every one."
 msgstr "Die Rohling-Varianten, die das Foto zeigt; leer für alle."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetProductPrices.php:48
+msgid "Read a product's prices and costs"
+msgstr "Preise und Kosten eines Produkts lesen"
+
+#. translators: %s: the name of the ability that prices a product.
+#: src/Abilities/GetProductPrices.php:51
+#, php-format
+msgid ""
+"Lists each variation of a product printed on a blank (a simple product has "
+"one row) with what the printshop charges for it, that cost in the store's "
+"currency, its regular price and margin, how its price stands to the pricing "
+"rule (`standing`), the price the rule suggests when it is another, and what "
+"stops the rule (`flag`). Also the rule the product is priced by: the "
+"store's, with the parts the product changes (`own_rule`). The costs are the "
+"ones last read: `checked_at` null means never. %s reads them again, and with "
+"`dry_run` answers the prices it would set, changing nothing. `prices` is a "
+"page of the rows, `page` and `per_page` choosing which; `total` counts them "
+"all."
+msgstr ""
+"Listet jede Variante eines Produkts auf, das auf einen Rohling gedruckt wird "
+"(ein einfaches Produkt hat eine Zeile), mit dem, was die Druckerei dafür "
+"berechnet, diesen Kosten in der Währung des Shops, ihrem regulären Preis und "
+"ihrer Marge, wie ihr Preis zur Preisregel steht (`standing`), dem Preis, den "
+"die Regel vorschlägt, wenn er ein anderer ist, und was die Regel aufhält "
+"(`flag`). Ausserdem die Regel, nach der das Produkt bepreist wird: die des "
+"Shops, mit den Teilen, die das Produkt ändert (`own_rule`). Die Kosten sind "
+"die zuletzt gelesenen: `checked_at` null bedeutet nie. %s liest sie erneut "
+"und nennt mit `dry_run` die Preise, die es festlegen würde, ohne etwas zu "
+"ändern. `prices` ist eine Seite der Zeilen, `page` und `per_page` wählen, "
+"welche; `total` zählt sie alle."
+
+#: src/Abilities/GetProductPrices.php:60 src/Abilities/PriceProduct.php:72
+msgid "A simple or variable product; never a variation."
+msgstr "Ein einfaches oder variables Produkt; niemals eine Variante."
+
+#: src/Abilities/GetProductPrices.php:125
+msgid "The store's currency, which prices and `cost_total` are in."
+msgstr ""
+"Die Währung des Shops, in der die Preise und `cost_total` angegeben sind."
+
+#: src/Abilities/GetProductPrices.php:130
+msgid ""
+"Whether there is a rule to price by: false without a target margin, and "
+"nothing is then priced."
+msgstr ""
+"Ob es eine Regel gibt, nach der bepreist wird: false ohne Zielmarge, dann "
+"wird nichts bepreist."
+
+#: src/Abilities/GetProductPrices.php:132
+msgid ""
+"The rule the product is priced by: margin and tolerance in percent, step, "
+"ending, min and max as amounts; empty for none."
+msgstr ""
+"Die Regel, nach der das Produkt bepreist wird: Marge und Toleranz in "
+"Prozent, Schritt, Endung, niedrigster und höchster Preis als Beträge; leer, "
+"wenn es keine gibt."
+
+#: src/Abilities/GetProductPrices.php:133
+msgid ""
+"The parts of the rule the product changes; a part it leaves to the store is "
+"empty."
+msgstr ""
+"Die Teile der Regel, die das Produkt ändert; ein Teil, den es dem Shop "
+"überlässt, ist leer."
+
+#: src/Abilities/GetProductPrices.php:136
+msgid ""
+"Whether the store changes prices that follow the rule by itself when a cost "
+"changes."
+msgstr ""
+"Ob der Shop Preise, die der Regel folgen, von selbst ändert, wenn sich "
+"Kosten ändern."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductSplitListing.php:34
 msgid "Read which values a product lists as their own products"
 msgstr "Abrufen, welche Werte ein Produkt als eigene Produkte aufführt"
@@ -1225,6 +1299,91 @@ msgstr "Wie viele Bestellungen insgesamt passen, über alle Seiten hinweg."
 msgid "The `before` that asks for the next page; null when there is none."
 msgstr "Das `before`, das die nächste Seite abruft; null, wenn es keine gibt."
 
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/PriceProduct.php:64
+msgid "Price a product by the pricing rule"
+msgstr "Ein Produkt nach der Preisregel bepreisen"
+
+#: src/Abilities/PriceProduct.php:65
+msgid ""
+"Reads the printshop's costs of a product printed on a blank again, and sets "
+"the regular price of each variation (a simple product has one) to the "
+"rule's: the price step nearest the target margin, within the lowest and "
+"highest price. A price it sets follows the rule from then on. `only` "
+"unpriced leaves every variation that has a price alone; `variation_ids` "
+"names the ones to price. A price edited by hand after the rule set it is "
+"kept unless `release_held`. `rule` stores the parts of the rule this product "
+"changes, first. With `dry_run` nothing is stored on the product: the answer "
+"gives the prices it would set. Each price answers `before`, `price` and "
+"`changed`; one the rule cannot set keeps its price and says why in `flag`. "
+"No other price is set, whatever the store changes by itself. `changed` "
+"counts every price that changed; `prices` is a page of them, `page` and "
+"`per_page` choosing which. Refused without a target margin."
+msgstr ""
+"Liest die Kosten der Druckerei für ein Produkt, das auf einen Rohling "
+"gedruckt wird, erneut und setzt den regulären Preis jeder Variante (ein "
+"einfaches Produkt hat einen) auf den der Regel: den Preisschritt, der der "
+"Zielmarge am nächsten liegt, innerhalb des niedrigsten und höchsten Preises. "
+"Ein so festgelegter Preis folgt von da an der Regel. `only` unpriced lässt "
+"jede Variante, die einen Preis hat, unverändert; `variation_ids` nennt die "
+"Varianten, die bepreist werden. Ein Preis, der von Hand geändert wurde, "
+"nachdem die Regel ihn festgelegt hat, bleibt erhalten, ausser mit "
+"`release_held`. `rule` speichert zuerst die Teile der Regel, die dieses "
+"Produkt ändert. Mit `dry_run` wird nichts am Produkt gespeichert: Die "
+"Antwort nennt die Preise, die festgelegt würden. Jeder Preis antwortet mit "
+"`before`, `price` und `changed`; einer, den die Regel nicht festlegen kann, "
+"behält seinen Preis und nennt den Grund in `flag`. Kein anderer Preis wird "
+"festgelegt, was auch immer der Shop von selbst ändert. `changed` zählt jeden "
+"Preis, der sich geändert hat; `prices` ist eine Seite davon, `page` und "
+"`per_page` wählen, welche. Wird ohne Zielmarge abgelehnt."
+
+#: src/Abilities/PriceProduct.php:81
+msgid ""
+"The variations to price, or the product's own id for a simple product; left "
+"out for all."
+msgstr ""
+"Die Varianten, die bepreist werden, oder die eigene ID des Produkts bei "
+"einem einfachen Produkt; weggelassen für alle."
+
+#: src/Abilities/PriceProduct.php:91
+msgid ""
+"Whether a price edited by hand after the rule set it is given back to the "
+"rule."
+msgstr ""
+"Ob ein Preis, der von Hand geändert wurde, nachdem die Regel ihn festgelegt "
+"hat, der Regel zurückgegeben wird."
+
+#: src/Abilities/PriceProduct.php:93
+msgid ""
+"The parts of the rule this product changes, replacing the ones it has: "
+"margin and tolerance in percent, step, ending, min and max as amounts. A "
+"part left out or empty is left to the store."
+msgstr ""
+"Die Teile der Regel, die dieses Produkt ändert; sie ersetzen die bisherigen: "
+"Marge und Toleranz in Prozent, Schritt, Endung, niedrigster und höchster "
+"Preis als Beträge. Ein weggelassener oder leerer Teil bleibt dem Shop "
+"überlassen."
+
+#: src/Abilities/PriceProduct.php:108
+msgid "How many prices changed, or would."
+msgstr "Wie viele Preise geändert wurden oder würden."
+
+#: src/Abilities/PriceProduct.php:114
+msgid "The regular price it had; null for none."
+msgstr "Der reguläre Preis, den es hatte; null, wenn es keinen gab."
+
+#. translators: %s: a part of the pricing rule, e.g. margin.
+#: src/Abilities/PriceProduct.php:210
+#, php-format
+msgid "The rule's %s is not a number."
+msgstr "Der Regelteil %s ist keine Zahl."
+
+#. translators: %s: one or more ids, e.g. 12, 15.
+#: src/Abilities/PriceProduct.php:234
+#, php-format
+msgid "The product has no variation with this id: %s."
+msgstr "Das Produkt hat keine Variante mit dieser ID: %s."
+
 #: src/Abilities/ProductLinks.php:104
 msgid "No simple or variable product or variation has this id."
 msgstr "Kein einfaches oder variables Produkt und keine Variante hat diese ID."
@@ -1246,6 +1405,144 @@ msgstr ""
 "Welche Varianten des Produkts keine Rohling-Variante verkaufen, in Worten; "
 "null, wenn jede eine verkauft. Die `variant` einer Variante wird mit `set-"
 "product-setup` festgelegt."
+
+#: src/Abilities/ProductPrices.php:71
+msgid ""
+"No simple or variable product printed on a blank has this id, so there is no "
+"printshop cost to price from. A variation is priced through its product."
+msgstr ""
+"Kein einfaches oder variables Produkt, das auf einen Rohling gedruckt wird, "
+"hat diese ID, daher gibt es keine Druckereikosten, aus denen sich ein Preis "
+"berechnen liesse. Eine Variante wird über ihr Produkt bepreist."
+
+#: src/Abilities/ProductPrices.php:80
+msgid ""
+"No target margin is set, for the store or for this product, so there is no "
+"rule to price by. Set one first."
+msgstr ""
+"Es ist keine Zielmarge festgelegt, weder für den Shop noch für dieses "
+"Produkt, daher gibt es keine Regel, nach der bepreist wird. Legen Sie zuerst "
+"eine fest."
+
+#. translators: %s: a country code, such as SE.
+#: src/Abilities/ProductPrices.php:91
+#, php-format
+msgid "Pixonaut has no printshop costs for the shop's country (%s)."
+msgstr "Pixonaut hat keine Druckereikosten für das Land des Shops (%s)."
+
+#: src/Abilities/ProductPrices.php:93
+msgid ""
+"Pixonaut could not be reached to read the printshop's costs. Try again in a "
+"moment."
+msgstr ""
+"Pixonaut war nicht erreichbar, um die Kosten der Druckerei zu lesen. "
+"Versuchen Sie es gleich noch einmal."
+
+#: src/Abilities/ProductPrices.php:144
+msgid "The variation, or the product itself when it has none."
+msgstr "Die Variante oder das Produkt selbst, wenn es keine hat."
+
+#: src/Abilities/ProductPrices.php:147
+msgid ""
+"Its regular price, as the store enters prices, including tax or not; null "
+"for none."
+msgstr ""
+"Der reguläre Preis, so wie der Shop Preise eingibt, mit oder ohne Steuern; "
+"null, wenn es keinen gibt."
+
+#: src/Abilities/ProductPrices.php:150
+msgid ""
+"What the printshop charges, in its own currency, as last read; null when no "
+"cost is known for the blank variant it sells."
+msgstr ""
+"Was die Druckerei berechnet, in ihrer eigenen Währung, wie zuletzt gelesen; "
+"null, wenn für die verkaufte Rohling-Variante keine Kosten bekannt sind."
+
+#: src/Abilities/ProductPrices.php:152
+msgid "The product; null when the printshop publishes no price."
+msgstr "Das Produkt; null, wenn die Druckerei keinen Preis nennt."
+
+#: src/Abilities/ProductPrices.php:154
+msgid "The cheapest shipping to the shop's country; null when none is known."
+msgstr ""
+"Der günstigste Versand in das Land des Shops; null, wenn keiner bekannt ist."
+
+#: src/Abilities/ProductPrices.php:159
+msgid ""
+"The product and its shipping in the store's currency, converted with the "
+"currency buffer added when charged in another; null when they price nothing."
+msgstr ""
+"Das Produkt und sein Versand in der Währung des Shops, umgerechnet mit "
+"aufgeschlagenem Währungspuffer, wenn in einer anderen abgerechnet wird; "
+"null, wenn sich daraus kein Preis berechnen lässt."
+
+#: src/Abilities/ProductPrices.php:162
+msgid ""
+"The day of the exchange rate the cost was converted with; null when it was "
+"not converted."
+msgstr ""
+"Der Tag des Wechselkurses, mit dem die Kosten umgerechnet wurden; null, wenn "
+"nicht umgerechnet wurde."
+
+#: src/Abilities/ProductPrices.php:166
+msgid ""
+"The currency buffer added to what was converted, in percent; null when "
+"nothing was."
+msgstr ""
+"Der Währungspuffer, der auf das Umgerechnete aufgeschlagen wurde, in "
+"Prozent; null, wenn nichts umgerechnet wurde."
+
+#: src/Abilities/ProductPrices.php:170
+msgid "The share of the price excluding tax left after the cost, in percent."
+msgstr ""
+"Der Anteil des Preises ohne Steuern, der nach den Kosten übrig bleibt, in "
+"Prozent."
+
+#: src/Abilities/ProductPrices.php:172
+msgid "The price the rule would set, when it is another than the price it has."
+msgstr ""
+"Der Preis, den die Regel festlegen würde, wenn er ein anderer ist als der "
+"bisherige."
+
+#: src/Abilities/ProductPrices.php:176
+msgid ""
+"own: the rule was never applied to it. follows: its price is the one the "
+"rule set. by_hand: its price was edited after the rule set it, and is held "
+"until it is given back to the rule."
+msgstr ""
+"own: Die Regel wurde nie darauf angewendet. follows: Der Preis ist der, den "
+"die Regel festgelegt hat. by_hand: Der Preis wurde geändert, nachdem die "
+"Regel ihn festgelegt hat, und bleibt erhalten, bis er der Regel "
+"zurückgegeben wird."
+
+#: src/Abilities/ProductPrices.php:180
+msgid ""
+"Why the rule cannot price it or suggests another price: margin, no_cost, "
+"unread, currency, rate_stale, no_step or sale; null when nothing does."
+msgstr ""
+"Warum die Regel keinen Preis festlegen kann oder einen anderen Preis "
+"vorschlägt: margin, no_cost, unread, currency, rate_stale, no_step oder "
+"sale; null, wenn nichts davon zutrifft."
+
+#: src/Abilities/ProductPrices.php:185
+msgid "When the rule last set its price."
+msgstr "Wann die Regel den Preis zuletzt festgelegt hat."
+
+#: src/Abilities/ProductPrices.php:189
+msgid "When its cost was last asked for; null when it never was."
+msgstr "Wann die Kosten zuletzt abgefragt wurden; null, wenn noch nie."
+
+#: src/Abilities/ProductPrices.php:206
+msgid ""
+"Which page of the prices the answer lists; it changes nothing about which "
+"are priced."
+msgstr ""
+"Welche Seite der Preise die Antwort auflistet; das ändert nichts daran, "
+"welche bepreist werden."
+
+#: src/Abilities/ProductPrices.php:249
+msgid "How many prices the product has, on every page."
+msgstr "Wie viele Preise das Produkt hat, über alle Seiten hinweg."
 
 #: src/Abilities/ProductSetup.php:122
 msgid "Whether it is linked to a template, personalised or not."
@@ -1453,6 +1750,44 @@ msgstr ""
 "die Lade- und Akzentfarbe, den Rahmen des Druckbereichs, die Produktbilder, "
 "die Felder und das Bild des Designs im Warenkorb, die Standard-Freigabe "
 "sowie Fristen und Erinnerungen für Korrekturabzüge."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/ReadPricingSettings.php:53
+msgid "Read the pricing settings"
+msgstr "Preiseinstellungen lesen"
+
+#: src/Abilities/ReadPricingSettings.php:54
+msgid ""
+"Gives the store's pricing rule, by which prices follow the printshop's "
+"costs: the target margin, the tolerance around it, the price step and what "
+"prices end in, the lowest and highest price, the currency buffer added to a "
+"cost converted from another currency, and whether prices change by "
+"themselves when a cost changes. Amounts and percentages are decimal strings, "
+"empty for none. Without a target margin the store has no rule. Also the "
+"store's currency, and whether prices are entered including tax."
+msgstr ""
+"Gibt die Preisregel des Shops an, nach der die Preise den Kosten der "
+"Druckerei folgen: die Zielmarge, die Toleranz um sie herum, den Preisschritt "
+"und worauf Preise enden, den niedrigsten und höchsten Preis, den "
+"Währungspuffer, der auf Kosten aus einer anderen Währung aufgeschlagen wird, "
+"und ob sich Preise von selbst ändern, wenn sich Kosten ändern. Beträge und "
+"Prozentwerte sind Dezimalzeichenfolgen, leer, wenn es keine gibt. Ohne "
+"Zielmarge hat der Shop keine Regel. Ausserdem die Währung des Shops und ob "
+"Preise inklusive Steuern eingegeben werden."
+
+#: src/Abilities/ReadPricingSettings.php:130
+msgid "The currency prices are in, as its code."
+msgstr "Die Währung, in der die Preise angegeben sind, als Code."
+
+#: src/Abilities/ReadPricingSettings.php:134
+msgid ""
+"Whether prices are entered including tax. The price step, ending, lowest and "
+"highest price count on the price as entered; the margin counts on it "
+"excluding tax."
+msgstr ""
+"Ob Preise inklusive Steuern eingegeben werden. Preisschritt, Endung, "
+"niedrigster und höchster Preis beziehen sich auf den Preis wie eingegeben; "
+"die Marge bezieht sich auf den Preis ohne Steuern."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/RecheckProducts.php:45
@@ -2737,7 +3072,9 @@ msgid "The Pixonaut settings have no setting %s."
 msgstr "In den Pixonaut-Einstellungen gibt es keine Einstellung %s."
 
 #. translators: %s: the key of a setting, e.g. default_layout.
+#. translators: %s: the key of a setting, e.g. price_margin.
 #: src/Abilities/UpdatePluginSettings.php:73
+#: src/Abilities/UpdatePricingSettings.php:78
 #, php-format
 msgid "The setting %s does not take that value."
 msgstr "Die Einstellung %s akzeptiert diesen Wert nicht."
@@ -2749,6 +3086,46 @@ msgid ""
 msgstr ""
 "Eine eigene Akzentfarbe braucht die Farbe: Geben Sie designer_accent_colour "
 "an, z. B. #1e73be."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/UpdatePricingSettings.php:42
+msgid "Change the pricing settings"
+msgstr "Preiseinstellungen ändern"
+
+#. translators: 1: the name of the ability that reads the pricing settings, 2: the name of the ability that prices a product.
+#: src/Abilities/UpdatePricingSettings.php:45
+#, php-format
+msgid ""
+"Changes the pricing settings given, by their keys as %1$s reads them; the "
+"others keep their values. `price_automatic` switches automatic price changes "
+"on or off: on, a price that follows the rule is set to the rule's price when "
+"its cost changes and its margin left the tolerance; off, the new price is "
+"only suggested. `price_ending` must be below `price_step`. Changing the rule "
+"changes no price by itself: price a product with %2$s. Answers with every "
+"pricing setting."
+msgstr ""
+"Ändert die angegebenen Preiseinstellungen anhand ihrer Schlüssel, wie %1$s "
+"sie liest; die übrigen behalten ihre Werte. `price_automatic` schaltet "
+"automatische Preisänderungen ein oder aus: Eingeschaltet wird ein Preis, der "
+"der Regel folgt, auf den Preis der Regel gesetzt, wenn sich seine Kosten "
+"ändern und seine Marge ausserhalb der Toleranz liegt; ausgeschaltet wird der "
+"neue Preis nur vorgeschlagen. `price_ending` muss unter `price_step` liegen. "
+"Eine Änderung der Regel ändert von selbst keinen Preis: Ein Produkt wird mit "
+"%2$s bepreist. Antwortet mit allen Preiseinstellungen."
+
+#. translators: %s: the key of a setting, e.g. price_margin.
+#: src/Abilities/UpdatePricingSettings.php:74
+#, php-format
+msgid "The pricing settings have no setting %s."
+msgstr "In den Preiseinstellungen gibt es keine Einstellung %s."
+
+#: src/Abilities/UpdatePricingSettings.php:85
+msgid ""
+"Prices end in an amount below the price step: with a step of 10, anything "
+"from 0 up to 9.99."
+msgstr ""
+"Preise enden auf einen Betrag unter dem Preisschritt: bei einem Schritt von "
+"10 alles von 0 bis 9.99."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/UseProductPicture.php:40
@@ -11299,9 +11676,6 @@ msgstr[1] "%s Ansichten"
 
 #~ msgid "Choose a placement"
 #~ msgstr "Druckposition wählen"
-
-#~ msgid "Where on the blank this side is printed."
-#~ msgstr "Wo auf dem Rohling diese Seite gedruckt wird."
 
 #~ msgid ""
 #~ "What customers fill in. With a blank, only templates that fit the "
