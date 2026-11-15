@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration;
 
+use MO;
 use Pixonaut\WooCommerce\DesignerLanguage;
 use Pixonaut\WooCommerce\FileTranslations;
 use Pixonaut\WooCommerce\Plugin;
@@ -89,6 +90,34 @@ PHP;
 		$this->assertNull( FileTranslations::beside( $this->mo_file() ) );
 	}
 
+	public function test_it_reads_a_mo_file_with_no_php_file_beside_it(): void {
+		$translations = FileTranslations::beside( $this->mo_file_written() );
+
+		$this->assertInstanceOf( FileTranslations::class, $translations );
+		$this->assertSame( 'Din design (mo)', $translations->translate( 'Your design' ) );
+		$this->assertSame( 'Ändra', $translations->translate( 'Edit', 'button' ) );
+		$this->assertSame( '%d sida', $translations->translate_plural( '%d side', '%d sides', 1 ) );
+		$this->assertSame( '%d sidor', $translations->translate_plural( '%d side', '%d sides', 2 ) );
+	}
+
+	public function test_the_php_file_is_read_before_the_mo_file_as_wordpress_does(): void {
+		$this->mo_file_written();
+
+		$translations = FileTranslations::beside( $this->php_file_written() );
+
+		$this->assertInstanceOf( FileTranslations::class, $translations );
+		$this->assertSame( 'Din design', $translations->translate( 'Your design' ) );
+	}
+
+	public function test_a_php_file_that_cannot_be_read_gives_way_to_the_mo_file(): void {
+		file_put_contents( $this->php_file(), '<?php return "not a translation";' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a fixture in the test's own directory.
+
+		$translations = FileTranslations::beside( $this->mo_file_written() );
+
+		$this->assertInstanceOf( FileTranslations::class, $translations );
+		$this->assertSame( 'Din design (mo)', $translations->translate( 'Your design' ) );
+	}
+
 	public function test_the_plugins_words_are_printed_in_another_language_from_the_php_file_alone(): void {
 		global $wp_textdomain_registry;
 		$this->assertInstanceOf( WP_Textdomain_Registry::class, $wp_textdomain_registry );
@@ -110,12 +139,47 @@ PHP;
 		return $this->dir . Plugin::TEXT_DOMAIN . '-' . self::LOCALE . '.mo';
 	}
 
+	private function php_file(): string {
+		return $this->dir . Plugin::TEXT_DOMAIN . '-' . self::LOCALE . '.l10n.php';
+	}
+
 	/**
 	 * Writes the `.l10n.php` file and answers the path of the `.mo` file
 	 * it stands in for.
 	 */
 	private function php_file_written(): string {
-		file_put_contents( $this->dir . Plugin::TEXT_DOMAIN . '-' . self::LOCALE . '.l10n.php', self::PHP_FILE ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a fixture in the test's own directory.
+		file_put_contents( $this->php_file(), self::PHP_FILE ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a fixture in the test's own directory.
+		return $this->mo_file();
+	}
+
+	/**
+	 * Writes the `.mo` file, with the `.l10n.php` file's strings but one
+	 * that says which file it came from, and answers its path.
+	 */
+	private function mo_file_written(): string {
+		$mo = new MO();
+		$mo->set_header( 'Plural-Forms', 'nplurals=2; plural=(n != 1);' );
+		$mo->add_entry(
+			array(
+				'singular'     => 'Your design',
+				'translations' => array( 'Din design (mo)' ),
+			)
+		);
+		$mo->add_entry(
+			array(
+				'singular'     => 'Edit',
+				'context'      => 'button',
+				'translations' => array( 'Ändra' ),
+			)
+		);
+		$mo->add_entry(
+			array(
+				'singular'     => '%d side',
+				'plural'       => '%d sides',
+				'translations' => array( '%d sida', '%d sidor' ),
+			)
+		);
+		$this->assertTrue( $mo->export_to_file( $this->mo_file() ) );
 		return $this->mo_file();
 	}
 }
