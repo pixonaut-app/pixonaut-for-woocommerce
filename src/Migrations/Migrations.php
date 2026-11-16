@@ -34,6 +34,7 @@ final class Migrations {
 			new RedrawVariationPictures(),
 			new ReplaceQueuedRechecks(),
 			new DrawFlatCardPictures(),
+			new DrawStoppedPictures(),
 		);
 	}
 }
