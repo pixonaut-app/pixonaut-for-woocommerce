@@ -17,6 +17,7 @@ import {
 import { type PixonautSdk, SdkLoadError } from './sdk-loader';
 import { BUSY_CLASS } from './submit-hold';
 import {
+	FAKE_PREVIEW_ASPECT,
 	fakeDesigner,
 	fakeSdk,
 	MOUNTS,
@@ -717,6 +718,11 @@ describe('ProductDesigner', () => {
 		finishMount(sdk.designer);
 		await mounting;
 		expect(frame.classList).toContain('is-drawn');
+		// The frame takes the shape of the picture the designer shows.
+		await settle();
+		expect(
+			frame.style.getPropertyValue('--pixonaut-preview-drawn-aspect'),
+		).toBe(String(FAKE_PREVIEW_ASPECT));
 	});
 
 	it('keeps the spinner over a mounted side until the SDK replaces the preview placeholder', async () => {

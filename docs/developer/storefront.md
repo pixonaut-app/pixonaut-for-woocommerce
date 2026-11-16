@@ -105,8 +105,12 @@ with `data-pixonaut-pinned`, against what an open keyboard leaves of the screen
 form stays reachable with the keyboard open. The views strip under it may
 run below the fold. Both take the shape the SDK drew once it has, which the
 script sets as `--pixonaut-preview-drawn-aspect` on the frame and follows as
-a view or variant of another shape is shown (not under a theme's
-`--pixonaut-preview-height`, where the SDK fits every photo in one box). A side on no blank
+a view or variant of another shape is shown. The designer says that shape
+itself (the first view's, kept until a view more than 10% from it is shown),
+so a theme that holds previews at `--pixonaut-preview-height` has it on the
+frame too, and can hold the frame at the picture's shape with it:
+`--pixonaut-preview-height: calc( 100cqi / var( --pixonaut-preview-drawn-aspect, var( --pixonaut-preview-aspect, 1 ) ) )`
+on a frame that is a size container. A side on no blank
 (`data-pixonaut-shape="template"` on its `.pixonaut-preview__frame`) has no
 photos and keeps its template's aspect ratio either way: under a fixed height
 it is as wide as that height takes at the template's ratio, at most the full

@@ -1,3 +1,5 @@
+import { DRAWN_ASPECT_PROPERTY } from './frame-shape';
+
 /** The previews the page printed in place of a gallery. */
 const PREVIEW_SELECTOR = '.pixonaut-preview';
 
@@ -12,10 +14,6 @@ const DRAWN_CLASS = 'is-drawn';
 /** How far down the page a preview starts, which the stylesheet holds the
  *  preview's height under the window by. */
 const TOP_PROPERTY = '--pixonaut-preview-top';
-
-/** The width per unit of height of what the SDK drew, which the stylesheet
- *  sizes the frame by in place of the printed `--pixonaut-preview-aspect`. */
-const DRAWN_ASPECT_PROPERTY = '--pixonaut-preview-drawn-aspect';
 
 /** A theme's fixed preview height, under which the SDK fits whatever it
  *  draws, so the drawn box's shape says nothing about the photo's. */

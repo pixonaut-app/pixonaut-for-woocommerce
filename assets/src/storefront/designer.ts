@@ -41,6 +41,7 @@ import {
 import {
 	applyShape,
 	type FrameShape,
+	followDrawnShape,
 	shapeOf,
 	shapeOnceDrawn,
 } from './frame-shape';
@@ -594,6 +595,11 @@ export class ProductDesigner {
 		this.markDrawnOnReveal(side);
 		this.deps.debug?.('mounted', { productId: this.productId, side });
 		designer.on('variant', ({ ref }) => this.variantPicked(side, ref));
+		const frame =
+			this.existingPreview(side)?.closest<HTMLElement>(FRAME_SELECTOR);
+		if (frame) {
+			followDrawnShape(frame, designer);
+		}
 		this.designers.set(side, designer);
 		this.keptValues.delete(side);
 		this.followHosts();

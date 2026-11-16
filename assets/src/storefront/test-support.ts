@@ -46,6 +46,7 @@ export type FakeDesigner = {
 	setTemplate: ReturnType<typeof vi.fn>;
 	setValue: ReturnType<typeof vi.fn>;
 	shown: ReturnType<typeof vi.fn>;
+	getPreviewAspect: Mock<() => number>;
 	setHostItemComplete: ReturnType<typeof vi.fn>;
 	getStep: ReturnType<typeof vi.fn>;
 	setStep: ReturnType<typeof vi.fn>;
@@ -63,6 +64,9 @@ export type FakeDesigner = {
 	/** Shows variant `ref` as the customer picking it in the designer does. */
 	pick: (ref: string) => void;
 };
+
+/** The shape of the fake designer's preview, width over height. */
+export const FAKE_PREVIEW_ASPECT = 0.8;
 
 export const PROOF = {
 	proofToken: 'prf_tok_front',
@@ -114,6 +118,7 @@ export function fakeDesigner({
 		setTemplate: vi.fn().mockResolvedValue(undefined),
 		setValue: vi.fn(),
 		shown: vi.fn().mockResolvedValue(undefined),
+		getPreviewAspect: vi.fn(() => FAKE_PREVIEW_ASPECT),
 		setHostItemComplete: vi.fn(),
 		getStep: vi.fn(),
 		setStep: vi.fn(),
