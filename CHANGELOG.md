@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.10.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.9.3...v1.10.0) (2026-11-16)
+
+
+### Features
+
+* **pricing:** a product can say for itself whether its prices change automatically ([#172](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/172)) ([af91cc0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/af91cc0cc3107ca5c30f6ec4dec24c370942e09b))
+* **storefront:** a product page can say how long the printshop says the chosen variation takes ([#180](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/180)) ([8ba4a92](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/8ba4a9245347c6668fe59f319b4e97dae8afbeef))
+* **storefront:** each card of a split product is a page of its own, with its head tags, sitemap entry and an address that follows the choice ([#179](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/179)) ([067d5ca](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/067d5cadaba395ce7b9b41bbb3645f2d63f527ed)), closes [#170](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/170)
+
+
+### Bug Fixes
+
+* **admin:** the product edit page judges only the sizes the product sells ([#171](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/171)) ([71ebf36](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/71ebf36e1f5c4200939e63df22ba7ca542f92274))
+* **catalogue:** a variable product's picture is the one of a variation it sells, and a variation on another template shows that template's showcase set ([#173](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/173)) ([f7bd18d](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/f7bd18d92896304bf99fcb84ab2886c59d48d949))
+* **contracts:** pin Pixonaut API 10.0.0 and SDK 0.43.0 ([#182](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/182)) ([5519549](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/5519549741bda6eb1ef97e132089960437af9ba7))
+* **storefront:** a side mounted again for another blank stays on the view the customer was on ([#177](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/177)) ([39d8640](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/39d8640fc095351455b3382418cca1d147fe1222))
+* **storefront:** a side mounted again passes the kept view's place to the mount ([#183](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/183)) ([eb48f6c](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/eb48f6cd070b3fd01ad498df351e9d6109d184fe))
+* **storefront:** a variable product's page opens on a whole variation, the one its picture shows ([#175](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/175)) ([e0f6e28](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/e0f6e28c9714052bffe69fc2f10c50f0e56981ae)), closes [#168](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/168)
+* **storefront:** the designer draws each option as it is picked, keeping what it shows for the rest ([#178](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/178)) ([5346326](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/5346326e0bca1eeae78b066187de50cb7ceeb7cf))
+* **storefront:** the designer leaves out the group of an option that does not apply, and numbers the rest again ([#174](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/174)) ([67cf670](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/67cf670ce445463b71dd714d3e517ab357b6b098)), closes [#165](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/165)
+* **storefront:** the views are drawn under the preview, and its frame takes the shape of the picture shown ([#176](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/176)) ([d17bd06](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/d17bd06da7d0e625f9c04eddf5d08f1e5c2735e8))
+
 ## [1.9.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.9.2...v1.9.3) (2026-11-15)
 
 
