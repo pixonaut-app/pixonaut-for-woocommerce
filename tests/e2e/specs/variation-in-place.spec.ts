@@ -5,7 +5,9 @@ import {
 	mounts,
 	type Sample,
 	samples,
+	switchFrames,
 	watchBoxes,
+	watchSwitch,
 } from '../designer-watch';
 import { expect, type FakePixonaut, restUrl, test } from '../fixtures';
 import { connectFixtureStore, PERSONALISED } from '../personalised';
@@ -77,6 +79,13 @@ const SWITCH_FRAMES = 120;
 /** A difference in height too small to see: layout rounds to whole
  *  pixels. */
 const SAME_HEIGHT_PX = 1;
+
+/** Most digits of the clock a unique slug takes: attribute slugs are short. */
+const SLUG_CLOCK_DIGITS = 8;
+
+/** The framed poster's variations, by the support route's keys: on the
+ *  hoodie, so the bare poster is on another blank. */
+const FRAMED = ['ram-svart', 'ram-vit'];
 
 /** What the shopper types before switching. */
 const TYPED = 'Ada Lovelace';
@@ -298,4 +307,85 @@ test('a product with no default opens on its first variation, chosen in the form
 		page.locator(BOXES.form).getByText(PHOTO_GROUP).first(),
 	).toBeVisible();
 	expect(await mounts(page), 'mounted once').toBe(1);
+});
+
+test('an option on another blank keeps the picture, the price and Add to cart while it mounts again', async ({
+	page,
+	request,
+}) => {
+	const key = String(Date.now()).slice(-SLUG_CLOCK_DIGITS);
+	const response = await request.post(
+		restUrl('/pixonaut-e2e/v1/dependent-poster'),
+		{
+			data: {
+				key,
+				pixonaut: PERSONALISED,
+				overrides: Object.fromEntries(FRAMED.map((framed) => [framed, HOODIE])),
+				variants: Object.fromEntries(
+					FRAMED.map((framed) => [framed, FIXTURE.variant.hoodieWhiteS]),
+				),
+			},
+		},
+	);
+	expect(response.status()).toBe(201);
+	const poster = (await response.json()) as {
+		permalink: string;
+		taxonomies: Record<string, { taxonomy: string }>;
+		variations: Record<string, number>;
+	};
+	const option = (attribute: string) =>
+		page.locator(
+			`form select[name="attribute_${poster.taxonomies[attribute]?.taxonomy}"]`,
+		);
+	try {
+		await countMounts(page);
+		await page.goto(poster.permalink);
+		await option('inramning').selectOption('ram');
+		await option('ramfarg').selectOption('svart');
+		await expect(page.locator('form [name="variation_id"]')).toHaveValue(
+			String(poster.variations['ram-svart']),
+		);
+		await expect.poll(() => mounts(page)).toBe(2);
+		await expect(page.locator('.pixonaut-preview__frame')).toHaveClass(
+			/is-drawn/,
+		);
+		// The framed poster's own mount is shown.
+		await expect(page.locator('[data-pixonaut-held]')).toHaveCount(0);
+		const before = await beforeSwitch(page);
+		await watchSwitch(page, 'front');
+
+		await option('inramning').selectOption('ingen');
+		await expect.poll(() => mounts(page)).toBe(3);
+		await afterSwitch(page);
+		const frames = await switchFrames(page);
+
+		expect(
+			frames.flatMap((frame) => frame.broken),
+			'no picture shows broken',
+		).toEqual([]);
+		expect(
+			frames.filter((frame) => !frame.cart),
+			'Add to cart shows throughout',
+		).toEqual([]);
+		const prices = frames
+			.map((frame) => frame.price)
+			.filter((price, index, all) => price !== all[index - 1]);
+		expect(prices, 'the price shows, and changes once').toHaveLength(2);
+		expect(prices).not.toContain('');
+		// The bare poster's form drops the frame's colour as the choice is
+		// made, and is drawn again once the new picture is: in between, as
+		// the side mounts again, nothing moves.
+		const held = frames.filter((frame) => frame.held);
+		const [first] = held;
+		expect(first, 'the picture is held').toBeDefined();
+		expect(movedFrom(before, held, 'preview'), 'the preview stays').toEqual([]);
+		expect(
+			movedFrom(first as Sample<typeof BOXES>, held, 'form'),
+			'the form stays',
+		).toEqual([]);
+	} finally {
+		await request.delete(restUrl('/pixonaut-e2e/v1/dependent-poster'), {
+			params: { key },
+		});
+	}
 });

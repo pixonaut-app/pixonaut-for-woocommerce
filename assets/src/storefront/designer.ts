@@ -7,7 +7,10 @@ import type {
 	SplitMountOptions,
 } from '../types/sdk';
 import { followAddress } from './address';
-import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
+import {
+	APPLY_CHOICES_EVENT,
+	NOT_APPLICABLE_ATTRIBUTE,
+} from './applicable-form';
 import { CheckboxApproval } from './approval';
 import { removePrintedSwatches } from './attribute-swatches';
 import {
@@ -1017,6 +1020,10 @@ export class ProductDesigner {
 	 * leaves both as they were changes nothing.
 	 */
 	private followForm(form: HTMLFormElement): void {
+		// The attributes that no longer apply are hidden, and their fields
+		// filled, before the variation is read: the side mounts with the
+		// groups it keeps, never once more as they are hidden after.
+		form.dispatchEvent(new Event(APPLY_CHOICES_EVENT));
 		const held = variationId(form);
 		const drawn = held === NO_VARIATION ? this.drawnFor(form) : held;
 		if (held === this.held && drawn === this.variation) {
@@ -1361,6 +1368,8 @@ export class ProductDesigner {
 		} else {
 			this.keptViews.set(side, keptView);
 		}
+		// A side mounted again before its last mount was shown holds what
+		// that one drew, and keeps hidden the parts it has not taken yet.
 		const hold = holdShown(
 			[
 				this.previewTarget(side),
@@ -1369,9 +1378,11 @@ export class ProductDesigner {
 			],
 			Object.values(this.markTarget(side)),
 			this.lendable(side),
+			this.holds.get(side)?.hidden(),
 		);
 		this.destroyDesigner(designer);
 		this.designers.delete(side);
+		this.releaseHold(side);
 		this.holds.set(side, hold);
 		hold.place();
 		const release = () => {

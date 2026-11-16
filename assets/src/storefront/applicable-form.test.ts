@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApplicableAttributes } from './applicable-attributes';
 import {
+	APPLY_CHOICES_EVENT,
 	hideInapplicableAttributes,
 	MAX_RETRIES,
 	NOT_APPLICABLE_ATTRIBUTE,
@@ -149,6 +150,21 @@ describe('hideInapplicableAttributes on the classic form', () => {
 			'attribute_hanger',
 			'attribute_frame',
 		]);
+	});
+
+	it('hides at once, ahead of the pause after a choice, when asked', () => {
+		const form = classicForm();
+		hideInapplicableAttributes(form, POSTER);
+		select('attribute_framing').value = 'none';
+		select('attribute_framing').dispatchEvent(
+			new Event('change', { bubbles: true }),
+		);
+		expect(hiddenRows()).toEqual([]);
+
+		form.dispatchEvent(new Event(APPLY_CHOICES_EVENT));
+
+		expect(hiddenRows()).toEqual(['attribute_hanger', 'attribute_frame']);
+		expect(select('attribute_frame').value).toBe('black');
 	});
 
 	it('shows an attribute again, cleared, once a choice makes it apply', () => {

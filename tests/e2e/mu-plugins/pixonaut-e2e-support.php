@@ -849,7 +849,9 @@ add_action(
 		// each depth (30.00), each variation setting only the option of its
 		// own extra, in a category of its own. `split` names the attributes
 		// the poster is listed by; `pixonaut` is its stored configuration,
-		// every variation then personalised. DELETE removes them.
+		// every variation then personalised, and `overrides` and `variants`
+		// give a variation, by its key (`ram-svart`), a configuration and a
+		// blank variant of its own. DELETE removes them.
 		register_rest_route(
 			'pixonaut-e2e/v1',
 			'/dependent-poster',
@@ -859,12 +861,12 @@ add_action(
 					'permission_callback' => '__return_true',
 					'args'                => array(
 						// A short unique suffix for the attributes' and the category's slugs.
-						'key'      => array(
+						'key'       => array(
 							'type'     => 'string',
 							'required' => true,
 							'pattern'  => '^[a-z0-9]{1,16}$',
 						),
-						'split'    => array(
+						'split'     => array(
 							'type'  => 'array',
 							'items' => array(
 								'type' => 'string',
@@ -872,7 +874,15 @@ add_action(
 							),
 						),
 						// A stored Pixonaut configuration document for the poster.
-						'pixonaut' => array(
+						'pixonaut'  => array(
+							'type' => 'object',
+						),
+						// A stored configuration by variation key (`ram-svart`), for a variation that overrides the poster's.
+						'overrides' => array(
+							'type' => 'object',
+						),
+						// A blank variant ref by variation key, for a variation that sells another than its blank's first.
+						'variants'  => array(
 							'type' => 'object',
 						),
 					),
@@ -962,10 +972,19 @@ add_action(
 						}
 						if ( is_array( $request['pixonaut'] ) && $poster instanceof WC_Product ) {
 							\Pixonaut\WooCommerce\Catalogue\ProductConfig::from_json( (string) wp_json_encode( $request['pixonaut'] ) )->save_to( $poster );
-							foreach ( $poster->get_children() as $variation_id ) {
+							$overrides = is_array( $request['overrides'] ) ? $request['overrides'] : array();
+							$refs      = is_array( $request['variants'] ) ? $request['variants'] : array();
+							foreach ( $variations as $variation_key => $variation_id ) {
 								$variation = wc_get_product( $variation_id );
+								if ( ! $variation instanceof WC_Product ) {
+									continue;
+								}
+								if ( is_array( $overrides[ $variation_key ] ?? null ) ) {
+									\Pixonaut\WooCommerce\Catalogue\ProductConfig::from_json( (string) wp_json_encode( $overrides[ $variation_key ] ) )->with_override( true )->save_to( $variation );
+									$variation = wc_get_product( $variation_id );
+								}
 								if ( $variation instanceof WC_Product ) {
-									pixonaut_e2e_pick_variant( $variation, null );
+									pixonaut_e2e_pick_variant( $variation, is_string( $refs[ $variation_key ] ?? null ) ? $refs[ $variation_key ] : null );
 								}
 							}
 						}

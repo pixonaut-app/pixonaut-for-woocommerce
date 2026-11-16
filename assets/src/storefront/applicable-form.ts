@@ -15,6 +15,11 @@ import { followChoices } from './variations';
  *  is hidden. */
 export const NOT_APPLICABLE_ATTRIBUTE = 'data-pixonaut-not-applicable';
 
+/** Dispatched on the add-to-cart form to have the attributes hidden and
+ *  shown for its choices at once, ahead of the pause after a choice: the
+ *  designer reads the form only once they are. */
+export const APPLY_CHOICES_EVENT = 'pixonaut:apply-choices';
+
 /** DOM events by which the customer makes a choice in either form. */
 const CHOICE_EVENTS = ['change', 'click', 'input'] as const;
 
@@ -34,7 +39,8 @@ export const MAX_RETRIES = 50;
  * choice makes it apply. WooCommerce finds a variation only with a value in
  * every field, so a hidden attribute's field is given its first value; the
  * server keeps it off the cart line. A field shown again is cleared, for the
- * customer to choose. Returns a function that looks at the form at once.
+ * customer to choose. Returns a function that looks at the form at once,
+ * as `APPLY_CHOICES_EVENT` does.
  */
 export function hideInapplicableAttributes(
 	form: HTMLFormElement,
@@ -81,6 +87,7 @@ export function hideInapplicableAttributes(
 			apply();
 		}
 	});
+	form.addEventListener(APPLY_CHOICES_EVENT, now);
 	now();
 	return now;
 }

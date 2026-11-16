@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
+import {
+	APPLY_CHOICES_EVENT,
+	NOT_APPLICABLE_ATTRIBUTE,
+} from './applicable-form';
 import { ProductDesigner } from './designer';
 import { type PixonautSdk, SdkLoadError } from './sdk-loader';
 import {
@@ -412,6 +415,31 @@ describe('ProductDesigner on a variable product', () => {
 				(group) => group.id,
 			),
 		).toEqual(['text']);
+	});
+
+	it('has the attributes that no longer apply hidden before it reads a choice', async () => {
+		const sdk = fakeSdk();
+		sdk.mount
+			.mockResolvedValueOnce(sdk.designer)
+			.mockResolvedValue(fakeDesigner());
+		const { form, mount } = start({ sdk });
+		await settle();
+		// What the form holds as the attributes are hidden: the choice, and
+		// the designers mounted.
+		const asked: Array<{ variation: string; mounted: number }> = [];
+		form.addEventListener(APPLY_CHOICES_EVENT, () =>
+			asked.push({
+				variation: (
+					form.querySelector('[name="variation_id"]') as HTMLInputElement
+				).value,
+				mounted: mount.mock.calls.length,
+			}),
+		);
+
+		await choose(form, '13');
+
+		expect(asked[0]).toEqual({ variation: '13', mounted: 1 });
+		expect(mount).toHaveBeenCalledTimes(2);
 	});
 
 	it('mounts the side again on the print size the customer is on', async () => {
@@ -917,7 +945,7 @@ describe('ProductDesigner on a variable product', () => {
 		);
 	});
 
-	it('keeps what the designer showed in its place until the side mounted again is shown', async () => {
+	it('keeps what the designer showed in its place until the side mounted again draws it', async () => {
 		const sdk = fakeSdk();
 		const hoodie = fakeDesigner();
 		let mounted = (_designer: unknown): void => undefined;
@@ -952,7 +980,10 @@ describe('ProductDesigner on a variable product', () => {
 		expect(row.style.display).toBe('none');
 		mounted(hoodie);
 		await settle();
-		expect(row.style.display).toBe('none');
+		// The new designer's form holds the row: it shows there at once,
+		// while the preview waits.
+		expect(target.contains(row)).toBe(true);
+		expect(row.style.display).toBe('');
 		shown();
 		await settle();
 		expect(row.style.display).toBe('');
