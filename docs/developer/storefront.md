@@ -225,7 +225,13 @@ block, `wp_get_attachment_image`, the Store API and feeds alike. It is drawn
 in the `pixonaut_wc_catalogue_picture` Action Scheduler job, from
 `GET /t/{id}/mockup.png` (the first side's template on the first view of its
 placement the product is shown in, with the variation's blank variant) or
-`GET /t/{id}/preview.png` for a product with no blank. Both take the store's
+`GET /t/{id}/preview.png` for a product with no blank. A variable product's
+picture is drawn as one of its variations (`PicturedVariation`): the first
+enabled variation WooCommerce offers that sells a variant of its blank and
+agrees with the product's default attributes, else the first such
+variation, with that variation's template, blank and variant, so the two
+share one attachment; a product with no such variation is drawn with no
+`variant`. Both take the store's
 publishable key, sent with the site's origin. The product keeps the image it
 has until the job ran, and while Pixonaut cannot draw it: one
 `pixonaut_wc_catalogue_picture_retry` job per product queues it again after
@@ -241,6 +247,9 @@ kind, view?, photo?}`, `kind` `mockup` or `preview`), written by the Pixonaut ta
 is the product's image, the others lead its gallery
 (`_product_image_gallery`), before the store manager's own gallery images,
 which are kept; a variation's image is drawn with the product's first set. A
+variation whose own first side is on another template than the product's
+is drawn with that template's set of the same name, else its first set, as
+`GET /v1/templates/{id}` lists them (`TemplateShowcases`). A
 `404 showcase_not_found` draws that picture without `showcase`, and the set
 is recorded as gone in `_pixonaut_picture` for the field to say so. The
 designer never receives a showcase set.
@@ -259,7 +268,7 @@ photo the blank no longer lists draws the picture as without a choice.
 
 A product is queued when its configuration (`_pixonaut_config`), its variant,
 its image, its showcase sets or the view and photo chosen change, whether through the meta API or a direct write that
-clears the post's cache, when its picture is deleted from the media library
+clears the post's cache, a variable product also at the end of a request that changed one of its variations, when its picture is deleted from the media library
 (a configured variable product's variations, which share its configuration,
 are checked in a `pixonaut_wc_catalogue_pictures_variations` job), and,
 through the `pixonaut_wc_catalogue_pictures_queue` job paging through
@@ -276,7 +285,9 @@ the setting is turned off, the remembered image is put back, unless the
 store manager set another one since.
 
 The attachment is recorded in the product's `_pixonaut_picture` meta, and
-carries `_pixonaut_picture_of` with the product's id; only such an
+carries `_pixonaut_picture_of` with the product's id, and
+`_pixonaut_picture_showcase` with the showcase set it was drawn with (empty
+for the template's defaults), which `picture_shows` reads; only such an
 attachment is deleted, when the product is no longer personalised, is
 deleted, or gets a new picture, or when the setting is turned off.
 Uninstalling the plugin puts each product's remembered image back before it

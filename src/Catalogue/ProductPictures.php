@@ -29,6 +29,8 @@ use WC_Product;
  * with several showcase sets chosen has a picture per set: the first is its
  * image, the others lead its gallery (`PictureGallery`). A set Pixonaut no
  * longer has is drawn with the template's defaults, and recorded as gone.
+ * A variable product's own picture is the one of a variation it sells
+ * (`PicturedVariation`).
  * A picture is drawn once per source: a variation drawn from what another
  * of its product's family already has a picture of shows that picture
  * (`SharedPictures`).
@@ -253,7 +255,7 @@ final class ProductPictures {
 				PictureQueue::schedule( $product->get_id() );
 				return;
 			}
-			$attachment = null === $drawing['png'] ? $drawing['attachment'] : SharedPictures::attach( $product, $drawing['png'], (string) $drawing['key'] );
+			$attachment = null === $drawing['png'] ? $drawing['attachment'] : SharedPictures::attach( $product, $drawing['png'], (string) $drawing['key'], $drawing['showcase'] );
 			if ( 0 === $attachment && null !== $drawing['png'] ) {
 				$this->logger->warning( sprintf( 'The picture of product #%d could not be saved to the media library.', $product->get_id() ), array( 'product_id' => $product->get_id() ) );
 				self::unattach( $product, $slots, $stored );
@@ -317,7 +319,7 @@ final class ProductPictures {
 	 * @param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $stored  Its recorded pictures.
 	 * @param bool                                                                                                                                                                 $own     Whether its image is the store manager's own, which is kept.
 	 *
-	 * @return list<array{key: string|null, attachment: int, png: string|null, gone: string|null, shared: bool}>
+	 * @return list<array{key: string|null, attachment: int, png: string|null, gone: string|null, shared: bool, showcase: string|null}> `showcase` is the set a PNG was drawn with.
 	 *
 	 * @throws ApiException When Pixonaut could not draw one.
 	 */
@@ -352,6 +354,7 @@ final class ProductPictures {
 					'png'        => null,
 					'gone'       => $gone,
 					'shared'     => false,
+					'showcase'   => null,
 				);
 				continue;
 			}
@@ -362,6 +365,7 @@ final class ProductPictures {
 				'png'        => null,
 				'gone'       => 0 === $shared ? null : $gone,
 				'shared'     => 0 !== $shared,
+				'showcase'   => null,
 			);
 			if ( 0 === $shared ) {
 				$wanted[ $index ] = $source;
@@ -395,6 +399,7 @@ final class ProductPictures {
 					'png'        => $pngs[ $index ],
 					'gone'       => $again[ $index ]['showcase'] ?? null,
 					'shared'     => false,
+					'showcase'   => isset( $again[ $index ] ) ? null : $wanted[ $index ]['showcase'] ?? null,
 				)
 				: $drawing;
 		}
@@ -539,8 +544,11 @@ final class ProductPictures {
 	 * What the picture depends on, as stored: the configuration of the
 	 * product (and of a variation's product), which holds each side's
 	 * template version, its variant, the showcase sets chosen when there are
-	 * any, the view and photo chosen when there is one, the generation `redraw_all()` moves, and the product's own that
-	 * `regenerate()` moves. Null when neither is configured.
+	 * any, the view and photo chosen when there is one, the variation a
+	 * variable product is drawn as, the template of a variation set up on
+	 * another than its product's while sets are chosen, the generation
+	 * `redraw_all()` moves, and the product's own that `regenerate()` moves.
+	 * Null when neither is configured.
 	 *
 	 * @param WC_Product $product A product or variation.
 	 */
@@ -566,6 +574,16 @@ final class ProductPictures {
 		if ( array() !== $views ) {
 			// Likewise only when chosen.
 			$parts[] = array( 'picture_view' => $views );
+		}
+		$drawn_as = PicturedVariation::document_on( $product );
+		if ( null !== $drawn_as ) {
+			// A variable product's picture is the one of a variation it sells.
+			$parts[] = array( 'drawn_as' => $drawn_as );
+		}
+		$template = null === $showcase ? null : TemplateShowcases::other_template( $product );
+		if ( null !== $template ) {
+			// A variation on another template than its product's is drawn with that template's set.
+			$parts[] = array( 'showcase_template' => $template );
 		}
 		return md5( (string) wp_json_encode( self::drawn_under( $product, $parts ) ) );
 	}

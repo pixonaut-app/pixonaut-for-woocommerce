@@ -31,6 +31,7 @@ final class Migrations {
 			new ForgetAddAfterApprove(),
 			new WriteSplitCards(),
 			new WriteCombinationCards(),
+			new RedrawVariationPictures(),
 		);
 	}
 }

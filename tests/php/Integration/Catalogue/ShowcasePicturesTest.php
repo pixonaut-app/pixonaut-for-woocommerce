@@ -182,16 +182,18 @@ final class ShowcasePicturesTest extends WP_UnitTestCase {
 		$variation->set_regular_price( '20' );
 		$variation->save();
 		DesignFixture::sell_variant( $variation );
-		$this->recorder->json( 200, BlankFixture::mockups( Hosts::server_api() ) );
-		foreach ( range( 1, 3 ) as $picture ) {
+		foreach ( range( 1, 2 ) as $picture ) {
 			$this->recorder->raw( 200, self::png(), 'image/png' );
 		}
 
 		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
 
-		$variation_requests = array_values( array_filter( $this->recorder->requests, static fn ( array $request ): bool => str_contains( $request['url'], '&variant=' ) ) );
-		$this->assertCount( 1, $variation_requests );
-		$this->assertStringEndsWith( '&showcase=showcase-anna', $variation_requests[0]['url'] );
+		// The product is drawn as the variation, so the two share the first set's picture.
+		$urls = array_column( $this->recorder->requests, 'url' );
+		$this->assertCount( 2, $urls );
+		$this->assertStringEndsWith( '&showcase=showcase-anna', $urls[0] );
+		$this->assertStringEndsWith( '&showcase=showcase-team', $urls[1] );
+		$this->assertSame( (int) $this->reload( $product )->get_image_id(), (int) $this->reload( $variation )->get_image_id() );
 		$this->assertSame( array(), $this->reload( $variation )->get_gallery_image_ids() );
 	}
 

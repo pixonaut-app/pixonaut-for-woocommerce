@@ -230,7 +230,9 @@ overrides, its
 `showcase_images` its pictures are drawn with, and its `picture`:
 `drawn`, `pending`, `failed`, `own_image` (the store manager's image is
 kept), `none` (nothing to draw it from) or `off` (pictures are not product
-images, or it is not personalised). A side is given as `set-product-setup`
+images, or it is not personalised), with `picture_shows`: `showcase` when
+the Pixonaut picture it has shows a showcase set's values, `template_defaults`
+when it shows the template's own placeholders, null without one. A side is given as `set-product-setup`
 takes it (`key`, `label`, `mode`, `template_id`, `template_pinned`, `placement_id`,
 `print_sizes` in millimetres, `start_size`, `form_groups`, `canvas_ratio`), with its
 `template_name` and `placement_name`, and, for a standing side on a blank

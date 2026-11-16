@@ -11,9 +11,15 @@ const PICTURE_HOOK = 'pixonaut_wc_catalogue_picture';
 /** The job that queues the drawings of a variable product's variations. */
 const VARIATIONS_HOOK = 'pixonaut_wc_catalogue_pictures_variations';
 
-/** A product's picture is saved as `pixonaut-<product id>-<key>.png`. */
-function pictureOf(id: number): RegExp {
-	return new RegExp(`/pixonaut-${id}-[0-9a-f]+(-\\d+x\\d+)?\\.png`);
+/**
+ * A product's picture is saved as `pixonaut-<product id>-<key>.png`, under
+ * the id of whichever of a product and its variations drew it first: they
+ * share a picture drawn from the same.
+ */
+function pictureOf(...ids: number[]): RegExp {
+	return new RegExp(
+		`/pixonaut-(${ids.join('|')})-[0-9a-f]+(-\\d+x\\d+)?\\.png`,
+	);
 }
 
 /** The images the Store API answers for a product or variation. */
@@ -87,17 +93,22 @@ test('each variation shows its own picture', async ({ request, theme }) => {
 		},
 	});
 	expect(response.status()).toBe(201);
-	const { variations } = (await response.json()) as {
+	const { id, variations } = (await response.json()) as {
+		id: number;
 		variations: Record<string, number>;
 	};
 	const ids = Object.values(variations);
 	await runJobs(request, { hook: PICTURE_HOOK });
 
-	for (const id of ids) {
-		expect(await storeImages(request, id)).toEqual([
-			expect.stringMatching(pictureOf(id)),
-		]);
+	const pictures: string[] = [];
+	for (const variation of ids) {
+		const images = await storeImages(request, variation);
+		expect(images).toEqual([expect.stringMatching(pictureOf(id, variation))]);
+		pictures.push(...images);
 	}
+	expect(new Set(pictures).size).toBe(ids.length);
+	// The product shows the picture of the first variation customers can buy.
+	expect(await storeImages(request, id)).toEqual([pictures[0]]);
 });
 
 test('the product images show the template’s showcase sets the merchant ticks', async ({
@@ -277,7 +288,7 @@ test('Regenerate in background draws a variable product’s pictures at once and
 	for (const [index, images] of redrawn.entries()) {
 		expect(images).toHaveLength(drawn[index]?.length ?? 0);
 		for (const [at, src] of images.entries()) {
-			expect(src).toMatch(pictureOf(pictured[index] ?? 0));
+			expect(src).toMatch(pictureOf(...pictured));
 			expect(src).not.toBe(drawn[index]?.[at]);
 		}
 	}

@@ -257,6 +257,13 @@ final class Schema {
 	const PICTURE_SOURCE_META = '_pixonaut_picture_source';
 
 	/**
+	 * Attachment meta holding the showcase set a Pixonaut picture was drawn
+	 * with; empty for one drawn with the template's defaults. A picture
+	 * drawn before the plugin recorded it has none.
+	 */
+	const PICTURE_SHOWCASE_META = '_pixonaut_picture_showcase';
+
+	/**
 	 * A number every product picture is drawn under; moving it draws them
 	 * all again.
 	 */

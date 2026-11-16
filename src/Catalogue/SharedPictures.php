@@ -33,6 +33,8 @@ final class SharedPictures {
 
 	public const SOURCE_META = Schema::PICTURE_SOURCE_META;
 
+	public const SHOWCASE_META = Schema::PICTURE_SHOWCASE_META;
+
 	/**
 	 * Prefix of the option a job holds while it draws a source, followed by
 	 * the family's product id and the source's key (`lock_option()`); under
@@ -126,13 +128,14 @@ final class SharedPictures {
 	/**
 	 * Saves the PNG to the media library as the product's picture.
 	 *
-	 * @param WC_Product $product A product or variation.
-	 * @param string     $png     The picture's bytes.
-	 * @param string     $key     What it was drawn from.
+	 * @param WC_Product  $product  A product or variation.
+	 * @param string      $png      The picture's bytes.
+	 * @param string      $key      What it was drawn from.
+	 * @param string|null $showcase The showcase set it was drawn with; null for the template's defaults.
 	 *
 	 * @return int The attachment; 0 when it could not be saved.
 	 */
-	public static function attach( WC_Product $product, string $png, string $key ): int {
+	public static function attach( WC_Product $product, string $png, string $key, ?string $showcase = null ): int {
 		$upload = wp_upload_bits( sprintf( 'pixonaut-%d-%s.png', $product->get_id(), substr( $key, 0, 8 ) ), null, $png );
 		if ( false !== $upload['error'] ) {
 			return 0;
@@ -160,9 +163,25 @@ final class SharedPictures {
 			return 0;
 		}
 		wp_update_attachment_metadata( $attachment, $metadata );
+		update_post_meta( $attachment, self::SHOWCASE_META, $showcase ?? '' );
 		// Last, so `find()` never gives another product a picture that is not yet a valid image.
 		update_post_meta( $attachment, self::SOURCE_META, $key );
 		return $attachment;
+	}
+
+	/**
+	 * The showcase set a picture was drawn with, which every product
+	 * sharing it shows: empty for the template's defaults; null for a
+	 * picture drawn before that was recorded.
+	 *
+	 * @param int $attachment A picture.
+	 */
+	public static function showcase_of( int $attachment ): ?string {
+		if ( ! metadata_exists( 'post', $attachment, self::SHOWCASE_META ) ) {
+			return null;
+		}
+		$showcase = get_post_meta( $attachment, self::SHOWCASE_META, true );
+		return is_string( $showcase ) ? $showcase : '';
 	}
 
 	/**

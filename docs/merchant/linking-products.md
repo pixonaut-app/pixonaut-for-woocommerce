@@ -675,8 +675,11 @@ networks show for the product's page. The picture is the product's first
 side's template on the first view of its print position that the product is
 shown in, unless you choose another view or photo (below). A variation's
 picture is on the photo of its own blank variant, so each colour shows its
-own, and becomes the variation's image. A product without a blank shows the
-template's own picture.
+own, and becomes the variation's image. A product with variations shows the
+picture of one of the variations customers can buy: the first that has the
+product's default attribute values (**Default Form Values**), else the first
+of them, so it never shows a size or colour the product does not sell. A
+product without a blank shows the template's own picture.
 
 The pictures are saved in the media library, named `pixonaut-<product id>-…`,
 and are made a few moments after the product is personalised, then again
@@ -806,9 +809,11 @@ images**:
 3. Update the product. The images are drawn a few moments later.
 
 A variation's image shows the product's first set, on the view and photo
-chosen for it as above. With no set ticked, or a template without sets, the
-images show the template's own defaults, as **The template's own** card
-shows them.
+chosen for it as above. A variation set up on another template than the
+product's shows that template's set of the same name, else its first set, so
+give the sets of the templates one product sells the same name to choose
+which. With no set ticked, or a template without sets, the images show the
+template's own defaults, as **The template's own** card shows them.
 
 Showcase sets only change the product's images. Customers still start
 designing from the template's own defaults, and their designs, proofs and
