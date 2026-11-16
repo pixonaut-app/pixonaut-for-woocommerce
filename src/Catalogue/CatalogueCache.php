@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Catalogue;
 use Closure;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 
 /**
  * Searches repeat as the store manager types, and the product screen reads
@@ -32,9 +33,59 @@ final class CatalogueCache {
 	public const GENERATION_OPTION = Schema::CATALOGUE_CACHE_GENERATION_OPTION;
 
 	/**
-	 * @param ConnectionStore $connections Names the connection the answers belong to.
+	 * After an answer's key, the copy `remember_or_kept()` keeps past the
+	 * answer's few minutes.
 	 */
-	public function __construct( private readonly ConnectionStore $connections ) {
+	private const KEPT_SUFFIX = '_kept';
+
+	/**
+	 * An hour, in seconds: how long a kept copy serves. The short-lived
+	 * links an answer carries, such as a mockup's `thumbnailUrl`, open for
+	 * at least that long.
+	 */
+	private const KEPT_SECONDS = 3600;
+
+	/**
+	 * A minute, in seconds: how long a read in a kept answer's place holds
+	 * off the next, and so how soon one that failed is tried again.
+	 */
+	private const REFRESH_HOLD_SECONDS = 60;
+
+	/**
+	 * The reads to make once the page is sent, by key.
+	 *
+	 * @var array<string, Closure(): array<int|string, mixed>>
+	 */
+	private array $refreshes = array();
+
+	/**
+	 * Finishes the response to the visitor, so the request's remaining
+	 * work runs without them waiting; null where the server offers no way.
+	 *
+	 * @var (Closure(): bool)|null
+	 */
+	private ?Closure $finish_response;
+
+	/**
+	 * @param ConnectionStore        $connections     Names the connection the answers belong to.
+	 * @param (Closure(): bool)|null $finish_response Finishes the response; by default PHP-FPM's or LiteSpeed's, where the server has one.
+	 */
+	public function __construct( private readonly ConnectionStore $connections, ?Closure $finish_response = null ) {
+		$this->finish_response = $finish_response ?? self::server_finish_response();
+	}
+
+	/**
+	 * The server's way to finish a response before the request ends: PHP-FPM's or LiteSpeed's.
+	 *
+	 * @return (Closure(): bool)|null
+	 */
+	private static function server_finish_response(): ?Closure {
+		foreach ( array( 'fastcgi_finish_request', 'litespeed_finish_request' ) as $finish ) {
+			if ( function_exists( $finish ) ) {
+				return static fn (): bool => (bool) call_user_func( $finish );
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -57,13 +108,112 @@ final class CatalogueCache {
 	}
 
 	/**
+	 * The cached answer, for a page a visitor waits on: once its few minutes
+	 * are up, the answer kept from before serves for up to an hour while
+	 * `$load` reads a new one after the response is finished
+	 * (`refresh_kept()`). Where the server cannot finish a response early,
+	 * the kept answer serves until its hour is up instead, rather than hold
+	 * the visitor for the read. With none kept, `$load`'s, cached.
+	 *
+	 * @param string                              $what Which answer, e.g. `storefront-template`.
+	 * @param array<string, string>               $args What it was asked with.
+	 * @param Closure(): array<int|string, mixed> $load Asks Pixonaut; may throw, which is not cached.
+	 * @return array<int|string, mixed>
+	 */
+	public function remember_or_kept( string $what, array $args, Closure $load ): array {
+		$key    = $this->key( $what, $args );
+		$cached = get_transient( $key );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+		$kept = get_transient( $key . self::KEPT_SUFFIX );
+		if ( ! is_array( $kept ) ) {
+			$answer = $load();
+			$this->keep( $key, $answer );
+			return $answer;
+		}
+		if ( null !== $this->finish_response && ! isset( $this->refreshes[ $key ] ) && $this->hold_refresh( $key ) ) {
+			$this->refreshes[ $key ] = $load;
+			add_action( 'shutdown', array( $this, 'refresh_kept' ), PHP_INT_MAX );
+		}
+		return $kept;
+	}
+
+	/**
+	 * Reads the answers kept ones served in place of, after every other
+	 * shutdown callback and once the response is finished, so the visitor
+	 * does not wait for it. A read Pixonaut refuses, or that cannot reach
+	 * it, leaves the kept answer serving, and is tried again a minute later.
+	 */
+	public function refresh_kept(): void {
+		$refreshes       = $this->refreshes;
+		$this->refreshes = array();
+		if ( array() === $refreshes || null === $this->finish_response ) {
+			return;
+		}
+		( $this->finish_response )();
+		foreach ( $refreshes as $key => $load ) {
+			try {
+				$this->keep( $key, $load() );
+			} catch ( ApiException ) {
+				// The kept answer serves on until it expires; the hold on refreshing it lapses in a minute.
+				continue;
+			}
+			delete_option( self::refresh_hold_option( $key ) );
+		}
+	}
+
+	/**
+	 * Takes the right to read a new answer in place of a kept one.
+	 * `add_option()` inserts or fails atomically, so two page views never
+	 * both read it; a hold older than a minute is taken over.
+	 *
+	 * @param string $key The answer's key.
+	 */
+	private function hold_refresh( string $key ): bool {
+		$option = self::refresh_hold_option( $key );
+		$now    = time();
+		if ( add_option( $option, (string) $now, '', false ) ) {
+			return true;
+		}
+		$held_since = get_option( $option );
+		if ( is_numeric( $held_since ) && $now - (int) $held_since < self::REFRESH_HOLD_SECONDS ) {
+			return false;
+		}
+		delete_option( $option );
+		return add_option( $option, (string) $now, '', false );
+	}
+
+	/**
+	 * The option holding the right to refresh an answer.
+	 *
+	 * @param string $key The answer's key.
+	 */
+	private static function refresh_hold_option( string $key ): string {
+		return Schema::CATALOGUE_REFRESH_HOLD_OPTION_PREFIX . md5( $key );
+	}
+
+	/**
+	 * Caches an answer, and keeps a copy for `remember_or_kept()`.
+	 *
+	 * @param string                   $key    The answer's key.
+	 * @param array<int|string, mixed> $answer The answer.
+	 */
+	private function keep( string $key, array $answer ): void {
+		set_transient( $key, $answer, self::TTL_SECONDS );
+		set_transient( $key . self::KEPT_SUFFIX, $answer, self::KEPT_SECONDS );
+	}
+
+	/**
 	 * Drops one cached answer, so the next read asks Pixonaut again.
 	 *
 	 * @param string                $what Which answer.
 	 * @param array<string, string> $args What it was asked with.
 	 */
 	public function forget( string $what, array $args ): void {
-		delete_transient( $this->key( $what, $args ) );
+		$key = $this->key( $what, $args );
+		delete_transient( $key );
+		delete_transient( $key . self::KEPT_SUFFIX );
 	}
 
 	/**

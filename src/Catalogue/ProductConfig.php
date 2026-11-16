@@ -247,8 +247,9 @@ final class ProductConfig {
 	public static function sold_variations( WC_Product $product ): array {
 		$sold     = array();
 		$children = $product->get_children();
-		// Three queries for all the variations, their meta and terms, rather than three for each.
-		_prime_post_caches( $children, true, true );
+		// Three queries for all the variations, their terms and their meta (as WordPress and WooCommerce each keep it), rather than four for each.
+		_prime_post_caches( $children, true, false );
+		ProductMeta::prime( array_values( array_map( 'intval', $children ) ) );
 		foreach ( $children as $child_id ) {
 			$variation = wc_get_product( $child_id );
 			// A disabled variation is stored as private.

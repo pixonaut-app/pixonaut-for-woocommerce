@@ -25,7 +25,10 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
  * box, and the blank's views and variants — so the page prints at its final
  * layout and the SDK starts without reading them again in the browser.
  * Answers are cached like the admin's catalogue reads, as the JSON text
- * Pixonaut sent, which the page passes on unchanged. When Pixonaut fails,
+ * Pixonaut sent, which the page passes on unchanged; once one's minutes
+ * are up, the one from before serves while a new one is read after the
+ * page is sent, so a visitor waits on Pixonaut only for an answer the
+ * store has not read in the last hour. When Pixonaut fails,
  * the page stops reading for a minute and the SDK reads in the browser as it
  * would without them, so an outage does not hold every product page up for
  * the API's timeout.
@@ -309,7 +312,7 @@ final class ServerReads {
 	 */
 	private function blank( string $blank_id, ?string $language ): array {
 		$args  = array( 'id' => $blank_id ) + ( null === $language ? array() : array( 'lang' => $language ) );
-		$blank = $this->cache->remember( 'storefront-blank-views', $args, fn (): array => $this->catalogue->blank_views_answers( $blank_id, $language ) );
+		$blank = $this->cache->remember_or_kept( 'storefront-blank-views', $args, fn (): array => $this->catalogue->blank_views_answers( $blank_id, $language ) );
 		return array(
 			'mockups'  => is_string( $blank['mockups'] ?? null ) ? $blank['mockups'] : '{}',
 			'variants' => is_string( $blank['variants'] ?? null ) ? $blank['variants'] : '{}',
@@ -327,7 +330,7 @@ final class ServerReads {
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function remember( string $what, array $args, Closure $load ): string {
-		$answer = $this->cache->remember( $what, $args, static fn (): array => array( 'json' => $load() ) );
+		$answer = $this->cache->remember_or_kept( $what, $args, static fn (): array => array( 'json' => $load() ) );
 		return is_string( $answer['json'] ?? null ) ? $answer['json'] : '{}';
 	}
 

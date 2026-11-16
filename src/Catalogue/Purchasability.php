@@ -23,9 +23,15 @@ use WC_Product;
  */
 final class Purchasability {
 
+	/**
+	 * The filters a variation's purchasability is read through.
+	 */
+	private const FILTERS = array( 'woocommerce_is_purchasable', 'woocommerce_variation_is_purchasable' );
+
 	public function register(): void {
-		add_filter( 'woocommerce_is_purchasable', array( $this, 'filter' ), 10, 2 );
-		add_filter( 'woocommerce_variation_is_purchasable', array( $this, 'filter' ), 10, 2 );
+		foreach ( self::FILTERS as $filter ) {
+			add_filter( $filter, array( $this, 'filter' ), 10, 2 );
+		}
 	}
 
 	/**
@@ -41,6 +47,22 @@ final class Purchasability {
 			// A product sells one of its blank's variants: without one, or with a retired one, Pixonaut refuses its order.
 			return self::sellable( $config ) && ProductVariant::sellable( $product, $config ) && self::printed( $product, $config );
 		}
+		if ( 0 === $product->get_id() ) {
+			return self::any_variation( $product );
+		}
+		// A page asks for a variable product's several times, its cards' and its own; the variations' configurations and labels it reads are part of the key.
+		return RequestCache::remember(
+			implode( '|', array( 'purchasable', ProductConfig::variations_key( $product ), RequestCache::filters_key( array_merge( self::FILTERS, array( 'woocommerce_attribute_label' ) ) ) ) ),
+			static fn (): bool => self::any_variation( $product )
+		);
+	}
+
+	/**
+	 * Whether one of a variable product's variations can be bought.
+	 *
+	 * @param WC_Product $product A variable product.
+	 */
+	private static function any_variation( WC_Product $product ): bool {
 		foreach ( $product->get_children() as $child_id ) {
 			$variation = wc_get_product( $child_id );
 			// The variation's own purchasability runs this filter on its resolved configuration.

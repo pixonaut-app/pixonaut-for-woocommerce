@@ -206,6 +206,8 @@ use Pixonaut\WooCommerce\Storefront\OpeningDefaults;
 use Pixonaut\WooCommerce\Storefront\OpeningPrice;
 use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
 use Pixonaut\WooCommerce\Storefront\ServerReads;
+use Pixonaut\WooCommerce\Storefront\CardHydration;
+use Pixonaut\WooCommerce\Storefront\CardStructuredData;
 use Pixonaut\WooCommerce\Storefront\SplitCardFaces;
 use Pixonaut\WooCommerce\Storefront\SplitCardListings;
 use Pixonaut\WooCommerce\Storefront\FilterMatches;
@@ -525,6 +527,8 @@ final class Plugin {
 		$split_card_listings = new SplitCardListings();
 		$split_card_listings->register();
 		( new SplitCardFaces( $split_card_listings ) )->register();
+		( new CardHydration() )->register();
+		( new CardStructuredData() )->register();
 		( new FilterMatches() )->register();
 		( new AttributeDependencies() )->register();
 		( new CardPageHead() )->register();
