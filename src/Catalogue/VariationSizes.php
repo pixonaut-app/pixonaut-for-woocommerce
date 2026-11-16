@@ -72,6 +72,10 @@ final class VariationSizes {
 		$judged        = $this->judged( $variation, $sizes, VariationSize::stored_on( self::fresh( $variation ) ), $failed );
 		$this->failure = $failed;
 		$judged->save_to( $variation );
+		if ( $judged->awaits_check() ) {
+			// Asked again in the background, which clears the reason once Pixonaut judges the size.
+			ProductRecheck::queue_soon( array( $variation->get_id() ) );
+		}
 		return $judged;
 	}
 
@@ -113,10 +117,13 @@ final class VariationSizes {
 	/**
 	 * A variation's sizes judged, its own or else its attribute value's; a
 	 * side it no longer sells personalised is dropped. A size judged before for the same basis keeps its verdict
-	 * unasked, unless Pixonaut could not judge it then. A size Pixonaut
-	 * cannot judge now keeps the verdict it had, else it is refused as
-	 * `check_failed`, so it is not sold unjudged; after the first failure
-	 * Pixonaut is not asked again in the same run.
+	 * unasked, unless Pixonaut gave none then (`InvalidReason::ASK_AGAIN`).
+	 * A size Pixonaut cannot judge now keeps the verdict it had, else it is
+	 * refused as `check_failed` with the code Pixonaut answered, so it is
+	 * not sold unjudged. After the first failure Pixonaut is not asked again
+	 * in the same run: a size with no verdict of its own then waits as
+	 * `check_pending` for the re-check, rather than taking the failure of
+	 * another's call.
 	 *
 	 * @param WC_Product                    $variation The variation.
 	 * @param array<string, PrintSize|null> $sizes     Its own sizes by side key.
@@ -143,32 +150,52 @@ final class VariationSizes {
 			$basis = VariationSize::basis( $side, $config->blank_id, $variant );
 			$held  = $stored->sizes[ $side->key ] ?? null;
 			$same  = null !== $held && $held['size']->stored() === $size->stored();
-			if ( $same && $held['basis'] === $basis && InvalidReason::CHECK_FAILED !== $held['refused'] ) {
+			if ( $same && $held['basis'] === $basis && ! in_array( $held['refused'], InvalidReason::ASK_AGAIN, true ) ) {
 				$judged[ $side->key ] = self::sourced( $held, $from );
 				continue;
 			}
-			$refused = InvalidReason::CHECK_FAILED;
-			$soft    = array();
-			if ( null === $failed ) {
-				try {
-					list( $refused, $soft ) = $this->refusal( $side, $config->blank_id, $variant, $size );
-				} catch ( ApiException $e ) {
-					$failed = $e;
-				}
+			if ( null !== $failed ) {
+				// Not asked, as Pixonaut could not be asked earlier in this run: the verdict it
+				// had for the size stands, else it waits for the re-check, never refused unasked.
+				$judged[ $side->key ] = $same ? self::sourced( $held, $from ) : self::pending( $size, $basis, $from );
+				continue;
 			}
-			if ( null !== $failed && $same ) {
-				// Unasked or unanswered: the verdict it had stands.
-				$judged[ $side->key ] = self::sourced( $held, $from );
+			try {
+				list( $refused, $soft ) = $this->refusal( $side, $config->blank_id, $variant, $size );
+			} catch ( ApiException $e ) {
+				$failed = $e;
+				// Asked and not answered: a verdict Pixonaut gave for the size stands, else the failure is kept with its code.
+				$judged[ $side->key ] = $same && ! in_array( $held['refused'], InvalidReason::ASK_AGAIN, true ) ? self::sourced( $held, $from ) : array(
+					'size'    => $size,
+					'refused' => InvalidReason::CHECK_FAILED,
+					'basis'   => $basis,
+					'code'    => $e->errorCode,
+				) + $from;
 				continue;
 			}
 			$judged[ $side->key ] = array(
 				'size'    => $size,
 				'refused' => $refused,
 				'basis'   => $basis,
-			) + $from + ( InvalidReason::CHECK_FAILED === $refused && null !== $failed ? array( 'code' => $failed->errorCode ) : array() )
-				+ ( array() === $soft ? array() : array( 'soft' => $soft ) );
+			) + $from + ( array() === $soft ? array() : array( 'soft' => $soft ) );
 		}
 		return new VariationSize( $judged );
+	}
+
+	/**
+	 * An entry for a size not asked about yet, waiting for the re-check.
+	 *
+	 * @param PrintSize           $size  The size.
+	 * @param string              $basis What it is judged for (`VariationSize::basis()`).
+	 * @param array{value?: true} $from  Marks an attribute value's size.
+	 * @return array{size: PrintSize, refused: string, basis: string, value?: true}
+	 */
+	private static function pending( PrintSize $size, string $basis, array $from ): array {
+		return array(
+			'size'    => $size,
+			'refused' => InvalidReason::CHECK_PENDING,
+			'basis'   => $basis,
+		) + $from;
 	}
 
 	/**
@@ -232,7 +259,7 @@ final class VariationSizes {
 		$asked     = (string) wp_json_encode( array( $template, $blank_id, $placement, $size->stored() ) );
 		if ( ! array_key_exists( $asked, $this->verdicts ) ) {
 			$verdict                  = $this->catalogue->check_print_sizes( $template, array( $size ), $blank_id, $placement )[0];
-			$this->verdicts[ $asked ] = array( $verdict->legal ? null : $verdict->reason ?? InvalidReason::CHECK_FAILED, $verdict->low_resolution );
+			$this->verdicts[ $asked ] = array( $verdict->legal ? null : $verdict->reason ?? InvalidReason::REFUSED_WITHOUT_REASON, $verdict->low_resolution );
 		}
 		return $this->verdicts[ $asked ];
 	}

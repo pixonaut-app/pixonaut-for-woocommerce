@@ -406,7 +406,7 @@ final class ProductLinker {
 			if ( array() === $menu && null !== $side->placement_id ) {
 				// The side sells nothing and its menu is gone: only the last save can say why,
 				// unless Pixonaut did not answer it, which would keep the product retrying.
-				$saved     = InvalidReason::CHECK_FAILED === $stored->invalid_reason ? null : $stored->invalid_reason;
+				$saved     = in_array( $stored->invalid_reason, InvalidReason::ASK_AGAIN, true ) ? null : $stored->invalid_reason;
 				$problem ??= $saved ?? InvalidReason::INVALID_PRINT_SIZE;
 			}
 		}
@@ -704,7 +704,7 @@ final class ProductLinker {
 				$sold = true;
 				continue;
 			}
-			$refused     ??= $verdict->reason ?? InvalidReason::CHECK_FAILED;
+			$refused     ??= $verdict->reason ?? InvalidReason::REFUSED_WITHOUT_REASON;
 			$unsold[ $at ] = new RowSize( $row->row, $row->variants, $row->width_mm, $row->height_mm, $row->full, null );
 		}
 		$rows = array_values( array_replace( $rows, $unsold ) );
@@ -780,7 +780,7 @@ final class ProductLinker {
 				continue;
 			}
 			$refused ??= $size->described();
-			$reason  ??= $verdict->reason ?? InvalidReason::CHECK_FAILED;
+			$reason  ??= $verdict->reason ?? InvalidReason::REFUSED_WITHOUT_REASON;
 		}
 		return array( $legal, $legal_at, $reason, $refused, $soft );
 	}

@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Admin\InvalidProductNotice;
 use Pixonaut\WooCommerce\Admin\LowResolutionWarnings;
 use Pixonaut\WooCommerce\Admin\TrashedProducts;
 use Pixonaut\WooCommerce\Api\Catalogue;
+use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Storefront\KeptDesignerLinks;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
@@ -347,6 +348,33 @@ final class ProductRecheck {
 		// What the printshop charges may have changed with the blank.
 		if ( null !== $this->rechecked ) {
 			( $this->rechecked )( $product );
+		}
+		return true;
+	}
+
+	/**
+	 * Queues a re-check of products or variations Pixonaut could not check
+	 * as they were saved, a minute on, so their reason clears once it can.
+	 * Queued once while the same re-check is pending.
+	 *
+	 * @param int[] $product_ids Products and variations.
+	 * @phpstan-param list<int> $product_ids
+	 * @return bool Whether the re-check is queued.
+	 */
+	public static function queue_soon( array $product_ids ): bool {
+		$args = array(
+			'product_ids' => $product_ids,
+			'attempt'     => 1,
+		);
+		if ( ! function_exists( 'as_schedule_single_action' ) ) {
+			return false;
+		}
+		if ( self::is_pending( self::ACTION, $args ) ) {
+			return true;
+		}
+		if ( 0 === as_schedule_single_action( time() + self::RETRY_BASE_SECONDS, self::ACTION, $args, self::GROUP ) ) {
+			( new WcLogger() )->error( 'The re-check of products Pixonaut could not check could not be queued.', array( 'products' => $product_ids ) );
+			return false;
 		}
 		return true;
 	}
