@@ -67,6 +67,12 @@ final class QueryNames {
 	public const ANY_VALUE = 'or';
 
 	/**
+	 * The way WooCommerce combines a filter's values when its address names
+	 * none, as the classic layered nav widget's do: a product holding all of them.
+	 */
+	public const ALL_VALUES = 'and';
+
+	/**
 	 * What WooCommerce puts before an attribute's slug to make its taxonomy.
 	 */
 	private const TAXONOMY_PREFIX = 'pa_';
@@ -256,7 +262,10 @@ final class QueryNames {
 	 * An address with each attribute WooCommerce names its way named by its
 	 * short name instead: `attribute_pa_storlek` and `filter_storlek` become
 	 * `storlek`, and a filter's `query_type_storlek=or` goes, as a short
-	 * address means it. Anything else in it stays as it is, in its order.
+	 * address means it. A filter naming no way of combining, which
+	 * WooCommerce reads as `and`, gains `query_type_storlek=and`. A short
+	 * name the address also gives goes, as WooCommerce's name wins over it.
+	 * Anything else in it stays as it is, in its order.
 	 *
 	 * @param string $url An address.
 	 */
@@ -283,22 +292,39 @@ final class QueryNames {
 			}
 		}
 		$shortened = array();
+		$long      = array();
+		$typed     = array();
 		foreach ( $pairs as list( $key ) ) {
-			$slug = self::slug_after( $key, self::FILTER_PREFIX, $names );
+			$filter = self::slug_after( $key, self::FILTER_PREFIX, $names );
+			if ( null !== $filter ) {
+				$shortened[ $filter ] = true;
+			}
+			$slug = self::slug_after( $key, self::FIELD_PREFIX . self::TAXONOMY_PREFIX, $names ) ?? $filter;
 			if ( null !== $slug ) {
-				$shortened[ $slug ] = true;
+				$long[ $names[ $slug ] ] = true;
+			}
+			$type = self::slug_after( $key, self::QUERY_TYPE_PREFIX, $names );
+			if ( null !== $type ) {
+				$typed[ $type ] = true;
 			}
 		}
 		$kept = array();
 		foreach ( $pairs as list( $key, $value, $raw ) ) {
-			$slug = self::slug_after( $key, self::FIELD_PREFIX . self::TAXONOMY_PREFIX, $names ) ?? self::slug_after( $key, self::FILTER_PREFIX, $names );
+			if ( isset( $long[ $key ] ) ) {
+				continue;
+			}
+			$filter = self::slug_after( $key, self::FILTER_PREFIX, $names );
+			$slug   = self::slug_after( $key, self::FIELD_PREFIX . self::TAXONOMY_PREFIX, $names ) ?? $filter;
 			if ( null !== $slug ) {
-				$raw = $names[ $slug ];
-			} else {
-				$typed = self::slug_after( $key, self::QUERY_TYPE_PREFIX, $names );
-				if ( null !== $typed && isset( $shortened[ $typed ] ) && self::ANY_VALUE === strtolower( rawurldecode( (string) $value ) ) ) {
-					continue;
+				$kept[] = $names[ $slug ] . ( null === $value ? '' : '=' . $value );
+				if ( null !== $filter && ! isset( $typed[ $filter ] ) ) {
+					$kept[] = self::QUERY_TYPE_PREFIX . $filter . '=' . self::ALL_VALUES;
 				}
+				continue;
+			}
+			$type = self::slug_after( $key, self::QUERY_TYPE_PREFIX, $names );
+			if ( null !== $type && isset( $shortened[ $type ] ) && self::ANY_VALUE === strtolower( rawurldecode( (string) $value ) ) ) {
+				continue;
 			}
 			$kept[] = $raw . ( null === $value ? '' : '=' . $value );
 		}

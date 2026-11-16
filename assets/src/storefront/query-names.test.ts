@@ -52,6 +52,30 @@ describe('shortenAddress', () => {
 		);
 	});
 
+	it('keeps a filter naming no way of combining as one holding all its values', () => {
+		expect(shortened('https://shop.test/shop/?filter_storlek=a%2Cb')).toBe(
+			'https://shop.test/shop/?storlek=a%2Cb&query_type_storlek=and',
+		);
+	});
+
+	it("keeps the long name's value over a short name the address also gives, in either order", () => {
+		expect(
+			shortened(
+				'https://shop.test/p/poster/?storlek=30x40&attribute_pa_storlek=50x70',
+			),
+		).toBe('https://shop.test/p/poster/?storlek=50x70');
+		expect(
+			shortened(
+				'https://shop.test/p/poster/?attribute_pa_storlek=50x70&storlek=30x40',
+			),
+		).toBe('https://shop.test/p/poster/?storlek=50x70');
+		expect(
+			shortened(
+				'https://shop.test/shop/?ram=ek&filter_inramning=vit&query_type_inramning=or',
+			),
+		).toBe('https://shop.test/shop/?ram=vit');
+	});
+
 	it('leaves an address naming no attribute the long way as it is', () => {
 		expect(
 			shortened(

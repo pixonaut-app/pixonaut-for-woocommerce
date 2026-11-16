@@ -100,6 +100,10 @@ final class ShortAddressesTest extends WP_UnitTestCase {
 
 		$this->assertSame( 'https://shop.test/p/?utm=1&motiv=med-bild&storlek=30x40#a', QueryNames::shorten( 'https://shop.test/p/?utm=1&attribute_pa_bild=med-bild&attribute_pa_storlek=30x40#a' ) );
 		$this->assertSame( 'https://shop.test/shop/?motiv=med-bild%2Cutan-bild&storlek=30x40&query_type_storlek=and&filter_colour=red', QueryNames::shorten( 'https://shop.test/shop/?filter_bild=med-bild%2Cutan-bild&query_type_bild=or&filter_storlek=30x40&query_type_storlek=and&filter_colour=red' ) );
+		$this->assertSame( 'https://shop.test/shop/?storlek=a,b&query_type_storlek=and', QueryNames::shorten( 'https://shop.test/shop/?filter_storlek=a,b' ), 'a filter naming no way of combining holds all its values' );
+		$this->assertSame( 'https://shop.test/p/?storlek=50x70', QueryNames::shorten( 'https://shop.test/p/?storlek=30x40&attribute_pa_storlek=50x70' ), 'WooCommerce\'s name wins over a short one' );
+		$this->assertSame( 'https://shop.test/p/?storlek=50x70', QueryNames::shorten( 'https://shop.test/p/?attribute_pa_storlek=50x70&storlek=30x40' ), 'in either order' );
+		$this->assertSame( 'https://shop.test/shop/?motiv=ram&query_type_bild=and', QueryNames::shorten( 'https://shop.test/shop/?filter_bild=ram&motiv=utan-bild&query_type_bild=and' ), 'and for a filter' );
 		$this->assertSame( 'https://shop.test/p/?attribute_size=s', QueryNames::shorten( 'https://shop.test/p/?attribute_size=s' ), 'a custom attribute keeps its field' );
 		$this->assertSame( 'https://shop.test/p/', QueryNames::shorten( 'https://shop.test/p/' ) );
 	}
