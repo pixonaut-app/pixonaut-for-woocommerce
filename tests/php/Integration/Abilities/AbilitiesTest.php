@@ -16,7 +16,6 @@ use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
-use Pixonaut\WooCommerce\Catalogue\ProductVariants;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
@@ -29,13 +28,13 @@ use Pixonaut\WooCommerce\Tests\Integration\Pricing\PricingAbilitiesTest;
 use Pixonaut\WooCommerce\Tests\Integration\ShopTools\SetVariationVariantsTest;
 use Pixonaut\WooCommerce\Tests\Integration\ShopTools\VariationPrintSizeTest;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
+use Pixonaut\WooCommerce\Tests\Support\FreshRequest;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\VariantsAnswer;
 use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
-use ReflectionProperty;
 use WC_Order;
 use WC_Order_Item_Product;
 use WC_Product;
@@ -122,8 +121,7 @@ final class AbilitiesTest extends WP_UnitTestCase {
 		$this->plugin->connection_store()->save( self::connection() );
 		// A product without a blank is checked against the printshops it may be sent to.
 		BlankFixture::remember_printshops( $this->plugin->catalogue_cache() );
-		// The abilities share the plugin's variants, which keep a blank's variants for the request: each test is one.
-		( new ReflectionProperty( ProductVariants::class, 'read' ) )->setValue( $this->plugin->product_variants(), array() );
+		FreshRequest::begin( $this->plugin );
 	}
 
 	public function tear_down(): void {

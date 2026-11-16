@@ -21,6 +21,7 @@ use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Refs;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
+use Pixonaut\WooCommerce\Tests\Support\FreshRequest;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\VariantsAnswer;
 use WC_Product_Simple;
@@ -49,6 +50,7 @@ abstract class PersonalisedCartTestCase extends WP_UnitTestCase {
 		$this->plugin   = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
 		$this->recorder = ( new HttpRecorder( Hosts::server_api() ) )->start();
 		$this->variants = ( new VariantsAnswer() )->start();
+		FreshRequest::begin( $this->plugin );
 		$this->plugin->connection_store()->save( self::connection() );
 
 		$product = new WC_Product_Simple();

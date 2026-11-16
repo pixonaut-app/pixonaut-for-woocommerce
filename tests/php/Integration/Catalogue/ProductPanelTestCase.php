@@ -28,6 +28,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductVariants;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\ConnectionAnswers;
+use Pixonaut\WooCommerce\Tests\Support\FreshRequest;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
@@ -119,6 +120,7 @@ abstract class ProductPanelTestCase extends WP_UnitTestCase {
 		$this->blank_fields->register();
 		$GLOBALS['wp_rest_server'] = new WP_REST_Server();
 		do_action( 'rest_api_init', $GLOBALS['wp_rest_server'] );
+		FreshRequest::begin( $this->plugin );
 	}
 
 	/**
