@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
 use Pixonaut\WooCommerce\Admin\SplitListingFields;
+use Pixonaut\WooCommerce\Catalogue\CardPages;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
@@ -110,6 +111,46 @@ final class SplitCombinationCardsTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '15.00', $listed['prices'][1] );
 		$this->assertStringNotContainsString( '17.00', $listed['prices'][1], 'only the oak hanger is in its card' );
 		$this->assertStringContainsString( '17.00', $listed['prices'][2] );
+	}
+
+	public function test_an_address_naming_a_combination_is_its_cards_page(): void {
+		$this->list_by( 'Inramning', 'Hangarfarg' );
+		$poster = $this->fresh();
+		$oak    = array(
+			'Inramning'  => 'hangare',
+			'Hangarfarg' => 'ek',
+		);
+		$named  = array(
+			wc_attribute_taxonomy_name( 'Inramning' )  => 'hangare',
+			wc_attribute_taxonomy_name( 'Hangarfarg' ) => 'ek',
+		);
+
+		$this->assertSame( $this->key( $oak ), CardPages::named_by( $poster, $named ) );
+		$this->assertSame( $this->key( $oak ), CardPages::named_by( $poster, $named + array( wc_attribute_taxonomy_name( 'Canvasdjup' ) => '2-cm' ) ), 'whatever it chooses of an attribute the product is not listed by' );
+		$this->assertNull( CardPages::named_by( $poster, array( wc_attribute_taxonomy_name( 'Inramning' ) => 'hangare' ) ), 'a hanger without its colour is no card' );
+		$this->assertSame( $this->key( array( 'Inramning' => 'ingen' ) ), CardPages::named_by( $poster, array( wc_attribute_taxonomy_name( 'Inramning' ) => 'ingen' ) ) );
+		$this->assertSame(
+			$this->key( array( 'Inramning' => 'ram' ) ),
+			CardPages::named_by(
+				$poster,
+				array(
+					wc_attribute_taxonomy_name( 'Inramning' )  => 'ram',
+					wc_attribute_taxonomy_name( 'Hangarfarg' ) => 'ek',
+				)
+			),
+			'a hanger colour the form holds for a framed poster, which has none, is a choice on top of the card'
+		);
+		$this->assertSame( 'Poster – Hängare, Ek', CardPages::title( $poster, $this->key( $oak ) ) );
+		$this->assertSame(
+			add_query_arg(
+				array(
+					self::poster_field( 'Inramning' )  => 'hangare',
+					self::poster_field( 'Hangarfarg' ) => 'ek',
+				),
+				'https://example.org/poster/'
+			),
+			CardPages::url( $poster, $this->key( $oak ), 'https://example.org/poster/' )
+		);
 	}
 
 	public function test_the_variations_a_listed_attribute_does_not_apply_to_share_a_card_showing_the_product(): void {

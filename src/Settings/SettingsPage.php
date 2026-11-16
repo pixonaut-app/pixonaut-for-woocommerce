@@ -135,6 +135,9 @@ final class SettingsPage {
 			'pixonaut_wc_pictures'     => array(
 				Settings::PRODUCT_PICTURES,
 			),
+			'pixonaut_wc_listings'     => array(
+				Settings::ONE_CARD_PER_PRODUCT,
+			),
 			'pixonaut_wc_line_details' => array(
 				Settings::LINE_PICTURE_VIEW,
 				Settings::SHOW_FIELD_VALUES,
@@ -612,6 +615,13 @@ final class SettingsPage {
 					/* translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the images of personalised products. */
 					'title' => __( 'Product images', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'The image the shop, feeds, emails and search results show for a personalised product.', 'pixonaut-for-woocommerce' ),
+				);
+			case 'pixonaut_wc_listings':
+				return array(
+					'type'  => 'title',
+					/* translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how products are listed on the shop's pages. */
+					'title' => __( 'Shop pages', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'How products are listed on the shop, category, tag and search pages.', 'pixonaut-for-woocommerce' ),
 				);
 			case 'pixonaut_wc_line_details':
 				return array(

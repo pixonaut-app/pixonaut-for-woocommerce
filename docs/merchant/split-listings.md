@@ -82,6 +82,68 @@ Product Collection block on the shop's templates) both show them.
 - **Elsewhere** the product is shown once: related products, up-sells,
   cross-sells and a Product Collection block with its own products chosen.
 
+## One card per product
+
+A product listed by several attributes can fill a page of the shop with
+cards that look much alike. **One card per product in the shop**, under
+**Pixonaut > Storefront** (**Shop pages**), lists each product once instead:
+
+- With no filter chosen, the product shows as itself: its own title, image,
+  price and link.
+- While a customer filters by an attribute the product is listed by
+  (**Framing: Frame**, say), the product shows as the first of its cards
+  the filter keeps, with that card's title, image, price and link. A
+  product with no such card is left out, as a product without the value
+  would be.
+- A filter by any other attribute keeps or drops the product, shown as
+  itself.
+
+Each card keeps its own page and its place in the sitemap either way. The
+setting is off by default. An assistant turns it on with the
+[`update-plugin-settings` ability](../../developer/abilities/), as
+`one_card_per_product`.
+
+## Each card's own page
+
+A card's link is its page: the product's address with the card's values
+chosen, such as `…/product/safari/?attribute_pa_picture=with-photo`. The
+page opens with those values chosen in the product's form and in the
+designer, and it is a page of its own to search engines:
+
+- **Title**: the card's own title, else the product's followed by the
+  card's values ("Safari – With photo").
+- **Description**: the card's values, then the start of the product's short
+  description (or of its description).
+- **Picture** (Open Graph): the card's image, as its card shows it.
+- **Canonical address**: the card's own. An address that chooses more on
+  top of the card's values, such as a size
+  (`…&attribute_pa_size=70x100`), opens with the size chosen and names the
+  card's page as its canonical address, so the sizes of a card are one page
+  to a search engine, not one each.
+
+The product's own address stays the product's page, with its own title and
+canonical address. A product behind a password has no card pages until it
+is unlocked.
+
+With Yoast SEO or Rank Math active, their title, description, canonical
+address and Open Graph tags are the ones changed, and a description written
+for the product there follows the card's values. Without either, WordPress
+prints the title and the canonical address, and the plugin prints the
+description and the Open Graph tags.
+
+**Sitemaps** list each card's page beside the product's, in a sitemap of
+the cards: WordPress's own index names it
+(`wp-sitemap-pixonautcards-1.xml`), and so do Yoast SEO's and Rank Math's
+(`/?pixonaut_wc_card_sitemap=1`, which the plugin serves). Only the cards' pages are
+listed, never one per size or per variation. A card the shop leaves out
+(its variations all on a template that is not live) and the cards of a
+product that is not published are not listed.
+
+**The address follows the customer's choice.** On a personalised product's
+page, when the customer changes a value in the product's form or in the
+designer, the address in the browser changes with it, without adding to the
+browser's history, so a link copied or shared opens the same choice.
+
 ## Each value's card
 
 Each card shows:

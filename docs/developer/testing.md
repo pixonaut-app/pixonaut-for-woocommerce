@@ -180,7 +180,9 @@ values' variations at different prices and the poster with a featured image
 and a gallery image (answered as `images`), beside a plain product, in a
 category of their own under slugs ending in the key;
 `DELETE` with the same key removes them. The `pixonaut_e2e_per_page` cookie
-sets how many products a page of the shop lists for one browser context.
+sets how many products a page of the shop lists for one browser context. The
+`pixonaut_e2e_one_card=on` cookie turns the `one_card_per_product` setting on
+for one browser context.
 
 Link a product on the product screen (`publishLinkedProduct()` in
 `tests/e2e/products.ts`) only in a test about linking it. A test about what

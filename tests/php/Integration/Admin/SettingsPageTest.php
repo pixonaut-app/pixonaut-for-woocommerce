@@ -55,7 +55,7 @@ final class SettingsPageTest extends WP_UnitTestCase {
 		$fields = $this->fields();
 
 		$this->assertSame(
-			array( 'Product page designer', 'Product images', 'Cart and orders', 'Image resolution', 'Approval', 'Proof by email' ),
+			array( 'Product page designer', 'Product images', 'Shop pages', 'Cart and orders', 'Image resolution', 'Approval' ),
 			array_slice( array_values( array_map( static fn ( array $field ): string => $field['title'], array_filter( $fields, static fn ( array $field ): bool => 'title' === ( $field['type'] ?? null ) && '' !== $field['title'] ) ) ), 0, 6 )
 		);
 		$shown = array_column( array_filter( $fields, static fn ( array $field ): bool => str_starts_with( (string) ( $field['id'] ?? '' ), Settings::OPTION . '[' ) ), null, 'id' );

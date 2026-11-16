@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-16T00:02:46+00:00\n"
+"POT-Creation-Date: 2026-11-16T01:24:45+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -48,7 +48,7 @@ msgstr ""
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
 #: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:220
-#: src/Settings/SettingsPage.php:260 templates/admin/product-variation.php:42
+#: src/Settings/SettingsPage.php:263 templates/admin/product-variation.php:42
 msgid "Pixonaut"
 msgstr "Pixonaut"
 
@@ -3884,7 +3884,7 @@ msgstr ""
 
 #. translators: Link on the Plugins screen to the plugin's settings.
 #. translators: Item in the admin menu under Pixonaut, opening the plugin's settings.
-#: src/Admin/PluginLinks.php:40 src/Settings/SettingsPage.php:273
+#: src/Admin/PluginLinks.php:40 src/Settings/SettingsPage.php:276
 msgid "Settings"
 msgstr "Instellingen"
 
@@ -4057,7 +4057,7 @@ msgstr "Nooit"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is a percentage.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a percentage. The margin is the share of a product's price, excluding VAT, left after the printshop's cost.
-#: src/Admin/PricingPanel.php:353 src/Settings/Settings.php:478
+#: src/Admin/PricingPanel.php:353 src/Settings/Settings.php:492
 msgid "Target margin (%)"
 msgstr "Doelmarge (%)"
 
@@ -4068,25 +4068,25 @@ msgstr "Tolerantie (punten)"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money: the distance between two prices the rule may set.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the distance between two prices the pricing rule may set.
-#: src/Admin/PricingPanel.php:357 src/Settings/Settings.php:500
+#: src/Admin/PricingPanel.php:357 src/Settings/Settings.php:514
 msgid "Price step"
 msgstr "Prijsstap"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money below the price step.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money below the price step: what each price the pricing rule sets ends in.
-#: src/Admin/PricingPanel.php:359 src/Settings/Settings.php:511
+#: src/Admin/PricingPanel.php:359 src/Settings/Settings.php:525
 msgid "Prices end in"
 msgstr "Prijzen eindigen op"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the lowest price the pricing rule sets.
-#: src/Admin/PricingPanel.php:361 src/Settings/Settings.php:522
+#: src/Admin/PricingPanel.php:361 src/Settings/Settings.php:536
 msgid "Lowest price"
 msgstr "Laagste prijs"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the highest price the pricing rule sets.
-#: src/Admin/PricingPanel.php:363 src/Settings/Settings.php:533
+#: src/Admin/PricingPanel.php:363 src/Settings/Settings.php:547
 msgid "Highest price"
 msgstr "Hoogste prijs"
 
@@ -7566,11 +7566,11 @@ msgstr ""
 "om de plugin te gebruiken."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:149
+#: src/Settings/Settings.php:151
 msgid "Default layout"
 msgstr "Standaardweergave"
 
-#: src/Settings/Settings.php:150
+#: src/Settings/Settings.php:152
 msgid ""
 "How personalised products show the designer, unless a product overrides it."
 msgstr ""
@@ -7578,11 +7578,11 @@ msgstr ""
 "overschrijft."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:163
+#: src/Settings/Settings.php:165
 msgid "Designer language"
 msgstr "Taal van de ontwerptool"
 
-#: src/Settings/Settings.php:164
+#: src/Settings/Settings.php:166
 msgid ""
 "The language of the designer on the product page, of Pixonaut’s designer the "
 "Personalise button opens, and of the proof pages customers approve their "
@@ -7598,11 +7598,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
 #. translators: Label of the dropdown choosing how the product page designer lays out its form. Admin product page.
-#: src/Settings/Settings.php:177 templates/admin/product-fields.php:237
+#: src/Settings/Settings.php:179 templates/admin/product-fields.php:237
 msgid "Form layout"
 msgstr "Formulierindeling"
 
-#: src/Settings/Settings.php:178
+#: src/Settings/Settings.php:180
 msgid ""
 "How the designer lays out its form, on the product page and in Pixonaut’s "
 "designer the Personalise button opens, unless a product overrides it: as the "
@@ -7614,11 +7614,11 @@ msgstr ""
 "één stap tegelijk."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: each product option, such as Size or Colour, gets a group of its own in the designer's form.
-#: src/Settings/Settings.php:190
+#: src/Settings/Settings.php:192
 msgid "As its own group"
 msgstr "Als eigen groep"
 
-#: src/Settings/Settings.php:191
+#: src/Settings/Settings.php:193
 msgid ""
 "Puts each of a product's options, such as Size or Colour, in a group of its "
 "own in the designer's form on the product page, named after the option, in "
@@ -7632,11 +7632,11 @@ msgstr ""
 "ingedeeld, behoudt ze."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the groups of a product's options come before or after the template's groups.
-#: src/Settings/Settings.php:202
+#: src/Settings/Settings.php:204
 msgid "Place of the option groups"
 msgstr "Plaats van de optiegroepen"
 
-#: src/Settings/Settings.php:203
+#: src/Settings/Settings.php:205
 msgid ""
 "Whether the groups of a product's options come before or after the "
 "template's groups."
@@ -7646,11 +7646,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the designer's form numbers its groups.
 #. translators: Label of the dropdown choosing whether the designer's form numbers its groups. Admin product page.
-#: src/Settings/Settings.php:215 templates/admin/product-fields.php:242
+#: src/Settings/Settings.php:217 templates/admin/product-fields.php:242
 msgid "Group numbers"
 msgstr "Groepsnummers"
 
-#: src/Settings/Settings.php:216
+#: src/Settings/Settings.php:218
 msgid ""
 "Numbers the groups of the designer's form on the product page: 1 Photo, 2 "
 "Text on one page, Step 1 of 2 in steps. Off shows the group names with no "
@@ -7661,11 +7661,11 @@ msgstr ""
 "groepsnamen zonder nummers."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:227
+#: src/Settings/Settings.php:229
 msgid "Load other colours and views"
 msgstr "Andere kleuren en aanzichten laden"
 
-#: src/Settings/Settings.php:228
+#: src/Settings/Settings.php:230
 msgid ""
 "Whether the designer loads a product's other colours, views and sides before "
 "the customer picks one, so they show at once. Choose In the background or "
@@ -7677,11 +7677,11 @@ msgstr ""
 "klanten die vooral op hun telefoon winkelen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:241
+#: src/Settings/Settings.php:243
 msgid "Designer accent colour"
 msgstr "Accentkleur van de ontwerptool"
 
-#: src/Settings/Settings.php:242
+#: src/Settings/Settings.php:244
 msgid ""
 "The colour the designer on the product page marks the chosen view, colour "
 "and option in, and draws its Next button in. None takes the accent colour of "
@@ -7694,11 +7694,11 @@ msgstr ""
 "behoudt de eigen kleuren van de ontwerptool als het merk er geen heeft."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:253
+#: src/Settings/Settings.php:255
 msgid "Custom accent colour"
 msgstr "Aangepaste accentkleur"
 
-#: src/Settings/Settings.php:254
+#: src/Settings/Settings.php:256
 msgid ""
 "The accent colour when Designer accent colour is A custom colour, e.g. "
 "#1e73be."
@@ -7707,11 +7707,11 @@ msgstr ""
 "kleur’ staat, bijv. #1e73be."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:265
+#: src/Settings/Settings.php:267
 msgid "Show the print area's frame"
 msgstr "Kader van het drukgebied tonen"
 
-#: src/Settings/Settings.php:266
+#: src/Settings/Settings.php:268
 msgid ""
 "Draws a thin grey frame on the preview around where the design can go, in "
 "the designer on the product page and in Pixonaut's designer the Personalise "
@@ -7724,12 +7724,12 @@ msgstr ""
 "ontwerp op de productfoto zoals het wordt gedrukt."
 
 #. translators: Title of a setting on the settings page, shown to the merchant. "Hosted page" is Pixonaut's designer page the Personalise button opens.
-#: src/Settings/Settings.php:276
+#: src/Settings/Settings.php:278
 msgid "Add to cart after approve in hosted page"
 msgstr "In winkelwagen plaatsen na goedkeuren op de gehoste pagina"
 
 #. translators: Help text of a setting on the settings page. "Approve and add to cart" and "Approve and go back" are the labels of the button on Pixonaut's designer page.
-#: src/Settings/Settings.php:278
+#: src/Settings/Settings.php:280
 msgid ""
 "For the Personalise button layout. Approving adds the product to the cart "
 "and opens its cart item's page, and Pixonaut's designer says Approve and add "
@@ -7742,11 +7742,11 @@ msgstr ""
 "keert terug naar de productpagina, en de tool toont Goedkeuren en teruggaan."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: how the options of a product option such as a size show in the designer's form.
-#: src/Settings/Settings.php:289
+#: src/Settings/Settings.php:291
 msgid "Product options in the designer"
 msgstr "Productopties in de ontwerptool"
 
-#: src/Settings/Settings.php:290
+#: src/Settings/Settings.php:292
 msgid ""
 "How the designer on the product page shows the options of a variable "
 "product, such as its sizes, when it draws them in its form. As the theme "
@@ -7763,11 +7763,11 @@ msgstr ""
 "de andere keuzes kan worden gekocht, wordt grijs weergegeven."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether a product option's swatches drawn as a colour or a picture show the option's name beside them.
-#: src/Settings/Settings.php:302
+#: src/Settings/Settings.php:304
 msgid "Show value names beside swatches"
 msgstr "Waardenamen naast de knoppen tonen"
 
-#: src/Settings/Settings.php:303
+#: src/Settings/Settings.php:305
 msgid ""
 "With product options shown as swatches, a value Pixonaut draws as a colour "
 "or a picture shows its name beside it. Off, the swatch shows the colour or "
@@ -7787,11 +7787,11 @@ msgstr ""
 "onder Producten > Attributen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:313
+#: src/Settings/Settings.php:315
 msgid "Use Pixonaut pictures as product images"
 msgstr "Pixonaut-afbeeldingen als productafbeeldingen gebruiken"
 
-#: src/Settings/Settings.php:314
+#: src/Settings/Settings.php:316
 msgid ""
 "Sets each personalised product’s and variation’s image to Pixonaut’s picture "
 "of it, its template on the blank, and draws it again when the product "
@@ -7807,12 +7807,35 @@ msgstr ""
 "afbeelding die je zelf instelt, blijft behouden. Als dit uit staat, krijgt "
 "elk product de afbeelding terug die het eerder had."
 
+#. translators: Title of a setting on the settings page, shown to the merchant. A product listed "once per value" shows as several cards in the shop, one per value of an attribute such as Framing; this setting shows one card for the whole product instead.
+#: src/Settings/Settings.php:326
+msgid "One card per product in the shop"
+msgstr "Eén kaart per product in de winkel"
+
+#. translators: Help text of a setting on the settings page. "Show each value as its own product" is the label of a box on a product's attribute.
+#: src/Settings/Settings.php:328
+msgid ""
+"Lists a product set to Show each value as its own product once on the shop, "
+"category, tag and search pages, as itself. While a customer filters by one "
+"of those attributes, the product shows as the first of its values the filter "
+"keeps, with that value's title, image, price and link. Each value keeps its "
+"own page and its place in the sitemap. Off, the product is listed once per "
+"value."
+msgstr ""
+"Toont een product waarvoor ‘Elke waarde als eigen product tonen’ aan staat "
+"één keer op de winkel-, categorie-, tag- en zoekpagina's, als zichzelf. "
+"Zolang een klant op een van die attributen filtert, wordt het product "
+"getoond als de eerste van zijn waarden die het filter overhoudt, met de "
+"titel, afbeelding, prijs en link van die waarde. Elke waarde houdt zijn "
+"eigen pagina en zijn plek in de sitemap. Als dit uit staat, wordt het "
+"product één keer per waarde getoond."
+
 #. translators: Title of a setting on the settings page, shown to the merchant: whether a product's Pixonaut tab warns when a print size makes one of its template's images print below its recommended resolution.
-#: src/Settings/Settings.php:324
+#: src/Settings/Settings.php:338
 msgid "Warn about soft images"
 msgstr "Waarschuwen voor onscherpe afbeeldingen"
 
-#: src/Settings/Settings.php:325
+#: src/Settings/Settings.php:339
 msgid ""
 "Warns in a product's Pixonaut tab when one of its print sizes makes an image "
 "in its template print below the resolution Pixonaut recommends, so it may "
@@ -7830,11 +7853,11 @@ msgstr ""
 "instellingen van de werkruimte in de Pixonaut-studio."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: the images a product's Pixonaut tab no longer warns about.
-#: src/Settings/Settings.php:335
+#: src/Settings/Settings.php:349
 msgid "Images not warned about"
 msgstr "Afbeeldingen zonder waarschuwing"
 
-#: src/Settings/Settings.php:336
+#: src/Settings/Settings.php:350
 msgid ""
 "The images you chose not to be warned about again in a product's Pixonaut "
 "tab, by their Pixonaut id. Remove one to be warned about it again."
@@ -7844,11 +7867,11 @@ msgstr ""
 "gewaarschuwd te worden."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the fields are the ones the customer filled in to personalise the item.
-#: src/Settings/Settings.php:347
+#: src/Settings/Settings.php:361
 msgid "List the design's fields"
 msgstr "Velden van het ontwerp tonen"
 
-#: src/Settings/Settings.php:348
+#: src/Settings/Settings.php:362
 msgid ""
 "Lists what the customer filled in under a personalised item in the cart, the "
 "checkout, their orders and the order emails, as the designer showed it. Off, "
@@ -7862,11 +7885,11 @@ msgstr ""
 "altijd."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: which view of the product the picture of a personalised item shows.
-#: src/Settings/Settings.php:359
+#: src/Settings/Settings.php:373
 msgid "Picture shows"
 msgstr "Afbeelding toont"
 
-#: src/Settings/Settings.php:360
+#: src/Settings/Settings.php:374
 msgid ""
 "A personalised item shows the customer’s design on the product in the cart, "
 "the checkout, their orders and the order emails. This chooses the view of "
@@ -7880,11 +7903,11 @@ msgstr ""
 "het eerste aanzicht van de drukpositie waarin het product wordt getoond."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:373
+#: src/Settings/Settings.php:387
 msgid "Default approval"
 msgstr "Standaardgoedkeuring"
 
-#: src/Settings/Settings.php:374
+#: src/Settings/Settings.php:388
 msgid ""
 "How customers approve their design before it is printed, unless a product "
 "overrides it."
@@ -7893,11 +7916,11 @@ msgstr ""
 "product dit overschrijft."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:388
+#: src/Settings/Settings.php:402
 msgid "Proof approval deadline (days)"
 msgstr "Termijn voor goedkeuring van de drukproef (dagen)"
 
-#: src/Settings/Settings.php:389
+#: src/Settings/Settings.php:403
 msgid ""
 "With proof by email, how many days the customer has to approve their proof. "
 "The link in the email works a week longer."
@@ -7906,11 +7929,11 @@ msgstr ""
 "te keuren. De link in de e-mail werkt een week langer."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:401
+#: src/Settings/Settings.php:415
 msgid "When no answer by the deadline"
 msgstr "Als er binnen de termijn geen antwoord is"
 
-#: src/Settings/Settings.php:402
+#: src/Settings/Settings.php:416
 msgid ""
 "With proof by email, what happens to a design the customer neither approved "
 "nor rejected by the deadline."
@@ -7919,11 +7942,11 @@ msgstr ""
 "de termijn niet heeft goedgekeurd of afgewezen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; what happens to an item whose design the customer rejected.
-#: src/Settings/Settings.php:415
+#: src/Settings/Settings.php:429
 msgid "On deny"
 msgstr "Bij afwijzing"
 
-#: src/Settings/Settings.php:416
+#: src/Settings/Settings.php:430
 msgid ""
 "What happens to an item whose design the customer rejected, or which was "
 "denied at the deadline."
@@ -7932,11 +7955,11 @@ msgstr ""
 "dat na afloop van de termijn is afgewezen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:430
+#: src/Settings/Settings.php:444
 msgid "First proof reminder after (days)"
 msgstr "Eerste herinnering drukproef na (dagen)"
 
-#: src/Settings/Settings.php:431
+#: src/Settings/Settings.php:445
 msgid ""
 "Days after the proof email that a customer who has not answered is reminded. "
 "Only reminders before the deadline are sent."
@@ -7946,20 +7969,20 @@ msgstr ""
 "einde van de termijn verstuurd."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:444
+#: src/Settings/Settings.php:458
 msgid "Then remind every (days)"
 msgstr "Daarna herinneren elke (dagen)"
 
-#: src/Settings/Settings.php:445
+#: src/Settings/Settings.php:459
 msgid "Days between one proof reminder and the next."
 msgstr "Aantal dagen tussen de ene herinnering en de volgende."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of reminders.
-#: src/Settings/Settings.php:458
+#: src/Settings/Settings.php:472
 msgid "Proof reminders at most"
 msgstr "Maximaal aantal herinneringen"
 
-#: src/Settings/Settings.php:459
+#: src/Settings/Settings.php:473
 msgid ""
 "How many reminders a customer gets at most; 0 sends none. The last one says "
 "when the deadline is and what happens then."
@@ -7968,7 +7991,7 @@ msgstr ""
 "verstuurd. De laatste vermeldt wanneer de termijn afloopt en wat er dan "
 "gebeurt."
 
-#: src/Settings/Settings.php:479
+#: src/Settings/Settings.php:493
 msgid ""
 "The share of a price, excluding VAT, that is left after what the printshop "
 "charges for the product and its shipping. With 50, a product that costs 167 "
@@ -7981,11 +8004,11 @@ msgstr ""
 "prijs zijn kosten, tenzij een product een eigen marge instelt."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of percentage points either side of the target margin.
-#: src/Settings/Settings.php:489
+#: src/Settings/Settings.php:503
 msgid "Tolerance (percentage points)"
 msgstr "Tolerantie (procentpunten)"
 
-#: src/Settings/Settings.php:490
+#: src/Settings/Settings.php:504
 msgid ""
 "How far a margin may drift from the target, either way, before the price "
 "moves. With a target of 50 and a tolerance of 10, a price is kept while its "
@@ -7995,7 +8018,7 @@ msgstr ""
 "voordat de prijs verandert. Bij een doel van 50 en een tolerantie van 10 "
 "blijft een prijs behouden zolang de marge tussen 40 en 60 ligt."
 
-#: src/Settings/Settings.php:501
+#: src/Settings/Settings.php:515
 msgid ""
 "The distance between two prices the rule may set: 10 for every ten, 5 for "
 "every five, 1 for whole amounts."
@@ -8003,7 +8026,7 @@ msgstr ""
 "De afstand tussen twee prijzen die de regel mag instellen: 10 voor "
 "tientallen, 5 voor vijftallen, 1 voor hele bedragen."
 
-#: src/Settings/Settings.php:512
+#: src/Settings/Settings.php:526
 msgid ""
 "What every price the rule sets ends in, below the step: with a step of 10, "
 "ending in 9 gives 379, 389, 399; ending in 0 gives 380, 390, 400."
@@ -8012,24 +8035,24 @@ msgstr ""
 "van 10 geeft eindigen op 9 de prijzen 379, 389, 399; eindigen op 0 geeft "
 "380, 390, 400."
 
-#: src/Settings/Settings.php:523
+#: src/Settings/Settings.php:537
 msgid "The rule never sets a price below this. Empty for no limit."
 msgstr ""
 "De regel stelt nooit een prijs onder dit bedrag in. Laat leeg voor geen "
 "limiet."
 
-#: src/Settings/Settings.php:534
+#: src/Settings/Settings.php:548
 msgid "The rule never sets a price above this. Empty for no limit."
 msgstr ""
 "De regel stelt nooit een prijs boven dit bedrag in. Laat leeg voor geen "
 "limiet."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a percentage added to a cost converted from another currency.
-#: src/Settings/Settings.php:544
+#: src/Settings/Settings.php:558
 msgid "Currency buffer (%)"
 msgstr "Valutabuffer (%)"
 
-#: src/Settings/Settings.php:545
+#: src/Settings/Settings.php:559
 msgid ""
 "A printshop charges in its own currency. A cost in another currency than "
 "your store’s is converted with the European Central Bank’s daily reference "
@@ -8044,11 +8067,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the plugin changes prices by itself when a printshop's cost changes.
 #. translators: Label of a field in the Prices section of the product edit page: whether this product's prices change by themselves when a printshop's cost changes.
-#: src/Settings/Settings.php:555 templates/admin/product-prices.php:70
+#: src/Settings/Settings.php:569 templates/admin/product-prices.php:70
 msgid "Automatic price changes"
 msgstr "Automatische prijswijzigingen"
 
-#: src/Settings/Settings.php:556
+#: src/Settings/Settings.php:570
 msgid ""
 "When a printshop changes what it charges, set the prices that follow the "
 "rule and whose margin left the tolerance to the rule’s price, and log each "
@@ -8062,11 +8085,11 @@ msgstr ""
 "met de prijs die de regel voorstelt, zodat je die kunt toepassen."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut API.
-#: src/Settings/Settings.php:572
+#: src/Settings/Settings.php:586
 msgid "API base"
 msgstr "API-basis"
 
-#: src/Settings/Settings.php:573
+#: src/Settings/Settings.php:587
 msgid ""
 "The Pixonaut API as the browser reaches it, e.g. a local Pixonaut. Empty "
 "uses Pixonaut’s own. The store’s key is sent to this address."
@@ -8076,11 +8099,11 @@ msgstr ""
 "adres gestuurd."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL WordPress uses for the Pixonaut API.
-#: src/Settings/Settings.php:582
+#: src/Settings/Settings.php:596
 msgid "Server-to-server API base"
 msgstr "API-basis server-naar-server"
 
-#: src/Settings/Settings.php:583
+#: src/Settings/Settings.php:597
 msgid ""
 "The Pixonaut API as WordPress itself reaches it, when that differs from the "
 "browser’s address (WordPress inside Docker, say). Empty uses the API base."
@@ -8090,11 +8113,11 @@ msgstr ""
 "API-basis."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut studio.
-#: src/Settings/Settings.php:592
+#: src/Settings/Settings.php:606
 msgid "Studio base"
 msgstr "Studio-basis"
 
-#: src/Settings/Settings.php:593
+#: src/Settings/Settings.php:607
 msgid ""
 "The Pixonaut studio, where a connect is approved and the admin’s studio "
 "links lead. Empty uses Pixonaut’s own."
@@ -8104,11 +8127,11 @@ msgstr ""
 "Pixonaut zelf."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the CDN the designer SDK loads from.
-#: src/Settings/Settings.php:602
+#: src/Settings/Settings.php:616
 msgid "CDN base"
 msgstr "CDN-basis"
 
-#: src/Settings/Settings.php:603
+#: src/Settings/Settings.php:617
 msgid ""
 "Where the pinned designer SDK release loads from, e.g. Pixonaut’s staging "
 "CDN. The release’s integrity is still checked. Empty uses Pixonaut’s own."
@@ -8119,11 +8142,11 @@ msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the URL of a designer SDK script.
 #. translators: Label of the field for the SDK script's URL, in developer tools.
-#: src/Settings/Settings.php:612 templates/admin/developer-tools.php:111
+#: src/Settings/Settings.php:626 templates/admin/developer-tools.php:111
 msgid "SDK script"
 msgstr "SDK-script"
 
-#: src/Settings/Settings.php:613
+#: src/Settings/Settings.php:627
 msgid ""
 "Loads the designer SDK from this script, e.g. a local build, instead of the "
 "pinned release from the CDN base. Its integrity is not checked. Empty loads "
@@ -8134,11 +8157,11 @@ msgstr ""
 "niet gecontroleerd. Leeg laadt de vastgezette release."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on debug logging of the designer SDK.
-#: src/Settings/Settings.php:622
+#: src/Settings/Settings.php:636
 msgid "SDK debug"
 msgstr "SDK-debug"
 
-#: src/Settings/Settings.php:623
+#: src/Settings/Settings.php:637
 msgid ""
 "Logs every designer mount and its failures to the browser console. On the "
 "storefront, only for logged-in store managers."
@@ -8148,25 +8171,25 @@ msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on a log of requests to Pixonaut.
 #. translators: Heading of the table of recent requests to Pixonaut, in developer tools.
-#: src/Settings/Settings.php:632 templates/admin/developer-tools.php:149
+#: src/Settings/Settings.php:646 templates/admin/developer-tools.php:149
 msgid "Request log"
 msgstr "Verzoekenlog"
 
-#: src/Settings/Settings.php:633
+#: src/Settings/Settings.php:647
 msgid "Records the last 50 requests to Pixonaut, without keys or tokens."
 msgstr ""
 "Registreert de laatste 50 verzoeken aan Pixonaut, zonder sleutels of tokens."
 
-#: src/Settings/SettingsPage.php:258 src/Settings/SettingsPage.php:271
-#: src/Settings/SettingsPage.php:362
+#: src/Settings/SettingsPage.php:261 src/Settings/SettingsPage.php:274
+#: src/Settings/SettingsPage.php:365
 msgid "Pixonaut settings"
 msgstr "Pixonaut-instellingen"
 
-#: src/Settings/SettingsPage.php:316
+#: src/Settings/SettingsPage.php:319
 msgid "You are not allowed to change the Pixonaut settings."
 msgstr "Je mag de Pixonaut-instellingen niet wijzigen."
 
-#: src/Settings/SettingsPage.php:336
+#: src/Settings/SettingsPage.php:339
 msgid ""
 "Prices end in an amount below the price step: with a step of 10, anything "
 "from 0 up to 9.99. The ending you had is kept."
@@ -8174,54 +8197,54 @@ msgstr ""
 "Prijzen eindigen op een bedrag onder de prijsstap: bij een stap van 10 alles "
 "van 0 tot en met 9,99. Het vorige eindbedrag blijft behouden."
 
-#: src/Settings/SettingsPage.php:344
+#: src/Settings/SettingsPage.php:347
 msgid "Your settings have been saved."
 msgstr "Je instellingen zijn opgeslagen."
 
-#: src/Settings/SettingsPage.php:378
+#: src/Settings/SettingsPage.php:381
 msgid "Save changes"
 msgstr "Wijzigingen opslaan"
 
-#: src/Settings/SettingsPage.php:475
+#: src/Settings/SettingsPage.php:478
 msgid "The changes you made will be lost if you navigate away from this page."
 msgstr ""
 "De wijzigingen die je hebt gemaakt gaan verloren als je deze pagina verlaat."
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the settings for the designer on the store's product pages.
-#: src/Settings/SettingsPage.php:578
+#: src/Settings/SettingsPage.php:581
 msgid "Storefront"
 msgstr "Winkel"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: how customers approve their designs, and the proof emails.
-#: src/Settings/SettingsPage.php:581
+#: src/Settings/SettingsPage.php:584
 msgctxt "settings tab"
 msgid "Approval"
 msgstr "Goedkeuring"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the rule that prices products from what the printshop charges.
-#: src/Settings/SettingsPage.php:584
+#: src/Settings/SettingsPage.php:587
 msgctxt "settings tab"
 msgid "Prices"
 msgstr "Prijzen"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: which releases of the plugin WordPress offers.
-#: src/Settings/SettingsPage.php:587
+#: src/Settings/SettingsPage.php:590
 msgctxt "settings tab"
 msgid "Updates"
 msgstr "Updates"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the store's connection to its Pixonaut workspace.
 #. translators: Heading of the Pixonaut connection card on the settings page.
-#: src/Settings/SettingsPage.php:590 templates/admin/connection-card.php:109
+#: src/Settings/SettingsPage.php:593 templates/admin/connection-card.php:109
 msgid "Connection"
 msgstr "Koppeling"
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how the designer on product pages looks and behaves.
-#: src/Settings/SettingsPage.php:606
+#: src/Settings/SettingsPage.php:609
 msgid "Product page designer"
 msgstr "Ontwerptool op de productpagina"
 
-#: src/Settings/SettingsPage.php:607
+#: src/Settings/SettingsPage.php:610
 msgid ""
 "How the designer looks and behaves on product pages. A product’s Pixonaut "
 "tab can change the layouts for that product."
@@ -8232,12 +8255,12 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the images of personalised products.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's images drawn by Pixonaut.
-#: src/Settings/SettingsPage.php:613
+#: src/Settings/SettingsPage.php:616
 #: templates/admin/product-showcase-images.php:58
 msgid "Product images"
 msgstr "Productafbeeldingen"
 
-#: src/Settings/SettingsPage.php:614
+#: src/Settings/SettingsPage.php:617
 msgid ""
 "The image the shop, feeds, emails and search results show for a personalised "
 "product."
@@ -8245,12 +8268,22 @@ msgstr ""
 "De afbeelding die de winkel, productfeeds, e-mails en zoekresultaten tonen "
 "voor een gepersonaliseerd product."
 
+#. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how products are listed on the shop's pages.
+#: src/Settings/SettingsPage.php:623
+msgid "Shop pages"
+msgstr "Winkelpagina's"
+
+#: src/Settings/SettingsPage.php:624
+msgid "How products are listed on the shop, category, tag and search pages."
+msgstr ""
+"Hoe producten worden getoond op de winkel-, categorie-, tag- en zoekpagina's."
+
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how a personalised item shows in the cart, the checkout, orders and emails.
-#: src/Settings/SettingsPage.php:620
+#: src/Settings/SettingsPage.php:630
 msgid "Cart and orders"
 msgstr "Winkelwagen en bestellingen"
 
-#: src/Settings/SettingsPage.php:621
+#: src/Settings/SettingsPage.php:631
 msgid ""
 "How a personalised item shows in the cart, the checkout, the customer’s "
 "orders and the order emails."
@@ -8259,11 +8292,11 @@ msgstr ""
 "afrekenen, in de bestellingen van de klant en in de bestelmails."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: warnings in a product's Pixonaut tab about images that print below their recommended resolution.
-#: src/Settings/SettingsPage.php:627
+#: src/Settings/SettingsPage.php:637
 msgid "Image resolution"
 msgstr "Resolutie van afbeeldingen"
 
-#: src/Settings/SettingsPage.php:628
+#: src/Settings/SettingsPage.php:638
 msgid ""
 "Warnings in a product’s Pixonaut tab about images in its template that print "
 "below the resolution Pixonaut recommends at one of its print sizes."
@@ -8274,11 +8307,11 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how customers approve their design before it is printed.
 #. translators: Label of the dropdown choosing how customers approve their design (proof) before printing. Admin product page.
-#: src/Settings/SettingsPage.php:634 templates/admin/product-fields.php:247
+#: src/Settings/SettingsPage.php:644 templates/admin/product-fields.php:247
 msgid "Approval"
 msgstr "Goedkeuring"
 
-#: src/Settings/SettingsPage.php:635
+#: src/Settings/SettingsPage.php:645
 msgid ""
 "How customers approve their design before it is printed. A product’s "
 "Pixonaut tab can choose another way for that product."
@@ -8287,11 +8320,11 @@ msgstr ""
 "tabblad van een product kan voor dat product een andere manier kiezen."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the approval mode where customers approve a proof sent by email.
-#: src/Settings/SettingsPage.php:641
+#: src/Settings/SettingsPage.php:651
 msgid "Proof by email"
 msgstr "Drukproef per e-mail"
 
-#: src/Settings/SettingsPage.php:642
+#: src/Settings/SettingsPage.php:652
 msgid ""
 "For every product whose approval is Proof by email: how long customers have "
 "to answer, the reminders they get, and what happens when they do not approve."
@@ -8302,12 +8335,12 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the rule that prices products from what the printshop charges for them.
 #. translators: Column of the Prices table of the product edit page: how the price stands to the pricing rule, and what the rule suggests.
-#: src/Settings/SettingsPage.php:648 templates/admin/product-prices.php:99
+#: src/Settings/SettingsPage.php:658 templates/admin/product-prices.php:99
 #: templates/admin/product-prices.php:115
 msgid "Pricing rule"
 msgstr "Prijsregel"
 
-#: src/Settings/SettingsPage.php:649
+#: src/Settings/SettingsPage.php:659
 msgid ""
 "Prices a product from what the printshop charges for it. Apply the rule in a "
 "product’s Pixonaut tab, under Prices; from then on its prices follow the "
@@ -8319,11 +8352,11 @@ msgstr ""
 "kan elk onderdeel van de regel voor zichzelf wijzigen."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: which releases of this plugin WordPress offers.
-#: src/Settings/SettingsPage.php:655
+#: src/Settings/SettingsPage.php:665
 msgid "Plugin updates"
 msgstr "Plugin-updates"
 
-#: src/Settings/SettingsPage.php:656
+#: src/Settings/SettingsPage.php:666
 msgid ""
 "Which releases of this plugin WordPress offers you on the Plugins and "
 "Updates screens."
@@ -8331,7 +8364,7 @@ msgstr ""
 "Welke versies van deze plugin WordPress je aanbiedt op de schermen Plugins "
 "en Updates."
 
-#: src/Settings/SettingsPage.php:677
+#: src/Settings/SettingsPage.php:687
 msgid ""
 "Designer accent colour is set to A custom colour: enter the colour, e.g. "
 "#1e73be."

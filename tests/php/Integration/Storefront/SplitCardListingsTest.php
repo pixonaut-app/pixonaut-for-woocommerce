@@ -14,6 +14,7 @@ use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Migrations\WriteSplitCards;
+use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\SplitCardListings;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
@@ -40,7 +41,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	public function set_up(): void {
 		parent::set_up();
 		// The plugin's own listings and card writers are registered at boot; this one only tells keys apart.
-		$this->listings = new SplitCardListings();
+		$this->listings = new SplitCardListings( new Settings() );
 		$this->set_up_posters();
 	}
 
@@ -192,6 +193,48 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 
 		$this->assertSame( array( $poster->get_id(), $poster->get_id() ), $listed['ids'] );
 		$this->assertSame( 2, $listed['found'] );
+	}
+
+	public function test_with_one_card_per_product_the_shop_lists_the_product_once_as_itself(): void {
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		$poster = $this->poster();
+		$mug    = $this->simple( 'Uggla' );
+		( new Settings() )->set( Settings::ONE_CARD_PER_PRODUCT, true );
+
+		$listed = $this->shop();
+
+		$this->assertSame( 2, $listed['found'] );
+		$this->assertSame( array( $poster->get_id(), $mug->get_id() ), $listed['ids'] );
+		$this->assertSame( array( (string) get_permalink( $poster->get_id() ), (string) get_permalink( $mug->get_id() ) ), $listed['links'] );
+		$this->assertSame( array( $this->term( 'med-bild' ), $this->term( 'utan-bild' ) ), $this->cards( $poster ), 'its cards are kept, each with its page' );
+	}
+
+	public function test_with_one_card_per_product_a_filter_shows_the_first_card_it_keeps(): void {
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		$poster = $this->poster();
+		$mug    = $this->simple( 'Uggla' );
+		( new Settings() )->set( Settings::ONE_CARD_PER_PRODUCT, true );
+
+		$without = $this->shop( array( 'filter_bild' => 'utan-bild' ) );
+		$this->assertSame( array( $poster->get_id() ), $without['ids'] );
+		$this->assertSame( 1, $without['found'] );
+		$this->assertStringContainsString( 'attribute_pa_bild=utan-bild', $without['links'][0], 'the card the filter chose' );
+
+		$either = $this->shop(
+			array(
+				'filter_bild'     => 'med-bild,utan-bild',
+				'query_type_bild' => 'or',
+			)
+		);
+		$this->assertSame( array( $poster->get_id() ), $either['ids'], 'once, however many of its cards the filter keeps' );
+		$this->assertStringContainsString( 'attribute_pa_bild=med-bild', $either['links'][0], 'the first of them' );
+
+		$sized = $this->shop( array( 'filter_storlek' => '30x40' ) );
+		$this->assertSame( array( $poster->get_id() ), $sized['ids'] );
+		$this->assertSame( array( (string) get_permalink( $poster->get_id() ) ), $sized['links'], 'a filter by an attribute it is not listed by shows it as itself' );
+
+		$this->assertSame( array(), $this->shop( array( 'filter_bild' => 'ram' ) )['ids'], 'no card holds the value: not listed' );
+		unset( $mug );
 	}
 
 	public function test_a_value_sold_only_on_a_template_that_is_not_live_has_no_card(): void {
