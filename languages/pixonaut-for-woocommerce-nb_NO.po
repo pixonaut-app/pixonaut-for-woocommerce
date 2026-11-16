@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-16T13:52:04+00:00\n"
+"POT-Creation-Date: 2026-11-16T14:20:16+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: nb_NO\n"
@@ -282,7 +282,10 @@ msgid ""
 "The name the shop's addresses give the attribute, as in `?size=50x70-cm`; "
 "null when it has none, as for a slug WordPress or WooCommerce reads itself, "
 "and keeps WooCommerce's `attribute_pa_<slug>` and `filter_<slug>`."
-msgstr "Navnet butikkens nettadresser gir attributtet, som i `?size=50x70-cm`; null når det ikke har noe, som for en slug WordPress eller WooCommerce selv leser, og da beholdes WooCommerces `attribute_pa_<slug>` og `filter_<slug>`."
+msgstr ""
+"Navnet butikkens nettadresser gir attributtet, som i `?size=50x70-cm`; null "
+"når det ikke har noe, som for en slug WordPress eller WooCommerce selv "
+"leser, og da beholdes WooCommerces `attribute_pa_<slug>` og `filter_<slug>`."
 
 #: src/Abilities/AttributeQueryNames.php:67
 msgid "The name the store gave it; empty when it goes by its slug."
@@ -292,7 +295,8 @@ msgstr "Navnet butikken har gitt det; tomt når det bruker sin slug."
 msgid ""
 "Its slug without `pa_`, the name it goes by without one of its own while "
 "that is free."
-msgstr "Sluggen uten `pa_`, navnet det har uten et eget, så lenge det er ledig."
+msgstr ""
+"Sluggen uten `pa_`, navnet det har uten et eget, så lenge det er ledig."
 
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
@@ -558,14 +562,17 @@ msgid ""
 "shop's filters give it: `?size=50x70-cm&frame=oak` rather than WooCommerce's "
 "`?attribute_pa_size=50x70-cm`. Each goes by the name the store gave it "
 "(`own`), else by its slug. Set one with `set-attribute-query-name`."
-msgstr "Viser, for hvert globale attributt, navnet en produktsides nettadresse og butikkens filtre gir det: `?size=50x70-cm&frame=oak` i stedet for WooCommerces `?attribute_pa_size=50x70-cm`. Hvert attributt har navnet butikken har gitt det (`own`), ellers sin slug. Velg et med `set-attribute-query-name`."
+msgstr ""
+"Viser, for hvert globale attributt, navnet en produktsides nettadresse og "
+"butikkens filtre gir det: `?size=50x70-cm&frame=oak` i stedet for "
+"WooCommerces `?attribute_pa_size=50x70-cm`. Hvert attributt har navnet "
+"butikken har gitt det (`own`), ellers sin slug. Velg et med `set-attribute-"
+"query-name`."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductForm.php:52
-#, fuzzy
-#| msgid "Read what a product's images are drawn on"
 msgid "Read how a product's designer form is arranged"
-msgstr "Vis hva et produkts bilder lages på"
+msgstr "Vis hvordan skjemaet i et produkts designverktøy er ordnet"
 
 #: src/Abilities/GetProductForm.php:53
 msgid ""
@@ -580,91 +587,88 @@ msgid ""
 "fields (null when Pixonaut could not be asked). Set it with `set-product-"
 "form`."
 msgstr ""
+"Viser hvordan skjemaet i designverktøyet for et enkelt eller variabelt "
+"produkt er ordnet, slik produktets Pixonaut-fane viser det: hver sides "
+"`form_groups` (gruppene i rekkefølge, hver med elementene sine: et malfelt "
+"som `field` `\"<layerId>:<prop>\"` med ordene som erstatter malens, eller "
+"ett av produktets alternativer som `attribute` med sin slug; null når siden "
+"viser malens eget skjema), `option_groups`, `group_numbers`, `form_layout` "
+"og `layout` (null for butikkens). Sammen med dem det et skjemaoppsett kan "
+"nevne: produktets `attributes`, og hver sides `template_groups`, malens "
+"grupper og felter (null når Pixonaut ikke kunne spørres). Angi det med `set-"
+"product-form`."
 
 #: src/Abilities/GetProductForm.php:59 src/Abilities/SetProductForm.php:71
-#, fuzzy
-#| msgid "Simple or variable products."
 msgid "A simple or variable product."
-msgstr "Enkle eller variable produkter."
+msgstr "Et enkelt eller variabelt produkt."
 
 #: src/Abilities/GetProductForm.php:188
-#, fuzzy
-#| msgid "The blank it is printed on; null for a template-only product."
 msgid "The side's groups, in order; null for the template's own form."
-msgstr "Basisproduktet det trykkes på; null for et produkt med bare en mal."
+msgstr "Sidens grupper i rekkefølge; null for malens eget skjema."
 
 #: src/Abilities/GetProductForm.php:199
 msgid ""
 "One of the template's groups, by id; or a group of the product's own, whose "
 "id starts with `wc-` and which takes a `title`."
 msgstr ""
+"En av malens grupper, angitt med id; eller en av produktets egne grupper, "
+"der id-en begynner med `wc-` og som får en `title`."
 
 #: src/Abilities/GetProductForm.php:203
 msgid "The group's title, in place of the template's."
-msgstr ""
+msgstr "Gruppens tittel i stedet for malens."
 
 #: src/Abilities/GetProductForm.php:212
 msgid "One of the template's fields, as `\"<layerId>:<prop>\"`."
-msgstr ""
+msgstr "Ett av malens felter, som `\"<layerId>:<prop>\"`."
 
 #: src/Abilities/GetProductForm.php:216
-#, fuzzy
-#| msgid "One of the product's global attributes, by id."
 msgid ""
 "One of the product's options, by its attribute's slug, in place of a field."
-msgstr "Ett av produktets globale attributter, angitt med id."
+msgstr ""
+"Ett av produktets alternativer, angitt med attributtets slug, i stedet for "
+"et felt."
 
 #: src/Abilities/GetProductForm.php:223
 msgid "Words in place of the field's offered values, by value."
-msgstr ""
+msgstr "Ord i stedet for feltets tilbudte verdier, angitt etter verdi."
 
 #: src/Abilities/GetProductForm.php:251
-#, fuzzy
-#| msgid "The product page layout; empty for the store's."
 msgid "The product page layout; null for the store's."
-msgstr "Utformingen av produktsiden; tom for butikkens."
+msgstr "Utformingen av produktsiden; null for butikkens."
 
 #: src/Abilities/GetProductForm.php:252
-#, fuzzy
-#| msgid "The form layout; empty for the store's."
 msgid "The form layout; null for the store's."
-msgstr "Skjemautformingen; tom for butikkens."
+msgstr "Skjemautformingen; null for butikkens."
 
 #: src/Abilities/GetProductForm.php:253
-#, fuzzy
-#| msgid ""
-#| "Where it overrides the store on its options in the form: `on_top`, "
-#| "`first` or `last`; null for the store's."
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "`first` or `last`; null for the store's."
 msgstr ""
-"Om det bruker sin egen innstilling i stedet for butikkens for hvor "
-"alternativene står i skjemaet: `on_top`, `first` eller `last`; null for "
-"butikkens."
+"Hvor produktets alternativer står på en side som ikke er ordnet for hånd: "
+"`on_top`, `first` eller `last`; null for butikkens."
 
 #: src/Abilities/GetProductForm.php:254
-#, fuzzy
-#| msgid ""
-#| "Whether it overrides the store on numbering the form's groups: `on` or "
-#| "`off`; null for the store's."
 msgid ""
 "Whether the form numbers its groups: `on` or `off`; null for the store's."
-msgstr ""
-"Om det bruker sin egen innstilling i stedet for butikkens for nummerering av "
-"skjemaets grupper: `on` eller `off`; null for butikkens."
+msgstr "Om skjemaet nummererer gruppene: `on` eller `off`; null for butikkens."
 
 #: src/Abilities/GetProductForm.php:257
 msgid ""
 "The options customers choose a variation by, as an arrangement names them: "
 "each attribute's slug and name. Empty for a simple product."
 msgstr ""
+"Alternativene kundene velger en variant etter, slik et skjemaoppsett nevner "
+"dem: hvert attributts slug og navn. Tom for et enkelt produkt."
 
 #: src/Abilities/GetProductForm.php:283
 msgid ""
 "The template's groups in its order, each with its fields; null without a "
 "template or when Pixonaut could not be asked."
 msgstr ""
+"Malens grupper i malens rekkefølge, hver med feltene sine; null uten mal "
+"eller når Pixonaut ikke kunne spørres."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductPictureViews.php:42
@@ -1930,16 +1934,6 @@ msgid "Read the pricing settings"
 msgstr "Les prisinnstillingene"
 
 #: src/Abilities/ReadPricingSettings.php:57
-#, fuzzy
-#| msgid ""
-#| "Gives the store's pricing rule, by which prices follow the printshop's "
-#| "costs: the target margin, the tolerance around it, the price step and "
-#| "what prices end in, the lowest and highest price, the currency buffer "
-#| "added to a cost converted from another currency, and whether prices "
-#| "change by themselves when a cost changes. Amounts and percentages are "
-#| "decimal strings, empty for none. Without a target margin the store has no "
-#| "rule. Also the store's currency, and whether prices are entered including "
-#| "tax."
 msgid ""
 "Gives the store's pricing rule, by which prices follow the printshop's "
 "costs: the target margin, the tolerance around it, the price step and what "
@@ -1959,7 +1953,10 @@ msgstr ""
 "fra en annen valuta, og om priser endres av seg selv når en kostnad endres. "
 "Beløp og prosenter er desimalstrenger, tomme når det ikke finnes noen. Uten "
 "målmargin har butikken ingen regel. Også butikkens valuta, og om priser "
-"angis inkludert mva."
+"angis inkludert mva. `delivery_time_show` angir om en produktside viser hvor "
+"lang tid trykkeriet sier den valgte varianten tar, noe Pixonaut henter "
+"sammen med kostnaden, og `delivery_time_handling_days` de egne dagene "
+"butikken legger til."
 
 #: src/Abilities/ReadPricingSettings.php:133
 msgid "The currency prices are in, as its code."
@@ -2105,7 +2102,14 @@ msgid ""
 "WordPress or WooCommerce reads from an address, or that another attribute "
 "goes by, is refused. Links shared with the old name no longer choose the "
 "value. The answer is the attribute's name now."
-msgstr "Velger navnet en produktsides nettadresse og butikkens filtre gir et globalt attributt, slik feltet «Navn i nettadresser» på attributtets redigeringsside gjør: `size` gir `?size=50x70-cm`. Små bokstaver og tall, ord bundet sammen med bindestrek eller understrek. Et tomt navn gir attributtet sin slug tilbake. Et navn WordPress eller WooCommerce leser fra en nettadresse, eller som et annet attributt allerede har, avvises. Lenker som er delt med det gamle navnet, velger ikke lenger verdien. Svaret er attributtets navn nå."
+msgstr ""
+"Velger navnet en produktsides nettadresse og butikkens filtre gir et globalt "
+"attributt, slik feltet «Navn i nettadresser» på attributtets redigeringsside "
+"gjør: `size` gir `?size=50x70-cm`. Små bokstaver og tall, ord bundet sammen "
+"med bindestrek eller understrek. Et tomt navn gir attributtet sin slug "
+"tilbake. Et navn WordPress eller WooCommerce leser fra en nettadresse, eller "
+"som et annet attributt allerede har, avvises. Lenker som er delt med det "
+"gamle navnet, velger ikke lenger verdien. Svaret er attributtets navn nå."
 
 #: src/Abilities/SetAttributeQueryName.php:38
 #: src/Abilities/SetAttributeSplitListing.php:44
@@ -2149,7 +2153,7 @@ msgstr "Modusen er ikke en av on, filtered eller off."
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductForm.php:64
 msgid "Arrange a product's designer form"
-msgstr ""
+msgstr "Ordne skjemaet i et produkts designverktøy"
 
 #: src/Abilities/SetProductForm.php:65
 msgid ""
@@ -2163,12 +2167,20 @@ msgid ""
 "template does not offer, refuses the whole call and the answer says each. "
 "The answer is the product's form now, as `get-product-form` gives it."
 msgstr ""
+"Ordner skjemaet i designverktøyet for et enkelt eller variabelt produkt, "
+"slik produktets Pixonaut-fane gjør: `form_groups` for hver side angitt med "
+"sin `key` (null for malens eget skjema), `option_groups`, `group_numbers`, "
+"`form_layout` og `layout`. Bare det som angis, endres: en side som utelates, "
+"beholder skjemaoppsettet sitt, og sidene, malene deres, plasseringene og "
+"trykkstørrelsene og variantenes egne oppsett beholdes. Se med `get-product-"
+"form` hva et skjemaoppsett kan nevne: et alternativ produktet ikke har, "
+"eller et felt eller en gruppe malen ikke tilbyr, avviser hele kallet, og "
+"svaret nevner hver av dem. Svaret er produktets skjema slik det er nå, slik "
+"`get-product-form` gir det."
 
 #: src/Abilities/SetProductForm.php:82
-#, fuzzy
-#| msgid "One of the product's global attributes, by id."
 msgid "One of the product's sides, by its key."
-msgstr "Ett av produktets globale attributter, angitt med id."
+msgstr "En av produktets sider, angitt med nøkkelen."
 
 #: src/Abilities/SetProductForm.php:90 src/Abilities/SetProductSetup.php:81
 msgid "The product page layout; empty for the store's."
@@ -2179,95 +2191,73 @@ msgid "The form layout; empty for the store's."
 msgstr "Skjemautformingen; tom for butikkens."
 
 #: src/Abilities/SetProductForm.php:92
-#, fuzzy
-#| msgid ""
-#| "Where the product's options stand in the form, on a side whose groups "
-#| "were not arranged by hand: `on_top`, unnumbered, or each in a group of "
-#| "its own, `first` or `last`; empty for the store's. A product's only: a "
-#| "variation follows its product."
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "unnumbered, or each in a group of its own, `first` or `last`; empty for the "
 "store's."
 msgstr ""
-"Hvor produktets alternativer står i skjemaet, på en side der gruppene ikke "
-"er ordnet for hånd: `on_top`, øverst uten nummer, eller hvert i en egen "
-"gruppe, `first` eller `last`; tom for butikkens. Bare for produkter: en "
-"variant følger produktet."
+"Hvor produktets alternativer står på en side som ikke er ordnet for hånd: "
+"`on_top`, øverst uten nummer, eller hvert i en egen gruppe, `first` eller "
+"`last`; tom for butikkens."
 
 #: src/Abilities/SetProductForm.php:93
-#, fuzzy
-#| msgid ""
-#| "Whether the form numbers its groups; empty for the store's. A product's "
-#| "only: a variation follows its product."
 msgid "Whether the form numbers its groups; empty for the store's."
-msgstr ""
-"Om skjemaet nummererer gruppene; tom for butikkens. Bare for produkter: en "
-"variant følger produktet."
+msgstr "Om skjemaet nummererer gruppene; tom for butikkens."
 
 #: src/Abilities/SetProductForm.php:120
 msgid ""
 "Give `sides`, `option_groups`, `group_numbers`, `form_layout` or `layout`."
 msgstr ""
+"Oppgi `sides`, `option_groups`, `group_numbers`, `form_layout` eller "
+"`layout`."
 
 #: src/Abilities/SetProductForm.php:127
-#, fuzzy
-#| msgid ""
-#| "The product is not personalised, so it has no Pixonaut images. Set it up "
-#| "first."
 msgid ""
 "The product has no Pixonaut setup, so it has no form to arrange. Link it to "
 "a template first."
 msgstr ""
-"Produktet er ikke personalisert, så det har ingen Pixonaut-bilder. Sett det "
-"opp først."
+"Produktet har ikke noe Pixonaut-oppsett, så det har ikke noe skjema å ordne. "
+"Koble det til en mal først."
 
 #: src/Abilities/SetProductForm.php:137
-#, fuzzy
-#| msgid ""
-#| "The product's Pixonaut setup changed meanwhile. Nothing was changed; try "
-#| "again."
 msgid ""
 "The product's Pixonaut setup was changed while this was saved, so nothing "
 "was changed. Read it again with `get-product-form`, then set it."
 msgstr ""
-"Produktets Pixonaut-oppsett ble endret i mellomtiden. Ingenting ble endret; "
-"prøv igjen."
+"Produktets Pixonaut-oppsett ble endret mens dette ble lagret, så ingenting "
+"ble endret. Les det på nytt med `get-product-form`, og angi det deretter."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:165
 #, php-format
 msgid "the product has no side `%s`"
-msgstr ""
+msgstr "produktet har ingen side `%s`"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:170
-#, fuzzy, php-format
-#| msgid "Card %s is listed twice."
+#, php-format
 msgid "side `%s` is given twice"
-msgstr "Kort %s er oppført to ganger."
+msgstr "side `%s` er oppgitt to ganger"
 
 #. translators: %s: every problem found, joined by semicolons. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:187
 #, php-format
 msgid "Nothing was saved: %s."
-msgstr ""
+msgstr "Ingenting ble lagret: %s."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:216
 #, php-format
 msgid "side `%s` has no template to arrange"
-msgstr ""
+msgstr "side `%s` har ingen mal å ordne"
 
 #: src/Abilities/SetProductForm.php:217
-#, fuzzy
-#| msgid ""
-#| "Pixonaut could not be asked for the template's showcase sets. Try again "
-#| "later."
 msgid ""
 "Pixonaut could not be asked for the template's fields, so the arrangement "
 "was not checked and nothing was saved. Try again."
-msgstr "Kunne ikke hente malens eksempelsett fra Pixonaut. Prøv igjen senere."
+msgstr ""
+"Kunne ikke hente malens felter fra Pixonaut, så skjemaoppsettet ble ikke "
+"kontrollert, og ingenting ble lagret. Prøv igjen."
 
 #. translators: 1: a group's id; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:227
@@ -2276,12 +2266,14 @@ msgid ""
 "group `%1$s` on side `%2$s` takes an id the product page uses for itself: "
 "pick another"
 msgstr ""
+"gruppe `%1$s` på side `%2$s` har en id produktsiden bruker selv: velg en "
+"annen"
 
 #. translators: 1: a group's id; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:231
 #, php-format
 msgid "group `%1$s` on side `%2$s` is the product's own and needs a title"
-msgstr ""
+msgstr "gruppe `%1$s` på side `%2$s` er produktets egen og må ha en tittel"
 
 #. translators: 1: a group's id; 2: a side's key; 3: the prefix of a group of the product's own. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:233
@@ -2290,18 +2282,21 @@ msgid ""
 "the template of side `%2$s` has no group `%1$s` (a group of the product's "
 "own takes an id starting with `%3$s`)"
 msgstr ""
+"malen for side `%2$s` har ingen gruppe `%1$s` (en av produktets egne grupper "
+"har en id som begynner med `%3$s`)"
 
 #. translators: %s: an attribute's slug. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:240
 #, php-format
 msgid "the product has no option `%s` its customers choose a variation by"
 msgstr ""
+"produktet har ikke noe alternativ `%s` som kundene velger en variant etter"
 
 #. translators: 1: a field, `<layerId>:<prop>`; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:243
 #, php-format
 msgid "the template of side `%2$s` offers no field `%1$s`"
-msgstr ""
+msgstr "malen for side `%2$s` tilbyr ikke noe felt `%1$s`"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:262
@@ -2310,31 +2305,33 @@ msgid ""
 "the form of side `%s` names no `groups`: give null for the template's own "
 "form"
 msgstr ""
+"skjemaet for side `%s` nevner ingen `groups`: oppgi null for malens eget "
+"skjema"
 
 #. translators: 1: a side's key; 2: the most groups a form keeps. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:266
 #, php-format
 msgid "the form of side `%1$s` has more than %2$d groups"
-msgstr ""
+msgstr "skjemaet for side `%1$s` har mer enn %2$d grupper"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:273
 #, php-format
 msgid "a group on side `%s` needs an `id` and its `items`"
-msgstr ""
+msgstr "en gruppe på side `%s` må ha en `id` og sine `items`"
 
 #. translators: 1: a group's id; 2: the most items a group keeps. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:278
 #, php-format
 msgid "group `%1$s` has more than %2$d items"
-msgstr ""
+msgstr "gruppe `%1$s` har mer enn %2$d elementer"
 
 #. translators: %s: a group's id. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:283
-#, fuzzy, php-format
-#| msgid "Give the image of card %s as either `id` or `src`."
+#, php-format
 msgid "each item of group `%s` names either a `field` or an `attribute`"
-msgstr "Oppgi bildet for kort %s enten som `id` eller som `src`."
+msgstr ""
+"hvert element i gruppe `%s` nevner enten et `field` eller et `attribute`"
 
 #: src/Abilities/SetProductForm.php:309
 #: src/Abilities/SetProductSplitListing.php:232
@@ -3575,16 +3572,7 @@ msgstr "Endre prisinnstillingene"
 
 #. translators: 1: the name of the ability that reads the pricing settings, 2: the name of the ability that prices a product.
 #: src/Abilities/UpdatePricingSettings.php:45
-#, fuzzy, php-format
-#| msgid ""
-#| "Changes the pricing settings given, by their keys as %1$s reads them; the "
-#| "others keep their values. `price_automatic` switches automatic price "
-#| "changes on or off: on, a price that follows the rule is set to the rule's "
-#| "price when its cost changes and its margin left the tolerance; off, the "
-#| "new price is only suggested; a product or variation set to always or "
-#| "never keeps to that, whatever the switch says. `price_ending` must be "
-#| "below `price_step`. Changing the rule changes no price by itself: price a "
-#| "product with %2$s. Answers with every pricing setting."
+#, php-format
 msgid ""
 "Changes the pricing settings given, by their keys as %1$s reads them; the "
 "others keep their values. `price_automatic` switches automatic price changes "
@@ -3605,6 +3593,10 @@ msgstr ""
 "regelens pris når kostnaden endres og marginen ligger utenfor toleransen; av "
 "blir den nye prisen bare foreslått; et produkt eller en variant som er satt "
 "til always eller never, holder seg til det, uansett hva bryteren sier. "
+"`delivery_time_show` får en produktside til å vise hvor lang tid trykkeriet "
+"sier den valgte varianten tar, slik Pixonaut hentet det sammen med kostnaden "
+"(bare det trykkeriet oppgir: ingenting vises der det ikke oppgir noe), og "
+"`delivery_time_handling_days` legger butikkens egne dager til. "
 "`price_ending` må være lavere enn `price_step`. Å endre regelen endrer ingen "
 "pris av seg selv: et produkt prissettes med %2$s. Svarer med alle "
 "prisinnstillingene."
@@ -8316,7 +8308,7 @@ msgstr ""
 #. translators: Title of a setting on the settings page, shown to the merchant: whether product pages say how long delivery takes.
 #: src/Settings/Settings.php:575
 msgid "Show the delivery time"
-msgstr ""
+msgstr "Vis leveringstiden"
 
 #: src/Settings/Settings.php:576
 msgid ""
@@ -8326,17 +8318,25 @@ msgid ""
 "nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing "
 "gets no line. The times are read with the costs, once a day."
 msgstr ""
+"Vis på produktsiden hvor lang tid trykkeriet sier den valgte varianten tar, "
+"for eksempel «Leveres innen 4–7 dager». Bare det trykkeriet selv oppgir, "
+"vises: et trykkeri som oppgir hvor lang tid det tar å produsere produktet, "
+"men ingenting om leveringen, får «Produseres på 2–3 dager», og et som ikke "
+"oppgir noe, får ingen linje. Tidene hentes sammen med kostnadene, én gang om "
+"dagen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days the store adds to the printshop's delivery time.
 #: src/Settings/Settings.php:588
 msgid "Handling days"
-msgstr ""
+msgstr "Behandlingsdager"
 
 #: src/Settings/Settings.php:589
 msgid ""
 "Days of your own to add to the printshop’s time, for what happens before an "
 "order reaches it, such as approving a proof."
 msgstr ""
+"Egne dager som legges til trykkeriets tid, for det som skjer før en ordre "
+"når trykkeriet, for eksempel godkjenning av en korrektur."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut API.
 #: src/Settings/Settings.php:606
@@ -8594,16 +8594,16 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
 #: src/Settings/SettingsPage.php:659
-#, fuzzy
-#| msgid "Delivery address"
 msgid "Delivery time"
-msgstr "Leveringsadresse"
+msgstr "Leveringstid"
 
 #: src/Settings/SettingsPage.php:660
 msgid ""
 "A printshop tells how long a product takes to make and to deliver to your "
 "shop’s country. Pixonaut reads it with the printshop’s cost."
 msgstr ""
+"Et trykkeri oppgir hvor lang tid et produkt tar å produsere og å levere til "
+"butikkens land. Pixonaut henter det sammen med trykkeriets kostnad."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: which releases of this plugin WordPress offers.
 #: src/Settings/SettingsPage.php:666
@@ -8757,28 +8757,34 @@ msgid "Off: load each one when it is shown"
 msgstr "Av: last inn hver enkelt når den vises"
 
 #. translators: %d: The longest name, in characters. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:214
+#: src/Storefront/QueryNames.php:220
 #, php-format
 msgid ""
 "Use lowercase letters, digits, and hyphens or underscores between them, at "
 "most %d characters."
-msgstr "Bruk små bokstaver og tall, med bindestreker eller understreker mellom dem, maks %d tegn."
+msgstr ""
+"Bruk små bokstaver og tall, med bindestreker eller understreker mellom dem, "
+"maks %d tegn."
 
 #. translators: %s: The refused name. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:218
+#: src/Storefront/QueryNames.php:224
 #, php-format
 msgid ""
 "WordPress or WooCommerce already reads “%s” in the shop's addresses. Choose "
 "another name."
-msgstr "WordPress eller WooCommerce leser allerede «%s» i butikkens nettadresser. Velg et annet navn."
+msgstr ""
+"WordPress eller WooCommerce leser allerede «%s» i butikkens nettadresser. "
+"Velg et annet navn."
 
 #. translators: 1: The refused name, 2: The attribute that has it. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:224
+#: src/Storefront/QueryNames.php:230
 #, php-format
 msgid ""
 "The attribute %2$s already goes by “%1$s” in the shop's addresses. Choose "
 "another name."
-msgstr "Attributtet %2$s heter allerede «%1$s» i butikkens nettadresser. Velg et annet navn."
+msgstr ""
+"Attributtet %2$s heter allerede «%1$s» i butikkens nettadresser. Velg et "
+"annet navn."
 
 #: src/Storefront/UnavailableProduct.php:95
 msgid ""
@@ -8878,7 +8884,10 @@ msgid ""
 "The name a product page's address and the shop's filters give this "
 "attribute, as in ?size=50x70-cm: lowercase letters, digits, and hyphens or "
 "underscores. Left empty, it goes by its slug."
-msgstr "Navnet en produktsides nettadresse og butikkens filtre gir dette attributtet, som i ?size=50x70-cm: små bokstaver, tall og bindestreker eller understreker. Står feltet tomt, brukes attributtets slug."
+msgstr ""
+"Navnet en produktsides nettadresse og butikkens filtre gir dette "
+"attributtet, som i ?size=50x70-cm: små bokstaver, tall og bindestreker eller "
+"understreker. Står feltet tomt, brukes attributtets slug."
 
 #. translators: %s: Why the name was refused. Shown under the "Name in addresses" field on the screen that adds or edits a product attribute, after the attribute was saved.
 #: templates/admin/attribute-query-name-field.php:27

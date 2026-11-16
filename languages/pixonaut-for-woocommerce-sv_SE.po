@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-16T13:52:04+00:00\n"
+"POT-Creation-Date: 2026-11-16T14:20:16+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -284,17 +284,23 @@ msgid ""
 "The name the shop's addresses give the attribute, as in `?size=50x70-cm`; "
 "null when it has none, as for a slug WordPress or WooCommerce reads itself, "
 "and keeps WooCommerce's `attribute_pa_<slug>` and `filter_<slug>`."
-msgstr "Namnet som butikens webbadresser ger attributet, som i `?size=50x70-cm`; null när det saknar ett, som för en slug som WordPress eller WooCommerce själva läser, och då behålls WooCommerces `attribute_pa_<slug>` och `filter_<slug>`."
+msgstr ""
+"Namnet som butikens webbadresser ger attributet, som i `?size=50x70-cm`; "
+"null när det saknar ett, som för en slug som WordPress eller WooCommerce "
+"själva läser, och då behålls WooCommerces `attribute_pa_<slug>` och "
+"`filter_<slug>`."
 
 #: src/Abilities/AttributeQueryNames.php:67
 msgid "The name the store gave it; empty when it goes by its slug."
-msgstr "Namnet som butiken har gett det; tomt när attributet använder sin slug."
+msgstr ""
+"Namnet som butiken har gett det; tomt när attributet använder sin slug."
 
 #: src/Abilities/AttributeQueryNames.php:71
 msgid ""
 "Its slug without `pa_`, the name it goes by without one of its own while "
 "that is free."
-msgstr "Dess slug utan `pa_`, det namn det har utan ett eget, så länge det är ledigt."
+msgstr ""
+"Dess slug utan `pa_`, det namn det har utan ett eget, så länge det är ledigt."
 
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
@@ -560,14 +566,17 @@ msgid ""
 "shop's filters give it: `?size=50x70-cm&frame=oak` rather than WooCommerce's "
 "`?attribute_pa_size=50x70-cm`. Each goes by the name the store gave it "
 "(`own`), else by its slug. Set one with `set-attribute-query-name`."
-msgstr "Visar, för varje globalt attribut, namnet som en produktsidas webbadress och butikens filter ger det: `?size=50x70-cm&frame=oak` i stället för WooCommerces `?attribute_pa_size=50x70-cm`. Varje attribut har namnet som butiken har gett det (`own`), annars sin slug. Ange ett med `set-attribute-query-name`."
+msgstr ""
+"Visar, för varje globalt attribut, namnet som en produktsidas webbadress och "
+"butikens filter ger det: `?size=50x70-cm&frame=oak` i stället för "
+"WooCommerces `?attribute_pa_size=50x70-cm`. Varje attribut har namnet som "
+"butiken har gett det (`own`), annars sin slug. Ange ett med `set-attribute-"
+"query-name`."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductForm.php:52
-#, fuzzy
-#| msgid "Read what a product's images are drawn on"
 msgid "Read how a product's designer form is arranged"
-msgstr "Läs vad en produkts bilder ritas på"
+msgstr "Läs hur formuläret i en produkts designverktyg är ordnat"
 
 #: src/Abilities/GetProductForm.php:53
 msgid ""
@@ -582,91 +591,89 @@ msgid ""
 "fields (null when Pixonaut could not be asked). Set it with `set-product-"
 "form`."
 msgstr ""
+"Läser hur formuläret i designverktyget för en enkel eller variabel produkt "
+"är ordnat, så som produktens Pixonaut-flik visar det: varje sidas "
+"`form_groups` (grupperna i ordning, var och en med sina poster: ett mallfält "
+"som `field` `\"<layerId>:<prop>\"` med de ord som ersätter mallens, eller "
+"ett av produktens alternativ som `attribute` med sin slug; null när sidan "
+"visar mallens eget formulär), `option_groups`, `group_numbers`, "
+"`form_layout` och `layout` (null för butikens). Tillsammans med dem det som "
+"en formulärordning får nämna: produktens `attributes` och varje sidas "
+"`template_groups`, mallens grupper och fält (null när det inte gick att "
+"fråga Pixonaut). Ange den med `set-product-form`."
 
 #: src/Abilities/GetProductForm.php:59 src/Abilities/SetProductForm.php:71
-#, fuzzy
-#| msgid "Simple or variable products."
 msgid "A simple or variable product."
-msgstr "Enkla eller variabla produkter."
+msgstr "En enkel eller variabel produkt."
 
 #: src/Abilities/GetProductForm.php:188
-#, fuzzy
-#| msgid "The blank it is printed on; null for a template-only product."
 msgid "The side's groups, in order; null for the template's own form."
-msgstr ""
-"Grundprodukten som den trycks på; null för en produkt med bara en mall."
+msgstr "Sidans grupper i ordning; null för mallens eget formulär."
 
 #: src/Abilities/GetProductForm.php:199
 msgid ""
 "One of the template's groups, by id; or a group of the product's own, whose "
 "id starts with `wc-` and which takes a `title`."
 msgstr ""
+"En av mallens grupper, angiven med id; eller en av produktens egna grupper, "
+"vars id börjar med `wc-` och som får en `title`."
 
 #: src/Abilities/GetProductForm.php:203
 msgid "The group's title, in place of the template's."
-msgstr ""
+msgstr "Gruppens rubrik i stället för mallens."
 
 #: src/Abilities/GetProductForm.php:212
 msgid "One of the template's fields, as `\"<layerId>:<prop>\"`."
-msgstr ""
+msgstr "Ett av mallens fält, som `\"<layerId>:<prop>\"`."
 
 #: src/Abilities/GetProductForm.php:216
-#, fuzzy
-#| msgid "One of the product's global attributes, by id."
 msgid ""
 "One of the product's options, by its attribute's slug, in place of a field."
-msgstr "Ett av produktens globala attribut, angivet med id."
+msgstr ""
+"Ett av produktens alternativ, angivet med attributets slug, i stället för "
+"ett fält."
 
 #: src/Abilities/GetProductForm.php:223
 msgid "Words in place of the field's offered values, by value."
-msgstr ""
+msgstr "Ord i stället för fältets erbjudna värden, per värde."
 
 #: src/Abilities/GetProductForm.php:251
-#, fuzzy
-#| msgid "The product page layout; empty for the store's."
 msgid "The product page layout; null for the store's."
-msgstr "Produktsidans layout; tom för butikens."
+msgstr "Produktsidans layout; null för butikens."
 
 #: src/Abilities/GetProductForm.php:252
-#, fuzzy
-#| msgid "The form layout; empty for the store's."
 msgid "The form layout; null for the store's."
-msgstr "Formulärlayouten; tom för butikens."
+msgstr "Formulärlayouten; null för butikens."
 
 #: src/Abilities/GetProductForm.php:253
-#, fuzzy
-#| msgid ""
-#| "Where it overrides the store on its options in the form: `on_top`, "
-#| "`first` or `last`; null for the store's."
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "`first` or `last`; null for the store's."
 msgstr ""
-"Om den åsidosätter butikens inställning för var dess alternativ står i "
-"formuläret: `on_top`, `first` eller `last`; null för butikens."
+"Var produktens alternativ står på en sida som inte har ordnats för hand: "
+"`on_top`, `first` eller `last`; null för butikens."
 
 #: src/Abilities/GetProductForm.php:254
-#, fuzzy
-#| msgid ""
-#| "Whether it overrides the store on numbering the form's groups: `on` or "
-#| "`off`; null for the store's."
 msgid ""
 "Whether the form numbers its groups: `on` or `off`; null for the store's."
 msgstr ""
-"Om den åsidosätter butikens inställning för numrering av formulärets "
-"grupper: `on` eller `off`; null för butikens."
+"Om formuläret numrerar sina grupper: `on` eller `off`; null för butikens."
 
 #: src/Abilities/GetProductForm.php:257
 msgid ""
 "The options customers choose a variation by, as an arrangement names them: "
 "each attribute's slug and name. Empty for a simple product."
 msgstr ""
+"Alternativen som kunderna väljer en variant efter, så som en formulärordning "
+"nämner dem: varje attributs slug och namn. Tom för en enkel produkt."
 
 #: src/Abilities/GetProductForm.php:283
 msgid ""
 "The template's groups in its order, each with its fields; null without a "
 "template or when Pixonaut could not be asked."
 msgstr ""
+"Mallens grupper i mallens ordning, var och en med sina fält; null utan mall "
+"eller när det inte gick att fråga Pixonaut."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductPictureViews.php:42
@@ -1943,16 +1950,6 @@ msgid "Read the pricing settings"
 msgstr "Läs prisinställningarna"
 
 #: src/Abilities/ReadPricingSettings.php:57
-#, fuzzy
-#| msgid ""
-#| "Gives the store's pricing rule, by which prices follow the printshop's "
-#| "costs: the target margin, the tolerance around it, the price step and "
-#| "what prices end in, the lowest and highest price, the currency buffer "
-#| "added to a cost converted from another currency, and whether prices "
-#| "change by themselves when a cost changes. Amounts and percentages are "
-#| "decimal strings, empty for none. Without a target margin the store has no "
-#| "rule. Also the store's currency, and whether prices are entered including "
-#| "tax."
 msgid ""
 "Gives the store's pricing rule, by which prices follow the printshop's "
 "costs: the target margin, the tolerance around it, the price step and what "
@@ -1972,7 +1969,10 @@ msgstr ""
 "om från en annan valuta, och om priser ändras av sig själva när en kostnad "
 "ändras. Belopp och procentsatser är decimalsträngar, tomma när det inte "
 "finns något. Utan målmarginal har butiken ingen regel. Även butikens valuta, "
-"och om priser anges inklusive moms."
+"och om priser anges inklusive moms. `delivery_time_show` anger om en "
+"produktsida visar hur lång tid tryckeriet säger att den valda varianten tar, "
+"vilket Pixonaut läser in tillsammans med kostnaden, och "
+"`delivery_time_handling_days` de egna dagar som butiken lägger till."
 
 #: src/Abilities/ReadPricingSettings.php:133
 msgid "The currency prices are in, as its code."
@@ -2117,7 +2117,15 @@ msgid ""
 "WordPress or WooCommerce reads from an address, or that another attribute "
 "goes by, is refused. Links shared with the old name no longer choose the "
 "value. The answer is the attribute's name now."
-msgstr "Anger namnet som en produktsidas webbadress och butikens filter ger ett globalt attribut, som fältet ”Namn i webbadresser” på attributets redigeringssida gör: `size` ger `?size=50x70-cm`. Små bokstäver och siffror, med ord sammanfogade med bindestreck eller understreck. Ett tomt namn ger attributet dess slug tillbaka. Ett namn som WordPress eller WooCommerce läser från en webbadress, eller som ett annat attribut redan har, nekas. Länkar som delats med det gamla namnet väljer inte längre värdet. Svaret är attributets namn nu."
+msgstr ""
+"Anger namnet som en produktsidas webbadress och butikens filter ger ett "
+"globalt attribut, som fältet ”Namn i webbadresser” på attributets "
+"redigeringssida gör: `size` ger `?size=50x70-cm`. Små bokstäver och siffror, "
+"med ord sammanfogade med bindestreck eller understreck. Ett tomt namn ger "
+"attributet dess slug tillbaka. Ett namn som WordPress eller WooCommerce "
+"läser från en webbadress, eller som ett annat attribut redan har, nekas. "
+"Länkar som delats med det gamla namnet väljer inte längre värdet. Svaret är "
+"attributets namn nu."
 
 #: src/Abilities/SetAttributeQueryName.php:38
 #: src/Abilities/SetAttributeSplitListing.php:44
@@ -2161,7 +2169,7 @@ msgstr "Läget är inte något av on, filtered eller off."
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductForm.php:64
 msgid "Arrange a product's designer form"
-msgstr ""
+msgstr "Ordna formuläret i en produkts designverktyg"
 
 #: src/Abilities/SetProductForm.php:65
 msgid ""
@@ -2175,12 +2183,20 @@ msgid ""
 "template does not offer, refuses the whole call and the answer says each. "
 "The answer is the product's form now, as `get-product-form` gives it."
 msgstr ""
+"Ordnar formuläret i designverktyget för en enkel eller variabel produkt, så "
+"som produktens Pixonaut-flik gör: `form_groups` för varje sida som anges med "
+"sin `key` (null för mallens eget formulär), `option_groups`, "
+"`group_numbers`, `form_layout` och `layout`. Bara det som anges ändras: en "
+"sida som utelämnas behåller sin formulärordning, och sidorna, deras mallar, "
+"placeringar och tryckstorlekar samt varianternas egna inställningar behålls. "
+"Läs vad en formulärordning får nämna med `get-product-form`: ett alternativ "
+"som produkten inte har, eller ett fält eller en grupp som dess mall inte "
+"erbjuder, gör att hela anropet avvisas, och svaret nämner var och en. Svaret "
+"är produktens formulär som det är nu, så som `get-product-form` ger det."
 
 #: src/Abilities/SetProductForm.php:82
-#, fuzzy
-#| msgid "One of the product's global attributes, by id."
 msgid "One of the product's sides, by its key."
-msgstr "Ett av produktens globala attribut, angivet med id."
+msgstr "En av produktens sidor, angiven med sin nyckel."
 
 #: src/Abilities/SetProductForm.php:90 src/Abilities/SetProductSetup.php:81
 msgid "The product page layout; empty for the store's."
@@ -2191,96 +2207,72 @@ msgid "The form layout; empty for the store's."
 msgstr "Formulärlayouten; tom för butikens."
 
 #: src/Abilities/SetProductForm.php:92
-#, fuzzy
-#| msgid ""
-#| "Where the product's options stand in the form, on a side whose groups "
-#| "were not arranged by hand: `on_top`, unnumbered, or each in a group of "
-#| "its own, `first` or `last`; empty for the store's. A product's only: a "
-#| "variation follows its product."
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "unnumbered, or each in a group of its own, `first` or `last`; empty for the "
 "store's."
 msgstr ""
-"Var produktens alternativ står i formuläret, på en sida vars grupper inte "
-"har ordnats för hand: `on_top`, överst och onumrerade, eller vart och ett i "
-"en egen grupp, `first` eller `last`; tom för butikens. Gäller bara "
-"produkter: en variant följer sin produkt."
+"Var produktens alternativ står på en sida som inte har ordnats för hand: "
+"`on_top`, överst och onumrerade, eller vart och ett i en egen grupp, `first` "
+"eller `last`; tom för butikens."
 
 #: src/Abilities/SetProductForm.php:93
-#, fuzzy
-#| msgid ""
-#| "Whether the form numbers its groups; empty for the store's. A product's "
-#| "only: a variation follows its product."
 msgid "Whether the form numbers its groups; empty for the store's."
-msgstr ""
-"Om formuläret numrerar sina grupper; tom för butikens. Gäller bara "
-"produkter: en variant följer sin produkt."
+msgstr "Om formuläret numrerar sina grupper; tom för butikens."
 
 #: src/Abilities/SetProductForm.php:120
 msgid ""
 "Give `sides`, `option_groups`, `group_numbers`, `form_layout` or `layout`."
 msgstr ""
+"Ange `sides`, `option_groups`, `group_numbers`, `form_layout` eller `layout`."
 
 #: src/Abilities/SetProductForm.php:127
-#, fuzzy
-#| msgid ""
-#| "The product is not personalised, so it has no Pixonaut images. Set it up "
-#| "first."
 msgid ""
 "The product has no Pixonaut setup, so it has no form to arrange. Link it to "
 "a template first."
 msgstr ""
-"Produkten är inte personaliserad, så den har inga Pixonaut-bilder. Ställ in "
-"den först."
+"Produkten har ingen Pixonaut-inställning, så den har inget formulär att "
+"ordna. Koppla den till en mall först."
 
 #: src/Abilities/SetProductForm.php:137
-#, fuzzy
-#| msgid ""
-#| "The product's Pixonaut setup changed meanwhile. Nothing was changed; try "
-#| "again."
 msgid ""
 "The product's Pixonaut setup was changed while this was saved, so nothing "
 "was changed. Read it again with `get-product-form`, then set it."
 msgstr ""
-"Produktens Pixonaut-inställning ändrades under tiden. Ingenting ändrades; "
-"försök igen."
+"Produktens Pixonaut-inställning ändrades medan detta sparades, så ingenting "
+"ändrades. Läs den igen med `get-product-form` och ange den sedan."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:165
 #, php-format
 msgid "the product has no side `%s`"
-msgstr ""
+msgstr "produkten har ingen sida `%s`"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:170
-#, fuzzy, php-format
-#| msgid "Card %s is listed twice."
+#, php-format
 msgid "side `%s` is given twice"
-msgstr "Kort %s finns med två gånger."
+msgstr "sidan `%s` anges två gånger"
 
 #. translators: %s: every problem found, joined by semicolons. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:187
 #, php-format
 msgid "Nothing was saved: %s."
-msgstr ""
+msgstr "Ingenting sparades: %s."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:216
 #, php-format
 msgid "side `%s` has no template to arrange"
-msgstr ""
+msgstr "sidan `%s` har ingen mall att ordna"
 
 #: src/Abilities/SetProductForm.php:217
-#, fuzzy
-#| msgid ""
-#| "Pixonaut could not be asked for the template's showcase sets. Try again "
-#| "later."
 msgid ""
 "Pixonaut could not be asked for the template's fields, so the arrangement "
 "was not checked and nothing was saved. Try again."
 msgstr ""
-"Det gick inte att hämta mallens exempelset från Pixonaut. Försök igen senare."
+"Det gick inte att hämta mallens fält från Pixonaut, så formulärordningen "
+"kontrollerades inte och ingenting sparades. Försök igen."
 
 #. translators: 1: a group's id; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:227
@@ -2289,12 +2281,15 @@ msgid ""
 "group `%1$s` on side `%2$s` takes an id the product page uses for itself: "
 "pick another"
 msgstr ""
+"gruppen `%1$s` på sidan `%2$s` har ett id som produktsidan själv använder: "
+"välj ett annat"
 
 #. translators: 1: a group's id; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:231
 #, php-format
 msgid "group `%1$s` on side `%2$s` is the product's own and needs a title"
 msgstr ""
+"gruppen `%1$s` på sidan `%2$s` är produktens egen och behöver en rubrik"
 
 #. translators: 1: a group's id; 2: a side's key; 3: the prefix of a group of the product's own. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:233
@@ -2303,18 +2298,21 @@ msgid ""
 "the template of side `%2$s` has no group `%1$s` (a group of the product's "
 "own takes an id starting with `%3$s`)"
 msgstr ""
+"mallen för sidan `%2$s` har ingen grupp `%1$s` (en av produktens egna "
+"grupper har ett id som börjar med `%3$s`)"
 
 #. translators: %s: an attribute's slug. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:240
 #, php-format
 msgid "the product has no option `%s` its customers choose a variation by"
 msgstr ""
+"produkten har inget alternativ `%s` som kunderna väljer en variant efter"
 
 #. translators: 1: a field, `<layerId>:<prop>`; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:243
 #, php-format
 msgid "the template of side `%2$s` offers no field `%1$s`"
-msgstr ""
+msgstr "mallen för sidan `%2$s` erbjuder inget fält `%1$s`"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:262
@@ -2323,31 +2321,33 @@ msgid ""
 "the form of side `%s` names no `groups`: give null for the template's own "
 "form"
 msgstr ""
+"formuläret för sidan `%s` nämner inga `groups`: ange null för mallens eget "
+"formulär"
 
 #. translators: 1: a side's key; 2: the most groups a form keeps. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:266
 #, php-format
 msgid "the form of side `%1$s` has more than %2$d groups"
-msgstr ""
+msgstr "formuläret för sidan `%1$s` har fler än %2$d grupper"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:273
 #, php-format
 msgid "a group on side `%s` needs an `id` and its `items`"
-msgstr ""
+msgstr "en grupp på sidan `%s` behöver ett `id` och sina `items`"
 
 #. translators: 1: a group's id; 2: the most items a group keeps. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:278
 #, php-format
 msgid "group `%1$s` has more than %2$d items"
-msgstr ""
+msgstr "gruppen `%1$s` har fler än %2$d poster"
 
 #. translators: %s: a group's id. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:283
-#, fuzzy, php-format
-#| msgid "Give the image of card %s as either `id` or `src`."
+#, php-format
 msgid "each item of group `%s` names either a `field` or an `attribute`"
-msgstr "Ange bilden för kort %s antingen som `id` eller som `src`."
+msgstr ""
+"varje post i gruppen `%s` nämner antingen ett `field` eller ett `attribute`"
 
 #: src/Abilities/SetProductForm.php:309
 #: src/Abilities/SetProductSplitListing.php:232
@@ -3589,16 +3589,7 @@ msgstr "Ändra prisinställningarna"
 
 #. translators: 1: the name of the ability that reads the pricing settings, 2: the name of the ability that prices a product.
 #: src/Abilities/UpdatePricingSettings.php:45
-#, fuzzy, php-format
-#| msgid ""
-#| "Changes the pricing settings given, by their keys as %1$s reads them; the "
-#| "others keep their values. `price_automatic` switches automatic price "
-#| "changes on or off: on, a price that follows the rule is set to the rule's "
-#| "price when its cost changes and its margin left the tolerance; off, the "
-#| "new price is only suggested; a product or variation set to always or "
-#| "never keeps to that, whatever the switch says. `price_ending` must be "
-#| "below `price_step`. Changing the rule changes no price by itself: price a "
-#| "product with %2$s. Answers with every pricing setting."
+#, php-format
 msgid ""
 "Changes the pricing settings given, by their keys as %1$s reads them; the "
 "others keep their values. `price_automatic` switches automatic price changes "
@@ -3619,6 +3610,10 @@ msgstr ""
 "pris när dess kostnad ändras och marginalen ligger utanför toleransen; av "
 "föreslås det nya priset bara; en produkt eller variant som är inställd på "
 "always eller never håller sig till det, oavsett vad reglaget anger. "
+"`delivery_time_show` låter en produktsida visa hur lång tid tryckeriet säger "
+"att den valda varianten tar, så som Pixonaut läste in det tillsammans med "
+"kostnaden (bara det tryckeriet uppger: ingenting visas där det inte uppger "
+"något), och `delivery_time_handling_days` lägger till butikens egna dagar. "
 "`price_ending` måste vara lägre än `price_step`. Att ändra regeln ändrar "
 "inget pris i sig: en produkt prissätts med %2$s. Svarar med alla "
 "prisinställningar."
@@ -8800,28 +8795,34 @@ msgid "Off: load each one when it is shown"
 msgstr "Av: ladda var och en när den visas"
 
 #. translators: %d: The longest name, in characters. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:214
+#: src/Storefront/QueryNames.php:220
 #, php-format
 msgid ""
 "Use lowercase letters, digits, and hyphens or underscores between them, at "
 "most %d characters."
-msgstr "Använd små bokstäver och siffror, med bindestreck eller understreck mellan dem, högst %d tecken."
+msgstr ""
+"Använd små bokstäver och siffror, med bindestreck eller understreck mellan "
+"dem, högst %d tecken."
 
 #. translators: %s: The refused name. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:218
+#: src/Storefront/QueryNames.php:224
 #, php-format
 msgid ""
 "WordPress or WooCommerce already reads “%s” in the shop's addresses. Choose "
 "another name."
-msgstr "WordPress eller WooCommerce läser redan ”%s” i butikens webbadresser. Välj ett annat namn."
+msgstr ""
+"WordPress eller WooCommerce läser redan ”%s” i butikens webbadresser. Välj "
+"ett annat namn."
 
 #. translators: 1: The refused name, 2: The attribute that has it. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:224
+#: src/Storefront/QueryNames.php:230
 #, php-format
 msgid ""
 "The attribute %2$s already goes by “%1$s” in the shop's addresses. Choose "
 "another name."
-msgstr "Attributet %2$s heter redan ”%1$s” i butikens webbadresser. Välj ett annat namn."
+msgstr ""
+"Attributet %2$s heter redan ”%1$s” i butikens webbadresser. Välj ett annat "
+"namn."
 
 #: src/Storefront/UnavailableProduct.php:95
 msgid ""
@@ -8921,7 +8922,10 @@ msgid ""
 "The name a product page's address and the shop's filters give this "
 "attribute, as in ?size=50x70-cm: lowercase letters, digits, and hyphens or "
 "underscores. Left empty, it goes by its slug."
-msgstr "Namnet som en produktsidas webbadress och butikens filter ger det här attributet, som i ?size=50x70-cm: små bokstäver, siffror och bindestreck eller understreck. Lämnas det tomt används attributets slug."
+msgstr ""
+"Namnet som en produktsidas webbadress och butikens filter ger det här "
+"attributet, som i ?size=50x70-cm: små bokstäver, siffror och bindestreck "
+"eller understreck. Lämnas det tomt används attributets slug."
 
 #. translators: %s: Why the name was refused. Shown under the "Name in addresses" field on the screen that adds or edits a product attribute, after the attribute was saved.
 #: templates/admin/attribute-query-name-field.php:27

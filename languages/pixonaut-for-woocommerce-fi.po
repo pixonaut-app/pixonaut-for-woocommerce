@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-16T13:52:04+00:00\n"
+"POT-Creation-Date: 2026-11-16T14:20:16+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -285,7 +285,11 @@ msgid ""
 "The name the shop's addresses give the attribute, as in `?size=50x70-cm`; "
 "null when it has none, as for a slug WordPress or WooCommerce reads itself, "
 "and keeps WooCommerce's `attribute_pa_<slug>` and `filter_<slug>`."
-msgstr "Nimi, jolla kaupan verkko-osoitteet kutsuvat ominaisuutta, kuten `?size=50x70-cm`; null, kun sillä ei ole nimeä, kuten slugilla, jonka WordPress tai WooCommerce lukee itse, jolloin WooCommercen `attribute_pa_<slug>` ja `filter_<slug>` säilyvät."
+msgstr ""
+"Nimi, jolla kaupan verkko-osoitteet kutsuvat ominaisuutta, kuten `?"
+"size=50x70-cm`; null, kun sillä ei ole nimeä, kuten slugilla, jonka "
+"WordPress tai WooCommerce lukee itse, jolloin WooCommercen "
+"`attribute_pa_<slug>` ja `filter_<slug>` säilyvät."
 
 #: src/Abilities/AttributeQueryNames.php:67
 msgid "The name the store gave it; empty when it goes by its slug."
@@ -295,7 +299,9 @@ msgstr "Kaupan sille antama nimi; tyhjä, kun se käyttää slugiaan."
 msgid ""
 "Its slug without `pa_`, the name it goes by without one of its own while "
 "that is free."
-msgstr "Sen slug ilman `pa_`-etuliitettä: nimi, jota se käyttää ilman omaa nimeä, kun se on vapaana."
+msgstr ""
+"Sen slug ilman `pa_`-etuliitettä: nimi, jota se käyttää ilman omaa nimeä, "
+"kun se on vapaana."
 
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
@@ -560,14 +566,17 @@ msgid ""
 "shop's filters give it: `?size=50x70-cm&frame=oak` rather than WooCommerce's "
 "`?attribute_pa_size=50x70-cm`. Each goes by the name the store gave it "
 "(`own`), else by its slug. Set one with `set-attribute-query-name`."
-msgstr "Näyttää jokaisen yleisen ominaisuuden nimen, jolla tuotesivun verkko-osoite ja kaupan suodattimet sitä kutsuvat: `?size=50x70-cm&frame=oak` eikä WooCommercen `?attribute_pa_size=50x70-cm`. Kukin käyttää nimeä, jonka kauppa on sille antanut (`own`), muuten slugiaan. Nimen voi asettaa työkalulla `set-attribute-query-name`."
+msgstr ""
+"Näyttää jokaisen yleisen ominaisuuden nimen, jolla tuotesivun verkko-osoite "
+"ja kaupan suodattimet sitä kutsuvat: `?size=50x70-cm&frame=oak` eikä "
+"WooCommercen `?attribute_pa_size=50x70-cm`. Kukin käyttää nimeä, jonka "
+"kauppa on sille antanut (`own`), muuten slugiaan. Nimen voi asettaa "
+"työkalulla `set-attribute-query-name`."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductForm.php:52
-#, fuzzy
-#| msgid "Read what a product's images are drawn on"
 msgid "Read how a product's designer form is arranged"
-msgstr "Lue, mihin tuotteen kuvat luodaan"
+msgstr "Lue, miten tuotteen suunnittelutyökalun lomake on järjestetty"
 
 #: src/Abilities/GetProductForm.php:53
 msgid ""
@@ -582,91 +591,89 @@ msgid ""
 "fields (null when Pixonaut could not be asked). Set it with `set-product-"
 "form`."
 msgstr ""
+"Lukee, miten yksinkertaisen tuotteen tai muunnelmatuotteen "
+"suunnittelutyökalun lomake on järjestetty, kuten tuotteen Pixonaut-välilehti "
+"sen näyttää: kunkin puolen `form_groups` (ryhmät järjestyksessä, kukin "
+"kohteineen: mallipohjan kenttä muodossa `field` `\"<layerId>:<prop>\"` "
+"sanoineen, jotka korvaavat mallipohjan sanat, tai jokin tuotteen "
+"vaihtoehdoista muodossa `attribute` slugin mukaan; null, kun puoli näyttää "
+"mallipohjan oman lomakkeen), `option_groups`, `group_numbers`, `form_layout` "
+"ja `layout` (null kaupan asetukselle). Niiden lisäksi se, mitä lomakkeen "
+"järjestely voi nimetä: tuotteen `attributes` ja kunkin puolen "
+"`template_groups`, sen mallipohjan ryhmät ja kentät (null, kun Pixonautilta "
+"ei voitu kysyä). Aseta se kyvyllä `set-product-form`."
 
 #: src/Abilities/GetProductForm.php:59 src/Abilities/SetProductForm.php:71
-#, fuzzy
-#| msgid "Simple or variable products."
 msgid "A simple or variable product."
-msgstr "Yksinkertaiset tuotteet tai muunnelmatuotteet."
+msgstr "Yksinkertainen tuote tai muunnelmatuote."
 
 #: src/Abilities/GetProductForm.php:188
-#, fuzzy
-#| msgid "The blank it is printed on; null for a template-only product."
 msgid "The side's groups, in order; null for the template's own form."
-msgstr ""
-"Pohjatuote, jolle se painetaan; null tuotteelle, jolla on vain mallipohja."
+msgstr "Puolen ryhmät järjestyksessä; null mallipohjan omalle lomakkeelle."
 
 #: src/Abilities/GetProductForm.php:199
 msgid ""
 "One of the template's groups, by id; or a group of the product's own, whose "
 "id starts with `wc-` and which takes a `title`."
 msgstr ""
+"Jokin mallipohjan ryhmistä id:n mukaan; tai tuotteen oma ryhmä, jonka id "
+"alkaa `wc-` ja jolle annetaan `title`."
 
 #: src/Abilities/GetProductForm.php:203
 msgid "The group's title, in place of the template's."
-msgstr ""
+msgstr "Ryhmän otsikko mallipohjan otsikon sijaan."
 
 #: src/Abilities/GetProductForm.php:212
 msgid "One of the template's fields, as `\"<layerId>:<prop>\"`."
-msgstr ""
+msgstr "Jokin mallipohjan kentistä muodossa `\"<layerId>:<prop>\"`."
 
 #: src/Abilities/GetProductForm.php:216
-#, fuzzy
-#| msgid "One of the product's global attributes, by id."
 msgid ""
 "One of the product's options, by its attribute's slug, in place of a field."
-msgstr "Yksi tuotteen yleisistä ominaisuuksista id:n mukaan."
+msgstr ""
+"Jokin tuotteen vaihtoehdoista ominaisuutensa slugin mukaan kentän sijaan."
 
 #: src/Abilities/GetProductForm.php:223
 msgid "Words in place of the field's offered values, by value."
-msgstr ""
+msgstr "Sanat kentän tarjoamien arvojen sijaan arvon mukaan."
 
 #: src/Abilities/GetProductForm.php:251
-#, fuzzy
-#| msgid "The product page layout; empty for the store's."
 msgid "The product page layout; null for the store's."
-msgstr "Tuotesivun asettelu; tyhjä kaupan asettelulle."
+msgstr "Tuotesivun asettelu; null kaupan asettelulle."
 
 #: src/Abilities/GetProductForm.php:252
-#, fuzzy
-#| msgid "The form layout; empty for the store's."
 msgid "The form layout; null for the store's."
-msgstr "Lomakkeen asettelu; tyhjä kaupan asettelulle."
+msgstr "Lomakkeen asettelu; null kaupan asettelulle."
 
 #: src/Abilities/GetProductForm.php:253
-#, fuzzy
-#| msgid ""
-#| "Where it overrides the store on its options in the form: `on_top`, "
-#| "`first` or `last`; null for the store's."
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "`first` or `last`; null for the store's."
 msgstr ""
-"Vaihtoehtojen paikka lomakkeessa, jolla se korvaa kaupan asetuksen: "
-"`on_top`, `first` tai `last`; null, kun käytetään kaupan asetusta."
+"Missä tuotteen vaihtoehdot ovat puolella, jota ei ole järjestetty käsin: "
+"`on_top`, `first` tai `last`; null kaupan asetukselle."
 
 #: src/Abilities/GetProductForm.php:254
-#, fuzzy
-#| msgid ""
-#| "Whether it overrides the store on numbering the form's groups: `on` or "
-#| "`off`; null for the store's."
 msgid ""
 "Whether the form numbers its groups: `on` or `off`; null for the store's."
-msgstr ""
-"Lomakkeen ryhmien numerointi, jolla se korvaa kaupan asetuksen: `on` tai "
-"`off`; null, kun käytetään kaupan asetusta."
+msgstr "Numeroiko lomake ryhmänsä: `on` tai `off`; null kaupan asetukselle."
 
 #: src/Abilities/GetProductForm.php:257
 msgid ""
 "The options customers choose a variation by, as an arrangement names them: "
 "each attribute's slug and name. Empty for a simple product."
 msgstr ""
+"Vaihtoehdot, joiden mukaan asiakkaat valitsevat muunnelman, sellaisina kuin "
+"lomakkeen järjestely ne nimeää: kunkin ominaisuuden slug ja nimi. Tyhjä "
+"yksinkertaiselle tuotteelle."
 
 #: src/Abilities/GetProductForm.php:283
 msgid ""
 "The template's groups in its order, each with its fields; null without a "
 "template or when Pixonaut could not be asked."
 msgstr ""
+"Mallipohjan ryhmät sen järjestyksessä, kukin kenttineen; null ilman "
+"mallipohjaa tai kun Pixonautilta ei voitu kysyä."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductPictureViews.php:42
@@ -1959,16 +1966,6 @@ msgid "Read the pricing settings"
 msgstr "Lue hinnoitteluasetukset"
 
 #: src/Abilities/ReadPricingSettings.php:57
-#, fuzzy
-#| msgid ""
-#| "Gives the store's pricing rule, by which prices follow the printshop's "
-#| "costs: the target margin, the tolerance around it, the price step and "
-#| "what prices end in, the lowest and highest price, the currency buffer "
-#| "added to a cost converted from another currency, and whether prices "
-#| "change by themselves when a cost changes. Amounts and percentages are "
-#| "decimal strings, empty for none. Without a target margin the store has no "
-#| "rule. Also the store's currency, and whether prices are entered including "
-#| "tax."
 msgid ""
 "Gives the store's pricing rule, by which prices follow the printshop's "
 "costs: the target margin, the tolerance around it, the price step and what "
@@ -1988,7 +1985,10 @@ msgstr ""
 "valuutasta muunnettuun kustannukseen, ja muuttuvatko hinnat itsestään, kun "
 "kustannus muuttuu. Summat ja prosentit ovat desimaalimerkkijonoja, tyhjiä, "
 "kun arvoa ei ole. Ilman tavoitekatetta kaupalla ei ole sääntöä. Lisäksi "
-"kaupan valuutta ja se, syötetäänkö hinnat veroineen."
+"kaupan valuutta ja se, syötetäänkö hinnat veroineen. `delivery_time_show` "
+"kertoo, näyttääkö tuotesivu, kuinka kauan valittu muunnelma painotalon "
+"mukaan kestää, minkä Pixonaut lukee kustannuksen yhteydessä, ja "
+"`delivery_time_handling_days` kaupan siihen lisäämät omat päivät."
 
 #: src/Abilities/ReadPricingSettings.php:133
 msgid "The currency prices are in, as its code."
@@ -2139,7 +2139,15 @@ msgid ""
 "WordPress or WooCommerce reads from an address, or that another attribute "
 "goes by, is refused. Links shared with the old name no longer choose the "
 "value. The answer is the attribute's name now."
-msgstr "Asettaa nimen, jolla tuotesivun verkko-osoite ja kaupan suodattimet kutsuvat yleistä ominaisuutta, kuten ominaisuuden muokkausnäkymän kenttä ”Nimi verkko-osoitteissa”: `size` antaa `?size=50x70-cm`. Pieniä kirjaimia ja numeroita, sanat yhdys- tai alaviivalla yhdistettyinä. Tyhjä nimi palauttaa ominaisuudelle sen slugin. Nimi, jonka WordPress tai WooCommerce lukee verkko-osoitteesta tai joka on jo toisen ominaisuuden käytössä, hylätään. Vanhalla nimellä jaetut linkit eivät enää valitse arvoa. Vastaus on ominaisuuden nykyinen nimi."
+msgstr ""
+"Asettaa nimen, jolla tuotesivun verkko-osoite ja kaupan suodattimet kutsuvat "
+"yleistä ominaisuutta, kuten ominaisuuden muokkausnäkymän kenttä ”Nimi verkko-"
+"osoitteissa”: `size` antaa `?size=50x70-cm`. Pieniä kirjaimia ja numeroita, "
+"sanat yhdys- tai alaviivalla yhdistettyinä. Tyhjä nimi palauttaa "
+"ominaisuudelle sen slugin. Nimi, jonka WordPress tai WooCommerce lukee "
+"verkko-osoitteesta tai joka on jo toisen ominaisuuden käytössä, hylätään. "
+"Vanhalla nimellä jaetut linkit eivät enää valitse arvoa. Vastaus on "
+"ominaisuuden nykyinen nimi."
 
 #: src/Abilities/SetAttributeQueryName.php:38
 #: src/Abilities/SetAttributeSplitListing.php:44
@@ -2184,7 +2192,7 @@ msgstr "Tila ei ole mikään arvoista on, filtered tai off."
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductForm.php:64
 msgid "Arrange a product's designer form"
-msgstr ""
+msgstr "Järjestä tuotteen suunnittelutyökalun lomake"
 
 #: src/Abilities/SetProductForm.php:65
 msgid ""
@@ -2198,12 +2206,21 @@ msgid ""
 "template does not offer, refuses the whole call and the answer says each. "
 "The answer is the product's form now, as `get-product-form` gives it."
 msgstr ""
+"Järjestää yksinkertaisen tuotteen tai muunnelmatuotteen suunnittelutyökalun "
+"lomakkeen, kuten tuotteen Pixonaut-välilehti tekee: kunkin puolen "
+"`form_groups` puolen `key`-avaimen mukaan (null mallipohjan omalle "
+"lomakkeelle), `option_groups`, `group_numbers`, `form_layout` ja `layout`. "
+"Vain annettu muuttuu: pois jätetty puoli säilyttää järjestelynsä, ja puolet, "
+"niiden mallipohjat, painokohdat ja painokoot sekä muunnelmien omat asetukset "
+"säilyvät. Lue kyvyllä `get-product-form`, mitä lomakkeen järjestely voi "
+"nimetä: vaihtoehto, jota tuotteella ei ole, tai kenttä tai ryhmä, jota sen "
+"mallipohja ei tarjoa, hylkää koko kutsun, ja vastaus kertoo jokaisen. "
+"Vastaus on tuotteen nykyinen lomake sellaisena kuin `get-product-form` sen "
+"antaa."
 
 #: src/Abilities/SetProductForm.php:82
-#, fuzzy
-#| msgid "One of the product's global attributes, by id."
 msgid "One of the product's sides, by its key."
-msgstr "Yksi tuotteen yleisistä ominaisuuksista id:n mukaan."
+msgstr "Jokin tuotteen puolista avaimensa mukaan."
 
 #: src/Abilities/SetProductForm.php:90 src/Abilities/SetProductSetup.php:81
 msgid "The product page layout; empty for the store's."
@@ -2214,97 +2231,72 @@ msgid "The form layout; empty for the store's."
 msgstr "Lomakkeen asettelu; tyhjä kaupan asettelulle."
 
 #: src/Abilities/SetProductForm.php:92
-#, fuzzy
-#| msgid ""
-#| "Where the product's options stand in the form, on a side whose groups "
-#| "were not arranged by hand: `on_top`, unnumbered, or each in a group of "
-#| "its own, `first` or `last`; empty for the store's. A product's only: a "
-#| "variation follows its product."
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "unnumbered, or each in a group of its own, `first` or `last`; empty for the "
 "store's."
 msgstr ""
-"Missä tuotteen vaihtoehdot ovat lomakkeessa puolella, jonka ryhmiä ei ole "
-"järjestetty käsin: `on_top` ylimpänä ilman numeroa tai kukin omassa "
-"ryhmässään, `first` ensin tai `last` viimeisenä; tyhjä kaupan asetukselle. "
-"Vain tuotteelle: muunnelma noudattaa tuotettaan."
+"Missä tuotteen vaihtoehdot ovat puolella, jota ei ole järjestetty käsin: "
+"`on_top` ylimpänä ilman numeroa tai kukin omassa ryhmässään, `first` ensin "
+"tai `last` viimeisenä; tyhjä kaupan asetukselle."
 
 #: src/Abilities/SetProductForm.php:93
-#, fuzzy
-#| msgid ""
-#| "Whether the form numbers its groups; empty for the store's. A product's "
-#| "only: a variation follows its product."
 msgid "Whether the form numbers its groups; empty for the store's."
-msgstr ""
-"Numeroiko lomake ryhmänsä; tyhjä kaupan asetukselle. Vain tuotteelle: "
-"muunnelma noudattaa tuotettaan."
+msgstr "Numeroiko lomake ryhmänsä; tyhjä kaupan asetukselle."
 
 #: src/Abilities/SetProductForm.php:120
 msgid ""
 "Give `sides`, `option_groups`, `group_numbers`, `form_layout` or `layout`."
 msgstr ""
+"Anna `sides`, `option_groups`, `group_numbers`, `form_layout` tai `layout`."
 
 #: src/Abilities/SetProductForm.php:127
-#, fuzzy
-#| msgid ""
-#| "The product is not personalised, so it has no Pixonaut images. Set it up "
-#| "first."
 msgid ""
 "The product has no Pixonaut setup, so it has no form to arrange. Link it to "
 "a template first."
 msgstr ""
-"Tuotetta ei ole personoitu, joten sillä ei ole Pixonautin kuvia. Määritä sen "
-"asetukset ensin."
+"Tuotteella ei ole Pixonaut-asetuksia, joten sillä ei ole järjestettävää "
+"lomaketta. Liitä se ensin mallipohjaan."
 
 #: src/Abilities/SetProductForm.php:137
-#, fuzzy
-#| msgid ""
-#| "The product's Pixonaut setup changed meanwhile. Nothing was changed; try "
-#| "again."
 msgid ""
 "The product's Pixonaut setup was changed while this was saved, so nothing "
 "was changed. Read it again with `get-product-form`, then set it."
 msgstr ""
-"Tuotteen Pixonaut-asetukset muuttuivat välissä. Mitään ei muutettu; yritä "
-"uudelleen."
+"Tuotteen Pixonaut-asetuksia muutettiin tallennuksen aikana, joten mitään ei "
+"muutettu. Lue ne uudelleen kyvyllä `get-product-form` ja aseta ne sitten."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:165
 #, php-format
 msgid "the product has no side `%s`"
-msgstr ""
+msgstr "tuotteella ei ole puolta `%s`"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:170
-#, fuzzy, php-format
-#| msgid "Card %s is listed twice."
+#, php-format
 msgid "side `%s` is given twice"
-msgstr "Kortti %s on luettelossa kahdesti."
+msgstr "puoli `%s` on annettu kahdesti"
 
 #. translators: %s: every problem found, joined by semicolons. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:187
 #, php-format
 msgid "Nothing was saved: %s."
-msgstr ""
+msgstr "Mitään ei tallennettu: %s."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:216
 #, php-format
 msgid "side `%s` has no template to arrange"
-msgstr ""
+msgstr "puolella `%s` ei ole järjestettävää mallipohjaa"
 
 #: src/Abilities/SetProductForm.php:217
-#, fuzzy
-#| msgid ""
-#| "Pixonaut could not be asked for the template's showcase sets. Try again "
-#| "later."
 msgid ""
 "Pixonaut could not be asked for the template's fields, so the arrangement "
 "was not checked and nothing was saved. Try again."
 msgstr ""
-"Mallipohjan esimerkkisarjoja ei voitu kysyä Pixonautilta. Yritä myöhemmin "
-"uudelleen."
+"Mallipohjan kenttiä ei voitu kysyä Pixonautilta, joten järjestelyä ei "
+"tarkistettu eikä mitään tallennettu. Yritä uudelleen."
 
 #. translators: 1: a group's id; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:227
@@ -2313,12 +2305,14 @@ msgid ""
 "group `%1$s` on side `%2$s` takes an id the product page uses for itself: "
 "pick another"
 msgstr ""
+"puolen `%2$s` ryhmällä `%1$s` on id, jota tuotesivu käyttää itse: valitse "
+"toinen"
 
 #. translators: 1: a group's id; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:231
 #, php-format
 msgid "group `%1$s` on side `%2$s` is the product's own and needs a title"
-msgstr ""
+msgstr "puolen `%2$s` ryhmä `%1$s` on tuotteen oma ja tarvitsee otsikon"
 
 #. translators: 1: a group's id; 2: a side's key; 3: the prefix of a group of the product's own. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:233
@@ -2327,18 +2321,22 @@ msgid ""
 "the template of side `%2$s` has no group `%1$s` (a group of the product's "
 "own takes an id starting with `%3$s`)"
 msgstr ""
+"puolen `%2$s` mallipohjassa ei ole ryhmää `%1$s` (tuotteen oman ryhmän id "
+"alkaa `%3$s`)"
 
 #. translators: %s: an attribute's slug. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:240
 #, php-format
 msgid "the product has no option `%s` its customers choose a variation by"
 msgstr ""
+"tuotteella ei ole vaihtoehtoa `%s`, jonka mukaan asiakkaat valitsevat "
+"muunnelman"
 
 #. translators: 1: a field, `<layerId>:<prop>`; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:243
 #, php-format
 msgid "the template of side `%2$s` offers no field `%1$s`"
-msgstr ""
+msgstr "puolen `%2$s` mallipohja ei tarjoa kenttää `%1$s`"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:262
@@ -2347,31 +2345,32 @@ msgid ""
 "the form of side `%s` names no `groups`: give null for the template's own "
 "form"
 msgstr ""
+"puolen `%s` lomake ei nimeä ryhmiä (`groups`): anna null mallipohjan omalle "
+"lomakkeelle"
 
 #. translators: 1: a side's key; 2: the most groups a form keeps. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:266
 #, php-format
 msgid "the form of side `%1$s` has more than %2$d groups"
-msgstr ""
+msgstr "puolen `%1$s` lomakkeessa on yli %2$d ryhmää"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:273
 #, php-format
 msgid "a group on side `%s` needs an `id` and its `items`"
-msgstr ""
+msgstr "puolen `%s` ryhmä tarvitsee kentät `id` ja `items`"
 
 #. translators: 1: a group's id; 2: the most items a group keeps. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:278
 #, php-format
 msgid "group `%1$s` has more than %2$d items"
-msgstr ""
+msgstr "ryhmässä `%1$s` on yli %2$d kohdetta"
 
 #. translators: %s: a group's id. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:283
-#, fuzzy, php-format
-#| msgid "Give the image of card %s as either `id` or `src`."
+#, php-format
 msgid "each item of group `%s` names either a `field` or an `attribute`"
-msgstr "Anna kortin %s kuva joko kentässä `id` tai kentässä `src`."
+msgstr "ryhmän `%s` jokaisessa kohteessa on joko `field` tai `attribute`"
 
 #: src/Abilities/SetProductForm.php:309
 #: src/Abilities/SetProductSplitListing.php:232
@@ -3627,16 +3626,7 @@ msgstr "Muuta hinnoitteluasetuksia"
 
 #. translators: 1: the name of the ability that reads the pricing settings, 2: the name of the ability that prices a product.
 #: src/Abilities/UpdatePricingSettings.php:45
-#, fuzzy, php-format
-#| msgid ""
-#| "Changes the pricing settings given, by their keys as %1$s reads them; the "
-#| "others keep their values. `price_automatic` switches automatic price "
-#| "changes on or off: on, a price that follows the rule is set to the rule's "
-#| "price when its cost changes and its margin left the tolerance; off, the "
-#| "new price is only suggested; a product or variation set to always or "
-#| "never keeps to that, whatever the switch says. `price_ending` must be "
-#| "below `price_step`. Changing the rule changes no price by itself: price a "
-#| "product with %2$s. Answers with every pricing setting."
+#, php-format
 msgid ""
 "Changes the pricing settings given, by their keys as %1$s reads them; the "
 "others keep their values. `price_automatic` switches automatic price changes "
@@ -3657,9 +3647,13 @@ msgstr ""
 "säännön hintaan, kun sen kustannus muuttuu ja kate on toleranssin "
 "ulkopuolella; pois päältä uutta hintaa vain ehdotetaan; tuote tai muunnelma, "
 "jonka asetus on always tai never, pysyy siinä kytkimen tilasta riippumatta. "
-"Arvon `price_ending` on oltava pienempi kuin `price_step`. Säännön "
-"muuttaminen ei itsessään muuta yhtään hintaa: tuote hinnoitellaan kyvyllä "
-"%2$s. Vastaa kaikilla hinnoitteluasetuksilla."
+"`delivery_time_show` saa tuotesivun kertomaan, kuinka kauan valittu "
+"muunnelma painotalon mukaan kestää, sellaisena kuin Pixonaut luki sen "
+"kustannuksen yhteydessä (vain sen, minkä painotalo kertoo: mitään ei "
+"näytetä, jos se ei kerro mitään), ja `delivery_time_handling_days` lisää "
+"siihen kaupan omia päiviä. Arvon `price_ending` on oltava pienempi kuin "
+"`price_step`. Säännön muuttaminen ei itsessään muuta yhtään hintaa: tuote "
+"hinnoitellaan kyvyllä %2$s. Vastaa kaikilla hinnoitteluasetuksilla."
 
 #. translators: %s: the key of a setting, e.g. price_margin.
 #: src/Abilities/UpdatePricingSettings.php:74
@@ -8384,7 +8378,7 @@ msgstr ""
 #. translators: Title of a setting on the settings page, shown to the merchant: whether product pages say how long delivery takes.
 #: src/Settings/Settings.php:575
 msgid "Show the delivery time"
-msgstr ""
+msgstr "Näytä toimitusaika"
 
 #: src/Settings/Settings.php:576
 msgid ""
@@ -8394,17 +8388,25 @@ msgid ""
 "nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing "
 "gets no line. The times are read with the costs, once a day."
 msgstr ""
+"Kerro tuotesivulla, kuinka kauan valittu muunnelma painotalon mukaan kestää, "
+"esimerkiksi ”Toimitus 4–7 päivässä”. Vain se, minkä painotalo itse kertoo, "
+"näytetään: painotalo, joka kertoo tuotteen valmistusajan mutta ei mitään "
+"toimituksesta, saa rivin ”Valmistus 2–3 päivässä”, ja painotalo, joka ei "
+"kerro mitään, ei saa riviä. Ajat luetaan kustannusten yhteydessä kerran "
+"päivässä."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days the store adds to the printshop's delivery time.
 #: src/Settings/Settings.php:588
 msgid "Handling days"
-msgstr ""
+msgstr "Käsittelypäivät"
 
 #: src/Settings/Settings.php:589
 msgid ""
 "Days of your own to add to the printshop’s time, for what happens before an "
 "order reaches it, such as approving a proof."
 msgstr ""
+"Omat päivät, jotka lisätään painotalon aikaan sitä varten, mitä tapahtuu "
+"ennen kuin tilaus saapuu painotaloon, kuten vedoksen hyväksyminen."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut API.
 #: src/Settings/Settings.php:606
@@ -8663,16 +8665,16 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
 #: src/Settings/SettingsPage.php:659
-#, fuzzy
-#| msgid "Delivery address"
 msgid "Delivery time"
-msgstr "Toimitusosoite"
+msgstr "Toimitusaika"
 
 #: src/Settings/SettingsPage.php:660
 msgid ""
 "A printshop tells how long a product takes to make and to deliver to your "
 "shop’s country. Pixonaut reads it with the printshop’s cost."
 msgstr ""
+"Painotalo kertoo, kuinka kauan tuotteen valmistus ja toimitus kauppasi "
+"maahan kestää. Pixonaut lukee sen painotalon kustannuksen yhteydessä."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: which releases of this plugin WordPress offers.
 #: src/Settings/SettingsPage.php:666
@@ -8826,28 +8828,34 @@ msgid "Off: load each one when it is shown"
 msgstr "Ei käytössä: kukin ladataan vasta, kun se näytetään"
 
 #. translators: %d: The longest name, in characters. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:214
+#: src/Storefront/QueryNames.php:220
 #, php-format
 msgid ""
 "Use lowercase letters, digits, and hyphens or underscores between them, at "
 "most %d characters."
-msgstr "Käytä pieniä kirjaimia ja numeroita, niiden välissä yhdys- tai alaviivoja, enintään %d merkkiä."
+msgstr ""
+"Käytä pieniä kirjaimia ja numeroita, niiden välissä yhdys- tai alaviivoja, "
+"enintään %d merkkiä."
 
 #. translators: %s: The refused name. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:218
+#: src/Storefront/QueryNames.php:224
 #, php-format
 msgid ""
 "WordPress or WooCommerce already reads “%s” in the shop's addresses. Choose "
 "another name."
-msgstr "WordPress tai WooCommerce lukee jo nimen ”%s” kaupan verkko-osoitteista. Valitse toinen nimi."
+msgstr ""
+"WordPress tai WooCommerce lukee jo nimen ”%s” kaupan verkko-osoitteista. "
+"Valitse toinen nimi."
 
 #. translators: 1: The refused name, 2: The attribute that has it. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:224
+#: src/Storefront/QueryNames.php:230
 #, php-format
 msgid ""
 "The attribute %2$s already goes by “%1$s” in the shop's addresses. Choose "
 "another name."
-msgstr "Ominaisuuden %2$s nimi kaupan verkko-osoitteissa on jo ”%1$s”. Valitse toinen nimi."
+msgstr ""
+"Ominaisuuden %2$s nimi kaupan verkko-osoitteissa on jo ”%1$s”. Valitse "
+"toinen nimi."
 
 #: src/Storefront/UnavailableProduct.php:95
 msgid ""
@@ -8947,7 +8955,10 @@ msgid ""
 "The name a product page's address and the shop's filters give this "
 "attribute, as in ?size=50x70-cm: lowercase letters, digits, and hyphens or "
 "underscores. Left empty, it goes by its slug."
-msgstr "Nimi, jolla tuotesivun verkko-osoite ja kaupan suodattimet kutsuvat tätä ominaisuutta, kuten ?size=50x70-cm: pieniä kirjaimia, numeroita sekä yhdys- tai alaviivoja. Tyhjänä käytetään ominaisuuden slugia."
+msgstr ""
+"Nimi, jolla tuotesivun verkko-osoite ja kaupan suodattimet kutsuvat tätä "
+"ominaisuutta, kuten ?size=50x70-cm: pieniä kirjaimia, numeroita sekä yhdys- "
+"tai alaviivoja. Tyhjänä käytetään ominaisuuden slugia."
 
 #. translators: %s: Why the name was refused. Shown under the "Name in addresses" field on the screen that adds or edits a product attribute, after the attribute was saved.
 #: templates/admin/attribute-query-name-field.php:27
