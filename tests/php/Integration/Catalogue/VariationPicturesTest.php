@@ -232,6 +232,29 @@ final class VariationPicturesTest extends WP_UnitTestCase {
 		$this->assertSame( ProductPictures::flat( $this->reload( $red ) ), ProductPictures::flat( $this->reload( $blue ) ) );
 	}
 
+	public function test_a_variation_showing_the_store_managers_own_image_is_drawn_flat_too(): void {
+		$product = $this->tee();
+		$red     = $this->variation( $product, 'Red', 'v_red' );
+		$this->answer_pictures( 1 );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+		$own   = $this->image();
+		$fresh = $this->reload( $red );
+		$fresh->set_image_id( $own );
+		$fresh->save();
+		$this->recorder->requests = array();
+
+		add_post_meta( $product->get_id(), SplitCards::META, SplitCards::NO_VALUE );
+		$this->answer_pictures( 1 );
+		ActionSchedulerRunner::run_pending( PictureQueue::VARIATIONS_ACTION );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+
+		$this->assertCount( 1, $this->recorder->requests, 'only the flat picture is drawn' );
+		$this->assertStringContainsString( '/preview.png?', $this->recorder->requests[0]['url'] );
+		$this->assertSame( $own, (int) $this->reload( $red )->get_image_id(), 'the store manager\'s image is kept' );
+		$this->assertNotSame( 0, ProductPictures::flat( $this->reload( $red ) ) );
+		$this->assertNotSame( $own, ProductPictures::flat( $this->reload( $red ) ) );
+	}
+
 	public function test_a_picture_drawn_without_a_set_shows_the_templates_defaults(): void {
 		$product = $this->tee();
 		$red     = $this->variation( $product, 'Red', 'v_red' );

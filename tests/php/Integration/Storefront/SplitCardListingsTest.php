@@ -18,7 +18,9 @@ use Pixonaut\WooCommerce\Storefront\SplitCardListings;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
+use WC_Product_Variable;
 use WC_Product_Simple;
+use WC_Product_Variation;
 use WC_Query;
 use WP_Query;
 use WP_UnitTestCase;
@@ -257,6 +259,34 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'attribute_pa_storlek=50x70', $large['links'][0] );
 
 		$this->assertSame( array(), $this->shop( array( 'filter_bild' => 'ram' ) )['ids'], 'no variation holds the value: not listed' );
+	}
+
+	public function test_a_product_with_more_attributes_listed_while_filtered_than_the_limit_is_listed_once(): void {
+		$names = array();
+		for ( $index = 0; $index <= SplitCards::MAX_FILTERED_ATTRIBUTES; ++$index ) {
+			$names[] = 'Extra' . $index;
+			$this->attribute( 'Extra' . $index, array( 'Value' . $index ) );
+		}
+		$product = new WC_Product_Variable();
+		$product->set_name( 'Many' );
+		$product->set_status( 'publish' );
+		$product->set_category_ids( array( $this->category ) );
+		$product->set_attributes( array_map( fn ( string $name ): \WC_Product_Attribute => $this->product_attribute( $name ), $names ) );
+		$product->save();
+		$variation = new WC_Product_Variation();
+		$variation->set_parent_id( $product->get_id() );
+		$variation->set_regular_price( '10' );
+		$variation->save();
+		$choices = array();
+		foreach ( $names as $name ) {
+			$choices[ $this->attributes[ $name ] ] = SplitListing::FILTERED;
+		}
+
+		$this->choose( $product, array_slice( $choices, 0, SplitCards::MAX_FILTERED_ATTRIBUTES, true ) );
+		$this->assertCount( 2 ** SplitCards::MAX_FILTERED_ATTRIBUTES, $this->cards( $product ), 'a card per set of them, the product itself first' );
+
+		$this->choose( $product, $choices );
+		$this->assertSame( array(), $this->cards( $product ), 'one more: listed once' );
 	}
 
 	public function test_a_value_sold_only_on_a_template_that_is_not_live_has_no_card(): void {

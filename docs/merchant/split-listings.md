@@ -109,6 +109,9 @@ per value while filtered by it**:
   design not sold in the framing has no card then.
 - A product listed only by attributes set this way shows as itself until a
   filter chooses one of their values.
+- A product with more than four attributes set this way, or whose cards
+  filtered and unfiltered together would come to more than 250, is listed
+  once.
 
 The filters' counts follow the same rule. Each card has its own page and its
 place in the sitemap, filtered or not. An assistant sets it with the

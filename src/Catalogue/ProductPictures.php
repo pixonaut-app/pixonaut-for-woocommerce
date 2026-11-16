@@ -489,14 +489,18 @@ final class ProductPictures {
 	/**
 	 * Whether a product showing the store manager's own image still has
 	 * gallery pictures to draw or take out: a product, with showcase sets
-	 * chosen or gallery pictures recorded.
+	 * chosen or gallery pictures recorded; a variation drawn flat too
+	 * (`draws_flat()`), or with a flat picture recorded.
 	 *
 	 * @param WC_Product $product A product or variation.
 	 * @param array      $stored  Its recorded pictures.
 	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $stored
 	 */
 	public static function has_gallery_work( WC_Product $product, array $stored ): bool {
-		return ! $product->is_type( 'variation' ) && ( array() !== ShowcaseImages::on( $product ) || array() !== $stored['gallery'] );
+		if ( $product->is_type( 'variation' ) ) {
+			return self::draws_flat( $product ) || array() !== $stored['gallery'];
+		}
+		return array() !== ShowcaseImages::on( $product ) || array() !== $stored['gallery'];
 	}
 
 	/**

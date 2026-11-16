@@ -163,9 +163,10 @@ final class Schema {
 	const PRODUCT_SPLIT_CARD_META = '_pixonaut_split_card';
 
 	/**
-	 * Product meta naming the attributes a split product lists a card per
-	 * value of only while a filter chooses one: a row per taxonomy. The
-	 * shop's listings read it beside the card rows.
+	 * Product meta naming the values a split product's cards hold of the
+	 * attributes it lists a card per value of only while a filter chooses
+	 * one: a row per value, `<taxonomy>:<term id>`. The shop's listings
+	 * read it beside the card rows.
 	 */
 	const PRODUCT_SPLIT_FILTERED_META = '_pixonaut_split_filtered';
 

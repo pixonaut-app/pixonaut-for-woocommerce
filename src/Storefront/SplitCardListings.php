@@ -227,12 +227,15 @@ final class SplitCardListings {
 	private static function unfiltered_levels( array $chosen, string $alias ): string {
 		global $wpdb;
 		$taxonomies = array_keys( $chosen );
-		$not_chosen = array() === $taxonomies ? '' : ' AND filtered.meta_value NOT IN ( ' . implode( ', ', array_fill( 0, count( $taxonomies ), '%s' ) ) . ' )';
+		// A row is `<taxonomy>:<term id>`, one per value the product's cards hold.
+		$not_chosen = array() === $taxonomies ? '' : ' AND SUBSTRING_INDEX( filtered.meta_value, %s, 1 ) NOT IN ( ' . implode( ', ', array_fill( 0, count( $taxonomies ), '%s' ) ) . ' )';
+		$args       = array() === $taxonomies ? array() : array( SplitCards::FILTERED_SEPARATOR, ...$taxonomies );
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- table names, a constant alias and a placeholder per taxonomy.
 		$left = $wpdb->prepare(
-			" AND ( {$alias}.meta_value IS NULL OR NOT EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS filtered INNER JOIN {$wpdb->term_taxonomy} AS filtered_term ON filtered_term.taxonomy = filtered.meta_value WHERE filtered.post_id = {$wpdb->posts}.ID AND filtered.meta_key = %s AND FIND_IN_SET( filtered_term.term_id, {$alias}.meta_value ){$not_chosen} ) )",
+			" AND ( {$alias}.meta_value IS NULL OR NOT EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS filtered WHERE filtered.post_id = {$wpdb->posts}.ID AND filtered.meta_key = %s AND FIND_IN_SET( SUBSTRING_INDEX( filtered.meta_value, %s, -1 ), {$alias}.meta_value ){$not_chosen} ) )",
 			SplitCards::FILTERED_META,
-			...$taxonomies
+			SplitCards::FILTERED_SEPARATOR,
+			...$args
 		);
 		// phpcs:enable
 		return is_string( $left ) ? $left : '';
