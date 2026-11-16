@@ -525,6 +525,7 @@ export const REACH = {
 		'src/Fulfilment/LineActions.php',
 		'src/Fulfilment/LineIndex.php',
 	],
+	'partial-choice.spec.ts': ['assets/src/storefront/partial-choice.ts'],
 	'personalise-button.spec.ts': [
 		'src/Storefront/PersonaliseButton.php',
 		'src/Storefront/ButtonProducts.php',

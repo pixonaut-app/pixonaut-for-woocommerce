@@ -48,6 +48,7 @@ import {
 } from './frame-shape';
 import { type KeptView, shownViewOf, viewStandingFor } from './kept-view';
 import { withStandIns } from './lent-parts';
+import { type DrawnSide, variationDrawnFor } from './partial-choice';
 import {
 	PREVIEW_OPENED_NAME,
 	previewOpenedValue,
@@ -89,8 +90,8 @@ import {
 	type Variation,
 	type VariationSide,
 	type Variations,
+	variationId,
 	variationsSoldAs,
-	watchVariation,
 } from './variations';
 import { whenNeeded } from './when-needed';
 
@@ -295,8 +296,14 @@ export class ProductDesigner {
 	 *  product without variations. */
 	private readonly price: PriceDisplay | null;
 
-	/** The variation the form holds; `NO_VARIATION` until one is chosen. */
+	/** The variation the designer follows: the one the form holds, else the
+	 *  one that has the values chosen so far and keeps what is drawn for
+	 *  the rest; `NO_VARIATION` while the form holds no value. */
 	private variation = NO_VARIATION;
+
+	/** The variation the form holds, the one an add to cart buys and the
+	 *  price is shown of; `NO_VARIATION` until its choices name one. */
+	private held = NO_VARIATION;
 
 	/** Reads the form's variation at once, rather than once it settles. */
 	private readVariation: () => void = () => undefined;
@@ -432,15 +439,14 @@ export class ProductDesigner {
 		// Followed even with no side to mount, so a variation bought without a
 		// design still hides the form and goes to the cart.
 		if (this.variations !== null && this.form !== null) {
-			this.readVariation = watchVariation(this.form, (id) =>
-				this.chooseVariation(id),
-			);
-			followAddress(this.form);
+			const form = this.form;
+			this.readVariation = followChoices(form, () => this.followForm(form));
+			followAddress(form);
 			// A page printed at a variation's price that the form did not open
 			// on shows the product's own once the form settles without one.
 			if (this.price?.printedOpening === true) {
 				followChoices(this.form, () => {
-					if (this.variation === NO_VARIATION) {
+					if (this.held === NO_VARIATION) {
 						this.showPrice();
 					}
 				});
@@ -992,6 +998,57 @@ export class ProductDesigner {
 		);
 	}
 
+	/**
+	 * Reads the form's choices: follows it to the variation it holds, and
+	 * while it holds none to the one its values so far draw. A choice that
+	 * leaves both as they were changes nothing.
+	 */
+	private followForm(form: HTMLFormElement): void {
+		const held = variationId(form);
+		const drawn = held === NO_VARIATION ? this.drawnFor(form) : held;
+		if (held === this.held && drawn === this.variation) {
+			return;
+		}
+		this.held = held;
+		this.chooseVariation(drawn);
+	}
+
+	/** The variation the form's values so far draw, see
+	 *  `variationDrawnFor()`; `NO_VARIATION` for none. */
+	private drawnFor(form: HTMLFormElement): string {
+		const followed = this.chosen();
+		const sides: Record<string, DrawnSide> = {};
+		for (const [side, options] of Object.entries(this.mounts)) {
+			const placed = options as SideOptions & Placed;
+			const size =
+				this.liveSize(options, this.designers.get(side)) ??
+				placed.selectedPrintSizeIndex;
+			sides[side] = {
+				templateId: placed.templateId,
+				blankId: placed.blankId,
+				placementId: placed.placementId,
+				...(size === undefined ? {} : { size }),
+			};
+		}
+		const variant =
+			this.variantDesigners()[0]?.getVariant() ??
+			variantRef(this.container, this.variations, this.variation);
+		return (
+			variationDrawnFor(
+				this.variations ?? {},
+				form,
+				{
+					...(followed?.state === 'personalised'
+						? { variation: followed }
+						: {}),
+					...(variant === undefined ? {} : { variant }),
+					sides,
+				},
+				(id) => !this.brokenVariations.has(id),
+			) ?? NO_VARIATION
+		);
+	}
+
 	/** Follows the form to another variation, after any switch under way. */
 	private chooseVariation(id: string): void {
 		this.variation = id;
@@ -1419,17 +1476,17 @@ export class ProductDesigner {
 		}
 	}
 
-	/** Shows the chosen variation's price, or the product's own once none
-	 *  is chosen. */
+	/** Shows the price of the variation the form holds, or the product's own
+	 *  while it holds none. */
 	private showPrice(): void {
-		const variation = this.chosen();
+		const variation = this.variations?.[this.held];
 		const side = Object.keys(this.mounts)[0] ?? '';
 		const size =
 			variation?.state === 'personalised'
 				? variation.sides[side]?.selectedPrintSizeIndex
 				: undefined;
 		this.price?.show(
-			variation === undefined ? null : Number(this.variation),
+			variation === undefined ? null : Number(this.held),
 			variation?.priceHtml,
 			{ productId: this.productId, side, printSizeIndex: size ?? null },
 		);
