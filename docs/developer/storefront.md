@@ -15,7 +15,7 @@ product.
 
 | Template | Printed | Holds |
 | --- | --- | --- |
-| `storefront/preview.php` | In place of the gallery: the classic `woocommerce_show_product_images`, or the output of the `woocommerce/product-image-gallery` or `woocommerce/product-gallery` block (product from the block's `postId` context) | `.pixonaut-preview` with a `.pixonaut-preview__frame` per side holding `#pixonaut-preview-<side>`, a `.pixonaut-spinner[role=status]` over it (label `designer_loading`), the mark target `#pixonaut-mark-<side>` under it and, on a blank, the views strip `#pixonaut-views-<side>`; then `.pixonaut-preview__images`, hidden, holding the product's featured and gallery images (see [A designer that cannot load](#a-designer-that-cannot-load)), and `p.pixonaut-preview__note` (label `preview_note`). See [Server-rendered layout](#server-rendered-layout) |
+| `storefront/preview.php` | In place of the gallery: the classic `woocommerce_show_product_images`, or the output of the `woocommerce/product-image-gallery` or `woocommerce/product-gallery` block (product from the block's `postId` context) | `.pixonaut-preview` with a `.pixonaut-preview__frame` per side holding `#pixonaut-preview-<side>`, a `.pixonaut-spinner[role=status]` over it (label `designer_loading`), the mark target `#pixonaut-mark-<side>` under it and, on a blank whose views the page could read, the views strip `#pixonaut-views-<side>` (the script makes that element under the mark where the page printed none, so the views are always drawn under the preview); then `.pixonaut-preview__images`, hidden, holding the product's featured and gallery images (see [A designer that cannot load](#a-designer-that-cannot-load)), and `p.pixonaut-preview__note` (label `preview_note`). See [Server-rendered layout](#server-rendered-layout) |
 | `storefront/form.php` | At `woocommerce_before_add_to_cart_button`, inside the add-to-cart form | `.pixonaut-form` with `#pixonaut-form-<side>` per side, the mount options in `data-pixonaut-mounts`, the blank variant in `data-pixonaut-variant` (see [Views and variants](#views-and-variants)) or, on a variable product, `data-pixonaut-variations` (see [Variations](#variations)), a `.pixonaut-form__placeholder` (`storefront/form-placeholder.php`) in each `#pixonaut-form-<side>` and the server's reads in `script.pixonaut-reads` (see [Server-rendered layout](#server-rendered-layout)), and a hidden `pixonaut_designs[<side>]` field per side; in the checkbox approval mode, `.pixonaut-approval` with the `pixonaut_approve` box (`.pixonaut-approval__box`) in its `label` a `.pixonaut-approval__proof` button per side (`data-pixonaut-side`), the label's linked word (a label that links none has them after it instead, under a block theme with its button class, as the side tabs) and an empty, hidden `p.pixonaut-approval__error[role=alert]` (see [Checkbox approval](#checkbox-approval)); with more than one side, the side tabs (see [Sides](#sides)); the theme presets in `data-pixonaut-look` (see [Theme look](#theme-look)) and, on a page printed at its opening variation's price, the product's own price in `data-pixonaut-product-price` and the attribute values the printed price is for in `data-pixonaut-opening-choice` (see [Price](#price)) |
 
 Override either by copying it to `yourtheme/woocommerce/pixonaut/storefront/`.
@@ -95,7 +95,9 @@ as keeps its picture in the window: from 768px wide, `.pixonaut-preview__frame`
 is held to the width that makes the picture as tall as the window below
 `--pixonaut-preview-top` (where the script measures the preview starts, at
 load, on resize and whenever the page's box changes, such as a web font
-above it loading), less 24px and at least 320px, and centred; under
+above it loading; where it rests in the page, so a theme may keep the
+preview or its column in view beside a long form with `position: sticky`),
+less 24px and at least 320px, and centred; under
 768px, to the width that makes it 80vh tall, so a 5:7 design spans a phone's
 width, and only a taller one narrows. Under 768px the preview stays at the top
 of the screen (`position: sticky`) only while the whole `.pixonaut-preview`
@@ -105,8 +107,12 @@ with `data-pixonaut-pinned`, against what an open keyboard leaves of the screen
 form stays reachable with the keyboard open. The views strip under it may
 run below the fold. Both take the shape the SDK drew once it has, which the
 script sets as `--pixonaut-preview-drawn-aspect` on the frame and follows as
-a view or variant of another shape is shown (not under a theme's
-`--pixonaut-preview-height`, where the SDK fits every photo in one box). A side on no blank
+a view or variant of another shape is shown. The designer says that shape
+itself (the first view's, kept until a view more than 10% from it is shown),
+so a theme that holds previews at `--pixonaut-preview-height` has it on the
+frame too, and can hold the frame at the picture's shape with it:
+`--pixonaut-preview-height: calc( 100cqi / var( --pixonaut-preview-drawn-aspect, var( --pixonaut-preview-aspect, 1 ) ) )`
+on a frame that is a size container. A side on no blank
 (`data-pixonaut-shape="template"` on its `.pixonaut-preview__frame`) has no
 photos and keeps its template's aspect ratio either way: under a fixed height
 it is as wide as that height takes at the template's ratio, at most the full

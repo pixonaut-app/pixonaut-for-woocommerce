@@ -5,6 +5,11 @@ export const RATIO_PROPERTY = '--pixonaut-preview-ratio';
 /** The same ratio as one number, for the stylesheet's arithmetic. */
 export const ASPECT_PROPERTY = '--pixonaut-preview-aspect';
 
+/** The width per unit of height of what the SDK drew, which the stylesheet,
+ *  and a theme that holds the preview at a height, size the frame by in
+ *  place of the printed `--pixonaut-preview-aspect`. */
+export const DRAWN_ASPECT_PROPERTY = '--pixonaut-preview-drawn-aspect';
+
 /** A change in shape too small to see: the SDK rounds its sizes to whole
  *  pixels. */
 const ASPECT_TOLERANCE = 0.01;
@@ -136,4 +141,48 @@ function aspectOf(image: HTMLImageElement): number | undefined {
 	return image.naturalWidth > 0 && image.naturalHeight > 0
 		? image.naturalWidth / image.naturalHeight
 		: undefined;
+}
+
+/** What `followDrawnShape` needs of a mounted designer. */
+export interface ShapedDesigner {
+	shown(): Promise<void>;
+	getPreviewAspect(): number;
+	on(
+		event: 'previewShape',
+		handler: (payload: { aspect: number }) => void,
+	): unknown;
+}
+
+/**
+ * Keeps the frame's drawn shape on the shape the designer's preview has,
+ * from its first picture on: the shape of the first view it shows, which it
+ * keeps until a view of another shape altogether is shown. A theme that
+ * holds the preview at a height reads it to hold the frame at the picture's
+ * shape, so the frame is never larger than the picture in it. Written in
+ * the designer's own event, so the frame and the picture change in one
+ * paint. A shape no different to look at is left as it is.
+ */
+export function followDrawnShape(
+	frame: HTMLElement,
+	designer: ShapedDesigner,
+): void {
+	const apply = (aspect: number): void => {
+		const now = Number.parseFloat(
+			frame.style.getPropertyValue(DRAWN_ASPECT_PROPERTY),
+		);
+		if (
+			!Number.isFinite(aspect) ||
+			!(aspect > 0) ||
+			Math.abs(aspect - now) <= ASPECT_TOLERANCE
+		) {
+			return;
+		}
+		frame.style.setProperty(DRAWN_ASPECT_PROPERTY, String(aspect));
+	};
+	const follow = (): void => {
+		apply(designer.getPreviewAspect());
+		designer.on('previewShape', ({ aspect }) => apply(aspect));
+	};
+	// A preview that never shows keeps the shape the page printed.
+	void designer.shown().then(follow, () => undefined);
 }
