@@ -394,9 +394,14 @@ final class SplitCardListings {
 		if ( ! $product instanceof WC_Product ) {
 			return $url;
 		}
-		$key  = null !== $this->current && $this->current[0] === $post->ID ? $this->current[1] : self::NO_CARD;
-		$link = self::NO_CARD === $key ? $url : CardPages::url( $product, $key, $url );
-		$more = array_diff_key( FilteredOpening::values( $product, $key ), SplitCards::link_values( $product, $key ) );
+		$key     = null !== $this->current && $this->current[0] === $post->ID ? $this->current[1] : self::NO_CARD;
+		$link    = self::NO_CARD === $key ? $url : CardPages::url( $product, $key, $url );
+		$opening = FilteredOpening::values( $product, $key );
+		// Without a filter on, the card's link is its own; its values are read only to leave them out of the filters' values.
+		if ( array() === $opening ) {
+			return $link;
+		}
+		$more = array_diff_key( $opening, SplitCards::link_values( $product, $key ) );
 		return array() === $more ? $link : add_query_arg( array_map( 'rawurlencode', $more ), $link );
 	}
 

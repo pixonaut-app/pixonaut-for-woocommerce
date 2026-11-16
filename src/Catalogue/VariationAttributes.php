@@ -36,7 +36,7 @@ final class VariationAttributes {
 			if ( $attribute instanceof WC_Product_Attribute && $attribute->get_variation() ) {
 				$attributes[] = array(
 					'slug'  => sanitize_title( $attribute->get_name() ),
-					'label' => wc_attribute_label( $attribute->get_name(), $product ),
+					'label' => ProductVariants::attribute_label( $attribute->get_name(), $product ),
 				);
 			}
 		}
@@ -75,7 +75,7 @@ final class VariationAttributes {
 			}
 			$attributes[] = array(
 				'slug'   => sanitize_title( $attribute->get_name() ),
-				'label'  => wc_attribute_label( $attribute->get_name(), $product ),
+				'label'  => ProductVariants::attribute_label( $attribute->get_name(), $product ),
 				'values' => $values,
 			);
 		}

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use ArrayObject;
 use Closure;
 use Pixonaut\WooCommerce\Admin\VariantNotice;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
@@ -246,6 +247,29 @@ final class ProductVariants {
 	 * @return array<string, string>
 	 */
 	public static function attributes( WC_Product $product ): array {
+		if ( ! $product->is_type( 'variation' ) || 0 === $product->get_id() ) {
+			return self::read_attributes( $product );
+		}
+		// A product page asks for each variation's several times; they are kept for the request, by the values the variation holds.
+		/** @var ArrayObject<string, array<string, string>> $kept */
+		$kept = RequestCache::remember(
+			implode( '|', array( 'variation_attributes', $product->get_parent_id(), determine_locale(), RequestCache::filters_key( array( 'woocommerce_attribute_label' ) ) ) ),
+			static fn (): ArrayObject => new ArrayObject()
+		);
+		$key  = $product->get_id() . ':' . wp_json_encode( $product->get_attributes() );
+		if ( ! isset( $kept[ $key ] ) ) {
+			$kept[ $key ] = self::read_attributes( $product );
+		}
+		return $kept[ $key ];
+	}
+
+	/**
+	 * Works out `attributes()`.
+	 *
+	 * @param WC_Product $product A product or variation.
+	 * @return array<string, string>
+	 */
+	private static function read_attributes( WC_Product $product ): array {
 		$parent = $product->is_type( 'variation' ) ? wc_get_product( $product->get_parent_id() ) : $product;
 		$parent = $parent instanceof WC_Product ? $parent : $product;
 		$labels = array();
@@ -255,10 +279,29 @@ final class ProductVariants {
 			}
 			$label = self::value_label( $name, $value );
 			if ( null !== $label ) {
-				$labels[ wc_attribute_label( $name, $parent ) ] = $label;
+				$labels[ self::attribute_label( $name, $parent ) ] = $label;
 			}
 		}
 		return $labels;
+	}
+
+	/**
+	 * An attribute's label on a product. Each of a product's variations asks
+	 * for the same few, which WooCommerce passes through `wp_kses_post()`
+	 * every time, so a label is kept for the request.
+	 *
+	 * @param string     $name    The attribute's name, `pa_color` for a global one.
+	 * @param WC_Product $product The product it is on.
+	 */
+	public static function attribute_label( string $name, WC_Product $product ): string {
+		$read = static fn (): string => (string) wc_attribute_label( $name, $product );
+		if ( 0 === $product->get_id() ) {
+			return $read();
+		}
+		return RequestCache::remember(
+			implode( '|', array( 'attribute_label', $product->get_id(), $name, determine_locale(), RequestCache::filters_key( array( 'woocommerce_attribute_label' ) ) ) ),
+			$read
+		);
 	}
 
 	/**

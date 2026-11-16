@@ -43,6 +43,19 @@ final class ProductVariant {
 	private const FIRST_SCHEMA_VERSION = 1;
 
 	/**
+	 * How many read documents `stored_on()` keeps before it starts over, so
+	 * a request walking the whole catalogue does not hold every one.
+	 */
+	private const MAX_READ_KEPT = 500;
+
+	/**
+	 * The variants read from documents, by document.
+	 *
+	 * @var array<string, self|null>
+	 */
+	private static array $read = array();
+
+	/**
 	 * No variant of the blank is the product's.
 	 */
 	public const UNMAPPED = 'unmapped';
@@ -227,7 +240,18 @@ final class ProductVariant {
 	 * @param WC_Product $product The product or variation.
 	 */
 	public static function stored_on( WC_Product $product ): ?self {
-		return self::from_document( self::document_on( $product ) );
+		$document = self::document_on( $product );
+		if ( null === $document ) {
+			return null;
+		}
+		// A product page asks for each variation's variant several times; a variant is immutable, so one read serves them all.
+		if ( ! array_key_exists( $document, self::$read ) ) {
+			if ( count( self::$read ) >= self::MAX_READ_KEPT ) {
+				self::$read = array();
+			}
+			self::$read[ $document ] = self::from_document( $document );
+		}
+		return self::$read[ $document ];
 	}
 
 	/**
