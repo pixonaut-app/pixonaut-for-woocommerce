@@ -76,10 +76,8 @@ test('the product page shows the chosen size’s price, and the range again once
 		await createProduct(request, `Priced ${theme} ${Date.now()}`),
 	);
 	const price = summaryPrice(page);
-	await expect(price).toContainText(SMALL_PRICE);
-	await expect(price).toContainText(LARGE_PRICE);
-
-	await chooseSize(page, 'Small');
+	// The page opens on the first size.
+	await expect(sizeSelect(page)).toHaveValue('Small');
 	await expect(price).toContainText(SMALL_PRICE);
 	await expect(price).not.toContainText(LARGE_PRICE);
 
@@ -134,7 +132,8 @@ test('a theme’s price target in the add-to-cart form takes the price instead o
 	);
 	expect(await detail.jsonValue()).toMatchObject({
 		side: 'front',
-		printSizeIndex: 0,
+		// After the size of the variation the page opened on.
+		printSizeIndex: 1,
 		variationId,
 		priceHtml: expect.stringMatching(LARGE_PRICE),
 	});

@@ -16,6 +16,7 @@ use Pixonaut\WooCommerce\Plugin;
 use RuntimeException;
 use WC_Order;
 use WC_Product_Simple;
+use WC_Product_Variable;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -240,6 +241,73 @@ final class ShopToolRouteTest extends WP_UnitTestCase {
 			)->get_status()
 		);
 		$this->assertFalse( wc_get_product( $id ) );
+	}
+
+	public function test_it_sets_and_reads_the_default_attributes_a_product_opens_on(): void {
+		$created = $this->call(
+			'create-product',
+			array(
+				'fields' => array(
+					'name'       => 'Poster',
+					'type'       => 'variable',
+					'attributes' => array(
+						array(
+							'name'      => 'Size',
+							'variation' => true,
+							'options'   => array( 'A4', 'A3' ),
+						),
+						array(
+							'name'      => 'Frame',
+							'variation' => true,
+							'options'   => array( 'None', 'Oak' ),
+						),
+					),
+				),
+			)
+		);
+		$this->assertSame( 200, $created->get_status() );
+		$id = $created->get_data()['result']['id'];
+		$this->assertSame( array(), $this->call( 'get-product', array( 'id' => $id ) )->get_data()['result']['default_attributes'] );
+
+		$defaults = array(
+			array(
+				'name'   => 'Size',
+				'option' => 'A3',
+			),
+			array(
+				'name'   => 'Frame',
+				'option' => 'Oak',
+			),
+		);
+		$updated  = $this->call(
+			'update-product',
+			array(
+				'id'     => $id,
+				'fields' => array( 'default_attributes' => $defaults ),
+			)
+		);
+
+		$this->assertSame( 200, $updated->get_status() );
+		$product = wc_get_product( $id );
+		$this->assertInstanceOf( WC_Product_Variable::class, $product );
+		$this->assertSame(
+			array(
+				'size'  => 'A3',
+				'frame' => 'Oak',
+			),
+			$product->get_default_attributes()
+		);
+		$read = $this->call( 'get-product', array( 'id' => $id ) )->get_data()['result']['default_attributes'];
+		$this->assertSame( array( 'A3', 'Oak' ), array_column( $read, 'option' ) );
+
+		$this->call(
+			'update-product',
+			array(
+				'id'     => $id,
+				'fields' => array( 'default_attributes' => array() ),
+			)
+		);
+		$this->assertSame( array(), $this->call( 'get-product', array( 'id' => $id ) )->get_data()['result']['default_attributes'] );
 	}
 
 	public function test_it_manages_categories_and_tags_and_attributes_with_no_user(): void {

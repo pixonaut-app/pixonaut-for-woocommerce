@@ -1062,6 +1062,25 @@ that opens on no variation, or on one it does not offer (out of stock while
 the store hides those, or not visible) or without a price, keeps the
 product's price, and other pages show it too.
 
+A personalised variable product's own page opens on a whole variation.
+WooCommerce opens the form on no value of an attribute the product stores
+no default for, so the form then holds no variation, and the designer
+draws none, until the customer has chosen every value.
+`Storefront\OpeningDefaults` fills them in on
+`woocommerce_product_get_default_attributes`, on the product's own page
+only: each attribute without a stored default takes its value from the
+first variation a customer can buy personalised that agrees with the values
+chosen already, the request's `attribute_*` values (a split card's link)
+and the stored defaults for the rest, else with the request's alone. With
+neither, that is the variation the product's picture is drawn for
+(`PicturedVariation`, see [Product pictures](#product-pictures)), so the
+page opens on what the card showed. An attribute that variation is sold in any
+value of stays open, the customer's to choose. A stored default is never
+replaced, a product no such variation agrees with opens as WooCommerce has
+it, and nothing is stored: the admin, the REST API (`get-product`,
+`update-product` and their `default_attributes`) and every other page read
+the defaults the product was given.
+
 The price shows once: on a variable product the script writes the chosen
 variation's price in the targets, so WooCommerce's own variation price in
 the form (`.single_variation .woocommerce-variation-price`, which the

@@ -67,6 +67,9 @@ Product Collection block on the shop's templates) both show them.
   product's form and in the designer. When every variation with that value
   has the same value of another attribute too, such as a picture sold in one
   size only, the card chooses that one as well.
+  The product's other attributes open on its default values, and one
+  without a default on the value of the first variation with the card's
+  value that customers can buy, so the page opens on a whole variation.
 - **Counting and pages**: each card counts as a product, so "Showing 1–12 of
   N" and the pages count cards.
 - **Categories and filters**: each card is in the product's categories and

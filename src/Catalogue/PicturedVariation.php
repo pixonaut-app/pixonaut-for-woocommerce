@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Generator;
 use WC_Product;
 use WC_Product_Variation;
 
@@ -34,19 +35,51 @@ final class PicturedVariation {
 		}
 		$defaults = array_filter( array_map( 'strval', $product->get_default_attributes() ), static fn ( string $value ): bool => '' !== $value );
 		$first    = null;
-		// One at a time: the first that agrees ends the search, however many the product has.
-		foreach ( $product->get_children() as $child_id ) {
-			$variation = wc_get_product( $child_id );
-			// A disabled variation is stored as private.
-			if ( ! $variation instanceof WC_Product_Variation || ProductConfig::PUBLIC_STATUS !== $variation->get_status() || ! self::bought( $variation, ProductConfig::config_for( $product, $variation ) ) ) {
-				continue;
-			}
+		foreach ( self::bought_of( $product ) as $variation ) {
 			if ( self::agrees( $variation, $defaults ) ) {
 				return $variation;
 			}
 			$first ??= $variation;
 		}
 		return $first;
+	}
+
+	/**
+	 * The first variation a customer can buy that has each of `$values`, or
+	 * leaves it open, in the product's order of variations; null when it
+	 * sells none that does.
+	 *
+	 * @param WC_Product            $product A variable product.
+	 * @param array<string, string> $values  The values to agree with, by attribute, as a variation keeps them.
+	 */
+	public static function agreeing_with( WC_Product $product, array $values ): ?WC_Product_Variation {
+		if ( ! $product->is_type( 'variable' ) ) {
+			return null;
+		}
+		foreach ( self::bought_of( $product ) as $variation ) {
+			if ( self::agrees( $variation, $values ) ) {
+				return $variation;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * The variations of a product a customer can buy personalised, in its
+	 * order of variations.
+	 *
+	 * @param WC_Product $product A variable product.
+	 * @return Generator<int, WC_Product_Variation>
+	 */
+	private static function bought_of( WC_Product $product ): Generator {
+		// One at a time: the first that agrees ends the search, however many the product has.
+		foreach ( $product->get_children() as $child_id ) {
+			$variation = wc_get_product( $child_id );
+			// A disabled variation is stored as private.
+			if ( $variation instanceof WC_Product_Variation && ProductConfig::PUBLIC_STATUS === $variation->get_status() && self::bought( $variation, ProductConfig::config_for( $product, $variation ) ) ) {
+				yield $variation;
+			}
+		}
 	}
 
 	/**
@@ -83,15 +116,15 @@ final class PicturedVariation {
 	}
 
 	/**
-	 * Whether the variation has each default value, or leaves it open.
+	 * Whether the variation has each value, or leaves it open.
 	 *
 	 * @param WC_Product_Variation  $variation A variation.
-	 * @param array<string, string> $defaults  The product's default values, by attribute.
+	 * @param array<string, string> $values    The values, by attribute.
 	 */
-	private static function agrees( WC_Product_Variation $variation, array $defaults ): bool {
-		$values = array_map( 'strval', $variation->get_attributes() );
-		foreach ( $defaults as $attribute => $value ) {
-			$own = $values[ sanitize_title( (string) $attribute ) ] ?? '';
+	private static function agrees( WC_Product_Variation $variation, array $values ): bool {
+		$held = array_map( 'strval', $variation->get_attributes() );
+		foreach ( $values as $attribute => $value ) {
+			$own = $held[ sanitize_title( (string) $attribute ) ] ?? '';
 			if ( '' !== $own && $own !== $value ) {
 				return false;
 			}

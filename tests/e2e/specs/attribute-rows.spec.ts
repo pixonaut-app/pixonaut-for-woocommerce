@@ -182,6 +182,9 @@ for (const viewport of [DESKTOP, PHONE]) {
 		const row = page.locator(`${ROW}[data-pixonaut-own-step]`);
 		const select = row.locator('select[name="attribute_size"]');
 		await expect(select).toBeVisible();
+		// The page opens on the product's first variation.
+		await select.selectOption('');
+		await expect(row.locator('.reset_variations')).toBeHidden();
 		// Nothing of the row stands over the field, nor under it while
 		// nothing is chosen.
 		const all = await box(row);
