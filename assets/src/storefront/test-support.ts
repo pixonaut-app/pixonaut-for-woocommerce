@@ -55,6 +55,9 @@ export type FakeDesigner = {
 	getVariant: Mock<() => string | undefined>;
 	getVariants: Mock<() => Array<{ ref: string; hasPhoto: boolean }>>;
 	setVariant: ReturnType<typeof vi.fn>;
+	getView: Mock<() => string | undefined>;
+	getViews: Mock<() => Array<{ viewId: string; hasPhoto: boolean }>>;
+	setView: ReturnType<typeof vi.fn>;
 	settled: ReturnType<typeof vi.fn>;
 	preload: ReturnType<typeof vi.fn>;
 	on: ReturnType<typeof vi.fn>;
@@ -130,6 +133,9 @@ export function fakeDesigner({
 			show(ref);
 			return Promise.resolve();
 		}),
+		getView: vi.fn(() => undefined),
+		getViews: vi.fn(() => []),
+		setView: vi.fn().mockResolvedValue(undefined),
 		settled: vi.fn().mockResolvedValue(undefined),
 		preload: vi.fn().mockResolvedValue(undefined),
 		on: vi.fn((event: string, handler: (event: { ref: string }) => void) => {
