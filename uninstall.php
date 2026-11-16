@@ -66,8 +66,9 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_option( \Pixonaut\WooCommerce\Schema::PICTURE_GENERATION_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::PICTURES_BACKFILL_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::EXCHANGE_RATES_OPTION );
-		// Cached catalogue answers and proof images expire on their own; this removes the ones still waiting to.
-		foreach ( array( \Pixonaut\WooCommerce\Schema::CATALOGUE_CACHE_PREFIX, \Pixonaut\WooCommerce\Schema::PROOF_CACHE_PREFIX ) as $pixonaut_wc_cache_prefix ) {
+		// Cached catalogue answers, proof images and filter indexes expire on their own; this removes the ones still waiting to.
+		delete_option( \Pixonaut\WooCommerce\Schema::FILTER_INDEX_GENERATION_OPTION );
+		foreach ( array( \Pixonaut\WooCommerce\Schema::CATALOGUE_CACHE_PREFIX, \Pixonaut\WooCommerce\Schema::PROOF_CACHE_PREFIX, \Pixonaut\WooCommerce\Schema::FILTER_INDEX_PREFIX ) as $pixonaut_wc_cache_prefix ) {
 			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				$wpdb->prepare(
 					"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",

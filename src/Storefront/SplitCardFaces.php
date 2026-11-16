@@ -10,9 +10,12 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Pixonaut\WooCommerce\Catalogue\CardPages;
+use Pixonaut\WooCommerce\Catalogue\ProductMeta;
+use Pixonaut\WooCommerce\Catalogue\RequestCache;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use WC_Product;
+use WC_Product_Variable;
 
 /**
  * While the shop's loop shows a split product's card (`SplitCardListings`),
@@ -37,6 +40,12 @@ final class SplitCardFaces {
 	 * card's price replaces the range they wrote.
 	 */
 	private const PRICE_PRIORITY = 100;
+
+	/**
+	 * The filters through which a variation's price can differ from the
+	 * one WooCommerce keeps for its product's price range.
+	 */
+	private const PRICE_FILTERS = array( 'woocommerce_product_variation_get_price', 'woocommerce_variation_prices_price', 'woocommerce_variation_prices' );
 
 	/**
 	 * @param SplitCardListings $listings Knows the card a loop shows.
@@ -97,28 +106,59 @@ final class SplitCardFaces {
 		if ( ! $product instanceof WC_Product || null === $key ) {
 			return $html;
 		}
-		$lowest       = null;
+		$variation_ids = SplitCards::card_variations( $product, $key );
+		$prices        = self::display_prices( $product );
+		if ( null === $prices ) {
+			// Three queries for the card's variations, their terms and their meta, rather than four for each.
+			_prime_post_caches( $variation_ids, true, false );
+			ProductMeta::prime( $variation_ids );
+		}
+		$lowest_id    = null;
 		$lowest_price = 0.0;
 		$highest      = 0.0;
-		foreach ( SplitCards::card_variations( $product, $key ) as $variation_id ) {
-			$variation = wc_get_product( $variation_id );
-			if ( ! $variation instanceof WC_Product || '' === $variation->get_price() ) {
+		foreach ( $variation_ids as $variation_id ) {
+			if ( null === $prices ) {
+				$variation = wc_get_product( $variation_id );
+				if ( ! $variation instanceof WC_Product || '' === $variation->get_price() ) {
+					continue;
+				}
+				$price = (float) wc_get_price_to_display( $variation );
+			} elseif ( isset( $prices[ $variation_id ] ) && '' !== $prices[ $variation_id ] ) {
+				$price = (float) $prices[ $variation_id ];
+			} else {
 				continue;
 			}
-			$price   = (float) wc_get_price_to_display( $variation );
-			$highest = null === $lowest ? $price : max( $highest, $price );
-			if ( null === $lowest || $price < $lowest_price ) {
-				$lowest       = $variation;
+			$highest = null === $lowest_id ? $price : max( $highest, $price );
+			if ( null === $lowest_id || $price < $lowest_price ) {
+				$lowest_id    = $variation_id;
 				$lowest_price = $price;
 			}
 		}
-		if ( null === $lowest ) {
+		$lowest = null === $lowest_id ? null : wc_get_product( $lowest_id );
+		if ( ! $lowest instanceof WC_Product ) {
 			return $html;
 		}
 		if ( $lowest_price === $highest ) {
 			return $lowest->get_price_html();
 		}
 		return wc_get_price_html_from_text() . wc_price( $lowest_price ) . $lowest->get_price_suffix();
+	}
+
+	/**
+	 * Each variation's price as the shop shows it, by variation id, as
+	 * WooCommerce keeps them for a variable product's price range; null
+	 * while something filters a variation's price, when the card's
+	 * variations are read one by one.
+	 *
+	 * @param WC_Product $product The card's product.
+	 * @return array<int|string, mixed>|null
+	 */
+	private static function display_prices( WC_Product $product ): ?array {
+		if ( ! $product instanceof WC_Product_Variable || '' !== RequestCache::filters_key( self::PRICE_FILTERS ) ) {
+			return null;
+		}
+		$prices = $product->get_variation_prices( true );
+		return is_array( $prices['price'] ?? null ) ? $prices['price'] : null;
 	}
 
 	/**

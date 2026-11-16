@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\FilterOffers;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
@@ -123,8 +124,22 @@ final class FilterMatches {
 	 * @return list<string>|null
 	 */
 	public static function left_out( WC_Product $product, array $chosen, ?float $min, ?float $max ): ?array {
+		return self::left_out_of( FilterOffers::of( $product ), SplitCards::sold_by_card( $product ), $chosen, $min, $max );
+	}
+
+	/**
+	 * Works out `left_out()` from a product's offers and its cards.
+	 *
+	 * @param list<array{id: int, values: array<string, list<int>>, min: float, max: float}> $offers The product's offers.
+	 * @param array<int|string, list<int>>                                                   $cards  The variations each of its cards sells, by the card's key.
+	 * @param array<string, list<int>>                                                       $chosen Chosen term ids by taxonomy.
+	 * @param float|null                                                                     $min    The lowest price chosen, as stored.
+	 * @param float|null                                                                     $max    The highest price chosen, as stored.
+	 * @return list<string>|null
+	 */
+	private static function left_out_of( array $offers, array $cards, array $chosen, ?float $min, ?float $max ): ?array {
 		$matching = array();
-		foreach ( FilterOffers::of( $product ) as $offer ) {
+		foreach ( $offers as $offer ) {
 			if ( FilterOffers::matches( $offer, $chosen, $min, $max ) ) {
 				$matching[] = $offer['id'];
 			}
@@ -133,9 +148,9 @@ final class FilterMatches {
 			return null;
 		}
 		$left = array();
-		foreach ( SplitCards::sold_by_card( $product ) as $key => $sold ) {
+		foreach ( $cards as $key => $sold ) {
 			if ( array() === array_intersect( $sold, $matching ) ) {
-				$left[] = $key;
+				$left[] = (string) $key;
 			}
 		}
 		return $left;
@@ -162,20 +177,26 @@ final class FilterMatches {
 			"SELECT DISTINCT {$wpdb->posts}.ID FROM {$wpdb->posts} {$join} WHERE 1=1 {$where} AND {$wpdb->posts}.ID IN ( SELECT type_rel.object_id FROM {$wpdb->term_relationships} type_rel INNER JOIN {$wpdb->term_taxonomy} type_tax ON type_tax.term_taxonomy_id = type_rel.term_taxonomy_id INNER JOIN {$wpdb->terms} type_term ON type_term.term_id = type_tax.term_id WHERE type_tax.taxonomy = 'product_type' AND type_term.slug = 'variable' )"
 		);
 		// phpcs:enable
+		$ids  = array_values( array_map( 'intval', is_array( $ids ) ? $ids : array() ) );
 		$left = array(
 			'products' => array(),
 			'cards'    => array(),
 		);
-		foreach ( is_array( $ids ) ? $ids : array() as $id ) {
-			$product = wc_get_product( (int) $id );
-			if ( ! $product instanceof WC_Product ) {
-				continue;
+		// What was kept of the products' variations since they last changed; the others, their meta and terms in three queries.
+		FilterIndex::look_up( $ids );
+		$unread = array_values( array_filter( $ids, static fn ( int $id ): bool => null === FilterOffers::worked_out( $id ) || ! isset( SplitCards::worked_out( $id )['cards'] ) ) );
+		_prime_post_caches( $unread, true, true );
+		foreach ( $ids as $id ) {
+			if ( in_array( $id, $unread, true ) ) {
+				$product = wc_get_product( $id );
+				$cards   = $product instanceof WC_Product ? self::left_out( $product, $chosen, $min, $max ) : array();
+			} else {
+				$cards = self::left_out_of( FilterOffers::worked_out( $id ) ?? array(), SplitCards::worked_out( $id )['cards'] ?? array(), $chosen, $min, $max );
 			}
-			$cards = self::left_out( $product, $chosen, $min, $max );
 			if ( null === $cards ) {
-				$left['products'][] = $product->get_id();
+				$left['products'][] = $id;
 			} elseif ( array() !== $cards ) {
-				$left['cards'][ $product->get_id() ] = $cards;
+				$left['cards'][ $id ] = $cards;
 			}
 		}
 		return $left;

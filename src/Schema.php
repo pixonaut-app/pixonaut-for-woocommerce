@@ -408,6 +408,18 @@ final class Schema {
 	const SPLIT_FILTERED_ATTRIBUTES_OPTION = 'pixonaut_wc_split_filtered_attributes';
 
 	/**
+	 * Before a product's id: the transient keeping what the shop's filters
+	 * read of its variations and cards between requests.
+	 */
+	const FILTER_INDEX_PREFIX = 'pixonaut_wc_filter_index_';
+
+	/**
+	 * Option raised when an attribute or one of its values changes, which
+	 * every kept filter index carries: raising it drops them all at once.
+	 */
+	const FILTER_INDEX_GENERATION_OPTION = 'pixonaut_wc_filter_index_generation';
+
+	/**
 	 * Option holding, by global attribute id, whether its swatches show
 	 * their values' names whatever the store's setting says.
 	 */

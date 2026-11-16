@@ -387,6 +387,51 @@ final class SplitCards {
 	private static function forget( int $product_id ): void {
 		unset( self::$variations[ $product_id ], self::$offers[ $product_id ], self::$cards[ $product_id ], self::$card_terms[ $product_id ], self::$links[ $product_id ] );
 		FilterOffers::forget( $product_id );
+		FilterIndex::forget( $product_id );
+	}
+
+	/**
+	 * What was worked out of a product's variations and cards this
+	 * request, for `FilterIndex` to keep: its variations' values, its cards
+	 * with their values, and its offers.
+	 *
+	 * @param int $product_id A product.
+	 * @return array{values?: array<int, array<string, string>>, cards?: array<string, list<int>>, card_terms?: array<string, list<int>>, offers?: list<array{id: int, attributes: array<string, string>, offered: bool, live: bool}>}
+	 */
+	public static function worked_out( int $product_id ): array {
+		$parts = array();
+		if ( isset( self::$variations[ $product_id ] ) ) {
+			$parts['values'] = self::$variations[ $product_id ];
+		}
+		if ( isset( self::$cards[ $product_id ], self::$card_terms[ $product_id ] ) ) {
+			$parts['cards']      = self::$cards[ $product_id ];
+			$parts['card_terms'] = self::$card_terms[ $product_id ];
+		}
+		if ( isset( self::$offers[ $product_id ] ) ) {
+			$parts['offers'] = self::$offers[ $product_id ];
+		}
+		return $parts;
+	}
+
+	/**
+	 * Takes what `worked_out()` answered in an earlier request as this
+	 * request's, for the parts not worked out yet.
+	 *
+	 * @param int                  $product_id A product.
+	 * @param array<string, mixed> $parts      Parts `worked_out()` answered, as `FilterIndex` kept them.
+	 */
+	public static function take( int $product_id, array $parts ): void {
+		if ( is_array( $parts['values'] ?? null ) ) {
+			self::$variations[ $product_id ] ??= $parts['values'];
+		}
+		if ( is_array( $parts['cards'] ?? null ) && is_array( $parts['card_terms'] ?? null ) && ! isset( self::$cards[ $product_id ] ) ) {
+			self::$cards[ $product_id ]      = $parts['cards'];
+			self::$card_terms[ $product_id ] = $parts['card_terms'];
+		}
+		if ( is_array( $parts['offers'] ?? null ) ) {
+			// @phpstan-ignore assign.propertyType (kept as `worked_out()` answered it, for this product's unchanged variations)
+			self::$offers[ $product_id ] ??= $parts['offers'];
+		}
 	}
 
 	/**

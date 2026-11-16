@@ -170,6 +170,25 @@ final class SplitCardFacesTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( wc_get_price_html_from_text(), $fresh->get_price_html() );
 	}
 
+	public function test_a_card_shows_its_variations_prices_as_a_price_filter_changes_them(): void {
+		$poster = new WC_Product_Variable();
+		$poster->set_name( 'Safari' );
+		$poster->set_status( 'publish' );
+		$poster->set_category_ids( array( $this->category ) );
+		$poster->set_attributes( array( $this->product_attribute( self::PICTURE ), $this->product_attribute( self::SIZE ) ) );
+		$poster->save();
+		$this->variation( $poster, 'med-bild', '30x40', '29' );
+		$this->variation( $poster, 'med-bild', '50x70', '19' );
+		WC_Product_Variable::sync( $poster->get_id() );
+		$double = static fn ( mixed $price ): mixed => is_numeric( $price ) ? (string) ( 2 * (float) $price ) : $price;
+		add_filter( 'woocommerce_product_variation_get_price', $double );
+
+		$price = $this->shop()[0]['price'];
+		remove_filter( 'woocommerce_product_variation_get_price', $double );
+
+		$this->assertSame( wc_get_price_html_from_text() . wc_price( 38 ), $price, 'each variation\'s price as the filter answers it' );
+	}
+
 	public function test_a_card_leaves_out_a_variation_the_store_hides_out_of_stock(): void {
 		$poster = new WC_Product_Variable();
 		$poster->set_name( 'Safari' );

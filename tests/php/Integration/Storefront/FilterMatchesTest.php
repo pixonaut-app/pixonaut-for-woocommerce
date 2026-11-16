@@ -7,11 +7,14 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
+use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
 use Pixonaut\WooCommerce\Storefront\OpeningChoice;
 use Pixonaut\WooCommerce\Storefront\QueryNames;
+use Pixonaut\WooCommerce\Tests\Support\FreshRequest;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
 use WC_Product_Attribute;
@@ -78,6 +81,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	}
 
 	public function tear_down(): void {
+		FreshRequest::forget_filter_reads();
 		$this->tear_down_posters();
 		update_option( Settings::OPTION, array() );
 		$_GET = array();
@@ -440,6 +444,124 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 			apply_filters( AttributeDependencies::FILTER, array( 'pa_other' => array( 'pa_size' => array( 'l' ) ) ) ),
 			'added to what another callback answered'
 		);
+	}
+
+	public function test_a_listing_takes_what_was_kept_of_a_product_until_woocommerce_saves_a_change(): void {
+		$filters = array(
+			'filter_storlek' => '30x40',
+			'max_price'      => self::PRICE_HIGH,
+		);
+		$this->settle();
+		$this->assertContains( $this->poster->get_id(), $this->shop( $filters )['ids'] );
+		FilterIndex::keep();
+		$this->assertIsArray( get_transient( Schema::FILTER_INDEX_PREFIX . $this->poster->get_id() ), 'kept for the next request' );
+
+		$sizes = $this->variations_in( $this->poster, '30x40' );
+		$this->price_unseen( array_slice( $sizes, 1 ), '999' );
+		FreshRequest::forget_filter_reads();
+		$this->assertContains( $this->poster->get_id(), $this->shop( $filters )['ids'], 'read as kept: nothing WooCommerce saved changed' );
+
+		$saved = wc_get_product( $sizes[0] );
+		$this->assertInstanceOf( WC_Product_Variation::class, $saved );
+		$saved->set_regular_price( '999' );
+		$saved->save();
+		FreshRequest::forget_filter_reads();
+		$this->assertNotContains( $this->poster->get_id(), $this->shop( $filters )['ids'], 'read again once a variation is saved: no 30x40 within the range' );
+	}
+
+	public function test_a_product_changed_moments_ago_is_not_kept(): void {
+		$this->shop( array( 'filter_storlek' => '30x40' ) );
+		FilterIndex::keep();
+
+		$this->assertFalse( get_transient( Schema::FILTER_INDEX_PREFIX . $this->poster->get_id() ), 'a change within the same second would not change its stamp' );
+	}
+
+	public function test_renaming_an_attributes_value_drops_what_was_kept(): void {
+		$filters = array(
+			'filter_storlek' => '30x40',
+			'max_price'      => self::PRICE_HIGH,
+		);
+		$this->settle();
+		$this->shop( $filters );
+		FilterIndex::keep();
+		$this->price_unseen( $this->variations_in( $this->poster, '30x40' ), '999' );
+
+		wp_update_term( $this->term( '50x70' ), 'pa_storlek', array( 'name' => '50 x 70' ) );
+		FreshRequest::forget_filter_reads();
+
+		$this->assertNotContains( $this->poster->get_id(), $this->shop( $filters )['ids'] );
+	}
+
+	public function test_a_filter_on_whether_a_variation_is_offered_is_read_on_each_request(): void {
+		$this->set_defaults( array( 'pa_storlek' => '50x70' ) );
+		$filters = array(
+			'filter_storlek' => '30x40',
+			'max_price'      => self::PRICE_HIGH,
+		);
+		$this->settle();
+		$this->shop( $filters );
+		FilterIndex::keep();
+		$bare = $this->variations_in( $this->poster, '30x40' )[0];
+		$hide = static fn ( mixed $visible, mixed $variation_id ): mixed => $bare === $variation_id ? false : $visible;
+		add_filter( 'woocommerce_variation_is_visible', $hide, 10, 2 );
+		FreshRequest::forget_filter_reads();
+
+		$link = $this->shop( $filters )['links'][ $this->poster->get_id() ] ?? '';
+		remove_filter( 'woocommerce_variation_is_visible', $hide, 10 );
+
+		$this->assertSame(
+			array(
+				'attribute_pa_storlek'   => '30x40',
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'ek',
+			),
+			$this->chosen( $link ),
+			'the bare 30x40 is not offered now, though it was when its offers were kept'
+		);
+	}
+
+	/**
+	 * Dates every product and variation's last change well back, as a
+	 * catalogue left alone since.
+	 */
+	private function settle(): void {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the test's own posts, dated back.
+		$wpdb->query( "UPDATE {$wpdb->posts} SET post_modified = '2020-01-01 00:00:00', post_modified_gmt = '2020-01-01 00:00:00' WHERE post_type IN ( 'product', 'product_variation' )" );
+	}
+
+	/**
+	 * Writes variations' prices past WooCommerce, which changes nothing a
+	 * kept read's stamp sees.
+	 *
+	 * @param int[]  $variation_ids Variations.
+	 * @param string $price         Their new price.
+	 * @phpstan-param list<int> $variation_ids
+	 */
+	private function price_unseen( array $variation_ids, string $price ): void {
+		foreach ( $variation_ids as $id ) {
+			foreach ( array( '_price', '_regular_price' ) as $key ) {
+				update_post_meta( $id, $key, $price );
+			}
+			clean_post_cache( $id );
+		}
+	}
+
+	/**
+	 * A product's variations of one size, in its order of variations.
+	 *
+	 * @param WC_Product $product A product.
+	 * @param string     $size    The size's slug.
+	 * @return list<int>
+	 */
+	private function variations_in( WC_Product $product, string $size ): array {
+		$ids = array();
+		foreach ( $product->get_children() as $id ) {
+			if ( get_post_meta( $id, 'attribute_pa_storlek', true ) === $size ) {
+				$ids[] = (int) $id;
+			}
+		}
+		return $ids;
 	}
 
 	/**
