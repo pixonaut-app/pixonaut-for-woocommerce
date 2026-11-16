@@ -88,7 +88,8 @@
  * own (marked on the printed form's slot, or on the part the designer
  * draws) goes under the field, at its end, so the field sits right under the
  * step's heading. While WooCommerce hides the link (nothing is chosen), it
- * holds no room there. */
+ * holds no room there. The link stands there only in a form with no cart
+ * row to take it (`liftResetLink()`). */
 .pixonaut-form
 	:is(
 		[data-pixonaut-own-step] > table.pixonaut-attribute,

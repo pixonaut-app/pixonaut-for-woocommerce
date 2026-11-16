@@ -1,4 +1,9 @@
 import type { SplitMountOptions } from '../types/sdk';
+import {
+	liftResetLink,
+	type ResetLinkHome,
+	returnResetLink,
+} from './reset-link';
 
 /** The add-to-cart form's own option fields: the classic form's variation
  *  table and the block form's variation selector. */
@@ -68,6 +73,8 @@ export type ShopParts = {
 	/** Where each part with a home stood when it was taken, for a home the
 	 *  page removed. */
 	places: Map<HTMLElement, PartPlace>;
+	/** The Clear link, while it stands in the cart row (`liftResetLink()`). */
+	resetLink?: ResetLinkHome;
 };
 
 /** A part's parent, and the parent's elements in order, as the first of
@@ -246,6 +253,7 @@ export function printShopParts(
 			slot.append(part);
 		}
 	}
+	liftResetLink(parts, form);
 	return [...parts.homes.keys()].filter((part) => inSlot(part));
 }
 
@@ -353,6 +361,7 @@ export function returnShopParts(
 		!lent.has(parts.cartRow) &&
 		parts.cartRow.previousElementSibling === container;
 	if (beside || away(parts.cartRow)) {
+		returnResetLink(parts);
 		parts.cartRow.remove();
 		container.after(
 			...parts.rowParts.filter((part) => parts.cartRow.contains(part)),

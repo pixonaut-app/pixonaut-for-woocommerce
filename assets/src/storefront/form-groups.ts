@@ -5,6 +5,7 @@ import type {
 	FormGroups,
 } from '../types/sdk';
 import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
+import { OWN_STEP_ATTRIBUTE } from './own-step';
 import { attributePart } from './shop-parts';
 import { chosenValue } from './variations';
 
@@ -23,11 +24,6 @@ const OWN_GROUP_PREFIX = 'wc-';
 /** Put before an attribute's slug for the id of the group holding that
  *  attribute alone, named after it (`FormGroupsMount::OPTION_GROUP_PREFIX`). */
 const OPTION_GROUP_PREFIX = `${OWN_GROUP_PREFIX}option-`;
-
-/** Set on an attribute's part lent to a group of its own, whose heading
- *  names it: the stylesheet hides WooCommerce's label of its field there,
- *  as the printed form does on the slot it stands in. */
-export const OWN_STEP_ATTRIBUTE = 'data-pixonaut-own-step';
 
 /** The add-to-cart form names an attribute's field `attribute_<slug>`. */
 const ATTRIBUTE_FIELD_PREFIX = 'attribute_';

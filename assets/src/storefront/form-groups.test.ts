@@ -7,8 +7,8 @@ import {
 	hostGroups,
 	inapplicableHosts,
 	lentElements,
-	OWN_STEP_ATTRIBUTE,
 } from './form-groups';
+import { OWN_STEP_ATTRIBUTE } from './own-step';
 import { ATTRIBUTE_TABLE_CLASS } from './shop-parts';
 
 const ARRANGED: ArrangedGroups = {

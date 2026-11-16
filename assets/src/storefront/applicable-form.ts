@@ -3,6 +3,7 @@ import {
 	type AttributeValues,
 	hiddenAttributes,
 } from './applicable-attributes';
+import { RESET_SELECTOR } from './reset-link';
 import {
 	BLOCK_ATTRIBUTE_SELECTOR,
 	type ThemeField,
@@ -13,10 +14,6 @@ import { followChoices } from './variations';
 /** On the row of an attribute that does not apply to the choice, while it
  *  is hidden. */
 export const NOT_APPLICABLE_ATTRIBUTE = 'data-pixonaut-not-applicable';
-
-/** The classic form's link that clears every choice, which WooCommerce
- *  prints in the last attribute's row. */
-const RESET_SELECTOR = '.reset_variations';
 
 /** DOM events by which the customer makes a choice in either form. */
 const CHOICE_EVENTS = ['change', 'click', 'input'] as const;
