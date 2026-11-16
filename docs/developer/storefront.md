@@ -869,6 +869,15 @@ several sides, or without the form, the attribute items are left out, with
 any group of the product's own they leave empty, and the variation fields
 stay in the form.
 
+The classic form's Clear link (`.reset_variations`), which WooCommerce prints
+in its last attribute row, clears every choice. Once that row stands in a step
+of its own (`data-pixonaut-own-step` on its table, or on the printed form's
+slot holding it), the script moves the link to the start of the cart row,
+showing its `aria-label` ("Clear options") as its words, so it reads as
+clearing every option rather than the last one; it goes back to its row with
+the cart row. A row sharing its step with other attributes keeps the link.
+While WooCommerce hides it (nothing is chosen), it takes no room.
+
 An attribute that does not apply to the form's choices (see
 [Attributes that do not apply](#attributes-that-do-not-apply)) is
 left out the same way: its row stays in the add-to-cart form, hidden, and a

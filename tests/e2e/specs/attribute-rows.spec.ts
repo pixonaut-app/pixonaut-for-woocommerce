@@ -20,6 +20,9 @@ const SAME_PLACE_PX = 1.5;
 const FRONT = '#pixonaut-form-front';
 const DESIGNER_FORM = `${FRONT} [data-testid="pixonaut-form"]`;
 
+/** The designer's cart row: the price, the quantity and Add to cart. */
+const CART_ROW = `${DESIGNER_FORM} .pixonaut-cart-row`;
+
 /** One attribute's row in the designer's form. */
 const ROW = `${DESIGNER_FORM} table.pixonaut-attribute`;
 
@@ -152,7 +155,7 @@ for (const viewport of [DESKTOP, PHONE]) {
 		});
 	}
 
-	test(`an option in a step of its own sits right under the step's heading, with its Clear link under it, at ${viewport.width}px`, async ({
+	test(`options in steps of their own sit right under their headings, with the Clear link for all of them over the cart row, at ${viewport.width}px`, async ({
 		page,
 		request,
 		baseURL,
@@ -171,6 +174,7 @@ for (const viewport of [DESKTOP, PHONE]) {
 				name: `Own row ${theme} ${Date.now()}`,
 				pixonaut: { ...PERSONALISED, v: SCHEMA_VERSION },
 				variations: ['Tee', 'Dark'],
+				finishes: ['Matt', 'Gloss'],
 				variant: FIXTURE.variant.teeWhiteS,
 				variants: { Dark: FIXTURE.variant.teeBlackS },
 			},
@@ -179,34 +183,54 @@ for (const viewport of [DESKTOP, PHONE]) {
 		await page.goto((await response.json()).permalink);
 		await page.addStyleTag({ content: GRID_THEME });
 
-		const row = page.locator(`${ROW}[data-pixonaut-own-step]`);
-		const select = row.locator('select[name="attribute_size"]');
-		await expect(select).toBeVisible();
+		const rows = page.locator(`${ROW}[data-pixonaut-own-step]`);
+		await expect(rows).toHaveCount(2);
+		const size = page.locator(`${DESIGNER_FORM} select[name="attribute_size"]`);
+		const finish = page.locator(
+			`${DESIGNER_FORM} select[name="attribute_finish"]`,
+		);
+		await expect(size).toBeVisible();
 		// The page opens on the product's first variation.
-		await select.selectOption('');
-		await expect(row.locator('.reset_variations')).toBeHidden();
-		// Nothing of the row stands over the field, nor under it while
-		// nothing is chosen.
-		const all = await box(row);
-		const field = await box(select);
-		expect(Math.abs(field.y - all.y)).toBeLessThanOrEqual(SAME_PLACE_PX);
-		// The menu takes the whole row, whatever width the theme gives it.
-		expect(Math.abs(field.x - all.x)).toBeLessThanOrEqual(SAME_PLACE_PX);
-		expect(
-			Math.abs(field.x + field.width - (all.x + all.width)),
-		).toBeLessThanOrEqual(SAME_PLACE_PX);
-		expect(
-			Math.abs(field.y + field.height - (all.y + all.height)),
-		).toBeLessThanOrEqual(SAME_PLACE_PX);
+		await size.selectOption('');
+		await finish.selectOption('');
+		// No step holds the link, and while nothing is chosen it takes no
+		// room over the cart row.
+		await expect(rows.locator('.reset_variations')).toHaveCount(0);
+		const clear = page.locator(`${CART_ROW} > .reset_variations:first-child`);
+		await expect(clear).toHaveCount(1);
+		await expect(clear).toBeHidden();
+		expect(await clear.boundingBox()).toBeNull();
+		const cartRow = await box(page.locator(CART_ROW));
+		const first = await box(
+			page.locator(`${CART_ROW} > :not(.reset_variations):visible`).first(),
+		);
+		expect(Math.abs(first.y - cartRow.y)).toBeLessThanOrEqual(SAME_PLACE_PX);
+		// Nothing of a row stands over its field, nor under it.
+		for (const row of await rows.all()) {
+			const all = await box(row);
+			const field = await box(row.locator('select'));
+			expect(Math.abs(field.y - all.y)).toBeLessThanOrEqual(SAME_PLACE_PX);
+			// The menu takes the whole row, whatever width the theme gives it.
+			expect(Math.abs(field.x - all.x)).toBeLessThanOrEqual(SAME_PLACE_PX);
+			expect(
+				Math.abs(field.x + field.width - (all.x + all.width)),
+			).toBeLessThanOrEqual(SAME_PLACE_PX);
+			expect(
+				Math.abs(field.y + field.height - (all.y + all.height)),
+			).toBeLessThanOrEqual(SAME_PLACE_PX);
+		}
 
-		await select.selectOption('Dark');
-		const clear = row.locator('.reset_variations');
+		await size.selectOption('Dark');
+		await finish.selectOption('Gloss');
 		await expect(clear).toBeVisible();
-		const chosen = await box(select);
-		expect(Math.abs(chosen.y - field.y)).toBeLessThanOrEqual(SAME_PLACE_PX);
+		await expect(clear).toHaveText('Clear options');
+		// Under the last step, over the rest of the cart row.
 		const link = await box(clear);
-		expect(link.y).toBeGreaterThanOrEqual(chosen.y + chosen.height);
+		const last = await box(rows.last());
+		expect(link.y).toBeGreaterThanOrEqual(last.y + last.height);
 		await clear.click();
-		await expect(select).toHaveValue('');
+		await expect(size).toHaveValue('');
+		await expect(finish).toHaveValue('');
+		await expect(clear).toBeHidden();
 	});
 }

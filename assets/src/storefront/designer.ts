@@ -64,6 +64,7 @@ import {
 	refusedFieldLabels,
 } from './refused-fields';
 import { holdShown, type RemountHold } from './remount-hold';
+import { liftResetLink } from './reset-link';
 import type { PixonautSdk } from './sdk-loader';
 import { mountSide, readServerReads } from './server-reads';
 import { type ProductMounts, readMounts, type SideOptions } from './settings';
@@ -696,6 +697,9 @@ export class ProductDesigner {
 		}
 		for (const lent of lentElements(groups)) {
 			this.drawSwatches(side, lent);
+		}
+		if (lending && (this.shopParts ?? null) !== null) {
+			liftResetLink(this.shopParts as ShopParts, this.form as HTMLFormElement);
 		}
 		const { optionsStep: _options, ...rest } = parts;
 		return { ...rest, formGroups: groups.formGroups };

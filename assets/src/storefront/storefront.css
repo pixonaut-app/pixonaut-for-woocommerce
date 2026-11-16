@@ -396,6 +396,24 @@ form:has(.pixonaut-form)
 	display: flow-root;
 }
 
+/* The Clear link, at the start of the cart row once the attribute rows
+ * stand apart, each in a step of its own (`liftResetLink()`): on a line of
+ * its own, at its end, over the price and the button, so it reads as
+ * clearing every option rather than the last one. While WooCommerce hides
+ * it (nothing is chosen), it holds no room. */
+.pixonaut-form .pixonaut-cart-row > .reset_variations {
+	display: block;
+	width: fit-content;
+	margin: 0 0 1em auto;
+}
+
+.pixonaut-form
+	.pixonaut-cart-row
+	> .reset_variations[style*="visibility: hidden"] {
+	/* biome-ignore lint/complexity/noImportantStyles: WooCommerce shows the link by an inline display, and hides it by its visibility alone. */
+	display: none !important;
+}
+
 /* A block theme's presets, where it defines them: the tabs and the approval
  * box drawn as the theme draws its own choices and checkboxes. The script
  * lists the presets the theme defines in `data-pixonaut-look`, so a theme
