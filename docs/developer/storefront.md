@@ -1188,8 +1188,12 @@ tax and shown with it.
   value added to the query's filters: per card kept, or once for a product
   listed once or with **One card per product** on. The base products come
   from the query without its attribute and price filters, with WooCommerce's
-  own clauses for the block's other filters, such as stock. Another callback's
-  answer stands, and price, stock, rating and taxonomy data stay WooCommerce's.
+  own clauses for the block's other filters, such as stock and taxonomies. An
+  attribute whose values combine with `and` keeps a product only while its
+  offers hold every chosen value, as WooCommerce's listing does. Counts are
+  cached per query until a product changes, or for an hour. Another
+  callback's answer stands, and price, stock, rating and taxonomy data stay
+  WooCommerce's.
 
 #### Dependent attributes for a theme
 
