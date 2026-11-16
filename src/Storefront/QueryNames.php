@@ -231,18 +231,21 @@ final class QueryNames {
 	 * Stores an attribute's name; an empty one, or its slug, gives it back
 	 * its slug. Refuses a name `refusal()` refuses, leaving it as it was.
 	 *
-	 * @param int    $attribute_id A global attribute's id.
-	 * @param string $name         The name.
+	 * @param int         $attribute_id A global attribute's id.
+	 * @param string      $name         The name.
+	 * @param string|null $slug         The attribute's slug without `pa_`, when
+	 *                                  WooCommerce is saving a new one it does
+	 *                                  not yet give; null for the one it gives.
 	 * @return string|null Why it was refused; null once stored.
 	 */
-	public static function set( int $attribute_id, string $name ): ?string {
+	public static function set( int $attribute_id, string $name, ?string $slug = null ): ?string {
 		$refusal = self::refusal( $name, $attribute_id );
 		if ( null !== $refusal ) {
 			return $refusal;
 		}
 		$names = self::stored();
 		unset( $names[ $attribute_id ] );
-		if ( '' !== $name && self::default_name( $attribute_id ) !== $name ) {
+		if ( '' !== $name && ( $slug ?? self::default_name( $attribute_id ) ) !== $name ) {
 			$names[ $attribute_id ] = $name;
 		}
 		self::store( $names );

@@ -54,8 +54,8 @@ final class QueryNameField {
 	public function register(): void {
 		add_action( 'woocommerce_after_add_attribute_fields', array( $this, 'render_add' ) );
 		add_action( 'woocommerce_after_edit_attribute_fields', array( $this, 'render_edit' ) );
-		add_action( 'woocommerce_attribute_added', array( $this, 'save_attribute' ) );
-		add_action( 'woocommerce_attribute_updated', array( $this, 'save_attribute' ) );
+		add_action( 'woocommerce_attribute_added', array( $this, 'save_attribute' ), 10, 2 );
+		add_action( 'woocommerce_attribute_updated', array( $this, 'save_attribute' ), 10, 2 );
 	}
 
 	public function render_add(): void {
@@ -70,17 +70,20 @@ final class QueryNameField {
 
 	/**
 	 * Saves the name when the attribute screen posted it, or keeps why it
-	 * was refused for the screen shown next.
+	 * was refused for the screen shown next. WooCommerce still gives an
+	 * updated attribute's old slug, so the slug saved comes from its data.
 	 *
-	 * @param int $attribute_id The attribute added or updated.
+	 * @param int                  $attribute_id The attribute added or updated.
+	 * @param array<string, mixed> $data         The attribute's row as saved; its `attribute_name` is its slug.
 	 */
-	public function save_attribute( int $attribute_id ): void {
+	public function save_attribute( int $attribute_id, array $data = array() ): void {
 		$nonce = isset( $_POST[ self::NONCE_FIELD ] ) && is_string( $_POST[ self::NONCE_FIELD ] ) ? sanitize_key( wp_unslash( $_POST[ self::NONCE_FIELD ] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- the nonce is what is checked.
 		if ( false === wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
 			return;
 		}
 		$name    = isset( $_POST[ self::FIELD ] ) && is_string( $_POST[ self::FIELD ] ) ? strtolower( trim( sanitize_text_field( wp_unslash( $_POST[ self::FIELD ] ) ) ) ) : '';
-		$refusal = QueryNames::set( $attribute_id, $name );
+		$slug    = isset( $data['attribute_name'] ) && is_string( $data['attribute_name'] ) ? wc_sanitize_taxonomy_name( $data['attribute_name'] ) : null;
+		$refusal = QueryNames::set( $attribute_id, $name, $slug );
 		if ( null !== $refusal ) {
 			$this->refusal = $refusal;
 			$this->refused = $name;

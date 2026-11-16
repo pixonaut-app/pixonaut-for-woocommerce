@@ -60,6 +60,26 @@ final class QueryNameFieldTest extends WP_UnitTestCase {
 		$this->assertSame( 'storlek', QueryNames::of( $this->attributes['Storlek'] ), 'an update not from the screen leaves it' );
 	}
 
+	public function test_an_attribute_given_a_new_slug_keeps_its_old_one_as_its_name(): void {
+		$_POST = $this->nonced( 'storlek' );
+		try {
+			$updated = wc_update_attribute(
+				$this->attributes['Storlek'],
+				array(
+					'name' => 'Storlek',
+					'slug' => 'format',
+				)
+			);
+		} finally {
+			// WooCommerce copies the old taxonomy to the new slug and keeps both; deleting the attribute drops only the new.
+			unregister_taxonomy( 'pa_storlek' );
+		}
+
+		$this->assertSame( $this->attributes['Storlek'], $updated );
+		$this->assertSame( 'storlek', QueryNames::own( $this->attributes['Storlek'] ), 'the old slug, typed, is a name of its own' );
+		$this->assertSame( 'storlek', QueryNames::of( $this->attributes['Storlek'] ) );
+	}
+
 	public function test_the_screen_refuses_a_name_in_use_and_says_why(): void {
 		$_POST = $this->nonced( 'orderby' );
 		wc_update_attribute( $this->attributes['Storlek'], array( 'name' => 'Storlek' ) );
