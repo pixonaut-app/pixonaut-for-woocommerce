@@ -206,7 +206,7 @@ final class SplitCombinationCardsTest extends WP_UnitTestCase {
 		$this->assertSame( 2, $hanger['found'] );
 
 		$framed = $this->shop( array( 'filter_ramfarg' => 'svart' ) );
-		$this->assertSame( 5, $framed['found'], 'a filter by an attribute the product is not listed by keeps every card' );
+		$this->assertSame( 1, $framed['found'], 'a filter by an attribute the product is not listed by keeps the cards selling a matching variation: only the frame has a frame colour' );
 	}
 
 	public function test_a_combinations_card_takes_a_title_of_its_own(): void {

@@ -231,7 +231,19 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 
 		$sized = $this->shop( array( 'filter_storlek' => '30x40' ) );
 		$this->assertSame( array( $poster->get_id() ), $sized['ids'] );
-		$this->assertSame( array( (string) get_permalink( $poster->get_id() ) ), $sized['links'], 'a filter by an attribute it is not listed by shows it as itself' );
+		$this->assertSame(
+			array(
+				add_query_arg(
+					array(
+						'attribute_pa_bild'    => 'med-bild',
+						'attribute_pa_storlek' => '30x40',
+					),
+					(string) get_permalink( $poster->get_id() )
+				),
+			),
+			$sized['links'],
+			'a filter by an attribute it is not listed by shows it as itself, opening on the first variation the filter keeps'
+		);
 
 		$this->assertSame( array(), $this->shop( array( 'filter_bild' => 'ram' ) )['ids'], 'no card holds the value: not listed' );
 		unset( $mug );
