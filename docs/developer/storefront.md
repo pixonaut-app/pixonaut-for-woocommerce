@@ -1025,7 +1025,7 @@ each side of the variation followed it then:
 | --- | --- |
 | print size only | `setPrintSize(index)`, unless the size the designer shows (its `getState().printSize`, which the customer may have picked) is one of the variation's |
 | template, and perhaps print size | `setTemplate(templateId)`, then `setPrintSize(index)` as above: the preview, form and view strip keep their place while the new template draws. A value on a field key both templates share carries over, and so does one on a field of the same layer id the new template's form offers, with `setValue()`. When `setTemplate()` rejects, the designer is mounted again as in the next row |
-| blank, placement, `placements`, `views`, `variants`, form layout, `formGroups` or `drawAtTemplateRatio` | is destroyed and mounted again with `initialValues` from its `getState().values`, read once its `settled()` resolved, and the variation's variant as `initialVariant`. Until the new designer is shown, an inert copy of what the old one showed (each canvas drawn in) stands in its preview, form and view strip, each keeping at least its height, and the form's parts it drew wait hidden: the page neither collapses nor jumps |
+| blank, placement, `placements`, `views`, `variants`, form layout, `formGroups` or `drawAtTemplateRatio` | is destroyed and mounted again with `initialValues` from its `getState().values`, read once its `settled()` resolved, and the variation's variant as `initialVariant`. Until the new designer is shown, an inert copy of what the old one showed (each canvas drawn in, its pictures the old designer's own images, every node marked `data-pixonaut-held`) stands in its preview, form and view strip, each keeping at least its height, and the form's parts it drew wait hidden until the new designer draws them in its form, which it does ahead of its preview: the page neither collapses nor jumps |
 
 and then shows the variation's variant (see [Views and variants](#views-and-variants)).
 
@@ -1252,6 +1252,7 @@ Dispatched on the `.pixonaut-form` element; they bubble.
 | `pixonaut:designer-approved` | A side's proof is ready | as `pixonaut.designer.approved` |
 | `pixonaut:cart-before-submit` | The form is about to be sent. Cancelable: `preventDefault()` keeps it, and the designer unlocks. | as `pixonaut.cart.beforeSubmit` |
 | `pixonaut:price` | The chosen variation changed the price shown, or the original came back (see [Price](#price)). Not cancelable; fires also without a target to write in. | `{productId, side, printSizeIndex, variationId, priceHtml}`: the product's first side, the variation's starting print size on it as an index into its mounted menu (`null` without a size menu, or for a variation that is not personalised), the variation whose price is shown (`null` when the original came back), and the HTML written into the targets |
+| `pixonaut:apply-choices` | Dispatched on the add-to-cart form itself, and not bubbling, before the designer reads the form's choice. The script that hides the options a choice leaves no use for answers it by hiding them, and filling their fields, at once rather than after its pause. A theme may dispatch it too, before it reads the form. | none |
 
 ## Submitting
 
