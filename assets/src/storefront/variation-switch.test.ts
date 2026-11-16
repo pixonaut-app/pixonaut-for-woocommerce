@@ -554,7 +554,13 @@ describe('ProductDesigner on a variable product', () => {
 	});
 
 	it('mounts the side again on the variation’s own starting view when its views leave out the one the customer was on', async () => {
+		const sdk = fakeSdk();
+		const hoodie = fakeDesigner();
+		hoodie.getView.mockReturnValue('own_b');
+		hoodie.getViews.mockReturnValue(views('own_a', 'own_b'));
+		sdk.mount.mockResolvedValueOnce(sdk.designer).mockResolvedValue(hoodie);
 		const { form, mount, sdkDesigner } = start({
+			sdk,
 			variations: {
 				'41': personalised('S', { front: FRONT }),
 				'42': personalised('L', {
@@ -574,6 +580,28 @@ describe('ProductDesigner on a variable product', () => {
 		await choose(form, '42');
 
 		expect(options(mount, 1)).toMatchObject({ initialView: 'own_b' });
+		expect(hoodie.setView).not.toHaveBeenCalled();
+	});
+
+	it('shows the view at the same place on a mount tried again after one that failed', async () => {
+		const sdk = fakeSdk();
+		const hoodie = fakeDesigner();
+		hoodie.getView.mockReturnValue('own_a');
+		hoodie.getViews.mockReturnValue(views('own_a', 'own_b'));
+		sdk.mount
+			.mockResolvedValueOnce(sdk.designer)
+			.mockRejectedValueOnce(requestError(503, 'unavailable'))
+			.mockResolvedValue(hoodie);
+		const { form, mount, designer, sdkDesigner } = start({ sdk });
+		await settle();
+		sdkDesigner.getView.mockReturnValue('scn_wall');
+		sdkDesigner.getViews.mockReturnValue(views('scn_studio', 'scn_wall'));
+
+		await choose(form, '13');
+		await designer.mount();
+
+		expect(mount).toHaveBeenCalledTimes(3);
+		expect(hoodie.setView).toHaveBeenCalledExactlyOnceWith('own_b');
 	});
 
 	it('shows the view at the same place when the other blank lacks the one the customer was on, before letting go of the old picture', async () => {

@@ -633,6 +633,15 @@ export class ProductDesigner {
 		) {
 			this.variantPicked(side, shown);
 		}
+		// A starting view the variation names itself is not left for one that
+		// only stands at the same place.
+		if (keptView !== undefined) {
+			await this.showKeptView(
+				designer,
+				keptView,
+				own !== undefined && 'initialView' in own ? own.initialView : undefined,
+			);
+		}
 	}
 
 	/**
@@ -1289,22 +1298,25 @@ export class ProductDesigner {
 			release();
 			return;
 		}
-		if (keptView !== undefined) {
-			await this.showKeptView(mounted, keptView);
-		}
 		void mounted.shown().then(release, release);
 	}
 
 	/** Shows, in a designer mounted again, the view that stands for the one
 	 *  its side showed before, when it opened on another: a blank without
-	 *  that view shows the one at the same place. A view it cannot show
-	 *  leaves it on the one it opened on. */
+	 *  that view shows the one at the same place, unless its variation named
+	 *  the view it starts on (`starting`). A view it cannot show leaves it on
+	 *  the one it opened on. */
 	private async showKeptView(
 		designer: PixonautDesigner,
 		kept: KeptView,
+		starting: string | undefined,
 	): Promise<void> {
 		const viewId = viewStandingFor(designer, kept);
-		if (viewId === undefined || viewId === designer.getView()) {
+		if (
+			viewId === undefined ||
+			viewId === designer.getView() ||
+			(viewId !== kept.viewId && starting !== undefined)
+		) {
 			return;
 		}
 		try {
