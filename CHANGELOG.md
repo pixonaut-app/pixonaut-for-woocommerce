@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.12.1...v1.12.2) (2026-11-16)
+
+
+### Bug Fixes
+
+* **catalogue:** a re-check refused for too many requests keeps its attempts ([#221](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/221)) ([379a983](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/379a983c52fdfde39a21b854f88a5e3d181ed892)), closes [#220](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/220)
+
 ## [1.12.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.12.0...v1.12.1) (2026-11-16)
 
 
