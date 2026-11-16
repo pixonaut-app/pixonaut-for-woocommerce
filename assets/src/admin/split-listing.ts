@@ -1,20 +1,17 @@
-// The "Show each value as its own product" control on a global attribute's
-// row in the product's Attributes tab: a three-way checkbox whose click
-// cycles Auto (the attribute's setting, read as mixed), On and Off. The
-// choice goes in the row's hidden field, which WooCommerce posts with the
-// product and with its Save attributes button.
+// The "Cards in the shop" menu on a global attribute's row in the
+// product's Attributes tab: Auto (the attribute's setting), a card per value
+// always, a card per value only while a filter chooses one, or one card for
+// all values. WooCommerce posts it with the product and with its Save
+// attributes button.
 //
 // Under it, each value's card in the shop takes a title and an image of its
-// own, shown while the choice lists the values as their own products: On, or
-// Auto when the attribute does. Its image is chosen from the media library.
+// own, shown while the choice lists the values as their own cards: always
+// or while filtered, or Auto when the attribute does. Its image is chosen
+// from the media library.
 
 import './wp-media';
 
-export const TOGGLE_SELECTOR = '.pixonaut-split-listing__toggle';
-
-const CHOICE_SELECTOR = '.pixonaut-split-listing__choice';
-
-const STATE_SELECTOR = '.pixonaut-split-listing__state';
+export const CHOICE_SELECTOR = '.pixonaut-split-listing__choice';
 
 const CARDS_SELECTOR = '.pixonaut-split-cards';
 
@@ -27,58 +24,24 @@ export const REMOVE_SELECTOR = '.pixonaut-split-card__remove';
 /** The image size a card's chosen image is previewed at, as the screen draws it. */
 const PREVIEW_SIZE = 'thumbnail';
 
-/** The choices in the order a click cycles through them. */
-export const CHOICES = ['auto', 'on', 'off'] as const;
+/** The choice that follows the attribute's own setting. */
+const AUTO = 'auto';
 
-export type Choice = (typeof CHOICES)[number];
+/** The setting, and choice, listing the values in one card. */
+const OFF = 'off';
 
-/** How a three-way checkbox reads each choice. */
-const ARIA_CHECKED: Record<Choice, string> = {
-	auto: 'mixed',
-	on: 'true',
-	off: 'false',
-};
-
-function isChoice(value: string): value is Choice {
-	return (CHOICES as readonly string[]).includes(value);
+/** Whether a choice lists the values as their own cards, given the attribute's setting. */
+export function listsCards(choice: string, attributeMode: string): boolean {
+	return choice === AUTO ? attributeMode !== OFF : choice !== OFF;
 }
 
-/** The choice after `choice`, back to the first after the last. */
-export function nextChoice(choice: string): Choice {
-	const at = isChoice(choice) ? CHOICES.indexOf(choice) : -1;
-	return CHOICES[(at + 1) % CHOICES.length];
-}
-
-/** Moves a row's control to its next choice. */
-export function cycle(toggle: HTMLElement): void {
-	const row = toggle.closest('.pixonaut-split-listing');
-	const field = row?.querySelector<HTMLInputElement>(CHOICE_SELECTOR);
-	if (!row || !field) {
-		return;
-	}
-	const choice = nextChoice(field.value);
-	field.value = choice;
-	toggle.setAttribute('aria-checked', ARIA_CHECKED[choice]);
-	const state = row.querySelector(STATE_SELECTOR);
-	if (state) {
-		state.textContent =
-			toggle.dataset[`state${choice[0].toUpperCase()}${choice.slice(1)}`] ?? '';
-	}
-	showCards(row, choice);
-	// WooCommerce enables its Save attributes button on a change in the rows.
-	field.dispatchEvent(new Event('change', { bubbles: true }));
-}
-
-/** Shows the row's cards while its choice lists the values as their own products. */
-function showCards(row: Element, choice: Choice): void {
-	const cards = row.nextElementSibling;
+/** Shows a row's cards while its choice lists the values as their own cards. */
+export function showCards(select: HTMLSelectElement): void {
+	const cards = select.closest('.pixonaut-split-listing')?.nextElementSibling;
 	if (!(cards instanceof HTMLElement) || !cards.matches(CARDS_SELECTOR)) {
 		return;
 	}
-	cards.hidden = !(
-		choice === 'on' ||
-		(choice === 'auto' && cards.dataset.attributeDefault === '1')
-	);
+	cards.hidden = !listsCards(select.value, cards.dataset.attributeMode ?? OFF);
 }
 
 /** Sets a card's image, or removes it with an id of 0. */
@@ -130,15 +93,16 @@ export function chooseCardImage(button: HTMLElement): void {
 
 /** Handles every row's control and cards, those WooCommerce adds or draws again included. */
 export function initSplitListing(root: Document): void {
-	root.addEventListener('click', (event) => {
-		const toggle = (event.target as Element | null)?.closest<HTMLElement>(
-			TOGGLE_SELECTOR,
-		);
-		if (toggle) {
-			event.preventDefault();
-			cycle(toggle);
-			return;
+	root.addEventListener('change', (event) => {
+		const target = event.target as Element | null;
+		if (
+			target instanceof HTMLSelectElement &&
+			target.matches(CHOICE_SELECTOR)
+		) {
+			showCards(target);
 		}
+	});
+	root.addEventListener('click', (event) => {
 		const target = event.target as Element | null;
 		const choose = target?.closest<HTMLElement>(CHOOSE_SELECTOR);
 		if (choose) {

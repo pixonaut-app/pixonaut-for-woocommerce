@@ -110,17 +110,17 @@ final class PluginSettingsShopToolsTest extends WP_UnitTestCase {
 		$read = $this->succeed( self::GET, array() );
 
 		$this->assertSame( array_keys( ReadPluginSettings::settings( $this->plugin->settings() ) ), array_keys( $read ) );
-		$this->assertFalse( $read[ Settings::ONE_CARD_PER_PRODUCT ] );
+		$this->assertFalse( $read[ Settings::PRINT_AREA_FRAME ] );
 	}
 
 	public function test_pixonaut_changes_the_settings_named_and_keeps_the_others(): void {
 		$before = $this->succeed( self::GET, array() );
 
-		$changed = $this->succeed( self::UPDATE, array( Settings::ONE_CARD_PER_PRODUCT => true ) );
+		$changed = $this->succeed( self::UPDATE, array( Settings::PRINT_AREA_FRAME => true ) );
 
-		$this->assertTrue( $changed[ Settings::ONE_CARD_PER_PRODUCT ] );
-		$this->assertTrue( $this->plugin->settings()->get( Settings::ONE_CARD_PER_PRODUCT ) );
-		$this->assertSame( array_merge( $before, array( Settings::ONE_CARD_PER_PRODUCT => true ) ), $changed );
+		$this->assertTrue( $changed[ Settings::PRINT_AREA_FRAME ] );
+		$this->assertTrue( $this->plugin->settings()->get( Settings::PRINT_AREA_FRAME ) );
+		$this->assertSame( array_merge( $before, array( Settings::PRINT_AREA_FRAME => true ) ), $changed );
 	}
 
 	public function test_a_value_a_setting_does_not_take_or_a_setting_that_is_not_there_changes_nothing(): void {

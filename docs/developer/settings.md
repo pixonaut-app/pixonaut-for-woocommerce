@@ -163,12 +163,6 @@ Default: `true`.
 
 Default: `true`.
 
-### `one_card_per_product`
-
-**One card per product in the shop** (checkbox). Lists a product set to Show each value as its own product once on the shop, category, tag and search pages, as itself. While a customer filters by one of those attributes, the product shows as the first of its values the filter keeps, with that value's title, image, price and link. Each value keeps its own page and its place in the sitemap. Off, the product is listed once per value.
-
-Default: `false`.
-
 ### `low_resolution_warnings`
 
 **Warn about soft images** (checkbox). Warns in a product's Pixonaut tab when one of its print sizes makes an image in its template print below the resolution Pixonaut recommends, so it may look soft or pixelated. Off, the tab says nothing of it. A size the Pixonaut workspace refuses for it is still refused and says why: whether Pixonaut warns, refuses or says nothing is chosen in the workspace's settings in the Pixonaut studio.

@@ -12,7 +12,6 @@ namespace Pixonaut\WooCommerce\Storefront;
 use Pixonaut\WooCommerce\Catalogue\FilterOffers;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
-use Pixonaut\WooCommerce\Settings\Settings;
 use WC_Cache_Helper;
 use WC_Product;
 use WC_Query;
@@ -79,11 +78,6 @@ final class FilterMatches {
 	private const MIN_PRICE = 'min_price';
 
 	private const MAX_PRICE = 'max_price';
-
-	/**
-	 * @param Settings $settings The settings.
-	 */
-	public function __construct( private readonly Settings $settings ) {}
 
 	public function register(): void {
 		add_filter( 'woocommerce_pre_product_filter_data', array( $this, 'counts' ), self::COUNTS_PRIORITY, 4 );
@@ -202,16 +196,15 @@ final class FilterMatches {
 		if ( null !== $results || 'attribute' !== $type || ! is_array( $query_vars ) || '' === $taxonomy ) {
 			return $results;
 		}
-		$one     = true === $this->settings->get( Settings::ONE_CARD_PER_PRODUCT );
 		$version = class_exists( WC_Cache_Helper::class ) ? (string) WC_Cache_Helper::get_transient_version( 'product' ) : '';
 		$normal  = $query_vars;
 		ksort( $normal );
-		$transient = self::COUNTS_TRANSIENT . md5( (string) wp_json_encode( array( $normal, $taxonomy, $one, $version ) ) );
+		$transient = self::COUNTS_TRANSIENT . md5( (string) wp_json_encode( array( $normal, $taxonomy, $version ) ) );
 		$cached    = get_transient( $transient );
 		if ( is_array( $cached ) ) {
 			return $cached;
 		}
-		$counts = self::count( $query_vars, $taxonomy, $one );
+		$counts = self::count( $query_vars, $taxonomy );
 		set_transient( $transient, $counts, self::COUNTS_LIFETIME );
 		return $counts;
 	}
@@ -221,10 +214,9 @@ final class FilterMatches {
 	 *
 	 * @param array<array-key, mixed> $query_vars The listing's query.
 	 * @param string                  $taxonomy   The counted attribute.
-	 * @param bool                    $one        Whether the store lists each product once.
 	 * @return array<int, int> Counts by term id.
 	 */
-	private static function count( array $query_vars, string $taxonomy, bool $one ): array {
+	private static function count( array $query_vars, string $taxonomy ): array {
 		$chosen = self::chosen_in( $query_vars );
 		$all    = self::all_values_in( $query_vars );
 		$range  = self::range(
@@ -240,7 +232,7 @@ final class FilterMatches {
 			foreach ( self::values_held( $product, $taxonomy ) as $term_id ) {
 				$with              = $chosen;
 				$with[ $taxonomy ] = array_values( array_unique( array_merge( $chosen[ $taxonomy ] ?? array(), array( $term_id ) ) ) );
-				$shown             = self::holds_all( $product, $with, $all ) ? self::shown( $product, $with, $range[0], $range[1], $one ) : 0;
+				$shown             = self::holds_all( $product, $with, $all ) ? self::shown( $product, $with, $range[0], $range[1] ) : 0;
 				if ( $shown > 0 ) {
 					$counts[ $term_id ] = ( $counts[ $term_id ] ?? 0 ) + $shown;
 				}
@@ -276,22 +268,26 @@ final class FilterMatches {
 	 * @param array<string, list<int>> $chosen  Chosen term ids by taxonomy.
 	 * @param float|null               $min     The lowest price chosen, as stored.
 	 * @param float|null               $max     The highest price chosen, as stored.
-	 * @param bool                     $one     Whether the store lists each product once.
 	 */
-	private static function shown( WC_Product $product, array $chosen, ?float $min, ?float $max, bool $one ): int {
+	private static function shown( WC_Product $product, array $chosen, ?float $min, ?float $max ): int {
 		$left_out = self::left_out( $product, $chosen, $min, $max );
 		if ( null === $left_out ) {
 			return 0;
 		}
-		$keys = $one ? array() : array_keys( SplitCards::sold_by_card( $product ) );
+		$keys = array_keys( SplitCards::sold_by_card( $product ) );
 		if ( array() === $keys ) {
 			return 1;
 		}
 		$not_live = in_array( $product->get_id(), NotLiveProducts::candidate_ids(), true ) ? SplitCards::not_live_cards( $product ) : array();
 		$listed   = self::listed_taxonomies( $keys );
+		$unchosen = array_diff( SplitCards::filtered_taxonomies( $product ), array_keys( $chosen ) );
 		$kept     = 0;
 		foreach ( array_diff( array_map( 'strval', $keys ), $left_out, $not_live ) as $key ) {
 			$held = SplitCards::term_ids( $key );
+			// A card holding a value of an attribute listed only while filtered shows only while a filter is on it.
+			if ( array() !== array_intersect( array_keys( self::listed_taxonomies( array( $key ) ) ), $unchosen ) ) {
+				continue;
+			}
 			foreach ( $chosen as $taxonomy => $ids ) {
 				// A filter on an attribute the product is listed by keeps the cards holding a chosen value.
 				if ( isset( $listed[ $taxonomy ] ) && array() === array_intersect( $held, $ids ) ) {

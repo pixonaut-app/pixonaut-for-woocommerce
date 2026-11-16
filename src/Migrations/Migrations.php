@@ -33,6 +33,7 @@ final class Migrations {
 			new WriteCombinationCards(),
 			new RedrawVariationPictures(),
 			new ReplaceQueuedRechecks(),
+			new DrawFlatCardPictures(),
 		);
 	}
 }

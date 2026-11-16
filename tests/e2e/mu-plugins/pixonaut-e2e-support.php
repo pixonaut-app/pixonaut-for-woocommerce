@@ -148,27 +148,6 @@ add_filter( 'option_pixonaut_wc_settings', 'pixonaut_e2e_swatch_names' );
 add_filter( 'default_option_pixonaut_wc_settings', 'pixonaut_e2e_swatch_names' );
 
 /**
- * Cookie that turns the store's `one_card_per_product` setting on for one
- * browser context (`on`), so a test of it changes no other test's listings.
- */
-const PIXONAUT_E2E_ONE_CARD_COOKIE = 'pixonaut_e2e_one_card';
-
-/**
- * The stored settings with `one_card_per_product` on, when the cookie says so.
- *
- * @param mixed $settings The stored settings.
- * @return mixed
- */
-function pixonaut_e2e_one_card( $settings ) {
-	if ( ! isset( $_COOKIE[ PIXONAUT_E2E_ONE_CARD_COOKIE ] ) || 'on' !== sanitize_key( wp_unslash( $_COOKIE[ PIXONAUT_E2E_ONE_CARD_COOKIE ] ) ) ) {
-		return $settings;
-	}
-	return array( \Pixonaut\WooCommerce\Settings\Settings::ONE_CARD_PER_PRODUCT => true ) + ( is_array( $settings ) ? $settings : array() );
-}
-add_filter( 'option_pixonaut_wc_settings', 'pixonaut_e2e_one_card' );
-add_filter( 'default_option_pixonaut_wc_settings', 'pixonaut_e2e_one_card' );
-
-/**
  * Cookie that sets the store's product-form settings for one browser context
  * (`as_groups=yes`, `place=last`, `numbers=off`, as a query string), so a spec
  * never changes them for another running at once.
@@ -689,6 +668,11 @@ add_action(
 						'pixonaut' => array(
 							'type' => 'object',
 						),
+						// `filtered`: the sizes list a card per value only while a filter chooses one.
+						'sizes'    => array(
+							'type' => 'string',
+							'enum' => array( 'filtered' ),
+						),
 					),
 					'callback'            => static function ( WP_REST_Request $request ) {
 						$key        = (string) $request['key'];
@@ -766,7 +750,11 @@ add_action(
 								pixonaut_e2e_pick_variant( $variation, null );
 							}
 						}
-						\Pixonaut\WooCommerce\Catalogue\SplitListing::set_attribute_default( $taxonomies['bild']['id'], true );
+						\Pixonaut\WooCommerce\Catalogue\SplitListing::set_attribute_mode( $taxonomies['bild']['id'], \Pixonaut\WooCommerce\Catalogue\SplitListing::ON );
+						// A size listed a card per value only while a filter chooses one, when the test asks.
+						if ( 'filtered' === $request['sizes'] ) {
+							\Pixonaut\WooCommerce\Catalogue\SplitListing::set_attribute_mode( $taxonomies['storlek']['id'], \Pixonaut\WooCommerce\Catalogue\SplitListing::FILTERED );
+						}
 						pixonaut_e2e_add_images( $poster instanceof WC_Product ? $poster->get_id() : 0, 2 );
 						$poster = $poster instanceof WC_Product ? wc_get_product( $poster->get_id() ) : $poster;
 
@@ -884,6 +872,11 @@ add_action(
 						// A blank variant ref by variation key, for a variation that sells another than its blank's first.
 						'variants'  => array(
 							'type' => 'object',
+						),
+						// `filtered`: the sizes list a card per value only while a filter chooses one.
+						'sizes'     => array(
+							'type' => 'string',
+							'enum' => array( 'filtered' ),
 						),
 					),
 					'callback'            => static function ( WP_REST_Request $request ) {

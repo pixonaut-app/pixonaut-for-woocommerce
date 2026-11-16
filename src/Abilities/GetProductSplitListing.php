@@ -35,7 +35,7 @@ final class GetProductSplitListing implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Read which values a product lists as their own products', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Reads, for each global attribute of a simple or variable product, its "Show each value as its own product" choice (`auto` follows the attribute\'s own setting, `attribute_default`), whether that lists its values as their own products, and each value\'s card\'s own title and image, with the image it waits for (`image_copy`). `listed_by` is the attribute the product is listed by now; null when it is listed once. `cards` are the cards it is listed as now: one per value, or, listed by several attributes, one per combination of their values that a variation sells, each with its values\' `term_ids` and its own title and image. Set them with `set-product-split-listing`.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Reads, for each global attribute of a simple or variable product, its "Cards in the shop" choice (`on`, a card per value always; `filtered`, a card per value only while a filter of the shop chooses one, as for a framing; `off`, none; `auto` follows the attribute\'s own setting, `attribute_mode`), what that comes to (`listed`), and each value\'s card\'s own title and image, with the image it waits for (`image_copy`). `listed_by` is the attribute the product is listed by now; null when it is listed once. `cards` are the cards it is listed as now: one per value, or, listed by several attributes, one per combination of their values that a variation sells, each with its values\' `term_ids` and its own title and image. Set them with `set-product-split-listing`.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -75,10 +75,14 @@ final class GetProductSplitListing implements Ability {
 	 * @return array<string, mixed>
 	 */
 	public static function answer( WC_Product $product ): array {
-		$config     = ProductConfig::stored_on( $product );
-		$looks      = SplitCardLooks::stored_on( $product->get_id() );
-		$copies     = SplitCardImageCopies::stored_on( $product->get_id() );
-		$listed_by  = array_map( static fn ( WC_Product_Attribute $attribute ): int => $attribute->get_id(), SplitListing::attributes_of( $product ) );
+		$config    = ProductConfig::stored_on( $product );
+		$looks     = SplitCardLooks::stored_on( $product->get_id() );
+		$copies    = SplitCardImageCopies::stored_on( $product->get_id() );
+		$listed_by = array_map( static fn ( WC_Product_Attribute $attribute ): int => $attribute->get_id(), SplitListing::attributes_of( $product ) );
+		$modes     = array();
+		foreach ( SplitListing::modes_of( $product ) as list( $listed, $mode ) ) {
+			$modes[ $listed->get_id() ] = $mode;
+		}
 		$attributes = array();
 		foreach ( self::global_attributes( $product ) as $attribute ) {
 			$values = array();
@@ -99,9 +103,11 @@ final class GetProductSplitListing implements Ability {
 				'attribute_id'      => $attribute->get_id(),
 				'name'              => wc_attribute_label( $attribute->get_name(), $product ),
 				'choice'            => SplitListing::choice( $config, $attribute->get_id() ),
-				'attribute_default' => SplitListing::attribute_default( $attribute->get_id() ),
-				// Its choice alone does not say: an attribute on Auto is not listed by while the product turned another on itself.
+				'attribute_default' => SplitListing::OFF !== SplitListing::attribute_mode( $attribute->get_id() ),
+				'attribute_mode'    => SplitListing::attribute_mode( $attribute->get_id() ),
+				// Its choice alone does not say: an attribute on Auto is not listed by while the product set another itself.
 				'own_products'      => in_array( $attribute->get_id(), $listed_by, true ),
+				'listed'            => $modes[ $attribute->get_id() ] ?? SplitListing::OFF,
 				'values'            => $values,
 			);
 		}
@@ -244,11 +250,21 @@ final class GetProductSplitListing implements Ability {
 							),
 							'attribute_default' => array(
 								'type'        => 'boolean',
-								'description' => __( 'Whether the attribute lists its values as their own products by default.', 'pixonaut-for-woocommerce' ),
+								'description' => __( 'Whether the attribute lists its values as their own products by default, always or while filtered.', 'pixonaut-for-woocommerce' ),
+							),
+							'attribute_mode'    => array(
+								'type'        => 'string',
+								'enum'        => SplitListing::modes(),
+								'description' => __( 'How the attribute lists its values by default: `on`, a card per value; `filtered`, a card per value only while a filter of the shop chooses one; `off`, none. Set it with `set-attribute-split-listing`.', 'pixonaut-for-woocommerce' ),
 							),
 							'own_products'      => array(
 								'type'        => 'boolean',
-								'description' => __( 'What the choice comes to: whether the product lists each value of this attribute as its own product.', 'pixonaut-for-woocommerce' ),
+								'description' => __( 'What the choice comes to: whether the product lists each value of this attribute as its own product, always or while filtered.', 'pixonaut-for-woocommerce' ),
+							),
+							'listed'            => array(
+								'type'        => 'string',
+								'enum'        => SplitListing::modes(),
+								'description' => __( 'What the choice comes to: `on`, a card per value always; `filtered`, only while a filter chooses one; `off`, none.', 'pixonaut-for-woocommerce' ),
 							),
 							'values'            => array(
 								'type'  => 'array',

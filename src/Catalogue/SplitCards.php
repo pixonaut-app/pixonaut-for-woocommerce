@@ -24,6 +24,8 @@ use WP_Term;
  * apply to that variation (`ApplicableAttributes`, the variation's own
  * values as the choice): a poster sold bare, or with a hanger in a colour,
  * listed by both has a card for the bare one and one per hanger colour.
+ * An attribute listed only while filtered adds its values to the cards a
+ * listing shows only while a filter chooses one of them (`cards()`).
  *
  * A card is named by its key: its values' term ids, lowest first, joined by
  * commas, so a card of one value is that term's id, and a combination keeps
@@ -45,6 +47,18 @@ final class SplitCards {
 	public const META = Schema::PRODUCT_SPLIT_CARD_META;
 
 	/**
+	 * The product's rows naming the values its cards hold of the
+	 * attributes it lists a card per value of only while filtered
+	 * (`filtered_rows()`).
+	 */
+	public const FILTERED_META = Schema::PRODUCT_SPLIT_FILTERED_META;
+
+	/**
+	 * Between the taxonomy and the term id of a `FILTERED_META` row.
+	 */
+	public const FILTERED_SEPARATOR = ':';
+
+	/**
 	 * Between the term ids of a card's key. MySQL's `FIND_IN_SET()` reads
 	 * a key as the set of its ids.
 	 */
@@ -62,6 +76,13 @@ final class SplitCards {
 	 * its cards are worked out in.
 	 */
 	public const MAX_CARDS = 250;
+
+	/**
+	 * The most attributes a product lists only while filtered: the cards
+	 * of each set of them are written, so each one doubles the sets. A
+	 * product with more is listed once.
+	 */
+	public const MAX_FILTERED_ATTRIBUTES = 4;
 
 	/**
 	 * In place of a value's place among its attribute's values, for an
@@ -326,10 +347,16 @@ final class SplitCards {
 		}
 		try {
 			self::forget( $product_id );
-			$product = $product_id > 0 ? wc_get_product( $product_id ) : null;
-			$keys    = $product instanceof WC_Product ? self::keys( $product ) : array();
-			$stored  = array_map( 'strval', get_post_meta( $product_id, self::META, false ) );
-			if ( $stored === $keys ) {
+			$product  = $product_id > 0 ? wc_get_product( $product_id ) : null;
+			$keys     = $product instanceof WC_Product ? self::keys( $product ) : array();
+			$filtered = $product instanceof WC_Product ? self::filtered_rows( $product ) : array();
+			if ( array_map( 'strval', get_post_meta( $product_id, self::FILTERED_META, false ) ) !== $filtered ) {
+				delete_post_meta( $product_id, self::FILTERED_META );
+				foreach ( $filtered as $taxonomy ) {
+					add_post_meta( $product_id, self::FILTERED_META, $taxonomy );
+				}
+			}
+			if ( array_map( 'strval', get_post_meta( $product_id, self::META, false ) ) === $keys ) {
 				return;
 			}
 			delete_post_meta( $product_id, self::META );
@@ -340,6 +367,16 @@ final class SplitCards {
 			$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', $lock ) );
 		}
 		// phpcs:enable
+	}
+
+	/**
+	 * Whether a product has card rows: it is listed as cards now, as its
+	 * rows were last written.
+	 *
+	 * @param int $product_id A product.
+	 */
+	public static function has_rows( int $product_id ): bool {
+		return array() !== get_post_meta( $product_id, self::META, false );
 	}
 
 	/**
@@ -452,9 +489,17 @@ final class SplitCards {
 	}
 
 	/**
-	 * A product's cards: the enabled variations each sells, by its key, in
-	 * the product's order of values. None for a product that would have
-	 * more than `MAX_CARDS`.
+	 * A product's cards: the enabled variations each sells, by its key.
+	 * First the cards of the attributes it always lists a card per value
+	 * of, then, for each set of those it lists one per value of only while
+	 * filtered, fewest first, the cards with their values too: a listing
+	 * shows those holding values of exactly the filtered attributes a
+	 * filter is on (`filtered_taxonomies()`). Without an attribute always
+	 * listed, the first is `NO_VALUE`, the product as itself. A card two
+	 * sets share is kept once, selling the variations of both. None for a
+	 * product whose cards, of all sets together, would be more than
+	 * `MAX_CARDS`, or with more than `MAX_FILTERED_ATTRIBUTES` listed only
+	 * while filtered.
 	 *
 	 * @param WC_Product $product A product.
 	 * @return array<string, list<int>> Variation ids by card key.
@@ -464,49 +509,186 @@ final class SplitCards {
 		if ( isset( self::$cards[ $product_id ] ) ) {
 			return self::$cards[ $product_id ];
 		}
-		$terms = array();
-		foreach ( SplitListing::attributes_of( $product ) as $attribute ) {
-			$terms[ self::field( $attribute ) ] = self::terms( $attribute );
-		}
-		$cards = array();
-		$order = array();
-		$held  = array();
-		if ( array() !== $terms ) {
-			$variations = self::variation_values( $product_id );
-			$fields     = ApplicableAttributes::fields( $product );
-			$sold       = array_values( $variations );
-			foreach ( $variations as $variation_id => $values ) {
-				$hidden       = ApplicableAttributes::hidden( $fields, $sold, $values );
-				$combinations = self::combinations( $terms, $values, $hidden );
-				if ( null === $combinations ) {
-					$cards = array();
-					break;
-				}
-				foreach ( $combinations as $positions ) {
-					$term_ids = array();
-					foreach ( $positions as $field => $position ) {
-						$term_id = array_values( $terms[ $field ] )[ $position ] ?? null;
-						if ( null !== $term_id ) {
-							$term_ids[] = $term_id;
-						}
-					}
-					$key             = self::key( $term_ids );
-					$cards[ $key ][] = $variation_id;
-					$order[ $key ]   = array_values( $positions );
-					$held[ $key ]    = $term_ids;
-				}
-				if ( count( $cards ) > self::MAX_CARDS ) {
-					$cards = array();
-					break;
-				}
+		$listed   = SplitListing::modes_of( $product );
+		$always   = array();
+		$sets     = array( array() );
+		$filtered = 0;
+		foreach ( $listed as list( $attribute, $mode ) ) {
+			if ( SplitListing::FILTERED !== $mode ) {
+				$always[] = $attribute;
+				continue;
 			}
-			// In the order of each attribute's values, a card without a value of one first.
-			uksort( $cards, static fn ( int|string $first, int|string $second ): int => $order[ $first ] <=> $order[ $second ] );
+			if ( ++$filtered > self::MAX_FILTERED_ATTRIBUTES ) {
+				// Too many sets of them to list: the product is listed once.
+				$listed = array();
+				break;
+			}
+			foreach ( $sets as $set ) {
+				$sets[] = array_merge( $set, array( $attribute ) );
+			}
 		}
-		self::$card_terms[ $product_id ] = array_intersect_key( $held, $cards );
+		// Fewest filtered attributes first, so a product's cards start with those an unfiltered listing shows.
+		usort( $sets, static fn ( array $first, array $second ): int => count( $first ) <=> count( $second ) );
+		$cards = array();
+		$held  = array();
+		foreach ( array() === $listed ? array() : $sets as $set ) {
+			$level = self::level( $product, self::in_product_order( $listed, array_merge( $always, $set ) ) );
+			if ( null === $level ) {
+				$cards = array();
+				$held  = array();
+				break;
+			}
+			foreach ( $level['cards'] as $key => $variation_ids ) {
+				$key            = (string) $key;
+				$cards[ $key ]  = array_values( array_unique( array_merge( $cards[ $key ] ?? array(), $variation_ids ) ) );
+				$held[ $key ] ??= $level['terms'][ $key ];
+			}
+			if ( count( $cards ) > self::MAX_CARDS ) {
+				$cards = array();
+				$held  = array();
+				break;
+			}
+		}
+		self::$card_terms[ $product_id ] = $held;
 		// PHP turns a key of digits into an integer.
 		self::$cards[ $product_id ] = $cards;
 		return $cards;
+	}
+
+	/**
+	 * The listed attributes of a set, in the product's order of attributes.
+	 *
+	 * @param array<int, array{0: WC_Product_Attribute, 1: string}> $listed The product's listed attributes (`SplitListing::modes_of()`).
+	 * @param WC_Product_Attribute[]                                $set    Some of them.
+	 * @phpstan-param list<WC_Product_Attribute> $set
+	 * @return list<WC_Product_Attribute>
+	 */
+	private static function in_product_order( array $listed, array $set ): array {
+		return array_values( array_filter( array_column( $listed, 0 ), static fn ( WC_Product_Attribute $attribute ): bool => in_array( $attribute, $set, true ) ) );
+	}
+
+	/**
+	 * The cards of one set of listed attributes: one per combination of
+	 * their values that an enabled variation sells, in the product's order
+	 * of values, each with its values in the product's order of
+	 * attributes. With no attribute, `NO_VALUE` selling every variation.
+	 * Null when they would be more than `MAX_CARDS`.
+	 *
+	 * @param WC_Product             $product    A product.
+	 * @param WC_Product_Attribute[] $attributes The set, in the product's order of attributes.
+	 * @phpstan-param list<WC_Product_Attribute> $attributes
+	 * @return array{cards: array<int|string, list<int>>, terms: array<int|string, list<int>>}|null Keys of digits are integers.
+	 */
+	private static function level( WC_Product $product, array $attributes ): ?array {
+		$variations = self::variation_values( $product->get_id() );
+		if ( array() === $attributes ) {
+			return array(
+				'cards' => array( self::NO_VALUE => array_keys( $variations ) ),
+				'terms' => array( self::NO_VALUE => array() ),
+			);
+		}
+		$terms = array();
+		foreach ( $attributes as $attribute ) {
+			$terms[ self::field( $attribute ) ] = self::terms( $attribute );
+		}
+		$cards  = array();
+		$order  = array();
+		$held   = array();
+		$fields = ApplicableAttributes::fields( $product );
+		$sold   = array_values( $variations );
+		foreach ( $variations as $variation_id => $values ) {
+			$hidden       = ApplicableAttributes::hidden( $fields, $sold, $values );
+			$combinations = self::combinations( $terms, $values, $hidden );
+			if ( null === $combinations ) {
+				return null;
+			}
+			foreach ( $combinations as $positions ) {
+				$term_ids = array();
+				foreach ( $positions as $field => $position ) {
+					$term_id = array_values( $terms[ $field ] )[ $position ] ?? null;
+					if ( null !== $term_id ) {
+						$term_ids[] = $term_id;
+					}
+				}
+				$key             = self::key( $term_ids );
+				$cards[ $key ][] = $variation_id;
+				$order[ $key ]   = array_values( $positions );
+				$held[ $key ]    = $term_ids;
+			}
+			if ( count( $cards ) > self::MAX_CARDS ) {
+				return null;
+			}
+		}
+		// In the order of each attribute's values, a card without a value of one first.
+		uksort( $cards, static fn ( int|string $first, int|string $second ): int => $order[ $first ] <=> $order[ $second ] );
+		return array(
+			'cards' => $cards,
+			'terms' => array_intersect_key( $held, $cards ),
+		);
+	}
+
+	/**
+	 * The attributes a product lists a card per value of only while a
+	 * filter chooses one of their values; none when it is listed once.
+	 *
+	 * @param WC_Product $product A product.
+	 * @return list<string> Taxonomies, in the product's order of attributes.
+	 */
+	public static function filtered_taxonomies( WC_Product $product ): array {
+		if ( array() === self::cards( $product ) ) {
+			return array();
+		}
+		$taxonomies = array();
+		foreach ( SplitListing::modes_of( $product ) as list( $attribute, $mode ) ) {
+			if ( SplitListing::FILTERED === $mode ) {
+				$taxonomies[] = $attribute->get_name();
+			}
+		}
+		return $taxonomies;
+	}
+
+	/**
+	 * The `FILTERED_META` rows of a product: each value of an attribute it
+	 * lists only while filtered that one of its cards holds, as
+	 * `<taxonomy>:<term id>`, in the order of its cards.
+	 *
+	 * @param WC_Product $product A product.
+	 * @return list<string>
+	 */
+	private static function filtered_rows( WC_Product $product ): array {
+		$filtered = self::filtered_taxonomies( $product );
+		$rows     = array();
+		foreach ( array() === $filtered ? array() : self::keys( $product ) as $key ) {
+			foreach ( self::card_terms( $product, $key ) as $term_id ) {
+				$term = get_term( $term_id );
+				if ( $term instanceof WP_Term && in_array( $term->taxonomy, $filtered, true ) ) {
+					$rows[] = $term->taxonomy . self::FILTERED_SEPARATOR . $term_id;
+				}
+			}
+		}
+		return array_values( array_unique( $rows ) );
+	}
+
+	/**
+	 * Whether a card is one a listing shows while no filter chooses a value
+	 * of the attributes the product lists by only while filtered: it holds
+	 * a value of none of them.
+	 *
+	 * @param WC_Product $product A product.
+	 * @param string     $key     One of its cards' keys.
+	 */
+	public static function is_unfiltered( WC_Product $product, string $key ): bool {
+		$filtered = self::filtered_taxonomies( $product );
+		if ( array() === $filtered ) {
+			return true;
+		}
+		foreach ( self::card_terms( $product, $key ) as $term_id ) {
+			$term = get_term( $term_id );
+			if ( $term instanceof WP_Term && in_array( $term->taxonomy, $filtered, true ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**

@@ -19,8 +19,9 @@ use WC_Product;
  * the product's title, image and price are the card's:
  *
  * - its own title (`SplitCardLooks`), else the product's;
- * - its own image, else the image of the first of its variations that has
- *   one, else the product's;
+ * - its own image, else the flat picture of its design, or, for a card a
+ *   filter on a framing shows, its first variation's picture
+ *   (`CardPages::image()`), else the product's;
  * - "From:" its variations' lowest price, or their one price as WooCommerce
  *   prints it when they all cost the same.
  *

@@ -21,8 +21,8 @@ use WP_Error;
 use WP_Http;
 
 /**
- * Sets, for the global attributes of a product named, the "Show each value
- * as its own product" choice and each value's card's own title and image,
+ * Sets, for the global attributes of a product named, the "Cards in the
+ * shop" choice and each value's card's own title and image,
  * and the title and image of the cards named by their values, as those of
  * a combination of values are, as the product's Attributes tab does. Only
  * what is named changes. Every
@@ -53,7 +53,7 @@ final class SetProductSplitListing implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Set which values a product lists as their own products', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Sets, for each global attribute of a simple or variable product listed, its "Show each value as its own product" choice (`on`, `off`, or `auto` to follow the attribute\'s own setting) and each listed value\'s card\'s own title and image, as the product\'s Attributes tab does. `cards` sets the title and image of the cards named by their values\' `term_ids`: one of a product listed by several attributes is a combination, one value of each, as `get-product-split-listing` lists them. Give `attributes`, `cards` or both. Only what is given changes: an attribute, value, card, title or image left out keeps what it has. An empty title or a null image gives the card the product\'s own again. Nothing is saved unless everything listed fits. An image given by `src` is copied after the call has answered: until then the card keeps the image it had, and its `image_copy` says it is waiting, or why the copy failed. The answer is what the product has now, as `get-product-split-listing` gives it.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Sets, for each global attribute of a simple or variable product listed, its "Cards in the shop" choice (`on`, a card per value always; `filtered`, a card per value only while a filter of the shop chooses one, as for a framing; `off`, none; or `auto` to follow the attribute\'s own setting, which `set-attribute-split-listing` sets) and each listed value\'s card\'s own title and image, as the product\'s Attributes tab does. `cards` sets the title and image of the cards named by their values\' `term_ids`: one of a product listed by several attributes is a combination, one value of each, as `get-product-split-listing` lists them. Give `attributes`, `cards` or both. Only what is given changes: an attribute, value, card, title or image left out keeps what it has. An empty title or a null image gives the card the product\'s own again. Nothing is saved unless everything listed fits. An image given by `src` is copied after the call has answered: until then the card keeps the image it had, and its `image_copy` says it is waiting, or why the copy failed. The answer is what the product has now, as `get-product-split-listing` gives it.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(

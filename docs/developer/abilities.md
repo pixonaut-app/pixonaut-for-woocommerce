@@ -29,7 +29,8 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/get-product-form` | How a simple or variable product's designer form is arranged: each side's groups, where its options stand, group numbers and layouts, with the options and template fields an arrangement may name | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-product-form` | Arranges a product's designer form: the groups of the sides named, where its options stand, group numbers and layouts, keeping its sides, print sizes and variations' setups | `edit_product` on that product |
 | `pixonaut-for-woocommerce/get-product-split-listing` | Whether each global attribute of a product lists its values as their own products, each value's card's own title and image, and the cards it is listed as now, combinations included | `edit_product` on that product |
-| `pixonaut-for-woocommerce/set-product-split-listing` | Sets a product's "Show each value as its own product" choice per global attribute, and each value's or combination's card's own title and image | `edit_product` on that product |
+| `pixonaut-for-woocommerce/set-product-split-listing` | Sets a product's "Cards in the shop" choice per global attribute, and each value's or combination's card's own title and image | `edit_product` on that product |
+| `pixonaut-for-woocommerce/set-attribute-split-listing` | Sets a global attribute's "Cards in the shop" setting, which the products on Auto follow | `manage_product_terms` |
 | `pixonaut-for-woocommerce/move-product-template` | Moves a product and its variations' own setups to another template version, keeping their sides | `edit_product` on that product |
 | `pixonaut-for-woocommerce/use-product-picture` | Puts the Pixonaut picture back in place of the store manager's own image | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/reset-standing-layout` | Undoes the layout adjusted by hand for one option of a standing side | `edit_product` on that product (and on a variation's product) |
@@ -406,19 +407,28 @@ is saved. The answer is the read's.
 `get-product-split-listing` reads what the product's Attributes tab shows
 for [listing each value as its own product](../../merchant/split-listings/):
 `attributes`, each global attribute of the product with its `choice`
-(`auto`, `on` or `off`), the attribute's own setting (`attribute_default`),
-whether the product is listed by it (`own_products`), and its `values`,
+(`auto`, `on` for a card per value, `filtered` for a card per value only
+while a filter of the shop chooses one, or `off`), the attribute's own
+setting (`attribute_mode`, one of `on`, `filtered` or `off`, and
+`attribute_default`, whether it is not `off`), whether the product is listed
+by it (`own_products`) and how (`listed`), and its `values`,
 each with its card's own `title` (empty for the product's) and `image` (`id`
 and `src`; null for the value's picture or the product's); `listed_by_all`,
 the attributes the product is listed by now, in its order of attributes,
 empty when it is listed once; and `listed_by`, the first of them, null when
 it is listed once; and `cards`, the cards the product is listed as now, in
 its order of values: one per value, or, for a product listed by several
-attributes, one per combination of their values that a variation sells. Each
+attributes, one per combination of their values that a variation sells; an
+attribute listed only while filtered adds the cards with its values after
+those without. Each
 has its values' `term_ids`, in the product's order of attributes, its `name`
 (the values' names), and its own `title` and `image`, as a value's. The card
 of the variations no listed attribute applies to shows the product as itself
 and is not among them.
+`set-attribute-split-listing` sets a global attribute's own setting by its
+`attribute_id` and `mode` (`on`, `filtered` or `off`), as its edit screen
+does, and answers the attribute's `attribute_id`, `name` and `mode`.
+
 `set-product-split-listing` sets them, by `attributes`, `cards` or both:
 each attribute listed takes a `choice` and `values`, each a `term_id` with a
 `title`, an `image`, or both; each card listed is named by its `term_ids`,

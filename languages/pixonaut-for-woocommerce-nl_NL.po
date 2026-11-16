@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-16T11:29:44+00:00\n"
+"POT-Creation-Date: 2026-11-16T12:42:16+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -48,7 +48,7 @@ msgstr ""
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
 #: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:221
-#: src/Settings/SettingsPage.php:267 templates/admin/product-variation.php:42
+#: src/Settings/SettingsPage.php:264 templates/admin/product-variation.php:42
 msgid "Pixonaut"
 msgstr "Pixonaut"
 
@@ -743,29 +743,33 @@ msgstr "Opvragen welke waarden een product als eigen producten toont"
 
 #: src/Abilities/GetProductSplitListing.php:38
 msgid ""
-"Reads, for each global attribute of a simple or variable product, its \"Show "
-"each value as its own product\" choice (`auto` follows the attribute's own "
-"setting, `attribute_default`), whether that lists its values as their own "
-"products, and each value's card's own title and image, with the image it "
-"waits for (`image_copy`). `listed_by` is the attribute the product is listed "
-"by now; null when it is listed once. `cards` are the cards it is listed as "
-"now: one per value, or, listed by several attributes, one per combination of "
-"their values that a variation sells, each with its values' `term_ids` and "
-"its own title and image. Set them with `set-product-split-listing`."
+"Reads, for each global attribute of a simple or variable product, its "
+"\"Cards in the shop\" choice (`on`, a card per value always; `filtered`, a "
+"card per value only while a filter of the shop chooses one, as for a "
+"framing; `off`, none; `auto` follows the attribute's own setting, "
+"`attribute_mode`), what that comes to (`listed`), and each value's card's "
+"own title and image, with the image it waits for (`image_copy`). `listed_by` "
+"is the attribute the product is listed by now; null when it is listed once. "
+"`cards` are the cards it is listed as now: one per value, or, listed by "
+"several attributes, one per combination of their values that a variation "
+"sells, each with its values' `term_ids` and its own title and image. Set "
+"them with `set-product-split-listing`."
 msgstr ""
 "Vraagt voor elk globaal attribuut van een simpel of variabel product de "
-"keuze voor “Elke waarde als eigen product tonen” op (`auto` volgt de eigen "
-"instelling van het attribuut, `attribute_default`), of de waarden daarmee "
-"als eigen producten worden getoond, en de eigen titel en afbeelding van de "
-"kaart van elke waarde, met de afbeelding waarop ze wacht (`image_copy`). "
-"`listed_by` is het attribuut waarnaar het product nu per waarde wordt "
-"getoond; null als het één keer wordt getoond. `cards` zijn de kaarten "
-"waarmee het nu wordt getoond: één per waarde of, bij meerdere attributen, "
-"één per combinatie van hun waarden die door een variatie wordt verkocht, elk "
-"met de `term_ids` van de waarden en een eigen titel en afbeelding. Stel ze "
-"in met `set-product-split-listing`."
+"keuze voor “Kaarten in de winkel” op (`on`, altijd een kaart per waarde; "
+"`filtered`, een kaart per waarde alleen terwijl een filter van de winkel er "
+"een kiest, zoals bij een inlijsting; `off`, geen; `auto` volgt de eigen "
+"instelling van het attribuut, `attribute_mode`), waar die keuze op neerkomt "
+"(`listed`), en de eigen titel en afbeelding van de kaart van elke waarde, "
+"met de afbeelding waarop ze wacht (`image_copy`). `listed_by` is het "
+"attribuut waarnaar het product nu per waarde wordt getoond; null als het één "
+"keer wordt getoond. `cards` zijn de kaarten waarmee het nu wordt getoond: "
+"één per waarde of, bij meerdere attributen, één per combinatie van hun "
+"waarden die door een variatie wordt verkocht, elk met de `term_ids` van de "
+"waarden en een eigen titel en afbeelding. Stel ze in met "
+"`set-product-split-listing`."
 
-#: src/Abilities/GetProductSplitListing.php:206
+#: src/Abilities/GetProductSplitListing.php:212
 msgid ""
 "The image the card is given by a URL and does not show yet: `src`, the URL, "
 "and `state`, `waiting` while the store copies it into the media library, as "
@@ -778,7 +782,7 @@ msgstr ""
 "met de reden in `reason`. Null zodra de kaart haar toont, en als ze er geen "
 "kreeg."
 
-#: src/Abilities/GetProductSplitListing.php:228
+#: src/Abilities/GetProductSplitListing.php:234
 msgid ""
 "The id of the attribute the product is listed by, one card per value; null "
 "when it is listed once. Only a variable product is listed by an attribute, "
@@ -789,25 +793,46 @@ msgstr ""
 "variabel product kan zo worden getoond, en alleen naar een attribuut dat het "
 "voor zijn variaties gebruikt."
 
-#: src/Abilities/GetProductSplitListing.php:247
+#: src/Abilities/GetProductSplitListing.php:253
 msgid ""
-"Whether the attribute lists its values as their own products by default."
-msgstr "Of het attribuut zijn waarden standaard als eigen producten toont."
-
-#: src/Abilities/GetProductSplitListing.php:251
-msgid ""
-"What the choice comes to: whether the product lists each value of this "
-"attribute as its own product."
+"Whether the attribute lists its values as their own products by default, "
+"always or while filtered."
 msgstr ""
-"Waar de keuze op neerkomt: of het product elke waarde van dit attribuut als "
-"eigen product toont."
+"Of het attribuut zijn waarden standaard als eigen producten toont, altijd of "
+"bij filteren."
+
+#: src/Abilities/GetProductSplitListing.php:258
+msgid ""
+"How the attribute lists its values by default: `on`, a card per value; "
+"`filtered`, a card per value only while a filter of the shop chooses one; "
+"`off`, none. Set it with `set-attribute-split-listing`."
+msgstr ""
+"Hoe het attribuut zijn waarden standaard toont: `on`, een kaart per waarde; "
+"`filtered`, een kaart per waarde alleen terwijl een filter van de winkel er "
+"een kiest; `off`, geen. Stel het in met `set-attribute-split-listing`."
 
 #: src/Abilities/GetProductSplitListing.php:262
+msgid ""
+"What the choice comes to: whether the product lists each value of this "
+"attribute as its own product, always or while filtered."
+msgstr ""
+"Waar de keuze op neerkomt: of het product elke waarde van dit attribuut als "
+"eigen product toont, altijd of bij filteren."
+
+#: src/Abilities/GetProductSplitListing.php:267
+msgid ""
+"What the choice comes to: `on`, a card per value always; `filtered`, only "
+"while a filter chooses one; `off`, none."
+msgstr ""
+"Waar de keuze op neerkomt: `on`, altijd een kaart per waarde; `filtered`, "
+"alleen terwijl een filter er een kiest; `off`, geen."
+
+#: src/Abilities/GetProductSplitListing.php:278
 msgid "The card's own title; empty when it shows the product's."
 msgstr ""
 "De eigen titel van de kaart; leeg als de kaart die van het product toont."
 
-#: src/Abilities/GetProductSplitListing.php:266
+#: src/Abilities/GetProductSplitListing.php:282
 msgid ""
 "The card's own image, by its attachment id and URL; null when it shows the "
 "value's picture or the product's."
@@ -815,7 +840,7 @@ msgstr ""
 "De eigen afbeelding van de kaart, met de ID en URL van de bijlage; null als "
 "de kaart de afbeelding van de waarde of die van het product toont."
 
-#: src/Abilities/GetProductSplitListing.php:281
+#: src/Abilities/GetProductSplitListing.php:297
 msgid ""
 "The cards the product is listed as now: one per value, or one per "
 "combination of values when it is listed by several attributes. Empty when it "
@@ -825,7 +850,7 @@ msgstr ""
 "combinatie van waarden als het per waarde van meerdere attributen wordt "
 "getoond. Leeg als het één keer wordt getoond."
 
-#: src/Abilities/GetProductSplitListing.php:287
+#: src/Abilities/GetProductSplitListing.php:303
 msgid ""
 "The term ids of the card's values, one of each attribute the product is "
 "listed by that applies to it, in the product's order of attributes."
@@ -2012,6 +2037,44 @@ msgstr ""
 "opnieuw."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetAttributeSplitListing.php:36
+msgid "Set how an attribute lists its values in the shop"
+msgstr "Instellen hoe een attribuut zijn waarden in de winkel toont"
+
+#: src/Abilities/SetAttributeSplitListing.php:37
+msgid ""
+"Sets a global attribute's \"Cards in the shop\" setting, as its edit screen "
+"does: `on` lists a variable product using it for its variations once per "
+"value; `filtered` does so only while a filter of the shop chooses a value of "
+"it, as for a framing that should not make cards of its own but should show "
+"the framed card while the customer filters by it; `off` makes no card per "
+"value. Each product on `auto` for the attribute follows it (`get-product-"
+"split-listing`, `set-product-split-listing`). The answer is the attribute's "
+"setting now."
+msgstr ""
+"Stelt de instelling “Kaarten in de winkel” van een globaal attribuut in, "
+"zoals het bewerkscherm ervan dat doet: `on` toont een variabel product dat "
+"het attribuut voor zijn variaties gebruikt één keer per waarde; `filtered` "
+"doet dat alleen terwijl een filter van de winkel een van zijn waarden kiest, "
+"zoals bij een inlijsting die geen eigen kaarten moet krijgen maar wel de "
+"ingelijste kaart moet tonen terwijl de klant erop filtert; `off` maakt geen "
+"kaart per waarde. Elk product dat voor het attribuut op `auto` staat, volgt "
+"het (`get-product-split-listing`, `set-product-split-listing`). Het antwoord "
+"is de huidige instelling van het attribuut."
+
+#: src/Abilities/SetAttributeSplitListing.php:44
+msgid "A global attribute, by id."
+msgstr "Een globaal attribuut, op ID."
+
+#: src/Abilities/SetAttributeSplitListing.php:92
+msgid "No global attribute has this id."
+msgstr "Er is geen globaal attribuut met deze ID."
+
+#: src/Abilities/SetAttributeSplitListing.php:95
+msgid "The mode is not one of on, filtered or off."
+msgstr "De modus is niet een van on, filtered of off."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductPictureView.php:40
 msgid "Set what a product image is drawn on"
 msgstr "Instellen waarop een productafbeelding wordt aangemaakt"
@@ -2349,8 +2412,10 @@ msgstr "Instellen welke waarden een product als eigen producten toont"
 #: src/Abilities/SetProductSplitListing.php:56
 msgid ""
 "Sets, for each global attribute of a simple or variable product listed, its "
-"\"Show each value as its own product\" choice (`on`, `off`, or `auto` to "
-"follow the attribute's own setting) and each listed value's card's own title "
+"\"Cards in the shop\" choice (`on`, a card per value always; `filtered`, a "
+"card per value only while a filter of the shop chooses one, as for a "
+"framing; `off`, none; or `auto` to follow the attribute's own setting, which "
+"`set-attribute-split-listing` sets) and each listed value's card's own title "
 "and image, as the product's Attributes tab does. `cards` sets the title and "
 "image of the cards named by their values' `term_ids`: one of a product "
 "listed by several attributes is a combination, one value of each, as `get-"
@@ -2364,22 +2429,25 @@ msgid ""
 "split-listing` gives it."
 msgstr ""
 "Stelt voor elk opgegeven globaal attribuut van een simpel of variabel "
-"product de keuze voor “Elke waarde als eigen product tonen” in (`on`, `off` "
-"of `auto` om de eigen instelling van het attribuut te volgen) en de eigen "
-"titel en afbeelding van de kaart van elke opgegeven waarde, zoals het "
-"tabblad Attributen van het product dat doet. `cards` stelt de titel en "
-"afbeelding in van de kaarten die met de `term_ids` van hun waarden worden "
-"aangeduid: bij een product dat per waarde van meerdere attributen wordt "
-"getoond, is een kaart een combinatie, één waarde van elk, zoals `get-product-"
-"split-listing` ze geeft. Geef `attributes`, `cards` of beide op. Alleen wat "
-"wordt opgegeven verandert: een attribuut, waarde, kaart, titel of afbeelding "
-"die wordt weggelaten, blijft zoals die is. Een lege titel of een afbeelding "
-"null geeft de kaart weer de titel of afbeelding van het product. Er wordt "
-"niets opgeslagen tenzij alles wat is opgegeven klopt. Een afbeelding die met "
-"`src` is opgegeven, wordt gekopieerd nadat de aanroep heeft geantwoord: tot "
-"dan houdt de kaart de afbeelding die ze had, en zegt haar `image_copy` dat "
-"ze wacht, of waarom het kopiëren is mislukt. Het antwoord is wat het product "
-"nu heeft, zoals `get-product-split-listing` dat geeft."
+"product de keuze voor “Kaarten in de winkel” in (`on`, altijd een kaart per "
+"waarde; `filtered`, een kaart per waarde alleen terwijl een filter van de "
+"winkel er een kiest, zoals bij een inlijsting; `off`, geen; of `auto` om de "
+"eigen instelling van het attribuut te volgen, die "
+"`set-attribute-split-listing` instelt) en de eigen titel en afbeelding van "
+"de kaart van elke opgegeven waarde, zoals het tabblad Attributen van het "
+"product dat doet. `cards` stelt de titel en afbeelding in van de kaarten die "
+"met de `term_ids` van hun waarden worden aangeduid: bij een product dat per "
+"waarde van meerdere attributen wordt getoond, is een kaart een combinatie, "
+"één waarde van elk, zoals `get-product-split-listing` ze geeft. Geef "
+"`attributes`, `cards` of beide op. Alleen wat wordt opgegeven verandert: een "
+"attribuut, waarde, kaart, titel of afbeelding die wordt weggelaten, blijft "
+"zoals die is. Een lege titel of een afbeelding null geeft de kaart weer de "
+"titel of afbeelding van het product. Er wordt niets opgeslagen tenzij alles "
+"wat is opgegeven klopt. Een afbeelding die met `src` is opgegeven, wordt "
+"gekopieerd nadat de aanroep heeft geantwoord: tot dan houdt de kaart de "
+"afbeelding die ze had, en zegt haar `image_copy` dat ze wacht, of waarom het "
+"kopiëren is mislukt. Het antwoord is wat het product nu heeft, zoals "
+"`get-product-split-listing` dat geeft."
 
 #: src/Abilities/SetProductSplitListing.php:73
 msgid "One of the product's global attributes, by id."
@@ -3917,7 +3985,7 @@ msgstr ""
 
 #. translators: Link on the Plugins screen to the plugin's settings.
 #. translators: Item in the admin menu under Pixonaut, opening the plugin's settings.
-#: src/Admin/PluginLinks.php:40 src/Settings/SettingsPage.php:280
+#: src/Admin/PluginLinks.php:40 src/Settings/SettingsPage.php:277
 msgid "Settings"
 msgstr "Instellingen"
 
@@ -4090,7 +4158,7 @@ msgstr "Nooit"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is a percentage.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a percentage. The margin is the share of a product's price, excluding VAT, left after the printshop's cost.
-#: src/Admin/PricingPanel.php:353 src/Settings/Settings.php:501
+#: src/Admin/PricingPanel.php:353 src/Settings/Settings.php:487
 msgid "Target margin (%)"
 msgstr "Doelmarge (%)"
 
@@ -4101,25 +4169,25 @@ msgstr "Tolerantie (punten)"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money: the distance between two prices the rule may set.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the distance between two prices the pricing rule may set.
-#: src/Admin/PricingPanel.php:357 src/Settings/Settings.php:523
+#: src/Admin/PricingPanel.php:357 src/Settings/Settings.php:509
 msgid "Price step"
 msgstr "Prijsstap"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money below the price step.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money below the price step: what each price the pricing rule sets ends in.
-#: src/Admin/PricingPanel.php:359 src/Settings/Settings.php:534
+#: src/Admin/PricingPanel.php:359 src/Settings/Settings.php:520
 msgid "Prices end in"
 msgstr "Prijzen eindigen op"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the lowest price the pricing rule sets.
-#: src/Admin/PricingPanel.php:361 src/Settings/Settings.php:545
+#: src/Admin/PricingPanel.php:361 src/Settings/Settings.php:531
 msgid "Lowest price"
 msgstr "Laagste prijs"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the highest price the pricing rule sets.
-#: src/Admin/PricingPanel.php:363 src/Settings/Settings.php:556
+#: src/Admin/PricingPanel.php:363 src/Settings/Settings.php:542
 msgid "Highest price"
 msgstr "Hoogste prijs"
 
@@ -4332,25 +4400,26 @@ msgstr "Waarop de variatieafbeelding wordt aangemaakt"
 msgid "%1$s, photo %2$d"
 msgstr "%1$s, foto %2$d"
 
-#. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is on.
+#. translators: Option of the "Cards in the shop" menu of a product attribute: the shop lists a product once, whatever this attribute's value.
 #: src/Admin/SplitListingFields.php:307
-msgid "Auto: on, as the attribute is"
-msgstr "Auto: aan, zoals het attribuut"
+msgid "One card for all values"
+msgstr "Eén kaart voor alle waarden"
 
-#. translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is off.
+#. translators: Option of the "Cards in the shop" menu of a product attribute: the shop always lists each of the attribute's values as its own card.
 #: src/Admin/SplitListingFields.php:309
-msgid "Auto: off, as the attribute is"
-msgstr "Auto: uit, zoals het attribuut"
+msgid "A card per value"
+msgstr "Een kaart per waarde"
 
-#. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it on, whatever the attribute's setting.
+#. translators: Option of the "Cards in the shop" menu of a product attribute: the shop lists each of the attribute's values as its own card only while a customer filters by the attribute.
 #: src/Admin/SplitListingFields.php:311
-msgid "On for this product"
-msgstr "Aan voor dit product"
+msgid "A card per value while filtered by it"
+msgstr "Een kaart per waarde bij filteren op het attribuut"
 
-#. translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it off, whatever the attribute's setting.
-#: src/Admin/SplitListingFields.php:313
-msgid "Off for this product"
-msgstr "Uit voor dit product"
+#. translators: Option of the "Cards in the shop" menu on an attribute's row in a product's Attributes tab, following the attribute's own setting. %s: that setting, such as "A card per value".
+#: src/Admin/SplitListingFields.php:325
+#, php-format
+msgid "Auto: %s, as the attribute"
+msgstr "Auto: %s, zoals het attribuut"
 
 #. translators: Option of "Value names beside swatches" on the screen that adds or edits a product attribute: follow the store's setting.
 #: src/Admin/SwatchNamesField.php:91
@@ -5143,13 +5212,16 @@ msgstr ""
 "Het eigen drukformaat van de variatie is niet gecontroleerd sinds het "
 "product is gewijzigd. Werk het product bij om het opnieuw te controleren."
 
-#: src/Catalogue/InvalidReason.php:392
 #
+#: src/Catalogue/InvalidReason.php:392
 msgid ""
 "Pixonaut could not check the configuration. It is checked again in a while; "
 "if this stays, check the connection on the Pixonaut settings page, then "
 "update the product."
-msgstr "Pixonaut kon de configuratie niet controleren. Over een tijdje wordt die opnieuw gecontroleerd; blijft dit zo, controleer dan de koppeling in de Pixonaut-instellingen en werk daarna het product bij."
+msgstr ""
+"Pixonaut kon de configuratie niet controleren. Over een tijdje wordt die "
+"opnieuw gecontroleerd; blijft dit zo, controleer dan de koppeling in de "
+"Pixonaut-instellingen en werk daarna het product bij."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:396
@@ -5158,13 +5230,18 @@ msgid ""
 "Pixonaut refused the print size without saying why. Choose another print "
 "size in %s, or update the product to ask again; if this stays, contact "
 "Pixonaut."
-msgstr "Pixonaut heeft het drukformaat geweigerd zonder te zeggen waarom. Kies %s een ander drukformaat, of werk het product bij om het opnieuw te vragen; blijft dit zo, neem dan contact op met Pixonaut."
+msgstr ""
+"Pixonaut heeft het drukformaat geweigerd zonder te zeggen waarom. Kies %s "
+"een ander drukformaat, of werk het product bij om het opnieuw te vragen; "
+"blijft dit zo, neem dan contact op met Pixonaut."
 
 #: src/Catalogue/InvalidReason.php:400
 msgid ""
 "The print size has not been checked with Pixonaut yet. It is checked in a "
 "while, and this notice clears once it is."
-msgstr "Het drukformaat is nog niet bij Pixonaut gecontroleerd. Dat gebeurt over een tijdje, en deze melding verdwijnt zodra het gecontroleerd is."
+msgstr ""
+"Het drukformaat is nog niet bij Pixonaut gecontroleerd. Dat gebeurt over een "
+"tijdje, en deze melding verdwijnt zodra het gecontroleerd is."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
 #: src/Catalogue/InvalidReason.php:404
@@ -5257,13 +5334,16 @@ msgstr ""
 "De winkel is niet gekoppeld aan Pixonaut. Koppel de winkel in de Pixonaut-"
 "instellingen en werk daarna het product bij."
 
-#: src/Catalogue/PixonautRefusal.php:108
 #
+#: src/Catalogue/PixonautRefusal.php:108
 msgid ""
 "Pixonaut could not be reached to check the configuration. It is checked "
 "again in a while; if this stays, check the connection on the Pixonaut "
 "settings page, then update the product."
-msgstr "Pixonaut was niet bereikbaar om de configuratie te controleren. Over een tijdje wordt die opnieuw gecontroleerd; blijft dit zo, controleer dan de koppeling in de Pixonaut-instellingen en werk daarna het product bij."
+msgstr ""
+"Pixonaut was niet bereikbaar om de configuratie te controleren. Over een "
+"tijdje wordt die opnieuw gecontroleerd; blijft dit zo, controleer dan de "
+"koppeling in de Pixonaut-instellingen en werk daarna het product bij."
 
 #: src/Catalogue/PixonautRefusal.php:110
 msgid ""
@@ -7622,11 +7702,11 @@ msgstr ""
 "om de plugin te gebruiken."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:160
+#: src/Settings/Settings.php:158
 msgid "Default layout"
 msgstr "Standaardweergave"
 
-#: src/Settings/Settings.php:161
+#: src/Settings/Settings.php:159
 msgid ""
 "How personalised products show the designer, unless a product overrides it."
 msgstr ""
@@ -7634,11 +7714,11 @@ msgstr ""
 "overschrijft."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:174
+#: src/Settings/Settings.php:172
 msgid "Designer language"
 msgstr "Taal van de ontwerptool"
 
-#: src/Settings/Settings.php:175
+#: src/Settings/Settings.php:173
 msgid ""
 "The language of the designer on the product page, of Pixonaut’s designer the "
 "Personalise button opens, and of the proof pages customers approve their "
@@ -7654,11 +7734,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
 #. translators: Label of the dropdown choosing how the product page designer lays out its form. Admin product page.
-#: src/Settings/Settings.php:188 templates/admin/product-fields.php:237
+#: src/Settings/Settings.php:186 templates/admin/product-fields.php:237
 msgid "Form layout"
 msgstr "Formulierindeling"
 
-#: src/Settings/Settings.php:189
+#: src/Settings/Settings.php:187
 msgid ""
 "How the designer lays out its form, on the product page and in Pixonaut’s "
 "designer the Personalise button opens, unless a product overrides it: as the "
@@ -7670,11 +7750,11 @@ msgstr ""
 "één stap tegelijk."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: each product option, such as Size or Colour, gets a group of its own in the designer's form.
-#: src/Settings/Settings.php:201
+#: src/Settings/Settings.php:199
 msgid "As its own group"
 msgstr "Als eigen groep"
 
-#: src/Settings/Settings.php:202
+#: src/Settings/Settings.php:200
 msgid ""
 "Puts each of a product's options, such as Size or Colour, in a group of its "
 "own in the designer's form on the product page, named after the option, in "
@@ -7688,11 +7768,11 @@ msgstr ""
 "ingedeeld, behoudt ze."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the groups of a product's options come before or after the template's groups.
-#: src/Settings/Settings.php:213
+#: src/Settings/Settings.php:211
 msgid "Place of the option groups"
 msgstr "Plaats van de optiegroepen"
 
-#: src/Settings/Settings.php:214
+#: src/Settings/Settings.php:212
 msgid ""
 "Whether the groups of a product's options come before or after the "
 "template's groups."
@@ -7702,11 +7782,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the designer's form numbers its groups.
 #. translators: Label of the dropdown choosing whether the designer's form numbers its groups. Admin product page.
-#: src/Settings/Settings.php:226 templates/admin/product-fields.php:242
+#: src/Settings/Settings.php:224 templates/admin/product-fields.php:242
 msgid "Group numbers"
 msgstr "Groepsnummers"
 
-#: src/Settings/Settings.php:227
+#: src/Settings/Settings.php:225
 msgid ""
 "Numbers the groups of the designer's form on the product page: 1 Photo, 2 "
 "Text on one page, Step 1 of 2 in steps. Off shows the group names with no "
@@ -7717,11 +7797,11 @@ msgstr ""
 "groepsnamen zonder nummers."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:238
+#: src/Settings/Settings.php:236
 msgid "Load other colours and views"
 msgstr "Andere kleuren en aanzichten laden"
 
-#: src/Settings/Settings.php:239
+#: src/Settings/Settings.php:237
 msgid ""
 "Whether the designer loads a product's other colours, views and sides before "
 "the customer picks one, so they show at once. Choose In the background or "
@@ -7733,11 +7813,11 @@ msgstr ""
 "klanten die vooral op hun telefoon winkelen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:252
+#: src/Settings/Settings.php:250
 msgid "Designer accent colour"
 msgstr "Accentkleur van de ontwerptool"
 
-#: src/Settings/Settings.php:253
+#: src/Settings/Settings.php:251
 msgid ""
 "The colour the designer on the product page marks the chosen view, colour "
 "and option in, and draws its Next button in. None takes the accent colour of "
@@ -7750,11 +7830,11 @@ msgstr ""
 "behoudt de eigen kleuren van de ontwerptool als het merk er geen heeft."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:264
+#: src/Settings/Settings.php:262
 msgid "Custom accent colour"
 msgstr "Aangepaste accentkleur"
 
-#: src/Settings/Settings.php:265
+#: src/Settings/Settings.php:263
 msgid ""
 "The accent colour when Designer accent colour is A custom colour, e.g. "
 "#1e73be."
@@ -7763,11 +7843,11 @@ msgstr ""
 "kleur’ staat, bijv. #1e73be."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:276
+#: src/Settings/Settings.php:274
 msgid "Show the print area's frame"
 msgstr "Kader van het drukgebied tonen"
 
-#: src/Settings/Settings.php:277
+#: src/Settings/Settings.php:275
 msgid ""
 "Draws a thin grey frame on the preview around where the design can go, in "
 "the designer on the product page and in Pixonaut's designer the Personalise "
@@ -7780,12 +7860,12 @@ msgstr ""
 "ontwerp op de productfoto zoals het wordt gedrukt."
 
 #. translators: Title of a setting on the settings page, shown to the merchant. "Hosted page" is Pixonaut's designer page the Personalise button opens.
-#: src/Settings/Settings.php:287
+#: src/Settings/Settings.php:285
 msgid "Add to cart after approve in hosted page"
 msgstr "In winkelwagen plaatsen na goedkeuren op de gehoste pagina"
 
 #. translators: Help text of a setting on the settings page. "Approve and add to cart" and "Approve and go back" are the labels of the button on Pixonaut's designer page.
-#: src/Settings/Settings.php:289
+#: src/Settings/Settings.php:287
 msgid ""
 "For the Personalise button layout. Approving adds the product to the cart "
 "and opens its cart item's page, and Pixonaut's designer says Approve and add "
@@ -7798,11 +7878,11 @@ msgstr ""
 "keert terug naar de productpagina, en de tool toont Goedkeuren en teruggaan."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: how the options of a product option such as a size show in the designer's form.
-#: src/Settings/Settings.php:300
+#: src/Settings/Settings.php:298
 msgid "Product options in the designer"
 msgstr "Productopties in de ontwerptool"
 
-#: src/Settings/Settings.php:301
+#: src/Settings/Settings.php:299
 msgid ""
 "How the designer on the product page shows the options of a variable "
 "product, such as its sizes, when it draws them in its form. As the theme "
@@ -7819,11 +7899,11 @@ msgstr ""
 "de andere keuzes kan worden gekocht, wordt grijs weergegeven."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether a product option's swatches drawn as a colour or a picture show the option's name beside them.
-#: src/Settings/Settings.php:313
+#: src/Settings/Settings.php:311
 msgid "Show value names beside swatches"
 msgstr "Waardenamen naast de knoppen tonen"
 
-#: src/Settings/Settings.php:314
+#: src/Settings/Settings.php:312
 msgid ""
 "With product options shown as swatches, a value Pixonaut draws as a colour "
 "or a picture shows its name beside it. Off, the swatch shows the colour or "
@@ -7843,11 +7923,11 @@ msgstr ""
 "onder Producten > Attributen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:324
+#: src/Settings/Settings.php:322
 msgid "Use Pixonaut pictures as product images"
 msgstr "Pixonaut-afbeeldingen als productafbeeldingen gebruiken"
 
-#: src/Settings/Settings.php:325
+#: src/Settings/Settings.php:323
 msgid ""
 "Sets each personalised product’s and variation’s image to Pixonaut’s picture "
 "of it, its template on the blank, and draws it again when the product "
@@ -7863,35 +7943,12 @@ msgstr ""
 "afbeelding die je zelf instelt, blijft behouden. Als dit uit staat, krijgt "
 "elk product de afbeelding terug die het eerder had."
 
-#. translators: Title of a setting on the settings page, shown to the merchant. A product listed "once per value" shows as several cards in the shop, one per value of an attribute such as Framing; this setting shows one card for the whole product instead.
-#: src/Settings/Settings.php:335
-msgid "One card per product in the shop"
-msgstr "Eén kaart per product in de winkel"
-
-#. translators: Help text of a setting on the settings page. "Show each value as its own product" is the label of a box on a product's attribute.
-#: src/Settings/Settings.php:337
-msgid ""
-"Lists a product set to Show each value as its own product once on the shop, "
-"category, tag and search pages, as itself. While a customer filters by one "
-"of those attributes, the product shows as the first of its values the filter "
-"keeps, with that value's title, image, price and link. Each value keeps its "
-"own page and its place in the sitemap. Off, the product is listed once per "
-"value."
-msgstr ""
-"Toont een product waarvoor ‘Elke waarde als eigen product tonen’ aan staat "
-"één keer op de winkel-, categorie-, tag- en zoekpagina's, als zichzelf. "
-"Zolang een klant op een van die attributen filtert, wordt het product "
-"getoond als de eerste van zijn waarden die het filter overhoudt, met de "
-"titel, afbeelding, prijs en link van die waarde. Elke waarde houdt zijn "
-"eigen pagina en zijn plek in de sitemap. Als dit uit staat, wordt het "
-"product één keer per waarde getoond."
-
 #. translators: Title of a setting on the settings page, shown to the merchant: whether a product's Pixonaut tab warns when a print size makes one of its template's images print below its recommended resolution.
-#: src/Settings/Settings.php:347
+#: src/Settings/Settings.php:333
 msgid "Warn about soft images"
 msgstr "Waarschuwen voor onscherpe afbeeldingen"
 
-#: src/Settings/Settings.php:348
+#: src/Settings/Settings.php:334
 msgid ""
 "Warns in a product's Pixonaut tab when one of its print sizes makes an image "
 "in its template print below the resolution Pixonaut recommends, so it may "
@@ -7909,11 +7966,11 @@ msgstr ""
 "instellingen van de werkruimte in de Pixonaut-studio."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: the images a product's Pixonaut tab no longer warns about.
-#: src/Settings/Settings.php:358
+#: src/Settings/Settings.php:344
 msgid "Images not warned about"
 msgstr "Afbeeldingen zonder waarschuwing"
 
-#: src/Settings/Settings.php:359
+#: src/Settings/Settings.php:345
 msgid ""
 "The images you chose not to be warned about again in a product's Pixonaut "
 "tab, by their Pixonaut id. Remove one to be warned about it again."
@@ -7923,11 +7980,11 @@ msgstr ""
 "gewaarschuwd te worden."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the fields are the ones the customer filled in to personalise the item.
-#: src/Settings/Settings.php:370
+#: src/Settings/Settings.php:356
 msgid "List the design's fields"
 msgstr "Velden van het ontwerp tonen"
 
-#: src/Settings/Settings.php:371
+#: src/Settings/Settings.php:357
 msgid ""
 "Lists what the customer filled in under a personalised item in the cart, the "
 "checkout, their orders and the order emails, as the designer showed it. Off, "
@@ -7941,11 +7998,11 @@ msgstr ""
 "altijd."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: which view of the product the picture of a personalised item shows.
-#: src/Settings/Settings.php:382
+#: src/Settings/Settings.php:368
 msgid "Picture shows"
 msgstr "Afbeelding toont"
 
-#: src/Settings/Settings.php:383
+#: src/Settings/Settings.php:369
 msgid ""
 "A personalised item shows the customer’s design on the product in the cart, "
 "the checkout, their orders and the order emails. This chooses the view of "
@@ -7959,11 +8016,11 @@ msgstr ""
 "het eerste aanzicht van de drukpositie waarin het product wordt getoond."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:396
+#: src/Settings/Settings.php:382
 msgid "Default approval"
 msgstr "Standaardgoedkeuring"
 
-#: src/Settings/Settings.php:397
+#: src/Settings/Settings.php:383
 msgid ""
 "How customers approve their design before it is printed, unless a product "
 "overrides it."
@@ -7972,11 +8029,11 @@ msgstr ""
 "product dit overschrijft."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:411
+#: src/Settings/Settings.php:397
 msgid "Proof approval deadline (days)"
 msgstr "Termijn voor goedkeuring van de drukproef (dagen)"
 
-#: src/Settings/Settings.php:412
+#: src/Settings/Settings.php:398
 msgid ""
 "With proof by email, how many days the customer has to approve their proof. "
 "The link in the email works a week longer."
@@ -7985,11 +8042,11 @@ msgstr ""
 "te keuren. De link in de e-mail werkt een week langer."
 
 #. translators: Title of a setting on the settings page, shown to the merchant.
-#: src/Settings/Settings.php:424
+#: src/Settings/Settings.php:410
 msgid "When no answer by the deadline"
 msgstr "Als er binnen de termijn geen antwoord is"
 
-#: src/Settings/Settings.php:425
+#: src/Settings/Settings.php:411
 msgid ""
 "With proof by email, what happens to a design the customer neither approved "
 "nor rejected by the deadline."
@@ -7998,11 +8055,11 @@ msgstr ""
 "de termijn niet heeft goedgekeurd of afgewezen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; what happens to an item whose design the customer rejected.
-#: src/Settings/Settings.php:438
+#: src/Settings/Settings.php:424
 msgid "On deny"
 msgstr "Bij afwijzing"
 
-#: src/Settings/Settings.php:439
+#: src/Settings/Settings.php:425
 msgid ""
 "What happens to an item whose design the customer rejected, or which was "
 "denied at the deadline."
@@ -8011,11 +8068,11 @@ msgstr ""
 "dat na afloop van de termijn is afgewezen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:453
+#: src/Settings/Settings.php:439
 msgid "First proof reminder after (days)"
 msgstr "Eerste herinnering drukproef na (dagen)"
 
-#: src/Settings/Settings.php:454
+#: src/Settings/Settings.php:440
 msgid ""
 "Days after the proof email that a customer who has not answered is reminded. "
 "Only reminders before the deadline are sent."
@@ -8025,20 +8082,20 @@ msgstr ""
 "einde van de termijn verstuurd."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days.
-#: src/Settings/Settings.php:467
+#: src/Settings/Settings.php:453
 msgid "Then remind every (days)"
 msgstr "Daarna herinneren elke (dagen)"
 
-#: src/Settings/Settings.php:468
+#: src/Settings/Settings.php:454
 msgid "Days between one proof reminder and the next."
 msgstr "Aantal dagen tussen de ene herinnering en de volgende."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of reminders.
-#: src/Settings/Settings.php:481
+#: src/Settings/Settings.php:467
 msgid "Proof reminders at most"
 msgstr "Maximaal aantal herinneringen"
 
-#: src/Settings/Settings.php:482
+#: src/Settings/Settings.php:468
 msgid ""
 "How many reminders a customer gets at most; 0 sends none. The last one says "
 "when the deadline is and what happens then."
@@ -8047,7 +8104,7 @@ msgstr ""
 "verstuurd. De laatste vermeldt wanneer de termijn afloopt en wat er dan "
 "gebeurt."
 
-#: src/Settings/Settings.php:502
+#: src/Settings/Settings.php:488
 msgid ""
 "The share of a price, excluding VAT, that is left after what the printshop "
 "charges for the product and its shipping. With 50, a product that costs 167 "
@@ -8060,11 +8117,11 @@ msgstr ""
 "prijs zijn kosten, tenzij een product een eigen marge instelt."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of percentage points either side of the target margin.
-#: src/Settings/Settings.php:512
+#: src/Settings/Settings.php:498
 msgid "Tolerance (percentage points)"
 msgstr "Tolerantie (procentpunten)"
 
-#: src/Settings/Settings.php:513
+#: src/Settings/Settings.php:499
 msgid ""
 "How far a margin may drift from the target, either way, before the price "
 "moves. With a target of 50 and a tolerance of 10, a price is kept while its "
@@ -8074,7 +8131,7 @@ msgstr ""
 "voordat de prijs verandert. Bij een doel van 50 en een tolerantie van 10 "
 "blijft een prijs behouden zolang de marge tussen 40 en 60 ligt."
 
-#: src/Settings/Settings.php:524
+#: src/Settings/Settings.php:510
 msgid ""
 "The distance between two prices the rule may set: 10 for every ten, 5 for "
 "every five, 1 for whole amounts."
@@ -8082,7 +8139,7 @@ msgstr ""
 "De afstand tussen twee prijzen die de regel mag instellen: 10 voor "
 "tientallen, 5 voor vijftallen, 1 voor hele bedragen."
 
-#: src/Settings/Settings.php:535
+#: src/Settings/Settings.php:521
 msgid ""
 "What every price the rule sets ends in, below the step: with a step of 10, "
 "ending in 9 gives 379, 389, 399; ending in 0 gives 380, 390, 400."
@@ -8091,24 +8148,24 @@ msgstr ""
 "van 10 geeft eindigen op 9 de prijzen 379, 389, 399; eindigen op 0 geeft "
 "380, 390, 400."
 
-#: src/Settings/Settings.php:546
+#: src/Settings/Settings.php:532
 msgid "The rule never sets a price below this. Empty for no limit."
 msgstr ""
 "De regel stelt nooit een prijs onder dit bedrag in. Laat leeg voor geen "
 "limiet."
 
-#: src/Settings/Settings.php:557
+#: src/Settings/Settings.php:543
 msgid "The rule never sets a price above this. Empty for no limit."
 msgstr ""
 "De regel stelt nooit een prijs boven dit bedrag in. Laat leeg voor geen "
 "limiet."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a percentage added to a cost converted from another currency.
-#: src/Settings/Settings.php:567
+#: src/Settings/Settings.php:553
 msgid "Currency buffer (%)"
 msgstr "Valutabuffer (%)"
 
-#: src/Settings/Settings.php:568
+#: src/Settings/Settings.php:554
 msgid ""
 "A printshop charges in its own currency. A cost in another currency than "
 "your store’s is converted with the European Central Bank’s daily reference "
@@ -8123,11 +8180,11 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the plugin changes prices by itself when a printshop's cost changes.
 #. translators: Label of a field in the Prices section of the product edit page: whether this product's prices change by themselves when a printshop's cost changes.
-#: src/Settings/Settings.php:578 templates/admin/product-prices.php:70
+#: src/Settings/Settings.php:564 templates/admin/product-prices.php:70
 msgid "Automatic price changes"
 msgstr "Automatische prijswijzigingen"
 
-#: src/Settings/Settings.php:579
+#: src/Settings/Settings.php:565
 msgid ""
 "When a printshop changes what it charges, set the prices that follow the "
 "rule and whose margin left the tolerance to the rule’s price, and log each "
@@ -8141,11 +8198,11 @@ msgstr ""
 "met de prijs die de regel voorstelt, zodat je die kunt toepassen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether product pages say how long delivery takes.
-#: src/Settings/Settings.php:589
+#: src/Settings/Settings.php:575
 msgid "Show the delivery time"
 msgstr ""
 
-#: src/Settings/Settings.php:590
+#: src/Settings/Settings.php:576
 msgid ""
 "Say on the product page how long the printshop says the chosen variation "
 "takes, such as “Delivered in 4–7 days”. Only what the printshop itself tells "
@@ -8155,22 +8212,22 @@ msgid ""
 msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days the store adds to the printshop's delivery time.
-#: src/Settings/Settings.php:602
+#: src/Settings/Settings.php:588
 msgid "Handling days"
 msgstr ""
 
-#: src/Settings/Settings.php:603
+#: src/Settings/Settings.php:589
 msgid ""
 "Days of your own to add to the printshop’s time, for what happens before an "
 "order reaches it, such as approving a proof."
 msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut API.
-#: src/Settings/Settings.php:620
+#: src/Settings/Settings.php:606
 msgid "API base"
 msgstr "API-basis"
 
-#: src/Settings/Settings.php:621
+#: src/Settings/Settings.php:607
 msgid ""
 "The Pixonaut API as the browser reaches it, e.g. a local Pixonaut. Empty "
 "uses Pixonaut’s own. The store’s key is sent to this address."
@@ -8180,11 +8237,11 @@ msgstr ""
 "adres gestuurd."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL WordPress uses for the Pixonaut API.
-#: src/Settings/Settings.php:630
+#: src/Settings/Settings.php:616
 msgid "Server-to-server API base"
 msgstr "API-basis server-naar-server"
 
-#: src/Settings/Settings.php:631
+#: src/Settings/Settings.php:617
 msgid ""
 "The Pixonaut API as WordPress itself reaches it, when that differs from the "
 "browser’s address (WordPress inside Docker, say). Empty uses the API base."
@@ -8194,11 +8251,11 @@ msgstr ""
 "API-basis."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut studio.
-#: src/Settings/Settings.php:640
+#: src/Settings/Settings.php:626
 msgid "Studio base"
 msgstr "Studio-basis"
 
-#: src/Settings/Settings.php:641
+#: src/Settings/Settings.php:627
 msgid ""
 "The Pixonaut studio, where a connect is approved and the admin’s studio "
 "links lead. Empty uses Pixonaut’s own."
@@ -8208,11 +8265,11 @@ msgstr ""
 "Pixonaut zelf."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the CDN the designer SDK loads from.
-#: src/Settings/Settings.php:650
+#: src/Settings/Settings.php:636
 msgid "CDN base"
 msgstr "CDN-basis"
 
-#: src/Settings/Settings.php:651
+#: src/Settings/Settings.php:637
 msgid ""
 "Where the pinned designer SDK release loads from, e.g. Pixonaut’s staging "
 "CDN. The release’s integrity is still checked. Empty uses Pixonaut’s own."
@@ -8223,11 +8280,11 @@ msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the URL of a designer SDK script.
 #. translators: Label of the field for the SDK script's URL, in developer tools.
-#: src/Settings/Settings.php:660 templates/admin/developer-tools.php:111
+#: src/Settings/Settings.php:646 templates/admin/developer-tools.php:111
 msgid "SDK script"
 msgstr "SDK-script"
 
-#: src/Settings/Settings.php:661
+#: src/Settings/Settings.php:647
 msgid ""
 "Loads the designer SDK from this script, e.g. a local build, instead of the "
 "pinned release from the CDN base. Its integrity is not checked. Empty loads "
@@ -8238,11 +8295,11 @@ msgstr ""
 "niet gecontroleerd. Leeg laadt de vastgezette release."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on debug logging of the designer SDK.
-#: src/Settings/Settings.php:670
+#: src/Settings/Settings.php:656
 msgid "SDK debug"
 msgstr "SDK-debug"
 
-#: src/Settings/Settings.php:671
+#: src/Settings/Settings.php:657
 msgid ""
 "Logs every designer mount and its failures to the browser console. On the "
 "storefront, only for logged-in store managers."
@@ -8252,25 +8309,25 @@ msgstr ""
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; turns on a log of requests to Pixonaut.
 #. translators: Heading of the table of recent requests to Pixonaut, in developer tools.
-#: src/Settings/Settings.php:680 templates/admin/developer-tools.php:149
+#: src/Settings/Settings.php:666 templates/admin/developer-tools.php:149
 msgid "Request log"
 msgstr "Verzoekenlog"
 
-#: src/Settings/Settings.php:681
+#: src/Settings/Settings.php:667
 msgid "Records the last 50 requests to Pixonaut, without keys or tokens."
 msgstr ""
 "Registreert de laatste 50 verzoeken aan Pixonaut, zonder sleutels of tokens."
 
-#: src/Settings/SettingsPage.php:265 src/Settings/SettingsPage.php:278
-#: src/Settings/SettingsPage.php:369
+#: src/Settings/SettingsPage.php:262 src/Settings/SettingsPage.php:275
+#: src/Settings/SettingsPage.php:366
 msgid "Pixonaut settings"
 msgstr "Pixonaut-instellingen"
 
-#: src/Settings/SettingsPage.php:323
+#: src/Settings/SettingsPage.php:320
 msgid "You are not allowed to change the Pixonaut settings."
 msgstr "Je mag de Pixonaut-instellingen niet wijzigen."
 
-#: src/Settings/SettingsPage.php:343
+#: src/Settings/SettingsPage.php:340
 msgid ""
 "Prices end in an amount below the price step: with a step of 10, anything "
 "from 0 up to 9.99. The ending you had is kept."
@@ -8278,54 +8335,54 @@ msgstr ""
 "Prijzen eindigen op een bedrag onder de prijsstap: bij een stap van 10 alles "
 "van 0 tot en met 9,99. Het vorige eindbedrag blijft behouden."
 
-#: src/Settings/SettingsPage.php:351
+#: src/Settings/SettingsPage.php:348
 msgid "Your settings have been saved."
 msgstr "Je instellingen zijn opgeslagen."
 
-#: src/Settings/SettingsPage.php:385
+#: src/Settings/SettingsPage.php:382
 msgid "Save changes"
 msgstr "Wijzigingen opslaan"
 
-#: src/Settings/SettingsPage.php:482
+#: src/Settings/SettingsPage.php:479
 msgid "The changes you made will be lost if you navigate away from this page."
 msgstr ""
 "De wijzigingen die je hebt gemaakt gaan verloren als je deze pagina verlaat."
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the settings for the designer on the store's product pages.
-#: src/Settings/SettingsPage.php:585
+#: src/Settings/SettingsPage.php:582
 msgid "Storefront"
 msgstr "Winkel"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: how customers approve their designs, and the proof emails.
-#: src/Settings/SettingsPage.php:588
+#: src/Settings/SettingsPage.php:585
 msgctxt "settings tab"
 msgid "Approval"
 msgstr "Goedkeuring"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the rule that prices products from what the printshop charges.
-#: src/Settings/SettingsPage.php:591
+#: src/Settings/SettingsPage.php:588
 msgctxt "settings tab"
 msgid "Prices"
 msgstr "Prijzen"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: which releases of the plugin WordPress offers.
-#: src/Settings/SettingsPage.php:594
+#: src/Settings/SettingsPage.php:591
 msgctxt "settings tab"
 msgid "Updates"
 msgstr "Updates"
 
 #. translators: Tab of the Pixonaut settings page, shown to the merchant: the store's connection to its Pixonaut workspace.
 #. translators: Heading of the Pixonaut connection card on the settings page.
-#: src/Settings/SettingsPage.php:597 templates/admin/connection-card.php:109
+#: src/Settings/SettingsPage.php:594 templates/admin/connection-card.php:109
 msgid "Connection"
 msgstr "Koppeling"
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how the designer on product pages looks and behaves.
-#: src/Settings/SettingsPage.php:613
+#: src/Settings/SettingsPage.php:610
 msgid "Product page designer"
 msgstr "Ontwerptool op de productpagina"
 
-#: src/Settings/SettingsPage.php:614
+#: src/Settings/SettingsPage.php:611
 msgid ""
 "How the designer looks and behaves on product pages. A product’s Pixonaut "
 "tab can change the layouts for that product."
@@ -8336,12 +8393,12 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the images of personalised products.
 #. translators: Heading of a group of fields in the Pixonaut tab of the product edit page, shown to the merchant: the product's images drawn by Pixonaut.
-#: src/Settings/SettingsPage.php:620
+#: src/Settings/SettingsPage.php:617
 #: templates/admin/product-showcase-images.php:58
 msgid "Product images"
 msgstr "Productafbeeldingen"
 
-#: src/Settings/SettingsPage.php:621
+#: src/Settings/SettingsPage.php:618
 msgid ""
 "The image the shop, feeds, emails and search results show for a personalised "
 "product."
@@ -8349,22 +8406,12 @@ msgstr ""
 "De afbeelding die de winkel, productfeeds, e-mails en zoekresultaten tonen "
 "voor een gepersonaliseerd product."
 
-#. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how products are listed on the shop's pages.
-#: src/Settings/SettingsPage.php:627
-msgid "Shop pages"
-msgstr "Winkelpagina's"
-
-#: src/Settings/SettingsPage.php:628
-msgid "How products are listed on the shop, category, tag and search pages."
-msgstr ""
-"Hoe producten worden getoond op de winkel-, categorie-, tag- en zoekpagina's."
-
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how a personalised item shows in the cart, the checkout, orders and emails.
-#: src/Settings/SettingsPage.php:634
+#: src/Settings/SettingsPage.php:624
 msgid "Cart and orders"
 msgstr "Winkelwagen en bestellingen"
 
-#: src/Settings/SettingsPage.php:635
+#: src/Settings/SettingsPage.php:625
 msgid ""
 "How a personalised item shows in the cart, the checkout, the customer’s "
 "orders and the order emails."
@@ -8373,11 +8420,11 @@ msgstr ""
 "afrekenen, in de bestellingen van de klant en in de bestelmails."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: warnings in a product's Pixonaut tab about images that print below their recommended resolution.
-#: src/Settings/SettingsPage.php:641
+#: src/Settings/SettingsPage.php:631
 msgid "Image resolution"
 msgstr "Resolutie van afbeeldingen"
 
-#: src/Settings/SettingsPage.php:642
+#: src/Settings/SettingsPage.php:632
 msgid ""
 "Warnings in a product’s Pixonaut tab about images in its template that print "
 "below the resolution Pixonaut recommends at one of its print sizes."
@@ -8388,11 +8435,11 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: how customers approve their design before it is printed.
 #. translators: Label of the dropdown choosing how customers approve their design (proof) before printing. Admin product page.
-#: src/Settings/SettingsPage.php:648 templates/admin/product-fields.php:247
+#: src/Settings/SettingsPage.php:638 templates/admin/product-fields.php:247
 msgid "Approval"
 msgstr "Goedkeuring"
 
-#: src/Settings/SettingsPage.php:649
+#: src/Settings/SettingsPage.php:639
 msgid ""
 "How customers approve their design before it is printed. A product’s "
 "Pixonaut tab can choose another way for that product."
@@ -8401,11 +8448,11 @@ msgstr ""
 "tabblad van een product kan voor dat product een andere manier kiezen."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the approval mode where customers approve a proof sent by email.
-#: src/Settings/SettingsPage.php:655
+#: src/Settings/SettingsPage.php:645
 msgid "Proof by email"
 msgstr "Drukproef per e-mail"
 
-#: src/Settings/SettingsPage.php:656
+#: src/Settings/SettingsPage.php:646
 msgid ""
 "For every product whose approval is Proof by email: how long customers have "
 "to answer, the reminders they get, and what happens when they do not approve."
@@ -8416,12 +8463,12 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the rule that prices products from what the printshop charges for them.
 #. translators: Column of the Prices table of the product edit page: how the price stands to the pricing rule, and what the rule suggests.
-#: src/Settings/SettingsPage.php:662 templates/admin/product-prices.php:99
+#: src/Settings/SettingsPage.php:652 templates/admin/product-prices.php:99
 #: templates/admin/product-prices.php:115
 msgid "Pricing rule"
 msgstr "Prijsregel"
 
-#: src/Settings/SettingsPage.php:663
+#: src/Settings/SettingsPage.php:653
 msgid ""
 "Prices a product from what the printshop charges for it. Apply the rule in a "
 "product’s Pixonaut tab, under Prices; from then on its prices follow the "
@@ -8433,24 +8480,24 @@ msgstr ""
 "kan elk onderdeel van de regel voor zichzelf wijzigen."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
-#: src/Settings/SettingsPage.php:669
+#: src/Settings/SettingsPage.php:659
 #, fuzzy
 #| msgid "Delivery address"
 msgid "Delivery time"
 msgstr "Verzendadres"
 
-#: src/Settings/SettingsPage.php:670
+#: src/Settings/SettingsPage.php:660
 msgid ""
 "A printshop tells how long a product takes to make and to deliver to your "
 "shop’s country. Pixonaut reads it with the printshop’s cost."
 msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: which releases of this plugin WordPress offers.
-#: src/Settings/SettingsPage.php:676
+#: src/Settings/SettingsPage.php:666
 msgid "Plugin updates"
 msgstr "Plugin-updates"
 
-#: src/Settings/SettingsPage.php:677
+#: src/Settings/SettingsPage.php:667
 msgid ""
 "Which releases of this plugin WordPress offers you on the Plugins and "
 "Updates screens."
@@ -8458,7 +8505,7 @@ msgstr ""
 "Welke versies van deze plugin WordPress je aanbiedt op de schermen Plugins "
 "en Updates."
 
-#: src/Settings/SettingsPage.php:698
+#: src/Settings/SettingsPage.php:688
 msgid ""
 "Designer accent colour is set to A custom colour: enter the colour, e.g. "
 "#1e73be."
@@ -8575,7 +8622,7 @@ msgid "Customers cannot open the designer for %1$s: %2$s"
 msgstr "Klanten kunnen de ontwerptool voor %1$s niet openen: %2$s"
 
 #. translators: %s: how many of the product are in the cart, as a number. Short for pieces, after the size of a cart item: 1 pc, 2 pcs.
-#: src/Storefront/PersonaliseButton.php:516
+#: src/Storefront/PersonaliseButton.php:520
 #, php-format
 msgid "%s pc"
 msgid_plural "%s pcs"
@@ -8598,7 +8645,7 @@ msgstr "Op de achtergrond, één tegelijk"
 msgid "Off: load each one when it is shown"
 msgstr "Uit: elk pas laden wanneer het wordt getoond"
 
-#: src/Storefront/UnavailableProduct.php:94
+#: src/Storefront/UnavailableProduct.php:95
 msgid ""
 "Shoppers do not see this product in the shop, search or related products, "
 "and cannot buy it: its template is paused or not published in Pixonaut. Make "
@@ -11118,25 +11165,27 @@ msgstr "Stoppen"
 msgid "Close"
 msgstr "Sluiten"
 
-#. translators: Checkbox on the screen that adds or edits a product attribute: the shop lists each of the attribute's values as its own product.
-#. translators: Three-way checkbox on an attribute's row in the product's Attributes tab: the shop lists each of the attribute's values as its own product.
-#: templates/admin/split-attribute-field.php:20
-#: templates/admin/split-listing-control.php:40
-msgid "Show each value as its own product"
-msgstr "Elke waarde als eigen product tonen"
-
-#. translators: Help under the "Show each value as its own product" checkbox on the screen that adds or edits a product attribute.
+#. translators: Label of a menu on the screen that adds or edits a product attribute: whether the shop lists each of the attribute's values as its own card.
+#. translators: Label of a menu on an attribute's row in the product's Attributes tab: whether the shop lists each of the attribute's values as its own card.
 #: templates/admin/split-attribute-field.php:22
+#: templates/admin/split-listing-control.php:28
+msgid "Cards in the shop"
+msgstr "Kaarten in de winkel"
+
+#. translators: Help under the "Cards in the shop" menu on the screen that adds or edits a product attribute.
+#: templates/admin/split-attribute-field.php:24
 msgid ""
-"A variable product using this attribute for its variations is listed once "
-"per value in the shop, its other options inside each one. Each product can "
-"follow this, or turn it on or off for itself, on its Attributes tab. Only "
-"one attribute per product is listed this way."
+"A variable product using this attribute for its variations can be listed "
+"once per value in the shop, its other options inside each one: always, or "
+"only while a customer filters by this attribute, as for a framing that "
+"should not make cards of its own. Each product can follow this, or choose "
+"for itself, on its Attributes tab."
 msgstr ""
-"Een variabel product dat dit attribuut voor zijn variaties gebruikt, wordt "
-"in de winkel één keer per waarde getoond, met zijn andere opties in elk "
-"ervan. Elk product kan dit volgen, of het voor zichzelf aan- of uitzetten, "
-"op zijn tabblad Attributen. Per product wordt maar één attribuut zo getoond."
+"Een variabel product dat dit attribuut voor zijn variaties gebruikt, kan in "
+"de winkel één keer per waarde worden getoond, met zijn andere opties in elk "
+"ervan: altijd, of alleen terwijl een klant op dit attribuut filtert, zoals "
+"bij een inlijsting die geen eigen kaarten moet krijgen. Elk product kan dit "
+"volgen, of zelf kiezen, op zijn tabblad Attributen."
 
 #. translators: Heading over a title and an image field per value of an attribute, on the attribute's row in the product's Attributes tab.
 #: templates/admin/split-card-looks.php:31
@@ -11146,13 +11195,15 @@ msgstr "Kaart van elke waarde in de winkel"
 #: templates/admin/split-card-looks.php:35
 msgid ""
 "A card without a title of its own shows the product’s. Without an image of "
-"its own, it shows the image of the value’s first variation that has one, "
-"else the product’s. Save attributes to add a row for a value you just added."
+"its own, it shows the flat picture of its design; a card a filter shows, of "
+"a value listed only while filtered, shows its first variation’s picture. "
+"Save attributes to add a row for a value you just added."
 msgstr ""
 "Een kaart zonder eigen titel toont die van het product. Zonder eigen "
-"afbeelding toont deze de afbeelding van de eerste variatie van de waarde die "
-"er een heeft, anders die van het product. Sla de attributen op om een rij "
-"toe te voegen voor een waarde die je net hebt toegevoegd."
+"afbeelding toont deze de platte afbeelding van haar ontwerp; een kaart die "
+"een filter toont, van een waarde die alleen bij filteren wordt getoond, "
+"toont de afbeelding van haar eerste variatie. Sla de attributen op om een "
+"rij toe te voegen voor een waarde die je net hebt toegevoegd."
 
 #. translators: %s: an attribute value, such as "With photo". Title of the media library window choosing the image of that value's card in the shop.
 #: templates/admin/split-card-looks.php:42
@@ -11582,6 +11633,45 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s weergave"
 msgstr[1] "%s weergaven"
+
+#~ msgid "Auto: off, as the attribute is"
+#~ msgstr "Auto: uit, zoals het attribuut"
+
+#~ msgid "On for this product"
+#~ msgstr "Aan voor dit product"
+
+#~ msgid "Off for this product"
+#~ msgstr "Uit voor dit product"
+
+#~ msgid "One card per product in the shop"
+#~ msgstr "Eén kaart per product in de winkel"
+
+#~ msgid ""
+#~ "Lists a product set to Show each value as its own product once on the "
+#~ "shop, category, tag and search pages, as itself. While a customer filters "
+#~ "by one of those attributes, the product shows as the first of its values "
+#~ "the filter keeps, with that value's title, image, price and link. Each "
+#~ "value keeps its own page and its place in the sitemap. Off, the product "
+#~ "is listed once per value."
+#~ msgstr ""
+#~ "Toont een product waarvoor ‘Elke waarde als eigen product tonen’ aan "
+#~ "staat één keer op de winkel-, categorie-, tag- en zoekpagina's, als "
+#~ "zichzelf. Zolang een klant op een van die attributen filtert, wordt het "
+#~ "product getoond als de eerste van zijn waarden die het filter overhoudt, "
+#~ "met de titel, afbeelding, prijs en link van die waarde. Elke waarde houdt "
+#~ "zijn eigen pagina en zijn plek in de sitemap. Als dit uit staat, wordt "
+#~ "het product één keer per waarde getoond."
+
+#~ msgid "Shop pages"
+#~ msgstr "Winkelpagina's"
+
+#~ msgid "How products are listed on the shop, category, tag and search pages."
+#~ msgstr ""
+#~ "Hoe producten worden getoond op de winkel-, categorie-, tag- en "
+#~ "zoekpagina's."
+
+#~ msgid "Show each value as its own product"
+#~ msgstr "Elke waarde als eigen product tonen"
 
 #~ msgid ""
 #~ "Whether the store changes prices that follow the rule by itself when a "

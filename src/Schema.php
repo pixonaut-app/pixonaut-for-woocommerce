@@ -163,6 +163,14 @@ final class Schema {
 	const PRODUCT_SPLIT_CARD_META = '_pixonaut_split_card';
 
 	/**
+	 * Product meta naming the values a split product's cards hold of the
+	 * attributes it lists a card per value of only while a filter chooses
+	 * one: a row per value, `<taxonomy>:<term id>`. The shop's listings
+	 * read it beside the card rows.
+	 */
+	const PRODUCT_SPLIT_FILTERED_META = '_pixonaut_split_filtered';
+
+	/**
 	 * Product meta holding a split product's cards' own titles and images,
 	 * by term id, as the store manager set them.
 	 */
@@ -387,6 +395,12 @@ final class Schema {
 	 * as their own products by default.
 	 */
 	const SPLIT_ATTRIBUTES_OPTION = 'pixonaut_wc_split_attributes';
+
+	/**
+	 * Option holding the ids of the global attributes whose values are listed
+	 * as their own products by default only while a filter chooses one.
+	 */
+	const SPLIT_FILTERED_ATTRIBUTES_OPTION = 'pixonaut_wc_split_filtered_attributes';
 
 	/**
 	 * Option holding, by global attribute id, whether its swatches show
