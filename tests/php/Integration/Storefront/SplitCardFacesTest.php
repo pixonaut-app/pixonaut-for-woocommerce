@@ -97,7 +97,12 @@ final class SplitCardFacesTest extends WP_UnitTestCase {
 	public function test_a_card_shows_the_flat_design_until_a_filter_on_an_attribute_listed_while_filtered_shows_its_studio_picture(): void {
 		SplitListing::set_attribute_mode( $this->attributes[ self::SIZE ], SplitListing::FILTERED );
 		$poster = $this->poster();
-		$drawn  = array();
+		/**
+		 * Each variation's studio and flat picture, by design and size.
+		 *
+		 * @var array<string, array<string, array{0: int, 1: int}>> $drawn
+		 */
+		$drawn = array();
 		foreach ( array( 'med-bild', 'utan-bild' ) as $picture ) {
 			foreach ( $this->variations_of( $poster, $picture ) as $variation ) {
 				$studio = $this->image();
