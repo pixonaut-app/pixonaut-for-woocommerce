@@ -6,6 +6,7 @@ import type {
 	ProductPlacement,
 	SplitMountOptions,
 } from '../types/sdk';
+import { followAddress } from './address';
 import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
 import { CheckboxApproval } from './approval';
 import { removePrintedSwatches } from './attribute-swatches';
@@ -434,6 +435,7 @@ export class ProductDesigner {
 			this.readVariation = watchVariation(this.form, (id) =>
 				this.chooseVariation(id),
 			);
+			followAddress(this.form);
 			// A page printed at a variation's price that the form did not open
 			// on shows the product's own once the form settles without one.
 			if (this.price?.printedOpening === true) {

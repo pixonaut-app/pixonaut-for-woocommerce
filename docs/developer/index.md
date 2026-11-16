@@ -142,7 +142,7 @@ product or a variation is trashed, restored or deleted, and once for every
 variable product after the upgrades that added and changed them; one request at a time
 writes a product's rows, under a MySQL named lock per product.
 `Storefront\SplitCardListings` joins the rows to the shop's main product query,
-so the count, pages and sort take each card as a product; a row naming a card the product no longer has, as one written before an upgrade changed its cards, shows the product as itself and has the product's rows written again. A configuration written by
+so the count, pages and sort take each card as a product; a row naming a card the product no longer has, as one written before an upgrade changed its cards, shows the product as itself and has the product's rows written again. With the `one_card_per_product` setting on, the query takes no card rows while no attribute filter is chosen, and otherwise the first row of each product that the filters keep. Each card's page is the product's at the address choosing the card's values (`Catalogue\CardPages`): `Storefront\CardPageHead` gives it the card's canonical address, title, description and Open Graph tags, through WordPress's own filters and through Yoast SEO's and Rank Math's, and `Storefront\CardSitemaps` lists it in WordPress's sitemap (`wp-sitemap-pixonautcards-1.xml`) and at the end of those plugins' first sitemap of products ([Each card's own page](../merchant/split-listings/#each-cards-own-page)). A configuration written by
 a newer plugin version reads as invalid, so the product cannot be bought,
 and is never overwritten; on a variation it applies even without "override".
 A line state written by a newer plugin version reads as `needs_attention` and

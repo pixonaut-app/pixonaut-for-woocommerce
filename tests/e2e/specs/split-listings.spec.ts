@@ -152,6 +152,119 @@ test('a category lists a card per picture that opens with it chosen', async ({
 	});
 });
 
+/** Read by the e2e support mu-plugin: `on` turns the store's
+ *  `one_card_per_product` setting on for this browser context. */
+const ONE_CARD_COOKIE = 'pixonaut_e2e_one_card';
+
+/** WordPress's sitemap of the cards' pages, on a site with plain permalinks. */
+const CARD_SITEMAP = '/?sitemap=pixonautcards&paged=1';
+
+/** A page's canonical address, as its head names it. */
+async function canonical(page: Page): Promise<string> {
+	return (
+		(await page.locator('link[rel="canonical"]').getAttribute('href')) ?? ''
+	);
+}
+
+test('a card’s page names itself in its head, a size on top of it names the card, and the address follows the choice', async ({
+	page,
+	request,
+	baseURL,
+}) => {
+	await withSplitProducts(request, async ({ poster, category, taxonomies }) => {
+		const picture = `attribute_${taxonomies.bild.taxonomy}`;
+		const size = `attribute_${taxonomies.storlek.taxonomy}`;
+
+		await page.goto(category);
+		const card = (await cardLinks(page))[0];
+		await cards(page).first().locator('a[href]').first().click();
+		const form = page.locator(
+			'#pixonaut-form-front [data-testid="pixonaut-form"]',
+		);
+		await expect(form.locator(`select[name="${picture}"]`)).toHaveValue(
+			'med-bild',
+		);
+		expect(await canonical(page)).toBe(card);
+		await expect(page).toHaveTitle(/Med bild/);
+		await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+			'content',
+			card,
+		);
+		await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+			'content',
+			/Med bild/,
+		);
+		await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+			'content',
+			/^Med bild/,
+		);
+
+		// The customer picks a size: the address follows, in place.
+		const entries = await page.evaluate(() => history.length);
+		await form.locator(`select[name="${size}"]`).selectOption('50x70');
+		await expect
+			.poll(() => chosen(page.url()))
+			.toEqual({ [picture]: 'med-bild', [size]: '50x70' });
+		expect(await page.evaluate(() => history.length)).toBe(entries);
+
+		// The address shared opens on the same choice, and names the card's page.
+		const shared = page.url();
+		await page.goto(shared);
+		await expect(form.locator(`select[name="${size}"]`)).toHaveValue('50x70');
+		await expect(form.locator(`select[name="${picture}"]`)).toHaveValue(
+			'med-bild',
+		);
+		expect(await canonical(page)).toBe(card);
+
+		// The product's own address stays its own page.
+		await page.goto(poster.permalink);
+		expect(chosen(await canonical(page))).toEqual({});
+		await expect(page.locator('meta[property="og:url"]')).toHaveCount(0);
+
+		const sitemap = await request.get(`${baseURL ?? ''}${CARD_SITEMAP}`);
+		expect(sitemap.status()).toBe(200);
+		const listed = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)]
+			.map(([, address]) => address.replaceAll('&amp;', '&'))
+			.filter(
+				(address) =>
+					new URL(address).searchParams.get('product') ===
+					new URL(poster.permalink).searchParams.get('product'),
+			);
+		expect(listed.map(chosen)).toEqual([
+			{ [picture]: 'med-bild' },
+			{ [picture]: 'utan-bild', [size]: '30x40' },
+		]);
+	});
+});
+
+test('with one card per product, a category lists the poster once and a filter shows the card it keeps', async ({
+	page,
+	request,
+	baseURL,
+}) => {
+	await page
+		.context()
+		.addCookies([{ name: ONE_CARD_COOKIE, value: 'on', url: baseURL ?? '' }]);
+	await withSplitProducts(request, async ({ category, taxonomies }) => {
+		await page.goto(category);
+		await expect(cards(page)).toHaveCount(2);
+		expect((await cardLinks(page)).map(chosen)).toEqual([{}, {}]);
+
+		const filtered = new URL(category);
+		filtered.searchParams.set(
+			`filter_${taxonomies.bild.taxonomy.replace(/^pa_/, '')}`,
+			'utan-bild',
+		);
+		await page.goto(filtered.toString());
+		await expect(cards(page)).toHaveCount(1);
+		expect((await cardLinks(page)).map(chosen)).toEqual([
+			expect.objectContaining({
+				[`attribute_${taxonomies.bild.taxonomy}`]: 'utan-bild',
+			}),
+		]);
+	});
+});
+
 test('a filter by picture keeps that picture’s card', async ({
 	page,
 	request,

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\CardPages;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use WC_Product;
@@ -76,16 +77,9 @@ final class SplitCardFaces {
 		if ( ! $product instanceof WC_Product || null === $key ) {
 			return $image_id;
 		}
-		$own = SplitCardLooks::of( $product->get_id(), $key )['image'];
-		if ( $own > 0 && wp_attachment_is_image( $own ) ) {
+		$own = CardPages::image( $product, $key );
+		if ( $own > 0 ) {
 			return $own;
-		}
-		foreach ( SplitCards::card_variations( $product, $key ) as $variation_id ) {
-			$variation = wc_get_product( $variation_id );
-			$image     = $variation instanceof WC_Product ? (int) $variation->get_image_id( 'edit' ) : 0;
-			if ( $image > 0 ) {
-				return $image;
-			}
 		}
 		return $image_id;
 	}

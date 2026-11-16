@@ -63,6 +63,8 @@ final class Settings {
 
 	public const PRODUCT_PICTURES = 'product_pictures';
 
+	public const ONE_CARD_PER_PRODUCT = 'one_card_per_product';
+
 	public const SHOW_FIELD_VALUES = 'show_field_values';
 
 	public const LOW_RESOLUTION_WARNINGS = 'low_resolution_warnings';
@@ -312,6 +314,18 @@ final class Settings {
 					/* translators: Title of a setting on the settings page, shown to the merchant. */
 					'title' => __( 'Use Pixonaut pictures as product images', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'Sets each personalised product’s and variation’s image to Pixonaut’s picture of it, its template on the blank, and draws it again when the product changes. A product can show its template’s showcase sets instead, chosen under Product images in its Pixonaut tab. An image you set yourself is kept. Off, each product gets back the image it had before.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::checkbox(
+				self::ONE_CARD_PER_PRODUCT,
+				false,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant. A product listed "once per value" shows as several cards in the shop, one per value of an attribute such as Framing; this setting shows one card for the whole product instead. */
+					'title' => __( 'One card per product in the shop', 'pixonaut-for-woocommerce' ),
+					/* translators: Help text of a setting on the settings page. "Show each value as its own product" is the label of a box on a product's attribute. */
+					'desc'  => __( 'Lists a product set to Show each value as its own product once on the shop, category, tag and search pages, as itself. While a customer filters by one of those attributes, the product shows as the first of its values the filter keeps, with that value\'s title, image, price and link. Each value keeps its own page and its place in the sitemap. Off, the product is listed once per value.', 'pixonaut-for-woocommerce' ),
 				)
 			)
 		);

@@ -9,7 +9,9 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\CardPages;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
+use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use WC_Product;
 use WC_Query;
@@ -28,6 +30,11 @@ use WP_Query;
  * Product Collection with a query of its own, the admin's) lists a product
  * once.
  *
+ * With the store's "one card per product" setting on, a listing shows each
+ * product once: as itself, or, while a filter is on an attribute the product
+ * is listed by, as the first of its cards the filter keeps. Every card keeps
+ * its page (`CardPages`) either way.
+ *
  * Each card links to the product with its values chosen. A filter by an
  * attribute the product is listed by keeps only the cards holding a chosen
  * value, and a card whose variations are all on a template that is not
@@ -41,6 +48,12 @@ final class SplitCardListings {
 	 * The joined card rows' alias.
 	 */
 	private const ALIAS = 'pixonaut_split_card';
+
+	/**
+	 * The alias of the card rows the first card a listing shows of a
+	 * product is looked for among.
+	 */
+	private const FIRST_ALIAS = 'pixonaut_first_card';
 
 	/**
 	 * The column holding a row's card value.
@@ -85,7 +98,10 @@ final class SplitCardListings {
 	 */
 	private array $shown = array();
 
-	public function __construct() {
+	/**
+	 * @param Settings $settings The settings.
+	 */
+	public function __construct( private readonly Settings $settings ) {
 		$this->cards = new WeakMap();
 	}
 
@@ -120,32 +136,39 @@ final class SplitCardListings {
 		if ( ! is_array( $clauses ) || ! $query instanceof WP_Query || ! self::lists_cards( $query ) || str_contains( (string) ( $clauses['join'] ?? '' ), " AS {$alias} " ) ) {
 			return $clauses;
 		}
+		$one    = true === $this->settings->get( Settings::ONE_CARD_PER_PRODUCT );
+		$chosen = self::chosen_values();
+		if ( $one && array() === $chosen ) {
+			// Each product once, as itself.
+			return $clauses;
+		}
 		global $wpdb;
 		$clauses['join']    = ( $clauses['join'] ?? '' ) . $wpdb->prepare( " LEFT JOIN {$wpdb->postmeta} AS {$alias} ON ( {$alias}.post_id = {$wpdb->posts}.ID AND {$alias}.meta_key = %s )", SplitCards::META ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table names and a constant alias.
 		$clauses['fields']  = ( $clauses['fields'] ?? '' ) . ", {$alias}.meta_value AS " . self::FIELD;
 		$clauses['groupby'] = '' === trim( (string) ( $clauses['groupby'] ?? '' ) ) ? '' : $clauses['groupby'] . ", {$alias}.meta_id";
 		$clauses['orderby'] = '' === trim( (string) ( $clauses['orderby'] ?? '' ) ) ? "{$alias}.meta_id ASC" : $clauses['orderby'] . ", {$alias}.meta_id ASC";
-		$clauses['where']   = ( $clauses['where'] ?? '' ) . self::filtered_cards();
-		foreach ( self::not_live_cards() as $product_id => $keys ) {
-			$clauses['where'] .= " AND NOT ( {$wpdb->posts}.ID = " . $product_id . " AND {$alias}.meta_value IN ( '" . implode( "', '", array_map( 'esc_sql', $keys ) ) . "' ) )";
+		$not_live           = self::not_live_cards();
+		$clauses['where']   = ( $clauses['where'] ?? '' ) . self::filtered_cards( $chosen, $alias ) . self::live_cards( $not_live, $alias );
+		if ( $one ) {
+			$first = self::FIRST_ALIAS;
+			// The first of the product's cards the filters keep; a product listed once has no card row.
+			$clauses['where'] .= " AND ( {$alias}.meta_id IS NULL OR {$alias}.meta_id = ( SELECT MIN( {$first}.meta_id ) FROM {$wpdb->postmeta} AS {$first} WHERE {$first}.post_id = {$wpdb->posts}.ID AND "
+				. $wpdb->prepare( "{$first}.meta_key = %s", SplitCards::META ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- a constant alias.
+				. self::filtered_cards( $chosen, $first ) . self::live_cards( $not_live, $first ) . ' ) )';
 		}
 		return $clauses;
 	}
 
 	/**
-	 * The condition a filtered listing keeps a card by, for each attribute
-	 * a filter is on: the card holds a value the filter chose, or none of
-	 * the product's cards holds a value of that attribute, so the product
-	 * is not listed by it. A product listed once has no card and is kept.
-	 * Empty without a filter.
+	 * The values the listing's filters chose, by the attribute each is on.
+	 *
+	 * @return array<string, list<int>> Term ids by taxonomy; none for a filter whose values name no term.
 	 */
-	private static function filtered_cards(): string {
-		global $wpdb;
-		$alias = self::ALIAS;
-		$where = '';
+	private static function chosen_values(): array {
+		$chosen = array();
 		foreach ( WC_Query::get_layered_nav_chosen_attributes() as $taxonomy => $filter ) {
-			$slugs = is_array( $filter['terms'] ?? null ) ? array_values( array_map( 'strval', $filter['terms'] ) ) : array();
-			$ids   = array() === $slugs ? array() : get_terms(
+			$slugs                        = is_array( $filter['terms'] ?? null ) ? array_values( array_map( 'strval', $filter['terms'] ) ) : array();
+			$ids                          = array() === $slugs ? array() : get_terms(
 				array(
 					'taxonomy'   => (string) $taxonomy,
 					'slug'       => $slugs,
@@ -153,17 +176,51 @@ final class SplitCardListings {
 					'fields'     => 'ids',
 				)
 			);
-			$ids   = is_array( $ids ) ? array_values( array_unique( array_map( 'intval', $ids ) ) ) : array();
+			$chosen[ (string) $taxonomy ] = is_array( $ids ) ? array_values( array_unique( array_map( 'intval', $ids ) ) ) : array();
+		}
+		return $chosen;
+	}
+
+	/**
+	 * The condition a filtered listing keeps a card row by, for each
+	 * attribute a filter is on: the card holds a value the filter chose, or
+	 * none of the product's cards holds a value of that attribute, so the
+	 * product is not listed by it. A product listed once has no card and is
+	 * kept. Empty without a filter.
+	 *
+	 * @param array<string, list<int>> $chosen The filters' values, as `chosen_values()` reads them.
+	 * @param string                   $alias  The card rows' alias.
+	 */
+	private static function filtered_cards( array $chosen, string $alias ): string {
+		global $wpdb;
+		$where = '';
+		foreach ( $chosen as $taxonomy => $ids ) {
 			// A key is the set of its term ids. No chosen id names a term: no card holds one.
 			$holds_chosen = array() === $ids ? '1 = 0' : implode( ' OR ', array_fill( 0, count( $ids ), "FIND_IN_SET( %d, {$alias}.meta_value )" ) );
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- table names, a constant alias and a placeholder per value.
 			$kept = $wpdb->prepare(
 				" AND ( {$alias}.meta_value IS NULL OR {$holds_chosen} OR NOT EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS listed INNER JOIN {$wpdb->term_taxonomy} AS held ON FIND_IN_SET( held.term_id, listed.meta_value ) WHERE listed.post_id = {$wpdb->posts}.ID AND listed.meta_key = %s AND held.taxonomy = %s ) )",
 				...$ids,
-				...array( SplitCards::META, (string) $taxonomy )
+				...array( SplitCards::META, $taxonomy )
 			);
 			// phpcs:enable
 			$where .= is_string( $kept ) ? $kept : '';
+		}
+		return $where;
+	}
+
+	/**
+	 * The condition leaving out the card rows of cards that are not live.
+	 *
+	 * @param array<int, list<string>> $not_live Card keys by product id, as `not_live_cards()` reads them.
+	 * @param string                   $alias    The card rows' alias.
+	 */
+	private static function live_cards( array $not_live, string $alias ): string {
+		global $wpdb;
+		$where = '';
+		foreach ( $not_live as $product_id => $keys ) {
+			// By the product's own id: a product without card rows has none to compare.
+			$where .= " AND NOT ( {$wpdb->posts}.ID = " . $product_id . " AND {$alias}.meta_value IN ( '" . implode( "', '", array_map( 'esc_sql', $keys ) ) . "' ) )";
 		}
 		return $where;
 	}
@@ -207,13 +264,15 @@ final class SplitCardListings {
 		if ( ! is_array( $posts ) || ! $query instanceof WP_Query || ! self::lists_cards( $query ) ) {
 			return $posts;
 		}
+		// With one card per product, a product shows a card only while a filter chose one of the card's values.
+		$filtered = true === $this->settings->get( Settings::ONE_CARD_PER_PRODUCT ) ? array_merge( array(), ...array_values( self::chosen_values() ) ) : null;
 		foreach ( $posts as $post ) {
 			if ( ! $post instanceof WP_Post || ! property_exists( $post, self::FIELD ) ) {
 				continue;
 			}
 			$key = $post->{self::FIELD};
 			unset( $post->{self::FIELD} );
-			if ( SplitCards::is_key( $key ) ) {
+			if ( SplitCards::is_key( $key ) && ( null === $filtered || array() !== array_intersect( SplitCards::term_ids( (string) $key ), $filtered ) ) ) {
 				$this->cards[ $post ] = (string) $key;
 			}
 		}
@@ -294,7 +353,7 @@ final class SplitCardListings {
 		if ( ! $product instanceof WC_Product ) {
 			return $url;
 		}
-		return add_query_arg( array_map( 'rawurlencode', SplitCards::link_values( $product, $this->current[1] ) ), $url );
+		return CardPages::url( $product, $this->current[1], $url );
 	}
 
 	/**

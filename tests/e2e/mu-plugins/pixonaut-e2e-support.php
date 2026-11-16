@@ -148,6 +148,27 @@ add_filter( 'option_pixonaut_wc_settings', 'pixonaut_e2e_swatch_names' );
 add_filter( 'default_option_pixonaut_wc_settings', 'pixonaut_e2e_swatch_names' );
 
 /**
+ * Cookie that turns the store's `one_card_per_product` setting on for one
+ * browser context (`on`), so a test of it changes no other test's listings.
+ */
+const PIXONAUT_E2E_ONE_CARD_COOKIE = 'pixonaut_e2e_one_card';
+
+/**
+ * The stored settings with `one_card_per_product` on, when the cookie says so.
+ *
+ * @param mixed $settings The stored settings.
+ * @return mixed
+ */
+function pixonaut_e2e_one_card( $settings ) {
+	if ( ! isset( $_COOKIE[ PIXONAUT_E2E_ONE_CARD_COOKIE ] ) || 'on' !== sanitize_key( wp_unslash( $_COOKIE[ PIXONAUT_E2E_ONE_CARD_COOKIE ] ) ) ) {
+		return $settings;
+	}
+	return array( \Pixonaut\WooCommerce\Settings\Settings::ONE_CARD_PER_PRODUCT => true ) + ( is_array( $settings ) ? $settings : array() );
+}
+add_filter( 'option_pixonaut_wc_settings', 'pixonaut_e2e_one_card' );
+add_filter( 'default_option_pixonaut_wc_settings', 'pixonaut_e2e_one_card' );
+
+/**
  * Cookie that sets the store's product-form settings for one browser context
  * (`as_groups=yes`, `place=last`, `numbers=off`, as a query string), so a spec
  * never changes them for another running at once.
