@@ -874,7 +874,7 @@ add_action(
 							'type' => 'object',
 						),
 						// `filtered`: the sizes list a card per value only while a filter chooses one.
-						'sizes'    => array(
+						'sizes'     => array(
 							'type' => 'string',
 							'enum' => array( 'filtered' ),
 						),
