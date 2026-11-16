@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Pixonaut\WooCommerce\Catalogue\CardPages;
+use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use WC_Product;
@@ -300,6 +301,7 @@ final class SplitCardListings {
 		if ( ! is_array( $posts ) || ! $query instanceof WP_Query || ! self::lists_cards( $query ) ) {
 			return $posts;
 		}
+		$carded = array();
 		foreach ( $posts as $post ) {
 			if ( $post instanceof WP_Post ) {
 				$this->listed[ $post ] = true;
@@ -311,8 +313,11 @@ final class SplitCardListings {
 			unset( $post->{self::FIELD} );
 			if ( SplitCards::is_key( $key ) ) {
 				$this->cards[ $post ] = (string) $key;
+				$carded[]             = $post->ID;
 			}
 		}
+		// Each card's link reads its product's variations.
+		FilterIndex::look_up( $carded );
 		return $posts;
 	}
 

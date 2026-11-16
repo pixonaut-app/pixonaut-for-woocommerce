@@ -98,6 +98,31 @@ final class FilterOffers {
 	}
 
 	/**
+	 * A product's offers when they were worked out this request, for
+	 * `FilterIndex` to keep; null when they were not.
+	 *
+	 * @param int $product_id A product.
+	 * @return list<array{id: int, values: array<string, list<int>>, min: float, max: float}>|null
+	 */
+	public static function worked_out( int $product_id ): ?array {
+		return self::$offers[ $product_id ] ?? null;
+	}
+
+	/**
+	 * Takes a product's offers, as `worked_out()` answered them in an
+	 * earlier request, as this request's when they are not worked out yet.
+	 *
+	 * @param int   $product_id A product.
+	 * @param mixed $offers     Its offers, as `FilterIndex` kept them.
+	 */
+	public static function take( int $product_id, mixed $offers ): void {
+		if ( is_array( $offers ) ) {
+			// @phpstan-ignore assign.propertyType (kept as `worked_out()` answered it, for this product's unchanged variations)
+			self::$offers[ $product_id ] ??= $offers;
+		}
+	}
+
+	/**
 	 * A product other than a variable one as its only offer.
 	 *
 	 * @param WC_Product $product A product.

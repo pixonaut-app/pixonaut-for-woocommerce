@@ -9,9 +9,14 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Support;
 
+use Pixonaut\WooCommerce\Catalogue\FilterIndex;
+use Pixonaut\WooCommerce\Catalogue\FilterOffers;
 use Pixonaut\WooCommerce\Catalogue\ProductVariants;
+use Pixonaut\WooCommerce\Catalogue\RequestCache;
+use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\VariationSizes;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Storefront\FilteredOpening;
 use ReflectionProperty;
 
 /**
@@ -33,5 +38,22 @@ final class FreshRequest {
 		if ( $sizes instanceof VariationSizes ) {
 			$sizes->forget();
 		}
+	}
+
+	/**
+	 * Forgets what the shop's filters and card links read of products'
+	 * variations this request, as the next request starts without it;
+	 * what `FilterIndex` kept between requests stays.
+	 */
+	public static function forget_filter_reads(): void {
+		foreach ( array( 'variations', 'offers', 'offers_plain', 'cards', 'card_terms', 'links' ) as $memo ) {
+			( new ReflectionProperty( SplitCards::class, $memo ) )->setValue( null, array() );
+		}
+		( new ReflectionProperty( FilterOffers::class, 'offers' ) )->setValue( null, array() );
+		( new ReflectionProperty( FilteredOpening::class, 'values' ) )->setValue( null, array() );
+		( new ReflectionProperty( FilterIndex::class, 'looked_up' ) )->setValue( null, array() );
+		( new ReflectionProperty( FilterIndex::class, 'switched' ) )->setValue( null, false );
+		( new ReflectionProperty( FilterIndex::class, 'errors' ) )->setValue( null, null );
+		RequestCache::forget();
 	}
 }

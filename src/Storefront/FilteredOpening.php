@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Pixonaut\WooCommerce\Catalogue\ApplicableAttributes;
+use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\FilterOffers;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use WC_Product;
@@ -63,6 +64,7 @@ final class FilteredOpening {
 		if ( array() === $chosen && null === $min && null === $max ) {
 			return array();
 		}
+		FilterIndex::look_up( array( $product->get_id() ) );
 		$defaults                     = array_filter( array_map( 'strval', $product->get_default_attributes( 'edit' ) ), static fn ( string $value ): bool => '' !== $value );
 		$cache_key                    = (string) wp_json_encode( array( $product->get_id(), $key, $chosen, $min, $max, $defaults ) );
 		self::$values[ $cache_key ] ??= self::read( $product, $key, $chosen, $min, $max, $defaults );

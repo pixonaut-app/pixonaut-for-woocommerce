@@ -117,6 +117,7 @@ final class RequestCache {
 	 *
 	 * @param string[] $filters The filters' names.
 	 * @phpstan-param list<string> $filters
+	 * @phpstan-impure
 	 */
 	public static function filters_key( array $filters ): string {
 		global $wp_filter;
