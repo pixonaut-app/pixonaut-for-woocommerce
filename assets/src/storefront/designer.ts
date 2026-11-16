@@ -46,7 +46,7 @@ import {
 	shapeOf,
 	shapeOnceDrawn,
 } from './frame-shape';
-import { type KeptView, shownViewOf, viewStandingFor } from './kept-view';
+import { type KeptView, shownViewOf } from './kept-view';
 import { withStandIns } from './lent-parts';
 import { type DrawnSide, variationDrawnFor } from './partial-choice';
 import {
@@ -549,6 +549,14 @@ export class ProductDesigner {
 				!(own?.views?.includes(keptView.viewId) ?? true)
 					? {}
 					: { initialView: keptView.viewId }),
+				// On a blank without that view it opens on the one at the same
+				// place, from its first frame. A starting view the variation
+				// names itself is not left for one that only stands there.
+				...(keptView === undefined ||
+				keptView.index < 0 ||
+				own?.initialView !== undefined
+					? {}
+					: { initialViewIndex: keptView.index }),
 				previewTarget: this.previewTarget(side),
 				formTarget: this.formTarget(side),
 				...this.viewsTarget(side),
@@ -640,15 +648,6 @@ export class ProductDesigner {
 			shown !== startingVariant(designer)
 		) {
 			this.variantPicked(side, shown);
-		}
-		// A starting view the variation names itself is not left for one that
-		// only stands at the same place.
-		if (keptView !== undefined) {
-			await this.showKeptView(
-				designer,
-				keptView,
-				own !== undefined && 'initialView' in own ? own.initialView : undefined,
-			);
 		}
 	}
 
@@ -1380,31 +1379,6 @@ export class ProductDesigner {
 			return;
 		}
 		void mounted.shown().then(release, release);
-	}
-
-	/** Shows, in a designer mounted again, the view that stands for the one
-	 *  its side showed before, when it opened on another: a blank without
-	 *  that view shows the one at the same place, unless its variation named
-	 *  the view it starts on (`starting`). A view it cannot show leaves it on
-	 *  the one it opened on. */
-	private async showKeptView(
-		designer: PixonautDesigner,
-		kept: KeptView,
-		starting: string | undefined,
-	): Promise<void> {
-		const viewId = viewStandingFor(designer, kept);
-		if (
-			viewId === undefined ||
-			viewId === designer.getView() ||
-			(viewId !== kept.viewId && starting !== undefined)
-		) {
-			return;
-		}
-		try {
-			await designer.setView(viewId);
-		} catch (error) {
-			console.error('Pixonaut: the view could not be kept.', error);
-		}
 	}
 
 	/** Lets go of what the side showed before it was mounted again. */
