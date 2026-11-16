@@ -53,6 +53,7 @@ trait SplitPosters {
 		}
 		delete_transient( 'wc_attribute_taxonomies' );
 		delete_option( SplitListing::OPTION );
+		delete_option( SplitListing::FILTERED_OPTION );
 	}
 
 	private function term( string $slug ): int {

@@ -1,8 +1,8 @@
 <?php
 /**
- * Each value's card in the shop, under the "Show each value as its own
- * product" control on a global attribute's row in the product's Attributes
- * tab: a title and an image of its own. Shown while the row's choice lists
+ * Each value's card in the shop, under the "Cards in the shop" menu on a
+ * global attribute's row in the product's Attributes tab: a title and an
+ * image of its own. Shown while the row's choice lists
  * the attribute's values as their own products. A product listed by
  * several attributes has a card per combination of their values, on the row
  * of the combination's last value.
@@ -10,19 +10,19 @@
  * Override by copying to yourtheme/woocommerce/pixonaut/admin/split-card-looks.php.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.9.0
+ * @version 1.12.0
  *
  * @var string $field             The posted titles' and images' name, before `[<card key>][title]` and `[<card key>][image]`.
  * @var string $id                The row's id, which each field's id starts with.
  * @var bool   $shown             Whether the row's choice lists the values as their own products now.
- * @var bool   $attribute_default Whether the attribute lists its values as their own products by default.
+ * @var string $attribute_mode    How the attribute lists its values by default: `off`, `on` or `filtered`.
  * @var string $product_title     The product's title, which a card without its own shows.
  * @var array<int, array{key: string, name: string, title: string, image: int, image_url: string}> $cards Each of the row's cards: its key (a value's term id, or a combination's joined by commas) and its values' names.
  */
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<tr class="pixonaut-split-cards" data-attribute-default="<?php echo $attribute_default ? '1' : '0'; ?>"<?php echo $shown ? '' : ' hidden'; ?>>
+<tr class="pixonaut-split-cards" data-attribute-mode="<?php echo esc_attr( $attribute_mode ); ?>"<?php echo $shown ? '' : ' hidden'; ?>>
 	<td colspan="2">
 		<fieldset class="pixonaut-split-cards__fieldset show_if_variable">
 			<legend class="pixonaut-split-cards__legend">
@@ -32,7 +32,7 @@ defined( 'ABSPATH' ) || exit;
 				?>
 			</legend>
 			<p class="description">
-				<?php esc_html_e( 'A card without a title of its own shows the product’s. Without an image of its own, it shows the image of the value’s first variation that has one, else the product’s. Save attributes to add a row for a value you just added.', 'pixonaut-for-woocommerce' ); ?>
+				<?php esc_html_e( 'A card without a title of its own shows the product’s. Without an image of its own, it shows the flat picture of its design; a card a filter shows, of a value listed only while filtered, shows its first variation’s picture. Save attributes to add a row for a value you just added.', 'pixonaut-for-woocommerce' ); ?>
 			</p>
 			<?php foreach ( $cards as $pixonaut_card ) : ?>
 				<?php

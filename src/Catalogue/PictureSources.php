@@ -26,7 +26,10 @@ use WC_Product;
  * (`TemplateShowcases`). The store manager may choose the view and photo of
  * each, or of the picture drawn without a set (`PictureView`); a variation
  * may choose its own, else it follows its product's for its image. A choice
- * the blank no longer has is drawn as without one.
+ * the blank no longer has is drawn as without one. A variation of a product
+ * listed as cards (`SplitCards`) drawn on a photo has a second picture,
+ * flat, drawn with the same set: the picture of its design a card in the
+ * shop shows (`CardPages::image()`).
  */
 final class PictureSources {
 
@@ -44,7 +47,9 @@ final class PictureSources {
 	}
 
 	/**
-	 * What each of the product's pictures is drawn from, its image's first:
+	 * What each of the product's pictures is drawn from, its image's first,
+	 * and for a variation of a product listed as cards drawn on a photo its
+	 * flat picture second:
 	 * the template, with the blank, placement, view, variant and the photo
 	 * chosen when it is drawn on a photo, and the showcase set it is drawn
 	 * with. Empty when the product shows none.
@@ -75,6 +80,10 @@ final class PictureSources {
 		foreach ( $choices as $choice ) {
 			$drawn     = $this->chosen( $product, $source, $own ?? $choice, null !== $own || ! $chooser->is_type( 'variation' ) );
 			$sources[] = $drawn + ( isset( $choice['id'] ) ? array( 'showcase' => $choice['id'] ) : array() );
+		}
+		if ( ProductPictures::draws_flat( $chooser ) && isset( $sources[0]['blank'] ) ) {
+			// The flat picture of its design, which a card shows.
+			$sources[] = array( 'template' => $sources[0]['template'] ) + ( isset( $sources[0]['showcase'] ) ? array( 'showcase' => $sources[0]['showcase'] ) : array() );
 		}
 		return $sources;
 	}

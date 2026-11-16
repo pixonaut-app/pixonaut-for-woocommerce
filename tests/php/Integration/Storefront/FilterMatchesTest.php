@@ -123,7 +123,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	}
 
 	public function test_each_card_counts_and_the_counts_follow_the_filters(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 
 		$unfiltered = $this->counts( 'pa_storlek', array() );
 		$this->assertSame(
@@ -182,35 +182,34 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		$this->assertSame( array( $this->term( 'svart' ) => 1 ), $colour );
 	}
 
-	public function test_with_one_card_per_product_a_product_counts_once(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
-		( new Settings() )->set( Settings::ONE_CARD_PER_PRODUCT, true );
+	public function test_an_attribute_listed_while_filtered_counts_its_cards_only_while_chosen(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::FILTERED );
 
 		$this->assertSame(
 			array(
 				$this->term( '30x40' ) => 2,
 				$this->term( '50x70' ) => 2,
 			),
-			$this->counts( 'pa_storlek', array() )
+			$this->counts( 'pa_storlek', array() ),
+			'each product once while no framing is chosen'
 		);
+		$this->assertSame( 2, $this->shop( array() )['found'] );
 		$this->assertSame(
-			0,
-			$this->shop(
-				array(
-					'filter_inramning' => 'ingen',
-					'filter_ramfarg'   => 'ek',
-				)
-			)['found']
+			array(
+				$this->term( 'ingen' )   => 2,
+				$this->term( 'ram' )     => 2,
+				$this->term( 'hangare' ) => 1,
+			),
+			$this->counts( 'pa_inramning', array() ),
+			'a framing chosen shows each product\'s card of it'
 		);
+		$this->assertSame( 2, $this->shop( array( 'filter_inramning' => 'ram' ) )['found'] );
 		$this->assertSame(
-			1,
-			$this->shop(
-				array(
-					'min_price' => '450',
-					'max_price' => '460',
-				)
-			)['found'],
-			'a price alone leaves out the print'
+			array(
+				$this->term( '30x40' ) => 1,
+				$this->term( '50x70' ) => 2,
+			),
+			$this->counts( 'pa_storlek', array( 'filter_inramning' => 'ram' ) )
 		);
 	}
 
@@ -339,7 +338,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	}
 
 	public function test_each_card_opens_on_its_own_matching_variation(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 
 		$links = $this->shop(
 			array(

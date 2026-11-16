@@ -125,9 +125,13 @@ final class CardPages {
 	}
 
 	/**
-	 * The picture of a card: its own image, else the image of the first of
-	 * its variations that has one. 0 when it has neither, and shows the
-	 * product's.
+	 * The picture of a card: its own image; else, for a card an unfiltered
+	 * listing shows, the flat picture of its design, drawn for the first of
+	 * its variations that has one (`ProductPictures::flat()`); else, as for
+	 * a card holding a value of an attribute listed only while filtered
+	 * (a framing), the image of the first of its variations that has one,
+	 * a picture of the product in its setting. 0 when it has none of
+	 * these, and shows the product's.
 	 *
 	 * @param WC_Product $product A product.
 	 * @param string     $key     The key of one of its cards.
@@ -138,9 +142,17 @@ final class CardPages {
 		if ( $own > 0 && wp_attachment_is_image( $own ) ) {
 			return $own;
 		}
-		foreach ( SplitCards::card_variations( $product, $key ) as $variation_id ) {
-			$variation = wc_get_product( $variation_id );
-			$image     = $variation instanceof WC_Product ? (int) $variation->get_image_id( 'edit' ) : 0;
+		$variations = array_filter( array_map( 'wc_get_product', SplitCards::card_variations( $product, $key ) ), static fn ( mixed $variation ): bool => $variation instanceof WC_Product );
+		if ( SplitCards::is_unfiltered( $product, $key ) ) {
+			foreach ( $variations as $variation ) {
+				$flat = ProductPictures::flat( $variation );
+				if ( $flat > 0 ) {
+					return $flat;
+				}
+			}
+		}
+		foreach ( $variations as $variation ) {
+			$image = (int) $variation->get_image_id( 'edit' );
 			if ( $image > 0 ) {
 				return $image;
 			}

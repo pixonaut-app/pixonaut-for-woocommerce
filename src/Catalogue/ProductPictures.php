@@ -30,7 +30,9 @@ use WC_Product;
  * image, the others lead its gallery (`PictureGallery`). A set Pixonaut no
  * longer has is drawn with the template's defaults, and recorded as gone.
  * A variable product's own picture is the one of a variation it sells
- * (`PicturedVariation`).
+ * (`PicturedVariation`). A variation of a product listed as cards, drawn
+ * on a photo, also has a flat picture of its design (`flat()`), which shows
+ * nowhere but on the cards.
  * A picture is drawn once per source: a variation drawn from what another
  * of its product's family already has a picture of shows that picture
  * (`SharedPictures`).
@@ -575,6 +577,10 @@ final class ProductPictures {
 			// Likewise only when chosen.
 			$parts[] = array( 'picture_view' => $views );
 		}
+		if ( self::draws_flat( $product ) ) {
+			// Drawn flat too, for the shop's cards (`flat()`).
+			$parts[] = array( 'flat' => true );
+		}
 		$drawn_as = PicturedVariation::document_on( $product );
 		if ( null !== $drawn_as ) {
 			// A variable product's picture is the one of a variation it sells.
@@ -586,6 +592,29 @@ final class ProductPictures {
 			$parts[] = array( 'showcase_template' => $template );
 		}
 		return md5( (string) wp_json_encode( self::drawn_under( $product, $parts ) ) );
+	}
+
+	/**
+	 * Whether a product is a variation drawn flat too, for the cards its
+	 * product is listed as (`SplitCards`).
+	 *
+	 * @param WC_Product $product A product or variation.
+	 */
+	public static function draws_flat( WC_Product $product ): bool {
+		return $product->is_type( 'variation' ) && SplitCards::has_rows( $product->get_parent_id() );
+	}
+
+	/**
+	 * The flat picture of a variation's design: the second of its recorded
+	 * pictures when its image is drawn on a photo, else its image's
+	 * picture, which is then flat; 0 when none is drawn.
+	 *
+	 * @param WC_Product $variation A variation.
+	 */
+	public static function flat( WC_Product $variation ): int {
+		$stored     = self::stored( $variation );
+		$attachment = $stored['gallery'][0]['attachment'] ?? $stored['attachment'];
+		return $attachment > 0 && wp_attachment_is_image( $attachment ) ? $attachment : 0;
 	}
 
 	/**

@@ -14,7 +14,6 @@ use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Migrations\WriteSplitCards;
-use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\SplitCardListings;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
@@ -41,7 +40,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	public function set_up(): void {
 		parent::set_up();
 		// The plugin's own listings and card writers are registered at boot; this one only tells keys apart.
-		$this->listings = new SplitCardListings( new Settings() );
+		$this->listings = new SplitCardListings();
 		$this->set_up_posters();
 	}
 
@@ -56,7 +55,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$poster = $this->poster();
 		$this->assertSame( array(), $this->cards( $poster ), 'listed once until the attribute splits' );
 
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$this->assertSame( array( $this->term( 'med-bild' ), $this->term( 'utan-bild' ) ), $this->cards( $poster ), 'framed has no variation' );
 
 		$this->choose( $poster, array( $this->attributes[ self::PICTURE ] => SplitListing::OFF ) );
@@ -65,13 +64,13 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$this->choose( $poster, array( $this->attributes[ self::SIZE ] => SplitListing::ON ) );
 		$this->assertSame( array( $this->term( '30x40' ), $this->term( '50x70' ) ), $this->cards( $poster ), 'or picks another attribute' );
 
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], false );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::OFF );
 		$this->choose( $poster, array() );
 		$this->assertSame( array(), $this->cards( $poster ) );
 	}
 
 	public function test_a_variations_change_rewrites_its_products_cards(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster = $this->poster();
 		$framed = $this->variation( $poster, 'ram', '30x40' );
 		$this->assertSame( array( $this->term( 'med-bild' ), $this->term( 'ram' ), $this->term( 'utan-bild' ) ), $this->cards( $poster ), 'a new variation adds its value, in the order WooCommerce lists the values' );
@@ -90,7 +89,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_trashed_and_restored_product_has_its_cards_again(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster = $this->poster();
 		$both   = array( $this->term( 'med-bild' ), $this->term( 'utan-bild' ) );
 
@@ -102,7 +101,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_trashed_restored_or_deleted_variation_rewrites_its_products_cards(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster  = $this->poster();
 		$without = $this->variation_of( $poster, 'Utan bild' );
 
@@ -117,7 +116,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_an_upgrade_writes_the_cards_of_a_product_set_up_before_they_were_kept(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster = $this->poster();
 		delete_post_meta( $poster->get_id(), SplitCards::META );
 
@@ -130,7 +129,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_the_shop_lists_a_card_per_value_and_counts_them(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster = $this->poster();
 		$mug    = $this->simple( 'Uggla' );
 
@@ -157,7 +156,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_the_shop_pages_by_card(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster = $this->poster();
 		$this->simple( 'Uggla' );
 		$per_page = static fn (): int => 2;
@@ -175,7 +174,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_filter_by_the_split_attribute_keeps_the_chosen_values_cards(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster = $this->poster();
 
 		$listed = $this->shop( array( 'filter_bild' => 'utan-bild' ) );
@@ -186,7 +185,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_filter_by_another_attribute_keeps_every_card_of_a_product_it_keeps(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster = $this->poster();
 
 		$listed = $this->shop( array( 'filter_storlek' => '30x40' ) );
@@ -195,62 +194,73 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$this->assertSame( 2, $listed['found'] );
 	}
 
-	public function test_with_one_card_per_product_the_shop_lists_the_product_once_as_itself(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+	public function test_an_attribute_listed_while_filtered_makes_cards_only_while_a_filter_chooses_one_of_its_values(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
+		SplitListing::set_attribute_mode( $this->attributes[ self::SIZE ], SplitListing::FILTERED );
 		$poster = $this->poster();
 		$mug    = $this->simple( 'Uggla' );
-		( new Settings() )->set( Settings::ONE_CARD_PER_PRODUCT, true );
+		$link   = static fn ( array $values ): string => add_query_arg( $values, (string) get_permalink( $poster->get_id() ) );
 
 		$listed = $this->shop();
+		$this->assertSame( array( $poster->get_id(), $poster->get_id(), $mug->get_id() ), $listed['ids'], 'a card per picture, none per size' );
+		$this->assertSame( 3, $listed['found'] );
+		$this->assertStringContainsString( 'attribute_pa_bild=med-bild', $listed['links'][0] );
+		$this->assertStringNotContainsString( 'attribute_pa_storlek', $listed['links'][0] );
 
-		$this->assertSame( 2, $listed['found'] );
-		$this->assertSame( array( $poster->get_id(), $mug->get_id() ), $listed['ids'] );
-		$this->assertSame( array( (string) get_permalink( $poster->get_id() ), (string) get_permalink( $mug->get_id() ) ), $listed['links'] );
-		$this->assertSame( array( $this->term( 'med-bild' ), $this->term( 'utan-bild' ) ), $this->cards( $poster ), 'its cards are kept, each with its page' );
-	}
-
-	public function test_with_one_card_per_product_a_filter_shows_the_first_card_it_keeps(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
-		$poster = $this->poster();
-		$mug    = $this->simple( 'Uggla' );
-		( new Settings() )->set( Settings::ONE_CARD_PER_PRODUCT, true );
-
-		$without = $this->shop( array( 'filter_bild' => 'utan-bild' ) );
-		$this->assertSame( array( $poster->get_id() ), $without['ids'] );
-		$this->assertSame( 1, $without['found'] );
-		$this->assertStringContainsString( 'attribute_pa_bild=utan-bild', $without['links'][0], 'the card the filter chose' );
-
-		$either = $this->shop(
-			array(
-				'filter_bild'     => 'med-bild,utan-bild',
-				'query_type_bild' => 'or',
-			)
-		);
-		$this->assertSame( array( $poster->get_id() ), $either['ids'], 'once, however many of its cards the filter keeps' );
-		$this->assertStringContainsString( 'attribute_pa_bild=med-bild', $either['links'][0], 'the first of them' );
-
-		$sized = $this->shop( array( 'filter_storlek' => '30x40' ) );
-		$this->assertSame( array( $poster->get_id() ), $sized['ids'] );
+		$small = $this->shop( array( 'filter_storlek' => '30x40' ) );
+		$this->assertSame( array( $poster->get_id(), $poster->get_id() ), $small['ids'], 'each picture in the size' );
 		$this->assertSame(
 			array(
-				add_query_arg(
+				$link(
 					array(
 						'attribute_pa_bild'    => 'med-bild',
 						'attribute_pa_storlek' => '30x40',
-					),
-					(string) get_permalink( $poster->get_id() )
+					)
+				),
+				$link(
+					array(
+						'attribute_pa_bild'    => 'utan-bild',
+						'attribute_pa_storlek' => '30x40',
+					)
 				),
 			),
-			$sized['links'],
-			'a filter by an attribute it is not listed by shows it as itself, opening on the first variation the filter keeps'
+			$small['links']
 		);
 
-		$this->assertSame( array(), $this->shop( array( 'filter_bild' => 'ram' ) )['ids'], 'no card holds the value: not listed' );
-		unset( $mug );
+		$large = $this->shop( array( 'filter_storlek' => '50x70' ) );
+		$this->assertSame( array( $poster->get_id() ), $large['ids'], 'only the picture sold in the size' );
+		$this->assertSame( 1, $large['found'] );
+
+		$either = $this->shop(
+			array(
+				'filter_storlek'     => '30x40,50x70',
+				'query_type_storlek' => 'or',
+			)
+		);
+		$this->assertSame( 3, $either['found'], 'a card per picture and size the filter keeps' );
+
+		$picture = $this->shop( array( 'filter_bild' => 'utan-bild' ) );
+		$this->assertSame( array( $poster->get_id() ), $picture['ids'], 'a filter on the picture alone keeps its card, of no size' );
+		$this->assertStringNotContainsString( 'attribute_pa_storlek=50x70', $picture['links'][0] );
+	}
+
+	public function test_a_product_listed_only_while_filtered_shows_as_itself_until_a_filter_chooses_a_value(): void {
+		$poster = $this->poster();
+		$this->choose( $poster, array( $this->attributes[ self::SIZE ] => SplitListing::FILTERED ) );
+
+		$listed = $this->shop();
+		$this->assertSame( array( $poster->get_id() ), $listed['ids'] );
+		$this->assertSame( array( (string) get_permalink( $poster->get_id() ) ), $listed['links'] );
+
+		$large = $this->shop( array( 'filter_storlek' => '50x70' ) );
+		$this->assertSame( array( $poster->get_id() ), $large['ids'] );
+		$this->assertStringContainsString( 'attribute_pa_storlek=50x70', $large['links'][0] );
+
+		$this->assertSame( array(), $this->shop( array( 'filter_bild' => 'ram' ) )['ids'], 'no variation holds the value: not listed' );
 	}
 
 	public function test_a_value_sold_only_on_a_template_that_is_not_live_has_no_card(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster = $this->poster();
 		self::personalised()->save_to( $poster );
 		$paused = self::personalised()->with_override( true )->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE );
@@ -314,7 +324,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_another_product_query_lists_the_product_once(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster = $this->poster();
 		$this->shop();
 
@@ -335,7 +345,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_product_templates_cards_get_keys_of_their_own(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster = $this->poster();
 		$mug    = $this->simple( 'Uggla' );
 		$with   = $this->term( 'med-bild' );
@@ -356,7 +366,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_row_naming_no_card_of_the_product_shows_it_as_itself_and_is_written_again(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$poster = $this->poster();
 		// As rows written before the product's cards changed.
 		delete_post_meta( $poster->get_id(), SplitCards::META );

@@ -54,10 +54,11 @@ final class PictureQueue {
 
 	/**
 	 * The post meta a product's picture depends on: its configuration, its
-	 * variant, its image, its showcase sets, the view and photo chosen and
-	 * its generation.
+	 * variant, its image, its showcase sets, the view and photo chosen, its
+	 * generation, and its card rows, with which its variations are drawn
+	 * flat too.
 	 */
-	private const WATCHED_META = array( ProductConfig::META_KEY, ProductVariant::META_KEY, PictureImage::THUMBNAIL_META, ShowcaseImages::META_KEY, PictureView::META_KEY, ProductPictures::PRODUCT_GENERATION_META );
+	private const WATCHED_META = array( ProductConfig::META_KEY, ProductVariant::META_KEY, PictureImage::THUMBNAIL_META, ShowcaseImages::META_KEY, PictureView::META_KEY, ProductPictures::PRODUCT_GENERATION_META, SplitCards::META );
 
 	/**
 	 * The arguments the post meta actions pass.

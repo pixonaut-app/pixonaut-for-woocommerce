@@ -21,9 +21,10 @@ use WC_Product;
 use WC_Product_Attribute;
 
 /**
- * A checkbox on a global attribute's add and edit screens turns its default
- * on; a three-way control on each global attribute's row in the product's
- * Attributes tab follows it (Auto) or turns it on or off for the product.
+ * A menu on a global attribute's add and edit screens sets how the shop
+ * lists its values by default: a card per value always, only while a
+ * filter chooses one, or none; a menu on each global attribute's row in the
+ * product's Attributes tab follows it (Auto) or sets it for the product.
  * Under it, each of the row's values has a title and an image field for its
  * card in the shop, shown while the row's choice lists the values as their
  * own products. The row's choice and the cards' titles and images are saved
@@ -33,7 +34,7 @@ use WC_Product_Attribute;
 final class SplitListingFields {
 
 	/**
-	 * The attribute screens' checkbox.
+	 * The attribute screens' menu.
 	 */
 	public const ATTRIBUTE_FIELD = 'pixonaut_wc_split_attribute';
 
@@ -99,16 +100,16 @@ final class SplitListingFields {
 	}
 
 	public function render_add(): void {
-		$this->render_attribute_field( false, false );
+		$this->render_attribute_field( false, SplitListing::OFF );
 	}
 
 	public function render_edit(): void {
 		$attribute_id = isset( $_GET['edit'] ) ? absint( $_GET['edit'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which attribute the screen edits.
-		$this->render_attribute_field( true, $attribute_id > 0 && SplitListing::attribute_default( $attribute_id ) );
+		$this->render_attribute_field( true, $attribute_id > 0 ? SplitListing::attribute_mode( $attribute_id ) : SplitListing::OFF );
 	}
 
 	/**
-	 * Saves the checkbox when the attribute screen posted it.
+	 * Saves the menu when the attribute screen posted it.
 	 *
 	 * @param int $attribute_id The attribute added or updated.
 	 */
@@ -116,7 +117,8 @@ final class SplitListingFields {
 		if ( ! self::posted_nonce_valid( $_POST ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- the nonce is what is checked.
 			return;
 		}
-		SplitListing::set_attribute_default( $attribute_id, isset( $_POST[ self::ATTRIBUTE_FIELD ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- checked above.
+		$mode = isset( $_POST[ self::ATTRIBUTE_FIELD ] ) ? sanitize_key( wp_unslash( $_POST[ self::ATTRIBUTE_FIELD ] ) ) : SplitListing::OFF; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- checked above.
+		SplitListing::set_attribute_mode( $attribute_id, $mode );
 	}
 
 	/**
@@ -138,7 +140,7 @@ final class SplitListingFields {
 				'field'       => self::PRODUCT_FIELD . '[' . $row . ']',
 				'id'          => 'pixonaut-split-listing-' . $row,
 				'choice'      => SplitListing::choice( $config, $attribute->get_id() ),
-				'states'      => self::states( SplitListing::attribute_default( $attribute->get_id() ) ),
+				'options'     => self::choices( SplitListing::attribute_mode( $attribute->get_id() ) ),
 				'nonce_field' => wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD, false, false ),
 			)
 		);
@@ -149,12 +151,12 @@ final class SplitListingFields {
 		$this->templates->render(
 			'admin/split-card-looks.php',
 			array(
-				'field'             => self::CARD_FIELD,
-				'id'                => 'pixonaut-split-card-' . $row,
-				'shown'             => SplitListing::splits( $config, $attribute->get_id() ),
-				'attribute_default' => SplitListing::attribute_default( $attribute->get_id() ),
-				'product_title'     => null === $product ? '' : $product->get_name(),
-				'cards'             => $cards,
+				'field'          => self::CARD_FIELD,
+				'id'             => 'pixonaut-split-card-' . $row,
+				'shown'          => SplitListing::splits( $config, $attribute->get_id() ),
+				'attribute_mode' => SplitListing::attribute_mode( $attribute->get_id() ),
+				'product_title'  => null === $product ? '' : $product->get_name(),
+				'cards'          => $cards,
 			)
 		);
 	}
@@ -295,36 +297,50 @@ final class SplitListingFields {
 	}
 
 	/**
-	 * What each choice reads as beside the control.
+	 * What each way of listing an attribute's values reads as.
 	 *
-	 * @param bool $attribute_default Whether the attribute is on by default.
-	 * @return array<string, string> By choice.
+	 * @return array<string, string> By mode, in order.
 	 */
-	private static function states( bool $attribute_default ): array {
+	private static function modes(): array {
 		return array(
-			SplitListing::AUTO => $attribute_default
-				/* translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is on. */
-				? __( 'Auto: on, as the attribute is', 'pixonaut-for-woocommerce' )
-				/* translators: Beside the "Show each value as its own product" control on a product's attribute row, when it follows the attribute's setting, which is off. */
-				: __( 'Auto: off, as the attribute is', 'pixonaut-for-woocommerce' ),
-			/* translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it on, whatever the attribute's setting. */
-			SplitListing::ON   => __( 'On for this product', 'pixonaut-for-woocommerce' ),
-			/* translators: Beside the "Show each value as its own product" control on a product's attribute row, when the product turned it off, whatever the attribute's setting. */
-			SplitListing::OFF  => __( 'Off for this product', 'pixonaut-for-woocommerce' ),
+			/* translators: Option of the "Cards in the shop" menu of a product attribute: the shop lists a product once, whatever this attribute's value. */
+			SplitListing::OFF      => __( 'One card for all values', 'pixonaut-for-woocommerce' ),
+			/* translators: Option of the "Cards in the shop" menu of a product attribute: the shop always lists each of the attribute's values as its own card. */
+			SplitListing::ON       => __( 'A card per value', 'pixonaut-for-woocommerce' ),
+			/* translators: Option of the "Cards in the shop" menu of a product attribute: the shop lists each of the attribute's values as its own card only while a customer filters by the attribute. */
+			SplitListing::FILTERED => __( 'A card per value while filtered by it', 'pixonaut-for-woocommerce' ),
 		);
 	}
 
 	/**
-	 * @param bool $editing Whether the edit screen shows it; else the add form.
-	 * @param bool $checked Whether the setting is on.
+	 * What each of a product's choices reads as in its row's menu.
+	 *
+	 * @param string $attribute_mode How the attribute lists its values by default.
+	 * @return array<string, string> By choice, in order.
 	 */
-	private function render_attribute_field( bool $editing, bool $checked ): void {
+	private static function choices( string $attribute_mode ): array {
+		$modes = self::modes();
+		return array(
+			/* translators: Option of the "Cards in the shop" menu on an attribute's row in a product's Attributes tab, following the attribute's own setting. %s: that setting, such as "A card per value". */
+			SplitListing::AUTO     => sprintf( __( 'Auto: %s, as the attribute', 'pixonaut-for-woocommerce' ), $modes[ $attribute_mode ] ?? $modes[ SplitListing::OFF ] ),
+			SplitListing::ON       => $modes[ SplitListing::ON ],
+			SplitListing::FILTERED => $modes[ SplitListing::FILTERED ],
+			SplitListing::OFF      => $modes[ SplitListing::OFF ],
+		);
+	}
+
+	/**
+	 * @param bool   $editing Whether the edit screen shows it; else the add form.
+	 * @param string $mode    The attribute's setting.
+	 */
+	private function render_attribute_field( bool $editing, string $mode ): void {
 		$this->templates->render(
 			'admin/split-attribute-field.php',
 			array(
 				'editing'     => $editing,
 				'field'       => self::ATTRIBUTE_FIELD,
-				'checked'     => $checked,
+				'mode'        => $mode,
+				'options'     => self::modes(),
 				'nonce_field' => wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD, false, false ),
 			)
 		);

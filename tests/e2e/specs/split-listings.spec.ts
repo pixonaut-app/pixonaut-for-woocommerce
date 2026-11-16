@@ -41,6 +41,7 @@ test.afterEach(async ({ request }) => {
 async function withSplitProducts(
 	request: APIRequestContext,
 	run: (products: SplitProducts) => Promise<void>,
+	sizes?: 'filtered',
 ): Promise<void> {
 	const key = String(Date.now()).slice(-SLUG_CLOCK_DIGITS);
 	const config = (taxonomies: string[]) => ({
@@ -65,6 +66,7 @@ async function withSplitProducts(
 			data: {
 				key,
 				pixonaut: config([`pa_bild${key}`, `pa_storlek${key}`]),
+				...(sizes ? { sizes } : {}),
 			},
 		},
 	);
@@ -153,10 +155,6 @@ test('a category lists a card per picture that opens with it chosen', async ({
 		await expect(form.locator(`select[name="${size}"]`)).toHaveValue('30x40');
 	});
 });
-
-/** Read by the e2e support mu-plugin: `on` turns the store's
- *  `one_card_per_product` setting on for this browser context. */
-const ONE_CARD_COOKIE = 'pixonaut_e2e_one_card';
 
 /** WordPress's sitemap of the cards' pages, on a site with plain permalinks. */
 const CARD_SITEMAP = '/?sitemap=pixonautcards&paged=1';
@@ -249,32 +247,49 @@ test('a card’s page names itself in its head, a size on top of it names the ca
 	});
 });
 
-test('with one card per product, a category lists the poster once and a filter shows the card it keeps', async ({
+test('sizes listed only while filtered make no cards until a filter chooses one, then the card of each picture with it', async ({
 	page,
 	request,
-	baseURL,
 }) => {
-	await page
-		.context()
-		.addCookies([{ name: ONE_CARD_COOKIE, value: 'on', url: baseURL ?? '' }]);
-	await withSplitProducts(request, async ({ category, taxonomies }) => {
-		await page.goto(category);
-		await expect(cards(page)).toHaveCount(2);
-		expect((await cardLinks(page)).map(chosen)).toEqual([{}, {}]);
+	await withSplitProducts(
+		request,
+		async ({ category, taxonomies }) => {
+			const picture = `attribute_${taxonomies.bild.taxonomy}`;
+			const size = `attribute_${taxonomies.storlek.taxonomy}`;
 
-		const filtered = new URL(category);
-		filtered.searchParams.set(
-			`filter_${taxonomies.bild.taxonomy.replace(/^pa_/, '')}`,
-			'utan-bild',
-		);
-		await page.goto(filtered.toString());
-		await expect(cards(page)).toHaveCount(1);
-		expect((await cardLinks(page)).map(chosen)).toEqual([
-			expect.objectContaining({
-				[`attribute_${taxonomies.bild.taxonomy}`]: 'utan-bild',
-			}),
-		]);
-	});
+			await page.goto(category);
+			// Med bild and Utan bild, and the vase.
+			await expect(cards(page)).toHaveCount(3);
+			expect(
+				(await cardLinks(page)).map(chosen).map((values) => values[picture]),
+			).toEqual(['med-bild', 'utan-bild', undefined]);
+
+			const filtered = new URL(category);
+			filtered.searchParams.set(
+				`filter_${taxonomies.storlek.taxonomy.replace(/^pa_/, '')}`,
+				'30x40',
+			);
+			// The vase has no size, so the filter leaves it out.
+			await page.goto(filtered.toString());
+			await expect(cards(page)).toHaveCount(2);
+			expect((await cardLinks(page)).map(chosen)).toEqual([
+				{ [picture]: 'med-bild', [size]: '30x40' },
+				{ [picture]: 'utan-bild', [size]: '30x40' },
+			]);
+
+			filtered.searchParams.set(
+				`filter_${taxonomies.storlek.taxonomy.replace(/^pa_/, '')}`,
+				'50x70',
+			);
+			await page.goto(filtered.toString());
+			// Only Med bild is sold in 50x70.
+			await expect(cards(page)).toHaveCount(1);
+			expect((await cardLinks(page)).map(chosen)).toEqual([
+				{ [picture]: 'med-bild', [size]: '50x70' },
+			]);
+		},
+		'filtered',
+	);
 });
 
 test('a filter by picture keeps that picture’s card', async ({

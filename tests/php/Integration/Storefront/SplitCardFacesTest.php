@@ -7,12 +7,14 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
 use WC_Product_Variable;
+use WC_Query;
 use WP_UnitTestCase;
 
 final class SplitCardFacesTest extends WP_UnitTestCase {
@@ -29,11 +31,13 @@ final class SplitCardFacesTest extends WP_UnitTestCase {
 	public function set_up(): void {
 		parent::set_up();
 		$this->set_up_posters();
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 	}
 
 	public function tear_down(): void {
 		$this->tear_down_posters();
+		$_GET = array();
+		( new \ReflectionProperty( WC_Query::class, 'chosen_attributes' ) )->setValue( null, null );
 		parent::tear_down();
 	}
 
@@ -88,6 +92,53 @@ final class SplitCardFacesTest extends WP_UnitTestCase {
 		$fresh = wc_get_product( $poster->get_id() );
 		$this->assertInstanceOf( WC_Product::class, $fresh );
 		$this->assertSame( $product, (int) $fresh->get_image_id(), 'out of the loop the product is itself' );
+	}
+
+	public function test_a_card_shows_the_flat_design_until_a_filter_on_an_attribute_listed_while_filtered_shows_its_studio_picture(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::SIZE ], SplitListing::FILTERED );
+		$poster = $this->poster();
+		$drawn  = array();
+		foreach ( array( 'med-bild', 'utan-bild' ) as $picture ) {
+			foreach ( $this->variations_of( $poster, $picture ) as $variation ) {
+				$studio = $this->image();
+				$flat   = $this->image();
+				$variation->set_image_id( $studio );
+				$variation->update_meta_data(
+					ProductPictures::META_KEY,
+					(string) wp_json_encode(
+						array(
+							'basis'      => 'drawn',
+							'source'     => 'studio',
+							'attachment' => $studio,
+							'gallery'    => array(
+								array(
+									'source'     => 'flat',
+									'attachment' => $flat,
+								),
+							),
+						)
+					)
+				);
+				$variation->save();
+				$drawn[ $picture ][ (string) $variation->get_attributes()['pa_storlek'] ] = array( $studio, $flat );
+			}
+		}
+
+		$this->assertSame(
+			array( $drawn['med-bild']['30x40'][1], $drawn['utan-bild']['30x40'][1] ),
+			array_column( $this->shop(), 'image' ),
+			'each design\'s flat picture'
+		);
+		$this->assertSame(
+			array( $drawn['med-bild']['50x70'][0] ),
+			array_column( $this->shop( array( 'filter_storlek' => '50x70' ) ), 'image' ),
+			'filtered by size, the studio picture of the variation in it'
+		);
+		$this->assertSame(
+			array( $drawn['utan-bild']['30x40'][1] ),
+			array_column( $this->shop( array( 'filter_bild' => 'utan-bild' ) ), 'image' ),
+			'a filter on the design alone keeps its flat picture'
+		);
 	}
 
 	public function test_a_card_shows_from_its_variations_lowest_price(): void {
@@ -147,12 +198,16 @@ final class SplitCardFacesTest extends WP_UnitTestCase {
 	/**
 	 * The category page's cards, each with the title, image and price a theme prints.
 	 *
+	 * @param array<string, string> $filters The listing's filters.
 	 * @return list<array{title: string, image: int, price: string}>
 	 */
-	private function shop(): array {
+	private function shop( array $filters = array() ): array {
+		// WooCommerce reads the chosen filters once a request.
+		( new \ReflectionProperty( WC_Query::class, 'chosen_attributes' ) )->setValue( null, null );
+		$_GET = $filters;
 		$page = get_term_link( $this->category, 'product_cat' );
 		$this->assertIsString( $page );
-		$this->go_to( $page );
+		$this->go_to( add_query_arg( $filters, $page ) );
 		global $wp_query;
 		$cards = array();
 		while ( $wp_query->have_posts() ) {
@@ -183,6 +238,24 @@ final class SplitCardFacesTest extends WP_UnitTestCase {
 			}
 		}
 		$this->fail( "No variation {$picture}" );
+	}
+
+	/**
+	 * The poster's variations with a picture.
+	 *
+	 * @param WC_Product $poster  The poster.
+	 * @param string     $picture The picture's slug.
+	 * @return list<WC_Product>
+	 */
+	private function variations_of( WC_Product $poster, string $picture ): array {
+		$found = array();
+		foreach ( $poster->get_children() as $id ) {
+			$variation = wc_get_product( $id );
+			if ( $variation instanceof WC_Product && $picture === $variation->get_attributes()['pa_bild'] ) {
+				$found[] = $variation;
+			}
+		}
+		return $found;
 	}
 
 	/**

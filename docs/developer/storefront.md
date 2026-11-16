@@ -1195,7 +1195,8 @@ tax and shown with it.
 - **The counts**: on `woocommerce_pre_product_filter_data` for `attribute`,
   each value's count is the number of rows the listing would show with the
   value added to the query's filters: per card kept, or once for a product
-  listed once or with **One card per product** on. The base products come
+  listed once; a card of an attribute listed only while filtered counts
+  only while a filter is on that attribute. The base products come
   from the query without its attribute and price filters, with WooCommerce's
   own clauses for the block's other filters, such as stock and taxonomies. An
   attribute whose values combine with `and` keeps a product only while its

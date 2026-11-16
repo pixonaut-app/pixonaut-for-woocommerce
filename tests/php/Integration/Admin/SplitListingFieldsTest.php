@@ -58,50 +58,54 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 		}
 		delete_transient( 'wc_attribute_taxonomies' );
 		delete_option( SplitListing::OPTION );
+		delete_option( SplitListing::FILTERED_OPTION );
 		$_POST = array();
 		$_GET  = array();
 		unset( $GLOBALS['product_object'] );
 		parent::tear_down();
 	}
 
-	public function test_the_attribute_screens_turn_its_default_on_and_off(): void {
-		$_POST = $this->nonced( array( SplitListingFields::ATTRIBUTE_FIELD => '1' ) );
+	public function test_the_attribute_screens_set_its_default(): void {
+		$_POST = $this->nonced( array( SplitListingFields::ATTRIBUTE_FIELD => SplitListing::ON ) );
 		$id    = $this->attribute( 'Ram', array( 'Svart' ) );
-		$this->assertTrue( SplitListing::attribute_default( $id ), 'added with the box ticked' );
-		$this->assertFalse( SplitListing::attribute_default( $this->attributes[ self::PICTURE ] ), 'another attribute keeps its own' );
+		$this->assertSame( SplitListing::ON, SplitListing::attribute_mode( $id ), 'added with a card per value' );
+		$this->assertSame( SplitListing::OFF, SplitListing::attribute_mode( $this->attributes[ self::PICTURE ] ), 'another attribute keeps its own' );
 
-		$_POST = $this->nonced( array() );
+		$_POST = $this->nonced( array( SplitListingFields::ATTRIBUTE_FIELD => SplitListing::FILTERED ) );
 		wc_update_attribute( $id, array( 'name' => 'Ram' ) );
-		$this->assertFalse( SplitListing::attribute_default( $id ), 'saved with the box cleared' );
+		$this->assertSame( SplitListing::FILTERED, SplitListing::attribute_mode( $id ), 'saved as listed while filtered' );
+		$this->assertFalse( get_option( SplitListing::OPTION ), 'no longer listed always' );
 
-		$_POST = array( SplitListingFields::ATTRIBUTE_FIELD => '1' );
+		$_POST = array( SplitListingFields::ATTRIBUTE_FIELD => SplitListing::OFF );
 		wc_update_attribute( $id, array( 'name' => 'Ram' ) );
-		$this->assertFalse( SplitListing::attribute_default( $id ), 'an update not from the screen leaves it' );
+		$this->assertSame( SplitListing::FILTERED, SplitListing::attribute_mode( $id ), 'an update not from the screen leaves it' );
 
-		$_POST = $this->nonced( array( SplitListingFields::ATTRIBUTE_FIELD => '1' ) );
+		$_POST = $this->nonced( array( SplitListingFields::ATTRIBUTE_FIELD => 'sometimes' ) );
 		wc_update_attribute( $id, array( 'name' => 'Ram' ) );
-		$this->assertTrue( SplitListing::attribute_default( $id ) );
+		$this->assertSame( SplitListing::OFF, SplitListing::attribute_mode( $id ), 'a setting it does not know is off' );
 
+		$_POST = $this->nonced( array( SplitListingFields::ATTRIBUTE_FIELD => SplitListing::FILTERED ) );
+		wc_update_attribute( $id, array( 'name' => 'Ram' ) );
 		wc_delete_attribute( $id );
-		$this->assertFalse( SplitListing::attribute_default( $id ), 'a deleted attribute is forgotten' );
-		$this->assertFalse( get_option( SplitListing::OPTION ), 'the option goes with the last one' );
+		$this->assertSame( SplitListing::OFF, SplitListing::attribute_mode( $id ), 'a deleted attribute is forgotten' );
+		$this->assertFalse( get_option( SplitListing::FILTERED_OPTION ), 'the option goes with the last one' );
 	}
 
-	public function test_the_attribute_screens_show_the_checkbox_as_set(): void {
+	public function test_the_attribute_screens_show_the_setting_as_set(): void {
 		ob_start();
 		$this->fields->render_add();
 		$added = (string) ob_get_clean();
 		$this->assertStringContainsString( 'name="' . SplitListingFields::ATTRIBUTE_FIELD . '"', $added );
-		$this->assertStringNotContainsString( 'checked', $added );
+		$this->assertStringContainsString( "<option value=\"off\"  selected='selected'>", $added );
 		$this->assertStringContainsString( 'name="' . SplitListingFields::NONCE_FIELD . '"', $added );
 
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::FILTERED );
 		$_GET['edit'] = (string) $this->attributes[ self::PICTURE ];
 		ob_start();
 		$this->fields->render_edit();
 		$edited = (string) ob_get_clean();
 		$this->assertStringContainsString( '<tr class="form-field pixonaut-split-attribute">', $edited );
-		$this->assertStringContainsString( "checked='checked'", $edited );
+		$this->assertStringContainsString( "<option value=\"filtered\"  selected='selected'>", $edited );
 	}
 
 	public function test_a_product_saves_each_global_attributes_choice(): void {
@@ -120,6 +124,10 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 		$_POST[ SplitListingFields::PRODUCT_FIELD ] = array( 'auto', 'off', 'on' );
 		do_action( 'woocommerce_process_product_meta', $product->get_id() );
 		$this->assertSame( array( $this->attributes[ self::SIZE ] => SplitListing::OFF ), $this->stored( $product )->split_listing, 'a row back on Auto loses its choice' );
+
+		$_POST[ SplitListingFields::PRODUCT_FIELD ] = array( 'auto', 'filtered', 'on' );
+		do_action( 'woocommerce_process_product_meta', $product->get_id() );
+		$this->assertSame( array( $this->attributes[ self::SIZE ] => SplitListing::FILTERED ), $this->stored( $product )->split_listing, 'a card per value while filtered' );
 	}
 
 	public function test_a_product_save_without_the_rows_or_their_nonce_keeps_the_choices(): void {
@@ -365,13 +373,13 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 		$attributes                = $product->get_attributes();
 
 		$hidden = $this->row( $attributes['pa_bild'], 0 );
-		$this->assertStringContainsString( '<tr class="pixonaut-split-cards" data-attribute-default="0" hidden>', $hidden, 'Auto, with the attribute off' );
+		$this->assertStringContainsString( '<tr class="pixonaut-split-cards" data-attribute-mode="off" hidden>', $hidden, 'Auto, with the attribute off' );
 		$this->assertStringContainsString( 'name="' . SplitListingFields::CARD_FIELD . '[' . $with . '][title]" value="Safari med bild" placeholder="Safari"', $hidden );
 		$this->assertStringContainsString( 'name="' . SplitListingFields::CARD_FIELD . '[' . $with . '][image]" value="' . $image . '"', $hidden );
 		$this->assertStringContainsString( 'Title for “Utan bild”', $hidden );
 
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
-		$this->assertStringContainsString( '<tr class="pixonaut-split-cards" data-attribute-default="1">', $this->row( $attributes['pa_bild'], 0 ) );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::FILTERED );
+		$this->assertStringContainsString( '<tr class="pixonaut-split-cards" data-attribute-mode="filtered">', $this->row( $attributes['pa_bild'], 0 ), 'Auto, with the attribute listing a card per value while filtered' );
 	}
 
 	public function test_auto_follows_the_attribute_and_a_products_own_choice_comes_first(): void {
@@ -380,7 +388,7 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 		$size    = $this->attributes[ self::SIZE ];
 		$this->assertNull( $this->split_by( $product ), 'neither attribute is on' );
 
-		SplitListing::set_attribute_default( $picture, true );
+		SplitListing::set_attribute_mode( $picture, SplitListing::ON );
 		$this->assertSame( $picture, $this->split_by( $product ), 'Auto follows the attribute' );
 		$this->assertTrue( SplitListing::splits( $this->stored( $product ), $picture ) );
 
@@ -391,7 +399,7 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 		$this->assertNull( $this->split_by( $product ), 'Off whatever the attribute says' );
 		$this->assertFalse( SplitListing::splits( $this->stored( $product ), $picture ) );
 
-		SplitListing::set_attribute_default( $picture, false );
+		SplitListing::set_attribute_mode( $picture, SplitListing::OFF );
 		$this->choose( $product, array( $picture => SplitListing::ON ) );
 		$this->assertSame( $picture, $this->split_by( $product ), 'On whatever the attribute says' );
 	}
@@ -402,8 +410,8 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 		$size    = $this->attributes[ self::SIZE ];
 		$ids     = fn (): array => array_map( static fn ( WC_Product_Attribute $attribute ): int => $attribute->get_id(), SplitListing::attributes_of( $this->fresh( $product ) ) );
 
-		SplitListing::set_attribute_default( $picture, true );
-		SplitListing::set_attribute_default( $size, true );
+		SplitListing::set_attribute_mode( $picture, SplitListing::ON );
+		SplitListing::set_attribute_mode( $size, SplitListing::ON );
 		$this->assertSame( array( $picture, $size ), $ids(), 'both on Auto, in the product\'s order of attributes' );
 
 		$this->choose(
@@ -413,13 +421,13 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 				$size    => SplitListing::ON,
 			)
 		);
-		SplitListing::set_attribute_default( $picture, false );
-		SplitListing::set_attribute_default( $size, false );
+		SplitListing::set_attribute_mode( $picture, SplitListing::OFF );
+		SplitListing::set_attribute_mode( $size, SplitListing::OFF );
 		$this->assertSame( array( $picture, $size ), $ids(), 'both turned on by the product' );
 	}
 
 	public function test_only_a_variable_products_variation_attribute_splits(): void {
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$simple = new WC_Product_Simple();
 		$simple->set_attributes( array( $this->product_attribute( self::PICTURE, false ) ) );
 		$simple->save();
@@ -434,20 +442,19 @@ final class SplitListingFieldsTest extends WP_UnitTestCase {
 	public function test_a_global_attributes_row_shows_the_products_choice(): void {
 		$product                   = $this->poster();
 		$GLOBALS['product_object'] = $product;
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$attributes = $product->get_attributes();
 
 		$auto = $this->row( $attributes['pa_bild'], 0 );
-		$this->assertStringContainsString( 'name="' . SplitListingFields::PRODUCT_FIELD . '[0]" value="auto"', $auto );
-		$this->assertStringContainsString( 'role="checkbox"', $auto );
-		$this->assertStringContainsString( 'aria-checked="mixed"', $auto, 'Auto reads as mixed' );
-		$this->assertStringContainsString( 'Auto: on, as the attribute is', $auto );
+		$this->assertStringContainsString( 'name="' . SplitListingFields::PRODUCT_FIELD . '[0]" id="pixonaut-split-listing-0"', $auto );
+		$this->assertStringContainsString( '<label for="pixonaut-split-listing-0"', $auto );
+		$this->assertStringContainsString( "<option value=\"auto\"  selected='selected'>Auto: A card per value, as the attribute</option>", $auto, 'Auto names what the attribute does' );
 
-		$this->choose( $product, array( $this->attributes[ self::SIZE ] => SplitListing::OFF ) );
+		$this->choose( $product, array( $this->attributes[ self::SIZE ] => SplitListing::FILTERED ) );
 		$GLOBALS['product_object'] = $this->fresh( $product );
-		$off                       = $this->row( $attributes['pa_posterstorlek'], 1 );
-		$this->assertStringContainsString( 'aria-checked="false"', $off );
-		$this->assertStringContainsString( 'Off for this product', $off );
+		$filtered                  = $this->row( $attributes['pa_posterstorlek'], 1 );
+		$this->assertStringContainsString( "<option value=\"filtered\"  selected='selected'>A card per value while filtered by it</option>", $filtered );
+		$this->assertStringContainsString( 'Auto: One card for all values, as the attribute', $filtered );
 
 		$custom = new WC_Product_Attribute();
 		$custom->set_name( 'Ram' );

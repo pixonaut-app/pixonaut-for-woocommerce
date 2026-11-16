@@ -30,7 +30,7 @@ final class CardPagesTest extends WP_UnitTestCase {
 	public function set_up(): void {
 		parent::set_up();
 		$this->set_up_posters();
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 	}
 
 	public function tear_down(): void {
@@ -202,7 +202,7 @@ final class CardPagesTest extends WP_UnitTestCase {
 		unset( $_GET[ CardSitemaps::PAGE_ARG ] );
 		$this->assertSame( 0, CardSitemaps::requested() );
 
-		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], false );
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::OFF );
 		$this->assertSame( array(), $provider->get_url_list( 1 ), 'a product listed once has its own page alone' );
 		$this->assertSame( 0, $provider->get_max_num_pages() );
 	}

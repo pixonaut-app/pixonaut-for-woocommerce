@@ -42,6 +42,7 @@ use Pixonaut\WooCommerce\Abilities\ReadPricingSettings;
 use Pixonaut\WooCommerce\Abilities\RecheckProducts;
 use Pixonaut\WooCommerce\Abilities\RegenerateProductPictures;
 use Pixonaut\WooCommerce\Abilities\ResetStandingLayout;
+use Pixonaut\WooCommerce\Abilities\SetAttributeSplitListing;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductForm;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
@@ -521,10 +522,10 @@ final class Plugin {
 		$this->personalise_button()->register();
 		$this->personalised_designs()->register();
 		( new MovedAttributeLinks() )->register();
-		$split_card_listings = new SplitCardListings( $this->settings() );
+		$split_card_listings = new SplitCardListings();
 		$split_card_listings->register();
 		( new SplitCardFaces( $split_card_listings ) )->register();
-		( new FilterMatches( $this->settings() ) )->register();
+		( new FilterMatches() )->register();
 		( new AttributeDependencies() )->register();
 		( new CardPageHead() )->register();
 		( new CardSitemaps() )->register();
@@ -562,6 +563,7 @@ final class Plugin {
 					new SetProductPictureView( $views ),
 					new GetProductSplitListing(),
 					new SetProductSplitListing(),
+					new SetAttributeSplitListing(),
 					new MoveProductTemplate( $links, $fields ),
 					new MoveProductAttribute( new WcLogger() ),
 					new UseProductPicture( $links, $this->settings() ),

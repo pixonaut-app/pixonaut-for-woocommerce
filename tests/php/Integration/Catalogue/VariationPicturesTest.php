@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\ProductVariants;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Migrations\Migrations;
 use Pixonaut\WooCommerce\Migrations\RedrawVariationPictures;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
@@ -203,6 +204,32 @@ final class VariationPicturesTest extends WP_UnitTestCase {
 		$this->assertCount( 1, $this->recorder->requests );
 		$this->assertStringEndsWith( '&showcase=' . self::ANNA['id'], $this->recorder->requests[0]['url'] );
 		$this->assertSame( ProductSetup::DRAWN_WITH_SHOWCASE, $this->picture_shows( $red ) );
+	}
+
+	public function test_a_variation_of_a_product_listed_as_cards_is_drawn_flat_too_with_the_same_set(): void {
+		$product = $this->tee();
+		ShowcaseImages::save( $product, array( self::ANNA ) );
+		$red  = $this->variation( $product, 'Red', 'v_red' );
+		$blue = $this->variation( $product, 'Blue', 'v_blue' );
+		$this->answer_pictures( 2 );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+		$this->assertSame( array(), ProductPictures::stored( $this->reload( $red ) )['gallery'], 'listed once, only its studio picture' );
+		$this->recorder->requests = array();
+
+		// Listed as cards: its card rows are written.
+		add_post_meta( $product->get_id(), SplitCards::META, SplitCards::NO_VALUE );
+		$this->answer_pictures( 1 );
+		ActionSchedulerRunner::run_pending( PictureQueue::VARIATIONS_ACTION );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+
+		$flat = array_values( array_filter( array_column( $this->recorder->requests, 'url' ), static fn ( string $url ): bool => str_contains( $url, '/preview.png?' ) ) );
+		$this->assertCount( 1, $flat, 'one flat picture of the design, which both colours share' );
+		$this->assertStringEndsWith( '&showcase=' . self::ANNA['id'], $flat[0] );
+		$this->assertCount( 1, $this->recorder->requests, 'the studio pictures are kept, not drawn again' );
+		$studio = (int) $this->reload( $red )->get_image_id();
+		$this->assertNotSame( 0, ProductPictures::flat( $this->reload( $red ) ) );
+		$this->assertNotSame( $studio, ProductPictures::flat( $this->reload( $red ) ), 'the image stays the studio picture' );
+		$this->assertSame( ProductPictures::flat( $this->reload( $red ) ), ProductPictures::flat( $this->reload( $blue ) ) );
 	}
 
 	public function test_a_picture_drawn_without_a_set_shows_the_templates_defaults(): void {

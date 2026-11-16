@@ -57,6 +57,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_option( \Pixonaut\WooCommerce\Schema::DESIGNER_LINK_WITHDRAWALS_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::WORKSPACE_SETTINGS_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::SPLIT_ATTRIBUTES_OPTION );
+		delete_option( \Pixonaut\WooCommerce\Schema::SPLIT_FILTERED_ATTRIBUTES_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::SWATCH_NAMES_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::CATALOGUE_CACHE_GENERATION_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::REQUEST_LOG_OPTION );
@@ -105,6 +106,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::LOW_RESOLUTION_ACCEPTED_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_MOVED_ATTRIBUTES_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_SPLIT_CARD_META );
+		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_SPLIT_FILTERED_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_SPLIT_CARD_LOOKS_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_SPLIT_CARD_IMAGE_COPIES_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::ATTACHMENT_CARD_IMAGE_SOURCE_META );

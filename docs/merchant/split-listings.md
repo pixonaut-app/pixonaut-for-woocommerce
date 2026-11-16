@@ -12,29 +12,36 @@ options (sizes, say) stay inside each.
 
 ## The attribute's setting
 
-Go to **Products > Attributes** and edit the attribute, or add it there. Tick
-**Show each value as its own product** and save. Every variable product that
-uses the attribute for its variations follows it, unless the product says
-otherwise.
+Go to **Products > Attributes** and edit the attribute, or add it there.
+Choose in **Cards in the shop** and save:
+
+| Setting | Every variable product using the attribute for its variations |
+|---|---|
+| One card for all values | is listed once for all of the attribute's values (the default) |
+| A card per value | is listed once per value |
+| A card per value while filtered by it | is listed once per value only while a customer filters the shop by this attribute (see [Only while filtered](#only-while-filtered)) |
+
+Each product follows it, unless the product says otherwise.
 
 ## The product's own choice
 
 On the product's **Attributes** tab, each global attribute's row has a
-**Show each value as its own product** box with three states. A click moves
-it to the next one:
+**Cards in the shop** menu:
 
-| State | Looks like | The product |
-|---|---|---|
-| Auto | a filled square | follows the attribute's setting, now and when it changes; the text beside the box says which it is |
-| On | a tick | is listed once per value, whatever the attribute says |
-| Off | an empty box | is listed once, whatever the attribute says |
+| Choice | The product |
+|---|---|
+| Auto: … , as the attribute | follows the attribute's setting, now and when it changes; the choice names what the attribute does |
+| A card per value | is listed once per value, whatever the attribute says |
+| A card per value while filtered by it | is listed once per value only while the shop is filtered by the attribute, whatever the attribute says |
+| One card for all values | is listed once for all of the attribute's values, whatever the attribute says |
 
 A new product starts on Auto. Save the product, or use **Save attributes**,
-to keep the choice. Screen readers read Auto as a mixed checkbox.
+to keep the choice.
 
 Only an attribute used for variations counts. A product with an attribute
-set to On is listed by the attributes it set to On; with none On, by those
-on Auto whose attribute is ticked.
+set to a card per value (always or while filtered) is listed by the
+attributes it set; with none set, by those on Auto whose attribute lists a
+card per value.
 
 ## More than one attribute
 
@@ -86,26 +93,27 @@ Product Collection block on the shop's templates) both show them.
 - **Elsewhere** the product is shown once: related products, up-sells,
   cross-sells and a Product Collection block with its own products chosen.
 
-## One card per product
+## Only while filtered
 
-A product listed by several attributes can fill a page of the shop with
-cards that look much alike. **One card per product in the shop**, under
-**Pixonaut > Storefront** (**Shop pages**), lists each product once instead:
+Some attributes change how a design is sold, not which design it is. A
+poster sold **Med bild** and **Utan bild** (two designs) and with a
+**Framing** of None, Frame or Hanger should show two cards, not six. Set
+the design attribute to **A card per value** and the framing to **A card
+per value while filtered by it**:
 
-- With no filter chosen, the product shows as itself: its own title, image,
-  price and link.
-- While a customer filters by an attribute the product is listed by
-  (**Framing: Frame**, say), the product shows as the first of its cards
-  the filter keeps, with that card's title, image, price and link. A
-  product with no such card is left out, as a product without the value
-  would be.
-- A filter by any other attribute keeps or drops the product, shown as
-  itself, which opens on the variation the filters chose.
+- With no filter on the framing, the product shows a card per design:
+  "Med bild" and "Utan bild". A filter by the design keeps its card.
+- While a customer filters by the framing (**Framing: Frame**, say), the
+  product shows a card per design in that framing: "Med bild, Frame" and
+  "Utan bild, Frame", each with its own title, image, price and link. A
+  design not sold in the framing has no card then.
+- A product listed only by attributes set this way shows as itself until a
+  filter chooses one of their values.
 
-Each card keeps its own page and its place in the sitemap either way. The
-setting is off by default. An assistant turns it on with the
-[`update-plugin-settings` ability](../../developer/abilities/), as
-`one_card_per_product`.
+The filters' counts follow the same rule. Each card has its own page and its
+place in the sitemap, filtered or not. An assistant sets it with the
+[`set-attribute-split-listing` and `set-product-split-listing` abilities](../../developer/abilities/),
+as `filtered`.
 
 ## Each card's own page
 
@@ -153,18 +161,24 @@ browser's history, so a link copied or shared opens the same choice.
 Each card shows:
 
 - **A title**: the value's own title, or the product's.
-- **An image**: the value's own image; without one, the image of the first
-  of the value's variations that has an image of its own; else the
-  product's.
+- **An image**: the value's own image. Without one, the flat picture of
+  its design: the template drawn with the product's showcase set, as
+  Pixonaut draws it for the card's first variation that has one. A card
+  shown while the shop is filtered by an attribute listed only while
+  filtered (a framing) shows instead the picture of its first variation
+  that has one, such as the framed poster on a wall. Without either, the
+  product's. The flat pictures are drawn in the background once the
+  product is listed as cards, while the store uses Pixonaut pictures as
+  product images; until then a card shows its variation's picture.
 - **A price**: "From:" the lowest price among the value's variations, sale
   prices counted. When they all cost the same, that one price, as the
   product page shows it. A variation the shop hides because it is out of
   stock counts for neither the price nor the image.
 
 To give a value's card its own title or image, open the product's
-**Attributes** tab. Under the attribute's **Show each value as its own
-product** box, while the product is listed once per value (On, or Auto with
-the attribute ticked), **Each value's card in the shop** lists the
+**Attributes** tab. Under the attribute's **Cards in the shop**
+menu, while the product is listed once per value (always or while
+filtered, or Auto with the attribute listing a card per value), **Each value's card in the shop** lists the
 attribute's values:
 
 - **Title for "…"**: leave it empty to show the product's title, which the
@@ -177,7 +191,7 @@ gets its fields once the attributes are saved.
 
 A product listed by more than one attribute has the fields of each
 combination's card ("Hanger, Oak") on the row of the combination's last
-attribute, once the product is saved with both turned on. A card keeps its
+attribute, once the product is saved listed by both. A card keeps its
 title and image while the product is listed another way, and when its
 attributes change places; it loses them when the product loses one of its
 values.
