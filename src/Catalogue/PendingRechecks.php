@@ -25,6 +25,10 @@ use Pixonaut\WooCommerce\Schema;
  * the change that asks for the next re-check, and one done, cancelled or
  * gone counts for nothing, so a mark it leaves behind is harmless; a
  * product copied with its meta is not named by its original's job.
+ *
+ * Reading and writing the mark take no lock: two requests queueing the
+ * same product at the same moment can both queue it. That costs one extra
+ * re-check, and the next event finds it waiting again.
  */
 final class PendingRechecks {
 
@@ -38,24 +42,7 @@ final class PendingRechecks {
 	 * @return list<int>
 	 */
 	public static function not_waiting( array $product_ids ): array {
-		if ( array() === $product_ids ) {
-			return array();
-		}
-		update_meta_cache( 'post', $product_ids );
-		$waiting = array();
-		return array_values(
-			array_filter(
-				$product_ids,
-				static function ( int $product_id ) use ( &$waiting ): bool {
-					$job = (int) get_post_meta( $product_id, self::META, true );
-					if ( 0 === $job ) {
-						return true;
-					}
-					$waiting[ $job ] ??= self::waiting_in( $job );
-					return ! in_array( $product_id, $waiting[ $job ], true );
-				}
-			)
-		);
+		return array_keys( self::stale_marks( $product_ids ) );
 	}
 
 	/**
@@ -72,15 +59,47 @@ final class PendingRechecks {
 	}
 
 	/**
-	 * Forgets the job the products were queued in, once it has started.
+	 * Forgets the job the products were queued in, once it has started. A
+	 * job queued for one of them meanwhile is kept: only the mark read is
+	 * deleted.
 	 *
 	 * @param int[] $product_ids Products and variations.
 	 * @phpstan-param list<int> $product_ids
 	 */
 	public static function forget( array $product_ids ): void {
-		foreach ( self::not_waiting( $product_ids ) as $product_id ) {
-			delete_post_meta( $product_id, self::META );
+		foreach ( self::stale_marks( $product_ids ) as $product_id => $job ) {
+			if ( 0 !== $job ) {
+				delete_post_meta( $product_id, self::META, (string) $job );
+			}
 		}
+	}
+
+	/**
+	 * The products of a list not waiting in a re-check, with the job their
+	 * mark names.
+	 *
+	 * @param int[] $product_ids Products and variations.
+	 * @phpstan-param list<int> $product_ids
+	 * @return array<int, int> The job by product id; 0 for a product without a mark.
+	 */
+	private static function stale_marks( array $product_ids ): array {
+		if ( array() === $product_ids ) {
+			return array();
+		}
+		update_meta_cache( 'post', $product_ids );
+		$named = array();
+		$stale = array();
+		foreach ( $product_ids as $product_id ) {
+			$job = (int) get_post_meta( $product_id, self::META, true );
+			if ( 0 !== $job ) {
+				$named[ $job ] ??= self::waiting_in( $job );
+				if ( in_array( $product_id, $named[ $job ], true ) ) {
+					continue;
+				}
+			}
+			$stale[ $product_id ] = $job;
+		}
+		return $stale;
 	}
 
 	/**
