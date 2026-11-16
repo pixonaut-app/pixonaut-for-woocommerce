@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.12.0...v1.12.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* **catalogue:** a picture job has time to make its image sizes, and one cut off is drawn again ([#218](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/218)) ([78974b3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/78974b3466644013bd269bd6d3bcddaa6dc94a17))
+
 ## [1.12.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.11.1...v1.12.0) (2026-11-16)
 
 
