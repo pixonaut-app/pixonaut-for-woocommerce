@@ -53,11 +53,18 @@ const PIXEL = 1;
  *  colour of the frame or the hanger a switch shows again keeps the first
  *  value it was given while it was hidden. */
 const SWITCHES = [
-	{ framing: 'ram', variation: 'ram-svart', mounted: 2 },
-	{ framing: 'hangare', variation: 'hangare-ek', mounted: 3 },
+	{ framing: 'ram', variation: 'ram-svart', mounted: 2, price: '20.00' },
+	{ framing: 'hangare', variation: 'hangare-ek', mounted: 3, price: '15.00' },
 	// Back on the tee, as on a hanger: switched in place.
-	{ framing: 'ingen', variation: 'ingen', mounted: 3 },
+	{ framing: 'ingen', variation: 'ingen', mounted: 3, price: '10.00' },
 ];
+
+/** The bare poster's price, which the page opens on. */
+const OPENING_PRICE = '10.00';
+
+/** The top of the poster's range, the canvas's price: no switch here lands
+ *  on it, so a price showing it is the range. */
+const RANGE_TOP = '30.00';
 
 type Poster = {
 	permalink: string;
@@ -196,15 +203,10 @@ for (const viewport of VIEWPORTS) {
 		const poster = await createPoster(request, key);
 		try {
 			await openPoster(page, poster);
-			const range = await page.evaluate(
-				() =>
-					document.querySelector<HTMLElement>('[data-pixonaut-product-price]')
-						?.dataset.pixonautProductPrice ?? '',
-			);
 			let before = (await switchFrames(page)).at(-1)?.price ?? '';
-			expect(before, 'the bare poster’s price shows').not.toBe('');
+			expect(before, 'the bare poster’s price shows').toContain(OPENING_PRICE);
 
-			for (const { framing: value, variation, mounted } of SWITCHES) {
+			for (const { framing: value, variation, mounted, price } of SWITCHES) {
 				const id = poster.variations[variation] as number;
 				const { frames, since, moved } = await switchTo(
 					page,
@@ -214,6 +216,7 @@ for (const viewport of VIEWPORTS) {
 					mounted,
 				);
 				const after = frames.at(-1)?.price ?? '';
+				expect(after, `${variation}'s price shows`).toContain(price);
 
 				expect(
 					unaccounted(await shiftsSince(page, since), moved),
@@ -222,10 +225,11 @@ for (const viewport of VIEWPORTS) {
 				expect(
 					changes(frames),
 					`the price changes once, to ${variation}'s`,
-				).toEqual(after === before ? [before] : [before, after]);
-				if (range !== '') {
-					expect(frames.map((frame) => frame.price)).not.toContain(range);
-				}
+				).toEqual([before, after]);
+				expect(
+					frames.filter((frame) => frame.price.includes(RANGE_TOP)),
+					'the range never shows',
+				).toEqual([]);
 				expect(
 					frames.filter((frame) => frame.disabled || !frame.cart),
 					'Add to cart stays enabled',
