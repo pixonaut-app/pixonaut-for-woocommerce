@@ -12,7 +12,7 @@ namespace Pixonaut\WooCommerce\Catalogue;
 use Closure;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Schema;
-use Throwable;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 
 /**
  * Searches repeat as the store manager types, and the product screen reads
@@ -46,16 +46,10 @@ final class CatalogueCache {
 	private const KEPT_SECONDS = 3600;
 
 	/**
-	 * After an answer's key, set while a new answer is being read in the
-	 * kept one's place, so one page view reads it rather than every one.
-	 */
-	private const REFRESHING_SUFFIX = '_refreshing';
-
-	/**
 	 * A minute, in seconds: how long a read in a kept answer's place holds
 	 * off the next, and so how soon one that failed is tried again.
 	 */
-	private const REFRESHING_SECONDS = 60;
+	private const REFRESH_HOLD_SECONDS = 60;
 
 	/**
 	 * The reads to make once the page is sent, by key.
@@ -65,9 +59,33 @@ final class CatalogueCache {
 	private array $refreshes = array();
 
 	/**
-	 * @param ConnectionStore $connections Names the connection the answers belong to.
+	 * Finishes the response to the visitor, so the request's remaining
+	 * work runs without them waiting; null where the server offers no way.
+	 *
+	 * @var (Closure(): bool)|null
 	 */
-	public function __construct( private readonly ConnectionStore $connections ) {
+	private ?Closure $finish_response;
+
+	/**
+	 * @param ConnectionStore        $connections     Names the connection the answers belong to.
+	 * @param (Closure(): bool)|null $finish_response Finishes the response; by default PHP-FPM's or LiteSpeed's, where the server has one.
+	 */
+	public function __construct( private readonly ConnectionStore $connections, ?Closure $finish_response = null ) {
+		$this->finish_response = $finish_response ?? self::server_finish_response();
+	}
+
+	/**
+	 * The server's way to finish a response before the request ends: PHP-FPM's or LiteSpeed's.
+	 *
+	 * @return (Closure(): bool)|null
+	 */
+	private static function server_finish_response(): ?Closure {
+		foreach ( array( 'fastcgi_finish_request', 'litespeed_finish_request' ) as $finish ) {
+			if ( function_exists( $finish ) ) {
+				return static fn (): bool => (bool) call_user_func( $finish );
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -92,8 +110,10 @@ final class CatalogueCache {
 	/**
 	 * The cached answer, for a page a visitor waits on: once its few minutes
 	 * are up, the answer kept from before serves for up to an hour while
-	 * `$load` reads a new one after the page is sent (`refresh_kept()`).
-	 * With none kept, `$load`'s, cached.
+	 * `$load` reads a new one after the response is finished
+	 * (`refresh_kept()`). Where the server cannot finish a response early,
+	 * the kept answer serves until its hour is up instead, rather than hold
+	 * the visitor for the read. With none kept, `$load`'s, cached.
 	 *
 	 * @param string                              $what Which answer, e.g. `storefront-template`.
 	 * @param array<string, string>               $args What it was asked with.
@@ -112,8 +132,7 @@ final class CatalogueCache {
 			$this->keep( $key, $answer );
 			return $answer;
 		}
-		if ( false === get_transient( $key . self::REFRESHING_SUFFIX ) ) {
-			set_transient( $key . self::REFRESHING_SUFFIX, 1, self::REFRESHING_SECONDS );
+		if ( null !== $this->finish_response && ! isset( $this->refreshes[ $key ] ) && $this->hold_refresh( $key ) ) {
 			$this->refreshes[ $key ] = $load;
 			add_action( 'shutdown', array( $this, 'refresh_kept' ), PHP_INT_MAX );
 		}
@@ -121,30 +140,57 @@ final class CatalogueCache {
 	}
 
 	/**
-	 * Reads the answers kept ones served in place of, once the page is
-	 * sent: after every other shutdown callback, and under PHP-FPM after
-	 * the response is finished, so the visitor does not wait for it. A read
-	 * that fails leaves the kept answer serving, and is tried again a
-	 * minute later.
+	 * Reads the answers kept ones served in place of, after every other
+	 * shutdown callback and once the response is finished, so the visitor
+	 * does not wait for it. A read Pixonaut refuses, or that cannot reach
+	 * it, leaves the kept answer serving, and is tried again a minute later.
 	 */
 	public function refresh_kept(): void {
 		$refreshes       = $this->refreshes;
 		$this->refreshes = array();
-		if ( array() === $refreshes ) {
+		if ( array() === $refreshes || null === $this->finish_response ) {
 			return;
 		}
-		if ( function_exists( 'fastcgi_finish_request' ) ) {
-			fastcgi_finish_request();
-		}
+		( $this->finish_response )();
 		foreach ( $refreshes as $key => $load ) {
 			try {
 				$this->keep( $key, $load() );
-			} catch ( Throwable ) {
+			} catch ( ApiException ) {
 				// The kept answer serves on until it expires; the hold on refreshing it lapses in a minute.
 				continue;
 			}
-			delete_transient( $key . self::REFRESHING_SUFFIX );
+			delete_option( self::refresh_hold_option( $key ) );
 		}
+	}
+
+	/**
+	 * Takes the right to read a new answer in place of a kept one.
+	 * `add_option()` inserts or fails atomically, so two page views never
+	 * both read it; a hold older than a minute is taken over.
+	 *
+	 * @param string $key The answer's key.
+	 */
+	private function hold_refresh( string $key ): bool {
+		$option = self::refresh_hold_option( $key );
+		$now    = time();
+		if ( add_option( $option, (string) $now, '', false ) ) {
+			return true;
+		}
+		$held_since = get_option( $option );
+		if ( is_numeric( $held_since ) && $now - (int) $held_since < self::REFRESH_HOLD_SECONDS ) {
+			return false;
+		}
+		delete_option( $option );
+		return add_option( $option, (string) $now, '', false );
+	}
+
+	/**
+	 * The option holding the right to refresh an answer.
+	 *
+	 * @param string $key The answer's key.
+	 */
+	private static function refresh_hold_option( string $key ): string {
+		return Schema::CATALOGUE_REFRESH_HOLD_OPTION_PREFIX . md5( $key );
 	}
 
 	/**

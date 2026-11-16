@@ -331,6 +331,11 @@ final class Schema {
 	const CATALOGUE_CACHE_PREFIX = 'pixonaut_wc_catalogue_';
 
 	/**
+	 * Before a hash of a cached catalogue answer's key: the option a page view holds while it reads a new answer in place of a kept one.
+	 */
+	const CATALOGUE_REFRESH_HOLD_OPTION_PREFIX = 'pixonaut_wc_catalogue_refresh_hold_';
+
+	/**
 	 * Option holding the catalogue cache's generation, which every cached
 	 * answer's key carries: raising it drops them all at once.
 	 */

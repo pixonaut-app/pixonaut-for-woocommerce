@@ -176,6 +176,8 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- options by prefix, once at uninstall.
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Schema::PROOF_LOCK_OPTION_PREFIX ) . '%' ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- options by prefix, once at uninstall.
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Schema::CATALOGUE_REFRESH_HOLD_OPTION_PREFIX ) . '%' ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- options by prefix, once at uninstall.
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Schema::DESIGNER_LINK_LOCK_OPTION_PREFIX ) . '%' ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- options by prefix, once at uninstall.
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Schema::PICTURE_LOCK_OPTION_PREFIX ) . '%' ) );

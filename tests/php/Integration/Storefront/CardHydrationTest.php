@@ -60,11 +60,7 @@ final class CardHydrationTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_card_with_an_add_to_cart_button_loads_the_whole_answer(): void {
-		$mug = new WC_Product_Simple();
-		$mug->set_name( 'Mug' );
-		$mug->set_status( 'publish' );
-		$mug->set_regular_price( '90' );
-		$mug->save();
+		$mug = $this->mug();
 
 		$this->cards( $mug, self::BUTTON_CARD );
 
@@ -80,6 +76,34 @@ final class CardHydrationTest extends WP_UnitTestCase {
 
 		$this->assertStringContainsString( 'product_type_variable', $html, 'its button is a link to the product' );
 		$this->assertArrayNotHasKey( 'variations', $this->loaded( $poster ) );
+	}
+
+	public function test_a_card_with_a_directive_naming_another_store_loads_the_whole_answer(): void {
+		$poster = $this->poster();
+
+		$this->cards( $poster, self::SHOP_CARD . '<!-- wp:html --><span data-wp-watch="wishlist::callbacks.update"></span><!-- /wp:html -->' );
+
+		$this->assertCount( 2, $this->loaded( $poster )['variations'] ?? array() );
+	}
+
+	public function test_a_card_reading_a_product_an_earlier_card_loaded_light_gets_the_whole_answer(): void {
+		$mug = $this->mug();
+
+		$this->cards( $mug, self::SHOP_CARD );
+		$this->assertArrayNotHasKey( 'prices', $this->loaded( $mug ), 'the first card loads it light' );
+		$this->cards( $mug, self::BUTTON_CARD );
+
+		$this->assertArrayHasKey( 'prices', $this->loaded( $mug ) );
+		$this->assertArrayHasKey( 'add_to_cart', $this->loaded( $mug ) );
+	}
+
+	public function test_a_light_card_after_one_reading_its_product_keeps_the_whole_answer(): void {
+		$mug = $this->mug();
+
+		$this->cards( $mug, self::BUTTON_CARD );
+		$this->cards( $mug, self::SHOP_CARD );
+
+		$this->assertArrayHasKey( 'prices', $this->loaded( $mug ) );
 	}
 
 	public function test_the_product_a_product_page_shows_is_loaded_whole_in_a_card(): void {
@@ -99,6 +123,18 @@ final class CardHydrationTest extends WP_UnitTestCase {
 		$this->cards( $poster, self::SHOP_CARD );
 
 		$this->assertArrayNotHasKey( 'variations', $this->loaded( $poster ) );
+	}
+
+	/**
+	 * A simple product, whose card's add to cart button adds it to the cart.
+	 */
+	private function mug(): WC_Product_Simple {
+		$mug = new WC_Product_Simple();
+		$mug->set_name( 'Mug' );
+		$mug->set_status( 'publish' );
+		$mug->set_regular_price( '90' );
+		$mug->save();
+		return $mug;
 	}
 
 	/**

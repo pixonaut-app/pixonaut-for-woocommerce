@@ -27,7 +27,9 @@ use WP_REST_Response;
  * product's identity instead: id, name, slug, parent, type and link. A card
  * with any other Interactivity directive, such as an add to cart button,
  * gets WooCommerce's whole answer, as does the product a product page shows,
- * which its own blocks read.
+ * which its own blocks read. The store holds one answer per product for the
+ * page, so a card that reads a product an earlier card loaded light puts
+ * the whole answer in its place.
  */
 final class CardHydration {
 
@@ -53,6 +55,11 @@ final class CardHydration {
 	private const COLLECTION_STORE = 'woocommerce/product-collection';
 
 	/**
+	 * The Interactivity API store a card's product is loaded into.
+	 */
+	private const PRODUCTS_STORE = 'woocommerce/products';
+
+	/**
 	 * How deep Product Template blocks are nested while one renders.
 	 *
 	 * @var int
@@ -66,6 +73,13 @@ final class CardHydration {
 	 * @var int|null
 	 */
 	private ?int $light = null;
+
+	/**
+	 * The products loaded light so far, by id.
+	 *
+	 * @var array<int, true>
+	 */
+	private array $loaded_light = array();
 
 	public function register(): void {
 		add_filter( 'pre_render_block', array( $this, 'enter' ), 10, 2 );
@@ -111,7 +125,12 @@ final class CardHydration {
 	public function card( mixed $content, mixed $parsed ): mixed {
 		if ( $this->depth > 0 && is_string( $content ) && is_array( $parsed ) && self::CARD_BLOCK === ( $parsed['blockName'] ?? null ) ) {
 			$product_id  = (int) get_the_ID();
-			$this->light = $product_id > 0 && ! self::reads_product( $content ) && ! self::is_page_product( $product_id ) ? $product_id : null;
+			$reads       = self::reads_product( $content );
+			$this->light = $product_id > 0 && ! $reads && ! self::is_page_product( $product_id ) ? $product_id : null;
+			if ( $reads && isset( $this->loaded_light[ $product_id ] ) ) {
+				self::load_whole( $product_id );
+				unset( $this->loaded_light[ $product_id ] );
+			}
 		}
 		return $content;
 	}
@@ -135,6 +154,7 @@ final class CardHydration {
 		if ( ! $product instanceof WC_Product ) {
 			return $result;
 		}
+		$this->loaded_light[ $light ] = true;
 		return new WP_REST_Response(
 			array(
 				'id'        => $product->get_id(),
@@ -145,6 +165,20 @@ final class CardHydration {
 				'permalink' => $product->get_permalink(),
 			)
 		);
+	}
+
+	/**
+	 * Puts the Store API's whole answer for a product in the page's product
+	 * store, over the identity an earlier card loaded.
+	 *
+	 * @param int $product_id The product.
+	 */
+	private static function load_whole( int $product_id ): void {
+		$response = rest_do_request( new WP_REST_Request( 'GET', self::PRODUCT_PATH . $product_id ) );
+		$data     = $response->is_error() ? null : $response->get_data();
+		if ( is_array( $data ) ) {
+			wp_interactivity_state( self::PRODUCTS_STORE, array( 'products' => array( $product_id => $data ) ) );
+		}
 	}
 
 	/**
@@ -165,7 +199,7 @@ final class CardHydration {
 		preg_match_all( '/\sdata-wp-[a-z0-9-]+="([^"]*)"|\sdata-wp-[a-z0-9-]+=\'([^\']*)\'/i', $content, $directives, PREG_SET_ORDER );
 		foreach ( $directives as $directive ) {
 			$value = html_entity_decode( ( $directive[1] ?? '' ) . ( $directive[2] ?? '' ), ENT_QUOTES );
-			if ( 1 === preg_match( '#^!?\s*([a-z0-9_-]+/[a-z0-9_/-]+)::#i', $value, $store ) && self::COLLECTION_STORE !== $store[1] ) {
+			if ( 1 === preg_match( '#^!?\s*([^\s:{}\[\]"\']+)::#', $value, $store ) && self::COLLECTION_STORE !== $store[1] ) {
 				return true;
 			}
 		}

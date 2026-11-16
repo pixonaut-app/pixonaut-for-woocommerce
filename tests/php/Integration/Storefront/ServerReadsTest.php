@@ -70,7 +70,7 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$this->store    = $this->plugin->connection_store();
 		StorefrontTest::connect( $this->store );
 		$client      = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
-		$this->cache = new CatalogueCache( $this->store );
+		$this->cache = new CatalogueCache( $this->store, static fn (): bool => true );
 		$this->reads = new ServerReads( new Catalogue( $client ), $this->cache, $client );
 		( new CatalogueCache( $this->store ) )->flush();
 		delete_transient( ServerReads::PAUSE_TRANSIENT );
@@ -214,16 +214,50 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$first = $this->reads->for_mounts( array( 'front' => self::FRONT ) );
 		self::expire_reads();
 		$this->recorder->requests = array();
-		$this->recorder->fail();
+		// The template, the placement and the blank's views each fail at their first request.
+		$this->recorder->fail()->fail()->fail();
 
 		$this->assertSame( $first, $this->reads->for_mounts( array( 'front' => self::FRONT ) ) );
 		$this->cache->refresh_kept();
-		$this->assertNotSame( array(), $this->recorder->requests );
+		$this->assertCount( 3, $this->recorder->requests );
 		$this->recorder->requests = array();
 
 		$this->assertSame( $first, $this->reads->for_mounts( array( 'front' => self::FRONT ) ) );
 		$this->cache->refresh_kept();
 		$this->assertSame( array(), $this->recorder->requests, 'tried again only after a minute' );
+	}
+
+	public function test_where_the_response_cannot_be_finished_early_the_one_from_before_serves_without_a_read(): void {
+		$client = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
+		$cache  = new CatalogueCache( $this->store, null );
+		$reads  = new ServerReads( new Catalogue( $client ), $cache, $client );
+		$this->answer_side();
+		$first = $reads->for_mounts( array( 'front' => self::FRONT ) );
+		self::expire_reads();
+		$this->recorder->requests = array();
+
+		$this->assertSame( $first, $reads->for_mounts( array( 'front' => self::FRONT ) ) );
+		$cache->refresh_kept();
+
+		$this->assertSame( array(), $this->recorder->requests, 'no read holds the visitor at shutdown' );
+	}
+
+	public function test_two_page_views_past_the_minutes_read_a_new_answer_once(): void {
+		$client = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) )->sdk();
+		$this->answer_side();
+		$this->reads->for_mounts( array( 'front' => self::FRONT ) );
+		self::expire_reads();
+		$this->recorder->requests = array();
+		$this->answer_side();
+		$other_cache = new CatalogueCache( $this->store, static fn (): bool => true );
+		$other_view  = new ServerReads( new Catalogue( $client ), $other_cache, $client );
+
+		$this->reads->for_mounts( array( 'front' => self::FRONT ) );
+		$other_view->for_mounts( array( 'front' => self::FRONT ) );
+		$this->cache->refresh_kept();
+		$other_cache->refresh_kept();
+
+		$this->assertCount( 4, $this->recorder->requests );
 	}
 
 	public function test_a_side_without_a_blank_reads_its_template_alone(): void {

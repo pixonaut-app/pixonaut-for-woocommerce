@@ -50,9 +50,9 @@ final class Purchasability {
 		if ( 0 === $product->get_id() ) {
 			return self::any_variation( $product );
 		}
-		// A page asks for a variable product's several times, its cards' and its own.
+		// A page asks for a variable product's several times, its cards' and its own; the variations' configurations and labels it reads are part of the key.
 		return RequestCache::remember(
-			implode( '|', array( 'purchasable', $product->get_id(), implode( ',', $product->get_children() ), RequestCache::filters_key( self::FILTERS ) ) ),
+			implode( '|', array( 'purchasable', ProductConfig::variations_key( $product ), RequestCache::filters_key( array_merge( self::FILTERS, array( 'woocommerce_attribute_label' ) ) ) ) ),
 			static fn (): bool => self::any_variation( $product )
 		);
 	}
