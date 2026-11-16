@@ -84,7 +84,9 @@ export const listVariantCosts: Handler = (context): HandlerResult => {
 						delivery:
 							cost.product === null || cost.shipping === null
 								? null
-								: DELIVERY_DAYS,
+								: cost.delivery === undefined
+									? DELIVERY_DAYS
+									: cost.delivery,
 					},
 					region,
 					readAt,

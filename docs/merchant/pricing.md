@@ -145,9 +145,9 @@ A printshop also tells how long a product takes: to make, to deliver to your
 shop's country, or both. Pixonaut reads that with the cost, once a day.
 
 Tick **Show the delivery time** under **WooCommerce > Settings > Pixonaut >
-Prices** and each product printed on a blank says it on its page, with its
-availability: "Delivered in 4–7 days". On a product with variations the line
-is the chosen variation's, and changes with the choice.
+Prices** and each product printed on a blank says it on its page, under Add
+to cart: "Delivered in 4–7 days". On a product with variations the line is
+the chosen variation's, and changes with the choice without moving the page.
 
 Only what the printshop tells is shown, in calendar days:
 

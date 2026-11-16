@@ -225,6 +225,7 @@ use Pixonaut\WooCommerce\Storefront\ShortAddresses;
 use Pixonaut\WooCommerce\Storefront\UnavailableReports;
 use Pixonaut\WooCommerce\Storefront\UnavailableProduct;
 use Pixonaut\WooCommerce\Storefront\VariationsUpFront;
+use Pixonaut\WooCommerce\Storefront\VariationSlots;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use Pixonaut\WooCommerce\Updates\Updates;
 use Pixonaut\WooCommerce\Updates\UpgradeNotice;
@@ -532,7 +533,9 @@ final class Plugin {
 		$this->opening_price()->register();
 		( new OpeningDefaults() )->register();
 		( new VariationsUpFront( $this->inline_products() ) )->register();
-		( new DeliveryTime( $this->settings() ) )->register();
+		$variation_slots = new VariationSlots( $this->file, $this->inline_products() );
+		$variation_slots->register();
+		( new DeliveryTime( $this->settings(), $variation_slots ) )->register();
 		( new PrintedSwatches( $this->inline_products(), $this->settings(), $this->swatch_looks() ) )->register();
 		$this->personalise_button()->register();
 		$this->personalised_designs()->register();

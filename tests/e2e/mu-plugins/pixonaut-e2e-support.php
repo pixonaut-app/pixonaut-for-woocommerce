@@ -865,12 +865,12 @@ add_action(
 					'permission_callback' => '__return_true',
 					'args'                => array(
 						// A short unique suffix for the attributes' and the category's slugs.
-						'key'       => array(
+						'key'          => array(
 							'type'     => 'string',
 							'required' => true,
 							'pattern'  => '^[a-z0-9]{1,16}$',
 						),
-						'split'     => array(
+						'split'        => array(
 							'type'  => 'array',
 							'items' => array(
 								'type' => 'string',
@@ -878,26 +878,34 @@ add_action(
 							),
 						),
 						// A stored Pixonaut configuration document for the poster.
-						'pixonaut'  => array(
+						'pixonaut'     => array(
 							'type' => 'object',
 						),
 						// A stored configuration by variation key (`ram-svart`), for a variation that overrides the poster's.
-						'overrides' => array(
+						'overrides'    => array(
 							'type' => 'object',
 						),
 						// A blank variant ref by variation key, for a variation that sells another than its blank's first.
-						'variants'  => array(
+						'variants'     => array(
 							'type' => 'object',
 						),
 						// `filtered`: the sizes list a card per value only while a filter chooses one.
-						'sizes'     => array(
+						'sizes'        => array(
 							'type' => 'string',
 							'enum' => array( 'filtered' ),
 						),
 						// `one-by-one`: the store's threshold has the form look each variation up as it is chosen, as WooCommerce does for a product with more than 30.
-						'lookup'    => array(
+						'lookup'       => array(
 							'type' => 'string',
 							'enum' => array( 'one-by-one' ),
+						),
+						// A description by variation key (`ram-svart`).
+						'descriptions' => array(
+							'type' => 'object',
+						),
+						// Whether the store shows delivery times, the poster's costs and times read from the fake; DELETE stops showing them.
+						'times'        => array(
+							'type' => 'boolean',
 						),
 					),
 					'callback'            => static function ( WP_REST_Request $request ) {
@@ -975,8 +983,13 @@ add_action(
 							$variation->set_parent_id( $poster->get_id() );
 							$variation->set_attributes( $set );
 							$variation->set_regular_price( $price );
+							$variation_key = null === $value ? $framing : $framing . '-' . $value;
+							$descriptions  = is_array( $request['descriptions'] ) ? $request['descriptions'] : array();
+							if ( is_string( $descriptions[ $variation_key ] ?? null ) ) {
+								$variation->set_description( $descriptions[ $variation_key ] );
+							}
 							$variation->save();
-							$variations[ null === $value ? $framing : $framing . '-' . $value ] = $variation->get_id();
+							$variations[ $variation_key ] = $variation->get_id();
 						}
 						WC_Product_Variable::sync( $poster->get_id() );
 						$split = array();
@@ -1004,6 +1017,12 @@ add_action(
 									pixonaut_e2e_pick_variant( $variation, is_string( $refs[ $variation_key ] ?? null ) ? $refs[ $variation_key ] : null );
 								}
 							}
+						}
+
+						if ( true === $request['times'] && $poster instanceof WC_Product ) {
+							$plugin = \Pixonaut\WooCommerce\Plugin::instance();
+							$plugin->settings()->set( \Pixonaut\WooCommerce\Settings\Settings::DELIVERY_TIME_SHOW, true );
+							$plugin->product_pricing()->read_costs( $poster );
 						}
 
 						return new WP_REST_Response(
@@ -1051,6 +1070,10 @@ add_action(
 							if ( $id > 0 ) {
 								wc_delete_attribute( $id );
 							}
+						}
+						$settings = \Pixonaut\WooCommerce\Plugin::instance()->settings();
+						if ( true === $settings->get( \Pixonaut\WooCommerce\Settings\Settings::DELIVERY_TIME_SHOW ) ) {
+							$settings->set( \Pixonaut\WooCommerce\Settings\Settings::DELIVERY_TIME_SHOW, false );
 						}
 						return new WP_REST_Response( null, 204 );
 					},

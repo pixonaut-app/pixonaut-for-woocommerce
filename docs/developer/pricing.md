@@ -45,12 +45,18 @@ with the cost in the `_pixonaut_price` meta. A printshop answers the spans
 it knows: a span that is not two whole day counts, shortest first, reads as
 none, and so does a cost read before Pixonaut answered times.
 
-With the store's `delivery_time_show` on, `Storefront\DeliveryTime` adds a
-line (`p.pixonaut-delivery-time`) to the availability WooCommerce prints
-for a product or variation in stock (`woocommerce_get_stock_html`): on a
-simple product's page, and in a variation's `availability_html`, which
-WooCommerce shows for the variation the customer chooses. It says only what
-the printshop tells:
+With the store's `delivery_time_show` on, `Storefront\DeliveryTime` prints
+a line under Add to cart (`woocommerce_after_add_to_cart_button`, priority
+20, after a theme's price row) for a product or variation in stock, in
+`div.pixonaut-delivery-time`. On a variable product's page it holds every
+variation's line up front, each distinct line once, stacked in one grid
+cell so the place keeps the height of the longest; the chosen variation's
+carries `is-chosen` and the others are `visibility: hidden`
+(`Storefront\VariationSlots`). On the page of a variable product the
+inline designer shows on, the variation's description is held the same way
+in `div.pixonaut-variation-description`, above the quantity, in place of
+the one WooCommerce redraws with each choice. The line says only what the
+printshop tells:
 
 | The printshop tells | The line |
 | --- | --- |

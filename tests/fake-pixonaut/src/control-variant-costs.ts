@@ -1,14 +1,16 @@
 // `POST /__fake/blanks/:id/costs`: sets what the printshop charges for some
 // of a blank's variants, as when a printshop changes its price list, so a
-// test can see the store follow a cost: `{costs: {<ref>: {product, shipping?,
-// currency?}}}`, `product` a decimal string, or null for a variant the
-// printshop publishes no price for. A variant left out keeps its cost. The
-// next reset brings back the fixture's costs.
+// test can see the store follow a cost: `{costs: {<ref>: {product?, shipping?,
+// currency?, delivery?}}}`, `product` a decimal string, or null for a variant
+// the printshop publishes no price for, and `delivery` the days from the
+// order to the door (`{minDays, maxDays}`), or null for none told. A field
+// left out keeps its value, and a variant left out its cost. The next reset
+// brings back the fixture's costs.
 import type { Hono } from 'hono';
 import type { Fake } from './app';
 import { type Body, jsonBody, PREFIX, type Read, refused } from './control';
 import { COST_CURRENCY, costOf } from './handlers/variant-costs';
-import type { Blank, VariantCost } from './state';
+import type { Blank, DeliveryDays, VariantCost } from './state';
 
 const NOT_FOUND_STATUS = 404;
 
@@ -17,6 +19,16 @@ const AMOUNT = /^\d+(\.\d+)?$/;
 
 function amount(value: unknown): value is string {
 	return typeof value === 'string' && AMOUNT.test(value);
+}
+
+function days(value: unknown): value is DeliveryDays {
+	const span = value as Partial<DeliveryDays> | null;
+	return (
+		typeof span === 'object' &&
+		span !== null &&
+		Number.isInteger(span.minDays) &&
+		Number.isInteger(span.maxDays)
+	);
 }
 
 function readCosts(
@@ -35,22 +47,26 @@ function readCosts(
 		}
 		const cost = (value ?? {}) as Record<string, unknown>;
 		const before = costOf(blank, ref);
+		const product = 'product' in cost ? cost.product : before.product;
 		const shipping = cost.shipping ?? before.shipping;
 		const currency = cost.currency ?? before.currency ?? COST_CURRENCY;
+		const delivery = 'delivery' in cost ? cost.delivery : before.delivery;
 		if (
 			typeof value !== 'object' ||
 			value === null ||
-			!(cost.product === null || amount(cost.product)) ||
+			!(product === null || amount(product)) ||
 			!(shipping === null || amount(shipping)) ||
-			typeof currency !== 'string'
+			typeof currency !== 'string' ||
+			!(delivery === undefined || delivery === null || days(delivery))
 		) {
 			return refused(`the cost of \`${ref}\` is not a product price`);
 		}
 		costs[ref] = {
-			product: cost.product as string | null,
+			product,
 			shipping: shipping as string | null,
 			currency,
 			changedAt: now,
+			...(delivery === undefined ? {} : { delivery }),
 		};
 	}
 	return { ok: true, value: costs };

@@ -346,6 +346,9 @@ export const REACH = {
 	],
 	'delivery-time.spec.ts': [
 		'src/Storefront/DeliveryTime.php',
+		'src/Storefront/VariationSlots.php',
+		'assets/src/storefront/variation-slots.ts',
+		'assets/src/storefront/variation-slots-index.ts',
 		'src/Pricing/DeliveryTimes.php',
 		'src/Pricing/CostRefresh.php',
 	],
@@ -830,6 +833,10 @@ export const REACH = {
 	],
 	'variation-switch-steady.spec.ts': [
 		'src/Storefront/VariationsUpFront.php',
+		'src/Storefront/VariationSlots.php',
+		'src/Storefront/DeliveryTime.php',
+		'assets/src/storefront/variation-slots.ts',
+		'assets/src/storefront/variation-slots-index.ts',
 		'assets/src/storefront/applicable-form.ts',
 		'assets/src/storefront/remount-hold.ts',
 		'assets/src/storefront/price.ts',

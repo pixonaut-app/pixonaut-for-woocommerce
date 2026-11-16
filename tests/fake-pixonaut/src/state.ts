@@ -373,7 +373,13 @@ export type VariantCost = {
 	shipping: string | null;
 	currency: string;
 	changedAt: number | null;
+	/** The days from the order to the door the printshop tells, null for
+	 *  none; absent for the fixture's span. */
+	delivery?: DeliveryDays | null;
 };
+
+/** A span of days as Pixonaut writes one. */
+export type DeliveryDays = { minDays: number; maxDays: number };
 
 /** A blank's names in one language, each by what it names as written:
  *  option names by axis, option values by axis and value, view labels by

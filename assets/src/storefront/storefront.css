@@ -849,3 +849,12 @@ form:has(.pixonaut-personalise:not([hidden]))
 	.woocommerce-variation-price {
 	display: none;
 }
+
+/* A variation's description shows once, in the place that keeps the height
+ * of the longest (`VariationSlots`), so the one WooCommerce redraws with
+ * each choice, which would move the price row under it, is left out. */
+.variations_form:has(.pixonaut-variation-description)
+	.single_variation
+	.woocommerce-variation-description {
+	display: none;
+}
