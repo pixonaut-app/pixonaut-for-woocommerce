@@ -167,4 +167,22 @@ describe('holdShown', () => {
 		second.release();
 		expect(row.style.display).toBe('');
 	});
+
+	it('leaves the pictures of a lent part in it, the copy showing its own', () => {
+		const { preview, form, row, home, mark } = drawn();
+		const icon = document.createElement('img');
+		icon.src = 'http://localhost/cart.svg';
+		row.append(icon);
+		const hold = holdShown([preview, form], [mark], [row]);
+		preview.replaceChildren();
+		form.replaceChildren();
+		home.append(row);
+
+		hold.place();
+
+		expect(row.contains(icon)).toBe(true);
+		expect(form.querySelectorAll('img')).toHaveLength(1);
+		hold.release();
+		expect(icon.isConnected).toBe(true);
+	});
 });

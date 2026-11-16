@@ -45,7 +45,9 @@ export function holdShown(
 	parts: readonly HTMLElement[],
 	hidden: readonly HTMLElement[] = [],
 ): RemountHold {
-	const copies = targets.map((target) => [target, copyOf(target)] as const);
+	const copies = targets.map(
+		(target) => [target, copyOf(target, [...parts, ...hidden])] as const,
+	);
 	// Every box keeps at least its height too: the copy can lay out shorter
 	// than the designer it copies, which styles its own parts as it draws.
 	const heights = [...targets, ...sized].map(
@@ -115,14 +117,19 @@ export function holdShown(
 }
 
 /** A target's copy: its nodes, and how to put the designer's own pictures
- *  in place of theirs, once the designer is gone. */
+ *  in place of theirs, once the designer is gone. The pictures in the form's
+ *  parts are the page's, which the next designer draws again: the copy
+ *  keeps its own of those. */
 type Copy = { nodes: Node[]; keepPictures(): void };
 
-/** Inert copies of the target's content, its canvases drawn in and its
- *  pictures kept. */
-function copyOf(target: HTMLElement): Copy {
+/** Inert copies of the target's content, its canvases drawn in and the
+ *  pictures of the designer, not in one of the form's `parts`, kept. */
+function copyOf(target: HTMLElement, parts: readonly HTMLElement[]): Copy {
 	const sources = [...target.querySelectorAll('canvas')];
 	const pictures = [...target.querySelectorAll('img')];
+	const lent = new Set(
+		pictures.filter((picture) => parts.some((part) => part.contains(picture))),
+	);
 	const copies = [...target.childNodes].map((node) => node.cloneNode(true));
 	const drawn = copies.flatMap((node) => {
 		if (node instanceof HTMLCanvasElement) {
@@ -169,7 +176,7 @@ function copyOf(target: HTMLElement): Copy {
 		keepPictures() {
 			pictures.forEach((picture, index) => {
 				const copy = pictureCopies[index];
-				if (copy === undefined) {
+				if (copy === undefined || lent.has(picture)) {
 					return;
 				}
 				unname(picture);
