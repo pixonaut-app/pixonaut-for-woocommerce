@@ -78,6 +78,11 @@ final class UpdatePluginSettings implements Ability {
 		if ( Accent::CUSTOM === $accent && '' === $colour ) {
 			return new WP_Error( 'pixonaut_wc_ability_accent_colour', __( 'A custom accent colour needs the colour: give designer_accent_colour, e.g. #1e73be.', 'pixonaut-for-woocommerce' ) );
 		}
+		// The page's settings hold the pricing rule too.
+		$refused = UpdatePricingSettings::rule_refusal( $this->settings, $input );
+		if ( null !== $refused ) {
+			return $refused;
+		}
 		$this->settings->set_many( $input );
 		return ReadPluginSettings::values( $this->settings );
 	}

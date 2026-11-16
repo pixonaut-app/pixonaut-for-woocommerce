@@ -9,6 +9,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\ShopTools;
 
 use Pixonaut\WooCommerce\Abilities\ReadPluginSettings;
 use Pixonaut\WooCommerce\Abilities\ReadPricingSettings;
+use Pixonaut\WooCommerce\Abilities\UpdatePricingSettings;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
@@ -132,6 +133,23 @@ final class PluginSettingsShopToolsTest extends WP_UnitTestCase {
 			$this->assertSame( 'invalid_input', $answer->get_data()['code'] );
 		}
 		$this->assertFalse( $this->plugin->settings()->get( Settings::SDK_DEBUG ) );
+	}
+
+	public function test_a_price_ending_not_below_the_step_is_refused_as_the_pricing_settings_refuse_it(): void {
+		$step_and_ending = array(
+			Settings::PRICE_STEP   => '10',
+			Settings::PRICE_ENDING => '20',
+		);
+
+		$kept = $this->plugin->settings()->get( Settings::PRICE_ENDING );
+
+		foreach ( array( self::UPDATE, UpdatePricingSettings::NAME ) as $tool ) {
+			$answer = $this->call( $tool, $step_and_ending );
+
+			$this->assertSame( self::UNPROCESSABLE, $answer->get_status(), $tool );
+			$this->assertSame( 'invalid_input', $answer->get_data()['code'], $tool );
+			$this->assertSame( $kept, $this->plugin->settings()->get( Settings::PRICE_ENDING ), $tool );
+		}
 	}
 
 	public function test_the_settings_the_tools_carry_are_the_ones_pixonaut_is_held_to(): void {
