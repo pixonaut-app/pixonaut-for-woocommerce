@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
 import { ProductDesigner } from './designer';
 import { type PixonautSdk, SdkLoadError } from './sdk-loader';
 import {
@@ -314,6 +315,134 @@ describe('ProductDesigner on a variable product', () => {
 			'attribute_size',
 			true,
 		);
+	});
+
+	it('mounts the side again without the group of an attribute that stops applying, and with it once it applies again', async () => {
+		const arranged = {
+			front: {
+				...MOUNTED.front,
+				formGroups: {
+					groups: [
+						{ id: 'text', items: [{ field: 'slogan:content' }] },
+						{
+							id: 'wc-option-size',
+							title: 'Size',
+							items: [{ attribute: 'size' }],
+						},
+					],
+				},
+			},
+		};
+		const { form, mount, sdkDesigner } = start({ mounts: arranged });
+		await settle();
+		const groupIds = (call: number) =>
+			(
+				options(mount, call).formGroups as { groups: Array<{ id: string }> }
+			).groups.map((group) => group.id);
+		expect(groupIds(0)).toEqual(['text', 'wc-option-size']);
+		const row = form
+			.querySelector('select[name="attribute_size"]')
+			?.closest('tr');
+		// The customer is on the template's step, the second of the three a
+		// form laid out in steps then has.
+		const steps = [{ groupId: '$options' }, { groupId: 'text' }];
+		sdkDesigner.getStep.mockReturnValue({ groupId: 'text', steps });
+
+		row?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
+		await settle();
+
+		expect(mount).toHaveBeenCalledTimes(2);
+		expect(sdkDesigner.destroy).toHaveBeenCalledOnce();
+		expect(groupIds(1)).toEqual(['text']);
+		expect(form.contains(row ?? null)).toBe(true);
+		expect(sdkDesigner.setStep).toHaveBeenLastCalledWith(1);
+
+		// Marked again as the form settles: nothing changed.
+		row?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
+		await settle();
+		expect(mount).toHaveBeenCalledTimes(2);
+
+		row?.removeAttribute(NOT_APPLICABLE_ATTRIBUTE);
+		await settle();
+
+		expect(mount).toHaveBeenCalledTimes(3);
+		expect(groupIds(2)).toEqual(['text', 'wc-option-size']);
+	});
+
+	/** The front with the size in a group of its own, after the template's. */
+	const SIZE_GROUP = {
+		groups: [
+			{ id: 'text', items: [{ field: 'slogan:content' }] },
+			{ id: 'wc-option-size', title: 'Size', items: [{ attribute: 'size' }] },
+		],
+	};
+
+	const sizeRow = (form: HTMLFormElement) =>
+		form.querySelector('select[name="attribute_size"]')?.closest('tr');
+
+	it('mounts the side again for an attribute that stopped applying while it mounted', async () => {
+		const sdk = fakeSdk();
+		let finish: () => void = () => undefined;
+		sdk.mount.mockImplementationOnce(
+			() =>
+				new Promise((resolve) => {
+					finish = () => resolve(sdk.designer);
+				}),
+		);
+		const { form, mount } = start({
+			sdk,
+			mounts: { front: { ...MOUNTED.front, formGroups: SIZE_GROUP } },
+		});
+		await settle();
+		expect(mount).toHaveBeenCalledOnce();
+
+		sizeRow(form)?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
+		await settle();
+		finish();
+		await settle();
+
+		expect(mount).toHaveBeenCalledTimes(2);
+		expect(
+			(options(mount, 1).formGroups as typeof SIZE_GROUP).groups.map(
+				(group) => group.id,
+			),
+		).toEqual(['text']);
+	});
+
+	it('mounts the side again on the print size the customer is on', async () => {
+		const { form, mount, sdkDesigner } = start({
+			mounts: { front: { ...MOUNTED.front, formGroups: SIZE_GROUP } },
+		});
+		await settle();
+		expect(options(mount)).not.toHaveProperty('selectedPrintSizeIndex', 1);
+		// The customer picked the small size in the designer's menu.
+		sdkDesigner.getState.mockReturnValue({
+			templateId: 'mini-tee@2',
+			values: {},
+			printSize: SMALL,
+		});
+
+		sizeRow(form)?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
+		await settle();
+
+		expect(mount).toHaveBeenCalledTimes(2);
+		expect(options(mount, 1).selectedPrintSizeIndex).toBe(1);
+	});
+
+	it('leaves the sides of a product with several mounted, which are lent no attribute', async () => {
+		const side = { ...MOUNTED.front, formGroups: SIZE_GROUP };
+		const { form, mount } = start({
+			mounts: { front: side, back: { ...side, placementId: 'back' } },
+		});
+		await settle();
+		const mounted = mount.mock.calls.length;
+
+		sizeRow(form)?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
+		await settle();
+		sizeRow(form)?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
+		await settle();
+
+		expect(mount).toHaveBeenCalledTimes(mounted);
 	});
 
 	it('mounts each variation with its own arrangement, or none', async () => {

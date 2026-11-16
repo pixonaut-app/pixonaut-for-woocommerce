@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
+import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
 import {
 	type ArrangedGroups,
 	hostComplete,
 	hostGroups,
+	inapplicableHosts,
 	lentElements,
 	OWN_STEP_ATTRIBUTE,
 } from './form-groups';
@@ -56,7 +58,7 @@ describe('hostGroups', () => {
 			field: 'slogan:content',
 			label: 'Name',
 		});
-		expect(lentElements({ formGroups, hosts })).toHaveLength(2);
+		expect(lentElements({ formGroups })).toHaveLength(2);
 	});
 
 	it('lends a row lent before as it is', () => {
@@ -81,7 +83,7 @@ describe('hostGroups', () => {
 		const { hosts, formGroups } = hostGroups(ARRANGED, form);
 
 		expect(hosts).toEqual(['attribute_size']);
-		const [element] = lentElements({ formGroups, hosts });
+		const [element] = lentElements({ formGroups });
 		expect(element?.className).toBe(
 			'wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute',
 		);
@@ -124,6 +126,96 @@ describe('hostGroups', () => {
 				},
 			],
 		});
+	});
+});
+
+describe('an attribute that does not apply to the choices', () => {
+	/** Each attribute in a group of its own, around the template's group. */
+	const OWN: ArrangedGroups = {
+		groups: [
+			{
+				id: 'wc-option-colour',
+				title: 'Colour',
+				items: [{ attribute: 'colour' }],
+			},
+			{
+				id: 'text-front',
+				title: 'Your words',
+				items: [{ field: 'slogan:content', label: 'Name' }],
+			},
+			{ id: 'wc-option-size', title: 'Size', items: [{ attribute: 'size' }] },
+		],
+	};
+
+	const hideRow = (form: HTMLFormElement, row: string) =>
+		form.querySelector(`tr.${row}`)?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
+
+	it('is left out with its own group, so the groups after it move up', () => {
+		const form = classicForm();
+		hideRow(form, 'colour');
+
+		const { formGroups, hosts, inapplicable } = hostGroups(OWN, form);
+
+		expect(formGroups.groups.map((group) => group.id)).toEqual([
+			'text-front',
+			'wc-option-size',
+		]);
+		expect(hosts).toEqual(['attribute_size']);
+		expect(inapplicable).toEqual(['attribute_colour']);
+		// Its row stays in the add-to-cart form's own table.
+		expect(form.querySelectorAll('table.variations tr.colour')).toHaveLength(1);
+		expect(form.querySelector('table.pixonaut-attribute tr.colour')).toBeNull();
+	});
+
+	it('is left out of a group it shares, which keeps its other items', () => {
+		const form = classicForm();
+		hideRow(form, 'size');
+
+		const { formGroups, hosts } = hostGroups(ARRANGED, form);
+
+		expect(hosts).toEqual(['attribute_colour']);
+		expect(formGroups.groups[1]).toEqual({
+			id: 'text-front',
+			title: 'Your words',
+			items: [{ field: 'slogan:content', label: 'Name' }],
+		});
+	});
+
+	it('is back in its group once it applies again, a row lent before among them', () => {
+		const form = classicForm();
+		const all = hostGroups(OWN, form);
+		hideRow(form, 'size');
+		expect(hostGroups(OWN, form).hosts).toEqual(['attribute_colour']);
+
+		form.querySelector('tr.size')?.removeAttribute(NOT_APPLICABLE_ATTRIBUTE);
+		const again = hostGroups(OWN, form);
+
+		expect(again.inapplicable).toEqual([]);
+		expect(again.formGroups.groups.map((group) => group.id)).toEqual(
+			all.formGroups.groups.map((group) => group.id),
+		);
+		expect(lentElements(again)).toEqual(lentElements(all));
+	});
+
+	it('is found on the block form’s attribute element', () => {
+		document.body.innerHTML = `
+			<form>
+				<div class="wp-block-woocommerce-add-to-cart-with-options-variation-selector">
+					<div class="wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute" ${NOT_APPLICABLE_ATTRIBUTE}><input type="radio" name="attribute_size" value="S"></div>
+					<div class="wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute"><input type="radio" name="attribute_colour" value="red"></div>
+				</div>
+			</form>`;
+		const form = document.querySelector('form') as HTMLFormElement;
+
+		expect(inapplicableHosts(OWN, form)).toEqual(['attribute_size']);
+		expect(hostGroups(OWN, form).hosts).toEqual(['attribute_colour']);
+	});
+
+	it('is none of the attributes the form has no field of', () => {
+		document.body.innerHTML = '<form></form>';
+		const form = document.querySelector('form') as HTMLFormElement;
+
+		expect(inapplicableHosts(OWN, form)).toEqual([]);
 	});
 });
 

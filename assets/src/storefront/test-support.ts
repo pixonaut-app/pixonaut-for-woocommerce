@@ -47,6 +47,8 @@ export type FakeDesigner = {
 	setValue: ReturnType<typeof vi.fn>;
 	shown: ReturnType<typeof vi.fn>;
 	setHostItemComplete: ReturnType<typeof vi.fn>;
+	getStep: ReturnType<typeof vi.fn>;
+	setStep: ReturnType<typeof vi.fn>;
 	reportPreviewOpened: Mock<() => void>;
 	wasPreviewOpened: Mock<() => boolean>;
 	getVariant: Mock<() => string | undefined>;
@@ -113,6 +115,8 @@ export function fakeDesigner({
 		setValue: vi.fn(),
 		shown: vi.fn().mockResolvedValue(undefined),
 		setHostItemComplete: vi.fn(),
+		getStep: vi.fn(),
+		setStep: vi.fn(),
 		getVariant: vi.fn(() => variant),
 		getVariants: vi.fn(() =>
 			startsOn === undefined ? [] : [{ ref: startsOn, hasPhoto: true }],
