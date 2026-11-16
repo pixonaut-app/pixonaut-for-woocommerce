@@ -95,7 +95,9 @@ as keeps its picture in the window: from 768px wide, `.pixonaut-preview__frame`
 is held to the width that makes the picture as tall as the window below
 `--pixonaut-preview-top` (where the script measures the preview starts, at
 load, on resize and whenever the page's box changes, such as a web font
-above it loading), less 24px and at least 320px, and centred; under
+above it loading; where it rests in the page, so a theme may keep the
+preview or its column in view beside a long form with `position: sticky`),
+less 24px and at least 320px, and centred; under
 768px, to the width that makes it 80vh tall, so a 5:7 design spans a phone's
 width, and only a taller one narrows. Under 768px the preview stays at the top
 of the screen (`position: sticky`) only while the whole `.pixonaut-preview`

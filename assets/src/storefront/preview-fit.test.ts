@@ -109,6 +109,35 @@ describe('fitPreviews', () => {
 		);
 	});
 
+	it('measures a preview kept in view where it rests in the page, not where it is stuck', () => {
+		const element = preview();
+		const column = document.createElement('div');
+		element.before(column);
+		column.append(element);
+		column.style.position = 'sticky';
+		/** Where the column is kept under the top of the window. */
+		const STUCK_AT_PX = 16;
+		const FAR_DOWN_PX = 2000;
+		vi.spyOn(window, 'scrollY', 'get').mockReturnValue(FAR_DOWN_PX);
+		// Stuck, the preview is at the top of the window; in the flow, it is
+		// where the page has it, far above what is scrolled to.
+		vi.spyOn(element, 'getBoundingClientRect').mockImplementation(() =>
+			DOMRect.fromRect({
+				y:
+					column.style.position === 'sticky'
+						? STUCK_AT_PX
+						: HEADER_PX - FAR_DOWN_PX,
+			}),
+		);
+
+		fitPreviews(document);
+
+		expect(element.style.getPropertyValue('--pixonaut-preview-top')).toBe(
+			`${HEADER_PX}px`,
+		);
+		expect(column.style.position).toBe('sticky');
+	});
+
 	it('measures again when the window is resized', () => {
 		const element = preview();
 		startsAt(element, HEADER_PX);

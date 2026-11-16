@@ -66,7 +66,7 @@ export function fitPreviews(doc: Document): void {
 			const box = preview.getBoundingClientRect();
 			preview.style.setProperty(
 				TOP_PROPERTY,
-				`${Math.max(0, box.top + win.scrollY)}px`,
+				`${Math.max(0, restingTop(preview, win))}px`,
 			);
 			// The document's height, unlike the window's, stays put as a phone's
 			// browser bars come and go, so scrolling never flips this. Only the
@@ -110,6 +110,38 @@ export function fitPreviews(doc: Document): void {
 	for (const mark of doc.querySelectorAll<HTMLElement>(MARK_TARGET_SELECTOR)) {
 		shapes.observe(mark);
 	}
+}
+
+/** The position that takes an element out of the page's flow of scrolling
+ *  while it is in view. */
+const STICKY = 'sticky';
+
+/**
+ * How far down the page `preview` starts where it rests, before anything
+ * keeps it in view: a theme may keep the preview, or the column it is in, at
+ * the top of the window while the form scrolls (`position: sticky`), and
+ * measured there a preview far down a long form would start as far down the
+ * page as the customer has scrolled, leaving it no room. Each such element
+ * is put back in the flow for the one measurement, in the same task, so
+ * nothing of it is painted.
+ */
+function restingTop(preview: HTMLElement, win: Window): number {
+	const kept: Array<{ element: HTMLElement; position: string }> = [];
+	for (
+		let element: HTMLElement | null = preview;
+		element !== null && element !== preview.ownerDocument.body;
+		element = element.parentElement
+	) {
+		if (win.getComputedStyle(element).position === STICKY) {
+			kept.push({ element, position: element.style.position });
+			element.style.position = 'static';
+		}
+	}
+	const top = preview.getBoundingClientRect().top + win.scrollY;
+	for (const { element, position } of kept) {
+		element.style.position = position;
+	}
+	return top;
 }
 
 /** Sets the frame's drawn shape from its side's box, once drawn. */
