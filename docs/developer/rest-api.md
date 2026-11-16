@@ -78,6 +78,7 @@ offered to a user:
 | A variation's print size | `set-variation-print-size` |
 | A variation's own setup | `set-product-setup`, always with a variation's id |
 | Showcase pictures | `set-product-showcase`, `get-product-picture-views` |
+| A product's designer form | `get-product-form`, `set-product-form` |
 | Listing each value as its own product | `get-product-split-listing`, `set-product-split-listing` |
 | The plugin's settings | `get-plugin-settings`, `update-plugin-settings` |
 | Pricing settings | `get-pricing-settings`, `update-pricing-settings` |

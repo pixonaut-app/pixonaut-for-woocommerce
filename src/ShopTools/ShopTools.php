@@ -56,6 +56,7 @@ final class ShopTools {
 	 * @param Closure $setup      Makes the ability that sets up a product or variation, once a call needs it.
 	 * @param Closure $pricing    Makes the abilities that read and change the pricing settings and a product's prices, once a call needs them.
 	 * @param Closure $settings   Makes the abilities that read and change the plugin's settings, once a call needs them.
+	 * @param Closure $form       Makes the abilities that read and arrange a product's designer form, once a call needs them.
 	 * @phpstan-param Closure(): ProductLinks $links
 	 * @phpstan-param Closure(): ProductVariants $variants
 	 * @phpstan-param Closure(): ShowcaseField $showcases
@@ -64,6 +65,7 @@ final class ShopTools {
 	 * @phpstan-param Closure(): SetProductSetup $setup
 	 * @phpstan-param Closure(): list<Ability> $pricing
 	 * @phpstan-param Closure(): list<Ability> $settings
+	 * @phpstan-param Closure(): list<Ability> $form
 	 */
 	public function __construct(
 		private readonly Closure $links,
@@ -74,6 +76,7 @@ final class ShopTools {
 		private readonly Closure $setup,
 		private readonly Closure $pricing,
 		private readonly Closure $settings,
+		private readonly Closure $form,
 	) {
 	}
 
@@ -91,7 +94,7 @@ final class ShopTools {
 			}
 		}
 		$links = ( $this->links )();
-		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )(), ( $this->setup )(), new GetProductSplitListing(), new SetProductSplitListing(), ...( $this->pricing )(), ...( $this->settings )() ) as $tool ) {
+		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )(), ( $this->setup )(), new GetProductSplitListing(), new SetProductSplitListing(), ...( $this->pricing )(), ...( $this->settings )(), ...( $this->form )() ) as $tool ) {
 			$tools[ $tool->name() ] = $tool;
 		}
 		return $tools;

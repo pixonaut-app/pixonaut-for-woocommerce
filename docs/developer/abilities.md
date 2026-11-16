@@ -26,6 +26,8 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/set-product-showcase` | Sets which of its template's showcase sets a product's images are drawn with | `edit_product` on that product |
 | `pixonaut-for-woocommerce/get-product-picture-views` | What a product's or variation's images are drawn on, the views and photos of its side's placement, and the showcase sets a product can show | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/set-product-picture-view` | Sets the view and photo one image of a product or variation is drawn on, or flat | `edit_product` on that product (and on a variation's product) |
+| `pixonaut-for-woocommerce/get-product-form` | How a simple or variable product's designer form is arranged: each side's groups, where its options stand, group numbers and layouts, with the options and template fields an arrangement may name | `edit_product` on that product |
+| `pixonaut-for-woocommerce/set-product-form` | Arranges a product's designer form: the groups of the sides named, where its options stand, group numbers and layouts, keeping its sides, print sizes and variations' setups | `edit_product` on that product |
 | `pixonaut-for-woocommerce/get-product-split-listing` | Whether each global attribute of a product lists its values as their own products, each value's card's own title and image, and the cards it is listed as now, combinations included | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-product-split-listing` | Sets a product's "Show each value as its own product" choice per global attribute, and each value's or combination's card's own title and image | `edit_product` on that product |
 | `pixonaut-for-woocommerce/move-product-template` | Moves a product and its variations' own setups to another template version, keeping their sides | `edit_product` on that product |
@@ -374,6 +376,32 @@ personalised (a link kept while personalisation is off is left as it is), to
 id for its live version, after which they follow its latest version, or
 another template. Everything else the side has is kept, and each setup is
 saved and checked again; when one cannot be worked out, nothing is saved.
+
+`get-product-form` reads what the product's Pixonaut tab arranges of its
+designer form: each side's `form_groups`, its groups in order, each with
+an `id` (one of the template's, or the product's own, starting with `wc-`),
+a `title` and `items`: a template field as `field` (`"<layerId>:<prop>"`)
+with the `label`, `help`, `placeholder` and offered values' words
+(`options`) that replace the template's, or one of the product's options as
+`attribute`, by its slug; null when the side shows the template's own form.
+With it the product's `option_groups`, `group_numbers`, `form_layout` and
+`layout`, null where it follows the store's, and what an arrangement may
+name: `attributes`, the options customers choose a variation by, and each
+side's `template_groups`, its template version's groups and their fields,
+null when Pixonaut could not be asked.
+`set-product-form` sets them: `sides`, each by `key` with its `form_groups`
+(null for the template's own form), and the four choices (empty for the
+store's). Only what is given changes; the sides' templates, placements and
+print sizes, and the variations' own setups, are kept, and Pixonaut is not
+asked to check the product again. A side the product does not have, an
+option it does not have, a group or field its template does not offer, or a
+group of the product's own without a title refuses the whole call, which
+names each; so does a form in another shape (one without `groups`, a group
+without an `id` or `items`, an item naming both or neither of `field` and
+`attribute`), and a group under an id the product page gives its own groups
+(`wc-options`, `wc-template-groups`). A product without a Pixonaut setup has
+no form to arrange and is refused. When Pixonaut cannot be asked for the template's fields, nothing
+is saved. The answer is the read's.
 
 `get-product-split-listing` reads what the product's Attributes tab shows
 for [listing each value as its own product](../../merchant/split-listings/):

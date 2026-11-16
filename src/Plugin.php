@@ -23,6 +23,7 @@ use Pixonaut\WooCommerce\Admin\PricingPanel;
 use Pixonaut\WooCommerce\Api\VariantCosts;
 use Pixonaut\WooCommerce\Bridge\Discovery;
 use Pixonaut\WooCommerce\Bridge\Status;
+use Pixonaut\WooCommerce\Abilities\GetProductForm;
 use Pixonaut\WooCommerce\Abilities\GetProductPictureViews;
 use Pixonaut\WooCommerce\Abilities\GetProductPrices;
 use Pixonaut\WooCommerce\Abilities\GetProductSplitListing;
@@ -42,6 +43,7 @@ use Pixonaut\WooCommerce\Abilities\RecheckProducts;
 use Pixonaut\WooCommerce\Abilities\RegenerateProductPictures;
 use Pixonaut\WooCommerce\Abilities\ResetStandingLayout;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
+use Pixonaut\WooCommerce\Abilities\SetProductForm;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
 use Pixonaut\WooCommerce\Abilities\SetProductPriceChanges;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
@@ -421,7 +423,7 @@ final class Plugin {
 		( new InvalidProductNotice( $this->notices() ) )->register();
 		$this->connection()->register();
 		$this->store_access()->register();
-		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ), fn (): array => $this->pricing_abilities(), fn (): array => $this->settings_abilities() ), new WcLogger() ) )->register();
+		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ), fn (): array => $this->pricing_abilities(), fn (): array => $this->settings_abilities(), fn (): array => $this->form_abilities() ), new WcLogger() ) )->register();
 		$this->workspace_settings()->register();
 		$this->webhook_processor()->register();
 		( new Receiver( $this->connection(), $this->intake(), new WcLogger() ) )->register();
@@ -571,6 +573,7 @@ final class Plugin {
 					new RecheckProducts( $this->connection(), $this->catalogue_cache(), $this->product_recheck() ),
 					...$this->settings_abilities(),
 					...$this->pricing_abilities(),
+					...$this->form_abilities(),
 					$status,
 					...array_map(
 						fn ( string $action ): ConnectionAction => new ConnectionAction( $action, $this->connection(), $connect, $this->webhook_endpoint(), $this->workspace_settings(), $status ),
@@ -580,6 +583,16 @@ final class Plugin {
 				);
 			}
 		);
+	}
+
+	/**
+	 * The abilities that read and arrange a product's designer form.
+	 *
+	 * @return list<Ability>
+	 */
+	private function form_abilities(): array {
+		$read = new GetProductForm( $this->catalogue_search() );
+		return array( $read, new SetProductForm( $read ) );
 	}
 
 	/**

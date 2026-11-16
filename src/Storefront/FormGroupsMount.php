@@ -45,6 +45,12 @@ final class FormGroupsMount {
 	private const TEMPLATE_GROUPS_ID = FormGroups::OWN_GROUP_PREFIX . 'template-groups';
 
 	/**
+	 * The group ids the page gives its own groups, which an arrangement may
+	 * not give one of the product's.
+	 */
+	public const RESERVED_GROUP_IDS = array( self::OPTIONS_GROUP_ID, self::TEMPLATE_GROUPS_ID );
+
+	/**
 	 * The option; null for a side that shows the template's own form.
 	 *
 	 * @param Side       $side    The side.
