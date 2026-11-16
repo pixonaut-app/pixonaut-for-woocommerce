@@ -1005,7 +1005,8 @@ one that leaves most of each side's template, blank, placement and print
 size, and of the variant shown, as they are, then the first in the
 variations' order (an "any" attribute takes the value chosen; a variation
 bought without a design, or one that cannot be personalised, is passed
-over). The form itself is left alone: its fields, its `variation_id` and
+over, and so is one Pixonaut refuses once the designer switches to it,
+for the next that fits). The form itself is left alone: its fields, its `variation_id` and
 the price shown stay as WooCommerce has them, and add to cart needs the
 whole choice as on any variable product. With no value chosen, or one for
 every attribute, the form's own variation is the only one followed. For

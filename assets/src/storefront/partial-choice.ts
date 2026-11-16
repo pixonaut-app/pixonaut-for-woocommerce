@@ -35,12 +35,22 @@ export function variationDrawnFor(
 	usable: (id: string) => boolean,
 ): string | undefined {
 	const kept = new Map<string, [attributes: number, shown: number]>();
+	// Each field is read once, however many variations name it.
+	const values = new Map<string, string>();
+	const chosenOf = (name: string): string => {
+		let value = values.get(name);
+		if (value === undefined) {
+			value = chosenValue(form, name);
+			values.set(name, value);
+		}
+		return value;
+	};
 	for (const [id, variation] of Object.entries(variations)) {
 		if (variation.state !== 'personalised' || !usable(id)) {
 			continue;
 		}
 		const held = Object.entries(variation.attributes).map(
-			([name, value]) => [name, value, chosenValue(form, name)] as const,
+			([name, value]) => [name, value, chosenOf(name)] as const,
 		);
 		// With every attribute chosen the form's own answer stands, and with
 		// none there is nothing to apply. An "any" attribute takes whatever

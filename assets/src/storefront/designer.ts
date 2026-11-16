@@ -1055,7 +1055,29 @@ export class ProductDesigner {
 		this.unmatched = false;
 		this.picked = undefined;
 		this.showPrice();
-		void this.queueSwitch(id);
+		void this.queueSwitch(id).then(() => this.passOver(id));
+	}
+
+	/**
+	 * After the switch to variation `id`: when Pixonaut refused it and the
+	 * customer never chose it (a part of a choice drew it), follows the next
+	 * variation that part draws. A variation the form holds stays
+	 * unavailable, and so does the last one a part of a choice can draw.
+	 */
+	private passOver(id: string): void {
+		const form = this.form;
+		if (
+			form === null ||
+			this.held !== NO_VARIATION ||
+			this.variation !== id ||
+			!this.brokenVariations.has(id)
+		) {
+			return;
+		}
+		const next = this.drawnFor(form);
+		if (next !== NO_VARIATION) {
+			this.chooseVariation(next);
+		}
 	}
 
 	/** Switches to the variation after any switch under way; false when the

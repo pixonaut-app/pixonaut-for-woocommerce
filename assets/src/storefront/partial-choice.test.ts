@@ -9,6 +9,7 @@ import {
 	pageDeps,
 	productPage,
 	settle,
+	VariantUnavailableError,
 } from './test-support';
 import { VARIATION_SETTLE_MS, type Variations } from './variations';
 
@@ -204,8 +205,8 @@ describe('variationDrawnFor', () => {
 
 /** The product's page with both attribute fields, the form holding no
  *  variation. */
-function start(sdk = fakeSdk()) {
-	const page = productPage(MOUNTED, { variations: VARIATIONS });
+function start(sdk = fakeSdk(), variations: Variations = VARIATIONS) {
+	const page = productPage(MOUNTED, { variations });
 	const table = page.form.querySelector('table.variations td') as HTMLElement;
 	table.innerHTML = FIELDS;
 	const price = document.createElement('p');
@@ -308,6 +309,36 @@ describe('ProductDesigner while the form holds part of a choice', () => {
 		expect(mount).toHaveBeenCalledTimes(2);
 		expect(framed.setTemplate).not.toHaveBeenCalled();
 		expect(price.innerHTML).toBe('<span>price 54</span>');
+	});
+
+	it('passes over a variation Pixonaut refuses to show for the next one with the value picked', async () => {
+		const [, oak] = sold('81', 'poster', 'with');
+		const [, black] = sold('82', 'poster', 'without');
+		const variations = {
+			'81': { ...oak, variant: 'v_oak' },
+			'82': { ...black, variant: 'v_black' },
+		} as unknown as Variations;
+		const { form, container, mount, sdkDesigner } = start(
+			fakeSdk(),
+			variations,
+		);
+		await settle();
+		sdkDesigner.setVariant.mockRejectedValueOnce(
+			new VariantUnavailableError('v_oak', 'variant_retired'),
+		);
+
+		await pick(form, 'attribute_frame', 'poster');
+
+		// The refused variation gave the form's parts back, so the next one
+		// mounts the side again.
+		expect(mount.mock.calls.at(-1)?.[0]).toMatchObject({
+			templateId: WITHOUT_PICTURE,
+			initialVariant: 'v_black',
+		});
+		expect(
+			container.querySelector<HTMLElement>('.pixonaut-form__unavailable')
+				?.hidden,
+		).toBe(true);
 	});
 
 	it('keeps what it draws once the form holds no value', async () => {
