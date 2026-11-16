@@ -28,3 +28,8 @@ export function shownViewOf(designer: Views): KeptView | undefined {
 	}
 	return { viewId, index: listed(designer).indexOf(viewId) };
 }
+
+/** Whether `designer` lists the very view `kept` names, with a photo. */
+export function listsView(designer: Views, kept: KeptView): boolean {
+	return listed(designer).includes(kept.viewId);
+}

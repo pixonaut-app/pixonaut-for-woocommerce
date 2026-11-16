@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shownViewOf } from './kept-view';
+import { listsView, shownViewOf } from './kept-view';
 
 function designer(shown: string | undefined, views: string[], hidden = '') {
 	return {
@@ -26,5 +26,22 @@ describe('shownViewOf', () => {
 
 	it('names none for a designer that shows no view', () => {
 		expect(shownViewOf(designer(undefined, []))).toBeUndefined();
+	});
+});
+
+describe('listsView', () => {
+	const kept = { viewId: 'scn_wall', index: 1 };
+
+	it('is true for a designer that lists the view with a photo', () => {
+		expect(listsView(designer('own_a', ['own_a', 'scn_wall']), kept)).toBe(
+			true,
+		);
+	});
+
+	it('is false without the view, or without its photo', () => {
+		expect(listsView(designer('own_a', ['own_a', 'own_b']), kept)).toBe(false);
+		expect(
+			listsView(designer('own_a', ['own_a', 'scn_wall'], 'scn_wall'), kept),
+		).toBe(false);
 	});
 });
