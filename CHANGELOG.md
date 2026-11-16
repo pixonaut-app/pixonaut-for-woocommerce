@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.10.0...v1.11.0) (2026-11-16)
+
+
+### Features
+
+* **shop-tools:** Pixonaut reads and changes the plugin's settings with the store's credential ([#185](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/185)) ([d27e455](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/d27e45588faba0236a28e9987ff6dc120a380ee7))
+
 ## [1.10.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.9.3...v1.10.0) (2026-11-16)
 
 
