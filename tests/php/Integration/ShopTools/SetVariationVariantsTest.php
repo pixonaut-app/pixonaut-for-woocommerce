@@ -13,16 +13,15 @@ use Pixonaut\WooCommerce\Admin\VariantNotice;
 use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
-use Pixonaut\WooCommerce\Catalogue\ProductVariants;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\StoreAccess;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
+use Pixonaut\WooCommerce\Tests\Support\FreshRequest;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\VariantsAnswer;
-use ReflectionProperty;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Simple;
@@ -81,7 +80,7 @@ final class SetVariationVariantsTest extends WP_UnitTestCase {
 		$this->recorder         = ( new HttpRecorder( Hosts::server_api() ) )->start();
 		$this->variants         = ( new VariantsAnswer() )->start();
 		$this->variants->answer = self::sizes();
-		$this->forget_reads();
+		FreshRequest::begin( $this->plugin );
 		global $wp_rest_server;
 		$wp_rest_server = new WP_REST_Server();
 		do_action( 'rest_api_init', $wp_rest_server );
@@ -355,7 +354,7 @@ final class SetVariationVariantsTest extends WP_UnitTestCase {
 		$small                 = $this->variation( $product, 'Small' );
 		$stored_before         = ProductVariant::document_on( $this->reload( $small ) );
 		$this->variants->error = new WP_Error( 'http_request_failed', 'Connection timed out' );
-		$this->forget_reads();
+		FreshRequest::begin( $this->plugin );
 
 		$answer = $this->call(
 			array(
@@ -459,14 +458,6 @@ final class SetVariationVariantsTest extends WP_UnitTestCase {
 		);
 
 		$this->assertSame( self::UNMAPPED, $read['pixonaut_variant'] );
-	}
-
-	/**
-	 * Forgets the blank variants read so far, as a new request would.
-	 */
-	private function forget_reads(): void {
-		( new ReflectionProperty( ProductVariants::class, 'read' ) )->setValue( $this->plugin->product_variants(), array() );
-		( new ReflectionProperty( ProductVariants::class, 'failed' ) )->setValue( $this->plugin->product_variants(), array() );
 	}
 
 	/**

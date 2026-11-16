@@ -18,7 +18,6 @@ use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
-use Pixonaut\WooCommerce\Catalogue\ProductVariants;
 use Pixonaut\WooCommerce\Catalogue\ShowcaseImages;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\StandingRow;
@@ -30,11 +29,11 @@ use Pixonaut\WooCommerce\OptionGroups;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
+use Pixonaut\WooCommerce\Tests\Support\FreshRequest;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\VariantsAnswer;
 use Pixonaut\WooCommerce\Tests\Support\VerdictAnswers;
-use ReflectionProperty;
 use WC_Product;
 use WC_Product_Simple;
 use WC_Product_Variable;
@@ -100,7 +99,7 @@ final class ProductSetupAbilitiesTest extends WP_UnitTestCase {
 		$this->plugin->connection_store()->save( self::connection() );
 		// A product without a blank is checked against the printshops it may be sent to.
 		BlankFixture::remember_printshops( $this->plugin->catalogue_cache() );
-		( new ReflectionProperty( ProductVariants::class, 'read' ) )->setValue( $this->plugin->product_variants(), array() );
+		FreshRequest::begin( $this->plugin );
 		wp_set_current_user( $this->user( 'shop_manager' ) );
 	}
 

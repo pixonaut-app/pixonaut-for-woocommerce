@@ -25,6 +25,7 @@ use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
+use Pixonaut\WooCommerce\Tests\Support\FreshRequest;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
 use Pixonaut\WooCommerce\Tests\Support\VariantsAnswer;
@@ -113,6 +114,7 @@ final class VariationPrintSizeTest extends WP_UnitTestCase {
 		parent::set_up();
 		$this->plugin   = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
 		$this->recorder = ( new HttpRecorder( Hosts::server_api() ) )->start();
+		FreshRequest::begin( $this->plugin );
 		global $wp_rest_server;
 		$wp_rest_server = new WP_REST_Server();
 		do_action( 'rest_api_init', $wp_rest_server );
