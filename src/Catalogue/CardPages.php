@@ -131,35 +131,101 @@ final class CardPages {
 	 * listing shows, the flat picture of its design, drawn for the first of
 	 * its variations that has one (`ProductPictures::flat()`); else, as for
 	 * a card holding a value of an attribute listed only while filtered
-	 * (a framing), the image of the first of its variations that has one,
-	 * a picture of the product in its setting. 0 when it has none of
-	 * these, and shows the product's.
+	 * (a framing), the image of one of its variations, a picture of the
+	 * product in its setting: of the variation a filtered listing opens the
+	 * card on when it has one, else of the one agreeing with
+	 * most of the values it opens on, the first of them on a tie. 0 when it
+	 * has none of these, and shows the product's.
 	 *
-	 * @param WC_Product $product A product.
-	 * @param string     $key     The key of one of its cards.
+	 * @param WC_Product            $product A product.
+	 * @param string                $key     The key of one of its cards.
+	 * @param array<string, string> $opens   The values a filtered listing opens the card on, by `attribute_<name>` field (`FilteredOpening`); none out of one.
+	 * @param \Closure|null         $undrawn `fn(WC_Product $variation): void`, told of the variation the card opens on when it is to show its picture and has none yet.
 	 * @return int An attachment id.
 	 */
-	public static function image( WC_Product $product, string $key ): int {
+	public static function image( WC_Product $product, string $key, array $opens = array(), ?\Closure $undrawn = null ): int {
 		$own = SplitCardLooks::of( $product->get_id(), $key )['image'];
 		if ( $own > 0 && wp_attachment_is_image( $own ) ) {
 			return $own;
 		}
-		$variations = array_filter( array_map( 'wc_get_product', SplitCards::card_variations( $product, $key ) ), static fn ( mixed $variation ): bool => $variation instanceof WC_Product );
+		$ids = SplitCards::card_variations( $product, $key );
 		if ( SplitCards::is_unfiltered( $product, $key ) ) {
-			foreach ( $variations as $variation ) {
+			foreach ( self::loaded( $ids ) as $variation ) {
 				$flat = ProductPictures::flat( $variation );
 				if ( $flat > 0 ) {
 					return $flat;
 				}
 			}
 		}
-		foreach ( $variations as $variation ) {
+		$held   = SplitCards::variation_values( $product->get_id() );
+		$opened = self::opened( $ids, $held, $opens );
+		if ( null !== $opened ) {
+			$image = (int) $opened->get_image_id( 'edit' );
+			if ( $image > 0 ) {
+				return $image;
+			}
+			if ( null !== $undrawn ) {
+				$undrawn( $opened );
+			}
+		}
+		// Most agreeing first; `usort()` keeps the product's order on a tie.
+		$agreeing = array();
+		foreach ( $ids as $id ) {
+			$agreeing[ $id ] = count( array_intersect_assoc( $held[ $id ] ?? array(), $opens ) );
+		}
+		usort( $ids, static fn ( int $first, int $second ): int => $agreeing[ $second ] <=> $agreeing[ $first ] );
+		foreach ( self::loaded( $ids ) as $variation ) {
 			$image = (int) $variation->get_image_id( 'edit' );
 			if ( $image > 0 ) {
 				return $image;
 			}
 		}
 		return 0;
+	}
+
+	/**
+	 * The variation a filtered listing opens a card on: the first of its
+	 * variations that sets each of the values the listing names, or leaves
+	 * it open, as the product's form chooses. Null out of a filtered
+	 * listing, or when none does.
+	 *
+	 * @param int[]                             $ids   The card's variations, in the product's order of variations.
+	 * @param array<int, array<string, string>> $held  Each variation's values by `attribute_<name>` field.
+	 * @param array<string, string>             $opens The values the listing names, by field; none out of one.
+	 * @phpstan-param list<int> $ids
+	 */
+	private static function opened( array $ids, array $held, array $opens ): ?WC_Product {
+		if ( array() === $opens ) {
+			return null;
+		}
+		foreach ( $ids as $id ) {
+			$own = $held[ $id ] ?? array();
+			foreach ( $opens as $field => $value ) {
+				$set = $own[ $field ] ?? '';
+				if ( '' !== $set && 0 !== strcasecmp( $set, $value ) ) {
+					continue 2;
+				}
+			}
+			$variation = wc_get_product( $id );
+			return $variation instanceof WC_Product ? $variation : null;
+		}
+		return null;
+	}
+
+	/**
+	 * Variations, read one at a time: the first that serves ends the search.
+	 *
+	 * @param int[] $ids Variation ids.
+	 * @phpstan-param list<int> $ids
+	 * @return \Generator<int, WC_Product>
+	 */
+	private static function loaded( array $ids ): \Generator {
+		foreach ( $ids as $id ) {
+			$variation = wc_get_product( $id );
+			if ( $variation instanceof WC_Product ) {
+				yield $variation;
+			}
+		}
 	}
 
 	/**

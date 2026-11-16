@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Pixonaut\WooCommerce\Catalogue\CardPages;
+use Pixonaut\WooCommerce\Catalogue\PictureQueue;
 use Pixonaut\WooCommerce\Catalogue\ProductMeta;
 use Pixonaut\WooCommerce\Catalogue\RequestCache;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
@@ -23,8 +24,12 @@ use WC_Product_Variable;
  *
  * - its own title (`SplitCardLooks`), else the product's;
  * - its own image, else the flat picture of its design, or, for a card a
- *   filter on a framing shows, its first variation's picture
- *   (`CardPages::image()`), else the product's;
+ *   filter on a framing shows, the picture of the variation the filters
+ *   open it on (`FilteredOpening`), the whole filtered combination: a
+ *   framing in the chosen colour, say (`CardPages::image()`), else the
+ *   product's. While that variation's picture is not drawn yet, its drawing
+ *   is queued, and the card shows the picture of its variation agreeing
+ *   with most of the filters meanwhile;
  * - "From:" its variations' lowest price, or their one price as WooCommerce
  *   prints it when they all cost the same.
  *
@@ -54,9 +59,21 @@ final class SplitCardFaces {
 	);
 
 	/**
-	 * @param SplitCardListings $listings Knows the card a loop shows.
+	 * The variations whose drawing a card checked in this request, by id:
+	 * a theme reads a card's image more than once.
+	 *
+	 * @var array<int, true>
 	 */
-	public function __construct( private readonly SplitCardListings $listings ) {
+	private array $checked = array();
+
+	/**
+	 * @param SplitCardListings $listings Knows the card a loop shows.
+	 * @param PictureQueue      $pictures Queues the drawing of a picture a card waits for.
+	 */
+	public function __construct(
+		private readonly SplitCardListings $listings,
+		private readonly PictureQueue $pictures,
+	) {
 	}
 
 	public function register(): void {
@@ -93,11 +110,24 @@ final class SplitCardFaces {
 		if ( ! $product instanceof WC_Product || null === $key ) {
 			return $image_id;
 		}
-		$own = CardPages::image( $product, $key );
+		$own = CardPages::image( $product, $key, FilteredOpening::values( $product, $key ), $this->draw( ... ) );
 		if ( $own > 0 ) {
 			return $own;
 		}
 		return $image_id;
+	}
+
+	/**
+	 * Queues the drawing of the picture a card waits for, once a request:
+	 * drawn in a job, as every picture, the card shows it from then on.
+	 *
+	 * @param WC_Product $variation The variation the card opens on.
+	 */
+	private function draw( WC_Product $variation ): void {
+		if ( ! isset( $this->checked[ $variation->get_id() ] ) ) {
+			$this->checked[ $variation->get_id() ] = true;
+			$this->pictures->queue_if_due( $variation );
+		}
 	}
 
 	/**
