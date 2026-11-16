@@ -337,17 +337,30 @@ final class CatalogueSearch {
 	 * @phpstan-param WP_REST_Request<array<string, mixed>> $request
 	 */
 	public function template_groups( WP_REST_Request $request ): WP_REST_Response|WP_Error {
-		$id = (string) $request->get_param( 'id' );
 		try {
-			$answer = $this->cache->remember(
-				'template-groups',
-				array( 'id' => $id ),
-				fn (): array => array( 'groups' => TemplateForm::groups( json_decode( $this->catalogue->template_answer( $id ), true ) ) )
-			);
+			$groups = $this->template_groups_of( (string) $request->get_param( 'id' ) );
 		} catch ( ApiException $e ) {
 			return self::failed( $e );
 		}
-		return new WP_REST_Response( array( 'groups' => is_array( $answer['groups'] ?? null ) ? $answer['groups'] : array() ) );
+		return new WP_REST_Response( array( 'groups' => $groups ) );
+	}
+
+	/**
+	 * A template version's form groups and fields, as `TemplateForm::groups()`
+	 * reads them, kept as any search's answer is: a version never changes.
+	 *
+	 * @param string $id A template version, `<baseId>@<version>`.
+	 * @return list<array<mixed>> Each as `TemplateForm::groups()` gives it.
+	 * @throws ApiException When Pixonaut could not be asked, or refused.
+	 */
+	public function template_groups_of( string $id ): array {
+		$answer = $this->cache->remember(
+			'template-groups',
+			array( 'id' => $id ),
+			fn (): array => array( 'groups' => TemplateForm::groups( json_decode( $this->catalogue->template_answer( $id ), true ) ) )
+		);
+		$groups = is_array( $answer['groups'] ?? null ) ? $answer['groups'] : array();
+		return array_values( array_filter( $groups, 'is_array' ) );
 	}
 
 	/**
