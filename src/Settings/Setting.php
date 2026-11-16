@@ -32,7 +32,7 @@ final class Setting {
 	/**
 	 * How WooCommerce's settings form saves a ticked checkbox, and an unticked one.
 	 */
-	private const CHECKED = 'yes';
+	public const CHECKED = 'yes';
 
 	private const UNCHECKED = 'no';
 

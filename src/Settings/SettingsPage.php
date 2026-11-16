@@ -161,7 +161,7 @@ final class SettingsPage {
 			),
 		),
 		self::PRICES     => array(
-			'pixonaut_wc_prices' => array(
+			'pixonaut_wc_prices'        => array(
 				Settings::PRICE_MARGIN,
 				Settings::PRICE_TOLERANCE,
 				Settings::PRICE_STEP,
@@ -170,6 +170,10 @@ final class SettingsPage {
 				Settings::PRICE_MAX,
 				Settings::PRICE_CURRENCY_BUFFER,
 				Settings::PRICE_AUTOMATIC,
+			),
+			'pixonaut_wc_delivery_time' => array(
+				Settings::DELIVERY_TIME_SHOW,
+				Settings::DELIVERY_TIME_HANDLING_DAYS,
 			),
 		),
 		self::UPDATES    => array(
@@ -657,6 +661,13 @@ final class SettingsPage {
 					/* translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the rule that prices products from what the printshop charges for them. */
 					'title' => __( 'Pricing rule', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'Prices a product from what the printshop charges for it. Apply the rule in a product’s Pixonaut tab, under Prices; from then on its prices follow the rule. A product can change any part of the rule for itself.', 'pixonaut-for-woocommerce' ),
+				);
+			case 'pixonaut_wc_delivery_time':
+				return array(
+					'type'  => 'title',
+					/* translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes. */
+					'title' => __( 'Delivery time', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'A printshop tells how long a product takes to make and to deliver to your shop’s country. Pixonaut reads it with the printshop’s cost.', 'pixonaut-for-woocommerce' ),
 				);
 			case 'pixonaut_wc_updates':
 				return array(

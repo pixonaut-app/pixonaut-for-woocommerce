@@ -1,6 +1,7 @@
 // What a blank's variants cost at their printshop, as Pixonaut reads it from
 // the printshop's price list: a product price and the cheapest shipping to a
-// region per variant, as decimal strings with their currency.
+// region per variant, as decimal strings with their currency, and how long
+// the printshop says that shipping takes.
 import type { Blank, VariantCost } from '../state';
 import { tenantBlank } from './catalogue';
 import { type Handler, type HandlerResult, refusal } from './types';
@@ -15,6 +16,10 @@ const FIRST_PRICE_CENTS = 12000;
 const PRICE_STEP_CENTS = 1550;
 /** The cheapest shipping of every variant. */
 const SHIPPING = '4.90';
+
+/** How long the fixture printshops say every variant takes from the order
+ *  to the door, in days: the one span they tell. */
+export const DELIVERY_DAYS = { minDays: 4, maxDays: 7 };
 
 /** The regions the fixture printshops ship to. */
 export const COST_REGIONS = ['SE', 'US', 'DE', 'NO', 'FI', 'DK', 'GB'];
@@ -70,6 +75,15 @@ export const listVariantCosts: Handler = (context): HandlerResult => {
 					product: money(cost.product),
 					// Shipping is priced only for something the printshop sells.
 					shipping: cost.product === null ? null : money(cost.shipping),
+					// A time is told of what is shipped, by that shipping.
+					times: {
+						production: null,
+						shipping: null,
+						delivery:
+							cost.product === null || cost.shipping === null
+								? null
+								: DELIVERY_DAYS,
+					},
 					region,
 					readAt,
 					changedAt:

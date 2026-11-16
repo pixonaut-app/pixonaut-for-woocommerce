@@ -16,7 +16,8 @@ variant, and the plugin prices from that by a rule. The merchant's side is in
 `GET /v1/blanks/{id}/variants/costs?region=<country>` with the store's
 integration key and the shop's base country, and reads each row as a
 `Pricing\VariantCost`: the product's price and the cheapest shipping, each
-with its currency. A variant the printshop publishes no price for has a cost
+with its currency, and how long the printshop says that shipping takes
+([Delivery times](#delivery-times)). A variant the printshop publishes no price for has a cost
 without one.
 
 Pixonaut reports the printshop's billing currency. `Pricing\CostConverter`
@@ -33,6 +34,40 @@ and is tried again an hour later, as does a file cut short or with a rate of not
 Money is counted in thousandths of a currency unit, as integers
 (`Pricing\Amount`), from the decimal strings Pixonaut answers to the decimal
 string WooCommerce stores as a price.
+
+## Delivery times
+
+Each cost carries `times`: how long the printshop says the variant takes to
+the shop's country by its cheapest shipping, as up to three spans of whole
+calendar days (`production`, `shipping`, `delivery`, each `{minDays,
+maxDays}` or null). `Pricing\DeliveryTimes` reads them, and they are stored
+with the cost in the `_pixonaut_price` meta. A printshop answers the spans
+it knows: a span that is not two whole day counts, shortest first, reads as
+none, and so does a cost read before Pixonaut answered times.
+
+With the store's `delivery_time_show` on, `Storefront\DeliveryTime` adds a
+line (`p.pixonaut-delivery-time`) to the availability WooCommerce prints
+for a product or variation in stock (`woocommerce_get_stock_html`): on a
+simple product's page, and in a variation's `availability_html`, which
+WooCommerce shows for the variation the customer chooses. It says only what
+the printshop tells:
+
+| The printshop tells | The line |
+| --- | --- |
+| `delivery`, or both `production` and `shipping` (added together) | Delivered in 4–7 days |
+| `production` alone | Made in 2–3 days |
+| `shipping` alone | Shipping takes 5–10 days |
+| nothing | no line |
+
+`delivery_time_handling_days` is added to the days that start at the order
+(the first two rows), never to the post alone. The time is the one stored
+for the variant the product sells now, shipped to the shop's country; any
+other has none.
+
+While the setting is on, `Pricing\CostRefresh` reads the costs of every
+product printed on a blank (`ProductPricing::on_blanks()`), not only of the
+ones with a price that follows the rule, and switching it on starts a read
+at once.
 
 ## The rule
 
@@ -84,7 +119,8 @@ the price the rule last set, and what the rule would change now.
   called for it with `$release`.
 
 `Pricing\CostRefresh` refreshes every product with a `_pixonaut_price_watch`
-meta once a day (`pixonaut_wc_pricing_refresh` starts
+meta (every product printed on a blank while the store shows
+[delivery times](#delivery-times)) once a day (`pixonaut_wc_pricing_refresh` starts
 `pixonaut_wc_pricing_refresh_page`, 20 products a job), and each product
 `Catalogue\ProductRecheck` checks again after a
 [blank event](../webhooks/#templates-and-blanks-changed-in-pixonaut).

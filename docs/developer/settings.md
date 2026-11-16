@@ -305,6 +305,18 @@ Default: `3`.
 
 Default: `false`.
 
+### `delivery_time_show`
+
+**Show the delivery time** (checkbox). Say on the product page how long the printshop says the chosen variation takes, such as “Delivered in 4–7 days”. Only what the printshop itself tells is shown: a printshop that tells how long it takes to make the product and nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing gets no line. The times are read with the costs, once a day.
+
+Default: `false`.
+
+### `delivery_time_handling_days`
+
+**Handling days** (number). Days of your own to add to the printshop’s time, for what happens before an order reaches it, such as approving a proof.
+
+Default: `0`.
+
 ### `api_base`
 
 **API base** (url). The Pixonaut API as the browser reaches it, e.g. a local Pixonaut. Empty uses Pixonaut’s own. The store’s key is sent to this address.

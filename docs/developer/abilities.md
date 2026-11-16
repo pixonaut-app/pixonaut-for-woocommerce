@@ -584,11 +584,15 @@ is refused, rather than stored as the default; a custom accent colour needs
 
 `get-pricing-settings` gives the settings of the Prices tab by their keys
 (`price_margin`, `price_tolerance`, `price_step`, `price_ending`,
-`price_min`, `price_max`, `price_currency_buffer`, `price_automatic`), with
+`price_min`, `price_max`, `price_currency_buffer`, `price_automatic`,
+`delivery_time_show`, `delivery_time_handling_days`), with
 the store's `currency` and `prices_include_tax`. `update-pricing-settings`
 takes any of the settings and changes only those; an ending that is not
 below the step is refused, as on the page. `price_automatic` is the switch
 for automatic price changes. Changing the rule sets no price.
+`delivery_time_show` has product pages say how long the printshop says the
+chosen variation takes ([Delivery times](../pricing/#delivery-times)), and
+`delivery_time_handling_days` adds the store's own days to it.
 
 `get-product-prices` takes the `product_id` of a simple or variable product
 personalised on a blank, and answers what the Prices section of its Pixonaut

@@ -62,6 +62,37 @@ final class VariantCostTest extends TestCase {
 		$this->assertNull( VariantCost::from_array( 'nothing' ) );
 	}
 
+	public function test_a_cost_carries_the_times_its_printshop_tells_and_keeps_them_when_stored(): void {
+		$row  = self::row( 'v_a3', '167.10', '65.50' ) + array(
+			'times' => array(
+				'production' => null,
+				'shipping'   => array(
+					'minDays' => 3,
+					'maxDays' => 6,
+				),
+				'delivery'   => array(
+					'minDays' => 4,
+					'maxDays' => 7,
+				),
+			),
+		);
+		$cost = VariantCost::list_from( array( $row ) )['v_a3'];
+
+		$this->assertNull( $cost->times->production );
+		$this->assertSame( array( 3, 6 ), $cost->times->shipping );
+		$this->assertSame( array( 4, 7 ), $cost->times->delivery );
+		$this->assertEquals( $cost, VariantCost::from_array( $cost->to_array() ) );
+	}
+
+	public function test_a_cost_answered_or_stored_without_times_has_none(): void {
+		$cost   = VariantCost::list_from( array( self::row( 'v_a3', '167.10', '65.50' ) ) )['v_a3'];
+		$stored = $cost->to_array();
+		unset( $stored['times'] );
+
+		$this->assertTrue( $cost->times->none() );
+		$this->assertTrue( VariantCost::from_array( $stored )?->times->none() );
+	}
+
 	/**
 	 * A row of the answer's `costs`.
 	 *
