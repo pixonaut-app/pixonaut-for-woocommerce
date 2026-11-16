@@ -23,7 +23,8 @@ use WC_Product_Variation;
  * customer can buy that agrees with what is chosen already: the values the
  * page's address names, as a split card's link does, and the stored defaults
  * for the rest. With neither, that is the variation the product's picture is
- * drawn for (`PicturedVariation`). A stored default is never replaced, and
+ * drawn for (`PicturedVariation`). An attribute that variation is sold in
+ * any value of stays open. A stored default is never replaced, and
  * nothing is stored: the product keeps the defaults it was given, which is
  * what the admin, the REST API and every other page read.
  */
@@ -82,15 +83,15 @@ final class OpeningDefaults {
 	 * @return array<string, string>
 	 */
 	private static function fill( WC_Product_Variable $product, array $stored ): array {
-		$options = array();
-		foreach ( $product->get_variation_attributes() as $name => $values ) {
-			$options[ sanitize_title( (string) $name ) ] = array_values( array_map( 'strval', (array) $values ) );
+		$attributes = array();
+		foreach ( array_keys( $product->get_variation_attributes() ) as $name ) {
+			$attributes[ sanitize_title( (string) $name ) ] = true;
 		}
-		$open = array_diff_key( $options, $stored );
+		$open = array_diff_key( $attributes, $stored );
 		if ( array() === $open ) {
 			return $stored;
 		}
-		$requested = array_filter( array_intersect_key( OpeningChoice::requested( $product ), $options ), static fn ( string $value ): bool => '' !== $value );
+		$requested = array_filter( array_intersect_key( OpeningChoice::requested( $product ), $attributes ), static fn ( string $value ): bool => '' !== $value );
 		// What the address names outranks a default, as it does in the form.
 		$variation = PicturedVariation::agreeing_with( $product, $requested + $stored );
 		if ( null === $variation && array() !== $requested ) {
@@ -100,12 +101,10 @@ final class OpeningDefaults {
 			return $stored;
 		}
 		$held = array_map( 'strval', $variation->get_attributes() );
-		foreach ( $open as $attribute => $values ) {
-			// A variation sold with any value of the attribute opens on the first.
-			$value = $held[ $attribute ] ?? '';
-			$value = '' === $value ? ( $values[0] ?? '' ) : $value;
-			if ( '' !== $value ) {
-				$stored[ $attribute ] = $value;
+		foreach ( array_keys( $open ) as $attribute ) {
+			// An attribute the variation is sold in any value of stays the customer's to choose.
+			if ( '' !== ( $held[ $attribute ] ?? '' ) ) {
+				$stored[ $attribute ] = $held[ $attribute ];
 			}
 		}
 		return $stored;

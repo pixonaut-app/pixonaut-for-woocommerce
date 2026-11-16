@@ -1074,8 +1074,8 @@ chosen already, the request's `attribute_*` values (a split card's link)
 and the stored defaults for the rest, else with the request's alone. With
 neither, that is the variation the product's picture is drawn for
 (`PicturedVariation`, see [Product pictures](#product-pictures)), so the
-page opens on what the card showed. A variation sold in any value of an
-attribute opens on the product's first. A stored default is never
+page opens on what the card showed. An attribute that variation is sold in any
+value of stays open, the customer's to choose. A stored default is never
 replaced, a product no such variation agrees with opens as WooCommerce has
 it, and nothing is stored: the admin, the REST API (`get-product`,
 `update-product` and their `default_attributes`) and every other page read

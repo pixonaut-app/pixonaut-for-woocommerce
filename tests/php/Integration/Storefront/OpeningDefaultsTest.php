@@ -129,17 +129,11 @@ final class OpeningDefaultsTest extends WP_UnitTestCase {
 		);
 	}
 
-	public function test_a_variation_sold_in_any_value_opens_on_the_first(): void {
+	public function test_an_attribute_the_variation_is_sold_in_any_value_of_stays_open(): void {
 		$poster = $this->personalised_poster( array(), array( array( self::WITH_PHOTO, '' ) ) );
 		$this->go_to( (string) get_permalink( $poster->get_id() ) );
 
-		$this->assertSame(
-			array(
-				'pa_bild'    => self::WITH_PHOTO,
-				'pa_storlek' => self::SMALL,
-			),
-			$poster->get_default_attributes()
-		);
+		$this->assertSame( array( 'pa_bild' => self::WITH_PHOTO ), $poster->get_default_attributes() );
 	}
 
 	public function test_a_variation_the_form_does_not_offer_is_passed_over(): void {

@@ -240,15 +240,11 @@ for (const viewport of [
 			async (poster) => {
 				await page.goto(poster.permalink);
 				const headings = page.locator(DESIGNER_HEADINGS);
+				// The page opens on the first variation, the bare poster.
 				await expect(headings).toHaveText(
-					numbered([
-						...TEMPLATE_STEPS,
-						'Inramning',
-						'Hängarfärg',
-						'Ramfärg',
-						'Canvasdjup',
-					]),
+					numbered([...TEMPLATE_STEPS, 'Inramning']),
 				);
+				await expectShown(page, poster, ['inramning']);
 
 				await choose(page, poster, 'inramning', 'hangare');
 				await expect(headings).toHaveText(

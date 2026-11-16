@@ -183,10 +183,10 @@ test('a variation with its own setup and no layout follows its product’s butto
 	);
 	await page.goto(permalink);
 
-	// The summary shows the range until a size is chosen, then that size's
-	// price alone: WooCommerce's own variation price is left out.
+	// The page opens on the first size, and the summary shows the chosen
+	// size's price alone: WooCommerce's own variation price is left out.
 	await expect(summaryPrice(page)).toContainText(SMALL_PRICE);
-	await expect(summaryPrice(page)).toContainText(LARGE_PRICE);
+	await expect(summaryPrice(page)).not.toContainText(LARGE_PRICE);
 
 	await page.locator('select[name="attribute_size"]').selectOption('Large');
 	await expect(personaliseButton(page)).toBeVisible();
@@ -226,6 +226,8 @@ test('pressing the button with no size chosen asks for the size and stays on the
 		`Button no size ${theme} ${Date.now()}`,
 	);
 	await page.goto(permalink);
+	// The page opens on the first size.
+	await page.locator('select[name="attribute_size"]').selectOption('');
 
 	await personaliseButton(page).click();
 
