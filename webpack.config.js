@@ -8,6 +8,7 @@ module.exports = {
 		'storefront-parts': './assets/src/storefront/shop-parts-inline.ts',
 		'applicable-attributes': './assets/src/storefront/applicable-index.ts',
 		'short-addresses': './assets/src/storefront/short-addresses-index.ts',
+		'variation-slots': './assets/src/storefront/variation-slots-index.ts',
 		'admin-product': './assets/src/admin/product-panel.ts',
 		'admin-products': './assets/src/admin/products-list.ts',
 		'admin-developer-tools': './assets/src/admin/developer-tools.ts',

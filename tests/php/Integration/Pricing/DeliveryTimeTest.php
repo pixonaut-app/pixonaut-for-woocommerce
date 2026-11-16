@@ -13,8 +13,8 @@ use WC_Product_Variable;
 
 /**
  * While the store shows delivery times, a product or variation printed on a
- * blank says how long its printshop says it takes, after its availability:
- * only what the printshop tells, read with the cost.
+ * blank says how long its printshop says it takes, under Add to cart: only
+ * what the printshop tells, read with the cost.
  */
 final class DeliveryTimeTest extends PricingTestCase {
 
@@ -45,10 +45,14 @@ final class DeliveryTimeTest extends PricingTestCase {
 	public function test_a_product_says_the_days_its_printshop_tells_from_order_to_door(): void {
 		$id = $this->read_product( self::WHOLE_WAY );
 
-		$this->assertSame( '<p class="pixonaut-delivery-time">Delivered in 4–7 days</p>', wc_get_stock_html( $this->product( $id ) ) );
+		$this->assertSame(
+			'<div class="pixonaut-variation-slot pixonaut-delivery-time" style="display:grid"><p class="pixonaut-variation-slot__item is-chosen" style="grid-area:1/1;margin:0">Delivered in 4–7 days</p></div>',
+			$this->printed( $this->product( $id ) )
+		);
+		$this->assertSame( '', wc_get_stock_html( $this->product( $id ) ), 'not in its availability' );
 	}
 
-	public function test_each_variation_says_its_own_time_with_its_availability(): void {
+	public function test_a_variable_product_prints_each_variations_time_apart_from_its_availability(): void {
 		$ids = $this->variable_product(
 			array(
 				'v_a3' => '200',
@@ -70,16 +74,23 @@ final class DeliveryTimeTest extends PricingTestCase {
 		$this->assertInstanceOf( WC_Product_Variable::class, $parent );
 
 		$shown = $parent->get_available_variation( $this->product( $ids['v_a4'] ) );
-
 		$this->assertIsArray( $shown );
-		$this->assertStringContainsString( 'Delivered in 4–7 days', (string) $shown['availability_html'] );
+		$this->assertStringNotContainsString( 'Delivered', (string) $shown['availability_html'], 'not in what WooCommerce redraws with each choice' );
+
+		$html = $this->printed( $parent );
+		// Both variations tell the same time: printed once, for both, shown once one is chosen.
+		$this->assertSame( 1, substr_count( $html, 'Delivered in 4–7 days' ) );
+		$this->assertStringContainsString( sprintf( 'data-pixonaut-variations="%d %d"', $ids['v_a3'], $ids['v_a4'] ), $html );
+		$this->assertStringContainsString( 'data-pixonaut-variation-slot', $html );
+		$this->assertStringContainsString( 'visibility:hidden', $html );
+		$this->assertStringNotContainsString( 'is-chosen', $html );
 	}
 
 	public function test_the_stores_handling_days_are_added_to_the_days_that_start_at_the_order(): void {
 		$id = $this->read_product( self::WHOLE_WAY );
 		$this->plugin->settings()->set( Settings::DELIVERY_TIME_HANDLING_DAYS, 2 );
 
-		$this->assertStringContainsString( 'Delivered in 6–9 days', wc_get_stock_html( $this->product( $id ) ) );
+		$this->assertStringContainsString( 'Delivered in 6–9 days', $this->printed( $this->product( $id ) ) );
 	}
 
 	public function test_a_making_and_a_post_told_apart_are_the_whole_way_together(): void {
@@ -91,7 +102,7 @@ final class DeliveryTimeTest extends PricingTestCase {
 			)
 		);
 
-		$this->assertStringContainsString( 'Delivered in 5–9 days', wc_get_stock_html( $this->product( $id ) ) );
+		$this->assertStringContainsString( 'Delivered in 5–9 days', $this->printed( $this->product( $id ) ) );
 	}
 
 	public function test_a_printshop_that_tells_the_making_alone_gets_that_said_and_no_delivery(): void {
@@ -104,7 +115,7 @@ final class DeliveryTimeTest extends PricingTestCase {
 		);
 		$this->plugin->settings()->set( Settings::DELIVERY_TIME_HANDLING_DAYS, 1 );
 
-		$html = wc_get_stock_html( $this->product( $id ) );
+		$html = $this->printed( $this->product( $id ) );
 
 		$this->assertStringContainsString( 'Made in 4 days', $html );
 		$this->assertStringNotContainsString( 'Delivered', $html );
@@ -120,7 +131,7 @@ final class DeliveryTimeTest extends PricingTestCase {
 		);
 		$this->plugin->settings()->set( Settings::DELIVERY_TIME_HANDLING_DAYS, 2 );
 
-		$this->assertStringContainsString( 'Shipping takes 5–10 days', wc_get_stock_html( $this->product( $id ) ) );
+		$this->assertStringContainsString( 'Shipping takes 5–10 days', $this->printed( $this->product( $id ) ) );
 	}
 
 	public function test_nothing_is_said_where_the_printshop_tells_no_time_or_none_was_read(): void {
@@ -133,21 +144,21 @@ final class DeliveryTimeTest extends PricingTestCase {
 		);
 		$unread    = $this->simple_product( 'v_other', '300' );
 
-		$this->assertSame( '', wc_get_stock_html( $this->product( $told_none ) ) );
-		$this->assertSame( '', wc_get_stock_html( $this->product( $unread ) ) );
+		$this->assertSame( '', $this->printed( $this->product( $told_none ) ) );
+		$this->assertSame( '', $this->printed( $this->product( $unread ) ) );
 	}
 
 	public function test_nothing_is_said_while_the_setting_is_off_or_the_product_is_out_of_stock(): void {
 		$id = $this->read_product( self::WHOLE_WAY );
 
 		$this->plugin->settings()->set( Settings::DELIVERY_TIME_SHOW, false );
-		$this->assertSame( '', wc_get_stock_html( $this->product( $id ) ) );
+		$this->assertSame( '', $this->printed( $this->product( $id ) ) );
 
 		$this->plugin->settings()->set( Settings::DELIVERY_TIME_SHOW, true );
 		$product = $this->product( $id );
 		$product->set_stock_status( 'outofstock' );
 		$product->save();
-		$this->assertStringNotContainsString( 'pixonaut-delivery-time', wc_get_stock_html( $this->product( $id ) ) );
+		$this->assertStringNotContainsString( 'pixonaut-delivery-time', $this->printed( $this->product( $id ) ) );
 	}
 
 	public function test_the_daily_job_reads_every_product_on_a_blank_while_times_are_shown(): void {
@@ -159,7 +170,7 @@ final class DeliveryTimeTest extends PricingTestCase {
 		$refresh->page( 0 );
 
 		$this->assertCount( 1, $this->recorder->requests );
-		$this->assertStringContainsString( 'Delivered in 4–7 days', wc_get_stock_html( $this->product( $id ) ) );
+		$this->assertStringContainsString( 'Delivered in 4–7 days', $this->printed( $this->product( $id ) ) );
 		$this->assertSame( '300', $this->price( $id ), 'a price that follows no rule is left alone' );
 	}
 
@@ -205,6 +216,18 @@ final class DeliveryTimeTest extends PricingTestCase {
 
 		remove_action( 'update_option_' . Settings::OPTION, array( $refresh, 'settings_changed' ), 10 );
 		remove_action( 'add_option_' . Settings::OPTION, array( $refresh, 'settings_added' ), 10 );
+	}
+
+	/**
+	 * What the add-to-cart form of `$product` prints under its button.
+	 *
+	 * @param \WC_Product $product The product.
+	 */
+	private function printed( \WC_Product $product ): string {
+		$GLOBALS['product'] = $product;
+		ob_start();
+		do_action( 'woocommerce_after_add_to_cart_button' );
+		return (string) ob_get_clean();
 	}
 
 	/**

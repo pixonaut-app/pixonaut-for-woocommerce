@@ -49,14 +49,49 @@ const SETTLED_FRAMES = 30;
 /** Layout rounds to whole pixels. */
 const PIXEL = 1;
 
+/** Each variation's description, of lengths far apart: none for the bare
+ *  poster, a line for the hanger, a paragraph that wraps for the frame. */
+const DESCRIPTIONS: Record<string, string> = {
+	'hangare-ek': 'Hängare i ek, med en upphängningssnodd.',
+	'ram-svart':
+		'Ram i svart ek med passepartout. Levereras med glas som inte reflekterar, upphängningsbeslag och skyddande hörn, klar att hänga på väggen. Ramens djup är 2 cm och den väger under ett kilo.',
+};
+
+/** The line the tee's variations say: the fixture printshop's span. The
+ *  frame, on the hoodie, says none: its printshop tells no time. */
+const TEE_LINE = 'Delivered in 4–7 days';
+
+/** The places the chosen variation's description and delivery time show
+ *  in, and the text each shows now. */
+const DESCRIPTION = '.pixonaut-variation-description .is-chosen';
+const DELIVERY = '.pixonaut-delivery-time .is-chosen';
+
 /** The switches, by Inramning value, with the variation each lands on: the
  *  colour of the frame or the hanger a switch shows again keeps the first
  *  value it was given while it was hidden. */
 const SWITCHES = [
-	{ framing: 'ram', variation: 'ram-svart', mounted: 2, price: '20.00' },
-	{ framing: 'hangare', variation: 'hangare-ek', mounted: 3, price: '15.00' },
+	{
+		framing: 'ram',
+		variation: 'ram-svart',
+		mounted: 2,
+		price: '20.00',
+		delivery: null,
+	},
+	{
+		framing: 'hangare',
+		variation: 'hangare-ek',
+		mounted: 3,
+		price: '15.00',
+		delivery: TEE_LINE,
+	},
 	// Back on the tee, as on a hanger: switched in place.
-	{ framing: 'ingen', variation: 'ingen', mounted: 3, price: '10.00' },
+	{
+		framing: 'ingen',
+		variation: 'ingen',
+		mounted: 3,
+		price: '10.00',
+		delivery: TEE_LINE,
+	},
 ];
 
 /** The bare poster's price, which the page opens on. */
@@ -72,8 +107,14 @@ type Poster = {
 	variations: Record<string, number>;
 };
 
-test.beforeEach(async ({ request, baseURL }) => {
+test.beforeEach(async ({ request, baseURL, fake }) => {
 	await connectFixtureStore(request, baseURL ?? '');
+	// The frame's printshop tells no delivery time: its line is empty.
+	const told = await fake.control.post(
+		`/__fake/blanks/${FIXTURE.blank.hoodie}/costs`,
+		{ data: { costs: { [FIXTURE.variant.hoodieWhiteS]: { delivery: null } } } },
+	);
+	expect(told.ok()).toBe(true);
 });
 
 test.afterEach(async ({ request }) => {
@@ -81,7 +122,9 @@ test.afterEach(async ({ request }) => {
 });
 
 /** A poster sold bare, on a hanger or framed, with more variations than
- *  the store gives the form up front, framed on another blank. */
+ *  the store gives the form up front, framed on another blank; each
+ *  variation described as `DESCRIPTIONS` says, in a store that shows
+ *  delivery times. */
 async function createPoster(
 	request: APIRequestContext,
 	key: string,
@@ -92,6 +135,8 @@ async function createPoster(
 			data: {
 				key,
 				lookup: 'one-by-one',
+				descriptions: DESCRIPTIONS,
+				times: true,
 				pixonaut: PERSONALISED,
 				overrides: Object.fromEntries(FRAMED.map((framed) => [framed, HOODIE])),
 				variants: Object.fromEntries(
@@ -127,13 +172,15 @@ async function rowsHeight(page: Page): Promise<number> {
  *  its columns to the labels of the rows it shows, so the steps that
  *  stay move along with those that appear or go. Rects are clipped to the
  *  viewport, so a node partly below it changes height as it moves, and one
- *  that came into view had none. */
+ *  that came into view had none. The designer's overlay is left out: it
+ *  follows the preview after a scroll (`Shift`). */
 function unaccounted(shifts: Shift[], moved: number): Shift['sources'] {
 	return shifts
 		.flatMap((shift) => shift.sources)
 		.filter(
-			({ previous, current, inAttributes }) =>
+			({ previous, current, inAttributes, inOverlay }) =>
 				!inAttributes &&
+				!inOverlay &&
 				previous.height > 0 &&
 				(Math.abs(current.x - previous.x) > PIXEL ||
 					Math.abs(current.y - previous.y - moved) > PIXEL),
@@ -167,6 +214,11 @@ async function switchTo(
 	variation: number,
 	mounted: number,
 ): Promise<{ frames: SwitchFrame[]; since: number; moved: number }> {
+	// A shift is noted only in view: the place the shopper reads the
+	// variation's description and delivery time in, by the button.
+	await page
+		.locator('form .single_add_to_cart_button')
+		.evaluate((button) => button.scrollIntoView({ block: 'end' }));
 	const rowsBefore = await rowsHeight(page);
 	const since = await page.evaluate(() => performance.now());
 	await framing(page, poster).selectOption(value);
@@ -205,8 +257,16 @@ for (const viewport of VIEWPORTS) {
 			await openPoster(page, poster);
 			let before = (await switchFrames(page)).at(-1)?.price ?? '';
 			expect(before, 'the bare poster’s price shows').toContain(OPENING_PRICE);
+			await expect(page.locator(DESCRIPTION)).toHaveCount(0);
+			await expect(page.locator(DELIVERY)).toHaveText(TEE_LINE);
 
-			for (const { framing: value, variation, mounted, price } of SWITCHES) {
+			for (const {
+				framing: value,
+				variation,
+				mounted,
+				price,
+				delivery,
+			} of SWITCHES) {
 				const id = poster.variations[variation] as number;
 				const { frames, since, moved } = await switchTo(
 					page,
@@ -217,6 +277,17 @@ for (const viewport of VIEWPORTS) {
 				);
 				const after = frames.at(-1)?.price ?? '';
 				expect(after, `${variation}'s price shows`).toContain(price);
+				const description = DESCRIPTIONS[variation];
+				if (description === undefined) {
+					await expect(page.locator(DESCRIPTION)).toHaveCount(0);
+				} else {
+					await expect(page.locator(DESCRIPTION)).toHaveText(description);
+				}
+				if (delivery === null) {
+					await expect(page.locator(DELIVERY)).toHaveCount(0);
+				} else {
+					await expect(page.locator(DELIVERY)).toHaveText(delivery);
+				}
 
 				expect(
 					unaccounted(await shiftsSince(page, since), moved),

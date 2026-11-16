@@ -14,14 +14,17 @@ use Pixonaut\WooCommerce\Pricing\DeliveryTimes;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
 use Pixonaut\WooCommerce\Settings\Settings;
 use WC_Product;
+use WC_Product_Variable;
 
 /**
  * While the store shows delivery times (`delivery_time_show`), a product or
  * variation printed on a blank says how long its printshop says it takes,
- * as Pixonaut read it with the cost: a line after its availability, which
- * WooCommerce prints on a simple product's page and, for a variable
- * product, with the variation the customer chooses. So the line follows the
- * choice on any theme, with no script of its own.
+ * as Pixonaut read it with the cost: a line under Add to cart, after the
+ * price row a theme closes there. On a variable product's page the line is
+ * the chosen variation's, in a place that keeps its height while the
+ * shopper switches (`VariationSlots`), never in the variation's
+ * availability, which WooCommerce redraws between the description and the
+ * price row with each choice.
  *
  * Only what the printshop tells is said. With the days from the order to
  * the door (told as such, or as its making and its post together) the line
@@ -35,29 +38,56 @@ final class DeliveryTime {
 	public const CSS_CLASS = 'pixonaut-delivery-time';
 
 	/**
-	 * @param Settings $settings Whether the time is shown, and the store's handling days.
+	 * After the price row a theme closes after the button (at the default
+	 * priority).
 	 */
-	public function __construct( private readonly Settings $settings ) {
+	private const PRIORITY = 20;
+
+	/**
+	 * @param Settings       $settings Whether the time is shown, and the store's handling days.
+	 * @param VariationSlots $slots    The place that keeps its height.
+	 */
+	public function __construct(
+		private readonly Settings $settings,
+		private readonly VariationSlots $slots,
+	) {
 	}
 
 	public function register(): void {
-		add_filter( 'woocommerce_get_stock_html', array( $this, 'stock_html' ), 10, 2 );
+		add_action( 'woocommerce_after_add_to_cart_button', array( $this, 'print_line' ), self::PRIORITY );
 	}
 
 	/**
-	 * The availability WooCommerce prints for a product or variation, with
-	 * its delivery time after it.
-	 *
-	 * @param mixed $html    The availability's HTML; empty when WooCommerce prints none.
-	 * @param mixed $product The product or variation.
+	 * Prints the delivery time of the product the add-to-cart form is for:
+	 * each variation's, for a variable product, of which the chosen one's
+	 * shows.
 	 */
-	public function stock_html( mixed $html, mixed $product = null ): string {
-		$html = is_string( $html ) ? $html : '';
-		if ( ! $product instanceof WC_Product || true !== $this->settings->get( Settings::DELIVERY_TIME_SHOW ) || ! $product->is_in_stock() ) {
-			return $html;
+	public function print_line(): void {
+		$product = $GLOBALS['product'] ?? null;
+		if ( ! $product instanceof WC_Product || true !== $this->settings->get( Settings::DELIVERY_TIME_SHOW ) ) {
+			return;
 		}
-		$line = $this->line( ProductPricing::times_of( $product ) );
-		return '' === $line ? $html : $html . '<p class="' . esc_attr( self::CSS_CLASS ) . '">' . esc_html( $line ) . '</p>';
+		if ( $product instanceof WC_Product_Variable ) {
+			$lines = array();
+			foreach ( VariationSlots::variations( $product ) as $variation ) {
+				$lines[ $variation->get_id() ] = esc_html( $this->line_of( $variation ) );
+			}
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Each line is escaped above; the markup is escaped where it is built.
+			echo $this->slots->varying( self::CSS_CLASS, 'p', $lines );
+			return;
+		}
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The line is escaped here; the markup is escaped where it is built.
+		echo $this->slots->fixed( self::CSS_CLASS, 'p', esc_html( $this->line_of( $product ) ) );
+	}
+
+	/**
+	 * What is said of a product's or a variation's delivery time; empty for
+	 * one out of stock or whose printshop tells none.
+	 *
+	 * @param WC_Product $product The product or variation.
+	 */
+	public function line_of( WC_Product $product ): string {
+		return $product->is_in_stock() ? $this->line( ProductPricing::times_of( $product ) ) : '';
 	}
 
 	/**

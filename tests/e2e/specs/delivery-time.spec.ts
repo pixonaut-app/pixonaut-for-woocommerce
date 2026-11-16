@@ -23,8 +23,9 @@ const SHOW = '[id="pixonaut_wc_settings[delivery_time_show]"]';
 const HANDLING_DAYS =
 	'[id="pixonaut_wc_settings[delivery_time_handling_days]"]';
 
-/** The line a product page says the delivery time in. */
-const LINE = '.pixonaut-delivery-time';
+/** The line a product page says the delivery time in: the chosen
+ *  variation's, of the place that holds every variation's. */
+const LINE = '.pixonaut-delivery-time .is-chosen';
 
 async function createProduct(
 	request: APIRequestContext,
