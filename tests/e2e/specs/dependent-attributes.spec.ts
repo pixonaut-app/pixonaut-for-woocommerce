@@ -120,10 +120,14 @@ test('a product page shows only the options that apply to the choice', async ({
 
 		await choose(page, poster, 'inramning', 'hangare');
 		await expectShown(page, poster, ['inramning', 'hangarfarg']);
-		// Shown again, the colour is the customer's to choose.
+		// Shown again, the colour keeps the value it was given, so the form
+		// holds a whole variation, and the customer may choose another.
 		await expect(
 			page.locator(`form [name="${field(poster, 'hangarfarg')}"]`),
-		).toHaveValue('');
+		).toHaveValue('ek');
+		await expect(page.locator('form [name="variation_id"]')).toHaveValue(
+			String(poster.variations['hangare-ek']),
+		);
 		await choose(page, poster, 'hangarfarg', 'svart');
 		await expect(page.locator('form [name="variation_id"]')).toHaveValue(
 			String(poster.variations['hangare-svart']),

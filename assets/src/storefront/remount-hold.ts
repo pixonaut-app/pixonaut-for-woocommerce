@@ -6,6 +6,14 @@ const NAMING_ATTRIBUTES = ['id', 'name', 'form', 'for', 'data-pixonaut-field'];
 /** On each node of a still copy, while it stands in for the designer. */
 export const HELD_ATTRIBUTE = 'data-pixonaut-held';
 
+/** On the element a hold shows its spinner in, once the next designer has
+ *  taken longer than `SLOW_MOUNT_MS` to show. */
+export const WAITING_CLASS = 'is-waiting';
+
+/** How long a side may take to mount again before a spinner shows over what
+ *  it held: a switch quicker than this shows none. */
+export const SLOW_MOUNT_MS = 800;
+
 /** What a side's designer shows, held in place while it mounts again. */
 export type RemountHold = {
 	/** Puts the copy in the emptied targets once the designer is destroyed,
@@ -37,13 +45,17 @@ export type RemountHold = {
  * the designer drew in its form, are shown in the copy and hidden where
  * they go back to until the next designer takes them in its form. `hidden`
  * are parts an earlier hold still hides, the designer it waited on being
- * destroyed before it took them, which stay hidden too.
+ * destroyed before it took them, which stay hidden too. `waiting`, the
+ * preview's frame, takes `WAITING_CLASS` once the hold has stood for
+ * `SLOW_MOUNT_MS`, which shows its spinner over the held picture, and loses
+ * it on release.
  */
 export function holdShown(
 	targets: readonly HTMLElement[],
 	sized: readonly HTMLElement[],
 	parts: readonly HTMLElement[],
 	hidden: readonly HTMLElement[] = [],
+	waiting: Element | null = null,
 ): RemountHold {
 	const copies = targets.map(
 		(target) => [target, copyOf(target, [...parts, ...hidden])] as const,
@@ -60,6 +72,7 @@ export function holdShown(
 	const displays = new Map<HTMLElement, string>();
 	const placed: Node[] = [];
 	let released = false;
+	let slow: ReturnType<typeof setTimeout> | undefined;
 	const showTaken = (): void => {
 		for (const [part, display] of displays) {
 			if (targets.some((target) => target.contains(part))) {
@@ -91,6 +104,12 @@ export function holdShown(
 			for (const target of targets) {
 				taking?.observe(target, { childList: true, subtree: true });
 			}
+			if (waiting !== null) {
+				slow = setTimeout(
+					() => waiting.classList.add(WAITING_CLASS),
+					SLOW_MOUNT_MS,
+				);
+			}
 		},
 		release() {
 			// Once: a later hold may have sized the same boxes since.
@@ -99,6 +118,8 @@ export function holdShown(
 			}
 			released = true;
 			taking?.disconnect();
+			clearTimeout(slow);
+			waiting?.classList.remove(WAITING_CLASS);
 			for (const [part, display] of displays) {
 				part.style.display = display;
 			}

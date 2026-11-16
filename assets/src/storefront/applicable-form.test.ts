@@ -167,19 +167,19 @@ describe('hideInapplicableAttributes on the classic form', () => {
 		expect(select('attribute_frame').value).toBe('black');
 	});
 
-	it('shows an attribute again, cleared, once a choice makes it apply', () => {
+	it('shows an attribute again, with the value it was given, once a choice makes it apply', () => {
 		hideInapplicableAttributes(classicForm(), POSTER);
 		choose('attribute_framing', 'none');
 
 		choose('attribute_framing', 'hanger');
 
 		expect(hiddenRows()).toEqual(['attribute_frame']);
-		expect(select('attribute_hanger').value).toBe('');
+		expect(select('attribute_hanger').value).toBe('oak');
 		expect(select('attribute_hanger').closest('tr')?.style.display).toBe('');
 		expect(select('attribute_frame').value).toBe('black');
 	});
 
-	it('clears a choice made before its attribute stopped applying', () => {
+	it('keeps a choice made before its attribute stopped applying', () => {
 		hideInapplicableAttributes(classicForm(), POSTER);
 		choose('attribute_frame', 'white');
 		choose('attribute_framing', 'none');
@@ -188,7 +188,7 @@ describe('hideInapplicableAttributes on the classic form', () => {
 		choose('attribute_framing', 'frame');
 
 		expect(hiddenRows()).toEqual(['attribute_hanger']);
-		expect(select('attribute_frame').value).toBe('');
+		expect(select('attribute_frame').value).toBe('white');
 	});
 
 	it('hides for the choice the page opens on', () => {
@@ -249,7 +249,7 @@ describe('hideInapplicableAttributes on the block form', () => {
 		);
 	});
 
-	it('shows an attribute again with no chip checked', () => {
+	it('shows an attribute again with the chip it was given checked', () => {
 		hideInapplicableAttributes(blockForm(), POSTER);
 		chip('attribute_framing', 'none').click();
 		vi.advanceTimersByTime(VARIATION_SETTLE_MS);
@@ -261,7 +261,10 @@ describe('hideInapplicableAttributes on the block form', () => {
 		expect(
 			(document.querySelector('[name="attribute_hanger"]') as HTMLInputElement)
 				.value,
-		).toBe('');
+		).toBe('oak');
+		expect(chip('attribute_hanger', 'oak').getAttribute('aria-checked')).toBe(
+			'true',
+		);
 	});
 
 	it('fills a hidden field once the form answers clicks', () => {

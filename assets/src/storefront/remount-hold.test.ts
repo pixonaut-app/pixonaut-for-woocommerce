@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { HELD_ATTRIBUTE, holdShown } from './remount-hold';
+import {
+	HELD_ATTRIBUTE,
+	holdShown,
+	SLOW_MOUNT_MS,
+	WAITING_CLASS,
+} from './remount-hold';
 
 /** A preview and a form as a designer draws them, a part of the
  *  add-to-cart form lent to the form, and a mark beside them. */
@@ -60,6 +65,42 @@ describe('holdShown', () => {
 		expect(document.querySelectorAll('[name="pixonaut_name"]')).toHaveLength(0);
 		expect(row.style.display).toBe('none');
 		expect(mark.style.minHeight).toBe('0px');
+	});
+
+	it('shows the spinner only once the side has taken too long to mount again, until it lets go', () => {
+		vi.useFakeTimers();
+		try {
+			const { preview, form, row, mark } = drawn();
+			const frame = document.createElement('div');
+			const hold = holdShown([preview, form], [mark], [row], [], frame);
+			hold.place();
+
+			vi.advanceTimersByTime(SLOW_MOUNT_MS - 1);
+			expect(frame.classList.contains(WAITING_CLASS)).toBe(false);
+			vi.advanceTimersByTime(1);
+			expect(frame.classList.contains(WAITING_CLASS)).toBe(true);
+
+			hold.release();
+			expect(frame.classList.contains(WAITING_CLASS)).toBe(false);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it('shows no spinner for a side that mounts again in time', () => {
+		vi.useFakeTimers();
+		try {
+			const { preview, form, row, mark } = drawn();
+			const frame = document.createElement('div');
+			const hold = holdShown([preview, form], [mark], [row], [], frame);
+			hold.place();
+			hold.release();
+
+			vi.advanceTimersByTime(SLOW_MOUNT_MS);
+			expect(frame.classList.contains(WAITING_CLASS)).toBe(false);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 
 	it('lets go: the part shows, the mark sizes freely and a copy nothing replaced goes', () => {

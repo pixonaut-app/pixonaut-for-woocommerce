@@ -38,9 +38,13 @@ export const MAX_RETRIES = 50;
  * choices made in it (`hiddenAttributes()`), and shows it again once a
  * choice makes it apply. WooCommerce finds a variation only with a value in
  * every field, so a hidden attribute's field is given its first value; the
- * server keeps it off the cart line. A field shown again is cleared, for the
- * customer to choose. Returns a function that looks at the form at once,
- * as `APPLY_CHOICES_EVENT` does.
+ * server keeps it off the cart line. A field shown again keeps what it
+ * holds, the value it was given or the customer's own choice from before
+ * it stopped applying: the form goes on naming a whole variation, so a
+ * switch to one with another option (a frame, with its colour) changes the
+ * picture, the price and Add to cart once, to that variation's, and the
+ * customer changes the value in place. Returns a function that looks at the
+ * form at once, as `APPLY_CHOICES_EVENT` does.
  */
 export function hideInapplicableAttributes(
 	form: HTMLFormElement,
@@ -112,13 +116,7 @@ function applyOnce(
 			hide(row);
 			settled = fill(field) && settled;
 		} else if (wasHidden) {
-			// What the field holds is the value it was filled with, or a
-			// choice made before the attribute stopped applying.
 			show(row);
-			if (chosenValue(field) !== '') {
-				field.clear();
-				settled = chosenValue(field) === '' && settled;
-			}
 		}
 	}
 	keepResetLinkShown(form, fields);

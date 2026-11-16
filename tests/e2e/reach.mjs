@@ -828,6 +828,12 @@ export const REACH = {
 		'templates/admin/variation-print-size.php',
 		'assets/src/admin/variations.ts',
 	],
+	'variation-switch-steady.spec.ts': [
+		'src/Storefront/VariationsUpFront.php',
+		'assets/src/storefront/applicable-form.ts',
+		'assets/src/storefront/remount-hold.ts',
+		'assets/src/storefront/price.ts',
+	],
 	'variation-switch.spec.ts': [
 		'src/Storefront/VariationSwitches.php',
 		'src/Storefront/Preload.php',

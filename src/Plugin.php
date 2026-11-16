@@ -224,6 +224,7 @@ use Pixonaut\WooCommerce\Storefront\QueryNames;
 use Pixonaut\WooCommerce\Storefront\ShortAddresses;
 use Pixonaut\WooCommerce\Storefront\UnavailableReports;
 use Pixonaut\WooCommerce\Storefront\UnavailableProduct;
+use Pixonaut\WooCommerce\Storefront\VariationsUpFront;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use Pixonaut\WooCommerce\Updates\Updates;
 use Pixonaut\WooCommerce\Updates\UpgradeNotice;
@@ -530,6 +531,7 @@ final class Plugin {
 		$this->storefront()->register();
 		$this->opening_price()->register();
 		( new OpeningDefaults() )->register();
+		( new VariationsUpFront( $this->inline_products() ) )->register();
 		( new DeliveryTime( $this->settings() ) )->register();
 		( new PrintedSwatches( $this->inline_products(), $this->settings(), $this->swatch_looks() ) )->register();
 		$this->personalise_button()->register();
