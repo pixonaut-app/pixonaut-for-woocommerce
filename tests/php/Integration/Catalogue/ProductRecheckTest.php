@@ -85,6 +85,13 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 		'label'          => 'Photo',
 	);
 
+	private const TOO_MANY_REQUESTS = 429;
+
+	/**
+	 * The wait Pixonaut asks for when it refuses a request for too many.
+	 */
+	private const RETRY_AFTER_SECONDS = 30;
+
 	private int $sequence = 0;
 
 	public function set_up(): void {
@@ -415,6 +422,56 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 		$this->assertSame(
 			array(
 				'product_ids' => array( $this->product_id ),
+				'attempt'     => 2,
+			),
+			array_values( $retries )[0]->get_args()
+		);
+	}
+
+	public function test_a_check_refused_for_too_many_requests_is_tried_again_after_the_wait_without_spending_an_attempt(): void {
+		$before = $this->stored( $this->product_id );
+		$this->live_list( array( DesignFixture::TEMPLATE_BASE_ID => DesignFixture::LIVE_VERSION ) );
+		$this->recorder->json( 200, BlankFixture::answer() );
+		$this->slow_down();
+
+		$queued_at = time();
+		$this->deliver_blank_updated();
+
+		$this->assertEquals( $before, $this->stored( $this->product_id ) );
+		$retries = $this->pending( ProductRecheck::ACTION, ProductRecheck::GROUP );
+		$this->assertCount( 1, $retries );
+		$retry = array_values( $retries )[0];
+		$this->assertSame(
+			array(
+				'product_ids' => array( $this->product_id ),
+				'attempt'     => 1,
+			),
+			$retry->get_args()
+		);
+		$schedule = $retry->get_schedule();
+		$this->assertInstanceOf( \ActionScheduler_Abstract_Schedule::class, $schedule );
+		$this->assertGreaterThanOrEqual( $queued_at + self::RETRY_AFTER_SECONDS, $schedule->get_date()?->getTimestamp() );
+	}
+
+	public function test_a_batch_stops_at_the_first_product_refused_for_too_many_requests(): void {
+		$other = $this->product( self::OTHER_TEMPLATE, self::OTHER_BLANK );
+		$this->live_list(
+			array(
+				DesignFixture::TEMPLATE_BASE_ID => DesignFixture::LIVE_VERSION,
+				self::OTHER_TEMPLATE            => DesignFixture::LIVE_VERSION,
+			)
+		);
+		$this->recorder->json( 200, BlankFixture::answer() );
+		$this->slow_down();
+
+		do_action( ProductRecheck::ACTION, array( $this->product_id, $other ), 2 );
+
+		$this->assertSame( array( 'GET /v1/templates', 'GET /v1/blanks/' . DesignFixture::BLANK_ID, 'POST /v1/templates/' . DesignFixture::TEMPLATE_BASE_ID . '@' . DesignFixture::LIVE_VERSION . '/print-size' ), $this->requested(), 'the second product was asked about' );
+		$retries = $this->pending( ProductRecheck::ACTION, ProductRecheck::GROUP );
+		$this->assertCount( 1, $retries );
+		$this->assertSame(
+			array(
+				'product_ids' => array( $this->product_id, $other ),
 				'attempt'     => 2,
 			),
 			array_values( $retries )[0]->get_args()
@@ -909,6 +966,13 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 				'pageSize' => Catalogue::LIST_PAGE_SIZE,
 			)
 		);
+	}
+
+	/**
+	 * Scripts Pixonaut refusing the next request because the store sent too many.
+	 */
+	private function slow_down(): void {
+		$this->recorder->json( self::TOO_MANY_REQUESTS, array( 'error' => 'rate_limited' ), array( 'Retry-After' => (string) self::RETRY_AFTER_SECONDS ) );
 	}
 
 	private function deliver_blank_updated(): void {

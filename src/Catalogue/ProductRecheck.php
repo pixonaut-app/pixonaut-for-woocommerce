@@ -19,6 +19,7 @@ use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Storefront\KeptDesignerLinks;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
 use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use Pixonaut\WooCommerce\Webhooks\Payload;
@@ -39,7 +40,9 @@ use WC_Product;
  * re-checks run queue each product once. A product that cannot be re-checked because Pixonaut
  * did not answer keeps its configuration and is tried again later, up to
  * MAX_ATTEMPTS times in all; Pixonaut being away never makes a product
- * unsellable. A product the re-check finds unsellable raises its notice, and
+ * unsellable. One Pixonaut refused because the store sent too many requests
+ * is not counted as an attempt: the batch stops there, and it and the
+ * products after it are checked again once Pixonaut takes requests again. A product the re-check finds unsellable raises its notice, and
  * one sellable again clears it. The result is written only over the
  * configuration the re-check read: one saved meanwhile is newer, and kept.
  * A re-check also forgets the product's designer links Pixonaut no longer
@@ -112,6 +115,22 @@ final class ProductRecheck {
 	public const RETRY_BASE_SECONDS = 60;
 
 	/**
+	 * What re-checking a product came to: checked, and what changed stored.
+	 */
+	private const CHECKED = 'checked';
+
+	/**
+	 * What re-checking a product came to: Pixonaut could not be asked, so nothing was stored.
+	 */
+	private const NOT_ASKED = 'not_asked';
+
+	/**
+	 * What re-checking a product came to: Pixonaut refused it because the
+	 * store sent too many requests, so nothing was stored.
+	 */
+	private const SLOWED_DOWN = 'slowed_down';
+
+	/**
 	 * Option holding whether every product's variant waits to be resolved.
 	 */
 	public const BACKFILL_OPTION = Schema::VARIANTS_BACKFILL_OPTION;
@@ -137,6 +156,14 @@ final class ProductRecheck {
 	 * @param Closure|null         $rechecked `fn( WC_Product ): void`, told each product or variation checked again; null tells nobody.
 	 * @phpstan-param (Closure(WC_Product): void)|null $rechecked
 	 */
+	/**
+	 * Seconds Pixonaut asked the store to wait, when it refused the
+	 * product being re-checked for too many requests and said how long.
+	 *
+	 * @var int|null
+	 */
+	private ?int $retry_after = null;
+
 	public function __construct(
 		private readonly ProductLinker $linker,
 		private readonly Catalogue $catalogue,
@@ -274,7 +301,8 @@ final class ProductRecheck {
 	/**
 	 * The job: re-checks each product of a batch against the templates live
 	 * now, and stores what changed. Products Pixonaut could not be asked
-	 * about are tried again later while they have attempts left.
+	 * about are tried again later while they have attempts left; ones it
+	 * refused for too many requests, once it takes requests again.
 	 *
 	 * @param array<int|string> $product_ids Products and variations.
 	 * @param int|string        $attempt     Which attempt this is, from 1.
@@ -293,8 +321,15 @@ final class ProductRecheck {
 		}
 
 		$again = array();
-		foreach ( $product_ids as $product_id ) {
-			if ( ! $this->recheck_one( $product_id, $live ) ) {
+		foreach ( $product_ids as $i => $product_id ) {
+			$this->retry_after = null;
+			$checked           = $this->recheck_one( $product_id, $live );
+			if ( self::SLOWED_DOWN === $checked ) {
+				// The products after it would be refused too, and each refusal spends the store's budget.
+				$this->later( array_slice( $product_ids, $i ), $attempt, $this->retry_after );
+				break;
+			}
+			if ( self::NOT_ASKED === $checked ) {
 				$again[] = $product_id;
 			}
 			$this->links->prune( $product_id );
@@ -307,17 +342,18 @@ final class ProductRecheck {
 	/**
 	 * @param int               $product_id A product or variation.
 	 * @param array<string,int> $live       The live templates' versions, by base id.
-	 * @return bool False when Pixonaut could not be asked, so nothing was stored.
+	 * @return string CHECKED, NOT_ASKED or SLOWED_DOWN.
+	 * @phpstan-return self::CHECKED|self::NOT_ASKED|self::SLOWED_DOWN
 	 */
-	private function recheck_one( int $product_id, array $live ): bool {
+	private function recheck_one( int $product_id, array $live ): string {
 		$product = wc_get_product( $product_id );
 		if ( ! $product instanceof WC_Product ) {
-			return true;
+			return self::CHECKED;
 		}
 		if ( TrashedProducts::in_trash( $product ) ) {
 			// Not checked while nobody can buy it: restoring it checks it again.
 			$this->notice->forget( $product_id );
-			return true;
+			return self::CHECKED;
 		}
 		$document = ProductConfig::document_on( $product );
 		if ( null === $document ) {
@@ -327,17 +363,17 @@ final class ProductRecheck {
 		$stored  = ProductConfig::from_json( $document );
 		$checked = $this->linker->recheck( $stored, $live );
 		if ( InvalidReason::CHECK_FAILED === $checked->invalid_reason ) {
-			return false;
+			return ErrorCode::RATE_LIMITED === $checked->invalid_detail?->code ? self::SLOWED_DOWN : self::NOT_ASKED;
 		}
 		if ( $checked->to_array() !== $stored->to_array() ) {
 			try {
 				if ( ! $checked->replace_on( $product, $document ) ) {
 					// Saved meanwhile: that configuration is newer, and its save raised its notice.
-					return true;
+					return self::CHECKED;
 				}
 			} catch ( LogicException $e ) {
 				// A newer plugin version's configuration is not this one's to change.
-				return true;
+				return self::CHECKED;
 			}
 			// Read again as stored: an accept is kept only for what the new configuration warns of.
 			$fresh = wc_get_product( $product_id );
@@ -353,19 +389,24 @@ final class ProductRecheck {
 	 * variations can be bought.
 	 *
 	 * @param WC_Product $product A product or variation.
-	 * @return bool False when Pixonaut could not be asked, so nothing was stored.
+	 * @return string CHECKED, NOT_ASKED or SLOWED_DOWN.
+	 * @phpstan-return self::CHECKED|self::NOT_ASKED|self::SLOWED_DOWN
 	 */
-	private function refresh_variants( WC_Product $product ): bool {
+	private function refresh_variants( WC_Product $product ): string {
 		try {
 			$this->variants->refresh( $product );
 		} catch ( ApiException $e ) {
-			return false;
+			if ( ErrorCode::RATE_LIMITED !== $e->errorCode ) {
+				return self::NOT_ASKED;
+			}
+			$this->retry_after = $e->retryAfter;
+			return self::SLOWED_DOWN;
 		}
 		// What the printshop charges may have changed with the blank.
 		if ( null !== $this->rechecked ) {
 			( $this->rechecked )( $product );
 		}
-		return true;
+		return self::CHECKED;
 	}
 
 	/**
@@ -403,6 +444,28 @@ final class ProductRecheck {
 		if ( $attempt < self::MAX_ATTEMPTS ) {
 			$this->queue_batch( $product_ids, $attempt + 1, self::RETRY_BASE_SECONDS * 2 ** ( $attempt - 1 ) );
 		}
+	}
+
+	/**
+	 * Queues products Pixonaut refused for too many requests again, at the
+	 * same attempt, after the wait it asked for or its window's length.
+	 *
+	 * @param int[]    $product_ids Products and variations not checked.
+	 * @param int      $attempt     The attempt they were refused in, which they keep.
+	 * @param int|null $retry_after Seconds Pixonaut asked the store to wait, when it said.
+	 * @phpstan-param list<int> $product_ids
+	 */
+	private function later( array $product_ids, int $attempt, ?int $retry_after ): void {
+		$this->logger->warning(
+			'Products re-checked later: Pixonaut asked the store to send fewer requests.',
+			array(
+				'products'    => $product_ids,
+				'attempt'     => $attempt,
+				'retry_after' => $retry_after,
+			)
+		);
+		// Never 0, which would run it at once.
+		$this->queue_batch( $product_ids, $attempt, max( 1, $retry_after ?? self::RETRY_BASE_SECONDS ) );
 	}
 
 	/**
