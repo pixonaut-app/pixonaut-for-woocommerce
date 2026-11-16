@@ -105,6 +105,16 @@ export type SwitchFrame = {
 	/** The heights of the side's preview and form. */
 	preview: number;
 	form: number;
+	/** When it was painted, on the page's clock. */
+	time: number;
+	/** Whether Add to cart shows as disabled. */
+	disabled: boolean;
+	/** Whether a block over the form (WooCommerce's `.blockUI`) or the
+	 *  preview's spinner shows. */
+	blocked: boolean;
+	spinner: boolean;
+	/** The variation the form holds; '' for none. */
+	variation: string;
 };
 
 /** Starts noting, at every painted frame, what `SwitchFrame` names: the
@@ -127,7 +137,23 @@ export async function watchSwitch(page: Page, side: string): Promise<void> {
 					),
 				];
 				const preview = document.getElementById(`pixonaut-preview-${side}`);
+				const cart = [
+					...document.querySelectorAll('.single_add_to_cart_button'),
+				].filter(shows);
 				frames.push({
+					time: performance.now(),
+					disabled: cart.some((button) =>
+						button.classList.contains('disabled'),
+					),
+					blocked: [...document.querySelectorAll('.blockUI')].some(shows),
+					spinner: [...document.querySelectorAll('.pixonaut-spinner')].some(
+						(spinner) =>
+							shows(spinner) && getComputedStyle(spinner).display !== 'none',
+					),
+					variation:
+						document.querySelector<HTMLInputElement>(
+							'form [name="variation_id"]',
+						)?.value ?? '',
 					// The copy held while the side mounts again.
 					held: preview?.querySelector('[data-pixonaut-held]') != null,
 					preview: preview?.getBoundingClientRect().height ?? 0,
@@ -145,9 +171,7 @@ export async function watchSwitch(page: Page, side: string): Promise<void> {
 								shows(img),
 						)
 						.map((img) => img.getAttribute('src') ?? ''),
-					cart: [
-						...document.querySelectorAll('.single_add_to_cart_button'),
-					].some(shows),
+					cart: cart.length > 0,
 					price:
 						[...document.querySelectorAll(PRICE_SELECTOR)]
 							.find(shows)
@@ -173,5 +197,97 @@ export async function watchSwitch(page: Page, side: string): Promise<void> {
 export async function switchFrames(page: Page): Promise<SwitchFrame[]> {
 	return page.evaluate(
 		() => (window as unknown as { switchFrames: SwitchFrame[] }).switchFrames,
+	);
+}
+
+/** One layout shift the page reported: its score, when, and how each node
+ *  it moved moved. */
+export type Shift = {
+	value: number;
+	time: number;
+	sources: Array<{
+		node: string;
+		/** Whether it is in the form's table of attributes, whose columns
+		 *  fit the labels of the rows it shows. */
+		inAttributes: boolean;
+		previous: { x: number; y: number; width: number; height: number };
+		current: { x: number; y: number; width: number; height: number };
+	}>;
+};
+
+/** Starts noting each layout shift the page reports with no input of the
+ *  shopper's just before it, from now on. */
+export async function watchShifts(page: Page): Promise<void> {
+	await page.evaluate(() => {
+		const shifts: Shift[] = [];
+		(window as unknown as { shifts: Shift[] }).shifts = shifts;
+		type Entry = PerformanceEntry & {
+			value: number;
+			hadRecentInput: boolean;
+			sources: Array<{
+				node: Node | null;
+				previousRect: DOMRectReadOnly;
+				currentRect: DOMRectReadOnly;
+			}>;
+		};
+		// The node, and the elements around it up to one with an id.
+		const describe = (node: Node | null): string => {
+			const names: string[] = [];
+			let element =
+				node instanceof Element ? node : (node?.parentElement ?? null);
+			if (!(node instanceof Element)) {
+				names.push(String(node?.nodeName));
+			}
+			while (element !== null && names.length < 4) {
+				names.push(
+					element.id === ''
+						? `${element.tagName.toLowerCase()}.${[...element.classList].join('.')}`
+						: `#${element.id}`,
+				);
+				if (element.id !== '') {
+					break;
+				}
+				element = element.parentElement;
+			}
+			return names.join(' < ');
+		};
+		const rect = (box: DOMRectReadOnly) => ({
+			x: box.x,
+			y: box.y,
+			width: box.width,
+			height: box.height,
+		});
+		new PerformanceObserver((list) => {
+			for (const entry of list.getEntries() as Entry[]) {
+				if (entry.hadRecentInput) {
+					continue;
+				}
+				shifts.push({
+					value: entry.value,
+					time: entry.startTime,
+					sources: entry.sources.map((source) => ({
+						node: describe(source.node),
+						inAttributes:
+							(source.node instanceof Element
+								? source.node
+								: (source.node?.parentElement ?? null)
+							)?.closest('table.variations') != null,
+						previous: rect(source.previousRect),
+						current: rect(source.currentRect),
+					})),
+				});
+			}
+		}).observe({ type: 'layout-shift' });
+	});
+}
+
+/** The layout shifts noted since `watchShifts()`, from `since` on. */
+export async function shiftsSince(page: Page, since: number): Promise<Shift[]> {
+	return page.evaluate(
+		(since) =>
+			(window as unknown as { shifts: Shift[] }).shifts.filter(
+				(shift) => shift.time >= since,
+			),
+		since,
 	);
 }

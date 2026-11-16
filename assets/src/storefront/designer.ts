@@ -1379,6 +1379,7 @@ export class ProductDesigner {
 			Object.values(this.markTarget(side)),
 			this.lendable(side),
 			this.holds.get(side)?.hidden(),
+			this.existingPreview(side)?.closest(FRAME_SELECTOR) ?? null,
 		);
 		this.destroyDesigner(designer);
 		this.designers.delete(side);

@@ -99,6 +99,12 @@
 	display: none;
 }
 
+/* A side mounting again on another blank keeps its picture; one that takes
+ * long to show its next shows the spinner over it, which moves nothing. */
+.pixonaut-preview__frame.is-drawn.is-waiting .pixonaut-spinner {
+	display: block;
+}
+
 .pixonaut-spinner .screen-reader-text {
 	position: absolute;
 	width: 1px;

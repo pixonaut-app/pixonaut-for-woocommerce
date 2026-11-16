@@ -58,6 +58,22 @@ add_filter(
 add_filter( 'woocommerce_enable_setup_wizard', '__return_false' );
 
 /**
+ * A product marked so: the store's threshold for giving the add-to-cart
+ * form every variation up front is below its count, so the form looks each
+ * one up as it is chosen, as WooCommerce does above 30 variations.
+ */
+const PIXONAUT_E2E_LOOKUP_META = '_pixonaut_e2e_lookup';
+
+add_filter(
+	'woocommerce_ajax_variation_threshold',
+	static function ( $threshold, $product ) {
+		return $product instanceof WC_Product && '' !== $product->get_meta( PIXONAUT_E2E_LOOKUP_META ) ? 1 : $threshold;
+	},
+	10,
+	2
+);
+
+/**
  * Cookie that lets one browser context set the browser's and the studio's
  * Pixonaut addresses in the developer tools, as on a site without the
  * constants the tests site sets. WordPress keeps reaching the fake through
@@ -878,6 +894,11 @@ add_action(
 							'type' => 'string',
 							'enum' => array( 'filtered' ),
 						),
+						// `one-by-one`: the store's threshold has the form look each variation up as it is chosen, as WooCommerce does for a product with more than 30.
+						'lookup'    => array(
+							'type' => 'string',
+							'enum' => array( 'one-by-one' ),
+						),
 					),
 					'callback'            => static function ( WP_REST_Request $request ) {
 						$key        = (string) $request['key'];
@@ -932,6 +953,9 @@ add_action(
 						$poster->set_status( 'publish' );
 						$poster->set_category_ids( array( (int) $category['term_id'] ) );
 						$poster->set_attributes( $attributes );
+						if ( 'one-by-one' === $request['lookup'] ) {
+							$poster->update_meta_data( PIXONAUT_E2E_LOOKUP_META, 'one-by-one' );
+						}
 						$poster->save();
 						$variations = array();
 						foreach ( array(
