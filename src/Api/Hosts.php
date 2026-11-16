@@ -55,6 +55,14 @@ final class Hosts {
 	private static ?Closure $constants = null;
 
 	/**
+	 * The settings an override is read from, made once: a page asks for
+	 * the API's address for every side of every variation.
+	 *
+	 * @var Settings|null
+	 */
+	private static ?Settings $settings = null;
+
+	/**
 	 * The API as the browser reaches it: the SDK's `apiBase`.
 	 */
 	public static function api(): string {
@@ -136,7 +144,8 @@ final class Hosts {
 		if ( '' !== $constant ) {
 			return untrailingslashit( $constant );
 		}
-		$override = ( new Settings() )->get( $setting );
+		self::$settings ??= new Settings();
+		$override         = self::$settings->get( $setting );
 		return is_string( $override ) && '' !== $override ? $override : $fallback;
 	}
 

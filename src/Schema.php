@@ -329,6 +329,12 @@ final class Schema {
 	const SERVER_READS_PAUSE_TRANSIENT = self::CATALOGUE_CACHE_PREFIX . 'server_reads_paused';
 
 	/**
+	 * Transient holding the products whose stored configuration may name a
+	 * template that is not live, for the shop to leave out.
+	 */
+	const NOT_LIVE_CANDIDATES_TRANSIENT = 'pixonaut_wc_not_live_candidates';
+
+	/**
 	 * Option holding the developer tools' request log: the last requests to
 	 * Pixonaut, newest first, while the log is on.
 	 */

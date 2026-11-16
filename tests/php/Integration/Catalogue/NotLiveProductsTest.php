@@ -10,6 +10,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Storefront\UnavailableProduct;
 use Pixonaut\WooCommerce\Tests\Integration\Cart\PersonalisedCartTestCase;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
@@ -178,6 +179,39 @@ final class NotLiveProductsTest extends PersonalisedCartTestCase {
 
 		$this->assertFalse( $this->reload( $red )->is_purchasable() );
 		$this->assertNotContains( $parent, ShopListing::shop() );
+	}
+
+	public function test_the_products_to_look_at_are_kept_for_later_pages_until_a_configuration_is_written(): void {
+		$this->set_config( $this->product_id, self::config()->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE ) );
+		$this->assertContains( $this->product_id, NotLiveProducts::candidate_ids() );
+
+		$kept = get_transient( Schema::NOT_LIVE_CANDIDATES_TRANSIENT );
+
+		$this->assertIsArray( $kept );
+		$this->assertContains( $this->product_id, $kept );
+
+		$this->set_config( $this->product_id, self::config() );
+
+		$this->assertFalse( get_transient( Schema::NOT_LIVE_CANDIDATES_TRANSIENT ) );
+		$this->assertNotContains( $this->product_id, NotLiveProducts::candidate_ids() );
+	}
+
+	public function test_a_product_page_not_among_the_products_to_look_at_reads_none_of_its_variations(): void {
+		list( $parent ) = $this->variable();
+		$read           = 0;
+		$count          = static function ( $personalise ) use ( &$read ) {
+			++$read;
+			return $personalise;
+		};
+		add_filter( 'pixonaut_wc_catalogue_is_personalisable', $count );
+		try {
+			$html = $this->page()->html( $this->reload( $parent ) );
+		} finally {
+			remove_filter( 'pixonaut_wc_catalogue_is_personalisable', $count );
+		}
+
+		$this->assertSame( '', $html );
+		$this->assertSame( 0, $read );
 	}
 
 	/**

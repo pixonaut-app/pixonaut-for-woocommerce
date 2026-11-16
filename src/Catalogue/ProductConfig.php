@@ -48,6 +48,29 @@ final class ProductConfig {
 	public const DESIGN_VIEW = 'design';
 
 	/**
+	 * How many read documents `stored_on()` keeps before it starts over, so
+	 * a request walking the whole catalogue does not hold every one.
+	 */
+	private const MAX_READ_KEPT = 500;
+
+	/**
+	 * The filters `resolved_for()` applies.
+	 */
+	private const FILTERS = array(
+		'pixonaut_wc_catalogue_is_personalisable',
+		'pixonaut_wc_catalogue_layout',
+		'pixonaut_wc_catalogue_approval_mode',
+		'pixonaut_wc_catalogue_side_config',
+	);
+
+	/**
+	 * Configurations `stored_on()` read, by their stored document.
+	 *
+	 * @var array<string, self>
+	 */
+	private static array $read = array();
+
+	/**
 	 * @param bool               $personalise    Whether customers personalise the product.
 	 * @param bool               $override       On a variation: use this configuration instead of the product's.
 	 * @param string|null        $blank_id       The Pixonaut blank; null for a template-only product.
@@ -185,7 +208,31 @@ final class ProductConfig {
 	 * @return array<int, self>
 	 */
 	public static function variation_configs( WC_Product $product ): array {
-		return array_map( static fn ( array $sold ): self => $sold[1], self::sold_variations( $product ) );
+		$read = static fn (): array => array_map( static fn ( array $sold ): self => $sold[1], self::sold_variations( $product ) );
+		if ( 0 === $product->get_id() ) {
+			return $read();
+		}
+		return RequestCache::remember( self::variations_key( $product ), $read );
+	}
+
+	/**
+	 * What a variable product's variation configurations are read from: the
+	 * product, its stored configuration and variations, and the filters
+	 * `resolved_for()` applies.
+	 *
+	 * @param WC_Product $product A variable product.
+	 */
+	public static function variations_key( WC_Product $product ): string {
+		return implode(
+			'|',
+			array(
+				'variation_configs',
+				$product->get_id(),
+				implode( ',', $product->get_children() ),
+				md5( (string) self::document_on( $product ) ),
+				RequestCache::filters_key( self::FILTERS ),
+			)
+		);
 	}
 
 	/**
@@ -196,8 +243,11 @@ final class ProductConfig {
 	 * @return array<int, array{0: WC_Product, 1: self}>
 	 */
 	public static function sold_variations( WC_Product $product ): array {
-		$sold = array();
-		foreach ( $product->get_children() as $child_id ) {
+		$sold     = array();
+		$children = $product->get_children();
+		// Three queries for all the variations, their meta and terms, rather than three for each.
+		_prime_post_caches( $children, true, true );
+		foreach ( $children as $child_id ) {
 			$variation = wc_get_product( $child_id );
 			// A disabled variation is stored as private.
 			if ( $variation instanceof WC_Product && self::PUBLIC_STATUS === $variation->get_status() ) {
@@ -214,7 +264,17 @@ final class ProductConfig {
 	 */
 	public static function stored_on( WC_Product $product ): self {
 		$document = self::document_on( $product );
-		return null === $document ? new self() : self::from_json( $document );
+		if ( null === $document ) {
+			return new self();
+		}
+		// A product page reads each variation's and its product's document many times; a configuration is immutable, so one read serves them all.
+		if ( ! isset( self::$read[ $document ] ) ) {
+			if ( count( self::$read ) >= self::MAX_READ_KEPT ) {
+				self::$read = array();
+			}
+			self::$read[ $document ] = self::from_json( $document );
+		}
+		return self::$read[ $document ];
 	}
 
 	/**
@@ -305,6 +365,7 @@ final class ProductConfig {
 			return false;
 		}
 		ProductIndex::rewrite( $product_id, $this );
+		NotLiveProducts::forget_candidates();
 		clean_post_cache( $product_id );
 		wc_delete_product_transients( $product_id );
 		return true;

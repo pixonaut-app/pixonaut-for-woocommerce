@@ -110,6 +110,7 @@ use Pixonaut\WooCommerce\Catalogue\PictureRunner;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
+use Pixonaut\WooCommerce\Catalogue\RequestCache;
 use Pixonaut\WooCommerce\Catalogue\Purchasability;
 use Pixonaut\WooCommerce\Catalogue\SplitCardImageCopies;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
@@ -471,6 +472,7 @@ final class Plugin {
 		$this->hosted_correction()->register();
 		( new Purchasability() )->register();
 		SplitListing::register();
+		RequestCache::register();
 		SwatchNames::register();
 		( new NotLiveProducts() )->register();
 		( new UnavailableProduct( $this->labels() ) )->register();
@@ -1083,7 +1085,11 @@ final class Plugin {
 	}
 
 	public function server_reads(): ServerReads {
-		$this->server_reads ??= new ServerReads( $this->catalogue(), $this->catalogue_cache(), $this->sdk() );
+		if ( null === $this->server_reads ) {
+			// A page waits for these reads while it renders: they give up sooner than the admin's.
+			$storefront_sdk     = $this->pixonaut()->sdk( Pixonaut::STOREFRONT_TIMEOUT_SECONDS );
+			$this->server_reads = new ServerReads( new Catalogue( $storefront_sdk ), $this->catalogue_cache(), $storefront_sdk );
+		}
 		return $this->server_reads;
 	}
 
