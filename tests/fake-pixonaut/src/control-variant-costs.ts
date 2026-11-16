@@ -45,15 +45,16 @@ function readCosts(
 		if (!blank.variants.some((variant) => variant.ref === ref)) {
 			return refused(`the blank has no variant \`${ref}\``);
 		}
-		const cost = (value ?? {}) as Record<string, unknown>;
+		if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+			return refused(`the cost of \`${ref}\` is not a product price`);
+		}
+		const cost = value as Record<string, unknown>;
 		const before = costOf(blank, ref);
 		const product = 'product' in cost ? cost.product : before.product;
 		const shipping = cost.shipping ?? before.shipping;
 		const currency = cost.currency ?? before.currency ?? COST_CURRENCY;
 		const delivery = 'delivery' in cost ? cost.delivery : before.delivery;
 		if (
-			typeof value !== 'object' ||
-			value === null ||
 			!(product === null || amount(product)) ||
 			!(shipping === null || amount(shipping)) ||
 			typeof currency !== 'string' ||
