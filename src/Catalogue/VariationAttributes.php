@@ -27,10 +27,23 @@ final class VariationAttributes {
 	 * @return list<array{slug: string, label: string}>
 	 */
 	public static function of( WC_Product $product ): array {
-		if ( $product->is_type( 'variation' ) ) {
-			$parent  = wc_get_product( $product->get_parent_id() );
-			$product = $parent instanceof WC_Product ? $parent : $product;
+		if ( $product->is_type( 'variation' ) && $product->get_parent_id() > 0 ) {
+			// A product page asks for each of its variations; they all have their product's.
+			return RequestCache::remember(
+				implode( '|', array( 'variation_attributes_of', $product->get_parent_id(), determine_locale(), RequestCache::filters_key( array( 'woocommerce_attribute_label' ) ) ) ),
+				static fn (): array => self::own( ProductVariants::parent_of( $product ) ?? $product )
+			);
 		}
+		return self::own( $product );
+	}
+
+	/**
+	 * `of()` a product, read from it.
+	 *
+	 * @param WC_Product $product A product.
+	 * @return list<array{slug: string, label: string}>
+	 */
+	private static function own( WC_Product $product ): array {
 		$attributes = array();
 		foreach ( $product->is_type( 'variable' ) ? $product->get_attributes() : array() as $attribute ) {
 			if ( $attribute instanceof WC_Product_Attribute && $attribute->get_variation() ) {

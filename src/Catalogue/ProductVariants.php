@@ -45,6 +45,12 @@ final class ProductVariants {
 	private static array $term_names = array();
 
 	/**
+	 * Starts the key in `$term_names` that marks a product's values of an
+	 * attribute as noted; no slug starts with a space.
+	 */
+	private const NOTED = ' noted:';
+
+	/**
 	 * Prefixes a blank id in `$read` and `$failed` for its variants read
 	 * with their options as written as well.
 	 */
@@ -270,8 +276,10 @@ final class ProductVariants {
 	 * @return array<string, string>
 	 */
 	private static function read_attributes( WC_Product $product ): array {
-		$parent = $product->is_type( 'variation' ) ? wc_get_product( $product->get_parent_id() ) : $product;
-		$parent = $parent instanceof WC_Product ? $parent : $product;
+		$parent = $product->is_type( 'variation' ) ? self::parent_of( $product ) ?? $product : $product;
+		if ( $parent !== $product ) {
+			self::note_term_names( $parent, array_keys( $product->get_attributes() ) );
+		}
 		$labels = array();
 		foreach ( $product->get_attributes() as $name => $value ) {
 			if ( ! is_string( $name ) ) {
@@ -283,6 +291,21 @@ final class ProductVariants {
 			}
 		}
 		return $labels;
+	}
+
+	/**
+	 * A variation's product, loaded once for the request: each of a product
+	 * page's variations reads it. Null when it has none.
+	 *
+	 * @param WC_Product $variation A variation.
+	 */
+	public static function parent_of( WC_Product $variation ): ?WC_Product {
+		$parent_id = $variation->get_parent_id();
+		if ( $parent_id <= 0 ) {
+			return null;
+		}
+		$parent = RequestCache::remember( 'variation_parent|' . $parent_id, static fn (): mixed => wc_get_product( $parent_id ) );
+		return $parent instanceof WC_Product ? $parent : null;
 	}
 
 	/**
@@ -327,6 +350,32 @@ final class ProductVariants {
 			return self::term_name( $name, $value );
 		}
 		return $value;
+	}
+
+	/**
+	 * Notes the names of a variable product's values of its attributes, as
+	 * `term_name()` finds them: its variations take their values from
+	 * those, which WordPress already holds with the product, so each name
+	 * needs no read of its own. They are taken from WordPress's cache of
+	 * the product's terms as `get_term_by()` would give them, not through
+	 * the `get_the_terms` filter, which may name them for display; when
+	 * the cache does not hold them, each is read as before.
+	 *
+	 * @param WC_Product $product    A variable product.
+	 * @param mixed[]    $taxonomies The attributes its variations name.
+	 */
+	private static function note_term_names( WC_Product $product, array $taxonomies ): void {
+		$changed = wp_cache_get_last_changed( 'terms' );
+		foreach ( $taxonomies as $taxonomy ) {
+			if ( ! is_string( $taxonomy ) || ! taxonomy_exists( $taxonomy ) || isset( self::$term_names[ $changed . ':' . $taxonomy . ':' . self::NOTED . $product->get_id() ] ) ) {
+				continue;
+			}
+			self::$term_names[ $changed . ':' . $taxonomy . ':' . self::NOTED . $product->get_id() ] = '';
+			$terms = get_object_term_cache( $product->get_id(), $taxonomy );
+			foreach ( is_array( $terms ) ? $terms : array() as $term ) {
+				self::$term_names[ $changed . ':' . $taxonomy . ':' . $term->slug ] ??= $term->name;
+			}
+		}
 	}
 
 	/**

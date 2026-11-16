@@ -97,6 +97,22 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$this->assertCount( 1, $this->recorder->requests );
 	}
 
+	public function test_a_template_read_again_is_decoded_once_and_again_once_pixonaut_answers_another(): void {
+		$template = json_decode( (string) OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200 ) );
+		$this->recorder->raw( 200, (string) wp_json_encode( $template ), self::JSON );
+
+		$first = $this->reads->template_read( 'mini-tee@2', null );
+
+		$this->assertSame( $first, $this->reads->template_read( 'mini-tee@2', null ) );
+		$this->assertCount( 1, $this->recorder->requests );
+
+		( new CatalogueCache( $this->store ) )->flush();
+		$template->name = 'Renamed tee';
+		$this->recorder->raw( 200, (string) wp_json_encode( $template ), self::JSON );
+
+		$this->assertSame( 'Renamed tee', $this->reads->template_read( 'mini-tee@2', null )['name'] ?? null );
+	}
+
 	public function test_a_templates_group_ids_are_null_when_pixonaut_cannot_be_asked(): void {
 		$this->recorder->json( 500, array( 'error' => 'internal_error' ) );
 

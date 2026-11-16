@@ -135,8 +135,8 @@ final class ProductConfig {
 	public static function config_for( WC_Product $product, ?WC_Product $variation = null ): self {
 		if ( null === $variation && $product->is_type( 'variation' ) ) {
 			$variation = $product;
-			$parent    = wc_get_product( $product->get_parent_id() );
-			if ( ! $parent instanceof WC_Product ) {
+			$parent    = ProductVariants::parent_of( $product );
+			if ( null === $parent ) {
 				return self::stored_on( $variation )->resolved_for( $variation );
 			}
 			$product = $parent;
@@ -208,11 +208,22 @@ final class ProductConfig {
 	 * @return array<int, self>
 	 */
 	public static function variation_configs( WC_Product $product ): array {
-		$read = static fn (): array => array_map( static fn ( array $sold ): self => $sold[1], self::sold_variations( $product ) );
+		return array_map( static fn ( array $sold ): self => $sold[1], self::kept_variations( $product ) );
+	}
+
+	/**
+	 * `sold_variations()`, read once for the request: the page's designer,
+	 * gallery, form and price each ask, and each variation is then the same
+	 * object with its meta read once.
+	 *
+	 * @param WC_Product $product A variable product.
+	 * @return array<int, array{0: WC_Product, 1: self}>
+	 */
+	public static function kept_variations( WC_Product $product ): array {
 		if ( 0 === $product->get_id() ) {
-			return $read();
+			return self::sold_variations( $product );
 		}
-		return RequestCache::remember( self::variations_key( $product ), $read );
+		return RequestCache::remember( self::variations_key( $product ), static fn (): array => self::sold_variations( $product ) );
 	}
 
 	/**
