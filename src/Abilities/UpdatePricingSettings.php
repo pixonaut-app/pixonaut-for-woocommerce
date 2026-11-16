@@ -78,13 +78,29 @@ final class UpdatePricingSettings implements Ability {
 				return new WP_Error( 'pixonaut_wc_ability_setting_invalid', sprintf( __( 'The setting %s does not take that value.', 'pixonaut-for-woocommerce' ), $key ), array( 'status' => self::UNPROCESSABLE ) );
 			}
 		}
-		$step   = Amount::parse( $input[ Settings::PRICE_STEP ] ?? $this->settings->get( Settings::PRICE_STEP ) );
-		$ending = Amount::parse( $input[ Settings::PRICE_ENDING ] ?? $this->settings->get( Settings::PRICE_ENDING ) ) ?? 0;
+		$refused = self::rule_refusal( $this->settings, $input );
+		if ( null !== $refused ) {
+			return $refused;
+		}
+		$this->settings->set_many( $input );
+		return ReadPricingSettings::values( $this->settings );
+	}
+
+	/**
+	 * Why the pricing rule would not hold with the settings given beside
+	 * the ones kept: prices must end below the step. Null when it holds.
+	 * Whatever writes pricing settings asks this before it writes.
+	 *
+	 * @param Settings             $settings The settings as they are.
+	 * @param array<string, mixed> $input    The settings to change, by key, each one its setting takes.
+	 */
+	public static function rule_refusal( Settings $settings, array $input ): ?WP_Error {
+		$step   = Amount::parse( $input[ Settings::PRICE_STEP ] ?? $settings->get( Settings::PRICE_STEP ) );
+		$ending = Amount::parse( $input[ Settings::PRICE_ENDING ] ?? $settings->get( Settings::PRICE_ENDING ) ) ?? 0;
 		// A step of nothing counts as one unit, as the rule reads it.
 		if ( $ending >= ( null === $step || 0 === $step ? Amount::PER_UNIT : $step ) ) {
 			return new WP_Error( 'pixonaut_wc_ability_price_ending', __( 'Prices end in an amount below the price step: with a step of 10, anything from 0 up to 9.99.', 'pixonaut-for-woocommerce' ), array( 'status' => self::UNPROCESSABLE ) );
 		}
-		$this->settings->set_many( $input );
-		return ReadPricingSettings::values( $this->settings );
+		return null;
 	}
 }
