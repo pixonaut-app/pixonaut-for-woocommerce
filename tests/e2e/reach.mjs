@@ -331,6 +331,11 @@ export const REACH = {
 		'src/Connection/PrintFileForm.php',
 		'src/Webhooks/Endpoint.php',
 	],
+	'delivery-time.spec.ts': [
+		'src/Storefront/DeliveryTime.php',
+		'src/Pricing/DeliveryTimes.php',
+		'src/Pricing/CostRefresh.php',
+	],
 	'dependent-attributes.spec.ts': [
 		'assets/src/storefront/applicable-attributes.ts',
 		'assets/src/storefront/applicable-form.ts',

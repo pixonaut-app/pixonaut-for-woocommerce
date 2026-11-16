@@ -103,6 +103,15 @@ final class Settings {
 
 	public const PRICE_CURRENCY_BUFFER = 'price_currency_buffer';
 
+	public const DELIVERY_TIME_SHOW = 'delivery_time_show';
+
+	public const DELIVERY_TIME_HANDLING_DAYS = 'delivery_time_handling_days';
+
+	/**
+	 * The most days a store adds to a printshop's delivery time: two months.
+	 */
+	public const MAX_HANDLING_DAYS = 60;
+
 	/**
 	 * Percent added to a cost converted from another currency, unless the
 	 * store sets another: what a card or bank usually takes for the exchange.
@@ -568,6 +577,31 @@ final class Settings {
 					/* translators: Title of a setting on the settings page, shown to the merchant: whether the plugin changes prices by itself when a printshop's cost changes. */
 					'title' => __( 'Automatic price changes', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'When a printshop changes what it charges, set the prices that follow the rule and whose margin left the tolerance to the rule’s price, and log each change under WooCommerce > Status > Logs. Off, such a price is flagged on the products list with the price the rule suggests, for you to apply.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::checkbox(
+				self::DELIVERY_TIME_SHOW,
+				false,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant: whether product pages say how long delivery takes. */
+					'title' => __( 'Show the delivery time', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'Say on the product page how long the printshop says the chosen variation takes, such as “Delivered in 4–7 days”. Only what the printshop itself tells is shown: a printshop that tells how long it takes to make the product and nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing gets no line. The times are read with the costs, once a day.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::number(
+				self::DELIVERY_TIME_HANDLING_DAYS,
+				0,
+				0,
+				self::MAX_HANDLING_DAYS,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days the store adds to the printshop's delivery time. */
+					'title'    => __( 'Handling days', 'pixonaut-for-woocommerce' ),
+					'desc'     => __( 'Days of your own to add to the printshop’s time, for what happens before an order reaches it, such as approving a proof.', 'pixonaut-for-woocommerce' ),
+					'desc_tip' => true,
 				)
 			)
 		);

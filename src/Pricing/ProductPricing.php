@@ -564,6 +564,34 @@ final class ProductPricing {
 	}
 
 	/**
+	 * How long the printshop says a product or variation takes, from the
+	 * cost stored for it, while that is the cost of the variant it sells
+	 * now, shipped to the shop's country; no time for any other.
+	 *
+	 * @param WC_Product $item The product or variation.
+	 */
+	public static function times_of( WC_Product $item ): DeliveryTimes {
+		$cost = self::known_cost( $item, PriceState::stored_on( $item ) );
+		return null === $cost ? new DeliveryTimes() : $cost->times;
+	}
+
+	/**
+	 * The products printed on a blank, after a product id, lowest first:
+	 * every product whose printshop tells a cost and a delivery time,
+	 * whether or not a price of it follows the rule.
+	 *
+	 * @param int $after The product id to start after.
+	 * @param int $limit How many at most.
+	 * @return list<int>
+	 */
+	public static function on_blanks( int $after, int $limit ): array {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- paged by id, which no meta query can do; read by a background job only.
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT m.post_id FROM {$wpdb->postmeta} m JOIN {$wpdb->posts} p ON p.ID = m.post_id WHERE m.meta_key = %s AND p.post_type = 'product' AND m.post_id > %d ORDER BY m.post_id LIMIT %d", ProductConfig::META_KEY, $after, $limit ) );
+		return array_values( array_map( 'intval', $ids ) );
+	}
+
+	/**
 	 * The cost stored for a product or variation, while it is the cost of
 	 * the variant it sells now, shipped to the shop's country.
 	 *

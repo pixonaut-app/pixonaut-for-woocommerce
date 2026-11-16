@@ -46,7 +46,13 @@ const ADMIN = { username: 'admin', password: 'password' };
 
 /** A tab of the Pixonaut settings page. */
 export function settingsPath(
-	tab: 'connection' | 'storefront' | 'approval' | 'pixel' | 'updates',
+	tab:
+		| 'connection'
+		| 'storefront'
+		| 'approval'
+		| 'prices'
+		| 'pixel'
+		| 'updates',
 ): string {
 	return `/wp-admin/admin.php?page=pixonaut&tab=${tab}`;
 }

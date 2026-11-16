@@ -197,6 +197,7 @@ use Pixonaut\WooCommerce\Storefront\PersonalisedDesigns;
 use Pixonaut\WooCommerce\Storefront\ButtonProducts;
 use Pixonaut\WooCommerce\Storefront\CardPageHead;
 use Pixonaut\WooCommerce\Storefront\CardSitemaps;
+use Pixonaut\WooCommerce\Storefront\DeliveryTime;
 use Pixonaut\WooCommerce\Storefront\OpeningDefaults;
 use Pixonaut\WooCommerce\Storefront\OpeningPrice;
 use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
@@ -508,6 +509,7 @@ final class Plugin {
 		$this->storefront()->register();
 		$this->opening_price()->register();
 		( new OpeningDefaults() )->register();
+		( new DeliveryTime( $this->settings() ) )->register();
 		( new PrintedSwatches( $this->inline_products(), $this->settings(), $this->swatch_looks() ) )->register();
 		$this->personalise_button()->register();
 		$this->personalised_designs()->register();
@@ -788,7 +790,7 @@ final class Plugin {
 	 */
 	public function cost_refresh(): CostRefresh {
 		$connection           = $this->active_connection();
-		$this->cost_refresh ??= new CostRefresh( $this->product_pricing(), static fn (): bool => null !== $connection(), new WcLogger() );
+		$this->cost_refresh ??= new CostRefresh( $this->product_pricing(), static fn (): bool => null !== $connection(), new WcLogger(), null, fn (): bool => true === $this->settings()->get( Settings::DELIVERY_TIME_SHOW ) );
 		return $this->cost_refresh;
 	}
 

@@ -11,6 +11,8 @@ namespace Pixonaut\WooCommerce\Pricing;
 
 use Closure;
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Settings\Setting;
+use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WC_Product;
@@ -18,7 +20,8 @@ use WC_Product;
 /**
  * Pixonaut keeps each blank variant's cost current, and sends no event when
  * one changes. So the costs of every product with a price that follows the
- * pricing rule are read again once a day, a page of products per Action
+ * pricing rule, and of every product printed on a blank while the store
+ * shows delivery times, are read again once a day, a page of products per Action
  * Scheduler job, and whenever Pixonaut says the product's blank changed and
  * the product is checked again. A product Pixonaut could not be asked about
  * keeps what it has until the next day.
@@ -50,6 +53,8 @@ final class CostRefresh {
 
 	private readonly Closure $clock;
 
+	private readonly Closure $every;
+
 	/**
 	 * The products read in this request, so one checked again with several
 	 * of its variations is read once.
@@ -63,22 +68,64 @@ final class CostRefresh {
 	 * @param Closure         $connected  `fn(): bool`, whether the store can ask Pixonaut: false while it is not connected, or paused.
 	 * @param LoggerInterface $logger     Logs a product whose costs could not be read.
 	 * @param Closure|null    $clock      `fn(): int` Unix time; `time()` when null.
+	 * @param Closure|null    $every      `fn(): bool`, whether every product printed on a blank is read, as while the store shows delivery times; null reads only the ones with a price that follows the rule.
 	 * @phpstan-param Closure(): bool $connected
 	 * @phpstan-param (Closure(): int)|null $clock
+	 * @phpstan-param (Closure(): bool)|null $every
 	 */
 	public function __construct(
 		private readonly ProductPricing $pricing,
 		private readonly Closure $connected,
 		private readonly LoggerInterface $logger,
 		?Closure $clock = null,
+		?Closure $every = null,
 	) {
 		$this->clock = $clock ?? static fn (): int => time();
+		$this->every = $every ?? static fn (): bool => false;
 	}
 
 	public function register(): void {
 		add_action( self::HOOK, array( $this, 'start' ), 10, 0 );
 		add_action( self::PAGE_HOOK, array( $this, 'page' ), 10, 1 );
 		add_action( 'action_scheduler_init', array( $this, 'schedule' ), 10, 0 );
+		add_action( 'update_option_' . Settings::OPTION, array( $this, 'settings_changed' ), 10, 2 );
+		add_action( 'add_option_' . Settings::OPTION, array( $this, 'settings_added' ), 10, 2 );
+	}
+
+	/**
+	 * The store's first saved settings: before them every setting had its
+	 * default, with delivery times off.
+	 *
+	 * @param mixed $option The option's name.
+	 * @param mixed $after  The settings now.
+	 */
+	public function settings_added( mixed $option, mixed $after ): void {
+		$this->settings_changed( array(), $after );
+	}
+
+	/**
+	 * Reads the costs at once when the store starts showing delivery times:
+	 * a product whose prices follow no rule has none read until then.
+	 *
+	 * @param mixed $before The settings before.
+	 * @param mixed $after  The settings now.
+	 */
+	public function settings_changed( mixed $before, mixed $after ): void {
+		$shown = static fn ( mixed $stored ): bool => is_array( $stored ) && in_array( $stored[ Settings::DELIVERY_TIME_SHOW ] ?? null, array( true, Setting::CHECKED ), true );
+		if ( $shown( $after ) && ! $shown( $before ) ) {
+			$this->restart();
+		}
+	}
+
+	/**
+	 * Starts a read at the first page whatever page a read under way has
+	 * reached: the pages before it were read for the products with a price
+	 * that follows the rule alone.
+	 */
+	private function restart(): void {
+		// By the hook alone: with a group, Action Scheduler takes away only the actions with no arguments.
+		as_unschedule_all_actions( self::PAGE_HOOK );
+		as_enqueue_async_action( self::PAGE_HOOK, array( 0 ), self::GROUP );
 	}
 
 	public function schedule(): void {
@@ -107,7 +154,8 @@ final class CostRefresh {
 		if ( ! ( $this->connected )() ) {
 			return;
 		}
-		$ids = ProductPricing::watched( (int) $after, self::PAGE );
+		// A delivery time is told of every product on a blank, a price only of the ones that follow the rule.
+		$ids = ( $this->every )() ? ProductPricing::on_blanks( (int) $after, self::PAGE ) : ProductPricing::watched( (int) $after, self::PAGE );
 		foreach ( $ids as $id ) {
 			$product = wc_get_product( $id );
 			if ( $product instanceof WC_Product ) {
@@ -127,7 +175,7 @@ final class CostRefresh {
 	 */
 	public function rechecked( WC_Product $product ): void {
 		$owner = $product->is_type( 'variation' ) ? wc_get_product( $product->get_parent_id() ) : $product;
-		if ( $owner instanceof WC_Product && '' !== $owner->get_meta( ProductPricing::WATCH_META_KEY, true ) ) {
+		if ( $owner instanceof WC_Product && ( ( $this->every )() || '' !== $owner->get_meta( ProductPricing::WATCH_META_KEY, true ) ) ) {
 			$this->refresh( $owner );
 		}
 	}

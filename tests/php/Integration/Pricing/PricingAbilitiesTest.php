@@ -85,19 +85,40 @@ final class PricingAbilitiesTest extends PricingTestCase {
 
 		$this->assertSame(
 			array(
-				Settings::PRICE_MARGIN          => '50',
-				Settings::PRICE_TOLERANCE       => '10',
-				Settings::PRICE_STEP            => '10',
-				Settings::PRICE_ENDING          => '9',
-				Settings::PRICE_MIN             => '99',
-				Settings::PRICE_MAX             => '',
-				Settings::PRICE_CURRENCY_BUFFER => Settings::DEFAULT_CURRENCY_BUFFER,
-				Settings::PRICE_AUTOMATIC       => false,
-				'currency'                      => get_woocommerce_currency(),
-				'prices_include_tax'            => false,
+				Settings::PRICE_MARGIN                => '50',
+				Settings::PRICE_TOLERANCE             => '10',
+				Settings::PRICE_STEP                  => '10',
+				Settings::PRICE_ENDING                => '9',
+				Settings::PRICE_MIN                   => '99',
+				Settings::PRICE_MAX                   => '',
+				Settings::PRICE_CURRENCY_BUFFER       => Settings::DEFAULT_CURRENCY_BUFFER,
+				Settings::PRICE_AUTOMATIC             => false,
+				Settings::DELIVERY_TIME_SHOW          => false,
+				Settings::DELIVERY_TIME_HANDLING_DAYS => 0,
+				'currency'                            => get_woocommerce_currency(),
+				'prices_include_tax'                  => false,
 			),
 			$read
 		);
+	}
+
+	public function test_the_pricing_settings_switch_the_delivery_time_on_and_set_its_handling_days(): void {
+		$changed = $this->update_settings->execute(
+			array(
+				Settings::DELIVERY_TIME_SHOW          => true,
+				Settings::DELIVERY_TIME_HANDLING_DAYS => 2,
+			)
+		);
+
+		$this->assertIsArray( $changed );
+		$this->assertTrue( $changed[ Settings::DELIVERY_TIME_SHOW ] );
+		$this->assertSame( 2, $changed[ Settings::DELIVERY_TIME_HANDLING_DAYS ] );
+		$this->assertTrue( $this->plugin->settings()->get( Settings::DELIVERY_TIME_SHOW ) );
+
+		$refused = $this->update_settings->execute( array( Settings::DELIVERY_TIME_HANDLING_DAYS => Settings::MAX_HANDLING_DAYS + 1 ) );
+		$this->assertWPError( $refused );
+		$this->plugin->settings()->set( Settings::DELIVERY_TIME_SHOW, false );
+		$this->plugin->settings()->set( Settings::DELIVERY_TIME_HANDLING_DAYS, 0 );
 	}
 
 	public function test_changing_pricing_settings_keeps_the_ones_not_named(): void {

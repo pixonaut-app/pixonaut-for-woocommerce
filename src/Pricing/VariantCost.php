@@ -12,19 +12,21 @@ namespace Pixonaut\WooCommerce\Pricing;
 /**
  * A blank variant's cost as `GET /v1/blanks/{id}/variants/costs` answers
  * it: the product's price and the cheapest shipping to a region, each in
- * its currency (the printshop's billing currency, never converted), and
- * when Pixonaut read them. A printshop that publishes no price gives none,
+ * its currency (the printshop's billing currency, never converted), how
+ * long the printshop says it takes by that shipping, and when Pixonaut read
+ * them. A printshop that publishes no price gives none,
  * and a cost is then never guessed.
  */
 final class VariantCost {
 
 	/**
-	 * @param int|null    $product           The product's price in thousandths; null when the printshop publishes none.
-	 * @param string      $currency          Its currency, `SEK`; empty without a price.
-	 * @param int|null    $shipping          The cheapest shipping in thousandths; null when none is known.
-	 * @param string      $shipping_currency Its currency; empty without shipping.
-	 * @param string      $region            The region the cost is for, a country code.
-	 * @param string|null $read_at           When Pixonaut read it from the printshop, ISO 8601.
+	 * @param int|null      $product           The product's price in thousandths; null when the printshop publishes none.
+	 * @param string        $currency          Its currency, `SEK`; empty without a price.
+	 * @param int|null      $shipping          The cheapest shipping in thousandths; null when none is known.
+	 * @param string        $shipping_currency Its currency; empty without shipping.
+	 * @param string        $region            The region the cost is for, a country code.
+	 * @param string|null   $read_at           When Pixonaut read it from the printshop, ISO 8601.
+	 * @param DeliveryTimes $times             How long the printshop says the variant takes by that shipping; none for a cost read before Pixonaut answered times.
 	 */
 	public function __construct(
 		public readonly ?int $product,
@@ -33,6 +35,7 @@ final class VariantCost {
 		public readonly string $shipping_currency = '',
 		public readonly string $region = '',
 		public readonly ?string $read_at = null,
+		public readonly DeliveryTimes $times = new DeliveryTimes(),
 	) {
 	}
 
@@ -58,14 +61,15 @@ final class VariantCost {
 				$shipping,
 				$shipping_currency,
 				is_string( $row['region'] ?? null ) ? $row['region'] : '',
-				is_string( $row['readAt'] ?? null ) ? $row['readAt'] : null
+				is_string( $row['readAt'] ?? null ) ? $row['readAt'] : null,
+				DeliveryTimes::from_array( $row['times'] ?? null )
 			);
 		}
 		return $costs;
 	}
 
 	/**
-	 * @return array{product: string|null, currency: string, shipping: string|null, shippingCurrency: string, region: string, readAt: string|null}
+	 * @return array<string, mixed> `product`, `currency`, `shipping`, `shippingCurrency`, `region`, `readAt` and `times`.
 	 */
 	public function to_array(): array {
 		return array(
@@ -75,6 +79,7 @@ final class VariantCost {
 			'shippingCurrency' => $this->shipping_currency,
 			'region'           => $this->region,
 			'readAt'           => $this->read_at,
+			'times'            => $this->times->to_array(),
 		);
 	}
 
@@ -94,7 +99,8 @@ final class VariantCost {
 			Amount::parse( $data['shipping'] ?? null ),
 			$text( 'shippingCurrency' ),
 			$text( 'region' ),
-			is_string( $data['readAt'] ?? null ) ? $data['readAt'] : null
+			is_string( $data['readAt'] ?? null ) ? $data['readAt'] : null,
+			DeliveryTimes::from_array( $data['times'] ?? null )
 		);
 	}
 
