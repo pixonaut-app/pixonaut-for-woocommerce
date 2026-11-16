@@ -722,6 +722,9 @@ export const listPrintshopConnections: Handler = (context) => {
 			adapter: p.adapter,
 			active: p.active,
 			isDefault: p.isDefault,
+			// The fake's printshops name no billing currency, and no test sets one.
+			billingCurrency: null,
+			billingCurrencyFrom: null,
 			// A print partner's integration has a catalogue; the merchant's own printshop has none.
 			catalogue: p.adapter !== CUSTOM_ADAPTER,
 			asksOfDesigns: {

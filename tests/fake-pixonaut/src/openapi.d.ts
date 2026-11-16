@@ -30945,6 +30945,8 @@ export interface operations {
                             bakesJob?: string | null;
                             /** @description The partner's product a bound blank (`partnerLocked`) is bound to, or null for a blank bound to none. Answered for one blank, never in a list. */
                             boundProduct?: {
+                                /** @description How the product reaches its buyer, as the printshop's data says: `assembled`, put together and ready to use (a framed poster already in its frame, ready to hang), or `unassembled`, its parts packed separately for the buyer to put together (the poster and the frame arrive apart, and the buyer puts the poster in the frame). Null where the printshop does not say. */
+                                assembly: string | null;
                                 /** @description The partner's own id of the product. */
                                 id: string;
                                 /** @description The product's name as the printshop last reported it: at import, then at each check for printshop changes. Null when the record of the import is gone. */
@@ -31852,6 +31854,8 @@ export interface operations {
                         bakesJob?: string | null;
                         /** @description The partner's product a bound blank (`partnerLocked`) is bound to, or null for a blank bound to none. Answered for one blank, never in a list. */
                         boundProduct?: {
+                            /** @description How the product reaches its buyer, as the printshop's data says: `assembled`, put together and ready to use (a framed poster already in its frame, ready to hang), or `unassembled`, its parts packed separately for the buyer to put together (the poster and the frame arrive apart, and the buyer puts the poster in the frame). Null where the printshop does not say. */
+                            assembly: string | null;
                             /** @description The partner's own id of the product. */
                             id: string;
                             /** @description The product's name as the printshop last reported it: at import, then at each check for printshop changes. Null when the record of the import is gone. */
@@ -33853,9 +33857,35 @@ export interface operations {
                                 /** @description The amount's currency, as its ISO 4217 code, such as `SEK`. */
                                 currency: string;
                             } | null;
+                            /** @description How long the printshop says the variant takes to the region by the shipping `shipping` is the amount of, in calendar days, each span as the printshop answers it and never estimated. Printshops answer different spans: Gelato the whole way from order to door, Printful the days in the post and the whole way, Printify the days in the post, Prodigi the days of making it. All three are null for a variant no time was read for: one with no cost, one of a printshop that answers none, and one last read before times were. */
+                            times: {
+                                /** @description From the order to the door, making it and the post together, where the printshop answers that itself. null when it answers none: it is never added up from the other two. */
+                                delivery: {
+                                    /** @description The longest, in whole days: never under `minDays`. */
+                                    maxDays: number;
+                                    /** @description The shortest, in whole days. */
+                                    minDays: number;
+                                } | null;
+                                /** @description Making it: from the order to its dispatch. null when the printshop answers none. */
+                                production: {
+                                    /** @description The longest, in whole days: never under `minDays`. */
+                                    maxDays: number;
+                                    /** @description The shortest, in whole days. */
+                                    minDays: number;
+                                } | null;
+                                /** @description In the post: from its dispatch to the door. null when the printshop answers none. */
+                                shipping: {
+                                    /** @description The longest, in whole days: never under `minDays`. */
+                                    maxDays: number;
+                                    /** @description The shortest, in whole days. */
+                                    minDays: number;
+                                } | null;
+                            };
                             /** @description The variant's `ref`. */
                             variant: string;
                         }[];
+                        /** @description Whether the costs wait for the printshop's billing currency: its printshop names no currency in what it answers, and nobody has stated the one it bills the connected account in (`PUT /v1/printshop-connections/{id}/billing-currency`). `costs` is then empty and `complete` false: no amount is read, or shown in a guessed currency. Once it is stated the costs are read in it within moments, and a cost held in another currency is left out until it is read again. */
+                        currencyNeeded: boolean;
                     };
                 };
             };
@@ -48040,6 +48070,8 @@ export interface operations {
                             bakesJob?: string | null;
                             /** @description The partner's product a bound blank (`partnerLocked`) is bound to, or null for a blank bound to none. Answered for one blank, never in a list. */
                             boundProduct?: {
+                                /** @description How the product reaches its buyer, as the printshop's data says: `assembled`, put together and ready to use (a framed poster already in its frame, ready to hang), or `unassembled`, its parts packed separately for the buyer to put together (the poster and the frame arrive apart, and the buyer puts the poster in the frame). Null where the printshop does not say. */
+                                assembly: string | null;
                                 /** @description The partner's own id of the product. */
                                 id: string;
                                 /** @description The product's name as the printshop last reported it: at import, then at each check for printshop changes. Null when the record of the import is gone. */
@@ -48899,6 +48931,8 @@ export interface operations {
                             bakesJob?: string | null;
                             /** @description The partner's product a bound blank (`partnerLocked`) is bound to, or null for a blank bound to none. Answered for one blank, never in a list. */
                             boundProduct?: {
+                                /** @description How the product reaches its buyer, as the printshop's data says: `assembled`, put together and ready to use (a framed poster already in its frame, ready to hang), or `unassembled`, its parts packed separately for the buyer to put together (the poster and the frame arrive apart, and the buyer puts the poster in the frame). Null where the printshop does not say. */
+                                assembly: string | null;
                                 /** @description The partner's own id of the product. */
                                 id: string;
                                 /** @description The product's name as the printshop last reported it: at import, then at each check for printshop changes. Null when the record of the import is gone. */
@@ -49943,6 +49977,10 @@ export interface operations {
                                 commitKeys: string[];
                                 needsBlank: boolean;
                             };
+                            /** @description The currency the printshop bills the connected account in, as its ISO 4217 code, such as `SEK`: what its costs are amounts of. null while nobody has said: a printshop that names it is asked when the connection is connected or reconnected, and any other is told by its merchant (`PUT /v1/printshop-connections/{id}/billing-currency`). */
+                            billingCurrency: string | null;
+                            /** @description Who says `billingCurrency`: `printshop` when the printshop names it, which nobody else can change, `merchant` when the printshop names none and its merchant states it, null for a printshop that tells no costs. `merchant` with `billingCurrency` null is a printshop whose costs wait for its currency. */
+                            billingCurrencyFrom: string | null;
                             /** @description The address to register in the printshop's own dashboard for its order updates, for a printshop whose updates cannot be registered for it; null for any other. It holds a secret: share it only with the printshop. */
                             callbackUrl: string | null;
                             config?: unknown;
@@ -49979,6 +50017,10 @@ export interface operations {
                         connections: {
                             active: boolean;
                             adapter: string;
+                            /** @description The currency the printshop bills the connected account in, as its ISO 4217 code, such as `SEK`: what its costs are amounts of. null while nobody has said: a printshop that names it is asked when the connection is connected or reconnected, and any other is told by its merchant (`PUT /v1/printshop-connections/{id}/billing-currency`). */
+                            billingCurrency: string | null;
+                            /** @description Who says `billingCurrency`: `printshop` when the printshop names it, which nobody else can change, `merchant` when the printshop names none and its merchant states it, null for a printshop that tells no costs. `merchant` with `billingCurrency` null is a printshop whose costs wait for its currency. */
+                            billingCurrencyFrom: string | null;
                             /** @description Whether its printshop has a catalogue to browse and import from (GET /v1/printshop-catalogue-products). */
                             catalogue: boolean;
                             id: string;
