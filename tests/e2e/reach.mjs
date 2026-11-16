@@ -88,6 +88,7 @@ export const NO_SPEC = [
 	'uninstall.php',
 	'src/Connection/UninstallRevoke.php',
 	'src/Migrations/',
+	'src/Catalogue/StoppedPictureJobs.php', // AS failure hooks; a job is never cut off in e2e
 	'src/Updates/',
 	'templates/admin/upgrade-notice.php',
 	'src/Privacy/',

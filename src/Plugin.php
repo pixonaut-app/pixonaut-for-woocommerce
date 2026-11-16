@@ -123,6 +123,7 @@ use Pixonaut\WooCommerce\Catalogue\SplitCardImageCopies;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Catalogue\StandingRows;
+use Pixonaut\WooCommerce\Catalogue\StoppedPictureJobs;
 use Pixonaut\WooCommerce\Catalogue\TemplateRename;
 use Pixonaut\WooCommerce\Cart\AddToCart;
 use Pixonaut\WooCommerce\Cart\CheckoutCheck;
@@ -496,6 +497,7 @@ final class Plugin {
 		( new VariantWatch( $this->product_recheck() ) )->register();
 		( new TrashedProducts( $this->notices(), $this->product_recheck() ) )->register();
 		$this->product_pictures()->register();
+		( new StoppedPictureJobs( $this->product_pictures() ) )->register();
 		$this->picture_queue()->register();
 		// The runners' admin-ajax action is registered once Action Scheduler, which ships the request class, is loaded.
 		add_action(
