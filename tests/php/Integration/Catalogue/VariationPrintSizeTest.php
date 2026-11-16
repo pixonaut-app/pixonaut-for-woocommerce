@@ -20,6 +20,7 @@ use Pixonaut\WooCommerce\Catalogue\LowResolutionSize;
 use Pixonaut\WooCommerce\Catalogue\PostedSides;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
 use Pixonaut\WooCommerce\Catalogue\VariationSize;
 use Pixonaut\WooCommerce\Catalogue\VariationSizes;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
@@ -56,6 +57,18 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		self::SMALL => array( 300, 400 ),
 		self::LARGE => array( 508, 711.2 ),
 	);
+
+	/**
+	 * Variations of the product the outage was reported on.
+	 */
+	private const MANY_VARIATIONS = 72;
+
+	/**
+	 * The narrowest of the many variations' own sizes, in millimetres; each next one is a millimetre wider, so each is asked about.
+	 */
+	private const FIRST_WIDTH_MM = 100;
+
+	private const HEIGHT_MM = '200';
 
 	private VariationPanel $variations;
 
@@ -384,6 +397,114 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$this->assertSame( InvalidReason::VARIATION_SIZE_UNCHECKED, ProductConfig::config_for( $this->reload_any( $small->get_id() ) )->invalid_reason );
 	}
 
+	public function test_after_a_call_that_failed_a_size_not_asked_waits_for_the_recheck_rather_than_taking_the_failure(): void {
+		list( $parent, $small, $large ) = $this->linked( 'within' );
+		$this->recorder->fail();
+
+		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
+		$requests = count( $this->recorder->requests );
+		$this->save_variation( $large, 1, self::custom( '220', '280' ) );
+
+		$this->assertCount( $requests, $this->recorder->requests, 'once a call failed, the run asks no more' );
+		$asked = ProductConfig::config_for( $this->reload_any( $small->get_id() ) );
+		$this->assertSame( InvalidReason::CHECK_FAILED, $asked->invalid_reason );
+		$this->assertSame( ApiException::TRANSPORT_FAILED, $asked->invalid_detail?->code, 'the code of the call that failed is kept with it' );
+		$this->assertStringContainsString( 'could not be reached', InvalidReason::stored( $asked ) );
+		$unasked = ProductConfig::config_for( $this->reload_any( $large->get_id() ) );
+		$this->assertSame( InvalidReason::CHECK_PENDING, $unasked->invalid_reason, 'never refused for another call\'s failure' );
+		$this->assertNull( $unasked->invalid_detail?->code );
+		$this->assertStringNotContainsString( 'could not be reached', InvalidReason::stored( $unasked ) );
+		foreach ( array( $small, $large ) as $variation ) {
+			$this->assertTrue( self::recheck_queued( $variation->get_id() ), 'each is asked again in the background' );
+		}
+
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) )->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
+		( new VariationSizes( $this->catalogue ) )->rejudge( $this->reload_any( $parent->get_id() ) );
+
+		$this->assertTrue( $this->reload_any( $small->get_id() )->is_purchasable() );
+		$this->assertTrue( $this->reload_any( $large->get_id() )->is_purchasable() );
+	}
+
+	public function test_after_a_call_that_failed_a_size_with_a_verdict_keeps_it(): void {
+		list( , $small, $large ) = $this->linked( 'within' );
+		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
+		$this->save_variation( $large, 1, self::custom( '220', '280' ) );
+		$this->recorder->fail();
+		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
+
+		$this->save_variation( $large, 1, self::custom( '220', '280' ) );
+
+		$this->assertNull( VariationSize::stored_on( $this->reload_any( $large->get_id() ) )->refused( self::SIDE_KEY ) );
+		$this->assertTrue( $this->reload_any( $large->get_id() )->is_purchasable() );
+	}
+
+	public function test_a_size_refused_without_a_reason_says_pixonaut_answered_unexpectedly_rather_than_that_it_could_not_be_reached(): void {
+		list( , $small ) = $this->linked( 'within' );
+		$this->recorder->off_spec(
+			200,
+			array(
+				'verdicts' => array(
+					array(
+						'legal'         => false,
+						'lowResolution' => array(),
+					),
+				),
+			)
+		);
+
+		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
+
+		$sold = ProductConfig::config_for( $this->reload_any( $small->get_id() ) );
+		$this->assertSame( ApiException::UNEXPECTED_RESPONSE, $sold->invalid_detail?->code, 'the code is kept with the reason' );
+		$this->assertStringContainsString( 'does not understand', InvalidReason::stored( $sold ) );
+		$this->assertStringNotContainsString( 'could not be reached', InvalidReason::stored( $sold ) );
+		$this->assertFalse( $this->reload_any( $small->get_id() )->is_purchasable() );
+	}
+
+	public function test_saving_many_variations_while_one_call_times_out_leaves_none_unsellable_once_rechecked(): void {
+		$parent    = new WC_Product_Variable();
+		$attribute = new WC_Product_Attribute();
+		$attribute->set_name( self::AREAS_VARY_BY );
+		$attribute->set_options( array( self::SMALL ) );
+		$attribute->set_visible( true );
+		$attribute->set_variation( true );
+		$parent->set_name( 'Wall chart' );
+		$parent->set_attributes( array( $attribute ) );
+		$parent->save();
+		$variations = array();
+		for ( $i = 0; $i < self::MANY_VARIATIONS; $i++ ) {
+			$variation = new WC_Product_Variation();
+			$variation->set_parent_id( $parent->get_id() );
+			$variation->set_attributes( array( sanitize_title( self::AREAS_VARY_BY ) => self::SMALL ) );
+			$variation->set_regular_price( '30' );
+			$variation->save();
+			$variations[] = $variation;
+		}
+		WC_Product_Variable::sync( $parent->get_id() );
+		$this->script_varying_save( 'within' );
+		$this->save( $parent->get_id() );
+		// The first variation's call answers too slowly and times out.
+		$this->recorder->fail();
+
+		foreach ( $variations as $loop => $variation ) {
+			$this->save_variation( $variation, $loop, self::custom( (string) ( self::FIRST_WIDTH_MM + $loop ), self::HEIGHT_MM ) );
+		}
+
+		foreach ( array_slice( $variations, 1 ) as $variation ) {
+			$this->assertSame( InvalidReason::CHECK_PENDING, VariationSize::stored_on( $this->reload_any( $variation->get_id() ) )->refused( self::SIDE_KEY ), 'not refused for the call that timed out' );
+		}
+
+		for ( $i = 0; $i < self::MANY_VARIATIONS; $i++ ) {
+			$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
+		}
+		( new VariationSizes( $this->catalogue ) )->rejudge( $this->reload_any( $parent->get_id() ) );
+
+		foreach ( $variations as $variation ) {
+			$this->assertTrue( ProductConfig::config_for( $this->reload_any( $variation->get_id() ) )->valid, 'judged by the re-check' );
+		}
+		$this->assertSame( array(), array_filter( array_keys( $this->plugin->notices()->all() ), static fn ( string $key ): bool => str_starts_with( $key, 'product_' ) ), 'no notice stays' );
+	}
+
 	public function test_a_rejudge_never_writes_over_sizes_saved_meanwhile(): void {
 		list( , $small ) = $this->linked( 'within' );
 		$this->save_variation( $small, 0, self::custom( '400', '500' ) );
@@ -594,6 +715,19 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 			'label'  => $value( 'label' ),
 			'error'  => trim( (string) $xpath->evaluate( 'string(//*[contains(@class, "pixonaut-variation-size-error")])' ) ),
 		);
+	}
+
+	/**
+	 * Whether a re-check of a variation alone is queued.
+	 *
+	 * @param int $variation_id The variation.
+	 */
+	private static function recheck_queued( int $variation_id ): bool {
+		$args = array(
+			'product_ids' => array( $variation_id ),
+			'attempt'     => 1,
+		);
+		return is_int( as_next_scheduled_action( ProductRecheck::ACTION, $args, ProductRecheck::GROUP ) );
 	}
 
 	/**

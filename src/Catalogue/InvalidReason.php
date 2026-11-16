@@ -116,9 +116,28 @@ final class InvalidReason {
 	public const VARIATION_SIZE_UNCHECKED = 'variation_size_unchecked';
 
 	/**
-	 * Pixonaut could not be asked: not connected, unreachable, or it refused.
+	 * Pixonaut could not be asked, or did not answer usably: not connected,
+	 * unreachable, or it refused the request. Stored with the error code it
+	 * answered, which the message names.
 	 */
 	public const CHECK_FAILED = 'check_failed';
+
+	/**
+	 * Pixonaut refused a print size without saying why.
+	 */
+	public const REFUSED_WITHOUT_REASON = 'refused_without_reason';
+
+	/**
+	 * A variation's print size not asked about yet, as Pixonaut could not be
+	 * asked earlier in the same run: it is asked again in the background.
+	 */
+	public const CHECK_PENDING = 'check_pending';
+
+	/**
+	 * Reasons a re-check asks Pixonaut about again, as they say nothing
+	 * about the configuration itself.
+	 */
+	public const ASK_AGAIN = array( self::CHECK_FAILED, self::CHECK_PENDING, self::REFUSED_WITHOUT_REASON );
 
 	/**
 	 * Pixonaut refused the standing design of a standing side.
@@ -370,7 +389,15 @@ final class InvalidReason {
 			case self::VARIATION_SIZE_UNCHECKED:
 				return __( 'The variation’s own print size has not been checked since the product changed. Update the product to check it again.', 'pixonaut-for-woocommerce' );
 			case self::CHECK_FAILED:
-				return __( 'Pixonaut could not be reached to check the configuration. Check the connection on the Pixonaut settings page, then update the product.', 'pixonaut-for-woocommerce' );
+				return __( 'Pixonaut could not check the configuration. It is checked again in a while; if this stays, check the connection on the Pixonaut settings page, then update the product.', 'pixonaut-for-woocommerce' );
+			case self::REFUSED_WITHOUT_REASON:
+				return sprintf(
+					/* translators: %s: where the settings are, e.g. "the product's Pixonaut tab". */
+					__( 'Pixonaut refused the print size without saying why. Choose another print size in %s, or update the product to ask again; if this stays, contact Pixonaut.', 'pixonaut-for-woocommerce' ),
+					$place
+				);
+			case self::CHECK_PENDING:
+				return __( 'The print size has not been checked with Pixonaut yet. It is checked in a while, and this notice clears once it is.', 'pixonaut-for-woocommerce' );
 			case self::STANDING_REFUSED:
 				return sprintf(
 					/* translators: %s: where the settings are, e.g. "the product's Pixonaut tab". */

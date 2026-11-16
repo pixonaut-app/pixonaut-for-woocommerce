@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Pixonaut for WooCommerce 1.9.3\n"
+"Project-Id-Version: Pixonaut for WooCommerce 1.11.1\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-16T01:48:00+00:00\n"
+"POT-Creation-Date: 2026-11-16T11:29:44+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -38,7 +38,7 @@ msgstr ""
 #: pixonaut-for-woocommerce.php
 #: src/Abilities/Abilities.php:63
 #: src/Admin/OrderBox.php:118
-#: src/Admin/ProductPanel.php:220
+#: src/Admin/ProductPanel.php:221
 #: src/Settings/SettingsPage.php:267
 #: templates/admin/product-variation.php:42
 msgid "Pixonaut"
@@ -1967,7 +1967,7 @@ msgstr ""
 msgid "The pricing settings have no setting %s."
 msgstr ""
 
-#: src/Abilities/UpdatePricingSettings.php:85
+#: src/Abilities/UpdatePricingSettings.php:102
 msgid "Prices end in an amount below the price step: with a step of 10, anything from 0 up to 9.99."
 msgstr ""
 
@@ -2270,9 +2270,15 @@ msgid "Field"
 msgstr ""
 
 #. translators: 1: product edit link, 2: why it cannot be bought.
-#: src/Admin/InvalidProductNotice.php:66
+#: src/Admin/InvalidProductNotice.php:109
 #, php-format
 msgid "Customers cannot buy %1$s: %2$s"
+msgstr ""
+
+#. translators: 1: the product's name, 2: the variation's attributes, e.g. "Size: M, Color: Red", or its id, e.g. "#123".
+#: src/Admin/InvalidProductNotice.php:145
+#, php-format
+msgid "%1$s, variation %2$s"
 msgstr ""
 
 #. translators: %s: an option's value, e.g. "XL" or "XL, Tall". Notice after the store manager adjusted a standing side's layout for that option on Pixonaut. Admin product page.
@@ -2300,19 +2306,19 @@ msgstr ""
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
 #: src/Admin/LinkedBlank.php:343
-#: src/Admin/ProductPanel.php:842
+#: src/Admin/ProductPanel.php:848
 msgid "Workspace default"
 msgstr ""
 
 #. translators: %s: the workspace's default printshop.
 #: src/Admin/LinkedBlank.php:345
-#: src/Admin/ProductPanel.php:845
+#: src/Admin/ProductPanel.php:851
 #, php-format
 msgid "Workspace default (%s)"
 msgstr ""
 
 #: src/Admin/LinkedBlank.php:348
-#: src/Admin/ProductPanel.php:857
+#: src/Admin/ProductPanel.php:863
 msgid "A printshop no longer connected to the workspace"
 msgstr ""
 
@@ -2329,7 +2335,7 @@ msgstr ""
 #. translators: 1: a product side's name, e.g. "Front", 2: what is wrong with an image on it. Admin product page.
 #. translators: 1: where on the product, e.g. "Side “Front” at 300 × 400 mm", 2: what is wrong there and how to fix it.
 #: src/Admin/LowResolutionWarnings.php:116
-#: src/Catalogue/InvalidReason.php:209
+#: src/Catalogue/InvalidReason.php:228
 #, php-format
 msgid "%1$s: %2$s"
 msgstr ""
@@ -2667,52 +2673,52 @@ msgstr ""
 msgid "%s %%"
 msgstr ""
 
-#: src/Admin/ProductPanel.php:439
+#: src/Admin/ProductPanel.php:440
 msgid "This variation cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 
-#: src/Admin/ProductPanel.php:440
+#: src/Admin/ProductPanel.php:441
 msgid "This product cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 
-#: src/Admin/ProductPanel.php:445
+#: src/Admin/ProductPanel.php:446
 msgid "Customers design this variation with a Pixonaut template."
 msgstr ""
 
-#: src/Admin/ProductPanel.php:446
+#: src/Admin/ProductPanel.php:447
 msgid "Customers design this product with a Pixonaut template."
 msgstr ""
 
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:487
-#: src/Admin/ProductPanel.php:758
+#: src/Admin/ProductPanel.php:488
+#: src/Admin/ProductPanel.php:764
 msgid "As the product says"
 msgstr ""
 
 #. translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page.
-#: src/Admin/ProductPanel.php:489
+#: src/Admin/ProductPanel.php:490
 msgid "As the template says"
 msgstr ""
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:775
+#: src/Admin/ProductPanel.php:781
 #, php-format
 msgid "Store setting: %s"
 msgstr ""
 
 #. translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page.
-#: src/Admin/ProductPanel.php:849
+#: src/Admin/ProductPanel.php:855
 #, php-format
 msgid "Workspace default (%s): prints only on a blank"
 msgstr ""
 
-#: src/Admin/ProductPanel.php:854
+#: src/Admin/ProductPanel.php:860
 msgid "The printshop chosen before"
 msgstr ""
 
 #. translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page.
-#: src/Admin/ProductPanel.php:856
+#: src/Admin/ProductPanel.php:862
 #, php-format
 msgid "%s (prints only on a blank)"
 msgstr ""
@@ -3276,173 +3282,183 @@ msgid "Side “%1$s” at %2$s"
 msgstr ""
 
 #. translators: Where a variation's Pixonaut settings are changed, used after "in" in messages such as "Choose a template in %s." Admin product page.
-#: src/Catalogue/InvalidReason.php:191
+#: src/Catalogue/InvalidReason.php:210
 msgid "the variation’s Pixonaut fields"
 msgstr ""
 
 #. translators: Where a product's Pixonaut settings are changed, used after "in" in messages such as "Choose a template in %s." Admin product page.
-#: src/Catalogue/InvalidReason.php:193
+#: src/Catalogue/InvalidReason.php:212
 msgid "the product’s Pixonaut tab"
 msgstr ""
 
-#: src/Catalogue/InvalidReason.php:257
+#: src/Catalogue/InvalidReason.php:276
 msgid "Pixonaut cannot print this configuration."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:261
+#: src/Catalogue/InvalidReason.php:280
 #, php-format
 msgid "No template is chosen. Choose one in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:267
+#: src/Catalogue/InvalidReason.php:286
 #, php-format
 msgid "No print position is chosen for where on the blank the design is printed. Choose one in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:273
+#: src/Catalogue/InvalidReason.php:292
 #, php-format
 msgid "The blank no longer exists in Pixonaut. Choose another blank in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:279
+#: src/Catalogue/InvalidReason.php:298
 #, php-format
 msgid "The blank is deleted in Pixonaut. Restore it in the Pixonaut studio, or choose another blank in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:285
+#: src/Catalogue/InvalidReason.php:304
 #, php-format
 msgid "The blank no longer has this print position, or Pixonaut cannot size a print for it. Choose another print position in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:291
+#: src/Catalogue/InvalidReason.php:310
 #, php-format
 msgid "The template is not published in Pixonaut, or no longer exists. Publish it in the Pixonaut studio, or choose another template in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:297
+#: src/Catalogue/InvalidReason.php:316
 #, php-format
 msgid "The template is paused or deleted in Pixonaut. Make it live again in the Pixonaut studio, or choose another template in %s."
 msgstr ""
 
 #. translators: 1: most sides a product can have, 2: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:303
+#: src/Catalogue/InvalidReason.php:322
 #, php-format
 msgid "A product has at most %1$d sides. Remove sides in %2$s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:310
+#: src/Catalogue/InvalidReason.php:329
 #, php-format
 msgid "Two sides use the same print position, and each print position can be one side only. Choose another print position for one of them in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:316
+#: src/Catalogue/InvalidReason.php:335
 #, php-format
 msgid "Two sides have the same key. Give each side its own in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:322
+#: src/Catalogue/InvalidReason.php:341
 #, php-format
 msgid "A custom print size has no width or height, or one that is not above zero. Enter both in millimetres under the side’s print sizes in %s."
 msgstr ""
 
 #. translators: 1: most print sizes one side can offer, 2: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:328
+#: src/Catalogue/InvalidReason.php:347
 #, php-format
 msgid "A side offers at most %1$d print sizes. Remove sizes under the side’s print sizes in %2$s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:335
+#: src/Catalogue/InvalidReason.php:354
 #, php-format
 msgid "The side has no print size, and without a blank there is no print position to take one from. Add a size in millimetres in %s, or choose a blank."
 msgstr ""
 
 #. translators: %s: where the product's settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:341
+#: src/Catalogue/InvalidReason.php:360
 #, php-format
 msgid "Some variations have no print size. Add one in millimetres in %s, or one for each value of an attribute there, or add one in each of those variations’ Pixonaut fields."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:347
+#: src/Catalogue/InvalidReason.php:366
 #, php-format
 msgid "The print size is larger than the print position can print. Enter a smaller size, or choose the print position’s size, in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:353
+#: src/Catalogue/InvalidReason.php:372
 #, php-format
 msgid "The print size does not match the template’s aspect ratio. Enter a size at the template’s ratio, or choose the print position’s size, in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:359
+#: src/Catalogue/InvalidReason.php:378
 #, php-format
 msgid "The print position is printed across its whole print area, so the print size must be that area. Choose the print position’s size instead in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:365
+#: src/Catalogue/InvalidReason.php:384
 #, php-format
 msgid "An image in the template prints below its recommended resolution at this size, and the Pixonaut workspace refuses such sizes. Upscale the image in the Pixonaut studio, or choose a smaller print size in %s."
 msgstr ""
 
-#: src/Catalogue/InvalidReason.php:369
+#: src/Catalogue/InvalidReason.php:388
 msgid "The template cannot be printed at the print area of this variation’s blank variant. Choose a template that fits, or another variant, in the variation’s Pixonaut fields, or stop selling the variation."
 msgstr ""
 
-#: src/Catalogue/InvalidReason.php:371
+#: src/Catalogue/InvalidReason.php:390
 msgid "The variation’s own print size has not been checked since the product changed. Update the product to check it again."
 msgstr ""
 
-#: src/Catalogue/InvalidReason.php:373
-msgid "Pixonaut could not be reached to check the configuration. Check the connection on the Pixonaut settings page, then update the product."
+#: src/Catalogue/InvalidReason.php:392
+msgid "Pixonaut could not check the configuration. It is checked again in a while; if this stays, check the connection on the Pixonaut settings page, then update the product."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:377
+#: src/Catalogue/InvalidReason.php:396
+#, php-format
+msgid "Pixonaut refused the print size without saying why. Choose another print size in %s, or update the product to ask again; if this stays, contact Pixonaut."
+msgstr ""
+
+#: src/Catalogue/InvalidReason.php:400
+msgid "The print size has not been checked with Pixonaut yet. It is checked in a while, and this notice clears once it is."
+msgstr ""
+
+#. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
+#: src/Catalogue/InvalidReason.php:404
 #, php-format
 msgid "Pixonaut would not make the design of a fixed-design side. Check the side’s template, print position and print size in %s, then update the product."
 msgstr ""
 
-#: src/Catalogue/InvalidReason.php:381
+#: src/Catalogue/InvalidReason.php:408
 msgid "Pixonaut would not make the design of a fixed-design side: the store may not create and approve designs. Check the connection’s permissions in the Pixonaut studio, then update the product."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:385
+#: src/Catalogue/InvalidReason.php:412
 #, php-format
 msgid "The template of a fixed-design side does not fit the print position at any of the blank’s sizes, so none of them can be printed. Choose a template that fits in %s."
 msgstr ""
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/InvalidReason.php:391
+#: src/Catalogue/InvalidReason.php:418
 #, php-format
 msgid "The printshop prints only on a blank. Choose a blank, or a printshop that prints without one, in %s."
 msgstr ""
 
-#: src/Catalogue/InvalidReason.php:395
+#: src/Catalogue/InvalidReason.php:422
 msgid "The configuration was saved by a newer version of Pixonaut for WooCommerce. Update the plugin."
 msgstr ""
 
 #. translators: %s: why, and what to do, e.g. "Pixonaut was asked too often. Wait a minute, then update the product."
-#: src/Catalogue/InvalidReason.php:413
+#: src/Catalogue/InvalidReason.php:440
 #, php-format
 msgid "Pixonaut would not make the design of a fixed-design side. %s"
 msgstr ""
 
 #. translators: %s: the code Pixonaut answered, e.g. "too_small", kept as it is.
-#: src/Catalogue/InvalidReason.php:426
+#: src/Catalogue/InvalidReason.php:453
 #, php-format
 msgid "Pixonaut cannot print this configuration, and answered “%s”. Update Pixonaut for WooCommerce, or contact Pixonaut with this code."
 msgstr ""
@@ -3459,6 +3475,10 @@ msgstr ""
 
 #: src/Catalogue/PixonautRefusal.php:106
 msgid "The store is not connected to Pixonaut. Connect it on the Pixonaut settings page, then update the product."
+msgstr ""
+
+#: src/Catalogue/PixonautRefusal.php:108
+msgid "Pixonaut could not be reached to check the configuration. It is checked again in a while; if this stays, check the connection on the Pixonaut settings page, then update the product."
 msgstr ""
 
 #: src/Catalogue/PixonautRefusal.php:110

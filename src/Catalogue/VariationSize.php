@@ -88,6 +88,19 @@ final class VariationSize {
 	}
 
 	/**
+	 * Whether a size waits for Pixonaut to judge it: it could not be asked,
+	 * or was not asked after another call failed.
+	 */
+	public function awaits_check(): bool {
+		foreach ( $this->sizes as $entry ) {
+			if ( in_array( $entry['refused'], array( InvalidReason::CHECK_FAILED, InvalidReason::CHECK_PENDING ), true ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Whether an entry is the size of the variation's attribute value.
 	 *
 	 * @param array{size: PrintSize, refused: string|null, basis: string, value?: bool, code?: string, soft?: list<LowResolutionImage>} $entry An entry of `$sizes`.

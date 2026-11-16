@@ -352,6 +352,29 @@ final class ProductRecheck {
 	}
 
 	/**
+	 * Queues a re-check of products or variations Pixonaut could not check
+	 * as they were saved, a minute on, so their reason clears once it can.
+	 * Queued once while the same re-check is pending.
+	 *
+	 * @param int[] $product_ids Products and variations.
+	 * @phpstan-param list<int> $product_ids
+	 * @return bool Whether the re-check is queued.
+	 */
+	public static function queue_soon( array $product_ids ): bool {
+		$args = array(
+			'product_ids' => $product_ids,
+			'attempt'     => 1,
+		);
+		if ( ! function_exists( 'as_schedule_single_action' ) ) {
+			return false;
+		}
+		if ( self::is_pending( self::ACTION, $args ) ) {
+			return true;
+		}
+		return 0 !== as_schedule_single_action( time() + self::RETRY_BASE_SECONDS, self::ACTION, $args, self::GROUP );
+	}
+
+	/**
 	 * Logs products not re-checked, and queues them again while they have attempts left.
 	 *
 	 * @param int[]  $product_ids Products and variations.

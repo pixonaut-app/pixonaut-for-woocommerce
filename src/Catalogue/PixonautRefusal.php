@@ -105,7 +105,7 @@ final class PixonautRefusal {
 			case self::NOT_CONNECTED:
 				return __( 'The store is not connected to Pixonaut. Connect it on the Pixonaut settings page, then update the product.', 'pixonaut-for-woocommerce' );
 			case self::UNREACHABLE:
-				return InvalidReason::message( InvalidReason::CHECK_FAILED );
+				return __( 'Pixonaut could not be reached to check the configuration. It is checked again in a while; if this stays, check the connection on the Pixonaut settings page, then update the product.', 'pixonaut-for-woocommerce' );
 			case self::UNEXPECTED:
 				return __( 'Pixonaut answered in a way this version of Pixonaut for WooCommerce does not understand. Update the plugin, then update the product.', 'pixonaut-for-woocommerce' );
 			case self::CONNECTION:
