@@ -252,7 +252,8 @@ final class CardPageHead {
 			$this->card = false;
 			$product    = is_product() ? wc_get_product( get_queried_object_id() ) : null;
 			$key        = $product instanceof WC_Product ? CardPages::named_by( $product, OpeningChoice::requested( $product ) ) : null;
-			if ( $product instanceof WC_Product && null !== $key ) {
+			// A product behind a password says nothing of itself until it is unlocked.
+			if ( $product instanceof WC_Product && null !== $key && ! post_password_required( $product->get_id() ) ) {
 				$this->card = array( $product, $key );
 			}
 		}

@@ -45,11 +45,6 @@ final class CardPages {
 	private const DESCRIPTION_WORDS = 30;
 
 	/**
-	 * Card rows read at a time when every card page is listed.
-	 */
-	private const BATCH = 500;
-
-	/**
 	 * The address of a card's page: the product's, choosing the card's
 	 * values, always in the same order.
 	 *
@@ -63,29 +58,37 @@ final class CardPages {
 
 	/**
 	 * The card whose page an address is, or is another choice on top of:
-	 * the one holding the value the address names for each attribute the
-	 * product is listed by. Null when they name no card of the product, as
-	 * on the product's own address.
+	 * the card whose every value the address names, the one of most values
+	 * when it names those of several, and the first of them in the
+	 * product's order on a tie. A value the address names of a listed
+	 * attribute that is not in the card is one more choice on top of it, as
+	 * a form holds for an attribute that does not apply to the card's
+	 * variations. Null when the address names no card's values, as the
+	 * product's own address.
 	 *
 	 * @param WC_Product            $product A product.
 	 * @param array<string, string> $values  The values an address names, by attribute as a variation keeps it (`pa_colour`).
 	 * @return string|null The card's key.
 	 */
 	public static function named_by( WC_Product $product, array $values ): ?string {
-		$term_ids = array();
+		$named = array();
 		foreach ( SplitListing::attributes_of( $product ) as $attribute ) {
-			$named = $values[ sanitize_title( $attribute->get_name() ) ] ?? '';
-			if ( '' === $named ) {
-				continue;
+			$value = $values[ sanitize_title( $attribute->get_name() ) ] ?? '';
+			$term  = '' === $value ? false : get_term_by( 'slug', sanitize_title( $value ), $attribute->get_name() );
+			if ( $term instanceof WP_Term ) {
+				$named[] = $term->term_id;
 			}
-			$term = get_term_by( 'slug', sanitize_title( $named ), $attribute->get_name() );
-			if ( ! $term instanceof WP_Term ) {
-				return null;
-			}
-			$term_ids[] = $term->term_id;
 		}
-		$key = SplitCards::key( $term_ids );
-		return SplitCards::NO_VALUE !== $key && SplitCards::has_card( $product, $key ) ? $key : null;
+		$card = null;
+		$most = 0;
+		foreach ( array() === $named ? array() : SplitCards::keys( $product ) as $key ) {
+			$held = SplitCards::term_ids( $key );
+			if ( count( $held ) > $most && array() === array_diff( $held, $named ) ) {
+				$card = $key;
+				$most = count( $held );
+			}
+		}
+		return $card;
 	}
 
 	/**
@@ -178,12 +181,16 @@ final class CardPages {
 			)
 		);
 		// phpcs:enable
+		$cards = array();
+		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
+			$cards[] = array( (int) $row->product_id, (string) $row->card_key );
+		}
 		$pages    = array();
 		$not_live = array();
-		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
-			$product_id = (int) $row->product_id;
-			$key        = (string) $row->card_key;
-			$product    = wc_get_product( $product_id );
+		// Every product of the page in one read, not one each.
+		_prime_post_caches( array_values( array_unique( array_column( $cards, 0 ) ) ) );
+		foreach ( $cards as list( $product_id, $key ) ) {
+			$product = wc_get_product( $product_id );
 			if ( ! $product instanceof WC_Product || ! SplitCards::has_card( $product, $key ) ) {
 				continue;
 			}
@@ -196,23 +203,6 @@ final class CardPages {
 				'loc'     => self::url( $product, $key, $product->get_permalink() ),
 				'lastmod' => null === $modified ? '' : gmdate( DATE_W3C, $modified->getTimestamp() ),
 			);
-		}
-		return $pages;
-	}
-
-	/**
-	 * Every card page of the shop, as `listed()` answers them, at most
-	 * `$most`.
-	 *
-	 * @param int $most The most pages answered.
-	 * @return list<array{loc: string, lastmod: string}>
-	 */
-	public static function all( int $most ): array {
-		$pages = array();
-		$rows  = min( self::count(), $most );
-		// A row has at most one page, so the first `$most` rows hold no more than that.
-		for ( $offset = 0; $offset < $rows; $offset += self::BATCH ) {
-			$pages = array_merge( $pages, self::listed( min( self::BATCH, $rows - $offset ), $offset ) );
 		}
 		return $pages;
 	}

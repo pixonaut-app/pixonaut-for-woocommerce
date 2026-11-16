@@ -159,6 +159,9 @@ const ONE_CARD_COOKIE = 'pixonaut_e2e_one_card';
 /** WordPress's sitemap of the cards' pages, on a site with plain permalinks. */
 const CARD_SITEMAP = '/?sitemap=pixonautcards&paged=1';
 
+/** The same sitemap as the plugin serves it, for an SEO plugin's index. */
+const SERVED_CARD_SITEMAP = '/?pixonaut_wc_card_sitemap=1';
+
 /** A page's canonical address, as its head names it. */
 async function canonical(page: Page): Promise<string> {
 	return (
@@ -221,19 +224,26 @@ test('a card’s page names itself in its head, a size on top of it names the ca
 		expect(chosen(await canonical(page))).toEqual({});
 		await expect(page.locator('meta[property="og:url"]')).toHaveCount(0);
 
-		const sitemap = await request.get(`${baseURL ?? ''}${CARD_SITEMAP}`);
-		expect(sitemap.status()).toBe(200);
-		const listed = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)]
-			.map(([, address]) => address.replaceAll('&amp;', '&'))
-			.filter(
-				(address) =>
-					new URL(address).searchParams.get('product') ===
-					new URL(poster.permalink).searchParams.get('product'),
-			);
-		expect(listed.map(chosen)).toEqual([
-			{ [picture]: 'med-bild' },
-			{ [picture]: 'utan-bild', [size]: '30x40' },
-		]);
+		// WordPress's sitemap, and the one the plugin serves for an SEO plugin's index.
+		for (const address of [CARD_SITEMAP, SERVED_CARD_SITEMAP]) {
+			const sitemap = await request.get(`${baseURL ?? ''}${address}`);
+			expect(sitemap.status()).toBe(200);
+			const listed = [
+				...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g),
+			]
+				.map(([, location]) =>
+					location.replaceAll('&amp;', '&').replaceAll('&#038;', '&'),
+				)
+				.filter(
+					(location) =>
+						new URL(location).searchParams.get('product') ===
+						new URL(poster.permalink).searchParams.get('product'),
+				);
+			expect(listed.map(chosen)).toEqual([
+				{ [picture]: 'med-bild' },
+				{ [picture]: 'utan-bild', [size]: '30x40' },
+			]);
+		}
 	});
 });
 

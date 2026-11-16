@@ -175,20 +175,56 @@ final class CardPagesTest extends WP_UnitTestCase {
 		( new CardSitemaps() )->provide();
 		$this->assertInstanceOf( CardSitemapProvider::class, wp_get_sitemap_providers()[ CardSitemapProvider::NAME ] ?? null );
 
-		$content = ( new CardSitemaps() )->content( '<url><loc>https://example.org/</loc></url>' );
-		$this->assertIsString( $content );
-		$this->assertStringStartsWith( '<url><loc>https://example.org/</loc></url>', $content );
-		$parsed = simplexml_load_string( '<urlset>' . $content . '</urlset>' );
+		$index = ( new CardSitemaps() )->index( '<sitemap><loc>https://example.org/product-sitemap.xml</loc></sitemap>' );
+		$this->assertIsString( $index );
+		$parsed = simplexml_load_string( '<sitemapindex>' . $index . '</sitemapindex>' );
 		$this->assertNotFalse( $parsed, 'well-formed XML' );
+		$named = array();
+		foreach ( $parsed->sitemap as $sitemap ) {
+			$named[] = (string) $sitemap->loc;
+		}
+		$this->assertSame( array( 'https://example.org/product-sitemap.xml', CardSitemaps::url( 1 ) ), $named, 'an SEO plugin\'s index names the page the plugin serves' );
+
+		$page = CardSitemaps::page( 1 );
+		$this->assertIsString( $page );
+		$served = simplexml_load_string( $page );
+		$this->assertNotFalse( $served );
 		$locations = array();
-		foreach ( $parsed->url as $url ) {
+		foreach ( $served->url as $url ) {
 			$locations[] = (string) $url->loc;
 		}
-		$this->assertSame( array_merge( array( 'https://example.org/' ), $expected ), $locations );
+		$this->assertSame( $expected, $locations );
+		$this->assertStringNotContainsString( 'xml-stylesheet', $page, 'WordPress\'s stylesheet is not served beside an SEO plugin' );
+		$this->assertNull( CardSitemaps::page( 2 ) );
+		$this->assertNull( CardSitemaps::page( 0 ) );
+		$_GET[ CardSitemaps::PAGE_ARG ] = '2';
+		$this->assertSame( 2, CardSitemaps::requested() );
+		unset( $_GET[ CardSitemaps::PAGE_ARG ] );
+		$this->assertSame( 0, CardSitemaps::requested() );
 
 		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], false );
 		$this->assertSame( array(), $provider->get_url_list( 1 ), 'a product listed once has its own page alone' );
 		$this->assertSame( 0, $provider->get_max_num_pages() );
+	}
+
+	public function test_a_product_behind_a_password_says_nothing_of_its_card(): void {
+		$poster = $this->poster();
+		$poster->set_short_description( 'Only for those let in.' );
+		$poster->save();
+		wp_update_post(
+			array(
+				'ID'            => $poster->get_id(),
+				'post_password' => 'secret',
+			)
+		);
+
+		$head = $this->open( $poster, array( 'attribute_pa_bild' => 'med-bild' ) );
+
+		$this->assertSame( '', $this->printed( $head ) );
+		$this->assertSame( 'x', $head->canonical( 'x', get_post( $poster->get_id() ) ) );
+		$this->assertSame( '', $head->description( '' ) );
+		$this->assertSame( array( 'title' => 'Protected: Safari' ), $head->title_parts( array( 'title' => 'Protected: Safari' ) ) );
+		$this->assertSame( array(), ( new CardSitemapProvider() )->get_url_list( 1 ), 'nor is it in the sitemap' );
 	}
 
 	/**

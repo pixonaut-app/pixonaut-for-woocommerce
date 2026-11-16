@@ -122,7 +122,8 @@ designer, and it is a page of its own to search engines:
   to a search engine, not one each.
 
 The product's own address stays the product's page, with its own title and
-canonical address.
+canonical address. A product behind a password has no card pages until it
+is unlocked.
 
 With Yoast SEO or Rank Math active, their title, description, canonical
 address and Open Graph tags are the ones changed, and a description written
@@ -130,9 +131,10 @@ for the product there follows the card's values. Without either, WordPress
 prints the title and the canonical address, and the plugin prints the
 description and the Open Graph tags.
 
-**Sitemaps** list each card's page beside the product's: WordPress's own
-sitemap in `wp-sitemap-pixonautcards-1.xml`, Yoast SEO's and Rank Math's at
-the end of their first sitemap of products. Only the cards' pages are
+**Sitemaps** list each card's page beside the product's, in a sitemap of
+the cards: WordPress's own index names it
+(`wp-sitemap-pixonautcards-1.xml`), and so do Yoast SEO's and Rank Math's
+(`/?pixonaut_wc_card_sitemap=1`, which the plugin serves). Only the cards' pages are
 listed, never one per size or per variation. A card the shop leaves out
 (its variations all on a template that is not live) and the cards of a
 product that is not published are not listed.

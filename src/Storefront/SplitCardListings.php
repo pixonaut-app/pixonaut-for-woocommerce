@@ -219,8 +219,12 @@ final class SplitCardListings {
 		global $wpdb;
 		$where = '';
 		foreach ( $not_live as $product_id => $keys ) {
+			$placeholders = implode( ', ', array_fill( 0, count( $keys ), '%s' ) );
 			// By the product's own id: a product without card rows has none to compare.
-			$where .= " AND NOT ( {$wpdb->posts}.ID = " . $product_id . " AND {$alias}.meta_value IN ( '" . implode( "', '", array_map( 'esc_sql', $keys ) ) . "' ) )";
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- a table name, a constant alias and a placeholder per key.
+			$left = $wpdb->prepare( " AND NOT ( {$wpdb->posts}.ID = %d AND {$alias}.meta_value IN ( {$placeholders} ) )", $product_id, ...$keys );
+			// phpcs:enable
+			$where .= is_string( $left ) ? $left : '';
 		}
 		return $where;
 	}

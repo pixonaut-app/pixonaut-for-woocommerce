@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { followAddress } from './address';
+import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
 import { VARIATION_SETTLE_MS } from './variations';
 
 function form(): HTMLFormElement {
@@ -64,6 +65,24 @@ describe('followAddress', () => {
 			attribute_size: '70x100',
 		});
 		expect(history.length).toBe(entries);
+	});
+
+	it('leaves out an attribute that does not apply to the choice', () => {
+		const element = form();
+		followAddress(element);
+		vi.advanceTimersByTime(VARIATION_SETTLE_MS);
+		const size = element.querySelector(
+			'[name="attribute_size"]',
+		) as HTMLSelectElement;
+		const row = document.createElement('div');
+		row.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
+		size.replaceWith(row);
+		row.append(size);
+		size.value = '70x100';
+
+		choose('attribute_pa_framing', 'hanger');
+
+		expect(location.search).toBe('?utm=mail&attribute_pa_framing=hanger');
 	});
 
 	it('drops a choice taken back', () => {

@@ -1,3 +1,4 @@
+import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
 import { chosenValue, followChoices } from './variations';
 
 /** What the add-to-cart form's attribute fields are named by, and what
@@ -12,7 +13,12 @@ function choices(form: HTMLFormElement): Record<string, string> {
 		HTMLInputElement | HTMLSelectElement
 	>('input, select')) {
 		if (field.name.startsWith(ATTRIBUTE_PREFIX) && !(field.name in chosen)) {
-			chosen[field.name] = chosenValue(form, field.name);
+			// An attribute that does not apply to the choice holds a value only
+			// for WooCommerce to find the variation; the customer chose none.
+			chosen[field.name] =
+				field.closest(`[${NOT_APPLICABLE_ATTRIBUTE}]`) === null
+					? chosenValue(form, field.name)
+					: '';
 		}
 	}
 	return chosen;
