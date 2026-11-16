@@ -439,6 +439,7 @@ export class ProductDesigner {
 			return;
 		}
 		this.printShopParts();
+		this.followApplicable();
 		followPrintedInputs(this.container.ownerDocument);
 		if (this.form !== null) {
 			removePrintedSwatches(this.form);
@@ -624,7 +625,7 @@ export class ProductDesigner {
 		side: string,
 		own: SideOptions | undefined,
 	): ShopStepOptions & Pick<SplitMountOptions, 'formGroups'> {
-		const lending = this.form !== null && Object.keys(this.mounts).length === 1;
+		const lending = this.lending();
 		if (lending && this.form !== null) {
 			this.shopParts ??= gatherShopParts(this.container, this.form);
 		}
@@ -650,6 +651,12 @@ export class ProductDesigner {
 		}
 		const { optionsStep: _options, ...rest } = parts;
 		return { ...rest, formGroups: groups.formGroups };
+	}
+
+	/** Whether the designer draws the add-to-cart form's parts in its own
+	 *  form: only with the form, and one side to draw them in. */
+	private lending(): boolean {
+		return this.form !== null && Object.keys(this.mounts).length === 1;
 	}
 
 	/** Puts the form's parts in the slots of the printed form, where the
@@ -733,9 +740,16 @@ export class ProductDesigner {
 				this.completeHosts(side, designer);
 			}
 		});
-		// An attribute's row is marked as it stops applying to the choices,
-		// and unmarked as it applies again.
-		new MutationObserver(() => this.fitHosts()).observe(form, {
+	}
+
+	/** Follows which of the form's attributes apply to its choices: a row
+	 *  is marked as its attribute stops applying, and unmarked as it applies
+	 *  again. From the start, so a change while a side mounts is not missed. */
+	private followApplicable(): void {
+		if (this.form === null) {
+			return;
+		}
+		new MutationObserver(() => this.fitHosts()).observe(this.form, {
 			attributeFilter: [NOT_APPLICABLE_ATTRIBUTE],
 			subtree: true,
 		});
@@ -764,7 +778,8 @@ export class ProductDesigner {
 		await this.mounting;
 		const form = this.form;
 		const sdk = this.sdk;
-		if (form === null || sdk === null) {
+		// A side that is lent no attribute has none to leave out.
+		if (form === null || sdk === null || !this.lending()) {
 			return;
 		}
 		for (const [side, groups] of [...this.hosts]) {
@@ -778,6 +793,15 @@ export class ProductDesigner {
 				continue;
 			}
 			const step = designer.getStep()?.groupId;
+			// The side mounts again on the size the customer is on.
+			const mounted = this.mounts[side] as SideOptions;
+			const size = this.liveSize(mounted, designer);
+			if (size !== undefined) {
+				this.mounts[side] = {
+					...mounted,
+					selectedPrintSizeIndex: size,
+				} as SideOptions;
+			}
 			await this.remount(this.variation, side, designer, sdk);
 			showStep(this.designers.get(side), step);
 		}
