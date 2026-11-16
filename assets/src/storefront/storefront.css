@@ -242,6 +242,21 @@ form.cart:has(> .pixonaut-form)::after {
 	grid-column: 1 / -1;
 }
 
+/* The option fields the designer took into its form leave their table, or
+ * the block form's selector, empty behind them. Empty, it still is a box of
+ * the form: in a theme that spaces the form's children apart, each one adds
+ * a gap above the designer. */
+form:has(.pixonaut-form) table.variations:not(:has(tr)),
+form:has(.pixonaut-form)
+	.wp-block-woocommerce-add-to-cart-with-options-variation-selector:not(
+		:has(
+			.wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute
+		)
+	) {
+	/* biome-ignore lint/complexity/noImportantStyles: a theme's own display for the variations table must not draw it. */
+	display: none !important;
+}
+
 /* A theme's display rule must not show a side whose tab is not selected,
  * a side or approval the chosen variation does not have, or the designer of
  * a variation bought without a design. */

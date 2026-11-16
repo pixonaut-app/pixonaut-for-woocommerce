@@ -402,6 +402,10 @@ export const REACH = {
 		'assets/src/admin/side-groups-parts.ts',
 		'assets/src/storefront/form-groups.ts',
 	],
+	'form-start.spec.ts': [
+		'assets/src/storefront/storefront.css',
+		'assets/src/storefront/shop-parts.ts',
+	],
 	'front-and-back.spec.ts': [
 		'src/Cart/OrderLines.php',
 		'src/Fulfilment/Fulfiller.php',
