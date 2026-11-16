@@ -494,19 +494,24 @@ final class ProductPictures {
 
 	/**
 	 * Records a drawing whose job stopped before it was done, as PHP's time
-	 * limit or an error stops one: the next pictures pass queues it, as it
-	 * still is due, and it is tried again after `RETRY_SECONDS`, at most
-	 * `CUT_OFF_RETRIES` times in a row. What it was drawn for stays as it
-	 * was, so a pass does not wait for the retry.
+	 * limit or an error stops one, as one Pixonaut could not draw: the
+	 * product shows it failed, and it is tried again after `RETRY_SECONDS`,
+	 * at most `CUT_OFF_RETRIES` times in a row; after that, the next
+	 * pictures pass queues it.
 	 *
 	 * @param WC_Product $product A product or variation.
 	 */
 	public function cut_off( WC_Product $product ): void {
+		$basis = self::basis( $product );
+		if ( null === $basis ) {
+			return;
+		}
 		$stored   = self::stored( $product );
 		$cut_offs = $stored['cut_offs'] + 1;
 		self::store(
 			$product,
 			array(
+				'basis'     => $basis,
 				'failed_at' => $this->now(),
 				'cut_offs'  => $cut_offs,
 			) + $stored
@@ -514,6 +519,19 @@ final class ProductPictures {
 		if ( $cut_offs <= self::CUT_OFF_RETRIES ) {
 			$this->retry_later( $product );
 		}
+	}
+
+	/**
+	 * Whether a drawing of the product holds its lock and is still within
+	 * `LOCK_SECONDS`, so may still be running.
+	 *
+	 * @param int $product_id A product or variation.
+	 */
+	public function drawing_now( int $product_id ): bool {
+		$option = self::LOCK_OPTION_PREFIX . $product_id;
+		wp_cache_delete( $option, 'options' );
+		$held_since = get_option( $option );
+		return is_numeric( $held_since ) && $this->now() - (int) $held_since < self::LOCK_SECONDS;
 	}
 
 	/**

@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
 use ActionScheduler;
+use Pixonaut\WooCommerce\Admin\RegeneratePictures;
 use Pixonaut\WooCommerce\Catalogue\PictureQueue;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Migrations\DrawStoppedPictures;
@@ -90,6 +91,7 @@ final class StoppedPictureJobsTest extends WP_UnitTestCase {
 
 		$this->assertCount( $runs, ActionSchedulerRunner::failed( ProductPictures::ACTION ) );
 		$this->assertSame( array(), ActionSchedulerRunner::pending( ProductPictures::ACTION ) );
+		$this->assertSame( RegeneratePictures::FAILED, RegeneratePictures::state( $this->reload( $product ) ) );
 	}
 
 	public function test_the_next_pictures_pass_queues_a_picture_whose_job_was_cut_off(): void {
@@ -98,6 +100,7 @@ final class StoppedPictureJobsTest extends WP_UnitTestCase {
 		$this->recorder->raw( 200, self::png(), 'image/png' );
 		ActionSchedulerRunner::run_once( ProductPictures::ACTION );
 		as_unschedule_all_actions( ProductPictures::RETRY_ACTION );
+		$this->fail_earlier( $product, ProductPictures::RETRY_SECONDS );
 
 		$this->assertTrue( PictureQueue::queue_all() );
 		ActionSchedulerRunner::run_pending( PictureQueue::QUEUE_ACTION );
@@ -130,6 +133,18 @@ final class StoppedPictureJobsTest extends WP_UnitTestCase {
 
 		$this->assertSame( 1, ProductPictures::stored( $this->reload( $product ) )['cut_offs'] );
 		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductPictures::RETRY_ACTION ) );
+	}
+
+	public function test_a_job_given_up_while_its_drawing_may_still_run_is_left_to_it(): void {
+		$product = $this->product( self::config() );
+		$job     = $this->stopped_job( $product );
+		add_option( ProductPictures::LOCK_OPTION_PREFIX . $product->get_id(), (string) time(), '', false );
+
+		do_action( 'action_scheduler_failed_action', $job, 300 );
+
+		$this->assertSame( 0, ProductPictures::stored( $this->reload( $product ) )['cut_offs'] );
+		$this->assertSame( array(), ActionSchedulerRunner::pending( ProductPictures::RETRY_ACTION ) );
+		delete_option( ProductPictures::LOCK_OPTION_PREFIX . $product->get_id() );
 	}
 
 	public function test_another_failed_job_records_nothing(): void {
@@ -171,6 +186,18 @@ final class StoppedPictureJobsTest extends WP_UnitTestCase {
 		$this->plugin->picture_queue()->running( $product->get_id() );
 		ActionScheduler::store()->mark_failure( $job );
 		return $job;
+	}
+
+	/**
+	 * Moves the product's recorded failure back in time.
+	 *
+	 * @param WC_Product $product A product or variation whose drawing failed.
+	 * @param int        $ago     How long ago it failed, in seconds.
+	 */
+	private function fail_earlier( WC_Product $product, int $ago ): void {
+		$stored              = ProductPictures::stored( $this->reload( $product ) );
+		$stored['failed_at'] = time() - $ago;
+		update_post_meta( $product->get_id(), ProductPictures::META_KEY, wp_slash( (string) wp_json_encode( $stored ) ) );
 	}
 
 	/**
