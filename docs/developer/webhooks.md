@@ -478,7 +478,14 @@ printshop costs read again too ([Prices from costs](../pricing/#following-the-ru
   a migration indexed the configurations stored before it). A job
   (`pixonaut_wc_catalogue_recheck_queue`) reads 100 products at a time and
   queues their re-check in batches of 10 (`pixonaut_wc_catalogue_recheck`);
-  when a page is full it queues itself for the page after. When Action
+  when a page is full it queues itself for the page after. A product or
+  variation already waiting in a batch is left out of the next one: each
+  holds the id of the job it was queued in (`_pixonaut_recheck_job`,
+  `Catalogue\PendingRechecks`), and counts as waiting while that job is
+  pending and names it. Events arriving faster than the re-checks run thus
+  queue each product once, however products added or moved between them
+  shift the batches; one arriving after its re-check started queues it
+  again. When Action
   Scheduler refuses the first job, the handler throws and the event is
   handled again later; a page whose batches or next page could not all be
   queued is recorded as failed, after trying each, and logs the products.
