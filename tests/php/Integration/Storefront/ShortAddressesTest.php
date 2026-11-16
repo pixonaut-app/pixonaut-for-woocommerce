@@ -28,6 +28,11 @@ final class ShortAddressesTest extends WP_UnitTestCase {
 
 	private const SIZE = 'Storlek';
 
+	/** The WooCommerce class keeping the query arguments that are a filter's, and where. */
+	private const FILTER_PARAMS = 'Automattic\\WooCommerce\\Internal\\ProductFilters\\Params';
+
+	private const FILTER_ARGUMENTS = 'params';
+
 	/**
 	 * The names a request may carry, cleared between requests.
 	 */
@@ -270,6 +275,13 @@ final class ShortAddressesTest extends WP_UnitTestCase {
 			unset( $_GET[ $arg ], $_REQUEST[ $arg ] );
 		}
 		( new \ReflectionProperty( WC_Query::class, 'chosen_attributes' ) )->setValue( null, null );
+		// WooCommerce keeps a filter's query arguments, one per attribute the
+		// store had, for the whole process: an archive an earlier test drew
+		// would leave out this test's attributes.
+		if ( class_exists( self::FILTER_PARAMS ) && property_exists( self::FILTER_PARAMS, self::FILTER_ARGUMENTS ) ) {
+			// @phpstan-ignore argument.type (an internal WooCommerce class the stubs leave out)
+			( new \ReflectionProperty( self::FILTER_PARAMS, self::FILTER_ARGUMENTS ) )->setValue( null, array() );
+		}
 		wp_dequeue_script( ShortAddresses::SCRIPT_HANDLE );
 	}
 }
