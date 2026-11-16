@@ -417,7 +417,7 @@ final class Plugin {
 		$this->notices()->register();
 		$this->connection()->register();
 		$this->store_access()->register();
-		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ), fn (): array => $this->pricing_abilities() ), new WcLogger() ) )->register();
+		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ), fn (): array => $this->pricing_abilities(), fn (): array => $this->settings_abilities() ), new WcLogger() ) )->register();
 		$this->workspace_settings()->register();
 		$this->webhook_processor()->register();
 		( new Receiver( $this->connection(), $this->intake(), new WcLogger() ) )->register();
@@ -562,8 +562,7 @@ final class Plugin {
 					new ChangeDeliveryAddress( $this->delivery_change(), $lines ),
 					new RegenerateProductPictures( $this->regenerate_pictures() ),
 					new RecheckProducts( $this->connection(), $this->catalogue_cache(), $this->product_recheck() ),
-					new ReadPluginSettings( $this->settings() ),
-					new UpdatePluginSettings( $this->settings() ),
+					...$this->settings_abilities(),
 					...$this->pricing_abilities(),
 					$status,
 					...array_map(
@@ -573,6 +572,18 @@ final class Plugin {
 					...StoreResources::abilities(),
 				);
 			}
+		);
+	}
+
+	/**
+	 * The abilities that read and change the plugin's settings.
+	 *
+	 * @return list<Ability>
+	 */
+	private function settings_abilities(): array {
+		return array(
+			new ReadPluginSettings( $this->settings() ),
+			new UpdatePluginSettings( $this->settings() ),
 		);
 	}
 
