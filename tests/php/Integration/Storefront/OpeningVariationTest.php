@@ -98,15 +98,13 @@ final class OpeningVariationTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( self::LARGE_PRICE, $product->get_price_html() );
 	}
 
-	public function test_a_form_opening_on_no_variation_keeps_the_range(): void {
+	public function test_a_product_without_a_default_opens_on_its_first_variation(): void {
 		$product = $this->sign( null );
 		$this->go_to( (string) get_permalink( $product->get_id() ) );
 
 		$this->assertStringContainsString( self::SMALL_PRICE, $product->get_price_html() );
-		$this->assertStringContainsString( self::LARGE_PRICE, $product->get_price_html() );
-		$html = $this->form_html( $product );
-		$this->assertStringNotContainsString( 'data-pixonaut-product-price', $html );
-		$this->assertStringNotContainsString( 'data-pixonaut-opening-choice', $html );
+		$this->assertStringNotContainsString( self::LARGE_PRICE, $product->get_price_html() );
+		$this->assertSame( array( 'attribute_size' => 'S' ), json_decode( $this->form_attribute( $product, 'opening-choice' ), true ) );
 	}
 
 	public function test_a_default_variation_the_form_hides_out_of_stock_keeps_the_products_price(): void {
@@ -236,7 +234,9 @@ final class OpeningVariationTest extends WP_UnitTestCase {
 
 	public function test_the_block_form_keeps_its_quantity_hidden_when_it_opens_on_no_variation(): void {
 		$GLOBALS['wp_interactivity'] = null;
-		$product                     = $this->sign( null );
+		// The default is a variation the form leaves out, so it opens on none.
+		update_option( 'woocommerce_hide_out_of_stock_items', 'yes' );
+		$product = $this->sign( 'L', 'L' );
 		$this->go_to( (string) get_permalink( $product->get_id() ) );
 
 		$this->form_html( $product );

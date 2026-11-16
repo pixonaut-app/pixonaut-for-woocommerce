@@ -271,3 +271,31 @@ test('a page opened on a variation prints its template, and the designer takes i
 	await expect(page.locator(BOXES.form).getByText(PHOTO_GROUP)).toHaveCount(0);
 	expect(movedFrom(before, seen, 'preview'), 'the preview stays').toEqual([]);
 });
+
+test('a product with no default opens on its first variation, chosen in the form and drawn', async ({
+	page,
+	request,
+	baseURL,
+	theme,
+	fake,
+}) => {
+	await textOnlyPoster(fake, request, baseURL);
+	await countMounts(page);
+	await page.goto(
+		await createProduct(request, {
+			name: `Opens chosen ${theme} ${Date.now()}`,
+			pixonaut: ARRANGED,
+			variations: ['Photo', 'Text'],
+			overrides: { Text: TEXT_ONLY },
+		}),
+	);
+
+	await expect(sizes(page)).toHaveValue('Photo');
+	await expect(page.locator('.pixonaut-preview__frame')).toHaveClass(
+		/is-drawn/,
+	);
+	await expect(
+		page.locator(BOXES.form).getByText(PHOTO_GROUP).first(),
+	).toBeVisible();
+	expect(await mounts(page), 'mounted once').toBe(1);
+});

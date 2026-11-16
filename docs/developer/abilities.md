@@ -127,6 +127,14 @@ and a variation whose attribute its product no longer has offers any value, so
 do not take a variable product off an attribute this way: use
 `move-product-attribute`.
 
+`default_attributes` are the values a variable product's form opens on,
+each `{id, option}` for a global attribute (`option` the term's slug) or
+`{name, option}` for a custom one; an empty list clears them. `get-product`
+reads the stored ones. On the product's own page an attribute without one
+opens on the value of the variation its picture shows (see
+[Price](../storefront/#price)), so set them only to open the page, and draw
+the picture, on another variation.
+
 ## Moving products to a global attribute
 
 `move-product-attribute` moves products from a custom attribute (`from`, by

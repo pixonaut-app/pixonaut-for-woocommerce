@@ -195,6 +195,7 @@ use Pixonaut\WooCommerce\Storefront\MovedAttributeLinks;
 use Pixonaut\WooCommerce\Storefront\PersonaliseButton;
 use Pixonaut\WooCommerce\Storefront\PersonalisedDesigns;
 use Pixonaut\WooCommerce\Storefront\ButtonProducts;
+use Pixonaut\WooCommerce\Storefront\OpeningDefaults;
 use Pixonaut\WooCommerce\Storefront\OpeningPrice;
 use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
 use Pixonaut\WooCommerce\Storefront\ServerReads;
@@ -504,6 +505,7 @@ final class Plugin {
 		}
 		$this->storefront()->register();
 		$this->opening_price()->register();
+		( new OpeningDefaults() )->register();
 		( new PrintedSwatches( $this->inline_products(), $this->settings(), $this->swatch_looks() ) )->register();
 		$this->personalise_button()->register();
 		$this->personalised_designs()->register();

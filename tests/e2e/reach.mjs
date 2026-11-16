@@ -756,6 +756,7 @@ export const REACH = {
 	],
 	'variation-in-place.spec.ts': [
 		'src/Storefront/OpeningChoice.php',
+		'src/Storefront/OpeningDefaults.php',
 		'src/Storefront/FormGroupsMount.php',
 		'assets/src/storefront/remount-hold.ts',
 		'assets/src/storefront/template-carry.ts',

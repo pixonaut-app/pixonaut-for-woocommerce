@@ -16,7 +16,8 @@ use WC_Product_Variation;
 /**
  * Reads the attribute values a variable product's add-to-cart form opens on,
  * as WooCommerce chooses them: the request's `attribute_*` values, else the
- * product's defaults. A split card's link chooses some of them this way.
+ * product's defaults, which its own page fills in to a whole variation
+ * (`OpeningDefaults`). A split card's link chooses some of them this way.
  */
 final class OpeningChoice {
 
@@ -32,13 +33,39 @@ final class OpeningChoice {
 		if ( ! $product instanceof WC_Product_Variable ) {
 			return array();
 		}
-		$chosen = array();
+		$requested = self::requested( $product );
+		$chosen    = array();
 		foreach ( array_keys( $product->get_variation_attributes() ) as $name ) {
-			$field = 'attribute_' . sanitize_title( (string) $name );
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read as WooCommerce reads it to choose the option; nothing is changed.
-			$chosen[ $field ] = isset( $_REQUEST[ $field ] ) ? sanitize_text_field( wp_unslash( (string) $_REQUEST[ $field ] ) ) : $product->get_variation_default_attribute( (string) $name );
+			$attribute                           = sanitize_title( (string) $name );
+			$chosen[ 'attribute_' . $attribute ] = $requested[ $attribute ] ?? $product->get_variation_default_attribute( (string) $name );
 		}
 		return $chosen;
+	}
+
+	/**
+	 * The values the request names for the product's attributes, by
+	 * attribute as a variation keeps it (`pa_colour`), as
+	 * `wc_dropdown_variation_attribute_options()` reads them: an attribute
+	 * named with no value opens on none, whatever its default.
+	 *
+	 * @param WC_Product $product A variable product.
+	 * @return array<string, string>
+	 */
+	public static function requested( WC_Product $product ): array {
+		if ( ! $product instanceof WC_Product_Variable ) {
+			return array();
+		}
+		$requested = array();
+		foreach ( array_keys( $product->get_variation_attributes() ) as $name ) {
+			$attribute = sanitize_title( (string) $name );
+			$field     = 'attribute_' . $attribute;
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read as WooCommerce reads it to choose the option; nothing is changed.
+			if ( isset( $_REQUEST[ $field ] ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- As above.
+				$requested[ $attribute ] = sanitize_text_field( wp_unslash( (string) $_REQUEST[ $field ] ) );
+			}
+		}
+		return $requested;
 	}
 
 	/**

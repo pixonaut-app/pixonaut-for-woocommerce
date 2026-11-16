@@ -599,6 +599,16 @@ size Pixonaut accepted for one variation is sold for that variation only:
 a design made at a size another variation offers is refused when it is
 added to the cart.
 
+The product's page opens with a variation already chosen, so customers see
+the designer and a price at once. It opens on the product's default
+attribute values (**Default Form Values**, on the **Variations** tab). An
+attribute you set no default for opens on the value of the first variation
+customers can buy that fits the defaults you did set: with none set, that
+is the variation the product's image shows. Set the defaults to open the
+page on another variation; the product's image follows them (see
+[Product images](#product-images)). An assistant sets them with
+`update-product` (`default_attributes`).
+
 Price each size as its own variation. When a customer picks a size, in the
 variation form or in the designer, the product page shows that variation's
 price in place of the product's price range, and the range again when they
