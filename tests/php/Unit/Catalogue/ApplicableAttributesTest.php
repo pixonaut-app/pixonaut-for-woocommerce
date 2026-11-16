@@ -83,4 +83,98 @@ final class ApplicableAttributesTest extends TestCase {
 		$this->assertTrue( ApplicableAttributes::matches( $variation, array( 'attribute_a' => '' ) ) );
 		$this->assertFalse( ApplicableAttributes::matches( $variation, array( 'attribute_a' => 'y' ) ) );
 	}
+
+	public function test_an_attribute_depends_on_the_attribute_whose_value_decides_whether_it_applies(): void {
+		$fields     = array( 'attribute_pa_storlek', 'attribute_pa_inramning', 'attribute_pa_ramfarg' );
+		$variations = array(
+			array(
+				'attribute_pa_storlek'   => '30x40',
+				'attribute_pa_inramning' => 'ingen',
+			),
+			array(
+				'attribute_pa_storlek'   => '30x40',
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'ek',
+			),
+			array(
+				'attribute_pa_storlek'   => '50x70',
+				'attribute_pa_inramning' => 'hangare',
+				'attribute_pa_ramfarg'   => 'svart',
+			),
+			array(
+				'attribute_pa_storlek'   => '50x70',
+				'attribute_pa_inramning' => 'ingen',
+			),
+		);
+
+		$this->assertSame(
+			array(
+				'attribute_pa_ramfarg' => array(
+					'field'  => 'attribute_pa_inramning',
+					'values' => array( 'ram', 'hangare' ),
+				),
+			),
+			ApplicableAttributes::parents( $fields, $variations ),
+			'the size does not decide it: both sizes come with and without a frame'
+		);
+	}
+
+	public function test_of_several_deciding_attributes_the_nearest_before_it_is_its_parent(): void {
+		$variations = array(
+			array(
+				'attribute_pa_storlek'   => '30x40',
+				'attribute_pa_inramning' => 'ingen',
+			),
+			array(
+				'attribute_pa_storlek'   => '50x70',
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'ek',
+			),
+		);
+
+		$this->assertSame( 'attribute_pa_inramning', ApplicableAttributes::parents( array( 'attribute_pa_storlek', 'attribute_pa_inramning', 'attribute_pa_ramfarg' ), $variations )['attribute_pa_ramfarg']['field'] ?? null );
+		$this->assertSame( 'attribute_pa_storlek', ApplicableAttributes::parents( array( 'attribute_pa_inramning', 'attribute_pa_storlek', 'attribute_pa_ramfarg' ), $variations )['attribute_pa_ramfarg']['field'] ?? null );
+		$this->assertSame( 'attribute_pa_inramning', ApplicableAttributes::parents( array( 'attribute_pa_ramfarg', 'attribute_pa_inramning', 'attribute_pa_storlek' ), $variations )['attribute_pa_ramfarg']['field'] ?? null, 'after it when none comes before' );
+	}
+
+	public function test_an_attribute_left_open_where_it_applies_still_depends_on_its_parent(): void {
+		$fields     = array( 'attribute_pa_inramning', 'attribute_pa_ramfarg' );
+		$variations = array(
+			array( 'attribute_pa_inramning' => 'ingen' ),
+			array(
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'ek',
+			),
+			array(
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => '',
+			),
+		);
+
+		$this->assertSame( array( 'ram' ), ApplicableAttributes::parents( $fields, $variations )['attribute_pa_ramfarg']['values'] ?? null );
+	}
+
+	public function test_an_attribute_no_single_attribute_decides_has_no_parent(): void {
+		$fields     = array( 'attribute_pa_inramning', 'attribute_pa_ramfarg' );
+		$variations = array(
+			array( 'attribute_pa_inramning' => 'ram' ),
+			array(
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'ek',
+			),
+			array( 'attribute_pa_inramning' => '' ),
+		);
+		$this->assertSame( array(), ApplicableAttributes::parents( $fields, $variations ), 'a variation open on the framing' );
+		$this->assertSame(
+			array(),
+			ApplicableAttributes::parents(
+				array( 'attribute_pa_size', 'attribute_pa_colour' ),
+				array(
+					array( 'attribute_pa_size' => 's' ),
+					array( 'attribute_pa_size' => 'm' ),
+				)
+			),
+			'a free choice depends on nothing'
+		);
+	}
 }

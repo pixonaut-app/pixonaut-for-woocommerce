@@ -1165,6 +1165,57 @@ from the order line as it is made
 before. Carts already in customers' sessions and existing orders are left
 as they are.
 
+### Filters in the shop
+
+`Storefront\FilterMatches` matches the shop's attribute and price filters
+against one offer at a time (`Catalogue\FilterOffers`): each purchasable
+variation of a variable product (enabled, with a price, in stock unless the
+store shows those out of stock), or any other product as itself. An offer
+holds, per global attribute, the value its variation sets, every value the
+product lists for one it leaves open, none for one that does not apply to it
+(`ApplicableAttributes`), and every value for an attribute that is not a
+variation's. It matches when it holds a chosen value of each filtered
+attribute and its price is within the range; the bounds lose the standard
+tax rate, as WooCommerce's price filter's do, when prices are stored without
+tax and shown with it.
+
+- **The listing**: `SplitCardListings` runs the main query's own joins and
+  conditions once to find the variable products WooCommerce's filters keep,
+  then leaves out those with no matching offer, and the cards none of whose
+  variations matches.
+- **The counts**: on `woocommerce_pre_product_filter_data` for `attribute`,
+  each value's count is the number of rows the listing would show with the
+  value added to the query's filters: per card kept, or once for a product
+  listed once or with **One card per product** on. The base products come
+  from the query without its attribute and price filters, with WooCommerce's
+  own clauses for the block's other filters, such as stock and taxonomies. An
+  attribute whose values combine with `and` keeps a product only while its
+  offers hold every chosen value, as WooCommerce's listing does. Counts are
+  cached per query until a product changes, or for an hour. Another
+  callback's answer stands, and price, stock, rating and taxonomy data stay
+  WooCommerce's.
+
+#### Dependent attributes for a theme
+
+`Storefront\AttributeDependencies` serves, on the
+`pixonaut_wc_storefront_attribute_dependencies` filter, which attribute each
+dependent attribute applies under, read from every published variable
+product's variations by `ApplicableAttributes::parents()`: for each
+attribute some variations set and others leave unset, the attribute every
+variation sets whose value alone decides whether it applies (the nearest
+before it in the product's order when several do), and those values. Only
+global attributes take part; products add up; the answer is cached until a
+product changes (WooCommerce's `product` transient version).
+
+```php
+$dependencies = apply_filters( 'pixonaut_wc_storefront_attribute_dependencies', array() );
+// array( 'pa_ramfarg' => array( 'pa_inramning' => array( 'ram', 'hangare' ) ) )
+```
+
+Each dependent attribute's taxonomy maps to the taxonomy of the attribute
+it depends on, and to the slugs of the values it applies under. Without the
+plugin, the filter returns the default given.
+
 ## JavaScript hooks
 
 Through `@wordpress/hooks` (`wp.hooks` on the page):
