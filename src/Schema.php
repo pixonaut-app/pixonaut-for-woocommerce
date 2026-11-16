@@ -137,6 +137,12 @@ final class Schema {
 	const VARIATION_PRINT_SIZE_META = '_pixonaut_print_size';
 
 	/**
+	 * Product and variation meta holding the id of the re-check job it was
+	 * last queued in, so it is not queued again while that job waits.
+	 */
+	const PRODUCT_RECHECK_JOB_META = '_pixonaut_recheck_job';
+
+	/**
 	 * Product and variation meta holding the images the store manager
 	 * accepted at a size although they print below their recommended
 	 * resolution there, by side, size and picture.

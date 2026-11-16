@@ -267,7 +267,7 @@ final class TemplateRename {
 			'lines_after'    => $lines_after,
 			'attempt'        => $attempt,
 		);
-		if ( is_int( as_next_scheduled_action( self::ACTION, $args, self::GROUP ) ) ) {
+		if ( WaitingJob::exists( self::ACTION, $args, self::GROUP ) ) {
 			return true;
 		}
 		$queued = 0 === $delay

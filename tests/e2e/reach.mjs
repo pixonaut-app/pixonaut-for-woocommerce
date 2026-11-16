@@ -735,6 +735,8 @@ export const REACH = {
 	],
 	'template-changes.spec.ts': [
 		'src/Catalogue/ProductRecheck.php',
+		'src/Catalogue/PendingRechecks.php',
+		'src/Catalogue/WaitingJob.php',
 		'src/Catalogue/ProductIndex.php',
 		'src/Catalogue/Purchasability.php',
 		'src/Catalogue/InvalidReason.php',

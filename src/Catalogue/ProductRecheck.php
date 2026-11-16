@@ -34,7 +34,9 @@ use WC_Product;
  *
  * Products are found through `ProductIndex`, a page at a time by a job that
  * queues the next page after its own, and re-checked in batches, one Action
- * Scheduler job each. A product that cannot be re-checked because Pixonaut
+ * Scheduler job each. A product already waiting in a batch is left out of
+ * the next one (`PendingRechecks`), so events arriving faster than the
+ * re-checks run queue each product once. A product that cannot be re-checked because Pixonaut
  * did not answer keeps its configuration and is tried again later, up to
  * MAX_ATTEMPTS times in all; Pixonaut being away never makes a product
  * unsellable. A product the re-check finds unsellable raises its notice, and
@@ -120,6 +122,12 @@ final class ProductRecheck {
 	public const BACKFILL_PENDING = '1';
 
 	/**
+	 * BACKFILL_OPTION's value while the re-check of every product waits to
+	 * be queued in place of every re-check queued before.
+	 */
+	public const BACKFILL_REPLACING = 'replace';
+
+	/**
 	 * @param ProductLinker        $linker  Checks a configuration with Pixonaut.
 	 * @param Catalogue            $catalogue Reads which templates are live.
 	 * @param InvalidProductNotice $notice  Raises or clears a product's notice.
@@ -153,8 +161,14 @@ final class ProductRecheck {
 	 * tried again on the next request.
 	 */
 	public function queue_backfill(): void {
-		if ( self::BACKFILL_PENDING !== get_option( self::BACKFILL_OPTION ) ) {
+		$backfill = get_option( self::BACKFILL_OPTION );
+		if ( self::BACKFILL_PENDING !== $backfill && self::BACKFILL_REPLACING !== $backfill ) {
 			return;
+		}
+		if ( self::BACKFILL_REPLACING === $backfill ) {
+			// The re-check of every product covers each one these would have checked. By hook alone, whatever their arguments.
+			as_unschedule_all_actions( self::ACTION );
+			as_unschedule_all_actions( self::QUEUE_ACTION );
 		}
 		if ( $this->queue_after( self::BY_ANY, '', 0 ) ) {
 			delete_option( self::BACKFILL_OPTION );
@@ -269,6 +283,8 @@ final class ProductRecheck {
 	public function recheck( array $product_ids, int|string $attempt = 1 ): void {
 		$product_ids = array_values( array_map( 'intval', $product_ids ) );
 		$attempt     = max( 1, (int) $attempt );
+		// Started: a change from now on queues them again.
+		PendingRechecks::forget( $product_ids );
 		try {
 			$live = $this->catalogue->live_versions();
 		} catch ( ApiException $e ) {
@@ -355,28 +371,17 @@ final class ProductRecheck {
 	/**
 	 * Queues a re-check of products or variations Pixonaut could not check
 	 * as they were saved, a minute on, so their reason clears once it can.
-	 * Queued once while the same re-check is pending.
+	 * One already waiting in a re-check is not queued again.
 	 *
 	 * @param int[] $product_ids Products and variations.
 	 * @phpstan-param list<int> $product_ids
 	 * @return bool Whether the re-check is queued.
 	 */
 	public static function queue_soon( array $product_ids ): bool {
-		$args = array(
-			'product_ids' => $product_ids,
-			'attempt'     => 1,
-		);
 		if ( ! function_exists( 'as_schedule_single_action' ) ) {
 			return false;
 		}
-		if ( self::is_pending( self::ACTION, $args ) ) {
-			return true;
-		}
-		if ( 0 === as_schedule_single_action( time() + self::RETRY_BASE_SECONDS, self::ACTION, $args, self::GROUP ) ) {
-			( new WcLogger() )->error( 'The re-check of products Pixonaut could not check could not be queued.', array( 'products' => $product_ids ) );
-			return false;
-		}
-		return true;
+		return self::enqueue( $product_ids, 1, self::RETRY_BASE_SECONDS, new WcLogger() );
 	}
 
 	/**
@@ -408,20 +413,36 @@ final class ProductRecheck {
 	 * @return bool False when the job could not be queued.
 	 */
 	private function queue_batch( array $product_ids, int $attempt, int $delay ): bool {
-		$args = array(
+		return self::enqueue( $product_ids, $attempt, $delay, $this->logger );
+	}
+
+	/**
+	 * Queues the re-check of the products not already waiting in one.
+	 *
+	 * @param int[]           $product_ids Products and variations.
+	 * @param int             $attempt     Which attempt.
+	 * @param int             $delay       Seconds to wait; 0 to run as soon as possible.
+	 * @param LoggerInterface $logger      Logs a job that could not be queued.
+	 * @phpstan-param list<int> $product_ids
+	 * @return bool False when the job could not be queued.
+	 */
+	private static function enqueue( array $product_ids, int $attempt, int $delay, LoggerInterface $logger ): bool {
+		$product_ids = PendingRechecks::not_waiting( $product_ids );
+		if ( array() === $product_ids ) {
+			return true;
+		}
+		$args   = array(
 			'product_ids' => $product_ids,
 			'attempt'     => $attempt,
 		);
-		if ( self::is_pending( self::ACTION, $args ) ) {
-			return true;
-		}
 		$queued = 0 === $delay
 			? as_enqueue_async_action( self::ACTION, $args, self::GROUP )
 			: as_schedule_single_action( time() + $delay, self::ACTION, $args, self::GROUP );
 		if ( 0 === $queued ) {
-			$this->logger->error( 'The re-check of products could not be queued.', array( 'products' => $product_ids ) );
+			$logger->error( 'The re-check of products could not be queued.', array( 'products' => $product_ids ) );
 			return false;
 		}
+		PendingRechecks::mark( $product_ids, $queued );
 		return true;
 	}
 
@@ -452,7 +473,7 @@ final class ProductRecheck {
 			'key'   => $key,
 			'after' => $after,
 		);
-		if ( self::is_pending( self::QUEUE_ACTION, $args ) ) {
+		if ( WaitingJob::exists( self::QUEUE_ACTION, $args, self::GROUP ) ) {
 			return true;
 		}
 		if ( 0 === as_enqueue_async_action( self::QUEUE_ACTION, $args, self::GROUP ) ) {
@@ -460,16 +481,5 @@ final class ProductRecheck {
 			return false;
 		}
 		return true;
-	}
-
-	/**
-	 * Whether the same job waits to run. One already running is not enough:
-	 * it may have read Pixonaut before the change that queues this one.
-	 *
-	 * @param string              $hook The job's hook.
-	 * @param array<string,mixed> $args Its arguments.
-	 */
-	private static function is_pending( string $hook, array $args ): bool {
-		return is_int( as_next_scheduled_action( $hook, $args, self::GROUP ) );
 	}
 }
