@@ -127,6 +127,7 @@ French, Spanish and Dutch nouns carry their article.
 | ability | An action the store offers an assistant (the WordPress Abilities API), such as "Create product", which Pixel runs as a tool. Admin. | förmåga | die Fähigkeit | la capacité | la habilidad | de vaardigheid | evne | evne | kyky |
 | credits | What the workspace pays Pixel's answers with. Admin. | krediter | die Credits | les crédits | los créditos | de credits | kreditter | kreditter | krediitit |
 | member | A person in the workspace, such as the one who connected the store. Admin. | medlem | das Mitglied | le membre | el miembro | het lid | medlem | medlem | jäsen |
+| card, cards in the shop | A product's tile in the shop listing; a variable product can be listed as a card per value of an attribute, always or only while a customer filters by it ("Cards in the shop", "A card per value"). Admin, AI tools. | kort, kort i butiken | die Karte, Karten im Shop | la carte, cartes dans la boutique | la tarjeta, tarjetas en la tienda | de kaart, kaarten in de winkel | kort (et), kort i butikken | kort (et), kort i butikken | kortti, kortit kaupassa |
 
 Kept as they are, in every language: **Pixonaut**, **WooCommerce**,
 **Pixonaut for WooCommerce**, **Live** and **Sandbox** (the names of the

@@ -749,18 +749,6 @@ msgid "Read which values a product lists as their own products"
 msgstr "Consulter les valeurs qu'un produit liste comme des produits à part"
 
 #: src/Abilities/GetProductSplitListing.php:38
-#, fuzzy
-#| msgid ""
-#| "Reads, for each global attribute of a simple or variable product, its "
-#| "\"Show each value as its own product\" choice (`auto` follows the "
-#| "attribute's own setting, `attribute_default`), whether that lists its "
-#| "values as their own products, and each value's card's own title and "
-#| "image, with the image it waits for (`image_copy`). `listed_by` is the "
-#| "attribute the product is listed by now; null when it is listed once. "
-#| "`cards` are the cards it is listed as now: one per value, or, listed by "
-#| "several attributes, one per combination of their values that a variation "
-#| "sells, each with its values' `term_ids` and its own title and image. Set "
-#| "them with `set-product-split-listing`."
 msgid ""
 "Reads, for each global attribute of a simple or variable product, its "
 "\"Cards in the shop\" choice (`on`, a card per value always; `filtered`, a "
@@ -775,16 +763,18 @@ msgid ""
 "them with `set-product-split-listing`."
 msgstr ""
 "Consulte, pour chaque attribut global d'un produit simple ou variable, son "
-"choix pour « Afficher chaque valeur comme un produit à part » (`auto` suit "
-"le réglage propre de l'attribut, `attribute_default`), si ce choix liste ses "
-"valeurs comme des produits à part, ainsi que le titre et l'image propres de "
-"la carte de chaque valeur, avec l'image en attente (`image_copy`). "
-"`listed_by` est l'attribut selon lequel le produit est actuellement listé ; "
-"null s'il est listé une seule fois. `cards` donne les cartes sous lesquelles "
-"il est actuellement listé : une par valeur ou, s'il est listé selon "
-"plusieurs attributs, une par combinaison de leurs valeurs que vend une "
-"variation, chacune avec les `term_ids` de ses valeurs ainsi que son titre et "
-"son image propres. Définissez-les avec `set-product-split-listing`."
+"choix pour « Cartes dans la boutique » (`on`, une carte par valeur, "
+"toujours ; `filtered`, une carte par valeur seulement lorsqu'un filtre de la "
+"boutique en choisit une, comme pour un encadrement ; `off`, aucune ; `auto` "
+"suit le réglage propre de l'attribut, `attribute_mode`), ce à quoi revient "
+"ce choix (`listed`), ainsi que le titre et l'image propres de la carte de "
+"chaque valeur, avec l'image en attente (`image_copy`). `listed_by` est "
+"l'attribut selon lequel le produit est actuellement listé ; null s'il est "
+"listé une seule fois. `cards` donne les cartes sous lesquelles il est "
+"actuellement listé : une par valeur ou, s'il est listé selon plusieurs "
+"attributs, une par combinaison de leurs valeurs que vend une variation, "
+"chacune avec les `term_ids` de ses valeurs ainsi que son titre et son image "
+"propres. Définissez-les avec `set-product-split-listing`."
 
 #: src/Abilities/GetProductSplitListing.php:212
 msgid ""
@@ -811,14 +801,12 @@ msgstr ""
 "ses variations."
 
 #: src/Abilities/GetProductSplitListing.php:253
-#, fuzzy
-#| msgid ""
-#| "Whether the attribute lists its values as their own products by default."
 msgid ""
 "Whether the attribute lists its values as their own products by default, "
 "always or while filtered."
 msgstr ""
-"Indique si l'attribut liste par défaut ses valeurs comme des produits à part."
+"Indique si l'attribut liste par défaut ses valeurs comme des produits à "
+"part, toujours ou lors d'un filtrage."
 
 #: src/Abilities/GetProductSplitListing.php:258
 msgid ""
@@ -826,24 +814,26 @@ msgid ""
 "`filtered`, a card per value only while a filter of the shop chooses one; "
 "`off`, none. Set it with `set-attribute-split-listing`."
 msgstr ""
+"La façon dont l'attribut liste ses valeurs par défaut : `on`, une carte par "
+"valeur ; `filtered`, une carte par valeur seulement lorsqu'un filtre de la "
+"boutique en choisit une ; `off`, aucune. Définissez-la avec "
+"`set-attribute-split-listing`."
 
 #: src/Abilities/GetProductSplitListing.php:262
-#, fuzzy
-#| msgid ""
-#| "What the choice comes to: whether the product lists each value of this "
-#| "attribute as its own product."
 msgid ""
 "What the choice comes to: whether the product lists each value of this "
 "attribute as its own product, always or while filtered."
 msgstr ""
 "Ce à quoi revient le choix : si le produit liste chaque valeur de cet "
-"attribut comme un produit à part."
+"attribut comme un produit à part, toujours ou lors d'un filtrage."
 
 #: src/Abilities/GetProductSplitListing.php:267
 msgid ""
 "What the choice comes to: `on`, a card per value always; `filtered`, only "
 "while a filter chooses one; `off`, none."
 msgstr ""
+"Ce à quoi revient le choix : `on`, une carte par valeur, toujours ; "
+"`filtered`, seulement lorsqu'un filtre en choisit une ; `off`, aucune."
 
 #: src/Abilities/GetProductSplitListing.php:278
 msgid "The card's own title; empty when it shows the product's."
@@ -2061,12 +2051,8 @@ msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeSplitListing.php:36
-#, fuzzy
-#| msgid ""
-#| "Whether the attribute lists its values as their own products by default."
 msgid "Set how an attribute lists its values in the shop"
-msgstr ""
-"Indique si l'attribut liste par défaut ses valeurs comme des produits à part."
+msgstr "Définir comment un attribut liste ses valeurs dans la boutique"
 
 #: src/Abilities/SetAttributeSplitListing.php:37
 msgid ""
@@ -2079,24 +2065,27 @@ msgid ""
 "split-listing`, `set-product-split-listing`). The answer is the attribute's "
 "setting now."
 msgstr ""
+"Définit le réglage « Cartes dans la boutique » d'un attribut global, comme "
+"le fait son écran de modification : `on` liste une fois par valeur un "
+"produit variable qui l'utilise pour ses variations ; `filtered` ne le fait "
+"que lorsqu'un filtre de la boutique choisit l'une de ses valeurs, comme pour "
+"un encadrement qui ne doit pas créer ses propres cartes mais doit afficher "
+"la carte encadrée lorsque le client filtre par lui ; `off` ne crée aucune "
+"carte par valeur. Chaque produit réglé sur `auto` pour l'attribut suit ce "
+"réglage (`get-product-split-listing`, `set-product-split-listing`). La "
+"réponse donne le réglage actuel de l'attribut."
 
 #: src/Abilities/SetAttributeSplitListing.php:44
-#, fuzzy
-#| msgid "One of the product's global attributes, by id."
 msgid "A global attribute, by id."
-msgstr "L'un des attributs globaux du produit, par identifiant."
+msgstr "Un attribut global, par identifiant."
 
 #: src/Abilities/SetAttributeSplitListing.php:92
-#, fuzzy
-#| msgid "No variation has this id."
 msgid "No global attribute has this id."
-msgstr "Aucune variation n'a cet identifiant."
+msgstr "Aucun attribut global n'a cet identifiant."
 
 #: src/Abilities/SetAttributeSplitListing.php:95
-#, fuzzy
-#| msgid "The store is not connected to Pixonaut."
 msgid "The mode is not one of on, filtered or off."
-msgstr "La boutique n'est pas connectée à Pixonaut."
+msgstr "Le mode n'est ni on, ni filtered, ni off."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductPictureView.php:40
@@ -2435,22 +2424,6 @@ msgid "Set which values a product lists as their own products"
 msgstr "Définir les valeurs qu'un produit liste comme des produits à part"
 
 #: src/Abilities/SetProductSplitListing.php:56
-#, fuzzy
-#| msgid ""
-#| "Sets, for each global attribute of a simple or variable product listed, "
-#| "its \"Show each value as its own product\" choice (`on`, `off`, or `auto` "
-#| "to follow the attribute's own setting) and each listed value's card's own "
-#| "title and image, as the product's Attributes tab does. `cards` sets the "
-#| "title and image of the cards named by their values' `term_ids`: one of a "
-#| "product listed by several attributes is a combination, one value of each, "
-#| "as `get-product-split-listing` lists them. Give `attributes`, `cards` or "
-#| "both. Only what is given changes: an attribute, value, card, title or "
-#| "image left out keeps what it has. An empty title or a null image gives "
-#| "the card the product's own again. Nothing is saved unless everything "
-#| "listed fits. An image given by `src` is copied after the call has "
-#| "answered: until then the card keeps the image it had, and its "
-#| "`image_copy` says it is waiting, or why the copy failed. The answer is "
-#| "what the product has now, as `get-product-split-listing` gives it."
 msgid ""
 "Sets, for each global attribute of a simple or variable product listed, its "
 "\"Cards in the shop\" choice (`on`, a card per value always; `filtered`, a "
@@ -2470,22 +2443,24 @@ msgid ""
 "split-listing` gives it."
 msgstr ""
 "Définit, pour chaque attribut global listé d'un produit simple ou variable, "
-"son choix pour « Afficher chaque valeur comme un produit à part » (`on`, "
-"`off`, ou `auto` pour suivre le réglage propre de l'attribut) ainsi que le "
-"titre et l'image propres de la carte de chaque valeur listée, comme le fait "
-"l'onglet Attributs du produit. `cards` définit le titre et l'image des "
-"cartes, désignées par les `term_ids` de leurs valeurs : pour un produit "
-"listé selon plusieurs attributs, une carte est une combinaison, une valeur "
-"de chacun, telle que les liste `get-product-split-listing`. Indiquez "
-"`attributes`, `cards` ou les deux. Seul ce qui est fourni change : un "
-"attribut, une valeur, une carte, un titre ou une image omis reste tel quel. "
-"Un titre vide ou une image null redonne à la carte le titre ou l'image du "
-"produit. Rien n'est enregistré tant que tout ce qui est listé n'est pas "
-"valide. Une image fournie par `src` est copiée après que l'appel a répondu : "
-"jusqu'alors, la carte garde l'image qu'elle avait, et son `image_copy` "
-"indique qu'elle est en attente, ou pourquoi la copie a échoué. La réponse "
-"donne ce que le produit a désormais, tel que le donne `get-product-split-"
-"listing`."
+"son choix pour « Cartes dans la boutique » (`on`, une carte par valeur, "
+"toujours ; `filtered`, une carte par valeur seulement lorsqu'un filtre de la "
+"boutique en choisit une, comme pour un encadrement ; `off`, aucune ; ou "
+"`auto` pour suivre le réglage propre de l'attribut, que définit "
+"`set-attribute-split-listing`) ainsi que le titre et l'image propres de la "
+"carte de chaque valeur listée, comme le fait l'onglet Attributs du produit. "
+"`cards` définit le titre et l'image des cartes, désignées par les `term_ids` "
+"de leurs valeurs : pour un produit listé selon plusieurs attributs, une "
+"carte est une combinaison, une valeur de chacun, telle que les liste "
+"`get-product-split-listing`. Indiquez `attributes`, `cards` ou les deux. "
+"Seul ce qui est fourni change : un attribut, une valeur, une carte, un titre "
+"ou une image omis reste tel quel. Un titre vide ou une image null redonne à "
+"la carte le titre ou l'image du produit. Rien n'est enregistré tant que tout "
+"ce qui est listé n'est pas valide. Une image fournie par `src` est copiée "
+"après que l'appel a répondu : jusqu'alors, la carte garde l'image qu'elle "
+"avait, et son `image_copy` indique qu'elle est en attente, ou pourquoi la "
+"copie a échoué. La réponse donne ce que le produit a désormais, tel que le "
+"donne `get-product-split-listing`."
 
 #: src/Abilities/SetProductSplitListing.php:73
 msgid "One of the product's global attributes, by id."
@@ -4461,24 +4436,23 @@ msgstr "%1$s, photo %2$d"
 #. translators: Option of the "Cards in the shop" menu of a product attribute: the shop lists a product once, whatever this attribute's value.
 #: src/Admin/SplitListingFields.php:307
 msgid "One card for all values"
-msgstr ""
+msgstr "Une carte pour toutes les valeurs"
 
 #. translators: Option of the "Cards in the shop" menu of a product attribute: the shop always lists each of the attribute's values as its own card.
 #: src/Admin/SplitListingFields.php:309
 msgid "A card per value"
-msgstr ""
+msgstr "Une carte par valeur"
 
 #. translators: Option of the "Cards in the shop" menu of a product attribute: the shop lists each of the attribute's values as its own card only while a customer filters by the attribute.
 #: src/Admin/SplitListingFields.php:311
 msgid "A card per value while filtered by it"
-msgstr ""
+msgstr "Une carte par valeur lors d’un filtrage par l’attribut"
 
 #. translators: Option of the "Cards in the shop" menu on an attribute's row in a product's Attributes tab, following the attribute's own setting. %s: that setting, such as "A card per value".
 #: src/Admin/SplitListingFields.php:325
-#, fuzzy, php-format
-#| msgid "Auto: on, as the attribute is"
+#, php-format
 msgid "Auto: %s, as the attribute"
-msgstr "Auto : activé, comme l'attribut"
+msgstr "Auto : %s, comme l'attribut"
 
 #. translators: Option of "Value names beside swatches" on the screen that adds or edits a product attribute: follow the store's setting.
 #: src/Admin/SwatchNamesField.php:91
@@ -11268,19 +11242,11 @@ msgstr "Fermer"
 #. translators: Label of a menu on an attribute's row in the product's Attributes tab: whether the shop lists each of the attribute's values as its own card.
 #: templates/admin/split-attribute-field.php:22
 #: templates/admin/split-listing-control.php:28
-#, fuzzy
-#| msgid "Each value’s card in the shop"
 msgid "Cards in the shop"
-msgstr "Carte de chaque valeur dans la boutique"
+msgstr "Cartes dans la boutique"
 
 #. translators: Help under the "Cards in the shop" menu on the screen that adds or edits a product attribute.
 #: templates/admin/split-attribute-field.php:24
-#, fuzzy
-#| msgid ""
-#| "A variable product using this attribute for its variations is listed once "
-#| "per value in the shop, its other options inside each one. Each product "
-#| "can follow this, or turn it on or off for itself, on its Attributes tab. "
-#| "Only one attribute per product is listed this way."
 msgid ""
 "A variable product using this attribute for its variations can be listed "
 "once per value in the shop, its other options inside each one: always, or "
@@ -11288,11 +11254,12 @@ msgid ""
 "should not make cards of its own. Each product can follow this, or choose "
 "for itself, on its Attributes tab."
 msgstr ""
-"Un produit variable qui utilise cet attribut pour ses variations est listé "
-"une fois par valeur dans la boutique, ses autres options dans chacune. "
-"Chaque produit peut suivre ce réglage, ou l'activer ou le désactiver pour "
-"lui-même, dans son onglet Attributs. Un seul attribut par produit est listé "
-"ainsi."
+"Un produit variable qui utilise cet attribut pour ses variations peut être "
+"listé une fois par valeur dans la boutique, ses autres options dans "
+"chacune : toujours, ou seulement lorsqu'un client filtre par cet attribut, "
+"comme pour un encadrement qui ne doit pas créer ses propres cartes. Chaque "
+"produit peut suivre ce réglage, ou choisir lui-même, dans son onglet "
+"Attributs."
 
 #. translators: Heading over a title and an image field per value of an attribute, on the attribute's row in the product's Attributes tab.
 #: templates/admin/split-card-looks.php:31
@@ -11300,12 +11267,6 @@ msgid "Each value’s card in the shop"
 msgstr "Carte de chaque valeur dans la boutique"
 
 #: templates/admin/split-card-looks.php:35
-#, fuzzy
-#| msgid ""
-#| "A card without a title of its own shows the product’s. Without an image "
-#| "of its own, it shows the image of the value’s first variation that has "
-#| "one, else the product’s. Save attributes to add a row for a value you "
-#| "just added."
 msgid ""
 "A card without a title of its own shows the product’s. Without an image of "
 "its own, it shows the flat picture of its design; a card a filter shows, of "
@@ -11313,8 +11274,9 @@ msgid ""
 "Save attributes to add a row for a value you just added."
 msgstr ""
 "Une carte sans titre propre affiche celui du produit. Sans image propre, "
-"elle affiche l’image de la première variation de la valeur qui en a une, "
-"sinon celle du produit. Enregistrez les attributs pour ajouter une ligne "
+"elle affiche l’image à plat de sa création ; une carte affichée par un "
+"filtre, pour une valeur listée seulement lors d’un filtrage, affiche l’image "
+"de sa première variation. Enregistrez les attributs pour ajouter une ligne "
 "pour une valeur que vous venez d’ajouter."
 
 #. translators: %s: an attribute value, such as "With photo". Title of the media library window choosing the image of that value's card in the shop.
