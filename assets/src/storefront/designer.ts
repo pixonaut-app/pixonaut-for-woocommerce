@@ -45,6 +45,7 @@ import {
 	shapeOf,
 	shapeOnceDrawn,
 } from './frame-shape';
+import { type KeptView, shownViewOf, viewStandingFor } from './kept-view';
 import { withStandIns } from './lent-parts';
 import {
 	PREVIEW_OPENED_NAME,
@@ -339,6 +340,9 @@ export class ProductDesigner {
 	/** The values of a side's designer removed to mount it again, which its
 	 *  next mount starts from, until one succeeds. */
 	private readonly keptValues = new Map<string, DesignerState['values']>();
+	/** The view each side's designer showed when it was destroyed to mount
+	 *  again, which the next one opens on. */
+	private readonly keptViews = new Map<string, KeptView>();
 
 	/** Set for good once a lasting reason says the product cannot be
 	 *  personalised on this page. */
@@ -513,6 +517,7 @@ export class ProductDesigner {
 		// Shown from the start, rather than switched to once mounted.
 		const ref = variantRef(this.container, this.variations, this.variation);
 		const own = this.mounts[side];
+		const keptView = this.keptViews.get(side);
 		const { formGroups, ...lent } = this.shopStepOptions(side, own);
 		const options = filterMountOptions<SplitMountOptions>(
 			{
@@ -530,6 +535,12 @@ export class ProductDesigner {
 					? {}
 					: { initialVariant: ref }),
 				...(kept === undefined ? {} : { initialValues: kept }),
+				// A side mounted again opens on the view it showed, where the
+				// views it is mounted with may hold it.
+				...(keptView === undefined ||
+				!(own?.views?.includes(keptView.viewId) ?? true)
+					? {}
+					: { initialView: keptView.viewId }),
 				previewTarget: this.previewTarget(side),
 				formTarget: this.formTarget(side),
 				...this.viewsTarget(side),
@@ -602,6 +613,7 @@ export class ProductDesigner {
 		}
 		this.designers.set(side, designer);
 		this.keptValues.delete(side);
+		this.keptViews.delete(side);
 		this.followHosts();
 		this.completeHosts(side, designer);
 		// Its tab may have been shown while it mounted.
@@ -620,6 +632,15 @@ export class ProductDesigner {
 			shown !== startingVariant(designer)
 		) {
 			this.variantPicked(side, shown);
+		}
+		// A starting view the variation names itself is not left for one that
+		// only stands at the same place.
+		if (keptView !== undefined) {
+			await this.showKeptView(
+				designer,
+				keptView,
+				own !== undefined && 'initialView' in own ? own.initialView : undefined,
+			);
 		}
 	}
 
@@ -1240,6 +1261,12 @@ export class ProductDesigner {
 		// An upload under way lands in the values the side mounts again with.
 		await designer.settled();
 		this.keptValues.set(side, designer.getState().values);
+		const keptView = shownViewOf(designer);
+		if (keptView === undefined) {
+			this.keptViews.delete(side);
+		} else {
+			this.keptViews.set(side, keptView);
+		}
 		const hold = holdShown(
 			[
 				this.previewTarget(side),
@@ -1272,6 +1299,31 @@ export class ProductDesigner {
 			return;
 		}
 		void mounted.shown().then(release, release);
+	}
+
+	/** Shows, in a designer mounted again, the view that stands for the one
+	 *  its side showed before, when it opened on another: a blank without
+	 *  that view shows the one at the same place, unless its variation named
+	 *  the view it starts on (`starting`). A view it cannot show leaves it on
+	 *  the one it opened on. */
+	private async showKeptView(
+		designer: PixonautDesigner,
+		kept: KeptView,
+		starting: string | undefined,
+	): Promise<void> {
+		const viewId = viewStandingFor(designer, kept);
+		if (
+			viewId === undefined ||
+			viewId === designer.getView() ||
+			(viewId !== kept.viewId && starting !== undefined)
+		) {
+			return;
+		}
+		try {
+			await designer.setView(viewId);
+		} catch (error) {
+			console.error('Pixonaut: the view could not be kept.', error);
+		}
 	}
 
 	/** Lets go of what the side showed before it was mounted again. */
