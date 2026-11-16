@@ -10,6 +10,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
+use Pixonaut\WooCommerce\Storefront\OpeningChoice;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
 use WC_Product_Attribute;
@@ -260,6 +261,172 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		$this->assertSame( 1, $this->counts( 'pa_storlek', $range )[ $this->term( '30x40' ) ] ?? null, 'the group\'s 500 child; no 30x40 variation costs that much' );
 	}
 
+	public function test_a_card_opens_on_the_size_and_a_price_the_filters_chose(): void {
+		$this->set_defaults( array( 'pa_storlek' => '50x70' ) );
+		$filters = array(
+			'filter_storlek' => '30x40',
+			'max_price'      => self::PRICE_HIGH,
+		);
+
+		$link = $this->shop( $filters )['links'][ $this->poster->get_id() ] ?? '';
+
+		$this->assertSame(
+			array(
+				'attribute_pa_storlek'   => '30x40',
+				'attribute_pa_inramning' => 'ingen',
+			),
+			$this->chosen( $link ),
+			'the cheapest 30x40 in range; the default 50x70 costs 299 bare, but is not the size chosen'
+		);
+		$this->assertSame( '199', $this->opened_price( $link ), 'the page opens on that variation' );
+	}
+
+	public function test_of_several_matching_variations_the_defaults_choose(): void {
+		$this->set_defaults(
+			array(
+				'pa_inramning' => 'ram',
+				'pa_ramfarg'   => 'svart',
+			)
+		);
+
+		$link = $this->shop(
+			array(
+				'filter_storlek' => '30x40',
+				'max_price'      => self::PRICE_HIGH,
+			)
+		)['links'][ $this->poster->get_id() ] ?? '';
+
+		$this->assertSame(
+			array(
+				'attribute_pa_storlek'   => '30x40',
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'svart',
+			),
+			$this->chosen( $link ),
+			'framed in black, as the defaults, over the cheaper bare one'
+		);
+		$this->assertSame( '349', $this->opened_price( $link ) );
+	}
+
+	public function test_a_frame_and_colour_filter_opens_on_a_framed_oak_variation(): void {
+		$filters = array(
+			'filter_inramning' => 'ram',
+			'filter_ramfarg'   => 'ek',
+		);
+
+		$this->assertSame(
+			array(
+				'attribute_pa_storlek'   => '30x40',
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'ek',
+			),
+			$this->chosen( $this->shop( $filters )['links'][ $this->poster->get_id() ] ?? '' ),
+			'the cheaper size without a default'
+		);
+
+		$this->set_defaults( array( 'pa_storlek' => '50x70' ) );
+		$link = $this->shop( $filters )['links'][ $this->poster->get_id() ] ?? '';
+		$this->assertSame(
+			array(
+				'attribute_pa_storlek'   => '50x70',
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'ek',
+			),
+			$this->chosen( $link ),
+			'the default size'
+		);
+		$this->assertSame( '499', $this->opened_price( $link ) );
+	}
+
+	public function test_each_card_opens_on_its_own_matching_variation(): void {
+		SplitListing::set_attribute_default( $this->attributes[ self::PICTURE ], true );
+
+		$links = $this->shop(
+			array(
+				'filter_storlek' => '30x40',
+				'max_price'      => self::PRICE_HIGH,
+			)
+		)['card_links'];
+
+		$this->assertSame(
+			array(
+				array(
+					'attribute_pa_inramning' => 'ingen',
+					'attribute_pa_storlek'   => '30x40',
+				),
+				array(
+					'attribute_pa_inramning' => 'ram',
+					'attribute_pa_storlek'   => '30x40',
+					'attribute_pa_ramfarg'   => 'ek',
+				),
+			),
+			array_map( array( $this, 'chosen' ), $links[ $this->poster->get_id() ] ?? array() ),
+			'the bare card and the framed one, the card\'s value first; the hanger is 50x70 only'
+		);
+	}
+
+	public function test_a_variation_is_chosen_only_when_its_link_opens_on_one_matching_the_filters(): void {
+		$sea = $this->product(
+			'Hav',
+			array(
+				array( '', 'ingen', '', '499' ),
+				array( '30x40', 'ingen', '', '199' ),
+				array( '30x40', 'ram', 'ek', '349' ),
+			)
+		);
+
+		$link = $this->shop(
+			array(
+				'filter_storlek' => '30x40',
+				'max_price'      => self::PRICE_HIGH,
+			)
+		)['links'][ $sea->get_id() ] ?? '';
+
+		$this->assertSame(
+			array(
+				'attribute_pa_storlek'   => '30x40',
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'ek',
+			),
+			$this->chosen( $link ),
+			'bare in 30x40 opens on the bare one in any size, at 499'
+		);
+		$this->assertSame( '349', $this->opened_price( $link, $sea ) );
+	}
+
+	public function test_a_value_a_filter_overrides_does_not_count_as_agreeing_with_the_defaults(): void {
+		$sea = $this->product(
+			'Hav',
+			array(
+				array( '', 'ingen', '', '199' ),
+				array( '30x40', 'ram', 'ek', '349' ),
+			)
+		);
+		$sea->set_default_attributes(
+			array(
+				'pa_storlek'   => '50x70',
+				'pa_inramning' => 'ram',
+			)
+		);
+		$sea->save();
+
+		$this->assertSame(
+			array(
+				'attribute_pa_storlek'   => '30x40',
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'ek',
+			),
+			$this->chosen( $this->shop( array( 'filter_storlek' => '30x40' ) )['links'][ $sea->get_id() ] ?? '' ),
+			'the bare one in any size opens in 30x40, not the default 50x70: the frame agrees with a default'
+		);
+	}
+
+	public function test_without_a_filter_a_card_links_to_the_product_itself(): void {
+		$this->set_defaults( array( 'pa_storlek' => '50x70' ) );
+
+		$this->assertSame( (string) get_permalink( $this->poster->get_id() ), $this->shop( array() )['links'][ $this->poster->get_id() ] ?? '' );
+	}
+
 	public function test_the_theme_reads_which_attribute_a_dependent_one_applies_under(): void {
 		$this->assertSame(
 			array( 'pa_ramfarg' => array( 'pa_inramning' => array( 'ram', 'hangare' ) ) ),
@@ -342,21 +509,80 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	 * The shop's main query on the category page and its loop.
 	 *
 	 * @param array<string, string> $args Query parameters.
-	 * @return array{ids: list<int>, found: int}
+	 * @return array{ids: list<int>, found: int, links: array<int, string>, card_links: array<int, list<string>>} The links by product id: the first card's, and every card's.
 	 */
 	private function shop( array $args ): array {
 		$this->go_to_listing( $args );
 		global $wp_query;
-		$ids = array();
+		$ids   = array();
+		$links = array();
 		while ( $wp_query->have_posts() ) {
 			$wp_query->the_post();
-			$ids[] = (int) get_the_ID();
+			$id             = (int) get_the_ID();
+			$ids[]          = $id;
+			$links[ $id ][] = (string) get_permalink();
 		}
 		wp_reset_postdata();
 		return array(
-			'ids'   => array_values( array_unique( $ids ) ),
-			'found' => (int) $wp_query->found_posts,
+			'ids'        => array_values( array_unique( $ids ) ),
+			'found'      => (int) $wp_query->found_posts,
+			'links'      => array_map( static fn ( array $each ): string => $each[0], $links ),
+			'card_links' => $links,
 		);
+	}
+
+	/**
+	 * The poster's stored default attributes.
+	 *
+	 * @param array<string, string> $defaults Slugs by taxonomy.
+	 */
+	private function set_defaults( array $defaults ): void {
+		$this->poster->set_default_attributes( $defaults );
+		$this->poster->save();
+	}
+
+	/**
+	 * A link's `attribute_*` query parameters, in its order.
+	 *
+	 * @param string $link A card's link.
+	 * @return array<string, string>
+	 */
+	private function chosen( string $link ): array {
+		parse_str( (string) wp_parse_url( $link, PHP_URL_QUERY ), $query );
+		$chosen = array();
+		foreach ( $query as $name => $value ) {
+			if ( is_string( $name ) && str_starts_with( $name, 'attribute_' ) && is_string( $value ) ) {
+				$chosen[ $name ] = $value;
+			}
+		}
+		return $chosen;
+	}
+
+	/**
+	 * The price of the variation a product's page opens on at a link.
+	 *
+	 * @param string          $link    A card's link to the product.
+	 * @param WC_Product|null $product The product; the poster when null.
+	 */
+	private function opened_price( string $link, ?WC_Product $product = null ): string {
+		$product ??= $this->poster;
+		$this->forget_chosen_filters();
+		$_GET = array();
+		foreach ( $this->chosen( $link ) as $field => $value ) {
+			$_REQUEST[ $field ] = $value;
+		}
+		$this->go_to( $link );
+		$variations = array();
+		foreach ( $product->get_children() as $id ) {
+			$variations[ $id ] = wc_get_product( $id );
+		}
+		$opened = OpeningChoice::variation_among( $product, array_filter( $variations ) );
+		foreach ( array_keys( $this->chosen( $link ) ) as $field ) {
+			unset( $_REQUEST[ $field ] );
+		}
+		$variation = wc_get_product( $opened );
+		$this->assertInstanceOf( WC_Product_Variation::class, $variation, 'the page opens on a variation' );
+		return (string) $variation->get_price();
 	}
 
 	/**

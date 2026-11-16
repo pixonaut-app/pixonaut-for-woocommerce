@@ -35,7 +35,9 @@ use WP_Query;
  * is listed by, as the first of its cards the filter keeps. Every card keeps
  * its page (`CardPages`) either way.
  *
- * Each card links to the product with its values chosen. A filter by an
+ * Each card links to the product with its values chosen, and, while a
+ * filter is on, with the variation the filters chose (`FilteredOpening`),
+ * a product shown as itself too. A filter by an
  * attribute the product is listed by keeps only the cards holding a chosen
  * value, and a card whose variations are all on a template that is not
  * live is left out. While an attribute or price filter is on, a product
@@ -93,6 +95,21 @@ final class SplitCardListings {
 	private ?array $current = null;
 
 	/**
+	 * The posts of the listing's results, by the post object it holds.
+	 *
+	 * @var WeakMap<WP_Post, true>
+	 */
+	private WeakMap $listed;
+
+	/**
+	 * The product a listing's loop shows now, while it shows one; its
+	 * card is `current`, when it shows a card of it.
+	 *
+	 * @var int|null
+	 */
+	private ?int $listed_id = null;
+
+	/**
 	 * The cards a Product Template block has shown so far, in order, `NO_CARD`
 	 * for a product listed once.
 	 *
@@ -104,7 +121,8 @@ final class SplitCardListings {
 	 * @param Settings $settings The settings.
 	 */
 	public function __construct( private readonly Settings $settings ) {
-		$this->cards = new WeakMap();
+		$this->cards  = new WeakMap();
+		$this->listed = new WeakMap();
 	}
 
 	public function register(): void {
@@ -278,6 +296,9 @@ final class SplitCardListings {
 		// With one card per product, a product shows a card only while a filter chose one of the card's values.
 		$filtered = true === $this->settings->get( Settings::ONE_CARD_PER_PRODUCT ) ? array_merge( array(), ...array_values( FilterMatches::chosen() ) ) : null;
 		foreach ( $posts as $post ) {
+			if ( $post instanceof WP_Post ) {
+				$this->listed[ $post ] = true;
+			}
 			if ( ! $post instanceof WP_Post || ! property_exists( $post, self::FIELD ) ) {
 				continue;
 			}
@@ -300,15 +321,17 @@ final class SplitCardListings {
 	 */
 	public function enter( mixed $post, mixed $query = null ): void {
 		if ( $query instanceof WP_Query && ! $query->in_the_loop ) {
-			$this->current = null;
+			$this->current   = null;
+			$this->listed_id = null;
 			return;
 		}
 		if ( ! $post instanceof WP_Post ) {
 			return;
 		}
-		$key           = $this->current_key( $post );
-		$this->current = self::NO_CARD === $key ? null : array( $post->ID, $key );
-		$this->shown[] = array( $post->ID, $key );
+		$key             = $this->current_key( $post );
+		$this->current   = self::NO_CARD === $key ? null : array( $post->ID, $key );
+		$this->listed_id = isset( $this->listed[ $post ] ) || null !== $this->current ? $post->ID : null;
+		$this->shown[]   = array( $post->ID, $key );
 	}
 
 	/**
@@ -346,25 +369,30 @@ final class SplitCardListings {
 	 * Forgets the card once its loop ends.
 	 */
 	public function leave(): void {
-		$this->current = null;
+		$this->current   = null;
+		$this->listed_id = null;
 	}
 
 	/**
-	 * A card's links to its product, with its values chosen.
+	 * A card's links to its product, with its values chosen, and with the
+	 * variation the listing's filters chose while one is on.
 	 *
 	 * @param mixed $url  The product's address.
 	 * @param mixed $post The product.
 	 * @return mixed
 	 */
 	public function link( mixed $url, mixed $post ): mixed {
-		if ( null === $this->current || ! is_string( $url ) || ! $post instanceof WP_Post || $post->ID !== $this->current[0] ) {
+		if ( ! is_string( $url ) || ! $post instanceof WP_Post || $post->ID !== $this->listed_id ) {
 			return $url;
 		}
 		$product = wc_get_product( $post->ID );
 		if ( ! $product instanceof WC_Product ) {
 			return $url;
 		}
-		return CardPages::url( $product, $this->current[1], $url );
+		$key  = null !== $this->current && $this->current[0] === $post->ID ? $this->current[1] : self::NO_CARD;
+		$link = self::NO_CARD === $key ? $url : CardPages::url( $product, $key, $url );
+		$more = array_diff_key( FilteredOpening::values( $product, $key ), SplitCards::link_values( $product, $key ) );
+		return array() === $more ? $link : add_query_arg( array_map( 'rawurlencode', $more ), $link );
 	}
 
 	/**

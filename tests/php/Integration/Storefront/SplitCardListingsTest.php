@@ -231,7 +231,19 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 
 		$sized = $this->shop( array( 'filter_storlek' => '30x40' ) );
 		$this->assertSame( array( $poster->get_id() ), $sized['ids'] );
-		$this->assertSame( array( (string) get_permalink( $poster->get_id() ) ), $sized['links'], 'a filter by an attribute it is not listed by shows it as itself' );
+		$this->assertSame(
+			array(
+				add_query_arg(
+					array(
+						'attribute_pa_bild'    => 'med-bild',
+						'attribute_pa_storlek' => '30x40',
+					),
+					(string) get_permalink( $poster->get_id() )
+				),
+			),
+			$sized['links'],
+			'a filter by an attribute it is not listed by shows it as itself, opening on the first variation the filter keeps'
+		);
 
 		$this->assertSame( array(), $this->shop( array( 'filter_bild' => 'ram' ) )['ids'], 'no card holds the value: not listed' );
 		unset( $mug );
@@ -272,6 +284,33 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 
 		self::personalised()->with_override( true )->save_to( $this->variation_of( $poster, 'Utan bild' ) );
 		$this->assertSame( 2, $this->shop()['found'], 'live again, it is listed again' );
+	}
+
+	public function test_a_filtered_product_shown_as_itself_opens_on_a_variation_on_a_live_template(): void {
+		$poster = $this->poster();
+		self::personalised()->save_to( $poster );
+		$paused = self::personalised()->with_override( true )->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE );
+		foreach ( $poster->get_children() as $id ) {
+			$variation = wc_get_product( $id );
+			$this->assertInstanceOf( WC_Product::class, $variation );
+			if ( 'Med bild' === $variation->get_attribute( 'pa_bild' ) && '30x40' === $variation->get_attribute( 'pa_storlek' ) ) {
+				$paused->save_to( $variation );
+			}
+		}
+
+		$this->assertSame(
+			array(
+				add_query_arg(
+					array(
+						'attribute_pa_bild'    => 'utan-bild',
+						'attribute_pa_storlek' => '30x40',
+					),
+					(string) get_permalink( $poster->get_id() )
+				),
+			),
+			$this->shop( array( 'filter_storlek' => '30x40' ) )['links'],
+			'the first 30x40 is on a paused template'
+		);
 	}
 
 	public function test_another_product_query_lists_the_product_once(): void {

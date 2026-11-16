@@ -703,6 +703,7 @@ export const REACH = {
 		'src/Storefront/SplitCardFaces.php',
 		'src/Storefront/SplitCardListings.php',
 		'src/Storefront/FilterMatches.php',
+		'src/Storefront/FilteredOpening.php',
 		'src/Catalogue/FilterOffers.php',
 		'templates/admin/split-card-looks.php',
 		'assets/src/admin/split-listing.ts',

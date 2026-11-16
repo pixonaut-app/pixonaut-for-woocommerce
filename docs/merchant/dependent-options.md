@@ -86,6 +86,11 @@ only while one variation a customer can buy matches every filter at once:
 - Within one attribute, any chosen value matches (**Oak** or **Black**). A
   variation that leaves an attribute on **Any** matches any of its values,
   unless the attribute does not apply to it.
+- A product's card opens the product on the variation the filters chose:
+  with **Size: 30×40** and a price up to **391**, a 30×40 variation within
+  that price, never the product's default 50×70. Of several that match, it
+  opens on the one the product's default values agree with most, else the
+  cheapest. Without a filter, a card opens as it always has.
 - Each value's count beside its checkbox is what the shop would list with
   that value added to the filters, counting each card of a product
   [listed once per value](../split-listings/).

@@ -70,6 +70,9 @@ Product Collection block on the shop's templates) both show them.
   The product's other attributes open on its default values, and one
   without a default on the value of the first variation with the card's
   value that customers can buy, so the page opens on a whole variation.
+  While the shop's filters are on, the card opens on the card's variation
+  the filters chose instead (see
+  [Filters in the shop](../dependent-options/#filters-in-the-shop)).
 - **Counting and pages**: each card counts as a product, so "Showing 1–12 of
   N" and the pages count cards.
 - **Categories and filters**: each card is in the product's categories and
@@ -97,7 +100,7 @@ cards that look much alike. **One card per product in the shop**, under
   product with no such card is left out, as a product without the value
   would be.
 - A filter by any other attribute keeps or drops the product, shown as
-  itself.
+  itself, which opens on the variation the filters chose.
 
 Each card keeps its own page and its place in the sitemap either way. The
 setting is off by default. An assistant turns it on with the
