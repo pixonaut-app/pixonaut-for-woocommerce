@@ -225,6 +225,7 @@ export const REACH = {
 		'assets/src/storefront/attribute-swatches.css',
 		'assets/src/storefront/shop-parts.ts',
 		'assets/src/storefront/lent-parts.ts',
+		'assets/src/storefront/reset-link.ts',
 		'src/Storefront/AttributeOptions.php',
 	],
 	'attribute-swatches.spec.ts': [
@@ -506,6 +507,7 @@ export const REACH = {
 		'src/Storefront/ArrangedSteps.php',
 		'templates/storefront/form-placeholder.php',
 		'assets/src/storefront/form-groups.ts',
+		'assets/src/storefront/own-step.ts',
 		'assets/src/storefront/form-placeholder.css',
 		'assets/src/admin/settings.ts',
 	],
