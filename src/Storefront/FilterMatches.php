@@ -13,6 +13,7 @@ use Pixonaut\WooCommerce\Catalogue\FilterOffers;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Settings\Settings;
+use WC_Cache_Helper;
 use WC_Product;
 use WC_Query;
 use WP_Query;
@@ -54,6 +55,22 @@ final class FilterMatches {
 	 * it keeps internal: used while it has them.
 	 */
 	private const QUERY_CLAUSES = 'Automattic\\WooCommerce\\Internal\\ProductFilters\\QueryClauses';
+
+	/**
+	 * The query type under which every chosen value of an attribute must be held.
+	 */
+	private const ALL_VALUES = 'and';
+
+	/**
+	 * Prefix of the transient each query's counts are kept in.
+	 */
+	private const COUNTS_TRANSIENT = 'pixonaut_wc_filter_counts_';
+
+	/**
+	 * How long counts are kept: they are read again sooner once a product
+	 * changes, and a template going live or paused shows within this time.
+	 */
+	private const COUNTS_LIFETIME = HOUR_IN_SECONDS;
 
 	/**
 	 * The price filter's query arguments.
@@ -184,12 +201,35 @@ final class FilterMatches {
 		if ( null !== $results || 'attribute' !== $type || ! is_array( $query_vars ) || '' === $taxonomy ) {
 			return $results;
 		}
+		$one     = true === $this->settings->get( Settings::ONE_CARD_PER_PRODUCT );
+		$version = class_exists( WC_Cache_Helper::class ) ? (string) WC_Cache_Helper::get_transient_version( 'product' ) : '';
+		$normal  = $query_vars;
+		ksort( $normal );
+		$transient = self::COUNTS_TRANSIENT . md5( (string) wp_json_encode( array( $normal, $taxonomy, $one, $version ) ) );
+		$cached    = get_transient( $transient );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+		$counts = self::count( $query_vars, $taxonomy, $one );
+		set_transient( $transient, $counts, self::COUNTS_LIFETIME );
+		return $counts;
+	}
+
+	/**
+	 * Works out `counts()`.
+	 *
+	 * @param array<array-key, mixed> $query_vars The listing's query.
+	 * @param string                  $taxonomy   The counted attribute.
+	 * @param bool                    $one        Whether the store lists each product once.
+	 * @return array<int, int> Counts by term id.
+	 */
+	private static function count( array $query_vars, string $taxonomy, bool $one ): array {
 		$chosen = self::chosen_in( $query_vars );
+		$all    = self::all_values_in( $query_vars );
 		$range  = self::range(
 			is_scalar( $query_vars[ self::MIN_PRICE ] ?? null ) ? (string) $query_vars[ self::MIN_PRICE ] : null,
 			is_scalar( $query_vars[ self::MAX_PRICE ] ?? null ) ? (string) $query_vars[ self::MAX_PRICE ] : null
 		);
-		$one    = true === $this->settings->get( Settings::ONE_CARD_PER_PRODUCT );
 		$counts = array();
 		foreach ( self::listed( $query_vars ) as $product_id ) {
 			$product = wc_get_product( $product_id );
@@ -199,13 +239,32 @@ final class FilterMatches {
 			foreach ( self::values_held( $product, $taxonomy ) as $term_id ) {
 				$with              = $chosen;
 				$with[ $taxonomy ] = array_values( array_unique( array_merge( $chosen[ $taxonomy ] ?? array(), array( $term_id ) ) ) );
-				$shown             = self::shown( $product, $with, $range[0], $range[1], $one );
+				$shown             = self::holds_all( $product, $with, $all ) ? self::shown( $product, $with, $range[0], $range[1], $one ) : 0;
 				if ( $shown > 0 ) {
 					$counts[ $term_id ] = ( $counts[ $term_id ] ?? 0 ) + $shown;
 				}
 			}
 		}
 		return $counts;
+	}
+
+	/**
+	 * Whether a product holds, across its offers, every chosen value of each
+	 * attribute whose values combine with `and`, as WooCommerce's own
+	 * reading of such a filter keeps it in the listing.
+	 *
+	 * @param WC_Product               $product A product.
+	 * @param array<string, list<int>> $chosen  Chosen term ids by taxonomy.
+	 * @param string[]                 $all     The taxonomies whose values combine with `and`.
+	 * @phpstan-param list<string> $all
+	 */
+	private static function holds_all( WC_Product $product, array $chosen, array $all ): bool {
+		foreach ( $all as $taxonomy ) {
+			if ( array() !== array_diff( $chosen[ $taxonomy ] ?? array(), self::values_held( $product, $taxonomy ) ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -286,7 +345,7 @@ final class FilterMatches {
 	 */
 	private static function listed( array $query_vars ): array {
 		foreach ( array_keys( $query_vars ) as $name ) {
-			if ( is_string( $name ) && ( str_starts_with( $name, self::FILTER_PREFIX ) || str_starts_with( $name, self::QUERY_TYPE_PREFIX ) || self::MIN_PRICE === $name || self::MAX_PRICE === $name ) ) {
+			if ( null !== self::attribute_of( $name, self::FILTER_PREFIX ) || null !== self::attribute_of( $name, self::QUERY_TYPE_PREFIX ) || self::MIN_PRICE === $name || self::MAX_PRICE === $name ) {
 				unset( $query_vars[ $name ] );
 			}
 		}
@@ -294,7 +353,7 @@ final class FilterMatches {
 		$query_vars['posts_per_page'] = -1;
 		$query_vars['nopaging']       = true;
 		$query_vars['no_found_rows']  = true;
-		// WooCommerce's own clauses for the block's other filters, such as stock; attributes and price are gone from the query.
+		// WooCommerce's own clauses for the block's other filters, such as stock and taxonomies; attributes and price are gone from the query.
 		$clauses = null;
 		if ( class_exists( self::QUERY_CLAUSES ) && function_exists( 'wc_get_container' ) ) {
 			/** @var class-string<object> $class */
@@ -320,16 +379,45 @@ final class FilterMatches {
 	private static function chosen_in( array $query_vars ): array {
 		$chosen = array();
 		foreach ( $query_vars as $name => $value ) {
-			if ( ! is_string( $name ) || ! str_starts_with( $name, self::FILTER_PREFIX ) || ! is_string( $value ) || '' === $value ) {
-				continue;
-			}
-			$attribute = wc_sanitize_taxonomy_name( substr( $name, strlen( self::FILTER_PREFIX ) ) );
-			$taxonomy  = wc_attribute_taxonomy_name( $attribute );
-			if ( taxonomy_exists( $taxonomy ) && 0 !== wc_attribute_taxonomy_id_by_name( $attribute ) ) {
+			$taxonomy = self::attribute_of( $name, self::FILTER_PREFIX );
+			if ( null !== $taxonomy && is_string( $value ) && '' !== $value ) {
 				$chosen[ $taxonomy ] = self::term_ids( $taxonomy, array_map( 'sanitize_title', explode( ',', $value ) ) );
 			}
 		}
 		return $chosen;
+	}
+
+	/**
+	 * The attributes whose chosen values a query combines with `and`.
+	 *
+	 * @param array<array-key, mixed> $query_vars A query.
+	 * @return list<string> Taxonomies.
+	 */
+	private static function all_values_in( array $query_vars ): array {
+		$all = array();
+		foreach ( $query_vars as $name => $value ) {
+			$taxonomy = self::attribute_of( $name, self::QUERY_TYPE_PREFIX );
+			if ( null !== $taxonomy && is_string( $value ) && self::ALL_VALUES === strtolower( $value ) ) {
+				$all[] = $taxonomy;
+			}
+		}
+		return $all;
+	}
+
+	/**
+	 * The global attribute a query argument names after a prefix; null for
+	 * any other argument, such as the stock filter's or a taxonomy's.
+	 *
+	 * @param int|string $name   A query argument's name.
+	 * @param string     $prefix `filter_` or `query_type_`.
+	 */
+	private static function attribute_of( int|string $name, string $prefix ): ?string {
+		if ( ! is_string( $name ) || ! str_starts_with( $name, $prefix ) ) {
+			return null;
+		}
+		$attribute = wc_sanitize_taxonomy_name( substr( $name, strlen( $prefix ) ) );
+		$taxonomy  = wc_attribute_taxonomy_name( $attribute );
+		return taxonomy_exists( $taxonomy ) && 0 !== wc_attribute_taxonomy_id_by_name( $attribute ) ? $taxonomy : null;
 	}
 
 	/**

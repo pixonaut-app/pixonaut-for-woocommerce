@@ -108,13 +108,31 @@ final class FilterOffers {
 		foreach ( self::attributes( $product ) as $taxonomy => $attribute ) {
 			$values[ $taxonomy ] = array_values( array_map( 'intval', $attribute->get_options() ) );
 		}
-		$price = (float) $product->get_price();
+		list( $min, $max ) = self::price_range( $product );
 		return array(
 			'id'     => $product->get_id(),
 			'values' => $values,
-			'min'    => $price,
-			'max'    => $price,
+			'min'    => $min,
+			'max'    => $max,
 		);
+	}
+
+	/**
+	 * A product's lowest and highest price, as WooCommerce's price filter
+	 * reads them: a grouped product's span its children's.
+	 *
+	 * @param WC_Product $product A product other than a variable one.
+	 * @return array{0: float, 1: float}
+	 */
+	private static function price_range( WC_Product $product ): array {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- WooCommerce's own lookup row, which its price filter reads.
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT min_price, max_price FROM {$wpdb->wc_product_meta_lookup} WHERE product_id = %d", $product->get_id() ) );
+		if ( is_object( $row ) && is_numeric( $row->min_price ?? null ) && is_numeric( $row->max_price ?? null ) ) {
+			return array( (float) $row->min_price, (float) $row->max_price );
+		}
+		$price = (float) $product->get_price();
+		return array( $price, $price );
 	}
 
 	/**

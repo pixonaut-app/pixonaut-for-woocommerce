@@ -12,6 +12,9 @@ use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
+use WC_Product_Attribute;
+use WC_Product_Grouped;
+use WC_Product_Simple;
 use WC_Product_Variable;
 use WC_Product_Variation;
 use WC_Query;
@@ -210,6 +213,53 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		);
 	}
 
+	public function test_the_counts_keep_the_blocks_other_filters_and_their_query_types(): void {
+		$sold_out = new WC_Product_Simple();
+		$sold_out->set_name( 'Slutsåld' );
+		$sold_out->set_status( 'publish' );
+		$sold_out->set_category_ids( array( $this->category ) );
+		$sold_out->set_attributes( array( $this->plain_attribute( self::SIZE, '30x40' ) ) );
+		$sold_out->set_regular_price( '100' );
+		$sold_out->set_stock_status( 'outofstock' );
+		$sold_out->save();
+
+		$this->assertSame( 3, $this->counts( 'pa_storlek', array() )[ $this->term( '30x40' ) ] ?? null, 'both posters and the sold-out one' );
+		$this->assertSame( 2, $this->counts( 'pa_storlek', array( 'filter_stock_status' => 'instock' ) )[ $this->term( '30x40' ) ] ?? null, 'the stock filter stays on' );
+
+		$all = array(
+			'filter_inramning'     => 'ram',
+			'query_type_inramning' => 'and',
+		);
+		$this->assertSame(
+			array(
+				$this->term( 'ingen' )   => 2,
+				$this->term( 'ram' )     => 2,
+				$this->term( 'hangare' ) => 1,
+			),
+			$this->counts( 'pa_inramning', $all, false ),
+			'with "and", a product counts for a value only while it holds every chosen one too: the print has no hanger'
+		);
+	}
+
+	public function test_a_grouped_product_matches_a_price_any_of_its_children_has(): void {
+		$cheap = $this->child( '100' );
+		$dear  = $this->child( '500' );
+		$group = new WC_Product_Grouped();
+		$group->set_name( 'Paket' );
+		$group->set_status( 'publish' );
+		$group->set_category_ids( array( $this->category ) );
+		$group->set_attributes( array( $this->plain_attribute( self::SIZE, '30x40' ) ) );
+		$group->set_children( array( $cheap->get_id(), $dear->get_id() ) );
+		$group->save();
+
+		$range = array(
+			'min_price' => '450',
+			'max_price' => '600',
+		);
+		$this->assertContains( $group->get_id(), $this->shop( $range )['ids'] );
+		$this->assertSame( 1, $this->counts( 'pa_storlek', $range )[ $this->term( '30x40' ) ] ?? null, 'the group\'s 500 child; no 30x40 variation costs that much' );
+	}
+
 	public function test_the_theme_reads_which_attribute_a_dependent_one_applies_under(): void {
 		$this->assertSame(
 			array( 'pa_ramfarg' => array( 'pa_inramning' => array( 'ram', 'hangare' ) ) ),
@@ -262,6 +312,33 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A product attribute holding one value, not used for variations.
+	 *
+	 * @param string $name  The attribute's name.
+	 * @param string $value The value's slug.
+	 */
+	private function plain_attribute( string $name, string $value ): WC_Product_Attribute {
+		$attribute = $this->product_attribute( $name );
+		$attribute->set_options( array( $this->term( $value ) ) );
+		$attribute->set_variation( false );
+		return $attribute;
+	}
+
+	/**
+	 * A simple product outside the category, for a group.
+	 *
+	 * @param string $price Its price.
+	 */
+	private function child( string $price ): WC_Product {
+		$child = new WC_Product_Simple();
+		$child->set_name( 'Del ' . $price );
+		$child->set_status( 'publish' );
+		$child->set_regular_price( $price );
+		$child->save();
+		return $child;
+	}
+
+	/**
 	 * The shop's main query on the category page and its loop.
 	 *
 	 * @param array<string, string> $args Query parameters.
@@ -289,13 +366,16 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	 *
 	 * @param string                $taxonomy The counted attribute.
 	 * @param array<string, string> $args     Query parameters.
+	 * @param bool                  $any      Whether its values combine with `or`, so the block drops its own filter.
 	 * @return array<int, int> Counts by term id.
 	 */
-	private function counts( string $taxonomy, array $args ): array {
+	private function counts( string $taxonomy, array $args, bool $any = true ): array {
 		$this->go_to_listing( $args );
 		global $wp_query;
 		$query_vars = array_merge( $wp_query->query_vars, $args );
-		unset( $query_vars[ 'filter_' . substr( $taxonomy, strlen( 'pa_' ) ) ] );
+		if ( $any ) {
+			unset( $query_vars[ 'filter_' . substr( $taxonomy, strlen( 'pa_' ) ) ] );
+		}
 		// As WooCommerce's FilterData asks before counting itself.
 		$counts = apply_filters( 'woocommerce_pre_product_filter_data', null, 'attribute', $query_vars, array( 'taxonomy' => $taxonomy ) );
 		$this->assertIsArray( $counts );
