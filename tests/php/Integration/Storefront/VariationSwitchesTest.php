@@ -243,6 +243,38 @@ final class VariationSwitchesTest extends WP_UnitTestCase {
 		}
 	}
 
+	public function test_the_mount_options_filter_runs_for_each_variation_set_up_alike(): void {
+		[ $product, $variations ] = self::variable(
+			self::front(),
+			array(
+				'M' => null,
+				'L' => null,
+			)
+		);
+		$asked                    = array();
+		add_filter(
+			'pixonaut_wc_storefront_mount_options',
+			static function ( array $options, WC_Product $variation ) use ( &$asked ): array {
+				$asked[] = $variation->get_id();
+				// A size of its own for L alone.
+				if ( 'L' === ( $variation->get_attributes()['size'] ?? null ) ) {
+					$options['selectedPrintSizeIndex'] = 1;
+					$options['printSizes'][]           = self::SMALL_SIZE;
+				}
+				return $options;
+			},
+			10,
+			2
+		);
+
+		$switches = self::data( $this->form_html( $product ), 'variations' );
+
+		$this->assertContains( $variations['M']->get_id(), $asked );
+		$this->assertContains( $variations['L']->get_id(), $asked );
+		$this->assertSame( array( 0 ), $switches[ $variations['M']->get_id() ]['sides']['front']['printSizes'] );
+		$this->assertSame( array( 0, 1 ), $switches[ $variations['L']->get_id() ]['sides']['front']['printSizes'] );
+	}
+
 	public function test_each_variation_names_the_size_and_view_its_side_starts_on(): void {
 		$product_size             = new PrintSize( 300.0, 360.0, '30×36' );
 		$small                    = new PrintSize( 210.0, 270.0, 'Small' );

@@ -98,6 +98,28 @@ final class Storefront {
 	private array $reads = array();
 
 	/**
+	 * The designer whose mounts `$fitted` holds fitted: the gallery, the
+	 * form and its placeholders each ask for them.
+	 *
+	 * @var InlineDesigner|null
+	 */
+	private ?InlineDesigner $fitted_for = null;
+
+	/**
+	 * `fit_groups()` of `$fitted_for` and its own mounts.
+	 *
+	 * @var array{0: array<string, array<string, mixed>>, 1: array<int, array<string, mixed>>}|null
+	 */
+	private ?array $fitted = null;
+
+	/**
+	 * `layouts()` of `$fitted_for`: the preview and the form's placeholders each ask.
+	 *
+	 * @var array<string, SideLayout>|null
+	 */
+	private ?array $laid_out = null;
+
+	/**
 	 * Whether a printed form stands above that the add-to-cart form's parts
 	 * are still to be placed in.
 	 *
@@ -481,10 +503,39 @@ final class Storefront {
 	 * @return array{0: array<string, array<string, mixed>>, 1: array<int, array<string, mixed>>}
 	 */
 	private function fit_groups( InlineDesigner $designer, array $mounts ): array {
-		$variations = $designer->variations;
 		if ( array() === $mounts ) {
-			return array( $mounts, $variations );
+			return array( $mounts, $designer->variations );
 		}
+		if ( $mounts !== $designer->mounts ) {
+			return $this->fit_groups_now( $designer, $mounts );
+		}
+		$this->remember_for( $designer );
+		$this->fitted ??= $this->fit_groups_now( $designer, $mounts );
+		return $this->fitted;
+	}
+
+	/**
+	 * Starts over what is kept of the page's designer when asked of another.
+	 *
+	 * @param InlineDesigner $designer An available designer.
+	 */
+	private function remember_for( InlineDesigner $designer ): void {
+		if ( $this->fitted_for !== $designer ) {
+			$this->fitted_for = $designer;
+			$this->fitted     = null;
+			$this->laid_out   = null;
+		}
+	}
+
+	/**
+	 * Works out `fit_groups()`.
+	 *
+	 * @param InlineDesigner                      $designer An available designer.
+	 * @param array<string, array<string, mixed>> $mounts   Mount options by side key, not empty.
+	 * @return array{0: array<string, array<string, mixed>>, 1: array<int, array<string, mixed>>}
+	 */
+	private function fit_groups_now( InlineDesigner $designer, array $mounts ): array {
+		$variations = $designer->variations;
 		// The layouts' reads too, kept for the request.
 		$reads     = $this->reads( $designer );
 		$groups    = array();
@@ -644,6 +695,18 @@ final class Storefront {
 	 * @return array<string, SideLayout>
 	 */
 	private function layouts( InlineDesigner $designer ): array {
+		$this->remember_for( $designer );
+		$this->laid_out ??= $this->lay_out( $designer );
+		return $this->laid_out;
+	}
+
+	/**
+	 * Works out `layouts()`.
+	 *
+	 * @param InlineDesigner $designer An available designer.
+	 * @return array<string, SideLayout>
+	 */
+	private function lay_out( InlineDesigner $designer ): array {
 		// A correction's side has no reads of its own, but prints its design's shape and its blank's views.
 		$reads   = $this->reads( $designer ) + $this->server->correction_views( $designer->mounts );
 		$layouts = array();

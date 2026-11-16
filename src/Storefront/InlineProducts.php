@@ -62,7 +62,8 @@ final class InlineProducts {
 	 */
 	public function for_product( WC_Product $product ): ?InlineDesigner {
 		$config   = ProductConfig::config_for( $product )->for_designer();
-		$variants = $product->is_type( 'variable' ) ? array_map( static fn ( ProductConfig $variant ): ProductConfig => $variant->for_designer(), ProductConfig::variation_configs( $product ) ) : array();
+		$sold     = $product->is_type( 'variable' ) ? ProductConfig::kept_variations( $product ) : array();
+		$variants = array_map( static fn ( array $variation ): ProductConfig => $variation[1]->for_designer(), $sold );
 		// A variable product shows the designer while it or one of its variations personalises inline.
 		$page = $config->personalise ? $config : $this->first_inline( $variants );
 		if ( null === $page || Layout::INLINE !== Layout::resolve( $page, $this->settings ) ) {
@@ -90,7 +91,7 @@ final class InlineProducts {
 			return new InlineDesigner( $product, $config, $this->mounts( $product, $config, null === $variant ? array() : array( $variant ) ), $mode, variant: $variant );
 		}
 		// The gallery, the form, the swatches and the price each ask for the designer; its variations are built once.
-		return RequestCache::remember( $this->designer_key( $product ), fn (): InlineDesigner => $this->variable_designer( $product, $config, $page, $variants, $mode ) );
+		return RequestCache::remember( $this->designer_key( $product ), fn (): InlineDesigner => $this->variable_designer( $product, $config, $page, $variants, array_map( static fn ( array $variation ): WC_Product => $variation[0], $sold ), $mode ) );
 	}
 
 	/**
@@ -125,16 +126,25 @@ final class InlineProducts {
 	 * @param ProductConfig             $config   Its own configuration.
 	 * @param ProductConfig             $page     The configuration the page mounts first: its own, or its first variation's personalised inline.
 	 * @param array<int, ProductConfig> $variants Each variation's configuration, by variation id.
+	 * @param array<int, WC_Product>    $objects  Each variation, by variation id.
 	 * @param string                    $mode     The page configuration's approval mode.
 	 */
-	private function variable_designer( WC_Product $product, ProductConfig $config, ProductConfig $page, array $variants, string $mode ): InlineDesigner {
+	private function variable_designer( WC_Product $product, ProductConfig $config, ProductConfig $page, array $variants, array $objects, string $mode ): InlineDesigner {
 		$switches = new VariationSwitches();
-		$sold     = $this->sold_by_blank( $variants );
-		$own      = $config->personalise ? $this->mounts( $product, $config, $sold[ (string) $config->blank_id ] ?? array() ) : null;
+		// The variant each variation sells: read once, as the switches and the blanks' lists each ask.
+		$refs = array();
+		foreach ( $variants as $variation_id => $variant ) {
+			$variation             = $objects[ $variation_id ] ?? null;
+			$refs[ $variation_id ] = null === $variant->blank_id || ! $variation instanceof WC_Product ? null : ProductVariant::sold_by( $variation, $variant );
+		}
+		$sold = $this->sold_by_blank( $variants, $refs );
+		// Mount options of the variations alike, while nothing filters them per variation.
+		$shared = '' === RequestCache::filters_key( self::FILTERS ) ? array() : null;
+		$own    = $config->personalise ? $this->mounts( $product, $config, $sold[ (string) $config->blank_id ] ?? array() ) : null;
 		// Each variation that can switch the designer to it: `variation`, its `config`, `attributes` and `mounts`.
 		$entries = array();
 		foreach ( $variants as $variation_id => $variant ) {
-			$variation = wc_get_product( $variation_id );
+			$variation = $objects[ $variation_id ] ?? null;
 			if ( ! $variation instanceof WC_Product ) {
 				continue;
 			}
@@ -145,8 +155,9 @@ final class InlineProducts {
 				continue;
 			}
 			// A variation on another layout cannot switch the inline designer to it.
-			$mounts = Layout::INLINE === Layout::resolve( $variant, $this->settings ) ? $this->mounts( $variation, $variant, $sold[ (string) $variant->blank_id ] ?? array() ) : array();
-			if ( array() === $mounts || ! ProductVariant::sellable( $variation, $variant ) ) {
+			$mounts = Layout::INLINE === Layout::resolve( $variant, $this->settings ) ? $this->variation_mounts( $variation, $variant, $sold[ (string) $variant->blank_id ] ?? array(), $shared ) : array();
+			// As `ProductVariant::sellable()`: personalised on a blank, it needs a variant.
+			if ( array() === $mounts || ( null !== $variant->blank_id && null === $refs[ $variation_id ] ) ) {
 				$switches->add_unavailable( $variation_id, $attributes );
 				continue;
 			}
@@ -170,7 +181,7 @@ final class InlineProducts {
 			$variant      = $entry['config'];
 			$variant_mode = ApprovalMode::resolve( $variant->approval_mode, $this->settings );
 			$switches->add_mounts( $entry['mounts'], $variant );
-			$switches->add_personalised( $variation_id, $entry['attributes'], $entry['mounts'], $variant_mode, null === $variant->blank_id ? null : ProductVariant::sold_by( $entry['variation'], $variant ) );
+			$switches->add_personalised( $variation_id, $entry['attributes'], $entry['mounts'], $variant_mode, $refs[ $variation_id ] );
 			if ( ApprovalMode::CHECKBOX === $variant_mode ) {
 				$mode = ApprovalMode::CHECKBOX;
 			}
@@ -179,21 +190,42 @@ final class InlineProducts {
 	}
 
 	/**
+	 * A variation's mount options. Variations set up alike mount alike, but
+	 * for what the mount options filter makes of each: while nothing
+	 * filters them, those of one serve all set up as it is.
+	 *
+	 * @param WC_Product                                              $variation A variation.
+	 * @param ProductConfig                                           $config    Its configuration.
+	 * @param string[]                                                $variants  The refs of its blank's variants the product sells.
+	 * @param array<string, array<string, array<string, mixed>>>|null $shared    Mount options by configuration, kept across calls; null to keep none.
+	 * @phpstan-param list<string> $variants
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function variation_mounts( WC_Product $variation, ProductConfig $config, array $variants, ?array &$shared ): array {
+		if ( null === $shared ) {
+			return $this->mounts( $variation, $config, $variants );
+		}
+		$key              = md5( serialize( $config ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- compares two configurations, never stored.
+		$shared[ $key ] ??= $this->mounts( $variation, $config, $variants );
+		return $shared[ $key ];
+	}
+
+	/**
 	 * The variant refs a variable product's variations personalised inline
 	 * sell, by blank: what a side's designer offers on that blank, the same
 	 * for every variation on it, so a switch between them never remounts.
 	 *
 	 * @param array<int, ProductConfig> $configs Configurations by variation id.
+	 * @param array<int, string|null>   $refs    The variant each variation sells, by variation id.
 	 * @return array<string, list<string>>
 	 */
-	private function sold_by_blank( array $configs ): array {
+	private function sold_by_blank( array $configs, array $refs ): array {
 		$sold = array();
 		foreach ( $configs as $variation_id => $config ) {
-			$variation = wc_get_product( $variation_id );
-			if ( null === $config->blank_id || ! $config->personalise || ! $variation instanceof WC_Product || Layout::INLINE !== Layout::resolve( $config, $this->settings ) ) {
+			if ( null === $config->blank_id || ! $config->personalise || Layout::INLINE !== Layout::resolve( $config, $this->settings ) ) {
 				continue;
 			}
-			$ref = ProductVariant::sold_by( $variation, $config );
+			$ref = $refs[ $variation_id ] ?? null;
 			if ( null !== $ref && ! in_array( $ref, $sold[ $config->blank_id ] ?? array(), true ) ) {
 				$sold[ $config->blank_id ][] = $ref;
 			}

@@ -47,6 +47,15 @@ final class ServerReads {
 	public const PAUSE_SECONDS = 60;
 
 	/**
+	 * The template `template_read()` decoded last, by template id and
+	 * language, with the answer it was decoded from: a product page asks
+	 * for the same template for each variation on it.
+	 *
+	 * @var array<string, array{0: string, 1: array<mixed>}>
+	 */
+	private array $decoded = array();
+
+	/**
 	 * @param Catalogue      $catalogue Reads Pixonaut.
 	 * @param CatalogueCache $cache     Keeps the answers for a few minutes.
 	 * @param Sdk            $pixonaut  Reads the designs a correction opens.
@@ -112,12 +121,17 @@ final class ServerReads {
 			return null;
 		}
 		try {
-			$template = json_decode( $this->template( $template_id, self::supported( $locale ) ), true );
+			$answer = $this->template( $template_id, self::supported( $locale ) );
 		} catch ( ApiException ) {
 			set_transient( self::PAUSE_TRANSIENT, 1, self::PAUSE_SECONDS );
 			return null;
 		}
-		return is_array( $template ) ? $template : array();
+		$key = $template_id . '|' . (string) self::supported( $locale );
+		if ( ( $this->decoded[ $key ][0] ?? null ) !== $answer ) {
+			$template              = json_decode( $answer, true );
+			$this->decoded[ $key ] = array( $answer, is_array( $template ) ? $template : array() );
+		}
+		return $this->decoded[ $key ][1];
 	}
 
 	/**
