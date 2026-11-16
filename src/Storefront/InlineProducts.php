@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\ApprovalMode;
 use Pixonaut\WooCommerce\Cart\CartEdit;
 use Pixonaut\WooCommerce\Cart\CommittedSide;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\RequestCache;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -31,6 +32,11 @@ use WC_Product_Variation;
  * the product is not personalised or uses another layout.
  */
 final class InlineProducts {
+
+	/**
+	 * The filter a designer's mounts pass through.
+	 */
+	private const FILTERS = array( 'pixonaut_wc_storefront_mount_options' );
 
 	/**
 	 * @param Settings       $settings   The default layout, approval mode, form layout and the designer's language.
@@ -83,7 +89,31 @@ final class InlineProducts {
 			$variant = null === $config->blank_id ? null : ProductVariant::sold_by( $product, $config );
 			return new InlineDesigner( $product, $config, $this->mounts( $product, $config, null === $variant ? array() : array( $variant ) ), $mode, variant: $variant );
 		}
-		return $this->variable_designer( $product, $config, $page, $variants, $mode );
+		// The gallery, the form, the swatches and the price each ask for the designer; its variations are built once.
+		return RequestCache::remember( $this->designer_key( $product ), fn (): InlineDesigner => $this->variable_designer( $product, $config, $page, $variants, $mode ) );
+	}
+
+	/**
+	 * What a variable product's designer is built from besides its
+	 * variations' configurations and the settings and connection this
+	 * builder reads: the variation it opens on, the language, and the
+	 * filters on its mount options.
+	 *
+	 * @param WC_Product $product A variable product.
+	 */
+	private function designer_key( WC_Product $product ): string {
+		return implode(
+			'|',
+			array(
+				'inline_designer',
+				spl_object_id( $this ),
+				ProductConfig::variations_key( $product ),
+				// The opening variation: chosen on the product's own page only, from the address or the defaults.
+				is_product() && get_queried_object_id() === $product->get_id() ? md5( (string) wp_json_encode( OpeningChoice::values( $product ) ) ) : '',
+				determine_locale(),
+				RequestCache::filters_key( self::FILTERS ),
+			)
+		);
 	}
 
 	/**

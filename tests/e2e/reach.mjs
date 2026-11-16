@@ -45,6 +45,7 @@ export const NO_SPEC = [
 	'src/Catalogue/ProductConfig.php', // the stored configuration every product reads
 	'src/Catalogue/Side.php',
 	'src/Catalogue/CatalogueCache.php',
+	'src/Catalogue/RequestCache.php', // reads kept for the rest of a request; every page passes through it
 	'src/Catalogue/Transaction.php',
 	'src/Cart/CartLine.php', // the cart item data every personalised line carries
 	'src/Cart/CommittedSide.php',

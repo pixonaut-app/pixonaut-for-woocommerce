@@ -85,7 +85,8 @@ final class UnavailableProduct {
 	 * @param WC_Product $product The product the page shows.
 	 */
 	public function html( WC_Product $product ): string {
-		if ( isset( $this->printed[ $product->get_id() ] ) || ! NotLiveProducts::is_not_live( $product ) ) {
+		// Only a product whose stored configuration names a reason can be not live; checking its variations is the dear part.
+		if ( isset( $this->printed[ $product->get_id() ] ) || ! in_array( $product->get_id(), NotLiveProducts::candidate_ids(), true ) || ! NotLiveProducts::is_not_live( $product ) ) {
 			return '';
 		}
 		$this->printed[ $product->get_id() ] = true;

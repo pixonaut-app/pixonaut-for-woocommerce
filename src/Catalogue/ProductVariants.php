@@ -37,6 +37,13 @@ use WP_Term;
 final class ProductVariants {
 
 	/**
+	 * Term names by terms' last change, taxonomy and slug, as `term_name()` found them.
+	 *
+	 * @var array<string, string>
+	 */
+	private static array $term_names = array();
+
+	/**
 	 * Prefixes a blank id in `$read` and `$failed` for its variants read
 	 * with their options as written as well.
 	 */
@@ -274,9 +281,25 @@ final class ProductVariants {
 			return null;
 		}
 		if ( '' !== $value && taxonomy_exists( $name ) ) {
-			$term = get_term_by( 'slug', $value, $name );
-			return $term instanceof WP_Term ? $term->name : $value;
+			return self::term_name( $name, $value );
 		}
 		return $value;
+	}
+
+	/**
+	 * A term's name by its slug; the slug when no term has it. A product page
+	 * asks for each variation's values many times, so the answer is kept for
+	 * the request, until a term changes.
+	 *
+	 * @param string $taxonomy The attribute's taxonomy.
+	 * @param string $slug     The term's slug.
+	 */
+	private static function term_name( string $taxonomy, string $slug ): string {
+		$key = wp_cache_get_last_changed( 'terms' ) . ':' . $taxonomy . ':' . $slug;
+		if ( ! isset( self::$term_names[ $key ] ) ) {
+			$term                     = get_term_by( 'slug', $slug, $taxonomy );
+			self::$term_names[ $key ] = $term instanceof WP_Term ? $term->name : $slug;
+		}
+		return self::$term_names[ $key ];
 	}
 }

@@ -367,6 +367,10 @@ final class PersonaliseButton {
 	 * @phpstan-return array<int, array{key: string, product_id: int, variation_id: int, quantity: int, attributes: array<string, string>, line: \Pixonaut\WooCommerce\Cart\CartLine}>
 	 */
 	private function page_designs( WC_Product $product ): array {
+		if ( null === $this->shown_key ) {
+			// No design to show: the product's variations need not be read.
+			return array();
+		}
 		$variants = $this->products->variants( $product );
 		$config   = $this->products->page_config( $product, $variants );
 		return null === $config ? array() : $this->shown_designs( $product, $config, $variants );

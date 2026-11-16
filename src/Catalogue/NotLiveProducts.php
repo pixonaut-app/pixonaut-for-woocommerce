@@ -9,8 +9,10 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Pixonaut\WooCommerce\Schema;
 use WC_Product;
 use WC_Product_Variation;
+use WP_Post;
 use WP_Query;
 
 /**
@@ -37,19 +39,29 @@ final class NotLiveProducts {
 	public const REASONS = array( InvalidReason::TEMPLATE_NOT_LIVE, InvalidReason::UNKNOWN_TEMPLATE );
 
 	/**
-	 * Object cache group of the products left out.
-	 */
-	private const CACHE_GROUP = 'pixonaut_wc';
-
-	/**
-	 * Start of the cache key of the products left out; the posts' last
+	 * Start of the in-request key of the products left out; the posts' last
 	 * change follows it, so any product or meta write makes a new key.
 	 */
 	private const CACHE_KEY_PREFIX = 'not_live_products:';
 
 	/**
-	 * Post type of WooCommerce products.
+	 * Transient holding the candidates, so a page view does not search
+	 * every stored configuration; deleted whenever one is written.
 	 */
+	private const CANDIDATES_TRANSIENT = Schema::NOT_LIVE_CANDIDATES_TRANSIENT;
+
+	/**
+	 * How long the candidates are kept at most, an hour in seconds. A
+	 * configuration write deletes them sooner; this bounds how long a list
+	 * read while one was being written can miss it.
+	 */
+	private const CANDIDATES_LIFETIME = 3600;
+
+	/**
+	 * Arguments of WordPress's post meta write actions.
+	 */
+	private const META_ACTION_ARGS = 3;
+
 	private const PRODUCT_POST_TYPE = 'product';
 
 	/**
@@ -89,6 +101,10 @@ final class NotLiveProducts {
 
 	public function register(): void {
 		add_action( 'pre_get_posts', array( $this, 'leave_out' ) );
+		foreach ( array( 'added_post_meta', 'updated_post_meta', 'deleted_post_meta' ) as $action ) {
+			add_action( $action, array( self::class, 'forget_on_write' ), 10, self::META_ACTION_ARGS );
+		}
+		add_action( 'clean_post_cache', array( self::class, 'forget_on_variation_write' ), 10, 2 );
 		add_filter( 'woocommerce_related_products', array( $this, 'related' ), 10, self::RELATED_ARGS );
 		add_filter( 'woocommerce_product_is_visible', array( $this, 'visible' ), 10, 2 );
 	}
@@ -167,14 +183,50 @@ final class NotLiveProducts {
 	 * @return list<int>
 	 */
 	public static function candidate_ids(): array {
-		$key = self::CACHE_KEY_PREFIX . wp_cache_get_last_changed( 'posts' );
 		// Only what is stored is cached: whether a product is personalised is filtered, per request.
-		$candidates = wp_cache_get( $key, self::CACHE_GROUP );
+		$candidates = get_transient( self::CANDIDATES_TRANSIENT );
 		if ( ! is_array( $candidates ) ) {
 			$candidates = self::candidates();
-			wp_cache_set( $key, $candidates, self::CACHE_GROUP );
+			set_transient( self::CANDIDATES_TRANSIENT, $candidates, self::CANDIDATES_LIFETIME );
 		}
 		return array_values( array_map( 'intval', $candidates ) );
+	}
+
+	/**
+	 * Drops the kept candidates, for the next read to search again.
+	 */
+	public static function forget_candidates(): void {
+		delete_transient( self::CANDIDATES_TRANSIENT );
+	}
+
+	/**
+	 * Drops the kept candidates when a variation is written: a candidate is
+	 * a variation's product, which a move to another product changes
+	 * without touching its configuration.
+	 *
+	 * @param mixed $post_id The post's id.
+	 * @param mixed $post    The post.
+	 */
+	public static function forget_on_variation_write( mixed $post_id, mixed $post ): void {
+		unset( $post_id );
+		if ( $post instanceof WP_Post && self::VARIATION_POST_TYPE === $post->post_type ) {
+			self::forget_candidates();
+		}
+	}
+
+	/**
+	 * Drops the kept candidates when a product's or variation's stored
+	 * configuration is written.
+	 *
+	 * @param mixed $meta_id   The meta row's id, or ids on a delete.
+	 * @param mixed $object_id The post's id.
+	 * @param mixed $meta_key  The meta key written.
+	 */
+	public static function forget_on_write( mixed $meta_id, mixed $object_id, mixed $meta_key ): void {
+		unset( $meta_id, $object_id );
+		if ( ProductConfig::META_KEY === $meta_key ) {
+			self::forget_candidates();
+		}
 	}
 
 	/**

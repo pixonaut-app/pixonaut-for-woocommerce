@@ -118,6 +118,14 @@ final class Pixonaut {
 	public const SHORT_TIMEOUT_SECONDS = 5;
 
 	/**
+	 * The timeout of a read a storefront page waits for while it renders,
+	 * when its cached answer has expired. A read that takes longer fails,
+	 * the page skips the reads for a minute, and the designer reads in the
+	 * browser instead.
+	 */
+	public const STOREFRONT_TIMEOUT_SECONDS = 3;
+
+	/**
 	 * The only method `all()` sends.
 	 */
 	private const READ = 'GET';

@@ -16,6 +16,7 @@ use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\RequestCache;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Connection\WorkspaceSettings;
@@ -317,6 +318,31 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '"constraints":{}', $match[1] ?? '', 'an empty object stays one' );
 	}
 
+	public function test_a_product_page_whose_reads_are_kept_asks_pixonaut_nothing(): void {
+		$this->answer_side();
+		$product = StorefrontTest::product( StorefrontTest::personalised() );
+		$this->render_page( $product );
+		$this->assertNotSame( array(), $this->recorder->requests, 'the first view reads' );
+		$this->recorder->requests = array();
+		$sent                     = array();
+		$record                   = static function ( $response, array $args, string $url ) use ( &$sent ) {
+			unset( $args );
+			$sent[] = $url;
+			return $response;
+		};
+		// The next view is another request: nothing it read is kept but the cached answers.
+		RequestCache::forget();
+		add_filter( 'pre_http_request', $record, 1, 3 );
+		try {
+			$html = $this->render_page( $product );
+		} finally {
+			remove_filter( 'pre_http_request', $record, 1 );
+		}
+
+		$this->assertSame( array(), $sent );
+		$this->assertStringContainsString( 'class="pixonaut-reads"', $html );
+	}
+
 	public function test_a_form_in_steps_prints_the_products_options_as_its_first_step(): void {
 		$html = $this->steps_form( array( new PrintSize( 300.0, 360.0, '30×36' ), new PrintSize( 400.0, 480.0, '40×48' ) ) );
 
@@ -412,6 +438,23 @@ final class ServerReadsTest extends WP_UnitTestCase {
 	 *
 	 * @param string|null $workspace_language The template answer's `workspaceLanguage`; null for the spec example's.
 	 */
+	/**
+	 * A view of the product's page: the gallery, the preview, the form and the assets.
+	 *
+	 * @param \WC_Product $product The product.
+	 */
+	private function render_page( \WC_Product $product ): string {
+		$storefront = new Storefront( $this->plugin->inline_products(), $this->plugin->templates(), $this->plugin->labels(), $this->plugin->settings(), dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php', $this->reads );
+		$this->go_to( (string) get_permalink( $product->get_id() ) );
+		$GLOBALS['product'] = $product;
+		$storefront->replace_classic_gallery();
+		$storefront->enqueue_on_product_page();
+		ob_start();
+		$storefront->render_classic_preview();
+		$storefront->render_form();
+		return (string) ob_get_clean();
+	}
+
 	private function answer_side( ?string $workspace_language = null ): void {
 		$mockups = json_decode( self::example_json( '/v1/blanks/{id}/mockups' ) );
 		foreach ( $mockups->placements as $placement ) {
