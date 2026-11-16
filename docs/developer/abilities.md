@@ -396,7 +396,11 @@ print sizes, and the variations' own setups, are kept, and Pixonaut is not
 asked to check the product again. A side the product does not have, an
 option it does not have, a group or field its template does not offer, or a
 group of the product's own without a title refuses the whole call, which
-names each. When Pixonaut cannot be asked for the template's fields, nothing
+names each; so does a form in another shape (one without `groups`, a group
+without an `id` or `items`, an item naming both or neither of `field` and
+`attribute`), and a group under an id the product page gives its own groups
+(`wc-options`, `wc-template-groups`). A product without a Pixonaut setup has
+no form to arrange and is refused. When Pixonaut cannot be asked for the template's fields, nothing
 is saved. The answer is the read's.
 
 `get-product-split-listing` reads what the product's Attributes tab shows

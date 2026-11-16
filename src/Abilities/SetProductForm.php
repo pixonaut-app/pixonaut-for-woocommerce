@@ -19,6 +19,7 @@ use Pixonaut\WooCommerce\FormLayout;
 use Pixonaut\WooCommerce\GroupNumbers;
 use Pixonaut\WooCommerce\Layout;
 use Pixonaut\WooCommerce\OptionGroups;
+use Pixonaut\WooCommerce\Storefront\FormGroupsMount;
 use WC_Product;
 use WP_Error;
 use WP_Http;
@@ -122,16 +123,17 @@ final class SetProductForm implements Ability {
 			return self::newer_configuration();
 		}
 		$document = ProductConfig::document_on( $product );
-		$config   = ProductConfig::stored_on( $product );
-		$sides    = $this->arranged( $product, $config, is_array( $input['sides'] ?? null ) ? $input['sides'] : array() );
+		if ( null === $document ) {
+			return new WP_Error( 'pixonaut_wc_ability_not_set_up', __( 'The product has no Pixonaut setup, so it has no form to arrange. Link it to a template first.', 'pixonaut-for-woocommerce' ) );
+		}
+		$config = ProductConfig::stored_on( $product );
+		$sides  = $this->arranged( $product, $config, is_array( $input['sides'] ?? null ) ? $input['sides'] : array() );
 		if ( $sides instanceof WP_Error ) {
 			return $sides;
 		}
 		$changed = self::with_choices( $config->with_sides( $sides ), $input );
 		try {
-			if ( null === $document ) {
-				$changed->save_to( $product );
-			} elseif ( ! $changed->replace_on( $product, $document ) ) {
+			if ( ! $changed->replace_on( $product, $document ) ) {
 				return new WP_Error( 'pixonaut_wc_ability_changed_meanwhile', __( 'The product\'s Pixonaut setup was changed while this was saved, so nothing was changed. Read it again with `get-product-form`, then set it.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::CONFLICT ) );
 			}
 		} catch ( LogicException $e ) {
@@ -199,10 +201,14 @@ final class SetProductForm implements Ability {
 	 * @return list<string>|WP_Error
 	 */
 	private function checked( Side $side, mixed $given, array $options ): array|WP_Error {
-		$groups = is_array( $given ) && is_array( $given['groups'] ?? null ) ? $given['groups'] : array();
-		if ( array() === $groups ) {
+		if ( null === $given ) {
 			return array();
 		}
+		$shape = self::misshapen( $side, $given );
+		if ( array() !== $shape ) {
+			return $shape;
+		}
+		$groups   = is_array( $given ) && is_array( $given['groups'] ?? null ) ? $given['groups'] : array();
 		$template = $this->read->template_groups( $side );
 		if ( null === $template ) {
 			return null === GetProductForm::template_of( $side )
@@ -216,7 +222,10 @@ final class SetProductForm implements Ability {
 		foreach ( $groups as $group ) {
 			$id    = is_array( $group ) && is_string( $group['id'] ?? null ) ? $group['id'] : '';
 			$title = is_array( $group ) && is_string( $group['title'] ?? null ) ? trim( $group['title'] ) : '';
-			if ( FormGroups::is_own( $id ) ? '' === $title : ! in_array( $id, $group_ids, true ) ) {
+			if ( in_array( $id, FormGroupsMount::RESERVED_GROUP_IDS, true ) ) {
+				/* translators: 1: a group's id; 2: a side's key. Why an AI assistant's change to the store was refused. */
+				$problems[] = sprintf( __( 'group `%1$s` on side `%2$s` takes an id the product page uses for itself: pick another', 'pixonaut-for-woocommerce' ), $id, $side->key );
+			} elseif ( FormGroups::is_own( $id ) ? '' === $title : ! in_array( $id, $group_ids, true ) ) {
 				$problems[] = FormGroups::is_own( $id )
 					/* translators: 1: a group's id; 2: a side's key. Why an AI assistant's change to the store was refused. */
 					? sprintf( __( 'group `%1$s` on side `%2$s` is the product\'s own and needs a title', 'pixonaut-for-woocommerce' ), $id, $side->key )
@@ -232,9 +241,46 @@ final class SetProductForm implements Ability {
 				} elseif ( null === $attribute && null !== $field && ! in_array( $field, $fields, true ) ) {
 					/* translators: 1: a field, `<layerId>:<prop>`; 2: a side's key. Why an AI assistant's change to the store was refused. */
 					$problems[] = sprintf( __( 'the template of side `%2$s` offers no field `%1$s`', 'pixonaut-for-woocommerce' ), $field, $side->key );
-				} elseif ( null === $attribute && null === $field ) {
-					/* translators: %s: a side's key. Why an AI assistant's change to the store was refused. */
-					$problems[] = sprintf( __( 'an item on side `%s` names neither a `field` nor an `attribute`', 'pixonaut-for-woocommerce' ), $side->key );
+				}
+			}
+		}
+		return array_values( array_unique( $problems ) );
+	}
+
+	/**
+	 * What makes an arrangement no arrangement at all, in words: one stored
+	 * as given would lose part of it, or be none and take the side's off.
+	 *
+	 * @param Side  $side  The side.
+	 * @param mixed $given Its `form_groups`, not null.
+	 * @return list<string>
+	 */
+	private static function misshapen( Side $side, mixed $given ): array {
+		$groups = is_array( $given ) ? ( $given['groups'] ?? null ) : null;
+		if ( ! is_array( $groups ) || array() === $groups ) {
+			/* translators: %s: a side's key. Why an AI assistant's change to the store was refused. */
+			return array( sprintf( __( 'the form of side `%s` names no `groups`: give null for the template\'s own form', 'pixonaut-for-woocommerce' ), $side->key ) );
+		}
+		if ( count( $groups ) > FormGroups::MAX_GROUPS ) {
+			/* translators: 1: a side's key; 2: the most groups a form keeps. Why an AI assistant's change to the store was refused. */
+			return array( sprintf( __( 'the form of side `%1$s` has more than %2$d groups', 'pixonaut-for-woocommerce' ), $side->key, FormGroups::MAX_GROUPS ) );
+		}
+		$problems = array();
+		foreach ( $groups as $group ) {
+			$items = is_array( $group ) ? ( $group['items'] ?? null ) : null;
+			if ( ! is_array( $group ) || ! is_string( $group['id'] ?? null ) || '' === trim( $group['id'] ) || ! is_array( $items ) ) {
+				/* translators: %s: a side's key. Why an AI assistant's change to the store was refused. */
+				$problems[] = sprintf( __( 'a group on side `%s` needs an `id` and its `items`', 'pixonaut-for-woocommerce' ), $side->key );
+				continue;
+			}
+			if ( count( $items ) > FormGroups::MAX_ITEMS ) {
+				/* translators: 1: a group's id; 2: the most items a group keeps. Why an AI assistant's change to the store was refused. */
+				$problems[] = sprintf( __( 'group `%1$s` has more than %2$d items', 'pixonaut-for-woocommerce' ), $group['id'], FormGroups::MAX_ITEMS );
+			}
+			foreach ( $items as $item ) {
+				if ( ! is_array( $item ) || isset( $item['field'], $item['attribute'] ) || ( ! is_string( $item['field'] ?? null ) && ! is_string( $item['attribute'] ?? null ) ) ) {
+					/* translators: %s: a group's id. Why an AI assistant's change to the store was refused. */
+					$problems[] = sprintf( __( 'each item of group `%s` names either a `field` or an `attribute`', 'pixonaut-for-woocommerce' ), $group['id'] );
 				}
 			}
 		}

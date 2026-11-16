@@ -33,6 +33,15 @@ final class GetProductForm implements Ability {
 	public function __construct( private readonly CatalogueSearch $search ) {
 	}
 
+	/**
+	 * Whether Pixonaut failed a template read in this request: each later
+	 * read then answers null at once, so a product of several sides never
+	 * waits out the read's timeout more than once.
+	 *
+	 * @var bool
+	 */
+	private bool $unreachable = false;
+
 	public function name(): string {
 		return 'get-product-form';
 	}
@@ -118,12 +127,13 @@ final class GetProductForm implements Ability {
 	 */
 	public function template_groups( Side $side ): ?array {
 		$template = self::template_of( $side );
-		if ( null === $template ) {
+		if ( null === $template || $this->unreachable ) {
 			return null;
 		}
 		try {
 			$groups = $this->search->template_groups_of( $template );
 		} catch ( ApiException $e ) {
+			$this->unreachable = true;
 			return null;
 		}
 		$answer = array();
@@ -176,11 +186,13 @@ final class GetProductForm implements Ability {
 		return array(
 			'type'        => array( 'object', 'null' ),
 			'description' => __( 'The side\'s groups, in order; null for the template\'s own form.', 'pixonaut-for-woocommerce' ),
+			'required'    => array( 'groups' ),
 			'properties'  => array(
 				'groups' => array(
 					'type'  => 'array',
 					'items' => array(
 						'type'       => 'object',
+						'required'   => array( 'id', 'items' ),
 						'properties' => array(
 							'id'    => array(
 								'type'        => 'string',

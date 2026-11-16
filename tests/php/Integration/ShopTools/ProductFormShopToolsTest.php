@@ -307,6 +307,85 @@ final class ProductFormShopToolsTest extends WP_UnitTestCase {
 		$this->assertSame( $before, ProductConfig::document_on( $this->reload( $poster ) ) );
 	}
 
+	public function test_a_form_in_no_shape_or_under_the_pages_own_ids_is_refused_and_nothing_saved(): void {
+		$poster = $this->poster( self::ARRANGEMENT );
+		$before = ProductConfig::document_on( $poster );
+		foreach ( array(
+			array( 'group' => array() ),
+			array( 'groups' => array() ),
+			array( 'groups' => array( array( 'title' => 'No id' ) ) ),
+			array(
+				'groups' => array(
+					array(
+						'id'    => self::TEXT_GROUP,
+						'items' => array(
+							array(
+								'field'     => self::SLOGAN,
+								'attribute' => self::SIZE,
+							),
+						),
+					),
+				),
+			),
+			array(
+				'groups' => array(
+					array(
+						'id'    => 'wc-options',
+						'title' => 'Personalisering',
+						'items' => array( array( 'field' => self::SLOGAN ) ),
+					),
+				),
+			),
+		) as $form ) {
+			$this->answer_template();
+			$refused = $this->call(
+				self::SET,
+				array(
+					'product_id' => $poster->get_id(),
+					'sides'      => array(
+						array(
+							'key'         => 'front',
+							'form_groups' => $form,
+						),
+					),
+				)
+			);
+
+			$this->assertSame( self::UNPROCESSABLE, $refused->get_status(), (string) wp_json_encode( $form ) );
+			$this->assertSame( $before, ProductConfig::document_on( $this->reload( $poster ) ), (string) wp_json_encode( $form ) );
+		}
+	}
+
+	public function test_a_product_without_a_setup_has_no_form_to_arrange(): void {
+		$product = new WC_Product_Variable();
+		$product->set_name( 'Plain' );
+		$product->save();
+
+		$refused = $this->call(
+			self::SET,
+			array(
+				'product_id'    => $product->get_id(),
+				'group_numbers' => GroupNumbers::ON,
+			)
+		);
+
+		$this->assertSame( self::UNPROCESSABLE, $refused->get_status() );
+		$this->assertNull( ProductConfig::document_on( $this->reload( $product ) ) );
+	}
+
+	public function test_pixonaut_is_asked_once_for_the_templates_of_several_sides_when_it_fails(): void {
+		$poster = $this->poster( null );
+		$front  = ProductConfig::stored_on( $poster )->sides[0];
+		$back   = new Side( 'back', 'Back', null, null, 'mini-tee', 2, null, 'Mini tee', array( new PrintSize( 300, 400, '30×40 cm', true ) ) );
+		ProductConfig::stored_on( $poster )->with_sides( array( $front, $back ) )->save_to( $poster );
+		$this->recorder->fail();
+
+		$read = $this->succeed( self::GET, array( 'product_id' => $poster->get_id() ) );
+
+		$this->assertSame( array( null, null ), array_column( $read['sides'], 'template_groups' ) );
+		$this->assertCount( 1, $this->recorder->requests );
+	}
+
 	public function test_a_variation_is_refused_for_it_follows_its_product(): void {
 		$variation = $this->own_setup_variation( $this->poster( null ) );
 
