@@ -627,6 +627,22 @@ final class SplitCards {
 	}
 
 	/**
+	 * The variations a product sells: those WooCommerce offers on a live
+	 * template, in the product's order of variations.
+	 *
+	 * @param WC_Product $product A variable product.
+	 * @return list<int> Variation ids.
+	 */
+	public static function live_variations( WC_Product $product ): array {
+		return array_values(
+			array_map(
+				static fn ( array $offer ): int => $offer['id'],
+				array_filter( self::offers( $product ), static fn ( array $offer ): bool => $offer['offered'] && $offer['live'] )
+			)
+		);
+	}
+
+	/**
 	 * The offers of `card_variations()`.
 	 *
 	 * @param WC_Product $product A product listed by an attribute.

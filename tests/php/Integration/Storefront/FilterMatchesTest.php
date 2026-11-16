@@ -365,6 +365,62 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		);
 	}
 
+	public function test_a_variation_is_chosen_only_when_its_link_opens_on_one_matching_the_filters(): void {
+		$sea = $this->product(
+			'Hav',
+			array(
+				array( '', 'ingen', '', '499' ),
+				array( '30x40', 'ingen', '', '199' ),
+				array( '30x40', 'ram', 'ek', '349' ),
+			)
+		);
+
+		$link = $this->shop(
+			array(
+				'filter_storlek' => '30x40',
+				'max_price'      => self::PRICE_HIGH,
+			)
+		)['links'][ $sea->get_id() ] ?? '';
+
+		$this->assertSame(
+			array(
+				'attribute_pa_storlek'   => '30x40',
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'ek',
+			),
+			$this->chosen( $link ),
+			'bare in 30x40 opens on the bare one in any size, at 499'
+		);
+		$this->assertSame( '349', $this->opened_price( $link, $sea ) );
+	}
+
+	public function test_a_value_a_filter_overrides_does_not_count_as_agreeing_with_the_defaults(): void {
+		$sea = $this->product(
+			'Hav',
+			array(
+				array( '', 'ingen', '', '199' ),
+				array( '30x40', 'ram', 'ek', '349' ),
+			)
+		);
+		$sea->set_default_attributes(
+			array(
+				'pa_storlek'   => '50x70',
+				'pa_inramning' => 'ram',
+			)
+		);
+		$sea->save();
+
+		$this->assertSame(
+			array(
+				'attribute_pa_storlek'   => '30x40',
+				'attribute_pa_inramning' => 'ram',
+				'attribute_pa_ramfarg'   => 'ek',
+			),
+			$this->chosen( $this->shop( array( 'filter_storlek' => '30x40' ) )['links'][ $sea->get_id() ] ?? '' ),
+			'the bare one in any size opens in 30x40, not the default 50x70: the frame agrees with a default'
+		);
+	}
+
 	public function test_without_a_filter_a_card_links_to_the_product_itself(): void {
 		$this->set_defaults( array( 'pa_storlek' => '50x70' ) );
 
@@ -503,11 +559,13 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The price of the variation the poster's page opens on at a link.
+	 * The price of the variation a product's page opens on at a link.
 	 *
-	 * @param string $link A card's link to the poster.
+	 * @param string          $link    A card's link to the product.
+	 * @param WC_Product|null $product The product; the poster when null.
 	 */
-	private function opened_price( string $link ): string {
+	private function opened_price( string $link, ?WC_Product $product = null ): string {
+		$product ??= $this->poster;
 		$this->forget_chosen_filters();
 		$_GET = array();
 		foreach ( $this->chosen( $link ) as $field => $value ) {
@@ -515,10 +573,10 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		}
 		$this->go_to( $link );
 		$variations = array();
-		foreach ( $this->poster->get_children() as $id ) {
+		foreach ( $product->get_children() as $id ) {
 			$variations[ $id ] = wc_get_product( $id );
 		}
-		$opened = OpeningChoice::variation_among( $this->poster, array_filter( $variations ) );
+		$opened = OpeningChoice::variation_among( $product, array_filter( $variations ) );
 		foreach ( array_keys( $this->chosen( $link ) ) as $field ) {
 			unset( $_REQUEST[ $field ] );
 		}
