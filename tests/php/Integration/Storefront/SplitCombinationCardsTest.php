@@ -13,6 +13,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
+use Pixonaut\WooCommerce\Storefront\QueryNames;
 use Pixonaut\WooCommerce\Templates;
 use Pixonaut\WooCommerce\Tests\Support\DependentPosters;
 use WC_Product;
@@ -86,25 +87,29 @@ final class SplitCombinationCardsTest extends WP_UnitTestCase {
 		$listed = $this->shop();
 
 		$this->assertSame( 5, $listed['found'] );
+		// A card's address names each attribute by its short name (#214).
 		$this->assertSame(
-			array(
-				add_query_arg( self::poster_field( 'Inramning' ), 'canvas', $permalink ),
-				add_query_arg(
-					array(
-						self::poster_field( 'Inramning' )  => 'hangare',
-						self::poster_field( 'Hangarfarg' ) => 'ek',
+			array_map(
+				array( QueryNames::class, 'shorten' ),
+				array(
+					add_query_arg( self::poster_field( 'Inramning' ), 'canvas', $permalink ),
+					add_query_arg(
+						array(
+							self::poster_field( 'Inramning' )  => 'hangare',
+							self::poster_field( 'Hangarfarg' ) => 'ek',
+						),
+						$permalink
 					),
-					$permalink
-				),
-				add_query_arg(
-					array(
-						self::poster_field( 'Inramning' )  => 'hangare',
-						self::poster_field( 'Hangarfarg' ) => 'svart',
+					add_query_arg(
+						array(
+							self::poster_field( 'Inramning' )  => 'hangare',
+							self::poster_field( 'Hangarfarg' ) => 'svart',
+						),
+						$permalink
 					),
-					$permalink
-				),
-				add_query_arg( self::poster_field( 'Inramning' ), 'ingen', $permalink ),
-				add_query_arg( self::poster_field( 'Inramning' ), 'ram', $permalink ),
+					add_query_arg( self::poster_field( 'Inramning' ), 'ingen', $permalink ),
+					add_query_arg( self::poster_field( 'Inramning' ), 'ram', $permalink ),
+				)
 			),
 			$listed['links']
 		);
@@ -142,12 +147,14 @@ final class SplitCombinationCardsTest extends WP_UnitTestCase {
 		);
 		$this->assertSame( 'Poster – Hängare, Ek', CardPages::title( $poster, $this->key( $oak ) ) );
 		$this->assertSame(
-			add_query_arg(
-				array(
-					self::poster_field( 'Inramning' )  => 'hangare',
-					self::poster_field( 'Hangarfarg' ) => 'ek',
-				),
-				'https://example.org/poster/'
+			QueryNames::shorten(
+				add_query_arg(
+					array(
+						self::poster_field( 'Inramning' )  => 'hangare',
+						self::poster_field( 'Hangarfarg' ) => 'ek',
+					),
+					'https://example.org/poster/'
+				)
 			),
 			CardPages::url( $poster, $this->key( $oak ), 'https://example.org/poster/' )
 		);
@@ -200,7 +207,7 @@ final class SplitCombinationCardsTest extends WP_UnitTestCase {
 
 		$oak = $this->shop( array( 'filter_hangarfarg' => 'ek' ) );
 		$this->assertSame( 1, $oak['found'], 'the bare poster\'s card holds no hanger colour' );
-		$this->assertStringContainsString( self::poster_field( 'Hangarfarg' ) . '=ek', $oak['links'][0] );
+		$this->assertStringContainsString( (string) wp_parse_url( QueryNames::shorten( add_query_arg( self::poster_field( 'Hangarfarg' ), 'ek', 'https://example.org/' ) ), PHP_URL_QUERY ), $oak['links'][0] );
 
 		$hanger = $this->shop( array( 'filter_inramning' => 'hangare' ) );
 		$this->assertSame( 2, $hanger['found'] );
