@@ -15,9 +15,9 @@ namespace Pixonaut\WooCommerce\Catalogue;
  *
  * A product page asks for them from the gallery, the form, the button, the
  * swatches and every price, and each answer walks every variation. Nothing
- * kept is used after a post, meta or term write, or a write to one of the
- * plugin's or WooCommerce's options; a caller's key names everything else
- * its read depends on.
+ * kept is used after a post, meta or term write, a write to one of the
+ * plugin's or WooCommerce's options, or a switch to another site of a
+ * network; a caller's key names everything else its read depends on.
  */
 final class RequestCache {
 
@@ -32,6 +32,8 @@ final class RequestCache {
 		'clean_term_cache',
 		'woocommerce_attribute_updated',
 		'woocommerce_attribute_deleted',
+		// Another site of a network has its own products under the same ids.
+		'switch_blog',
 	);
 
 	/**

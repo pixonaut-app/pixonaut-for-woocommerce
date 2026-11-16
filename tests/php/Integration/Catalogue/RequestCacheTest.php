@@ -77,6 +77,19 @@ final class RequestCacheTest extends WP_UnitTestCase {
 		$this->assertSame( 3, $reads );
 	}
 
+	public function test_a_switch_to_another_site_forgets(): void {
+		$reads = 0;
+		$read  = static function () use ( &$reads ): int {
+			return ++$reads;
+		};
+		RequestCache::remember( self::KEY, $read );
+
+		do_action( 'switch_blog', get_current_blog_id(), get_current_blog_id(), 'switch' );
+		RequestCache::remember( self::KEY, $read );
+
+		$this->assertSame( 2, $reads );
+	}
+
 	public function test_a_filters_key_changes_as_a_callback_is_added_or_removed(): void {
 		$filter = 'pixonaut_wc_request_cache_test';
 		$none   = RequestCache::filters_key( array( $filter ) );
@@ -124,6 +137,24 @@ final class RequestCacheTest extends WP_UnitTestCase {
 			remove_filter( 'pixonaut_wc_catalogue_is_personalisable', $turned_off );
 		}
 		$this->assertFalse( $configs[ $variation ]->personalise, 'a filter added since is applied' );
+	}
+
+	public function test_variation_configurations_are_kept_per_locale(): void {
+		list( $parent ) = self::variable();
+		update_post_meta( $parent, ProductConfig::META_KEY, wp_slash( ( new ProductConfig( personalise: true ) )->to_json() ) );
+		$product = wc_get_product( $parent );
+		$this->assertInstanceOf( WC_Product::class, $product );
+
+		$english        = ProductConfig::variations_key( $product );
+		$swedish_locale = static fn (): string => 'sv_SE';
+		add_filter( 'determine_locale', $swedish_locale );
+		try {
+			$swedish = ProductConfig::variations_key( $product );
+		} finally {
+			remove_filter( 'determine_locale', $swedish_locale );
+		}
+
+		$this->assertNotSame( $english, $swedish );
 	}
 
 	/**

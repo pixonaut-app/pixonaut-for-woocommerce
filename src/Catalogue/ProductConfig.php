@@ -217,8 +217,8 @@ final class ProductConfig {
 
 	/**
 	 * What a variable product's variation configurations are read from: the
-	 * product, its stored configuration and variations, and the filters
-	 * `resolved_for()` applies.
+	 * product, its stored configuration and variations, the locale, and the
+	 * filters `resolved_for()` applies.
 	 *
 	 * @param WC_Product $product A variable product.
 	 */
@@ -230,6 +230,8 @@ final class ProductConfig {
 				$product->get_id(),
 				implode( ',', $product->get_children() ),
 				md5( (string) self::document_on( $product ) ),
+				// A filter may translate what it resolves.
+				determine_locale(),
 				RequestCache::filters_key( self::FILTERS ),
 			)
 		);

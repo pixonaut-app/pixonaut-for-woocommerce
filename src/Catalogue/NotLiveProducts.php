@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Catalogue;
 use Pixonaut\WooCommerce\Schema;
 use WC_Product;
 use WC_Product_Variation;
+use WP_Post;
 use WP_Query;
 
 /**
@@ -103,6 +104,7 @@ final class NotLiveProducts {
 		foreach ( array( 'added_post_meta', 'updated_post_meta', 'deleted_post_meta' ) as $action ) {
 			add_action( $action, array( self::class, 'forget_on_write' ), 10, self::META_ACTION_ARGS );
 		}
+		add_action( 'clean_post_cache', array( self::class, 'forget_on_variation_write' ), 10, 2 );
 		add_filter( 'woocommerce_related_products', array( $this, 'related' ), 10, self::RELATED_ARGS );
 		add_filter( 'woocommerce_product_is_visible', array( $this, 'visible' ), 10, 2 );
 	}
@@ -195,6 +197,21 @@ final class NotLiveProducts {
 	 */
 	public static function forget_candidates(): void {
 		delete_transient( self::CANDIDATES_TRANSIENT );
+	}
+
+	/**
+	 * Drops the kept candidates when a variation is written: a candidate is
+	 * a variation's product, which a move to another product changes
+	 * without touching its configuration.
+	 *
+	 * @param mixed $post_id The post's id.
+	 * @param mixed $post    The post.
+	 */
+	public static function forget_on_variation_write( mixed $post_id, mixed $post ): void {
+		unset( $post_id );
+		if ( $post instanceof WP_Post && self::VARIATION_POST_TYPE === $post->post_type ) {
+			self::forget_candidates();
+		}
 	}
 
 	/**

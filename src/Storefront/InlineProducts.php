@@ -96,8 +96,8 @@ final class InlineProducts {
 	/**
 	 * What a variable product's designer is built from besides its
 	 * variations' configurations and the settings and connection this
-	 * builder reads: the variation the address asks for, the language, and
-	 * the filters on its mount options.
+	 * builder reads: the variation it opens on, the language, and the
+	 * filters on its mount options.
 	 *
 	 * @param WC_Product $product A variable product.
 	 */
@@ -108,7 +108,8 @@ final class InlineProducts {
 				'inline_designer',
 				spl_object_id( $this ),
 				ProductConfig::variations_key( $product ),
-				md5( (string) wp_json_encode( OpeningChoice::requested( $product ) ) ),
+				// The opening variation: chosen on the product's own page only, from the address or the defaults.
+				is_product() && get_queried_object_id() === $product->get_id() ? md5( (string) wp_json_encode( OpeningChoice::values( $product ) ) ) : '',
 				determine_locale(),
 				RequestCache::filters_key( self::FILTERS ),
 			)

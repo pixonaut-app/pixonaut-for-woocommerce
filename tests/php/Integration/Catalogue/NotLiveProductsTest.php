@@ -196,6 +196,19 @@ final class NotLiveProductsTest extends PersonalisedCartTestCase {
 		$this->assertNotContains( $this->product_id, NotLiveProducts::candidate_ids() );
 	}
 
+	public function test_a_variation_moved_to_another_product_makes_that_product_one_to_look_at(): void {
+		list( $from, $red ) = $this->variable();
+		list( $to )         = $this->variable();
+		$this->set_config( $red, self::config()->with_override( true )->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE ) );
+		$this->assertContains( $from, NotLiveProducts::candidate_ids() );
+
+		$moved = $this->reload( $red );
+		$moved->set_parent_id( $to );
+		$moved->save();
+
+		$this->assertContains( $to, NotLiveProducts::candidate_ids() );
+	}
+
 	public function test_a_product_page_not_among_the_products_to_look_at_reads_none_of_its_variations(): void {
 		list( $parent ) = $this->variable();
 		$read           = 0;
