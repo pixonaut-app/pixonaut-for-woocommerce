@@ -210,6 +210,11 @@ export type Shift = {
 		/** Whether it is in the form's table of attributes, whose columns
 		 *  fit the labels of the rows it shows. */
 		inAttributes: boolean;
+		/** Whether it is in the designer's overlay of the stage's parts: a
+		 *  fixed layer the SDK places over the preview again after each
+		 *  scroll, so a scroll the page made for the rows a switch showed
+		 *  reports it as moved. It draws nothing of the page. */
+		inOverlay: boolean;
 		previous: { x: number; y: number; width: number; height: number };
 		current: { x: number; y: number; width: number; height: number };
 	}>;
@@ -272,6 +277,11 @@ export async function watchShifts(page: Page): Promise<void> {
 								? source.node
 								: (source.node?.parentElement ?? null)
 							)?.closest('table.variations') != null,
+						inOverlay:
+							(source.node instanceof Element
+								? source.node
+								: (source.node?.parentElement ?? null)
+							)?.closest('[data-pixonaut-part]') != null,
 						previous: rect(source.previousRect),
 						current: rect(source.currentRect),
 					})),

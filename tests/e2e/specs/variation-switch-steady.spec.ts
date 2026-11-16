@@ -172,13 +172,15 @@ async function rowsHeight(page: Page): Promise<number> {
  *  its columns to the labels of the rows it shows, so the steps that
  *  stay move along with those that appear or go. Rects are clipped to the
  *  viewport, so a node partly below it changes height as it moves, and one
- *  that came into view had none. */
+ *  that came into view had none. The designer's overlay is left out: it
+ *  follows the preview after a scroll (`Shift`). */
 function unaccounted(shifts: Shift[], moved: number): Shift['sources'] {
 	return shifts
 		.flatMap((shift) => shift.sources)
 		.filter(
-			({ previous, current, inAttributes }) =>
+			({ previous, current, inAttributes, inOverlay }) =>
 				!inAttributes &&
+				!inOverlay &&
 				previous.height > 0 &&
 				(Math.abs(current.x - previous.x) > PIXEL ||
 					Math.abs(current.y - previous.y - moved) > PIXEL),
