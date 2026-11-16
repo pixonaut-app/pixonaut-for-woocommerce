@@ -1360,9 +1360,16 @@ declare interface MountOptionsBase extends ErrorOption, FormMountOptions, SideMo
      *  view. */
     views?: readonly string[];
     /** The view shown first, one of `placementId`'s or the Design view: the
-     *  editor opens on that placement. Omitted, or naming another, its first
-     *  view with a photo. */
+     *  editor opens on that placement. Omitted, or naming another, the view
+     *  `initialViewIndex` names, else its first view with a photo. */
     initialView?: string;
+    /** Where to open when `initialView` is omitted or names no view of
+     *  `placementId` with a photo: the place, from 0, among the views
+     *  `getViews()` lists with a photo. A host mounting again on another blank
+     *  passes the place of the view its last designer showed, and opens there
+     *  from the first frame. A place past the end, or of a view of another
+     *  placement, opens the first view with a photo. */
+    initialViewIndex?: number;
     /** The refs of the blank's variants the product is offered in;
      *  omitted or empty, every one not retired. The default picker draws
      *  their colours and garment sizes, and `setVariant()` refuses another. */
@@ -3331,7 +3338,7 @@ export declare type SplitMountOptions = MountOptions & {
     /** The element the form, and the size picker, are drawn into. */
     formTarget: MountTarget;
     /** The element the switcher between the product's views is drawn into;
-     *  absent, it is drawn above the form. */
+     *  absent, a split mount draws it above the form. */
     viewsTarget?: MountTarget;
     fill?: never;
 };

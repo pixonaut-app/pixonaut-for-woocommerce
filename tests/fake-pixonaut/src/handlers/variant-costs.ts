@@ -66,6 +66,8 @@ export const listVariantCosts: Handler = (context): HandlerResult => {
 		body: {
 			// The fake holds every variant's cost at once, so a read is whole.
 			complete: true,
+			// Every cost the fake holds names its own currency.
+			currencyNeeded: false,
 			costs: blank.variants.map((variant) => {
 				const cost = costOf(blank, variant.ref);
 				const money = (amount: string | null) =>
