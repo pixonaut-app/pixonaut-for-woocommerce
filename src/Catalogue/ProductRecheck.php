@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Admin\InvalidProductNotice;
 use Pixonaut\WooCommerce\Admin\LowResolutionWarnings;
 use Pixonaut\WooCommerce\Admin\TrashedProducts;
 use Pixonaut\WooCommerce\Api\Catalogue;
+use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Storefront\KeptDesignerLinks;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
@@ -371,7 +372,11 @@ final class ProductRecheck {
 		if ( self::is_pending( self::ACTION, $args ) ) {
 			return true;
 		}
-		return 0 !== as_schedule_single_action( time() + self::RETRY_BASE_SECONDS, self::ACTION, $args, self::GROUP );
+		if ( 0 === as_schedule_single_action( time() + self::RETRY_BASE_SECONDS, self::ACTION, $args, self::GROUP ) ) {
+			( new WcLogger() )->error( 'The re-check of products Pixonaut could not check could not be queued.', array( 'products' => $product_ids ) );
+			return false;
+		}
+		return true;
 	}
 
 	/**

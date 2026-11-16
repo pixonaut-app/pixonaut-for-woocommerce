@@ -164,8 +164,8 @@ final class VariationSizes {
 				list( $refused, $soft ) = $this->refusal( $side, $config->blank_id, $variant, $size );
 			} catch ( ApiException $e ) {
 				$failed = $e;
-				// Asked and not answered: the verdict it had for the size stands, else the failure is kept with its code.
-				$judged[ $side->key ] = $same ? self::sourced( $held, $from ) : array(
+				// Asked and not answered: a verdict Pixonaut gave for the size stands, else the failure is kept with its code.
+				$judged[ $side->key ] = $same && ! in_array( $held['refused'], InvalidReason::ASK_AGAIN, true ) ? self::sourced( $held, $from ) : array(
 					'size'    => $size,
 					'refused' => InvalidReason::CHECK_FAILED,
 					'basis'   => $basis,

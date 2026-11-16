@@ -425,6 +425,25 @@ final class VariationPrintSizeTest extends ProductPanelTestCase {
 		$this->assertTrue( $this->reload_any( $large->get_id() )->is_purchasable() );
 	}
 
+	public function test_a_waiting_size_whose_own_call_fails_keeps_that_calls_code(): void {
+		list( , $small, $large ) = $this->linked( 'within' );
+		$this->recorder->fail();
+		$this->save_variation( $small, 0, self::custom( '210', '270' ) );
+		$this->save_variation( $large, 1, self::custom( '220', '280' ) );
+		$this->recorder->json( 403, array( 'error' => 'workspace_suspended' ) );
+
+		try {
+			( new VariationSizes( $this->catalogue ) )->rejudge( $this->reload_any( $large->get_id() ) );
+			$this->fail( 'the caller is told to check again' );
+		} catch ( ApiException $e ) {
+			$this->assertSame( 'workspace_suspended', $e->errorCode );
+		}
+
+		$sold = ProductConfig::config_for( $this->reload_any( $large->get_id() ) );
+		$this->assertSame( InvalidReason::CHECK_FAILED, $sold->invalid_reason, 'asked now, it no longer waits' );
+		$this->assertSame( 'workspace_suspended', $sold->invalid_detail?->code );
+	}
+
 	public function test_after_a_call_that_failed_a_size_with_a_verdict_keeps_it(): void {
 		list( , $small, $large ) = $this->linked( 'within' );
 		$this->recorder->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
