@@ -68,9 +68,10 @@ final class FilterMatches {
 
 	/**
 	 * How long counts are kept: they are read again sooner once a product
-	 * changes, and a template going live or paused shows within this time.
+	 * changes, and a template going live or paused shows within this time:
+	 * an hour, in seconds.
 	 */
-	private const COUNTS_LIFETIME = HOUR_IN_SECONDS;
+	private const COUNTS_LIFETIME = 3600;
 
 	/**
 	 * The price filter's query arguments.
