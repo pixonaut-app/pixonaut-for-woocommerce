@@ -538,50 +538,55 @@ add_action(
 				'methods'             => 'POST',
 				'permission_callback' => '__return_true',
 				'args'                => array(
-					'name'          => array(
+					'name'              => array(
 						'type'    => 'string',
 						'default' => 'E2E product',
 					),
-					'regular_price' => array(
+					'regular_price'     => array(
 						'type'    => 'string',
 						'default' => '19.00',
 					),
+					// The short description the product page prints under its title; none by default.
+					'short_description' => array(
+						'type'    => 'string',
+						'default' => '',
+					),
 					// A stored Pixonaut configuration document, for a personalised product.
-					'pixonaut'      => array(
+					'pixonaut'          => array(
 						'type' => 'object',
 					),
 					// Values of a `size` attribute, for a variable product with a variation per value.
-					'variations'    => array(
+					'variations'        => array(
 						'type'  => 'array',
 						'items' => array( 'type' => 'string' ),
 					),
 					// Values of a second variation attribute, `finish`, after `size`; each variation sells any finish.
-					'finishes'      => array(
+					'finishes'          => array(
 						'type'  => 'array',
 						'items' => array( 'type' => 'string' ),
 					),
 					// A stored configuration by `size` value, for a variation that overrides its product's.
-					'overrides'     => array(
+					'overrides'         => array(
 						'type' => 'object',
 					),
 					// The `size` value the add-to-cart form opens on; none by default.
-					'default'       => array(
+					'default'           => array(
 						'type' => 'string',
 					),
 					// A regular price by `size` value, for a variation priced other than `regular_price`.
-					'prices'        => array(
+					'prices'            => array(
 						'type' => 'object',
 					),
 					// The blank variant the product, or each variation, sells; by default its blank's first one on sale.
-					'variant'       => array(
+					'variant'           => array(
 						'type' => 'string',
 					),
 					// A blank variant ref by `size` value, for a variation that sells another than `variant`.
-					'variants'      => array(
+					'variants'          => array(
 						'type' => 'object',
 					),
 					// How many pictures the product shows without its designer: a featured image, then its gallery.
-					'images'        => array(
+					'images'            => array(
 						'type'    => 'integer',
 						'default' => 0,
 					),
@@ -590,6 +595,7 @@ add_action(
 					$sizes   = is_array( $request['variations'] ) ? array_map( 'strval', $request['variations'] ) : array();
 					$product = array() === $sizes ? new WC_Product_Simple() : new WC_Product_Variable();
 					$product->set_name( (string) $request['name'] );
+					$product->set_short_description( (string) $request['short_description'] );
 					$product->set_status( 'publish' );
 					if ( array() === $sizes ) {
 						$product->set_regular_price( (string) $request['regular_price'] );
