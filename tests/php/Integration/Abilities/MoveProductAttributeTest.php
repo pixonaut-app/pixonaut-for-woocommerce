@@ -538,7 +538,7 @@ final class MoveProductAttributeTest extends WP_UnitTestCase {
 				'pixonaut_edit'     => 'abc',
 			)
 		);
-		$this->assertSame( 'https://shop.test/product/sign/?pixonaut_edit=abc&attribute_pa_storlek=a3-297', $url );
+		$this->assertSame( 'https://shop.test/product/sign/?pixonaut_edit=abc&storlek=a3-297', $url );
 
 		$this->assertNull( MovedAttributeLinks::moved_url( $product, 'https://shop.test/?attribute_pa_storlek=a4-210', array( 'attribute_pa_storlek' => 'a4-210' ) ) );
 		$other = $this->product();

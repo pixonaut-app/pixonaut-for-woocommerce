@@ -9,13 +9,15 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Pixonaut\WooCommerce\Storefront\QueryNames;
 use WC_Product;
 use WP_Term;
 
 /**
  * Each card a split product is listed as (`SplitCards`) has a page of its
  * own: the product's page at the address that chooses the card's values,
- * `…/safari/?attribute_pa_picture=with-photo`. It is the page a search engine
+ * `…/safari/?picture=with-photo`, each attribute by its short name
+ * (`QueryNames`). It is the page a search engine
  * lists for that version of the product, with the card's title, description
  * and picture, and the address every other choice on top of the card's (a
  * size, say) names as its canonical one, so the sizes of a card make no
@@ -53,7 +55,7 @@ final class CardPages {
 	 * @param string     $permalink The product's own address.
 	 */
 	public static function url( WC_Product $product, string $key, string $permalink ): string {
-		return add_query_arg( array_map( 'rawurlencode', SplitCards::link_values( $product, $key ) ), $permalink );
+		return QueryNames::shorten( add_query_arg( array_map( 'rawurlencode', SplitCards::link_values( $product, $key ) ), $permalink ) );
 	}
 
 	/**

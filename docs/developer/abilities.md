@@ -31,6 +31,8 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/get-product-split-listing` | Whether each global attribute of a product lists its values as their own products, each value's card's own title and image, and the cards it is listed as now, combinations included | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-product-split-listing` | Sets a product's "Cards in the shop" choice per global attribute, and each value's or combination's card's own title and image | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-attribute-split-listing` | Sets a global attribute's "Cards in the shop" setting, which the products on Auto follow | `manage_product_terms` |
+| `pixonaut-for-woocommerce/get-attribute-query-names` | The name each global attribute goes by in the shop's addresses (`?size=50x70-cm`) | `manage_product_terms` |
+| `pixonaut-for-woocommerce/set-attribute-query-name` | Sets a global attribute's "Name in addresses", refusing one WordPress or WooCommerce reads or another attribute goes by | `manage_product_terms` |
 | `pixonaut-for-woocommerce/move-product-template` | Moves a product and its variations' own setups to another template version, keeping their sides | `edit_product` on that product |
 | `pixonaut-for-woocommerce/use-product-picture` | Puts the Pixonaut picture back in place of the store manager's own image | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/reset-standing-layout` | Undoes the layout adjusted by hand for one option of a standing side | `edit_product` on that product (and on a variation's product) |
@@ -428,6 +430,17 @@ and is not among them.
 `set-attribute-split-listing` sets a global attribute's own setting by its
 `attribute_id` and `mode` (`on`, `filtered` or `off`), as its edit screen
 does, and answers the attribute's `attribute_id`, `name` and `mode`.
+
+`get-attribute-query-names` answers `attributes`, one per global attribute in
+the store's order: its `attribute_id`, `name`, `query_name` (the name the
+shop's addresses give it; null when it has none and keeps WooCommerce's
+`attribute_pa_<slug>` and `filter_<slug>`), `own` (the name the store gave
+it, empty for its slug) and `slug` (without `pa_`).
+`set-attribute-query-name` takes an `attribute_id` and a `query_name`
+(lowercase letters and digits, words joined by `-` or `_`, at most 32
+characters; empty for the slug) and answers the same row, or a `400` saying
+why the name was refused: WordPress or WooCommerce reads it from an address,
+or another attribute goes by it.
 
 `set-product-split-listing` sets them, by `attributes`, `cards` or both:
 each attribute listed takes a `choice` and `values`, each a `term_id` with a

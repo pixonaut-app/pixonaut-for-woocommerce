@@ -43,6 +43,8 @@ use Pixonaut\WooCommerce\Abilities\RecheckProducts;
 use Pixonaut\WooCommerce\Abilities\RegenerateProductPictures;
 use Pixonaut\WooCommerce\Abilities\ResetStandingLayout;
 use Pixonaut\WooCommerce\Abilities\SetAttributeSplitListing;
+use Pixonaut\WooCommerce\Abilities\GetAttributeQueryNames;
+use Pixonaut\WooCommerce\Abilities\SetAttributeQueryName;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductForm;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
@@ -75,6 +77,7 @@ use Pixonaut\WooCommerce\Admin\ShowcaseField;
 use Pixonaut\WooCommerce\Admin\SoldRows;
 use Pixonaut\WooCommerce\Admin\SplitListingFields;
 use Pixonaut\WooCommerce\Admin\SwatchNamesField;
+use Pixonaut\WooCommerce\Admin\QueryNameField;
 use Pixonaut\WooCommerce\Admin\LayoutAdjustments;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Admin\StatusReport;
@@ -215,6 +218,8 @@ use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
 use Pixonaut\WooCommerce\Storefront\Storefront;
 use Pixonaut\WooCommerce\Storefront\SwatchLooks;
 use Pixonaut\WooCommerce\Storefront\SwatchNames;
+use Pixonaut\WooCommerce\Storefront\QueryNames;
+use Pixonaut\WooCommerce\Storefront\ShortAddresses;
 use Pixonaut\WooCommerce\Storefront\UnavailableReports;
 use Pixonaut\WooCommerce\Storefront\UnavailableProduct;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
@@ -479,6 +484,7 @@ final class Plugin {
 		SplitListing::register();
 		RequestCache::register();
 		SwatchNames::register();
+		QueryNames::register();
 		( new NotLiveProducts() )->register();
 		( new UnavailableProduct( $this->labels() ) )->register();
 		SplitCards::register();
@@ -513,6 +519,7 @@ final class Plugin {
 			$this->showcase_field()->register();
 			( new SplitListingFields( $this->templates() ) )->register();
 			( new SwatchNamesField( $this->templates() ) )->register();
+			( new QueryNameField( $this->templates() ) )->register();
 			( new StatusReport( $this->templates() ) )->register();
 			( new OrderBox( $this->line_actions(), $this->proof_urls(), $this->templates() ) )->register();
 		}
@@ -524,6 +531,7 @@ final class Plugin {
 		$this->personalise_button()->register();
 		$this->personalised_designs()->register();
 		( new MovedAttributeLinks() )->register();
+		( new ShortAddresses( $this->file ) )->register();
 		$split_card_listings = new SplitCardListings();
 		$split_card_listings->register();
 		( new SplitCardFaces( $split_card_listings ) )->register();
@@ -568,6 +576,8 @@ final class Plugin {
 					new GetProductSplitListing(),
 					new SetProductSplitListing(),
 					new SetAttributeSplitListing(),
+					new GetAttributeQueryNames(),
+					new SetAttributeQueryName(),
 					new MoveProductTemplate( $links, $fields ),
 					new MoveProductAttribute( new WcLogger() ),
 					new UseProductPicture( $links, $this->settings() ),

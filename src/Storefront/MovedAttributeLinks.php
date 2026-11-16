@@ -64,7 +64,7 @@ final class MovedAttributeLinks {
 		if ( array() === $gone ) {
 			return null;
 		}
-		return add_query_arg( urlencode_deep( array_diff_key( $translated, $attributes ) ), remove_query_arg( $gone, $url ) );
+		return QueryNames::shorten( add_query_arg( urlencode_deep( array_diff_key( $translated, $attributes ) ), remove_query_arg( $gone, $url ) ) );
 	}
 
 	/**

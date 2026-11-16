@@ -141,11 +141,11 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$this->assertSame( array( $poster->get_id(), $poster->get_id(), $mug->get_id() ), $listed['ids'] );
 		$this->assertSame(
 			array(
-				add_query_arg( 'attribute_pa_bild', 'med-bild', (string) get_permalink( $poster->get_id() ) ),
+				add_query_arg( 'bild', 'med-bild', (string) get_permalink( $poster->get_id() ) ),
 				add_query_arg(
 					array(
-						'attribute_pa_bild'    => 'utan-bild',
-						'attribute_pa_storlek' => '30x40',
+						'bild'    => 'utan-bild',
+						'storlek' => '30x40',
 					),
 					(string) get_permalink( $poster->get_id() )
 				),
@@ -183,7 +183,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 
 		$this->assertSame( array( $poster->get_id() ), $listed['ids'] );
 		$this->assertSame( 1, $listed['found'] );
-		$this->assertStringContainsString( 'attribute_pa_bild=utan-bild', $listed['links'][0] );
+		$this->assertStringContainsString( 'bild=utan-bild', $listed['links'][0] );
 	}
 
 	public function test_a_filter_by_another_attribute_keeps_every_card_of_a_product_it_keeps(): void {
@@ -206,8 +206,8 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$listed = $this->shop();
 		$this->assertSame( array( $poster->get_id(), $poster->get_id(), $mug->get_id() ), $listed['ids'], 'a card per picture, none per size' );
 		$this->assertSame( 3, $listed['found'] );
-		$this->assertStringContainsString( 'attribute_pa_bild=med-bild', $listed['links'][0] );
-		$this->assertStringNotContainsString( 'attribute_pa_storlek', $listed['links'][0] );
+		$this->assertStringContainsString( 'bild=med-bild', $listed['links'][0] );
+		$this->assertStringNotContainsString( 'storlek', $listed['links'][0] );
 
 		$small = $this->shop( array( 'filter_storlek' => '30x40' ) );
 		$this->assertSame( array( $poster->get_id(), $poster->get_id() ), $small['ids'], 'each picture in the size' );
@@ -215,14 +215,14 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 			array(
 				$link(
 					array(
-						'attribute_pa_bild'    => 'med-bild',
-						'attribute_pa_storlek' => '30x40',
+						'bild'    => 'med-bild',
+						'storlek' => '30x40',
 					)
 				),
 				$link(
 					array(
-						'attribute_pa_bild'    => 'utan-bild',
-						'attribute_pa_storlek' => '30x40',
+						'bild'    => 'utan-bild',
+						'storlek' => '30x40',
 					)
 				),
 			),
@@ -243,7 +243,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 
 		$picture = $this->shop( array( 'filter_bild' => 'utan-bild' ) );
 		$this->assertSame( array( $poster->get_id() ), $picture['ids'], 'a filter on the picture alone keeps its card, of no size' );
-		$this->assertStringNotContainsString( 'attribute_pa_storlek=50x70', $picture['links'][0] );
+		$this->assertStringNotContainsString( 'storlek=50x70', $picture['links'][0] );
 	}
 
 	public function test_a_product_listed_only_while_filtered_shows_as_itself_until_a_filter_chooses_a_value(): void {
@@ -256,7 +256,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 
 		$large = $this->shop( array( 'filter_storlek' => '50x70' ) );
 		$this->assertSame( array( $poster->get_id() ), $large['ids'] );
-		$this->assertStringContainsString( 'attribute_pa_storlek=50x70', $large['links'][0] );
+		$this->assertStringContainsString( 'storlek=50x70', $large['links'][0] );
 
 		$this->assertSame( array(), $this->shop( array( 'filter_bild' => 'ram' ) )['ids'], 'no variation holds the value: not listed' );
 	}
@@ -313,8 +313,8 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 		$this->assertSame(
 			add_query_arg(
 				array(
-					'attribute_pa_bild'    => 'med-bild',
-					'attribute_pa_storlek' => '30x40',
+					'bild'    => 'med-bild',
+					'storlek' => '30x40',
 				),
 				(string) get_permalink( $poster->get_id() )
 			),
@@ -342,8 +342,8 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 			array(
 				add_query_arg(
 					array(
-						'attribute_pa_bild'    => 'utan-bild',
-						'attribute_pa_storlek' => '30x40',
+						'bild'    => 'utan-bild',
+						'storlek' => '30x40',
 					),
 					(string) get_permalink( $poster->get_id() )
 				),

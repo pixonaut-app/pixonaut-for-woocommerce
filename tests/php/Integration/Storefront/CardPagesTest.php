@@ -64,7 +64,7 @@ final class CardPagesTest extends WP_UnitTestCase {
 
 	public function test_a_card_page_is_canonical_to_itself_and_a_size_on_top_of_it_to_the_card(): void {
 		$poster = $this->poster();
-		$card   = add_query_arg( 'attribute_pa_bild', 'med-bild', (string) get_permalink( $poster->get_id() ) );
+		$card   = add_query_arg( 'bild', 'med-bild', (string) get_permalink( $poster->get_id() ) );
 
 		$this->assertSame( $card, $this->open( $poster, array( 'attribute_pa_bild' => 'med-bild' ) )->canonical( 'x', get_post( $poster->get_id() ) ) );
 		$sized = $this->open(
@@ -97,7 +97,7 @@ final class CardPagesTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '<meta name="description" content="Med bild. A poster of the savannah." />', $tags );
 		$this->assertStringContainsString( '<meta property="og:title" content="Safari – Med bild" />', $tags );
 		$this->assertStringContainsString( '<meta property="og:type" content="product" />', $tags );
-		$this->assertStringContainsString( 'property="og:url" content="' . esc_attr( add_query_arg( 'attribute_pa_bild', 'med-bild', (string) get_permalink( $poster->get_id() ) ) ) . '"', $tags );
+		$this->assertStringContainsString( 'property="og:url" content="' . esc_attr( add_query_arg( 'bild', 'med-bild', (string) get_permalink( $poster->get_id() ) ) ) . '"', $tags );
 		$this->assertStringContainsString( 'property="og:image" content="' . esc_attr( (string) wp_get_attachment_url( $product_image ) ) . '"', $tags, 'the product\'s picture until the card has one' );
 
 		SplitCardLooks::save(
@@ -130,7 +130,7 @@ final class CardPagesTest extends WP_UnitTestCase {
 			)
 		);
 		$head = $this->open( $poster, array( 'attribute_pa_bild' => 'med-bild' ) );
-		$card = add_query_arg( 'attribute_pa_bild', 'med-bild', (string) get_permalink( $poster->get_id() ) );
+		$card = add_query_arg( 'bild', 'med-bild', (string) get_permalink( $poster->get_id() ) );
 
 		$this->assertSame( $card, $head->address( (string) get_permalink( $poster->get_id() ) ) );
 		$this->assertSame( 'Safari – Med bild | Shop', $head->title( 'Safari | Shop' ), 'the card where the title names the product' );
@@ -155,11 +155,11 @@ final class CardPagesTest extends WP_UnitTestCase {
 		$this->poster_named( 'Draft', 'draft' );
 		$address  = (string) get_permalink( $poster->get_id() );
 		$expected = array(
-			add_query_arg( 'attribute_pa_bild', 'med-bild', $address ),
+			add_query_arg( 'bild', 'med-bild', $address ),
 			add_query_arg(
 				array(
-					'attribute_pa_bild'    => 'utan-bild',
-					'attribute_pa_storlek' => '30x40',
+					'bild'    => 'utan-bild',
+					'storlek' => '30x40',
 				),
 				$address
 			),

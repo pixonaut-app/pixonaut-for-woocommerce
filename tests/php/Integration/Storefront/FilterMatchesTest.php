@@ -11,6 +11,7 @@ use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
 use Pixonaut\WooCommerce\Storefront\OpeningChoice;
+use Pixonaut\WooCommerce\Storefront\QueryNames;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
 use WC_Product_Attribute;
@@ -541,17 +542,23 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * A link's `attribute_*` query parameters, in its order.
+	 * The values a link chooses, by `attribute_*` field, in its order: a
+	 * global attribute goes by its short name in it.
 	 *
 	 * @param string $link A card's link.
 	 * @return array<string, string>
 	 */
 	private function chosen( string $link ): array {
 		parse_str( (string) wp_parse_url( $link, PHP_URL_QUERY ), $query );
+		$fields = array();
+		foreach ( QueryNames::names() as $slug => $name ) {
+			$fields[ $name ] = 'attribute_pa_' . $slug;
+		}
 		$chosen = array();
 		foreach ( $query as $name => $value ) {
-			if ( is_string( $name ) && str_starts_with( $name, 'attribute_' ) && is_string( $value ) ) {
-				$chosen[ $name ] = $value;
+			$field = $fields[ $name ] ?? $name;
+			if ( is_string( $field ) && str_starts_with( $field, 'attribute_' ) && is_string( $value ) ) {
+				$chosen[ $field ] = $value;
 			}
 		}
 		return $chosen;

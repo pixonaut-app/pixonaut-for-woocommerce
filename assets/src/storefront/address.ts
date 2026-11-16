@@ -1,4 +1,5 @@
 import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
+import { addressName, type QueryNames, readQueryNames } from './query-names';
 import { chosenValue, followChoices } from './variations';
 
 /** What the add-to-cart form's attribute fields are named by, and what
@@ -30,9 +31,10 @@ function choices(form: HTMLFormElement): Record<string, string> {
  * address is replaced in place, adding nothing to the browser's history,
  * and only once the customer changed a choice: the address the page was
  * opened at stays as it is until then. Its other parameters and its
- * fragment are kept.
+ * fragment are kept. A global attribute goes by its short name
+ * (`?storlek=50x70-cm`), which the server reads as WooCommerce's field.
  */
-export function followAddress(form: HTMLFormElement): void {
+export function followAddress(form: HTMLFormElement, names?: QueryNames): void {
 	const view = form.ownerDocument.defaultView;
 	if (view === null) {
 		return;
@@ -48,7 +50,13 @@ export function followAddress(form: HTMLFormElement): void {
 			return;
 		}
 		const address = new URL(view.location.href);
-		for (const [name, value] of Object.entries(chosen)) {
+		for (const [field, value] of Object.entries(chosen)) {
+			// Read once the page has printed them, which may be after the form mounts.
+			const name = addressName(field, names ?? readQueryNames());
+			if (name !== field) {
+				// An address opened with WooCommerce's own name for it.
+				address.searchParams.delete(field);
+			}
 			if (value === '') {
 				address.searchParams.delete(name);
 			} else {

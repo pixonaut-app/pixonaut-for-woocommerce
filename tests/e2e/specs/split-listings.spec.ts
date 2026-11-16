@@ -100,22 +100,33 @@ async function cardLinks(page: Page): Promise<string[]> {
 	);
 }
 
-/** A link's query parameters, its `attribute_*` ones only. */
+/** The name a global attribute goes by in an address: its slug, `pa_` off. */
+function short(taxonomy: string): string {
+	return taxonomy.replace(/^pa_/, '');
+}
+
+/** A link's query parameters naming an attribute: a custom one's field, or a global one's short name. */
 function chosen(url: string): Record<string, string> {
 	return Object.fromEntries(
-		[...new URL(url).searchParams].filter(([name]) =>
-			name.startsWith('attribute_'),
+		[...new URL(url).searchParams].filter(
+			([name]) => name.startsWith('attribute_') || ATTRIBUTE_NAMES.has(name),
 		),
 	);
 }
+
+/** The short names of the attributes the specs make, filled as each makes them. */
+const ATTRIBUTE_NAMES = new Set<string>();
 
 test('a category lists a card per picture that opens with it chosen', async ({
 	page,
 	request,
 }) => {
 	await withSplitProducts(request, async ({ poster, category, taxonomies }) => {
-		const picture = `attribute_${taxonomies.bild.taxonomy}`;
-		const size = `attribute_${taxonomies.storlek.taxonomy}`;
+		const picture = short(taxonomies.bild.taxonomy);
+		const size = short(taxonomies.storlek.taxonomy);
+		ATTRIBUTE_NAMES.add(picture).add(size);
+		const pictureField = `attribute_${taxonomies.bild.taxonomy}`;
+		const sizeField = `attribute_${taxonomies.storlek.taxonomy}`;
 
 		await page.goto(category);
 		await expect(cards(page)).toHaveCount(3);
@@ -140,19 +151,23 @@ test('a category lists a card per picture that opens with it chosen', async ({
 		const form = page.locator(
 			'#pixonaut-form-front [data-testid="pixonaut-form"]',
 		);
-		await expect(form.locator(`select[name="${picture}"]`)).toHaveValue(
+		await expect(form.locator(`select[name="${pictureField}"]`)).toHaveValue(
 			'utan-bild',
 		);
-		await expect(form.locator(`select[name="${size}"]`)).toHaveValue('30x40');
+		await expect(form.locator(`select[name="${sizeField}"]`)).toHaveValue(
+			'30x40',
+		);
 
 		await page.goBack();
 		await cards(page).first().locator('a[href]').first().click();
-		await expect(form.locator(`select[name="${picture}"]`)).toHaveValue(
+		await expect(form.locator(`select[name="${pictureField}"]`)).toHaveValue(
 			'med-bild',
 		);
 		// The card names no size: the page opens on the first variation sold
 		// with the picture, so the form holds a whole choice.
-		await expect(form.locator(`select[name="${size}"]`)).toHaveValue('30x40');
+		await expect(form.locator(`select[name="${sizeField}"]`)).toHaveValue(
+			'30x40',
+		);
 	});
 });
 
@@ -175,8 +190,11 @@ test('a card’s page names itself in its head, a size on top of it names the ca
 	baseURL,
 }) => {
 	await withSplitProducts(request, async ({ poster, category, taxonomies }) => {
-		const picture = `attribute_${taxonomies.bild.taxonomy}`;
-		const size = `attribute_${taxonomies.storlek.taxonomy}`;
+		const picture = short(taxonomies.bild.taxonomy);
+		const size = short(taxonomies.storlek.taxonomy);
+		ATTRIBUTE_NAMES.add(picture).add(size);
+		const pictureField = `attribute_${taxonomies.bild.taxonomy}`;
+		const sizeField = `attribute_${taxonomies.storlek.taxonomy}`;
 
 		await page.goto(category);
 		const card = (await cardLinks(page))[0];
@@ -184,7 +202,7 @@ test('a card’s page names itself in its head, a size on top of it names the ca
 		const form = page.locator(
 			'#pixonaut-form-front [data-testid="pixonaut-form"]',
 		);
-		await expect(form.locator(`select[name="${picture}"]`)).toHaveValue(
+		await expect(form.locator(`select[name="${pictureField}"]`)).toHaveValue(
 			'med-bild',
 		);
 		expect(await canonical(page)).toBe(card);
@@ -204,7 +222,7 @@ test('a card’s page names itself in its head, a size on top of it names the ca
 
 		// The customer picks a size: the address follows, in place.
 		const entries = await page.evaluate(() => history.length);
-		await form.locator(`select[name="${size}"]`).selectOption('50x70');
+		await form.locator(`select[name="${sizeField}"]`).selectOption('50x70');
 		await expect
 			.poll(() => chosen(page.url()))
 			.toEqual({ [picture]: 'med-bild', [size]: '50x70' });
@@ -213,8 +231,10 @@ test('a card’s page names itself in its head, a size on top of it names the ca
 		// The address shared opens on the same choice, and names the card's page.
 		const shared = page.url();
 		await page.goto(shared);
-		await expect(form.locator(`select[name="${size}"]`)).toHaveValue('50x70');
-		await expect(form.locator(`select[name="${picture}"]`)).toHaveValue(
+		await expect(form.locator(`select[name="${sizeField}"]`)).toHaveValue(
+			'50x70',
+		);
+		await expect(form.locator(`select[name="${pictureField}"]`)).toHaveValue(
 			'med-bild',
 		);
 		expect(await canonical(page)).toBe(card);
@@ -254,8 +274,9 @@ test('sizes listed only while filtered make no cards until a filter chooses one,
 	await withSplitProducts(
 		request,
 		async ({ category, taxonomies }) => {
-			const picture = `attribute_${taxonomies.bild.taxonomy}`;
-			const size = `attribute_${taxonomies.storlek.taxonomy}`;
+			const picture = short(taxonomies.bild.taxonomy);
+			const size = short(taxonomies.storlek.taxonomy);
+			ATTRIBUTE_NAMES.add(picture).add(size);
 
 			await page.goto(category);
 			// Med bild and Utan bild, and the vase.
@@ -265,10 +286,7 @@ test('sizes listed only while filtered make no cards until a filter chooses one,
 			).toEqual(['med-bild', 'utan-bild', undefined]);
 
 			const filtered = new URL(category);
-			filtered.searchParams.set(
-				`filter_${taxonomies.storlek.taxonomy.replace(/^pa_/, '')}`,
-				'30x40',
-			);
+			filtered.searchParams.set(size, '30x40');
 			// The vase has no size, so the filter leaves it out.
 			await page.goto(filtered.toString());
 			await expect(cards(page)).toHaveCount(2);
@@ -277,10 +295,7 @@ test('sizes listed only while filtered make no cards until a filter chooses one,
 				{ [picture]: 'utan-bild', [size]: '30x40' },
 			]);
 
-			filtered.searchParams.set(
-				`filter_${taxonomies.storlek.taxonomy.replace(/^pa_/, '')}`,
-				'50x70',
-			);
+			filtered.searchParams.set(size, '50x70');
 			await page.goto(filtered.toString());
 			// Only Med bild is sold in 50x70.
 			await expect(cards(page)).toHaveCount(1);
@@ -297,19 +312,16 @@ test('a filter by picture keeps that picture’s card', async ({
 	request,
 }) => {
 	await withSplitProducts(request, async ({ category, taxonomies }) => {
+		const picture = short(taxonomies.bild.taxonomy);
+		ATTRIBUTE_NAMES.add(picture);
 		const filtered = new URL(category);
-		filtered.searchParams.set(
-			`filter_${taxonomies.bild.taxonomy.replace(/^pa_/, '')}`,
-			'utan-bild',
-		);
+		filtered.searchParams.set(picture, 'utan-bild');
 
 		await page.goto(filtered.toString());
 
 		await expect(cards(page)).toHaveCount(1);
 		expect((await cardLinks(page)).map(chosen)).toEqual([
-			expect.objectContaining({
-				[`attribute_${taxonomies.bild.taxonomy}`]: 'utan-bild',
-			}),
+			expect.objectContaining({ [picture]: 'utan-bild' }),
 		]);
 	});
 });
