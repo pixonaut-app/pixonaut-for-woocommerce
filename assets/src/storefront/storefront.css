@@ -852,9 +852,15 @@ form:has(.pixonaut-personalise:not([hidden]))
 
 /* A variation's description shows once, in the place that keeps the height
  * of the longest (`VariationSlots`), so the one WooCommerce redraws with
- * each choice, which would move the price row under it, is left out. */
+ * each choice, which would move the price row under it, is left out: the
+ * classic form's, and the Add to Cart + Options block's, which prints the
+ * place through the same hooks. */
 .variations_form:has(.pixonaut-variation-description)
 	.single_variation
-	.woocommerce-variation-description {
+	.woocommerce-variation-description,
+.wp-block-woocommerce-add-to-cart-with-options:has(
+		.pixonaut-variation-description
+	)
+	.wp-block-woocommerce-add-to-cart-with-options-variation-description {
 	display: none;
 }

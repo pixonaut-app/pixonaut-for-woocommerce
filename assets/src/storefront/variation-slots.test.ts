@@ -20,6 +20,10 @@ function page(): { form: HTMLFormElement; field: HTMLInputElement } {
 	return { form, field };
 }
 
+function announced(): string {
+	return document.querySelector('[aria-live="polite"]')?.textContent ?? 'none';
+}
+
 function shown(): string[] {
 	return [...document.querySelectorAll<HTMLElement>('p')]
 		.filter((item) => item.style.visibility !== 'hidden')
@@ -38,6 +42,7 @@ describe('showVariation', () => {
 
 		expect(shown()).toEqual(['Short']);
 		expect(document.querySelector('.is-chosen')?.textContent).toBe('Short');
+		expect(announced(), 'the chosen text alone is announced').toBe('Short');
 	});
 
 	it('shows nothing, keeping every text’s room, for a variation no text is of', () => {
@@ -53,6 +58,8 @@ describe('showVariation', () => {
 		expect(shown()).toEqual([]);
 		expect(document.querySelectorAll('p')).toHaveLength(2);
 		expect(document.querySelector('.is-chosen')).toBeNull();
+		expect(announced()).toBe('');
+		expect(document.querySelectorAll('[aria-live]')).toHaveLength(1);
 	});
 });
 
