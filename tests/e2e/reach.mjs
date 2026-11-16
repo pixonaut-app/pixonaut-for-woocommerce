@@ -113,6 +113,7 @@ export const NO_SPEC = [
 	'src/Abilities/ChangeDeliveryAddress.php', // abilities no spec runs
 	'src/Abilities/ConnectionAction.php',
 	'src/Abilities/ConnectionStatus.php',
+	'src/Abilities/GetProductForm.php',
 	'src/Abilities/GetProductPictureViews.php',
 	'src/Abilities/GetProductPrices.php',
 	'src/Abilities/GetProductSplitListing.php',
@@ -123,6 +124,7 @@ export const NO_SPEC = [
 	'src/Abilities/ReadPricingSettings.php',
 	'src/Abilities/RecheckProducts.php',
 	'src/Abilities/ResetStandingLayout.php',
+	'src/Abilities/SetProductForm.php',
 	'src/Abilities/SetProductPictureView.php',
 	'src/Abilities/SetProductPriceChanges.php',
 	'src/Abilities/SetProductSplitListing.php',
