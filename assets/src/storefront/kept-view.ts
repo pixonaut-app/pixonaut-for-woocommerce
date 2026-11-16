@@ -5,7 +5,8 @@ export type KeptView = {
 	/** Its id. A scene's view has the same id on every blank that shows the
 	 *  scene, and a stored view's is its own key. */
 	viewId: string;
-	/** Its place among the views the designer listed with a photo. */
+	/** Its place among the views the designer listed with a photo; -1 when
+	 *  it is not one of them, as the artwork alone is not. */
 	index: number;
 };
 
@@ -28,17 +29,7 @@ export function shownViewOf(designer: Views): KeptView | undefined {
 	return { viewId, index: listed(designer).indexOf(viewId) };
 }
 
-/**
- * The view of `designer` that stands for `kept`, the view the designer
- * before it showed: the one with the same id, else the one at the same
- * place among its views. Undefined when it has neither, and the designer
- * stays on the view it opened on. Views are never matched by their labels,
- * which merchants rename and translate.
- */
-export function viewStandingFor(
-	designer: Views,
-	kept: KeptView,
-): string | undefined {
-	const views = listed(designer);
-	return views.includes(kept.viewId) ? kept.viewId : views[kept.index];
+/** Whether `designer` lists the very view `kept` names, with a photo. */
+export function listsView(designer: Views, kept: KeptView): boolean {
+	return listed(designer).includes(kept.viewId);
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shownViewOf, viewStandingFor } from './kept-view';
+import { listsView, shownViewOf } from './kept-view';
 
 function designer(shown: string | undefined, views: string[], hidden = '') {
 	return {
@@ -18,36 +18,30 @@ describe('shownViewOf', () => {
 		).toEqual({ viewId: 'scn_wall', index: 1 });
 	});
 
+	it('gives a view that is not listed with a photo no place', () => {
+		expect(shownViewOf(designer('design', ['scn_studio', 'scn_wall']))).toEqual(
+			{ viewId: 'design', index: -1 },
+		);
+	});
+
 	it('names none for a designer that shows no view', () => {
 		expect(shownViewOf(designer(undefined, []))).toBeUndefined();
 	});
 });
 
-describe('viewStandingFor', () => {
+describe('listsView', () => {
 	const kept = { viewId: 'scn_wall', index: 1 };
 
-	it('is the view of the same id, wherever the next blank lists it', () => {
-		expect(
-			viewStandingFor(designer('scn_wall', ['scn_wall', 'scn_studio']), kept),
-		).toBe('scn_wall');
+	it('is true for a designer that lists the view with a photo', () => {
+		expect(listsView(designer('own_a', ['own_a', 'scn_wall']), kept)).toBe(
+			true,
+		);
 	});
 
-	it('is the view at the same place when the next blank lacks the id', () => {
+	it('is false without the view, or without its photo', () => {
+		expect(listsView(designer('own_a', ['own_a', 'own_b']), kept)).toBe(false);
 		expect(
-			viewStandingFor(designer('own_a', ['own_a', 'own_b', 'own_c']), kept),
-		).toBe('own_b');
-	});
-
-	it('counts only the views with a photo for the place', () => {
-		expect(
-			viewStandingFor(
-				designer('own_a', ['own_a', 'gone', 'own_c'], 'gone'),
-				kept,
-			),
-		).toBe('own_c');
-	});
-
-	it('is none when the next blank has neither, so its first view stays', () => {
-		expect(viewStandingFor(designer('own_a', ['own_a']), kept)).toBeUndefined();
+			listsView(designer('own_a', ['own_a', 'scn_wall'], 'scn_wall'), kept),
+		).toBe(false);
 	});
 });

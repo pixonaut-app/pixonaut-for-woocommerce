@@ -52,6 +52,13 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 	 */
 	protected const NOW = 1794636000;
 
+	/** A cost's `times` when its printshop tells none. */
+	protected const NO_TIMES = array(
+		'production' => null,
+		'shipping'   => null,
+		'delivery'   => null,
+	);
+
 	protected HttpRecorder $recorder;
 
 	protected RecordingLogger $logger;
@@ -219,7 +226,7 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 	 * @param array<string, string|null> $products Each variant's product price by ref; null for one the printshop publishes none for.
 	 * @param string|null                $shipping Every variant's shipping; null for none.
 	 * @param string|null                $currency The costs' currency; the store's when null.
-	 * @param array<string, mixed>|null  $times    Every variant's `times`, as the answer writes them; null for an answer without any.
+	 * @param array<string, mixed>|null  $times    Every variant's `times`, as the answer writes them; null for a printshop that tells none.
 	 */
 	protected function script_costs( array $products, ?string $shipping = null, ?string $currency = null, ?array $times = null ): void {
 		$currency ??= get_woocommerce_currency();
@@ -236,13 +243,16 @@ abstract class PricingTestCase extends WP_UnitTestCase {
 				'region'    => (string) WC()->countries->get_base_country(),
 				'readAt'    => '2026-11-14T06:00:00.000Z',
 				'changedAt' => null,
-			) + ( null === $times ? array() : array( 'times' => $times ) );
+				'times'     => $times ?? self::NO_TIMES,
+			);
 		}
 		$this->recorder->json(
 			200,
 			array(
-				'costs'    => $costs,
-				'complete' => true,
+				'costs'          => $costs,
+				'complete'       => true,
+				// Every cost of the fixture names its own currency.
+				'currencyNeeded' => false,
 			)
 		);
 	}
