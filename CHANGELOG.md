@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.12.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.11.1...v1.12.0) (2026-11-16)
+
+
+### Features
+
+* **shop-tools:** Pixonaut reads and arranges a product's designer form with the store's credential ([#202](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/202)) ([f423ae6](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/f423ae6808448e513b0561852524b18fdd058d94))
+* **storefront:** each split attribute lists a card per value always or only while filtered, and cards show the flat design until a framing is filtered ([#209](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/209)) ([928356f](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/928356fdd4c1f5fb96b9217e8db50eb4f2f44069))
+* **storefront:** product, card and filter addresses name each attribute by a short name ([#214](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/214)) ([20e6f39](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/20e6f39af8fd2bf3e4aa5c83eef38980fa09ba07))
+
+
+### Bug Fixes
+
+* **catalogue:** "Pixonaut could not be reached" shows only when it could not be reached, and one failed call does not mark the variations not asked ([#200](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/200)) ([b6f3b45](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/b6f3b457928a702310f102be94c808b3c3dc3a52))
+* **catalogue:** a product waiting for a re-check is queued once, whatever events arrive before it runs ([#207](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/207)) ([cbe903f](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/cbe903fc1bb28d15a694fa88c652f045b87633a2))
+* **contracts:** pin Pixonaut API 10.3.0, SDK 0.43.1 and pixonaut-php 20.3, and translate the new strings ([#211](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/211)) ([0e4087a](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/0e4087afd05b4e22b1c8b205839dde6f07042853))
+* **storefront:** a card on a filtered archive opens the variation the filters chose ([#205](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/205)) ([6cf5cb8](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/6cf5cb88a19c947cb455ca358ee23781688b4e31))
+* **storefront:** archive filters list and count only products with one variation matching every filter ([#198](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/198)) ([6e7f010](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/6e7f010eca15a46d088b1a2de719a76fff73ff8c))
+* **storefront:** emptied option fields leave no gap above the designer ([#201](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/201)) ([cb648a3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/cb648a3af6a6c64faee4b4ce61371f0758ea0435))
+* **storefront:** keep the picture, the price and Add to cart in place while a side mounts on another blank ([#206](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/206)) ([faa53fe](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/faa53fed9eec2197369548c3218d6c24e34eb05b))
+* **storefront:** the Clear link stands over the cart row when options have steps of their own ([#204](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/204)) ([e85ee08](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/e85ee08169d8705baf03eae5371b1359f099fc2a))
+* **tests:** start each test reading blank variants as a request of its own ([#208](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/208)) ([2e53b9f](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/2e53b9f37e51e01925f9c94e4c2fbb48ff65c66e))
+
+
+### Performance Improvements
+
+* **storefront:** a product page builds its designer from each variation once ([#215](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/215)) ([08e826a](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/08e826af762e43f5cfe6e9d17f13c355c0a239d6))
+* **storefront:** filtered shop and category pages keep what they read of each product's variations between requests ([#213](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/213)) ([5b2463a](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/5b2463a9afa81a8166e79d5c6ded3c8b8e77a20d))
+* **storefront:** product and archive pages read each product's variations once per request ([#203](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/203)) ([880d820](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/880d820c4db4edb39f7dd5a957acebacca5b1c47))
+* **storefront:** product cards load their product's identity alone, and storefront reads never hold a page for Pixonaut ([#212](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/212)) ([23f5121](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/23f5121c28f2f1811793bc149e25db204d028bd4))
+
 ## [1.11.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.11.0...v1.11.1) (2026-11-16)
 
 
