@@ -65,13 +65,16 @@ final class BlankFixture {
 	 */
 	public static function printshops( string $default_id = self::PRINTSHOP_ID ): array {
 		$printshop = static fn ( string $id, string $name, string $adapter ): array => array(
-			'id'            => $id,
-			'name'          => $name,
-			'adapter'       => $adapter,
-			'active'        => true,
-			'isDefault'     => $default_id === $id,
-			'catalogue'     => 'custom' !== $adapter,
-			'asksOfDesigns' => array(
+			'id'                  => $id,
+			'name'                => $name,
+			'adapter'             => $adapter,
+			'active'              => true,
+			'isDefault'           => $default_id === $id,
+			// No printshop of the fixture names a billing currency.
+			'billingCurrency'     => null,
+			'billingCurrencyFrom' => null,
+			'catalogue'           => 'custom' !== $adapter,
+			'asksOfDesigns'       => array(
 				'commitKeys' => array(),
 				'needsBlank' => 'custom' !== $adapter,
 			),
