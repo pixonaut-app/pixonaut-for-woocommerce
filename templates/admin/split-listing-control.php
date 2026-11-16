@@ -20,7 +20,7 @@
 defined( 'ABSPATH' ) || exit;
 ?>
 <tr class="pixonaut-split-listing">
-	<td>
+	<td colspan="2">
 		<div class="enable_variation show_if_variable">
 			<label for="<?php echo esc_attr( $id ); ?>" class="pixonaut-split-listing__label">
 				<?php

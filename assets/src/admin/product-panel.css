@@ -1483,6 +1483,12 @@
 	margin-bottom: 0.25em;
 }
 
+/* WooCommerce narrows the selects of an attribute's row; this one's choices are whole phrases. */
+#product_attributes .pixonaut-split-listing__choice {
+	width: auto;
+	max-width: 100%;
+}
+
 /* Each value's card under the control: a title field and an image per value. */
 .pixonaut-split-cards[hidden] {
 	display: none;
