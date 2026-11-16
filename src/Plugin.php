@@ -538,7 +538,7 @@ final class Plugin {
 		( new ShortAddresses( $this->file ) )->register();
 		$split_card_listings = new SplitCardListings();
 		$split_card_listings->register();
-		( new SplitCardFaces( $split_card_listings ) )->register();
+		( new SplitCardFaces( $split_card_listings, $this->picture_queue() ) )->register();
 		( new CardHydration() )->register();
 		( new CardStructuredData() )->register();
 		( new FilterMatches() )->register();

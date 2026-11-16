@@ -169,9 +169,12 @@ Each card shows:
   its design: the template drawn with the product's showcase set, as
   Pixonaut draws it for the card's first variation that has one. A card
   shown while the shop is filtered by an attribute listed only while
-  filtered (a framing) shows instead the picture of its first variation
-  that has one, such as the framed poster on a wall. Without either, the
-  product's. The flat pictures are drawn in the background once the
+  filtered (a framing) shows instead the picture of the variation the card
+  opens, which matches every filter the customer ticked: filtered by
+  **Framing: Frame** and **Frame colour: Black**, the poster in a black
+  frame on a wall. When that picture is not drawn yet, it is drawn in the
+  background, and the card shows the picture of the variation closest to
+  the filters until then. Without either, the product's. The flat pictures are drawn in the background once the
   product is listed as cards, while the store uses Pixonaut pictures as
   product images; until then a card shows its variation's picture.
 - **A price**: "From:" the lowest price among the value's variations, sale

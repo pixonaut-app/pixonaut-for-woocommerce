@@ -450,9 +450,12 @@ final class PictureQueue {
 	}
 
 	/**
+	 * Queues the drawing of the product's picture when the job has something
+	 * to do for it (`is_due()`).
+	 *
 	 * @param WC_Product $product A product or variation.
 	 */
-	private function queue_if_due( WC_Product $product ): void {
+	public function queue_if_due( WC_Product $product ): void {
 		if ( $this->is_due( $product ) ) {
 			$this->queue( $product->get_id() );
 		}
