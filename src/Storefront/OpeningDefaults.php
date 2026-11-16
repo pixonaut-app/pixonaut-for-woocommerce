@@ -83,15 +83,26 @@ final class OpeningDefaults {
 	 * @return array<string, string>
 	 */
 	private static function fill( WC_Product_Variable $product, array $stored ): array {
-		$attributes = array();
-		foreach ( array_keys( $product->get_variation_attributes() ) as $name ) {
-			$attributes[ sanitize_title( (string) $name ) ] = true;
+		$options = array();
+		foreach ( $product->get_variation_attributes() as $name => $values ) {
+			$options[ sanitize_title( (string) $name ) ] = array(
+				'taxonomy' => taxonomy_exists( (string) $name ),
+				'values'   => array_map( 'strval', (array) $values ),
+			);
 		}
-		$open = array_diff_key( $attributes, $stored );
+		$named = array_intersect_key( OpeningChoice::requested( $product ), $options );
+		// An attribute the address names opens on that, whatever its default.
+		$open = array_diff_key( $options, $stored, $named );
 		if ( array() === $open ) {
 			return $stored;
 		}
-		$requested = array_filter( array_intersect_key( OpeningChoice::requested( $product ), $attributes ), static fn ( string $value ): bool => '' !== $value );
+		$requested = array();
+		foreach ( $named as $attribute => $value ) {
+			$chosen = self::option( $value, $options[ $attribute ]['values'], $options[ $attribute ]['taxonomy'] );
+			if ( '' !== $chosen ) {
+				$requested[ $attribute ] = $chosen;
+			}
+		}
 		// What the address names outranks a default, as it does in the form.
 		$variation = PicturedVariation::agreeing_with( $product, $requested + $stored );
 		if ( null === $variation && array() !== $requested ) {
@@ -108,6 +119,27 @@ final class OpeningDefaults {
 			}
 		}
 		return $stored;
+	}
+
+	/**
+	 * The value of an attribute the form opens on for a value the address
+	 * names, as `wc_dropdown_variation_attribute_options()` selects it: a
+	 * term by its slug, however the address spells it, and a custom value
+	 * by itself or by the slug of it. The value as named when it is none of
+	 * them, which no variation then agrees with.
+	 *
+	 * @param string   $named    The value the address names.
+	 * @param string[] $values   The attribute's values, as a variation keeps them.
+	 * @param bool     $taxonomy Whether the attribute is a global one, kept by its terms' slugs.
+	 */
+	private static function option( string $named, array $values, bool $taxonomy ): string {
+		$slug = sanitize_title( $named );
+		foreach ( $values as $value ) {
+			if ( $taxonomy ? $slug === $value : ( $named === $value || ( $slug === $named && sanitize_title( $value ) === $named ) ) ) {
+				return $value;
+			}
+		}
+		return $named;
 	}
 
 	/**

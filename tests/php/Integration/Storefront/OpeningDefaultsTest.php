@@ -13,6 +13,7 @@ use Pixonaut\WooCommerce\Storefront\OpeningChoice;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
 use WC_Product;
+use WC_Product_Attribute;
 use WC_Product_Variable;
 use WC_Product_Variation;
 use WP_UnitTestCase;
@@ -47,7 +48,7 @@ final class OpeningDefaultsTest extends WP_UnitTestCase {
 
 	public function tear_down(): void {
 		$this->tear_down_posters();
-		unset( $_REQUEST['attribute_pa_bild'], $_REQUEST['attribute_pa_storlek'] );
+		unset( $_REQUEST['attribute_pa_bild'], $_REQUEST['attribute_pa_storlek'], $_REQUEST['attribute_size'] );
 		delete_option( 'woocommerce_hide_out_of_stock_items' );
 		parent::tear_down();
 	}
@@ -127,6 +128,52 @@ final class OpeningDefaultsTest extends WP_UnitTestCase {
 			),
 			OpeningChoice::values( $poster )
 		);
+	}
+
+	public function test_a_value_the_address_spells_another_way_chooses_the_rest_as_the_form_selects_it(): void {
+		$poster                        = $this->personalised_poster();
+		$_REQUEST['attribute_pa_bild'] = 'Utan Bild';
+		$this->go_to( (string) get_permalink( $poster->get_id() ) );
+
+		$this->assertSame( array( 'pa_storlek' => self::SMALL ), $poster->get_default_attributes() );
+	}
+
+	public function test_a_custom_value_the_address_names_by_its_slug_chooses_the_rest(): void {
+		$product = new WC_Product_Variable();
+		$product->set_name( 'Sign' );
+		$product->set_status( 'publish' );
+		$attributes = array();
+		foreach ( array(
+			'Size'   => array( 'Small', 'Large' ),
+			'Finish' => array( 'Matt', 'Gloss' ),
+		) as $name => $values ) {
+			$attribute = new WC_Product_Attribute();
+			$attribute->set_name( $name );
+			$attribute->set_options( $values );
+			$attribute->set_variation( true );
+			$attributes[] = $attribute;
+		}
+		$product->set_attributes( $attributes );
+		$product->save();
+		foreach ( array( array( 'Small', 'Matt' ), array( 'Large', 'Gloss' ) ) as list( $size, $finish ) ) {
+			$variation = new WC_Product_Variation();
+			$variation->set_parent_id( $product->get_id() );
+			$variation->set_attributes(
+				array(
+					'size'   => $size,
+					'finish' => $finish,
+				)
+			);
+			$variation->set_regular_price( '10' );
+			$variation->save();
+		}
+		VariationSwitchesTest::front()->save_to( $product );
+		DesignFixture::sell_variant( $product );
+		$product                    = $this->reloaded( $product );
+		$_REQUEST['attribute_size'] = 'large';
+		$this->go_to( (string) get_permalink( $product->get_id() ) );
+
+		$this->assertSame( array( 'finish' => 'Gloss' ), $product->get_default_attributes() );
 	}
 
 	public function test_an_attribute_the_variation_is_sold_in_any_value_of_stays_open(): void {
