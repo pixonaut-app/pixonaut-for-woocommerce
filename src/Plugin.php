@@ -204,6 +204,8 @@ use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
 use Pixonaut\WooCommerce\Storefront\ServerReads;
 use Pixonaut\WooCommerce\Storefront\SplitCardFaces;
 use Pixonaut\WooCommerce\Storefront\SplitCardListings;
+use Pixonaut\WooCommerce\Storefront\FilterMatches;
+use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
 use Pixonaut\WooCommerce\Storefront\Storefront;
 use Pixonaut\WooCommerce\Storefront\SwatchLooks;
 use Pixonaut\WooCommerce\Storefront\SwatchNames;
@@ -517,6 +519,8 @@ final class Plugin {
 		$split_card_listings = new SplitCardListings( $this->settings() );
 		$split_card_listings->register();
 		( new SplitCardFaces( $split_card_listings ) )->register();
+		( new FilterMatches( $this->settings() ) )->register();
+		( new AttributeDependencies() )->register();
 		( new CardPageHead() )->register();
 		( new CardSitemaps() )->register();
 		$this->designer_links()->register();

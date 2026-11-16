@@ -349,6 +349,7 @@ final class SplitCards {
 	 */
 	private static function forget( int $product_id ): void {
 		unset( self::$variations[ $product_id ], self::$offers[ $product_id ], self::$cards[ $product_id ], self::$card_terms[ $product_id ], self::$links[ $product_id ] );
+		FilterOffers::forget( $product_id );
 	}
 
 	/**
@@ -436,6 +437,21 @@ final class SplitCards {
 	}
 
 	/**
+	 * The enabled variations each of a product's cards sells, by the card's
+	 * key, in the product's order of values; empty when it is listed once.
+	 *
+	 * @param WC_Product $product A product.
+	 * @return array<string, list<int>> Variation ids.
+	 */
+	public static function sold_by_card( WC_Product $product ): array {
+		$sold = array();
+		foreach ( self::cards( $product ) as $key => $variation_ids ) {
+			$sold[ (string) $key ] = $variation_ids;
+		}
+		return $sold;
+	}
+
+	/**
 	 * A product's cards: the enabled variations each sells, by its key, in
 	 * the product's order of values. None for a product that would have
 	 * more than `MAX_CARDS`.
@@ -456,7 +472,7 @@ final class SplitCards {
 		$order = array();
 		$held  = array();
 		if ( array() !== $terms ) {
-			$variations = self::variations( $product_id );
+			$variations = self::variation_values( $product_id );
 			$fields     = ApplicableAttributes::fields( $product );
 			$sold       = array_values( $variations );
 			foreach ( $variations as $variation_id => $values ) {
@@ -689,12 +705,12 @@ final class SplitCards {
 
 	/**
 	 * The attribute values of a product's enabled variations, `''` for one
-	 * it leaves unset.
+	 * it leaves unset; read once a request.
 	 *
 	 * @param int $product_id A variable product.
 	 * @return array<int, array<string, string>> Values by `attribute_<name>` field, by variation id, in the product's order of variations.
 	 */
-	private static function variations( int $product_id ): array {
+	public static function variation_values( int $product_id ): array {
 		if ( isset( self::$variations[ $product_id ] ) ) {
 			return self::$variations[ $product_id ];
 		}

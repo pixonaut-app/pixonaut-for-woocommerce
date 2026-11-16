@@ -83,6 +83,82 @@ final class ApplicableAttributes {
 	}
 
 	/**
+	 * Whether an attribute applies to a variation: the variation sets it,
+	 * or leaves it open without the attribute being hidden under the
+	 * variation's own values.
+	 *
+	 * @param string[]                    $fields     The product's `attribute_*` fields, in its order of attributes.
+	 * @param list<array<string, string>> $variations Each variation's values by field; an unset one empty or missing.
+	 * @param array<string, string>       $variation  One of them.
+	 * @param string                      $field      The attribute's field.
+	 * @phpstan-param list<string> $fields
+	 */
+	public static function applies( array $fields, array $variations, array $variation, string $field ): bool {
+		return '' !== ( $variation[ $field ] ?? '' ) || ! in_array( $field, self::hidden( $fields, $variations, $variation ), true );
+	}
+
+	/**
+	 * The attribute each hidden-able attribute depends on, and the values of
+	 * it the attribute applies under: an attribute every variation sets, and
+	 * whose value alone decides whether the dependent one applies. A frame
+	 * colour that applies to the framed and the hanger variations depends on
+	 * the framing, under "framed" and "hanger". When several decide it, as a
+	 * size does when only the large size is sold framed, the nearest before
+	 * the dependent attribute in the product's order is taken, else the
+	 * nearest after it. An attribute no such attribute decides has no entry.
+	 *
+	 * @param string[]                    $fields     The product's `attribute_*` fields, in its order of attributes.
+	 * @param list<array<string, string>> $variations Each variation's values by field; an unset one empty or missing.
+	 * @phpstan-param list<string> $fields
+	 * @return array<string, array{field: string, values: list<string>}> By the dependent attribute's field; values in the order the variations first hold them.
+	 */
+	public static function parents( array $fields, array $variations ): array {
+		$dependent = self::dependent( $fields, $variations );
+		$parents   = array();
+		foreach ( $dependent as $field ) {
+			$applies = array_map( static fn ( array $variation ): bool => self::applies( $fields, $variations, $variation, $field ), $variations );
+			$place   = (int) array_search( $field, $fields, true );
+			$nearer  = array_merge( array_reverse( array_slice( $fields, 0, $place ) ), array_slice( $fields, $place + 1 ) );
+			foreach ( array_diff( $nearer, $dependent ) as $parent ) {
+				$under = self::values_deciding( $variations, $applies, $parent );
+				if ( null !== $under ) {
+					$parents[ $field ] = array(
+						'field'  => $parent,
+						'values' => $under,
+					);
+					break;
+				}
+			}
+		}
+		return $parents;
+	}
+
+	/**
+	 * The values of an attribute under which another applies, when the
+	 * attribute's value alone decides that: every variation sets it, all the
+	 * variations holding one value agree, and some value has the other not
+	 * apply. Null otherwise.
+	 *
+	 * @param list<array<string, string>> $variations Each variation's values by field.
+	 * @param bool[]                      $applies    Whether the other attribute applies, by variation.
+	 * @param string                      $deciding   The attribute's field.
+	 * @phpstan-param list<bool> $applies
+	 * @return list<string>|null
+	 */
+	private static function values_deciding( array $variations, array $applies, string $deciding ): ?array {
+		$by_value = array();
+		foreach ( $variations as $index => $variation ) {
+			$value = $variation[ $deciding ] ?? '';
+			if ( '' === $value || ( isset( $by_value[ $value ] ) && $by_value[ $value ] !== $applies[ $index ] ) ) {
+				return null;
+			}
+			$by_value[ $value ] = $applies[ $index ];
+		}
+		$under = array_keys( array_filter( $by_value ) );
+		return count( $under ) === count( $by_value ) ? null : array_map( 'strval', $under );
+	}
+
+	/**
 	 * Whether a variation holds every chosen value, one it leaves unset
 	 * holding any.
 	 *

@@ -900,6 +900,24 @@ add_action( 'pixonaut_wc_webhook_order_status_changed', function ( $payload ) {
 
 <!-- END GENERATED hooks -->
 
+## Data the plugin serves
+
+A theme reads these by applying the filter with a default; the plugin
+answers it, adding to what the default or another callback holds.
+
+### `pixonaut_wc_storefront_attribute_dependencies`
+
+Which attribute each dependent product attribute applies under, read from
+the store's variations: the dependent attribute's taxonomy, then the
+taxonomy of the attribute it depends on, then the slugs of the values it
+applies under. See
+[Dependent attributes for a theme](../storefront/#dependent-attributes-for-a-theme).
+
+```php
+$dependencies = apply_filters( 'pixonaut_wc_storefront_attribute_dependencies', array() );
+// array( 'pa_ramfarg' => array( 'pa_inramning' => array( 'ram', 'hangare' ) ) )
+```
+
 ## JavaScript hooks
 
 The storefront script's `@wordpress/hooks` filters and actions

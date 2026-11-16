@@ -74,8 +74,9 @@ Product Collection block on the shop's templates) both show them.
   N" and the pages count cards.
 - **Categories and filters**: each card is in the product's categories and
   tags. A filter by an attribute the product is listed by keeps only the
-  cards with a chosen value; any other filter keeps or drops all of them,
-  as it would the product.
+  cards with a chosen value. Every filter, the price included, keeps a card
+  only while one of its variations matches all of them at once (see
+  [Filters in the shop](../dependent-options/#filters-in-the-shop)).
 - **Templates that are not live**: a value whose every variation is on a
   paused or unpublished template has no card, as a product would have none;
   a card chooses only among the variations on a live template.

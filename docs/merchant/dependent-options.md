@@ -73,3 +73,28 @@ still lists only the ones that applied.
 
 A product can be [listed once per value](../split-listings/) of such
 options, with a card per combination that a variation sells.
+
+## Filters in the shop
+
+The shop's and its categories' attribute and price filters keep a product
+only while one variation a customer can buy matches every filter at once:
+
+- **Framing: None** with **Frame colour: Oak** lists no poster above, since
+  no variation is bare and oak.
+- **Size: 30×40** with a price of **299–391** lists a product only when
+  its 30×40 variation costs within that range, not when another size does.
+- Within one attribute, any chosen value matches (**Oak** or **Black**). A
+  variation that leaves an attribute on **Any** matches any of its values,
+  unless the attribute does not apply to it.
+- Each value's count beside its checkbox is what the shop would list with
+  that value added to the filters, counting each card of a product
+  [listed once per value](../split-listings/).
+
+A variation counts while it is enabled, has a price, and is in stock or
+the store shows products out of stock. Simple products match as before.
+The counts are those of WooCommerce's **Product Filters** block, which
+block themes such as Pixonaut Shop use.
+
+A theme can also nest an option under the values of the option it depends
+on (**Frame colour** under **Frame** and **Hanger**): the plugin reads that
+from the variations, never from the names of the options.

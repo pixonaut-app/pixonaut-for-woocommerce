@@ -38,6 +38,7 @@ export const NO_SPEC = [
 	'src/Settings/Setting.php', // every spec sets some setting
 	'src/Settings/Settings.php',
 	'src/Admin/Notices.php', // the notice store; specs about a notice list its raiser
+	'src/Storefront/AttributeDependencies.php', // data for a theme's filter panel; tested by the PHP suites
 	'src/Admin/HelpLinks.php',
 	'src/Admin/PluginLinks.php',
 	'templates/admin/notice.php',
@@ -698,6 +699,8 @@ export const REACH = {
 		'assets/src/storefront/address.ts',
 		'src/Storefront/SplitCardFaces.php',
 		'src/Storefront/SplitCardListings.php',
+		'src/Storefront/FilterMatches.php',
+		'src/Catalogue/FilterOffers.php',
 		'templates/admin/split-card-looks.php',
 		'assets/src/admin/split-listing.ts',
 	],
