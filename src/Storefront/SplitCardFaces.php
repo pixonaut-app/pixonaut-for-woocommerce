@@ -110,18 +110,24 @@ final class SplitCardFaces {
 		if ( ! $product instanceof WC_Product || null === $key ) {
 			return $image_id;
 		}
-		$opens  = FilteredOpening::values( $product, $key );
-		$opened = CardPages::opened( $product, $key, $opens );
-		if ( null !== $opened && ! isset( $this->checked[ $opened->get_id() ] ) && 0 === (int) $opened->get_image_id( 'edit' ) && ! SplitCards::is_unfiltered( $product, $key ) ) {
-			$this->checked[ $opened->get_id() ] = true;
-			// Drawn once in a job, as every picture; a card shows it from then on.
-			$this->pictures->queue_if_due( $opened );
-		}
-		$own = CardPages::image( $product, $key, $opens );
+		$own = CardPages::image( $product, $key, FilteredOpening::values( $product, $key ), $this->draw( ... ) );
 		if ( $own > 0 ) {
 			return $own;
 		}
 		return $image_id;
+	}
+
+	/**
+	 * Queues the drawing of the picture a card waits for, once a request:
+	 * drawn in a job, as every picture, the card shows it from then on.
+	 *
+	 * @param WC_Product $variation The variation the card opens on.
+	 */
+	private function draw( WC_Product $variation ): void {
+		if ( ! isset( $this->checked[ $variation->get_id() ] ) ) {
+			$this->checked[ $variation->get_id() ] = true;
+			$this->pictures->queue_if_due( $variation );
+		}
 	}
 
 	/**

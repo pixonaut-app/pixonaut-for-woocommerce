@@ -10,6 +10,8 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 use ActionScheduler;
 use Pixonaut\WooCommerce\Catalogue\PictureQueue;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
+use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
+use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Tests\Integration\Catalogue\PicturedProducts;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
@@ -123,6 +125,38 @@ final class FilteredCardPicturesTest extends WP_UnitTestCase {
 			'once drawn, framed in white'
 		);
 		$this->assertSame( array(), ActionSchedulerRunner::pending( ProductPictures::ACTION ) );
+	}
+
+	public function test_a_card_with_its_own_image_draws_no_picture_for_the_filtered_colour(): void {
+		$this->picture_each_variation( array( 'ram-vit' ) );
+		// A card's own image must be one the media library knows as an image.
+		$own = self::factory()->attachment->create_object(
+			array(
+				'file'           => 'card.png',
+				'post_mime_type' => 'image/png',
+			)
+		);
+		$this->assertIsInt( $own );
+		SplitCardLooks::save(
+			$this->poster->get_id(),
+			array(
+				SplitCards::key( array( $this->poster_term( 'Inramning', 'ram' ) ) ) => array(
+					'title' => '',
+					'image' => $own,
+				),
+			)
+		);
+
+		$this->assertSame(
+			array( $own ),
+			$this->shop(
+				array(
+					'filter_inramning' => 'ram',
+					'filter_ramfarg'   => 'vit',
+				)
+			)
+		);
+		$this->assertSame( array(), ActionSchedulerRunner::pending( ProductPictures::ACTION ), 'the card never shows the drawing' );
 	}
 
 	/**
