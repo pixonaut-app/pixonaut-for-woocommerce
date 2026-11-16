@@ -46,12 +46,14 @@ final class FreshRequest {
 	 * what `FilterIndex` kept between requests stays.
 	 */
 	public static function forget_filter_reads(): void {
-		foreach ( array( 'variations', 'offers', 'cards', 'card_terms', 'links' ) as $memo ) {
+		foreach ( array( 'variations', 'offers', 'offers_plain', 'cards', 'card_terms', 'links' ) as $memo ) {
 			( new ReflectionProperty( SplitCards::class, $memo ) )->setValue( null, array() );
 		}
 		( new ReflectionProperty( FilterOffers::class, 'offers' ) )->setValue( null, array() );
 		( new ReflectionProperty( FilteredOpening::class, 'values' ) )->setValue( null, array() );
 		( new ReflectionProperty( FilterIndex::class, 'looked_up' ) )->setValue( null, array() );
+		( new ReflectionProperty( FilterIndex::class, 'switched' ) )->setValue( null, false );
+		( new ReflectionProperty( FilterIndex::class, 'errors' ) )->setValue( null, null );
 		RequestCache::forget();
 	}
 }

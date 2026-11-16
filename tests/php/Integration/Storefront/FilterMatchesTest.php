@@ -501,8 +501,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		$this->settle();
 		$this->shop( $filters );
 		FilterIndex::keep();
-		$bare = $this->variations_in( $this->poster, '30x40' )[0];
-		$hide = static fn ( mixed $visible, mixed $variation_id ): mixed => $bare === $variation_id ? false : $visible;
+		$hide = $this->hiding( $this->variations_in( $this->poster, '30x40' )[0] );
 		add_filter( 'woocommerce_variation_is_visible', $hide, 10, 2 );
 		FreshRequest::forget_filter_reads();
 
@@ -518,6 +517,75 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 			$this->chosen( $link ),
 			'the bare 30x40 is not offered now, though it was when its offers were kept'
 		);
+	}
+
+	public function test_offers_read_under_a_filter_since_removed_are_not_kept(): void {
+		$this->set_defaults( array( 'pa_storlek' => '50x70' ) );
+		$filters = array(
+			'filter_storlek' => '30x40',
+			'max_price'      => self::PRICE_HIGH,
+		);
+		$this->settle();
+		$hide = $this->hiding( $this->variations_in( $this->poster, '30x40' )[0] );
+		add_filter( 'woocommerce_variation_is_visible', $hide, 10, 2 );
+		$this->shop( $filters );
+		remove_filter( 'woocommerce_variation_is_visible', $hide, 10 );
+		FilterIndex::keep();
+		FreshRequest::forget_filter_reads();
+
+		$this->assertSame( 'ingen', $this->chosen( $this->shop( $filters )['links'][ $this->poster->get_id() ] ?? '' )['attribute_pa_inramning'] ?? '', 'the bare 30x40 is offered again' );
+	}
+
+	public function test_a_filter_added_after_a_product_was_looked_up_still_counts(): void {
+		$this->set_defaults( array( 'pa_storlek' => '50x70' ) );
+		$filters = array(
+			'filter_storlek' => '30x40',
+			'max_price'      => self::PRICE_HIGH,
+		);
+		$this->settle();
+		$this->shop( $filters );
+		FilterIndex::keep();
+		FreshRequest::forget_filter_reads();
+		FilterIndex::look_up( array( $this->poster->get_id() ) );
+		$hide = $this->hiding( $this->variations_in( $this->poster, '30x40' )[0] );
+		add_filter( 'woocommerce_variation_is_visible', $hide, 10, 2 );
+
+		$link = $this->shop( $filters )['links'][ $this->poster->get_id() ] ?? '';
+		remove_filter( 'woocommerce_variation_is_visible', $hide, 10 );
+
+		$this->assertSame( 'ram', $this->chosen( $link )['attribute_pa_inramning'] ?? '' );
+	}
+
+	public function test_nothing_is_kept_from_a_request_that_switched_sites_or_had_a_database_error(): void {
+		$this->settle();
+		$this->shop( array( 'filter_storlek' => '30x40' ) );
+		do_action( 'switch_blog', 1, 1, 'switch' );
+		FilterIndex::keep();
+		$this->assertFalse( get_transient( Schema::FILTER_INDEX_PREFIX . $this->poster->get_id() ), 'another site\'s products share its ids' );
+
+		FreshRequest::forget_filter_reads();
+		$this->shop( array( 'filter_storlek' => '30x40' ) );
+		global $EZSQL_ERROR;
+		$errors = $EZSQL_ERROR;
+
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- a failed query, as wpdb records it.
+		$EZSQL_ERROR[] = array(
+			'query'     => 'SELECT 1',
+			'error_str' => 'Lost connection',
+		);
+		FilterIndex::keep();
+		$EZSQL_ERROR = $errors; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- restores what the test added.
+		$this->assertFalse( get_transient( Schema::FILTER_INDEX_PREFIX . $this->poster->get_id() ), 'a failed read may have found no variations' );
+	}
+
+	/**
+	 * A visibility filter hiding one variation.
+	 *
+	 * @param int $hidden The variation.
+	 * @return \Closure(mixed, mixed): mixed
+	 */
+	private function hiding( int $hidden ): \Closure {
+		return static fn ( mixed $visible, mixed $variation_id ): mixed => $hidden === $variation_id ? false : $visible;
 	}
 
 	/**

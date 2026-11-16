@@ -31,12 +31,16 @@ use WP_Term;
  * read again. One read within moments of the product's last change is not
  * kept, so two changes within the same second cannot leave it stale.
  *
- * Whether a variation is on a live template, and whether WooCommerce
- * offers it while something filters its price, stock or visibility, are
- * decided per request: kept offers are taken only for a product no stored
+ * Whether a variation is on a live template, and what WooCommerce answers
+ * of its variations while something filters them (`SplitCards::OFFER_FILTERS`),
+ * are decided per request: offers are kept only when read while nothing
+ * filtered them, and taken, when first read, only for a product no stored
  * configuration names a template that is not live of
- * (`NotLiveProducts::candidate_ids()`), and only while nothing filters
- * those.
+ * (`NotLiveProducts::candidate_ids()`) and only while nothing filters them.
+ *
+ * Nothing is kept from a request that switched to another site of a
+ * network, whose products share ids, nor from one in which a database
+ * query failed, which may have read a product's variations as none.
  */
 final class FilterIndex {
 
@@ -54,17 +58,6 @@ final class FilterIndex {
 	private const SETTLE_SECONDS = 2;
 
 	/**
-	 * The filters through which WooCommerce decides whether it offers a
-	 * variation, as `SplitCards` reads it.
-	 */
-	private const OFFER_FILTERS = array(
-		'woocommerce_variation_is_visible',
-		'woocommerce_product_variation_get_price',
-		'woocommerce_product_variation_get_stock_status',
-		'woocommerce_product_is_in_stock',
-	);
-
-	/**
 	 * The term meta writes after which the attribute's values may list in another order.
 	 */
 	private const TERM_META_WRITES = array( 'added_term_meta', 'updated_term_meta', 'deleted_term_meta' );
@@ -80,13 +73,28 @@ final class FilterIndex {
 	private const TERM_ACTION_ARGS = 3;
 
 	/**
-	 * The products whose kept reads were looked up this request, by site
-	 * and product id: the stamp read before anything else of them, whether
+	 * The products whose kept reads were looked up this request, by
+	 * product id: the stamp read before anything else of them, whether
 	 * it has settled, and what was kept.
 	 *
-	 * @var array<string, array{id: int, stamp: string, settled: bool, kept: array<string, mixed>}>
+	 * @var array<int, array{id: int, stamp: string, settled: bool, kept: array<string, mixed>}>
 	 */
 	private static array $looked_up = array();
+
+	/**
+	 * Whether this request switched to another site.
+	 *
+	 * @var bool
+	 */
+	private static bool $switched = false;
+
+	/**
+	 * How many database errors this request had when it first looked up a
+	 * product; null before.
+	 *
+	 * @var int|null
+	 */
+	private static ?int $errors = null;
 
 	public static function register(): void {
 		add_action( 'edited_term', array( self::class, 'term_changed' ), 10, self::TERM_ACTION_ARGS );
@@ -96,7 +104,15 @@ final class FilterIndex {
 		}
 		add_action( 'woocommerce_attribute_updated', array( self::class, 'drop_all' ) );
 		add_action( 'woocommerce_attribute_deleted', array( self::class, 'drop_all' ) );
+		add_action( 'switch_blog', array( self::class, 'site_switched' ) );
 		add_action( 'shutdown', array( self::class, 'keep' ) );
+	}
+
+	/**
+	 * Notes that this request switched to another site: nothing it read is kept.
+	 */
+	public static function site_switched(): void {
+		self::$switched = true;
 	}
 
 	/**
@@ -108,13 +124,16 @@ final class FilterIndex {
 	public static function look_up( array $product_ids ): void {
 		$ids = array();
 		foreach ( $product_ids as $id ) {
-			if ( $id > 0 && ! isset( self::$looked_up[ self::slot( $id ) ] ) ) {
+			if ( $id > 0 && ! isset( self::$looked_up[ $id ] ) ) {
 				$ids[ $id ] = $id;
 			}
 		}
-		if ( array() === $ids ) {
+		if ( array() === $ids || self::$switched ) {
 			return;
 		}
+		// Errors from here on mean a read may have failed.
+		self::$errors ??= self::errors();
+
 		$stamps = self::stamps( array_values( $ids ) );
 		$names  = array();
 		foreach ( array_keys( $stamps ) as $id ) {
@@ -123,24 +142,35 @@ final class FilterIndex {
 		}
 		// Two options a product, read in one query rather than two each.
 		wp_prime_option_caches( $names );
-		$offers_taken = self::offers_taken();
 		foreach ( $stamps as $id => $stamp ) {
 			$parts = self::kept( $id, $stamp['stamp'] );
-			$taken = $parts;
-			unset( $taken['offers'] );
-			if ( is_array( $parts['offers'] ?? null ) && $offers_taken && ! in_array( $id, NotLiveProducts::candidate_ids(), true ) ) {
-				// No stored configuration of the product names a template that is not live.
-				$taken['offers'] = array_map( static fn ( mixed $offer ): array => array( 'live' => true ) + ( is_array( $offer ) ? $offer : array() ), $parts['offers'] );
-			}
-			SplitCards::take( $id, $taken );
+			SplitCards::take( $id, $parts );
 			FilterOffers::take( $id, $parts['filter_offers'] ?? null );
-			self::$looked_up[ self::slot( $id ) ] = array(
+			self::$looked_up[ $id ] = array(
 				'id'      => $id,
 				'stamp'   => $stamp['stamp'],
 				'settled' => $stamp['settled'],
 				'kept'    => $parts,
 			);
 		}
+	}
+
+	/**
+	 * A product's kept offers, each live, as `SplitCards` reads them when
+	 * first asked: none unless it was looked up, nothing filters what
+	 * WooCommerce answers of its variations now, and no stored configuration
+	 * names a template that is not live of it.
+	 *
+	 * @param int $product_id A product.
+	 * @return list<array{id: int, attributes: array<string, string>, offered: bool, live: bool}>|null
+	 */
+	public static function offers( int $product_id ): ?array {
+		$kept = self::$looked_up[ $product_id ]['kept']['offers'] ?? null;
+		if ( ! is_array( $kept ) || self::$switched || '' !== RequestCache::filters_key( SplitCards::OFFER_FILTERS ) || in_array( $product_id, NotLiveProducts::candidate_ids(), true ) ) {
+			return null;
+		}
+		/** @var list<array{id: int, attributes: array<string, string>, offered: bool}> $kept */
+		return array_map( static fn ( array $offer ): array => $offer + array( 'live' => true ), $kept );
 	}
 
 	/**
@@ -164,16 +194,18 @@ final class FilterIndex {
 	 * whose kept reads were missing or partial.
 	 */
 	public static function keep(): void {
-		$offers_kept = self::offers_taken();
-		foreach ( self::$looked_up as $slot => $looked_up ) {
-			if ( ! $looked_up['settled'] || ! str_starts_with( $slot, get_current_blog_id() . ':' ) ) {
+		$looked_up_all   = self::$switched || self::errors() !== self::$errors ? array() : self::$looked_up;
+		self::$looked_up = array();
+		self::$errors    = null;
+		foreach ( $looked_up_all as $looked_up ) {
+			if ( ! $looked_up['settled'] ) {
 				continue;
 			}
 			$id    = $looked_up['id'];
 			$parts = SplitCards::worked_out( $id );
 			unset( $parts['offers'] );
 			$offers = SplitCards::worked_out( $id )['offers'] ?? null;
-			if ( null !== $offers && $offers_kept && array() === array_filter( $offers, static fn ( array $offer ): bool => ! $offer['live'] ) ) {
+			if ( null !== $offers && array() === array_filter( $offers, static fn ( array $offer ): bool => ! $offer['live'] ) ) {
 				// Each one live: whether it is live is read per request again.
 				$parts['offers'] = array_map(
 					static function ( array $offer ): array {
@@ -201,7 +233,6 @@ final class FilterIndex {
 				);
 			}
 		}
-		self::$looked_up = array();
 	}
 
 	/**
@@ -212,7 +243,7 @@ final class FilterIndex {
 	 * @param int $product_id A product.
 	 */
 	public static function forget( int $product_id ): void {
-		unset( self::$looked_up[ self::slot( $product_id ) ] );
+		unset( self::$looked_up[ $product_id ] );
 		delete_transient( self::transient( $product_id ) );
 	}
 
@@ -254,11 +285,11 @@ final class FilterIndex {
 	}
 
 	/**
-	 * Whether kept offers are taken and kept now: nothing filters whether
-	 * WooCommerce offers a variation.
+	 * How many database errors this request has had.
 	 */
-	private static function offers_taken(): bool {
-		return '' === RequestCache::filters_key( self::OFFER_FILTERS );
+	private static function errors(): int {
+		global $EZSQL_ERROR;
+		return is_array( $EZSQL_ERROR ) ? count( $EZSQL_ERROR ) : 0;
 	}
 
 	/**
@@ -308,16 +339,6 @@ final class FilterIndex {
 				get_option( 'woocommerce_hide_out_of_stock_items' ),
 			)
 		);
-	}
-
-	/**
-	 * A product's place in `$looked_up`: another site of a network has its
-	 * own products under the same ids.
-	 *
-	 * @param int $product_id A product.
-	 */
-	private static function slot( int $product_id ): string {
-		return get_current_blog_id() . ':' . $product_id;
 	}
 
 	/**

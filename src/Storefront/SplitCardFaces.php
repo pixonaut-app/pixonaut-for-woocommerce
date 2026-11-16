@@ -45,7 +45,13 @@ final class SplitCardFaces {
 	 * The filters through which a variation's price can differ from the
 	 * one WooCommerce keeps for its product's price range.
 	 */
-	private const PRICE_FILTERS = array( 'woocommerce_product_variation_get_price', 'woocommerce_variation_prices_price', 'woocommerce_variation_prices' );
+	private const PRICE_FILTERS = array(
+		'woocommerce_product_variation_get_price',
+		'woocommerce_variation_prices_price',
+		'woocommerce_variation_prices',
+		'woocommerce_get_price_including_tax',
+		'woocommerce_get_price_excluding_tax',
+	);
 
 	/**
 	 * @param SplitCardListings $listings Knows the card a loop shows.

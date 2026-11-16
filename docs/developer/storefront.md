@@ -1213,10 +1213,12 @@ tax and shown with it.
   and stock included), its stored configuration, the plugin's version, the
   attributes listed by default, the hide-out-of-stock setting, and a
   generation raised when an attribute, a value or their order changes. A
-  product changed within the last two seconds is not kept. Whether a
-  variation is on a live template is read on each request; kept offers are
-  not used for a product a stored configuration marks not live, nor while
-  something filters a variation's price, stock or visibility.
+  product changed within the last two seconds is not kept, nor anything from
+  a request that switched sites or had a database error. Whether a
+  variation is on a live template is read on each request. Offers are kept
+  only when read while nothing filters a product's variations, their
+  values, price, stock or visibility, and are not used for a product a
+  stored configuration marks not live, nor while such a filter is on.
 
 #### Short names in addresses
 

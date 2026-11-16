@@ -157,6 +157,29 @@ final class SplitCards {
 	private static array $offers = array();
 
 	/**
+	 * Whether each product's offers were read while nothing filtered them
+	 * (`OFFER_FILTERS`), by product id: only those are kept between requests.
+	 *
+	 * @var array<int, bool>
+	 */
+	private static array $offers_plain = array();
+
+	/**
+	 * The filters through which WooCommerce answers which variations a
+	 * product has, their values, and whether it offers each, as `offers()`
+	 * reads them.
+	 */
+	public const OFFER_FILTERS = array(
+		'woocommerce_get_children',
+		'woocommerce_product_variation_get_status',
+		'woocommerce_product_variation_get_attributes',
+		'woocommerce_variation_is_visible',
+		'woocommerce_product_variation_get_price',
+		'woocommerce_product_variation_get_stock_status',
+		'woocommerce_product_is_in_stock',
+	);
+
+	/**
 	 * Products' cards, by product id: each card's variations by its key, in
 	 * the product's order of values; worked out once a request.
 	 *
@@ -385,7 +408,7 @@ final class SplitCards {
 	 * @param int $product_id A product.
 	 */
 	private static function forget( int $product_id ): void {
-		unset( self::$variations[ $product_id ], self::$offers[ $product_id ], self::$cards[ $product_id ], self::$card_terms[ $product_id ], self::$links[ $product_id ] );
+		unset( self::$variations[ $product_id ], self::$offers[ $product_id ], self::$offers_plain[ $product_id ], self::$cards[ $product_id ], self::$card_terms[ $product_id ], self::$links[ $product_id ] );
 		FilterOffers::forget( $product_id );
 		FilterIndex::forget( $product_id );
 	}
@@ -393,7 +416,7 @@ final class SplitCards {
 	/**
 	 * What was worked out of a product's variations and cards this
 	 * request, for `FilterIndex` to keep: its variations' values, its cards
-	 * with their values, and its offers.
+	 * with their values, and its offers when nothing filtered them.
 	 *
 	 * @param int $product_id A product.
 	 * @return array{values?: array<int, array<string, string>>, cards?: array<string, list<int>>, card_terms?: array<string, list<int>>, offers?: list<array{id: int, attributes: array<string, string>, offered: bool, live: bool}>}
@@ -407,7 +430,7 @@ final class SplitCards {
 			$parts['cards']      = self::$cards[ $product_id ];
 			$parts['card_terms'] = self::$card_terms[ $product_id ];
 		}
-		if ( isset( self::$offers[ $product_id ] ) ) {
+		if ( isset( self::$offers[ $product_id ] ) && ( self::$offers_plain[ $product_id ] ?? false ) ) {
 			$parts['offers'] = self::$offers[ $product_id ];
 		}
 		return $parts;
@@ -415,7 +438,9 @@ final class SplitCards {
 
 	/**
 	 * Takes what `worked_out()` answered in an earlier request as this
-	 * request's, for the parts not worked out yet.
+	 * request's, for the parts not worked out yet. Kept offers are taken
+	 * when they are first read (`FilterIndex::offers()`), as the filters
+	 * on them stand then.
 	 *
 	 * @param int                  $product_id A product.
 	 * @param array<string, mixed> $parts      Parts `worked_out()` answered, as `FilterIndex` kept them.
@@ -427,10 +452,6 @@ final class SplitCards {
 		if ( is_array( $parts['cards'] ?? null ) && is_array( $parts['card_terms'] ?? null ) && ! isset( self::$cards[ $product_id ] ) ) {
 			self::$cards[ $product_id ]      = $parts['cards'];
 			self::$card_terms[ $product_id ] = $parts['card_terms'];
-		}
-		if ( is_array( $parts['offers'] ?? null ) ) {
-			// @phpstan-ignore assign.propertyType (kept as `worked_out()` answered it, for this product's unchanged variations)
-			self::$offers[ $product_id ] ??= $parts['offers'];
 		}
 	}
 
@@ -919,6 +940,13 @@ final class SplitCards {
 		if ( isset( self::$offers[ $product->get_id() ] ) ) {
 			return self::$offers[ $product->get_id() ];
 		}
+		$kept = FilterIndex::offers( $product->get_id() );
+		if ( null !== $kept ) {
+			self::$offers_plain[ $product->get_id() ] = true;
+			self::$offers[ $product->get_id() ]       = $kept;
+			return $kept;
+		}
+		$plain  = '' === RequestCache::filters_key( self::OFFER_FILTERS );
 		$offers = array();
 		foreach ( ProductConfig::sold_variations( $product ) as list( $variation, $config ) ) {
 			if ( ! $variation instanceof WC_Product_Variation ) {
@@ -932,7 +960,8 @@ final class SplitCards {
 				'live'       => ! NotLiveProducts::not_live( $config ),
 			);
 		}
-		self::$offers[ $product->get_id() ] = $offers;
+		self::$offers_plain[ $product->get_id() ] = $plain && '' === RequestCache::filters_key( self::OFFER_FILTERS );
+		self::$offers[ $product->get_id() ]       = $offers;
 		return $offers;
 	}
 
