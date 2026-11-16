@@ -45,6 +45,13 @@ function rule(root: HTMLElement): Record<string, string> {
 	return parts;
 }
 
+/** Whether the product's prices change by themselves, as chosen: one of
+ *  `PriceChanges::OF_PRODUCT`; undefined for a section without the field. */
+function changes(root: HTMLElement): string | undefined {
+	return root.querySelector<HTMLSelectElement>('.pixonaut-prices__changes')
+		?.value;
+}
+
 function say(root: HTMLElement, text: string, failed = false): void {
 	const status = root.querySelector<HTMLElement>('.pixonaut-prices__status');
 	if (status) {
@@ -106,7 +113,9 @@ export async function act(
 			body: JSON.stringify({
 				action,
 				...(item === undefined ? {} : { ids: [item] }),
-				...(action === 'apply' ? { rule: rule(root) } : {}),
+				...(action === 'apply'
+					? { rule: rule(root), changes: changes(root) }
+					: {}),
 			}),
 		});
 		answer = await response.json();
@@ -130,14 +139,21 @@ export async function act(
 		setBusy(root, false);
 		return;
 	}
-	// The section stays as open as it was, and keeps what was typed in its
-	// rule's fields, which only Apply and saving the product store.
+	// The section stays as open as it was, and keeps what was typed and
+	// chosen in its rule's fields, which only Apply and saving the product store.
 	next.toggleAttribute('open', root.hasAttribute('open'));
 	const typed = rule(root);
 	for (const input of next.querySelectorAll<HTMLInputElement>(
 		'.pixonaut-prices__input',
 	)) {
 		input.value = typed[input.dataset.part ?? ''] ?? input.value;
+	}
+	const chosen = changes(root);
+	const select = next.querySelector<HTMLSelectElement>(
+		'.pixonaut-prices__changes',
+	);
+	if (select && chosen !== undefined) {
+		select.value = chosen;
 	}
 	root.replaceWith(next);
 	say(next, answer.message);

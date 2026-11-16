@@ -112,6 +112,7 @@ not recorded and it runs again. What it throws decides what the store sees:
 | Product and variation meta | `_pixonaut_variant` | The blank variant it sells: the store manager's pick, the ref resolved, the attribute labels a match was made from, and what Pixonaut last said of it (options, retirement, views with a photo), versioned JSON |
 | Product and variation meta | `_pixonaut_price` | The printshop cost last read for it, whether its price follows the pricing rule, the price the rule last set and when, and what the rule suggests now, versioned JSON ([Prices from costs](./pricing/)) |
 | Product meta | `_pixonaut_price_rule` | The parts of the store's pricing rule the product changes, by part, JSON |
+| Product and variation meta | `_pixonaut_price_automatic` | `always` or `never` on a product whose prices change by themselves, or never do, whatever the store's `price_automatic` says, and on a variation that answers its product; absent on one that follows |
 | Product meta | `_pixonaut_price_watch` | On a product with a price that follows the pricing rule: how many of its prices the rule flags, versioned JSON; finds the products whose costs are read again |
 | Order item meta | `_pixonaut_line` | The line's fulfilment state, the Pixonaut ids, refs and keys it used, and the requests it may send again, versioned JSON |
 | Order item meta | `_pixonaut_order_id` | The line's Pixonaut order id, kept in step with `_pixonaut_line` |

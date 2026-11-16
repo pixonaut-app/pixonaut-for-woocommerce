@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-15T20:51:21+00:00\n"
+"POT-Creation-Date: 2026-11-15T23:53:02+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -48,8 +48,8 @@ msgstr ""
 #. translators: The plugin's item in the admin menu, shown to the merchant; the product name, keep it as it is.
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
-#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:218
-#: src/Settings/SettingsPage.php:260 templates/admin/product-variation.php:40
+#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:220
+#: src/Settings/SettingsPage.php:260 templates/admin/product-variation.php:42
 msgid "Pixonaut"
 msgstr "Pixonaut"
 
@@ -632,45 +632,49 @@ msgid "The blank variants the photo shows; empty for every one."
 msgstr "Grundproduktvarianterna som fotot visar; tom om det gäller alla."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/GetProductPrices.php:48
+#: src/Abilities/GetProductPrices.php:45
 msgid "Read a product's prices and costs"
 msgstr "Läs en produkts priser och kostnader"
 
 #. translators: %s: the name of the ability that prices a product.
-#: src/Abilities/GetProductPrices.php:51
+#: src/Abilities/GetProductPrices.php:48
 #, php-format
 msgid ""
 "Lists each variation of a product printed on a blank (a simple product has "
 "one row) with what the printshop charges for it, that cost in the store's "
 "currency, its regular price and margin, how its price stands to the pricing "
 "rule (`standing`), the price the rule suggests when it is another, and what "
-"stops the rule (`flag`). Also the rule the product is priced by: the "
-"store's, with the parts the product changes (`own_rule`). The costs are the "
-"ones last read: `checked_at` null means never. %s reads them again, and with "
-"`dry_run` answers the prices it would set, changing nothing. `prices` is a "
-"page of the rows, `page` and `per_page` choosing which; `total` counts them "
-"all."
+"stops the rule (`flag`), and whether it changes by itself when its cost "
+"changes (`automatic`, and `price_changes` for what it is set to). Also the "
+"rule the product is priced by: the store's, with the parts the product "
+"changes (`own_rule`). The costs are the ones last read: `checked_at` null "
+"means never. %s reads them again, and with `dry_run` answers the prices it "
+"would set, changing nothing. `prices` is a page of the rows, `page` and "
+"`per_page` choosing which; `total` counts them all."
 msgstr ""
 "Listar varje variant av en produkt som trycks på en grundprodukt (en enkel "
 "produkt har en rad) med vad tryckeriet tar betalt för den, den kostnaden i "
 "butikens valuta, dess ordinarie pris och marginal, hur priset förhåller sig "
 "till prisregeln (`standing`), det pris regeln föreslår när det är ett annat, "
-"och vad som hindrar regeln (`flag`). Även regeln som produkten prissätts "
-"efter: butikens, med de delar produkten ändrar (`own_rule`). Kostnaderna är "
-"de senast hämtade: `checked_at` null betyder aldrig. %s hämtar dem på nytt "
-"och svarar med `dry_run` med de priser den skulle sätta, utan att ändra "
-"något. `prices` är en sida av raderna, där `page` och `per_page` väljer "
-"vilken; `total` räknar alla."
+"och vad som hindrar regeln (`flag`), samt om priset ändras av sig självt när "
+"kostnaden ändras (`automatic`, och `price_changes` för vad det är inställt "
+"på). Även regeln som produkten prissätts efter: butikens, med de delar "
+"produkten ändrar (`own_rule`). Kostnaderna är de senast hämtade: "
+"`checked_at` null betyder aldrig. %s hämtar dem på nytt och svarar med "
+"`dry_run` med de priser den skulle sätta, utan att ändra något. `prices` är "
+"en sida av raderna, där `page` och `per_page` väljer vilken; `total` räknar "
+"alla."
 
-#: src/Abilities/GetProductPrices.php:60 src/Abilities/PriceProduct.php:72
+#: src/Abilities/GetProductPrices.php:57 src/Abilities/PriceProduct.php:67
+#: src/Abilities/SetProductPriceChanges.php:58
 msgid "A simple or variable product; never a variation."
 msgstr "En enkel eller variabel produkt; aldrig en variant."
 
-#: src/Abilities/GetProductPrices.php:125
+#: src/Abilities/GetProductPrices.php:133
 msgid "The store's currency, which prices and `cost_total` are in."
 msgstr "Butikens valuta, som priserna och `cost_total` anges i."
 
-#: src/Abilities/GetProductPrices.php:130
+#: src/Abilities/GetProductPrices.php:138
 msgid ""
 "Whether there is a rule to price by: false without a target margin, and "
 "nothing is then priced."
@@ -678,7 +682,7 @@ msgstr ""
 "Om det finns en regel att prissätta efter: false utan målmarginal, och då "
 "prissätts ingenting."
 
-#: src/Abilities/GetProductPrices.php:132
+#: src/Abilities/GetProductPrices.php:140
 msgid ""
 "The rule the product is priced by: margin and tolerance in percent, step, "
 "ending, min and max as amounts; empty for none."
@@ -686,7 +690,7 @@ msgstr ""
 "Regeln som produkten prissätts efter: marginal och tolerans i procent, steg, "
 "slut, lägsta och högsta pris som belopp; tom när det inte finns någon."
 
-#: src/Abilities/GetProductPrices.php:133
+#: src/Abilities/GetProductPrices.php:141
 msgid ""
 "The parts of the rule the product changes; a part it leaves to the store is "
 "empty."
@@ -694,12 +698,24 @@ msgstr ""
 "De delar av regeln som produkten ändrar; en del som den överlåter till "
 "butiken är tom."
 
-#: src/Abilities/GetProductPrices.php:136
+#: src/Abilities/GetProductPrices.php:144
 msgid ""
-"Whether the store changes prices that follow the rule by itself when a cost "
-"changes."
+"Whether the product's prices that follow the rule change by themselves when "
+"a cost changes: what the product is set to, or the store's switch when it "
+"follows the store. A variation may answer otherwise: see `automatic` of each "
+"price."
 msgstr ""
-"Om butiken själv ändrar priser som följer regeln när en kostnad ändras."
+"Om produktens priser som följer regeln ändras av sig själva när en kostnad "
+"ändras: det produkten är inställd på, eller butikens reglage när den följer "
+"butiken. En variant kan svara annorlunda: se `automatic` för varje pris."
+
+#: src/Abilities/GetProductPrices.php:149
+msgid ""
+"What the product is set to: store follows the store's switch for automatic "
+"price changes, always and never answer it for this product."
+msgstr ""
+"Vad produkten är inställd på: store följer butikens reglage för automatiska "
+"prisändringar, always och never avgör det själva för den här produkten."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductSplitListing.php:37
@@ -1293,11 +1309,11 @@ msgid "The `before` that asks for the next page; null when there is none."
 msgstr "Det `before` som hämtar nästa sida; null när det inte finns någon."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/PriceProduct.php:64
+#: src/Abilities/PriceProduct.php:59
 msgid "Price a product by the pricing rule"
 msgstr "Prissätt en produkt enligt prisregeln"
 
-#: src/Abilities/PriceProduct.php:65
+#: src/Abilities/PriceProduct.php:60
 msgid ""
 "Reads the printshop's costs of a product printed on a blank again, and sets "
 "the regular price of each variation (a simple product has one) to the "
@@ -1309,9 +1325,9 @@ msgid ""
 "changes, first. With `dry_run` nothing is stored on the product: the answer "
 "gives the prices it would set. Each price answers `before`, `price` and "
 "`changed`; one the rule cannot set keeps its price and says why in `flag`. "
-"No other price is set, whatever the store changes by itself. `changed` "
-"counts every price that changed; `prices` is a page of them, `page` and "
-"`per_page` choosing which. Refused without a target margin."
+"No other price is set, whatever changes by itself. `changed` counts every "
+"price that changed; `prices` is a page of them, `page` and `per_page` "
+"choosing which. Refused without a target margin."
 msgstr ""
 "Hämtar på nytt tryckeriets kostnader för en produkt som trycks på en "
 "grundprodukt och sätter det ordinarie priset för varje variant (en enkel "
@@ -1324,11 +1340,11 @@ msgstr ""
 "Med `dry_run` sparas ingenting på produkten: svaret ger de priser den skulle "
 "sätta. Varje pris svarar med `before`, `price` och `changed`; ett som regeln "
 "inte kan sätta behåller sitt pris och anger varför i `flag`. Inget annat "
-"pris sätts, oavsett vad butiken själv ändrar. `changed` räknar varje pris "
-"som ändrades; `prices` är en sida av dem, där `page` och `per_page` väljer "
-"vilken. Avvisas utan målmarginal."
+"pris sätts, oavsett vad som ändras av sig självt. `changed` räknar varje "
+"pris som ändrades; `prices` är en sida av dem, där `page` och `per_page` "
+"väljer vilken. Avvisas utan målmarginal."
 
-#: src/Abilities/PriceProduct.php:81
+#: src/Abilities/PriceProduct.php:76
 msgid ""
 "The variations to price, or the product's own id for a simple product; left "
 "out for all."
@@ -1336,7 +1352,7 @@ msgstr ""
 "Varianterna som ska prissättas, eller produktens eget id för en enkel "
 "produkt; utelämnas för alla."
 
-#: src/Abilities/PriceProduct.php:91
+#: src/Abilities/PriceProduct.php:86
 msgid ""
 "Whether a price edited by hand after the rule set it is given back to the "
 "rule."
@@ -1344,7 +1360,7 @@ msgstr ""
 "Om ett pris som har ändrats för hand efter att regeln satte det lämnas "
 "tillbaka till regeln."
 
-#: src/Abilities/PriceProduct.php:93
+#: src/Abilities/PriceProduct.php:88
 msgid ""
 "The parts of the rule this product changes, replacing the ones it has: "
 "margin and tolerance in percent, step, ending, min and max as amounts. A "
@@ -1354,22 +1370,24 @@ msgstr ""
 "marginal och tolerans i procent, steg, slut, lägsta och högsta pris som "
 "belopp. En del som utelämnas eller är tom överlåts till butiken."
 
-#: src/Abilities/PriceProduct.php:108
+#: src/Abilities/PriceProduct.php:103
 msgid "How many prices changed, or would."
 msgstr "Hur många priser som ändrades, eller skulle ändras."
 
-#: src/Abilities/PriceProduct.php:114
+#: src/Abilities/PriceProduct.php:109
 msgid "The regular price it had; null for none."
 msgstr "Det ordinarie pris den hade; null när den inte hade något."
 
 #. translators: %s: a part of the pricing rule, e.g. margin.
-#: src/Abilities/PriceProduct.php:210
+#: src/Abilities/PriceProduct.php:205
 #, php-format
 msgid "The rule's %s is not a number."
 msgstr "Regelns %s är inte ett tal."
 
 #. translators: %s: one or more ids, e.g. 12, 15.
-#: src/Abilities/PriceProduct.php:234
+#. translators: %s: an id, e.g. 12.
+#: src/Abilities/PriceProduct.php:229
+#: src/Abilities/SetProductPriceChanges.php:148
 #, php-format
 msgid "The product has no variation with this id: %s."
 msgstr "Produkten har ingen variant med detta id: %s."
@@ -1395,7 +1413,7 @@ msgstr ""
 "ord; null när alla gör det. Ange en variants `variant` med `set-product-"
 "setup`."
 
-#: src/Abilities/ProductPrices.php:71
+#: src/Abilities/ProductPrices.php:72
 msgid ""
 "No simple or variable product printed on a blank has this id, so there is no "
 "printshop cost to price from. A variation is priced through its product."
@@ -1404,7 +1422,7 @@ msgstr ""
 "id, så det finns ingen tryckerikostnad att prissätta utifrån. En variant "
 "prissätts via sin produkt."
 
-#: src/Abilities/ProductPrices.php:80
+#: src/Abilities/ProductPrices.php:81
 msgid ""
 "No target margin is set, for the store or for this product, so there is no "
 "rule to price by. Set one first."
@@ -1413,12 +1431,12 @@ msgstr ""
 "produkten, så det finns ingen regel att prissätta efter. Ange en först."
 
 #. translators: %s: a country code, such as SE.
-#: src/Abilities/ProductPrices.php:91
+#: src/Abilities/ProductPrices.php:92
 #, php-format
 msgid "Pixonaut has no printshop costs for the shop's country (%s)."
 msgstr "Pixonaut har inga tryckerikostnader för butikens land (%s)."
 
-#: src/Abilities/ProductPrices.php:93
+#: src/Abilities/ProductPrices.php:94
 msgid ""
 "Pixonaut could not be reached to read the printshop's costs. Try again in a "
 "moment."
@@ -1426,11 +1444,11 @@ msgstr ""
 "Pixonaut kunde inte nås för att läsa tryckeriets kostnader. Försök igen om "
 "en stund."
 
-#: src/Abilities/ProductPrices.php:144
+#: src/Abilities/ProductPrices.php:147
 msgid "The variation, or the product itself when it has none."
 msgstr "Varianten, eller produkten själv när den inte har några."
 
-#: src/Abilities/ProductPrices.php:147
+#: src/Abilities/ProductPrices.php:150
 msgid ""
 "Its regular price, as the store enters prices, including tax or not; null "
 "for none."
@@ -1438,7 +1456,7 @@ msgstr ""
 "Dess ordinarie pris, så som butiken anger priser, inklusive moms eller inte; "
 "null när det inte finns något."
 
-#: src/Abilities/ProductPrices.php:150
+#: src/Abilities/ProductPrices.php:153
 msgid ""
 "What the printshop charges, in its own currency, as last read; null when no "
 "cost is known for the blank variant it sells."
@@ -1446,15 +1464,15 @@ msgstr ""
 "Vad tryckeriet tar betalt, i sin egen valuta, enligt senaste hämtningen; "
 "null när ingen kostnad är känd för den grundproduktvariant den säljer."
 
-#: src/Abilities/ProductPrices.php:152
+#: src/Abilities/ProductPrices.php:155
 msgid "The product; null when the printshop publishes no price."
 msgstr "Produkten; null när tryckeriet inte anger något pris."
 
-#: src/Abilities/ProductPrices.php:154
+#: src/Abilities/ProductPrices.php:157
 msgid "The cheapest shipping to the shop's country; null when none is known."
 msgstr "Den billigaste frakten till butikens land; null när ingen är känd."
 
-#: src/Abilities/ProductPrices.php:159
+#: src/Abilities/ProductPrices.php:162
 msgid ""
 "The product and its shipping in the store's currency, converted with the "
 "currency buffer added when charged in another; null when they price nothing."
@@ -1463,7 +1481,7 @@ msgstr ""
 "pålagd när de debiteras i en annan valuta; null när de inte ger något att "
 "prissätta utifrån."
 
-#: src/Abilities/ProductPrices.php:162
+#: src/Abilities/ProductPrices.php:165
 msgid ""
 "The day of the exchange rate the cost was converted with; null when it was "
 "not converted."
@@ -1471,7 +1489,7 @@ msgstr ""
 "Dagen för den växelkurs som kostnaden räknades om med; null när den inte "
 "räknades om."
 
-#: src/Abilities/ProductPrices.php:166
+#: src/Abilities/ProductPrices.php:169
 msgid ""
 "The currency buffer added to what was converted, in percent; null when "
 "nothing was."
@@ -1479,17 +1497,17 @@ msgstr ""
 "Valutabufferten som lades på det som räknades om, i procent; null när inget "
 "räknades om."
 
-#: src/Abilities/ProductPrices.php:170
+#: src/Abilities/ProductPrices.php:173
 msgid "The share of the price excluding tax left after the cost, in percent."
 msgstr ""
 "Den andel av priset exklusive moms som blir kvar efter kostnaden, i procent."
 
-#: src/Abilities/ProductPrices.php:172
+#: src/Abilities/ProductPrices.php:175
 msgid "The price the rule would set, when it is another than the price it has."
 msgstr ""
 "Det pris regeln skulle sätta, när det är ett annat än det pris den har."
 
-#: src/Abilities/ProductPrices.php:176
+#: src/Abilities/ProductPrices.php:179
 msgid ""
 "own: the rule was never applied to it. follows: its price is the one the "
 "rule set. by_hand: its price was edited after the rule set it, and is held "
@@ -1499,7 +1517,7 @@ msgstr ""
 "satte. by_hand: priset ändrades efter att regeln satte det, och behålls "
 "tills det lämnas tillbaka till regeln."
 
-#: src/Abilities/ProductPrices.php:180
+#: src/Abilities/ProductPrices.php:183
 msgid ""
 "Why the rule cannot price it or suggests another price: margin, no_cost, "
 "unread, currency, rate_stale, no_step or sale; null when nothing does."
@@ -1508,22 +1526,40 @@ msgstr ""
 "no_cost, unread, currency, rate_stale, no_step eller sale; null när inget "
 "hindrar."
 
-#: src/Abilities/ProductPrices.php:185
+#: src/Abilities/ProductPrices.php:188
 msgid "When the rule last set its price."
 msgstr "När regeln senast satte priset."
 
-#: src/Abilities/ProductPrices.php:189
+#: src/Abilities/ProductPrices.php:192
 msgid "When its cost was last asked for; null when it never was."
 msgstr "När kostnaden senast hämtades; null när det aldrig har skett."
 
-#: src/Abilities/ProductPrices.php:206
+#: src/Abilities/ProductPrices.php:196
+msgid ""
+"Whether its price, once it follows the rule, is set to the rule's by itself "
+"when its cost changes and its margin left the tolerance."
+msgstr ""
+"Om priset, när det väl följer regeln, sätts till regelns pris av sig självt "
+"när kostnaden ändras och marginalen ligger utanför toleransen."
+
+#: src/Abilities/ProductPrices.php:201
+msgid ""
+"What it is set to: a variation says product when it follows its product, "
+"always or never when it answers it; a simple product's one row says what the "
+"product does."
+msgstr ""
+"Vad det är inställt på: en variant anger product när den följer sin produkt, "
+"always eller never när den avgör det själv; den enda raden för en enkel "
+"produkt anger vad produkten gör."
+
+#: src/Abilities/ProductPrices.php:218
 msgid ""
 "Which page of the prices the answer lists; it changes nothing about which "
 "are priced."
 msgstr ""
 "Vilken sida av priserna svaret listar; det ändrar inte vilka som prissätts."
 
-#: src/Abilities/ProductPrices.php:249
+#: src/Abilities/ProductPrices.php:261
 msgid "How many prices the product has, on every page."
 msgstr "Hur många priser produkten har, på alla sidor."
 
@@ -1984,6 +2020,46 @@ msgid ""
 msgstr ""
 "Grundprodukten har ingen sådan vy eller sådant foto för produktens sida. Den "
 "har: %1$s."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetProductPriceChanges.php:45
+msgid "Set a product's automatic price changes"
+msgstr "Ange en produkts automatiska prisändringar"
+
+#. translators: 1: the name of the ability that changes the pricing settings, 2: the name of the ability that reads a product's prices.
+#: src/Abilities/SetProductPriceChanges.php:48
+#, php-format
+msgid ""
+"Says whether the prices of a product printed on a blank change by themselves "
+"when a cost changes, whatever the store's switch (`price_automatic`, %1$s) "
+"says. `price_changes`: `store` follows the store's switch, `always` has the "
+"product's prices that follow the rule set to the rule's price when their "
+"cost changes and their margin left the tolerance, also with the store's "
+"switch off; `never` only has the new price suggested, also with the switch "
+"on. `variations` does the same for single variations, each against its "
+"product: `product` follows the product, `always` and `never` answer it. What "
+"is left out keeps what it has. It sets no price and reads no cost. Answers "
+"what %2$s does: `automatic` and `price_changes` of the product, and of each "
+"price."
+msgstr ""
+"Anger om priserna för en produkt som trycks på en grundprodukt ändras av sig "
+"själva när en kostnad ändras, oavsett vad butikens reglage "
+"(`price_automatic`, %1$s) anger. `price_changes`: `store` följer butikens "
+"reglage; `always` gör att produktens priser som följer regeln sätts till "
+"regelns pris när deras kostnad ändras och marginalen ligger utanför "
+"toleransen, även när butikens reglage är av; `never` gör att det nya priset "
+"bara föreslås, även när reglaget är på. `variations` gör samma sak för "
+"enskilda varianter, var och en gentemot sin produkt: `product` följer "
+"produkten, `always` och `never` avgör det själva. Det som utelämnas behåller "
+"det det har. Den sätter inget pris och hämtar ingen kostnad. Svarar med det "
+"som %2$s svarar med: `automatic` och `price_changes` för produkten och för "
+"varje pris."
+
+#. translators: 1: the values to choose from, e.g. store, always, never; 2: a product or variation id.
+#: src/Abilities/SetProductPriceChanges.php:169
+#, php-format
+msgid "`price_changes` is one of %1$s for #%2$d."
+msgstr "`price_changes` är ett av %1$s för #%2$d."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductSetup.php:53
@@ -3087,17 +3163,20 @@ msgid ""
 "others keep their values. `price_automatic` switches automatic price changes "
 "on or off: on, a price that follows the rule is set to the rule's price when "
 "its cost changes and its margin left the tolerance; off, the new price is "
-"only suggested. `price_ending` must be below `price_step`. Changing the rule "
-"changes no price by itself: price a product with %2$s. Answers with every "
-"pricing setting."
+"only suggested; a product or variation set to always or never keeps to that, "
+"whatever the switch says. `price_ending` must be below `price_step`. "
+"Changing the rule changes no price by itself: price a product with %2$s. "
+"Answers with every pricing setting."
 msgstr ""
 "Ändrar de angivna prisinställningarna, med deras nycklar så som %1$s läser "
 "dem; övriga behåller sina värden. `price_automatic` slår på eller av "
 "automatiska prisändringar: på sätts ett pris som följer regeln till regelns "
 "pris när dess kostnad ändras och marginalen ligger utanför toleransen; av "
-"föreslås det nya priset bara. `price_ending` måste vara lägre än "
-"`price_step`. Att ändra regeln ändrar inget pris i sig: en produkt prissätts "
-"med %2$s. Svarar med alla prisinställningar."
+"föreslås det nya priset bara; en produkt eller variant som är inställd på "
+"always eller never håller sig till det, oavsett vad reglaget anger. "
+"`price_ending` måste vara lägre än `price_step`. Att ändra regeln ändrar "
+"inget pris i sig: en produkt prissätts med %2$s. Svarar med alla "
+"prisinställningar."
 
 #. translators: %s: the key of a setting, e.g. price_margin.
 #: src/Abilities/UpdatePricingSettings.php:74
@@ -3152,12 +3231,12 @@ msgstr "Produkten finns inte."
 
 #. translators: Message in the blank search on the product edit page, shown to the merchant.
 #: src/Admin/CatalogueProducts.php:148 src/Admin/CatalogueProducts.php:222
-#: src/Admin/CatalogueSearch.php:316
+#: src/Admin/CatalogueSearch.php:361
 msgid "Connect the store to Pixonaut to search its catalogue."
 msgstr "Anslut butiken till Pixonaut för att söka i dess katalog."
 
-#: src/Admin/CatalogueProducts.php:149 src/Admin/CatalogueSearch.php:239
-#: src/Admin/CatalogueSearch.php:317
+#: src/Admin/CatalogueProducts.php:149 src/Admin/CatalogueSearch.php:284
+#: src/Admin/CatalogueSearch.php:362
 msgid "Pixonaut could not be searched. Try again in a moment."
 msgstr "Det gick inte att söka i Pixonaut. Försök igen om en stund."
 
@@ -3494,17 +3573,17 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:343 src/Admin/ProductPanel.php:820
+#: src/Admin/LinkedBlank.php:343 src/Admin/ProductPanel.php:842
 msgid "Workspace default"
 msgstr "Arbetsytans standard"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:345 src/Admin/ProductPanel.php:823
+#: src/Admin/LinkedBlank.php:345 src/Admin/ProductPanel.php:845
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Arbetsytans standard (%s)"
 
-#: src/Admin/LinkedBlank.php:348 src/Admin/ProductPanel.php:835
+#: src/Admin/LinkedBlank.php:348 src/Admin/ProductPanel.php:857
 msgid "A printshop no longer connected to the workspace"
 msgstr "Ett tryckeri som inte längre är anslutet till arbetsytan"
 
@@ -3514,7 +3593,7 @@ msgstr "Ett tryckeri som inte längre är anslutet till arbetsytan"
 msgid "%s (from the blank’s category)"
 msgstr "%s (från grundproduktens kategori)"
 
-#: src/Admin/LinkedBlank.php:454
+#: src/Admin/LinkedBlank.php:472
 msgid "Pixonaut could not be asked which printshop this is."
 msgstr "Det gick inte att fråga Pixonaut vilket tryckeri detta är."
 
@@ -3741,7 +3820,7 @@ msgstr[1] "%d priser sattes till de priser som prisregeln föreslår."
 msgid "Apply suggested prices"
 msgstr "Tillämpa föreslagna priser"
 
-#: src/Admin/PricingPanel.php:156
+#: src/Admin/PricingPanel.php:170
 msgid ""
 "This product is not printed on a blank, so it has no printshop cost to price "
 "from."
@@ -3749,17 +3828,17 @@ msgstr ""
 "Den här produkten trycks inte på en grundprodukt, så det finns ingen "
 "tryckerikostnad att prissätta utifrån."
 
-#: src/Admin/PricingPanel.php:166
+#: src/Admin/PricingPanel.php:180
 msgid "The costs are read."
 msgstr "Kostnaderna har hämtats."
 
 #. translators: %s: a country code, such as SE. Said in the Prices section of the product edit page.
-#: src/Admin/PricingPanel.php:184
+#: src/Admin/PricingPanel.php:202
 #, php-format
 msgid "Pixonaut has no printshop costs for your shop’s country (%s)."
 msgstr "Pixonaut har inga tryckerikostnader för din butiks land (%s)."
 
-#: src/Admin/PricingPanel.php:186 templates/admin/product-prices.php:45
+#: src/Admin/PricingPanel.php:204 templates/admin/product-prices.php:49
 msgid ""
 "Pixonaut could not be reached to read the printshop’s costs. Try again in a "
 "moment."
@@ -3767,33 +3846,33 @@ msgstr ""
 "Pixonaut kunde inte nås för att läsa tryckeriets kostnader. Försök igen om "
 "en stund."
 
-#: src/Admin/PricingPanel.php:197
+#: src/Admin/PricingPanel.php:215
 msgid ""
 "Pixonaut is reading the printshop’s costs. Refresh the costs in a moment."
 msgstr ""
 "Pixonaut läser tryckeriets kostnader. Uppdatera kostnaderna om en stund."
 
-#: src/Admin/PricingPanel.php:203
+#: src/Admin/PricingPanel.php:221
 msgid "No price changed."
 msgstr "Inget pris ändrades."
 
 #. translators: %d: how many prices. Said in the Prices section of the product edit page after the pricing rule set prices.
-#: src/Admin/PricingPanel.php:205
+#: src/Admin/PricingPanel.php:223
 #, php-format
 msgid "%d price set."
 msgid_plural "%d prices set."
 msgstr[0] "%d pris satt."
 msgstr[1] "%d priser satta."
 
-#: src/Admin/PricingPanel.php:289
+#: src/Admin/PricingPanel.php:314
 msgid "The margin left the tolerance."
 msgstr "Marginalen ligger utanför toleransen."
 
-#: src/Admin/PricingPanel.php:290
+#: src/Admin/PricingPanel.php:315
 msgid "The printshop publishes no price for it, so the rule cannot price it."
 msgstr "Tryckeriet anger inget pris för den, så regeln kan inte prissätta den."
 
-#: src/Admin/PricingPanel.php:291
+#: src/Admin/PricingPanel.php:316
 msgid ""
 "No cost is read for it yet. Refresh the costs in a moment; if it stays so, "
 "pair it with a blank variant."
@@ -3801,7 +3880,7 @@ msgstr ""
 "Ingen kostnad har hämtats för den än. Uppdatera kostnaderna om en stund; om "
 "det inte ändras, koppla den till en grundproduktvariant."
 
-#: src/Admin/PricingPanel.php:292
+#: src/Admin/PricingPanel.php:317
 msgid ""
 "The cost is in a currency with no exchange rate to your store’s, so the rule "
 "cannot price it."
@@ -3809,7 +3888,7 @@ msgstr ""
 "Kostnaden är i en valuta utan växelkurs till butikens valuta, så regeln kan "
 "inte prissätta den."
 
-#: src/Admin/PricingPanel.php:293
+#: src/Admin/PricingPanel.php:318
 msgid ""
 "The exchange rate is over a week old and could not be updated, so the rule "
 "does not price it."
@@ -3817,127 +3896,149 @@ msgstr ""
 "Växelkursen är över en vecka gammal och kunde inte uppdateras, så regeln "
 "prissätter den inte."
 
-#: src/Admin/PricingPanel.php:294
+#: src/Admin/PricingPanel.php:319
 msgid "No price step lies between the lowest and the highest price."
 msgstr "Inget prissteg ligger mellan det lägsta och det högsta priset."
 
-#: src/Admin/PricingPanel.php:295
+#: src/Admin/PricingPanel.php:320
 msgid ""
 "The rule’s price is not above the sale price. Change or remove the sale "
 "price first."
 msgstr ""
 "Regelns pris är inte högre än reapriset. Ändra eller ta bort reapriset först."
 
+#. translators: Option of the Automatic price changes field in the Prices section of the product edit page: the product does as the store's setting says, which is on.
+#: src/Admin/PricingPanel.php:335
+msgid "As the store: on"
+msgstr "Som butiken: på"
+
+#. translators: Option of the Automatic price changes field in the Prices section of the product edit page: the product does as the store's setting says, which is off.
+#: src/Admin/PricingPanel.php:337
+msgid "As the store: off"
+msgstr "Som butiken: av"
+
+#. translators: Option of the Automatic price changes field in the Prices section of the product edit page: this product's prices change by themselves, whatever the store's setting says.
+#: src/Admin/PricingPanel.php:339
+msgctxt "automatic price changes"
+msgid "Always"
+msgstr "Alltid"
+
+#. translators: Option of the Automatic price changes field in the Prices section of the product edit page: this product's prices never change by themselves, whatever the store's setting says.
+#: src/Admin/PricingPanel.php:341
+msgctxt "automatic price changes"
+msgid "Never"
+msgstr "Aldrig"
+
 #. translators: Label of a field in the Prices section of the product edit page; the value is a percentage.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a percentage. The margin is the share of a product's price, excluding VAT, left after the printshop's cost.
-#: src/Admin/PricingPanel.php:307 src/Settings/Settings.php:478
+#: src/Admin/PricingPanel.php:353 src/Settings/Settings.php:478
 msgid "Target margin (%)"
 msgstr "Målmarginal (%)"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is a number of percentage points either side of the target margin.
-#: src/Admin/PricingPanel.php:309
+#: src/Admin/PricingPanel.php:355
 msgid "Tolerance (points)"
 msgstr "Tolerans (procentenheter)"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money: the distance between two prices the rule may set.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the distance between two prices the pricing rule may set.
-#: src/Admin/PricingPanel.php:311 src/Settings/Settings.php:500
+#: src/Admin/PricingPanel.php:357 src/Settings/Settings.php:500
 msgid "Price step"
 msgstr "Prissteg"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money below the price step.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money below the price step: what each price the pricing rule sets ends in.
-#: src/Admin/PricingPanel.php:313 src/Settings/Settings.php:511
+#: src/Admin/PricingPanel.php:359 src/Settings/Settings.php:511
 msgid "Prices end in"
 msgstr "Priser slutar på"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the lowest price the pricing rule sets.
-#: src/Admin/PricingPanel.php:315 src/Settings/Settings.php:522
+#: src/Admin/PricingPanel.php:361 src/Settings/Settings.php:522
 msgid "Lowest price"
 msgstr "Lägsta pris"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the highest price the pricing rule sets.
-#: src/Admin/PricingPanel.php:317 src/Settings/Settings.php:533
+#: src/Admin/PricingPanel.php:363 src/Settings/Settings.php:533
 msgid "Highest price"
 msgstr "Högsta pris"
 
 #. translators: 1: what the printshop charges for the product, 2: what it charges for shipping; both amounts of money. Under a cost in the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:334
+#: src/Admin/PricingPanel.php:380
 #, php-format
 msgid "%1$s + %2$s shipping"
 msgstr "%1$s + %2$s frakt"
 
 #. translators: 1: a cost as the printshop charges it, in its own currency, such as "€16.71 + €3.00 shipping"; 2: the day of the exchange rate, such as 2026-11-14; 3: the currency buffer in percent, such as 3. Under a converted cost in the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:344
+#: src/Admin/PricingPanel.php:390
 #, php-format
 msgid "%1$s (rate %2$s, +%3$s %%)"
 msgstr "%1$s (kurs %2$s, +%3$s %%)"
 
 #. translators: %s: a cost converted to the store's currency, such as 192 kr. In the Prices table of the product edit page: the amount is approximate.
-#: src/Admin/PricingPanel.php:357
+#: src/Admin/PricingPanel.php:403
 #, php-format
 msgid "≈ %s"
 msgstr "≈ %s"
 
 #. translators: %s: a margin as a number, such as 50.2. In the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:364
+#: src/Admin/PricingPanel.php:410
 #, php-format
 msgid "%s %%"
 msgstr "%s %%"
 
-#: src/Admin/ProductPanel.php:436
+#: src/Admin/ProductPanel.php:439
 msgid ""
 "This variation cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Den här varianten kan inte köpas förrän dess Pixonaut-konfiguration har "
 "åtgärdats:"
 
-#: src/Admin/ProductPanel.php:437
+#: src/Admin/ProductPanel.php:440
 msgid ""
 "This product cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Den här produkten kan inte köpas förrän dess Pixonaut-konfiguration har "
 "åtgärdats:"
 
-#: src/Admin/ProductPanel.php:442
+#: src/Admin/ProductPanel.php:445
 msgid "Customers design this variation with a Pixonaut template."
 msgstr "Kunder designar den här varianten med en Pixonaut-mall."
 
-#: src/Admin/ProductPanel.php:443
+#: src/Admin/ProductPanel.php:446
 msgid "Customers design this product with a Pixonaut template."
 msgstr "Kunder designar den här produkten med en Pixonaut-mall."
 
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:484 src/Admin/ProductPanel.php:736
+#: src/Admin/ProductPanel.php:487 src/Admin/ProductPanel.php:758
 msgid "As the product says"
 msgstr "Som produkten anger"
 
 #. translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page.
-#: src/Admin/ProductPanel.php:486
+#: src/Admin/ProductPanel.php:489
 msgid "As the template says"
 msgstr "Som mallen anger"
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:753
+#: src/Admin/ProductPanel.php:775
 #, php-format
 msgid "Store setting: %s"
 msgstr "Butiksinställning: %s"
 
 #. translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page.
-#: src/Admin/ProductPanel.php:827
+#: src/Admin/ProductPanel.php:849
 #, php-format
 msgid "Workspace default (%s): prints only on a blank"
 msgstr "Arbetsytans standard (%s): trycker bara på en grundprodukt"
 
-#: src/Admin/ProductPanel.php:832
+#: src/Admin/ProductPanel.php:854
 msgid "The printshop chosen before"
 msgstr "Tryckeriet som valdes tidigare"
 
 #. translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page.
-#: src/Admin/ProductPanel.php:834
+#: src/Admin/ProductPanel.php:856
 #, php-format
 msgid "%s (prints only on a blank)"
 msgstr "%s (trycker bara på en grundprodukt)"
@@ -7149,7 +7250,7 @@ msgstr "Beställningsnummer"
 
 #. translators: Label of a row in the personal data export the customer receives; the value is the product name.
 #: src/Privacy/PersonalDataExporter.php:100
-#: templates/admin/product-prices.php:83
+#: templates/admin/product-prices.php:95
 msgid "Product"
 msgstr "Produkt"
 
@@ -7743,7 +7844,8 @@ msgstr ""
 "debiteringen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the plugin changes prices by itself when a printshop's cost changes.
-#: src/Settings/Settings.php:555
+#. translators: Label of a field in the Prices section of the product edit page: whether this product's prices change by themselves when a printshop's cost changes.
+#: src/Settings/Settings.php:555 templates/admin/product-prices.php:70
 msgid "Automatic price changes"
 msgstr "Automatiska prisändringar"
 
@@ -7997,8 +8099,8 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the rule that prices products from what the printshop charges for them.
 #. translators: Column of the Prices table of the product edit page: how the price stands to the pricing rule, and what the rule suggests.
-#: src/Settings/SettingsPage.php:648 templates/admin/product-prices.php:87
-#: templates/admin/product-prices.php:103
+#: src/Settings/SettingsPage.php:648 templates/admin/product-prices.php:99
+#: templates/admin/product-prices.php:115
 msgid "Pricing rule"
 msgstr "Prisregel"
 
@@ -9655,32 +9757,32 @@ msgstr ""
 "snart den har ritats."
 
 #. translators: %d: how many prices. Summary of the Prices section of the product edit page.
-#: templates/admin/product-prices.php:35
+#: templates/admin/product-prices.php:39
 #, php-format
 msgid "%d price to review"
 msgid_plural "%d prices to review"
 msgstr[0] "%d pris att granska"
 msgstr[1] "%d priser att granska"
 
-#: templates/admin/product-prices.php:37
+#: templates/admin/product-prices.php:41
 msgid "Following the pricing rule"
 msgstr "Följer prisregeln"
 
-#: templates/admin/product-prices.php:39
+#: templates/admin/product-prices.php:43
 msgid "Rule not applied yet"
 msgstr "Regeln har inte tillämpats än"
 
-#: templates/admin/product-prices.php:41
+#: templates/admin/product-prices.php:45
 msgid "No target margin set"
 msgstr "Ingen målmarginal angiven"
 
 #. translators: Heading of a closed section in the Pixonaut tab of the product edit page: what the printshop charges for the product, and the prices that follow from it.
-#: templates/admin/product-prices.php:47
+#: templates/admin/product-prices.php:51
 msgctxt "product section"
 msgid "Prices"
 msgstr "Priser"
 
-#: templates/admin/product-prices.php:51
+#: templates/admin/product-prices.php:55
 msgid ""
 "What the printshop charges for the product and its shipping, and the margin "
 "each price leaves. Apply sets every price to the step nearest the target "
@@ -9690,44 +9792,44 @@ msgstr ""
 "varje pris ger. Tillämpa sätter varje pris till det steg som ligger närmast "
 "målmarginalen; därefter följer priserna regeln."
 
-#: templates/admin/product-prices.php:53
+#: templates/admin/product-prices.php:57
 msgid "Margins are worked out on the price excluding VAT."
 msgstr "Marginalerna räknas på priset exklusive moms."
 
-#: templates/admin/product-prices.php:57
+#: templates/admin/product-prices.php:61
 msgid "Pricing rule for this product"
 msgstr "Prisregel för den här produkten"
 
-#: templates/admin/product-prices.php:62
+#: templates/admin/product-prices.php:66
 msgctxt "no value set for a part of the pricing rule"
 msgid "None"
 msgstr "Inte angivet"
 
-#: templates/admin/product-prices.php:66
+#: templates/admin/product-prices.php:78
 msgid "An empty field follows the store’s pricing rule, shown in grey."
 msgstr "Ett tomt fält följer butikens prisregel, som visas i grått."
 
 #. translators: Link from the Prices section of the product edit page to the pricing rule on the Pixonaut settings page.
-#: templates/admin/product-prices.php:67
+#: templates/admin/product-prices.php:79
 msgid "Store’s pricing rule"
 msgstr "Butikens prisregel"
 
 #. translators: Button in the Prices section of the product edit page: sets every price of the product to the pricing rule's price.
-#: templates/admin/product-prices.php:71
+#: templates/admin/product-prices.php:83
 msgid "Apply to all prices"
 msgstr "Tillämpa på alla priser"
 
 #. translators: Button in the Prices section of the product edit page: sets every price of the product to the pricing rule's price.
-#: templates/admin/product-prices.php:71
+#: templates/admin/product-prices.php:83
 msgid "Apply to the price"
 msgstr "Tillämpa på priset"
 
 #. translators: Button in the Prices section of the product edit page: reads what the printshop charges again.
-#: templates/admin/product-prices.php:72
+#: templates/admin/product-prices.php:84
 msgid "Refresh costs"
 msgstr "Uppdatera kostnader"
 
-#: templates/admin/product-prices.php:77
+#: templates/admin/product-prices.php:89
 msgid ""
 "Enter a target margin here, or on the Pixonaut settings page, to price by "
 "the rule."
@@ -9735,54 +9837,64 @@ msgstr ""
 "Ange en målmarginal här, eller i Pixonaut-inställningarna, för att prissätta "
 "enligt regeln."
 
-#: templates/admin/product-prices.php:83
+#: templates/admin/product-prices.php:95
 #: templates/admin/product-variant-pairing.php:44
 msgid "Variation"
 msgstr "Variant"
 
 #. translators: Column of the Prices table of the product edit page: what the printshop charges for the product and its shipping.
-#: templates/admin/product-prices.php:84 templates/admin/product-prices.php:95
+#: templates/admin/product-prices.php:96 templates/admin/product-prices.php:107
 msgid "Cost"
 msgstr "Kostnad"
 
 #. translators: Column of the Prices table of the product edit page: the regular price in the store.
-#: templates/admin/product-prices.php:85 templates/admin/product-prices.php:101
+#: templates/admin/product-prices.php:97 templates/admin/product-prices.php:113
 msgid "Price"
 msgstr "Pris"
 
 #. translators: Column of the Prices table of the product edit page: the share of the price left after the cost.
-#: templates/admin/product-prices.php:86 templates/admin/product-prices.php:102
+#: templates/admin/product-prices.php:98 templates/admin/product-prices.php:114
 msgid "Margin"
 msgstr "Marginal"
 
 #. translators: In the Prices table of the product edit page: the store manager changed this price after the pricing rule set it, so the rule leaves it alone.
-#: templates/admin/product-prices.php:105
+#: templates/admin/product-prices.php:117
 msgid "Edited by hand: kept"
 msgstr "Ändrat manuellt: behålls"
 
 #. translators: Button on a price edited by hand, in the Prices table of the product edit page: the pricing rule sets the price again from now on.
-#: templates/admin/product-prices.php:107
+#: templates/admin/product-prices.php:119
 msgid "Follow the rule"
 msgstr "Följ regeln"
 
-#: templates/admin/product-prices.php:116
+#: templates/admin/product-prices.php:128
 msgid "Follows the rule"
 msgstr "Följer regeln"
 
 #. translators: %s: a date. In the Prices table of the product edit page: the pricing rule set this price on that day.
-#: templates/admin/product-prices.php:118
+#: templates/admin/product-prices.php:130
 #, php-format
 msgid "Follows the rule, set %s"
 msgstr "Följer regeln, satt %s"
 
+#. translators: In the Prices table of the product edit page: this variation's price changes by itself when its cost changes, whatever the product and the store say.
+#: templates/admin/product-prices.php:136
+msgid "Automatic price changes: always"
+msgstr "Automatiska prisändringar: alltid"
+
+#. translators: In the Prices table of the product edit page: this variation's price never changes by itself, whatever the product and the store say.
+#: templates/admin/product-prices.php:138
+msgid "Automatic price changes: never"
+msgstr "Automatiska prisändringar: aldrig"
+
 #. translators: %s: a price. In the Prices table of the product edit page: the price the pricing rule would set.
-#: templates/admin/product-prices.php:127
+#: templates/admin/product-prices.php:144
 #, php-format
 msgid "Suggested: %s"
 msgstr "Föreslaget: %s"
 
 #. translators: Button beside a suggested price, in the Prices table of the product edit page: sets that one price.
-#: templates/admin/product-prices.php:131
+#: templates/admin/product-prices.php:148
 msgctxt "one suggested price"
 msgid "Apply"
 msgstr "Tillämpa"
@@ -10404,11 +10516,11 @@ msgid "Show retired variants"
 msgstr "Visa utgångna grundproduktvarianter"
 
 #. translators: Checkbox label on a variable product's variation panel: this variation uses its own personalisation settings. Admin product page.
-#: templates/admin/product-variation.php:44
+#: templates/admin/product-variation.php:46
 msgid "Override for this variation"
 msgstr "Egna inställningar för den här varianten"
 
-#: templates/admin/product-variation.php:47
+#: templates/admin/product-variation.php:49
 msgid ""
 "Personalised as the product’s Pixonaut tab says. Tick to give this variation "
 "its own setup."
@@ -11051,6 +11163,12 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s vy"
 msgstr[1] "%s vyer"
+
+#~ msgid ""
+#~ "Whether the store changes prices that follow the rule by itself when a "
+#~ "cost changes."
+#~ msgstr ""
+#~ "Om butiken själv ändrar priser som följer regeln när en kostnad ändras."
 
 #~ msgid "Choose a template."
 #~ msgstr "Välj en mall."

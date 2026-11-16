@@ -43,6 +43,7 @@ use Pixonaut\WooCommerce\Abilities\RegenerateProductPictures;
 use Pixonaut\WooCommerce\Abilities\ResetStandingLayout;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
+use Pixonaut\WooCommerce\Abilities\SetProductPriceChanges;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
 use Pixonaut\WooCommerce\Abilities\SetProductSplitListing;
 use Pixonaut\WooCommerce\Abilities\SetVariationPrintSize;
@@ -578,8 +579,9 @@ final class Plugin {
 		return array(
 			new ReadPricingSettings( $this->settings() ),
 			new UpdatePricingSettings( $this->settings() ),
-			new GetProductPrices( $pricing, $this->settings() ),
-			new PriceProduct( $pricing, $this->settings() ),
+			new GetProductPrices( $pricing ),
+			new PriceProduct( $pricing ),
+			new SetProductPriceChanges( $pricing ),
 		);
 	}
 

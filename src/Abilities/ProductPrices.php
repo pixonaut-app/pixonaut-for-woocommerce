@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Abilities;
 use Pixonaut\WooCommerce\Admin\PricingPanel;
 use Pixonaut\WooCommerce\Api\VariantCosts;
 use Pixonaut\WooCommerce\Pricing\Amount;
+use Pixonaut\WooCommerce\Pricing\PriceChanges;
 use Pixonaut\WooCommerce\Pricing\PriceRow;
 use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Pricing\PriceState;
@@ -122,6 +123,8 @@ final class ProductPrices {
 			'flag_message'    => null === $row->flag ? null : ( PricingPanel::flag_texts()[ $row->flag ] ?? null ),
 			'rule_at'         => self::time( $row->rule_at ),
 			'checked_at'      => self::time( $row->checked_at ),
+			'automatic'       => $row->automatic,
+			'price_changes'   => $row->changes,
 		);
 	}
 
@@ -187,6 +190,15 @@ final class ProductPrices {
 				'checked_at'      => array(
 					'type'        => array( 'string', 'null' ),
 					'description' => __( 'When its cost was last asked for; null when it never was.', 'pixonaut-for-woocommerce' ),
+				),
+				'automatic'       => array(
+					'type'        => 'boolean',
+					'description' => __( 'Whether its price, once it follows the rule, is set to the rule\'s by itself when its cost changes and its margin left the tolerance.', 'pixonaut-for-woocommerce' ),
+				),
+				'price_changes'   => array(
+					'type'        => 'string',
+					'enum'        => array( PriceChanges::STORE, PriceChanges::PRODUCT, PriceChanges::ALWAYS, PriceChanges::NEVER ),
+					'description' => __( 'What it is set to: a variation says product when it follows its product, always or never when it answers it; a simple product\'s one row says what the product does.', 'pixonaut-for-woocommerce' ),
 				),
 			) + $more,
 		);

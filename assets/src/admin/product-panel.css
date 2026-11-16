@@ -1786,7 +1786,20 @@
 	display: inline;
 }
 
-#pixonaut_product_data .pixonaut-prices__standing {
+/* Its label is longer than a part's, and its options name the store's setting. */
+#pixonaut_product_data .pixonaut-prices__changes-part {
+	grid-column: span 2;
+}
+
+#pixonaut_product_data .pixonaut-prices__changes {
+	float: none;
+	width: 100%;
+	max-width: none;
+	margin: 0;
+}
+
+#pixonaut_product_data
+	:is(.pixonaut-prices__standing, .pixonaut-prices__changes-note) {
 	color: #646970;
 }
 

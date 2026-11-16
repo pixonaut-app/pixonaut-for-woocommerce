@@ -10,9 +10,10 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Abilities;
 
 use Closure;
+use Pixonaut\WooCommerce\Pricing\PriceChanges;
 use Pixonaut\WooCommerce\Pricing\PriceRow;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
-use Pixonaut\WooCommerce\Settings\Settings;
+use WC_Product;
 use WP_Error;
 
 /**
@@ -28,14 +29,10 @@ final class GetProductPrices implements Ability {
 	public const NAME = 'get-product-prices';
 
 	/**
-	 * @param Closure  $pricing  Gives what reads the prices, once a call needs it.
-	 * @param Settings $settings Whether prices change by themselves.
+	 * @param Closure $pricing Gives what reads the prices, once a call needs it.
 	 * @phpstan-param Closure(): ProductPricing $pricing
 	 */
-	public function __construct(
-		private readonly Closure $pricing,
-		private readonly Settings $settings,
-	) {
+	public function __construct( private readonly Closure $pricing ) {
 	}
 
 	public function name(): string {
@@ -48,7 +45,7 @@ final class GetProductPrices implements Ability {
 			'label'               => __( 'Read a product\'s prices and costs', 'pixonaut-for-woocommerce' ),
 			'description'         => sprintf(
 				/* translators: %s: the name of the ability that prices a product. */
-				__( 'Lists each variation of a product printed on a blank (a simple product has one row) with what the printshop charges for it, that cost in the store\'s currency, its regular price and margin, how its price stands to the pricing rule (`standing`), the price the rule suggests when it is another, and what stops the rule (`flag`). Also the rule the product is priced by: the store\'s, with the parts the product changes (`own_rule`). The costs are the ones last read: `checked_at` null means never. %s reads them again, and with `dry_run` answers the prices it would set, changing nothing. `prices` is a page of the rows, `page` and `per_page` choosing which; `total` counts them all.', 'pixonaut-for-woocommerce' ),
+				__( 'Lists each variation of a product printed on a blank (a simple product has one row) with what the printshop charges for it, that cost in the store\'s currency, its regular price and margin, how its price stands to the pricing rule (`standing`), the price the rule suggests when it is another, and what stops the rule (`flag`), and whether it changes by itself when its cost changes (`automatic`, and `price_changes` for what it is set to). Also the rule the product is priced by: the store\'s, with the parts the product changes (`own_rule`). The costs are the ones last read: `checked_at` null means never. %s reads them again, and with `dry_run` answers the prices it would set, changing nothing. `prices` is a page of the rows, `page` and `per_page` choosing which; `total` counts them all.', 'pixonaut-for-woocommerce' ),
 				Abilities::tool( PriceProduct::NAME )
 			),
 			'input_schema'        => array(
@@ -86,29 +83,40 @@ final class GetProductPrices implements Ability {
 		if ( $product instanceof WP_Error ) {
 			return $product;
 		}
-		$pricing = ( $this->pricing )();
-		return self::product_values( $pricing, $this->settings, $product->get_id(), ProductPricing::own_parts( $product ), $pricing->rule_for( $product )->is_set() ) + ProductPrices::page( array_map( static fn ( PriceRow $row ): array => ProductPrices::row( $row ), $pricing->rows( $product ) ), $input );
+		return self::answer( ( $this->pricing )(), $product, $input );
+	}
+
+	/**
+	 * The ability's answer for a product, from what is stored.
+	 *
+	 * @param ProductPricing $pricing Reads the prices.
+	 * @param WC_Product     $product The product.
+	 * @param mixed          $input   The call's input, with `page` and `per_page`.
+	 * @return array<string, mixed>
+	 */
+	public static function answer( ProductPricing $pricing, WC_Product $product, mixed $input ): array {
+		return self::product_values( $pricing, $product, ProductPricing::own_parts( $product ), $pricing->rule_for( $product )->is_set() ) + ProductPrices::page( array_map( static fn ( PriceRow $row ): array => ProductPrices::row( $row ), $pricing->rows( $product ) ), $input );
 	}
 
 	/**
 	 * What an answer says of the product besides its prices.
 	 *
-	 * @param ProductPricing        $pricing    Reads the store's rule.
-	 * @param Settings              $settings   Whether prices change by themselves.
-	 * @param int                   $product_id The product.
-	 * @param array<string, string> $own        The parts of the rule the product changes, by part.
-	 * @param bool                  $rule_set   Whether there is a rule to price it by.
+	 * @param ProductPricing        $pricing  Reads the store's rule, and whether the product's prices change by themselves.
+	 * @param WC_Product            $product  The product.
+	 * @param array<string, string> $own      The parts of the rule the product changes, by part.
+	 * @param bool                  $rule_set Whether there is a rule to price it by.
 	 * @return array<string, mixed>
 	 */
-	public static function product_values( ProductPricing $pricing, Settings $settings, int $product_id, array $own, bool $rule_set ): array {
+	public static function product_values( ProductPricing $pricing, WC_Product $product, array $own, bool $rule_set ): array {
 		return array(
-			'product_id'         => $product_id,
+			'product_id'         => $product->get_id(),
 			'currency'           => get_woocommerce_currency(),
 			'prices_include_tax' => wc_tax_enabled() && wc_prices_include_tax(),
 			'rule_set'           => $rule_set,
 			'rule'               => array_filter( $own, static fn ( string $part ): bool => '' !== $part ) + $pricing->store_parts(),
 			'own_rule'           => $own,
-			'automatic'          => true === $settings->get( Settings::PRICE_AUTOMATIC ),
+			'automatic'          => $pricing->automatic_for( $product ),
+			'price_changes'      => PriceChanges::setting( $product ),
 		);
 	}
 
@@ -133,7 +141,12 @@ final class GetProductPrices implements Ability {
 			'own_rule'           => ProductPrices::parts_schema( __( 'The parts of the rule the product changes; a part it leaves to the store is empty.', 'pixonaut-for-woocommerce' ) ),
 			'automatic'          => array(
 				'type'        => 'boolean',
-				'description' => __( 'Whether the store changes prices that follow the rule by itself when a cost changes.', 'pixonaut-for-woocommerce' ),
+				'description' => __( 'Whether the product\'s prices that follow the rule change by themselves when a cost changes: what the product is set to, or the store\'s switch when it follows the store. A variation may answer otherwise: see `automatic` of each price.', 'pixonaut-for-woocommerce' ),
+			),
+			'price_changes'      => array(
+				'type'        => 'string',
+				'enum'        => PriceChanges::OF_PRODUCT,
+				'description' => __( 'What the product is set to: store follows the store\'s switch for automatic price changes, always and never answer it for this product.', 'pixonaut-for-woocommerce' ),
 			),
 		);
 	}

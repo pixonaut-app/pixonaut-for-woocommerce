@@ -41,6 +41,7 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/get-pricing-settings` | The store's pricing rule, currency buffer and whether prices change by themselves, with the store's currency | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/update-pricing-settings` | Changes the pricing settings given, as saving the Prices tab does | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/get-product-prices` | Each variation of a product on a blank with its printshop cost, price, margin and how it stands to the pricing rule | `edit_product` on that product |
+| `pixonaut-for-woocommerce/set-product-price-changes` | Whether a product's prices change by themselves when a cost changes: as the store, always or never; a variation can answer its product | `edit_product` on that product |
 | `pixonaut-for-woocommerce/price-product` | Reads a product's costs again and sets its prices to the rule's: all, the ones without a price or the ones named; `dry_run` changes nothing | `edit_product` on that product |
 | `pixonaut-for-woocommerce/get-connection-status` | Whether the store is connected, to which workspace and environment, whether the connection is paused, its origins, the last webhook test and the workspace's brands and settings | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/choose-brand` | Chooses the workspace brand the store's pages are drawn in | `manage_woocommerce` |
@@ -582,11 +583,14 @@ for automatic price changes. Changing the rule sets no price.
 `get-product-prices` takes the `product_id` of a simple or variable product
 personalised on a blank, and answers what the Prices section of its Pixonaut
 tab lists, from what is stored: the rule it is priced by (`rule`, the store's
-with the product's `own_rule` over it, and `rule_set`), `automatic`, and in
+with the product's `own_rule` over it, and `rule_set`), `automatic` (whether
+its prices change by themselves) with `price_changes` (what the product is
+set to: `store`, `always` or `never`), and in
 `prices` one row per variation (a simple product has one): `price`, the
 printshop's `cost` in its own currency, `cost_total` in the store's,
-`margin`, `suggested`, `standing` (`own`, `follows` or `by_hand`), and `flag`
-with its `flag_message`. Money is a decimal string; a time is ISO 8601.
+`margin`, `suggested`, `standing` (`own`, `follows` or `by_hand`), `flag`
+with its `flag_message`, and the row's own `automatic` and `price_changes`
+(`product` for a variation that follows its product). Money is a decimal string; a time is ISO 8601.
 `prices` is a page of the rows: `page` and `per_page` (25 unless given, at
 most 100) choose which, and `total` and `pages` count them all.
 
@@ -594,8 +598,8 @@ most 100) choose which, and `total` and `pages` count them all.
 `ProductPricing::read_costs()` and `apply()`: it reads the costs from Pixonaut
 again and sets each price to the rule's, which follows the rule from then
 on. It sets no price it was not asked to: one that follows the rule and was
-not chosen is only flagged with the price suggested, also while the store
-changes prices automatically. `only: "unpriced"` prices the variations without a regular price and
+not chosen is only flagged with the price suggested, also while its prices
+change automatically. `only: "unpriced"` prices the variations without a regular price and
 leaves the others; `variation_ids` names the ones to price. A price edited
 by hand is kept unless `release_held`. `rule` replaces the parts of the rule
 the product changes, once the costs are read: a read that fails stores no
@@ -608,6 +612,17 @@ for a product that is not on a blank (`pixonaut_wc_not_priced`), and when
 Pixonaut cannot give the costs (`pixonaut_wc_costs_unread`,
 `pixonaut_wc_costs_no_region`); a price the rule cannot set keeps its value
 and says why in `flag`.
+
+`set-product-price-changes` sets what **Automatic price changes** in that
+section does (`Pricing\PriceChanges`): `price_changes` `store` has the
+product follow the store's `price_automatic`, `always` and `never` answer it
+for the product. `variations` takes `{id, price_changes}` rows for single
+variations, each against its product: `product`, `always` or `never`. What
+is left out keeps what it has; every value is checked before any is stored.
+It sets no price and asks Pixonaut nothing, and answers what
+`get-product-prices` does. A variation of another product is refused
+(`pixonaut_wc_ability_unknown_variation`), as is a value of the other level
+(`pixonaut_wc_ability_price_changes`).
 
 ## Pictures and the catalogue
 

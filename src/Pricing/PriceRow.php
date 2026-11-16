@@ -30,6 +30,8 @@ final class PriceRow {
 	 * @param int|null         $checked_at When its cost was last asked for, a Unix time; null when it never was.
 	 * @param string           $rate_date  The day of the exchange rates its cost was converted with; empty when it was not converted.
 	 * @param string           $buffer     The currency buffer added to what was converted, in percent as written; empty when nothing was.
+	 * @param bool             $automatic  Whether its price changes by itself when its cost changes, once it follows the rule.
+	 * @param string           $changes    What it is set to, as `PriceChanges::setting()` says it.
 	 */
 	public function __construct(
 		public readonly int $id,
@@ -45,6 +47,8 @@ final class PriceRow {
 		public readonly ?int $checked_at,
 		public readonly string $rate_date = '',
 		public readonly string $buffer = '',
+		public readonly bool $automatic = false,
+		public readonly string $changes = PriceChanges::STORE,
 	) {
 	}
 }

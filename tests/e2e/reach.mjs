@@ -122,6 +122,7 @@ export const NO_SPEC = [
 	'src/Abilities/RecheckProducts.php',
 	'src/Abilities/ResetStandingLayout.php',
 	'src/Abilities/SetProductPictureView.php',
+	'src/Abilities/SetProductPriceChanges.php',
 	'src/Abilities/SetProductSplitListing.php',
 	'src/Abilities/SetVariationPrintSize.php',
 	'src/Abilities/SetVariationVariants.php',

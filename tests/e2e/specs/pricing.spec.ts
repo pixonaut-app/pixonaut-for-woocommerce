@@ -110,3 +110,55 @@ test('prices are set from the printshop’s costs, and a cost that leaves the to
 		'409.00',
 	);
 });
+
+test('a product set to always changes its price by itself when its cost leaves the tolerance, with the store’s automatic price changes off', async ({
+	connectedStore: admin,
+	request,
+	fake,
+	baseURL,
+}) => {
+	await usePlainPermalinks(admin, baseURL);
+	const id = await createProduct(request, `Self-priced tee ${Date.now()}`);
+
+	await admin.goto(`/wp-admin/post.php?post=${id}&action=edit`);
+	await openPixonautTab(admin);
+	await openPrices(admin);
+	const prices = productPanel(admin).locator('.pixonaut-prices');
+	const choice = prices.locator('.pixonaut-prices__changes');
+	const small = prices.locator('.pixonaut-prices__row', {
+		has: admin.locator('.pixonaut-prices__name', { hasText: 'Small' }),
+	});
+	await expect(small).toContainText('$124.90');
+
+	// The store only suggests prices; this product is to change them itself.
+	await expect(choice.locator('option:checked')).toHaveText(
+		'As the store: off',
+	);
+	await choice.selectOption('always');
+	await prices.locator('[data-part="margin"]').fill('50');
+	await prices.locator('.pixonaut-prices__apply').click();
+	await expect(prices.locator('.pixonaut-prices__status')).toHaveText(
+		'2 prices set.',
+	);
+	await expect(choice).toHaveValue('always');
+
+	// The printshop raises Small's price: its margin leaves the tolerance.
+	const raised = await fake.control.post(
+		`/__fake/blanks/${FIXTURE.blank.tee}/costs`,
+		{ data: { costs: { [VARIANTS.Small]: { product: '200.00' } } } },
+	);
+	expect(raised.ok()).toBe(true);
+	await prices.locator('.pixonaut-prices__refresh').click();
+
+	await expect(prices.locator('.pixonaut-prices__status')).toHaveText(
+		'1 price set.',
+	);
+	await expect(small.locator('.pixonaut-prices__price')).toHaveText('$409.00');
+	await expect(small).not.toContainText('Suggested');
+
+	// Apply stored the choice: the page read again still says so.
+	await admin.reload();
+	await openPixonautTab(admin);
+	await openPrices(admin);
+	await expect(choice).toHaveValue('always');
+});

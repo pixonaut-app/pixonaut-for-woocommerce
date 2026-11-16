@@ -71,9 +71,14 @@ the price the rule last set, and what the rule would change now.
 - `apply()` sets regular prices to the rule's price, and from then on they
   follow the rule. Sale prices are never set.
 - `settle()` looks only at prices that follow the rule. One the rule holds is
-  left alone. One it does not is set when `price_automatic` is on and its
-  cost just changed, and logged (`WcLogger`, level `info`); otherwise the
-  rule's price is stored as a suggestion with a flag.
+  left alone. One it does not is set when its prices change automatically
+  and its cost just changed, and logged (`WcLogger`, level `info`);
+  otherwise the rule's price is stored as a suggestion with a flag.
+- Whether a price changes automatically is the store's `price_automatic`,
+  unless its product answers it, or its variation answers the product:
+  `Pricing\PriceChanges` reads `always` or `never` from the
+  `_pixonaut_price_automatic` meta of the variation, then of the product,
+  and one without it follows the level above.
 - A price that follows the rule and is no longer the one the rule set was
   edited by hand: nothing is set or suggested for it until `apply()` is
   called for it with `$release`.
@@ -90,7 +95,9 @@ Pixonaut sends no event for a changed cost.
 `Admin\PricingPanel` renders the **Prices** section of the Pixonaut tab
 (`admin/product-prices.php`) and serves
 `POST /pixonaut/v1/products/<id>/prices` with `action` `refresh`, `apply` or
-`follow`, optionally `ids` and, for `apply`, the product's `rule` as typed.
+`follow`, optionally `ids` and, for `apply`, the product's `rule` as typed
+and its choice for automatic price changes (`changes`: `store`, `always` or
+`never`).
 It answers the section drawn again, and each regular price as the product
 form shows it, which `assets/src/admin/pricing.ts` puts back in the form.
 `Admin\PricingList` prints the flag under a product's name on the products

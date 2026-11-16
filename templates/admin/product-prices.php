@@ -2,23 +2,27 @@
 /**
  * Prices, a section of the Pixonaut tab of a product printed on a blank:
  * what the printshop charges for each variation, its price and margin, the
- * parts of the store's pricing rule the product changes, and the buttons
+ * parts of the store's pricing rule the product changes, whether its prices
+ * change by themselves, and the buttons
  * that read the costs again and apply the rule.
  *
  * Override by copying to yourtheme/woocommerce/pixonaut/admin/product-prices.php.
  * Field names, classes and the `data-` attributes are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.7.0
+ * @version 1.10.0
  *
  * @var string                $url        The product's prices route, which the buttons post to.
  * @var string                $field      The posted field holding the parts of the rule the product changes.
+ * @var string                $changes_field   The posted field holding whether the product's prices change by themselves.
+ * @var string                $changes         What the product is set to: `store`, `always` or `never`.
+ * @var array<string, string> $changes_options What it can be set to, each with what the store manager reads, by value.
  * @var bool                  $open       Whether the section is open.
  * @var bool                  $rule_set   Whether the store or the product has a target margin.
  * @var array<string, string> $own_parts  The parts of the rule the product changes, by part; empty for the store's.
  * @var array<string, string> $store      The store's rule, by part.
  * @var array<string, string> $parts      Each part's label, by part, in the order shown.
- * @var list<array{id: int, label: string, cost: string, cost_parts: string, price: string, margin: string, suggested: string, standing: string, flag: string|null, rule_at: string}> $rows Each price: its product or variation, what it is called, its cost, the cost's parts, its price, its margin, the price the rule suggests, how it stands to the rule (`own`, `follows`, `by_hand`), why it needs the store manager, and when the rule last set it.
+ * @var list<array{id: int, label: string, cost: string, cost_parts: string, price: string, margin: string, suggested: string, standing: string, flag: string|null, rule_at: string, changes: string}> $rows Each price: its product or variation, what it is called, its cost, the cost's parts, its price, its margin, the price the rule suggests, how it stands to the rule (`own`, `follows`, `by_hand`), why it needs the store manager, when the rule last set it, and whether its price changes by itself (`always` or `never` on a variation that answers its product, else `product` or `store`).
  * @var bool                  $unread     Whether no cost was read yet: the script reads them when the section opens.
  * @var int                   $flagged    Prices that follow the rule and need the store manager.
  * @var int                   $following  Prices the rule was applied to.
@@ -62,6 +66,14 @@ if ( $flagged > 0 ) {
 				<input type="text" inputmode="decimal" id="<?php echo esc_attr( $pixonaut_id ); ?>" class="short pixonaut-prices__input" name="<?php echo esc_attr( $field . '[' . $pixonaut_part . ']' ); ?>" data-part="<?php echo esc_attr( $pixonaut_part ); ?>" value="<?php echo esc_attr( $own_parts[ $pixonaut_part ] ?? '' ); ?>" placeholder="<?php echo esc_attr( '' === ( $store[ $pixonaut_part ] ?? '' ) ? _x( 'None', 'no value set for a part of the pricing rule', 'pixonaut-for-woocommerce' ) : $store[ $pixonaut_part ] ); ?>" />
 			</p>
 		<?php endforeach; ?>
+		<p class="pixonaut-prices__part pixonaut-prices__changes-part">
+			<label for="pixonaut_price_automatic"><?php /* translators: Label of a field in the Prices section of the product edit page: whether this product's prices change by themselves when a printshop's cost changes. */ esc_html_e( 'Automatic price changes', 'pixonaut-for-woocommerce' ); ?></label>
+			<select id="pixonaut_price_automatic" class="pixonaut-prices__changes" name="<?php echo esc_attr( $changes_field ); ?>">
+				<?php foreach ( $changes_options as $pixonaut_value => $pixonaut_label ) : ?>
+					<option value="<?php echo esc_attr( $pixonaut_value ); ?>" <?php selected( $changes, $pixonaut_value ); ?>><?php echo esc_html( $pixonaut_label ); ?></option>
+				<?php endforeach; ?>
+			</select>
+		</p>
 		<p class="description pixonaut-prices__rule-hint">
 			<?php esc_html_e( 'An empty field follows the store’s pricing rule, shown in grey.', 'pixonaut-for-woocommerce' ); ?>
 			<a href="<?php echo esc_url( $settings ); ?>"><?php /* translators: Link from the Prices section of the product edit page to the pricing rule on the Pixonaut settings page. */ esc_html_e( 'Store’s pricing rule', 'pixonaut-for-woocommerce' ); ?></a>
@@ -119,6 +131,11 @@ if ( $flagged > 0 ) {
 									);
 									?>
 								</span>
+							<?php endif; ?>
+							<?php if ( $variable && \Pixonaut\WooCommerce\Pricing\PriceChanges::ALWAYS === $pixonaut_row['changes'] ) : ?>
+								<span class="pixonaut-prices__changes-note"><?php /* translators: In the Prices table of the product edit page: this variation's price changes by itself when its cost changes, whatever the product and the store say. */ esc_html_e( 'Automatic price changes: always', 'pixonaut-for-woocommerce' ); ?></span>
+							<?php elseif ( $variable && \Pixonaut\WooCommerce\Pricing\PriceChanges::NEVER === $pixonaut_row['changes'] ) : ?>
+								<span class="pixonaut-prices__changes-note"><?php /* translators: In the Prices table of the product edit page: this variation's price never changes by itself, whatever the product and the store say. */ esc_html_e( 'Automatic price changes: never', 'pixonaut-for-woocommerce' ); ?></span>
 							<?php endif; ?>
 							<?php if ( '' !== $pixonaut_row['suggested'] && \Pixonaut\WooCommerce\Pricing\PriceState::BY_HAND !== $pixonaut_row['standing'] ) : ?>
 								<span class="pixonaut-prices__suggested">

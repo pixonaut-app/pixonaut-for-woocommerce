@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-15T20:51:21+00:00\n"
+"POT-Creation-Date: 2026-11-15T23:53:02+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -47,8 +47,8 @@ msgstr ""
 #. translators: The plugin's item in the admin menu, shown to the merchant; the product name, keep it as it is.
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
-#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:218
-#: src/Settings/SettingsPage.php:260 templates/admin/product-variation.php:40
+#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:220
+#: src/Settings/SettingsPage.php:260 templates/admin/product-variation.php:42
 msgid "Pixonaut"
 msgstr "Pixonaut"
 
@@ -647,46 +647,50 @@ msgstr ""
 "varianten."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/GetProductPrices.php:48
+#: src/Abilities/GetProductPrices.php:45
 msgid "Read a product's prices and costs"
 msgstr "De prijzen en kosten van een product lezen"
 
 #. translators: %s: the name of the ability that prices a product.
-#: src/Abilities/GetProductPrices.php:51
+#: src/Abilities/GetProductPrices.php:48
 #, php-format
 msgid ""
 "Lists each variation of a product printed on a blank (a simple product has "
 "one row) with what the printshop charges for it, that cost in the store's "
 "currency, its regular price and margin, how its price stands to the pricing "
 "rule (`standing`), the price the rule suggests when it is another, and what "
-"stops the rule (`flag`). Also the rule the product is priced by: the "
-"store's, with the parts the product changes (`own_rule`). The costs are the "
-"ones last read: `checked_at` null means never. %s reads them again, and with "
-"`dry_run` answers the prices it would set, changing nothing. `prices` is a "
-"page of the rows, `page` and `per_page` choosing which; `total` counts them "
-"all."
+"stops the rule (`flag`), and whether it changes by itself when its cost "
+"changes (`automatic`, and `price_changes` for what it is set to). Also the "
+"rule the product is priced by: the store's, with the parts the product "
+"changes (`own_rule`). The costs are the ones last read: `checked_at` null "
+"means never. %s reads them again, and with `dry_run` answers the prices it "
+"would set, changing nothing. `prices` is a page of the rows, `page` and "
+"`per_page` choosing which; `total` counts them all."
 msgstr ""
 "Geeft elke variatie van een product dat op een blanco product wordt gedrukt "
 "(een simpel product heeft één rij) met wat de drukkerij ervoor rekent, die "
 "kosten in de valuta van de winkel, de reguliere prijs en marge, hoe de prijs "
 "zich tot de prijsregel verhoudt (`standing`), de prijs die de regel "
-"voorstelt als dat een andere is, en wat de regel tegenhoudt (`flag`). Ook de "
-"regel waarmee de prijs van het product wordt bepaald: die van de winkel, met "
-"de onderdelen die het product wijzigt (`own_rule`). De kosten zijn de laatst "
-"opgehaalde: `checked_at` null betekent nooit. %s haalt ze opnieuw op en "
-"geeft met `dry_run` de prijzen die het zou instellen, zonder iets te "
-"wijzigen. `prices` is een pagina van de rijen, waarbij `page` en `per_page` "
-"bepalen welke; `total` telt ze allemaal."
+"voorstelt als dat een andere is, en wat de regel tegenhoudt (`flag`), en of "
+"de prijs vanzelf verandert wanneer de kosten veranderen (`automatic`, en "
+"`price_changes` voor waarop die is ingesteld). Ook de regel waarmee de prijs "
+"van het product wordt bepaald: die van de winkel, met de onderdelen die het "
+"product wijzigt (`own_rule`). De kosten zijn de laatst opgehaalde: "
+"`checked_at` null betekent nooit. %s haalt ze opnieuw op en geeft met "
+"`dry_run` de prijzen die het zou instellen, zonder iets te wijzigen. "
+"`prices` is een pagina van de rijen, waarbij `page` en `per_page` bepalen "
+"welke; `total` telt ze allemaal."
 
-#: src/Abilities/GetProductPrices.php:60 src/Abilities/PriceProduct.php:72
+#: src/Abilities/GetProductPrices.php:57 src/Abilities/PriceProduct.php:67
+#: src/Abilities/SetProductPriceChanges.php:58
 msgid "A simple or variable product; never a variation."
 msgstr "Een simpel of variabel product; nooit een variatie."
 
-#: src/Abilities/GetProductPrices.php:125
+#: src/Abilities/GetProductPrices.php:133
 msgid "The store's currency, which prices and `cost_total` are in."
 msgstr "De valuta van de winkel, waarin de prijzen en `cost_total` staan."
 
-#: src/Abilities/GetProductPrices.php:130
+#: src/Abilities/GetProductPrices.php:138
 msgid ""
 "Whether there is a rule to price by: false without a target margin, and "
 "nothing is then priced."
@@ -694,7 +698,7 @@ msgstr ""
 "Of er een regel is om prijzen mee te bepalen: false zonder doelmarge, en dan "
 "wordt er geen prijs bepaald."
 
-#: src/Abilities/GetProductPrices.php:132
+#: src/Abilities/GetProductPrices.php:140
 msgid ""
 "The rule the product is priced by: margin and tolerance in percent, step, "
 "ending, min and max as amounts; empty for none."
@@ -703,7 +707,7 @@ msgstr ""
 "in procenten, stap, einde, laagste en hoogste prijs als bedragen; leeg als "
 "er geen is."
 
-#: src/Abilities/GetProductPrices.php:133
+#: src/Abilities/GetProductPrices.php:141
 msgid ""
 "The parts of the rule the product changes; a part it leaves to the store is "
 "empty."
@@ -711,13 +715,26 @@ msgstr ""
 "De onderdelen van de regel die het product wijzigt; een onderdeel dat het "
 "aan de winkel overlaat is leeg."
 
-#: src/Abilities/GetProductPrices.php:136
+#: src/Abilities/GetProductPrices.php:144
 msgid ""
-"Whether the store changes prices that follow the rule by itself when a cost "
-"changes."
+"Whether the product's prices that follow the rule change by themselves when "
+"a cost changes: what the product is set to, or the store's switch when it "
+"follows the store. A variation may answer otherwise: see `automatic` of each "
+"price."
 msgstr ""
-"Of de winkel prijzen die de regel volgen zelf wijzigt wanneer de kosten "
-"veranderen."
+"Of de prijzen van het product die de regel volgen vanzelf veranderen wanneer "
+"de kosten veranderen: waarop het product is ingesteld, of de schakelaar van "
+"de winkel wanneer het de winkel volgt. Een variatie kan anders antwoorden: "
+"zie `automatic` van elke prijs."
+
+#: src/Abilities/GetProductPrices.php:149
+msgid ""
+"What the product is set to: store follows the store's switch for automatic "
+"price changes, always and never answer it for this product."
+msgstr ""
+"Waarop het product is ingesteld: store volgt de schakelaar van de winkel "
+"voor automatische prijswijzigingen, always en never bepalen het zelf voor "
+"dit product."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductSplitListing.php:37
@@ -1333,11 +1350,11 @@ msgid "The `before` that asks for the next page; null when there is none."
 msgstr "De `before` die de volgende pagina opvraagt; null als die er niet is."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/PriceProduct.php:64
+#: src/Abilities/PriceProduct.php:59
 msgid "Price a product by the pricing rule"
 msgstr "De prijs van een product bepalen met de prijsregel"
 
-#: src/Abilities/PriceProduct.php:65
+#: src/Abilities/PriceProduct.php:60
 msgid ""
 "Reads the printshop's costs of a product printed on a blank again, and sets "
 "the regular price of each variation (a simple product has one) to the "
@@ -1349,9 +1366,9 @@ msgid ""
 "changes, first. With `dry_run` nothing is stored on the product: the answer "
 "gives the prices it would set. Each price answers `before`, `price` and "
 "`changed`; one the rule cannot set keeps its price and says why in `flag`. "
-"No other price is set, whatever the store changes by itself. `changed` "
-"counts every price that changed; `prices` is a page of them, `page` and "
-"`per_page` choosing which. Refused without a target margin."
+"No other price is set, whatever changes by itself. `changed` counts every "
+"price that changed; `prices` is a page of them, `page` and `per_page` "
+"choosing which. Refused without a target margin."
 msgstr ""
 "Haalt de kosten van de drukkerij voor een product dat op een blanco product "
 "wordt gedrukt opnieuw op, en stelt de reguliere prijs van elke variatie (een "
@@ -1366,11 +1383,11 @@ msgstr ""
 "de prijzen die zouden worden ingesteld. Elke prijs antwoordt met `before`, "
 "`price` en `changed`; een prijs die de regel niet kan instellen blijft zoals "
 "hij is en zegt waarom in `flag`. Er wordt geen andere prijs ingesteld, wat "
-"de winkel ook zelf wijzigt. `changed` telt elke prijs die is gewijzigd; "
+"er ook vanzelf verandert. `changed` telt elke prijs die is gewijzigd; "
 "`prices` is een pagina daarvan, waarbij `page` en `per_page` bepalen welke. "
 "Geweigerd zonder doelmarge."
 
-#: src/Abilities/PriceProduct.php:81
+#: src/Abilities/PriceProduct.php:76
 msgid ""
 "The variations to price, or the product's own id for a simple product; left "
 "out for all."
@@ -1378,7 +1395,7 @@ msgstr ""
 "De variaties waarvan de prijs wordt bepaald, of de eigen ID van het product "
 "bij een simpel product; weggelaten voor alle."
 
-#: src/Abilities/PriceProduct.php:91
+#: src/Abilities/PriceProduct.php:86
 msgid ""
 "Whether a price edited by hand after the rule set it is given back to the "
 "rule."
@@ -1386,7 +1403,7 @@ msgstr ""
 "Of een prijs die met de hand is bewerkt nadat de regel hem had ingesteld, "
 "aan de regel wordt teruggegeven."
 
-#: src/Abilities/PriceProduct.php:93
+#: src/Abilities/PriceProduct.php:88
 msgid ""
 "The parts of the rule this product changes, replacing the ones it has: "
 "margin and tolerance in percent, step, ending, min and max as amounts. A "
@@ -1397,22 +1414,24 @@ msgstr ""
 "prijs als bedragen. Een weggelaten of leeg onderdeel wordt aan de winkel "
 "overgelaten."
 
-#: src/Abilities/PriceProduct.php:108
+#: src/Abilities/PriceProduct.php:103
 msgid "How many prices changed, or would."
 msgstr "Hoeveel prijzen er zijn gewijzigd, of zouden worden gewijzigd."
 
-#: src/Abilities/PriceProduct.php:114
+#: src/Abilities/PriceProduct.php:109
 msgid "The regular price it had; null for none."
 msgstr "De reguliere prijs die het had; null als er geen was."
 
 #. translators: %s: a part of the pricing rule, e.g. margin.
-#: src/Abilities/PriceProduct.php:210
+#: src/Abilities/PriceProduct.php:205
 #, php-format
 msgid "The rule's %s is not a number."
 msgstr "Het onderdeel %s van de regel is geen getal."
 
 #. translators: %s: one or more ids, e.g. 12, 15.
-#: src/Abilities/PriceProduct.php:234
+#. translators: %s: an id, e.g. 12.
+#: src/Abilities/PriceProduct.php:229
+#: src/Abilities/SetProductPriceChanges.php:148
 #, php-format
 msgid "The product has no variation with this id: %s."
 msgstr "Het product heeft geen variatie met deze ID: %s."
@@ -1439,7 +1458,7 @@ msgstr ""
 "verkopen, in woorden; null als elke variatie er een verkoopt. Stel de "
 "`variant` van een variatie in met `set-product-setup`."
 
-#: src/Abilities/ProductPrices.php:71
+#: src/Abilities/ProductPrices.php:72
 msgid ""
 "No simple or variable product printed on a blank has this id, so there is no "
 "printshop cost to price from. A variation is priced through its product."
@@ -1448,7 +1467,7 @@ msgstr ""
 "gedrukt met deze ID, dus er zijn geen drukkerijkosten om de prijs op te "
 "baseren. De prijs van een variatie wordt via het product bepaald."
 
-#: src/Abilities/ProductPrices.php:80
+#: src/Abilities/ProductPrices.php:81
 msgid ""
 "No target margin is set, for the store or for this product, so there is no "
 "rule to price by. Set one first."
@@ -1458,12 +1477,12 @@ msgstr ""
 "in."
 
 #. translators: %s: a country code, such as SE.
-#: src/Abilities/ProductPrices.php:91
+#: src/Abilities/ProductPrices.php:92
 #, php-format
 msgid "Pixonaut has no printshop costs for the shop's country (%s)."
 msgstr "Pixonaut heeft geen drukkerijkosten voor het land van de winkel (%s)."
 
-#: src/Abilities/ProductPrices.php:93
+#: src/Abilities/ProductPrices.php:94
 msgid ""
 "Pixonaut could not be reached to read the printshop's costs. Try again in a "
 "moment."
@@ -1471,11 +1490,11 @@ msgstr ""
 "Pixonaut was niet bereikbaar om de kosten van de drukkerij te lezen. Probeer "
 "het zo meteen opnieuw."
 
-#: src/Abilities/ProductPrices.php:144
+#: src/Abilities/ProductPrices.php:147
 msgid "The variation, or the product itself when it has none."
 msgstr "De variatie, of het product zelf als het er geen heeft."
 
-#: src/Abilities/ProductPrices.php:147
+#: src/Abilities/ProductPrices.php:150
 msgid ""
 "Its regular price, as the store enters prices, including tax or not; null "
 "for none."
@@ -1483,7 +1502,7 @@ msgstr ""
 "De reguliere prijs, zoals de winkel prijzen invoert, inclusief btw of niet; "
 "null als er geen is."
 
-#: src/Abilities/ProductPrices.php:150
+#: src/Abilities/ProductPrices.php:153
 msgid ""
 "What the printshop charges, in its own currency, as last read; null when no "
 "cost is known for the blank variant it sells."
@@ -1492,17 +1511,17 @@ msgstr ""
 "als er geen kosten bekend zijn voor de variant van het blanco product die "
 "het verkoopt."
 
-#: src/Abilities/ProductPrices.php:152
+#: src/Abilities/ProductPrices.php:155
 msgid "The product; null when the printshop publishes no price."
 msgstr "Het product; null als de drukkerij geen prijs publiceert."
 
-#: src/Abilities/ProductPrices.php:154
+#: src/Abilities/ProductPrices.php:157
 msgid "The cheapest shipping to the shop's country; null when none is known."
 msgstr ""
 "De goedkoopste verzending naar het land van de winkel; null als er geen "
 "bekend is."
 
-#: src/Abilities/ProductPrices.php:159
+#: src/Abilities/ProductPrices.php:162
 msgid ""
 "The product and its shipping in the store's currency, converted with the "
 "currency buffer added when charged in another; null when they price nothing."
@@ -1511,7 +1530,7 @@ msgstr ""
 "met de valutabuffer erbij opgeteld wanneer ze in een andere valuta worden "
 "gerekend; null als er geen prijs mee te bepalen is."
 
-#: src/Abilities/ProductPrices.php:162
+#: src/Abilities/ProductPrices.php:165
 msgid ""
 "The day of the exchange rate the cost was converted with; null when it was "
 "not converted."
@@ -1519,7 +1538,7 @@ msgstr ""
 "De dag van de wisselkoers waarmee de kosten zijn omgerekend; null als ze "
 "niet zijn omgerekend."
 
-#: src/Abilities/ProductPrices.php:166
+#: src/Abilities/ProductPrices.php:169
 msgid ""
 "The currency buffer added to what was converted, in percent; null when "
 "nothing was."
@@ -1527,19 +1546,19 @@ msgstr ""
 "De valutabuffer die bij het omgerekende is opgeteld, in procenten; null als "
 "er niets is omgerekend."
 
-#: src/Abilities/ProductPrices.php:170
+#: src/Abilities/ProductPrices.php:173
 msgid "The share of the price excluding tax left after the cost, in percent."
 msgstr ""
 "Het deel van de prijs exclusief btw dat na de kosten overblijft, in "
 "procenten."
 
-#: src/Abilities/ProductPrices.php:172
+#: src/Abilities/ProductPrices.php:175
 msgid "The price the rule would set, when it is another than the price it has."
 msgstr ""
 "De prijs die de regel zou instellen, als dat een andere is dan de huidige "
 "prijs."
 
-#: src/Abilities/ProductPrices.php:176
+#: src/Abilities/ProductPrices.php:179
 msgid ""
 "own: the rule was never applied to it. follows: its price is the one the "
 "rule set. by_hand: its price was edited after the rule set it, and is held "
@@ -1549,7 +1568,7 @@ msgstr ""
 "regel heeft ingesteld. by_hand: de prijs is bewerkt nadat de regel hem had "
 "ingesteld, en blijft behouden totdat hij aan de regel wordt teruggegeven."
 
-#: src/Abilities/ProductPrices.php:180
+#: src/Abilities/ProductPrices.php:183
 msgid ""
 "Why the rule cannot price it or suggests another price: margin, no_cost, "
 "unread, currency, rate_stale, no_step or sale; null when nothing does."
@@ -1558,17 +1577,35 @@ msgstr ""
 "margin, no_cost, unread, currency, rate_stale, no_step of sale; null als "
 "niets dat doet."
 
-#: src/Abilities/ProductPrices.php:185
+#: src/Abilities/ProductPrices.php:188
 msgid "When the rule last set its price."
 msgstr "Wanneer de regel de prijs voor het laatst heeft ingesteld."
 
-#: src/Abilities/ProductPrices.php:189
+#: src/Abilities/ProductPrices.php:192
 msgid "When its cost was last asked for; null when it never was."
 msgstr ""
 "Wanneer de kosten voor het laatst zijn opgevraagd; null als dat nooit is "
 "gebeurd."
 
-#: src/Abilities/ProductPrices.php:206
+#: src/Abilities/ProductPrices.php:196
+msgid ""
+"Whether its price, once it follows the rule, is set to the rule's by itself "
+"when its cost changes and its margin left the tolerance."
+msgstr ""
+"Of de prijs, zodra die de regel volgt, vanzelf op die van de regel wordt "
+"ingesteld wanneer de kosten veranderen en de marge buiten de tolerantie valt."
+
+#: src/Abilities/ProductPrices.php:201
+msgid ""
+"What it is set to: a variation says product when it follows its product, "
+"always or never when it answers it; a simple product's one row says what the "
+"product does."
+msgstr ""
+"Waarop die is ingesteld: een variatie zegt product wanneer die het product "
+"volgt, always of never wanneer die het zelf bepaalt; de ene rij van een "
+"simpel product zegt wat het product doet."
+
+#: src/Abilities/ProductPrices.php:218
 msgid ""
 "Which page of the prices the answer lists; it changes nothing about which "
 "are priced."
@@ -1576,7 +1613,7 @@ msgstr ""
 "Welke pagina van de prijzen het antwoord geeft; het verandert niets aan "
 "welke prijzen worden bepaald."
 
-#: src/Abilities/ProductPrices.php:249
+#: src/Abilities/ProductPrices.php:261
 msgid "How many prices the product has, on every page."
 msgstr "Hoeveel prijzen het product heeft, op alle pagina's samen."
 
@@ -2057,6 +2094,47 @@ msgid ""
 msgstr ""
 "Het blanco product heeft dat aanzicht of die foto niet voor de zijde van het "
 "product. Het heeft: %1$s."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetProductPriceChanges.php:45
+msgid "Set a product's automatic price changes"
+msgstr "De automatische prijswijzigingen van een product instellen"
+
+#. translators: 1: the name of the ability that changes the pricing settings, 2: the name of the ability that reads a product's prices.
+#: src/Abilities/SetProductPriceChanges.php:48
+#, php-format
+msgid ""
+"Says whether the prices of a product printed on a blank change by themselves "
+"when a cost changes, whatever the store's switch (`price_automatic`, %1$s) "
+"says. `price_changes`: `store` follows the store's switch, `always` has the "
+"product's prices that follow the rule set to the rule's price when their "
+"cost changes and their margin left the tolerance, also with the store's "
+"switch off; `never` only has the new price suggested, also with the switch "
+"on. `variations` does the same for single variations, each against its "
+"product: `product` follows the product, `always` and `never` answer it. What "
+"is left out keeps what it has. It sets no price and reads no cost. Answers "
+"what %2$s does: `automatic` and `price_changes` of the product, and of each "
+"price."
+msgstr ""
+"Bepaalt of de prijzen van een product dat op een blanco product wordt "
+"gedrukt vanzelf veranderen wanneer de kosten veranderen, wat de schakelaar "
+"van de winkel (`price_automatic`, %1$s) ook aangeeft. `price_changes`: "
+"`store` volgt de schakelaar van de winkel; met `always` worden de prijzen "
+"van het product die de regel volgen ingesteld op de prijs van de regel "
+"wanneer hun kosten veranderen en hun marge buiten de tolerantie valt, ook "
+"als de schakelaar van de winkel uit staat; met `never` wordt de nieuwe prijs "
+"alleen voorgesteld, ook als de schakelaar aan staat. `variations` doet "
+"hetzelfde voor afzonderlijke variaties, elk ten opzichte van het eigen "
+"product: `product` volgt het product, `always` en `never` bepalen het zelf. "
+"Wat wordt weggelaten behoudt wat het heeft. Stelt geen prijs in en haalt "
+"geen kosten op. Antwoordt met wat %2$s antwoordt: `automatic` en "
+"`price_changes` van het product en van elke prijs."
+
+#. translators: 1: the values to choose from, e.g. store, always, never; 2: a product or variation id.
+#: src/Abilities/SetProductPriceChanges.php:169
+#, php-format
+msgid "`price_changes` is one of %1$s for #%2$d."
+msgstr "`price_changes` is een van %1$s voor #%2$d."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductSetup.php:53
@@ -3189,18 +3267,20 @@ msgid ""
 "others keep their values. `price_automatic` switches automatic price changes "
 "on or off: on, a price that follows the rule is set to the rule's price when "
 "its cost changes and its margin left the tolerance; off, the new price is "
-"only suggested. `price_ending` must be below `price_step`. Changing the rule "
-"changes no price by itself: price a product with %2$s. Answers with every "
-"pricing setting."
+"only suggested; a product or variation set to always or never keeps to that, "
+"whatever the switch says. `price_ending` must be below `price_step`. "
+"Changing the rule changes no price by itself: price a product with %2$s. "
+"Answers with every pricing setting."
 msgstr ""
 "Wijzigt de opgegeven prijsinstellingen, op hun sleutels zoals %1$s ze leest; "
 "de andere behouden hun waarde. `price_automatic` zet automatische "
 "prijswijzigingen aan of uit: aan wordt een prijs die de regel volgt "
 "ingesteld op de prijs van de regel wanneer de kosten veranderen en de marge "
-"buiten de tolerantie valt; uit wordt de nieuwe prijs alleen voorgesteld. "
-"`price_ending` moet lager zijn dan `price_step`. De regel wijzigen verandert "
-"op zichzelf geen prijs: de prijs van een product wordt bepaald met %2$s. "
-"Antwoordt met alle prijsinstellingen."
+"buiten de tolerantie valt; uit wordt de nieuwe prijs alleen voorgesteld; een "
+"product of variatie die op always of never is ingesteld houdt zich daaraan, "
+"wat de schakelaar ook aangeeft. `price_ending` moet lager zijn dan "
+"`price_step`. De regel wijzigen verandert op zichzelf geen prijs: de prijs "
+"van een product wordt bepaald met %2$s. Antwoordt met alle prijsinstellingen."
 
 #. translators: %s: the key of a setting, e.g. price_margin.
 #: src/Abilities/UpdatePricingSettings.php:74
@@ -3258,12 +3338,12 @@ msgstr "Dit product bestaat niet."
 
 #. translators: Message in the blank search on the product edit page, shown to the merchant.
 #: src/Admin/CatalogueProducts.php:148 src/Admin/CatalogueProducts.php:222
-#: src/Admin/CatalogueSearch.php:316
+#: src/Admin/CatalogueSearch.php:361
 msgid "Connect the store to Pixonaut to search its catalogue."
 msgstr "Koppel de winkel aan Pixonaut om in de catalogus te zoeken."
 
-#: src/Admin/CatalogueProducts.php:149 src/Admin/CatalogueSearch.php:239
-#: src/Admin/CatalogueSearch.php:317
+#: src/Admin/CatalogueProducts.php:149 src/Admin/CatalogueSearch.php:284
+#: src/Admin/CatalogueSearch.php:362
 msgid "Pixonaut could not be searched. Try again in a moment."
 msgstr "Er kon niet in Pixonaut worden gezocht. Probeer het zo meteen opnieuw."
 
@@ -3604,17 +3684,17 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:343 src/Admin/ProductPanel.php:820
+#: src/Admin/LinkedBlank.php:343 src/Admin/ProductPanel.php:842
 msgid "Workspace default"
 msgstr "Standaard van de werkruimte"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:345 src/Admin/ProductPanel.php:823
+#: src/Admin/LinkedBlank.php:345 src/Admin/ProductPanel.php:845
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Standaard van de werkruimte (%s)"
 
-#: src/Admin/LinkedBlank.php:348 src/Admin/ProductPanel.php:835
+#: src/Admin/LinkedBlank.php:348 src/Admin/ProductPanel.php:857
 msgid "A printshop no longer connected to the workspace"
 msgstr "Een drukkerij die niet meer aan de werkruimte is gekoppeld"
 
@@ -3624,7 +3704,7 @@ msgstr "Een drukkerij die niet meer aan de werkruimte is gekoppeld"
 msgid "%s (from the blank’s category)"
 msgstr "%s (uit de categorie van het blanco product)"
 
-#: src/Admin/LinkedBlank.php:454
+#: src/Admin/LinkedBlank.php:472
 msgid "Pixonaut could not be asked which printshop this is."
 msgstr "Pixonaut kon niet worden gevraagd welke drukkerij dit is."
 
@@ -3852,7 +3932,7 @@ msgstr[1] ""
 msgid "Apply suggested prices"
 msgstr "Voorgestelde prijzen toepassen"
 
-#: src/Admin/PricingPanel.php:156
+#: src/Admin/PricingPanel.php:170
 msgid ""
 "This product is not printed on a blank, so it has no printshop cost to price "
 "from."
@@ -3860,17 +3940,17 @@ msgstr ""
 "Dit product wordt niet op een blanco product gedrukt, dus er zijn geen "
 "drukkerijkosten om de prijs op te baseren."
 
-#: src/Admin/PricingPanel.php:166
+#: src/Admin/PricingPanel.php:180
 msgid "The costs are read."
 msgstr "De kosten zijn opgehaald."
 
 #. translators: %s: a country code, such as SE. Said in the Prices section of the product edit page.
-#: src/Admin/PricingPanel.php:184
+#: src/Admin/PricingPanel.php:202
 #, php-format
 msgid "Pixonaut has no printshop costs for your shop’s country (%s)."
 msgstr "Pixonaut heeft geen drukkerijkosten voor het land van je winkel (%s)."
 
-#: src/Admin/PricingPanel.php:186 templates/admin/product-prices.php:45
+#: src/Admin/PricingPanel.php:204 templates/admin/product-prices.php:49
 msgid ""
 "Pixonaut could not be reached to read the printshop’s costs. Try again in a "
 "moment."
@@ -3878,35 +3958,35 @@ msgstr ""
 "Pixonaut was niet bereikbaar om de kosten van de drukkerij te lezen. Probeer "
 "het zo meteen opnieuw."
 
-#: src/Admin/PricingPanel.php:197
+#: src/Admin/PricingPanel.php:215
 msgid ""
 "Pixonaut is reading the printshop’s costs. Refresh the costs in a moment."
 msgstr ""
 "Pixonaut haalt de kosten van de drukkerij op. Vernieuw de kosten zo meteen."
 
-#: src/Admin/PricingPanel.php:203
+#: src/Admin/PricingPanel.php:221
 msgid "No price changed."
 msgstr "Geen prijs gewijzigd."
 
 #. translators: %d: how many prices. Said in the Prices section of the product edit page after the pricing rule set prices.
-#: src/Admin/PricingPanel.php:205
+#: src/Admin/PricingPanel.php:223
 #, php-format
 msgid "%d price set."
 msgid_plural "%d prices set."
 msgstr[0] "%d prijs ingesteld."
 msgstr[1] "%d prijzen ingesteld."
 
-#: src/Admin/PricingPanel.php:289
+#: src/Admin/PricingPanel.php:314
 msgid "The margin left the tolerance."
 msgstr "De marge valt buiten de tolerantie."
 
-#: src/Admin/PricingPanel.php:290
+#: src/Admin/PricingPanel.php:315
 msgid "The printshop publishes no price for it, so the rule cannot price it."
 msgstr ""
 "De drukkerij publiceert er geen prijs voor, dus de regel kan de prijs niet "
 "bepalen."
 
-#: src/Admin/PricingPanel.php:291
+#: src/Admin/PricingPanel.php:316
 msgid ""
 "No cost is read for it yet. Refresh the costs in a moment; if it stays so, "
 "pair it with a blank variant."
@@ -3914,7 +3994,7 @@ msgstr ""
 "Hiervoor zijn nog geen kosten opgehaald. Vernieuw de kosten zo meteen; "
 "blijft dat zo, koppel het dan aan een variant van het blanco product."
 
-#: src/Admin/PricingPanel.php:292
+#: src/Admin/PricingPanel.php:317
 msgid ""
 "The cost is in a currency with no exchange rate to your store’s, so the rule "
 "cannot price it."
@@ -3922,7 +4002,7 @@ msgstr ""
 "De kosten zijn in een valuta zonder wisselkoers naar die van je winkel, dus "
 "de regel kan de prijs niet bepalen."
 
-#: src/Admin/PricingPanel.php:293
+#: src/Admin/PricingPanel.php:318
 msgid ""
 "The exchange rate is over a week old and could not be updated, so the rule "
 "does not price it."
@@ -3930,11 +4010,11 @@ msgstr ""
 "De wisselkoers is meer dan een week oud en kon niet worden bijgewerkt, dus "
 "de regel bepaalt de prijs niet."
 
-#: src/Admin/PricingPanel.php:294
+#: src/Admin/PricingPanel.php:319
 msgid "No price step lies between the lowest and the highest price."
 msgstr "Er ligt geen prijsstap tussen de laagste en de hoogste prijs."
 
-#: src/Admin/PricingPanel.php:295
+#: src/Admin/PricingPanel.php:320
 msgid ""
 "The rule’s price is not above the sale price. Change or remove the sale "
 "price first."
@@ -3942,115 +4022,137 @@ msgstr ""
 "De prijs van de regel is niet hoger dan de actieprijs. Wijzig of verwijder "
 "eerst de actieprijs."
 
+#. translators: Option of the Automatic price changes field in the Prices section of the product edit page: the product does as the store's setting says, which is on.
+#: src/Admin/PricingPanel.php:335
+msgid "As the store: on"
+msgstr "Zoals de winkel: aan"
+
+#. translators: Option of the Automatic price changes field in the Prices section of the product edit page: the product does as the store's setting says, which is off.
+#: src/Admin/PricingPanel.php:337
+msgid "As the store: off"
+msgstr "Zoals de winkel: uit"
+
+#. translators: Option of the Automatic price changes field in the Prices section of the product edit page: this product's prices change by themselves, whatever the store's setting says.
+#: src/Admin/PricingPanel.php:339
+msgctxt "automatic price changes"
+msgid "Always"
+msgstr "Altijd"
+
+#. translators: Option of the Automatic price changes field in the Prices section of the product edit page: this product's prices never change by themselves, whatever the store's setting says.
+#: src/Admin/PricingPanel.php:341
+msgctxt "automatic price changes"
+msgid "Never"
+msgstr "Nooit"
+
 #. translators: Label of a field in the Prices section of the product edit page; the value is a percentage.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a percentage. The margin is the share of a product's price, excluding VAT, left after the printshop's cost.
-#: src/Admin/PricingPanel.php:307 src/Settings/Settings.php:478
+#: src/Admin/PricingPanel.php:353 src/Settings/Settings.php:478
 msgid "Target margin (%)"
 msgstr "Doelmarge (%)"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is a number of percentage points either side of the target margin.
-#: src/Admin/PricingPanel.php:309
+#: src/Admin/PricingPanel.php:355
 msgid "Tolerance (points)"
 msgstr "Tolerantie (punten)"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money: the distance between two prices the rule may set.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the distance between two prices the pricing rule may set.
-#: src/Admin/PricingPanel.php:311 src/Settings/Settings.php:500
+#: src/Admin/PricingPanel.php:357 src/Settings/Settings.php:500
 msgid "Price step"
 msgstr "Prijsstap"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money below the price step.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money below the price step: what each price the pricing rule sets ends in.
-#: src/Admin/PricingPanel.php:313 src/Settings/Settings.php:511
+#: src/Admin/PricingPanel.php:359 src/Settings/Settings.php:511
 msgid "Prices end in"
 msgstr "Prijzen eindigen op"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the lowest price the pricing rule sets.
-#: src/Admin/PricingPanel.php:315 src/Settings/Settings.php:522
+#: src/Admin/PricingPanel.php:361 src/Settings/Settings.php:522
 msgid "Lowest price"
 msgstr "Laagste prijs"
 
 #. translators: Label of a field in the Prices section of the product edit page; the value is an amount of money.
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money: the highest price the pricing rule sets.
-#: src/Admin/PricingPanel.php:317 src/Settings/Settings.php:533
+#: src/Admin/PricingPanel.php:363 src/Settings/Settings.php:533
 msgid "Highest price"
 msgstr "Hoogste prijs"
 
 #. translators: 1: what the printshop charges for the product, 2: what it charges for shipping; both amounts of money. Under a cost in the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:334
+#: src/Admin/PricingPanel.php:380
 #, php-format
 msgid "%1$s + %2$s shipping"
 msgstr "%1$s + %2$s verzending"
 
 #. translators: 1: a cost as the printshop charges it, in its own currency, such as "€16.71 + €3.00 shipping"; 2: the day of the exchange rate, such as 2026-11-14; 3: the currency buffer in percent, such as 3. Under a converted cost in the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:344
+#: src/Admin/PricingPanel.php:390
 #, php-format
 msgid "%1$s (rate %2$s, +%3$s %%)"
 msgstr "%1$s (koers %2$s, +%3$s%%)"
 
 #. translators: %s: a cost converted to the store's currency, such as 192 kr. In the Prices table of the product edit page: the amount is approximate.
-#: src/Admin/PricingPanel.php:357
+#: src/Admin/PricingPanel.php:403
 #, php-format
 msgid "≈ %s"
 msgstr "≈ %s"
 
 #. translators: %s: a margin as a number, such as 50.2. In the Prices table of the product edit page.
-#: src/Admin/PricingPanel.php:364
+#: src/Admin/PricingPanel.php:410
 #, php-format
 msgid "%s %%"
 msgstr "%s%%"
 
-#: src/Admin/ProductPanel.php:436
+#: src/Admin/ProductPanel.php:439
 msgid ""
 "This variation cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Deze variatie kan pas worden gekocht als de Pixonaut-configuratie is "
 "hersteld:"
 
-#: src/Admin/ProductPanel.php:437
+#: src/Admin/ProductPanel.php:440
 msgid ""
 "This product cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Dit product kan pas worden gekocht als de Pixonaut-configuratie is hersteld:"
 
-#: src/Admin/ProductPanel.php:442
+#: src/Admin/ProductPanel.php:445
 msgid "Customers design this variation with a Pixonaut template."
 msgstr "Klanten ontwerpen deze variatie met een Pixonaut-sjabloon."
 
-#: src/Admin/ProductPanel.php:443
+#: src/Admin/ProductPanel.php:446
 msgid "Customers design this product with a Pixonaut template."
 msgstr "Klanten ontwerpen dit product met een Pixonaut-sjabloon."
 
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:484 src/Admin/ProductPanel.php:736
+#: src/Admin/ProductPanel.php:487 src/Admin/ProductPanel.php:758
 msgid "As the product says"
 msgstr "Zoals het product aangeeft"
 
 #. translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page.
-#: src/Admin/ProductPanel.php:486
+#: src/Admin/ProductPanel.php:489
 msgid "As the template says"
 msgstr "Zoals het sjabloon aangeeft"
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:753
+#: src/Admin/ProductPanel.php:775
 #, php-format
 msgid "Store setting: %s"
 msgstr "Winkelinstelling: %s"
 
 #. translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page.
-#: src/Admin/ProductPanel.php:827
+#: src/Admin/ProductPanel.php:849
 #, php-format
 msgid "Workspace default (%s): prints only on a blank"
 msgstr "Standaard van de werkruimte (%s): drukt alleen op een blanco product"
 
-#: src/Admin/ProductPanel.php:832
+#: src/Admin/ProductPanel.php:854
 msgid "The printshop chosen before"
 msgstr "De eerder gekozen drukkerij"
 
 #. translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page.
-#: src/Admin/ProductPanel.php:834
+#: src/Admin/ProductPanel.php:856
 #, php-format
 msgid "%s (prints only on a blank)"
 msgstr "%s (drukt alleen op een blanco product)"
@@ -7323,7 +7425,7 @@ msgstr "Bestelnummer"
 
 #. translators: Label of a row in the personal data export the customer receives; the value is the product name.
 #: src/Privacy/PersonalDataExporter.php:100
-#: templates/admin/product-prices.php:83
+#: templates/admin/product-prices.php:95
 msgid "Product"
 msgstr "Product"
 
@@ -7935,7 +8037,8 @@ msgstr ""
 "verkoop en de afschrijving."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether the plugin changes prices by itself when a printshop's cost changes.
-#: src/Settings/Settings.php:555
+#. translators: Label of a field in the Prices section of the product edit page: whether this product's prices change by themselves when a printshop's cost changes.
+#: src/Settings/Settings.php:555 templates/admin/product-prices.php:70
 msgid "Automatic price changes"
 msgstr "Automatische prijswijzigingen"
 
@@ -8193,8 +8296,8 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: the rule that prices products from what the printshop charges for them.
 #. translators: Column of the Prices table of the product edit page: how the price stands to the pricing rule, and what the rule suggests.
-#: src/Settings/SettingsPage.php:648 templates/admin/product-prices.php:87
-#: templates/admin/product-prices.php:103
+#: src/Settings/SettingsPage.php:648 templates/admin/product-prices.php:99
+#: templates/admin/product-prices.php:115
 msgid "Pricing rule"
 msgstr "Prijsregel"
 
@@ -9873,32 +9976,32 @@ msgstr ""
 "verschijnt hier zodra die is aangemaakt."
 
 #. translators: %d: how many prices. Summary of the Prices section of the product edit page.
-#: templates/admin/product-prices.php:35
+#: templates/admin/product-prices.php:39
 #, php-format
 msgid "%d price to review"
 msgid_plural "%d prices to review"
 msgstr[0] "%d prijs om te controleren"
 msgstr[1] "%d prijzen om te controleren"
 
-#: templates/admin/product-prices.php:37
+#: templates/admin/product-prices.php:41
 msgid "Following the pricing rule"
 msgstr "Volgt de prijsregel"
 
-#: templates/admin/product-prices.php:39
+#: templates/admin/product-prices.php:43
 msgid "Rule not applied yet"
 msgstr "Regel nog niet toegepast"
 
-#: templates/admin/product-prices.php:41
+#: templates/admin/product-prices.php:45
 msgid "No target margin set"
 msgstr "Geen doelmarge ingesteld"
 
 #. translators: Heading of a closed section in the Pixonaut tab of the product edit page: what the printshop charges for the product, and the prices that follow from it.
-#: templates/admin/product-prices.php:47
+#: templates/admin/product-prices.php:51
 msgctxt "product section"
 msgid "Prices"
 msgstr "Prijzen"
 
-#: templates/admin/product-prices.php:51
+#: templates/admin/product-prices.php:55
 msgid ""
 "What the printshop charges for the product and its shipping, and the margin "
 "each price leaves. Apply sets every price to the step nearest the target "
@@ -9908,45 +10011,45 @@ msgstr ""
 "elke prijs overlaat. Toepassen zet elke prijs op de stap die het dichtst bij "
 "de doelmarge ligt; vanaf dan volgen de prijzen de regel."
 
-#: templates/admin/product-prices.php:53
+#: templates/admin/product-prices.php:57
 msgid "Margins are worked out on the price excluding VAT."
 msgstr "Marges worden berekend over de prijs exclusief btw."
 
-#: templates/admin/product-prices.php:57
+#: templates/admin/product-prices.php:61
 msgid "Pricing rule for this product"
 msgstr "Prijsregel voor dit product"
 
-#: templates/admin/product-prices.php:62
+#: templates/admin/product-prices.php:66
 msgctxt "no value set for a part of the pricing rule"
 msgid "None"
 msgstr "Geen"
 
-#: templates/admin/product-prices.php:66
+#: templates/admin/product-prices.php:78
 msgid "An empty field follows the store’s pricing rule, shown in grey."
 msgstr ""
 "Een leeg veld volgt de prijsregel van de winkel, die in grijs wordt getoond."
 
 #. translators: Link from the Prices section of the product edit page to the pricing rule on the Pixonaut settings page.
-#: templates/admin/product-prices.php:67
+#: templates/admin/product-prices.php:79
 msgid "Store’s pricing rule"
 msgstr "Prijsregel van de winkel"
 
 #. translators: Button in the Prices section of the product edit page: sets every price of the product to the pricing rule's price.
-#: templates/admin/product-prices.php:71
+#: templates/admin/product-prices.php:83
 msgid "Apply to all prices"
 msgstr "Toepassen op alle prijzen"
 
 #. translators: Button in the Prices section of the product edit page: sets every price of the product to the pricing rule's price.
-#: templates/admin/product-prices.php:71
+#: templates/admin/product-prices.php:83
 msgid "Apply to the price"
 msgstr "Toepassen op de prijs"
 
 #. translators: Button in the Prices section of the product edit page: reads what the printshop charges again.
-#: templates/admin/product-prices.php:72
+#: templates/admin/product-prices.php:84
 msgid "Refresh costs"
 msgstr "Kosten vernieuwen"
 
-#: templates/admin/product-prices.php:77
+#: templates/admin/product-prices.php:89
 msgid ""
 "Enter a target margin here, or on the Pixonaut settings page, to price by "
 "the rule."
@@ -9954,54 +10057,64 @@ msgstr ""
 "Vul hier of in de Pixonaut-instellingen een doelmarge in om prijzen volgens "
 "de regel te bepalen."
 
-#: templates/admin/product-prices.php:83
+#: templates/admin/product-prices.php:95
 #: templates/admin/product-variant-pairing.php:44
 msgid "Variation"
 msgstr "Variatie"
 
 #. translators: Column of the Prices table of the product edit page: what the printshop charges for the product and its shipping.
-#: templates/admin/product-prices.php:84 templates/admin/product-prices.php:95
+#: templates/admin/product-prices.php:96 templates/admin/product-prices.php:107
 msgid "Cost"
 msgstr "Kosten"
 
 #. translators: Column of the Prices table of the product edit page: the regular price in the store.
-#: templates/admin/product-prices.php:85 templates/admin/product-prices.php:101
+#: templates/admin/product-prices.php:97 templates/admin/product-prices.php:113
 msgid "Price"
 msgstr "Prijs"
 
 #. translators: Column of the Prices table of the product edit page: the share of the price left after the cost.
-#: templates/admin/product-prices.php:86 templates/admin/product-prices.php:102
+#: templates/admin/product-prices.php:98 templates/admin/product-prices.php:114
 msgid "Margin"
 msgstr "Marge"
 
 #. translators: In the Prices table of the product edit page: the store manager changed this price after the pricing rule set it, so the rule leaves it alone.
-#: templates/admin/product-prices.php:105
+#: templates/admin/product-prices.php:117
 msgid "Edited by hand: kept"
 msgstr "Handmatig bewerkt: behouden"
 
 #. translators: Button on a price edited by hand, in the Prices table of the product edit page: the pricing rule sets the price again from now on.
-#: templates/admin/product-prices.php:107
+#: templates/admin/product-prices.php:119
 msgid "Follow the rule"
 msgstr "Regel volgen"
 
-#: templates/admin/product-prices.php:116
+#: templates/admin/product-prices.php:128
 msgid "Follows the rule"
 msgstr "Volgt de regel"
 
 #. translators: %s: a date. In the Prices table of the product edit page: the pricing rule set this price on that day.
-#: templates/admin/product-prices.php:118
+#: templates/admin/product-prices.php:130
 #, php-format
 msgid "Follows the rule, set %s"
 msgstr "Volgt de regel, ingesteld op %s"
 
+#. translators: In the Prices table of the product edit page: this variation's price changes by itself when its cost changes, whatever the product and the store say.
+#: templates/admin/product-prices.php:136
+msgid "Automatic price changes: always"
+msgstr "Automatische prijswijzigingen: altijd"
+
+#. translators: In the Prices table of the product edit page: this variation's price never changes by itself, whatever the product and the store say.
+#: templates/admin/product-prices.php:138
+msgid "Automatic price changes: never"
+msgstr "Automatische prijswijzigingen: nooit"
+
 #. translators: %s: a price. In the Prices table of the product edit page: the price the pricing rule would set.
-#: templates/admin/product-prices.php:127
+#: templates/admin/product-prices.php:144
 #, php-format
 msgid "Suggested: %s"
 msgstr "Voorgesteld: %s"
 
 #. translators: Button beside a suggested price, in the Prices table of the product edit page: sets that one price.
-#: templates/admin/product-prices.php:131
+#: templates/admin/product-prices.php:148
 msgctxt "one suggested price"
 msgid "Apply"
 msgstr "Toepassen"
@@ -10634,11 +10747,11 @@ msgid "Show retired variants"
 msgstr "Niet meer leverbare varianten tonen"
 
 #. translators: Checkbox label on a variable product's variation panel: this variation uses its own personalisation settings. Admin product page.
-#: templates/admin/product-variation.php:44
+#: templates/admin/product-variation.php:46
 msgid "Override for this variation"
 msgstr "Overschrijven voor deze variatie"
 
-#: templates/admin/product-variation.php:47
+#: templates/admin/product-variation.php:49
 msgid ""
 "Personalised as the product’s Pixonaut tab says. Tick to give this variation "
 "its own setup."
@@ -11295,6 +11408,13 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s weergave"
 msgstr[1] "%s weergaven"
+
+#~ msgid ""
+#~ "Whether the store changes prices that follow the rule by itself when a "
+#~ "cost changes."
+#~ msgstr ""
+#~ "Of de winkel prijzen die de regel volgen zelf wijzigt wanneer de kosten "
+#~ "veranderen."
 
 #~ msgid "Choose a template."
 #~ msgstr "Kies een sjabloon."
