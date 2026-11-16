@@ -162,7 +162,7 @@ final class FilterMatches {
 	 */
 	public static function left_out_of_listing( string $join, string $where, array $chosen, ?float $min, ?float $max ): array {
 		global $wpdb;
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- the listing's own clauses, which WP_Query prepared; read once a listing.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- the listing's own clauses, which WP_Query prepared; read once a listing.
 		$ids = $wpdb->get_col(
 			"SELECT DISTINCT {$wpdb->posts}.ID FROM {$wpdb->posts} {$join} WHERE 1=1 {$where} AND {$wpdb->posts}.ID IN ( SELECT type_rel.object_id FROM {$wpdb->term_relationships} type_rel INNER JOIN {$wpdb->term_taxonomy} type_tax ON type_tax.term_taxonomy_id = type_rel.term_taxonomy_id INNER JOIN {$wpdb->terms} type_term ON type_term.term_id = type_tax.term_id WHERE type_tax.taxonomy = 'product_type' AND type_term.slug = 'variable' )"
 		);
