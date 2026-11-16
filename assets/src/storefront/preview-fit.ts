@@ -126,6 +126,7 @@ const STICKY = 'sticky';
  * nothing of it is painted.
  */
 function restingTop(preview: HTMLElement, win: Window): number {
+	// Read first, then write: every computed style before any is changed.
 	const kept: Array<{ element: HTMLElement; position: string }> = [];
 	for (
 		let element: HTMLElement | null = preview;
@@ -134,14 +135,18 @@ function restingTop(preview: HTMLElement, win: Window): number {
 	) {
 		if (win.getComputedStyle(element).position === STICKY) {
 			kept.push({ element, position: element.style.position });
-			element.style.position = 'static';
 		}
 	}
-	const top = preview.getBoundingClientRect().top + win.scrollY;
-	for (const { element, position } of kept) {
-		element.style.position = position;
+	try {
+		for (const { element } of kept) {
+			element.style.position = 'static';
+		}
+		return preview.getBoundingClientRect().top + win.scrollY;
+	} finally {
+		for (const { element, position } of kept) {
+			element.style.position = position;
+		}
 	}
-	return top;
 }
 
 /** Sets the frame's drawn shape from its side's box, once drawn. */
