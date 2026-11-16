@@ -356,7 +356,10 @@ final class ProductVariants {
 	 * Notes the names of a variable product's values of its attributes, as
 	 * `term_name()` finds them: its variations take their values from
 	 * those, which WordPress already holds with the product, so each name
-	 * needs no read of its own.
+	 * needs no read of its own. They are taken from WordPress's cache of
+	 * the product's terms as `get_term_by()` would give them, not through
+	 * the `get_the_terms` filter, which may name them for display; when
+	 * the cache does not hold them, each is read as before.
 	 *
 	 * @param WC_Product $product    A variable product.
 	 * @param mixed[]    $taxonomies The attributes its variations name.
@@ -368,7 +371,7 @@ final class ProductVariants {
 				continue;
 			}
 			self::$term_names[ $changed . ':' . $taxonomy . ':' . self::NOTED . $product->get_id() ] = '';
-			$terms = get_the_terms( $product->get_id(), $taxonomy );
+			$terms = get_object_term_cache( $product->get_id(), $taxonomy );
 			foreach ( is_array( $terms ) ? $terms : array() as $term ) {
 				self::$term_names[ $changed . ':' . $taxonomy . ':' . $term->slug ] ??= $term->name;
 			}

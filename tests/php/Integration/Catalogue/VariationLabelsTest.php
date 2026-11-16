@@ -48,6 +48,28 @@ final class VariationLabelsTest extends WP_UnitTestCase {
 		$this->assertSame( array( 'Colour' => 'Red' ), ProductVariants::attributes( $variations['red'] ) );
 	}
 
+	public function test_a_name_given_for_display_leaves_the_value_its_terms_name(): void {
+		$variations = self::product( array( 'Red', 'Navy Blue' ) );
+		$display    = static function ( mixed $terms ): mixed {
+			if ( ! is_array( $terms ) ) {
+				return $terms;
+			}
+			return array_map(
+				static function ( WP_Term $term ): WP_Term {
+					$shown       = clone $term;
+					$shown->name = 'Shown ' . $term->name;
+					return $shown;
+				},
+				$terms
+			);
+		};
+		add_filter( 'get_the_terms', $display );
+		// The product's terms as a page has them by now.
+		get_the_terms( $variations['red']->get_parent_id(), self::TAXONOMY );
+
+		$this->assertSame( array( 'Colour' => 'Navy Blue' ), ProductVariants::attributes( $variations['navy-blue'] ) );
+	}
+
 	public function test_a_renamed_value_reads_by_its_new_name(): void {
 		$variations = self::product( array( 'Red', 'Navy Blue' ) );
 		ProductVariants::attributes( $variations['navy-blue'] );
