@@ -1204,6 +1204,19 @@ tax and shown with it.
   cached per query until a product changes, or for an hour. Another
   callback's answer stands, and price, stock, rating and taxonomy data stay
   WooCommerce's.
+- **Kept between requests**: what the listing and the cards' links read of
+  each product's variations (its offers, its cards and which variations
+  each sells, its variations' values, and whether WooCommerce offers each)
+  is kept by `Catalogue\FilterIndex`, one transient per product, for a day.
+  A kept read is used only while its stamp matches: the product's and its
+  variations' last change and count (WooCommerce dates every save, prices
+  and stock included), its stored configuration, the plugin's version, the
+  attributes listed by default, the hide-out-of-stock setting, and a
+  generation raised when an attribute, a value or their order changes. A
+  product changed within the last two seconds is not kept. Whether a
+  variation is on a live template is read on each request; kept offers are
+  not used for a product a stored configuration marks not live, nor while
+  something filters a variation's price, stock or visibility.
 
 #### Short names in addresses
 
