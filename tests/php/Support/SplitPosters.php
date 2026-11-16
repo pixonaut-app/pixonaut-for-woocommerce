@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Support;
 
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
+use Pixonaut\WooCommerce\Storefront\QueryNames;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variable;
@@ -54,6 +55,7 @@ trait SplitPosters {
 		delete_transient( 'wc_attribute_taxonomies' );
 		delete_option( SplitListing::OPTION );
 		delete_option( SplitListing::FILTERED_OPTION );
+		delete_option( QueryNames::OPTION );
 	}
 
 	private function term( string $slug ): int {

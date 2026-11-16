@@ -23,6 +23,9 @@ first shipped order.
   to a blank, its sides, views and variant, a template and print sizes.
 - [Listing each value as its own product](./split-listings/): one card
   per value of an attribute, such as with and without a photo.
+- [Short addresses](./short-addresses/): product pages, cards and the
+  shop's filters name each attribute by a short name, as in
+  `?size=50x70-cm`.
 - [Options that depend on each other](./dependent-options/): a hanger
   colour only with a hanger, hidden on the product page and left off the
   order while it does not apply.

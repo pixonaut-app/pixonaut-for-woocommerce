@@ -402,7 +402,7 @@ final class SplitCardListings {
 			return $link;
 		}
 		$more = array_diff_key( $opening, SplitCards::link_values( $product, $key ) );
-		return array() === $more ? $link : add_query_arg( array_map( 'rawurlencode', $more ), $link );
+		return array() === $more ? $link : QueryNames::shorten( add_query_arg( array_map( 'rawurlencode', $more ), $link ) );
 	}
 
 	/**

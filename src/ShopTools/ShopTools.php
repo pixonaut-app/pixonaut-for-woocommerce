@@ -16,6 +16,8 @@ use Pixonaut\WooCommerce\Abilities\GetProductSplitListing;
 use Pixonaut\WooCommerce\Abilities\LinkProduct;
 use Pixonaut\WooCommerce\Abilities\ProductLinks;
 use Pixonaut\WooCommerce\Abilities\SetAttributeSplitListing;
+use Pixonaut\WooCommerce\Abilities\GetAttributeQueryNames;
+use Pixonaut\WooCommerce\Abilities\SetAttributeQueryName;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductShowcase;
 use Pixonaut\WooCommerce\Abilities\SetProductSplitListing;
@@ -95,7 +97,7 @@ final class ShopTools {
 			}
 		}
 		$links = ( $this->links )();
-		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )(), ( $this->setup )(), new GetProductSplitListing(), new SetProductSplitListing(), new SetAttributeSplitListing(), ...( $this->pricing )(), ...( $this->settings )(), ...( $this->form )() ) as $tool ) {
+		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )(), ( $this->setup )(), new GetProductSplitListing(), new SetProductSplitListing(), new SetAttributeSplitListing(), new GetAttributeQueryNames(), new SetAttributeQueryName(), ...( $this->pricing )(), ...( $this->settings )(), ...( $this->form )() ) as $tool ) {
 			$tools[ $tool->name() ] = $tool;
 		}
 		return $tools;

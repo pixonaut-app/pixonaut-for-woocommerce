@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { followAddress } from './address';
 import { NOT_APPLICABLE_ATTRIBUTE } from './applicable-form';
+import { NAMES_GLOBAL } from './query-names';
 import { VARIATION_SETTLE_MS } from './variations';
 
 function form(): HTMLFormElement {
@@ -102,5 +103,36 @@ describe('followAddress', () => {
 		choose('attribute_pa_framing', 'hanger');
 
 		expect(location.search).toBe('?attribute_pa_framing=hanger');
+	});
+
+	it('names a global attribute by its short name, in place of the name the page was opened with', () => {
+		history.replaceState(
+			null,
+			'',
+			'/product/poster/?attribute_pa_framing=frame',
+		);
+		followAddress(form(), { framing: 'ram' });
+		vi.advanceTimersByTime(VARIATION_SETTLE_MS);
+
+		choose('attribute_pa_framing', 'hanger');
+		choose('attribute_size', '70x100');
+
+		expect(location.search).toBe('?ram=hanger&attribute_size=70x100');
+	});
+
+	it('reads the names the page printed', () => {
+		(globalThis as Record<string, unknown>)[NAMES_GLOBAL] = {
+			framing: 'framing',
+		};
+		try {
+			followAddress(form());
+			vi.advanceTimersByTime(VARIATION_SETTLE_MS);
+
+			choose('attribute_pa_framing', 'hanger');
+
+			expect(location.search).toBe('?utm=mail&framing=hanger');
+		} finally {
+			delete (globalThis as Record<string, unknown>)[NAMES_GLOBAL];
+		}
 	});
 });

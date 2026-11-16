@@ -414,6 +414,12 @@ final class Schema {
 	const SWATCH_NAMES_OPTION = 'pixonaut_wc_swatch_names';
 
 	/**
+	 * Option holding, by global attribute id, the name an attribute goes by
+	 * in the shop's addresses when the store gave it one of its own.
+	 */
+	const ATTRIBUTE_QUERY_NAMES_OPTION = 'pixonaut_wc_attribute_query_names';
+
+	/**
 	 * Option holding the ids of designer links Pixonaut could not be asked
 	 * to withdraw yet, which a job asks again.
 	 */

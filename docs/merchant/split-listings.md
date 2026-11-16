@@ -121,7 +121,8 @@ as `filtered`.
 ## Each card's own page
 
 A card's link is its page: the product's address with the card's values
-chosen, such as `…/product/safari/?attribute_pa_picture=with-photo`. The
+chosen, such as `…/product/safari/?picture=with-photo`, each attribute by
+its [short name](../short-addresses/). The
 page opens with those values chosen in the product's form and in the
 designer, and it is a page of its own to search engines:
 
@@ -132,7 +133,7 @@ designer, and it is a page of its own to search engines:
 - **Picture** (Open Graph): the card's image, as its card shows it.
 - **Canonical address**: the card's own. An address that chooses more on
   top of the card's values, such as a size
-  (`…&attribute_pa_size=70x100`), opens with the size chosen and names the
+  (`…&size=70x100`), opens with the size chosen and names the
   card's page as its canonical address, so the sizes of a card are one page
   to a search engine, not one each.
 

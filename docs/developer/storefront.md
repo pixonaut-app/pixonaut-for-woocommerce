@@ -1205,6 +1205,39 @@ tax and shown with it.
   callback's answer stands, and price, stock, rating and taxonomy data stay
   WooCommerce's.
 
+#### Short names in addresses
+
+`Storefront\QueryNames` gives each global attribute a short name in the
+shop's addresses: the one the store set on its edit screen
+(`Admin\QueryNameField`, option `pixonaut_wc_attribute_query_names` by
+attribute id), else its slug without `pa_` while that is free. A name
+WordPress or WooCommerce reads from an address (public query variables,
+WooCommerce's endpoints, taxonomies' and post types' query variables, its
+cart, sorting and filter arguments, anything starting `attribute_`,
+`filter_`, `query_type_`, `pa_`, `utm_`, `wc`, `wp` or `pixonaut`) or another
+attribute's is refused.
+
+`Storefront\ShortAddresses` reads a short name at `parse_request` as
+WooCommerce's: on a product's page as the form field
+(`attribute_pa_<slug>`, in `$_GET` and `$_REQUEST`), anywhere else as the
+filter (`filter_<slug>`, with `query_type_<slug>=or` unless the address
+names one, also as a query variable). A name WooCommerce's own way already
+gives keeps its value. The Product Filters block and the Product Collection's
+no-results block read `REQUEST_URI` themselves, so while they render they
+are given it with WooCommerce's names. Outgoing addresses are shortened by
+`QueryNames::shorten()`: card links, canonical addresses and sitemap
+entries (`CardPages::url()`), and the classic filter widgets' links
+(`woocommerce_layered_nav_link`).
+
+In the browser, `assets/build/short-addresses.js` (handle
+`pixonaut-short-addresses`, on product pages, the shop's archives and any
+page with a Product Filters block) reads the names from
+`window.pixonautQueryNames` (by slug) and shortens the address the page
+was opened at and any address `history.pushState` or `replaceState` is
+given, which is how the Product Filters block's router goes to a filtered
+address. The designer's address following (`address.ts`) writes the short
+names itself.
+
 #### Dependent attributes for a theme
 
 `Storefront\AttributeDependencies` serves, on the
