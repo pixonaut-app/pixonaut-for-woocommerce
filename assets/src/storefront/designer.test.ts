@@ -642,6 +642,41 @@ describe('ProductDesigner', () => {
 		expect(mark.classList).toContain('pixonaut-preview__mark');
 		expect(mark.previousElementSibling).toBe(frame.firstElementChild);
 		expect(preview?.contains(mark)).toBe(false);
+		// The views target it makes too goes under the mark.
+		const views = sdk.mount.mock.calls[0]?.[0].viewsTarget as HTMLElement;
+		expect(views.previousElementSibling).toBe(mark);
+	});
+
+	it('makes the views target under the preview and its mark where the page printed none', async () => {
+		const sdk = fakeSdk();
+		productPage(MOUNTS);
+		const preview = document.getElementById('pixonaut-preview-front');
+		const frame = document.createElement('div');
+		frame.className = 'pixonaut-preview__frame';
+		frame.dataset.pixonautSide = 'front';
+		frame.innerHTML =
+			'<div class="pixonaut-preview__stage"></div><div id="pixonaut-mark-front" class="pixonaut-preview__mark" data-pixonaut-side="front"></div>';
+		preview?.replaceWith(frame);
+		frame.firstElementChild?.append(preview as HTMLElement);
+		const container = document.querySelector('.pixonaut-form') as HTMLElement;
+		const designer = new ProductDesigner(container, {
+			loadSdk: () => Promise.resolve(sdk.sdk),
+			label: (key) => `label:${key}`,
+			report: vi.fn(),
+			...pageDeps(),
+		});
+		designer.start();
+		await designer.mount();
+
+		const views = sdk.mount.mock.calls[0]?.[0].viewsTarget as HTMLElement;
+		expect(views.id).toBe('pixonaut-views-front');
+		expect(views.classList).toContain('pixonaut-views');
+		expect(views.dataset.pixonautSide).toBe('front');
+		expect(views.previousElementSibling).toBe(
+			document.getElementById('pixonaut-mark-front'),
+		);
+		expect(views.parentElement).toBe(frame);
+		expect(document.querySelectorAll('#pixonaut-views-front')).toHaveLength(1);
 	});
 
 	it('mounts the views and the mark under the preview the server printed, and takes the spinner off once the side is drawn', async () => {

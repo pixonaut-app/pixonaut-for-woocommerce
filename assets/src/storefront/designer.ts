@@ -131,6 +131,10 @@ const VIEWS_ID_PREFIX = 'pixonaut-views-';
 
 const MARK_ID_PREFIX = 'pixonaut-mark-';
 
+/** The class of a side's views target, which the stylesheet lays the strip
+ *  of views out in. */
+const VIEWS_TARGET_CLASS = 'pixonaut-views';
+
 /** The class of a side's mark target, which the stylesheet keeps the
  *  mark's room in. */
 const MARK_TARGET_CLASS = 'pixonaut-preview__mark';
@@ -2094,13 +2098,32 @@ export class ProductDesigner {
 		return target;
 	}
 
-	/** The side's views target, where the page printed one under its
-	 *  preview; without it the SDK draws the views above the form. */
+	/** The side's views target, under its preview as a gallery's thumbnails
+	 *  are, so the views stay with the picture they change. The page prints
+	 *  one for a side whose views it could read; a side it printed none for
+	 *  (its reads failed, or a theme's copy of the preview template is from
+	 *  before the target) gets one made under the preview's mark. Without a
+	 *  preview frame the SDK draws the views above the form. */
 	private viewsTarget(side: string): { viewsTarget?: HTMLElement } {
 		const preview = this.preview();
-		const target =
+		const printed =
 			preview === null ? null : byId(preview, VIEWS_ID_PREFIX + side);
-		return target === null ? {} : { viewsTarget: target };
+		if (printed !== null) {
+			return { viewsTarget: printed };
+		}
+		const below = this.existingPreview(side);
+		const frame = below?.closest<HTMLElement>(FRAME_SELECTOR);
+		if (below === null || frame === null || frame === undefined) {
+			return {};
+		}
+		const target = this.doc().createElement('div');
+		target.id = VIEWS_ID_PREFIX + side;
+		target.className = VIEWS_TARGET_CLASS;
+		target.dataset.pixonautSide = side;
+		// Under the mark, which is under the stage the spinner sits on.
+		const stage = below.parentElement === frame ? below : below.parentElement;
+		(this.markTarget(side).markTarget ?? stage)?.after(target);
+		return { viewsTarget: target };
 	}
 
 	/** Where the side's "Powered by Pixonaut" goes: under its preview,
