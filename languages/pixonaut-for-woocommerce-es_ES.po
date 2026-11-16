@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-16T13:52:04+00:00\n"
+"POT-Creation-Date: 2026-11-16T14:20:16+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -287,7 +287,11 @@ msgid ""
 "The name the shop's addresses give the attribute, as in `?size=50x70-cm`; "
 "null when it has none, as for a slug WordPress or WooCommerce reads itself, "
 "and keeps WooCommerce's `attribute_pa_<slug>` and `filter_<slug>`."
-msgstr "El nombre que las direcciones web de la tienda dan al atributo, como en `?size=50x70-cm`; null cuando no tiene, como en el caso de un slug que WordPress o WooCommerce leen por sí mismos, y entonces conserva los `attribute_pa_<slug>` y `filter_<slug>` de WooCommerce."
+msgstr ""
+"El nombre que las direcciones web de la tienda dan al atributo, como en `?"
+"size=50x70-cm`; null cuando no tiene, como en el caso de un slug que "
+"WordPress o WooCommerce leen por sí mismos, y entonces conserva los "
+"`attribute_pa_<slug>` y `filter_<slug>` de WooCommerce."
 
 #: src/Abilities/AttributeQueryNames.php:67
 msgid "The name the store gave it; empty when it goes by its slug."
@@ -297,7 +301,9 @@ msgstr "El nombre que le ha dado la tienda; vacío cuando usa su slug."
 msgid ""
 "Its slug without `pa_`, the name it goes by without one of its own while "
 "that is free."
-msgstr "Su slug sin `pa_`, el nombre que usa cuando no tiene uno propio, mientras esté libre."
+msgstr ""
+"Su slug sin `pa_`, el nombre que usa cuando no tiene uno propio, mientras "
+"esté libre."
 
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
@@ -563,7 +569,8 @@ msgstr ""
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetAttributeQueryNames.php:26
 msgid "Read the names attributes go by in the shop's addresses"
-msgstr "Consultar los nombres de los atributos en las direcciones web de la tienda"
+msgstr ""
+"Consultar los nombres de los atributos en las direcciones web de la tienda"
 
 #: src/Abilities/GetAttributeQueryNames.php:27
 msgid ""
@@ -571,14 +578,19 @@ msgid ""
 "shop's filters give it: `?size=50x70-cm&frame=oak` rather than WooCommerce's "
 "`?attribute_pa_size=50x70-cm`. Each goes by the name the store gave it "
 "(`own`), else by its slug. Set one with `set-attribute-query-name`."
-msgstr "Consulta, para cada atributo global, el nombre que le dan la dirección de la página de un producto y los filtros de la tienda: `?size=50x70-cm&frame=oak` en lugar del `?attribute_pa_size=50x70-cm` de WooCommerce. Cada uno usa el nombre que le ha dado la tienda (`own`) o, si no, su slug. Establece uno con `set-attribute-query-name`."
+msgstr ""
+"Consulta, para cada atributo global, el nombre que le dan la dirección de la "
+"página de un producto y los filtros de la tienda: `?size=50x70-cm&frame=oak` "
+"en lugar del `?attribute_pa_size=50x70-cm` de WooCommerce. Cada uno usa el "
+"nombre que le ha dado la tienda (`own`) o, si no, su slug. Establece uno con "
+"`set-attribute-query-name`."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductForm.php:52
-#, fuzzy
-#| msgid "Read what a product's images are drawn on"
 msgid "Read how a product's designer form is arranged"
-msgstr "Consultar sobre qué se generan las imágenes de un producto"
+msgstr ""
+"Consultar cómo está organizado el formulario del personalizador de un "
+"producto"
 
 #: src/Abilities/GetProductForm.php:53
 msgid ""
@@ -593,19 +605,27 @@ msgid ""
 "fields (null when Pixonaut could not be asked). Set it with `set-product-"
 "form`."
 msgstr ""
+"Consulta cómo está organizado el formulario del personalizador de un "
+"producto simple o variable, tal como lo muestra su pestaña Pixonaut: los "
+"`form_groups` de cada cara (los grupos en orden, cada uno con sus elementos: "
+"un campo de la plantilla como `field` `\"<layerId>:<prop>\"` con las "
+"palabras que sustituyen a las de la plantilla, o una de las opciones del "
+"producto como `attribute` por su slug; null cuando la cara muestra el "
+"formulario propio de la plantilla), `option_groups`, `group_numbers`, "
+"`form_layout` y `layout` (null para los de la tienda). Con ellos, lo que "
+"puede nombrar una organización: los `attributes` del producto y, de cada "
+"cara, sus `template_groups`, los grupos y campos de su plantilla (null "
+"cuando no se ha podido consultar a Pixonaut). Se cambia con `set-product-"
+"form`."
 
 #: src/Abilities/GetProductForm.php:59 src/Abilities/SetProductForm.php:71
-#, fuzzy
-#| msgid "Simple or variable products."
 msgid "A simple or variable product."
-msgstr "Productos simples o variables."
+msgstr "Un producto simple o variable."
 
 #: src/Abilities/GetProductForm.php:188
-#, fuzzy
-#| msgid "The blank it is printed on; null for a template-only product."
 msgid "The side's groups, in order; null for the template's own form."
 msgstr ""
-"El producto base en el que se imprime; null para un producto solo con "
+"Los grupos de la cara, en orden; null para el formulario propio de la "
 "plantilla."
 
 #: src/Abilities/GetProductForm.php:199
@@ -613,72 +633,66 @@ msgid ""
 "One of the template's groups, by id; or a group of the product's own, whose "
 "id starts with `wc-` and which takes a `title`."
 msgstr ""
+"Uno de los grupos de la plantilla, por identificador; o un grupo propio del "
+"producto, cuyo identificador empieza por `wc-` y que lleva un `title`."
 
 #: src/Abilities/GetProductForm.php:203
 msgid "The group's title, in place of the template's."
-msgstr ""
+msgstr "El título del grupo, en lugar del de la plantilla."
 
 #: src/Abilities/GetProductForm.php:212
 msgid "One of the template's fields, as `\"<layerId>:<prop>\"`."
-msgstr ""
+msgstr "Uno de los campos de la plantilla, como `\"<layerId>:<prop>\"`."
 
 #: src/Abilities/GetProductForm.php:216
-#, fuzzy
-#| msgid "One of the product's global attributes, by id."
 msgid ""
 "One of the product's options, by its attribute's slug, in place of a field."
-msgstr "Uno de los atributos globales del producto, por identificador."
+msgstr ""
+"Una de las opciones del producto, por el slug de su atributo, en lugar de un "
+"campo."
 
 #: src/Abilities/GetProductForm.php:223
 msgid "Words in place of the field's offered values, by value."
-msgstr ""
+msgstr "Palabras en lugar de los valores que ofrece el campo, por valor."
 
 #: src/Abilities/GetProductForm.php:251
-#, fuzzy
-#| msgid "The product page layout; empty for the store's."
 msgid "The product page layout; null for the store's."
-msgstr "La presentación de la página de producto; vacío para la de la tienda."
+msgstr "La presentación de la página de producto; null para la de la tienda."
 
 #: src/Abilities/GetProductForm.php:252
-#, fuzzy
-#| msgid "The form layout; empty for the store's."
 msgid "The form layout; null for the store's."
-msgstr "La disposición del formulario; vacío para la de la tienda."
+msgstr "La disposición del formulario; null para la de la tienda."
 
 #: src/Abilities/GetProductForm.php:253
-#, fuzzy
-#| msgid ""
-#| "Where it overrides the store on its options in the form: `on_top`, "
-#| "`first` or `last`; null for the store's."
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "`first` or `last`; null for the store's."
 msgstr ""
-"Dónde coloca sus opciones en el formulario cuando sustituye la configuración "
-"de la tienda: `on_top`, `first` o `last`; null para la de la tienda."
+"Dónde se colocan las opciones del producto en una cara no organizada a mano: "
+"`on_top`, `first` o `last`; null para la de la tienda."
 
 #: src/Abilities/GetProductForm.php:254
-#, fuzzy
-#| msgid ""
-#| "Whether it overrides the store on numbering the form's groups: `on` or "
-#| "`off`; null for the store's."
 msgid ""
 "Whether the form numbers its groups: `on` or `off`; null for the store's."
 msgstr ""
-"Si numera los grupos del formulario cuando sustituye la configuración de la "
-"tienda: `on` u `off`; null para la de la tienda."
+"Si el formulario numera sus grupos: `on` u `off`; null para la de la tienda."
 
 #: src/Abilities/GetProductForm.php:257
 msgid ""
 "The options customers choose a variation by, as an arrangement names them: "
 "each attribute's slug and name. Empty for a simple product."
 msgstr ""
+"Las opciones con las que los clientes eligen una variación, tal como las "
+"nombra una organización: el slug y el nombre de cada atributo. Vacío para un "
+"producto simple."
 
 #: src/Abilities/GetProductForm.php:283
 msgid ""
 "The template's groups in its order, each with its fields; null without a "
 "template or when Pixonaut could not be asked."
 msgstr ""
+"Los grupos de la plantilla en su orden, cada uno con sus campos; null sin "
+"plantilla o cuando no se ha podido consultar a Pixonaut."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductPictureViews.php:42
@@ -1999,16 +2013,6 @@ msgid "Read the pricing settings"
 msgstr "Leer los ajustes de precios"
 
 #: src/Abilities/ReadPricingSettings.php:57
-#, fuzzy
-#| msgid ""
-#| "Gives the store's pricing rule, by which prices follow the printshop's "
-#| "costs: the target margin, the tolerance around it, the price step and "
-#| "what prices end in, the lowest and highest price, the currency buffer "
-#| "added to a cost converted from another currency, and whether prices "
-#| "change by themselves when a cost changes. Amounts and percentages are "
-#| "decimal strings, empty for none. Without a target margin the store has no "
-#| "rule. Also the store's currency, and whether prices are entered including "
-#| "tax."
 msgid ""
 "Gives the store's pricing rule, by which prices follow the printshop's "
 "costs: the target margin, the tolerance around it, the price step and what "
@@ -2029,7 +2033,10 @@ msgstr ""
 "los precios cambian por sí solos cuando cambia un coste. Los importes y los "
 "porcentajes son cadenas decimales, vacías si no hay ninguno. Sin margen "
 "objetivo, la tienda no tiene regla. También la moneda de la tienda, y si los "
-"precios se introducen con impuestos incluidos."
+"precios se introducen con impuestos incluidos. `delivery_time_show` indica "
+"si una página de producto dice cuánto tarda la variación elegida según la "
+"imprenta, lo que Pixonaut lee con su coste, y `delivery_time_handling_days`, "
+"los días propios que la tienda suma a ese plazo."
 
 #: src/Abilities/ReadPricingSettings.php:133
 msgid "The currency prices are in, as its code."
@@ -2167,7 +2174,8 @@ msgstr ""
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
 msgid "Set the name an attribute goes by in the shop's addresses"
-msgstr "Establecer el nombre de un atributo en las direcciones web de la tienda"
+msgstr ""
+"Establecer el nombre de un atributo en las direcciones web de la tienda"
 
 #: src/Abilities/SetAttributeQueryName.php:31
 msgid ""
@@ -2178,7 +2186,15 @@ msgid ""
 "WordPress or WooCommerce reads from an address, or that another attribute "
 "goes by, is refused. Links shared with the old name no longer choose the "
 "value. The answer is the attribute's name now."
-msgstr "Establece el nombre que la dirección de la página de un producto y los filtros de la tienda dan a un atributo global, como hace el campo «Nombre en las direcciones web» de su pantalla de edición: `size` da `?size=50x70-cm`. Letras minúsculas y números, con las palabras unidas por un guion o un guion bajo. Un nombre vacío le devuelve su slug. Se rechaza un nombre que WordPress o WooCommerce lean de una dirección o que ya use otro atributo. Los enlaces compartidos con el nombre anterior dejan de elegir el valor. La respuesta es el nombre actual del atributo."
+msgstr ""
+"Establece el nombre que la dirección de la página de un producto y los "
+"filtros de la tienda dan a un atributo global, como hace el campo «Nombre en "
+"las direcciones web» de su pantalla de edición: `size` da `?size=50x70-cm`. "
+"Letras minúsculas y números, con las palabras unidas por un guion o un guion "
+"bajo. Un nombre vacío le devuelve su slug. Se rechaza un nombre que "
+"WordPress o WooCommerce lean de una dirección o que ya use otro atributo. "
+"Los enlaces compartidos con el nombre anterior dejan de elegir el valor. La "
+"respuesta es el nombre actual del atributo."
 
 #: src/Abilities/SetAttributeQueryName.php:38
 #: src/Abilities/SetAttributeSplitListing.php:44
@@ -2222,7 +2238,7 @@ msgstr "El modo no es on, filtered ni off."
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetProductForm.php:64
 msgid "Arrange a product's designer form"
-msgstr ""
+msgstr "Organizar el formulario del personalizador de un producto"
 
 #: src/Abilities/SetProductForm.php:65
 msgid ""
@@ -2236,12 +2252,21 @@ msgid ""
 "template does not offer, refuses the whole call and the answer says each. "
 "The answer is the product's form now, as `get-product-form` gives it."
 msgstr ""
+"Organiza el formulario del personalizador de un producto simple o variable, "
+"como lo hace su pestaña Pixonaut: los `form_groups` de cada cara nombrada "
+"por su `key` (null para el formulario propio de la plantilla), "
+"`option_groups`, `group_numbers`, `form_layout` y `layout`. Solo cambia lo "
+"que se indica: una cara que no se indica conserva su organización, y se "
+"conservan las caras, sus plantillas, ubicaciones y tamaños de impresión, y "
+"las configuraciones propias de las variaciones. Lo que puede nombrar una "
+"organización se consulta con `get-product-form`: una opción que el producto "
+"no tiene, o un campo o un grupo que su plantilla no ofrece, rechaza toda la "
+"llamada, y la respuesta indica cada uno. La respuesta es el formulario "
+"actual del producto, tal como lo da `get-product-form`."
 
 #: src/Abilities/SetProductForm.php:82
-#, fuzzy
-#| msgid "One of the product's global attributes, by id."
 msgid "One of the product's sides, by its key."
-msgstr "Uno de los atributos globales del producto, por identificador."
+msgstr "Una de las caras del producto, por su clave."
 
 #: src/Abilities/SetProductForm.php:90 src/Abilities/SetProductSetup.php:81
 msgid "The product page layout; empty for the store's."
@@ -2252,97 +2277,74 @@ msgid "The form layout; empty for the store's."
 msgstr "La disposición del formulario; vacío para la de la tienda."
 
 #: src/Abilities/SetProductForm.php:92
-#, fuzzy
-#| msgid ""
-#| "Where the product's options stand in the form, on a side whose groups "
-#| "were not arranged by hand: `on_top`, unnumbered, or each in a group of "
-#| "its own, `first` or `last`; empty for the store's. A product's only: a "
-#| "variation follows its product."
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "unnumbered, or each in a group of its own, `first` or `last`; empty for the "
 "store's."
 msgstr ""
-"Dónde se colocan las opciones del producto en el formulario, en una cara "
-"cuyos grupos no se han organizado a mano: `on_top`, arriba y sin número, o "
-"cada una en un grupo propio, `first` o `last`; vacío para la de la tienda. "
-"Solo para productos: una variación sigue a su producto."
+"Dónde se colocan las opciones del producto en una cara no organizada a mano: "
+"`on_top`, arriba y sin número, o cada una en un grupo propio, `first` o "
+"`last`; vacío para la de la tienda."
 
 #: src/Abilities/SetProductForm.php:93
-#, fuzzy
-#| msgid ""
-#| "Whether the form numbers its groups; empty for the store's. A product's "
-#| "only: a variation follows its product."
 msgid "Whether the form numbers its groups; empty for the store's."
-msgstr ""
-"Si el formulario numera sus grupos; vacío para la de la tienda. Solo para "
-"productos: una variación sigue a su producto."
+msgstr "Si el formulario numera sus grupos; vacío para la de la tienda."
 
 #: src/Abilities/SetProductForm.php:120
 msgid ""
 "Give `sides`, `option_groups`, `group_numbers`, `form_layout` or `layout`."
 msgstr ""
+"Indica `sides`, `option_groups`, `group_numbers`, `form_layout` o `layout`."
 
 #: src/Abilities/SetProductForm.php:127
-#, fuzzy
-#| msgid ""
-#| "The product is not personalised, so it has no Pixonaut images. Set it up "
-#| "first."
 msgid ""
 "The product has no Pixonaut setup, so it has no form to arrange. Link it to "
 "a template first."
 msgstr ""
-"El producto no está personalizado, así que no tiene imágenes de Pixonaut. "
-"Configúralo primero."
+"El producto no tiene configuración de Pixonaut, así que no tiene ningún "
+"formulario que organizar. Vincúlalo primero a una plantilla."
 
 #: src/Abilities/SetProductForm.php:137
-#, fuzzy
-#| msgid ""
-#| "The product's Pixonaut setup changed meanwhile. Nothing was changed; try "
-#| "again."
 msgid ""
 "The product's Pixonaut setup was changed while this was saved, so nothing "
 "was changed. Read it again with `get-product-form`, then set it."
 msgstr ""
-"La configuración de Pixonaut del producto cambió mientras tanto. No se ha "
-"cambiado nada; inténtalo de nuevo."
+"La configuración de Pixonaut del producto ha cambiado mientras se guardaba "
+"esto, así que no se ha cambiado nada. Vuelve a consultarla con `get-product-"
+"form` y después cámbiala."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:165
 #, php-format
 msgid "the product has no side `%s`"
-msgstr ""
+msgstr "el producto no tiene ninguna cara `%s`"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:170
-#, fuzzy, php-format
-#| msgid "Card %s is listed twice."
+#, php-format
 msgid "side `%s` is given twice"
-msgstr "La tarjeta %s aparece dos veces."
+msgstr "la cara `%s` se indica dos veces"
 
 #. translators: %s: every problem found, joined by semicolons. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:187
 #, php-format
 msgid "Nothing was saved: %s."
-msgstr ""
+msgstr "No se ha guardado nada: %s."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:216
 #, php-format
 msgid "side `%s` has no template to arrange"
-msgstr ""
+msgstr "la cara `%s` no tiene ninguna plantilla que organizar"
 
 #: src/Abilities/SetProductForm.php:217
-#, fuzzy
-#| msgid ""
-#| "Pixonaut could not be asked for the template's showcase sets. Try again "
-#| "later."
 msgid ""
 "Pixonaut could not be asked for the template's fields, so the arrangement "
 "was not checked and nothing was saved. Try again."
 msgstr ""
-"No se han podido obtener de Pixonaut los conjuntos de muestra de la "
-"plantilla. Inténtalo de nuevo más tarde."
+"No se han podido obtener de Pixonaut los campos de la plantilla, así que la "
+"organización no se ha comprobado y no se ha guardado nada. Inténtalo de "
+"nuevo."
 
 #. translators: 1: a group's id; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:227
@@ -2351,12 +2353,15 @@ msgid ""
 "group `%1$s` on side `%2$s` takes an id the product page uses for itself: "
 "pick another"
 msgstr ""
+"el grupo `%1$s` de la cara `%2$s` lleva un identificador que la página de "
+"producto usa para sí misma: elige otro"
 
 #. translators: 1: a group's id; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:231
 #, php-format
 msgid "group `%1$s` on side `%2$s` is the product's own and needs a title"
 msgstr ""
+"el grupo `%1$s` de la cara `%2$s` es propio del producto y necesita un título"
 
 #. translators: 1: a group's id; 2: a side's key; 3: the prefix of a group of the product's own. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:233
@@ -2365,18 +2370,22 @@ msgid ""
 "the template of side `%2$s` has no group `%1$s` (a group of the product's "
 "own takes an id starting with `%3$s`)"
 msgstr ""
+"la plantilla de la cara `%2$s` no tiene ningún grupo `%1$s` (un grupo propio "
+"del producto lleva un identificador que empieza por `%3$s`)"
 
 #. translators: %s: an attribute's slug. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:240
 #, php-format
 msgid "the product has no option `%s` its customers choose a variation by"
 msgstr ""
+"el producto no tiene ninguna opción `%s` con la que sus clientes elijan una "
+"variación"
 
 #. translators: 1: a field, `<layerId>:<prop>`; 2: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:243
 #, php-format
 msgid "the template of side `%2$s` offers no field `%1$s`"
-msgstr ""
+msgstr "la plantilla de la cara `%2$s` no ofrece ningún campo `%1$s`"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:262
@@ -2385,32 +2394,33 @@ msgid ""
 "the form of side `%s` names no `groups`: give null for the template's own "
 "form"
 msgstr ""
+"el formulario de la cara `%s` no nombra ningún `groups`: indica null para el "
+"formulario propio de la plantilla"
 
 #. translators: 1: a side's key; 2: the most groups a form keeps. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:266
 #, php-format
 msgid "the form of side `%1$s` has more than %2$d groups"
-msgstr ""
+msgstr "el formulario de la cara `%1$s` tiene más de %2$d grupos"
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:273
 #, php-format
 msgid "a group on side `%s` needs an `id` and its `items`"
-msgstr ""
+msgstr "un grupo de la cara `%s` necesita un `id` y sus `items`"
 
 #. translators: 1: a group's id; 2: the most items a group keeps. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:278
 #, php-format
 msgid "group `%1$s` has more than %2$d items"
-msgstr ""
+msgstr "el grupo `%1$s` tiene más de %2$d elementos"
 
 #. translators: %s: a group's id. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:283
-#, fuzzy, php-format
-#| msgid "Give the image of card %s as either `id` or `src`."
+#, php-format
 msgid "each item of group `%s` names either a `field` or an `attribute`"
 msgstr ""
-"Indica la imagen de la tarjeta %s con `id` o con `src`, solo uno de los dos."
+"cada elemento del grupo `%s` nombra o bien un `field` o bien un `attribute`"
 
 #: src/Abilities/SetProductForm.php:309
 #: src/Abilities/SetProductSplitListing.php:232
@@ -3691,16 +3701,7 @@ msgstr "Cambiar los ajustes de precios"
 
 #. translators: 1: the name of the ability that reads the pricing settings, 2: the name of the ability that prices a product.
 #: src/Abilities/UpdatePricingSettings.php:45
-#, fuzzy, php-format
-#| msgid ""
-#| "Changes the pricing settings given, by their keys as %1$s reads them; the "
-#| "others keep their values. `price_automatic` switches automatic price "
-#| "changes on or off: on, a price that follows the rule is set to the rule's "
-#| "price when its cost changes and its margin left the tolerance; off, the "
-#| "new price is only suggested; a product or variation set to always or "
-#| "never keeps to that, whatever the switch says. `price_ending` must be "
-#| "below `price_step`. Changing the rule changes no price by itself: price a "
-#| "product with %2$s. Answers with every pricing setting."
+#, php-format
 msgid ""
 "Changes the pricing settings given, by their keys as %1$s reads them; the "
 "others keep their values. `price_automatic` switches automatic price changes "
@@ -3721,9 +3722,13 @@ msgstr ""
 "fija en el precio de la regla cuando cambia su coste y su margen sale de la "
 "tolerancia; desactivado, el nuevo precio solo se sugiere; un producto o una "
 "variación configurados como always o never se atienen a ello, diga lo que "
-"diga el interruptor. `price_ending` debe ser inferior a `price_step`. "
-"Cambiar la regla no cambia ningún precio por sí solo: el precio de un "
-"producto se fija con %2$s. Responde con todos los ajustes de precios."
+"diga el interruptor. `delivery_time_show` hace que una página de producto "
+"diga cuánto tarda la variación elegida según la imprenta, tal como Pixonaut "
+"lo leyó con el coste (solo lo que dice la imprenta: donde no dice nada, no "
+"se muestra nada), y `delivery_time_handling_days` le suma días propios de la "
+"tienda. `price_ending` debe ser inferior a `price_step`. Cambiar la regla no "
+"cambia ningún precio por sí solo: el precio de un producto se fija con %2$s. "
+"Responde con todos los ajustes de precios."
 
 #. translators: %s: the key of a setting, e.g. price_margin.
 #: src/Abilities/UpdatePricingSettings.php:74
@@ -8511,7 +8516,7 @@ msgstr ""
 #. translators: Title of a setting on the settings page, shown to the merchant: whether product pages say how long delivery takes.
 #: src/Settings/Settings.php:575
 msgid "Show the delivery time"
-msgstr ""
+msgstr "Mostrar el plazo de entrega"
 
 #: src/Settings/Settings.php:576
 msgid ""
@@ -8521,17 +8526,24 @@ msgid ""
 "nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing "
 "gets no line. The times are read with the costs, once a day."
 msgstr ""
+"Muestra en la página de producto cuánto tarda la variación elegida según la "
+"imprenta, como «Entrega en 4–7 días». Solo se muestra lo que dice la propia "
+"imprenta: una imprenta que dice cuánto tarda en fabricar el producto y nada "
+"de la entrega da «Fabricado en 2–3 días», y una que no dice nada no da "
+"ninguna línea. Los plazos se leen con los costes, una vez al día."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days the store adds to the printshop's delivery time.
 #: src/Settings/Settings.php:588
 msgid "Handling days"
-msgstr ""
+msgstr "Días de preparación"
 
 #: src/Settings/Settings.php:589
 msgid ""
 "Days of your own to add to the printshop’s time, for what happens before an "
 "order reaches it, such as approving a proof."
 msgstr ""
+"Días propios que se suman al plazo de la imprenta, para lo que ocurre antes "
+"de que un pedido llegue a ella, como aprobar una prueba."
 
 #. translators: Title of a developer setting on the settings page, shown to the merchant; the base URL of the Pixonaut API.
 #: src/Settings/Settings.php:606
@@ -8791,16 +8803,16 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
 #: src/Settings/SettingsPage.php:659
-#, fuzzy
-#| msgid "Delivery address"
 msgid "Delivery time"
-msgstr "Dirección de envío"
+msgstr "Plazo de entrega"
 
 #: src/Settings/SettingsPage.php:660
 msgid ""
 "A printshop tells how long a product takes to make and to deliver to your "
 "shop’s country. Pixonaut reads it with the printshop’s cost."
 msgstr ""
+"Una imprenta indica cuánto tarda en fabricar un producto y en entregarlo en "
+"el país de tu tienda. Pixonaut lo lee junto con el coste de la imprenta."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: which releases of this plugin WordPress offers.
 #: src/Settings/SettingsPage.php:666
@@ -8955,28 +8967,34 @@ msgid "Off: load each one when it is shown"
 msgstr "Desactivado: cargar cada uno cuando se muestra"
 
 #. translators: %d: The longest name, in characters. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:214
+#: src/Storefront/QueryNames.php:220
 #, php-format
 msgid ""
 "Use lowercase letters, digits, and hyphens or underscores between them, at "
 "most %d characters."
-msgstr "Usa letras minúsculas y números, con guiones o guiones bajos entre ellos, %d caracteres como máximo."
+msgstr ""
+"Usa letras minúsculas y números, con guiones o guiones bajos entre ellos, %d "
+"caracteres como máximo."
 
 #. translators: %s: The refused name. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:218
+#: src/Storefront/QueryNames.php:224
 #, php-format
 msgid ""
 "WordPress or WooCommerce already reads “%s” in the shop's addresses. Choose "
 "another name."
-msgstr "WordPress o WooCommerce ya lee «%s» en las direcciones web de la tienda. Elige otro nombre."
+msgstr ""
+"WordPress o WooCommerce ya lee «%s» en las direcciones web de la tienda. "
+"Elige otro nombre."
 
 #. translators: 1: The refused name, 2: The attribute that has it. Refusal of the name an attribute goes by in the shop's addresses.
-#: src/Storefront/QueryNames.php:224
+#: src/Storefront/QueryNames.php:230
 #, php-format
 msgid ""
 "The attribute %2$s already goes by “%1$s” in the shop's addresses. Choose "
 "another name."
-msgstr "El atributo %2$s ya usa «%1$s» en las direcciones web de la tienda. Elige otro nombre."
+msgstr ""
+"El atributo %2$s ya usa «%1$s» en las direcciones web de la tienda. Elige "
+"otro nombre."
 
 #: src/Storefront/UnavailableProduct.php:95
 msgid ""
@@ -9078,7 +9096,10 @@ msgid ""
 "The name a product page's address and the shop's filters give this "
 "attribute, as in ?size=50x70-cm: lowercase letters, digits, and hyphens or "
 "underscores. Left empty, it goes by its slug."
-msgstr "El nombre que la dirección de la página de un producto y los filtros de la tienda dan a este atributo, como en ?size=50x70-cm: letras minúsculas, números y guiones o guiones bajos. Si se deja vacío, usa su slug."
+msgstr ""
+"El nombre que la dirección de la página de un producto y los filtros de la "
+"tienda dan a este atributo, como en ?size=50x70-cm: letras minúsculas, "
+"números y guiones o guiones bajos. Si se deja vacío, usa su slug."
 
 #. translators: %s: Why the name was refused. Shown under the "Name in addresses" field on the screen that adds or edits a product attribute, after the attribute was saved.
 #: templates/admin/attribute-query-name-field.php:27

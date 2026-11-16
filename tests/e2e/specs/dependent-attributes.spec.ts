@@ -55,6 +55,11 @@ function field(poster: Poster, attribute: Attribute): string {
 	return `attribute_${poster.taxonomies[attribute].taxonomy}`;
 }
 
+/** The name an attribute goes by in a card's address: its slug. */
+function queryName(poster: Poster, attribute: Attribute): string {
+	return poster.taxonomies[attribute].taxonomy.replace(/^pa_/, '');
+}
+
 /** The form's row of one attribute: its name and its field. */
 function row(page: Page, poster: Poster, attribute: Attribute): Locator {
 	return page
@@ -168,23 +173,26 @@ test('a category lists a card per real combination, which opens on it', async ({
 	request,
 }) => {
 	await withPoster(request, ['inramning', 'hangarfarg'], async (poster) => {
-		const framing = field(poster, 'inramning');
-		const colour = field(poster, 'hangarfarg');
+		// A card's address names each attribute by its short name, its slug.
+		const framing = queryName(poster, 'inramning');
+		const colour = queryName(poster, 'hangarfarg');
 
 		await page.goto(poster.category);
 		// A classic theme's cards and a Product Collection's.
 		const cards = page.locator('main li.product');
 		await expect(cards).toHaveCount(5);
-		const chosen = await cards.evaluateAll((items) =>
-			items.map((item) =>
-				Object.fromEntries(
-					[
-						...new URL(
-							(item.querySelector('a[href]') as HTMLAnchorElement).href,
-						).searchParams,
-					].filter(([name]) => name.startsWith('attribute_')),
+		const chosen = await cards.evaluateAll(
+			(items, names) =>
+				items.map((item) =>
+					Object.fromEntries(
+						[
+							...new URL(
+								(item.querySelector('a[href]') as HTMLAnchorElement).href,
+							).searchParams,
+						].filter(([name]) => names.includes(name)),
+					),
 				),
-			),
+			[framing, colour],
 		);
 		// In the order WooCommerce lists the values; no card for a bare poster
 		// with a hanger colour, nor for a hanger without one.
@@ -198,7 +206,9 @@ test('a category lists a card per real combination, which opens on it', async ({
 
 		await cards.nth(1).locator('a[href]').first().click();
 		await expectShown(page, poster, ['inramning', 'hangarfarg']);
-		await expect(page.locator(`form [name="${colour}"]`)).toHaveValue('ek');
+		await expect(
+			page.locator(`form [name="${field(poster, 'hangarfarg')}"]`),
+		).toHaveValue('ek');
 		await expect(page.locator('form [name="variation_id"]')).toHaveValue(
 			String(poster.variations['hangare-ek']),
 		);

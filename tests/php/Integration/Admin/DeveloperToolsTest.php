@@ -16,6 +16,7 @@ use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\RequestLog;
 use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
+use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
 use Pixonaut\WooCommerce\Connection\StoredConnection;
 use Pixonaut\WooCommerce\Migrations\MigrationRunner;
 use Pixonaut\WooCommerce\Plugin;
@@ -293,6 +294,9 @@ final class DeveloperToolsTest extends WP_UnitTestCase {
 		// Pixonaut is not reachable from the tests.
 		$this->assertStringContainsString( DeveloperTools::RESULT_ARG . '=' . DeveloperTools::PULL_FAILED, $this->post( DeveloperTools::PULL_ACTION ), 'Pixonaut not reached.' );
 
+		// A re-check already waiting counts as queued: none waits here, so
+		// the refused enqueue is what the result reports.
+		as_unschedule_all_actions( ProductRecheck::QUEUE_ACTION );
 		add_filter( 'pre_as_enqueue_async_action', static fn (): int => 0 );
 		$this->assertStringContainsString( DeveloperTools::RESULT_ARG . '=' . DeveloperTools::RECHECK_FAILED, $this->post( DeveloperTools::RECHECK_ACTION ) );
 	}
