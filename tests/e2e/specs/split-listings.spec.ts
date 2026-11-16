@@ -148,7 +148,9 @@ test('a category lists a card per picture that opens with it chosen', async ({
 		await expect(form.locator(`select[name="${picture}"]`)).toHaveValue(
 			'med-bild',
 		);
-		await expect(form.locator(`select[name="${size}"]`)).toHaveValue('');
+		// The card names no size: the page opens on the first variation sold
+		// with the picture, so the form holds a whole choice.
+		await expect(form.locator(`select[name="${size}"]`)).toHaveValue('30x40');
 	});
 });
 

@@ -692,7 +692,8 @@ on a side that shows another (a switch of variation, or a mount whose
 On a product without variations the ref is the form's
 `data-pixonaut-variant` (absent when the product has none, as a
 template-only product); on a variable product it is the chosen variation's
-`variant` (see below), and nothing is shown before one is chosen. A side
+`variant` (see below; that of the variation a part of a choice draws, see
+[Variations](#variations)), and nothing is shown before a value is chosen. A side
 that already shows the ref is left alone. When `setVariant()` rejects with
 the SDK's `VariantUnavailableError` (an unknown or retired variant, or one
 no allowed view has a photo of), the variation, or the product, shows
@@ -995,8 +996,21 @@ product and for each variation, with the variation as `$product`.
 The script reads the form's `variation_id` field 100 ms after the classic
 form's jQuery `found_variation`, `reset_data` or `hide_variation`, or after
 a `change`, `click` or `input` in the form (the Add to Cart with Options
-block), and at once when the form is submitted. For each side of the
-chosen variation it then:
+block), and at once when the form is submitted. While the form holds a
+value for some of its attributes and not for all, so that `variation_id`
+names none, the designer follows the personalised variation that has
+every value chosen and keeps what it draws for the rest: the one that
+keeps most attribute values of the variation it last followed, then the
+one that leaves most of each side's template, blank, placement and print
+size, and of the variant shown, as they are, then the first in the
+variations' order (an "any" attribute takes the value chosen; a variation
+bought without a design, or one that cannot be personalised, is passed
+over, and so is one Pixonaut refuses once the designer switches to it,
+for the next that fits). The form itself is left alone: its fields, its `variation_id` and
+the price shown stay as WooCommerce has them, and add to cart needs the
+whole choice as on any variable product. With no value chosen, or one for
+every attribute, the form's own variation is the only one followed. For
+each side of the variation followed it then:
 
 | The variation differs by | The designer |
 | --- | --- |

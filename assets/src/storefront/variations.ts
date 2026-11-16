@@ -271,7 +271,9 @@ export function holdsChoice(
 	);
 }
 
-function variationId(form: HTMLFormElement): string {
+/** The id of the variation the form holds; `NO_VARIATION` while its choices
+ *  name none. */
+export function variationId(form: HTMLFormElement): string {
 	const field = namedFields(form, VARIATION_FIELD)[0];
 	const id = field?.value ?? '';
 	return id === '0' ? NO_VARIATION : id;
