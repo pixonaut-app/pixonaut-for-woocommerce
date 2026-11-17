@@ -163,7 +163,7 @@ final class SplitCardListings {
 		foreach ( $left['cards'] as $product_id => $keys ) {
 			$hidden[ $product_id ] = array_values( array_unique( array_merge( $hidden[ $product_id ] ?? array(), $keys ) ) );
 		}
-		$clauses['where'] .= self::filtered_cards( $chosen, $alias ) . self::unfiltered_levels( $chosen, $alias ) . self::shown_cards( $hidden, $alias );
+		$clauses['where'] .= self::filtered_cards( $chosen, FilterMatches::exempt( $chosen ), $alias ) . self::unfiltered_levels( $chosen, $alias ) . self::shown_cards( $hidden, $alias );
 		return $clauses;
 	}
 
@@ -190,18 +190,25 @@ final class SplitCardListings {
 	 * The condition a filtered listing keeps a card row by, for each
 	 * attribute a filter is on: the card holds a value the filter chose, or
 	 * none of the product's cards holds a value of that attribute, so the
-	 * product is not listed by it. A product listed once has no card and is
-	 * kept. Empty without a filter.
+	 * product is not listed by it. While the filter is waived under some
+	 * values (`FilterMatches::exempt()`), a card holding no value of the
+	 * attribute is kept too: the attribute does not apply to what it sells,
+	 * and its variations decide (`FilterMatches::left_out_of_listing()`). A
+	 * product listed once has no card and is kept. Empty without a filter.
 	 *
 	 * @param array<string, list<int>> $chosen The filters' values, as `FilterMatches::chosen()` reads them.
+	 * @param array<string, list<int>> $exempt The values each filter is waived under (`FilterMatches::exempt()`).
 	 * @param string                   $alias  The card rows' alias.
 	 */
-	private static function filtered_cards( array $chosen, string $alias ): string {
+	private static function filtered_cards( array $chosen, array $exempt, string $alias ): string {
 		global $wpdb;
 		$where = '';
 		foreach ( $chosen as $taxonomy => $ids ) {
 			// A key is the set of its term ids. No chosen id names a term: no card holds one.
 			$holds_chosen = array() === $ids ? '1 = 0' : implode( ' OR ', array_fill( 0, count( $ids ), "FIND_IN_SET( %d, {$alias}.meta_value )" ) );
+			if ( array() !== ( $exempt[ $taxonomy ] ?? array() ) ) {
+				$holds_chosen .= $wpdb->prepare( " OR NOT EXISTS ( SELECT 1 FROM {$wpdb->term_taxonomy} AS own WHERE FIND_IN_SET( own.term_id, {$alias}.meta_value ) AND own.taxonomy = %s )", $taxonomy ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table names and a constant alias.
+			}
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- table names, a constant alias and a placeholder per value.
 			$kept = $wpdb->prepare(
 				" AND ( {$alias}.meta_value IS NULL OR {$holds_chosen} OR NOT EXISTS ( SELECT 1 FROM {$wpdb->postmeta} AS listed INNER JOIN {$wpdb->term_taxonomy} AS held ON FIND_IN_SET( held.term_id, listed.meta_value ) WHERE listed.post_id = {$wpdb->posts}.ID AND listed.meta_key = %s AND held.taxonomy = %s ) )",

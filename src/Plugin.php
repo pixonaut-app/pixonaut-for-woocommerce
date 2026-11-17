@@ -216,6 +216,7 @@ use Pixonaut\WooCommerce\Storefront\CardStructuredData;
 use Pixonaut\WooCommerce\Storefront\SplitCardFaces;
 use Pixonaut\WooCommerce\Storefront\SplitCardListings;
 use Pixonaut\WooCommerce\Storefront\FilterMatches;
+use Pixonaut\WooCommerce\Storefront\DependentFilterQuery;
 use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
 use Pixonaut\WooCommerce\Storefront\Storefront;
 use Pixonaut\WooCommerce\Storefront\SwatchLooks;
@@ -548,6 +549,7 @@ final class Plugin {
 		( new CardHydration() )->register();
 		( new CardStructuredData() )->register();
 		( new FilterMatches() )->register();
+		( new DependentFilterQuery() )->register();
 		( new AttributeDependencies() )->register();
 		( new CardPageHead() )->register();
 		( new CardSitemaps() )->register();

@@ -30,7 +30,9 @@ use WC_Product_Variable;
  * Each dependent attribute's taxonomy maps to the taxonomy of each attribute
  * it applies under, and the slugs of the values it applies under. Only
  * global attributes take part. One product's reading adds to another's.
- * The answer is cached until a product changes.
+ * The answer is cached until a product changes. The shop's filters read
+ * the same answer (`store()`), so a dependent attribute's filter leaves
+ * alone what it does not apply to (`FilterMatches::exempt()`).
  */
 final class AttributeDependencies {
 
@@ -57,7 +59,7 @@ final class AttributeDependencies {
 	 * @return array<string, array<string, list<string>>>
 	 */
 	public function serve( mixed $dependencies ): array {
-		return self::merge( is_array( $dependencies ) ? self::shaped( $dependencies ) : array(), self::cached() );
+		return self::merge( is_array( $dependencies ) ? self::shaped( $dependencies ) : array(), self::store() );
 	}
 
 	/**
@@ -65,7 +67,7 @@ final class AttributeDependencies {
 	 *
 	 * @return array<string, array<string, list<string>>>
 	 */
-	private static function cached(): array {
+	public static function store(): array {
 		$version = class_exists( WC_Cache_Helper::class ) ? (string) WC_Cache_Helper::get_transient_version( 'product' ) : '';
 		$cached  = get_transient( self::TRANSIENT );
 		if ( is_array( $cached ) && ( $cached['version'] ?? null ) === $version && is_array( $cached['dependencies'] ?? null ) ) {

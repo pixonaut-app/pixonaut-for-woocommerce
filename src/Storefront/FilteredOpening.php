@@ -88,15 +88,16 @@ final class FilteredOpening {
 		$held     = SplitCards::variation_values( $product->get_id() );
 		$offers   = FilterOffers::of( $product );
 		$fields   = ApplicableAttributes::fields( $product );
+		$exempt   = FilterMatches::exempt( $chosen );
 		$best     = null;
 		foreach ( $offers as $offer ) {
-			if ( ! in_array( $offer['id'], $eligible, true ) || ! FilterOffers::matches( $offer, $chosen, $min, $max ) ) {
+			if ( ! in_array( $offer['id'], $eligible, true ) || ! FilterOffers::matches( $offer, $chosen, $min, $max, $exempt ) ) {
 				continue;
 			}
 			$own    = $held[ $offer['id'] ] ?? array();
 			$hidden = ApplicableAttributes::hidden( $fields, array_values( $held ), $own );
 			$values = self::named( $product, $own, $hidden, $card, $chosen, $defaults );
-			if ( ! self::opens_matching( $offers, $held, $values, $chosen, $min, $max ) ) {
+			if ( ! self::opens_matching( $offers, $held, $values, $chosen, $min, $max, $exempt ) ) {
 				continue;
 			}
 			$rank = array( self::agreeing( $values, $defaults ), -$offer['min'] );
@@ -148,8 +149,9 @@ final class FilteredOpening {
 	 * @param array<string, list<int>>                                                       $chosen Chosen term ids by taxonomy.
 	 * @param float|null                                                                     $min    The lowest price chosen, as stored.
 	 * @param float|null                                                                     $max    The highest price chosen, as stored.
+	 * @param array<string, list<int>>                                                       $exempt The values each filter is waived under (`FilterMatches::exempt()`).
 	 */
-	private static function opens_matching( array $offers, array $held, array $values, array $chosen, ?float $min, ?float $max ): bool {
+	private static function opens_matching( array $offers, array $held, array $values, array $chosen, ?float $min, ?float $max, array $exempt ): bool {
 		foreach ( $offers as $offer ) {
 			$own = $held[ $offer['id'] ] ?? array();
 			foreach ( $values as $field => $value ) {
@@ -158,7 +160,7 @@ final class FilteredOpening {
 					continue 2;
 				}
 			}
-			return FilterOffers::matches( $offer, $chosen, $min, $max );
+			return FilterOffers::matches( $offer, $chosen, $min, $max, $exempt );
 		}
 		return false;
 	}

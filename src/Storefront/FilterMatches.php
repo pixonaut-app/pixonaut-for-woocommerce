@@ -17,6 +17,7 @@ use WC_Cache_Helper;
 use WC_Product;
 use WC_Query;
 use WP_Query;
+use WP_Term;
 
 /**
  * WooCommerce reads each attribute filter, and the price filter, on its
@@ -27,10 +28,16 @@ use WP_Query;
  * costs within the chosen range; a card's offers are the variations it
  * sells.
  *
+ * Values chosen of one attribute combine with "or", attributes with
+ * "and". A dependent attribute, which applies only under some values of
+ * another (`AttributeDependencies`), filters only what it applies to: with
+ * "hanger" and "no frame" chosen, a frame colour keeps the bare prints and
+ * the hangers in that colour (`exempt()`).
+ *
  * The Product Filters block's counts follow the same rule: each value's
  * count is what the listing would show with that value chosen on top of
- * the other filters, counting a product once per card it would be listed
- * as. WooCommerce asks for them through `woocommerce_pre_product_filter_data`,
+ * the current filters, its own attribute's chosen values included,
+ * counting a product once per card it would be listed as. WooCommerce asks for them through `woocommerce_pre_product_filter_data`,
  * which takes the query its listing runs.
  */
 final class FilterMatches {
@@ -62,6 +69,11 @@ final class FilterMatches {
 	private const ALL_VALUES = 'and';
 
 	/**
+	 * The query type under which any chosen value of an attribute is enough.
+	 */
+	private const ANY_VALUE = 'or';
+
+	/**
 	 * Prefix of the transient each query's counts are kept in.
 	 */
 	private const COUNTS_TRANSIENT = 'pixonaut_wc_filter_counts_';
@@ -82,6 +94,8 @@ final class FilterMatches {
 
 	public function register(): void {
 		add_filter( 'woocommerce_pre_product_filter_data', array( $this, 'counts' ), self::COUNTS_PRIORITY, 4 );
+		// Values chosen of one attribute combine with "or" unless the address asks for "and", as the Product Filters block's do.
+		add_filter( 'woocommerce_layered_nav_default_query_type', static fn (): string => self::ANY_VALUE );
 	}
 
 	/**
@@ -121,10 +135,42 @@ final class FilterMatches {
 	 * @param array<string, list<int>> $chosen  Chosen term ids by taxonomy.
 	 * @param float|null               $min     The lowest price chosen, as stored.
 	 * @param float|null               $max     The highest price chosen, as stored.
+	 * @param array<string, list<int>> $exempt  The values each filter is waived under (`exempt()`); worked out from the chosen ones when null.
 	 * @return list<string>|null
 	 */
-	public static function left_out( WC_Product $product, array $chosen, ?float $min, ?float $max ): ?array {
-		return self::left_out_of( FilterOffers::of( $product ), SplitCards::sold_by_card( $product ), $chosen, $min, $max );
+	public static function left_out( WC_Product $product, array $chosen, ?float $min, ?float $max, ?array $exempt = null ): ?array {
+		return self::left_out_of( FilterOffers::of( $product ), SplitCards::sold_by_card( $product ), $chosen, $min, $max, $exempt ?? self::exempt( $chosen ) );
+	}
+
+	/**
+	 * The values under which each chosen attribute's filter passes what it
+	 * does not apply to: for a dependent attribute, the chosen values of the
+	 * attribute it depends on that it does not apply under, as the store's
+	 * variations say (`AttributeDependencies::store()`), never by name. A
+	 * frame colour chosen beside "no frame" keeps what is sold bare; with no
+	 * framing chosen it keeps only what comes in that colour.
+	 *
+	 * @param array<string, list<int>> $chosen Chosen term ids by taxonomy.
+	 * @return array<string, list<int>> Term ids by the filtered attribute's taxonomy.
+	 */
+	public static function exempt( array $chosen ): array {
+		// A dependent attribute is waived only through a chosen value of another.
+		if ( count( $chosen ) < 2 ) {
+			return array();
+		}
+		$dependencies = AttributeDependencies::store();
+		$exempt       = array();
+		foreach ( array_keys( $chosen ) as $taxonomy ) {
+			foreach ( $dependencies[ $taxonomy ] ?? array() as $parent => $under ) {
+				foreach ( $chosen[ $parent ] ?? array() as $term_id ) {
+					$term = get_term( $term_id, $parent );
+					if ( $term instanceof WP_Term && ! in_array( $term->slug, $under, true ) ) {
+						$exempt[ $taxonomy ][] = $term->term_id;
+					}
+				}
+			}
+		}
+		return $exempt;
 	}
 
 	/**
@@ -135,12 +181,13 @@ final class FilterMatches {
 	 * @param array<string, list<int>>                                                       $chosen Chosen term ids by taxonomy.
 	 * @param float|null                                                                     $min    The lowest price chosen, as stored.
 	 * @param float|null                                                                     $max    The highest price chosen, as stored.
+	 * @param array<string, list<int>>                                                       $exempt The values each filter is waived under (`exempt()`).
 	 * @return list<string>|null
 	 */
-	private static function left_out_of( array $offers, array $cards, array $chosen, ?float $min, ?float $max ): ?array {
+	private static function left_out_of( array $offers, array $cards, array $chosen, ?float $min, ?float $max, array $exempt ): ?array {
 		$matching = array();
 		foreach ( $offers as $offer ) {
-			if ( FilterOffers::matches( $offer, $chosen, $min, $max ) ) {
+			if ( FilterOffers::matches( $offer, $chosen, $min, $max, $exempt ) ) {
 				$matching[] = $offer['id'];
 			}
 		}
@@ -161,7 +208,9 @@ final class FilterMatches {
 	 * finds, by WooCommerce's own reading of the filters: the products none
 	 * of whose offers matches, and of the others the cards none of whose
 	 * offers does. Any other product is one offer, which WooCommerce's
-	 * reading already matches.
+	 * reading already matches, unless a filter is waived under some values
+	 * (`exempt()`): WooCommerce's query then admits what holds them
+	 * (`DependentFilterQuery`), and every product is read.
 	 *
 	 * @param string                   $join   The listing's joins.
 	 * @param string                   $where  The listing's conditions.
@@ -172,10 +221,10 @@ final class FilterMatches {
 	 */
 	public static function left_out_of_listing( string $join, string $where, array $chosen, ?float $min, ?float $max ): array {
 		global $wpdb;
+		$exempt   = self::exempt( $chosen );
+		$variable = array() === $exempt ? " AND {$wpdb->posts}.ID IN ( SELECT type_rel.object_id FROM {$wpdb->term_relationships} type_rel INNER JOIN {$wpdb->term_taxonomy} type_tax ON type_tax.term_taxonomy_id = type_rel.term_taxonomy_id INNER JOIN {$wpdb->terms} type_term ON type_term.term_id = type_tax.term_id WHERE type_tax.taxonomy = 'product_type' AND type_term.slug = 'variable' )" : '';
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- the listing's own clauses, which WP_Query prepared; read once a listing.
-		$ids = $wpdb->get_col(
-			"SELECT DISTINCT {$wpdb->posts}.ID FROM {$wpdb->posts} {$join} WHERE 1=1 {$where} AND {$wpdb->posts}.ID IN ( SELECT type_rel.object_id FROM {$wpdb->term_relationships} type_rel INNER JOIN {$wpdb->term_taxonomy} type_tax ON type_tax.term_taxonomy_id = type_rel.term_taxonomy_id INNER JOIN {$wpdb->terms} type_term ON type_term.term_id = type_tax.term_id WHERE type_tax.taxonomy = 'product_type' AND type_term.slug = 'variable' )"
-		);
+		$ids = $wpdb->get_col( "SELECT DISTINCT {$wpdb->posts}.ID FROM {$wpdb->posts} {$join} WHERE 1=1 {$where}{$variable}" );
 		// phpcs:enable
 		$ids  = array_values( array_map( 'intval', is_array( $ids ) ? $ids : array() ) );
 		$left = array(
@@ -189,9 +238,9 @@ final class FilterMatches {
 		foreach ( $ids as $id ) {
 			if ( in_array( $id, $unread, true ) ) {
 				$product = wc_get_product( $id );
-				$cards   = $product instanceof WC_Product ? self::left_out( $product, $chosen, $min, $max ) : array();
+				$cards   = $product instanceof WC_Product ? self::left_out( $product, $chosen, $min, $max, $exempt ) : array();
 			} else {
-				$cards = self::left_out_of( FilterOffers::worked_out( $id ) ?? array(), SplitCards::worked_out( $id )['cards'] ?? array(), $chosen, $min, $max );
+				$cards = self::left_out_of( FilterOffers::worked_out( $id ) ?? array(), SplitCards::worked_out( $id )['cards'] ?? array(), $chosen, $min, $max, $exempt );
 			}
 			if ( null === $cards ) {
 				$left['products'][] = $id;
@@ -220,40 +269,65 @@ final class FilterMatches {
 		$version = class_exists( WC_Cache_Helper::class ) ? (string) WC_Cache_Helper::get_transient_version( 'product' ) : '';
 		$normal  = $query_vars;
 		ksort( $normal );
-		$transient = self::COUNTS_TRANSIENT . md5( (string) wp_json_encode( array( $normal, $taxonomy, $version ) ) );
+		// WooCommerce leaves out the counted attribute's own filter when its values combine with "or": the request still has it.
+		$own       = isset( self::chosen_in( $query_vars )[ $taxonomy ] ) ? array() : ( self::chosen()[ $taxonomy ] ?? array() );
+		$transient = self::COUNTS_TRANSIENT . md5( (string) wp_json_encode( array( $normal, $taxonomy, $own, $version ) ) );
 		$cached    = get_transient( $transient );
 		if ( is_array( $cached ) ) {
 			return $cached;
 		}
-		$counts = self::count( $query_vars, $taxonomy );
+		$counts = self::count( $query_vars, $taxonomy, $own );
 		set_transient( $transient, $counts, self::COUNTS_LIFETIME );
 		return $counts;
 	}
 
 	/**
-	 * Works out `counts()`.
+	 * Works out `counts()`: for each value any listed product holds, the
+	 * listing's cards with that value chosen on top of the filters.
 	 *
 	 * @param array<array-key, mixed> $query_vars The listing's query.
 	 * @param string                  $taxonomy   The counted attribute.
+	 * @param int[]                   $own        The counted attribute's chosen values the query leaves out.
+	 * @phpstan-param list<int> $own
 	 * @return array<int, int> Counts by term id.
 	 */
-	private static function count( array $query_vars, string $taxonomy ): array {
+	private static function count( array $query_vars, string $taxonomy, array $own ): array {
 		$chosen = self::chosen_in( $query_vars );
-		$all    = self::all_values_in( $query_vars );
-		$range  = self::range(
+		if ( ! isset( $chosen[ $taxonomy ] ) && array() !== $own ) {
+			$chosen[ $taxonomy ] = $own;
+		}
+		$all      = self::all_values_in( $query_vars );
+		$range    = self::range(
 			is_scalar( $query_vars[ self::MIN_PRICE ] ?? null ) ? (string) $query_vars[ self::MIN_PRICE ] : null,
 			is_scalar( $query_vars[ self::MAX_PRICE ] ?? null ) ? (string) $query_vars[ self::MAX_PRICE ] : null
 		);
+		$products = array_values( array_filter( array_map( 'wc_get_product', self::listed( $query_vars ) ), static fn ( mixed $product ): bool => $product instanceof WC_Product ) );
+		$values   = array();
+		foreach ( $products as $product ) {
+			$values = array_merge( $values, self::values_held( $product, $taxonomy ) );
+		}
+		$with   = array();
+		$exempt = array();
+		foreach ( array_values( array_unique( $values ) ) as $term_id ) {
+			$with[ $term_id ]              = $chosen;
+			$with[ $term_id ][ $taxonomy ] = array_values( array_unique( array_merge( $chosen[ $taxonomy ] ?? array(), array( $term_id ) ) ) );
+			$exempt[ $term_id ]            = self::exempt( $with[ $term_id ] );
+		}
+		// Adding a value to an attribute already chosen with "or" leaves a product not holding it as the filters list it.
+		$widens = isset( $chosen[ $taxonomy ] ) && ! in_array( $taxonomy, $all, true );
 		$counts = array();
-		foreach ( self::listed( $query_vars ) as $product_id ) {
-			$product = wc_get_product( $product_id );
-			if ( ! $product instanceof WC_Product ) {
-				continue;
-			}
-			foreach ( self::values_held( $product, $taxonomy ) as $term_id ) {
-				$with              = $chosen;
-				$with[ $taxonomy ] = array_values( array_unique( array_merge( $chosen[ $taxonomy ] ?? array(), array( $term_id ) ) ) );
-				$shown             = self::holds_all( $product, $with, $all ) ? self::shown( $product, $with, $range[0], $range[1] ) : 0;
+		foreach ( $products as $product ) {
+			$held = self::values_held( $product, $taxonomy );
+			$base = null;
+			foreach ( $with as $term_id => $filters ) {
+				if ( in_array( $term_id, $held, true ) || isset( $exempt[ $term_id ][ $taxonomy ] ) ) {
+					$shown = self::holds_all( $product, $filters, $all ) ? self::shown( $product, $filters, $range[0], $range[1], $exempt[ $term_id ] ) : 0;
+				} elseif ( $widens ) {
+					$base ??= self::holds_all( $product, $chosen, $all ) ? self::shown( $product, $chosen, $range[0], $range[1], self::exempt( $chosen ) ) : 0;
+					$shown = $base;
+				} else {
+					continue;
+				}
 				if ( $shown > 0 ) {
 					$counts[ $term_id ] = ( $counts[ $term_id ] ?? 0 ) + $shown;
 				}
@@ -289,9 +363,10 @@ final class FilterMatches {
 	 * @param array<string, list<int>> $chosen  Chosen term ids by taxonomy.
 	 * @param float|null               $min     The lowest price chosen, as stored.
 	 * @param float|null               $max     The highest price chosen, as stored.
+	 * @param array<string, list<int>> $exempt  The values each filter is waived under (`exempt()`).
 	 */
-	private static function shown( WC_Product $product, array $chosen, ?float $min, ?float $max ): int {
-		$left_out = self::left_out( $product, $chosen, $min, $max );
+	private static function shown( WC_Product $product, array $chosen, ?float $min, ?float $max, array $exempt ): int {
+		$left_out = self::left_out( $product, $chosen, $min, $max, $exempt );
 		if ( null === $left_out ) {
 			return 0;
 		}
@@ -310,8 +385,8 @@ final class FilterMatches {
 				continue;
 			}
 			foreach ( $chosen as $taxonomy => $ids ) {
-				// A filter on an attribute the product is listed by keeps the cards holding a chosen value.
-				if ( isset( $listed[ $taxonomy ] ) && array() === array_intersect( $held, $ids ) ) {
+				// A filter on an attribute the product is listed by keeps the cards holding a chosen value; while it is waived, those holding none of its values too.
+				if ( isset( $listed[ $taxonomy ] ) && array() === array_intersect( $held, $ids ) && ( array() === ( $exempt[ $taxonomy ] ?? array() ) || isset( self::listed_taxonomies( array( $key ) )[ $taxonomy ] ) ) ) {
 					continue 2;
 				}
 			}

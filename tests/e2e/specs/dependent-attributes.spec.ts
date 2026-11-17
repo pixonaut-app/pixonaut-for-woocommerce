@@ -219,6 +219,120 @@ test('a category lists a card per real combination, which opens on it', async ({
 	});
 });
 
+/** The query argument naming the attributes whose filter counts the
+ *  support plugin renders beside a listing. */
+const COUNTS_ARG = 'pixonaut_e2e_counts';
+
+/** A category's address with these filters, each a list of values. */
+function filtered(
+	poster: Poster,
+	filters: Partial<Record<Attribute, string[]>>,
+): URL {
+	const url = new URL(poster.category);
+	for (const [attribute, values] of Object.entries(filters)) {
+		url.searchParams.set(
+			`filter_${queryName(poster, attribute as Attribute)}`,
+			values.join(','),
+		);
+	}
+	return url;
+}
+
+/** The listing's cards, and the Product Filters block's count of each
+ *  value of the counted attributes, by value. */
+async function listing(
+	page: Page,
+	poster: Poster,
+	url: URL,
+	counted: Attribute[],
+): Promise<{ cards: number; counts: Record<string, number> }> {
+	const withCounts = new URL(url);
+	withCounts.searchParams.set(
+		COUNTS_ARG,
+		counted.map((attribute) => poster.taxonomies[attribute].id).join(','),
+	);
+	await page.goto(withCounts.toString());
+	const counts = await page
+		.locator('[data-pixonaut-e2e-counts] [data-wp-context]')
+		.evaluateAll((filters) =>
+			Object.fromEntries(
+				filters.flatMap(
+					(filter) =>
+						(
+							JSON.parse(filter.getAttribute('data-wp-context') ?? '{}') as {
+								items?: { value: string; count?: number; type: string }[];
+							}
+						).items?.map((item) => [
+							`${item.type.replace(/^attribute\//, '')}=${item.value}`,
+							item.count ?? 0,
+						]) ?? [],
+				),
+			),
+		);
+	return { cards: await page.locator('main li.product').count(), counts };
+}
+
+test('a frame option chosen beside a bare poster keeps the bare card, and each count is the listing with its value chosen', async ({
+	page,
+	request,
+}) => {
+	await withPoster(request, ['inramning', 'hangarfarg'], async (poster) => {
+		const hangerOrBare = { inramning: ['hangare', 'ingen'] };
+		const inOak = { ...hangerOrBare, hangarfarg: ['ek'] };
+
+		await page.goto(filtered(poster, inOak).toString());
+		const framing = queryName(poster, 'inramning');
+		const colour = queryName(poster, 'hangarfarg');
+		const chosen = await page
+			.locator('main li.product')
+			.evaluateAll(
+				(items, names) =>
+					items.map((item) =>
+						Object.fromEntries(
+							[
+								...new URL(
+									(item.querySelector('a[href]') as HTMLAnchorElement).href,
+								).searchParams,
+							].filter(([name]) => names.includes(name)),
+						),
+					),
+				[framing, colour],
+			);
+		// The hanger colour does not apply to the bare poster.
+		expect(chosen).toEqual([
+			{ [framing]: 'hangare', [colour]: 'ek' },
+			{ [framing]: 'ingen' },
+		]);
+
+		for (const filters of [hangerOrBare, inOak] as Partial<
+			Record<Attribute, string[]>
+		>[]) {
+			const shown = await listing(page, poster, filtered(poster, filters), [
+				'inramning',
+				'hangarfarg',
+			]);
+			for (const [attribute, values] of [
+				['inramning', ['ingen', 'hangare', 'ram', 'canvas']],
+				['hangarfarg', ['ek', 'svart']],
+			] as const) {
+				for (const value of values) {
+					const added = new Set([...(filters[attribute] ?? []), value]);
+					const ticked = await listing(
+						page,
+						poster,
+						filtered(poster, { ...filters, [attribute]: [...added] }),
+						[],
+					);
+					expect(
+						shown.counts[`${queryName(poster, attribute)}=${value}`] ?? 0,
+						`${JSON.stringify(filters)}: ${attribute} ${value}`,
+					).toBe(ticked.cards);
+				}
+			}
+		}
+	});
+});
+
 /** The first configuration version with a place for the option groups. */
 const OPTION_GROUPS_VERSION = 12;
 
