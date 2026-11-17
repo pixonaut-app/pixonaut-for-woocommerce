@@ -587,6 +587,11 @@ test("the preview shows a picture of the designer's first drawing from the first
 	expect(
 		await poster.evaluate((image) => getComputedStyle(image).objectFit),
 	).toBe('cover');
+	// Printed before the poster: a cached poster paints as soon as it is
+	// parsed, before a rule after it applies.
+	expect(
+		await poster.evaluate((image) => image.previousElementSibling?.tagName),
+	).toBe('STYLE');
 	await page.evaluate(() => {
 		const shifts = { total: 0 };
 		Object.assign(window, { pixonautShifts: shifts });

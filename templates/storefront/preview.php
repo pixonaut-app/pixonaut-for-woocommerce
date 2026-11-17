@@ -52,8 +52,8 @@ defined( 'ABSPATH' ) || exit;
 			<div class="pixonaut-preview__stage">
 				<div id="<?php echo esc_attr( 'pixonaut-preview-' . $pixonaut_side ); ?>" class="pixonaut-preview__side" data-pixonaut-side="<?php echo esc_attr( $pixonaut_side ); ?>"><span class="pixonaut-preview__placeholder" aria-hidden="true">
 					<?php if ( isset( $posters[ $pixonaut_side ] ) ) : ?>
+						<?php echo \Pixonaut\WooCommerce\Storefront\PosterFit::style( $pixonaut_side, $posters[ $pixonaut_side ]['width'], $posters[ $pixonaut_side ]['height'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- numbers and a side name PosterFit checks; before the poster, which a page paints as soon as it is parsed when its file is cached. ?>
 						<img class="pixonaut-preview__poster" src="<?php echo esc_url( $posters[ $pixonaut_side ]['url'] ); ?>" width="<?php echo esc_attr( (string) $posters[ $pixonaut_side ]['width'] ); ?>" height="<?php echo esc_attr( (string) $posters[ $pixonaut_side ]['height'] ); ?>" alt="" fetchpriority="high" data-pixonaut-template="<?php echo esc_attr( $posters[ $pixonaut_side ]['template'] ); ?>" data-pixonaut-blank="<?php echo esc_attr( $posters[ $pixonaut_side ]['blank'] ); ?>" data-pixonaut-placement="<?php echo esc_attr( $posters[ $pixonaut_side ]['placement'] ); ?>" data-pixonaut-view="<?php echo esc_attr( $posters[ $pixonaut_side ]['view'] ); ?>" data-pixonaut-variant="<?php echo esc_attr( $posters[ $pixonaut_side ]['variant'] ); ?>" />
-						<?php echo \Pixonaut\WooCommerce\Storefront\PosterFit::style( $pixonaut_side, $posters[ $pixonaut_side ]['width'], $posters[ $pixonaut_side ]['height'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- numbers and a side name PosterFit checks. ?>
 					<?php endif; ?>
 				</span></div>
 				<span class="pixonaut-spinner" role="status"><span class="screen-reader-text"><?php echo esc_html( $loading ); ?></span></span>
