@@ -714,6 +714,7 @@ export const REACH = {
 		'src/Storefront/PrintedSwatches.php',
 		'src/Storefront/OpeningPrice.php',
 		'src/Storefront/StagePosters.php',
+		'src/Storefront/PosterFit.php',
 		'src/Catalogue/BlankPhoto.php',
 		'src/FormLayout.php',
 		'src/GroupNumbers.php',
