@@ -141,14 +141,26 @@ final class PictureReportTest extends WP_UnitTestCase {
 		$this->assertFalse( get_option( Schema::PICTURE_REPORT_SENT_OPTION ) );
 	}
 
-	public function test_another_refusal_is_logged_and_waits_for_the_next_report(): void {
+	public function test_a_pixonaut_without_the_route_yet_is_noted_quietly_and_waits_for_the_next_report(): void {
 		$this->recorder->json( 404, array( 'error' => 'not_found' ) );
 		as_unschedule_all_actions( PictureReport::ACTION );
 		$logger = new RecordingLogger();
 
 		$this->report( $logger )->send();
 
-		$this->assertCount( 1, $logger->entries );
+		$this->assertSame( array( 'info' ), array_column( $logger->entries, 'level' ) );
+		$this->assertSame( array(), ActionSchedulerRunner::pending( PictureReport::ACTION ) );
+		$this->assertFalse( get_option( Schema::PICTURE_REPORT_SENT_OPTION ) );
+	}
+
+	public function test_another_refusal_is_logged_and_waits_for_the_next_report(): void {
+		$this->recorder->json( 400, array( 'error' => 'invalid_input' ) );
+		as_unschedule_all_actions( PictureReport::ACTION );
+		$logger = new RecordingLogger();
+
+		$this->report( $logger )->send();
+
+		$this->assertSame( array( 'warning' ), array_column( $logger->entries, 'level' ) );
 		$this->assertSame( array(), ActionSchedulerRunner::pending( PictureReport::ACTION ) );
 	}
 

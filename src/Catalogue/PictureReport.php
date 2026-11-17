@@ -68,6 +68,12 @@ final class PictureReport {
 	private const OPERATION = 'connectedStore.reportPictureStorage';
 
 	/**
+	 * The status of a Pixonaut that has no route for the report yet, or no
+	 * connection for the store's key: the next report tries again.
+	 */
+	private const NOT_TAKEN = 404;
+
+	/**
 	 * The admin anchor of the setting on the settings page and in a product's Pixonaut tab.
 	 */
 	public const SETTING_ANCHOR = 'pixonaut-variation-pictures';
@@ -143,7 +149,8 @@ final class PictureReport {
 
 	/**
 	 * Sends the report. Pixonaut slowing the store down sends it again
-	 * later; any other refusal is logged, and the next report tries again.
+	 * later; a `404` (an api without the route yet) is noted quietly; any
+	 * other refusal is logged as a warning. The next report tries again.
 	 */
 	public function send(): void {
 		if ( null === $this->store->load() ) {
@@ -155,6 +162,11 @@ final class PictureReport {
 		} catch ( ApiException $e ) {
 			if ( ErrorCode::RATE_LIMITED === $e->errorCode ) {
 				as_schedule_single_action( ( $this->clock )() + max( 1, $e->retryAfter ?? self::DELAY_SECONDS ), self::ACTION, array(), self::GROUP );
+				return;
+			}
+			if ( self::NOT_TAKEN === $e->status ) {
+				// A Pixonaut that does not take the report yet: the next one tries again, and nothing else needs to know.
+				$this->logger->info( 'Pixonaut does not take the report of the pictures the shop keeps yet; it is sent again later.', array( 'status' => $e->status ) );
 				return;
 			}
 			$this->logger->warning(
