@@ -63,6 +63,8 @@ final class Settings {
 
 	public const PRODUCT_PICTURES = 'product_pictures';
 
+	public const VARIATION_PICTURES = 'variation_pictures';
+
 	public const SHOW_FIELD_VALUES = 'show_field_values';
 
 	public const LOW_RESOLUTION_WARNINGS = 'low_resolution_warnings';
@@ -321,6 +323,17 @@ final class Settings {
 					/* translators: Title of a setting on the settings page, shown to the merchant. */
 					'title' => __( 'Use Pixonaut pictures as product images', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'Sets each personalised product’s and variation’s image to Pixonaut’s picture of it, its template on the blank, and draws it again when the product changes. A product can show its template’s showcase sets instead, chosen under Product images in its Pixonaut tab. An image you set yourself is kept. Off, each product gets back the image it had before.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::checkbox(
+				self::VARIATION_PICTURES,
+				false,
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant: whether each variation of a product gets a Pixonaut picture of its own, drawn on its blank's photo. */
+					'title' => __( 'Generate a picture for every variation', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'Draws each variation on its blank\'s photo, in its own colour and size, so the product page shows the variation a shopper picks. Off, variations whose pictures are drawn flat share one picture. Each picture is a file in your shop\'s media library, on your shop\'s own server, not in Pixonaut: before you turn it on, you see how many pictures it would draw and how much space they take. A product can choose otherwise in its Pixonaut tab. Turning it off deletes the variation pictures nothing else uses.', 'pixonaut-for-woocommerce' ),
 				)
 			)
 		);

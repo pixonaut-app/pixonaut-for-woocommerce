@@ -141,20 +141,21 @@ final class ProductPanel {
 	private readonly LowResolutionWarnings $low_resolution;
 
 	/**
-	 * @param ProductLinker           $linker     Checks and builds the configuration.
-	 * @param LinkedBlank             $blank      Reads the linked blank's placements, views and printshop.
-	 * @param Notices                 $notices    Raises the invalid-product notice.
-	 * @param Templates               $templates  Renders the panel.
-	 * @param Settings                $settings   The default layout, form layout and approval mode.
-	 * @param string                  $file       Main plugin file, for asset URLs.
-	 * @param VariantField            $variant    Renders and saves the product's blank variant.
-	 * @param ShowcaseField|null      $showcases  Renders the product images field; null for none.
-	 * @param RegeneratePictures|null $regenerate Renders the Regenerate product image button; null for none.
-	 * @param ProofUrls|null          $proofs     Signs the previews of a standing side's options; null to show them without.
-	 * @param Connection|null         $connection While the store is not connected, the panel says how to connect it; null never says.
-	 * @param VariantPairing|null     $pairing    Shows and saves each variation's blank variant in a variable product's panel; null shows a line pointing at Variations.
-	 * @param PricingPanel|null       $pricing    Renders the Prices section; null for none.
-	 * @param SoldRows|null           $sold_rows  Tells the rows of the blank the product sells, the only ones a side's misfit warning names; null names every row its template misfits.
+	 * @param ProductLinker               $linker     Checks and builds the configuration.
+	 * @param LinkedBlank                 $blank      Reads the linked blank's placements, views and printshop.
+	 * @param Notices                     $notices    Raises the invalid-product notice.
+	 * @param Templates                   $templates  Renders the panel.
+	 * @param Settings                    $settings   The default layout, form layout and approval mode.
+	 * @param string                      $file       Main plugin file, for asset URLs.
+	 * @param VariantField                $variant    Renders and saves the product's blank variant.
+	 * @param ShowcaseField|null          $showcases  Renders the product images field; null for none.
+	 * @param RegeneratePictures|null     $regenerate Renders the Regenerate product image button; null for none.
+	 * @param ProofUrls|null              $proofs     Signs the previews of a standing side's options; null to show them without.
+	 * @param Connection|null             $connection While the store is not connected, the panel says how to connect it; null never says.
+	 * @param VariantPairing|null         $pairing    Shows and saves each variation's blank variant in a variable product's panel; null shows a line pointing at Variations.
+	 * @param PricingPanel|null           $pricing    Renders the Prices section; null for none.
+	 * @param SoldRows|null               $sold_rows  Tells the rows of the blank the product sells, the only ones a side's misfit warning names; null names every row its template misfits.
+	 * @param VariationPicturesField|null $variation_pictures Renders a variable product's Picture for every variation choice; null for none.
 	 */
 	public function __construct(
 		private readonly ProductLinker $linker,
@@ -171,6 +172,7 @@ final class ProductPanel {
 		private readonly ?VariantPairing $pairing = null,
 		private readonly ?PricingPanel $pricing = null,
 		private readonly ?SoldRows $sold_rows = null,
+		private readonly ?VariationPicturesField $variation_pictures = null,
 	) {
 		$this->low_resolution = new LowResolutionWarnings( $settings, $templates );
 	}
@@ -241,11 +243,12 @@ final class ProductPanel {
 				// Shown with the blank; a variable product's variations each have their own.
 				'fields_html'  => $this->not_connected_html() . $this->fields_html(
 					$panel + array(
-						'variant_html'    => $product_object->is_type( 'variable' ) ? '' : $this->variant->html( $product_object, PanelFields::product(), $this->integration( ProductConfig::stored_on( $product_object ) ) ),
-						'pairing_html'    => true === $panel['importing'] || true === $panel['import_failed'] ? '' : $this->pairing_html( $product_object, ProductConfig::stored_on( $product_object ) ),
-						'images_html'     => null === $this->showcases ? '' : $this->showcases->html( $product_object ),
-						'regenerate_html' => null === $this->regenerate ? '' : $this->regenerate->html( $product_object ),
-						'pricing_html'    => null === $this->pricing ? '' : $this->pricing->html( $product_object, in_array( PricingPanel::DISCLOSURE, is_array( $panel['open'] ) ? $panel['open'] : array(), true ) ),
+						'variant_html'            => $product_object->is_type( 'variable' ) ? '' : $this->variant->html( $product_object, PanelFields::product(), $this->integration( ProductConfig::stored_on( $product_object ) ) ),
+						'pairing_html'            => true === $panel['importing'] || true === $panel['import_failed'] ? '' : $this->pairing_html( $product_object, ProductConfig::stored_on( $product_object ) ),
+						'images_html'             => null === $this->showcases ? '' : $this->showcases->html( $product_object ),
+						'variation_pictures_html' => null === $this->variation_pictures ? '' : $this->variation_pictures->html( $product_object ),
+						'regenerate_html'         => null === $this->regenerate ? '' : $this->regenerate->html( $product_object ),
+						'pricing_html'            => null === $this->pricing ? '' : $this->pricing->html( $product_object, in_array( PricingPanel::DISCLOSURE, is_array( $panel['open'] ) ? $panel['open'] : array(), true ) ),
 					)
 				),
 				'search_urls'  => self::search_urls(),

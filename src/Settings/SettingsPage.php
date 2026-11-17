@@ -12,6 +12,10 @@ namespace Pixonaut\WooCommerce\Settings;
 use Pixonaut\WooCommerce\Admin\ConnectionScreen;
 use Pixonaut\WooCommerce\Admin\DeveloperTools;
 use Pixonaut\WooCommerce\Admin\Notices;
+use Pixonaut\WooCommerce\Admin\VariationPicturesField;
+use Pixonaut\WooCommerce\Catalogue\PictureReport;
+use Pixonaut\WooCommerce\Catalogue\VariationPictureCost;
+use Pixonaut\WooCommerce\Catalogue\VariationPictures;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Pricing\Amount;
 use Pixonaut\WooCommerce\Storefront\Accent;
@@ -134,6 +138,7 @@ final class SettingsPage {
 			),
 			'pixonaut_wc_pictures'     => array(
 				Settings::PRODUCT_PICTURES,
+				Settings::VARIATION_PICTURES,
 			),
 			'pixonaut_wc_line_details' => array(
 				Settings::LINE_PICTURE_VIEW,
@@ -209,13 +214,18 @@ final class SettingsPage {
 			'on'      => Settings::LOW_RESOLUTION_WARNINGS,
 			'checked' => true,
 		),
+		Settings::VARIATION_PICTURES          => array(
+			'on'      => Settings::PRODUCT_PICTURES,
+			'checked' => true,
+		),
 	);
 
 	/**
-	 * @param Settings $settings The registry whose settings the page shows.
-	 * @param string   $file     Main plugin file, for asset URLs.
+	 * @param Settings                  $settings The registry whose settings the page shows.
+	 * @param string                    $file     Main plugin file, for asset URLs.
+	 * @param VariationPictureCost|null $cost     What turning a picture for every variation on costs, which needs confirming past its warning; null saves it as any other.
 	 */
-	public function __construct( private readonly Settings $settings, private readonly string $file = '' ) {
+	public function __construct( private readonly Settings $settings, private readonly string $file = '', private readonly ?VariationPictureCost $cost = null ) {
 	}
 
 	public function register(): void {
@@ -332,9 +342,18 @@ final class SettingsPage {
 	 */
 	public function save( string $tab ): void {
 		self::load_wc_settings();
-		$before = $this->settings->get( Settings::DESIGNER_ACCENT_COLOUR );
-		$ending = $this->settings->get( Settings::PRICE_ENDING );
+		$before  = $this->settings->get( Settings::DESIGNER_ACCENT_COLOUR );
+		$ending  = $this->settings->get( Settings::PRICE_ENDING );
+		$refused = self::STOREFRONT === $tab ? $this->unconfirmed_variation_pictures() : null;
+		if ( null !== $refused ) {
+			// Saved as it was: off.
+			unset( $_POST[ Settings::OPTION ][ $refused[0] ] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- checked in load().
+		}
 		WC_Admin_Settings::save_fields( $this->fields( $tab ) );
+		if ( null !== $refused ) {
+			WC_Admin_Settings::add_error( Settings::PRODUCT_PICTURES === $refused[0] ? VariationPicturesField::refused_pictures( $refused[1] ) : VariationPicturesField::refused( $refused[1] ) );
+			return;
+		}
 		if ( self::PRICES === $tab && ! $this->ending_is_below_step() ) {
 			$this->settings->set( Settings::PRICE_ENDING, $ending );
 			WC_Admin_Settings::add_error( __( 'Prices end in an amount below the price step: with a step of 10, anything from 0 up to 9.99. The ending you had is kept.', 'pixonaut-for-woocommerce' ) );
@@ -346,6 +365,37 @@ final class SettingsPage {
 			return;
 		}
 		WC_Admin_Settings::add_message( __( 'Your settings have been saved.', 'pixonaut-for-woocommerce' ) );
+	}
+
+	/**
+	 * What a save that starts drawing a picture for every variation needs
+	 * confirmed, when it is not: the setting it would turn on (variation
+	 * pictures, or product pictures while some products have them on), and
+	 * the warning; null when nothing needs confirming.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function unconfirmed_variation_pictures(): ?array {
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- checked in load().
+		$posted = array();
+		foreach ( array( Settings::PRODUCT_PICTURES, Settings::VARIATION_PICTURES ) as $key ) {
+			$posted[ $key ] = isset( $_POST[ Settings::OPTION ][ $key ] ) && in_array( sanitize_key( wp_unslash( $_POST[ Settings::OPTION ][ $key ] ) ), array( '1', 'yes' ), true );
+		}
+		$confirmed = isset( $_POST[ VariationPicturesField::CONFIRM_FIELD ] ) && VariationPicturesField::CONFIRMED === sanitize_key( wp_unslash( $_POST[ VariationPicturesField::CONFIRM_FIELD ] ) );
+		// phpcs:enable
+		if ( null === $this->cost || $confirmed || ! $posted[ Settings::PRODUCT_PICTURES ] ) {
+			return null;
+		}
+		if ( true !== $this->settings->get( Settings::PRODUCT_PICTURES ) ) {
+			// Pictures start now: every product that has variation pictures on draws them.
+			$warning = VariationPictureCost::warning( array( 'on' => true ) + $this->cost->turning_on( $this->cost->resolving_on( $posted[ Settings::VARIATION_PICTURES ] ) ) );
+			return null === $warning ? null : array( Settings::PRODUCT_PICTURES, $warning );
+		}
+		if ( ! $posted[ Settings::VARIATION_PICTURES ] || true === $this->settings->get( Settings::VARIATION_PICTURES ) ) {
+			return null;
+		}
+		$warning = VariationPictureCost::warning( $this->cost->changing_to( $this->cost->following_store_wide(), true ) );
+		return null === $warning ? null : array( Settings::VARIATION_PICTURES, $warning );
 	}
 
 	/**
@@ -532,7 +582,10 @@ final class SettingsPage {
 			'default'  => $setting->stored( $setting->fallback ),
 			'desc_tip' => false,
 		) + $setting->field();
-		$rule  = self::DEPENDENT[ $setting->key ] ?? null;
+		if ( Settings::VARIATION_PICTURES === $setting->key ) {
+			$field = $this->variation_pictures_field( $field );
+		}
+		$rule = self::DEPENDENT[ $setting->key ] ?? null;
 		if ( null === $rule ) {
 			return $field;
 		}
@@ -551,6 +604,32 @@ final class SettingsPage {
 		}
 		$field['custom_attributes'] = $attributes + ( is_array( $field['custom_attributes'] ?? null ) ? $field['custom_attributes'] : array() );
 		$field['row_class']         = self::DEPENDENT_ROW . ( $this->applies( $rule ) ? '' : ' ' . self::HIDDEN_ROW );
+		return $field;
+	}
+
+	/**
+	 * The picture for every variation setting's field: the anchor the studio
+	 * links to, and what the settings script needs to show what turning it
+	 * on or off costs before it is saved.
+	 *
+	 * @param array<string, mixed> $field The field.
+	 * @return array<string, mixed>
+	 */
+	private function variation_pictures_field( array $field ): array {
+		$field['desc']              = '<span id="' . esc_attr( PictureReport::SETTING_ANCHOR ) . '"></span>' . ( is_string( $field['desc'] ?? null ) ? $field['desc'] : '' );
+		$field['custom_attributes'] = array(
+			'data-pixonaut-cost-url'            => rest_url( Plugin::REST_NAMESPACE . VariationPicturesField::ROUTE ),
+			'data-pixonaut-cost-nonce'          => wp_create_nonce( 'wp_rest' ),
+			'data-pixonaut-cost-saved'          => true === $this->settings->get( Settings::VARIATION_PICTURES ) ? VariationPictures::ON : VariationPictures::OFF,
+			// Turning product pictures on draws the variation pictures of every product that has them on.
+			'data-pixonaut-cost-pictures'       => self::field_id( Settings::PRODUCT_PICTURES ),
+			'data-pixonaut-cost-pictures-saved' => true === $this->settings->get( Settings::PRODUCT_PICTURES ) ? VariationPictures::ON : VariationPictures::OFF,
+			'data-pixonaut-confirm-name'        => VariationPicturesField::CONFIRM_FIELD,
+			/* translators: Box the store manager ticks to turn on a picture for every variation although it takes much of the shop's storage. */
+			'data-pixonaut-confirm-label'       => __( 'Turn it on anyway', 'pixonaut-for-woocommerce' ),
+			/* translators: Shown under Generate a picture for every variation when what turning it on or off costs could not be read. */
+			'data-pixonaut-cost-error'          => __( 'What this costs could not be read. Saving it on still asks for a confirmation when it takes much of your shop\'s storage.', 'pixonaut-for-woocommerce' ),
+		);
 		return $field;
 	}
 

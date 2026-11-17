@@ -742,6 +742,42 @@ any of them, or the product, still shows it.
 The buttons and the actions are there while **Use Pixonaut pictures as
 product images** is on.
 
+### A picture for every variation
+
+When a product's showcase set is drawn flat (the template alone, without
+the blank), all its variations share that one picture, whichever colour or
+frame they sell, so the product page shows the same picture whatever the
+shopper picks. **Generate a picture for every variation** (**Pixonaut >
+Storefront**, under **Use Pixonaut pictures as product images**; off by
+default) draws each such variation on its blank's photo instead, as the
+variant it sells, with the same showcase set. Variations of one variant, the
+sizes of a poster for one, still share one picture. A variation that chose
+its own picture view keeps it.
+
+A variable product can choose for itself under **Picture for every
+variation** in **Product images** in its Pixonaut tab: **As the store-wide
+setting**, **On** or **Off**.
+
+Every picture is a file in your shop's media library, with the smaller
+sizes WordPress makes of it, so it takes space on your shop's own server,
+not in Pixonaut. Before you save the change, the setting says what it does:
+how many new pictures it draws, and about how much space they take (the
+average of the Pixonaut pictures your shop keeps already, times the number
+of pictures). When that is more than a tenth of the space left where your
+shop keeps its media (the free space on its disk, or on a WordPress network
+what is left of the site's upload quota), or when that space cannot be
+read, it warns you, and saves it on only once you tick **Turn it on
+anyway**.
+
+The pictures are drawn in the background, a page of a product's variations
+at a time so other products' pictures are drawn in between, and more
+slowly when Pixonaut asks the store to wait. Turning it off draws the
+variations flat again, and deletes the variation pictures nothing else
+uses; the setting says how much space that frees before you save.
+
+The plugin tells Pixonaut how many pictures your shop keeps and how much
+space they take, product by product, so the Pixonaut studio can show it.
+
 The **Product image** box says when the image is Pixonaut's picture, and a
 personalised variation's options say the same beside its image.
 

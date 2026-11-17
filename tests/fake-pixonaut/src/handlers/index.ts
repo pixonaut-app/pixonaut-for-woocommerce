@@ -68,6 +68,7 @@ import {
 	retryOrder,
 	updateOrder,
 } from './orders';
+import { reportPictureStorage } from './picture-storage';
 import {
 	importCatalogueBlank,
 	listCatalogueProducts,
@@ -92,6 +93,7 @@ export const HANDLERS: Partial<Record<OperationKey, Handler>> = {
 	'GET /v1/connect': readConnection,
 	'PATCH /v1/connect': updateConnection,
 	'POST /v1/connect/token': exchangeConnectCode,
+	'PUT /v1/connect/picture-storage': reportPictureStorage,
 	'PUT /v1/connect/store-access': setStoreAccess,
 	'DELETE /v1/connect/store-access': deleteStoreAccess,
 	'GET /f/{file}': readFontFile,

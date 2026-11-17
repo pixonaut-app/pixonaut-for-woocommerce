@@ -36,6 +36,7 @@ pretty permalinks).
 | `/pixonaut/v1/shop-tools/(?P<tool>[^/]+)` | POST |
 | `/pixonaut/v1/storefront/reads-ahead` | GET |
 | `/pixonaut/v1/storefront/unavailable` | POST |
+| `/pixonaut/v1/variation-pictures/cost` | GET |
 | `/pixonaut/v1/webhook` | POST |
 
 <!-- END GENERATED rest-routes -->

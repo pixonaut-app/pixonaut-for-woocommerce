@@ -42,7 +42,9 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/regenerate-product-pictures` | Draws the Pixonaut pictures of up to 50 products again, as Regenerate in background does | `edit_product` on every product |
 | `pixonaut-for-woocommerce/recheck-products` | Clears the cached catalogue and re-checks every linked product, as Recheck products does | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/get-plugin-settings` | Every setting on the Pixonaut settings page, by its key | `manage_woocommerce` |
-| `pixonaut-for-woocommerce/update-plugin-settings` | Changes the settings given, as saving the settings page does | `manage_woocommerce` |
+| `pixonaut-for-woocommerce/update-plugin-settings` | Changes the settings given, as saving the settings page does; refuses to turn `variation_pictures` on | `manage_woocommerce` |
+| `pixonaut-for-woocommerce/get-variation-pictures` | Whether a picture is drawn for every variation, store-wide or for a variable product (`product_id`), and what turning it on or off costs the shop's storage | `manage_woocommerce`; `edit_product` with `product_id` |
+| `pixonaut-for-woocommerce/set-variation-pictures` | Turns it on or off store-wide, or sets a product's `choice`; past the storage warning, on needs `confirm` | `manage_woocommerce`; `edit_product` with `product_id` |
 | `pixonaut-for-woocommerce/get-pricing-settings` | The store's pricing rule, currency buffer and whether prices change by themselves, with the store's currency | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/update-pricing-settings` | Changes the pricing settings given, as saving the Prices tab does | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/get-product-prices` | Each variation of a product on a blank with its printshop cost, price, margin and how it stands to the pricing rule | `edit_product` on that product |
@@ -697,6 +699,20 @@ screen's Regenerate in background button and the products list's bulk action use
 call, drawing nothing, when one of them shows no Pixonaut picture. Each
 product's `state` is `drawing`, `drawn`, `kept` (the store manager's own
 image), `failed` or `error`.
+
+`get-variation-pictures` answers `store_wide`, `on`, and for a product its
+`choice` (`default`, `on`, `off`), with `turning_on` and `turning_off`:
+each `pictures`, `bytes`, `free` and `percent` (null when the free space
+cannot be read), `warn`, and the `summary` and `warning` the settings page
+and the product's Pixonaut tab show (`VariationPictureCost`).
+`set-variation-pictures` takes `choice` (store-wide `on` or `off`) and
+`product_id`; when the change warns (more than
+`VariationPictureCost::WARN_PERCENT` of the free space, or free space that
+cannot be read), it refuses with
+`pixonaut_wc_ability_variation_pictures_unconfirmed` unless `confirm` is
+true. `update-plugin-settings` refuses to turn `variation_pictures` on
+(`pixonaut_wc_ability_variation_pictures_cost`), so the cost is always
+read first.
 
 `recheck-products` clears the cached catalogue answers, then queues the
 re-check of every linked product, as Recheck products in the developer

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Abilities;
 
+use Pixonaut\WooCommerce\Catalogue\VariationPictureCost;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\Accent;
 use WP_Error;
@@ -22,9 +23,10 @@ use WP_Error;
 final class UpdatePluginSettings implements Ability {
 
 	/**
-	 * @param Settings $settings The settings.
+	 * @param Settings                  $settings The settings.
+	 * @param VariationPictureCost|null $cost     What turning product pictures on draws for products with variation pictures on; null checks nothing.
 	 */
-	public function __construct( private readonly Settings $settings ) {
+	public function __construct( private readonly Settings $settings, private readonly ?VariationPictureCost $cost = null ) {
 	}
 
 	public function name(): string {
@@ -71,6 +73,30 @@ final class UpdatePluginSettings implements Ability {
 			if ( ! $settings[ $key ]->accepts( $value ) ) {
 				/* translators: %s: the key of a setting, e.g. default_layout. */
 				return new WP_Error( 'pixonaut_wc_ability_setting_invalid', sprintf( __( 'The setting %s does not take that value.', 'pixonaut-for-woocommerce' ), $key ) );
+			}
+		}
+		if ( true === ( $input[ Settings::VARIATION_PICTURES ] ?? null ) && true !== $this->settings->get( Settings::VARIATION_PICTURES ) ) {
+			return new WP_Error(
+				'pixonaut_wc_ability_variation_pictures_cost',
+				sprintf(
+					/* translators: %s: the name of the ability that turns a picture for every variation on. */
+					__( 'Turn variation_pictures on with %s, which says first what it costs the shop\'s storage. Nothing was changed.', 'pixonaut-for-woocommerce' ),
+					Abilities::tool( SetVariationPictures::NAME )
+				)
+			);
+		}
+		if ( null !== $this->cost && true === ( $input[ Settings::PRODUCT_PICTURES ] ?? null ) && true !== $this->settings->get( Settings::PRODUCT_PICTURES ) ) {
+			$warning = VariationPictureCost::warning( array( 'on' => true ) + $this->cost->turning_on( $this->cost->resolving_on( true === ( $input[ Settings::VARIATION_PICTURES ] ?? $this->settings->get( Settings::VARIATION_PICTURES ) ) ) ) );
+			if ( null !== $warning ) {
+				return new WP_Error(
+					'pixonaut_wc_ability_variation_pictures_cost',
+					sprintf(
+						/* translators: 1: why turning product pictures on needs confirming, 2: the name of the ability that turns a picture for every variation on or off. */
+						__( '%1$s Products with a picture for every variation on would draw them all once product pictures are on. Turn variation pictures off with %2$s first, turn product_pictures on, then turn them on again with %2$s, which asks for the confirmation. Nothing was changed.', 'pixonaut-for-woocommerce' ),
+						$warning,
+						Abilities::tool( SetVariationPictures::NAME )
+					)
+				);
 			}
 		}
 		$accent = $input[ Settings::DESIGNER_ACCENT ] ?? $this->settings->get( Settings::DESIGNER_ACCENT );

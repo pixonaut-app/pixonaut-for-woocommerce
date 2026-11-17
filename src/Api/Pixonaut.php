@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Vendor\Nyholm\Psr7\Factory\Psr17Factory;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Config;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Credentials\Credential;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Credentials\CredentialProvider;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
@@ -52,6 +53,8 @@ final class Pixonaut {
 		// Its body is the credential Pixonaut calls the store with.
 		'connectedStore.holdAccess',
 		'connectedStore.cutAccess',
+		// Not in the pinned SDK yet: see `PENDING`.
+		'connectedStore.reportPictureStorage',
 		'webhookEndpoints.list',
 		'webhookEndpoints.update',
 		'webhookEndpoints.ping',
@@ -109,6 +112,21 @@ final class Pixonaut {
 		'shareLinks.update',
 		// Revoking a revoked link changes nothing, so it takes no key.
 		'shareLinks.delete',
+	);
+
+	/**
+	 * Operations the plugin calls that the pinned SDK does not describe yet,
+	 * each as Pixonaut agreed to add it. One the SDK has is taken from it
+	 * instead, so moving to an SDK that has them changes nothing here but
+	 * this list, which then empties.
+	 *
+	 * @var array<string, array{method: string, path: string}>
+	 */
+	private const PENDING = array(
+		'connectedStore.reportPictureStorage' => array(
+			'method' => 'PUT',
+			'path'   => '/v1/connect/picture-storage',
+		),
 	);
 
 	/**
@@ -237,6 +255,9 @@ final class Pixonaut {
 			return self::$catalogue;
 		}
 		$operations = array();
+		foreach ( self::PENDING as $id => $pending ) {
+			$operations[ $id ] = new Operation( $id, $pending['method'], $pending['path'], array( Credential::IntegrationKey ) );
+		}
 		foreach ( Operations::all() as $operation ) {
 			$operations[ $operation->id ] = $operation;
 		}

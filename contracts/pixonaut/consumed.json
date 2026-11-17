@@ -64,6 +64,7 @@
 		"POST /v1/templates/{id}/print-size",
 		"POST /v1/webhooks/{id}/deliveries/redeliver-failed",
 		"POST /v1/webhooks/{id}/ping",
+		"PUT /v1/connect/picture-storage",
 		"PUT /v1/connect/store-access",
 		"PUT /v1/designs/{id}/external-ref"
 	],
@@ -158,8 +159,11 @@
 		"POST /v1/templates/{id}/print-size": ["integrationKey", "publishableKey"],
 		"POST /v1/webhooks/{id}/deliveries/redeliver-failed": "integrationKey",
 		"POST /v1/webhooks/{id}/ping": "integrationKey",
+		"PUT /v1/connect/picture-storage": "integrationKey",
 		"PUT /v1/connect/store-access": "integrationKey",
 		"PUT /v1/designs/{id}/external-ref": "integrationKey"
 	},
-	"pending": []
+	"pending": [
+		{ "op": "PUT /v1/connect/picture-storage", "requirement": "pixonaut-app/pixonaut-for-woocommerce#242" }
+	]
 }

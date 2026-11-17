@@ -121,6 +121,9 @@ export const NO_SPEC = [
 	'src/Abilities/GetProductPictureViews.php',
 	'src/Abilities/GetProductPrices.php',
 	'src/Abilities/GetProductSplitListing.php',
+	'src/Abilities/GetVariationPictures.php',
+	'src/Abilities/SetVariationPictures.php',
+	'src/Abilities/VariationPicturesState.php',
 	'src/Abilities/LinkProduct.php',
 	'src/Abilities/ListTemplates.php',
 	'src/Abilities/PriceProduct.php',
@@ -158,6 +161,15 @@ export const NO_SPEC = [
 	'templates/emails/plain/needs-attention.php',
 	'templates/emails/plain/part-shipped.php',
 	'templates/emails/plain/tracking-changed.php',
+	// A picture for every variation and what it costs the shop's storage: the PHP and JS suites.
+	'src/Admin/VariationPicturesField.php',
+	'src/Catalogue/MediaSpace.php',
+	'src/Catalogue/PictureReport.php',
+	'src/Catalogue/PictureStorage.php',
+	'src/Catalogue/VariationPictureCost.php',
+	'src/Catalogue/VariationPictures.php',
+	'templates/admin/product-variation-pictures.php',
+	'assets/src/admin/variation-pictures.ts',
 ];
 
 /**

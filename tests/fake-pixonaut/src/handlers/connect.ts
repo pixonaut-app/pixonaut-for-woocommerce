@@ -55,6 +55,7 @@ export function revoke(state: State, store: Store): void {
 	store.integrationKey = '';
 	store.storeAccess = null;
 	store.storeAccessRequest = null;
+	store.pictureStorage = undefined;
 	store.webhook.active = false;
 	store.publishableKey = '';
 	store.allowedOrigins = [];

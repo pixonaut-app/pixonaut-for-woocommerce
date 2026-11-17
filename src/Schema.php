@@ -217,6 +217,26 @@ final class Schema {
 	const VARIATION_CARD_PHOTO_META = '_pixonaut_card_photo';
 
 	/**
+	 * Product meta choosing whether each of its variations is drawn on its
+	 * blank's photo, its own picture, rather than sharing the flat one:
+	 * `on`, `off`, or absent for the store-wide setting
+	 * (`VariationPictures`).
+	 */
+	const PRODUCT_VARIATION_PICTURES_META = '_pixonaut_variation_pictures';
+
+	/**
+	 * Option holding when the picture report was last sent to Pixonaut, as
+	 * a Unix time (`PictureReport`).
+	 */
+	const PICTURE_REPORT_SENT_OPTION = 'pixonaut_wc_picture_report_sent';
+
+	/**
+	 * Transient keeping the average bytes of a Pixonaut picture the shop
+	 * keeps, for the estimate of variation pictures (`PictureStorage`).
+	 */
+	const PICTURE_AVERAGE_TRANSIENT = 'pixonaut_wc_picture_average_bytes';
+
+	/**
 	 * Option holding the exchange rates last read, their day and when they
 	 * were read: converts a printshop's costs to the store's currency.
 	 */

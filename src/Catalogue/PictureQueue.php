@@ -45,6 +45,29 @@ final class PictureQueue {
 	 */
 	public const VARIATIONS_ACTION = 'pixonaut_wc_catalogue_pictures_variations';
 
+	/**
+	 * Variations one variations job queues drawings of; the rest wait for
+	 * the next page (`queue_variations()`).
+	 */
+	public const VARIATIONS_PAGE = 20;
+
+	/**
+	 * Variations one variations job reads at most, however few of them are
+	 * due, so a product of many variations drawn already is read in pages too.
+	 */
+	public const VARIATIONS_EXAMINED = 5 * self::VARIATIONS_PAGE;
+
+	/**
+	 * How long the next page of a product's variations waits, so other
+	 * products' drawings queued meanwhile run first.
+	 */
+	public const VARIATIONS_PAGE_SECONDS = 60;
+
+	/**
+	 * Arguments of the variations job: the product, and where it starts.
+	 */
+	private const VARIATIONS_ARGS = 2;
+
 	public const BACKFILL_OPTION = Schema::PICTURES_BACKFILL_OPTION;
 
 	/**
@@ -58,7 +81,7 @@ final class PictureQueue {
 	 * generation, and its card rows, with which its variations are drawn
 	 * flat too.
 	 */
-	private const WATCHED_META = array( ProductConfig::META_KEY, ProductVariant::META_KEY, PictureImage::THUMBNAIL_META, ShowcaseImages::META_KEY, PictureView::META_KEY, ProductPictures::PRODUCT_GENERATION_META, SplitCards::META, CardPhotos::META_KEY );
+	private const WATCHED_META = array( ProductConfig::META_KEY, ProductVariant::META_KEY, PictureImage::THUMBNAIL_META, ShowcaseImages::META_KEY, PictureView::META_KEY, ProductPictures::PRODUCT_GENERATION_META, SplitCards::META, CardPhotos::META_KEY, VariationPictures::META_KEY );
 
 	/**
 	 * The arguments the post meta actions pass.
@@ -102,7 +125,7 @@ final class PictureQueue {
 	public function register(): void {
 		add_action( ProductPictures::ACTION, array( $this, 'running' ), self::BEFORE_JOB_PRIORITY );
 		add_action( self::QUEUE_ACTION, array( $this, 'queue_page' ) );
-		add_action( self::VARIATIONS_ACTION, array( $this, 'queue_variations' ) );
+		add_action( self::VARIATIONS_ACTION, array( $this, 'queue_variations' ), 10, self::VARIATIONS_ARGS );
 		add_action( ProductPictures::RETRY_ACTION, array( $this, 'queue' ) );
 		add_action( 'delete_attachment', array( $this, 'deleting_attachment' ) );
 		foreach ( array( 'added_post_meta', 'updated_post_meta', 'deleted_post_meta' ) as $action ) {
@@ -186,16 +209,31 @@ final class PictureQueue {
 	}
 
 	/**
-	 * The variations job: queues each variation of the product whose picture is due.
+	 * The variations job: queues each variation of the product whose picture
+	 * is due, `VARIATIONS_PAGE` at a time. The rest are checked by the same
+	 * job `VARIATIONS_PAGE_SECONDS` later, from where this one stopped, so
+	 * a product of many variations (each drawn for every variation,
+	 * `VariationPictures`) leaves room for other products' pictures between
+	 * its pages rather than holding every runner.
 	 *
 	 * @param mixed $product_id A variable product.
+	 * @param mixed $from       The position among its variations to start at; 0 for the first.
 	 */
-	public function queue_variations( mixed $product_id ): void {
-		$product = wc_get_product( (int) $product_id );
-		foreach ( $product instanceof WC_Product ? $product->get_children() : array() as $child_id ) {
-			$child = wc_get_product( $child_id );
-			if ( $child instanceof WC_Product ) {
-				$this->queue_if_due( $child );
+	public function queue_variations( mixed $product_id, mixed $from = 0 ): void {
+		$product  = wc_get_product( (int) $product_id );
+		$children = $product instanceof WC_Product ? array_values( $product->get_children() ) : array();
+		$queued   = 0;
+		$count    = count( $children );
+		$first    = max( 0, (int) $from );
+		for ( $index = $first; $index < $count; ++$index ) {
+			if ( self::VARIATIONS_PAGE === $queued || self::VARIATIONS_EXAMINED === $index - $first ) {
+				as_schedule_single_action( $this->now() + self::VARIATIONS_PAGE_SECONDS, self::VARIATIONS_ACTION, array( (int) $product_id, $index ), ProductPictures::GROUP );
+				return;
+			}
+			$child = wc_get_product( $children[ $index ] );
+			if ( $child instanceof WC_Product && $this->is_due( $child ) ) {
+				$this->queue( $child->get_id() );
+				++$queued;
 			}
 		}
 	}
@@ -294,13 +332,14 @@ final class PictureQueue {
 	}
 
 	/**
-	 * Checks every product when the setting is turned on or off.
+	 * Checks every product when pictures as product images, or a picture
+	 * for every variation, is turned on or off.
 	 *
 	 * @param mixed $old_value The settings before.
 	 * @param mixed $value     The settings now.
 	 */
 	public function settings_changed( mixed $old_value, mixed $value ): void {
-		if ( $this->enabled_in( $old_value ) !== $this->enabled_in( $value ) ) {
+		if ( $this->enabled_in( $old_value, Settings::PRODUCT_PICTURES ) !== $this->enabled_in( $value, Settings::PRODUCT_PICTURES ) || $this->enabled_in( $old_value, Settings::VARIATION_PICTURES ) !== $this->enabled_in( $value, Settings::VARIATION_PICTURES ) ) {
 			self::queue_all();
 		}
 	}
@@ -353,15 +392,17 @@ final class PictureQueue {
 		$checking = as_get_scheduled_actions(
 			array(
 				'hook'     => self::VARIATIONS_ACTION,
-				'args'     => array( $product->get_id() ),
 				'group'    => ProductPictures::GROUP,
 				'status'   => $active,
-				'per_page' => 1,
-			),
-			'ids'
+				'per_page' => -1,
+			)
 		);
-		if ( array() !== $checking ) {
-			return true;
+		foreach ( $checking as $check ) {
+			// Its first page, or a later one (`queue_variations()`).
+			$args = $check instanceof ActionScheduler_Action ? $check->get_args() : array();
+			if ( (int) ( $args[0] ?? 0 ) === $product->get_id() ) {
+				return true;
+			}
 		}
 		$drawings = as_get_scheduled_actions(
 			array(
@@ -462,13 +503,14 @@ final class PictureQueue {
 	}
 
 	/**
-	 * Whether the settings make pictures product images.
+	 * Whether a checkbox setting is on in the settings.
 	 *
-	 * @param mixed $settings The settings option's value.
+	 * @param mixed  $settings The settings option's value.
+	 * @param string $key      The setting: PRODUCT_PICTURES or VARIATION_PICTURES.
 	 */
-	private function enabled_in( mixed $settings ): bool {
+	private function enabled_in( mixed $settings, string $key ): bool {
 		$stored = is_array( $settings ) ? $settings : array();
-		return true === $this->settings->all()[ Settings::PRODUCT_PICTURES ]->resolve( $stored[ Settings::PRODUCT_PICTURES ] ?? null );
+		return true === $this->settings->all()[ $key ]->resolve( $stored[ $key ] ?? null );
 	}
 
 	/**

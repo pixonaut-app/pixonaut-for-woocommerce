@@ -225,6 +225,22 @@ add_filter( 'pixonaut_wc_catalogue_layout', function ( $layout, $bought ) {
 }, 10, 2 );
 ```
 
+### `pixonaut_wc_catalogue_media_free_bytes`
+
+Filters the free space, in bytes, where the shop keeps its media, which Pixonaut pictures take: what is left of the site's upload quota on a network enforcing one, else the free space on the disk of the uploads directory. Return null when it cannot be known. A site whose media is kept elsewhere (offloaded to object storage) can say how much room is left there.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `$free` | `int\|null` | Free bytes; null when they cannot be read. |
+
+Since 1.15.0. Fired in `src/Catalogue/MediaSpace.php`.
+
+```php
+add_filter( 'pixonaut_wc_catalogue_media_free_bytes', function ( $free ) {
+    return 500 * GB_IN_BYTES; // The bucket's own limit.
+} );
+```
+
 ### `pixonaut_wc_catalogue_product_config`
 
 Filters a product's or variation's Pixonaut configuration before the product screen saves it.
