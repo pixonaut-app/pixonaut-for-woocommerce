@@ -58,12 +58,12 @@ final class PictureReport {
 	 * Products the report lists at most, the largest first, as Pixonaut
 	 * takes them.
 	 */
-	public const MAX_PRODUCTS = 5000;
+	public const MAX_PRODUCTS = 1000;
 
 	/**
 	 * The longest product name Pixonaut takes.
 	 */
-	public const MAX_NAME_LENGTH = 500;
+	public const MAX_NAME_LENGTH = 200;
 
 	private const OPERATION = 'connectedStore.reportPictureStorage';
 
@@ -182,7 +182,7 @@ final class PictureReport {
 	/**
 	 * The report, as Pixonaut takes it.
 	 *
-	 * @return array{pictureCount: int, pictureBytes: int, variationPictureCount: int, variationPictureBytes: int, freeBytes: int|null, variationPicturesOn: bool, links: array{variationSetting: string, cleanUp: string}, products: list<array{storeProductId: string, name: string, pictureCount: int, pictureBytes: int, variationPictureCount: int, variationPictureBytes: int, variationPicturesOn: bool, editUrl: string}>}
+	 * @return array{pictureCount: int, pictureBytes: int, variationPictureCount: int, variationPictureBytes: int, freeBytes: int|null, variationPicturesOn: bool, links: array{variationSetting: string, cleanUp: string}, productCount: int, products: list<array{storeProductId: string, name: string, pictureCount: int, pictureBytes: int, variationPictureCount: int, variationPictureBytes: int, variationPicturesOn: bool, editUrl: string}>}
 	 */
 	public function body(): array {
 		$totals = $this->storage->totals();
@@ -222,6 +222,8 @@ final class PictureReport {
 				'variationSetting' => $settings,
 				'cleanUp'          => $settings,
 			),
+			// Those past the cap included.
+			'productCount'          => count( $totals['products'] ),
 			'products'              => $products,
 		);
 	}
