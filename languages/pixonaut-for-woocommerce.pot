@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Pixonaut for WooCommerce 1.11.1\n"
+"Project-Id-Version: Pixonaut for WooCommerce 1.12.2\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-16T14:20:16+00:00\n"
+"POT-Creation-Date: 2026-11-17T00:09:37+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -5891,13 +5891,13 @@ msgid "As swatches, like the designer's own choices"
 msgstr ""
 
 #. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 4 and 7. Shown on the product page: how long until the customer has the order.
-#: src/Storefront/DeliveryTime.php:77
+#: src/Storefront/DeliveryTime.php:107
 #, php-format
 msgid "Delivered in %1$d–%2$d days"
 msgstr ""
 
 #. translators: %d: a number of days. Shown on the product page: how long until the customer has the order.
-#: src/Storefront/DeliveryTime.php:79
+#: src/Storefront/DeliveryTime.php:109
 #, php-format
 msgid "Delivered in %d day"
 msgid_plural "Delivered in %d days"
@@ -5905,13 +5905,13 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 2 and 3. Shown on the product page: how long the product takes to make before it is sent.
-#: src/Storefront/DeliveryTime.php:87
+#: src/Storefront/DeliveryTime.php:117
 #, php-format
 msgid "Made in %1$d–%2$d days"
 msgstr ""
 
 #. translators: %d: a number of days. Shown on the product page: how long the product takes to make before it is sent.
-#: src/Storefront/DeliveryTime.php:89
+#: src/Storefront/DeliveryTime.php:119
 #, php-format
 msgid "Made in %d day"
 msgid_plural "Made in %d days"
@@ -5919,13 +5919,13 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 5 and 10. Shown on the product page: how long the parcel is on its way once it is sent.
-#: src/Storefront/DeliveryTime.php:97
+#: src/Storefront/DeliveryTime.php:127
 #, php-format
 msgid "Shipping takes %1$d–%2$d days"
 msgstr ""
 
 #. translators: %d: a number of days. Shown on the product page: how long the parcel is on its way once it is sent.
-#: src/Storefront/DeliveryTime.php:99
+#: src/Storefront/DeliveryTime.php:129
 #, php-format
 msgid "Shipping takes %d day"
 msgid_plural "Shipping takes %d days"
