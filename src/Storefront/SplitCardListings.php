@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\ArchiveCards;
+use Pixonaut\WooCommerce\Catalogue\ArchiveTerms;
 use Pixonaut\WooCommerce\Catalogue\CardPages;
 use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
@@ -18,6 +20,7 @@ use WC_Query;
 use WeakMap;
 use WP_Post;
 use WP_Query;
+use WP_Term;
 
 /**
  * The shop, its category, tag and attribute pages and product search list
@@ -34,7 +37,10 @@ use WP_Query;
  * makes cards only while a filter chooses a value of it: a listing shows
  * the product's cards holding values of exactly the filtered attributes a
  * filter is on (`SplitCards::filtered_taxonomies()`). Every card keeps its
- * page (`CardPages`).
+ * page (`CardPages`). While several values of such an attribute are chosen,
+ * the product's cards of one design show once (`CardDesigns`), and a theme
+ * asks for the others as the card's swatches, on
+ * `pixonaut_wc_storefront_card_swatches` (`swatches()`).
  *
  * Each card links to the product with its values chosen, and, while a
  * filter is on, with the variation the filters chose (`FilteredOpening`),
@@ -48,6 +54,11 @@ use WP_Query;
  * written again) shows the product as itself, and has its rows written.
  */
 final class SplitCardListings {
+
+	/**
+	 * What a theme asks for the swatches of the card its loop shows.
+	 */
+	public const SWATCHES_FILTER = 'pixonaut_wc_storefront_card_swatches';
 
 	/**
 	 * The joined card rows' alias.
@@ -105,6 +116,15 @@ final class SplitCardListings {
 	private ?int $listed_id = null;
 
 	/**
+	 * Of each product several of whose cards the listing shows as one
+	 * design (`CardDesigns`), the other cards of each design shown, by
+	 * product id and the shown card's key.
+	 *
+	 * @var array<int, array<string, list<string>>>
+	 */
+	private array $designs = array();
+
+	/**
 	 * The cards a Product Template block has shown so far, in order, `NO_CARD`
 	 * for a product listed once.
 	 *
@@ -125,6 +145,7 @@ final class SplitCardListings {
 		add_filter( 'post_type_link', array( $this, 'link' ), 10, 2 );
 		add_filter( 'pre_render_block', array( $this, 'start_template' ), 10, 2 );
 		add_filter( 'render_block_woocommerce/product-template', array( $this, 'keys' ) );
+		add_filter( self::SWATCHES_FILTER, array( $this, 'swatches' ), 10, 2 );
 	}
 
 	/**
@@ -148,8 +169,9 @@ final class SplitCardListings {
 		if ( ! is_array( $clauses ) || ! $query instanceof WP_Query || ! self::lists_cards( $query ) || str_contains( (string) ( $clauses['join'] ?? '' ), " AS {$alias} " ) ) {
 			return $clauses;
 		}
-		$chosen = FilterMatches::chosen();
-		$left   = self::left_out( $clauses, $chosen );
+		$chosen        = FilterMatches::chosen();
+		$left          = self::left_out( $clauses, $chosen );
+		$this->designs = $left['designs'];
 		global $wpdb;
 		if ( array() !== $left['products'] ) {
 			$clauses['where'] = ( $clauses['where'] ?? '' ) . " AND {$wpdb->posts}.ID NOT IN ( " . implode( ', ', array_map( 'intval', $left['products'] ) ) . ' )'; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- a table name and integers.
@@ -173,7 +195,7 @@ final class SplitCardListings {
 	 *
 	 * @param array<array-key, mixed>  $clauses The listing's clauses.
 	 * @param array<string, list<int>> $chosen  The filters' values, as `FilterMatches::chosen()` reads them.
-	 * @return array{products: list<int>, cards: array<int, list<string>>}
+	 * @return array{products: list<int>, cards: array<int, list<string>>, designs: array<int, array<string, list<string>>>}
 	 */
 	private static function left_out( array $clauses, array $chosen ): array {
 		list( $min, $max ) = FilterMatches::price_range();
@@ -181,6 +203,7 @@ final class SplitCardListings {
 			return array(
 				'products' => array(),
 				'cards'    => array(),
+				'designs'  => array(),
 			);
 		}
 		return FilterMatches::left_out_of_listing( (string) ( $clauses['join'] ?? '' ), (string) ( $clauses['where'] ?? '' ), $chosen, $min, $max );
@@ -406,7 +429,18 @@ final class SplitCardListings {
 		if ( ! $product instanceof WC_Product ) {
 			return $url;
 		}
-		$key     = null !== $this->current && $this->current[0] === $post->ID ? $this->current[1] : self::NO_CARD;
+		return self::card_link( $product, null !== $this->current && $this->current[0] === $post->ID ? $this->current[1] : self::NO_CARD, $url );
+	}
+
+	/**
+	 * A card's link: the product's address with the card's values, and the
+	 * values of the variation the filters chose while one is on.
+	 *
+	 * @param WC_Product $product A product the listing shows.
+	 * @param string     $key     Its card's key; `NO_CARD` for the product shown as itself.
+	 * @param string     $url     The product's address.
+	 */
+	private static function card_link( WC_Product $product, string $key, string $url ): string {
 		$link    = self::NO_CARD === $key ? $url : CardPages::url( $product, $key, $url );
 		$opening = FilteredOpening::values( $product, $key );
 		// Without a filter on, the card's link is its own; its values are read only to leave them out of the filters' values.
@@ -415,6 +449,56 @@ final class SplitCardListings {
 		}
 		$more = array_diff_key( $opening, SplitCards::link_values( $product, $key ) );
 		return array() === $more ? $link : QueryNames::shorten( add_query_arg( array_map( 'rawurlencode', $more ), $link ) );
+	}
+
+	/**
+	 * The swatches of the card the loop shows: the product's other cards
+	 * the listing shows as the same design (`CardDesigns`), each with its
+	 * values of the attributes listed only while filtered, its link and its
+	 * picture, as the card would show them.
+	 *
+	 * @param mixed $swatches What another callback answered.
+	 * @param mixed $product  The product the theme draws a card of.
+	 * @return mixed `list<array{key: string, id: string, label: string, url: string, image: array{src: string, srcset: string, width: int, height: int, alt: string}}>`
+	 */
+	public function swatches( mixed $swatches, mixed $product ): mixed {
+		if ( ! $product instanceof WC_Product || null === $this->current || $this->current[0] !== $product->get_id() ) {
+			return $swatches;
+		}
+		$others = $this->designs[ $product->get_id() ][ $this->current[1] ] ?? array();
+		if ( array() === $others ) {
+			return $swatches;
+		}
+		$terms    = new ArchiveTerms();
+		$filtered = SplitCards::filtered_taxonomies( $product );
+		// The product's own address, not the shown card's.
+		$listed          = $this->listed_id;
+		$this->listed_id = null;
+		$url             = (string) get_permalink( $product->get_id() );
+		$this->listed_id = $listed;
+		$answer          = is_array( $swatches ) ? $swatches : array();
+		foreach ( $others as $key ) {
+			$labels = array();
+			$slugs  = array();
+			$field  = '';
+			foreach ( SplitCards::card_terms( $product, $key ) as $term_id ) {
+				$term = get_term( $term_id );
+				if ( $term instanceof WP_Term && in_array( $term->taxonomy, $filtered, true ) ) {
+					$labels[] = $term->name;
+					$slugs[]  = $term->slug;
+					$field    = '' === $field ? $terms->key( $term->taxonomy ) : $field;
+				}
+			}
+			$image    = CardPages::image( $product, $key, FilteredOpening::values( $product, $key ), null, SplitCardFaces::picks_beyond( $product, $key ) );
+			$answer[] = array(
+				'key'   => $field,
+				'id'    => implode( SplitCards::KEY_SEPARATOR, $slugs ),
+				'label' => html_entity_decode( implode( ', ', $labels ), ENT_QUOTES, 'UTF-8' ),
+				'url'   => self::card_link( $product, $key, $url ),
+				'image' => ArchiveCards::image( $image > 0 ? $image : (int) $product->get_image_id( 'edit' ) ),
+			);
+		}
+		return $answer;
 	}
 
 	/**

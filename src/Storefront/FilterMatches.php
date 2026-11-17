@@ -217,7 +217,7 @@ final class FilterMatches {
 	 * @param array<string, list<int>> $chosen Chosen term ids by taxonomy.
 	 * @param float|null               $min    The lowest price chosen, as stored.
 	 * @param float|null               $max    The highest price chosen, as stored.
-	 * @return array{products: list<int>, cards: array<int, list<string>>} Product ids, and card keys by product id.
+	 * @return array{products: list<int>, cards: array<int, list<string>>, designs: array<int, array<string, list<string>>>} Product ids, card keys by product id, and, of a product several of whose cards show one design (`CardDesigns`), its shown designs by product id.
 	 */
 	public static function left_out_of_listing( string $join, string $where, array $chosen, ?float $min, ?float $max ): array {
 		global $wpdb;
@@ -230,7 +230,10 @@ final class FilterMatches {
 		$left = array(
 			'products' => array(),
 			'cards'    => array(),
+			'designs'  => array(),
 		);
+		// Several values chosen of one attribute may show a design once per value.
+		$several = array() !== array_filter( $chosen, static fn ( array $term_ids ): bool => count( $term_ids ) > 1 );
 		// What was kept of the products' variations since they last changed; the others, their meta and terms in three queries.
 		FilterIndex::look_up( $ids );
 		$unread = array_values( array_filter( $ids, static fn ( int $id ): bool => null === FilterOffers::worked_out( $id ) || ! isset( SplitCards::worked_out( $id )['cards'] ) ) );
@@ -244,7 +247,20 @@ final class FilterMatches {
 			}
 			if ( null === $cards ) {
 				$left['products'][] = $id;
-			} elseif ( array() !== $cards ) {
+				continue;
+			}
+			$product = $several ? wc_get_product( $id ) : null;
+			$designs = array();
+			if ( $product instanceof WC_Product && array() !== SplitCards::filtered_taxonomies( $product ) ) {
+				$shown   = self::shown_cards( $product, $chosen, $min, $max, $exempt );
+				$designs = null === $shown ? array() : CardDesigns::of( $product, $shown );
+			}
+			$merged = array() === $designs ? array() : array_merge( ...array_values( $designs ) );
+			if ( array() !== $merged ) {
+				$left['designs'][ $id ] = $designs;
+				$cards                  = array_values( array_unique( array_merge( $cards, $merged ) ) );
+			}
+			if ( array() !== $cards ) {
 				$left['cards'][ $id ] = $cards;
 			}
 		}
@@ -356,8 +372,9 @@ final class FilterMatches {
 	}
 
 	/**
-	 * How many times a filtered listing shows a product: once per card it
-	 * keeps, or once when the product is listed once.
+	 * How many times a filtered listing shows a product: once per design
+	 * of the cards it keeps (`CardDesigns`), or once when the product is
+	 * listed once.
 	 *
 	 * @param WC_Product               $product A product.
 	 * @param array<string, list<int>> $chosen  Chosen term ids by taxonomy.
@@ -366,18 +383,35 @@ final class FilterMatches {
 	 * @param array<string, list<int>> $exempt  The values each filter is waived under (`exempt()`).
 	 */
 	private static function shown( WC_Product $product, array $chosen, ?float $min, ?float $max, array $exempt ): int {
+		$keys = self::shown_cards( $product, $chosen, $min, $max, $exempt );
+		return null === $keys ? 1 : count( CardDesigns::of( $product, $keys ) );
+	}
+
+	/**
+	 * The cards a filtered listing keeps of a product, in its order of
+	 * cards; null when the product is listed once and kept, none when it
+	 * is left out.
+	 *
+	 * @param WC_Product               $product A product.
+	 * @param array<string, list<int>> $chosen  Chosen term ids by taxonomy.
+	 * @param float|null               $min     The lowest price chosen, as stored.
+	 * @param float|null               $max     The highest price chosen, as stored.
+	 * @param array<string, list<int>> $exempt  The values each filter is waived under (`exempt()`).
+	 * @return list<string>|null
+	 */
+	public static function shown_cards( WC_Product $product, array $chosen, ?float $min, ?float $max, array $exempt ): ?array {
 		$left_out = self::left_out( $product, $chosen, $min, $max, $exempt );
 		if ( null === $left_out ) {
-			return 0;
+			return array();
 		}
 		$keys = array_keys( SplitCards::sold_by_card( $product ) );
 		if ( array() === $keys ) {
-			return 1;
+			return null;
 		}
 		$not_live = in_array( $product->get_id(), NotLiveProducts::candidate_ids(), true ) ? SplitCards::not_live_cards( $product ) : array();
 		$listed   = self::listed_taxonomies( $keys );
 		$unchosen = array_diff( SplitCards::filtered_taxonomies( $product ), array_keys( $chosen ) );
-		$kept     = 0;
+		$kept     = array();
 		foreach ( array_diff( array_map( 'strval', $keys ), $left_out, $not_live ) as $key ) {
 			$held = SplitCards::term_ids( $key );
 			// A card holding a value of an attribute listed only while filtered shows only while a filter is on it.
@@ -390,7 +424,7 @@ final class FilterMatches {
 					continue 2;
 				}
 			}
-			++$kept;
+			$kept[] = $key;
 		}
 		return $kept;
 	}

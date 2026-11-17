@@ -239,7 +239,7 @@ final class SplitCardListingsTest extends WP_UnitTestCase {
 				'query_type_storlek' => 'or',
 			)
 		);
-		$this->assertSame( 3, $either['found'], 'a card per picture and size the filter keeps' );
+		$this->assertSame( 2, $either['found'], 'a card per picture: the sizes chosen of one picture are one design' );
 
 		$picture = $this->shop( array( 'filter_bild' => 'utan-bild' ) );
 		$this->assertSame( array( $poster->get_id() ), $picture['ids'], 'a filter on the picture alone keeps its card, of no size' );

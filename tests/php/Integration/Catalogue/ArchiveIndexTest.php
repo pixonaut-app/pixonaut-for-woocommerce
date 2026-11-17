@@ -92,6 +92,11 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 			'filter_storlek'   => '50x70',
 		),
 		array( 'min_price' => '450' ),
+		array( 'filter_ramfarg' => 'ek,svart' ),
+		array(
+			'filter_inramning' => 'ram,hangare',
+			'filter_ramfarg'   => 'ek,svart',
+		),
 	);
 
 	public function set_up(): void {
@@ -279,6 +284,7 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 			$label                      = $name . ' ' . ( (string) wp_json_encode( $address ) );
 			$this->assertSame( array_map( array( $this, 'normal' ), array_column( $server, 'link' ) ), array_map( array( $this, 'normal' ), array_column( $shown, 'link' ) ), "{$label}: the cards and their links" );
 			$this->assertSame( array_column( $server, 'image' ), array_column( $shown, 'image' ), "{$label}: the cards' pictures" );
+			$this->assertSame( array_column( $server, 'swatches' ), array_map( fn ( array $card ): array => array_map( array( $this, 'normal' ), $card['swatches'] ), $shown ), "{$label}: the cards' swatches" );
 			$counts = $client->counts( $chosen, $min, $max );
 			foreach ( $counts as $key => $by_value ) {
 				foreach ( $by_value as $value => $count ) {
@@ -289,11 +295,12 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 				}
 			}
 			$expected[] = array(
-				'query'  => (object) $this->short_query( $address ),
-				'cards'  => array_column( $shown, 'id' ),
-				'links'  => array_column( $shown, 'link' ),
-				'images' => array_column( $shown, 'image' ),
-				'counts' => $counts,
+				'query'    => (object) $this->short_query( $address ),
+				'cards'    => array_column( $shown, 'id' ),
+				'links'    => array_column( $shown, 'link' ),
+				'images'   => array_column( $shown, 'image' ),
+				'swatches' => array_column( $shown, 'swatches' ),
+				'counts'   => $counts,
 			);
 		}
 		foreach ( ArchiveIndexBuild::SORTS as $sort ) {
@@ -394,7 +401,7 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 	 * The cards the category's page lists at an address, with their links and pictures.
 	 *
 	 * @param array<string, string> $args Query parameters.
-	 * @return list<array{link: string, image: string}>
+	 * @return list<array{link: string, image: string, swatches: list<string>}>
 	 */
 	private function shop( array $args ): array {
 		$this->forget_chosen_filters();
@@ -409,9 +416,12 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 			$wp_query->the_post();
 			$product = wc_get_product( (int) get_the_ID() );
 			$this->assertInstanceOf( WC_Product::class, $product );
+			$swatches = apply_filters( 'pixonaut_wc_storefront_card_swatches', array(), $product );
+			$this->assertIsArray( $swatches );
 			$cards[] = array(
-				'link'  => (string) get_permalink(),
-				'image' => ArchiveCards::image( (int) $product->get_image_id() )['src'],
+				'link'     => (string) get_permalink(),
+				'image'    => ArchiveCards::image( (int) $product->get_image_id() )['src'],
+				'swatches' => array_map( array( $this, 'normal' ), array_column( $swatches, 'url' ) ),
 			);
 		}
 		wp_reset_postdata();
