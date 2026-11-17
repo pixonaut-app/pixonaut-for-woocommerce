@@ -114,7 +114,8 @@
 			[
 				{
 					"link": "http://localhost:8862/?product=hav&inramning=ingen&storlek=30x40",
-					"image": "http://localhost:8862/wp-content/uploads/variation-91.png"
+					"image": "http://localhost:8862/wp-content/uploads/variation-91.png",
+					"title": "Hav"
 				}
 			],
 			[],
@@ -157,13 +158,15 @@
 			[
 				{
 					"link": "http://localhost:8862/?product=safari&inramning=ram&storlek=50x70&ramfarg=ek",
-					"image": "http://localhost:8862/wp-content/uploads/variation-85.png"
+					"image": "http://localhost:8862/wp-content/uploads/variation-85.png",
+					"title": "Safari"
 				}
 			],
 			[
 				{
 					"link": "http://localhost:8862/?product=skog&inramning=ram&storlek=50x70&ramfarg=ek",
-					"image": "http://localhost:8862/wp-content/uploads/variation-89.png"
+					"image": "http://localhost:8862/wp-content/uploads/variation-89.png",
+					"title": "Skog"
 				}
 			]
 		],
@@ -202,7 +205,8 @@
 			[
 				{
 					"link": "http://localhost:8862/?product=safari&inramning=ingen&storlek=50x70",
-					"image": "http://localhost:8862/wp-content/uploads/variation-82.png"
+					"image": "http://localhost:8862/wp-content/uploads/variation-82.png",
+					"title": "Safari"
 				}
 			]
 		],
@@ -360,23 +364,27 @@
 			[
 				{
 					"link": "http://localhost:8862/?product=hav&inramning=ingen&storlek=30x40",
-					"image": "http://localhost:8862/wp-content/uploads/variation-91.png"
+					"image": "http://localhost:8862/wp-content/uploads/variation-91.png",
+					"title": "Hav"
 				}
 			],
 			[
 				{
 					"link": "http://localhost:8862/?product=safari&inramning=ingen&storlek=50x70",
-					"image": "http://localhost:8862/wp-content/uploads/variation-82.png"
+					"image": "http://localhost:8862/wp-content/uploads/variation-82.png",
+					"title": "Safari"
 				},
 				{
 					"link": "http://localhost:8862/?product=safari&inramning=ram&storlek=50x70&ramfarg=ek",
-					"image": "http://localhost:8862/wp-content/uploads/variation-85.png"
+					"image": "http://localhost:8862/wp-content/uploads/variation-85.png",
+					"title": "Safari"
 				}
 			],
 			[
 				{
 					"link": "http://localhost:8862/?product=skog&inramning=ram&storlek=50x70&ramfarg=ek",
-					"image": "http://localhost:8862/wp-content/uploads/variation-89.png"
+					"image": "http://localhost:8862/wp-content/uploads/variation-89.png",
+					"title": "Skog"
 				}
 			]
 		],
@@ -417,11 +425,13 @@
 			[
 				{
 					"link": "http://localhost:8862/?product=safari&inramning=ingen&storlek=50x70",
-					"image": "http://localhost:8862/wp-content/uploads/variation-82.png"
+					"image": "http://localhost:8862/wp-content/uploads/variation-82.png",
+					"title": "Safari"
 				},
 				{
 					"link": "http://localhost:8862/?product=safari&inramning=ram&storlek=50x70&ramfarg=ek",
-					"image": "http://localhost:8862/wp-content/uploads/variation-85.png"
+					"image": "http://localhost:8862/wp-content/uploads/variation-85.png",
+					"title": "Safari"
 				}
 			],
 			[]
@@ -525,7 +535,8 @@
 			[
 				{
 					"link": "http://localhost:8862/?product=safari&inramning=ram&storlek=50x70&ramfarg=ek",
-					"image": "http://localhost:8862/wp-content/uploads/variation-85.png"
+					"image": "http://localhost:8862/wp-content/uploads/variation-85.png",
+					"title": "Safari"
 				}
 			],
 			[]

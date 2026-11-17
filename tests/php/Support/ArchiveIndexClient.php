@@ -30,7 +30,7 @@ final class ArchiveIndexClient {
 	 * @param float|null                  $min    `min_price`.
 	 * @param float|null                  $max    `max_price`.
 	 * @param string|null                 $sort   An `orderby`; the index's order when null.
-	 * @return list<array{id: string, link: string, image: string, swatches: list<array{link: string, image: string}>}>
+	 * @return list<array{id: string, link: string, image: string, swatches: list<array{link: string, image: string, title: string}>}>
 	 */
 	public function shown( array $chosen, ?float $min = null, ?float $max = null, ?string $sort = null ): array {
 		$chosen   = array_filter( $chosen, static fn ( array $ids ): bool => array() !== $ids );
@@ -90,6 +90,7 @@ final class ArchiveIndexClient {
 				$swatches[ $designs[ $design ] ][] = array(
 					'link'  => $drawn['link'],
 					'image' => $drawn['image'],
+					'title' => (string) $card['title'],
 				);
 				continue;
 			}

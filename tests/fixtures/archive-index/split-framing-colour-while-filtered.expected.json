@@ -124,7 +124,8 @@
 			[
 				{
 					"link": "http://localhost:8862/?product=hav&inramning=hangare&ramfarg=ek&storlek=50x70",
-					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+					"title": "Hav"
 				}
 			],
 			[],
@@ -173,14 +174,16 @@
 			[
 				{
 					"link": "http://localhost:8862/?product=safari&inramning=ram&ramfarg=ek&storlek=50x70",
-					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+					"title": "Safari"
 				}
 			],
 			[],
 			[
 				{
 					"link": "http://localhost:8862/?product=skog&inramning=ram&ramfarg=ek&storlek=50x70",
-					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+					"title": "Skog"
 				}
 			]
 		],
@@ -486,14 +489,16 @@
 			[
 				{
 					"link": "http://localhost:8862/?product=hav&inramning=hangare&ramfarg=svart&storlek=50x70",
-					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+					"title": "Hav"
 				}
 			],
 			[],
 			[
 				{
 					"link": "http://localhost:8862/?product=safari&inramning=ram&ramfarg=svart&storlek=30x40",
-					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+					"title": "Safari"
 				}
 			],
 			[]
@@ -536,14 +541,16 @@
 			[
 				{
 					"link": "http://localhost:8862/?product=hav&inramning=hangare&ramfarg=svart&storlek=50x70",
-					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+					"title": "Hav"
 				}
 			],
 			[],
 			[
 				{
 					"link": "http://localhost:8862/?product=safari&inramning=ram&ramfarg=svart&storlek=30x40",
-					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+					"title": "Safari"
 				}
 			],
 			[]

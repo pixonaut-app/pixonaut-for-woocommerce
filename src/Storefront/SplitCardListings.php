@@ -14,6 +14,7 @@ use Pixonaut\WooCommerce\Catalogue\ArchiveTerms;
 use Pixonaut\WooCommerce\Catalogue\CardPages;
 use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
+use Pixonaut\WooCommerce\Catalogue\SplitCardLooks;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use WC_Product;
 use WC_Query;
@@ -455,13 +456,14 @@ final class SplitCardListings {
 	 * The swatches of the card the loop shows: the card itself, marked
 	 * current, then the product's other cards the listing shows as the same
 	 * design (`CardDesigns`); none for a design of one card. Each with its
-	 * values of the attributes listed only while filtered (each attribute's
-	 * key, the value's slug and its name), its link and its picture, as the
+	 * values of the attributes the design's cards differ by (each
+	 * attribute's key, the value's slug and its name; a card holding none
+	 * of those, all its values), and its title, link and picture, as the
 	 * card would show them.
 	 *
 	 * @param mixed $swatches What another callback answered.
 	 * @param mixed $product  The product the theme draws a card of.
-	 * @return mixed `list<array{values: list<array{key: string, id: string, label: string}>, url: string, image: array{src: string, srcset: string, width: int, height: int, alt: string}, current: bool}>`
+	 * @return mixed `list<array{values: list<array{key: string, id: string, label: string}>, title: string, url: string, image: array{src: string, srcset: string, width: int, height: int, alt: string}, current: bool}>`
 	 */
 	public function swatches( mixed $swatches, mixed $product ): mixed {
 		if ( ! $product instanceof WC_Product || null === $this->current || $this->current[0] !== $product->get_id() ) {
@@ -471,29 +473,50 @@ final class SplitCardListings {
 		if ( array() === $others ) {
 			return $swatches;
 		}
-		$terms    = new ArchiveTerms();
-		$filtered = SplitCards::filtered_taxonomies( $product );
+		$terms = new ArchiveTerms();
 		// The product's own address, not the shown card's.
 		$listed          = $this->listed_id;
 		$this->listed_id = null;
 		$url             = (string) get_permalink( $product->get_id() );
 		$this->listed_id = $listed;
 		$answer          = is_array( $swatches ) ? $swatches : array();
-		foreach ( array_merge( array( $this->current[1] ), $others ) as $key ) {
-			$values = array();
+		$keys            = array_merge( array( $this->current[1] ), $others );
+		$held            = array();
+		foreach ( $keys as $key ) {
+			$held[ $key ] = array();
 			foreach ( SplitCards::card_terms( $product, $key ) as $term_id ) {
 				$term = get_term( $term_id );
-				if ( $term instanceof WP_Term && in_array( $term->taxonomy, $filtered, true ) ) {
+				if ( $term instanceof WP_Term ) {
+					$held[ $key ][ $term->taxonomy ][] = $term;
+				}
+			}
+		}
+		// The attributes the design's cards differ by: a swatch names its card by these.
+		$taxonomies = array_unique( array_merge( ...array_map( 'array_keys', array_values( $held ) ) ) );
+		$differing  = array_values(
+			array_filter(
+				$taxonomies,
+				static fn ( string $taxonomy ): bool => 1 < count( array_unique( array_map( static fn ( array $terms ): string => implode( SplitCards::KEY_SEPARATOR, wp_list_pluck( $terms[ $taxonomy ] ?? array(), 'term_id' ) ), $held ) ) )
+			)
+		);
+		foreach ( $keys as $key ) {
+			$values = array();
+			// A card holding none of them, as one a waived filter keeps beside its colours, is named by the values it holds.
+			$naming = array() === array_intersect( $differing, array_keys( $held[ $key ] ) ) ? array_keys( $held[ $key ] ) : $differing;
+			foreach ( $naming as $taxonomy ) {
+				foreach ( $held[ $key ][ $taxonomy ] ?? array() as $term ) {
 					$values[] = array(
-						'key'   => $terms->key( $term->taxonomy ),
+						'key'   => $terms->key( $taxonomy ),
 						'id'    => $term->slug,
 						'label' => html_entity_decode( $term->name, ENT_QUOTES, 'UTF-8' ),
 					);
 				}
 			}
+			$own      = SplitCardLooks::of( $product->get_id(), $key )['title'];
 			$image    = CardPages::image( $product, $key, FilteredOpening::values( $product, $key ), null, SplitCardFaces::picks_beyond( $product, $key ) );
 			$answer[] = array(
 				'values'  => $values,
+				'title'   => '' !== $own ? $own : $product->get_name(),
 				'url'     => self::card_link( $product, $key, $url ),
 				'image'   => ArchiveCards::image( $image > 0 ? $image : (int) $product->get_image_id( 'edit' ) ),
 				'current' => $key === $this->current[1],
