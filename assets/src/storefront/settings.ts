@@ -13,6 +13,9 @@ export type StorefrontSettings = {
 	labels: Record<string, string>;
 	/** Where a side that cannot be personalised is reported. */
 	reportUrl: string;
+	/** Where the reads for the variations' other sides are asked for
+	 *  (`ReadsAhead`). */
+	readsAheadUrl?: string;
 	/** Whether a designer whose mount options name no `accent` takes the
 	 *  colour of the theme's buttons (the store's accent setting). */
 	themeAccent?: boolean;

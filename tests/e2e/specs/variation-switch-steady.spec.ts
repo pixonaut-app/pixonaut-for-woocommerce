@@ -128,7 +128,9 @@ test.afterEach(async ({ request }) => {
 async function createPoster(
 	request: APIRequestContext,
 	key: string,
+	version?: number,
 ): Promise<Poster> {
+	const v = version === undefined ? {} : { v: version };
 	const response = await request.post(
 		restUrl('/pixonaut-e2e/v1/dependent-poster'),
 		{
@@ -137,8 +139,10 @@ async function createPoster(
 				lookup: 'one-by-one',
 				descriptions: DESCRIPTIONS,
 				times: true,
-				pixonaut: PERSONALISED,
-				overrides: Object.fromEntries(FRAMED.map((framed) => [framed, HOODIE])),
+				pixonaut: { ...PERSONALISED, ...v },
+				overrides: Object.fromEntries(
+					FRAMED.map((framed) => [framed, { ...HOODIE, ...v }]),
+				),
 				variants: Object.fromEntries(
 					FRAMED.map((framed) => [framed, FIXTURE.variant.hoodieWhiteS]),
 				),
@@ -374,4 +378,174 @@ async function slowFake(page: Page, fake: FakePixonaut): Promise<void> {
 			await route.fallback();
 		},
 	);
+}
+
+/** The first configuration version with a place for the option groups. */
+const OPTION_GROUPS_VERSION = 12;
+
+/** The store's setting that draws each option as a group of the designer's
+ *  own, after the template's. */
+const OPTIONS_AS_GROUPS = 'as_groups=yes&place=last';
+
+/** The designer's numbered group headings. */
+const GROUP_HEADINGS =
+	'#pixonaut-form-front [data-testid="pixonaut-form"] > h3';
+
+/** How long the page stays idle before each switch: time for what the
+ *  next blank needs to be read ahead. */
+const IDLE_MS = 3000;
+
+/** How long after a choice the page's own moves count as answering it,
+ *  as the browser's layout shift score counts them. */
+const INPUT_WINDOW_MS = 500;
+
+/** Each switch, the group of the option it shows, and the description. */
+const GROUPED_SWITCHES = [
+	{ framing: 'ram', group: 'Ramfärg', variation: 'ram-svart' },
+	{ framing: 'ingen', group: null, variation: 'ingen' },
+	{ framing: 'ram', group: 'Ramfärg', variation: 'ram-svart' },
+	{ framing: 'hangare', group: 'Hängarfärg', variation: 'hangare-ek' },
+	{ framing: 'ingen', group: null, variation: 'ingen' },
+];
+
+/** The groups that come and go with the framing. */
+const DEPENDENT_GROUPS = ['Ramfärg', 'Hängarfärg'];
+
+type FormFrame = {
+	time: number;
+	groups: string[];
+	description: string;
+	held: boolean;
+	spinner: boolean;
+};
+
+/** Starts noting, at every painted frame, the designer's groups, the
+ *  variation's description and whether the preview is held; and when the
+ *  framing was last chosen. */
+async function watchForm(page: Page, framingField: string): Promise<void> {
+	await page.evaluate(
+		([headings, description, field]) => {
+			const frames: FormFrame[] = [];
+			const at = { chosen: 0 };
+			Object.assign(window, { formFrames: frames, chosenAt: at });
+			const shows = (element: Element) => element.getClientRects().length > 0;
+			document.addEventListener(
+				'change',
+				(event) => {
+					if ((event.target as HTMLSelectElement).name === field) {
+						at.chosen = performance.now();
+					}
+				},
+				true,
+			);
+			const note = (): void => {
+				frames.push({
+					time: performance.now(),
+					groups: [...document.querySelectorAll(headings)]
+						.filter(shows)
+						.map((heading) => heading.textContent ?? ''),
+					description: [...document.querySelectorAll(description)]
+						.filter(shows)
+						.map((text) => text.textContent?.trim() ?? '')
+						.join(''),
+					held: document.querySelector('[data-pixonaut-held]') !== null,
+					spinner: document.querySelector('.is-waiting') !== null,
+				});
+				requestAnimationFrame(note);
+			};
+			requestAnimationFrame(note);
+		},
+		[GROUP_HEADINGS, DESCRIPTION, framingField] as const,
+	);
+}
+
+for (const viewport of VIEWPORTS) {
+	test(`with the options in the designer's groups, a switch to another blank changes the form in the frame it is made in and moves nothing later, at ${viewport.width}x${viewport.height}`, async ({
+		page,
+		request,
+		baseURL,
+	}) => {
+		await page.context().addCookies([
+			{
+				name: 'pixonaut_e2e_product_form',
+				value: OPTIONS_AS_GROUPS,
+				url: baseURL ?? '',
+			},
+		]);
+		await page.setViewportSize(viewport);
+		const key = String(Date.now()).slice(-SLUG_CLOCK_DIGITS);
+		const poster = await createPoster(request, key, OPTION_GROUPS_VERSION);
+		try {
+			await openPoster(page, poster);
+			const field = `attribute_${poster.taxonomies.inramning?.taxonomy}`;
+			await watchForm(page, field);
+
+			for (const { framing: value, group, variation } of GROUPED_SWITCHES) {
+				// Idle, as a shopper reading the page is.
+				await page.waitForTimeout(IDLE_MS);
+				await page
+					.locator('form .single_add_to_cart_button')
+					.evaluate((button) => button.scrollIntoView({ block: 'end' }));
+				const since = await page.evaluate(() => performance.now());
+				await framing(page, poster).selectOption(value);
+				await expect(page.locator('form [name="variation_id"]')).toHaveValue(
+					String(poster.variations[variation]),
+				);
+				await expect(page.locator('[data-pixonaut-held]')).toHaveCount(0, {
+					timeout: DRAWN_TIMEOUT_MS,
+				});
+				const settled = (await switchFrames(page)).length;
+				await expect
+					.poll(async () => (await switchFrames(page)).length)
+					.toBeGreaterThan(settled + SETTLED_FRAMES);
+				const { frames, chosen } = await page.evaluate(() => ({
+					frames: (window as unknown as { formFrames: FormFrame[] }).formFrames,
+					chosen: (window as unknown as { chosenAt: { chosen: number } })
+						.chosenAt.chosen,
+				}));
+				const after = frames.filter((frame) => frame.time >= chosen);
+				const first = after[0];
+				const shown = (frame: FormFrame | undefined) =>
+					DEPENDENT_GROUPS.filter((name) =>
+						frame?.groups.some((heading) => heading.endsWith(` ${name}`)),
+					);
+
+				expect(
+					shown(first),
+					`switching to ${value}, the next frame shows its option's group`,
+				).toEqual(group === null ? [] : [group]);
+				expect(
+					first?.description,
+					`switching to ${value}, the next frame shows its description`,
+				).toBe(DESCRIPTIONS[variation] ?? '');
+				expect(
+					after.filter(
+						(frame) =>
+							shown(frame).join() !== (group ?? '') ||
+							frame.description !== (DESCRIPTIONS[variation] ?? ''),
+					),
+					'and nothing changes them back while the side mounts',
+				).toEqual([]);
+				const lastHeld = after.filter((frame) => frame.held).at(-1);
+				expect(
+					(lastHeld?.time ?? chosen) - chosen,
+					'a switch on an idle page settles under 800 ms',
+				).toBeLessThan(SPINNER_AFTER_MS);
+				expect(
+					after.filter((frame) => frame.spinner),
+					'with no spinner',
+				).toEqual([]);
+				const late = (await shiftsSince(page, since)).filter(
+					(shift) =>
+						shift.time > chosen + INPUT_WINDOW_MS &&
+						shift.sources.some((source) => !source.inOverlay),
+				);
+				expect(late, `switching to ${value} moves nothing later`).toEqual([]);
+			}
+		} finally {
+			await request.delete(restUrl('/pixonaut-e2e/v1/dependent-poster'), {
+				params: { key },
+			});
+		}
+	});
 }

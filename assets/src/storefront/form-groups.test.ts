@@ -150,50 +150,67 @@ describe('an attribute that does not apply to the choices', () => {
 	const hideRow = (form: HTMLFormElement, row: string) =>
 		form.querySelector(`tr.${row}`)?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
 
-	it('is left out with its own group, so the groups after it move up', () => {
+	/** The host item of `host` in `groups`. */
+	const itemOf = (
+		groups: ReturnType<typeof hostGroups>,
+		host: string,
+	): { host: string; element: HTMLElement; hidden?: boolean } | undefined =>
+		groups.formGroups.groups
+			.flatMap((group) => group.items)
+			.find(
+				(item): item is { host: string; element: HTMLElement } =>
+					'host' in item && item.host === host,
+			);
+
+	it('is lent hidden in its own group, which the designer leaves out and numbers past', () => {
 		const form = classicForm();
 		hideRow(form, 'colour');
 
-		const { formGroups, hosts, inapplicable } = hostGroups(OWN, form);
+		const groups = hostGroups(OWN, form);
 
-		expect(formGroups.groups.map((group) => group.id)).toEqual([
+		expect(groups.formGroups.groups.map((group) => group.id)).toEqual([
+			'wc-option-colour',
 			'text-front',
 			'wc-option-size',
 		]);
-		expect(hosts).toEqual(['attribute_size']);
-		expect(inapplicable).toEqual(['attribute_colour']);
-		// Its row stays in the add-to-cart form's own table.
-		expect(form.querySelectorAll('table.variations tr.colour')).toHaveLength(1);
-		expect(form.querySelector('table.pixonaut-attribute tr.colour')).toBeNull();
+		expect(groups.hosts).toEqual(['attribute_colour', 'attribute_size']);
+		expect(groups.inapplicable).toEqual(['attribute_colour']);
+		expect(itemOf(groups, 'attribute_colour')?.hidden).toBe(true);
+		expect(itemOf(groups, 'attribute_size')).not.toHaveProperty('hidden');
+		// Its row is lent as any other, for the designer to show in place.
+		expect(
+			itemOf(groups, 'attribute_colour')?.element.querySelector('tr.colour'),
+		).not.toBeNull();
 	});
 
-	it('is left out of a group it shares, which keeps its other items', () => {
+	it('is lent hidden in a group it shares, which keeps its other items', () => {
 		const form = classicForm();
 		hideRow(form, 'size');
 
-		const { formGroups, hosts } = hostGroups(ARRANGED, form);
+		const groups = hostGroups(ARRANGED, form);
 
-		expect(hosts).toEqual(['attribute_colour']);
-		expect(formGroups.groups[1]).toEqual({
-			id: 'text-front',
-			title: 'Your words',
-			items: [{ field: 'slogan:content', label: 'Name' }],
-		});
+		expect(groups.hosts).toEqual(['attribute_colour', 'attribute_size']);
+		expect(
+			groups.formGroups.groups[1]?.items.map((item) =>
+				'host' in item ? { host: item.host, hidden: item.hidden } : item,
+			),
+		).toEqual([
+			{ host: 'attribute_size', hidden: true },
+			{ field: 'slogan:content', label: 'Name' },
+		]);
 	});
 
-	it('is back in its group once it applies again, a row lent before among them', () => {
+	it('is lent shown once it applies again, the same rows lent', () => {
 		const form = classicForm();
 		const all = hostGroups(OWN, form);
 		hideRow(form, 'size');
-		expect(hostGroups(OWN, form).hosts).toEqual(['attribute_colour']);
+		expect(hostGroups(OWN, form).inapplicable).toEqual(['attribute_size']);
 
 		form.querySelector('tr.size')?.removeAttribute(NOT_APPLICABLE_ATTRIBUTE);
 		const again = hostGroups(OWN, form);
 
 		expect(again.inapplicable).toEqual([]);
-		expect(again.formGroups.groups.map((group) => group.id)).toEqual(
-			all.formGroups.groups.map((group) => group.id),
-		);
+		expect(itemOf(again, 'attribute_size')).not.toHaveProperty('hidden');
 		expect(lentElements(again)).toEqual(lentElements(all));
 	});
 
@@ -208,7 +225,7 @@ describe('an attribute that does not apply to the choices', () => {
 		const form = document.querySelector('form') as HTMLFormElement;
 
 		expect(inapplicableHosts(OWN, form)).toEqual(['attribute_size']);
-		expect(hostGroups(OWN, form).hosts).toEqual(['attribute_colour']);
+		expect(itemOf(hostGroups(OWN, form), 'attribute_size')?.hidden).toBe(true);
 	});
 
 	it('is none of the attributes the form has no field of', () => {

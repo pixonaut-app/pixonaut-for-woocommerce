@@ -66,6 +66,31 @@ describe('showVariation', () => {
 describe('followVariationSlots', () => {
 	afterEach(() => {
 		vi.useRealTimers();
+		delete (window as { jQuery?: unknown }).jQuery;
+	});
+
+	it('shows the variation the classic form finds at once, ahead of the pause after a choice', () => {
+		vi.useFakeTimers();
+		const handlers: Array<[string, (event: unknown, data?: unknown) => void]> =
+			[];
+		(window as { jQuery?: unknown }).jQuery = () => ({
+			on: (events: string, handler: (event: unknown, data?: unknown) => void) =>
+				handlers.push([events, handler]),
+		});
+		page();
+		followVariationSlots(document);
+		// The last to follow it: the one that answers at once.
+		const found = handlers
+			.filter(([events]) => events.split(' ').includes('found_variation'))
+			.at(-1);
+
+		// WooCommerce's own handler puts the id in the form after this one.
+		found?.[1]({}, { variation_id: 13 });
+
+		expect(shown()).toEqual(['A longer text']);
+
+		found?.[1]({});
+		expect(shown(), 'none once the form holds no variation').toEqual([]);
 	});
 
 	it('follows the variation the form holds', () => {

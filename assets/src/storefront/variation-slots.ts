@@ -1,4 +1,18 @@
-import { watchVariation } from './variations';
+import { NO_VARIATION, watchVariation } from './variations';
+
+/** The classic form's jQuery events that tell the variation found, with
+ *  its data, or that none is. */
+const FOUND_EVENTS = 'found_variation reset_data hide_variation';
+
+/** What `found_variation` hands its handlers after the event. */
+type FoundVariation = { variation_id?: number | string };
+
+type JQueryLike = (element: Element) => {
+	on: (
+		events: string,
+		handler: (event: unknown, variation?: FoundVariation) => void,
+	) => unknown;
+};
 
 /** A place the server printed every variation's text in, stacked
  *  (`VariationSlots`). */
@@ -61,12 +75,27 @@ export function showVariation(slot: Element, id: string): void {
 }
 
 /** Has each place in `root` follow the variation its add-to-cart form
- *  holds. */
+ *  holds: in the classic form at once, in the frame the choice is made in,
+ *  as WooCommerce finds the variation; in either form once the choice
+ *  settled. */
 export function followVariationSlots(root: ParentNode): void {
 	for (const slot of root.querySelectorAll(SLOT_SELECTOR)) {
 		const form = slot.closest('form');
-		if (form !== null) {
-			watchVariation(form, (id) => showVariation(slot, id));
+		if (form === null) {
+			continue;
 		}
+		watchVariation(form, (id) => showVariation(slot, id));
+		const jQuery = (form.ownerDocument.defaultView as { jQuery?: JQueryLike })
+			?.jQuery;
+		// Told with the variation's data: a handler of WooCommerce's own may
+		// put its id in the form only after this one runs.
+		jQuery?.(form).on(FOUND_EVENTS, (_event, variation) =>
+			showVariation(
+				slot,
+				variation?.variation_id === undefined
+					? NO_VARIATION
+					: String(variation.variation_id),
+			),
+		);
 	}
 }

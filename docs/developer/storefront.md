@@ -155,6 +155,15 @@ Reads more than 30 minutes old, as a full-page cache can serve, are left to the 
 read fails, the side is printed without them, and product pages make no
 reads for a minute, so an outage does not hold every page up.
 
+A variation that mounts a side on another template, blank or placement has
+no reads in the page. Once the page's first side is shown and the page is
+idle, the script asks `GET /wp-json/pixonaut/v1/storefront/reads-ahead?product=<id>`
+(with `printed[]=<templateId>|<blankId>|<placementId>` for each target the
+page printed reads for) for the server's reads of the others, at most six,
+and a side mounted again on one of them starts from them as above. The
+route answers only a published product without a password, and the script
+lets its reads go after the same 30 minutes, asking again at the next mount.
+
 The spinner shows until the side's design is drawn, when the script marks
 its `.pixonaut-preview__frame` `is-drawn` (once the SDK has replaced the
 preview's placeholder, after the mount resolves), or its mount failed (or the SDK

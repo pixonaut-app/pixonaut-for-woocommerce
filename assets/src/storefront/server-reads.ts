@@ -10,7 +10,6 @@ import type {
 	TemplateAnswer,
 } from '../types/sdk';
 import type { PixonautSdk } from './sdk-loader';
-import type { SideOptions } from './settings';
 
 /** What the server read from Pixonaut for one side's designer. */
 export type SideReads = {
@@ -34,9 +33,9 @@ const READS_SELECTOR = 'script.pixonaut-reads';
  *  photo links in them open for an hour or two, and the server keeps an
  *  answer for five minutes. A full-page cache's older copy of the page
  *  leaves the reads to the browser. */
-const READS_MAX_AGE_S = 30 * 60;
+export const READS_MAX_AGE_S = 30 * 60;
 
-const MS_PER_S = 1000;
+export const MS_PER_S = 1000;
 
 /** The SDK release up to which `createDesigner` draws into one target
  *  alone, as `[major, minor]`: 0.6.0 takes a split mount's preview, form
@@ -86,7 +85,9 @@ export function mountSide(
 	sdk: CoreSdk,
 	options: SplitMountOptions,
 	reads: SideReads | undefined,
-	readFor: SideOptions | undefined,
+	readFor:
+		| Partial<Pick<SplitMountOptions, (typeof READ_KEYS)[number]>>
+		| undefined,
 ): Promise<PixonautDesigner> {
 	if (
 		reads?.template === undefined ||

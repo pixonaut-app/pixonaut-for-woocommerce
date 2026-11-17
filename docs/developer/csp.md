@@ -35,8 +35,9 @@ The template's font files are fetched from the same origin.
 | `img-src blob:` and the API origin | The preview, picture thumbnails and the proof in the proof dialog are `blob:` images; the photos of the blank's views come from the API origin. |
 
 The storefront script also posts to the store's own
-`/wp-json/pixonaut/v1/storefront/unavailable` when the designer cannot start
-(`connect-src 'self'`).
+`/wp-json/pixonaut/v1/storefront/unavailable` when the designer cannot start,
+and asks `/wp-json/pixonaut/v1/storefront/reads-ahead` for the reads of a
+variable product's other blanks (`connect-src 'self'`).
 
 When the policy blocks the SDK, customers see *Personalisation is unavailable
 right now*, the script reports `sdk_load`, and the store manager gets a

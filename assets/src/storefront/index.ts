@@ -5,6 +5,7 @@ import { CartEdit } from './cart-edit';
 import { ProductDesigner } from './designer';
 import { PersonaliseButton } from './personalise-button';
 import { fitPreviews } from './preview-fit';
+import { ReadsAhead } from './reads-ahead';
 import { reportUnavailable } from './report';
 import { loadSdk } from './sdk-loader';
 import { readSettings } from './settings';
@@ -39,6 +40,10 @@ domReady(() => {
 			report: (productId, side, reason) =>
 				reportUnavailable(settings.reportUrl, productId, side, reason),
 			cartEdit: (edit) => new CartEdit(edit),
+			readsAhead: new ReadsAhead(
+				settings.readsAheadUrl,
+				Number(container.dataset.pixonautProduct),
+			),
 			navigate: (url) => window.location.assign(url),
 			...(settings.themeAccent ? { themeOptions: themeMountOptions } : {}),
 			...(settings.attributeSwatches
