@@ -30,7 +30,7 @@ final class ArchiveIndexClient {
 	 * @param float|null                  $min    `min_price`.
 	 * @param float|null                  $max    `max_price`.
 	 * @param string|null                 $sort   An `orderby`; the index's order when null.
-	 * @return list<array{id: string, link: string, image: string, swatches: list<string>}>
+	 * @return list<array{id: string, link: string, image: string, swatches: list<array{link: string, image: string}>}>
 	 */
 	public function shown( array $chosen, ?float $min = null, ?float $max = null, ?string $sort = null ): array {
 		$chosen   = array_filter( $chosen, static fn ( array $ids ): bool => array() !== $ids );
@@ -87,7 +87,10 @@ final class ArchiveIndexClient {
 			$design = $card['productId'] . (string) wp_json_encode( $holds );
 			// With filters on, a design shows once: its first card, the others its swatches.
 			if ( $filtered && isset( $designs[ $design ] ) ) {
-				$swatches[ $designs[ $design ] ][] = $drawn['link'];
+				$swatches[ $designs[ $design ] ][] = array(
+					'link'  => $drawn['link'],
+					'image' => $drawn['image'],
+				);
 				continue;
 			}
 			$designs[ $design ] = count( $cards );

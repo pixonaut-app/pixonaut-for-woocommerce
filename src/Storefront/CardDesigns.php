@@ -15,8 +15,9 @@ use WP_Term;
 
 /**
  * A product listed by an attribute only while filtered (a framing) has a
- * card per value of it, and a filter choosing several of its values would
- * show the same design once per value. Those cards are one design: the
+ * card per value of it, and a filter choosing several of its values (or a
+ * waived filter, keeping a card holding none of them beside one holding a
+ * chosen one) would show the same design more than once. Those cards are one design: the
  * cards of a product holding the same values once the values of its
  * attributes listed only while filtered are set aside. A filtered listing
  * shows each design once, as its first card in the product's order of

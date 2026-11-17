@@ -232,8 +232,9 @@ final class FilterMatches {
 			'cards'    => array(),
 			'designs'  => array(),
 		);
-		// Several values chosen of one attribute may show a design once per value.
-		$several = array() !== array_filter( $chosen, static fn ( array $term_ids ): bool => count( $term_ids ) > 1 );
+		// A product listed only while filtered by a chosen attribute may show one design as several cards: several values chosen, or a waived filter keeping a card of none beside one of a chosen value.
+		$several = self::listing_by_several( $ids, array_keys( $chosen ) );
+		_prime_post_caches( $several, true, true );
 		// What was kept of the products' variations since they last changed; the others, their meta and terms in three queries.
 		FilterIndex::look_up( $ids );
 		$unread = array_values( array_filter( $ids, static fn ( int $id ): bool => null === FilterOffers::worked_out( $id ) || ! isset( SplitCards::worked_out( $id )['cards'] ) ) );
@@ -249,7 +250,7 @@ final class FilterMatches {
 				$left['products'][] = $id;
 				continue;
 			}
-			$product = $several ? wc_get_product( $id ) : null;
+			$product = in_array( $id, $several, true ) ? wc_get_product( $id ) : null;
 			$designs = array();
 			if ( $product instanceof WC_Product && array() !== SplitCards::filtered_taxonomies( $product ) ) {
 				$shown   = self::shown_cards( $product, $chosen, $min, $max, $exempt );
@@ -265,6 +266,35 @@ final class FilterMatches {
 			}
 		}
 		return $left;
+	}
+
+	/**
+	 * The products listed only while filtered by any of some attributes,
+	 * as their card rows say (`SplitCards::FILTERED_META`), read in one query.
+	 *
+	 * @param int[]    $product_ids Products.
+	 * @param string[] $taxonomies  Attributes' taxonomies.
+	 * @phpstan-param list<int> $product_ids
+	 * @phpstan-param list<string> $taxonomies
+	 * @return list<int>
+	 */
+	private static function listing_by_several( array $product_ids, array $taxonomies ): array {
+		if ( array() === $product_ids || array() === $taxonomies ) {
+			return array();
+		}
+		global $wpdb;
+		$ids   = implode( ', ', array_fill( 0, count( $product_ids ), '%d' ) );
+		$names = implode( ', ', array_fill( 0, count( $taxonomies ), '%s' ) );
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- one read for a listing's products; a placeholder per id and taxonomy.
+		$found = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND post_id IN ( {$ids} ) AND SUBSTRING_INDEX( meta_value, %s, 1 ) IN ( {$names} )",
+				SplitCards::FILTERED_META,
+				...array_merge( $product_ids, array( SplitCards::FILTERED_SEPARATOR ), $taxonomies )
+			)
+		);
+		// phpcs:enable
+		return array_values( array_map( 'intval', is_array( $found ) ? $found : array() ) );
 	}
 
 	/**

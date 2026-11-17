@@ -185,6 +185,39 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 		$this->assert_index_lists_as_the_server( 'split-framing-pictures' );
 	}
 
+	public function test_a_swatch_names_each_of_its_values_by_its_attribute(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::FILTERED );
+		SplitListing::set_attribute_mode( $this->attributes[ self::COLOUR ], SplitListing::FILTERED );
+		$swatches = array();
+		$this->forget_chosen_filters();
+		$args = array(
+			'filter_inramning' => 'ram,hangare',
+			'filter_ramfarg'   => 'ek,svart',
+		);
+		$_GET = $args;
+		$page = get_term_link( $this->category, 'product_cat' );
+		$this->assertIsString( $page );
+		$this->go_to( add_query_arg( $args, $page ) );
+		global $wp_query;
+		while ( $wp_query->have_posts() ) {
+			$wp_query->the_post();
+			$product = wc_get_product( (int) get_the_ID() );
+			if ( $product instanceof WC_Product && 'Safari' === $product->get_name() ) {
+				$swatches = apply_filters( 'pixonaut_wc_storefront_card_swatches', array(), $product );
+				break;
+			}
+		}
+		wp_reset_postdata();
+
+		$this->assertIsArray( $swatches );
+		$this->assertNotSame( array(), $swatches, 'the safari\'s other framings and colours' );
+		foreach ( $swatches as $swatch ) {
+			$this->assertSame( array( 'inramning', 'ramfarg' ), array_column( $swatch['values'], 'key' ), 'a value of each attribute, by its own key' );
+			$this->assertContains( $swatch['values'][0]['id'], array( 'ram', 'hangare' ) );
+			$this->assertContains( $swatch['values'][1]['id'], array( 'ek', 'svart' ) );
+		}
+	}
+
 	public function test_simple_grouped_and_sold_out_products_beside_the_posters(): void {
 		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$sold_out = new WC_Product_Simple();
@@ -284,7 +317,20 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 			$label                      = $name . ' ' . ( (string) wp_json_encode( $address ) );
 			$this->assertSame( array_map( array( $this, 'normal' ), array_column( $server, 'link' ) ), array_map( array( $this, 'normal' ), array_column( $shown, 'link' ) ), "{$label}: the cards and their links" );
 			$this->assertSame( array_column( $server, 'image' ), array_column( $shown, 'image' ), "{$label}: the cards' pictures" );
-			$this->assertSame( array_column( $server, 'swatches' ), array_map( fn ( array $card ): array => array_map( array( $this, 'normal' ), $card['swatches'] ), $shown ), "{$label}: the cards' swatches" );
+			$this->assertSame(
+				array_column( $server, 'swatches' ),
+				array_map(
+					fn ( array $card ): array => array_map(
+						fn ( array $swatch ): array => array(
+							'link'  => $this->normal( $swatch['link'] ),
+							'image' => $swatch['image'],
+						),
+						$card['swatches']
+					),
+					$shown
+				),
+				"{$label}: the cards' swatches"
+			);
 			$counts = $client->counts( $chosen, $min, $max );
 			foreach ( $counts as $key => $by_value ) {
 				foreach ( $by_value as $value => $count ) {
@@ -401,7 +447,7 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 	 * The cards the category's page lists at an address, with their links and pictures.
 	 *
 	 * @param array<string, string> $args Query parameters.
-	 * @return list<array{link: string, image: string, swatches: list<string>}>
+	 * @return list<array<string, mixed>>
 	 */
 	private function shop( array $args ): array {
 		$this->forget_chosen_filters();
@@ -421,7 +467,13 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 			$cards[] = array(
 				'link'     => (string) get_permalink(),
 				'image'    => ArchiveCards::image( (int) $product->get_image_id() )['src'],
-				'swatches' => array_map( array( $this, 'normal' ), array_column( $swatches, 'url' ) ),
+				'swatches' => array_map(
+					fn ( array $swatch ): array => array(
+						'link'  => $this->normal( $swatch['url'] ),
+						'image' => $swatch['image']['src'],
+					),
+					$swatches
+				),
 			);
 		}
 		wp_reset_postdata();

@@ -454,12 +454,13 @@ final class SplitCardListings {
 	/**
 	 * The swatches of the card the loop shows: the product's other cards
 	 * the listing shows as the same design (`CardDesigns`), each with its
-	 * values of the attributes listed only while filtered, its link and its
-	 * picture, as the card would show them.
+	 * values of the attributes listed only while filtered (each attribute's
+	 * key, the value's slug and its name), its link and its picture, as the
+	 * card would show them.
 	 *
 	 * @param mixed $swatches What another callback answered.
 	 * @param mixed $product  The product the theme draws a card of.
-	 * @return mixed `list<array{key: string, id: string, label: string, url: string, image: array{src: string, srcset: string, width: int, height: int, alt: string}}>`
+	 * @return mixed `list<array{values: list<array{key: string, id: string, label: string}>, url: string, image: array{src: string, srcset: string, width: int, height: int, alt: string}}>`
 	 */
 	public function swatches( mixed $swatches, mixed $product ): mixed {
 		if ( ! $product instanceof WC_Product || null === $this->current || $this->current[0] !== $product->get_id() ) {
@@ -478,24 +479,22 @@ final class SplitCardListings {
 		$this->listed_id = $listed;
 		$answer          = is_array( $swatches ) ? $swatches : array();
 		foreach ( $others as $key ) {
-			$labels = array();
-			$slugs  = array();
-			$field  = '';
+			$values = array();
 			foreach ( SplitCards::card_terms( $product, $key ) as $term_id ) {
 				$term = get_term( $term_id );
 				if ( $term instanceof WP_Term && in_array( $term->taxonomy, $filtered, true ) ) {
-					$labels[] = $term->name;
-					$slugs[]  = $term->slug;
-					$field    = '' === $field ? $terms->key( $term->taxonomy ) : $field;
+					$values[] = array(
+						'key'   => $terms->key( $term->taxonomy ),
+						'id'    => $term->slug,
+						'label' => html_entity_decode( $term->name, ENT_QUOTES, 'UTF-8' ),
+					);
 				}
 			}
 			$image    = CardPages::image( $product, $key, FilteredOpening::values( $product, $key ), null, SplitCardFaces::picks_beyond( $product, $key ) );
 			$answer[] = array(
-				'key'   => $field,
-				'id'    => implode( SplitCards::KEY_SEPARATOR, $slugs ),
-				'label' => html_entity_decode( implode( ', ', $labels ), ENT_QUOTES, 'UTF-8' ),
-				'url'   => self::card_link( $product, $key, $url ),
-				'image' => ArchiveCards::image( $image > 0 ? $image : (int) $product->get_image_id( 'edit' ) ),
+				'values' => $values,
+				'url'    => self::card_link( $product, $key, $url ),
+				'image'  => ArchiveCards::image( $image > 0 ? $image : (int) $product->get_image_id( 'edit' ) ),
 			);
 		}
 		return $answer;

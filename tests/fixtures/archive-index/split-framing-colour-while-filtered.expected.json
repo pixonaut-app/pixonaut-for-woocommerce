@@ -122,7 +122,10 @@
 		],
 		"swatches": [
 			[
-				"http://localhost:8862/?product=hav&inramning=hangare&ramfarg=ek&storlek=50x70"
+				{
+					"link": "http://localhost:8862/?product=hav&inramning=hangare&ramfarg=ek&storlek=50x70",
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+				}
 			],
 			[],
 			[],
@@ -168,11 +171,17 @@
 			[],
 			[],
 			[
-				"http://localhost:8862/?product=safari&inramning=ram&ramfarg=ek&storlek=50x70"
+				{
+					"link": "http://localhost:8862/?product=safari&inramning=ram&ramfarg=ek&storlek=50x70",
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+				}
 			],
 			[],
 			[
-				"http://localhost:8862/?product=skog&inramning=ram&ramfarg=ek&storlek=50x70"
+				{
+					"link": "http://localhost:8862/?product=skog&inramning=ram&ramfarg=ek&storlek=50x70",
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+				}
 			]
 		],
 		"counts": {
@@ -475,11 +484,17 @@
 		],
 		"swatches": [
 			[
-				"http://localhost:8862/?product=hav&inramning=hangare&ramfarg=svart&storlek=50x70"
+				{
+					"link": "http://localhost:8862/?product=hav&inramning=hangare&ramfarg=svart&storlek=50x70",
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+				}
 			],
 			[],
 			[
-				"http://localhost:8862/?product=safari&inramning=ram&ramfarg=svart&storlek=30x40"
+				{
+					"link": "http://localhost:8862/?product=safari&inramning=ram&ramfarg=svart&storlek=30x40",
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+				}
 			],
 			[]
 		],
@@ -519,11 +534,17 @@
 		],
 		"swatches": [
 			[
-				"http://localhost:8862/?product=hav&inramning=hangare&ramfarg=svart&storlek=50x70"
+				{
+					"link": "http://localhost:8862/?product=hav&inramning=hangare&ramfarg=svart&storlek=50x70",
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+				}
 			],
 			[],
 			[
-				"http://localhost:8862/?product=safari&inramning=ram&ramfarg=svart&storlek=30x40"
+				{
+					"link": "http://localhost:8862/?product=safari&inramning=ram&ramfarg=svart&storlek=30x40",
+					"image": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp"
+				}
 			],
 			[]
 		],
