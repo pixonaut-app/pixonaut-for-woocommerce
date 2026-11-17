@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.16.2...v1.16.3) (2026-11-17)
+
+
+### Bug Fixes
+
+* **storefront:** an unfiltered card shows the bare template, as the product's other lists do ([#260](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/260)) ([0055211](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/0055211ba0e1db266761d0fb2a74b5e23bce66ee))
+
 ## [1.16.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.16.1...v1.16.2) (2026-11-17)
 
 
