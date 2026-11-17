@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.15.1...v1.16.0) (2026-11-17)
+
+
+### Features
+
+* **abilities:** read and change the active theme's settings ([#252](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/252)) ([dabea10](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/dabea1060a95e6ba9bc1677bfbd0ff421b079202))
+
 ## [1.15.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.15.0...v1.15.1) (2026-11-17)
 
 
