@@ -7,7 +7,10 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
+use ActionScheduler;
+use Pixonaut\WooCommerce\Catalogue\ArchiveCards;
 use Pixonaut\WooCommerce\Catalogue\ArchiveIndexes;
+use Pixonaut\WooCommerce\Catalogue\ArchiveTerms;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Storefront\ArchiveIndexDiscovery;
 use Pixonaut\WooCommerce\Storefront\ArchiveIndexRoute;
@@ -25,6 +28,34 @@ use WP_UnitTestCase;
  * version. Without the theme's support nothing is built or named.
  */
 final class ArchiveIndexesTest extends WP_UnitTestCase {
+
+	/**
+	 * Action Scheduler's priority for a job queued without one, as each
+	 * picture's redraw is.
+	 */
+	private const DEFAULT_JOB_PRIORITY = 10;
+
+	/**
+	 * A `large` size smaller than the test image (640x480), so `large` has
+	 * a file of its own, apart from the original and the shop's thumbnail.
+	 */
+	private const LARGE_SIDE = 400;
+
+	/**
+	 * The test image's `large` width: its 640px wide side scaled to `LARGE_SIDE`.
+	 */
+	private const LARGE_WIDTH = self::LARGE_SIDE;
+
+	/**
+	 * The test image's `large` height: its 480px scaled as its width, 480 × 400 / 640.
+	 */
+	private const LARGE_HEIGHT = 300;
+
+	/**
+	 * How far ahead a build queued before an upgrade waits: later than any
+	 * build a visit would queue now, so keeping its time shows.
+	 */
+	private const EARLIER_BUILD_DELAY_SECONDS = 3600;
 
 	private int $category;
 
@@ -44,6 +75,7 @@ final class ArchiveIndexesTest extends WP_UnitTestCase {
 	public function tear_down(): void {
 		remove_theme_support( ArchiveIndexes::THEME_SUPPORT );
 		remove_all_filters( 'pixonaut_wc_archive_index_card' );
+		remove_all_filters( 'pixonaut_wc_archive_index_image_size' );
 		remove_all_filters( 'pixonaut_wc_archive_index_variation' );
 		as_unschedule_all_actions( ArchiveIndexes::ACTION );
 		delete_option( Schema::ARCHIVE_INDEXES_OPTION );
@@ -64,6 +96,101 @@ final class ArchiveIndexesTest extends WP_UnitTestCase {
 		$this->assertSame( $current['version'], $named['version'] );
 		$this->assertSame( 2, $named['count'] );
 		$this->assertSame( ArchiveIndexRoute::url( $this->archive(), $current['version'] ), $named['url'] );
+	}
+
+	public function test_the_build_is_queued_ahead_of_jobs_at_the_default_priority(): void {
+		$this->head();
+		$queued = as_get_scheduled_actions(
+			array(
+				'hook'     => ArchiveIndexes::ACTION,
+				'status'   => \ActionScheduler_Store::STATUS_PENDING,
+				'per_page' => 1,
+			),
+			'ids'
+		);
+		$this->assertCount( 1, $queued, 'the visit queued the build' );
+
+		$priority = ActionScheduler::store()->fetch_action( (string) $queued[0] )->get_priority();
+		$this->assertSame( ArchiveIndexes::PRIORITY, $priority );
+		$this->assertLessThan( self::DEFAULT_JOB_PRIORITY, $priority, 'picture jobs queued before it do not hold it back' );
+	}
+
+	public function test_a_build_waiting_at_another_priority_is_queued_again_at_the_builds_own_for_the_same_time(): void {
+		$due = time() + self::EARLIER_BUILD_DELAY_SECONDS;
+		as_schedule_single_action( $due, ArchiveIndexes::ACTION, array(), ArchiveIndexes::GROUP );
+
+		$this->head();
+		$queued = as_get_scheduled_actions(
+			array(
+				'hook'   => ArchiveIndexes::ACTION,
+				'status' => \ActionScheduler_Store::STATUS_PENDING,
+			),
+			'ids'
+		);
+		$this->assertCount( 1, $queued, 'the earlier build is replaced, not joined' );
+		$action = ActionScheduler::store()->fetch_action( (string) reset( $queued ) );
+		$this->assertSame( ArchiveIndexes::PRIORITY, $action->get_priority() );
+		$this->assertSame( $due, $action->get_schedule()->get_date()?->getTimestamp() );
+
+		$this->head();
+		$kept = as_get_scheduled_actions(
+			array(
+				'hook'   => ArchiveIndexes::ACTION,
+				'status' => \ActionScheduler_Store::STATUS_PENDING,
+			),
+			'ids'
+		);
+		$this->assertSame( array_values( $queued ), array_values( $kept ), 'a build at its own priority is kept' );
+	}
+
+	public function test_a_theme_names_the_size_the_index_lists_pictures_in(): void {
+		$image = $this->factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
+		$this->assertIsInt( $image );
+		$this->print->set_image_id( $image );
+		$this->print->save();
+		add_filter( 'pixonaut_wc_archive_index_image_size', static fn (): string => 'woocommerce_thumbnail' );
+
+		$this->built();
+		$thumbnail = wp_get_attachment_image_src( $image, 'woocommerce_thumbnail' );
+		$this->assertIsArray( $thumbnail );
+		$this->assertNotSame( wp_get_attachment_image_url( $image, 'large' ), $thumbnail[0], 'the sizes are other files' );
+		$card = array_column( $this->stored()['cards'], 'image', 'title' )['Skog'];
+		$this->assertSame( $thumbnail[0], $card['src'] );
+		$this->assertSame( array( $thumbnail[1], $thumbnail[2] ), array( $card['width'], $card['height'] ) );
+		$placeholder = array_column( $this->stored()['cards'], 'image', 'title' )['Hav'];
+		$size        = wc_get_image_size( 'woocommerce_thumbnail' );
+		$this->assertSame( array( $size['width'], $size['height'] ), array( $placeholder['width'], $placeholder['height'] ) );
+	}
+
+	public function test_card_and_variation_pictures_are_listed_at_the_large_size(): void {
+		update_option( 'large_size_w', self::LARGE_SIDE );
+		update_option( 'large_size_h', self::LARGE_SIDE );
+		$image = $this->factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
+		$this->assertIsInt( $image );
+		$large = wp_get_attachment_image_src( $image, 'large' );
+		$this->assertIsArray( $large );
+		$this->assertSame( array( self::LARGE_WIDTH, self::LARGE_HEIGHT ), array( $large[1], $large[2] ) );
+		$this->assertNotSame( wp_get_attachment_image_url( $image, 'woocommerce_thumbnail' ), $large[0], 'the thumbnail is another file' );
+		$this->print->set_image_id( $image );
+		$this->print->save();
+
+		$this->built();
+		$cards = array_column( $this->stored()['cards'], 'image', 'title' );
+		$this->assertSame( $large[0], $cards['Skog']['src'] );
+		$this->assertSame( array( self::LARGE_WIDTH, self::LARGE_HEIGHT ), array( $cards['Skog']['width'], $cards['Skog']['height'] ) );
+
+		// A filtered card's picture of a variation, as the build lists it.
+		$picture = ( new ArchiveCards( new ArchiveTerms() ) )->picture( $image );
+		$this->assertSame( $large[0], $picture['src'] );
+		$this->assertSame( array( self::LARGE_WIDTH, self::LARGE_HEIGHT ), array( $picture['width'], $picture['height'] ) );
+	}
+
+	public function test_a_card_without_a_picture_lists_the_placeholder_as_woocommerce_prints_it_at_the_large_size(): void {
+		$this->built();
+		$cards = array_column( $this->stored()['cards'], 'image', 'title' );
+		$size  = wc_get_image_size( 'large' );
+		$this->assertSame( wc_placeholder_img_src( 'large' ), $cards['Hav']['src'] );
+		$this->assertSame( array( $size['width'], $size['height'] ), array( $cards['Hav']['width'], $cards['Hav']['height'] ) );
 	}
 
 	public function test_the_route_serves_the_index_compressed_cached_and_by_version(): void {

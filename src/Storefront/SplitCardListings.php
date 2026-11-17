@@ -475,6 +475,7 @@ final class SplitCardListings {
 			return $swatches;
 		}
 		$terms = new ArchiveTerms();
+		$size  = ArchiveCards::image_size();
 		// The product's own address, not the shown card's.
 		$listed          = $this->listed_id;
 		$this->listed_id = null;
@@ -522,7 +523,7 @@ final class SplitCardListings {
 				'values'  => $values,
 				'title'   => '' !== $own ? $own : $product->get_name(),
 				'url'     => self::card_link( $product, $key, $url ),
-				'image'   => ArchiveCards::image( $image > 0 ? $image : (int) $product->get_image_id( 'edit' ) ),
+				'image'   => ArchiveCards::image( $image > 0 ? $image : (int) $product->get_image_id( 'edit' ), $size ),
 				'current' => $key === $this->current[1],
 			);
 		}

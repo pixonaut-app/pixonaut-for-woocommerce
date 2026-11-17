@@ -481,7 +481,7 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 			}
 			$cards[] = array(
 				'link'     => (string) get_permalink(),
-				'image'    => ArchiveCards::image( (int) $product->get_image_id() )['src'],
+				'image'    => ArchiveCards::image( (int) $product->get_image_id(), ArchiveCards::image_size() )['src'],
 				'swatches' => array_map(
 					fn ( array $swatch ): array => array(
 						'link'  => $this->normal( $swatch['url'] ),

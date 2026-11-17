@@ -1344,7 +1344,12 @@ archives work as they always have.
   its page lets a shopper choose, and its variations the shop offers, in the
   order a filtered listing prefers to open the card on, each with the values
   it is sold in, its displayed price and regular price, and the pictures a
-  filtered card shows of it. The rules a client applies to reproduce the
+  filtered card shows of it. Pictures are listed at the `large` size, the
+  one WooCommerce's Product Image block prints on a card; a theme whose
+  cards print another size, as a classic theme's loop prints
+  `woocommerce_thumbnail`, names it with
+  `pixonaut_wc_archive_index_image_size`, which the card swatches follow
+  too. The rules a client applies to reproduce the
   server's listing, links, pictures and counts, and fixtures generated from
   the server's own listing, are in `tests/fixtures/archive-index/`.
 - **When it is built**: by the Action Scheduler job
@@ -1352,13 +1357,16 @@ archives work as they always have.
   minute after anything it reads changes (a product or variation, its meta,
   terms or status, a category, tag, attribute or value, the currency, tax,
   stock and sorting settings, the plugin's listing settings), once for a run
-  of changes, and no sooner than five minutes after the last build started. An index's version changes only when its content does. An
+  of changes, and no sooner than five minutes after the last build started,
+  ahead of jobs queued at Action Scheduler's default priority, such as
+  pictures being drawn. An index's version changes only when its content does. An
   index older than a day is built again on the next visit, and an archive
   nobody opened for thirty days is dropped. Each index is kept compressed in
   the option `pixonaut_wc_archive_index_<archive>`.
 - **A theme's own fields**: `pixonaut_wc_archive_index_card` and
   `pixonaut_wc_archive_index_variation` filter each card and each variation
-  row while the index is built ([hooks](../hooks/)).
+  row while the index is built, and `pixonaut_wc_archive_index_image_size`
+  names the size its pictures are listed in ([hooks](../hooks/)).
 
 ## JavaScript hooks
 
