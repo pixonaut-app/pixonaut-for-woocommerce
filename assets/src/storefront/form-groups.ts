@@ -33,8 +33,8 @@ const ATTRIBUTE_FIELD_PREFIX = 'attribute_';
 export type HostGroups = {
 	formGroups: FormGroups;
 	hosts: string[];
-	/** The fields of the attributes left out for not applying to the form's
-	 *  choices (`inapplicableHosts()`). */
+	/** The fields of the attributes lent hidden for not applying to the
+	 *  form's choices (`inapplicableHosts()`), as the designer was last told. */
 	inapplicable: string[];
 };
 
@@ -45,10 +45,13 @@ const isAttribute = (item: ArrangedItem): item is { attribute: string } =>
  * `arranged` as the designer takes it. With `form`, each attribute item is
  * that attribute's part of the form, moved into the group; without it, or
  * for an attribute the form has no field of, the item is left out, with a
- * group of the product's own that it leaves empty. So is an attribute that
- * does not apply to the form's choices, which has nothing to pick: the
- * designer numbers the groups it is given, so those after it move up. An
- * attribute in a group of its own is marked so (`OWN_STEP_ATTRIBUTE`).
+ * group of the product's own that it leaves empty. An attribute that does
+ * not apply to the form's choices, which has nothing to pick, is lent
+ * hidden: the designer leaves out a group holding nothing else and numbers
+ * those after it up, and shows it again in place once the attribute
+ * applies (`setHostItemHidden()`), so a choice changes the form at once,
+ * without mounting it again. An attribute in a group of its own is marked
+ * so (`OWN_STEP_ATTRIBUTE`).
  */
 export function hostGroups(
 	arranged: ArrangedGroups,
@@ -66,13 +69,14 @@ export function hostGroups(
 				continue;
 			}
 			const name = ATTRIBUTE_FIELD_PREFIX + item.attribute;
-			if (inapplicable.includes(name)) {
-				continue;
-			}
 			const element = form === null ? null : attributePart(form, name);
 			if (element !== null) {
 				element.toggleAttribute(OWN_STEP_ATTRIBUTE, ownStep);
-				items.push({ host: name, element });
+				items.push({
+					host: name,
+					element,
+					...(inapplicable.includes(name) ? { hidden: true } : {}),
+				});
 				hosts.push(name);
 			}
 		}

@@ -81,7 +81,7 @@ export function hideInapplicableAttributes(
 			showUnfilled(form, rules);
 		}
 	};
-	const now = followChoices(form, () => {
+	const chose = (): void => {
 		if (customerChose) {
 			customerChose = false;
 			retries = 0;
@@ -89,6 +89,15 @@ export function hideInapplicableAttributes(
 		// A field that never takes its value announces every try.
 		if (retries < MAX_RETRIES) {
 			apply();
+		}
+	};
+	const now = followChoices(form, chose);
+	// A select holds its choice as it announces it: the rows change in the
+	// frame it was made in, and once more after the pause, as the form
+	// settles.
+	form.addEventListener('change', (event) => {
+		if (!applying && event.target instanceof HTMLSelectElement) {
+			chose();
 		}
 	});
 	form.addEventListener(APPLY_CHOICES_EVENT, now);

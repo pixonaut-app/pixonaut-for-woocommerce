@@ -382,10 +382,11 @@ final class Storefront {
 	 */
 	private function script_settings(): array {
 		return array(
-			'sdk'       => Sdk::script( $this->settings ),
-			'debug'     => true === $this->settings->get( Settings::SDK_DEBUG ) && current_user_can( Notices::CAPABILITY ),
-			'labels'    => $this->labels->all(),
-			'reportUrl' => UnavailableReports::url(),
+			'sdk'           => Sdk::script( $this->settings ),
+			'debug'         => true === $this->settings->get( Settings::SDK_DEBUG ) && current_user_can( Notices::CAPABILITY ),
+			'labels'        => $this->labels->all(),
+			'reportUrl'     => UnavailableReports::url(),
+			'readsAheadUrl' => ReadsAhead::url(),
 		) + ( Accent::follows_theme( $this->settings ) ? array( 'themeAccent' => true ) : array() )
 			+ ( AttributeOptions::swatches( $this->settings ) ? array( 'attributeSwatches' => true ) : array() );
 	}

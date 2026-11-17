@@ -48,6 +48,7 @@ export type FakeDesigner = {
 	shown: ReturnType<typeof vi.fn>;
 	getPreviewAspect: Mock<() => number>;
 	setHostItemComplete: ReturnType<typeof vi.fn>;
+	setHostItemHidden: ReturnType<typeof vi.fn>;
 	getStep: ReturnType<typeof vi.fn>;
 	setStep: ReturnType<typeof vi.fn>;
 	reportPreviewOpened: Mock<() => void>;
@@ -123,6 +124,7 @@ export function fakeDesigner({
 		shown: vi.fn().mockResolvedValue(undefined),
 		getPreviewAspect: vi.fn(() => FAKE_PREVIEW_ASPECT),
 		setHostItemComplete: vi.fn(),
+		setHostItemHidden: vi.fn(),
 		getStep: vi.fn(),
 		setStep: vi.fn(),
 		getVariant: vi.fn(() => variant),

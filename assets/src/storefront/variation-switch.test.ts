@@ -5,6 +5,7 @@ import {
 	NOT_APPLICABLE_ATTRIBUTE,
 } from './applicable-form';
 import { ProductDesigner } from './designer';
+import { ReadsAhead } from './reads-ahead';
 import { type PixonautSdk, SdkLoadError } from './sdk-loader';
 import {
 	fakeDesigner,
@@ -22,6 +23,9 @@ import {
 	VariantUnavailableError,
 } from './test-support';
 import { VARIATION_SETTLE_MS } from './variations';
+
+/** An SDK release whose `createDesigner` draws a split mount. */
+const SPLIT_SDK = '0.6.0';
 
 const SMALL = { widthMm: 210, heightMm: 270, label: 'Small' };
 
@@ -153,14 +157,18 @@ function start({
 	mounts = MOUNTED as object,
 	variations = VARIATIONS as object,
 	checkbox = false,
+	before = (_form: HTMLFormElement): void => undefined,
+	readsAhead = undefined as ReadsAhead | undefined,
 } = {}) {
 	const page = productPage(mounts, { checkbox, variations });
+	before(page.form);
 	const report = vi.fn();
 	const designer = new ProductDesigner(page.container, {
 		loadSdk,
 		label: (key) => `label:${key}`,
 		report,
 		...pageDeps(),
+		...(readsAhead === undefined ? {} : { readsAhead }),
 	});
 	designer.start();
 	return { ...page, ...sdk, sdkDesigner: sdk.designer, report, designer };
@@ -325,7 +333,7 @@ describe('ProductDesigner on a variable product', () => {
 		);
 	});
 
-	it('mounts the side again without the group of an attribute that stops applying, and with it once it applies again', async () => {
+	it('hides the group of an attribute that stops applying in place, and shows it again once it applies, without mounting again', async () => {
 		const arranged = {
 			front: {
 				...MOUNTED.front,
@@ -351,30 +359,34 @@ describe('ProductDesigner on a variable product', () => {
 		const row = form
 			.querySelector('select[name="attribute_size"]')
 			?.closest('tr');
-		// The customer is on the template's step, the second of the three a
-		// form laid out in steps then has.
-		const steps = [{ groupId: '$options' }, { groupId: 'text' }];
-		sdkDesigner.getStep.mockReturnValue({ groupId: 'text', steps });
 
 		row?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
-		await settle();
+		// In the same task: the designer is told before the next paint.
+		await Promise.resolve();
 
-		expect(mount).toHaveBeenCalledTimes(2);
-		expect(sdkDesigner.destroy).toHaveBeenCalledOnce();
-		expect(groupIds(1)).toEqual(['text']);
+		expect(sdkDesigner.setHostItemHidden).toHaveBeenLastCalledWith(
+			'attribute_size',
+			true,
+		);
+		await settle();
+		expect(mount).toHaveBeenCalledOnce();
+		expect(sdkDesigner.destroy).not.toHaveBeenCalled();
 		expect(form.contains(row ?? null)).toBe(true);
-		expect(sdkDesigner.setStep).toHaveBeenLastCalledWith(1);
 
 		// Marked again as the form settles: nothing changed.
+		sdkDesigner.setHostItemHidden.mockClear();
 		row?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
 		await settle();
-		expect(mount).toHaveBeenCalledTimes(2);
+		expect(sdkDesigner.setHostItemHidden).not.toHaveBeenCalled();
 
 		row?.removeAttribute(NOT_APPLICABLE_ATTRIBUTE);
 		await settle();
 
-		expect(mount).toHaveBeenCalledTimes(3);
-		expect(groupIds(2)).toEqual(['text', 'wc-option-size']);
+		expect(sdkDesigner.setHostItemHidden).toHaveBeenLastCalledWith(
+			'attribute_size',
+			false,
+		);
+		expect(mount).toHaveBeenCalledOnce();
 	});
 
 	/** The front with the size in a group of its own, after the template's. */
@@ -388,7 +400,7 @@ describe('ProductDesigner on a variable product', () => {
 	const sizeRow = (form: HTMLFormElement) =>
 		form.querySelector('select[name="attribute_size"]')?.closest('tr');
 
-	it('mounts the side again for an attribute that stopped applying while it mounted', async () => {
+	it('tells a side that mounted an attribute stopped applying while it mounted', async () => {
 		const sdk = fakeSdk();
 		let finish: () => void = () => undefined;
 		sdk.mount.mockImplementationOnce(
@@ -409,12 +421,28 @@ describe('ProductDesigner on a variable product', () => {
 		finish();
 		await settle();
 
-		expect(mount).toHaveBeenCalledTimes(2);
-		expect(
-			(options(mount, 1).formGroups as typeof SIZE_GROUP).groups.map(
-				(group) => group.id,
-			),
-		).toEqual(['text']);
+		expect(mount).toHaveBeenCalledOnce();
+		expect(sdk.designer.setHostItemHidden).toHaveBeenLastCalledWith(
+			'attribute_size',
+			true,
+		);
+	});
+
+	it('lends an attribute that does not apply as it mounts hidden', async () => {
+		const { form, mount } = start({
+			mounts: { front: { ...MOUNTED.front, formGroups: SIZE_GROUP } },
+			before: (shop) =>
+				sizeRow(shop)?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, ''),
+		});
+		await settle();
+
+		const size = (
+			options(mount).formGroups as {
+				groups: Array<{ items: Array<{ host?: string; hidden?: boolean }> }>;
+			}
+		).groups[1]?.items[0];
+		expect(size).toMatchObject({ host: 'attribute_size', hidden: true });
+		expect(form.contains(sizeRow(form) ?? null)).toBe(true);
 	});
 
 	it('has the attributes that no longer apply hidden before it reads a choice', async () => {
@@ -440,26 +468,6 @@ describe('ProductDesigner on a variable product', () => {
 
 		expect(asked[0]).toEqual({ variation: '13', mounted: 1 });
 		expect(mount).toHaveBeenCalledTimes(2);
-	});
-
-	it('mounts the side again on the print size the customer is on', async () => {
-		const { form, mount, sdkDesigner } = start({
-			mounts: { front: { ...MOUNTED.front, formGroups: SIZE_GROUP } },
-		});
-		await settle();
-		expect(options(mount)).not.toHaveProperty('selectedPrintSizeIndex', 1);
-		// The customer picked the small size in the designer's menu.
-		sdkDesigner.getState.mockReturnValue({
-			templateId: 'mini-tee@2',
-			values: {},
-			printSize: SMALL,
-		});
-
-		sizeRow(form)?.setAttribute(NOT_APPLICABLE_ATTRIBUTE, '');
-		await settle();
-
-		expect(mount).toHaveBeenCalledTimes(2);
-		expect(options(mount, 1).selectedPrintSizeIndex).toBe(1);
 	});
 
 	it('leaves the sides of a product with several mounted, which are lent no attribute', async () => {
@@ -561,6 +569,51 @@ describe('ProductDesigner on a variable product', () => {
 			initialValues: values,
 		});
 		expect(hoodie.setVariant).not.toHaveBeenCalled();
+	});
+
+	it('mounts a side on another blank from the reads asked ahead for it, once the page is shown', async () => {
+		const sdk = fakeSdk();
+		const hoodie = fakeDesigner();
+		const createDesigner = vi.fn().mockResolvedValue(hoodie);
+		Object.assign(sdk.sdk, {
+			version: SPLIT_SDK,
+			createDesigner,
+			designerUi: {},
+		});
+		const template = { status: 'live', id: 'mini-tee@2' };
+		const fetcher = vi.fn(
+			async () =>
+				new Response(
+					JSON.stringify({
+						reads: [
+							{
+								templateId: 'mini-tee@2',
+								blankId: 'blank_hoodie',
+								placementId: 'front',
+								reads: { template },
+							},
+						],
+					}),
+				),
+		);
+		// The page falls idle at once.
+		vi.stubGlobal('requestIdleCallback', (run: () => void) =>
+			setTimeout(run, 0),
+		);
+		const readsAhead = new ReadsAhead('https://shop.test/reads', 7, fetcher);
+		const { form, mount } = start({ sdk, readsAhead });
+		await settle();
+		// Asked once the first side is shown, when the page is idle.
+		await settle();
+		vi.unstubAllGlobals();
+		expect(fetcher).toHaveBeenCalledOnce();
+
+		await choose(form, '13');
+
+		expect(mount).toHaveBeenCalledOnce();
+		expect(createDesigner).toHaveBeenCalledWith(
+			expect.objectContaining({ blankId: 'blank_hoodie', template }),
+		);
 	});
 
 	it('mounts the side again on the view the customer was on', async () => {

@@ -222,6 +222,7 @@ use Pixonaut\WooCommerce\Storefront\SwatchLooks;
 use Pixonaut\WooCommerce\Storefront\SwatchNames;
 use Pixonaut\WooCommerce\Storefront\QueryNames;
 use Pixonaut\WooCommerce\Storefront\ShortAddresses;
+use Pixonaut\WooCommerce\Storefront\ReadsAhead;
 use Pixonaut\WooCommerce\Storefront\UnavailableReports;
 use Pixonaut\WooCommerce\Storefront\UnavailableProduct;
 use Pixonaut\WooCommerce\Storefront\VariationsUpFront;
@@ -553,6 +554,7 @@ final class Plugin {
 		$this->designer_links()->register();
 		$this->designer_link_withdrawals()->register();
 		( new UnavailableReports( $this->inline_products(), $this->catalogue(), $this->notices(), new WcLogger() ) )->register();
+		( new ReadsAhead( $this->inline_products(), $this->server_reads() ) )->register();
 		$this->abilities()->register();
 	}
 

@@ -145,20 +145,30 @@ describe('hideInapplicableAttributes on the classic form', () => {
 
 		choose('attribute_framing', 'none');
 
-		expect(changed).toEqual([
+		expect([...changed].sort()).toEqual([
+			'attribute_frame',
 			'attribute_framing',
 			'attribute_hanger',
-			'attribute_frame',
 		]);
 	});
 
-	it('hides at once, ahead of the pause after a choice, when asked', () => {
+	it('hides in the same task a select announces its choice in, ahead of the pause after it', () => {
 		const form = classicForm();
 		hideInapplicableAttributes(form, POSTER);
 		select('attribute_framing').value = 'none';
 		select('attribute_framing').dispatchEvent(
 			new Event('change', { bubbles: true }),
 		);
+
+		expect(hiddenRows()).toEqual(['attribute_hanger', 'attribute_frame']);
+		expect(select('attribute_frame').value).toBe('black');
+	});
+
+	it('hides at once, ahead of the pause after a choice, when asked', () => {
+		const form = classicForm();
+		hideInapplicableAttributes(form, POSTER);
+		// Chosen with no event of its own, as the block form updates a field.
+		select('attribute_framing').value = 'none';
 		expect(hiddenRows()).toEqual([]);
 
 		form.dispatchEvent(new Event(APPLY_CHOICES_EVENT));

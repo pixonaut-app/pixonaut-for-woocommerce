@@ -10,7 +10,6 @@ import type {
 	TemplateAnswer,
 } from '../types/sdk';
 import type { PixonautSdk } from './sdk-loader';
-import type { SideOptions } from './settings';
 
 /** What the server read from Pixonaut for one side's designer. */
 export type SideReads = {
@@ -86,7 +85,9 @@ export function mountSide(
 	sdk: CoreSdk,
 	options: SplitMountOptions,
 	reads: SideReads | undefined,
-	readFor: SideOptions | undefined,
+	readFor:
+		| Partial<Pick<SplitMountOptions, (typeof READ_KEYS)[number]>>
+		| undefined,
 ): Promise<PixonautDesigner> {
 	if (
 		reads?.template === undefined ||

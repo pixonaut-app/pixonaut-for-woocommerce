@@ -811,6 +811,10 @@ export declare interface FormGroupHostItem {
     host: string;
     /** the element, moved in and put back on `destroy()` */
     element: HTMLElement;
+    /** left out of the form until `setHostItemHidden(host, false)`: its
+     *  element waits in the form, hidden, and a group holding nothing else is
+     *  not drawn */
+    hidden?: boolean;
 }
 
 /** An item of a group: a field of the template's, or the host's own. */
@@ -2370,6 +2374,8 @@ export declare class PixonautDesigner extends DesignerProduct {
     setStep(index: number): void;
     /** Mark a host item (`formGroups`) complete, or not: Next waits on it. */
     setHostItemComplete(id: string, complete: boolean): void;
+    /** Hide a host item (`formGroups`) in place, or show it again. */
+    setHostItemHidden(id: string, hidden: boolean): void;
     setValue(layerId: string, prop: string, value: unknown): void;
     /** The value a field shows: the customer's, carried by its field key
      *  too, else the template's own. */

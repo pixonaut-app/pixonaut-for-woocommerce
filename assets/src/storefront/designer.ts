@@ -60,6 +60,7 @@ import {
 import { PriceDisplay } from './price';
 import { dropUntouchedInputs, followPrintedInputs } from './printed-inputs';
 import { ProofDialog, type ProofFetch } from './proof-dialog';
+import type { ReadsAhead } from './reads-ahead';
 import {
 	isPrintSizeRefusal,
 	joinLabels,
@@ -124,6 +125,10 @@ export type DesignerDeps = {
 	/** Fetches the image of a proof the customer opens; the browser's `fetch`
 	 *  when absent. */
 	fetchProof?: ProofFetch;
+	/** The reads of the variations' other sides, asked for once the page's
+	 *  designer is shown; without it, a side mounted on another blank reads
+	 *  as it mounts. */
+	readsAhead?: ReadsAhead;
 };
 
 /** Label keys of the proof dialog's text. */
@@ -578,6 +583,13 @@ export class ProductDesigner {
 		// Read at each mount: a side mounted late, or again, may find the
 		// server's reads too old to use by then.
 		const reads = readServerReads(this.container)[side];
+		// A side mounted again on another blank mounts from the reads asked
+		// ahead for it, when there are any.
+		const from = this.deps.readsAhead?.readsFor(
+			options,
+			reads,
+			this.readFor[side],
+		) ?? { reads, readFor: this.readFor[side] };
 		// The form printed another template's defaults, or ones the browser
 		// now reads afresh: the SDK would take them as the customer's.
 		if (
@@ -616,8 +628,8 @@ export class ProductDesigner {
 			designer = await mountSide(
 				sdk,
 				this.forgetOnChange(side, preloaded),
-				reads,
-				this.readFor[side],
+				from.reads,
+				from.readFor,
 			);
 		} catch (error) {
 			const alone = error instanceof TypeError ? designAlone(own) : undefined;
@@ -632,6 +644,15 @@ export class ProductDesigner {
 		}
 		this.markDrawnOnReveal(side);
 		this.deps.debug?.('mounted', { productId: this.productId, side });
+		// A variation may mount a side on another blank: its reads are asked
+		// for once this one is shown, off the way of its own.
+		if (this.variations !== null) {
+			const ahead = this.deps.readsAhead;
+			void designer.shown().then(
+				() => ahead?.ask(),
+				() => undefined,
+			);
+		}
 		designer.on('variant', ({ ref }) => this.variantPicked(side, ref));
 		const frame =
 			this.existingPreview(side)?.closest<HTMLElement>(FRAME_SELECTOR);
@@ -642,6 +663,9 @@ export class ProductDesigner {
 		this.keptValues.delete(side);
 		this.keptViews.delete(side);
 		this.followHosts();
+		// An attribute may have stopped applying, or applied again, while
+		// the side mounted.
+		this.fitHosts();
 		this.completeHosts(side, designer);
 		// Its tab may have been shown while it mounted.
 		if (this.tabs?.selected() === side) {
@@ -811,54 +835,32 @@ export class ProductDesigner {
 	}
 
 	/**
-	 * After every switch under way, which may have mounted a side as it
-	 * should be: mounts again each side whose groups hold an attribute that
-	 * no longer applies to the form's choices, or leave out one that applies
-	 * again. The designer would draw the group of an attribute with nothing
-	 * to pick as an empty step, and numbers its groups only as it mounts.
+	 * Hides in each mounted designer, in place, the host items of the
+	 * attributes that no longer apply to the form's choices, and shows those
+	 * that apply again: the designer leaves out a group with nothing to pick
+	 * and numbers those after it up. At once, in the frame the choice is made
+	 * in, so the form never waits for a side mounting again. A side mounting
+	 * now is told once it has mounted.
 	 */
 	private fitHosts(): void {
-		this.switching = this.switching
-			.then(() => this.mountMisfits())
-			.catch((error: unknown) => {
-				console.error(
-					'Pixonaut: the option groups could not be drawn again.',
-					error,
-				);
-			});
-	}
-
-	private async mountMisfits(): Promise<void> {
-		// A side mounting now is in no designer's name yet.
-		await this.mounting;
 		const form = this.form;
-		const sdk = this.sdk;
-		// A side that is lent no attribute has none to leave out.
-		if (form === null || sdk === null || !this.lending()) {
+		if (form === null) {
 			return;
 		}
-		for (const [side, groups] of [...this.hosts]) {
+		for (const [side, groups] of this.hosts) {
 			const designer = this.designers.get(side);
 			const arranged = arrangedOf(this.mounts[side]);
-			if (
-				designer === undefined ||
-				arranged === undefined ||
-				sameList(groups.inapplicable, inapplicableHosts(arranged, form))
-			) {
+			if (designer === undefined || arranged === undefined) {
 				continue;
 			}
-			const step = designer.getStep()?.groupId;
-			// The side mounts again on the size the customer is on.
-			const mounted = this.mounts[side] as SideOptions;
-			const size = this.liveSize(mounted, designer);
-			if (size !== undefined) {
-				this.mounts[side] = {
-					...mounted,
-					selectedPrintSizeIndex: size,
-				} as SideOptions;
+			const inapplicable = inapplicableHosts(arranged, form);
+			if (sameList(groups.inapplicable, inapplicable)) {
+				continue;
 			}
-			await this.remount(this.variation, side, designer, sdk);
-			showStep(this.designers.get(side), step);
+			for (const host of groups.hosts) {
+				designer.setHostItemHidden(host, inapplicable.includes(host));
+			}
+			groups.inapplicable = inapplicable;
 		}
 	}
 
@@ -2440,21 +2442,6 @@ function sameList(
 	second: readonly unknown[] | undefined,
 ): boolean {
 	return JSON.stringify(first ?? []) === JSON.stringify(second ?? []);
-}
-
-/** Shows the step of group `groupId` in a form laid out in steps, which a
- *  designer mounted again opens on its first; nothing when it has no such
- *  step. */
-function showStep(
-	designer: PixonautDesigner | undefined,
-	groupId: string | undefined,
-): void {
-	const index =
-		designer?.getStep()?.steps.findIndex((step) => step.groupId === groupId) ??
-		-1;
-	if (index >= 0) {
-		designer?.setStep(index);
-	}
 }
 
 /** The side's arrangement as the server prints it, which the SDK's own
