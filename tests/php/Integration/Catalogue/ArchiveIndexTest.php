@@ -167,6 +167,11 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 		$this->assert_index_lists_as_the_server( 'split-colour' );
 	}
 
+	public function test_posters_listed_by_colour_only_while_filtered(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::COLOUR ], SplitListing::FILTERED );
+		$this->assert_index_lists_as_the_server( 'split-colour-while-filtered' );
+	}
+
 	public function test_posters_listed_by_framing_and_by_colour_only_while_filtered(): void {
 		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		SplitListing::set_attribute_mode( $this->attributes[ self::COLOUR ], SplitListing::FILTERED );

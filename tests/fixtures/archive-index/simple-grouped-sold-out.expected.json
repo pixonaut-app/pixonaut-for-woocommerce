@@ -2,16 +2,16 @@
 	{
 		"query": {},
 		"cards": [
-			"154-82",
-			"154-80",
-			"162",
-			"159",
-			"144-82",
-			"144-80",
-			"144-81",
-			"151-80",
-			"151-81",
-			"158"
+			"168-90",
+			"168-88",
+			"176",
+			"173",
+			"158-90",
+			"158-88",
+			"158-89",
+			"165-88",
+			"165-89",
+			"172"
 		],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70",
@@ -58,7 +58,7 @@
 		"query": {
 			"ramfarg": "ek"
 		},
-		"cards": ["154-82", "144-81", "151-81"],
+		"cards": ["168-90", "158-89", "165-89"],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70&ramfarg=ek",
 			"http://localhost:8862/?product=safari&inramning=ram&storlek=50x70&ramfarg=ek",
@@ -91,7 +91,7 @@
 			"inramning": "ingen",
 			"ramfarg": "ek"
 		},
-		"cards": ["154-80", "144-80", "151-80"],
+		"cards": ["168-88", "158-88", "165-88"],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=ingen&storlek=30x40",
 			"http://localhost:8862/?product=safari&inramning=ingen&storlek=50x70",
@@ -124,7 +124,7 @@
 			"inramning": "hangare,ingen",
 			"ramfarg": "ek"
 		},
-		"cards": ["154-82", "154-80", "144-80", "151-80"],
+		"cards": ["168-90", "168-88", "158-88", "165-88"],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70&ramfarg=ek",
 			"http://localhost:8862/?product=hav&inramning=ingen&storlek=30x40",
@@ -159,7 +159,7 @@
 			"inramning": "ingen,ram",
 			"ramfarg": "ek"
 		},
-		"cards": ["154-80", "144-80", "144-81", "151-80", "151-81"],
+		"cards": ["168-88", "158-88", "158-89", "165-88", "165-89"],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=ingen&storlek=30x40",
 			"http://localhost:8862/?product=safari&inramning=ingen&storlek=50x70",
@@ -196,7 +196,7 @@
 			"inramning": "ingen,hangare",
 			"storlek": "50x70"
 		},
-		"cards": ["154-82", "144-82", "144-80"],
+		"cards": ["168-90", "158-90", "158-88"],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70&ramfarg=ek",
 			"http://localhost:8862/?product=safari&inramning=hangare&storlek=50x70&ramfarg=svart",
@@ -230,7 +230,7 @@
 			"storlek": "50x70",
 			"max_price": "400"
 		},
-		"cards": ["144-80"],
+		"cards": ["158-88"],
 		"links": [
 			"http://localhost:8862/?product=safari&inramning=ingen&storlek=50x70"
 		],
@@ -259,7 +259,7 @@
 			"storlek": "30x40,50x70",
 			"max_price": "300"
 		},
-		"cards": ["154-80", "162", "144-80", "151-80", "158"],
+		"cards": ["168-88", "176", "158-88", "165-88", "172"],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=ingen&storlek=30x40",
 			"http://localhost:8862/?product=paket",
@@ -297,7 +297,7 @@
 			"min_price": "299",
 			"max_price": "391"
 		},
-		"cards": ["162", "144-81"],
+		"cards": ["176", "158-89"],
 		"links": [
 			"http://localhost:8862/?product=paket",
 			"http://localhost:8862/?product=safari&inramning=ram&storlek=30x40&ramfarg=ek"
@@ -327,7 +327,7 @@
 		"query": {
 			"inramning": "ram"
 		},
-		"cards": ["144-81", "151-81"],
+		"cards": ["158-89", "165-89"],
 		"links": [
 			"http://localhost:8862/?product=safari&inramning=ram&storlek=50x70&ramfarg=ek",
 			"http://localhost:8862/?product=skog&inramning=ram&storlek=50x70&ramfarg=ek"
@@ -358,13 +358,13 @@
 			"inramning": "ingen,ram,hangare"
 		},
 		"cards": [
-			"154-82",
-			"154-80",
-			"144-82",
-			"144-80",
-			"144-81",
-			"151-80",
-			"151-81"
+			"168-90",
+			"168-88",
+			"158-90",
+			"158-88",
+			"158-89",
+			"165-88",
+			"165-89"
 		],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70&ramfarg=ek",
@@ -406,7 +406,7 @@
 			"inramning": "ingen,ram,hangare",
 			"storlek": "50x70"
 		},
-		"cards": ["154-82", "144-82", "144-80", "144-81", "151-81"],
+		"cards": ["168-90", "158-90", "158-88", "158-89", "165-89"],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70&ramfarg=ek",
 			"http://localhost:8862/?product=safari&inramning=hangare&storlek=50x70&ramfarg=svart",
@@ -442,7 +442,7 @@
 		"query": {
 			"min_price": "450"
 		},
-		"cards": ["154-82", "162", "144-82", "144-81"],
+		"cards": ["168-90", "176", "158-90", "158-89"],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70&ramfarg=ek",
 			"http://localhost:8862/?product=paket",
@@ -476,7 +476,7 @@
 		"query": {
 			"ramfarg": "ek,svart"
 		},
-		"cards": ["154-82", "144-82", "144-81", "151-81"],
+		"cards": ["168-90", "158-90", "158-89", "165-89"],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70&ramfarg=ek",
 			"http://localhost:8862/?product=safari&inramning=hangare&storlek=50x70&ramfarg=svart",
@@ -511,7 +511,7 @@
 			"inramning": "ram,hangare",
 			"ramfarg": "ek,svart"
 		},
-		"cards": ["154-82", "144-82", "144-81", "151-81"],
+		"cards": ["168-90", "158-90", "158-89", "165-89"],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70&ramfarg=ek",
 			"http://localhost:8862/?product=safari&inramning=hangare&storlek=50x70&ramfarg=svart",
@@ -546,16 +546,16 @@
 			"orderby": "menu_order"
 		},
 		"cards": [
-			"154-82",
-			"154-80",
-			"162",
-			"159",
-			"144-82",
-			"144-80",
-			"144-81",
-			"151-80",
-			"151-81",
-			"158"
+			"168-90",
+			"168-88",
+			"176",
+			"173",
+			"158-90",
+			"158-88",
+			"158-89",
+			"165-88",
+			"165-89",
+			"172"
 		],
 		"links": [
 			"http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70",
@@ -587,16 +587,16 @@
 			"orderby": "popularity"
 		},
 		"cards": [
-			"162",
-			"159",
-			"158",
-			"154-82",
-			"154-80",
-			"151-80",
-			"151-81",
-			"144-82",
-			"144-80",
-			"144-81"
+			"176",
+			"173",
+			"172",
+			"168-90",
+			"168-88",
+			"165-88",
+			"165-89",
+			"158-90",
+			"158-88",
+			"158-89"
 		],
 		"links": [
 			"http://localhost:8862/?product=paket",
@@ -628,16 +628,16 @@
 			"orderby": "rating"
 		},
 		"cards": [
-			"162",
-			"159",
-			"158",
-			"154-82",
-			"154-80",
-			"151-80",
-			"151-81",
-			"144-82",
-			"144-80",
-			"144-81"
+			"176",
+			"173",
+			"172",
+			"168-90",
+			"168-88",
+			"165-88",
+			"165-89",
+			"158-90",
+			"158-88",
+			"158-89"
 		],
 		"links": [
 			"http://localhost:8862/?product=paket",
@@ -669,16 +669,16 @@
 			"orderby": "date"
 		},
 		"cards": [
-			"162",
-			"159",
-			"158",
-			"154-82",
-			"154-80",
-			"151-80",
-			"151-81",
-			"144-82",
-			"144-80",
-			"144-81"
+			"176",
+			"173",
+			"172",
+			"168-90",
+			"168-88",
+			"165-88",
+			"165-89",
+			"158-90",
+			"158-88",
+			"158-89"
 		],
 		"links": [
 			"http://localhost:8862/?product=paket",
@@ -710,16 +710,16 @@
 			"orderby": "price"
 		},
 		"cards": [
-			"158",
-			"162",
-			"144-82",
-			"144-80",
-			"144-81",
-			"151-80",
-			"151-81",
-			"154-82",
-			"154-80",
-			"159"
+			"172",
+			"176",
+			"158-90",
+			"158-88",
+			"158-89",
+			"165-88",
+			"165-89",
+			"168-90",
+			"168-88",
+			"173"
 		],
 		"links": [
 			"http://localhost:8862/?product=slutsald",
@@ -751,16 +751,16 @@
 			"orderby": "price-desc"
 		},
 		"cards": [
-			"162",
-			"144-82",
-			"144-80",
-			"144-81",
-			"154-82",
-			"154-80",
-			"159",
-			"151-80",
-			"151-81",
-			"158"
+			"176",
+			"158-90",
+			"158-88",
+			"158-89",
+			"168-90",
+			"168-88",
+			"173",
+			"165-88",
+			"165-89",
+			"172"
 		],
 		"links": [
 			"http://localhost:8862/?product=paket",

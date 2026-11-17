@@ -27,7 +27,7 @@ The cases: three posters (Safari, Skog, Hav) with a size, a framing (none,
 frame, hanger) and a frame colour that applies only to frames and hangers,
 listed once (`listed-once`), one card per framing (`split-framing`), per
 framing only while a framing is filtered (`split-framing-while-filtered`),
-per colour (`split-colour`), per framing and per colour only while filtered
+per colour (`split-colour`), per colour only while a colour is filtered (`split-colour-while-filtered`), per framing and per colour only while filtered
 (`split-framing-colour-while-filtered`), with a picture of each framed
 variation (`split-framing-pictures`, `split-framing-while-filtered-pictures`),
 and beside simple, grouped, on-sale and sold-out products

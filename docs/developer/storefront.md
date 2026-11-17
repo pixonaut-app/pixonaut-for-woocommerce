@@ -1225,7 +1225,8 @@ tax and shown with it.
   answers them: the card itself first, with `current` true, then the
   others, each with its values of the attributes the design's cards
   differ by (the attribute's key, the value's slug and name; for a card
-  holding none of those, all its values), and the title, link and picture
+  holding none of those, all its values; for one holding none at all, the
+  chosen values it opens on), and the title, link and picture
   that card would show; none for a design of one card.
 - **Kept between requests**: what the listing and the cards' links read of
   each product's variations (its offers, its cards and which variations

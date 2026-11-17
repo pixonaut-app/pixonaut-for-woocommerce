@@ -458,8 +458,9 @@ final class SplitCardListings {
 	 * design (`CardDesigns`); none for a design of one card. Each with its
 	 * values of the attributes the design's cards differ by (each
 	 * attribute's key, the value's slug and its name; a card holding none
-	 * of those, all its values), and its title, link and picture, as the
-	 * card would show them.
+	 * of those, all its values; one holding none at all, the chosen values
+	 * it opens on), and its title, link and picture, as the card would show
+	 * them.
 	 *
 	 * @param mixed $swatches What another callback answered.
 	 * @param mixed $product  The product the theme draws a card of.
@@ -512,6 +513,9 @@ final class SplitCardListings {
 					);
 				}
 			}
+			if ( array() === $values ) {
+				$values = self::opening_values( $product, $key, $terms );
+			}
 			$own      = SplitCardLooks::of( $product->get_id(), $key )['title'];
 			$image    = CardPages::image( $product, $key, FilteredOpening::values( $product, $key ), null, SplitCardFaces::picks_beyond( $product, $key ) );
 			$answer[] = array(
@@ -523,6 +527,34 @@ final class SplitCardListings {
 			);
 		}
 		return $answer;
+	}
+
+	/**
+	 * The values of the chosen attributes a card holding none opens on:
+	 * the product shown as itself, kept by a waived filter beside its
+	 * cards of the chosen values, is named by the variation the filters
+	 * open it on (a bare print, say).
+	 *
+	 * @param WC_Product   $product A split product.
+	 * @param string       $key     One of its cards.
+	 * @param ArchiveTerms $terms   How attributes are named.
+	 * @return list<array{key: string, id: string, label: string}>
+	 */
+	private static function opening_values( WC_Product $product, string $key, ArchiveTerms $terms ): array {
+		$chosen = FilterMatches::chosen();
+		$values = array();
+		foreach ( FilteredOpening::values( $product, $key ) as $field => $slug ) {
+			$taxonomy = substr( $field, strlen( QueryNames::FIELD_PREFIX ) );
+			$term     = isset( $chosen[ $taxonomy ] ) ? get_term_by( 'slug', $slug, $taxonomy ) : false;
+			if ( $term instanceof WP_Term ) {
+				$values[] = array(
+					'key'   => $terms->key( $taxonomy ),
+					'id'    => $term->slug,
+					'label' => html_entity_decode( $term->name, ENT_QUOTES, 'UTF-8' ),
+				);
+			}
+		}
+		return $values;
 	}
 
 	/**

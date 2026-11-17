@@ -78,8 +78,8 @@
 	"sorts": [],
 	"cards": [
 		{
-			"id": "154-82",
-			"productId": 154,
+			"id": "168-90",
+			"productId": 168,
 			"title": "Hav",
 			"url": "http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70",
 			"summary": "",
@@ -126,8 +126,8 @@
 			]
 		},
 		{
-			"id": "154-80",
-			"productId": 154,
+			"id": "168-88",
+			"productId": 168,
 			"title": "Hav",
 			"url": "http://localhost:8862/?product=hav&inramning=ingen&storlek=30x40",
 			"summary": "",
@@ -165,8 +165,8 @@
 			]
 		},
 		{
-			"id": "162",
-			"productId": 162,
+			"id": "176",
+			"productId": 176,
 			"title": "Paket",
 			"url": "http://localhost:8862/?product=paket",
 			"summary": "",
@@ -201,8 +201,8 @@
 			]
 		},
 		{
-			"id": "159",
-			"productId": 159,
+			"id": "173",
+			"productId": 173,
 			"title": "Rea",
 			"url": "http://localhost:8862/?product=rea",
 			"summary": "",
@@ -236,8 +236,8 @@
 			]
 		},
 		{
-			"id": "144-82",
-			"productId": 144,
+			"id": "158-90",
+			"productId": 158,
 			"title": "Safari",
 			"url": "http://localhost:8862/?product=safari&inramning=hangare&storlek=50x70&ramfarg=svart",
 			"summary": "",
@@ -275,8 +275,8 @@
 			]
 		},
 		{
-			"id": "144-80",
-			"productId": 144,
+			"id": "158-88",
+			"productId": 158,
 			"title": "Safari",
 			"url": "http://localhost:8862/?product=safari&inramning=ingen",
 			"summary": "",
@@ -323,8 +323,8 @@
 			]
 		},
 		{
-			"id": "144-81",
-			"productId": 144,
+			"id": "158-89",
+			"productId": 158,
 			"title": "Safari",
 			"url": "http://localhost:8862/?product=safari&inramning=ram",
 			"summary": "",
@@ -380,8 +380,8 @@
 			]
 		},
 		{
-			"id": "151-80",
-			"productId": 151,
+			"id": "165-88",
+			"productId": 165,
 			"title": "Skog",
 			"url": "http://localhost:8862/?product=skog&inramning=ingen&storlek=30x40",
 			"summary": "",
@@ -419,8 +419,8 @@
 			]
 		},
 		{
-			"id": "151-81",
-			"productId": 151,
+			"id": "165-89",
+			"productId": 165,
 			"title": "Skog",
 			"url": "http://localhost:8862/?product=skog&inramning=ram&storlek=50x70&ramfarg=ek",
 			"summary": "",
