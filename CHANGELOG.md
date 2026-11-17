@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.21.0...v1.21.1) (2026-11-17)
+
+
+### Performance Improvements
+
+* **storefront:** a product page keeps its designer, variation data and delivery rows between requests ([#291](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/291)) ([f49e6c9](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/f49e6c92b6697ac1ab4dfc9d8af7fa908b7358ad))
+
 ## [1.21.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.20.4...v1.21.0) (2026-11-17)
 
 
