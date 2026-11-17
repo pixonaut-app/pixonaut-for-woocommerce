@@ -35,9 +35,12 @@ use WC_Product_Variable;
 final class ArchiveCards {
 
 	/**
-	 * The size a card's picture is listed in, as the shop's loops show it.
+	 * The size a card's picture is listed in, as the shop's cards print it:
+	 * WooCommerce's Product Image block, which block themes' loops use,
+	 * prints `large` whatever its image sizing (that sets only the aspect
+	 * ratio), so the picture is shown whole rather than cropped square.
 	 */
-	public const IMAGE_SIZE = 'woocommerce_thumbnail';
+	public const IMAGE_SIZE = 'large';
 
 	/**
 	 * How many words of the product's short description a card's summary takes.
@@ -412,8 +415,8 @@ final class ArchiveCards {
 	}
 
 	/**
-	 * A card's picture as the shop's loops show it; the store's placeholder
-	 * for none.
+	 * A card's picture as the shop's cards print it; the store's placeholder
+	 * for none, at the dimensions WooCommerce prints it with.
 	 *
 	 * @param int $attachment An image; 0 for none.
 	 * @return array{src: string, srcset: string, width: int, height: int, alt: string}

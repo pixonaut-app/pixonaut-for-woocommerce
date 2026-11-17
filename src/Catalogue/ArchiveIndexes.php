@@ -86,6 +86,14 @@ final class ArchiveIndexes {
 	public const MIN_INTERVAL_SECONDS = 300;
 
 	/**
+	 * Where a build stands in Action Scheduler's queue: ahead of the jobs
+	 * queued at its default of 10, as each picture's redraw is. A store may
+	 * hold hundreds of those, a minute each, while the index names
+	 * pictures they replace and delete.
+	 */
+	public const PRIORITY = 5;
+
+	/**
 	 * How long one build may run: an archive of a few hundred products
 	 * reads each of their variations.
 	 */
@@ -483,7 +491,7 @@ final class ArchiveIndexes {
 		if ( array() !== $waiting ) {
 			return;
 		}
-		as_schedule_single_action( max( time() + $delay, self::state()['ran'] + self::MIN_INTERVAL_SECONDS ), self::ACTION, array(), self::GROUP );
+		as_schedule_single_action( max( time() + $delay, self::state()['ran'] + self::MIN_INTERVAL_SECONDS ), self::ACTION, array(), self::GROUP, false, self::PRIORITY );
 	}
 
 	/**
