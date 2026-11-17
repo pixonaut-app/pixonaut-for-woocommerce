@@ -177,6 +177,15 @@ Each card shows:
   the filters until then. Without either, the product's. The flat pictures are drawn in the background once the
   product is listed as cards, while the store uses Pixonaut pictures as
   product images; until then a card shows its variation's picture.
+
+  When the filters pick a value the card itself does not hold, such as
+  **Frame colour: Dark wood** on the card of **Framing: Frame**, the card
+  shows that whole combination even when it has an image of its own: the
+  poster in a dark wood frame, drawn on the photo of the variant the
+  variation sells. A variation whose picture is drawn flat, as with a flat
+  showcase set, gets this picture drawn in the background the first time a
+  filtered card needs it, a few per page view, and keeps it from then on;
+  until it is drawn, the card shows its own image.
 - **A price**: "From:" the lowest price among the value's variations, sale
   prices counted. When they all cost the same, that one price, as the
   product page shows it. A variation the shop hides because it is out of

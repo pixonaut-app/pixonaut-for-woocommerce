@@ -127,23 +127,37 @@ final class CardPages {
 	}
 
 	/**
-	 * The picture of a card: its own image; else, for a card an unfiltered
+	 * The picture of a card. When the filters pick values the card does not
+	 * hold (`$picked`), the picture of the whole combination: the variation
+	 * the card opens on on its blank's photo (`combination()`). Else, and
+	 * while that is not drawn, its own image; else, for a card an unfiltered
 	 * listing shows, the flat picture of its design, drawn for the first of
 	 * its variations that has one (`ProductPictures::flat()`); else, as for
-	 * a card holding a value of an attribute listed only while filtered
-	 * (a framing), the image of one of its variations, a picture of the
+	 * a card holding a value of an attribute listed only while filtered (a
+	 * framing), the image of one of its variations, a picture of the
 	 * product in its setting: of the variation a filtered listing opens the
-	 * card on when it has one, else of the one agreeing with
-	 * most of the values it opens on, the first of them on a tie. 0 when it
-	 * has none of these, and shows the product's.
+	 * card on when it has one, else of the one agreeing with most of the
+	 * values it opens on, the first of them on a tie. 0 when it has none of
+	 * these, and shows the product's.
 	 *
 	 * @param WC_Product            $product A product.
 	 * @param string                $key     The key of one of its cards.
 	 * @param array<string, string> $opens   The values a filtered listing opens the card on, by `attribute_<name>` field (`FilteredOpening`); none out of one.
-	 * @param \Closure|null         $undrawn `fn(WC_Product $variation): void`, told of the variation the card opens on when it is to show its picture and has none yet.
+	 * @param \Closure|null         $undrawn `fn(WC_Product $variation, bool $on_photo): void`, told of the variation the card opens on when it is to show a picture of it not drawn yet: on its blank's photo, or its image.
+	 * @param bool                  $picked  Whether the filters pick a value of an attribute the card holds none of, as a frame's colour on a card of a framing.
 	 * @return int An attachment id.
 	 */
-	public static function image( WC_Product $product, string $key, array $opens = array(), ?\Closure $undrawn = null ): int {
+	public static function image( WC_Product $product, string $key, array $opens = array(), ?\Closure $undrawn = null, bool $picked = false ): int {
+		$opened = $picked ? self::opened( SplitCards::card_variations( $product, $key ), SplitCards::variation_values( $product->get_id() ), $opens ) : null;
+		if ( null !== $opened ) {
+			$combination = self::combination( $opened );
+			if ( $combination > 0 ) {
+				return $combination;
+			}
+			if ( null !== $undrawn ) {
+				$undrawn( $opened, true );
+			}
+		}
 		$own = SplitCardLooks::of( $product->get_id(), $key )['image'];
 		if ( $own > 0 && wp_attachment_is_image( $own ) ) {
 			return $own;
@@ -157,15 +171,15 @@ final class CardPages {
 				}
 			}
 		}
-		$held   = SplitCards::variation_values( $product->get_id() );
-		$opened = self::opened( $ids, $held, $opens );
+		$held     = SplitCards::variation_values( $product->get_id() );
+		$opened ??= self::opened( $ids, $held, $opens );
 		if ( null !== $opened ) {
 			$image = (int) $opened->get_image_id( 'edit' );
 			if ( $image > 0 ) {
 				return $image;
 			}
 			if ( null !== $undrawn ) {
-				$undrawn( $opened );
+				$undrawn( $opened, false );
 			}
 		}
 		// Most agreeing first; `usort()` keeps the product's order on a tie.
@@ -181,6 +195,23 @@ final class CardPages {
 			}
 		}
 		return 0;
+	}
+
+	/**
+	 * The picture of a variation in its setting, its blank's photo: the
+	 * Pixonaut picture of it there (`ProductPictures::on_photo()`), else an
+	 * image the store gave it, which shows it as the store chose; 0 while
+	 * neither is there, as when its Pixonaut picture is drawn flat alone.
+	 *
+	 * @param WC_Product $variation A variation.
+	 */
+	private static function combination( WC_Product $variation ): int {
+		$photo = ProductPictures::on_photo( $variation );
+		if ( $photo > 0 ) {
+			return $photo;
+		}
+		$image = (int) $variation->get_image_id( 'edit' );
+		return $image > 0 && ! PictureImage::is_picture( $image, $variation ) ? $image : 0;
 	}
 
 	/**

@@ -602,6 +602,7 @@ export const REACH = {
 		'src/Catalogue/PictureQueue.php',
 		'src/Catalogue/PictureRunner.php',
 		'src/Catalogue/PictureSources.php',
+		'src/Catalogue/CardPhotos.php',
 		'src/Catalogue/PictureView.php',
 		'src/Catalogue/PicturedVariation.php',
 		'src/Catalogue/ProductPictures.php',

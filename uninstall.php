@@ -164,6 +164,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_PICTURE_GENERATION_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_SHOWCASE_IMAGES_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PICTURE_VIEW_META );
+		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::VARIATION_CARD_PHOTO_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_KEEPS_IMAGE_META );
 		// Prices the rule set stay as they are: they are the products' own prices now.
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRICE_META );

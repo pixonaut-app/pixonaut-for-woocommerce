@@ -29,7 +29,9 @@ use WC_Product;
  * the blank no longer has is drawn as without one. A variation of a product
  * listed as cards (`SplitCards`) drawn on a photo has a second picture,
  * flat, drawn with the same set: the picture of its design a card in the
- * shop shows (`CardPages::image()`).
+ * shop shows (`CardPages::image()`). One drawn flat that a filtered card
+ * wants on its blank's photo (`CardPhotos`) has a second picture there,
+ * drawn with the same set.
  */
 final class PictureSources {
 
@@ -49,14 +51,15 @@ final class PictureSources {
 	/**
 	 * What each of the product's pictures is drawn from, its image's first,
 	 * and for a variation of a product listed as cards drawn on a photo its
-	 * flat picture second:
+	 * flat picture second, or for one drawn flat that a filtered card wants
+	 * on its blank's photo that picture second (`card_photo`):
 	 * the template, with the blank, placement, view, variant and the photo
 	 * chosen when it is drawn on a photo, and the showcase set it is drawn
 	 * with. Empty when the product shows none.
 	 *
 	 * @param WC_Product $product A product or variation.
 	 *
-	 * @return list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string}>
+	 * @return list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true}>
 	 *
 	 * @throws ApiException When the blank's views or the template's sets cannot be read.
 	 */
@@ -84,6 +87,11 @@ final class PictureSources {
 		if ( ProductPictures::draws_flat( $chooser ) && isset( $sources[0]['blank'] ) ) {
 			// The flat picture of its design, which a card shows.
 			$sources[] = array( 'template' => $sources[0]['template'] ) + ( isset( $sources[0]['showcase'] ) ? array( 'showcase' => $sources[0]['showcase'] ) : array() );
+		}
+		$photo = ! isset( $sources[0]['blank'] ) && ProductPictures::draws_flat( $chooser ) && CardPhotos::wanted( $chooser ) ? $this->source( $product, true ) : null;
+		if ( isset( $photo['blank'] ) ) {
+			// Its image is flat: the picture on its blank's photo a filtered card shows.
+			$sources[] = $photo + ( isset( $sources[0]['showcase'] ) ? array( 'showcase' => $sources[0]['showcase'] ) : array() ) + array( 'card_photo' => true );
 		}
 		return $sources;
 	}

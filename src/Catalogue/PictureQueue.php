@@ -58,7 +58,7 @@ final class PictureQueue {
 	 * generation, and its card rows, with which its variations are drawn
 	 * flat too.
 	 */
-	private const WATCHED_META = array( ProductConfig::META_KEY, ProductVariant::META_KEY, PictureImage::THUMBNAIL_META, ShowcaseImages::META_KEY, PictureView::META_KEY, ProductPictures::PRODUCT_GENERATION_META, SplitCards::META );
+	private const WATCHED_META = array( ProductConfig::META_KEY, ProductVariant::META_KEY, PictureImage::THUMBNAIL_META, ShowcaseImages::META_KEY, PictureView::META_KEY, ProductPictures::PRODUCT_GENERATION_META, SplitCards::META, CardPhotos::META_KEY );
 
 	/**
 	 * The arguments the post meta actions pass.
