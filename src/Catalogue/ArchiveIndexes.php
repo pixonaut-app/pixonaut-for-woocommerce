@@ -26,7 +26,8 @@ use WP_Term;
  * written, its meta, terms or status, an attribute or one of its values,
  * the store's currency, tax, stock or sorting settings, the plugin's
  * listing settings) queues one build of every kept archive
- * `DELAY_SECONDS` later, however many changes come meanwhile. A build
+ * `DELAY_SECONDS` later, however many changes come meanwhile, and no
+ * sooner than `MIN_INTERVAL_SECONDS` after the last build started. A build
  * gives an index a new version only when what it holds changed; an index
  * older than a day is built again on the next visit. An archive nobody
  * opened for `UNUSED_SECONDS` is no longer kept.
@@ -60,6 +61,12 @@ final class ArchiveIndexes {
 	 * How long an archive nobody opens is kept: thirty days.
 	 */
 	public const UNUSED_SECONDS = 2592000;
+
+	/**
+	 * The least time between the starts of two builds: a store busy with
+	 * changes, such as pictures being drawn, builds every few minutes at most.
+	 */
+	public const MIN_INTERVAL_SECONDS = 300;
 
 	/**
 	 * How long one build may run: an archive of a few hundred products
@@ -355,11 +362,12 @@ final class ArchiveIndexes {
 		wc_set_time_limit( self::TIME_LIMIT_SECONDS );
 		self::$building = true;
 		try {
-			$state  = self::state();
-			$now    = time();
-			$terms  = new ArchiveTerms();
-			$build  = new ArchiveIndexBuild( new ArchiveCards( $terms ), $terms );
-			$hidden = ( new NotLiveProducts() )->hidden_ids();
+			$state        = self::state();
+			$now          = time();
+			$terms        = new ArchiveTerms();
+			$build        = new ArchiveIndexBuild( new ArchiveCards( $terms ), $terms );
+			$hidden       = ( new NotLiveProducts() )->hidden_ids();
+			$state['ran'] = $now;
 			foreach ( $state['seen'] as $archive => $seen ) {
 				$archive = (string) $archive;
 				$built   = $now - (int) $seen > self::UNUSED_SECONDS ? null : $build->build( $archive, $hidden );
@@ -409,7 +417,7 @@ final class ArchiveIndexes {
 		if ( ! self::wanted() || ! did_action( 'action_scheduler_init' ) || as_has_scheduled_action( self::ACTION, array(), self::GROUP ) ) {
 			return;
 		}
-		as_schedule_single_action( time() + $delay, self::ACTION, array(), self::GROUP );
+		as_schedule_single_action( max( time() + $delay, self::state()['ran'] + self::MIN_INTERVAL_SECONDS ), self::ACTION, array(), self::GROUP );
 	}
 
 	/**
@@ -422,17 +430,19 @@ final class ArchiveIndexes {
 	}
 
 	/**
-	 * The kept archives: when each was last opened, and its built index.
+	 * The kept archives: when each was last opened, and its built index;
+	 * and when the last build started.
 	 *
-	 * @return array{seen: array<string, int>, built: array<string, array{version: string, count: int, built: int}>}
+	 * @return array{seen: array<string, int>, built: array<string, array{version: string, count: int, built: int}>, ran: int}
 	 */
 	private static function state(): array {
 		$state = get_option( Schema::ARCHIVE_INDEXES_OPTION, array() );
 		$state = is_array( $state ) ? $state : array();
-		/** @var array{seen: array<string, int>, built: array<string, array{version: string, count: int, built: int}>} */
+		/** @var array{seen: array<string, int>, built: array<string, array{version: string, count: int, built: int}>, ran: int} */
 		return array(
 			'seen'  => is_array( $state['seen'] ?? null ) ? $state['seen'] : array(),
 			'built' => is_array( $state['built'] ?? null ) ? $state['built'] : array(),
+			'ran'   => is_int( $state['ran'] ?? null ) ? $state['ran'] : 0,
 		);
 	}
 }

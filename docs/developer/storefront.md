@@ -1337,7 +1337,7 @@ archives work as they always have.
   minute after anything it reads changes (a product or variation, its meta,
   terms or status, a category, tag, attribute or value, the currency, tax,
   stock and sorting settings, the plugin's listing settings), once for a run
-  of changes. An index's version changes only when its content does. An
+  of changes, and no sooner than five minutes after the last build started. An index's version changes only when its content does. An
   index older than a day is built again on the next visit, and an archive
   nobody opened for thirty days is dropped. Each index is kept compressed in
   the option `pixonaut_wc_archive_index_<archive>`.

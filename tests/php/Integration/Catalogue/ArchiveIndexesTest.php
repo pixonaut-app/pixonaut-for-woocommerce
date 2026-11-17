@@ -99,6 +99,8 @@ final class ArchiveIndexesTest extends WP_UnitTestCase {
 		$this->print->set_regular_price( '249' );
 		$this->print->save();
 		$this->assertTrue( as_has_scheduled_action( ArchiveIndexes::ACTION ), 'the change queued a build' );
+		$built = ArchiveIndexes::current( $this->archive() )['built'] ?? 0;
+		$this->assertGreaterThanOrEqual( $built + ArchiveIndexes::MIN_INTERVAL_SECONDS, as_next_scheduled_action( ArchiveIndexes::ACTION ), 'no sooner than five minutes after the last build' );
 		ActionSchedulerRunner::run_pending( ArchiveIndexes::ACTION );
 
 		$changed = ArchiveIndexes::current( $this->archive() )['version'] ?? null;
