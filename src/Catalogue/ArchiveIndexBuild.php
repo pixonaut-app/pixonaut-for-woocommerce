@@ -40,6 +40,11 @@ final class ArchiveIndexBuild {
 	private const DEFAULT_SORT = 'menu_order';
 
 	/**
+	 * How many products are read at a time.
+	 */
+	private const BATCH = 50;
+
+	/**
 	 * The price filter's key.
 	 */
 	public const PRICE_KEY = 'price';
@@ -73,6 +78,8 @@ final class ArchiveIndexBuild {
 			'nopaging'         => true,
 			'no_found_rows'    => true,
 			'fields'           => 'ids',
+			// The index is public: a product behind a password keeps it to those who have it.
+			'has_password'     => false,
 			'suppress_filters' => false,
 			'tax_query'        => WC()->query->get_tax_query( $tax_query ), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- the archive's own query, built in the background.
 			'meta_query'       => WC()->query->get_meta_query(), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- the archive's own query, built in the background.
@@ -88,31 +95,68 @@ final class ArchiveIndexBuild {
 			$ordered[ $sort ] = $ids;
 		}
 		$cards = array();
-		_prime_post_caches( $ordered[ $default ], true, true );
-		foreach ( $ordered[ $default ] as $product_id ) {
-			$product = wc_get_product( $product_id );
-			if ( ! $product instanceof WC_Product ) {
-				continue;
+		foreach ( array_chunk( $ordered[ $default ], self::BATCH ) as $batch ) {
+			// What was kept of the products' variations since they last changed; the rest read in a few queries a batch.
+			FilterIndex::look_up( $batch );
+			_prime_post_caches( $batch, true, true );
+			foreach ( $batch as $product_id ) {
+				$product = wc_get_product( $product_id );
+				if ( ! $product instanceof WC_Product ) {
+					continue;
+				}
+				$sort = array();
+				foreach ( self::SORTS as $key ) {
+					$sort[ $key ] = $places[ $key ][ $product_id ] ?? count( $places[ $key ] );
+				}
+				foreach ( $this->cards->of( $product ) as $card ) {
+					$cards[] = array_slice( $card, 0, 6, true ) + array( 'sort' => $sort ) + $card;
+				}
 			}
-			$sort = array();
-			foreach ( self::SORTS as $key ) {
-				$sort[ $key ] = $places[ $key ][ $product_id ] ?? count( $places[ $key ] );
-			}
-			foreach ( $this->cards->of( $product ) as $card ) {
-				$cards[] = array_slice( $card, 0, 6, true ) + array( 'sort' => $sort ) + $card;
-			}
+			// What a batch read is kept for the next build, and let go of: a large archive would hold it all.
+			FilterIndex::keep();
+			SplitCards::release( $batch );
+			wp_cache_flush_runtime();
 		}
-		$count = count( array_filter( $cards, static fn ( array $card ): bool => array() === ( $card['onlyFiltered'] ?? array() ) ) );
+		$count                  = count( array_filter( $cards, static fn ( array $card ): bool => array() === ( $card['onlyFiltered'] ?? array() ) ) );
+		list( $cards, $images ) = $this->pictures( $cards );
 		return array(
 			'index' => array(
 				'currency' => self::currency(),
 				'filters'  => $this->filters( $cards ),
 				'sorts'    => self::sort_menu(),
 				'cards'    => $cards,
-				'images'   => $this->cards->images(),
+				'images'   => $images,
 			),
 			'count' => $count,
 		);
+	}
+
+	/**
+	 * Lists the pictures an archive's cards' variations point to, each
+	 * once in the order first met, and points to them by their place.
+	 *
+	 * @param list<array<string, mixed>> $cards The archive's cards, their variations' pictures as attachment ids.
+	 * @return array{0: list<array<string, mixed>>, 1: list<array{src: string, srcset: string, width: int, height: int}>}
+	 */
+	private function pictures( array $cards ): array {
+		$places = array();
+		$images = array();
+		foreach ( $cards as $index => $card ) {
+			foreach ( is_array( $card['variations'] ?? null ) ? $card['variations'] : array() as $row_index => $row ) {
+				foreach ( array( 'image', 'openImage' ) as $field ) {
+					if ( ! is_array( $row ) || ! is_int( $row[ $field ] ?? null ) ) {
+						continue;
+					}
+					$attachment = $row[ $field ];
+					if ( ! isset( $places[ $attachment ] ) ) {
+						$places[ $attachment ] = count( $images );
+						$images[]              = $this->cards->picture( $attachment );
+					}
+					$cards[ $index ]['variations'][ $row_index ][ $field ] = $places[ $attachment ];
+				}
+			}
+		}
+		return array( $cards, $images );
 	}
 
 	/**

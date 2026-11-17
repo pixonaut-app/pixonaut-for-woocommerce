@@ -84,10 +84,8 @@ final class ArchiveIndexRoute {
 	 * @param WP_REST_Request $request The request.
 	 */
 	public function handle( WP_REST_Request $request ): WP_REST_Response {
-		$archive = (string) $request['archive'];
-		$current = ArchiveIndexes::current( $archive );
-		$body    = null === $current ? null : ArchiveIndexes::body( $archive );
-		if ( null === $current || null === $body ) {
+		$kept = ArchiveIndexes::body( (string) $request['archive'] );
+		if ( null === $kept ) {
 			return new WP_REST_Response(
 				array(
 					'code'    => 'pixonaut_archive_index_not_found',
@@ -98,10 +96,11 @@ final class ArchiveIndexRoute {
 				array( 'Cache-Control' => 'no-store' )
 			);
 		}
-		$etag    = '"' . $current['version'] . '"';
+		$body    = $kept['gzip'];
+		$etag    = '"' . $kept['version'] . '"';
 		$headers = array(
 			'Content-Type'           => 'application/json; charset=utf-8',
-			'Cache-Control'          => (string) $request['v'] === $current['version'] ? self::CACHE_CONTROL : self::STALE_CACHE_CONTROL,
+			'Cache-Control'          => (string) $request['v'] === $kept['version'] ? self::CACHE_CONTROL : self::STALE_CACHE_CONTROL,
 			'ETag'                   => $etag,
 			'Vary'                   => 'Accept-Encoding',
 			'X-Content-Type-Options' => 'nosniff',

@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use ActionScheduler_Store;
+use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Schema;
 use WP_Post;
 use WP_Term;
@@ -61,6 +63,21 @@ final class ArchiveIndexes {
 	 * How long an archive nobody opens is kept: thirty days.
 	 */
 	public const UNUSED_SECONDS = 2592000;
+
+	/**
+	 * Between an index's version and its compressed body in the option keeping them.
+	 */
+	private const BODY_SEPARATOR = ':';
+
+	/**
+	 * How many hex digits of the index's hash its version keeps.
+	 */
+	private const VERSION_LENGTH = 12;
+
+	/**
+	 * The strongest gzip compression: an index is compressed once and sent many times.
+	 */
+	private const GZIP_LEVEL = 9;
 
 	/**
 	 * The least time between the starts of two builds: a store busy with
@@ -250,17 +267,24 @@ final class ArchiveIndexes {
 	}
 
 	/**
-	 * An archive's index as kept, compressed with gzip; null before it is built.
+	 * An archive's index as kept: its version and its JSON compressed with
+	 * gzip, read together, so the two always belong to each other; null
+	 * before it is built.
 	 *
 	 * @param string $archive An archive's name.
+	 * @return array{version: string, gzip: string}|null
 	 */
-	public static function body( string $archive ): ?string {
+	public static function body( string $archive ): ?array {
 		$stored = get_option( Schema::ARCHIVE_INDEX_BODY_PREFIX . $archive );
-		if ( ! is_string( $stored ) || '' === $stored ) {
+		$parts  = is_string( $stored ) ? explode( self::BODY_SEPARATOR, $stored, 2 ) : array();
+		if ( 2 !== count( $parts ) || '' === $parts[0] ) {
 			return null;
 		}
-		$body = base64_decode( $stored, true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- the index's compressed bytes, kept as text.
-		return false === $body ? null : $body;
+		$gzip = base64_decode( $parts[1], true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- the index's compressed bytes, kept as text.
+		return false === $gzip || '' === $gzip ? null : array(
+			'version' => $parts[0],
+			'gzip'    => $gzip,
+		);
 	}
 
 	/**
@@ -270,12 +294,11 @@ final class ArchiveIndexes {
 	 * @param string $archive An archive's name.
 	 */
 	public static function visited( string $archive ): void {
-		$state = self::state();
-		$now   = time();
-		$seen  = (int) ( $state['seen'][ $archive ] ?? 0 );
-		if ( $now - $seen > self::STALE_SECONDS ) {
-			$state['seen'][ $archive ] = $now;
-			update_option( Schema::ARCHIVE_INDEXES_OPTION, $state, true );
+		$now    = time();
+		$visits = self::visits();
+		if ( $now - (int) ( $visits[ $archive ] ?? 0 ) > self::STALE_SECONDS ) {
+			$visits[ $archive ] = $now;
+			update_option( Schema::ARCHIVE_INDEX_VISITS_OPTION, $visits, true );
 		}
 		$built = self::current( $archive );
 		if ( null === $built ) {
@@ -289,7 +312,7 @@ final class ArchiveIndexes {
 	 * Queues a build of every kept archive's index after a change.
 	 */
 	public static function changed(): void {
-		if ( ! self::$building && array() !== self::state()['seen'] ) {
+		if ( ! self::$building && array() !== self::visits() ) {
 			self::queue( self::DELAY_SECONDS );
 		}
 	}
@@ -354,6 +377,12 @@ final class ArchiveIndexes {
 	/**
 	 * Builds the index of every kept archive, drops those of archives nobody
 	 * opened for long, and keeps a new version of each whose index changed.
+	 *
+	 * An archive whose build had a database error keeps its last index, and
+	 * the build is queued again: a failed read may have found too few
+	 * products. A change written while the build runs queues the next one
+	 * (`queue()` counts only builds waiting to start), as does an archive
+	 * first opened meanwhile.
 	 */
 	public static function build_all(): void {
 		if ( ! self::wanted() ) {
@@ -364,42 +393,66 @@ final class ArchiveIndexes {
 		try {
 			$state        = self::state();
 			$now          = time();
-			$terms        = new ArchiveTerms();
-			$build        = new ArchiveIndexBuild( new ArchiveCards( $terms ), $terms );
-			$hidden       = ( new NotLiveProducts() )->hidden_ids();
 			$state['ran'] = $now;
-			foreach ( $state['seen'] as $archive => $seen ) {
+			update_option( Schema::ARCHIVE_INDEXES_OPTION, $state, true );
+			$terms  = new ArchiveTerms();
+			$build  = new ArchiveIndexBuild( new ArchiveCards( $terms ), $terms );
+			$hidden = ( new NotLiveProducts() )->hidden_ids();
+			$failed = array();
+			$unused = array();
+			foreach ( self::visits() as $archive => $seen ) {
 				$archive = (string) $archive;
+				$errors  = self::errors();
 				$built   = $now - (int) $seen > self::UNUSED_SECONDS ? null : $build->build( $archive, $hidden );
+				if ( self::errors() !== $errors ) {
+					$failed[] = $archive;
+					continue;
+				}
 				if ( null === $built ) {
-					unset( $state['seen'][ $archive ], $state['built'][ $archive ] );
+					$unused[] = $archive;
+					unset( $state['built'][ $archive ] );
 					delete_option( Schema::ARCHIVE_INDEX_BODY_PREFIX . $archive );
 					continue;
 				}
-				$state['built'][ $archive ] = self::keep( $archive, $built['index'], $built['count'], $state['built'][ $archive ] ?? null, $now );
+				$kept = self::keep( $archive, $built['index'], $built['count'], $now );
+				if ( null === $kept ) {
+					$failed[] = $archive;
+					continue;
+				}
+				$state['built'][ $archive ] = $kept;
 			}
 			update_option( Schema::ARCHIVE_INDEXES_OPTION, $state, true );
+			self::forget_visits( $unused );
 		} finally {
 			self::$building = false;
+		}
+		if ( array() !== $failed ) {
+			( new WcLogger() )->warning( 'The index of some product archives could not be built; their last index stays, and the build runs again.', array( 'archives' => $failed ) );
+			self::queue( self::DELAY_SECONDS );
 		}
 	}
 
 	/**
-	 * Keeps an archive's index, under a new version only when it changed.
+	 * Keeps an archive's index, under a new version only when it changed,
+	 * its version stored with it. Null when it could not be stored: the
+	 * last index stays.
 	 *
-	 * @param string                                              $archive  The archive.
-	 * @param array<string, mixed>                                $index    Its index, without a version.
-	 * @param int                                                 $count    How many cards it shows unfiltered.
-	 * @param array{version: string, count: int, built: int}|null $previous What was kept of it before.
-	 * @param int                                                 $now      The time.
-	 * @return array{version: string, count: int, built: int}
+	 * @param string               $archive The archive.
+	 * @param array<string, mixed> $index   Its index, without a version.
+	 * @param int                  $count   How many cards it shows unfiltered.
+	 * @param int                  $now     The time.
+	 * @return array{version: string, count: int, built: int}|null
 	 */
-	private static function keep( string $archive, array $index, int $count, ?array $previous, int $now ): array {
+	private static function keep( string $archive, array $index, int $count, int $now ): ?array {
 		$json    = (string) wp_json_encode( $index, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
-		$version = substr( md5( $json ), 0, 12 );
-		if ( null === $previous || $previous['version'] !== $version || null === self::body( $archive ) ) {
-			$body = (string) wp_json_encode( array( 'version' => $version ) + $index, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
-			update_option( Schema::ARCHIVE_INDEX_BODY_PREFIX . $archive, base64_encode( (string) gzencode( $body, 9 ) ), false ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- compressed bytes kept in an option, which holds text.
+		$version = substr( md5( $json ), 0, self::VERSION_LENGTH );
+		if ( ( self::body( $archive )['version'] ?? null ) !== $version ) {
+			$body   = (string) wp_json_encode( array( 'version' => $version ) + $index, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+			$stored = $version . self::BODY_SEPARATOR . base64_encode( (string) gzencode( $body, self::GZIP_LEVEL ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- compressed bytes kept in an option, which holds text.
+			update_option( Schema::ARCHIVE_INDEX_BODY_PREFIX . $archive, $stored, false );
+			if ( ( self::body( $archive )['version'] ?? null ) !== $version ) {
+				return null;
+			}
 		}
 		return array(
 			'version' => $version,
@@ -409,15 +462,36 @@ final class ArchiveIndexes {
 	}
 
 	/**
-	 * Queues the build, unless one is queued already.
+	 * Queues the build, unless one is waiting to start already; a build
+	 * running now does not count, as it may have read what changed.
 	 *
 	 * @param int $delay Seconds from now.
 	 */
 	private static function queue( int $delay ): void {
-		if ( ! self::wanted() || ! did_action( 'action_scheduler_init' ) || as_has_scheduled_action( self::ACTION, array(), self::GROUP ) ) {
+		if ( ! self::wanted() || ! did_action( 'action_scheduler_init' ) ) {
+			return;
+		}
+		$waiting = as_get_scheduled_actions(
+			array(
+				'hook'     => self::ACTION,
+				'group'    => self::GROUP,
+				'status'   => ActionScheduler_Store::STATUS_PENDING,
+				'per_page' => 1,
+			),
+			'ids'
+		);
+		if ( array() !== $waiting ) {
 			return;
 		}
 		as_schedule_single_action( max( time() + $delay, self::state()['ran'] + self::MIN_INTERVAL_SECONDS ), self::ACTION, array(), self::GROUP );
+	}
+
+	/**
+	 * How many database errors this request has had.
+	 */
+	private static function errors(): int {
+		global $EZSQL_ERROR;
+		return is_array( $EZSQL_ERROR ) ? count( $EZSQL_ERROR ) : 0;
 	}
 
 	/**
@@ -430,17 +504,46 @@ final class ArchiveIndexes {
 	}
 
 	/**
-	 * The kept archives: when each was last opened, and its built index;
-	 * and when the last build started.
+	 * When each kept archive was last opened, by name. Kept apart from the
+	 * built indexes, so a visit during a build is never written over.
 	 *
-	 * @return array{seen: array<string, int>, built: array<string, array{version: string, count: int, built: int}>, ran: int}
+	 * @return array<string, int>
+	 */
+	private static function visits(): array {
+		$visits = get_option( Schema::ARCHIVE_INDEX_VISITS_OPTION, array() );
+		/** @var array<string, int> */
+		return is_array( $visits ) ? $visits : array();
+	}
+
+	/**
+	 * Stops keeping archives nobody opened for long, unless opened since.
+	 *
+	 * @param string[] $archives Archive names.
+	 */
+	private static function forget_visits( array $archives ): void {
+		if ( array() === $archives ) {
+			return;
+		}
+		$visits = self::visits();
+		$now    = time();
+		foreach ( $archives as $archive ) {
+			if ( $now - (int) ( $visits[ $archive ] ?? 0 ) > self::UNUSED_SECONDS ) {
+				unset( $visits[ $archive ] );
+			}
+		}
+		update_option( Schema::ARCHIVE_INDEX_VISITS_OPTION, $visits, true );
+	}
+
+	/**
+	 * The built indexes, and when the last build started.
+	 *
+	 * @return array{built: array<string, array{version: string, count: int, built: int}>, ran: int}
 	 */
 	private static function state(): array {
 		$state = get_option( Schema::ARCHIVE_INDEXES_OPTION, array() );
 		$state = is_array( $state ) ? $state : array();
-		/** @var array{seen: array<string, int>, built: array<string, array{version: string, count: int, built: int}>, ran: int} */
+		/** @var array{built: array<string, array{version: string, count: int, built: int}>, ran: int} */
 		return array(
-			'seen'  => is_array( $state['seen'] ?? null ) ? $state['seen'] : array(),
 			'built' => is_array( $state['built'] ?? null ) ? $state['built'] : array(),
 			'ran'   => is_int( $state['ran'] ?? null ) ? $state['ran'] : 0,
 		);

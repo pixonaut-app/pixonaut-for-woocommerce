@@ -18,7 +18,8 @@ use WC_Product_Variable;
  * a template that is not live. Each card carries what the shop's filters
  * read of it (`FilterOffers`): the variations it sells that the shop
  * offers, each with the values it is sold in, its displayed price, and the
- * picture of it a filtered card shows (`CardPages::combination()`); and,
+ * pictures of it a filtered card shows (`CardPages::combination()`, by
+ * attachment id until `ArchiveIndexBuild` lists them per archive); and,
  * of a split product, the card's own values, the attributes the product's
  * cards hold, and those of them it lists by only while filtered; and the
  * attributes the product's page lets a shopper choose, which a filtered
@@ -29,7 +30,7 @@ use WC_Product_Variable;
  * product's defaults first, then the cheapest, then the product's order.
  *
  * Each product's cards are worked out once a build, whichever archives
- * list it, and its pictures are added to the build's shared list.
+ * list it.
  */
 final class ArchiveCards {
 
@@ -56,19 +57,11 @@ final class ArchiveCards {
 	private array $cards = array();
 
 	/**
-	 * The pictures of filtered combinations, by attachment id: their place
-	 * in `images()`.
+	 * The pictures of filtered combinations read so far, by attachment id.
 	 *
-	 * @var array<int, int>
+	 * @var array<int, array{src: string, srcset: string, width: int, height: int}>
 	 */
-	private array $image_index = array();
-
-	/**
-	 * The pictures of filtered combinations, in the order first listed.
-	 *
-	 * @var list<array{src: string, srcset: string, width: int, height: int}>
-	 */
-	private array $images = array();
+	private array $pictures = array();
 
 	/**
 	 * @param ArchiveTerms $terms How attributes and values are named.
@@ -88,22 +81,18 @@ final class ArchiveCards {
 	}
 
 	/**
-	 * The pictures of filtered combinations the cards read so far point to.
-	 *
-	 * @return list<array{src: string, srcset: string, width: int, height: int}>
-	 */
-	public function images(): array {
-		return $this->images;
-	}
-
-	/**
 	 * Works out `of()`.
 	 *
 	 * @param WC_Product $product A product.
 	 * @return list<array<string, mixed>>
 	 */
 	private function read( WC_Product $product ): array {
-		$rows      = $this->rows( $product );
+		// Each variation the shop sells, read once for the prices, pictures and cards below.
+		$variations = array();
+		foreach ( $product instanceof WC_Product_Variable ? ProductConfig::sold_variations( $product ) : array() as $id => $sold ) {
+			$variations[ $id ] = $sold[0];
+		}
+		$rows      = $this->rows( $product, $variations );
 		$sold      = $product instanceof WC_Product_Variable ? SplitCards::sold_by_card( $product ) : array();
 		$permalink = (string) get_permalink( $product->get_id() );
 		$summary   = $this->summary( $product );
@@ -153,7 +142,7 @@ final class ArchiveCards {
 					'listedBy'     => $listed_by,
 					'onlyFiltered' => array_values( array_intersect( array_keys( $holds ), $only ) ),
 					'choices'      => $choices,
-					'variations'   => array_values( $this->ordered( $product, $rows, $ids, SplitCards::link_values( $product, $key ), $this->fixed( $product, $key, $own['image'] ) ? $image : 0 ) ),
+					'variations'   => array_values( $this->ordered( $product, $rows, $ids, SplitCards::link_values( $product, $key ), $this->fixed( $product, $key, $own['image'], $variations ) ? $image : 0 ) ),
 				),
 				$product
 			);
@@ -166,14 +155,15 @@ final class ArchiveCards {
 	 * it opens on, unless the filters pick a value beyond it, as
 	 * `CardPages::image()` decides.
 	 *
-	 * @param WC_Product $product A split product.
-	 * @param string     $key     One of its cards.
-	 * @param int        $own     The card's own image; 0 for none.
+	 * @param WC_Product             $product    A split product.
+	 * @param string                 $key        One of its cards.
+	 * @param int                    $own        The card's own image; 0 for none.
+	 * @param array<int, WC_Product> $variations The product's variations the shop sells, by id.
 	 */
-	private function fixed( WC_Product $product, string $key, int $own ): bool {
+	private function fixed( WC_Product $product, string $key, int $own, array $variations ): bool {
 		if ( SplitCards::is_unfiltered( $product, $key ) ) {
 			foreach ( SplitCards::card_variations( $product, $key ) as $id ) {
-				$variation = wc_get_product( $id );
+				$variation = $variations[ $id ] ?? null;
 				if ( $variation instanceof WC_Product && ProductPictures::flat( $variation ) > 0 ) {
 					return true;
 				}
@@ -215,7 +205,7 @@ final class ArchiveCards {
 		 *
 		 * @since 1.18.0
 		 *
-		 * @param array<string, mixed> $card    The card: `id`, `productId`, `title`, `url`, `summary`, `image`, `holds`, `listedBy`, `onlyFiltered`, `choices`, `variations`.
+		 * @param array<string, mixed> $card    The card: `id`, `productId`, `title`, `url`, `summary`, `image`, `holds`, `listedBy`, `onlyFiltered`, `choices`, `variations` (whose `image` and `openImage` are attachment ids here, listed in the index's `images` after).
 		 * @param WC_Product           $product The card's product.
 		 *
 		 * @example
@@ -230,10 +220,11 @@ final class ArchiveCards {
 	/**
 	 * Each offer of a product as a card's variation row, by offer id.
 	 *
-	 * @param WC_Product $product A product.
+	 * @param WC_Product             $product    A product.
+	 * @param array<int, WC_Product> $variations Its variations the shop sells, by id.
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function rows( WC_Product $product ): array {
+	private function rows( WC_Product $product, array $variations ): array {
 		$offers  = FilterOffers::of( $product );
 		$regular = $product instanceof WC_Product_Variable ? self::regular_prices( array_column( $offers, 'id' ) ) : array();
 		$rows    = array();
@@ -250,17 +241,19 @@ final class ArchiveCards {
 				}
 				$values[ $this->terms->key( $taxonomy ) ] = $slugs;
 			}
+			$variation   = $variations[ $offer['id'] ] ?? null;
 			$own_regular = $product instanceof WC_Product_Variable ? ( $regular[ $offer['id'] ] ?? null ) : self::number( $product->get_regular_price( 'edit' ) );
-			$row         = array(
+			// A variation's own tax class decides its displayed price.
+			$taxed = $variation ?? $product;
+			$row   = array(
 				'values'       => (object) $values,
-				'price'        => self::displayed( $product, $offer['min'] ),
-				'regularPrice' => self::displayed( $product, max( $offer['min'], $own_regular ?? $offer['min'] ) ),
+				'price'        => self::displayed( $taxed, $offer['min'] ),
+				'regularPrice' => self::displayed( $taxed, max( $offer['min'], $own_regular ?? $offer['min'] ) ),
 			);
 			if ( $offer['max'] > $offer['min'] ) {
-				$row['priceMax'] = self::displayed( $product, $offer['max'] );
+				$row['priceMax'] = self::displayed( $taxed, $offer['max'] );
 			}
-			$variation = $product instanceof WC_Product_Variable ? wc_get_product( $offer['id'] ) : null;
-			$pictures  = array( 0, 0 );
+			$pictures = array( 0, 0 );
 			if ( $variation instanceof WC_Product ) {
 				$pictures = array( CardPages::combination( $variation ), (int) $variation->get_image_id( 'edit' ) );
 				if ( $filters ) {
@@ -335,11 +328,11 @@ final class ArchiveCards {
 			list( $combination, $own ) = $row['pictures'];
 			unset( $row['min'], $row['pictures'] );
 			if ( null !== $fixed && $combination > 0 ) {
-				$row['image'] = $this->image_index( $combination );
+				$row['image'] = $combination;
 			}
 			// A card showing neither its flat picture nor its own opens on the variation's own image.
 			if ( 0 === $fixed && $own > 0 ) {
-				$row['openImage'] = $this->image_index( $own );
+				$row['openImage'] = $own;
 			}
 			$ordered[ $id ] = $row;
 		}
@@ -400,22 +393,22 @@ final class ArchiveCards {
 	}
 
 	/**
-	 * A picture's place in `images()`, adding it once.
+	 * A picture of a filtered combination, as the index lists it; read once a build.
 	 *
 	 * @param int $attachment An image.
+	 * @return array{src: string, srcset: string, width: int, height: int}
 	 */
-	private function image_index( int $attachment ): int {
-		if ( ! isset( $this->image_index[ $attachment ] ) ) {
-			$image                            = self::image( $attachment );
-			$this->image_index[ $attachment ] = count( $this->images );
-			$this->images[]                   = array(
+	public function picture( int $attachment ): array {
+		if ( ! isset( $this->pictures[ $attachment ] ) ) {
+			$image                         = self::image( $attachment );
+			$this->pictures[ $attachment ] = array(
 				'src'    => $image['src'],
 				'srcset' => $image['srcset'],
 				'width'  => $image['width'],
 				'height' => $image['height'],
 			);
 		}
-		return $this->image_index[ $attachment ];
+		return $this->pictures[ $attachment ];
 	}
 
 	/**

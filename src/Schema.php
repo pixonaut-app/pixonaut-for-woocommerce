@@ -460,12 +460,18 @@ final class Schema {
 
 	/**
 	 * Option holding, by archive, the version, card count and build time of
-	 * the archive's index, and the archives whose index is kept.
+	 * the archive's index, and when the last build started.
 	 */
 	const ARCHIVE_INDEXES_OPTION = 'pixonaut_wc_archive_indexes';
 
 	/**
-	 * Before an archive's name: the option holding its index, compressed.
+	 * Option holding when each archive with a kept index was last opened.
+	 */
+	const ARCHIVE_INDEX_VISITS_OPTION = 'pixonaut_wc_archive_index_visits';
+
+	/**
+	 * Before an archive's name: the option holding its index's version and
+	 * the index, compressed.
 	 */
 	const ARCHIVE_INDEX_BODY_PREFIX = 'pixonaut_wc_archive_index_';
 

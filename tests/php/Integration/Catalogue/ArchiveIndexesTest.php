@@ -47,6 +47,7 @@ final class ArchiveIndexesTest extends WP_UnitTestCase {
 		remove_all_filters( 'pixonaut_wc_archive_index_variation' );
 		as_unschedule_all_actions( ArchiveIndexes::ACTION );
 		delete_option( Schema::ARCHIVE_INDEXES_OPTION );
+		delete_option( Schema::ARCHIVE_INDEX_VISITS_OPTION );
 		delete_option( Schema::ARCHIVE_INDEX_BODY_PREFIX . $this->archive() );
 		parent::tear_down();
 	}
@@ -105,7 +106,7 @@ final class ArchiveIndexesTest extends WP_UnitTestCase {
 
 		$changed = ArchiveIndexes::current( $this->archive() )['version'] ?? null;
 		$this->assertNotSame( $version, $changed );
-		$index = json_decode( (string) gzdecode( (string) ArchiveIndexes::body( $this->archive() ) ), true );
+		$index = json_decode( (string) gzdecode( ArchiveIndexes::body( $this->archive() )['gzip'] ?? '' ), true );
 		$this->assertIsArray( $index );
 		$this->assertSame( 249.0, (float) $index['cards'][1]['variations'][0]['price'] );
 	}
@@ -124,9 +125,99 @@ final class ArchiveIndexesTest extends WP_UnitTestCase {
 		$this->print->save();
 
 		$this->built();
-		$index = json_decode( (string) gzdecode( (string) ArchiveIndexes::body( $this->archive() ) ), true );
+		$index = json_decode( (string) gzdecode( ArchiveIndexes::body( $this->archive() )['gzip'] ?? '' ), true );
 		$this->assertIsArray( $index );
 		$this->assertSame( 'SKOG-1', $index['cards'][1]['sku'] );
+	}
+
+	public function test_a_product_behind_a_password_is_not_in_the_index(): void {
+		wp_update_post(
+			array(
+				'ID'            => $this->print->get_id(),
+				'post_password' => 'hemligt',
+			)
+		);
+
+		$this->built();
+		$this->assertSame( array( 'Hav' ), array_column( $this->stored()['cards'], 'title' ) );
+	}
+
+	public function test_a_build_with_a_failed_read_keeps_the_last_index_and_runs_again(): void {
+		$version = $this->built();
+		$this->print->set_regular_price( '249' );
+		$this->print->save();
+		as_unschedule_all_actions( ArchiveIndexes::ACTION );
+		$broken     = static fn (): string => 'SELECT ID FROM no_such_table';
+		add_filter( 'posts_request', $broken );
+		$suppressed = $GLOBALS['wpdb']->suppress_errors( true );
+
+		do_action( ArchiveIndexes::ACTION );
+
+		$GLOBALS['wpdb']->suppress_errors( $suppressed );
+		remove_filter( 'posts_request', $broken );
+		$this->assertSame( $version, ArchiveIndexes::current( $this->archive() )['version'] ?? null, 'the last index stays' );
+		$this->assertSame( $version, ArchiveIndexes::body( $this->archive() )['version'] ?? null );
+		$this->assertTrue( as_has_scheduled_action( ArchiveIndexes::ACTION ), 'the build runs again' );
+	}
+
+	public function test_the_route_answers_the_version_stored_with_the_index(): void {
+		$version = $this->built();
+		$state   = get_option( Schema::ARCHIVE_INDEXES_OPTION );
+		$this->assertIsArray( $state );
+		$state['built'][ $this->archive() ]['version'] = 'older';
+		update_option( Schema::ARCHIVE_INDEXES_OPTION, $state );
+
+		$response = $this->get( 'older', 'gzip' );
+		$this->assertSame( '"' . $version . '"', $response->get_headers()['ETag'] );
+		$this->assertSame( 'public, max-age=60', $response->get_headers()['Cache-Control'], 'the bytes are another version than the one asked for' );
+	}
+
+	public function test_a_variations_own_tax_class_sets_its_displayed_price(): void {
+		update_option( 'woocommerce_calc_taxes', 'yes' );
+		update_option( 'woocommerce_prices_include_tax', 'no' );
+		update_option( 'woocommerce_tax_display_shop', 'incl' );
+		$standard = \WC_Tax::_insert_tax_rate(
+			array(
+				'tax_rate'          => '25.0000',
+				'tax_rate_name'     => 'Moms',
+				'tax_rate_priority' => '1',
+				'tax_rate_order'    => '1',
+				'tax_rate_class'    => '',
+			)
+		);
+		\WC_Tax::create_tax_class( 'Noll' );
+		$product = new \WC_Product_Variable();
+		$product->set_name( 'Ram' );
+		$product->set_status( 'publish' );
+		$product->set_category_ids( array( $this->category ) );
+		$attribute = new \WC_Product_Attribute();
+		$attribute->set_name( 'Storlek' );
+		$attribute->set_options( array( 'Liten', 'Stor' ) );
+		$attribute->set_variation( true );
+		$product->set_attributes( array( $attribute ) );
+		$product->save();
+		foreach ( array(
+			'Liten' => '',
+			'Stor'  => 'noll',
+		) as $size => $tax_class ) {
+			$variation = new \WC_Product_Variation();
+			$variation->set_parent_id( $product->get_id() );
+			$variation->set_attributes( array( 'storlek' => $size ) );
+			$variation->set_regular_price( '100' );
+			$variation->set_tax_class( $tax_class );
+			$variation->save();
+		}
+		\WC_Product_Variable::sync( $product->get_id() );
+
+		$this->built();
+		$cards = array_column( $this->stored()['cards'], 'variations', 'title' );
+		$this->assertEqualsCanonicalizing( array( 125.0, 100.0 ), array_map( static fn ( array $row ): float => (float) $row['price'], $cards['Ram'] ), 'the zero-rated variation shows no tax' );
+
+		\WC_Tax::_delete_tax_rate( $standard );
+		\WC_Tax::delete_tax_class_by( 'slug', 'noll' );
+		delete_option( 'woocommerce_calc_taxes' );
+		delete_option( 'woocommerce_prices_include_tax' );
+		delete_option( 'woocommerce_tax_display_shop' );
 	}
 
 	public function test_without_the_themes_support_nothing_is_built_or_named(): void {
@@ -171,6 +262,17 @@ final class ArchiveIndexesTest extends WP_UnitTestCase {
 		$current = ArchiveIndexes::current( $this->archive() );
 		$this->assertNotNull( $current );
 		return $current['version'];
+	}
+
+	/**
+	 * The category's index as kept.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function stored(): array {
+		$index = json_decode( (string) gzdecode( ArchiveIndexes::body( $this->archive() )['gzip'] ?? '' ), true );
+		$this->assertIsArray( $index );
+		return $index;
 	}
 
 	/**

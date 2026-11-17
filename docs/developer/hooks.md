@@ -101,7 +101,7 @@ Filters a card of an archive's index, before the index is kept: a theme adds the
 
 | Parameter | Type | Description |
 |---|---|---|
-| `$card` | `array<string, mixed>` | The card: `id`, `productId`, `title`, `url`, `summary`, `image`, `holds`, `listedBy`, `onlyFiltered`, `choices`, `variations`. |
+| `$card` | `array<string, mixed>` | The card: `id`, `productId`, `title`, `url`, `summary`, `image`, `holds`, `listedBy`, `onlyFiltered`, `choices`, `variations` (whose `image` and `openImage` are attachment ids here, listed in the index's `images` after). |
 | `$product` | `WC_Product` | The card's product. |
 
 Since 1.18.0. Fired in `src/Catalogue/ArchiveCards.php`.
