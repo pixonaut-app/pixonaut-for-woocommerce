@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.19.0...v1.20.0) (2026-11-17)
+
+
+### Features
+
+* **storefront:** answer a card's own swatch first, marked current ([#274](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/274)) ([4d5520d](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/4d5520d8f2591894d37ea32989de5a3c91f92893))
+
 ## [1.19.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.18.0...v1.19.0) (2026-11-17)
 
 
