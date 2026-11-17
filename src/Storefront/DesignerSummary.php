@@ -33,7 +33,11 @@ final class DesignerSummary {
 	private const EXCERPT          = 'woocommerce_template_single_excerpt';
 	private const EXCERPT_PRIORITY = 20;
 
-	/** Whether the summary printing now has the short description taken off. */
+	/**
+	 * Whether the summary printing now has the short description taken off.
+	 *
+	 * @var bool
+	 */
 	private bool $taken_off = false;
 
 	/**

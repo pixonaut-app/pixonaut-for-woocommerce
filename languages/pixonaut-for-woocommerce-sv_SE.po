@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-17T09:41:59+00:00\n"
+"POT-Creation-Date: 2026-11-17T09:59:33+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -8356,7 +8356,13 @@ msgid ""
 "make the product and nothing of the delivery gets “Made in 2–3 days”, and "
 "one that tells nothing gets no row. The times are read with the costs, once "
 "a day."
-msgstr "Skriv i raden ”Leveranstid” i produktens attributtabell hur lång tid tryckeriet säger att den valda varianten tar, till exempel ”4–7 dagar”. Bara det tryckeriet självt uppger visas: ett tryckeri som uppger hur lång tid produkten tar att tillverka men inget om leveransen får ”Tillverkas på 2–3 dagar”, och ett som inte uppger något får ingen rad. Tiderna läses in tillsammans med kostnaderna, en gång om dagen."
+msgstr ""
+"Skriv i raden ”Leveranstid” i produktens attributtabell hur lång tid "
+"tryckeriet säger att den valda varianten tar, till exempel ”4–7 dagar”. Bara "
+"det tryckeriet självt uppger visas: ett tryckeri som uppger hur lång tid "
+"produkten tar att tillverka men inget om leveransen får ”Tillverkas på 2–3 "
+"dagar”, och ett som inte uppger något får ingen rad. Tiderna läses in "
+"tillsammans med kostnaderna, en gång om dagen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days the store adds to the printshop's delivery time.
 #: src/Settings/Settings.php:588
@@ -8626,7 +8632,7 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
 #. translators: Label of a row of the product's attributes table: how long until the customer has the order, e.g. "5–8 days".
-#: src/Settings/SettingsPage.php:659 src/Storefront/DeliveryRows.php:149
+#: src/Settings/SettingsPage.php:659 src/Storefront/DeliveryRows.php:167
 msgid "Delivery time"
 msgstr "Leveranstid"
 
@@ -8690,7 +8696,7 @@ msgid "As swatches, like the designer's own choices"
 msgstr "Som knappar, likt designverktygets egna val"
 
 #. translators: Label of a row of the product's attributes table: how the product is delivered, as the chosen variation describes it, e.g. "as a poster, without a frame".
-#: src/Storefront/DeliveryRows.php:133
+#: src/Storefront/DeliveryRows.php:151
 msgid "Delivery"
 msgstr "Leverans"
 
