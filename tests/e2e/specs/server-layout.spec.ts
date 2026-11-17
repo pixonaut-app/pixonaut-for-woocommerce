@@ -581,6 +581,12 @@ test("the preview shows a picture of the designer's first drawing from the first
 	expect(Math.abs(shown.height - printed.height)).toBeLessThanOrEqual(
 		SAME_BOX_PX,
 	);
+	// In a box of its shape its picture fills the box, as the designer's
+	// does: one a fraction of a pixel short of it is a smaller paint than the
+	// designer's, which the browser then reports as the page's largest.
+	expect(
+		await poster.evaluate((image) => getComputedStyle(image).objectFit),
+	).toBe('cover');
 	await page.evaluate(() => {
 		const shifts = { total: 0 };
 		Object.assign(window, { pixonautShifts: shifts });

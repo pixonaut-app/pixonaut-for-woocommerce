@@ -115,6 +115,9 @@
 	display: block;
 	width: 100%;
 	height: 100%;
+	/* Sized by the side, never by the poster: its shape is what the rule
+	 * printed with the poster (PosterFit) compares the poster's with. */
+	container: pixonaut-poster / size;
 }
 
 .pixonaut-preview__poster {
