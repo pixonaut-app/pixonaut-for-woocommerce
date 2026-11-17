@@ -32,7 +32,8 @@ use WC_Product;
  * A variable product's own picture is the one of a variation it sells
  * (`PicturedVariation`). A variation of a product listed as cards, drawn
  * on a photo, also has a flat picture of its design (`flat()`), which shows
- * nowhere but on the cards.
+ * nowhere but on the cards; one drawn flat that a filtered card wants on
+ * its blank's photo (`CardPhotos`) has that picture too (`on_photo()`).
  * A picture is drawn once per source: a variation drawn from what another
  * of its product's family already has a picture of shows that picture
  * (`SharedPictures`).
@@ -272,7 +273,7 @@ final class ProductPictures {
 			return;
 		}
 		$slots = array();
-		foreach ( $drawings as $drawing ) {
+		foreach ( $drawings as $index => $drawing ) {
 			if ( $drawing['shared'] && ! SharedPictures::share( $drawing['attachment'], $product ) ) {
 				// Its last product let it go meanwhile: drawn again at once, rather than shown missing.
 				self::unattach( $product, $slots, $stored );
@@ -289,7 +290,7 @@ final class ProductPictures {
 			$slots[] = array(
 				'source'     => $drawing['key'],
 				'attachment' => $attachment,
-			);
+			) + ( isset( $sources[ $index ]['card_photo'] ) ? array( 'photo' => true ) : array() );
 		}
 		// `$sources` is never empty, so neither is `$slots`.
 		$main    = array_shift( $slots ) ?? array(
@@ -322,10 +323,10 @@ final class ProductPictures {
 	 * Lets go the pictures a drawing attached or shared before it stopped,
 	 * keeping those the product had.
 	 *
-	 * @param WC_Product                                        $product A product or variation.
-	 * @param list<array{source: string|null, attachment: int}> $slots   The pictures so far.
-	 * @param array                                             $stored  Its recorded pictures.
-	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $stored
+	 * @param WC_Product                                                      $product A product or variation.
+	 * @param list<array{source: string|null, attachment: int, photo?: true}> $slots   The pictures so far.
+	 * @param array                                                           $stored  Its recorded pictures.
+	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int, photo?: true}>, gone: list<string>} $stored
 	 */
 	private static function unattach( WC_Product $product, array $slots, array $stored ): void {
 		foreach ( array_diff( array_column( $slots, 'attachment' ), self::attachments( $stored ) ) as $attached ) {
@@ -339,10 +340,10 @@ final class ProductPictures {
 	 * Pixonaut's PNG. A set Pixonaut no longer has is drawn with the
 	 * template's defaults instead, and named in `gone`.
 	 *
-	 * @param WC_Product                                                                                                                                                                          $product A product or variation.
-	 * @param list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string}>                                          $sources What each is drawn from, its image's first.
-	 * @param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $stored  Its recorded pictures.
-	 * @param bool                                                                                                                                                                                $own     Whether its image is the store manager's own, which is kept.
+	 * @param WC_Product                                                                                                                                                                                        $product A product or variation.
+	 * @param list<array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true}>                                     $sources What each is drawn from, its image's first.
+	 * @param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int, photo?: true}>, gone: list<string>} $stored  Its recorded pictures.
+	 * @param bool                                                                                                                                                                                              $own     Whether its image is the store manager's own, which is kept.
 	 *
 	 * @return list<array{key: string|null, attachment: int, png: string|null, gone: string|null, shared: bool, showcase: string|null}> `showcase` is the set a PNG was drawn with.
 	 *
@@ -454,8 +455,8 @@ final class ProductPictures {
 	/**
 	 * Pixonaut's PNGs of the sources, drawn at once.
 	 *
-	 * @param array<int, array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string}> $sources       What each is drawn from.
-	 * @param bool                                                                                                                                             $with_showcase Whether each is drawn with its showcase set; else with the template's defaults.
+	 * @param array<int, array{template: string, blank?: string, placement?: string, view?: string, variant?: string|null, photo?: string, showcase?: string, card_photo?: true}> $sources       What each is drawn from.
+	 * @param bool                                                                                                                                                                $with_showcase Whether each is drawn with its showcase set; else with the template's defaults.
 	 *
 	 * @return array<int, string|ApiException> Each source's PNG, or why Pixonaut did not draw it, under the source's key.
 	 */
@@ -479,7 +480,7 @@ final class ProductPictures {
 	 * @param WC_Product $product A product or variation.
 	 * @param string     $basis   What its picture depends on now.
 	 * @param array      $stored  Its recorded pictures.
-	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $stored
+	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int, photo?: true}>, gone: list<string>} $stored
 	 */
 	private function failed( WC_Product $product, string $basis, array $stored ): void {
 		self::store(
@@ -568,7 +569,7 @@ final class ProductPictures {
 	 *
 	 * @param WC_Product $product A product or variation.
 	 * @param array      $stored  Its recorded pictures.
-	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $stored
+	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int, photo?: true}>, gone: list<string>} $stored
 	 */
 	public static function has_gallery_work( WC_Product $product, array $stored ): bool {
 		if ( $product->is_type( 'variation' ) ) {
@@ -584,7 +585,7 @@ final class ProductPictures {
 	 * @param WC_Product  $product A product or variation.
 	 * @param string|null $basis   What its picture depends on now, recorded as drawn without a picture; null forgets the record.
 	 * @param array       $stored  Its recorded pictures.
-	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $stored
+	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int, photo?: true}>, gone: list<string>} $stored
 	 */
 	private static function release( WC_Product $product, ?string $basis, array $stored ): void {
 		// Recorded first: the image put back then queues nothing more.
@@ -658,6 +659,10 @@ final class ProductPictures {
 		if ( self::draws_flat( $product ) ) {
 			// Drawn flat too, for the shop's cards (`flat()`).
 			$parts[] = array( 'flat' => true );
+			if ( CardPhotos::wanted( $product ) ) {
+				// And on its blank's photo, for a filtered card (`on_photo()`).
+				$parts[] = array( 'card_photo' => true );
+			}
 		}
 		$drawn_as = PicturedVariation::document_on( $product );
 		if ( null !== $drawn_as ) {
@@ -691,7 +696,27 @@ final class ProductPictures {
 	 */
 	public static function flat( WC_Product $variation ): int {
 		$stored     = self::stored( $variation );
-		$attachment = $stored['gallery'][0]['attachment'] ?? $stored['attachment'];
+		$flat       = array_values( array_filter( $stored['gallery'], static fn ( array $slot ): bool => ! isset( $slot['photo'] ) ) );
+		$attachment = $flat[0]['attachment'] ?? $stored['attachment'];
+		return $attachment > 0 && wp_attachment_is_image( $attachment ) ? $attachment : 0;
+	}
+
+	/**
+	 * The picture of a variation on its blank's photo: its image's picture
+	 * when that is drawn on the photo, with its flat picture beside it, else
+	 * the one drawn on the photo for a filtered card (`CardPhotos`); 0 when
+	 * none is drawn.
+	 *
+	 * @param WC_Product $variation A variation.
+	 */
+	public static function on_photo( WC_Product $variation ): int {
+		$stored = self::stored( $variation );
+		$beside = $stored['gallery'][0] ?? null;
+		if ( null === $beside ) {
+			// Its image alone: flat, or not drawn for a card.
+			return 0;
+		}
+		$attachment = isset( $beside['photo'] ) ? $beside['attachment'] : $stored['attachment'];
 		return $attachment > 0 && wp_attachment_is_image( $attachment ) ? $attachment : 0;
 	}
 
@@ -743,7 +768,7 @@ final class ProductPictures {
 	/**
 	 * @param WC_Product $product A product or variation.
 	 *
-	 * @return array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>}
+	 * @return array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int, photo?: true}>, gone: list<string>}
 	 */
 	public static function stored( WC_Product $product ): array {
 		$raw    = $product->get_meta( self::META_KEY );
@@ -755,7 +780,7 @@ final class ProductPictures {
 	 * Every picture recorded: its image's, then its gallery's.
 	 *
 	 * @param array $stored A record, as `stored()` reads it.
-	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $stored
+	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int, photo?: true}>, gone: list<string>} $stored
 	 *
 	 * @return list<int>
 	 */
@@ -768,7 +793,7 @@ final class ProductPictures {
 	 *
 	 * @param array<mixed> $stored The decoded meta.
 	 *
-	 * @return array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>}
+	 * @return array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int, photo?: true}>, gone: list<string>}
 	 */
 	private static function stored_from( array $stored ): array {
 		$gallery = array();
@@ -777,7 +802,7 @@ final class ProductPictures {
 				$gallery[] = array(
 					'source'     => is_string( $slot['source'] ?? null ) ? $slot['source'] : null,
 					'attachment' => $slot['attachment'],
-				);
+				) + ( true === ( $slot['photo'] ?? null ) ? array( 'photo' => true ) : array() );
 			}
 		}
 		return array(
@@ -796,7 +821,7 @@ final class ProductPictures {
 	 *
 	 * @param WC_Product $product A product or variation.
 	 * @param array      $record  What it was drawn for (`basis`) and from (`source`, null for no picture), the picture (`attachment`, 0 for none), when Pixonaut last failed to draw it, how many times in a row its job was cut off, its gallery's pictures, and the showcase sets that are gone.
-	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int}>, gone: list<string>} $record
+	 * @phpstan-param array{basis: string|null, source: string|null, attachment: int, failed_at: int|null, cut_offs: int, gallery: list<array{source: string|null, attachment: int, photo?: true}>, gone: list<string>} $record
 	 */
 	private static function store( WC_Product $product, array $record ): void {
 		$product->update_meta_data( self::META_KEY, (string) wp_json_encode( $record ) );

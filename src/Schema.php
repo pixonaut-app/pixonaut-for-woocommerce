@@ -210,6 +210,13 @@ final class Schema {
 	const PICTURE_VIEW_META = '_pixonaut_picture_view';
 
 	/**
+	 * Variation meta marking one a filtered shop card opens on, which is
+	 * drawn on its blank's photo too when its image is drawn flat
+	 * (`CardPhotos`).
+	 */
+	const VARIATION_CARD_PHOTO_META = '_pixonaut_card_photo';
+
+	/**
 	 * Option holding the exchange rates last read, their day and when they
 	 * were read: converts a printshop's costs to the store's currency.
 	 */

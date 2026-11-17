@@ -9,6 +9,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
 use Pixonaut\WooCommerce\Abilities\ProductSetup;
 use Pixonaut\WooCommerce\Api\Hosts;
+use Pixonaut\WooCommerce\Catalogue\CardPhotos;
 use Pixonaut\WooCommerce\Catalogue\PictureQueue;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
@@ -232,6 +233,55 @@ final class VariationPicturesTest extends WP_UnitTestCase {
 		$this->assertSame( ProductPictures::flat( $this->reload( $red ) ), ProductPictures::flat( $this->reload( $blue ) ) );
 	}
 
+	public function test_a_flat_variation_a_card_wants_on_its_photo_is_drawn_there_too_and_keeps_its_flat_picture(): void {
+		$product = $this->tee();
+		ShowcaseImages::save( $product, array( array( 'kind' => ShowcaseImages::PREVIEW ) + self::ANNA ) );
+		$red  = $this->variation( $product, 'Red', 'v_red' );
+		$blue = $this->variation( $product, 'Blue', 'v_blue' );
+		add_post_meta( $product->get_id(), SplitCards::META, SplitCards::NO_VALUE );
+		$this->answer_pictures( 2 );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+		$flat = (int) $this->reload( $red )->get_image_id();
+		$this->assertSame( $flat, (int) $this->reload( $blue )->get_image_id(), 'both colours share the flat picture' );
+		$this->assertSame( 0, ProductPictures::on_photo( $this->reload( $red ) ), 'no colour is drawn on its photo yet' );
+		$this->recorder->requests = array();
+
+		$this->assertTrue( CardPhotos::want( $this->reload( $red ) ) );
+		$this->assertFalse( CardPhotos::want( $this->reload( $red ) ), 'marked once' );
+		$this->assertSame( array( $red->get_id() ), $this->queued(), 'the mark queues its drawing' );
+		$this->answer_pictures( 1 );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+
+		$this->assertCount( 1, $this->recorder->requests );
+		$this->assertStringContainsString( '/mockup.png?', $this->recorder->requests[0]['url'] );
+		$this->assertStringContainsString( '&variant=v_red', $this->recorder->requests[0]['url'] );
+		$this->assertStringEndsWith( '&showcase=' . self::ANNA['id'], $this->recorder->requests[0]['url'] );
+		$photo = ProductPictures::on_photo( $this->reload( $red ) );
+		$this->assertGreaterThan( 0, $photo );
+		$this->assertNotSame( $flat, $photo );
+		$this->assertSame( $flat, (int) $this->reload( $red )->get_image_id(), 'its image stays the flat picture' );
+		$this->assertSame( $flat, ProductPictures::flat( $this->reload( $red ) ) );
+		$this->assertSame( 0, ProductPictures::on_photo( $this->reload( $blue ) ), 'only the colour a card wants' );
+		$this->assertFalse( $this->plugin->picture_queue()->is_due( $this->reload( $red ) ), 'kept' );
+	}
+
+	public function test_a_variation_drawn_on_its_photo_is_its_own_picture_on_the_photo(): void {
+		$product = $this->tee();
+		ShowcaseImages::save( $product, array( self::ANNA ) );
+		$red = $this->variation( $product, 'Red', 'v_red' );
+		add_post_meta( $product->get_id(), SplitCards::META, SplitCards::NO_VALUE );
+		$this->answer_pictures( 2 );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+		$this->recorder->requests = array();
+
+		CardPhotos::want( $this->reload( $red ) );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+
+		$this->assertSame( array(), $this->recorder->requests, 'nothing more to draw' );
+		$this->assertSame( (int) $this->reload( $red )->get_image_id(), ProductPictures::on_photo( $this->reload( $red ) ) );
+		$this->assertNotSame( ProductPictures::flat( $this->reload( $red ) ), ProductPictures::on_photo( $this->reload( $red ) ) );
+	}
+
 	public function test_a_variation_showing_the_store_managers_own_image_is_drawn_flat_too(): void {
 		$product = $this->tee();
 		$red     = $this->variation( $product, 'Red', 'v_red' );
@@ -417,6 +467,19 @@ final class VariationPicturesTest extends WP_UnitTestCase {
 	 */
 	private function drawn_without_variant(): array {
 		return array_values( array_filter( array_column( $this->recorder->requests, 'url' ), static fn ( string $url ): bool => str_contains( $url, '/mockup.png?' ) && ! str_contains( $url, '&variant=' ) ) );
+	}
+
+	/**
+	 * The products whose drawing waits to start.
+	 *
+	 * @return list<int>
+	 */
+	private function queued(): array {
+		$ids = array();
+		foreach ( ActionSchedulerRunner::pending( ProductPictures::ACTION ) as $action_id ) {
+			$ids[] = (int) ( \ActionScheduler::store()->fetch_action( (string) $action_id )->get_args()[0] ?? 0 );
+		}
+		return $ids;
 	}
 
 	/**
