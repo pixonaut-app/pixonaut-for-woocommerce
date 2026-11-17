@@ -95,6 +95,43 @@ add_filter( 'pixonaut_wc_approval_proof_link_days', function ( $days, $deadline_
 }, 10, 2 );
 ```
 
+### `pixonaut_wc_archive_index_card`
+
+Filters a card of an archive's index, before the index is kept: a theme adds the fields its cards show, such as a second picture. Runs while the index is built in the background, never on a shopper's request; the fields the plugin writes keep their meaning.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `$card` | `array<string, mixed>` | The card: `id`, `productId`, `title`, `url`, `summary`, `image`, `holds`, `listedBy`, `onlyFiltered`, `choices`, `variations`. |
+| `$product` | `WC_Product` | The card's product. |
+
+Since 1.18.0. Fired in `src/Catalogue/ArchiveCards.php`.
+
+```php
+add_filter( 'pixonaut_wc_archive_index_card', function ( array $card, WC_Product $product ): array {
+    $card['badge'] = $product->is_featured() ? 'featured' : '';
+    return $card;
+}, 10, 2 );
+```
+
+### `pixonaut_wc_archive_index_variation`
+
+Filters a variation's row on a card of an archive's index, before the index is kept: a theme adds the fields it shows with a filtered card, such as its lowest price of the last 30 days. Runs while the index is built in the background.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `$row` | `array<string, mixed>` | The row: `values`, `price`, `regularPrice` and `priceMax` when it has one; the pictures are added per card after. |
+| `$variation` | `WC_Product` | The variation. |
+| `$product` | `WC_Product` | Its product. |
+
+Since 1.18.0. Fired in `src/Catalogue/ArchiveCards.php`.
+
+```php
+add_filter( 'pixonaut_wc_archive_index_variation', function ( array $row, WC_Product $variation, WC_Product $product ): array {
+    $row['sku'] = $variation->get_sku();
+    return $row;
+}, 10, 3 );
+```
+
 ### `pixonaut_wc_bridge_abilities`
 
 Filters the abilities `pixonaut_wc_abilities()` answers another plugin with, such as an MCP bridge offering them as its tools.

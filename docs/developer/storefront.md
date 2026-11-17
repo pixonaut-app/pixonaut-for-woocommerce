@@ -1297,6 +1297,54 @@ listing. The plugin sets `woocommerce_layered_nav_default_query_type` to
 `or`, so values of one attribute combine with "or" unless the address
 carries `query_type_<attribute>=and`.
 
+#### An archive's index for a theme filtering in the browser
+
+A theme that filters, sorts and counts a product archive in the browser
+declares `add_theme_support( 'pixonaut-archive-index' )`. The plugin then
+keeps one index per archive a shopper opens (the shop page, each product
+category and tag; not a search): every card the archive lists, with what
+the rules above read of it. Without the declaration nothing is built and
+archives work as they always have.
+
+- **Discovery**: the archive's head carries
+  `<script type="application/json" id="pixonaut-archive-index">{"url", "version", "count"}</script>`
+  (`Storefront\ArchiveIndexDiscovery`), `count` being the cards it lists
+  unfiltered. The first visit to an archive queues the index's build and
+  prints nothing; the page names it from then on.
+- **The index**: `GET /pixonaut/v1/archive-index/<archive>?v=<version>`
+  (`Storefront\ArchiveIndexRoute`), `<archive>` being `shop`,
+  `product_cat-<term id>` or `product_tag-<term id>`. It answers JSON,
+  compressed with gzip when the browser takes it, with
+  `Cache-Control: public, max-age=31536000, immutable` and the version as
+  its `ETag`. An older version answers the current index, cached for a
+  minute; an archive without an index answers `404`.
+- **What it holds** (`Catalogue\ArchiveIndexBuild`, `Catalogue\ArchiveCards`):
+  the store's currency; the filters, one per global attribute the cards'
+  variations hold (keyed by the attribute's short name, values by slug, in
+  the store's order, a dependent attribute naming the parent values it
+  applies under), then the price; the sort menu WooCommerce last showed
+  on an archive; and the cards in the store's default order, each with its
+  place under every WooCommerce sort, its own values, the attributes its
+  product is listed by, those it shows only while filtered, the attributes
+  its page lets a shopper choose, and its variations the shop offers, in the
+  order a filtered listing prefers to open the card on, each with the values
+  it is sold in, its displayed price and regular price, and the pictures a
+  filtered card shows of it. The rules a client applies to reproduce the
+  server's listing, links, pictures and counts, and fixtures generated from
+  the server's own listing, are in `tests/fixtures/archive-index/`.
+- **When it is built**: by the Action Scheduler job
+  `pixonaut_wc_catalogue_archive_indexes`, never on a shopper's request, a
+  minute after anything it reads changes (a product or variation, its meta,
+  terms or status, a category, tag, attribute or value, the currency, tax,
+  stock and sorting settings, the plugin's listing settings), once for a run
+  of changes. An index's version changes only when its content does. An
+  index older than a day is built again on the next visit, and an archive
+  nobody opened for thirty days is dropped. Each index is kept compressed in
+  the option `pixonaut_wc_archive_index_<archive>`.
+- **A theme's own fields**: `pixonaut_wc_archive_index_card` and
+  `pixonaut_wc_archive_index_variation` filter each card and each variation
+  row while the index is built ([hooks](./hooks/)).
+
 ## JavaScript hooks
 
 Through `@wordpress/hooks` (`wp.hooks` on the page):
