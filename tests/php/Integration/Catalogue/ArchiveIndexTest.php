@@ -211,6 +211,7 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 
 		$this->assertIsArray( $swatches );
 		$this->assertNotSame( array(), $swatches, 'the safari\'s other framings and colours' );
+		$this->assertTrue( $swatches[0]['current'] );
 		foreach ( $swatches as $swatch ) {
 			$this->assertSame( array( 'inramning', 'ramfarg' ), array_column( $swatch['values'], 'key' ), 'a value of each attribute, by its own key' );
 			$this->assertContains( $swatch['values'][0]['id'], array( 'ram', 'hangare' ) );
@@ -464,6 +465,11 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 			$this->assertInstanceOf( WC_Product::class, $product );
 			$swatches = apply_filters( 'pixonaut_wc_storefront_card_swatches', array(), $product );
 			$this->assertIsArray( $swatches );
+			if ( array() !== $swatches ) {
+				$this->assertTrue( $swatches[0]['current'], 'the card itself first' );
+				$this->assertSame( $this->normal( (string) get_permalink() ), $this->normal( $swatches[0]['url'] ) );
+				$this->assertCount( 1, array_filter( array_column( $swatches, 'current' ) ) );
+			}
 			$cards[] = array(
 				'link'     => (string) get_permalink(),
 				'image'    => ArchiveCards::image( (int) $product->get_image_id() )['src'],
@@ -472,7 +478,7 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 						'link'  => $this->normal( $swatch['url'] ),
 						'image' => $swatch['image']['src'],
 					),
-					$swatches
+					array_values( array_filter( $swatches, static fn ( array $swatch ): bool => ! $swatch['current'] ) )
 				),
 			);
 		}

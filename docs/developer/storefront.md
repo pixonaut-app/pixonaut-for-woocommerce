@@ -1222,9 +1222,10 @@ tax and shown with it.
   own design. A theme draws the design's other cards as the shown card's
   swatches: inside the loop,
   `apply_filters( 'pixonaut_wc_storefront_card_swatches', array(), $product )`
-  answers them, each with its values of those attributes (the attribute's
-  key, the value's slug and name), the link and the picture that card
-  would show.
+  answers them: the card itself first, with `current` true, then the
+  others, each with its values of those attributes (the attribute's key,
+  the value's slug and name), the link and the picture that card would
+  show; none for a design of one card.
 - **Kept between requests**: what the listing and the cards' links read of
   each product's variations (its offers, its cards and which variations
   each sells, its variations' values, and whether WooCommerce offers each)
