@@ -75,11 +75,12 @@ final class PictureReportTest extends WP_UnitTestCase {
 		$this->assertStringEndsWith( '/v1/connect/picture-storage', $request['url'] );
 		$body = json_decode( (string) $request['body'], true );
 		$this->assertSame(
-			array( 'pictureCount', 'pictureBytes', 'variationPictureCount', 'variationPictureBytes', 'freeBytes', 'variationPicturesOn', 'links', 'products' ),
+			array( 'pictureCount', 'pictureBytes', 'variationPictureCount', 'variationPictureBytes', 'freeBytes', 'variationPicturesOn', 'links', 'productCount', 'products' ),
 			array_keys( $body ),
 			'only the fields the api takes'
 		);
 		$this->assertSame( 4, $body['pictureCount'] );
+		$this->assertSame( 2, $body['productCount'] );
 		$this->assertSame( 4 * self::PICTURE_BYTES, $body['pictureBytes'] );
 		$this->assertSame( 2, $body['variationPictureCount'], 'only variations show them' );
 		$this->assertSame( 2 * self::PICTURE_BYTES, $body['variationPictureBytes'] );
@@ -113,6 +114,50 @@ final class PictureReportTest extends WP_UnitTestCase {
 			$body['products']
 		);
 		$this->assertSame( self::NOW, get_option( Schema::PICTURE_REPORT_SENT_OPTION ) );
+	}
+
+	public function test_a_long_product_name_is_cut_to_what_pixonaut_takes(): void {
+		$sign = $this->sign();
+		$sign->set_name( str_repeat( 'Å', PictureReport::MAX_NAME_LENGTH + 1 ) );
+		$sign->save();
+		$this->keep( array( $sign->get_id() ) );
+
+		$this->report()->send();
+
+		$body = json_decode( (string) $this->recorder->requests[0]['body'], true );
+		$this->assertSame( PictureReport::MAX_NAME_LENGTH, mb_strlen( $body['products'][0]['name'] ) );
+	}
+
+	public function test_admin_links_off_the_shops_host_are_left_out(): void {
+		$this->keep( array( $this->sign()->get_id() ) );
+		$admin = static fn (): string => 'https://admin.example.net';
+		add_filter( 'option_siteurl', $admin );
+
+		$this->report()->send();
+
+		remove_filter( 'option_siteurl', $admin );
+		$body = json_decode( (string) $this->recorder->requests[0]['body'], true );
+		$this->assertNull( $body['links']['variationSetting'] );
+		$this->assertNull( $body['links']['cleanUp'] );
+		$this->assertNull( $body['products'][0]['editUrl'] );
+	}
+
+	public function test_a_report_past_what_pixonaut_takes_drops_the_smallest_products(): void {
+		$large = $this->sign();
+		$large->set_name( str_repeat( '🖼', PictureReport::MAX_NAME_LENGTH ) );
+		$large->save();
+		$this->keep( array( $large->get_id() ) );
+		$this->keep( array( $large->get_id() ) );
+		$this->keep( array( $this->sign()->get_id() ) );
+		$this->recorder->stop();
+		$body  = $this->report()->body();
+		$whole = strlen( (string) wp_json_encode( $body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) );
+
+		$fitted = PictureReport::fitted( $body, $whole - 1 );
+
+		$this->assertSame( array( (string) $large->get_id() ), array_column( $fitted['products'], 'storeProductId' ), 'the smallest dropped' );
+		$this->assertSame( 2, $fitted['productCount'] );
+		$this->assertSame( $body, PictureReport::fitted( $body, $whole ) );
 	}
 
 	public function test_a_shop_keeping_none_reports_nothing_held(): void {
