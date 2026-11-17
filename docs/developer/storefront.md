@@ -1283,6 +1283,13 @@ Each dependent attribute's taxonomy maps to the taxonomy of the attribute
 it depends on, and to the slugs of the values it applies under. Without the
 plugin, the filter returns the default given.
 
+The shop's own filters read the same store-wide answer
+(`AttributeDependencies::store()`): a dependent attribute's filter passes a
+variation, and a card, holding a chosen value of the attribute it depends
+on that it does not apply under (`FilterMatches::exempt()`). With
+`filter_inramning=hangare,ingen&filter_ramfarg=ek`, the bare variations
+pass the frame colour's filter; with only `filter_ramfarg=ek`, none does.
+
 ## JavaScript hooks
 
 Through `@wordpress/hooks` (`wp.hooks` on the page):

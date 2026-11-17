@@ -208,6 +208,36 @@ add_filter(
 );
 
 /**
+ * Query argument naming attribute ids whose Product Filters block a listing
+ * renders at its foot, with counts, so a test reads the counts the block
+ * would show beside any theme's listing.
+ */
+const PIXONAUT_E2E_FILTER_COUNTS_ARG = 'pixonaut_e2e_counts';
+
+add_action(
+	'wp_footer',
+	static function () {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a test's listing, which changes nothing.
+		$ids = isset( $_GET[ PIXONAUT_E2E_FILTER_COUNTS_ARG ] ) ? array_filter( array_map( 'absint', explode( ',', sanitize_text_field( wp_unslash( $_GET[ PIXONAUT_E2E_FILTER_COUNTS_ARG ] ) ) ) ) ) : array();
+		if ( array() === $ids || ! is_product_taxonomy() ) {
+			return;
+		}
+		$filters = '';
+		foreach ( $ids as $id ) {
+			$filters .= '<!-- wp:woocommerce/product-filter-attribute ' . wp_json_encode(
+				array(
+					'attributeId' => $id,
+					'showCounts'  => true,
+					'queryType'   => 'or',
+					'hideEmpty'   => true,
+				)
+			) . ' /-->';
+		}
+		echo '<div data-pixonaut-e2e-counts>' . do_blocks( '<!-- wp:woocommerce/product-filters --><div class="wp-block-woocommerce-product-filters">' . $filters . '</div><!-- /wp:woocommerce/product-filters -->' ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WooCommerce's own block markup.
+	}
+);
+
+/**
  * Cookie that swaps the block theme's single product blocks for the secondary
  * pair, Add to Cart with Options and Product Gallery, for one browser context.
  */

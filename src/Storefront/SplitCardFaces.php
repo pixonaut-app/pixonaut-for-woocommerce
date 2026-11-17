@@ -178,7 +178,9 @@ final class SplitCardFaces {
 	/**
 	 * Whether the request's filters pick a value of an attribute the
 	 * product's variations differ by that the card holds none of: a
-	 * frame's colour on the card of a framing.
+	 * frame's colour on the card of a framing. A card holding a value the
+	 * filter is waived under, such as "no frame" for a frame's colour, is
+	 * not picked beyond.
 	 *
 	 * @param WC_Product $product The card's product.
 	 * @param string     $key     The card's key.
@@ -186,9 +188,11 @@ final class SplitCardFaces {
 	private static function picks_beyond( WC_Product $product, string $key ): bool {
 		$held       = SplitCards::term_ids( $key );
 		$attributes = $product->get_attributes();
-		foreach ( FilterMatches::chosen() as $taxonomy => $term_ids ) {
+		$chosen     = FilterMatches::chosen();
+		$exempt     = FilterMatches::exempt( $chosen );
+		foreach ( $chosen as $taxonomy => $term_ids ) {
 			$attribute = $attributes[ $taxonomy ] ?? null;
-			if ( $attribute instanceof WC_Product_Attribute && $attribute->get_variation() && array() !== $term_ids && array() === array_intersect( $term_ids, $held ) ) {
+			if ( $attribute instanceof WC_Product_Attribute && $attribute->get_variation() && array() !== $term_ids && array() === array_intersect( array_merge( $term_ids, $exempt[ $taxonomy ] ?? array() ), $held ) ) {
 				return true;
 			}
 		}

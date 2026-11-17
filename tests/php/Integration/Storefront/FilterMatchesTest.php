@@ -48,7 +48,17 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 
 	private const PRICE_HIGH = '391';
 
+	/**
+	 * Hanger or bare, in oak.
+	 */
+	private const HANGER_OR_BARE_IN_OAK = array(
+		'filter_inramning' => 'hangare,ingen',
+		'filter_ramfarg'   => 'ek',
+	);
+
 	private WC_Product $poster;
+
+	private WC_Product $skog;
 
 	public function set_up(): void {
 		parent::set_up();
@@ -71,7 +81,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 				array( '50x70', 'hangare', 'svart', '450' ),
 			)
 		);
-		$this->product(
+		$this->skog   = $this->product(
 			'Skog',
 			array(
 				array( '30x40', 'ingen', '', '199' ),
@@ -89,7 +99,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		parent::tear_down();
 	}
 
-	public function test_a_bare_choice_with_a_frame_colour_lists_nothing(): void {
+	public function test_a_bare_choice_with_a_frame_colour_lists_what_is_sold_bare(): void {
 		$listed = $this->shop(
 			array(
 				'filter_inramning' => 'ingen',
@@ -97,8 +107,91 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 			)
 		);
 
-		$this->assertSame( array(), $listed['ids'], 'no variation is bare and in oak' );
-		$this->assertSame( 0, $listed['found'] );
+		$this->assertEqualsCanonicalizing( array( $this->poster->get_id(), $this->skog->get_id() ), $listed['ids'], 'the frame colour does not apply to what is sold bare' );
+	}
+
+	public function test_a_colour_without_a_framing_chosen_lists_only_what_comes_in_it(): void {
+		$this->assertEqualsCanonicalizing( array( $this->poster->get_id(), $this->skog->get_id() ), $this->shop( array( 'filter_ramfarg' => 'ek' ) )['ids'], 'both are framed in oak; neither is bare in oak' );
+		$this->assertSame(
+			array(),
+			$this->shop(
+				array(
+					'filter_ramfarg'   => 'ek',
+					'filter_inramning' => 'hangare',
+				)
+			)['ids'],
+			'the only hanger is black'
+		);
+	}
+
+	public function test_hanger_and_bare_with_a_colour_list_every_bare_card_and_the_hangers_in_that_colour(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
+		$sea = $this->sea();
+
+		$listed = $this->shop( self::HANGER_OR_BARE_IN_OAK );
+
+		$this->assertSame( 4, $listed['found'], 'each product\'s bare card and the sea\'s oak hanger; the safari\'s hanger is black' );
+		$this->assertEqualsCanonicalizing(
+			array(
+				array(
+					'attribute_pa_inramning' => 'ingen',
+					'attribute_pa_storlek'   => '30x40',
+				),
+				array(
+					'attribute_pa_inramning' => 'hangare',
+					'attribute_pa_storlek'   => '50x70',
+					'attribute_pa_ramfarg'   => 'ek',
+				),
+			),
+			array_map( array( $this, 'chosen' ), $listed['card_links'][ $sea->get_id() ] ?? array() ),
+			'the bare card opens bare, the hanger in oak'
+		);
+		$this->assertCount( 1, $listed['card_links'][ $this->poster->get_id() ] ?? array(), 'the safari\'s bare card' );
+		$this->assertCount( 1, $listed['card_links'][ $this->skog->get_id() ] ?? array(), 'the forest\'s bare card' );
+	}
+
+	public function test_values_of_one_attribute_combine_with_or_and_attributes_with_and(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
+		$bare_or_hanger_in_50x70 = array(
+			'filter_inramning' => 'ingen,hangare',
+			'filter_storlek'   => '50x70',
+		);
+
+		$this->assertSame( 2, $this->shop( $bare_or_hanger_in_50x70 )['found'], 'the safari\'s bare and hanger cards; the forest is bare only in 30x40' );
+		$this->assertSame( 1, $this->shop( array_merge( $bare_or_hanger_in_50x70, array( 'max_price' => '400' ) ) )['found'], 'the hanger costs 450' );
+		$this->assertSame(
+			2,
+			$this->shop(
+				array(
+					'filter_storlek' => '30x40,50x70',
+					'max_price'      => '300',
+				)
+			)['found'],
+			'each product\'s bare card, at 199 or 299'
+		);
+	}
+
+	public function test_each_values_count_is_the_listing_with_that_value_chosen(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
+		$this->sea();
+
+		foreach ( array( 'inramning', 'ramfarg', 'storlek' ) as $attribute ) {
+			$counts = $this->counts( 'pa_' . $attribute, self::HANGER_OR_BARE_IN_OAK );
+			$terms  = get_terms(
+				array(
+					'taxonomy'   => 'pa_' . $attribute,
+					'hide_empty' => false,
+				)
+			);
+			$this->assertIsArray( $terms );
+			foreach ( $terms as $term ) {
+				$this->assertInstanceOf( \WP_Term::class, $term );
+				$filters            = self::HANGER_OR_BARE_IN_OAK;
+				$filter             = 'filter_' . $attribute;
+				$filters[ $filter ] = isset( $filters[ $filter ] ) ? $filters[ $filter ] . ',' . $term->slug : $term->slug;
+				$this->assertSame( $this->shop( $filters )['found'], $counts[ $term->term_id ] ?? 0, "{$attribute} {$term->slug}" );
+			}
+		}
 	}
 
 	public function test_a_size_and_a_price_list_only_products_with_that_size_in_the_range(): void {
@@ -170,7 +263,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		);
 
 		$framing = $this->counts( 'pa_inramning', array( 'filter_ramfarg' => 'ek' ) );
-		$this->assertArrayNotHasKey( $this->term( 'ingen' ), $framing, 'nothing bare is oak' );
+		$this->assertSame( 2, $framing[ $this->term( 'ingen' ) ] ?? null, 'bare chosen beside oak keeps the bare cards: the colour does not apply to them' );
 		$this->assertArrayNotHasKey( $this->term( 'hangare' ), $framing, 'the hanger is only black' );
 		$this->assertSame( 2, $framing[ $this->term( 'ram' ) ] ?? null );
 		$this->assertSame(
@@ -576,6 +669,20 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		FilterIndex::keep();
 		$EZSQL_ERROR = $errors; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- restores what the test added.
 		$this->assertFalse( get_transient( Schema::FILTER_INDEX_PREFIX . $this->poster->get_id() ), 'a failed read may have found no variations' );
+	}
+
+	/**
+	 * A third product sold bare, and with a hanger in oak or black.
+	 */
+	private function sea(): WC_Product {
+		return $this->product(
+			'Hav',
+			array(
+				array( '30x40', 'ingen', '', '199' ),
+				array( '50x70', 'hangare', 'ek', '450' ),
+				array( '50x70', 'hangare', 'svart', '450' ),
+			)
+		);
 	}
 
 	/**

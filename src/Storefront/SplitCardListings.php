@@ -163,7 +163,7 @@ final class SplitCardListings {
 		foreach ( $left['cards'] as $product_id => $keys ) {
 			$hidden[ $product_id ] = array_values( array_unique( array_merge( $hidden[ $product_id ] ?? array(), $keys ) ) );
 		}
-		$clauses['where'] .= self::filtered_cards( $chosen, $alias ) . self::unfiltered_levels( $chosen, $alias ) . self::shown_cards( $hidden, $alias );
+		$clauses['where'] .= self::filtered_cards( $chosen, FilterMatches::exempt( $chosen ), $alias ) . self::unfiltered_levels( $chosen, $alias ) . self::shown_cards( $hidden, $alias );
 		return $clauses;
 	}
 
@@ -188,18 +188,21 @@ final class SplitCardListings {
 
 	/**
 	 * The condition a filtered listing keeps a card row by, for each
-	 * attribute a filter is on: the card holds a value the filter chose, or
-	 * none of the product's cards holds a value of that attribute, so the
-	 * product is not listed by it. A product listed once has no card and is
-	 * kept. Empty without a filter.
+	 * attribute a filter is on: the card holds a value the filter chose or
+	 * one the filter is waived under, such as "no frame" for a frame
+	 * colour, or none of the product's cards holds a value of that
+	 * attribute, so the product is not listed by it. A product listed once
+	 * has no card and is kept. Empty without a filter.
 	 *
 	 * @param array<string, list<int>> $chosen The filters' values, as `FilterMatches::chosen()` reads them.
+	 * @param array<string, list<int>> $exempt The values each filter is waived under (`FilterMatches::exempt()`).
 	 * @param string                   $alias  The card rows' alias.
 	 */
-	private static function filtered_cards( array $chosen, string $alias ): string {
+	private static function filtered_cards( array $chosen, array $exempt, string $alias ): string {
 		global $wpdb;
 		$where = '';
 		foreach ( $chosen as $taxonomy => $ids ) {
+			$ids = array_values( array_unique( array_merge( $ids, $exempt[ $taxonomy ] ?? array() ) ) );
 			// A key is the set of its term ids. No chosen id names a term: no card holds one.
 			$holds_chosen = array() === $ids ? '1 = 0' : implode( ' OR ', array_fill( 0, count( $ids ), "FIND_IN_SET( %d, {$alias}.meta_value )" ) );
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- table names, a constant alias and a placeholder per value.

@@ -25,8 +25,8 @@ use WP_Term;
  * it can be bought in: the one a variation sets; each the product lists
  * for an attribute the variation leaves open; none for one that does not
  * apply to it (`ApplicableAttributes`), so a filter on that attribute
- * never matches it; each the product lists for an attribute that is not a
- * variation's. A filter's values on one attribute match an offer holding
+ * matches it only where the filter is waived (`matches()`); each the
+ * product lists for an attribute that is not a variation's. A filter's values on one attribute match an offer holding
  * any of them.
  *
  * A variation is purchasable while it is enabled, has a price, and is in
@@ -45,20 +45,38 @@ final class FilterOffers {
 	/**
 	 * Whether an offer holds a chosen value of each filtered attribute and
 	 * costs within the chosen range. A filter whose values name no term
-	 * matches nothing.
+	 * matches nothing. A filter on an attribute that does not apply to the
+	 * offer passes it when the offer holds one of the values the filter is
+	 * waived under, such as a chosen "no frame" for a frame colour's filter.
 	 *
 	 * @param array{values: array<string, list<int>>, min: float, max: float} $offer  An offer.
 	 * @param array<string, list<int>>                                        $chosen Chosen term ids by taxonomy.
 	 * @param float|null                                                      $min    The lowest price chosen; null for none.
 	 * @param float|null                                                      $max    The highest price chosen; null for none.
+	 * @param array<string, list<int>>                                        $exempt By a filtered attribute's taxonomy, the term ids of other attributes whose holder its filter passes.
 	 */
-	public static function matches( array $offer, array $chosen, ?float $min, ?float $max ): bool {
+	public static function matches( array $offer, array $chosen, ?float $min, ?float $max, array $exempt = array() ): bool {
 		foreach ( $chosen as $taxonomy => $ids ) {
-			if ( array() === array_intersect( $offer['values'][ $taxonomy ] ?? array(), $ids ) ) {
+			if ( array() === array_intersect( $offer['values'][ $taxonomy ] ?? array(), $ids ) && ! self::holds_any( $offer, $exempt[ $taxonomy ] ?? array() ) ) {
 				return false;
 			}
 		}
 		return ( null === $min || $offer['max'] >= $min ) && ( null === $max || $offer['min'] <= $max );
+	}
+
+	/**
+	 * Whether an offer holds any of some values, of whichever attribute.
+	 *
+	 * @param array{values: array<string, list<int>>} $offer An offer.
+	 * @param int[]                                   $ids   Term ids, which no two attributes share.
+	 */
+	private static function holds_any( array $offer, array $ids ): bool {
+		foreach ( array() === $ids ? array() : $offer['values'] as $held ) {
+			if ( array() !== array_intersect( $held, $ids ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

@@ -79,8 +79,14 @@ options, with a card per combination that a variation sells.
 The shop's and its categories' attribute and price filters keep a product
 only while one variation a customer can buy matches every filter at once:
 
-- **Framing: None** with **Frame colour: Oak** lists no poster above, since
-  no variation is bare and oak.
+- Values chosen of one attribute combine with *or*, attributes with *and*:
+  **Framing: Hanger** or **None**, and **Frame colour: Oak**.
+- An option that applies only under some values of another filters only
+  the variations it applies to. **Framing: Hanger** and **None** with
+  **Frame colour: Oak** lists every bare poster and the hangers in oak:
+  the frame colour does not apply to a bare poster. Which values an option
+  applies under is read from the variations, never from names. With no
+  framing chosen, **Frame colour: Oak** lists only what comes in oak.
 - **Size: 30×40** with a price of **299–391** lists a product only when
   its 30×40 variation costs within that range, not when another size does.
 - Within one attribute, any chosen value matches (**Oak** or **Black**). A
@@ -92,8 +98,10 @@ only while one variation a customer can buy matches every filter at once:
   opens on the one the product's default values agree with most, else the
   cheapest. Without a filter, a card opens as it always has.
 - Each value's count beside its checkbox is what the shop would list with
-  that value added to the filters, counting each card of a product
-  [listed once per value](../split-listings/).
+  that value added to the filters, its own option's chosen values
+  included, counting each card of a product
+  [listed once per value](../split-listings/). With **Hanger** chosen,
+  **None** counts the hangers and the bare posters together.
 
 A variation counts while it is enabled, has a price, and is in stock or
 the store shows products out of stock. Simple products match as before.
