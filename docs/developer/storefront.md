@@ -1077,23 +1077,29 @@ form, which sets its `data-product_variations` before WooCommerce's script
 reads it; a product with no variation to offer keeps WooCommerce's own.
 
 A kept read is found under a key of the plugin's version, a generation, the
-product's version, the locale, the currency, and, while the store charges
-taxes, how prices show them and the shopper's tax location and VAT
-exemption, and the callbacks (by name, not by object) on the filters that
-shape prices, stock, variations and the designer. The product's version is
-dropped when the product or one of its variations is written (a post, meta
-or term write, a save, a stock change, a deletion), again at the end of that
-request; the generation is new when one of WooCommerce's options or one of
-the plugin's (but its locks, logs and other bookkeeping) is written, which
-an attribute or value change does through `FilterIndex`'s generation, and
-when a plugin, the theme or a translation changes. A page that edits a cart
-or order line builds its designer for itself, and one whose address names an
-attribute value the product does not offer its designer and the defaults it
-opens on.
+product's version, the locale, the currency, the signed-in shopper's roles,
+and, while the store charges taxes, how prices show them, the shopper's VAT
+exemption and the rates of every tax class at the shopper's location and at
+the shop's (the rates, not the address), and the callbacks (by name, not by
+object) on the filters that shape prices, stock, variations and the
+designer. The product's version is the time it was last written: the
+product or one of its variations (a post, meta or term write, a save, a
+stock change, a deletion), or the image of one of them, and again at the end
+of that request. The generation is the time everything was last dropped:
+when one of WooCommerce's options or one of the plugin's (but its locks,
+logs and other bookkeeping) is written, which an attribute or value change
+does through `FilterIndex`'s generation, and when a plugin, the theme or a
+translation changes. A request keeps a read only while both are older than
+the request and the version is unchanged once the read is built, so nothing
+read while a change was being written is kept. A page that edits a cart or
+order line builds its designer for itself, and one whose address names
+attribute values no enabled variation holds together its designer and the
+defaults it opens on.
 
-Nothing about the shopper is kept: a callback on one of those filters, such
-as `pixonaut_wc_storefront_mount_options`, answers the same for every
-shopper, or its answer is served to the next one.
+Nothing about the shopper is kept. A store whose extensions answer those
+filters for one shopper alone, such as with customer-specific prices,
+returns false from `pixonaut_wc_storefront_keeps_product_pages`
+([Hooks](../hooks/)), and its product pages keep nothing.
 
 ### Price
 

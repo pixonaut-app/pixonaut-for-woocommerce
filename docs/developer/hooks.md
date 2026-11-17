@@ -589,6 +589,21 @@ add_filter( 'pixonaut_wc_storefront_edit_mount_options', function ( $options ) {
 } );
 ```
 
+### `pixonaut_wc_storefront_keeps_product_pages`
+
+Filters whether a product page keeps what it builds of the product between requests: its designer, what WooCommerce tells its form of each variation, its delivery rows and the defaults it opens on. A kept read serves every shopper whose language, currency, roles and taxes match, while the callbacks on the price, stock, variation and designer filters are the same: return false on a store whose extensions answer those filters for one shopper alone, such as with customer-specific prices.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `$keeps` | `bool` | Whether the page keeps its reads; true. |
+| `$product` | `WC_Product` | The product the page shows. |
+
+Since 1.22.0. Fired in `src/Storefront/ProductPageCache.php`.
+
+```php
+add_filter( 'pixonaut_wc_storefront_keeps_product_pages', '__return_false' );
+```
+
 ### `pixonaut_wc_storefront_label`
 
 Filters a customer-facing text.

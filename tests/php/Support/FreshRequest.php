@@ -60,14 +60,14 @@ final class FreshRequest {
 	}
 
 	/**
-	 * Forgets what this request read of product pages, as the next
-	 * request starts without it: the versions of products it read and the
-	 * defaults it filled in. What `ProductPageCache` kept between
-	 * requests stays.
+	 * Starts the next request now, without what this one read of product
+	 * pages: the versions of products it read and the defaults it filled
+	 * in. What `ProductPageCache` kept between requests stays.
 	 */
 	public static function forget_page_reads(): void {
 		( new ReflectionProperty( ProductPageCache::class, 'versions' ) )->setValue( null, array() );
-		( new ReflectionProperty( ProductPageCache::class, 'dropped' ) )->setValue( null, array() );
+		( new ReflectionProperty( ProductPageCache::class, 'written' ) )->setValue( null, array() );
+		$_SERVER['REQUEST_TIME_FLOAT'] = microtime( true );
 		global $wp_filter;
 		foreach ( $wp_filter['woocommerce_product_get_default_attributes']->callbacks ?? array() as $callbacks ) {
 			foreach ( $callbacks as $callback ) {

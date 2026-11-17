@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Schema;
 use ReflectionFunction;
 use WC_Customer;
 use WC_Product;
+use WC_Tax;
 use WP_Hook;
 use WP_Post;
 
@@ -27,22 +28,29 @@ use WP_Post;
  *
  * Each kept read is found under a key made of what it depends on besides
  * the product: the plugin's version, a generation, the product's version,
- * the language, the currency, how prices show taxes and, while the store
- * charges taxes, the shopper's tax location and exemption, and the
- * callbacks on the filters that shape prices, stock and the designer. A
- * caller adds what else its read depends on.
+ * the language, the currency, the signed-in shopper's roles, how prices
+ * show taxes and, while the store charges taxes, the rates that apply at
+ * the shopper's and the shop's location and the shopper's exemption, and
+ * the callbacks on the filters that shape prices, stock and the designer.
+ * A caller adds what else its read depends on.
  *
- * A product's version is dropped, so its reads are built again, when the
- * product or one of its variations is written: a post, meta or term
- * write, a save (WooCommerce's prices and stock too), a deletion. The
- * generation is new, so every read is built again, when one of the
- * plugin's or WooCommerce's options is written (the plugin's
- * bookkeeping excepted), which includes an attribute's or one of its
- * values' change through `FilterIndex`'s generation, and when a plugin,
- * the theme or a translation changes. A read is kept a day at most.
+ * A product's version is the time it was last written: when the product
+ * or one of its variations is written (a post, meta or term write, a save,
+ * WooCommerce's prices and stock too, a deletion), when the image of one
+ * of them is edited, and again at the end of that request. The generation
+ * is the time everything was last dropped: when one of the plugin's or
+ * WooCommerce's options is written (the plugin's bookkeeping excepted),
+ * which includes an attribute's or one of its values' change through
+ * `FilterIndex`'s generation, and when a plugin, the theme or a
+ * translation changes. A request keeps a read only when the product's
+ * version and the generation are older than the request, and the version
+ * is unchanged once the read is built, so a read made while a change was
+ * written is never kept. A read is kept a day at most.
  *
  * Nothing about a shopper's cart, session or account is kept: a caller
- * keeps only what is the same for every shopper the key matches.
+ * keeps only what is the same for every shopper the key matches. A store
+ * whose extensions answer those filters per shopper turns keeping off
+ * with `pixonaut_wc_storefront_keeps_product_pages`.
  */
 final class ProductPageCache {
 
@@ -156,13 +164,19 @@ final class ProductPageCache {
 	);
 
 	/**
-	 * Products whose version this request dropped, by id, since it last
-	 * read it: dropped again once the request is done, as a page built
-	 * between two of its writes may have kept a read of the first.
+	 * Post meta of an image that a page shows of it: its sizes, file and
+	 * alternative text.
+	 */
+	private const IMAGE_META = array( '_wp_attachment_metadata', '_wp_attached_file', '_wp_attachment_image_alt' );
+
+	/**
+	 * Products this request wrote, by id: their version is set again once
+	 * the request is done, so a request that started while they were
+	 * being written keeps nothing of them.
 	 *
 	 * @var array<int, true>
 	 */
-	private static array $dropped = array();
+	private static array $written = array();
 
 	/**
 	 * Each product's version as this request read it, by id.
@@ -187,6 +201,8 @@ final class ProductPageCache {
 		foreach ( self::CODE_CHANGES as $action ) {
 			add_action( $action, array( self::class, 'forget_all' ) );
 		}
+		add_action( 'attachment_updated', array( self::class, 'image_edited' ) );
+		add_action( 'delete_attachment', array( self::class, 'image_edited' ) );
 		add_action( 'shutdown', array( self::class, 'drop_again' ) );
 	}
 
@@ -204,19 +220,22 @@ final class ProductPageCache {
 	public static function remember( WC_Product $product, string $what, string $context, callable $build ): mixed {
 		$id = $product->get_id();
 		// Another site of a network has its own products under the same ids.
-		if ( $id <= 0 || ( is_multisite() && ms_is_switched() ) ) {
+		if ( $id <= 0 || ( is_multisite() && ms_is_switched() ) || ! self::keeps( $product ) ) {
 			return $build();
 		}
-		$key  = Schema::PRODUCT_PAGE_CACHE_PREFIX . md5( implode( "\n", array( self::version( $id ), $what, $context, self::shared_context() ) ) );
-		$kept = get_transient( $key );
+		$version    = self::version( $id );
+		$generation = (string) get_option( Schema::PRODUCT_PAGE_GENERATION_OPTION, '' );
+		$key        = Schema::PRODUCT_PAGE_CACHE_PREFIX . md5( implode( "\n", array( $version, $generation, $what, $context, self::shared_context() ) ) );
+		$kept       = get_transient( $key );
 		if ( is_array( $kept ) && array_key_exists( 'read', $kept ) ) {
 			/** @var T */
 			return $kept['read'];
 		}
 		$errors = self::errors();
 		$read   = $build();
-		// A failed query may have read the product as less than it is.
-		if ( self::errors() === $errors ) {
+		// A failed query may have read the product as less than it is; a read
+		// made while the product or the store changed may hold some of it from before.
+		if ( self::errors() === $errors && self::before_start( $version ) && self::before_start( $generation ) && self::stored_version( $id ) === $version ) {
 			set_transient( $key, array( 'read' => $read ), self::LIFETIME );
 		}
 		return $read;
@@ -228,12 +247,19 @@ final class ProductPageCache {
 	 * @param int $product_id A product (not a variation).
 	 */
 	public static function forget( int $product_id ): void {
-		if ( $product_id <= 0 || isset( self::$dropped[ $product_id ] ) ) {
+		if ( $product_id <= 0 ) {
 			return;
 		}
-		self::$dropped[ $product_id ] = true;
+		// A write to another site of a network is that site's, and this request's state is not.
+		if ( is_multisite() && ms_is_switched() ) {
+			self::stamp( $product_id );
+			return;
+		}
 		unset( self::$versions[ $product_id ] );
-		delete_transient( self::version_name( $product_id ) );
+		if ( ! isset( self::$written[ $product_id ] ) ) {
+			self::$written[ $product_id ] = true;
+			self::stamp( $product_id );
+		}
 	}
 
 	/**
@@ -241,18 +267,37 @@ final class ProductPageCache {
 	 */
 	public static function forget_all(): void {
 		self::$versions = array();
-		update_option( Schema::PRODUCT_PAGE_GENERATION_OPTION, wp_generate_uuid4(), true );
+		update_option( Schema::PRODUCT_PAGE_GENERATION_OPTION, self::now(), true );
 	}
 
 	/**
-	 * Drops again, once the request is done, the products it dropped:
-	 * another request may have kept a read of one between its writes.
+	 * Sets the version of the products this request wrote again once it is
+	 * done: a request that started while they were being written keeps
+	 * nothing of them.
 	 */
 	public static function drop_again(): void {
-		$dropped       = array_keys( self::$dropped );
-		self::$dropped = array();
-		foreach ( $dropped as $product_id ) {
-			delete_transient( self::version_name( $product_id ) );
+		$written       = array_keys( self::$written );
+		self::$written = array();
+		foreach ( $written as $product_id ) {
+			self::stamp( $product_id );
+		}
+	}
+
+	/**
+	 * Drops the reads of the products whose image, or variation's image,
+	 * an image is, when it is edited or deleted.
+	 *
+	 * @param mixed $attachment_id The image.
+	 */
+	public static function image_edited( mixed $attachment_id ): void {
+		if ( ! is_numeric( $attachment_id ) || (int) $attachment_id <= 0 ) {
+			return;
+		}
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the posts showing an image, read once when it is edited.
+		$posts = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_thumbnail_id' AND meta_value = %s", (string) (int) $attachment_id ) );
+		foreach ( is_array( $posts ) ? $posts : array() as $post_id ) {
+			self::post_written( $post_id );
 		}
 	}
 
@@ -265,7 +310,9 @@ final class ProductPageCache {
 	 */
 	public static function meta_written( mixed $meta_id, mixed $post_id, mixed $meta_key ): void {
 		unset( $meta_id );
-		if ( ! in_array( $meta_key, self::UNSHOWN_META, true ) ) {
+		if ( in_array( $meta_key, self::IMAGE_META, true ) ) {
+			self::image_edited( $post_id );
+		} elseif ( ! in_array( $meta_key, self::UNSHOWN_META, true ) ) {
 			self::post_written( $post_id );
 		}
 	}
@@ -354,7 +401,36 @@ final class ProductPageCache {
 	}
 
 	/**
-	 * A product's version, made when it has none.
+	 * Whether a store's product pages keep what they build between
+	 * requests.
+	 *
+	 * @param WC_Product $product The product the page shows.
+	 */
+	private static function keeps( WC_Product $product ): bool {
+		/**
+		 * Filters whether a product page keeps what it builds of the
+		 * product between requests: its designer, what WooCommerce tells
+		 * its form of each variation, its delivery rows and the defaults
+		 * it opens on. A kept read serves every shopper whose language,
+		 * currency, roles and taxes match, while the callbacks on the
+		 * price, stock, variation and designer filters are the same:
+		 * return false on a store whose extensions answer those filters
+		 * for one shopper alone, such as with customer-specific prices.
+		 *
+		 * @since 1.22.0
+		 *
+		 * @param bool       $keeps   Whether the page keeps its reads; true.
+		 * @param WC_Product $product The product the page shows.
+		 *
+		 * @example
+		 * add_filter( 'pixonaut_wc_storefront_keeps_product_pages', '__return_false' );
+		 */
+		return (bool) apply_filters( 'pixonaut_wc_storefront_keeps_product_pages', true, $product );
+	}
+
+	/**
+	 * A product's version, the time it was last written; this request's
+	 * start when it has none kept.
 	 *
 	 * @param int $product_id A product.
 	 */
@@ -364,13 +440,71 @@ final class ProductPageCache {
 		}
 		$version = get_transient( self::version_name( $product_id ) );
 		if ( ! is_string( $version ) || '' === $version ) {
-			$version = wp_generate_uuid4();
+			$version = self::format( self::started() );
 			set_transient( self::version_name( $product_id ), $version, self::LIFETIME );
 		}
-		// Read anew: a later write drops it again.
-		unset( self::$dropped[ $product_id ] );
 		self::$versions[ $product_id ] = $version;
 		return $version;
+	}
+
+	/**
+	 * A product's version as it is kept now, read past this request's own
+	 * copy of the options.
+	 *
+	 * @param int $product_id A product.
+	 */
+	private static function stored_version( int $product_id ): string {
+		$name = self::version_name( $product_id );
+		if ( ! wp_using_ext_object_cache() ) {
+			wp_cache_delete( '_transient_' . $name, 'options' );
+			wp_cache_delete( '_transient_timeout_' . $name, 'options' );
+		}
+		$version = get_transient( $name );
+		return is_string( $version ) ? $version : '';
+	}
+
+	/**
+	 * Sets a product's version to now.
+	 *
+	 * @param int $product_id A product.
+	 */
+	private static function stamp( int $product_id ): void {
+		set_transient( self::version_name( $product_id ), self::now(), self::LIFETIME );
+	}
+
+	/**
+	 * Whether a version or generation is older than this request; one
+	 * never set is.
+	 *
+	 * @param string $stamp A time from `now()`, or empty.
+	 */
+	private static function before_start( string $stamp ): bool {
+		return '' === $stamp || ! is_numeric( $stamp ) || (float) $stamp < self::started();
+	}
+
+	/**
+	 * When this request started, in seconds.
+	 */
+	private static function started(): float {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- the server's own clock, read as a number.
+		$started = $_SERVER['REQUEST_TIME_FLOAT'] ?? null;
+		return is_numeric( $started ) ? (float) $started : microtime( true );
+	}
+
+	/**
+	 * Now, as a version or generation.
+	 */
+	private static function now(): string {
+		return self::format( microtime( true ) );
+	}
+
+	/**
+	 * A time as a version or generation, to the microsecond.
+	 *
+	 * @param float $time Seconds.
+	 */
+	private static function format( float $time ): string {
+		return sprintf( '%.6F', $time );
 	}
 
 	/**
@@ -392,8 +526,8 @@ final class ProductPageCache {
 		return (string) wp_json_encode(
 			array(
 				Plugin::VERSION,
-				get_option( Schema::PRODUCT_PAGE_GENERATION_OPTION, '' ),
 				determine_locale(),
+				self::roles(),
 				get_woocommerce_currency(),
 				self::tax_context(),
 				self::filters_signature(),
@@ -402,9 +536,23 @@ final class ProductPageCache {
 	}
 
 	/**
+	 * The signed-in shopper's roles, which a store's prices may follow;
+	 * none for a guest.
+	 *
+	 * @return list<string>
+	 */
+	private static function roles(): array {
+		$roles = array_values( array_map( 'strval', wp_get_current_user()->roles ) );
+		sort( $roles );
+		return $roles;
+	}
+
+	/**
 	 * How prices show taxes to this shopper: nothing while the store
-	 * charges none; else how the shop shows them, and the shopper's tax
-	 * location and exemption, which the shown price follows.
+	 * charges none; else how the shop shows them, the shopper's exemption,
+	 * and the rates of every tax class at the shopper's location and at
+	 * the shop's, which the shown price follows. The rates, not the
+	 * address, so every address under the same rates reads the same.
 	 *
 	 * @return array<int|string, mixed>
 	 */
@@ -415,12 +563,36 @@ final class ProductPageCache {
 		// Absent before WooCommerce loads its session, as in a REST or cron request.
 		/** @var WC_Customer|null $customer */
 		$customer = WC()->customer;
+		$shop     = array( WC()->countries->get_base_country(), WC()->countries->get_base_state(), WC()->countries->get_base_postcode(), WC()->countries->get_base_city() );
 		return array(
 			get_option( 'woocommerce_tax_display_shop' ),
 			get_option( 'woocommerce_prices_include_tax' ),
-			$customer instanceof WC_Customer ? $customer->get_taxable_address() : null,
 			$customer instanceof WC_Customer ? $customer->is_vat_exempt() : null,
+			self::rates_at( $customer instanceof WC_Customer ? $customer->get_taxable_address() : $shop ),
+			self::rates_at( $shop ),
 		);
+	}
+
+	/**
+	 * The rates of every tax class at a location, by class.
+	 *
+	 * @param array<int, mixed> $location Country, state, postcode and city.
+	 * @return array<string, mixed>
+	 */
+	private static function rates_at( array $location ): array {
+		$rates = array();
+		foreach ( array_merge( array( '' ), WC_Tax::get_tax_class_slugs() ) as $class ) {
+			$rates[ (string) $class ] = WC_Tax::find_rates(
+				array(
+					'country'   => (string) ( $location[0] ?? '' ),
+					'state'     => (string) ( $location[1] ?? '' ),
+					'postcode'  => (string) ( $location[2] ?? '' ),
+					'city'      => (string) ( $location[3] ?? '' ),
+					'tax_class' => (string) $class,
+				)
+			);
+		}
+		return $rates;
 	}
 
 	/**

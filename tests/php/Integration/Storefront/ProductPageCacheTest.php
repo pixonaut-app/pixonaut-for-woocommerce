@@ -13,9 +13,11 @@ use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\InlineDesigner;
+use Pixonaut\WooCommerce\Storefront\ProductPageCache;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\FreshRequest;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
+use ReflectionProperty;
 use WC_Product;
 use WC_Product_Variable;
 use WC_Product_Variation;
@@ -209,7 +211,7 @@ final class ProductPageCacheTest extends WP_UnitTestCase {
 		$this->assertGreaterThan( $built, $this->built );
 	}
 
-	public function test_a_tax_display_change_and_another_tax_location_read_their_own(): void {
+	public function test_a_tax_display_change_and_a_location_under_other_rates_read_their_own(): void {
 		update_option( 'woocommerce_calc_taxes', 'yes' );
 		$poster = $this->personalised();
 		$this->page( $poster );
@@ -220,11 +222,26 @@ final class ProductPageCacheTest extends WP_UnitTestCase {
 		$this->assertGreaterThan( $built, $this->built, 'tax display' );
 		$built = $this->built;
 
+		\WC_Tax::_insert_tax_rate(
+			array(
+				'tax_rate_country' => 'NO',
+				'tax_rate'         => '25.0000',
+				'tax_rate_name'    => 'MVA',
+				'tax_rate_order'   => 1,
+			)
+		);
+		$this->page( $poster );
+		$built         = $this->built;
 		WC()->customer = new \WC_Customer( 0, true );
+		WC()->customer->set_billing_country( 'DK' );
+		WC()->customer->set_shipping_country( 'DK' );
+		$this->page( $poster );
+		$this->assertSame( $built, $this->built, 'another location under the same rates' );
+
 		WC()->customer->set_billing_country( 'NO' );
 		WC()->customer->set_shipping_country( 'NO' );
 		$this->page( $poster );
-		$this->assertGreaterThan( $built, $this->built, 'tax location' );
+		$this->assertGreaterThan( $built, $this->built, 'a location under other rates' );
 	}
 
 	public function test_nothing_of_a_shopper_is_kept(): void {
@@ -255,16 +272,140 @@ final class ProductPageCacheTest extends WP_UnitTestCase {
 		$this->assertSame( $built, $this->built );
 	}
 
+	public function test_a_read_made_while_the_product_is_written_is_not_kept(): void {
+		$poster = $this->next_request( $this->personalised() );
+		$write  = function () use ( $poster ): string {
+			update_post_meta( $this->variation_of( $poster )->get_id(), '_pixonaut_test', 'written' );
+			return 'before';
+		};
+
+		$this->assertSame( 'before', ProductPageCache::remember( $poster, 'test', '', $write ) );
+		$this->assertSame( 'after', ProductPageCache::remember( $this->next_request( $poster ), 'test', '', static fn (): string => 'after' ) );
+	}
+
+	public function test_a_read_by_a_request_that_started_before_a_write_is_not_kept(): void {
+		$poster = $this->next_request( $this->personalised() );
+		// Another request writes the product, and ends, while this one runs.
+		update_post_meta( $this->variation_of( $poster )->get_id(), '_pixonaut_test', 'written' );
+		ProductPageCache::drop_again();
+		( new ReflectionProperty( ProductPageCache::class, 'versions' ) )->setValue( null, array() );
+
+		ProductPageCache::remember( $poster, 'test', '', static fn (): string => 'read during the write' );
+
+		$this->assertSame( 'after', ProductPageCache::remember( $this->next_request( $poster ), 'test', '', static fn (): string => 'after' ) );
+	}
+
+	public function test_a_tax_rate_change_shows_on_the_next_request(): void {
+		update_option( 'woocommerce_calc_taxes', 'yes' );
+		update_option( 'woocommerce_tax_display_shop', 'incl' );
+		$rate   = \WC_Tax::_insert_tax_rate(
+			array(
+				'tax_rate_country' => '',
+				'tax_rate'         => '25.0000',
+				'tax_rate_name'    => 'VAT',
+				'tax_rate_order'   => 1,
+			)
+		);
+		$poster = $this->personalised();
+		$this->variation_of( $poster );
+		$this->assertEquals( 12.5, $this->changed( $this->page( $poster ) )['display_price'] );
+
+		\WC_Tax::_update_tax_rate( $rate, array( 'tax_rate' => '12.0000' ) );
+
+		$this->assertEquals( 11.2, $this->changed( $this->page( $poster ) )['display_price'] );
+	}
+
+	public function test_an_edit_of_a_variations_image_shows_on_the_next_request(): void {
+		$poster    = $this->personalised();
+		$image     = self::factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
+		$variation = $this->variation_of( $poster );
+		$this->assertIsInt( $image );
+		$variation->set_image_id( $image );
+		$variation->save();
+		$this->page( $poster );
+
+		update_post_meta( $image, '_wp_attachment_image_alt', 'Rapsfält' );
+
+		$this->assertSame( 'Rapsfält', $this->changed( $this->page( $poster ) )['image']['alt'] );
+	}
+
+	public function test_another_role_reads_its_own(): void {
+		$poster   = $this->personalised();
+		$customer = self::factory()->user->create( array( 'role' => 'customer' ) );
+		$this->assertIsInt( $customer );
+		wp_set_current_user( $customer );
+		$this->page( $poster );
+		$built = $this->built;
+		$this->page( $poster );
+		$this->assertSame( $built, $this->built, 'the same role takes what is kept' );
+
+		$subscriber = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+		$this->assertIsInt( $subscriber );
+		wp_set_current_user( $subscriber );
+		$this->page( $poster );
+
+		$this->assertGreaterThan( $built, $this->built );
+	}
+
+	public function test_a_store_can_keep_nothing(): void {
+		add_filter( 'pixonaut_wc_storefront_keeps_product_pages', '__return_false' );
+		try {
+			$poster = $this->personalised();
+			$this->page( $poster );
+			$built = $this->built;
+			$this->page( $poster );
+		} finally {
+			remove_filter( 'pixonaut_wc_storefront_keeps_product_pages', '__return_false' );
+		}
+
+		$this->assertSame( 2 * $built, $this->built );
+	}
+
+	public function test_an_address_naming_values_no_variation_holds_together_keeps_nothing_of_its_own(): void {
+		$poster = $this->personalised();
+		$this->page( $poster );
+		$kept = $this->kept_count();
+
+		// The poster is sold without a photo in 30x40 alone.
+		$this->page(
+			$poster,
+			array(
+				'attribute_pa_bild'    => 'utan-bild',
+				'attribute_pa_storlek' => '50x70',
+			)
+		);
+		$this->assertSame( $kept, $this->kept_count() );
+
+		$this->page(
+			$poster,
+			array(
+				'attribute_pa_bild'    => 'utan-bild',
+				'attribute_pa_storlek' => '30x40',
+			)
+		);
+		$this->assertGreaterThan( $kept, $this->kept_count() );
+	}
+
+	/**
+	 * How many reads and versions are kept.
+	 */
+	private function kept_count(): int {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( '_transient_' . Schema::PRODUCT_PAGE_CACHE_PREFIX ) . '%' ) );
+	}
+
 	/**
 	 * What the product's page shows, as the next request builds it: the
 	 * variations the form is handed, whether the designer shows, its first
 	 * side's template version, and the attributes table's rows.
 	 *
-	 * @param WC_Product $product The variable product.
+	 * @param WC_Product            $product The variable product.
+	 * @param array<string, string> $query   The values the address names.
 	 * @return array{variations: mixed, designer: bool, template_version: int|null, rows: string}
 	 */
-	private function page( WC_Product $product ): array {
-		$product = $this->next_request( $product );
+	private function page( WC_Product $product, array $query = array() ): array {
+		$product = $this->next_request( $product, $query );
 		$plugin  = Plugin::boot( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' );
 
 		$GLOBALS['product'] = $product;
@@ -322,14 +463,16 @@ final class ProductPageCacheTest extends WP_UnitTestCase {
 	 * Starts a request of its own on the product's page, as the next
 	 * shopper's: nothing read in this one is held, only what is kept.
 	 *
-	 * @param WC_Product $product The variable product.
+	 * @param WC_Product            $product The variable product.
+	 * @param array<string, string> $query   The values the address names.
 	 */
-	private function next_request( WC_Product $product ): WC_Product {
+	private function next_request( WC_Product $product, array $query = array() ): WC_Product {
 		FreshRequest::forget_filter_reads();
 		FreshRequest::forget_page_reads();
 		RequestCache::forget();
-		$this->go_to( (string) get_permalink( $product->get_id() ) );
-		$fresh = wc_get_product( $product->get_id() );
+		$this->go_to( add_query_arg( $query, (string) get_permalink( $product->get_id() ) ) );
+		$_REQUEST = $query;
+		$fresh    = wc_get_product( $product->get_id() );
 		$this->assertInstanceOf( WC_Product::class, $fresh );
 		return $fresh;
 	}

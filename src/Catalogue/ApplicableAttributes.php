@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Pixonaut\WooCommerce\Storefront\ProductPageCache;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variable;
@@ -210,6 +211,17 @@ final class ApplicableAttributes {
 		_prime_post_caches( $ids, false, true );
 		$enabled = array_values( array_filter( $ids, static fn ( int $id ): bool => 'publish' === get_post_status( $id ) ) );
 		return array_map( static fn ( int $id ): array => array_map( 'strval', wc_get_product_variation_attributes( $id ) ), $enabled );
+	}
+
+	/**
+	 * `variations()`, kept between requests with what else a product page
+	 * keeps of the product (`ProductPageCache`).
+	 *
+	 * @param WC_Product $product A product.
+	 * @return list<array<string, string>>
+	 */
+	public static function kept_variations( WC_Product $product ): array {
+		return ProductPageCache::remember( $product, 'applicable_variations', '', static fn (): array => self::variations( $product ) );
 	}
 
 	/**
