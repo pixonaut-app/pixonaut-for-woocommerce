@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.13.4...v1.14.0) (2026-11-17)
+
+
+### Features
+
+* **storefront:** a designer product's form holds only the designer and the buy row; the variation's description and delivery time are rows of the attributes table ([#244](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/244)) ([7ef2c10](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/7ef2c104e7363e468dfd88e26b842508aedb4538))
+
 ## [1.13.4](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.13.3...v1.13.4) (2026-11-17)
 
 
