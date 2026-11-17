@@ -349,17 +349,22 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		);
 	}
 
-	public function test_several_values_of_an_attribute_listed_while_filtered_list_and_count_each_card_once(): void {
+	public function test_several_values_of_an_attribute_listed_while_filtered_list_and_count_each_design_once(): void {
 		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::FILTERED );
 		$every_framing = array( 'filter_inramning' => 'ingen,ram,hangare' );
 
 		$listed = $this->shop( $every_framing );
 		$links  = array_merge( ...array_values( $listed['card_links'] ) );
-		$this->assertSame( 5, $listed['found'], 'the safari\'s bare, framed and hanger cards, and the forest\'s bare and framed ones' );
+		$this->assertSame( 2, $listed['found'], 'each poster once: its framings chosen are one design' );
 		$this->assertCount( $listed['found'], array_unique( $links ), 'each card once, though the product holds every chosen value' );
-		foreach ( $links as $link ) {
-			wp_parse_str( (string) wp_parse_url( $link, PHP_URL_QUERY ), $chosen );
-			$this->assertContains( $chosen['inramning'] ?? null, array( 'ingen', 'ram', 'hangare' ), "{$link} opens on one framing" );
+		// The attribute orders its values by name: Hängare, Ingen, Ram; the forest sells no hanger.
+		$first = array(
+			$this->poster->get_id() => 'hangare',
+			$this->skog->get_id()   => 'ingen',
+		);
+		foreach ( $listed['card_links'] as $product_id => $product_links ) {
+			wp_parse_str( (string) wp_parse_url( $product_links[0], PHP_URL_QUERY ), $chosen );
+			$this->assertSame( $first[ $product_id ] ?? null, $chosen['inramning'] ?? null, "{$product_links[0]} opens on the first framing chosen it sells, in the attribute's order" );
 		}
 		$this->assert_counts_follow_the_listing( $every_framing );
 		$this->assert_counts_follow_the_listing( $every_framing + array( 'filter_storlek' => '50x70' ) );

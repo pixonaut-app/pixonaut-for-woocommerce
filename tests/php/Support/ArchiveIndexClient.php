@@ -30,7 +30,7 @@ final class ArchiveIndexClient {
 	 * @param float|null                  $min    `min_price`.
 	 * @param float|null                  $max    `max_price`.
 	 * @param string|null                 $sort   An `orderby`; the index's order when null.
-	 * @return list<array{id: string, link: string, image: string}>
+	 * @return list<array{id: string, link: string, image: string, swatches: list<array{link: string, image: string}>}>
 	 */
 	public function shown( array $chosen, ?float $min = null, ?float $max = null, ?string $sort = null ): array {
 		$chosen   = array_filter( $chosen, static fn ( array $ids ): bool => array() !== $ids );
@@ -70,13 +70,34 @@ final class ArchiveIndexClient {
 		if ( null !== $sort ) {
 			usort( $shown, static fn ( array $first, array $second ): int => array( $first[1]['sort'][ $sort ], $first[0] ) <=> array( $second[1]['sort'][ $sort ], $second[0] ) );
 		}
-		$cards = array();
+		$cards    = array();
+		$swatches = array();
+		$designs  = array();
 		foreach ( $shown as list( , $card, $opened ) ) {
-			$cards[] = array(
+			$drawn = array(
 				'id'    => (string) $card['id'],
 				'link'  => $this->link( $card, $opened ),
 				'image' => $this->image( $card, $opened, $chosen, $waived ),
 			);
+			$holds = $card['holds'];
+			foreach ( $card['onlyFiltered'] as $key ) {
+				unset( $holds[ $key ] );
+			}
+			ksort( $holds );
+			$design = $card['productId'] . (string) wp_json_encode( $holds );
+			// With filters on, a design shows once: its first card, the others its swatches.
+			if ( $filtered && isset( $designs[ $design ] ) ) {
+				$swatches[ $designs[ $design ] ][] = array(
+					'link'  => $drawn['link'],
+					'image' => $drawn['image'],
+				);
+				continue;
+			}
+			$designs[ $design ] = count( $cards );
+			$cards[]            = $drawn;
+		}
+		foreach ( $cards as $index => $drawn ) {
+			$cards[ $index ] = $drawn + array( 'swatches' => $swatches[ $index ] ?? array() );
 		}
 		return $cards;
 	}

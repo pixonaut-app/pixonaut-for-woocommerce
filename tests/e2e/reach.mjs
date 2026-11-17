@@ -45,6 +45,7 @@ export const NO_SPEC = [
 	'src/Catalogue/ArchiveTerms.php',
 	'src/Storefront/ArchiveIndexDiscovery.php',
 	'src/Storefront/ArchiveIndexRoute.php',
+	'src/Storefront/CardDesigns.php', // one card per design while several filtered values are chosen; tested by the PHP suites against the index
 	'src/Admin/HelpLinks.php',
 	'src/Admin/PluginLinks.php',
 	'templates/admin/notice.php',

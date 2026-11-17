@@ -186,7 +186,7 @@ final class SplitCardFaces {
 	 * @param WC_Product $product The card's product.
 	 * @param string     $key     The card's key.
 	 */
-	private static function picks_beyond( WC_Product $product, string $key ): bool {
+	public static function picks_beyond( WC_Product $product, string $key ): bool {
 		$held       = SplitCards::term_ids( $key );
 		$attributes = $product->get_attributes();
 		$chosen     = FilterMatches::chosen();

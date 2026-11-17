@@ -78,13 +78,13 @@
 	"sorts": [],
 	"cards": [
 		{
-			"id": "140-74",
-			"productId": 140,
+			"id": "154-82",
+			"productId": 154,
 			"title": "Hav",
-			"url": "http://localhost:8872/?product=hav&inramning=hangare&storlek=50x70",
+			"url": "http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"src": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
 				"srcset": "",
 				"width": 300,
 				"height": 300,
@@ -126,13 +126,13 @@
 			]
 		},
 		{
-			"id": "140-72",
-			"productId": 140,
+			"id": "154-80",
+			"productId": 154,
 			"title": "Hav",
-			"url": "http://localhost:8872/?product=hav&inramning=ingen&storlek=30x40",
+			"url": "http://localhost:8862/?product=hav&inramning=ingen&storlek=30x40",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"src": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
 				"srcset": "",
 				"width": 300,
 				"height": 300,
@@ -165,13 +165,13 @@
 			]
 		},
 		{
-			"id": "148",
-			"productId": 148,
+			"id": "162",
+			"productId": 162,
 			"title": "Paket",
-			"url": "http://localhost:8872/?product=paket",
+			"url": "http://localhost:8862/?product=paket",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"src": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
 				"srcset": "",
 				"width": 300,
 				"height": 300,
@@ -201,13 +201,13 @@
 			]
 		},
 		{
-			"id": "145",
-			"productId": 145,
+			"id": "159",
+			"productId": 159,
 			"title": "Rea",
-			"url": "http://localhost:8872/?product=rea",
+			"url": "http://localhost:8862/?product=rea",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"src": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
 				"srcset": "",
 				"width": 300,
 				"height": 300,
@@ -236,13 +236,13 @@
 			]
 		},
 		{
-			"id": "130-74",
-			"productId": 130,
+			"id": "144-82",
+			"productId": 144,
 			"title": "Safari",
-			"url": "http://localhost:8872/?product=safari&inramning=hangare&storlek=50x70&ramfarg=svart",
+			"url": "http://localhost:8862/?product=safari&inramning=hangare&storlek=50x70&ramfarg=svart",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"src": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
 				"srcset": "",
 				"width": 300,
 				"height": 300,
@@ -275,13 +275,13 @@
 			]
 		},
 		{
-			"id": "130-72",
-			"productId": 130,
+			"id": "144-80",
+			"productId": 144,
 			"title": "Safari",
-			"url": "http://localhost:8872/?product=safari&inramning=ingen",
+			"url": "http://localhost:8862/?product=safari&inramning=ingen",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"src": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
 				"srcset": "",
 				"width": 300,
 				"height": 300,
@@ -323,13 +323,13 @@
 			]
 		},
 		{
-			"id": "130-73",
-			"productId": 130,
+			"id": "144-81",
+			"productId": 144,
 			"title": "Safari",
-			"url": "http://localhost:8872/?product=safari&inramning=ram",
+			"url": "http://localhost:8862/?product=safari&inramning=ram",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"src": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
 				"srcset": "",
 				"width": 300,
 				"height": 300,
@@ -380,13 +380,13 @@
 			]
 		},
 		{
-			"id": "137-72",
-			"productId": 137,
+			"id": "151-80",
+			"productId": 151,
 			"title": "Skog",
-			"url": "http://localhost:8872/?product=skog&inramning=ingen&storlek=30x40",
+			"url": "http://localhost:8862/?product=skog&inramning=ingen&storlek=30x40",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"src": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
 				"srcset": "",
 				"width": 300,
 				"height": 300,
@@ -419,13 +419,13 @@
 			]
 		},
 		{
-			"id": "137-73",
-			"productId": 137,
+			"id": "151-81",
+			"productId": 151,
 			"title": "Skog",
-			"url": "http://localhost:8872/?product=skog&inramning=ram&storlek=50x70&ramfarg=ek",
+			"url": "http://localhost:8862/?product=skog&inramning=ram&storlek=50x70&ramfarg=ek",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"src": "http://localhost:8862/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
 				"srcset": "",
 				"width": 300,
 				"height": 300,

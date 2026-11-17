@@ -19,9 +19,9 @@ Each case is a pair:
   arguments as the shop writes them: a filter by its key, `a,b` for several
   values, `min_price`, `max_price`, `orderby`), and what the archive shows
   there: `cards` (card ids, in order), `links` (each card's link, its
-  arguments in any order), `images` (each card's picture's `src`) and, for
+  arguments in any order), `images` (each card's picture's `src`), `swatches` (each card's swatches' links: the other cards of its design) and, for
   filtered addresses, `counts` (by filter key and value id: the cards shown
-  with that value added).
+  with that value added; designs, not cards).
 
 The cases: three posters (Safari, Skog, Hav) with a size, a framing (none,
 frame, hanger) and a frame colour that applies only to frames and hangers,
