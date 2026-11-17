@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Catalogue;
 
 use Closure;
+use Pixonaut\WooCommerce\Connection\Connection;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
@@ -64,6 +65,11 @@ final class PictureReport {
 	 * The longest product name Pixonaut takes.
 	 */
 	public const MAX_NAME_LENGTH = 200;
+
+	/**
+	 * The largest report body Pixonaut takes: 1 MiB.
+	 */
+	public const MAX_BODY_BYTES = 1048576;
 
 	private const OPERATION = 'connectedStore.reportPictureStorage';
 
@@ -182,7 +188,7 @@ final class PictureReport {
 	/**
 	 * The report, as Pixonaut takes it.
 	 *
-	 * @return array{pictureCount: int, pictureBytes: int, variationPictureCount: int, variationPictureBytes: int, freeBytes: int|null, variationPicturesOn: bool, links: array{variationSetting: string, cleanUp: string}, productCount: int, products: list<array{storeProductId: string, name: string, pictureCount: int, pictureBytes: int, variationPictureCount: int, variationPictureBytes: int, variationPicturesOn: bool, editUrl: string}>}
+	 * @return array{pictureCount: int, pictureBytes: int, variationPictureCount: int, variationPictureBytes: int, freeBytes: int|null, variationPicturesOn: bool, links: array{variationSetting: string|null, cleanUp: string|null}, productCount: int, products: list<array{storeProductId: string, name: string, pictureCount: int, pictureBytes: int, variationPictureCount: int, variationPictureBytes: int, variationPicturesOn: bool, editUrl: string|null}>}
 	 */
 	public function body(): array {
 		$totals = $this->storage->totals();
@@ -203,14 +209,14 @@ final class PictureReport {
 				'variationPictureCount' => $own['variation_pictures'],
 				'variationPictureBytes' => $own['variation_bytes'],
 				'variationPicturesOn'   => VariationPictures::on_for( $product, $this->settings ),
-				'editUrl'               => self::product_url( $product_id ),
+				'editUrl'               => self::on_shop( self::product_url( $product_id ) ),
 			);
 			if ( self::MAX_PRODUCTS === count( $products ) ) {
 				break;
 			}
 		}
-		$settings = self::settings_url();
-		return array(
+		$settings = self::on_shop( self::settings_url() );
+		$body     = array(
 			'pictureCount'          => $totals['pictures'],
 			'pictureBytes'          => $totals['bytes'],
 			'variationPictureCount' => $totals['variation_pictures'],
@@ -226,6 +232,45 @@ final class PictureReport {
 			'productCount'          => count( $totals['products'] ),
 			'products'              => $products,
 		);
+		/** @phpstan-var array{pictureCount: int, pictureBytes: int, variationPictureCount: int, variationPictureBytes: int, freeBytes: int|null, variationPicturesOn: bool, links: array{variationSetting: string|null, cleanUp: string|null}, productCount: int, products: list<array{storeProductId: string, name: string, pictureCount: int, pictureBytes: int, variationPictureCount: int, variationPictureBytes: int, variationPicturesOn: bool, editUrl: string|null}>} $fitted */
+		$fitted = self::fitted( $body, self::MAX_BODY_BYTES );
+		return $fitted;
+	}
+
+	/**
+	 * The report without its smallest products while it encodes to more
+	 * than the bytes given; `productCount` still counts them.
+	 *
+	 * @param array<string, mixed> $body  The report, its `products` largest first.
+	 * @param int                  $limit Bytes it may take.
+	 * @return array<string, mixed>
+	 */
+	public static function fitted( array $body, int $limit ): array {
+		$products = is_array( $body['products'] ?? null ) ? array_values( $body['products'] ) : array();
+		do {
+			$body['products'] = $products;
+			$bytes            = strlen( (string) wp_json_encode( $body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) );
+		} while ( $bytes > $limit && null !== array_pop( $products ) );
+		return $body;
+	}
+
+	/**
+	 * The link, when it is on the shop's own host or a subdomain of it, as
+	 * Pixonaut takes links; null otherwise, as when the admin is on another
+	 * host than the site.
+	 *
+	 * @param string $url An admin link.
+	 */
+	private static function on_shop( string $url ): ?string {
+		$shop = wp_parse_url( Connection::site_url(), PHP_URL_HOST );
+		$host = wp_parse_url( $url, PHP_URL_HOST );
+		$web  = in_array( wp_parse_url( $url, PHP_URL_SCHEME ), array( 'http', 'https' ), true );
+		if ( ! $web || ! is_string( $shop ) || ! is_string( $host ) ) {
+			return null;
+		}
+		$shop = strtolower( $shop );
+		$host = strtolower( $host );
+		return $host === $shop || str_ends_with( $host, '.' . $shop ) ? $url : null;
 	}
 
 	/**
