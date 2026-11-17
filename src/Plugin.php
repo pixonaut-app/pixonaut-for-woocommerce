@@ -258,7 +258,7 @@ use WC_Product;
  */
 final class Plugin {
 
-	public const VERSION = '1.17.1'; // phpcs:ignore Squiz.Commenting.InlineComment.InvalidEndChar -- x-release-please-version
+	public const VERSION = '1.17.2'; // phpcs:ignore Squiz.Commenting.InlineComment.InvalidEndChar -- x-release-please-version
 
 	/**
 	 * The plugin's slug: its directory and main file on a store, and its text domain.
