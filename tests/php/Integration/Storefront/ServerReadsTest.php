@@ -420,13 +420,25 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$this->go_to( (string) get_permalink( $product->get_id() ) );
 		$GLOBALS['product'] = $product;
 
-		$first = $this->preview( $posters );
-		$posters->draw_queued();
-		$again = $this->preview( $posters );
+		self::delete_posters();
+		try {
+			$first = $this->preview( $posters );
+			$posters->draw_queued();
+			$again = $this->preview( $posters );
+		} finally {
+			self::delete_posters();
+		}
 
 		$this->assertStringNotContainsString( 'pixonaut-preview__poster', $first );
-		$this->assertSame( 1, preg_match( '#<span class="pixonaut-preview__placeholder" aria-hidden="true">\s*<img class="pixonaut-preview__poster" src="([^"]+)" width="8" height="8" alt="" fetchpriority="high" data-pixonaut-template="mini-tee@2" data-pixonaut-blank="blank_tee" data-pixonaut-placement="front" data-pixonaut-view="[^"]+" data-pixonaut-variant="([^"]*)" />\s*</span>#', $again, $poster ) );
+		// The poster's cover rule comes first: a cached poster paints as soon as it is parsed.
+		$this->assertSame( 1, preg_match( '#<span class="pixonaut-preview__placeholder" aria-hidden="true">\s*<style>@container pixonaut-poster [^\n]*?\#pixonaut-preview-front \.pixonaut-preview__poster\{object-fit:cover\}[^<]*</style>\s*<img class="pixonaut-preview__poster" src="([^"]+)" width="8" height="8" alt="" fetchpriority="high" data-pixonaut-template="mini-tee@2" data-pixonaut-blank="blank_tee" data-pixonaut-placement="front" data-pixonaut-view="[^"]+" data-pixonaut-variant="([^"]*)" />\s*</span>#', $again, $poster ) );
 		$this->assertStringStartsWith( wp_upload_dir()['baseurl'] . '/' . StagePosters::DIRECTORY . '/', $poster[1] ?? '' );
+	}
+
+	/**
+	 * Deletes the posters drawn into the uploads, which outlive a test.
+	 */
+	private static function delete_posters(): void {
 		foreach ( (array) glob( (string) StagePosters::directory() . '/*' ) as $file ) {
 			wp_delete_file( (string) $file );
 		}
