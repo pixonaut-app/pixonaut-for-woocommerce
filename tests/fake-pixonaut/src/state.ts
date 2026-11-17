@@ -113,6 +113,9 @@ export type Store = {
 	storeAccess: string | null;
 	/** The studio's current request to turn store access on; null when none. */
 	storeAccessRequest: string | null;
+	/** The last picture storage report the store sent, as it sent it; absent
+	 *  until it sends one, and after it disconnects. */
+	pictureStorage?: unknown;
 	webhook: WebhookEndpoint;
 };
 

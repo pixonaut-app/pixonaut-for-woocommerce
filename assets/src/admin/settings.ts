@@ -4,6 +4,7 @@
 import './settings.css';
 import { domReady } from '../shared/dom-ready';
 import { setFieldError } from './field-error';
+import { initVariationPictures } from './variation-pictures';
 
 /** The row of a hidden dependent setting, as the server renders it too. */
 export const HIDDEN_ROW = 'pixonaut-hidden';
@@ -94,4 +95,7 @@ export function initDependents(root: ParentNode): void {
 	}
 }
 
-domReady(() => initDependents(document));
+domReady(() => {
+	initDependents(document);
+	initVariationPictures(document);
+});

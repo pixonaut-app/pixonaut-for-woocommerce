@@ -85,7 +85,7 @@ final class AbilitiesTest extends WP_UnitTestCase {
 
 	private const SET_QUERY_NAME = Abilities::NAMESPACE . '/set-attribute-query-name';
 
-	private const ALL = array( self::GET_FORM, self::SET_FORM, self::GET_SPLIT_LISTING, self::SET_SPLIT_LISTING, self::SET_ATTRIBUTE_SPLIT_LISTING, self::GET_QUERY_NAMES, self::SET_QUERY_NAME, self::LIST_TEMPLATES, self::LIST_PRODUCTS, self::LINK_PRODUCT, self::UNLINK_PRODUCT, self::LIST_ORDERS, self::ACT_ON_LINE, self::CHANGE_DELIVERY, self::CONNECTION_STATUS, ...ProductSetupAbilitiesTest::WRITES, MoveProductAttributeTest::MOVE, StoreAdminAbilitiesTest::READ_SETTINGS, ...StoreAdminAbilitiesTest::WRITES, PictureViewAbilitiesTest::GET, PictureViewAbilitiesTest::SET, SetVariationVariantsTest::ABILITY, VariationPrintSizeTest::ABILITY, ...PricingAbilitiesTest::ABILITIES );
+	private const ALL = array( self::GET_FORM, self::SET_FORM, self::GET_SPLIT_LISTING, self::SET_SPLIT_LISTING, self::SET_ATTRIBUTE_SPLIT_LISTING, self::GET_QUERY_NAMES, self::SET_QUERY_NAME, self::LIST_TEMPLATES, self::LIST_PRODUCTS, self::LINK_PRODUCT, self::UNLINK_PRODUCT, self::LIST_ORDERS, self::ACT_ON_LINE, self::CHANGE_DELIVERY, self::CONNECTION_STATUS, ...ProductSetupAbilitiesTest::WRITES, MoveProductAttributeTest::MOVE, StoreAdminAbilitiesTest::READ_SETTINGS, ...StoreAdminAbilitiesTest::WRITES, PictureViewAbilitiesTest::GET, PictureViewAbilitiesTest::SET, VariationPicturesAbilitiesTest::READ, VariationPicturesAbilitiesTest::SET, SetVariationVariantsTest::ABILITY, VariationPrintSizeTest::ABILITY, ...PricingAbilitiesTest::ABILITIES );
 
 	private const TEMPLATE_ID = 'mini-tee@2';
 

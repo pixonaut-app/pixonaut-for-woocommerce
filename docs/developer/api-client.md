@@ -66,6 +66,13 @@ another operation means, in one pull request: its id in the list, the code
 that calls it, the fake's handler, and `consumed.json` regenerated (which
 moves the operation out of `pending` if it was planned there).
 
+An operation Pixonaut has agreed to add but the pinned SDK does not
+describe yet is listed in `Api\Pixonaut::PENDING` with its method and path,
+so the SDK can send it; the spec overlay describes it for the fake and the
+contract checks (`connectedStore.reportPictureStorage`, the picture report
+`Catalogue\PictureReport` sends, is one today). The list empties when a pin
+brings the operation.
+
 Requests are built with the SDK's typed request models. Answers are read
 through the plugin's answer models in `Api\Answers`, which hold only the
 fields the plugin reads, each typed as the SDK's own model types it:

@@ -57,6 +57,9 @@ use Pixonaut\WooCommerce\Abilities\SetupFields;
 use Pixonaut\WooCommerce\Abilities\Store\StoreResources;
 use Pixonaut\WooCommerce\Abilities\UnlinkProduct;
 use Pixonaut\WooCommerce\Abilities\UpdatePluginSettings;
+use Pixonaut\WooCommerce\Abilities\GetVariationPictures;
+use Pixonaut\WooCommerce\Abilities\SetVariationPictures;
+use Pixonaut\WooCommerce\Abilities\VariationPicturesState;
 use Pixonaut\WooCommerce\Abilities\UpdatePricingSettings;
 use Pixonaut\WooCommerce\Abilities\UseProductPicture;
 use Pixonaut\WooCommerce\Admin\BlankFields;
@@ -73,6 +76,7 @@ use Pixonaut\WooCommerce\Admin\LinkedBlank;
 use Pixonaut\WooCommerce\Admin\PictureFields;
 use Pixonaut\WooCommerce\Admin\RegenerateNow;
 use Pixonaut\WooCommerce\Admin\RegeneratePictures;
+use Pixonaut\WooCommerce\Admin\VariationPicturesField;
 use Pixonaut\WooCommerce\Admin\ShowcaseField;
 use Pixonaut\WooCommerce\Admin\SoldRows;
 use Pixonaut\WooCommerce\Admin\SplitListingFields;
@@ -111,7 +115,11 @@ use Pixonaut\WooCommerce\Api\RequestLog;
 use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\ProductLinker;
+use Pixonaut\WooCommerce\Catalogue\MediaSpace;
 use Pixonaut\WooCommerce\Catalogue\PictureQueue;
+use Pixonaut\WooCommerce\Catalogue\PictureReport;
+use Pixonaut\WooCommerce\Catalogue\PictureStorage;
+use Pixonaut\WooCommerce\Catalogue\VariationPictureCost;
 use Pixonaut\WooCommerce\Catalogue\PictureRunner;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
@@ -466,7 +474,7 @@ final class Plugin {
 		( new LineDisplay( $this->labels(), $this->settings(), $this->templates() ) )->register();
 		( new LinePictures( $this->proof_urls(), new LinePicture( $this->settings() ), $this->templates(), $this->labels() ) )->register();
 		( new ConnectionScreen( $this->connection(), $this->sdk(), $this->webhook_endpoint(), new Deprecations(), $this->templates(), ConnectionScreen::settings_url(), $this->workspace_settings(), $this->store_access() ) )->register();
-		( new SettingsPage( $this->settings(), $this->file ) )->register();
+		( new SettingsPage( $this->settings(), $this->file, $this->variation_picture_cost() ) )->register();
 		( new ConnectNotice( $this->connection(), $this->templates(), ConnectionScreen::settings_url() ) )->register();
 		( new DeveloperTools( $this->settings(), $this->connection(), $this->webhook_endpoint(), $this->events_pull(), $this->product_recheck(), $this->catalogue_cache(), $this->designer_links(), $this->request_log(), $this->templates(), $this->file ) )->register();
 		( new UpgradeNotice( plugin_basename( $this->file ), self::VERSION, $this->templates() ) )->register();
@@ -505,6 +513,7 @@ final class Plugin {
 		$this->product_pictures()->register();
 		( new StoppedPictureJobs( $this->product_pictures() ) )->register();
 		$this->picture_queue()->register();
+		$this->picture_report()->register();
 		// The runners' admin-ajax action is registered once Action Scheduler, which ships the request class, is loaded.
 		add_action(
 			'action_scheduler_init',
@@ -516,6 +525,7 @@ final class Plugin {
 		$this->catalogue_products()->register();
 		$this->blank_fields()->register();
 		$this->regenerate_pictures()->register();
+		$this->variation_pictures_field()->register();
 		$this->regenerate_now()->register();
 		$this->cost_refresh()->register();
 		$this->pricing_panel()->register();
@@ -631,9 +641,12 @@ final class Plugin {
 	 * @return list<Ability>
 	 */
 	private function settings_abilities(): array {
+		$variation_pictures = new VariationPicturesState( $this->settings(), $this->variation_pictures_field(), $this->variation_picture_cost() );
 		return array(
 			new ReadPluginSettings( $this->settings() ),
-			new UpdatePluginSettings( $this->settings() ),
+			new UpdatePluginSettings( $this->settings(), $this->variation_picture_cost() ),
+			new GetVariationPictures( $variation_pictures ),
+			new SetVariationPictures( $variation_pictures, $this->settings() ),
 		);
 	}
 
@@ -887,7 +900,7 @@ final class Plugin {
 	}
 
 	public function product_panel(): ProductPanel {
-		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection(), new VariantPairing( $this->product_variants(), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->variant_field(), $this->templates() ), $this->pricing_panel(), $this->sold_rows() );
+		return new ProductPanel( new ProductLinker( $this->catalogue(), new Designs( $this->sdk() ), $this->sdk(), new WcLogger() ), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->notices(), $this->templates(), $this->settings(), $this->file, $this->variant_field(), $this->showcase_field(), $this->regenerate_pictures(), $this->proof_urls(), $this->connection(), new VariantPairing( $this->product_variants(), new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->variant_field(), $this->templates() ), $this->pricing_panel(), $this->sold_rows(), $this->variation_pictures_field() );
 	}
 
 	/**
@@ -910,6 +923,27 @@ final class Plugin {
 	 */
 	public function regenerate_now(): RegenerateNow {
 		return new RegenerateNow( $this->templates(), $this->settings(), $this->regenerate_pictures(), $this->picture_queue(), $this->product_pictures(), $this->file );
+	}
+
+	/**
+	 * A variable product's Picture for every variation choice, and what a change costs.
+	 */
+	public function variation_pictures_field(): VariationPicturesField {
+		return new VariationPicturesField( $this->templates(), $this->settings(), $this->variation_picture_cost() );
+	}
+
+	/**
+	 * Tells Pixonaut how much of the shop's storage its pictures take.
+	 */
+	public function picture_report(): PictureReport {
+		return new PictureReport( $this->connection_store(), $this->sdk(), $this->settings(), new PictureStorage(), new MediaSpace(), new WcLogger() );
+	}
+
+	/**
+	 * What turning a picture for every variation on or off costs the shop's storage.
+	 */
+	public function variation_picture_cost(): VariationPictureCost {
+		return new VariationPictureCost( $this->settings(), new PictureStorage(), new MediaSpace() );
 	}
 
 	public function picture_queue(): PictureQueue {

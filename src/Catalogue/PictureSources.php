@@ -31,7 +31,9 @@ use WC_Product;
  * flat, drawn with the same set: the picture of its design a card in the
  * shop shows (`CardPages::image()`). One drawn flat that a filtered card
  * wants on its blank's photo (`CardPhotos`) has a second picture there,
- * drawn with the same set.
+ * drawn with the same set. With a picture for every variation
+ * (`VariationPictures`), a variation whose image would be drawn flat is
+ * drawn on its blank's photo instead, with the same set.
  */
 final class PictureSources {
 
@@ -83,6 +85,13 @@ final class PictureSources {
 		foreach ( $choices as $choice ) {
 			$drawn     = $this->chosen( $product, $source, $own ?? $choice, null !== $own || ! $chooser->is_type( 'variation' ) );
 			$sources[] = $drawn + ( isset( $choice['id'] ) ? array( 'showcase' => $choice['id'] ) : array() );
+		}
+		if ( ! isset( $sources[0]['blank'] ) && VariationPictures::draws( $chooser ) ) {
+			$photo = $this->source( $product, true );
+			if ( isset( $photo['blank'] ) ) {
+				// Its own picture on its blank's photo, in place of the flat one its product's variations share.
+				$sources[0] = $photo + ( isset( $sources[0]['showcase'] ) ? array( 'showcase' => $sources[0]['showcase'] ) : array() );
+			}
 		}
 		if ( ProductPictures::draws_flat( $chooser ) && isset( $sources[0]['blank'] ) ) {
 			// The flat picture of its design, which a card shows.

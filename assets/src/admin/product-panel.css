@@ -854,6 +854,49 @@
 	display: none;
 }
 
+/* The picture for every variation choice sits in Product images too, and
+ * what a change costs shows under it. */
+#pixonaut_product_data
+	.pixonaut-showcase-images
+	+ .pixonaut-variation-pictures {
+	border-top: 0;
+}
+
+#pixonaut_product_data .pixonaut-variation-pictures__cost {
+	margin: 0 12px 12px 162px;
+	padding: 8px 12px;
+	border-left: 4px solid #72aee6;
+	background: #f6f7f7;
+}
+
+#pixonaut_product_data .pixonaut-variation-pictures__cost.is-warning {
+	border-left-color: #dba617;
+}
+
+#pixonaut_product_data .pixonaut-variation-pictures__cost p {
+	margin: 0 0 6px;
+	padding: 0;
+}
+
+#pixonaut_product_data .pixonaut-variation-pictures__warning {
+	font-weight: 600;
+}
+
+/* WooCommerce floats a panel's labels into the left column. */
+#pixonaut_product_data .pixonaut-variation-pictures__confirm {
+	display: block;
+	float: none;
+	width: auto;
+	margin: 0;
+	padding: 0;
+}
+
+@media (max-width: 782px) {
+	#pixonaut_product_data .pixonaut-variation-pictures__cost {
+		margin-left: 12px;
+	}
+}
+
 @media (max-width: 600px) {
 	#pixonaut_product_data .pixonaut-picture-cards {
 		grid-template-columns: repeat(2, minmax(0, 1fr));

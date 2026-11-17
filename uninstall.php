@@ -43,6 +43,8 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_option( \Pixonaut\WooCommerce\Schema::MIGRATION_LOCK_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::API_DEPRECATIONS_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::SETTINGS_OPTION );
+		delete_option( \Pixonaut\WooCommerce\Schema::PICTURE_REPORT_SENT_OPTION );
+		delete_transient( \Pixonaut\WooCommerce\Schema::PICTURE_AVERAGE_TRANSIENT );
 		delete_option( \Pixonaut\WooCommerce\Schema::NOTICES_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::CONNECTION_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::CONNECTION_LOCK_OPTION );
@@ -112,6 +114,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_SPLIT_CARD_LOOKS_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_SPLIT_CARD_IMAGE_COPIES_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::ATTACHMENT_CARD_IMAGE_SOURCE_META );
+		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_VARIATION_PICTURES_META );
 		// A product whose image is its Pixonaut picture gets back the image it had before; one the store set since stays.
 		// By the meta rows, whatever the product's status: a product in the trash may be restored later.
 		$pixonaut_wc_previous_batch = 100; // Products read per query.

@@ -98,3 +98,24 @@ input[type="checkbox"].pixonaut-switch:focus-visible {
 	width: auto;
 	min-width: 5em;
 }
+
+/* What turning a picture for every variation on or off costs, under it. */
+.pixonaut-variation-pictures__cost {
+	max-width: 640px;
+	margin-top: 8px;
+	padding: 8px 12px;
+	border-left: 4px solid #72aee6;
+	background: #fff;
+}
+
+.pixonaut-variation-pictures__cost.is-warning {
+	border-left-color: #dba617;
+}
+
+.pixonaut-variation-pictures__cost p {
+	margin: 0 0 6px;
+}
+
+.pixonaut-variation-pictures__warning {
+	font-weight: 600;
+}

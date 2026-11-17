@@ -34,6 +34,8 @@ use WC_Product;
  * on a photo, also has a flat picture of its design (`flat()`), which shows
  * nowhere but on the cards; one drawn flat that a filtered card wants on
  * its blank's photo (`CardPhotos`) has that picture too (`on_photo()`).
+ * With a picture for every variation (`VariationPictures`), a variation
+ * whose image would be drawn flat is drawn on its blank's photo instead.
  * A picture is drawn once per source: a variation drawn from what another
  * of its product's family already has a picture of shows that picture
  * (`SharedPictures`).
@@ -98,6 +100,12 @@ final class ProductPictures {
 	public const SIZE = 1200;
 
 	/**
+	 * How long a drawing Pixonaut slowed down (`429 rate_limited`) waits
+	 * before it is drawn again, when Pixonaut does not say.
+	 */
+	public const SLOWED_DOWN_SECONDS = 60;
+
+	/**
 	 * How long a picture Pixonaut failed to draw waits before it is tried again.
 	 */
 	public const RETRY_SECONDS = 60 * 60;
@@ -123,6 +131,14 @@ final class ProductPictures {
 	 * @var array<string, string>
 	 */
 	private array $claims = array();
+
+	/**
+	 * Whether this job's drawing was slowed down by Pixonaut and is to run
+	 * again later (`slowed_down()`).
+	 *
+	 * @var bool
+	 */
+	private bool $slowed = false;
 
 	/**
 	 * @param Pictures        $pictures  Draws the picture.
@@ -228,7 +244,12 @@ final class ProductPictures {
 			}
 			$this->claims = array();
 			self::unlock( $product->get_id(), $held );
-			PictureQueue::resume( $product->get_id(), $this->now() );
+			if ( $this->slowed ) {
+				// Waits as Pixonaut asked, rather than being moved up again.
+				$this->slowed = false;
+			} else {
+				PictureQueue::resume( $product->get_id(), $this->now() );
+			}
 		}
 	}
 
@@ -256,6 +277,10 @@ final class ProductPictures {
 			}
 			$drawings = $this->drawings( $product, $sources, $stored, $own );
 		} catch ( ApiException $e ) {
+			if ( ErrorCode::RATE_LIMITED === $e->errorCode ) {
+				$this->slowed_down( $product, $e->retryAfter );
+				return;
+			}
 			$this->logger->warning(
 				sprintf( 'Pixonaut could not draw the picture of product #%d: %s', $product->get_id(), $e->getMessage() ),
 				array(
@@ -475,6 +500,26 @@ final class ProductPictures {
 	}
 
 	/**
+	 * Draws the product's picture again once Pixonaut lets the store ask
+	 * again, `$retry_after` seconds on or `SLOWED_DOWN_SECONDS`: Pixonaut's
+	 * mockup budget is spent, which is no failure of the picture, so it is
+	 * not recorded as failed and keeps the image it has meanwhile.
+	 *
+	 * @param WC_Product $product     The product or variation.
+	 * @param int|null   $retry_after Seconds Pixonaut asked the store to wait; null when it did not say.
+	 */
+	private function slowed_down( WC_Product $product, ?int $retry_after ): void {
+		$this->slowed = true;
+		$this->logger->info(
+			sprintf( 'Pixonaut asked the store to slow down while drawing the picture of product #%d; it is drawn again later.', $product->get_id() ),
+			array( 'product_id' => $product->get_id() )
+		);
+		// A drawing of it queued meanwhile waits too, rather than asking again at once.
+		as_unschedule_all_actions( self::ACTION, array( $product->get_id() ), self::GROUP );
+		PictureQueue::schedule( $product->get_id(), $this->now() + max( 1, $retry_after ?? self::SLOWED_DOWN_SECONDS ) );
+	}
+
+	/**
 	 * Records a drawing that failed, and tries it again after `RETRY_SECONDS`.
 	 *
 	 * @param WC_Product $product A product or variation.
@@ -655,6 +700,10 @@ final class ProductPictures {
 		if ( array() !== $views ) {
 			// Likewise only when chosen.
 			$parts[] = array( 'picture_view' => $views );
+		}
+		if ( VariationPictures::draws( $product ) ) {
+			// Drawn on its blank's photo, not flat (`PictureSources`): only when on, so turning it on redraws.
+			$parts[] = array( 'every_variation' => true );
 		}
 		if ( self::draws_flat( $product ) ) {
 			// Drawn flat too, for the shop's cards (`flat()`).

@@ -80,6 +80,7 @@ import {
 import { chosenThumbnail, thumbnailOptions } from './thumbnails';
 import { initUsePicture } from './use-picture';
 import { initValueSizes } from './value-sizes';
+import { initVariationPictures } from './variation-pictures';
 import {
 	initOverride,
 	initVariationSizes,
@@ -1147,6 +1148,7 @@ domReady(() => {
 		initRetiredVariants(panel);
 		initRegeneratePictures(panel, { nonce: panel.dataset.restNonce ?? '' });
 		initPricing(panel, { nonce: panel.dataset.restNonce ?? '' });
+		initVariationPictures(panel);
 	}
 	// WooCommerce loads the variations, a page at a time, after the screen.
 	window

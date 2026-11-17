@@ -163,6 +163,12 @@ Default: `true`.
 
 Default: `true`.
 
+### `variation_pictures`
+
+**Generate a picture for every variation** (checkbox). Draws each variation on its blank's photo, in its own colour and size, so the product page shows the variation a shopper picks. Off, variations whose pictures are drawn flat share one picture. Each picture is a file in your shop's media library, on your shop's own server, not in Pixonaut: before you turn it on, you see how many pictures it would draw and how much space they take. A product can choose otherwise in its Pixonaut tab. Turning it off deletes the variation pictures nothing else uses.
+
+Default: `false`.
+
 ### `low_resolution_warnings`
 
 **Warn about soft images** (checkbox). Warns in a product's Pixonaut tab when one of its print sizes makes an image in its template print below the resolution Pixonaut recommends, so it may look soft or pixelated. Off, the tab says nothing of it. A size the Pixonaut workspace refuses for it is still refused and says why: whether Pixonaut warns, refuses or says nothing is chosen in the workspace's settings in the Pixonaut studio.

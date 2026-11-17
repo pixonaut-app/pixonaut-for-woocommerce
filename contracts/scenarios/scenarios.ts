@@ -62,6 +62,9 @@ const THREAD_COPY = [200, 201, 403];
 const COST_REGION = 'SE';
 /** A blank's costs: read, or refused for a country the target has none for. */
 const COSTS_READ = [200, 422];
+/** The pictures a scenario's store reports keeping, and what each takes. */
+const PICTURE_COUNT = 3;
+const PICTURE_BYTES = 250_000;
 /** A catalogue import is written at once and filled in in the background. */
 const ACCEPTED = 202;
 /** A product imported before is answered with its blank, not imported again. */
@@ -976,6 +979,23 @@ export const SCENARIOS: Scenario[] = [
 				json: { credential: randomUUID() },
 			});
 			await session.call('DELETE /v1/connect/store-access');
+		},
+	},
+	{
+		name: 'report the pictures the store keeps',
+		async run(session) {
+			await session.call('PUT /v1/connect/picture-storage', {
+				json: {
+					pictureCount: PICTURE_COUNT,
+					pictureBytes: PICTURE_COUNT * PICTURE_BYTES,
+					variationPictureCount: 0,
+					variationPictureBytes: 0,
+					freeBytes: null,
+					variationPicturesOn: false,
+					links: { variationSetting: null, cleanUp: null },
+					products: [],
+				},
+			});
 		},
 	},
 	{

@@ -7,7 +7,7 @@
  * Field names, classes and the `data-` attributes are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.7.0
+ * @version 1.15.0
  *
  * @var array{personalise: string, blank: string, layout: string, form_layout: string, approval_mode: string, views: string, printshop: string, canvas_ratio: string, option_groups: string, group_numbers: string} $names Each field's posted name.
  * @var array{personalise: string, blank: string, layout: string, form_layout: string, approval_mode: string, initial_view: string, printshop: string, canvas_ratio: string, option_groups: string, group_numbers: string} $ids Each field's id.
@@ -44,6 +44,7 @@
  * @var string                                  $canvas_ratio   How the designer draws a print size whose ratio is not the template's, a `CanvasRatio` choice.
  * @var array<string, string>                   $canvas_ratios  The choices' names, by choice; the empty one follows the template.
  * @var string                                  $images_html    The product images field, rendered from `admin/product-showcase-images.php`; empty for a variation, or without a template.
+ * @var string                                  $variation_pictures_html The Picture for every variation choice, rendered from `admin/product-variation-pictures.php`; empty for a variation, a product that is not variable, or one that shows no Pixonaut picture.
  * @var string                                  $regenerate_html The Regenerate product image button, rendered from `admin/product-regenerate.php`; empty for a variation, or a product that shows no Pixonaut picture.
  * @var string                                  $pricing_html   The Prices section, rendered from `admin/product-prices.php`; empty for a variation, or a product without a blank.
  * @var array<string, string>                   $approval_modes Approval mode names by mode; the empty mode is the store's default.
@@ -207,6 +208,7 @@ $pixonaut_setting = static function ( string $key, string $label, array $choices
 </p>
 </div>
 <?php echo $images_html ?? ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in admin/product-showcase-images.php. ?>
+<?php echo $variation_pictures_html ?? ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in admin/product-variation-pictures.php. ?>
 <?php echo $regenerate_html ?? ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in admin/product-regenerate.php. ?>
 
 <div class="pixonaut-views-disclosure pixonaut-with-blank" <?php echo '' === $blank_id ? 'hidden' : ''; ?>>
