@@ -124,6 +124,27 @@ final class SideLayoutTest extends TestCase {
 		$this->assertSame( '--pixonaut-preview-ratio: 500 / 1000; --pixonaut-preview-aspect: 0.5', $layout->style() );
 	}
 
+	public function test_a_photo_of_a_setting_counts_though_it_has_no_mount(): void {
+		$reads = self::reads();
+		$photo = &$reads['blank']['mockups']['placements'][1]['views'][0]['photos'][1];
+		$photo['mount']      = null;
+		$photo['photoScene'] = array(
+			'bakeKey'     => 'bake',
+			'exact'       => true,
+			'maskUrl'     => 'https://example.test/mask.png',
+			'photoSizePx' => array(
+				'w' => 500,
+				'h' => 1000,
+			),
+		);
+		unset( $photo );
+
+		$layout = SideLayout::of( self::OPTIONS, $reads, null );
+
+		$this->assertSame( array( 'view_front', 'view_close', 'design' ), array_column( $layout->views, 'id' ) );
+		$this->assertSame( '--pixonaut-preview-ratio: 1200 / 1600; --pixonaut-preview-aspect: 0.75', $layout->style() );
+	}
+
 	public function test_a_placement_without_a_photo_the_sdk_can_draw_has_no_strip(): void {
 		$reads = self::reads();
 		foreach ( $reads['blank']['mockups']['placements'][1]['views'] as $view => $row ) {

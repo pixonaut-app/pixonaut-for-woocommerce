@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\BlankPhoto;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\TemplateForm;
 use Pixonaut\WooCommerce\DesignerLanguage;
@@ -190,8 +191,8 @@ final class SideLayout {
 
 	/**
 	 * The photo a view shows the variant in: its own, else the one naming
-	 * no variant. A photo without a `mount` (still uploading, or with no
-	 * print area marked) is one the SDK cannot draw, and counts for none.
+	 * no variant. A photo the SDK cannot draw (`BlankPhoto::drawable()`)
+	 * counts for none.
 	 *
 	 * @param array<mixed> $photos  The view's photos.
 	 * @param string|null  $variant The variant shown.
@@ -200,7 +201,7 @@ final class SideLayout {
 	private static function photo( array $photos, ?string $variant ): ?array {
 		$any = null;
 		foreach ( $photos as $photo ) {
-			if ( ! is_array( $photo ) || ! is_array( $photo['mount'] ?? null ) ) {
+			if ( ! is_array( $photo ) || ! BlankPhoto::drawable( $photo ) ) {
 				continue;
 			}
 			$refs = self::strings( $photo['variantRefs'] ?? array() );
