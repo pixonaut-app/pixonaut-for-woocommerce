@@ -713,7 +713,7 @@ final class Storefront {
 		$layouts = array();
 		// As the form mounts them: arranged only as far as the template read allows.
 		foreach ( $this->fit_groups( $designer, $designer->mounts )[0] as $side => $options ) {
-			$layouts[ (string) $side ] = SideLayout::of( $options, ServerReads::decoded( $reads[ (string) $side ] ?? array() ), $designer->variant, self::has_options( $designer, $options ), 1 === count( $designer->mounts ) );
+			$layouts[ (string) $side ] = SideLayout::of( $options, ServerReads::decoded( $reads[ (string) $side ] ?? array() ), $designer->shown_variant(), self::has_options( $designer, $options ), 1 === count( $designer->mounts ) );
 		}
 		return $layouts;
 	}
