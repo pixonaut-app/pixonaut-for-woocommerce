@@ -1343,7 +1343,7 @@ archives work as they always have.
   the option `pixonaut_wc_archive_index_<archive>`.
 - **A theme's own fields**: `pixonaut_wc_archive_index_card` and
   `pixonaut_wc_archive_index_variation` filter each card and each variation
-  row while the index is built ([hooks](./hooks/)).
+  row while the index is built ([hooks](../hooks/)).
 
 ## JavaScript hooks
 
