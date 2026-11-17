@@ -623,6 +623,28 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		);
 	}
 
+	public function test_the_dependencies_read_the_values_kept_of_each_product(): void {
+		$this->settle();
+		$this->shop( array( 'filter_storlek' => '30x40' ) );
+		FilterIndex::keep();
+		FreshRequest::forget_filter_reads();
+		delete_transient( 'pixonaut_wc_attribute_dependencies' );
+		global $wpdb;
+		// Every hanger written past WooCommerce, which changes nothing a kept read's stamp sees.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- the test's own variations.
+		$wpdb->query( "UPDATE {$wpdb->postmeta} SET meta_value = 'ram' WHERE meta_key = 'attribute_pa_inramning' AND meta_value = 'hangare'" );
+		wp_cache_flush_runtime();
+		$kept = count( (array) $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( '_transient_' . Schema::FILTER_INDEX_PREFIX ) . '%' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- what is kept, as stored.
+
+		$this->assertSame(
+			array( 'pa_ramfarg' => array( 'pa_inramning' => array( 'ram', 'hangare' ) ) ),
+			apply_filters( AttributeDependencies::FILTER, array() ),
+			'as kept: the hangers were changed past WooCommerce'
+		);
+		FilterIndex::keep();
+		$this->assertCount( $kept, (array) $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( '_transient_' . Schema::FILTER_INDEX_PREFIX ) . '%' ) ), 'nothing more kept by reading every product' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- what is kept, as stored.
+	}
+
 	public function test_a_listing_takes_what_was_kept_of_a_product_until_woocommerce_saves_a_change(): void {
 		$filters = array(
 			'filter_storlek' => '30x40',
