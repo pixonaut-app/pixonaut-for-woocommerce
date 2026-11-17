@@ -13,8 +13,10 @@ use Closure;
 use Pixonaut\WooCommerce\Api\Pictures;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
+use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
 use WP_Error;
 
 /**
@@ -30,7 +32,11 @@ use WP_Error;
  * and the picture is drawn once the page is sent, or, on a server that
  * cannot finish a response early, in an Action Scheduler job. One older than a day is
  * printed, and drawn again the same way, as a template's default values may
- * name the day (a date of birth that defaults to today). One page view at a
+ * name the day (a date of birth that defaults to today). Each drawing is kept
+ * under a name of its own, so a browser or CDN that keeps uploads for long
+ * asks for the new one; the one before stays until the next drawing, for
+ * pages cached with its link. A picture belongs to the connection it was
+ * drawn for: one drawn for another workspace is never printed. One page view at a
  * time draws a picture, and one Pixonaut refused is not asked for again for a
  * minute. Pictures no product page has printed for a month are deleted when
  * the next one is drawn.
@@ -94,9 +100,15 @@ final class StagePosters {
 	private const PNG = 'png';
 
 	/**
+	 * A kept drawing's file name ends in its size and content hash: a
+	 * drawing still being written has neither.
+	 */
+	private const KEPT_NAME = '/-(\d+)x(\d+)-[0-9a-f]+\.(?:webp|jpg|png)$/';
+
+	/**
 	 * The pictures to draw once the page is sent, by key.
 	 *
-	 * @var array<string, array{template: string, blank: string, placement: string, view: string, variant: string|null}>
+	 * @var array<string, array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string}>
 	 */
 	private array $queued = array();
 
@@ -108,15 +120,32 @@ final class StagePosters {
 	private ?Closure $finish_response;
 
 	/**
+	 * How many arguments a job passes: what the picture is drawn from.
+	 */
+	private const JOB_ARGS = 6;
+
+	/**
+	 * Characters of a drawing's content hash in its file name.
+	 */
+	private const REVISION_LENGTH = 8;
+
+	/**
 	 * @param Pictures               $pictures        Draws the pictures.
+	 * @param ConnectionStore        $connections     Names the connection a picture is drawn for.
+	 * @param LoggerInterface        $logger          Logs a picture that could not be drawn or kept.
 	 * @param (Closure(): bool)|null $finish_response Finishes the response; by default PHP-FPM's or LiteSpeed's, where the server has one.
 	 */
-	public function __construct( private readonly Pictures $pictures, ?Closure $finish_response = null ) {
+	public function __construct(
+		private readonly Pictures $pictures,
+		private readonly ConnectionStore $connections,
+		private readonly LoggerInterface $logger,
+		?Closure $finish_response = null,
+	) {
 		$this->finish_response = $finish_response ?? CatalogueCache::server_finish_response();
 	}
 
 	public function register(): void {
-		add_action( self::ACTION, array( $this, 'draw_scheduled' ), 10, 5 );
+		add_action( self::ACTION, array( $this, 'draw_scheduled' ), 10, self::JOB_ARGS );
 	}
 
 	/**
@@ -128,10 +157,10 @@ final class StagePosters {
 	 * @param array<string, mixed> $options The side's mount options.
 	 * @param SideLayout           $layout  The side's layout.
 	 * @param string|null          $variant The ref of the blank variant the page shows; null for the side's first.
-	 * @return array{url: string, width: int, height: int, template: string, variant: string}|null
+	 * @return array{url: string, width: int, height: int, template: string, blank: string, placement: string, view: string, variant: string}|null
 	 */
 	public function for_side( array $options, SideLayout $layout, ?string $variant ): ?array {
-		$view      = $layout->views[0]['id'] ?? null;
+		$view      = $layout->opening_view;
 		$template  = $options['templateId'] ?? null;
 		$blank     = $options['blankId'] ?? null;
 		$placement = $options['placementId'] ?? null;
@@ -140,11 +169,12 @@ final class StagePosters {
 			return null;
 		}
 		$source = array(
-			'template'  => $template,
-			'blank'     => $blank,
-			'placement' => $placement,
-			'view'      => $view,
-			'variant'   => $variant,
+			'template'   => $template,
+			'blank'      => $blank,
+			'placement'  => $placement,
+			'view'       => $view,
+			'variant'    => $variant,
+			'connection' => $this->connection(),
 		);
 		$key    = self::key( $source );
 		$kept   = $this->kept( $key );
@@ -155,11 +185,14 @@ final class StagePosters {
 			return null;
 		}
 		return array(
-			'url'      => $kept['url'],
-			'width'    => $kept['width'],
-			'height'   => $kept['height'],
-			'template' => $template,
-			'variant'  => $variant ?? '',
+			'url'       => $kept['url'],
+			'width'     => $kept['width'],
+			'height'    => $kept['height'],
+			'template'  => $template,
+			'blank'     => $blank,
+			'placement' => $placement,
+			'view'      => $view,
+			'variant'   => $variant ?? '',
 		);
 	}
 
@@ -189,17 +222,19 @@ final class StagePosters {
 	 * @param mixed $placement The placement.
 	 * @param mixed $view      The view.
 	 * @param mixed $variant   The variant ref; null for the view's default photo.
+	 * @param mixed $connection The connection the page asked for it under; a job of another is dropped.
 	 */
-	public function draw_scheduled( mixed $template, mixed $blank, mixed $placement, mixed $view, mixed $variant = null ): void {
-		if ( ! is_string( $template ) || ! is_string( $blank ) || ! is_string( $placement ) || ! is_string( $view ) ) {
+	public function draw_scheduled( mixed $template, mixed $blank, mixed $placement, mixed $view, mixed $variant = null, mixed $connection = '' ): void {
+		if ( ! is_string( $template ) || ! is_string( $blank ) || ! is_string( $placement ) || ! is_string( $view ) || $connection !== $this->connection() ) {
 			return;
 		}
 		$source = array(
-			'template'  => $template,
-			'blank'     => $blank,
-			'placement' => $placement,
-			'view'      => $view,
-			'variant'   => is_string( $variant ) ? $variant : null,
+			'template'   => $template,
+			'blank'      => $blank,
+			'placement'  => $placement,
+			'view'       => $view,
+			'variant'    => is_string( $variant ) ? $variant : null,
+			'connection' => $connection,
 		);
 		$key    = self::key( $source );
 		if ( $this->draw( $key, $source ) ) {
@@ -212,38 +247,60 @@ final class StagePosters {
 	 * when Pixonaut refused or could not be reached, or the file could not
 	 * be written.
 	 *
-	 * @param string                                                                                        $key    The picture's key.
-	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null} $source What it is drawn from.
+	 * @param string                                                                                                            $key    The picture's key.
+	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string} $source What it is drawn from.
 	 */
 	private function draw( string $key, array $source ): bool {
+		$context = array(
+			'template'  => $source['template'],
+			'blank'     => $source['blank'],
+			'placement' => $source['placement'],
+			'view'      => $source['view'],
+			'variant'   => $source['variant'],
+		);
 		try {
 			$png = $this->pictures->mockup( $source['template'], $source['blank'], $source['placement'], $source['view'], $source['variant'], self::SIZE );
-		} catch ( ApiException ) {
+		} catch ( ApiException $error ) {
+			$this->logger->warning( 'The picture a product page shows until the designer has drawn could not be drawn.', $context + array( 'error' => $error->getMessage() ) );
 			return false;
 		}
 		$directory = self::directory();
-		if ( null === $directory || ! wp_mkdir_p( $directory ) ) {
-			return false;
-		}
-		$drawn = $directory . '/' . $key . '-drawing.' . self::PNG;
+		$drawn     = null === $directory ? null : $directory . '/' . $key . '-drawing.' . self::PNG;
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a file of the uploads, written as WordPress writes its own.
-		if ( false === file_put_contents( $drawn, $png ) ) {
+		if ( null === $directory || null === $drawn || ! wp_mkdir_p( $directory ) || false === file_put_contents( $drawn, $png ) ) {
+			$this->logger->warning( 'The picture a product page shows until the designer has drawn could not be written to the uploads.', $context );
 			return false;
 		}
 		$size = wp_getimagesize( $drawn );
 		if ( ! is_array( $size ) || $size[0] <= 0 || $size[1] <= 0 ) {
 			wp_delete_file( $drawn );
+			$this->logger->warning( 'Pixonaut answered the picture a product page shows until the designer has drawn with no image.', $context );
 			return false;
 		}
-		$stale = $this->files( $key );
-		$kept  = $this->converted( $drawn, $directory . '/' . $key . '-' . $size[0] . 'x' . $size[1] );
-		foreach ( $stale as $file ) {
-			if ( $file !== $kept ) {
+		$before = $this->newest( $key );
+		$kept   = $this->revised( $this->converted( $drawn, $directory . '/' . $key . '-' . $size[0] . 'x' . $size[1] ) );
+		// The drawing before stays for pages cached with its link; older ones go.
+		foreach ( $this->files( $key ) as $file ) {
+			if ( $file !== $kept && $file !== $before ) {
 				wp_delete_file( $file );
 			}
 		}
 		$this->prune( $directory );
 		return true;
+	}
+
+	/**
+	 * Names a kept file by its content, so each drawing has a link of its own.
+	 *
+	 * @param string $file The kept file, named `<name>.<extension>`.
+	 * @return string The renamed file's path.
+	 */
+	private function revised( string $file ): string {
+		$hash    = md5_file( $file );
+		$dot     = strrpos( $file, '.' );
+		$revised = false === $hash || false === $dot ? $file : substr( $file, 0, $dot ) . '-' . substr( $hash, 0, self::REVISION_LENGTH ) . substr( $file, $dot );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- names a file of the uploads within its directory.
+		return $revised === $file || rename( $file, $revised ) ? $revised : $file;
 	}
 
 	/**
@@ -297,20 +354,43 @@ final class StagePosters {
 	 * @return array{url: string, width: int, height: int, drawn_at: int}|null
 	 */
 	private function kept( string $key ): ?array {
-		foreach ( $this->files( $key ) as $file ) {
-			if ( 1 !== preg_match( '/-(\d+)x(\d+)\.(?:webp|jpg|png)$/', $file, $size ) ) {
-				continue;
-			}
-			$drawn_at = filemtime( $file );
-			$upload   = wp_upload_dir( null, false );
-			return array(
-				'url'      => $upload['baseurl'] . '/' . self::DIRECTORY . '/' . basename( $file ),
-				'width'    => (int) $size[1],
-				'height'   => (int) $size[2],
-				'drawn_at' => false === $drawn_at ? 0 : $drawn_at,
-			);
+		$file = $this->newest( $key );
+		if ( null === $file || 1 !== preg_match( self::KEPT_NAME, $file, $size ) ) {
+			return null;
 		}
-		return null;
+		$drawn_at = filemtime( $file );
+		$upload   = wp_upload_dir( null, false );
+		return array(
+			'url'      => $upload['baseurl'] . '/' . self::DIRECTORY . '/' . basename( $file ),
+			'width'    => (int) $size[1],
+			'height'   => (int) $size[2],
+			'drawn_at' => false === $drawn_at ? 0 : $drawn_at,
+		);
+	}
+
+	/**
+	 * The newest drawing kept for a picture; null for none.
+	 *
+	 * @param string $key The picture's key.
+	 */
+	private function newest( string $key ): ?string {
+		$newest = null;
+		$at     = -1;
+		foreach ( $this->files( $key ) as $file ) {
+			$drawn_at = filemtime( $file );
+			if ( 1 === preg_match( self::KEPT_NAME, $file ) && false !== $drawn_at && $drawn_at >= $at ) {
+				$newest = $file;
+				$at     = $drawn_at;
+			}
+		}
+		return $newest;
+	}
+
+	/**
+	 * The current connection's id; empty without one.
+	 */
+	private function connection(): string {
+		return $this->connections->load()->connection_id ?? '';
 	}
 
 	/**
@@ -329,8 +409,8 @@ final class StagePosters {
 	 * another page view is drawing it, or a drawing of it failed less than a
 	 * minute ago.
 	 *
-	 * @param string                                                                                        $key    The picture's key.
-	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null} $source What it is drawn from.
+	 * @param string                                                                                                            $key    The picture's key.
+	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string} $source What it is drawn from.
 	 */
 	private function queue( string $key, array $source ): void {
 		if ( isset( $this->queued[ $key ] ) || ( null === $this->finish_response && ! did_action( 'action_scheduler_init' ) ) ) {
@@ -375,7 +455,7 @@ final class StagePosters {
 	/**
 	 * A picture's key: a hash of what it is drawn from and its size.
 	 *
-	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null} $source What it is drawn from.
+	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null, connection: string} $source What it is drawn from.
 	 */
 	private static function key( array $source ): string {
 		return md5( (string) wp_json_encode( array( $source, self::SIZE ) ) );

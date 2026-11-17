@@ -1194,7 +1194,7 @@ final class Plugin {
 	 * The pictures a product page's preview shows until its designer has drawn.
 	 */
 	public function stage_posters(): StagePosters {
-		$this->stage_posters ??= new StagePosters( new Pictures( $this->pixonaut() ) );
+		$this->stage_posters ??= new StagePosters( new Pictures( $this->pixonaut() ), $this->connection_store(), new WcLogger() );
 		return $this->stage_posters;
 	}
 

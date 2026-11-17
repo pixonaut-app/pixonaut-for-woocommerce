@@ -1086,6 +1086,9 @@ export class ProductDesigner {
 			for (const [side, target] of Object.entries(chosen.sides)) {
 				dropPosterUnlike(this.existingPreview(side), {
 					templateId: target.templateId,
+					blankId: target.blankId,
+					placementId: target.placementId,
+					initialView: target.initialView,
 					variant: chosen.variant,
 				});
 			}

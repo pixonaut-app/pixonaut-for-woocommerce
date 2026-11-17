@@ -415,7 +415,7 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$this->answer_side();
 		$this->recorder->raw( 200, PngFixture::white(), 'image/png' );
 		$client  = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) );
-		$posters = new StagePosters( new Pictures( $client ), static fn (): bool => true );
+		$posters = new StagePosters( new Pictures( $client ), $this->store, new WcLogger(), static fn (): bool => true );
 		$product = StorefrontTest::product( StorefrontTest::personalised() );
 		$this->go_to( (string) get_permalink( $product->get_id() ) );
 		$GLOBALS['product'] = $product;
@@ -425,7 +425,7 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$again = $this->preview( $posters );
 
 		$this->assertStringNotContainsString( 'pixonaut-preview__poster', $first );
-		$this->assertSame( 1, preg_match( '#<span class="pixonaut-preview__placeholder" aria-hidden="true">\s*<img class="pixonaut-preview__poster" src="([^"]+)" width="8" height="8" alt="" fetchpriority="high" data-pixonaut-template="mini-tee@2" data-pixonaut-variant="([^"]*)" />\s*</span>#', $again, $poster ) );
+		$this->assertSame( 1, preg_match( '#<span class="pixonaut-preview__placeholder" aria-hidden="true">\s*<img class="pixonaut-preview__poster" src="([^"]+)" width="8" height="8" alt="" fetchpriority="high" data-pixonaut-template="mini-tee@2" data-pixonaut-blank="blank_tee" data-pixonaut-placement="front" data-pixonaut-view="[^"]+" data-pixonaut-variant="([^"]*)" />\s*</span>#', $again, $poster ) );
 		$this->assertStringStartsWith( wp_upload_dir()['baseurl'] . '/' . StagePosters::DIRECTORY . '/', $poster[1] ?? '' );
 		foreach ( (array) glob( (string) StagePosters::directory() . '/*' ) as $file ) {
 			wp_delete_file( (string) $file );

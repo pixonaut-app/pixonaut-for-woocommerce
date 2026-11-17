@@ -46,6 +46,7 @@ final class SideLayout {
 	 * @param bool                                                      $lends_options Whether the add-to-cart form's option fields, when it has any, go in the form as one part: with one side, unless its groups place them one by one.
 	 * @param bool                                                      $lends_cart Whether the add-to-cart form's cart row goes in the form: with one side.
 	 * @param string[]                                                  $later_hosts In the steps layout, the field name of every attribute the groups place in a step after the first, which the printed form holds in hidden slots; empty otherwise.
+	 * @param string|null                                               $opening_view The id of the view the designer opens on, among `$views`: the side's starting view when the strip has it, else the first; null without a strip.
 	 * @phpstan-param list<string> $sizes
 	 * @phpstan-param list<string> $step_labels
 	 * @phpstan-param list<string> $later_hosts
@@ -63,6 +64,7 @@ final class SideLayout {
 		public readonly bool $lends_options = false,
 		public readonly bool $lends_cart = false,
 		public readonly array $later_hosts = array(),
+		public readonly ?string $opening_view = null,
 	) {
 	}
 
@@ -119,6 +121,7 @@ final class SideLayout {
 			$lending && ! $hosted,
 			$lending,
 			$template_steps['later_hosts'],
+			$first['id'] ?? null,
 		);
 	}
 

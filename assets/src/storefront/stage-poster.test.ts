@@ -5,12 +5,22 @@ import { dropBrokenPosters, dropPosterUnlike } from './stage-poster';
 /** A side's preview as the server prints it, with a poster of `template`
  *  in variant `variant`. */
 function preview(template = 'poster@5', variant = 'v_50x70'): HTMLElement {
+	const where =
+		'data-pixonaut-blank="blank_poster" data-pixonaut-placement="front" data-pixonaut-view="view_wall"';
 	document.body.innerHTML = `
 		<div id="pixonaut-preview-default" class="pixonaut-preview__side">
-			<span class="pixonaut-preview__placeholder" aria-hidden="true"><img class="pixonaut-preview__poster" src="https://shop.test/poster.webp" width="825" height="1024" alt="" data-pixonaut-template="${template}" data-pixonaut-variant="${variant}" /></span>
+			<span class="pixonaut-preview__placeholder" aria-hidden="true"><img class="pixonaut-preview__poster" src="https://shop.test/poster.webp" width="825" height="1024" alt="" data-pixonaut-template="${template}" ${where} data-pixonaut-variant="${variant}" /></span>
 		</div>`;
 	return document.getElementById('pixonaut-preview-default') as HTMLElement;
 }
+
+/** What the poster shows. */
+const OPENED = {
+	templateId: 'poster@5',
+	blankId: 'blank_poster',
+	placementId: 'front',
+	variant: 'v_50x70',
+};
 
 const poster = () => document.querySelector('.pixonaut-preview__poster');
 
@@ -18,21 +28,38 @@ describe('dropPosterUnlike', () => {
 	it('keeps the poster of the variation the page opened on', () => {
 		const side = preview();
 
-		dropPosterUnlike(side, { templateId: 'poster@5', variant: 'v_50x70' });
+		dropPosterUnlike(side, OPENED);
 
 		expect(poster()).not.toBeNull();
 	});
 
 	it('takes down the poster of another variant or template', () => {
-		dropPosterUnlike(preview(), { templateId: 'poster@5', variant: 'v_30x40' });
+		dropPosterUnlike(preview(), { ...OPENED, variant: 'v_30x40' });
 		expect(poster()).toBeNull();
 
-		dropPosterUnlike(preview(), { templateId: 'card@1', variant: 'v_50x70' });
+		dropPosterUnlike(preview(), { ...OPENED, templateId: 'card@1' });
 		expect(poster()).toBeNull();
 	});
 
+	it('takes down the poster of another blank, placement or view', () => {
+		dropPosterUnlike(preview(), { ...OPENED, blankId: 'blank_frame' });
+		expect(poster()).toBeNull();
+
+		dropPosterUnlike(preview(), { ...OPENED, placementId: 'back' });
+		expect(poster()).toBeNull();
+
+		dropPosterUnlike(preview(), { ...OPENED, initialView: 'view_flat' });
+		expect(poster()).toBeNull();
+	});
+
+	it('keeps the poster of a side opening on the view it shows', () => {
+		dropPosterUnlike(preview(), { ...OPENED, initialView: 'view_wall' });
+
+		expect(poster()).not.toBeNull();
+	});
+
 	it('takes down a poster with a variant for a side shown in none', () => {
-		dropPosterUnlike(preview(), { templateId: 'poster@5' });
+		dropPosterUnlike(preview(), { ...OPENED, variant: undefined });
 
 		expect(poster()).toBeNull();
 	});

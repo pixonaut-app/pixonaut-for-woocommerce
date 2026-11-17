@@ -505,7 +505,7 @@ final class Storefront {
 	 * drawn, by side key; empty when there is none yet.
 	 *
 	 * @param InlineDesigner $designer An available designer.
-	 * @return array<string, array{url: string, width: int, height: int, template: string, variant: string}>
+	 * @return array<string, array{url: string, width: int, height: int, template: string, blank: string, placement: string, view: string, variant: string}>
 	 */
 	private function posters( InlineDesigner $designer ): array {
 		$side   = array_key_first( $designer->mounts );
