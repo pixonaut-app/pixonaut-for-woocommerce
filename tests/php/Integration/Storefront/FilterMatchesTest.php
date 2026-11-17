@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
+use Automattic\WooCommerce\Internal\ProductFilters\FilterDataProvider;
+use Automattic\WooCommerce\Internal\ProductFilters\QueryClauses;
 use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Schema;
@@ -318,6 +320,29 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		$this->assertSame( array( $this->term( 'svart' ) => 1 ), $colour );
 	}
 
+	public function test_the_counts_list_the_products_woocommerce_read_for_its_price_filter_first(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
+		$this->go_to_listing( array() );
+		global $wp_query;
+		// The filter blocks' query, as they read it: published products, paged by nothing of its own.
+		$query_vars = array_merge( $wp_query->query_vars, array( 'post_status' => 'publish' ) );
+		unset( $query_vars['nopaging'] );
+		// The price filter's read runs the same query with no results, and WordPress keeps that answer for it.
+		$container = wc_get_container();
+		$container->get( FilterDataProvider::class )->with( $container->get( QueryClauses::class ) )->get_filtered_price( $query_vars );
+
+		$counts = apply_filters( 'woocommerce_pre_product_filter_data', null, 'attribute', $query_vars, array( 'taxonomy' => 'pa_storlek' ) );
+		$this->assertIsArray( $counts );
+		ksort( $counts );
+		$this->assertSame(
+			array(
+				$this->term( '30x40' ) => 3,
+				$this->term( '50x70' ) => 4,
+			),
+			$counts
+		);
+	}
+
 	public function test_an_attribute_listed_while_filtered_counts_its_cards_only_while_chosen(): void {
 		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::FILTERED );
 
@@ -596,6 +621,28 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 			apply_filters( AttributeDependencies::FILTER, array( 'pa_other' => array( 'pa_size' => array( 'l' ) ) ) ),
 			'added to what another callback answered'
 		);
+	}
+
+	public function test_the_dependencies_read_the_values_kept_of_each_product(): void {
+		$this->settle();
+		$this->shop( array( 'filter_storlek' => '30x40' ) );
+		FilterIndex::keep();
+		FreshRequest::forget_filter_reads();
+		delete_transient( 'pixonaut_wc_attribute_dependencies' );
+		global $wpdb;
+		// Every hanger written past WooCommerce, which changes nothing a kept read's stamp sees.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- the test's own variations.
+		$wpdb->query( "UPDATE {$wpdb->postmeta} SET meta_value = 'ram' WHERE meta_key = 'attribute_pa_inramning' AND meta_value = 'hangare'" );
+		wp_cache_flush_runtime();
+		$kept = count( (array) $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( '_transient_' . Schema::FILTER_INDEX_PREFIX ) . '%' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- what is kept, as stored.
+
+		$this->assertSame(
+			array( 'pa_ramfarg' => array( 'pa_inramning' => array( 'ram', 'hangare' ) ) ),
+			apply_filters( AttributeDependencies::FILTER, array() ),
+			'as kept: the hangers were changed past WooCommerce'
+		);
+		FilterIndex::keep();
+		$this->assertCount( $kept, (array) $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( '_transient_' . Schema::FILTER_INDEX_PREFIX ) . '%' ) ), 'nothing more kept by reading every product' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- what is kept, as stored.
 	}
 
 	public function test_a_listing_takes_what_was_kept_of_a_product_until_woocommerce_saves_a_change(): void {

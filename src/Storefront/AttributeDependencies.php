@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Pixonaut\WooCommerce\Catalogue\ApplicableAttributes;
+use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use WC_Cache_Helper;
 use WC_Product_Attribute;
@@ -104,11 +105,14 @@ final class AttributeDependencies {
 					'order'   => 'ASC',
 				)
 			);
-			$ids = is_array( $ids ) ? $ids : array();
+			$ids = is_array( $ids ) ? array_values( array_map( 'intval', $ids ) ) : array();
+			// The values kept of each product's variations since it last changed: only a changed product's are read again.
+			$kept = FilterIndex::kept_values( $ids );
+			_prime_post_caches( $ids, true, true );
 			foreach ( $ids as $id ) {
-				$product = wc_get_product( (int) $id );
+				$product = wc_get_product( $id );
 				if ( $product instanceof WC_Product_Variable ) {
-					$dependencies = self::merge( $dependencies, self::of( $product ) );
+					$dependencies = self::merge( $dependencies, self::of( $product, $kept[ $id ] ?? null ) );
 				}
 			}
 			++$page;
@@ -120,17 +124,18 @@ final class AttributeDependencies {
 	/**
 	 * One product's dependencies, by taxonomy.
 	 *
-	 * @param WC_Product_Variable $product A variable product.
+	 * @param WC_Product_Variable                    $product A variable product.
+	 * @param array<int, array<string, string>>|null $values  Its variations' attribute values, when already read (`SplitCards::variation_values()`).
 	 * @return array<string, array<string, list<string>>>
 	 */
-	public static function of( WC_Product_Variable $product ): array {
+	public static function of( WC_Product_Variable $product, ?array $values = null ): array {
 		$taxonomies = array();
 		foreach ( $product->get_attributes() as $attribute ) {
 			if ( $attribute instanceof WC_Product_Attribute && $attribute->is_taxonomy() ) {
 				$taxonomies[ 'attribute_' . sanitize_title( $attribute->get_name() ) ] = $attribute->get_name();
 			}
 		}
-		$parents      = ApplicableAttributes::parents( ApplicableAttributes::fields( $product ), array_values( SplitCards::variation_values( $product->get_id() ) ) );
+		$parents      = ApplicableAttributes::parents( ApplicableAttributes::fields( $product ), array_values( $values ?? SplitCards::variation_values( $product->get_id() ) ) );
 		$dependencies = array();
 		foreach ( $parents as $field => $parent ) {
 			if ( isset( $taxonomies[ $field ], $taxonomies[ $parent['field'] ] ) ) {

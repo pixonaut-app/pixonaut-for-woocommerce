@@ -156,6 +156,41 @@ final class FilterIndex {
 	}
 
 	/**
+	 * The attribute values of each product's variations, as kept, for a
+	 * read across the whole catalogue: nothing else of the products is
+	 * held, nor kept for later, and a product with none kept is left out.
+	 *
+	 * @param int[] $product_ids Products.
+	 * @phpstan-param list<int> $product_ids
+	 * @return array<int, array<int, array<string, string>>> By product id, then variation id, as `SplitCards::variation_values()` answers.
+	 */
+	public static function kept_values( array $product_ids ): array {
+		if ( array() === $product_ids || self::$switched ) {
+			return array();
+		}
+		$stamps = self::stamps( $product_ids );
+		$names  = array();
+		foreach ( array_keys( $stamps ) as $id ) {
+			$names[] = '_transient_' . self::transient( $id );
+			$names[] = '_transient_timeout_' . self::transient( $id );
+		}
+		wp_prime_option_caches( $names );
+		$values = array();
+		foreach ( $stamps as $id => $stamp ) {
+			$kept = self::$looked_up[ $id ]['kept']['values'] ?? self::kept( $id, $stamp['stamp'] )['values'] ?? null;
+			if ( is_array( $kept ) ) {
+				/** @var array<int, array<string, string>> $kept */
+				$values[ $id ] = $kept;
+			}
+		}
+		// The rest of each kept read is not needed: let go of it.
+		foreach ( $names as $name ) {
+			wp_cache_delete( $name, 'options' );
+		}
+		return $values;
+	}
+
+	/**
 	 * A product's kept offers, each live, as `SplitCards` reads them when
 	 * first asked: none unless it was looked up, nothing filters what
 	 * WooCommerce answers of its variations now, and no stored configuration
