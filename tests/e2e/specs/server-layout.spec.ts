@@ -539,6 +539,81 @@ test('the page does not move while the designer starts', async ({
 	expect(shift).toBe(0);
 });
 
+test("the preview shows a picture of the designer's first drawing from the first paint, and nothing moves when the designer draws over it", async ({
+	page,
+	request,
+	theme,
+}) => {
+	await page.setViewportSize(DESKTOP);
+	const permalink = await createProduct(
+		request,
+		`Stage poster ${theme} ${Date.now()}`,
+		PERSONALISED,
+	);
+	const poster = page.locator(`${FRONT_FRAME} .pixonaut-preview__poster`);
+	await request.delete(restUrl('/pixonaut-e2e/v1/stage-posters'));
+	// The first view of the page queues the picture, which a job draws.
+	await page.goto(permalink, { waitUntil: 'domcontentloaded' });
+	await expect(poster).toHaveCount(0);
+	const jobs = await request.post(restUrl('/pixonaut-e2e/v1/stage-posters'));
+	expect(jobs.ok()).toBe(true);
+	expect(((await jobs.json()) as { ran: number }).ran).toBeGreaterThan(0);
+
+	const release = await holdSdk(page);
+	await page.goto(permalink, { waitUntil: 'domcontentloaded' });
+	await expect(poster).toBeVisible();
+	await expect
+		.poll(() =>
+			poster.evaluate((image: HTMLImageElement) => image.naturalWidth),
+		)
+		.toBeGreaterThan(0);
+	await expect(page.locator(`${FRONT_FRAME} .pixonaut-spinner`)).toBeHidden();
+	await page.evaluate(() => document.fonts.ready);
+	const side = `${FRONT_FRAME} .pixonaut-preview__side`;
+	const printed = await box(page, side);
+	const shown = await box(
+		page,
+		`${FRONT_FRAME} .pixonaut-preview__placeholder`,
+	);
+	expect(Math.abs(shown.width - printed.width)).toBeLessThanOrEqual(
+		SAME_BOX_PX,
+	);
+	expect(Math.abs(shown.height - printed.height)).toBeLessThanOrEqual(
+		SAME_BOX_PX,
+	);
+	await page.evaluate(() => {
+		const shifts = { total: 0 };
+		Object.assign(window, { pixonautShifts: shifts });
+		new PerformanceObserver((list) => {
+			for (const entry of list.getEntries() as unknown as {
+				value: number;
+				hadRecentInput: boolean;
+			}[]) {
+				if (!entry.hadRecentInput) {
+					shifts.total += entry.value;
+				}
+			}
+		}).observe({ type: 'layout-shift' });
+	});
+	release();
+	await expect(page.locator(FRONT_FRAME)).toHaveClass(/is-drawn/);
+
+	await expect(poster).toHaveCount(0);
+	const drawn = await box(page, side);
+	expect(Math.abs(drawn.width - printed.width)).toBeLessThanOrEqual(
+		SAME_BOX_PX,
+	);
+	expect(Math.abs(drawn.height - printed.height)).toBeLessThanOrEqual(
+		SAME_BOX_PX,
+	);
+	const shift = await page.evaluate(
+		() =>
+			(window as unknown as { pixonautShifts: { total: number } })
+				.pixonautShifts.total,
+	);
+	expect(shift).toBe(0);
+});
+
 test('the browser makes none of the reads the server made', async ({
 	page,
 	request,

@@ -230,6 +230,7 @@ use Pixonaut\WooCommerce\Storefront\SplitCardListings;
 use Pixonaut\WooCommerce\Storefront\FilterMatches;
 use Pixonaut\WooCommerce\Storefront\DependentFilterQuery;
 use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
+use Pixonaut\WooCommerce\Storefront\StagePosters;
 use Pixonaut\WooCommerce\Storefront\Storefront;
 use Pixonaut\WooCommerce\Storefront\SwatchLooks;
 use Pixonaut\WooCommerce\Storefront\SwatchNames;
@@ -313,6 +314,8 @@ final class Plugin {
 	private ?PictureQueue $picture_queue = null;
 
 	private ?ProductPictures $product_pictures = null;
+
+	private ?StagePosters $stage_posters = null;
 
 	private ?PictureRunner $picture_runner = null;
 
@@ -547,6 +550,7 @@ final class Plugin {
 			( new OrderBox( $this->line_actions(), $this->proof_urls(), $this->templates() ) )->register();
 		}
 		$this->storefront()->register();
+		$this->stage_posters()->register();
 		$this->opening_price()->register();
 		( new OpeningDefaults() )->register();
 		( new VariationsUpFront( $this->inline_products() ) )->register();
@@ -1186,8 +1190,16 @@ final class Plugin {
 		return $this->swatch_looks;
 	}
 
+	/**
+	 * The pictures a product page's preview shows until its designer has drawn.
+	 */
+	public function stage_posters(): StagePosters {
+		$this->stage_posters ??= new StagePosters( new Pictures( $this->pixonaut() ), $this->connection_store(), new WcLogger() );
+		return $this->stage_posters;
+	}
+
 	public function storefront(): Storefront {
-		$this->storefront ??= new Storefront( $this->inline_products(), $this->templates(), $this->labels(), $this->settings(), $this->file, $this->server_reads(), $this->opening_price(), $this->swatch_looks() );
+		$this->storefront ??= new Storefront( $this->inline_products(), $this->templates(), $this->labels(), $this->settings(), $this->file, $this->server_reads(), $this->opening_price(), $this->swatch_looks(), $this->stage_posters() );
 		return $this->storefront;
 	}
 

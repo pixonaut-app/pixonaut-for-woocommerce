@@ -19,14 +19,19 @@
  * Pixonaut" into `#pixonaut-mark-<side>`, under the preview and outside
  * anything a theme draws around it; a side whose designer shows it is
  * marked `data-pixonaut-mark`, and keeps the mark's room there until it is
- * drawn. A note under the sides says the preview follows what the customer
+ * drawn. A side with a poster shows it in its placeholder in place of the
+ * spinner: a picture of what the designer draws first, at the preview's
+ * size, which the SDK replaces with its own drawing. It names the template,
+ * blank, placement, view and variant it shows, so the script takes it down
+ * when the customer picks a variation that shows another before the
+ * designer has drawn. A note under the sides says the preview follows what the customer
  * types. `.pixonaut-preview__images` holds the product's own images, its
  * featured image and then its gallery's, or WooCommerce's placeholder: when
  * the designer cannot load, the script marks the preview `is-unavailable`,
  * shows them in place of the sides and hides the note.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.4.0
+ * @version 1.17.0
  *
  * @var int                       $product_id The product.
  * @var string[]                  $sides      Side keys, in display order.
@@ -35,6 +40,7 @@
  * @var string                    $loading    What the spinner reads out.
  * @var array<string, \Pixonaut\WooCommerce\Storefront\SideLayout> $layouts Each side's layout, by side key.
  * @var int[]                     $images     The product's image attachment ids, its featured image first; empty for none.
+ * @var array<string, array{url: string, width: int, height: int, template: string, blank: string, placement: string, view: string, variant: string}> $posters Each side's poster, by side key; a side without one has none.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -44,7 +50,11 @@ defined( 'ABSPATH' ) || exit;
 		<?php $pixonaut_layout = $layouts[ $pixonaut_side ] ?? null; ?>
 		<div class="pixonaut-preview__frame" data-pixonaut-side="<?php echo esc_attr( $pixonaut_side ); ?>"<?php echo null === $pixonaut_layout ? '' : ' style="' . esc_attr( $pixonaut_layout->style() ) . '"'; ?><?php echo null !== $pixonaut_layout && $pixonaut_layout->template_shaped ? ' data-pixonaut-shape="template"' : ''; ?><?php echo null === $pixonaut_layout || $pixonaut_layout->powered_by ? ' data-pixonaut-mark' : ''; ?><?php echo 0 === $pixonaut_index ? '' : ' hidden'; ?>>
 			<div class="pixonaut-preview__stage">
-				<div id="<?php echo esc_attr( 'pixonaut-preview-' . $pixonaut_side ); ?>" class="pixonaut-preview__side" data-pixonaut-side="<?php echo esc_attr( $pixonaut_side ); ?>"><span class="pixonaut-preview__placeholder" aria-hidden="true"></span></div>
+				<div id="<?php echo esc_attr( 'pixonaut-preview-' . $pixonaut_side ); ?>" class="pixonaut-preview__side" data-pixonaut-side="<?php echo esc_attr( $pixonaut_side ); ?>"><span class="pixonaut-preview__placeholder" aria-hidden="true">
+					<?php if ( isset( $posters[ $pixonaut_side ] ) ) : ?>
+						<img class="pixonaut-preview__poster" src="<?php echo esc_url( $posters[ $pixonaut_side ]['url'] ); ?>" width="<?php echo esc_attr( (string) $posters[ $pixonaut_side ]['width'] ); ?>" height="<?php echo esc_attr( (string) $posters[ $pixonaut_side ]['height'] ); ?>" alt="" fetchpriority="high" data-pixonaut-template="<?php echo esc_attr( $posters[ $pixonaut_side ]['template'] ); ?>" data-pixonaut-blank="<?php echo esc_attr( $posters[ $pixonaut_side ]['blank'] ); ?>" data-pixonaut-placement="<?php echo esc_attr( $posters[ $pixonaut_side ]['placement'] ); ?>" data-pixonaut-view="<?php echo esc_attr( $posters[ $pixonaut_side ]['view'] ); ?>" data-pixonaut-variant="<?php echo esc_attr( $posters[ $pixonaut_side ]['variant'] ); ?>" />
+					<?php endif; ?>
+				</span></div>
 				<span class="pixonaut-spinner" role="status"><span class="screen-reader-text"><?php echo esc_html( $loading ); ?></span></span>
 			</div>
 			<div id="<?php echo esc_attr( 'pixonaut-mark-' . $pixonaut_side ); ?>" class="pixonaut-preview__mark" data-pixonaut-side="<?php echo esc_attr( $pixonaut_side ); ?>"></div>

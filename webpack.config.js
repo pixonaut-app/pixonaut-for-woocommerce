@@ -6,6 +6,7 @@ module.exports = {
 	entry: {
 		storefront: './assets/src/storefront/index.ts',
 		'storefront-parts': './assets/src/storefront/shop-parts-inline.ts',
+		'storefront-kept-top': './assets/src/storefront/kept-top-inline.ts',
 		'applicable-attributes': './assets/src/storefront/applicable-index.ts',
 		'short-addresses': './assets/src/storefront/short-addresses-index.ts',
 		'variation-slots': './assets/src/storefront/variation-slots-index.ts',

@@ -363,6 +363,18 @@ final class Schema {
 	const CATALOGUE_REFRESH_HOLD_OPTION_PREFIX = 'pixonaut_wc_catalogue_refresh_hold_';
 
 	/**
+	 * Before a picture's key: the option a page view holds while it draws a
+	 * picture a product page's preview shows until the designer has drawn
+	 * (`StagePosters`).
+	 */
+	const STAGE_POSTER_HOLD_OPTION_PREFIX = 'pixonaut_wc_stage_poster_hold_';
+
+	/**
+	 * Under the uploads, the directory holding those pictures.
+	 */
+	const STAGE_POSTER_DIRECTORY = 'pixonaut-posters';
+
+	/**
 	 * Option holding the catalogue cache's generation, which every cached
 	 * answer's key carries: raising it drops them all at once.
 	 */

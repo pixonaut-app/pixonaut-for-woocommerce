@@ -168,8 +168,8 @@ final class PictureView {
 				}
 				$photos = array();
 				foreach ( is_array( $view['photos'] ?? null ) ? $view['photos'] : array() as $photo ) {
-					// A photo Pixonaut cannot draw on yet has no mount.
-					if ( ! is_array( $photo ) || ! is_string( $photo['id'] ?? null ) || '' === $photo['id'] || ( array_key_exists( 'mount', $photo ) && null === $photo['mount'] ) ) {
+					// A photo Pixonaut cannot draw on yet has no mount; one of a setting is drawn through its scene.
+					if ( ! is_array( $photo ) || ! is_string( $photo['id'] ?? null ) || '' === $photo['id'] || ( array_key_exists( 'mount', $photo ) && ! BlankPhoto::drawable( $photo ) ) ) {
 						continue;
 					}
 					$photos[] = array(

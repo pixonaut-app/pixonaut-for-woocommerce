@@ -9,6 +9,7 @@ import { ReadsAhead } from './reads-ahead';
 import { reportUnavailable } from './report';
 import { loadSdk } from './sdk-loader';
 import { readSettings } from './settings';
+import { dropBrokenPosters } from './stage-poster';
 import { drawStepNumbers } from './step-numbers';
 import { readSwatchLooks } from './swatch-looks';
 import { markThemeLook, readThemeLook, themeMountOptions } from './theme-look';
@@ -24,6 +25,7 @@ domReady(() => {
 	}
 	const label = createLabeler(settings.labels);
 	fitPreviews(document);
+	dropBrokenPosters(document);
 	for (const container of document.querySelectorAll<HTMLElement>(
 		'.pixonaut-form',
 	)) {

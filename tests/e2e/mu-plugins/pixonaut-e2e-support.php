@@ -408,6 +408,54 @@ add_action(
 			)
 		);
 
+		// Runs the jobs drawing the pictures product page previews show until
+		// the designer has drawn, which a page queues where it cannot finish
+		// its response early (Apache's mod_php, as here). DELETE forgets every
+		// picture drawn, which the projects sharing this site would otherwise
+		// find drawn by another.
+		register_rest_route(
+			'pixonaut-e2e/v1',
+			'/stage-posters',
+			array(
+				'methods'             => 'DELETE',
+				'permission_callback' => '__return_true',
+				'callback'            => static function () {
+					global $wpdb;
+					$files = glob( (string) \Pixonaut\WooCommerce\Storefront\StagePosters::directory() . '/*' );
+					foreach ( false === $files ? array() : $files as $file ) {
+						wp_delete_file( $file );
+					}
+					$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Storefront\StagePosters::HOLD_OPTION_PREFIX ) . '%' ) );
+					wp_cache_flush();
+					as_unschedule_all_actions( \Pixonaut\WooCommerce\Storefront\StagePosters::ACTION );
+					return new WP_REST_Response( null, 204 );
+				},
+			)
+		);
+		register_rest_route(
+			'pixonaut-e2e/v1',
+			'/stage-posters',
+			array(
+				'methods'             => 'POST',
+				'permission_callback' => '__return_true',
+				'callback'            => static function () {
+					$ran = 0;
+					foreach ( as_get_scheduled_actions(
+						array(
+							'hook'     => \Pixonaut\WooCommerce\Storefront\StagePosters::ACTION,
+							'status'   => ActionScheduler_Store::STATUS_PENDING,
+							'per_page' => -1,
+						),
+						'ids'
+					) as $action_id ) {
+						ActionScheduler::runner()->process_action( (int) $action_id, 'e2e' );
+						++$ran;
+					}
+					return new WP_REST_Response( array( 'ran' => $ran ) );
+				},
+			)
+		);
+
 		// Sends one GET from WordPress to the fake Pixonaut's server base, so a
 		// test proves the site reaches its own fake.
 		register_rest_route(

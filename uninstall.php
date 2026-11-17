@@ -189,6 +189,21 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Schema::PICTURE_LOCK_OPTION_PREFIX ) . '%' ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- options by prefix, once at uninstall.
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Schema::PICTURE_RUNNER_OPTION_PREFIX ) . '%' ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- options by prefix, once at uninstall.
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Schema::STAGE_POSTER_HOLD_OPTION_PREFIX ) . '%' ) );
+		// The pictures product pages show until the designer has drawn.
+		$pixonaut_wc_uploads = wp_upload_dir( null, false );
+		if ( ! empty( $pixonaut_wc_uploads['basedir'] ) ) {
+			$pixonaut_wc_posters = $pixonaut_wc_uploads['basedir'] . '/' . \Pixonaut\WooCommerce\Schema::STAGE_POSTER_DIRECTORY;
+			$pixonaut_wc_files   = glob( $pixonaut_wc_posters . '/*' );
+			foreach ( false === $pixonaut_wc_files ? array() : $pixonaut_wc_files as $pixonaut_wc_file ) {
+				wp_delete_file( $pixonaut_wc_file );
+			}
+			if ( is_dir( $pixonaut_wc_posters ) ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- the plugin's own directory of the uploads, emptied above.
+				rmdir( $pixonaut_wc_posters );
+			}
+		}
 	}
 }
 

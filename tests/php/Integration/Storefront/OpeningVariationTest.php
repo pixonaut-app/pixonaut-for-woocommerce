@@ -8,12 +8,15 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
+use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Layout;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\AttributeOptions;
 use Pixonaut\WooCommerce\Storefront\Storefront;
+use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
+use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use WC_Product;
 use WC_Product_Variable;
 use WC_Product_Variation;
@@ -152,6 +155,25 @@ final class OpeningVariationTest extends WP_UnitTestCase {
 		$this->assertSame( 'mini-tee@2', $switches[ $variations['M']->get_id() ]['sides']['front']['templateId'] );
 	}
 
+	public function test_the_preview_is_printed_in_the_variant_of_the_variation_the_page_opens_on(): void {
+		[ $product, $variations ] = VariationSwitchesTest::variable(
+			VariationSwitchesTest::front(),
+			array(
+				'M' => null,
+				'D' => null,
+			)
+		);
+		( new ProductVariant( DesignFixture::BLANK_ID, 'v_tee_black', 'v_tee_black', 'Colour: Black', null, BlankFixture::VARIANT_VIEWS ) )->save_to( $variations['D'] );
+		$_REQUEST['attribute_size'] = 'D';
+		$this->go_to( (string) get_permalink( $product->get_id() ) );
+
+		$designer = $this->plugin->inline_products()->for_product( $product );
+
+		$this->assertNotNull( $designer );
+		$this->assertNull( $designer->variant, 'a variable product sells no variant of its own' );
+		$this->assertSame( 'v_tee_black', $designer->shown_variant() );
+	}
+
 	public function test_a_page_opened_on_no_variation_mounts_with_the_products_options(): void {
 		[ $product ] = VariationSwitchesTest::variable(
 			VariationSwitchesTest::front(),
@@ -252,7 +274,11 @@ final class OpeningVariationTest extends WP_UnitTestCase {
 		$this->go_to( (string) get_permalink( $product->get_id() ) );
 		$this->form_html( $product );
 
-		$this->assertStringContainsString( '<script', $this->after_form() );
+		$script = $this->after_form();
+
+		$this->assertStringContainsString( '<script', $script );
+		$this->assertStringContainsString( '--pixonaut-preview-top', $script, 'it holds the preview under the window from the first paint' );
+		$this->assertSame( 0, substr_count( (string) preg_replace( '#</?script[^>]*>#', '', $script ), '<' ), 'a block theme\'s wptexturize() would read a less-than sign as a tag' );
 		$this->assertSame( '', $this->after_form() );
 	}
 

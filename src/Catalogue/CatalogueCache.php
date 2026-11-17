@@ -79,7 +79,7 @@ final class CatalogueCache {
 	 *
 	 * @return (Closure(): bool)|null
 	 */
-	private static function server_finish_response(): ?Closure {
+	public static function server_finish_response(): ?Closure {
 		foreach ( array( 'fastcgi_finish_request', 'litespeed_finish_request' ) as $finish ) {
 			if ( function_exists( $finish ) ) {
 				return static fn (): bool => (bool) call_user_func( $finish );

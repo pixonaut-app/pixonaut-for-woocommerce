@@ -33,6 +33,7 @@ final class InlineDesigner {
 	 * @param array<int, array<string, mixed>>    $variations    On a variable product: what each variation switches the designer to, by variation id (`VariationSwitches`).
 	 * @param array<string, string>               $side_labels   Each mounted side's name, by side key; empty to take them from the configuration.
 	 * @param string|null                         $variant       The ref of the blank variant the product sells, which the designer shows it in; null for none, and on a variable product, whose variations each name theirs.
+	 * @param string|null                         $opening_variant On a variable product, the ref of the blank variant of the variation the page opens on, which its preview is printed in; null for none.
 	 */
 	public function __construct(
 		public readonly WC_Product $product,
@@ -45,6 +46,7 @@ final class InlineDesigner {
 		public readonly array $variations = array(),
 		private readonly array $side_labels = array(),
 		public readonly ?string $variant = null,
+		public readonly ?string $opening_variant = null,
 	) {
 	}
 
@@ -62,6 +64,14 @@ final class InlineDesigner {
 			$labels[ $side->key ] = $side->label;
 		}
 		return $labels;
+	}
+
+	/**
+	 * The ref of the blank variant the page's preview is printed in: the
+	 * product's, else the opening variation's; null for none.
+	 */
+	public function shown_variant(): ?string {
+		return $this->variant ?? $this->opening_variant;
 	}
 
 	public function available(): bool {

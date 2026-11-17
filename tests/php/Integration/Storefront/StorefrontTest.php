@@ -165,6 +165,51 @@ final class StorefrontTest extends WP_UnitTestCase {
 		$this->assertTrue( wp_script_is( Storefront::SCRIPT_HANDLE, 'enqueued' ) );
 	}
 
+	public function test_a_designer_product_page_asks_for_the_renderer_with_its_head(): void {
+		$product = self::product( self::personalised() );
+		$plain   = self::product( null );
+
+		$this->go_to( (string) get_permalink( $product->get_id() ) );
+		$designer = apply_filters( 'wp_preload_resources', array() );
+		$this->go_to( (string) get_permalink( $plain->get_id() ) );
+		$none = apply_filters( 'wp_preload_resources', array() );
+
+		$beside = dirname( Sdk::pinned_url() );
+		$this->assertSame(
+			array(
+				array(
+					'href'        => $beside . '/pixonaut_wasm.js',
+					'as'          => 'fetch',
+					'crossorigin' => 'anonymous',
+				),
+				array(
+					'href'        => $beside . '/pixonaut_wasm_bg.wasm',
+					'as'          => 'fetch',
+					'crossorigin' => 'anonymous',
+				),
+			),
+			$designer
+		);
+		$this->assertSame( array(), $none );
+	}
+
+	public function test_a_designer_product_page_starts_from_the_preview_top_kept_in_its_head(): void {
+		if ( ! is_readable( dirname( __DIR__, 4 ) . '/assets/build/storefront-kept-top.js' ) ) {
+			$this->markTestSkipped( 'The assets are not built.' );
+		}
+		$product = self::product( self::personalised() );
+		$plain   = self::product( null );
+
+		$this->go_to( (string) get_permalink( $product->get_id() ) );
+		$designer = $this->capture( fn () => $this->plugin->storefront()->print_kept_top_script() );
+		$this->go_to( (string) get_permalink( $plain->get_id() ) );
+		$none = $this->capture( fn () => $this->plugin->storefront()->print_kept_top_script() );
+
+		$this->assertStringContainsString( '<script', $designer );
+		$this->assertStringContainsString( '--pixonaut-preview-top', $designer );
+		$this->assertSame( '', $none );
+	}
+
 	public function test_product_page_shortcode_prints_the_preview_in_place_of_the_gallery(): void {
 		add_filter( 'woocommerce_product_tabs', '__return_empty_array' );
 		$product = self::product( self::personalised() );

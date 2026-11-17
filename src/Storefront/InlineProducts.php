@@ -170,7 +170,8 @@ final class InlineProducts {
 		}
 		// The page opens on the variation its address or the product's defaults choose: the
 		// sides mount with its options, so the page prints its form and preview.
-		$opening = $entries[ OpeningChoice::variation_among( $product, array_map( static fn ( array $entry ): WC_Product => $entry['variation'], $entries ) ) ] ?? null;
+		$opening_id = OpeningChoice::variation_among( $product, array_map( static fn ( array $entry ): WC_Product => $entry['variation'], $entries ) );
+		$opening    = $entries[ $opening_id ] ?? null;
 		if ( null !== $opening ) {
 			$switches->open_on( $opening['mounts'] );
 		}
@@ -186,7 +187,7 @@ final class InlineProducts {
 				$mode = ApprovalMode::CHECKBOX;
 			}
 		}
-		return new InlineDesigner( $product, $config->personalise ? $config : $page, $switches->mounts(), $mode, variations: $switches->variations(), side_labels: $switches->side_labels() );
+		return new InlineDesigner( $product, $config->personalise ? $config : $page, $switches->mounts(), $mode, variations: $switches->variations(), side_labels: $switches->side_labels(), opening_variant: null === $opening ? null : $refs[ $opening_id ] ?? null );
 	}
 
 	/**
