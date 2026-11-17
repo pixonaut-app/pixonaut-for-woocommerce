@@ -233,7 +233,7 @@ Filters the free space, in bytes, where the shop keeps its media, which Pixonaut
 |---|---|---|
 | `$free` | `int\|null` | Free bytes; null when they cannot be read. |
 
-Since 1.14.0. Fired in `src/Catalogue/MediaSpace.php`.
+Since 1.15.0. Fired in `src/Catalogue/MediaSpace.php`.
 
 ```php
 add_filter( 'pixonaut_wc_catalogue_media_free_bytes', function ( $free ) {
