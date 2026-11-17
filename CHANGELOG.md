@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.17.0...v1.17.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **storefront:** back and forward on a filtered archive restore the results in place under short addresses ([#265](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/265)) ([693b3fa](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/693b3fa5c238941829739db6294efd60eee9eb1f))
+
 ## [1.17.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.16.3...v1.17.0) (2026-11-17)
 
 
