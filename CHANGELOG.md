@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.16.3...v1.17.0) (2026-11-17)
+
+
+### Features
+
+* **storefront:** show a designer product's picture at its final size from the first paint ([#262](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/262)) ([cff2610](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/cff2610bb598d4b61a82c7c393353194d477db5f))
+
 ## [1.16.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.16.2...v1.16.3) (2026-11-17)
 
 
