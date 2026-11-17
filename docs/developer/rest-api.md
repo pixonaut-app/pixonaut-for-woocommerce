@@ -83,6 +83,7 @@ offered to a user:
 | A product's designer form | `get-product-form`, `set-product-form` |
 | Listing each value as its own product | `get-product-split-listing`, `set-product-split-listing`, `set-attribute-split-listing` |
 | The plugin's settings | `get-plugin-settings`, `update-plugin-settings` |
+| The active theme's settings | `get-theme-settings`, `update-theme-settings` |
 | Pricing settings | `get-pricing-settings`, `update-pricing-settings` |
 | A product's prices | `get-product-prices`, `price-product`, `set-product-price-changes` |
 | Orders, read only | `list-orders`, `get-order` |

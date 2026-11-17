@@ -58,7 +58,7 @@ final class ShopTools {
 	 * @param Closure $print_size Makes the ability that sets a variation's print size, once a call needs it.
 	 * @param Closure $setup      Makes the ability that sets up a product or variation, once a call needs it.
 	 * @param Closure $pricing    Makes the abilities that read and change the pricing settings and a product's prices, once a call needs them.
-	 * @param Closure $settings   Makes the abilities that read and change the plugin's settings, once a call needs them.
+	 * @param Closure $settings   Makes the abilities that read and change the plugin's settings and the active theme's, once a call needs them.
 	 * @param Closure $form       Makes the abilities that read and arrange a product's designer form, once a call needs them.
 	 * @phpstan-param Closure(): ProductLinks $links
 	 * @phpstan-param Closure(): ProductVariants $variants

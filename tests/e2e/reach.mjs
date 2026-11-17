@@ -144,6 +144,9 @@ export const NO_SPEC = [
 	'src/Abilities/UnlinkProduct.php',
 	'src/Abilities/UpdatePricingSettings.php',
 	'src/Abilities/UseProductPicture.php',
+	'src/Abilities/GetThemeSettings.php',
+	'src/Abilities/UpdateThemeSettings.php',
+	'src/Theme/ThemeSettings.php',
 	'assets/src/admin/use-picture.ts',
 	// Emails no spec reads; the PHP suites render them.
 	'src/Emails/DeadlinePassedEmail.php',

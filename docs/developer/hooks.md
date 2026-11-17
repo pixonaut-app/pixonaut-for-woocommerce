@@ -579,6 +579,28 @@ add_filter( 'pixonaut_wc_storefront_mount_options', function ( $options ) {
 } );
 ```
 
+### `pixonaut_wc_theme_settings`
+
+Filters the settings the active theme declares for a store to set, which the abilities `get-theme-settings` and `update-theme-settings` read and change, also as shop tools. Each entry is keyed by the WordPress option the setting is stored in: `label` and `description` (what it does, each value) are strings, `schema` is the JSON schema a value must fit, as WordPress's REST API validates it, and `default` is what the theme shows while the option is unset (null when missing). An entry that is not well formed is left out.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `$settings` | `array<mixed>` | The settings declared so far, each by its option; empty. |
+
+Since 1.16.0. Fired in `src/Theme/ThemeSettings.php`.
+
+```php
+add_filter( 'pixonaut_wc_theme_settings', function ( array $settings ) {
+    $settings['my_theme_header'] = array(
+        'label'       => __( 'Header', 'my-theme' ),
+        'description' => __( 'Which header the pages show: simple or mega.', 'my-theme' ),
+        'schema'      => array( 'type' => 'string', 'enum' => array( 'simple', 'mega' ) ),
+        'default'     => 'simple',
+    );
+    return $settings;
+} );
+```
+
 ### `pixonaut_wc_updates_upgrade_notice`
 
 Filters the warning shown under a major update in the plugins list.
