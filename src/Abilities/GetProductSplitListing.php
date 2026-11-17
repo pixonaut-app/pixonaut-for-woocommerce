@@ -279,7 +279,7 @@ final class GetProductSplitListing implements Ability {
 										),
 										'image'      => array(
 											'type'        => array( 'object', 'null' ),
-											'description' => __( 'The card\'s own image, by its attachment id and URL; null when it shows the value\'s picture or the product\'s.', 'pixonaut-for-woocommerce' ),
+											'description' => __( 'The card\'s own image, by its attachment id and URL; null when it shows the value\'s picture or the product\'s. A card the shop lists without a filter shows the Pixonaut picture of its design over it once that is drawn.', 'pixonaut-for-woocommerce' ),
 											'properties'  => array(
 												'id'  => array( 'type' => 'integer' ),
 												'src' => array( 'type' => 'string' ),

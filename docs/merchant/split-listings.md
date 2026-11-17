@@ -165,9 +165,12 @@ browser's history, so a link copied or shared opens the same choice.
 Each card shows:
 
 - **A title**: the value's own title, or the product's.
-- **An image**: the value's own image. Without one, the flat picture of
-  its design: the template drawn with the product's showcase set, as
-  Pixonaut draws it for the card's first variation that has one. A card
+- **An image**: the flat picture of its design: the template alone,
+  drawn with the product's showcase set, as Pixonaut draws it for the
+  card's first variation that has one, the same picture the product shows
+  in the shop's other lists. It shows even when the value has an image of
+  its own; the value's own image shows only while no flat picture is drawn,
+  and on the cards a filter shows. A card
   shown while the shop is filtered by an attribute listed only while
   filtered (a framing) shows instead the picture of the variation the card
   opens, which matches every filter the customer ticked: filtered by
