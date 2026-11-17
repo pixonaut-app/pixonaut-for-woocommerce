@@ -43,6 +43,8 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/recheck-products` | Clears the cached catalogue and re-checks every linked product, as Recheck products does | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/get-plugin-settings` | Every setting on the Pixonaut settings page, by its key | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/update-plugin-settings` | Changes the settings given, as saving the settings page does; refuses to turn `variation_pictures` on | `manage_woocommerce` |
+| `pixonaut-for-woocommerce/get-theme-settings` | The active theme and the settings it declares on `pixonaut_wc_theme_settings`, each with its schema, default and value | `edit_theme_options` |
+| `pixonaut-for-woocommerce/update-theme-settings` | Changes the theme's settings given, each checked against its schema first; null clears one | `edit_theme_options` |
 | `pixonaut-for-woocommerce/get-variation-pictures` | Whether a picture is drawn for every variation, store-wide or for a variable product (`product_id`), and what turning it on or off costs the shop's storage | `manage_woocommerce`; `edit_product` with `product_id` |
 | `pixonaut-for-woocommerce/set-variation-pictures` | Turns it on or off store-wide, or sets a product's `choice`; past the storage warning, on needs `confirm` | `manage_woocommerce`; `edit_product` with `product_id` |
 | `pixonaut-for-woocommerce/get-pricing-settings` | The store's pricing rule, currency buffer and whether prices change by themselves, with the store's currency | `manage_woocommerce` |
@@ -632,6 +634,73 @@ write of the option, so what follows a change (the product pictures drawn
 again, or the images put back) runs once. A value a setting does not take
 is refused, rather than stored as the default; a custom accent colour needs
 `designer_accent_colour`, as on the page.
+
+## Theme settings
+
+A theme lets a store's agent set what it would otherwise set in wp-admin
+(its header, a campaign band, how a price shows) by declaring those
+settings on the filter `pixonaut_wc_theme_settings` ([hooks](../hooks/)).
+The plugin applies it to an empty array and names no theme's settings
+itself. Each entry is keyed by the WordPress option the setting is stored
+in:
+
+```php
+add_filter( 'pixonaut_wc_theme_settings', static function ( array $settings ): array {
+	$settings['my_theme_header'] = array(
+		'label'       => __( 'Header', 'my-theme' ),
+		'description' => __( 'Which header the pages show: simple or mega.', 'my-theme' ),
+		'schema'      => array( 'type' => 'string', 'enum' => array( 'simple', 'mega' ) ),
+		'default'     => 'simple',
+	);
+	return $settings;
+} );
+```
+
+| Field | Type | Meaning |
+|---|---|---|
+| `label` | string | The setting's name |
+| `description` | string | What it does, and what each value does |
+| `schema` | array | The JSON schema a value must fit, as WordPress's REST API validates it (`rest_validate_value_from_schema()`) |
+| `default` | any | What the theme shows while the option is not set; null when left out |
+
+An entry whose key is not a string, or without a string `label`, a string
+`description` or an array `schema`, is left out.
+
+`get-theme-settings` answers the active theme and each setting, in the
+order declared:
+
+```json
+{
+  "theme": { "stylesheet": "my-theme", "name": "My Theme", "version": "1.2.0" },
+  "settings": [
+    {
+      "key": "my_theme_header",
+      "label": "Header",
+      "description": "Which header the pages show: simple or mega.",
+      "schema": { "type": "string", "enum": ["simple", "mega"] },
+      "default": "simple",
+      "value": "mega"
+    }
+  ]
+}
+```
+
+`value` is the stored option, as its schema sanitizes it, when it fits the
+schema; otherwise, and while the option is not set, it is `default`. A
+theme that declares nothing answers `settings: []`.
+
+`update-theme-settings` takes `{"settings": {"<key>": <value> | null}}`,
+with at least one key, and answers as `get-theme-settings`. Every value is
+checked against its schema before any is stored: a key the theme does not
+declare (`pixonaut_wc_ability_theme_setting_unknown`) or a value that does
+not fit (`pixonaut_wc_ability_theme_setting_invalid`) changes nothing. A
+value is stored with `update_option()` as `rest_sanitize_value_from_schema()`
+gives it; `null` deletes the option, so the theme shows its default. The
+settings not given keep their values.
+
+Both need `edit_theme_options`. Pixonaut calls them as shop tools of the
+same names with the store's credential ([REST API](../rest-api/)), where
+either refusal answers `422 invalid_input`.
 
 ## Prices
 

@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-17T10:46:56+00:00\n"
+"POT-Creation-Date: 2026-11-17T11:46:38+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1005,6 +1005,46 @@ msgstr ""
 "Los identificadores de término de los valores de la tarjeta: uno de cada "
 "atributo por el que aparece el producto y que se aplica a la tarjeta, en el "
 "orden de los atributos del producto."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetThemeSettings.php:47
+msgid "Read the theme's settings"
+msgstr "Consultar los ajustes del tema"
+
+#: src/Abilities/GetThemeSettings.php:48
+msgid ""
+"Gives the active theme and each setting it lets the store set: its key, "
+"label, description, the JSON schema a value must fit, its default and its "
+"value now. A theme that declares none has no settings."
+msgstr ""
+"Da el tema activo y cada ajuste que permite definir a la tienda: su clave, "
+"etiqueta, descripción, el esquema JSON al que debe ajustarse un valor, su "
+"valor predeterminado y su valor actual. Un tema que no declara ninguno no "
+"tiene ajustes."
+
+#: src/Abilities/GetThemeSettings.php:112
+msgid "The active theme's directory name, a child theme's when one is active."
+msgstr ""
+"El nombre del directorio del tema activo, o el del tema hijo cuando hay uno "
+"activo."
+
+#: src/Abilities/GetThemeSettings.php:125
+msgid "The WordPress option the setting is stored in."
+msgstr "La opción de WordPress en la que se guarda el ajuste."
+
+#: src/Abilities/GetThemeSettings.php:131
+msgid "The JSON schema a value must fit."
+msgstr "El esquema JSON al que debe ajustarse un valor."
+
+#: src/Abilities/GetThemeSettings.php:135
+msgid "What the theme shows while the setting is not set."
+msgstr "Lo que muestra el tema mientras el ajuste no está definido."
+
+#: src/Abilities/GetThemeSettings.php:139
+msgid "The stored value when it fits the schema, otherwise the default."
+msgstr ""
+"El valor guardado cuando se ajusta al esquema; si no, el valor "
+"predeterminado."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetVariationPictures.php:39
@@ -3843,6 +3883,43 @@ msgid ""
 msgstr ""
 "Los precios terminan en un importe inferior al paso de precio: con un paso "
 "de 10, cualquier valor de 0 a 9.99."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/UpdateThemeSettings.php:42
+msgid "Change the theme's settings"
+msgstr "Cambiar los ajustes del tema"
+
+#. translators: %s: the name of the ability that reads the theme's settings.
+#: src/Abilities/UpdateThemeSettings.php:45
+#, php-format
+msgid ""
+"Changes the active theme's settings given in `settings`, by their keys as %s "
+"reads them, each to a value that fits its schema, or to null to clear it so "
+"the theme shows its default; the others keep their values. A key the theme "
+"does not have, or a value that does not fit, changes nothing. Answers with "
+"every setting."
+msgstr ""
+"Cambia los ajustes del tema activo indicados en `settings`, por sus claves "
+"tal como los lee %s, cada uno a un valor que se ajuste a su esquema, o a "
+"null para borrarlo y que el tema muestre su valor predeterminado; los demás "
+"conservan sus valores. Una clave que el tema no tiene, o un valor que no se "
+"ajusta, no cambia nada. Responde con todos los ajustes."
+
+#: src/Abilities/UpdateThemeSettings.php:53
+msgid "The new values, by key; null clears a setting."
+msgstr "Los valores nuevos, por clave; null borra un ajuste."
+
+#. translators: %s: the key of a theme's setting, e.g. my_theme_header.
+#: src/Abilities/UpdateThemeSettings.php:80
+#, php-format
+msgid "The theme has no setting %s. Nothing was changed."
+msgstr "El tema no tiene ningún ajuste %s. No se cambió nada."
+
+#. translators: 1: the key of a theme's setting, e.g. my_theme_header, 2: why its schema does not take the value.
+#: src/Abilities/UpdateThemeSettings.php:87
+#, php-format
+msgid "The setting %1$s does not take that value: %2$s Nothing was changed."
+msgstr "El ajuste %1$s no admite ese valor: %2$s No se cambió nada."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/UseProductPicture.php:40

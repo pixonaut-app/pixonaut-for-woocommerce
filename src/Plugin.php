@@ -57,7 +57,9 @@ use Pixonaut\WooCommerce\Abilities\SetupFields;
 use Pixonaut\WooCommerce\Abilities\Store\StoreResources;
 use Pixonaut\WooCommerce\Abilities\UnlinkProduct;
 use Pixonaut\WooCommerce\Abilities\UpdatePluginSettings;
+use Pixonaut\WooCommerce\Abilities\UpdateThemeSettings;
 use Pixonaut\WooCommerce\Abilities\GetVariationPictures;
+use Pixonaut\WooCommerce\Abilities\GetThemeSettings;
 use Pixonaut\WooCommerce\Abilities\SetVariationPictures;
 use Pixonaut\WooCommerce\Abilities\VariationPicturesState;
 use Pixonaut\WooCommerce\Abilities\UpdatePricingSettings;
@@ -237,6 +239,7 @@ use Pixonaut\WooCommerce\Storefront\ReadsAhead;
 use Pixonaut\WooCommerce\Storefront\UnavailableReports;
 use Pixonaut\WooCommerce\Storefront\UnavailableProduct;
 use Pixonaut\WooCommerce\Storefront\VariationsUpFront;
+use Pixonaut\WooCommerce\Theme\ThemeSettings;
 use Pixonaut\WooCommerce\Storefront\VariationSlots;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
 use Pixonaut\WooCommerce\Updates\Updates;
@@ -636,17 +639,21 @@ final class Plugin {
 	}
 
 	/**
-	 * The abilities that read and change the plugin's settings.
+	 * The abilities that read and change the plugin's settings, and the
+	 * settings the active theme declares.
 	 *
 	 * @return list<Ability>
 	 */
 	private function settings_abilities(): array {
 		$variation_pictures = new VariationPicturesState( $this->settings(), $this->variation_pictures_field(), $this->variation_picture_cost() );
+		$theme_settings     = new ThemeSettings();
 		return array(
 			new ReadPluginSettings( $this->settings() ),
 			new UpdatePluginSettings( $this->settings(), $this->variation_picture_cost() ),
 			new GetVariationPictures( $variation_pictures ),
 			new SetVariationPictures( $variation_pictures, $this->settings() ),
+			new GetThemeSettings( $theme_settings ),
+			new UpdateThemeSettings( $theme_settings ),
 		);
 	}
 

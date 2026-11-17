@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-17T10:46:56+00:00\n"
+"POT-Creation-Date: 2026-11-17T11:46:38+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1008,6 +1008,46 @@ msgstr ""
 "De term-ID's van de waarden van de kaart: één van elke eigenschap waarnaar "
 "het product per waarde wordt getoond en die voor de kaart geldt, in de "
 "volgorde van de eigenschappen van het product."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetThemeSettings.php:47
+msgid "Read the theme's settings"
+msgstr "Thema-instellingen opvragen"
+
+#: src/Abilities/GetThemeSettings.php:48
+msgid ""
+"Gives the active theme and each setting it lets the store set: its key, "
+"label, description, the JSON schema a value must fit, its default and its "
+"value now. A theme that declares none has no settings."
+msgstr ""
+"Geeft het actieve thema en elke instelling die het de winkel laat instellen: "
+"de sleutel, het label, de beschrijving, het JSON-schema waaraan een waarde "
+"moet voldoen, de standaardwaarde en de huidige waarde. Een thema dat er geen "
+"declareert, heeft geen instellingen."
+
+#: src/Abilities/GetThemeSettings.php:112
+msgid "The active theme's directory name, a child theme's when one is active."
+msgstr ""
+"De mapnaam van het actieve thema, of die van het child-thema als er een "
+"actief is."
+
+#: src/Abilities/GetThemeSettings.php:125
+msgid "The WordPress option the setting is stored in."
+msgstr "De WordPress-optie waarin de instelling wordt opgeslagen."
+
+#: src/Abilities/GetThemeSettings.php:131
+msgid "The JSON schema a value must fit."
+msgstr "Het JSON-schema waaraan een waarde moet voldoen."
+
+#: src/Abilities/GetThemeSettings.php:135
+msgid "What the theme shows while the setting is not set."
+msgstr "Wat het thema toont zolang de instelling niet is ingesteld."
+
+#: src/Abilities/GetThemeSettings.php:139
+msgid "The stored value when it fits the schema, otherwise the default."
+msgstr ""
+"De opgeslagen waarde als die aan het schema voldoet, anders de "
+"standaardwaarde."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetVariationPictures.php:39
@@ -3852,6 +3892,45 @@ msgid ""
 msgstr ""
 "Prijzen eindigen op een bedrag onder de prijsstap: bij een stap van 10 alles "
 "van 0 tot en met 9.99."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/UpdateThemeSettings.php:42
+msgid "Change the theme's settings"
+msgstr "Thema-instellingen wijzigen"
+
+#. translators: %s: the name of the ability that reads the theme's settings.
+#: src/Abilities/UpdateThemeSettings.php:45
+#, php-format
+msgid ""
+"Changes the active theme's settings given in `settings`, by their keys as %s "
+"reads them, each to a value that fits its schema, or to null to clear it so "
+"the theme shows its default; the others keep their values. A key the theme "
+"does not have, or a value that does not fit, changes nothing. Answers with "
+"every setting."
+msgstr ""
+"Wijzigt de instellingen van het actieve thema die in `settings` zijn "
+"opgegeven, op hun sleutels zoals %s ze leest, elk naar een waarde die aan "
+"het schema voldoet, of naar null om ze te wissen zodat het thema de "
+"standaardwaarde toont; de andere behouden hun waarden. Een sleutel die het "
+"thema niet heeft, of een waarde die niet voldoet, wijzigt niets. Antwoordt "
+"met alle instellingen."
+
+#: src/Abilities/UpdateThemeSettings.php:53
+msgid "The new values, by key; null clears a setting."
+msgstr "De nieuwe waarden, per sleutel; null wist een instelling."
+
+#. translators: %s: the key of a theme's setting, e.g. my_theme_header.
+#: src/Abilities/UpdateThemeSettings.php:80
+#, php-format
+msgid "The theme has no setting %s. Nothing was changed."
+msgstr "Het thema heeft geen instelling %s. Er is niets gewijzigd."
+
+#. translators: 1: the key of a theme's setting, e.g. my_theme_header, 2: why its schema does not take the value.
+#: src/Abilities/UpdateThemeSettings.php:87
+#, php-format
+msgid "The setting %1$s does not take that value: %2$s Nothing was changed."
+msgstr ""
+"De instelling %1$s accepteert die waarde niet: %2$s Er is niets gewijzigd."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/UseProductPicture.php:40

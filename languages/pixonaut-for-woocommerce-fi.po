@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-17T10:46:56+00:00\n"
+"POT-Creation-Date: 2026-11-17T11:46:38+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -978,6 +978,44 @@ msgstr ""
 "Kortin arvojen termien id:t, yksi jokaisesta korttia koskevasta "
 "ominaisuudesta, jonka arvoittain tuote näytetään, tuotteen ominaisuuksien "
 "järjestyksessä."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetThemeSettings.php:47
+msgid "Read the theme's settings"
+msgstr "Näytä teeman asetukset"
+
+#: src/Abilities/GetThemeSettings.php:48
+msgid ""
+"Gives the active theme and each setting it lets the store set: its key, "
+"label, description, the JSON schema a value must fit, its default and its "
+"value now. A theme that declares none has no settings."
+msgstr ""
+"Antaa käytössä olevan teeman ja jokaisen asetuksen, jonka se antaa kaupan "
+"asettaa: sen avaimen, nimen, kuvauksen, JSON-skeeman, johon arvon on "
+"sovittava, oletusarvon ja nykyisen arvon. Teemalla, joka ei ilmoita yhtään, "
+"ei ole asetuksia."
+
+#: src/Abilities/GetThemeSettings.php:112
+msgid "The active theme's directory name, a child theme's when one is active."
+msgstr ""
+"Käytössä olevan teeman hakemiston nimi, tai lapsiteeman, kun sellainen on "
+"käytössä."
+
+#: src/Abilities/GetThemeSettings.php:125
+msgid "The WordPress option the setting is stored in."
+msgstr "WordPressin optio, johon asetus tallennetaan."
+
+#: src/Abilities/GetThemeSettings.php:131
+msgid "The JSON schema a value must fit."
+msgstr "JSON-skeema, johon arvon on sovittava."
+
+#: src/Abilities/GetThemeSettings.php:135
+msgid "What the theme shows while the setting is not set."
+msgstr "Mitä teema näyttää, kun asetusta ei ole asetettu."
+
+#: src/Abilities/GetThemeSettings.php:139
+msgid "The stored value when it fits the schema, otherwise the default."
+msgstr "Tallennettu arvo, kun se sopii skeemaan, muuten oletusarvo."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetVariationPictures.php:39
@@ -3769,6 +3807,43 @@ msgid ""
 msgstr ""
 "Hintojen pääte on hinta-askelta pienempi summa: kun askel on 10, mikä "
 "tahansa arvo väliltä 0–9.99."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/UpdateThemeSettings.php:42
+msgid "Change the theme's settings"
+msgstr "Muuta teeman asetuksia"
+
+#. translators: %s: the name of the ability that reads the theme's settings.
+#: src/Abilities/UpdateThemeSettings.php:45
+#, php-format
+msgid ""
+"Changes the active theme's settings given in `settings`, by their keys as %s "
+"reads them, each to a value that fits its schema, or to null to clear it so "
+"the theme shows its default; the others keep their values. A key the theme "
+"does not have, or a value that does not fit, changes nothing. Answers with "
+"every setting."
+msgstr ""
+"Muuttaa käytössä olevan teeman asetukset, jotka on annettu kentässä "
+"`settings`, avaimilla, joilla %s ne lukee, kunkin skeemaansa sopivaan arvoon "
+"tai arvoon null, joka tyhjentää sen, jolloin teema näyttää oletusarvonsa; "
+"muut säilyttävät arvonsa. Avain, jota teemalla ei ole, tai arvo, joka ei "
+"sovi, ei muuta mitään. Vastaa kaikilla asetuksilla."
+
+#: src/Abilities/UpdateThemeSettings.php:53
+msgid "The new values, by key; null clears a setting."
+msgstr "Uudet arvot avaimittain; null tyhjentää asetuksen."
+
+#. translators: %s: the key of a theme's setting, e.g. my_theme_header.
+#: src/Abilities/UpdateThemeSettings.php:80
+#, php-format
+msgid "The theme has no setting %s. Nothing was changed."
+msgstr "Teemalla ei ole asetusta %s. Mitään ei muutettu."
+
+#. translators: 1: the key of a theme's setting, e.g. my_theme_header, 2: why its schema does not take the value.
+#: src/Abilities/UpdateThemeSettings.php:87
+#, php-format
+msgid "The setting %1$s does not take that value: %2$s Nothing was changed."
+msgstr "Asetus %1$s ei hyväksy tätä arvoa: %2$s Mitään ei muutettu."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/UseProductPicture.php:40
