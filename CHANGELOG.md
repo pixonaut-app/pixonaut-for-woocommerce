@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.4](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.13.3...v1.13.4) (2026-11-17)
+
+
+### Bug Fixes
+
+* **storefront:** archive filters combine OR within and AND between attributes, and a dependent attribute filters only what it applies to ([#243](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/243)) ([88d059f](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/88d059f0c132fd29b147480e5c7ea8077b0aa473))
+
 ## [1.13.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.13.2...v1.13.3) (2026-11-17)
 
 
