@@ -414,6 +414,20 @@ final class SplitCards {
 	}
 
 	/**
+	 * Lets go of what this request read of some products' variations and
+	 * cards, once nothing reads them again: a job reading a whole catalogue
+	 * would hold them all. Kept reads (`FilterIndex`) are not touched.
+	 *
+	 * @param int[] $product_ids Products.
+	 */
+	public static function release( array $product_ids ): void {
+		foreach ( $product_ids as $product_id ) {
+			unset( self::$variations[ $product_id ], self::$offers[ $product_id ], self::$offers_plain[ $product_id ], self::$cards[ $product_id ], self::$card_terms[ $product_id ], self::$links[ $product_id ] );
+			FilterOffers::forget( $product_id );
+		}
+	}
+
+	/**
 	 * What was worked out of a product's variations and cards this
 	 * request, for `FilterIndex` to keep: its variations' values, its cards
 	 * with their values, and its offers when nothing filtered them.

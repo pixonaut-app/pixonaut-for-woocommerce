@@ -23,6 +23,7 @@ pretty permalinks).
 | `/pixonaut/v1/admin/search/template` | GET |
 | `/pixonaut/v1/admin/search/template-groups` | GET |
 | `/pixonaut/v1/admin/search/templates` | GET |
+| `/pixonaut/v1/archive-index/(?P<archive>shop\|(?:product_cat\|product_tag)-[1-9]\d*)` | GET |
 | `/pixonaut/v1/cart/design` | POST |
 | `/pixonaut/v1/cart/design-link` | POST |
 | `/pixonaut/v1/order-items/(?P<item>\d+)/design` | POST |

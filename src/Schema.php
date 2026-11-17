@@ -459,6 +459,28 @@ final class Schema {
 	const FILTER_INDEX_GENERATION_OPTION = 'pixonaut_wc_filter_index_generation';
 
 	/**
+	 * Option holding, by archive, the version, card count and build time of
+	 * the archive's index, and when the last build started.
+	 */
+	const ARCHIVE_INDEXES_OPTION = 'pixonaut_wc_archive_indexes';
+
+	/**
+	 * Option holding when each archive with a kept index was last opened.
+	 */
+	const ARCHIVE_INDEX_VISITS_OPTION = 'pixonaut_wc_archive_index_visits';
+
+	/**
+	 * Before an archive's name: the option holding its index's version and
+	 * the index, compressed.
+	 */
+	const ARCHIVE_INDEX_BODY_PREFIX = 'pixonaut_wc_archive_index_';
+
+	/**
+	 * Option holding the shop's sort menu, as WooCommerce last showed it.
+	 */
+	const ARCHIVE_SORTS_OPTION = 'pixonaut_wc_archive_sorts';
+
+	/**
 	 * Option holding, by global attribute id, whether its swatches show
 	 * their values' names whatever the store's setting says.
 	 */

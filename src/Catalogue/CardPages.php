@@ -207,7 +207,7 @@ final class CardPages {
 	 *
 	 * @param WC_Product $variation A variation.
 	 */
-	private static function combination( WC_Product $variation ): int {
+	public static function combination( WC_Product $variation ): int {
 		$photo = ProductPictures::on_photo( $variation );
 		if ( $photo > 0 ) {
 			return $photo;

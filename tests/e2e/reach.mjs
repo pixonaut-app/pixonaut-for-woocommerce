@@ -39,6 +39,12 @@ export const NO_SPEC = [
 	'src/Settings/Settings.php',
 	'src/Admin/Notices.php', // the notice store; specs about a notice list its raiser
 	'src/Storefront/AttributeDependencies.php', // data for a theme's filter panel; tested by the PHP suites
+	'src/Catalogue/ArchiveCards.php', // an archive's index for a theme filtering in the browser; tested by the PHP suites against the server's listing
+	'src/Catalogue/ArchiveIndexBuild.php',
+	'src/Catalogue/ArchiveIndexes.php',
+	'src/Catalogue/ArchiveTerms.php',
+	'src/Storefront/ArchiveIndexDiscovery.php',
+	'src/Storefront/ArchiveIndexRoute.php',
 	'src/Admin/HelpLinks.php',
 	'src/Admin/PluginLinks.php',
 	'templates/admin/notice.php',

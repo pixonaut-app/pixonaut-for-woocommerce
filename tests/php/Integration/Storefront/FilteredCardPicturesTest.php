@@ -8,6 +8,9 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
 use ActionScheduler;
+use Pixonaut\WooCommerce\Catalogue\ArchiveCards;
+use Pixonaut\WooCommerce\Catalogue\ArchiveIndexBuild;
+use Pixonaut\WooCommerce\Catalogue\ArchiveTerms;
 use Pixonaut\WooCommerce\Catalogue\CardPhotos;
 use Pixonaut\WooCommerce\Catalogue\PictureQueue;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
@@ -18,6 +21,7 @@ use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Tests\Integration\Catalogue\PicturedProducts;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
+use Pixonaut\WooCommerce\Tests\Support\ArchiveIndexClient;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\DependentPosters;
@@ -199,6 +203,49 @@ final class FilteredCardPicturesTest extends WP_UnitTestCase {
 		$this->assertSame( array( $photo ), $this->shop( $filters ), 'once drawn, the poster framed in white on its photo' );
 		$this->assertSame( $flat, (int) $this->reload( $vit )->get_image_id( 'edit' ), 'the variation\'s image stays flat' );
 		$this->assertSame( array(), ActionSchedulerRunner::pending( ProductPictures::ACTION ), 'kept' );
+	}
+
+	public function test_the_archive_index_shows_the_pictures_the_server_shows(): void {
+		$pictures = $this->picture_each_variation( array( 'hangare-ek' ) );
+		$own      = $this->own_card_image();
+		$this->assertNotContains( $own, $pictures );
+		$filters = array(
+			array(),
+			array( 'filter_inramning' => 'ram' ),
+			array(
+				'filter_inramning' => 'ram',
+				'filter_ramfarg'   => 'vit',
+			),
+			array(
+				'filter_inramning' => 'ram,hangare',
+				'filter_ramfarg'   => 'svart',
+			),
+			array(
+				'filter_inramning'  => 'hangare',
+				'filter_hangarfarg' => 'vit',
+			),
+			array(
+				'filter_inramning'  => 'hangare',
+				'filter_hangarfarg' => 'svart',
+			),
+		);
+		$terms   = new ArchiveTerms();
+		$built   = ( new ArchiveIndexBuild( new ArchiveCards( $terms ), $terms ) )->build( 'product_cat-' . $this->category, array() );
+		$this->assertNotNull( $built );
+		$index = json_decode( (string) wp_json_encode( $built['index'] ), true );
+		$this->assertIsArray( $index );
+		$client = new ArchiveIndexClient( $index );
+		foreach ( $filters as $filter ) {
+			$chosen = array();
+			foreach ( $filter as $name => $values ) {
+				$chosen[ substr( $name, strlen( 'filter_' ) ) ] = explode( ',', $values );
+			}
+			$this->assertSame(
+				array_map( static fn ( int $image ): string => ArchiveCards::image( $image )['src'], $this->shop( $filter ) ),
+				array_column( $client->shown( $chosen ), 'image' ),
+				(string) wp_json_encode( $filter )
+			);
+		}
 	}
 
 	public function test_a_page_view_marks_a_bounded_number_of_colours_to_draw(): void {
