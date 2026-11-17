@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.20.1...v1.20.2) (2026-11-17)
+
+
+### Bug Fixes
+
+* **storefront:** name each swatch by the values its design's cards differ by, with its card's title ([#278](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/278)) ([08f2337](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/08f2337acc9d680163c9d03111a6db2f77db36fc))
+
 ## [1.20.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.20.0...v1.20.1) (2026-11-17)
 
 
