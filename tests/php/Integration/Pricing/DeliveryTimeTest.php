@@ -13,8 +13,9 @@ use WC_Product_Variable;
 
 /**
  * While the store shows delivery times, a product or variation printed on a
- * blank says how long its printshop says it takes, under Add to cart: only
- * what the printshop tells, read with the cost.
+ * blank says how long its printshop says it takes, in a "Delivery time" row
+ * of its attributes table: only what the printshop tells, read with the
+ * cost.
  */
 final class DeliveryTimeTest extends PricingTestCase {
 
@@ -45,11 +46,43 @@ final class DeliveryTimeTest extends PricingTestCase {
 	public function test_a_product_says_the_days_its_printshop_tells_from_order_to_door(): void {
 		$id = $this->read_product( self::WHOLE_WAY );
 
-		$this->assertSame(
-			'<div class="pixonaut-variation-slot pixonaut-delivery-time" style="display:grid"><p class="pixonaut-variation-slot__item is-chosen" style="grid-area:1/1;margin:0">Delivered in 4–7 days</p></div>',
-			$this->printed( $this->product( $id ) )
+		$html = $this->printed( $this->product( $id ) );
+		$this->assertStringContainsString( '<th class="woocommerce-product-attributes-item__label" scope="row">Delivery time</th>', $html );
+		$this->assertStringContainsString(
+			'<div class="pixonaut-variation-slot pixonaut-delivery-time" style="display:grid"><div class="pixonaut-variation-slot__item is-chosen" style="grid-row:1;grid-column:1;margin:0">4–7 days</div></div>',
+			$html
 		);
 		$this->assertSame( '', wc_get_stock_html( $this->product( $id ) ), 'not in its availability' );
+	}
+
+	public function test_a_product_with_nothing_else_to_list_gets_the_tab_and_the_block_table_for_its_time(): void {
+		$product = $this->product( $this->read_product( self::WHOLE_WAY ) );
+		$this->assertFalse( $product->has_attributes() || $product->has_weight() || $product->has_dimensions(), 'nothing else to list' );
+
+		$tabs = $this->tabs( $product );
+		$this->assertIsArray( $tabs );
+		$this->assertSame( 'woocommerce_product_additional_information_tab', $tabs['additional_information']['callback'] ?? null );
+
+		$block = new \WP_Block(
+			array(
+				'blockName'    => 'woocommerce/product-specifications',
+				'attrs'        => array(),
+				'innerBlocks'  => array(),
+				'innerHTML'    => '',
+				'innerContent' => array(),
+			),
+			array( 'postId' => $product->get_id() )
+		);
+		$html  = $block->render();
+		$this->assertStringContainsString( '<tbody><tr class="wp-block-product-specifications-item wp-block-product-specifications-item-pixonaut_delivery_time">', $html );
+		$this->assertStringContainsString( '>4–7 days<', $html );
+	}
+
+	public function test_a_product_without_a_time_gets_no_tab_of_its_own(): void {
+		$tabs = $this->tabs( $this->product( $this->simple_product( 'v_other', '300' ) ) );
+
+		$this->assertIsArray( $tabs );
+		$this->assertArrayNotHasKey( 'additional_information', $tabs );
 	}
 
 	public function test_a_variable_product_prints_each_variations_time_apart_from_its_availability(): void {
@@ -75,11 +108,11 @@ final class DeliveryTimeTest extends PricingTestCase {
 
 		$shown = $parent->get_available_variation( $this->product( $ids['v_a4'] ) );
 		$this->assertIsArray( $shown );
-		$this->assertStringNotContainsString( 'Delivered', (string) $shown['availability_html'], 'not in what WooCommerce redraws with each choice' );
+		$this->assertStringNotContainsString( 'days', (string) $shown['availability_html'], 'not in what WooCommerce redraws with each choice' );
 
 		$html = $this->printed( $parent );
 		// Both variations tell the same time: printed once, for both, shown once one is chosen.
-		$this->assertSame( 1, substr_count( $html, 'Delivered in 4–7 days' ) );
+		$this->assertSame( 1, substr_count( $html, '4–7 days' ) );
 		$this->assertStringContainsString( sprintf( 'data-pixonaut-variations="%d %d"', $ids['v_a3'], $ids['v_a4'] ), $html );
 		$this->assertStringContainsString( 'data-pixonaut-variation-slot', $html );
 		$this->assertStringContainsString( 'visibility:hidden', $html );
@@ -90,7 +123,7 @@ final class DeliveryTimeTest extends PricingTestCase {
 		$id = $this->read_product( self::WHOLE_WAY );
 		$this->plugin->settings()->set( Settings::DELIVERY_TIME_HANDLING_DAYS, 2 );
 
-		$this->assertStringContainsString( 'Delivered in 6–9 days', $this->printed( $this->product( $id ) ) );
+		$this->assertStringContainsString( '>6–9 days<', $this->printed( $this->product( $id ) ) );
 	}
 
 	public function test_a_making_and_a_post_told_apart_are_the_whole_way_together(): void {
@@ -102,7 +135,7 @@ final class DeliveryTimeTest extends PricingTestCase {
 			)
 		);
 
-		$this->assertStringContainsString( 'Delivered in 5–9 days', $this->printed( $this->product( $id ) ) );
+		$this->assertStringContainsString( '>5–9 days<', $this->printed( $this->product( $id ) ) );
 	}
 
 	public function test_a_printshop_that_tells_the_making_alone_gets_that_said_and_no_delivery(): void {
@@ -118,7 +151,7 @@ final class DeliveryTimeTest extends PricingTestCase {
 		$html = $this->printed( $this->product( $id ) );
 
 		$this->assertStringContainsString( 'Made in 4 days', $html );
-		$this->assertStringNotContainsString( 'Delivered', $html );
+		$this->assertStringNotContainsString( '>4 days<', $html, 'not said as the days to the door' );
 	}
 
 	public function test_a_printshop_that_tells_the_post_alone_gets_that_said_without_the_handling_days(): void {
@@ -144,15 +177,15 @@ final class DeliveryTimeTest extends PricingTestCase {
 		);
 		$unread    = $this->simple_product( 'v_other', '300' );
 
-		$this->assertSame( '', $this->printed( $this->product( $told_none ) ) );
-		$this->assertSame( '', $this->printed( $this->product( $unread ) ) );
+		$this->assertStringNotContainsString( 'Delivery time', $this->printed( $this->product( $told_none ) ) );
+		$this->assertStringNotContainsString( 'Delivery time', $this->printed( $this->product( $unread ) ) );
 	}
 
 	public function test_nothing_is_said_while_the_setting_is_off_or_the_product_is_out_of_stock(): void {
 		$id = $this->read_product( self::WHOLE_WAY );
 
 		$this->plugin->settings()->set( Settings::DELIVERY_TIME_SHOW, false );
-		$this->assertSame( '', $this->printed( $this->product( $id ) ) );
+		$this->assertStringNotContainsString( 'Delivery time', $this->printed( $this->product( $id ) ) );
 
 		$this->plugin->settings()->set( Settings::DELIVERY_TIME_SHOW, true );
 		$product = $this->product( $id );
@@ -170,7 +203,7 @@ final class DeliveryTimeTest extends PricingTestCase {
 		$refresh->page( 0 );
 
 		$this->assertCount( 1, $this->recorder->requests );
-		$this->assertStringContainsString( 'Delivered in 4–7 days', $this->printed( $this->product( $id ) ) );
+		$this->assertStringContainsString( '>4–7 days<', $this->printed( $this->product( $id ) ) );
 		$this->assertSame( '300', $this->price( $id ), 'a price that follows no rule is left alone' );
 	}
 
@@ -219,14 +252,26 @@ final class DeliveryTimeTest extends PricingTestCase {
 	}
 
 	/**
-	 * What the add-to-cart form of `$product` prints under its button.
+	 * The tabs of the page of `$product`.
+	 *
+	 * @param \WC_Product $product The product.
+	 * @return mixed
+	 */
+	private function tabs( \WC_Product $product ): mixed {
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- The post WooCommerce's default tabs read, as the page's loop sets it.
+		$GLOBALS['post']    = get_post( $product->get_id() );
+		$GLOBALS['product'] = $product;
+		return apply_filters( 'woocommerce_product_tabs', array() );
+	}
+
+	/**
+	 * The attributes table of `$product`, as WooCommerce prints it.
 	 *
 	 * @param \WC_Product $product The product.
 	 */
 	private function printed( \WC_Product $product ): string {
-		$GLOBALS['product'] = $product;
 		ob_start();
-		do_action( 'woocommerce_after_add_to_cart_button' );
+		wc_display_product_attributes( $product );
 		return (string) ob_get_clean();
 	}
 

@@ -59,12 +59,20 @@ const DESCRIPTIONS: Record<string, string> = {
 
 /** The line the tee's variations say: the fixture printshop's span. The
  *  frame, on the hoodie, says none: its printshop tells no time. */
-const TEE_LINE = 'Delivered in 4–7 days';
+const TEE_LINE = '4–7 days';
+
+/** The product's attributes table: WooCommerce's, or the Product
+ *  Specifications block's. */
+const TABLE =
+	':is(table.woocommerce-product-attributes, .wp-block-woocommerce-product-specifications table)';
 
 /** The places the chosen variation's description and delivery time show
- *  in, and the text each shows now. */
-const DESCRIPTION = '.pixonaut-variation-description .is-chosen';
-const DELIVERY = '.pixonaut-delivery-time .is-chosen';
+ *  in, rows of the attributes table, and the text each shows now. */
+const DESCRIPTION = `${TABLE} .pixonaut-variation-description .is-chosen`;
+const DELIVERY = `${TABLE} .pixonaut-delivery-time .is-chosen`;
+
+/** The tab the classic attributes table is in, closed as the page opens. */
+const TABLE_TAB = '.additional_information_tab a';
 
 /** The switches, by Inramning value, with the variation each lands on: the
  *  colour of the frame or the hanger a switch shows again keeps the first
@@ -191,6 +199,18 @@ function unaccounted(shifts: Shift[], moved: number): Shift['sources'] {
 		);
 }
 
+/** Each row of the attributes table: its label, and its top and height
+ *  from the table's top. A switch must leave them as they are. */
+async function tableRows(page: Page): Promise<string[]> {
+	return page.locator(TABLE).evaluate((table) => {
+		const top = table.getBoundingClientRect().top;
+		return [...table.querySelectorAll('tr')].map((row) => {
+			const box = row.getBoundingClientRect();
+			return `${row.querySelector('th')?.textContent?.trim()} ${Math.round(box.top - top)} ${Math.round(box.height)}`;
+		});
+	});
+}
+
 /** Opens the poster on its bare variation, drawn, and starts watching. */
 async function openPoster(page: Page, poster: Poster): Promise<void> {
 	await countMounts(page);
@@ -203,6 +223,12 @@ async function openPoster(page: Page, poster: Poster): Promise<void> {
 		/is-drawn/,
 	);
 	await expect(page.locator('[data-pixonaut-held]')).toHaveCount(0);
+	// The classic table is in a tab: open it, so its rows take their room.
+	const tab = page.locator(TABLE_TAB);
+	if ((await tab.count()) > 0) {
+		await tab.click();
+	}
+	await expect(page.locator(TABLE)).toBeVisible();
 	await watchSwitch(page, 'front');
 	await watchShifts(page);
 }
@@ -218,8 +244,8 @@ async function switchTo(
 	variation: number,
 	mounted: number,
 ): Promise<{ frames: SwitchFrame[]; since: number; moved: number }> {
-	// A shift is noted only in view: the place the shopper reads the
-	// variation's description and delivery time in, by the button.
+	// A shift is noted only in view: the buy row the shopper is at. The
+	// attributes table below is checked by its rows' places.
 	await page
 		.locator('form .single_add_to_cart_button')
 		.evaluate((button) => button.scrollIntoView({ block: 'end' }));
@@ -263,6 +289,16 @@ for (const viewport of VIEWPORTS) {
 			expect(before, 'the bare poster’s price shows').toContain(OPENING_PRICE);
 			await expect(page.locator(DESCRIPTION)).toHaveCount(0);
 			await expect(page.locator(DELIVERY)).toHaveText(TEE_LINE);
+			await expect(
+				page.locator(
+					'form :is(.pixonaut-variation-description, .pixonaut-delivery-time)',
+				),
+				'the form holds neither',
+			).toHaveCount(0);
+			const rows = await tableRows(page);
+			expect(rows.join('\n'), 'the table lists both rows').toMatch(
+				/^Delivery \d+ \d+$[\s\S]*^Delivery time \d+ \d+$/m,
+			);
 
 			for (const {
 				framing: value,
@@ -293,6 +329,10 @@ for (const viewport of VIEWPORTS) {
 					await expect(page.locator(DELIVERY)).toHaveText(delivery);
 				}
 
+				expect(
+					await tableRows(page),
+					`switching to ${value} moves none of the table's rows`,
+				).toEqual(rows);
 				expect(
 					unaccounted(await shiftsSince(page, since), moved),
 					`switching to ${value} shifts nothing but the steps it shows or hides`,

@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-16T14:20:16+00:00\n"
+"POT-Creation-Date: 2026-11-17T10:05:45+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -8496,17 +8496,19 @@ msgstr "Mostrar el plazo de entrega"
 
 #: src/Settings/Settings.php:576
 msgid ""
-"Say on the product page how long the printshop says the chosen variation "
-"takes, such as “Delivered in 4–7 days”. Only what the printshop itself tells "
-"is shown: a printshop that tells how long it takes to make the product and "
-"nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing "
-"gets no line. The times are read with the costs, once a day."
+"Say in a “Delivery time” row of the product’s attributes table how long the "
+"printshop says the chosen variation takes, such as “4–7 days”. Only what the "
+"printshop itself tells is shown: a printshop that tells how long it takes to "
+"make the product and nothing of the delivery gets “Made in 2–3 days”, and "
+"one that tells nothing gets no row. The times are read with the costs, once "
+"a day."
 msgstr ""
-"Muestra en la página de producto cuánto tarda la variación elegida según la "
-"imprenta, como “Entrega en 4–7 días”. Solo se muestra lo que dice la propia "
-"imprenta: una imprenta que dice cuánto tarda en fabricar el producto y nada "
-"de la entrega da “Fabricado en 2–3 días”, y una que no dice nada no da "
-"ninguna línea. Los plazos se leen con los costos, una vez al día."
+"Muestra en la fila “Plazo de entrega” de la tabla de atributos del producto "
+"cuánto tarda la variación elegida según la imprenta, como “4–7 días”. Solo "
+"se muestra lo que dice la propia imprenta: una imprenta que dice cuánto "
+"tarda en fabricar el producto y nada de la entrega da “Fabricado en 2–3 "
+"días”, y una que no dice nada no da ninguna fila. Los plazos se leen con los "
+"costos, una vez al día."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days the store adds to the printshop's delivery time.
 #: src/Settings/Settings.php:588
@@ -8778,7 +8780,8 @@ msgstr ""
 "cualquier parte de la regla para sí mismo."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
-#: src/Settings/SettingsPage.php:659
+#. translators: Label of a row of the product's attributes table: how long until the customer has the order, e.g. "5–8 days".
+#: src/Settings/SettingsPage.php:659 src/Storefront/DeliveryRows.php:212
 msgid "Delivery time"
 msgstr "Plazo de entrega"
 
@@ -8840,28 +8843,38 @@ msgstr "Como las muestra el tema"
 msgid "As swatches, like the designer's own choices"
 msgstr "Como botones, igual que las opciones propias del personalizador"
 
-#. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 4 and 7. Shown on the product page: how long until the customer has the order.
-#: src/Storefront/DeliveryTime.php:77
-#, php-format
-msgid "Delivered in %1$d–%2$d days"
-msgstr "Entrega en %1$d–%2$d días"
+#. translators: Title of the product page's tab that lists the product's attributes, as WooCommerce names it.
+#: src/Storefront/DeliveryRows.php:101
+msgid "Additional information"
+msgstr "Información adicional"
 
-#. translators: %d: a number of days. Shown on the product page: how long until the customer has the order.
-#: src/Storefront/DeliveryTime.php:79
+#. translators: Label of a row of the product's attributes table: how the product is delivered, as the chosen variation describes it, e.g. "as a poster, without a frame".
+#: src/Storefront/DeliveryRows.php:196
+msgid "Delivery"
+msgstr "Entrega"
+
+#. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 4 and 7. Shown on the product page after the label "Delivery time": how long until the customer has the order.
+#: src/Storefront/DeliveryTime.php:70
 #, php-format
-msgid "Delivered in %d day"
-msgid_plural "Delivered in %d days"
-msgstr[0] "Entrega en %d día"
-msgstr[1] "Entrega en %d días"
+msgid "%1$d–%2$d days"
+msgstr "%1$d–%2$d días"
+
+#. translators: %d: a number of days. Shown on the product page after the label "Delivery time": how long until the customer has the order.
+#: src/Storefront/DeliveryTime.php:72
+#, php-format
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] "%d día"
+msgstr[1] "%d días"
 
 #. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 2 and 3. Shown on the product page: how long the product takes to make before it is sent.
-#: src/Storefront/DeliveryTime.php:87
+#: src/Storefront/DeliveryTime.php:80
 #, php-format
 msgid "Made in %1$d–%2$d days"
 msgstr "Fabricado en %1$d–%2$d días"
 
 #. translators: %d: a number of days. Shown on the product page: how long the product takes to make before it is sent.
-#: src/Storefront/DeliveryTime.php:89
+#: src/Storefront/DeliveryTime.php:82
 #, php-format
 msgid "Made in %d day"
 msgid_plural "Made in %d days"
@@ -8869,13 +8882,13 @@ msgstr[0] "Fabricado en %d día"
 msgstr[1] "Fabricado en %d días"
 
 #. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 5 and 10. Shown on the product page: how long the parcel is on its way once it is sent.
-#: src/Storefront/DeliveryTime.php:97
+#: src/Storefront/DeliveryTime.php:90
 #, php-format
 msgid "Shipping takes %1$d–%2$d days"
 msgstr "El envío tarda %1$d–%2$d días"
 
 #. translators: %d: a number of days. Shown on the product page: how long the parcel is on its way once it is sent.
-#: src/Storefront/DeliveryTime.php:99
+#: src/Storefront/DeliveryTime.php:92
 #, php-format
 msgid "Shipping takes %d day"
 msgid_plural "Shipping takes %d days"
@@ -11970,6 +11983,16 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s vista"
 msgstr[1] "%s vistas"
+
+#, php-format
+#~ msgid "Delivered in %1$d–%2$d days"
+#~ msgstr "Entrega en %1$d–%2$d días"
+
+#, php-format
+#~ msgid "Delivered in %d day"
+#~ msgid_plural "Delivered in %d days"
+#~ msgstr[0] "Entrega en %d día"
+#~ msgstr[1] "Entrega en %d días"
 
 #~ msgid "Auto: off, as the attribute is"
 #~ msgstr "Auto: desactivado, como el atributo"

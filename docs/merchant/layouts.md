@@ -20,6 +20,12 @@ add-to-cart form, above the quantity and the **Add to cart** button.
   with it. The designer is locked while that happens, so the design added is
   the one shown, and the button shows a spinner and takes no second click
   until the next page opens or an error is shown.
+- The purchase panel holds the title, the price and the designer with the
+  quantity and **Add to cart** under it, and nothing else: the product's
+  short description is not shown there. On a product with variations, the
+  chosen variation's description shows as a **Delivery** row of the
+  product's attributes table (**Additional information**), and follows the
+  customer's choice without moving the page.
 - On a product whose approval mode is the checkbox, the **I approve the
   preview** box sits under the form; its word **preview** opens the proof. See
   [Approval modes](../approval-modes/).

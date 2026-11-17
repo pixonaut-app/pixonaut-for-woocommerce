@@ -145,23 +145,24 @@ A printshop also tells how long a product takes: to make, to deliver to your
 shop's country, or both. Pixonaut reads that with the cost, once a day.
 
 Tick **Show the delivery time** under **WooCommerce > Settings > Pixonaut >
-Prices** and each product printed on a blank says it on its page, under Add
-to cart: "Delivered in 4–7 days". On a product with variations the line is
-the chosen variation's, and changes with the choice without moving the page.
+Prices** and each product printed on a blank says it on its page, in a
+**Delivery time** row of the product's attributes table (**Additional
+information**): "4–7 days". On a product with variations the row is the
+chosen variation's, and changes with the choice without moving the page.
 
 Only what the printshop tells is shown, in calendar days:
 
 - A printshop that tells the whole way, or both the making and the
-  shipping, gets "Delivered in 4–7 days".
+  shipping, gets "4–7 days".
 - One that tells only how long the product takes to make gets "Made in 2–3
   days".
 - One that tells only how long the parcel is on its way gets "Shipping
   takes 5–10 days".
-- One that tells nothing gets no line.
+- One that tells nothing gets no row.
 
 **Handling days** adds days of your own, for what happens before an order
 reaches the printshop, such as approving a proof. They are added to
-"Delivered in" and "Made in", not to the shipping alone.
+the whole way and to "Made in", not to the shipping alone.
 
 The first times show within a few minutes of ticking the box, once the
 costs are read. A product out of stock shows none.

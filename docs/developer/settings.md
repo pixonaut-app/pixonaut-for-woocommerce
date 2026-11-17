@@ -301,7 +301,7 @@ Default: `false`.
 
 ### `delivery_time_show`
 
-**Show the delivery time** (checkbox). Say on the product page how long the printshop says the chosen variation takes, such as “Delivered in 4–7 days”. Only what the printshop itself tells is shown: a printshop that tells how long it takes to make the product and nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing gets no line. The times are read with the costs, once a day.
+**Show the delivery time** (checkbox). Say in a “Delivery time” row of the product’s attributes table how long the printshop says the chosen variation takes, such as “4–7 days”. Only what the printshop itself tells is shown: a printshop that tells how long it takes to make the product and nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing gets no row. The times are read with the costs, once a day.
 
 Default: `false`.
 

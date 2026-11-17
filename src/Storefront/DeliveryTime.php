@@ -14,70 +14,33 @@ use Pixonaut\WooCommerce\Pricing\DeliveryTimes;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
 use Pixonaut\WooCommerce\Settings\Settings;
 use WC_Product;
-use WC_Product_Variable;
 
 /**
- * While the store shows delivery times (`delivery_time_show`), a product or
- * variation printed on a blank says how long its printshop says it takes,
- * as Pixonaut read it with the cost: a line under Add to cart, after the
- * price row a theme closes there. On a variable product's page the line is
- * the chosen variation's, in a place that keeps its height while the
- * shopper switches (`VariationSlots`), never in the variation's
- * availability, which WooCommerce redraws between the description and the
- * price row with each choice.
+ * How long a product or variation printed on a blank takes to deliver, as
+ * its printshop says and Pixonaut read it with the cost, in the words the
+ * product page says it in, after the label "Delivery time"
+ * (`DeliveryRows`).
  *
  * Only what the printshop tells is said. With the days from the order to
- * the door (told as such, or as its making and its post together) the line
- * is "Delivered in 4–7 days"; with the making alone "Made in 2–3 days";
- * with the post alone "Shipping takes 5–10 days". A printshop that tells no
- * time gets no line. The store's handling days are added to the days that
- * start at the order, never to the post alone.
+ * the door (told as such, or as its making and its post together) it is
+ * "4–7 days"; with the making alone "Made in 2–3 days"; with the post alone
+ * "Shipping takes 5–10 days". A printshop that tells no time gets nothing
+ * said. The store's handling days are added to the days that start at the
+ * order, never to the post alone.
  */
 final class DeliveryTime {
 
-	public const CSS_CLASS = 'pixonaut-delivery-time';
-
 	/**
-	 * After the price row a theme closes after the button (at the default
-	 * priority).
-	 */
-	private const PRIORITY = 20;
-
-	/**
-	 * @param Settings       $settings Whether the time is shown, and the store's handling days.
-	 * @param VariationSlots $slots    The place that keeps its height.
+	 * @param Settings $settings Whether the time is shown, and the store's handling days.
 	 */
 	public function __construct(
 		private readonly Settings $settings,
-		private readonly VariationSlots $slots,
 	) {
 	}
 
-	public function register(): void {
-		add_action( 'woocommerce_after_add_to_cart_button', array( $this, 'print_line' ), self::PRIORITY );
-	}
-
-	/**
-	 * Prints the delivery time of the product the add-to-cart form is for:
-	 * each variation's, for a variable product, of which the chosen one's
-	 * shows.
-	 */
-	public function print_line(): void {
-		$product = $GLOBALS['product'] ?? null;
-		if ( ! $product instanceof WC_Product || true !== $this->settings->get( Settings::DELIVERY_TIME_SHOW ) ) {
-			return;
-		}
-		if ( $product instanceof WC_Product_Variable ) {
-			$lines = array();
-			foreach ( VariationSlots::variations( $product ) as $variation ) {
-				$lines[ $variation->get_id() ] = esc_html( $this->line_of( $variation ) );
-			}
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Each line is escaped above; the markup is escaped where it is built.
-			echo $this->slots->varying( self::CSS_CLASS, 'p', $lines );
-			return;
-		}
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The line is escaped here; the markup is escaped where it is built.
-		echo $this->slots->fixed( self::CSS_CLASS, 'p', esc_html( $this->line_of( $product ) ) );
+	/** Whether the store shows delivery times (`delivery_time_show`). */
+	public function shown(): bool {
+		return true === $this->settings->get( Settings::DELIVERY_TIME_SHOW );
 	}
 
 	/**
@@ -103,10 +66,10 @@ final class DeliveryTime {
 			return self::said(
 				$to_door[0] + $handling,
 				$to_door[1] + $handling,
-				/* translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 4 and 7. Shown on the product page: how long until the customer has the order. */
-				__( 'Delivered in %1$d–%2$d days', 'pixonaut-for-woocommerce' ),
-				/* translators: %d: a number of days. Shown on the product page: how long until the customer has the order. */
-				static fn ( int $days ): string => _n( 'Delivered in %d day', 'Delivered in %d days', $days, 'pixonaut-for-woocommerce' )
+				/* translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 4 and 7. Shown on the product page after the label "Delivery time": how long until the customer has the order. */
+				__( '%1$d–%2$d days', 'pixonaut-for-woocommerce' ),
+				/* translators: %d: a number of days. Shown on the product page after the label "Delivery time": how long until the customer has the order. */
+				static fn ( int $days ): string => _n( '%d day', '%d days', $days, 'pixonaut-for-woocommerce' )
 			);
 		}
 		if ( null !== $times->production ) {

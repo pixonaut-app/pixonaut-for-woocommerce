@@ -10,14 +10,13 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Pixonaut\WooCommerce\Plugin;
-use WC_Product;
 use WC_Product_Variable;
 use WC_Product_Variation;
 
 /**
- * A place in the add-to-cart form for something each variation says of
- * itself, such as its description or its delivery time, that does not move
- * the page when the shopper chooses another variation.
+ * A place for something each variation says of itself, such as its
+ * description or its delivery time, that does not move the page when the
+ * shopper chooses another variation.
  *
  * Every variation's text is printed up front, each distinct text once, all
  * of them stacked in the same cell of a grid: the place is as tall as the
@@ -26,11 +25,9 @@ use WC_Product_Variation;
  * nothing. A small script of its own follows the form's choice. The layout
  * is in the elements' own style, so the place keeps its size before any
  * stylesheet loads and on a page the storefront styles are not loaded on.
- *
- * On the page of a variable product the inline designer shows on, the
- * variation's description is printed this way just above the quantity and
- * Add to cart, where the theme's price row starts, in place of the one
- * WooCommerce redraws with each choice (hidden by `storefront.css`).
+ * The place names its product, so it follows that product's form wherever
+ * on the page it is printed, such as in the product's attributes table
+ * (`DeliveryRows`).
  */
 final class VariationSlots {
 
@@ -39,62 +36,35 @@ final class VariationSlots {
 	/** Marks a place the script follows the choice in. */
 	public const SLOT_ATTRIBUTE = 'data-pixonaut-variation-slot';
 
+	/** Names the product whose add-to-cart form a place follows. */
+	public const PRODUCT_ATTRIBUTE = 'data-pixonaut-variation-product';
+
 	/** Names the variations, by id and space-separated, a text in a place is of. */
 	public const VARIATIONS_ATTRIBUTE = 'data-pixonaut-variations';
 
 	/** Marks the text of the chosen variation. */
 	public const CHOSEN_CLASS = 'is-chosen';
 
-	/** The place of a variation's description. */
-	public const DESCRIPTION_CLASS = 'pixonaut-variation-description';
-
 	private const SLOT_CLASS = 'pixonaut-variation-slot';
 	private const ITEM_CLASS = 'pixonaut-variation-slot__item';
 
-	/** Every text in the one cell, so the place is as tall as the tallest. */
+	/**
+	 * Every text in the one cell, so the place is as tall as the tallest. In
+	 * properties `wp_kses_post` keeps, as WooCommerce passes a table row's
+	 * value through it.
+	 */
 	private const SLOT_STYLE = 'display:grid';
-	private const ITEM_STYLE = 'grid-area:1/1;margin:0';
+	private const ITEM_STYLE = 'grid-row:1;grid-column:1;margin:0';
 
 	/** A text that is not the chosen variation's keeps its room, unseen. */
 	private const UNCHOSEN_STYLE = ';visibility:hidden';
 
 	/**
-	 * Before WooCommerce's quantity input and the price row a theme opens
-	 * there (at the default priority).
-	 */
-	private const DESCRIPTION_PRIORITY = 5;
-
-	/**
-	 * @param string         $plugin_file The plugin's main file.
-	 * @param InlineProducts $products    Resolves a product to its designer.
+	 * @param string $plugin_file The plugin's main file.
 	 */
 	public function __construct(
 		private readonly string $plugin_file,
-		private readonly InlineProducts $products,
 	) {
-	}
-
-	public function register(): void {
-		add_action( 'woocommerce_before_add_to_cart_quantity', array( $this, 'print_description' ), self::DESCRIPTION_PRIORITY );
-	}
-
-	/**
-	 * Prints the place of the chosen variation's description, on the form of
-	 * a variable product the inline designer shows on whose variations have
-	 * one.
-	 */
-	public function print_description(): void {
-		$product = $GLOBALS['product'] ?? null;
-		if ( ! $product instanceof WC_Product_Variable || null === $this->products->for_product( $product ) ) {
-			return;
-		}
-		$texts = array();
-		foreach ( self::variations( $product ) as $variation ) {
-			// As WooCommerce formats it for its own place.
-			$texts[ $variation->get_id() ] = wc_format_content( wp_kses_post( $variation->get_description() ) );
-		}
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Each text is formatted and filtered above; the markup is escaped where it is built.
-		echo $this->varying( self::DESCRIPTION_CLASS, 'div', $texts );
 	}
 
 	/**
@@ -102,11 +72,12 @@ final class VariationSlots {
 	 * variation's text by its id, HTML, empty for one that has none. Empty
 	 * when no variation has one.
 	 *
-	 * @param string            $css_class The place's own class.
-	 * @param string            $tag       The element each text is in: `div` or `p`.
-	 * @param array<int,string> $texts     Each variation's text.
+	 * @param int               $product_id The variable product whose form the place follows.
+	 * @param string            $css_class  The place's own class.
+	 * @param string            $tag        The element each text is in: `div` or `p`.
+	 * @param array<int,string> $texts      Each variation's text.
 	 */
-	public function varying( string $css_class, string $tag, array $texts ): string {
+	public function varying( int $product_id, string $css_class, string $tag, array $texts ): string {
 		if ( array() === array_filter( $texts, static fn ( string $text ): bool => '' !== $text ) ) {
 			return '';
 		}
@@ -122,10 +93,12 @@ final class VariationSlots {
 		}
 		$this->enqueue();
 		return sprintf(
-			'<div class="%s" style="%s" %s>%s</div>',
+			'<div class="%s" style="%s" %s %s="%d">%s</div>',
 			esc_attr( self::SLOT_CLASS . ' ' . $css_class ),
 			esc_attr( self::SLOT_STYLE ),
 			esc_attr( self::SLOT_ATTRIBUTE ),
+			esc_attr( self::PRODUCT_ATTRIBUTE ),
+			$product_id,
 			$items
 		);
 	}

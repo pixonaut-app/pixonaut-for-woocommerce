@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-16T14:20:16+00:00\n"
+"POT-Creation-Date: 2026-11-17T10:05:45+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -2321,8 +2321,8 @@ msgid ""
 "was changed. Read it again with `get-product-form`, then set it."
 msgstr ""
 "De Pixonaut-instellingen van het product zijn gewijzigd terwijl dit werd "
-"opgeslagen, dus er is niets gewijzigd. Vraag ze opnieuw op met "
-"`get-product-form` en stel ze daarna in."
+"opgeslagen, dus er is niets gewijzigd. Vraag ze opnieuw op met `get-product-"
+"form` en stel ze daarna in."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:165
@@ -8555,18 +8555,19 @@ msgstr "Levertijd tonen"
 
 #: src/Settings/Settings.php:576
 msgid ""
-"Say on the product page how long the printshop says the chosen variation "
-"takes, such as “Delivered in 4–7 days”. Only what the printshop itself tells "
-"is shown: a printshop that tells how long it takes to make the product and "
-"nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing "
-"gets no line. The times are read with the costs, once a day."
+"Say in a “Delivery time” row of the product’s attributes table how long the "
+"printshop says the chosen variation takes, such as “4–7 days”. Only what the "
+"printshop itself tells is shown: a printshop that tells how long it takes to "
+"make the product and nothing of the delivery gets “Made in 2–3 days”, and "
+"one that tells nothing gets no row. The times are read with the costs, once "
+"a day."
 msgstr ""
-"Vermeld op de productpagina hoe lang de gekozen variatie volgens de "
-"drukkerij duurt, zoals “Geleverd binnen 4–7 dagen”. Alleen wat de drukkerij "
-"zelf vermeldt, wordt getoond: een drukkerij die vermeldt hoe lang het maken "
-"van het product duurt en niets over de levering, krijgt “Gemaakt in 2–3 "
-"dagen”, en een drukkerij die niets vermeldt, krijgt geen regel. De tijden "
-"worden samen met de kosten opgehaald, één keer per dag."
+"Vermeld in de rij “Levertijd” van de attributentabel van het product hoe "
+"lang de gekozen variatie volgens de drukkerij duurt, zoals “4–7 dagen”. "
+"Alleen wat de drukkerij zelf vermeldt, wordt getoond: een drukkerij die "
+"vermeldt hoe lang het maken van het product duurt en niets over de levering, "
+"krijgt “Gemaakt in 2–3 dagen”, en een drukkerij die niets vermeldt, krijgt "
+"geen rij. De tijden worden samen met de kosten opgehaald, één keer per dag."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days the store adds to the printshop's delivery time.
 #: src/Settings/Settings.php:588
@@ -8840,7 +8841,8 @@ msgstr ""
 "kan elk onderdeel van de regel voor zichzelf wijzigen."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
-#: src/Settings/SettingsPage.php:659
+#. translators: Label of a row of the product's attributes table: how long until the customer has the order, e.g. "5–8 days".
+#: src/Settings/SettingsPage.php:659 src/Storefront/DeliveryRows.php:212
 msgid "Delivery time"
 msgstr "Levertijd"
 
@@ -8903,28 +8905,38 @@ msgstr "Zoals het thema ze toont"
 msgid "As swatches, like the designer's own choices"
 msgstr "Als knoppen, zoals de eigen keuzes van de ontwerptool"
 
-#. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 4 and 7. Shown on the product page: how long until the customer has the order.
-#: src/Storefront/DeliveryTime.php:77
-#, php-format
-msgid "Delivered in %1$d–%2$d days"
-msgstr "Geleverd binnen %1$d–%2$d dagen"
+#. translators: Title of the product page's tab that lists the product's attributes, as WooCommerce names it.
+#: src/Storefront/DeliveryRows.php:101
+msgid "Additional information"
+msgstr "Aanvullende informatie"
 
-#. translators: %d: a number of days. Shown on the product page: how long until the customer has the order.
-#: src/Storefront/DeliveryTime.php:79
+#. translators: Label of a row of the product's attributes table: how the product is delivered, as the chosen variation describes it, e.g. "as a poster, without a frame".
+#: src/Storefront/DeliveryRows.php:196
+msgid "Delivery"
+msgstr "Levering"
+
+#. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 4 and 7. Shown on the product page after the label "Delivery time": how long until the customer has the order.
+#: src/Storefront/DeliveryTime.php:70
 #, php-format
-msgid "Delivered in %d day"
-msgid_plural "Delivered in %d days"
-msgstr[0] "Geleverd binnen %d dag"
-msgstr[1] "Geleverd binnen %d dagen"
+msgid "%1$d–%2$d days"
+msgstr "%1$d–%2$d dagen"
+
+#. translators: %d: a number of days. Shown on the product page after the label "Delivery time": how long until the customer has the order.
+#: src/Storefront/DeliveryTime.php:72
+#, php-format
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] "%d dag"
+msgstr[1] "%d dagen"
 
 #. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 2 and 3. Shown on the product page: how long the product takes to make before it is sent.
-#: src/Storefront/DeliveryTime.php:87
+#: src/Storefront/DeliveryTime.php:80
 #, php-format
 msgid "Made in %1$d–%2$d days"
 msgstr "Gemaakt in %1$d–%2$d dagen"
 
 #. translators: %d: a number of days. Shown on the product page: how long the product takes to make before it is sent.
-#: src/Storefront/DeliveryTime.php:89
+#: src/Storefront/DeliveryTime.php:82
 #, php-format
 msgid "Made in %d day"
 msgid_plural "Made in %d days"
@@ -8932,13 +8944,13 @@ msgstr[0] "Gemaakt in %d dag"
 msgstr[1] "Gemaakt in %d dagen"
 
 #. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 5 and 10. Shown on the product page: how long the parcel is on its way once it is sent.
-#: src/Storefront/DeliveryTime.php:97
+#: src/Storefront/DeliveryTime.php:90
 #, php-format
 msgid "Shipping takes %1$d–%2$d days"
 msgstr "De verzending duurt %1$d–%2$d dagen"
 
 #. translators: %d: a number of days. Shown on the product page: how long the parcel is on its way once it is sent.
-#: src/Storefront/DeliveryTime.php:99
+#: src/Storefront/DeliveryTime.php:92
 #, php-format
 msgid "Shipping takes %d day"
 msgid_plural "Shipping takes %d days"
@@ -12047,6 +12059,16 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s weergave"
 msgstr[1] "%s weergaven"
+
+#, php-format
+#~ msgid "Delivered in %1$d–%2$d days"
+#~ msgstr "Geleverd binnen %1$d–%2$d dagen"
+
+#, php-format
+#~ msgid "Delivered in %d day"
+#~ msgid_plural "Delivered in %d days"
+#~ msgstr[0] "Geleverd binnen %d dag"
+#~ msgstr[1] "Geleverd binnen %d dagen"
 
 #~ msgid "Auto: off, as the attribute is"
 #~ msgstr "Auto: uit, zoals de eigenschap"
