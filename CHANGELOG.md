@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.21.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.20.4...v1.21.0) (2026-11-17)
+
+
+### Features
+
+* **catalogue:** list archive index pictures at the size the shop's cards print, let a theme name it, and build the index ahead of picture jobs ([#286](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/286)) ([ea4aba5](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/ea4aba5e2c8b5bad211096b36f8f86d055df7114))
+
+
+### Bug Fixes
+
+* **contracts:** pin Pixonaut API 10.6.0 and pixonaut-php 23 ([#288](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/288)) ([5ceb6f8](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/5ceb6f89a6c7aabc406d4e2af40a93ceeb86db65))
+* **storefront:** archive filters read kept variations and never an empty cached listing ([#287](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/287)) ([412dd59](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/412dd59d487699b4e36b2e249bb588a6705e8286))
+
 ## [1.20.4](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.20.3...v1.20.4) (2026-11-17)
 
 
