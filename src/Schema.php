@@ -459,6 +459,19 @@ final class Schema {
 	const FILTER_INDEX_GENERATION_OPTION = 'pixonaut_wc_filter_index_generation';
 
 	/**
+	 * Before what a product page keeps between requests: the transients
+	 * holding its designer, its variations' data and its delivery rows,
+	 * and each product's version.
+	 */
+	const PRODUCT_PAGE_CACHE_PREFIX = 'pixonaut_wc_product_page_';
+
+	/**
+	 * Option every kept product page read carries: a new value drops them
+	 * all at once.
+	 */
+	const PRODUCT_PAGE_GENERATION_OPTION = 'pixonaut_wc_product_page_generation';
+
+	/**
 	 * Option holding, by archive, the version, card count and build time of
 	 * the archive's index, and when the last build started.
 	 */

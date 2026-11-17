@@ -1063,6 +1063,38 @@ mode than the checkbox hides `.pixonaut-approval` and disables its box. A
 the form as it is, also when no side of the product can mount (the form
 then carries `data-pixonaut-variations` without `data-pixonaut-mounts`).
 
+### Kept between requests
+
+A variable product's page builds its designer, what WooCommerce tells its
+add-to-cart form of each variation, its delivery rows, the defaults it opens
+on, whether its Personalise button shows, its dependent attributes and
+whether it can be bought from every variation. `Storefront\ProductPageCache`
+keeps each in a transient (the object cache, where the site has a persistent
+one) for a day at most, and the next request takes it from there. The form
+is then given no variations by WooCommerce (`woocommerce_ajax_variation_threshold`
+answers −1 for it) and is handed the kept ones by a script at the top of the
+form, which sets its `data-product_variations` before WooCommerce's script
+reads it; a product with no variation to offer keeps WooCommerce's own.
+
+A kept read is found under a key of the plugin's version, a generation, the
+product's version, the locale, the currency, and, while the store charges
+taxes, how prices show them and the shopper's tax location and VAT
+exemption, and the callbacks (by name, not by object) on the filters that
+shape prices, stock, variations and the designer. The product's version is
+dropped when the product or one of its variations is written (a post, meta
+or term write, a save, a stock change, a deletion), again at the end of that
+request; the generation is new when one of WooCommerce's options or one of
+the plugin's (but its locks, logs and other bookkeeping) is written, which
+an attribute or value change does through `FilterIndex`'s generation, and
+when a plugin, the theme or a translation changes. A page that edits a cart
+or order line builds its designer for itself, and one whose address names an
+attribute value the product does not offer its designer and the defaults it
+opens on.
+
+Nothing about the shopper is kept: a callback on one of those filters, such
+as `pixonaut_wc_storefront_mount_options`, answers the same for every
+shopper, or its answer is served to the next one.
+
 ### Price
 
 Every variation carries `priceHtml`, its price as WooCommerce formats it

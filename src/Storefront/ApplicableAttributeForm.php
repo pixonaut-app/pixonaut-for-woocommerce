@@ -47,8 +47,9 @@ final class ApplicableAttributeForm {
 		if ( ! $product instanceof WC_Product ) {
 			return;
 		}
-		$fields     = ApplicableAttributes::fields( $product );
-		$variations = array() === $fields ? array() : ApplicableAttributes::variations( $product );
+		$fields = ApplicableAttributes::fields( $product );
+		// Read of every variation: kept for the next request with what else the page keeps of the product.
+		$variations = array() === $fields ? array() : ProductPageCache::remember( $product, 'applicable_variations', '', static fn (): array => ApplicableAttributes::variations( $product ) );
 		if ( array() === ApplicableAttributes::dependent( $fields, $variations ) ) {
 			return;
 		}

@@ -872,6 +872,7 @@ export const REACH = {
 	],
 	'variation-switch-steady.spec.ts': [
 		'src/Storefront/VariationsUpFront.php',
+		'src/Storefront/ProductPageCache.php',
 		'src/Storefront/VariationSlots.php',
 		'src/Storefront/DeliveryTime.php',
 		'src/Storefront/DeliveryRows.php',

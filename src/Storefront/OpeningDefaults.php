@@ -67,7 +67,13 @@ final class OpeningDefaults {
 		if ( ! isset( $this->filled[ $id ][ $key ] ) ) {
 			$this->filling = true;
 			try {
-				$this->filled[ $id ] = array( $key => self::fill( $product, $stored ) );
+				$requested = OpeningChoice::requested( $product );
+				// The page's variations are read to fill them: kept for the next request, while the address names only values the product offers.
+				$this->filled[ $id ] = array(
+					$key => OpeningChoice::offers_all( $product, $requested )
+						? ProductPageCache::remember( $product, 'opening_defaults', $key, static fn (): array => self::fill( $product, $stored ) )
+						: self::fill( $product, $stored ),
+				);
 			} finally {
 				$this->filling = false;
 			}

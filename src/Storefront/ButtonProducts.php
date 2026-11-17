@@ -47,6 +47,21 @@ final class ButtonProducts {
 	}
 
 	/**
+	 * `page_config()` of a product with its variations' configurations: on
+	 * a variable product, as kept from an earlier request while nothing it
+	 * is read from has changed (`ProductPageCache`), so a page that shows
+	 * no button reads none of its variations to say so.
+	 *
+	 * @param WC_Product $product The product the page shows.
+	 */
+	public function page_config_of( WC_Product $product ): ?ProductConfig {
+		if ( ! $product->is_type( 'variable' ) ) {
+			return $this->page_config( $product, array() );
+		}
+		return ProductPageCache::remember( $product, 'button_config', '', fn (): ?ProductConfig => $this->page_config( $product, $this->variants( $product ) ) );
+	}
+
+	/**
 	 * The configuration a product page starts the button on, else null when
 	 * the page shows no button. A variable product shows it while it is
 	 * personalised on the button layout or, when it is not personalised,

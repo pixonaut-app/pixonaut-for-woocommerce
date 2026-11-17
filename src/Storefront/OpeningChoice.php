@@ -69,6 +69,32 @@ final class OpeningChoice {
 	}
 
 	/**
+	 * Whether each of some values is empty or one the product offers, as
+	 * its variations keep it. What a page opens on is kept between
+	 * requests only then (`ProductPageCache`), so no address makes up a
+	 * key of its own.
+	 *
+	 * @param WC_Product            $product A variable product.
+	 * @param array<string, string> $values  Values by attribute as a variation keeps it (`pa_colour`), or by field name (`attribute_pa_colour`).
+	 */
+	public static function offers_all( WC_Product $product, array $values ): bool {
+		if ( ! $product instanceof WC_Product_Variable ) {
+			return false;
+		}
+		$offered = array();
+		foreach ( $product->get_variation_attributes() as $name => $options ) {
+			$offered[ sanitize_title( (string) $name ) ] = array_map( 'strval', (array) $options );
+		}
+		foreach ( $values as $attribute => $value ) {
+			$attribute = str_starts_with( (string) $attribute, 'attribute_' ) ? substr( (string) $attribute, strlen( 'attribute_' ) ) : (string) $attribute;
+			if ( '' !== $value && ! in_array( $value, $offered[ $attribute ] ?? array(), true ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
 	 * The first of `$variations` the product's page opens on: one whose
 	 * attributes hold every value the form opens on, an attribute of "any"
 	 * value holding all, and that the form offers. 0 for none, for a choice

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Pixonaut\WooCommerce\Storefront\ProductPageCache;
 use WC_Product;
 
 /**
@@ -53,7 +54,10 @@ final class Purchasability {
 		// A page asks for a variable product's several times, its cards' and its own; the variations' configurations and labels it reads are part of the key.
 		return RequestCache::remember(
 			implode( '|', array( 'purchasable', ProductConfig::variations_key( $product ), RequestCache::filters_key( array_merge( self::FILTERS, array( 'woocommerce_attribute_label' ) ) ) ) ),
-			static fn (): bool => self::any_variation( $product )
+			// On the shop's pages, which ask for it of every card, kept for the next request with what else a product page keeps of it.
+			static fn (): bool => is_admin()
+				? self::any_variation( $product )
+				: ProductPageCache::remember( $product, 'purchasable', '', static fn (): bool => self::any_variation( $product ) )
 		);
 	}
 

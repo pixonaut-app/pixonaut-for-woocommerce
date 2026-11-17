@@ -296,11 +296,11 @@ final class PersonaliseButton {
 		if ( ! $product instanceof WC_Product ) {
 			return;
 		}
-		$variants = $this->products->variants( $product );
-		$config   = $this->products->page_config( $product, $variants );
+		$config = $this->products->page_config_of( $product );
 		if ( null === $config ) {
 			return;
 		}
+		$variants   = $this->products->variants( $product );
 		$context    = array( 'product_id' => $product->get_id() );
 		$designs    = $this->shown_designs( $product, $config, $variants );
 		$variations = $this->variation_states( $variants, $designs );
@@ -371,9 +371,8 @@ final class PersonaliseButton {
 			// No design to show: the product's variations need not be read.
 			return array();
 		}
-		$variants = $this->products->variants( $product );
-		$config   = $this->products->page_config( $product, $variants );
-		return null === $config ? array() : $this->shown_designs( $product, $config, $variants );
+		$config = $this->products->page_config_of( $product );
+		return null === $config ? array() : $this->shown_designs( $product, $config, $this->products->variants( $product ) );
 	}
 
 	/**
@@ -651,7 +650,7 @@ final class PersonaliseButton {
 
 	public function enqueue(): void {
 		$product = is_product() ? wc_get_product( get_queried_object_id() ) : null;
-		if ( $product instanceof WC_Product && null !== $this->products->page_config( $product, $this->products->variants( $product ) ) ) {
+		if ( $product instanceof WC_Product && null !== $this->products->page_config_of( $product ) ) {
 			$this->storefront->enqueue_style();
 		}
 	}

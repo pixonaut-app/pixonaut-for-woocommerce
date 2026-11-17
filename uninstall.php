@@ -70,6 +70,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_option( \Pixonaut\WooCommerce\Schema::EXCHANGE_RATES_OPTION );
 		// Cached catalogue answers, proof images and filter indexes expire on their own; this removes the ones still waiting to.
 		delete_option( \Pixonaut\WooCommerce\Schema::FILTER_INDEX_GENERATION_OPTION );
+		delete_option( \Pixonaut\WooCommerce\Schema::PRODUCT_PAGE_GENERATION_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::ARCHIVE_INDEXES_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::ARCHIVE_SORTS_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::ARCHIVE_INDEX_VISITS_OPTION );
@@ -79,7 +80,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 				$wpdb->esc_like( \Pixonaut\WooCommerce\Schema::ARCHIVE_INDEX_BODY_PREFIX ) . '%'
 			)
 		);
-		foreach ( array( \Pixonaut\WooCommerce\Schema::CATALOGUE_CACHE_PREFIX, \Pixonaut\WooCommerce\Schema::PROOF_CACHE_PREFIX, \Pixonaut\WooCommerce\Schema::FILTER_INDEX_PREFIX ) as $pixonaut_wc_cache_prefix ) {
+		foreach ( array( \Pixonaut\WooCommerce\Schema::CATALOGUE_CACHE_PREFIX, \Pixonaut\WooCommerce\Schema::PROOF_CACHE_PREFIX, \Pixonaut\WooCommerce\Schema::FILTER_INDEX_PREFIX, \Pixonaut\WooCommerce\Schema::PRODUCT_PAGE_CACHE_PREFIX ) as $pixonaut_wc_cache_prefix ) {
 			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				$wpdb->prepare(
 					"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
