@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.18.0...v1.19.0) (2026-11-17)
+
+
+### Features
+
+* **storefront:** list a design once while several values of an attribute listed only while filtered are chosen ([#272](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/272)) ([bbebf97](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/bbebf97319b1b4c22a790e584a51f9842ea91322))
+
 ## [1.18.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.17.2...v1.18.0) (2026-11-17)
 
 
