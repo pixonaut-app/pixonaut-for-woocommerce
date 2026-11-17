@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.14.0...v1.15.0) (2026-11-17)
+
+
+### Features
+
+* **catalogue:** draw a picture for every variation after seeing its storage cost ([#246](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/246)) ([9e2fa0c](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/9e2fa0ca5f97ffe5896abd444336e5dc1a732259))
+
 ## [1.14.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.13.4...v1.14.0) (2026-11-17)
 
 
