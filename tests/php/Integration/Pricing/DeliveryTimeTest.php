@@ -55,6 +55,36 @@ final class DeliveryTimeTest extends PricingTestCase {
 		$this->assertSame( '', wc_get_stock_html( $this->product( $id ) ), 'not in its availability' );
 	}
 
+	public function test_a_product_with_nothing_else_to_list_gets_the_tab_and_the_block_table_for_its_time(): void {
+		$product = $this->product( $this->read_product( self::WHOLE_WAY ) );
+		$this->assertFalse( $product->has_attributes() || $product->has_weight() || $product->has_dimensions(), 'nothing else to list' );
+
+		$tabs = $this->tabs( $product );
+		$this->assertIsArray( $tabs );
+		$this->assertSame( 'woocommerce_product_additional_information_tab', $tabs['additional_information']['callback'] ?? null );
+
+		$block = new \WP_Block(
+			array(
+				'blockName'    => 'woocommerce/product-specifications',
+				'attrs'        => array(),
+				'innerBlocks'  => array(),
+				'innerHTML'    => '',
+				'innerContent' => array(),
+			),
+			array( 'postId' => $product->get_id() )
+		);
+		$html  = $block->render();
+		$this->assertStringContainsString( '<tbody><tr class="wp-block-product-specifications-item wp-block-product-specifications-item-pixonaut_delivery_time">', $html );
+		$this->assertStringContainsString( '>4–7 days<', $html );
+	}
+
+	public function test_a_product_without_a_time_gets_no_tab_of_its_own(): void {
+		$tabs = $this->tabs( $this->product( $this->simple_product( 'v_other', '300' ) ) );
+
+		$this->assertIsArray( $tabs );
+		$this->assertArrayNotHasKey( 'additional_information', $tabs );
+	}
+
 	public function test_a_variable_product_prints_each_variations_time_apart_from_its_availability(): void {
 		$ids = $this->variable_product(
 			array(
@@ -219,6 +249,19 @@ final class DeliveryTimeTest extends PricingTestCase {
 
 		remove_action( 'update_option_' . Settings::OPTION, array( $refresh, 'settings_changed' ), 10 );
 		remove_action( 'add_option_' . Settings::OPTION, array( $refresh, 'settings_added' ), 10 );
+	}
+
+	/**
+	 * The tabs of the page of `$product`.
+	 *
+	 * @param \WC_Product $product The product.
+	 * @return mixed
+	 */
+	private function tabs( \WC_Product $product ): mixed {
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- The post WooCommerce's default tabs read, as the page's loop sets it.
+		$GLOBALS['post']    = get_post( $product->get_id() );
+		$GLOBALS['product'] = $product;
+		return apply_filters( 'woocommerce_product_tabs', array() );
 	}
 
 	/**

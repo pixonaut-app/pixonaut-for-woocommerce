@@ -51,6 +51,10 @@ table, in `div.pixonaut-delivery-time`, for a product or variation in stock:
 WooCommerce's table through `woocommerce_display_product_attributes`, and
 the Product Specifications block's through
 `render_block_woocommerce/product-specifications`, which has no such filter.
+A product with nothing else to list (no visible attribute, weight or
+dimensions) gets WooCommerce's Additional information tab added for the
+rows (`woocommerce_product_tabs`), and the block prints a table of the rows
+alone.
 On a variable product's page the row holds every variation's text up front,
 each distinct text once, stacked in one grid cell so the row keeps the
 height of the longest; the chosen variation's carries `is-chosen` and the

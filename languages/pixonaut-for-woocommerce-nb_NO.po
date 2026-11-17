@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-17T09:59:33+00:00\n"
+"POT-Creation-Date: 2026-11-17T10:05:45+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: nb_NO\n"
@@ -8595,7 +8595,7 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
 #. translators: Label of a row of the product's attributes table: how long until the customer has the order, e.g. "5–8 days".
-#: src/Settings/SettingsPage.php:659 src/Storefront/DeliveryRows.php:167
+#: src/Settings/SettingsPage.php:659 src/Storefront/DeliveryRows.php:212
 msgid "Delivery time"
 msgstr "Leveringstid"
 
@@ -8657,8 +8657,13 @@ msgstr "Slik temaet viser dem"
 msgid "As swatches, like the designer's own choices"
 msgstr "Som knapper, slik designverktøyets egne valg vises"
 
+#. translators: Title of the product page's tab that lists the product's attributes, as WooCommerce names it.
+#: src/Storefront/DeliveryRows.php:101
+msgid "Additional information"
+msgstr "Tilleggsinformasjon"
+
 #. translators: Label of a row of the product's attributes table: how the product is delivered, as the chosen variation describes it, e.g. "as a poster, without a frame".
-#: src/Storefront/DeliveryRows.php:151
+#: src/Storefront/DeliveryRows.php:196
 msgid "Delivery"
 msgstr "Levering"
 

@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\RequestCache;
 use WC_Product;
 use WC_Product_Variable;
 use WP_Block;
@@ -31,8 +33,10 @@ use WP_Block;
  * variation has a text for is left out.
  *
  * The rows go into WooCommerce's attributes table (`Additional
- * information`), and into the Product Specifications block, which prints
- * its own table without that table's filter.
+ * information`), whose tab is added for a product that has no other
+ * information to list, and into the Product Specifications block, which
+ * prints its own table without that table's filter, and which prints one
+ * for these rows alone when it has nothing else to list.
  */
 final class DeliveryRows {
 
@@ -51,6 +55,15 @@ final class DeliveryRows {
 	/** Where the Product Specifications block's rows end. */
 	private const SPECIFICATIONS_BODY_END = '</tbody>';
 
+	/** WooCommerce's tab of the attributes table, as its default tabs name it. */
+	private const TAB_KEY = 'additional_information';
+
+	/** Where WooCommerce places that tab among the product's tabs. */
+	private const TAB_PRIORITY = 20;
+
+	/** After WooCommerce's default tabs (at the default priority). */
+	private const TABS_FILTER_PRIORITY = 11;
+
 	/**
 	 * @param InlineProducts $products Resolves a product to its designer.
 	 * @param DeliveryTime   $times    What is said of a delivery time.
@@ -67,6 +80,29 @@ final class DeliveryRows {
 		add_filter( 'woocommerce_display_product_attributes', array( $this, 'add_rows' ), 10, 2 );
 		add_filter( 'render_block_woocommerce/product-specifications', array( $this, 'add_specifications_rows' ), 10, 3 );
 		add_filter( 'woocommerce_available_variation', array( $this, 'leave_out_description' ), 10, 2 );
+		add_filter( 'woocommerce_product_tabs', array( $this, 'add_tab' ), self::TABS_FILTER_PRIORITY );
+	}
+
+	/**
+	 * Adds WooCommerce's Additional information tab to the page of a product
+	 * that has these rows and nothing else for the tab to list: no visible
+	 * attribute, weight or dimensions.
+	 *
+	 * @param mixed $tabs The product's tabs, by key.
+	 * @return mixed
+	 */
+	public function add_tab( mixed $tabs ): mixed {
+		$product = $GLOBALS['product'] ?? null;
+		if ( ! is_array( $tabs ) || isset( $tabs[ self::TAB_KEY ] ) || ! $product instanceof WC_Product || array() === $this->rows( $product ) ) {
+			return $tabs;
+		}
+		$tabs[ self::TAB_KEY ] = array(
+			/* translators: Title of the product page's tab that lists the product's attributes, as WooCommerce names it. */
+			'title'    => __( 'Additional information', 'pixonaut-for-woocommerce' ),
+			'priority' => self::TAB_PRIORITY,
+			'callback' => 'woocommerce_product_additional_information_tab',
+		);
+		return $tabs;
 	}
 
 	/**
@@ -112,8 +148,7 @@ final class DeliveryRows {
 	 */
 	public function add_specifications_rows( mixed $content, mixed $block, mixed $instance = null ): mixed {
 		unset( $block );
-		$at = is_string( $content ) ? strrpos( $content, self::SPECIFICATIONS_BODY_END ) : false;
-		if ( false === $at || ! $instance instanceof WP_Block || ! is_numeric( $instance->context['postId'] ?? null ) ) {
+		if ( ! is_string( $content ) || ! $instance instanceof WP_Block || ! is_numeric( $instance->context['postId'] ?? null ) ) {
 			return $content;
 		}
 		$product = wc_get_product( (int) $instance->context['postId'] );
@@ -129,7 +164,17 @@ final class DeliveryRows {
 				wp_kses_post( $row['value'] )
 			);
 		}
-		return '' === $html ? $content : substr_replace( (string) $content, $html, $at, 0 );
+		if ( '' === $html ) {
+			return $content;
+		}
+		$at = strrpos( $content, self::SPECIFICATIONS_BODY_END );
+		if ( false !== $at ) {
+			return substr_replace( $content, $html, $at, 0 );
+		}
+		// The block lists nothing else, so it printed no table: one of these rows alone, in its markup.
+		return '' === trim( $content )
+			? sprintf( '<figure class="wp-block-woocommerce-product-specifications wp-block-table"><table><tbody>%s</tbody></table></figure>', $html )
+			: $content;
 	}
 
 	/**
@@ -172,12 +217,15 @@ final class DeliveryRows {
 	}
 
 	/**
-	 * Whether the inline designer shows on a variable product, which
-	 * `InlineProducts` builds once a request.
+	 * Whether the inline designer shows on a variable product: asked once a
+	 * request, as the form asks it again for each variation.
 	 *
 	 * @param WC_Product_Variable $product The variable product.
 	 */
 	private function has_designer( WC_Product_Variable $product ): bool {
-		return null !== $this->products->for_product( $product );
+		return (bool) RequestCache::remember(
+			'delivery_rows_designer|' . spl_object_id( $this ) . '|' . ProductConfig::variations_key( $product ) . '|' . ( is_product() ? get_queried_object_id() : 0 ),
+			fn (): bool => null !== $this->products->for_product( $product )
+		);
 	}
 }
