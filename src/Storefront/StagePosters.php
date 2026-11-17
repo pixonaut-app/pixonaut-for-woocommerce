@@ -27,7 +27,8 @@ use WP_Error;
  * image of its own site that the browser loads with the page.
  *
  * A page never waits for one: a side without its picture is printed without,
- * and the picture is drawn once the page is sent. One older than a day is
+ * and the picture is drawn once the page is sent, or, on a server that
+ * cannot finish a response early, in an Action Scheduler job. One older than a day is
  * printed, and drawn again the same way, as a template's default values may
  * name the day (a date of birth that defaults to today). One page view at a
  * time draws a picture, and one Pixonaut refused is not asked for again for a
@@ -68,6 +69,13 @@ final class StagePosters {
 	public const HOLD_OPTION_PREFIX = Schema::STAGE_POSTER_HOLD_OPTION_PREFIX;
 
 	/**
+	 * The job drawing a picture where the response cannot be finished early.
+	 */
+	public const ACTION = 'pixonaut_wc_stage_poster';
+
+	public const GROUP = Schema::ACTION_GROUP;
+
+	/**
 	 * The quality a picture is written at: a photo, shown at most at its own size.
 	 */
 	private const QUALITY = 80;
@@ -105,6 +113,10 @@ final class StagePosters {
 	 */
 	public function __construct( private readonly Pictures $pictures, ?Closure $finish_response = null ) {
 		$this->finish_response = $finish_response ?? CatalogueCache::server_finish_response();
+	}
+
+	public function register(): void {
+		add_action( self::ACTION, array( $this, 'draw_scheduled' ), 10, 5 );
 	}
 
 	/**
@@ -166,6 +178,32 @@ final class StagePosters {
 			if ( $this->draw( $key, $source ) ) {
 				delete_option( self::HOLD_OPTION_PREFIX . $key );
 			}
+		}
+	}
+
+	/**
+	 * Draws a picture a page queued as a job (`ACTION`).
+	 *
+	 * @param mixed $template  The template id.
+	 * @param mixed $blank     The blank.
+	 * @param mixed $placement The placement.
+	 * @param mixed $view      The view.
+	 * @param mixed $variant   The variant ref; null for the view's default photo.
+	 */
+	public function draw_scheduled( mixed $template, mixed $blank, mixed $placement, mixed $view, mixed $variant = null ): void {
+		if ( ! is_string( $template ) || ! is_string( $blank ) || ! is_string( $placement ) || ! is_string( $view ) ) {
+			return;
+		}
+		$source = array(
+			'template'  => $template,
+			'blank'     => $blank,
+			'placement' => $placement,
+			'view'      => $view,
+			'variant'   => is_string( $variant ) ? $variant : null,
+		);
+		$key    = self::key( $source );
+		if ( $this->draw( $key, $source ) ) {
+			delete_option( self::HOLD_OPTION_PREFIX . $key );
 		}
 	}
 
@@ -287,14 +325,26 @@ final class StagePosters {
 	}
 
 	/**
-	 * Draws the picture once the page is sent, unless another page view
-	 * is drawing it, or a drawing of it failed less than a minute ago.
+	 * Draws the picture once the page is sent, or queues a job to, unless
+	 * another page view is drawing it, or a drawing of it failed less than a
+	 * minute ago.
 	 *
 	 * @param string                                                                                        $key    The picture's key.
 	 * @param array{template: string, blank: string, placement: string, view: string, variant: string|null} $source What it is drawn from.
 	 */
 	private function queue( string $key, array $source ): void {
-		if ( null === $this->finish_response || isset( $this->queued[ $key ] ) || ! $this->hold( $key ) ) {
+		if ( isset( $this->queued[ $key ] ) || ( null === $this->finish_response && ! did_action( 'action_scheduler_init' ) ) ) {
+			return;
+		}
+		$args = array_values( $source );
+		if ( null === $this->finish_response && as_has_scheduled_action( self::ACTION, $args, self::GROUP ) ) {
+			return;
+		}
+		if ( ! $this->hold( $key ) ) {
+			return;
+		}
+		if ( null === $this->finish_response ) {
+			as_enqueue_async_action( self::ACTION, $args, self::GROUP );
 			return;
 		}
 		$this->queued[ $key ] = $source;

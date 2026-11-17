@@ -176,13 +176,41 @@ final class StagePostersTest extends WP_UnitTestCase {
 		$this->assertCount( 0, $this->recorder->requests );
 	}
 
-	public function test_a_server_that_cannot_finish_the_response_early_draws_nothing(): void {
-		$client  = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) );
+	public function test_a_server_that_cannot_finish_the_response_early_draws_in_a_job(): void {
+		$this->recorder->raw( 200, PngFixture::white(), 'image/png' );
+		$client  = new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL );
 		$posters = new StagePosters( new Pictures( $client ), null );
-		$posters->for_side( self::OPTIONS, self::layout(), null );
+		$posters->register();
+
+		$posters->for_side( self::OPTIONS, self::layout(), 'v_black' );
+		$posters->for_side( self::OPTIONS, self::layout(), 'v_black' );
+		$this->posters()->for_side( self::OPTIONS, self::layout(), 'v_black' );
 
 		$this->assertFalse( has_action( 'shutdown', array( $posters, 'draw_queued' ) ) );
 		$this->assertCount( 0, $this->recorder->requests );
+		$args = array( 'mini-tee@2', 'blank_tee', 'front', 'view_front', 'v_black' );
+		$this->assertCount( 1, as_get_scheduled_actions( self::job( $args ), 'ids' ) );
+		do_action( StagePosters::ACTION, ...$args );
+		$this->assertCount( 1, $this->recorder->requests );
+		$this->assertNotNull( $this->posters()->for_side( self::OPTIONS, self::layout(), 'v_black' ) );
+		remove_action( StagePosters::ACTION, array( $posters, 'draw_scheduled' ) );
+		as_unschedule_all_actions( StagePosters::ACTION, $args, StagePosters::GROUP );
+	}
+
+	/**
+	 * The query for a picture's pending job.
+	 *
+	 * @param array<int, string> $args The job's arguments.
+	 * @phpstan-param list<string> $args
+	 * @return array<string, mixed>
+	 */
+	private static function job( array $args ): array {
+		return array(
+			'hook'   => StagePosters::ACTION,
+			'args'   => $args,
+			'group'  => StagePosters::GROUP,
+			'status' => \ActionScheduler_Store::STATUS_PENDING,
+		);
 	}
 
 	/**
