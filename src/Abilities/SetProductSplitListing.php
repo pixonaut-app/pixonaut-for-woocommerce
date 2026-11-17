@@ -152,7 +152,7 @@ final class SetProductSplitListing implements Ability {
 	private static function image_schema(): array {
 		return array(
 			'type'                 => array( 'object', 'null' ),
-			'description'          => __( 'The card\'s own image: `id`, an image of the media library, or `src`, a public URL the store copies into it after the call has answered; null for the value\'s picture or the product\'s.', 'pixonaut-for-woocommerce' ),
+			'description'          => __( 'The card\'s own image: `id`, an image of the media library, or `src`, a public URL the store copies into it after the call has answered; null for the value\'s picture or the product\'s. A card the shop lists without a filter shows the Pixonaut picture of its design, the template alone, over its own image once that picture is drawn.', 'pixonaut-for-woocommerce' ),
 			'properties'           => array(
 				'id'  => array(
 					'type'    => 'integer',

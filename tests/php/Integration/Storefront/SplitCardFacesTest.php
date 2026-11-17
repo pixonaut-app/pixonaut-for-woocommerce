@@ -146,6 +146,63 @@ final class SplitCardFacesTest extends WP_UnitTestCase {
 		);
 	}
 
+	public function test_an_unfiltered_card_shows_the_flat_design_over_its_own_image(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::SIZE ], SplitListing::FILTERED );
+		$poster = $this->poster();
+		$flats  = array();
+		foreach ( $this->variations_of( $poster, 'med-bild' ) as $variation ) {
+			$studio = $this->image();
+			$flat   = $this->image();
+			$variation->set_image_id( $studio );
+			$variation->update_meta_data(
+				ProductPictures::META_KEY,
+				(string) wp_json_encode(
+					array(
+						'basis'      => 'drawn',
+						'source'     => 'studio',
+						'attachment' => $studio,
+						'gallery'    => array(
+							array(
+								'source'     => 'flat',
+								'attachment' => $flat,
+							),
+						),
+					)
+				)
+			);
+			$variation->save();
+			$flats[ (string) $variation->get_attributes()['pa_storlek'] ] = $flat;
+		}
+		/**
+		 * Each card's own image, by its key: a lone value's key is a term id.
+		 *
+		 * @var array<int|string, int> $own
+		 */
+		$own   = array();
+		$looks = array();
+		foreach ( SplitCards::keys( $poster ) as $key ) {
+			$own[ $key ]   = $this->image();
+			$looks[ $key ] = array(
+				'title' => '',
+				'image' => $own[ $key ],
+			);
+		}
+		SplitCardLooks::save( $poster->get_id(), $looks );
+
+		$this->assertSame(
+			array( $flats['30x40'], $own[ $this->term( 'utan-bild' ) ] ),
+			array_column( $this->shop(), 'image' ),
+			'the flat picture of the design, the card\'s own image only while none is drawn'
+		);
+		$large  = $this->term( '50x70' );
+		$framed = array_values( array_filter( SplitCards::keys( $poster ), static fn ( string $key ): bool => in_array( $large, SplitCards::term_ids( $key ), true ) ) );
+		$this->assertSame(
+			array( $own[ $framed[0] ] ),
+			array_column( $this->shop( array( 'filter_storlek' => '50x70' ) ), 'image' ),
+			'a card a filter shows keeps its own image'
+		);
+	}
+
 	public function test_a_card_shows_from_its_variations_lowest_price(): void {
 		$poster = new WC_Product_Variable();
 		$poster->set_name( 'Safari' );

@@ -32,9 +32,10 @@ use WC_Product_Variable;
  *   (`CardPages::image()`). While that picture is not drawn yet, its
  *   drawing is queued (`CardPhotos`), at most `WANTS_PER_REQUEST` new ones
  *   a request, and the card shows what it shows otherwise meanwhile;
- * - its own image, else the flat picture of its design, or, for a card a
- *   filter on a framing shows, the picture of the variation the filters
- *   open it on, else the product's. While that variation's picture is not
+ * - for a card an unfiltered listing shows, the flat picture of its design,
+ *   the template alone as the product's other lists show it; else its own
+ *   image, or, for a card a filter on a framing shows, the picture of the
+ *   variation the filters open it on, else the product's. While that variation's picture is not
  *   drawn yet, its drawing is queued, and the card shows the picture of
  *   its variation agreeing with most of the filters meanwhile;
  * - "From:" its variations' lowest price, or their one price as WooCommerce

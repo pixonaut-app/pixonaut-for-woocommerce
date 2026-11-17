@@ -419,7 +419,9 @@ setting (`attribute_mode`, one of `on`, `filtered` or `off`, and
 `attribute_default`, whether it is not `off`), whether the product is listed
 by it (`own_products`) and how (`listed`), and its `values`,
 each with its card's own `title` (empty for the product's) and `image` (`id`
-and `src`; null for the value's picture or the product's); `listed_by_all`,
+and `src`; null for the value's picture or the product's; a card listed
+without a filter shows the flat picture of its design over it once that is
+drawn); `listed_by_all`,
 the attributes the product is listed by now, in its order of attributes,
 empty when it is listed once; and `listed_by`, the first of them, null when
 it is listed once; and `cards`, the cards the product is listed as now, in

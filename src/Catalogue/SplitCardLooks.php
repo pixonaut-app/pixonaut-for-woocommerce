@@ -18,7 +18,9 @@ use WC_Product_Attribute;
  * or per combination of values. The store manager can give each card a
  * title and an image of its own; a card without them shows the product's
  * title, and its variations' own picture or the product's
- * (`Storefront\SplitCardFaces`). They are kept by the card's key on the
+ * (`Storefront\SplitCardFaces`). A card an unfiltered listing shows keeps
+ * the flat picture of its design over its own image, which it shows only
+ * while none is drawn (`CardPages::image()`). They are kept by the card's key on the
  * product (a value's term id, or a combination's joined), so they stay with
  * their card when the product is listed by another attribute and back, until
  * the product loses one of the card's values.

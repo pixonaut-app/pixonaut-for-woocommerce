@@ -130,10 +130,11 @@ final class CardPages {
 	 * The picture of a card. When the filters pick values the card does not
 	 * hold (`$picked`), the picture of the whole combination: the variation
 	 * the card opens on on its blank's photo (`combination()`). Else, and
-	 * while that is not drawn, its own image; else, for a card an unfiltered
-	 * listing shows, the flat picture of its design, drawn for the first of
-	 * its variations that has one (`ProductPictures::flat()`); else, as for
-	 * a card holding a value of an attribute listed only while filtered (a
+	 * while that is not drawn, for a card an unfiltered listing shows, the
+	 * flat picture of its design, drawn for the first of its variations
+	 * that has one (`ProductPictures::flat()`), the template alone as the
+	 * product's other lists show it; else its own image; else, as for a
+	 * card holding a value of an attribute listed only while filtered (a
 	 * framing), the image of one of its variations, a picture of the
 	 * product in its setting: of the variation a filtered listing opens the
 	 * card on when it has one, else of the one agreeing with most of the
@@ -158,18 +159,19 @@ final class CardPages {
 				$undrawn( $opened, true );
 			}
 		}
-		$own = SplitCardLooks::of( $product->get_id(), $key )['image'];
-		if ( $own > 0 && wp_attachment_is_image( $own ) ) {
-			return $own;
-		}
 		$ids = SplitCards::card_variations( $product, $key );
 		if ( SplitCards::is_unfiltered( $product, $key ) ) {
+			// The design alone, as the product shows in every other list, even over the card's own image.
 			foreach ( self::loaded( $ids ) as $variation ) {
 				$flat = ProductPictures::flat( $variation );
 				if ( $flat > 0 ) {
 					return $flat;
 				}
 			}
+		}
+		$own = SplitCardLooks::of( $product->get_id(), $key )['image'];
+		if ( $own > 0 && wp_attachment_is_image( $own ) ) {
+			return $own;
 		}
 		$held     = SplitCards::variation_values( $product->get_id() );
 		$opened ??= self::opened( $ids, $held, $opens );
