@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.13.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.12.2...v1.13.0) (2026-11-17)
+
+
+### Bug Fixes
+
+* **storefront:** a card on a filtered archive shows the picture of the whole filtered combination ([#227](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/227)) ([2565746](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/2565746153c96408dca926e1b8417044e84d9cd7))
+* **storefront:** switching to a variation on another blank moves nothing, shows no range price and no spinner under 800 ms ([#228](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/228)) ([d77a487](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/d77a48746960eeb598b9c77f740b7b8d53edc11b))
+* **storefront:** the delivery time sits under Add to cart and a variation switch moves nothing ([#229](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/229)) ([60b1139](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/60b1139855db42c6a234093f5b5b39695a20765b))
+
+
+### Miscellaneous Chores
+
+* **i18n:** refresh the .pot's line references for the delivery time's strings ([#230](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/230)) ([c06e03e](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/c06e03edc312062dc26944a049ad081683bf688f))
+
 ## [1.12.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.12.1...v1.12.2) (2026-11-16)
 
 
