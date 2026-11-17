@@ -17,7 +17,8 @@ use WP_UnitTestCase;
 /**
  * The page of a variable product the inline designer mounts on gives its
  * add-to-cart form every variation, however low the store set WooCommerce's
- * threshold for looking them up one choice at a time.
+ * threshold for looking them up one choice at a time: handed from what is
+ * kept between requests, by a script at the top of the form.
  */
 final class VariationsUpFrontTest extends WP_UnitTestCase {
 
@@ -53,9 +54,29 @@ final class VariationsUpFrontTest extends WP_UnitTestCase {
 	public function test_a_personalised_product_gives_the_form_every_variation(): void {
 		$poster = $this->personalised();
 		$this->go_to( (string) get_permalink( $poster->get_id() ) );
+		$form = $this->form( $poster );
+
+		$this->assertSame( -1, $this->threshold( $poster ), 'WooCommerce reads none of them for the form' );
+		$this->assertSame( 1, preg_match( '/<form[^>]*data-product_variations="false">\s*<script>(.*?)<\/script>/s', $form, $script ), 'the script is the first thing in the form' );
+		$this->assertStringNotContainsString( '<', $script[1] ?? '' );
+		$this->assertSame( 1, preg_match( '/setAttribute\("data-product_variations",(".*?")\);/', $script[1] ?? '', $handed ) );
+		$this->assertSame( json_decode( (string) wp_json_encode( $poster->get_available_variations() ), true ), json_decode( (string) json_decode( $handed[1] ?? '' ), true ) );
+	}
+
+	public function test_a_personalised_product_with_no_variation_to_offer_keeps_them_in_the_form(): void {
+		$poster = $this->personalised();
+		foreach ( $poster->get_children() as $id ) {
+			$variation = wc_get_product( $id );
+			$this->assertInstanceOf( WC_Product::class, $variation );
+			$variation->set_status( 'private' );
+			$variation->save();
+		}
+		$poster = wc_get_product( $poster->get_id() );
+		$this->assertInstanceOf( WC_Product::class, $poster );
+		$this->go_to( (string) get_permalink( $poster->get_id() ) );
 
 		$this->assertSame( count( $poster->get_children() ), $this->threshold( $poster ) );
-		$this->assertStringNotContainsString( 'data-product_variations="false"', $this->form( $poster ) );
+		$this->assertStringNotContainsString( 'setAttribute', $this->form( $poster ) );
 	}
 
 	public function test_a_product_without_the_designer_keeps_the_store_threshold(): void {
@@ -66,22 +87,13 @@ final class VariationsUpFrontTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'data-product_variations="false"', $this->form( $poster ) );
 	}
 
-	public function test_a_higher_threshold_is_kept(): void {
-		$poster = $this->personalised();
-		$this->go_to( (string) get_permalink( $poster->get_id() ) );
-		$higher = count( $poster->get_children() ) + 1;
-		remove_filter( 'woocommerce_ajax_variation_threshold', array( $this, 'low_threshold' ) );
-
-		$this->assertSame( $higher, apply_filters( 'woocommerce_ajax_variation_threshold', $higher, $poster ) );
-	}
-
-	private function personalised(): WC_Product {
+	private function personalised(): WC_Product_Variable {
 		$poster = $this->poster();
 		VariationSwitchesTest::front()->save_to( $poster );
 		DesignFixture::sell_variant( $poster );
 		WC_Product_Variable::sync( $poster->get_id() );
 		$read = wc_get_product( $poster->get_id() );
-		$this->assertInstanceOf( WC_Product::class, $read );
+		$this->assertInstanceOf( WC_Product_Variable::class, $read );
 		return $read;
 	}
 

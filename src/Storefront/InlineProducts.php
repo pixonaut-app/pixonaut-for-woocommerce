@@ -38,6 +38,7 @@ final class InlineProducts {
 	 */
 	private const FILTERS = array( 'pixonaut_wc_storefront_mount_options' );
 
+
 	/**
 	 * @param Settings       $settings   The default layout, approval mode, form layout and the designer's language.
 	 * @param Connection     $connection The keys the SDK mounts with.
@@ -61,6 +62,76 @@ final class InlineProducts {
 	 * @param WC_Product $product The product the page shows.
 	 */
 	public function for_product( WC_Product $product ): ?InlineDesigner {
+		if ( $product->is_type( 'variable' ) && $product->get_id() > 0 && ! $this->edits( $product ) ) {
+			// The gallery, the form, the swatches and the price each ask for the designer; its variations are read once, and kept for the next shopper.
+			return RequestCache::remember( $this->designer_key( $product ), fn (): ?InlineDesigner => $this->kept_designer( $product ) );
+		}
+		return $this->built( $product );
+	}
+
+	/**
+	 * Whether the page edits a cart or order line of the product, which is
+	 * the shopper's own.
+	 *
+	 * @param WC_Product $product The product the page shows.
+	 */
+	private function edits( WC_Product $product ): bool {
+		return null !== $this->order_edit?->line_for( $product ) || null !== $this->edit?->line_for( $product );
+	}
+
+	/**
+	 * A variable product's designer, as kept from an earlier request while
+	 * nothing it is built from has changed (`ProductPageCache`).
+	 *
+	 * @param WC_Product $product A variable product, on a page that edits no line of it.
+	 */
+	private function kept_designer( WC_Product $product ): ?InlineDesigner {
+		$context = $this->designer_context( $product );
+		if ( null === $context ) {
+			return $this->built( $product );
+		}
+		$kept = ProductPageCache::remember(
+			$product,
+			'designer',
+			$context,
+			function () use ( $product ): ?array {
+				$designer = $this->built( $product );
+				return null === $designer ? null : array(
+					'config'          => $designer->config,
+					'mounts'          => $designer->mounts,
+					'approval_mode'   => $designer->approval_mode,
+					'variations'      => $designer->variations,
+					'side_labels'     => $designer->side_labels(),
+					'variant'         => $designer->variant,
+					'opening_variant' => $designer->opening_variant,
+				);
+			}
+		);
+		if ( null === $kept ) {
+			return null;
+		}
+		return new InlineDesigner( $product, $kept['config'], $kept['mounts'], $kept['approval_mode'], variations: $kept['variations'], side_labels: $kept['side_labels'], variant: $kept['variant'], opening_variant: $kept['opening_variant'] );
+	}
+
+	/**
+	 * What a kept designer depends on besides what every kept read does:
+	 * the values the page opens on, and whether the connection is paused.
+	 * Null, so nothing is kept, while the address names a value the
+	 * product offers none of.
+	 *
+	 * @param WC_Product $product A variable product.
+	 */
+	private function designer_context( WC_Product $product ): ?string {
+		$opening = is_product() && get_queried_object_id() === $product->get_id() ? OpeningChoice::values( $product ) : array();
+		return OpeningChoice::offers_all( $product, $opening ) ? (string) wp_json_encode( array( $opening, $this->connection->paused() ) ) : null;
+	}
+
+	/**
+	 * The designer the page shows, built from the product's variations.
+	 *
+	 * @param WC_Product $product The product the page shows.
+	 */
+	private function built( WC_Product $product ): ?InlineDesigner {
 		$config   = ProductConfig::config_for( $product )->for_designer();
 		$sold     = $product->is_type( 'variable' ) ? ProductConfig::kept_variations( $product ) : array();
 		$variants = array_map( static fn ( array $variation ): ProductConfig => $variation[1]->for_designer(), $sold );
@@ -90,8 +161,7 @@ final class InlineProducts {
 			$variant = null === $config->blank_id ? null : ProductVariant::sold_by( $product, $config );
 			return new InlineDesigner( $product, $config, $this->mounts( $product, $config, null === $variant ? array() : array( $variant ) ), $mode, variant: $variant );
 		}
-		// The gallery, the form, the swatches and the price each ask for the designer; its variations are built once.
-		return RequestCache::remember( $this->designer_key( $product ), fn (): InlineDesigner => $this->variable_designer( $product, $config, $page, $variants, array_map( static fn ( array $variation ): WC_Product => $variation[0], $sold ), $mode ) );
+		return $this->variable_designer( $product, $config, $page, $variants, array_map( static fn ( array $variation ): WC_Product => $variation[0], $sold ), $mode );
 	}
 
 	/**
@@ -330,6 +400,10 @@ final class InlineProducts {
 			 * into the first step (on a product with one side; with more it
 			 * leaves the item out), and marks complete once it holds a
 			 * choice.
+			 *
+			 * On a variable product the options are kept between requests
+			 * with the rest of the designer, until the product or a setting
+			 * changes: a callback answers the same for every shopper.
 			 *
 			 * @since 0.1.0
 			 *

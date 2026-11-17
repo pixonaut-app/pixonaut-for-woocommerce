@@ -48,7 +48,7 @@ final class ApplicableAttributeForm {
 			return;
 		}
 		$fields     = ApplicableAttributes::fields( $product );
-		$variations = array() === $fields ? array() : ApplicableAttributes::variations( $product );
+		$variations = array() === $fields ? array() : ApplicableAttributes::kept_variations( $product );
 		if ( array() === ApplicableAttributes::dependent( $fields, $variations ) ) {
 			return;
 		}

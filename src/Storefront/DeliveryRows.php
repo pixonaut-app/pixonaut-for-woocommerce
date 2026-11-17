@@ -184,29 +184,19 @@ final class DeliveryRows {
 	 * @return array<string, array{label: string, value: string}>
 	 */
 	public function rows( WC_Product $product ): array {
-		$rows = array();
-		if ( $product instanceof WC_Product_Variable && $this->has_designer( $product ) ) {
-			$texts = array();
-			foreach ( VariationSlots::variations( $product ) as $variation ) {
-				// A line of the table, as the table's other values are: its own breaks kept, in no paragraph a theme spaces.
-				$texts[ $variation->get_id() ] = nl2br( wptexturize( wp_kses_post( trim( $variation->get_description() ) ) ) );
-			}
+		$rows  = array();
+		$texts = $product instanceof WC_Product_Variable ? ProductPageCache::remember( $product, 'delivery_rows', '', fn (): array => $this->variation_texts( $product ) ) : array();
+		if ( isset( $texts['descriptions'] ) ) {
 			$rows[ self::DELIVERY_KEY ] = array(
 				/* translators: Label of a row of the product's attributes table: how the product is delivered, as the chosen variation describes it, e.g. "as a poster, without a frame". */
 				'label' => __( 'Delivery', 'pixonaut-for-woocommerce' ),
-				'value' => $this->slots->varying( $product->get_id(), self::DELIVERY_CLASS, 'div', $texts ),
+				'value' => $this->slots->varying( $product->get_id(), self::DELIVERY_CLASS, 'div', $texts['descriptions'] ),
 			);
 		}
 		if ( $this->times->shown() ) {
-			if ( $product instanceof WC_Product_Variable ) {
-				$lines = array();
-				foreach ( VariationSlots::variations( $product ) as $variation ) {
-					$lines[ $variation->get_id() ] = esc_html( $this->times->line_of( $variation ) );
-				}
-				$value = $this->slots->varying( $product->get_id(), self::DELIVERY_TIME_CLASS, 'div', $lines );
-			} else {
-				$value = $this->slots->fixed( self::DELIVERY_TIME_CLASS, 'div', esc_html( $this->times->line_of( $product ) ) );
-			}
+			$value                           = $product instanceof WC_Product_Variable
+				? $this->slots->varying( $product->get_id(), self::DELIVERY_TIME_CLASS, 'div', $texts['times'] ?? array() )
+				: $this->slots->fixed( self::DELIVERY_TIME_CLASS, 'div', esc_html( $this->times->line_of( $product ) ) );
 			$rows[ self::DELIVERY_TIME_KEY ] = array(
 				/* translators: Label of a row of the product's attributes table: how long until the customer has the order, e.g. "5–8 days". */
 				'label' => __( 'Delivery time', 'pixonaut-for-woocommerce' ),
@@ -214,6 +204,32 @@ final class DeliveryRows {
 			);
 		}
 		return array_filter( $rows, static fn ( array $row ): bool => '' !== $row['value'] );
+	}
+
+	/**
+	 * What each of a variable product's variations says in the rows, by
+	 * variation id, HTML: its description while the inline designer shows
+	 * on the product, and its delivery time while the store shows them.
+	 *
+	 * @param WC_Product_Variable $product The variable product.
+	 * @return array{descriptions?: array<int, string>, times?: array<int, string>}
+	 */
+	private function variation_texts( WC_Product_Variable $product ): array {
+		$texts = array();
+		if ( $this->has_designer( $product ) ) {
+			$texts['descriptions'] = array();
+			foreach ( VariationSlots::variations( $product ) as $variation ) {
+				// A line of the table, as the table's other values are: its own breaks kept, in no paragraph a theme spaces.
+				$texts['descriptions'][ $variation->get_id() ] = nl2br( wptexturize( wp_kses_post( trim( $variation->get_description() ) ) ) );
+			}
+		}
+		if ( $this->times->shown() ) {
+			$texts['times'] = array();
+			foreach ( VariationSlots::variations( $product ) as $variation ) {
+				$texts['times'][ $variation->get_id() ] = esc_html( $this->times->line_of( $variation ) );
+			}
+		}
+		return $texts;
 	}
 
 	/**

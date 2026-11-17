@@ -589,6 +589,21 @@ add_filter( 'pixonaut_wc_storefront_edit_mount_options', function ( $options ) {
 } );
 ```
 
+### `pixonaut_wc_storefront_keeps_product_pages`
+
+Filters whether a product page keeps what it builds of the product between requests: its designer, what WooCommerce tells its form of each variation, its delivery rows and the defaults it opens on. A kept read serves every shopper whose language, currency, roles and taxes match, while the callbacks on the price, stock, variation and designer filters are the same: return false on a store whose extensions answer those filters for one shopper alone, such as with customer-specific prices.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `$keeps` | `bool` | Whether the page keeps its reads; true. |
+| `$product` | `WC_Product` | The product the page shows. |
+
+Since 1.22.0. Fired in `src/Storefront/ProductPageCache.php`.
+
+```php
+add_filter( 'pixonaut_wc_storefront_keeps_product_pages', '__return_false' );
+```
+
 ### `pixonaut_wc_storefront_label`
 
 Filters a customer-facing text.
@@ -614,6 +629,8 @@ add_filter( 'pixonaut_wc_storefront_label', function ( $text, $key ) {
 Filters the options one side of the inline designer mounts with, before the targets are added. The storefront script runs them through the JavaScript filter `pixonaut.designer.mountOptions` too. On a variable product the filter runs for the product and for each variation, and a side mounts with the print sizes of all.
 
 Pixonaut checks every proof against the product's configuration when it is added to the cart, so a template, blank, placement or print size changed here is refused there. `views` lists the ids of the blank's views the designer shows (empty for all), `placements` the side's placement, and `variants` the refs of the blank's variants the product sells: on a variable product, those of every variation on the blank, which the designer's colour and size picker offers. `preload` is the store's `designer_preload` setting: what the designer loads ahead (`auto`, `background` or `off`, or the SDK's `eager`). The storefront script adds `initialVariant`, the chosen variation's, and mounts a side whose tab is hidden with `preload` `off`, preloading in that mode once the tab shows. `showPrintAreaFrame` is the store's `print_area_frame` setting and `accent` its custom `designer_accent_colour`; with the theme's accent chosen, the script reads the colour of the theme's buttons into `accent` when the options name none. The script draws the designer's colour and size picker only on a product without variations whose `variants` lists more than one (a variable product's variation fields offer them), unless `showVariantPicker` says otherwise. On a product with one side it adds `optionsStep` and `lastStepContent`, which draw the add-to-cart form's variation fields in the designer's first step and its cart row on the last. A side the store manager arranged, or whose product's options stand in groups of their own, has `formGroups`, the designer's groups in their order with the product's words; an item `{attribute: <slug>}` in it is the variation field of that attribute, which the script moves into that group instead of into the first step (on a product with one side; with more it leaves the item out), and marks complete once it holds a choice.
+
+On a variable product the options are kept between requests with the rest of the designer, until the product or a setting changes: a callback answers the same for every shopper.
 
 | Parameter | Type | Description |
 |---|---|---|

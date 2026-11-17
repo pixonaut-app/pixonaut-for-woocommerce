@@ -17,6 +17,8 @@ use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\VariationSizes;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Storefront\FilteredOpening;
+use Pixonaut\WooCommerce\Storefront\OpeningDefaults;
+use Pixonaut\WooCommerce\Storefront\ProductPageCache;
 use ReflectionProperty;
 
 /**
@@ -55,5 +57,25 @@ final class FreshRequest {
 		( new ReflectionProperty( FilterIndex::class, 'switched' ) )->setValue( null, false );
 		( new ReflectionProperty( FilterIndex::class, 'errors' ) )->setValue( null, null );
 		RequestCache::forget();
+	}
+
+	/**
+	 * Starts the next request now, without what this one read of product
+	 * pages: the versions of products it read and the defaults it filled
+	 * in. What `ProductPageCache` kept between requests stays.
+	 */
+	public static function forget_page_reads(): void {
+		( new ReflectionProperty( ProductPageCache::class, 'versions' ) )->setValue( null, array() );
+		( new ReflectionProperty( ProductPageCache::class, 'written' ) )->setValue( null, array() );
+		$_SERVER['REQUEST_TIME_FLOAT'] = microtime( true );
+		global $wp_filter;
+		foreach ( $wp_filter['woocommerce_product_get_default_attributes']->callbacks ?? array() as $callbacks ) {
+			foreach ( $callbacks as $callback ) {
+				$function = $callback['function'];
+				if ( is_array( $function ) && $function[0] instanceof OpeningDefaults ) {
+					( new ReflectionProperty( OpeningDefaults::class, 'filled' ) )->setValue( $function[0], array() );
+				}
+			}
+		}
 	}
 }

@@ -206,8 +206,7 @@ final class OpeningPrice {
 		if ( null !== $designer ) {
 			return $designer->variations;
 		}
-		$variants = $this->buttons->variants( $product );
-		return null === $this->buttons->page_config( $product, $variants ) ? array() : $variants;
+		return null === $this->buttons->page_config_of( $product ) ? array() : $this->buttons->variants( $product );
 	}
 
 	/**

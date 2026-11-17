@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\ApplicableAttributes;
 use WC_Product;
 use WC_Product_Variable;
 use WC_Product_Variation;
@@ -66,6 +67,47 @@ final class OpeningChoice {
 			}
 		}
 		return $requested;
+	}
+
+	/**
+	 * Whether each of some values is empty or one the product offers, as
+	 * its variations keep it, and the values together are held by one of
+	 * its enabled variations (an attribute of "any" value holding all).
+	 * What a page opens on is kept between requests only then
+	 * (`ProductPageCache`), so no address makes up a key of its own.
+	 *
+	 * @param WC_Product            $product A variable product.
+	 * @param array<string, string> $values  Values by attribute as a variation keeps it (`pa_colour`), or by field name (`attribute_pa_colour`).
+	 */
+	public static function offers_all( WC_Product $product, array $values ): bool {
+		if ( ! $product instanceof WC_Product_Variable ) {
+			return false;
+		}
+		$offered = array();
+		foreach ( $product->get_variation_attributes() as $name => $options ) {
+			$offered[ 'attribute_' . sanitize_title( (string) $name ) ] = array_map( 'strval', (array) $options );
+		}
+		$named = array();
+		foreach ( $values as $attribute => $value ) {
+			$field = str_starts_with( (string) $attribute, 'attribute_' ) ? (string) $attribute : 'attribute_' . $attribute;
+			if ( '' === $value ) {
+				continue;
+			}
+			if ( ! in_array( $value, $offered[ $field ] ?? array(), true ) ) {
+				return false;
+			}
+			$named[ $field ] = $value;
+		}
+		if ( array() === $named ) {
+			return true;
+		}
+		foreach ( ApplicableAttributes::kept_variations( $product ) as $attributes ) {
+			$held = array_filter( $named, static fn ( string $value, string $field ): bool => '' === ( $attributes[ $field ] ?? '' ) || $attributes[ $field ] === $value, ARRAY_FILTER_USE_BOTH );
+			if ( count( $held ) === count( $named ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

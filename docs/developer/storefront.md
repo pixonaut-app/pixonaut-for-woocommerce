@@ -1063,6 +1063,44 @@ mode than the checkbox hides `.pixonaut-approval` and disables its box. A
 the form as it is, also when no side of the product can mount (the form
 then carries `data-pixonaut-variations` without `data-pixonaut-mounts`).
 
+### Kept between requests
+
+A variable product's page builds its designer, what WooCommerce tells its
+add-to-cart form of each variation, its delivery rows, the defaults it opens
+on, whether its Personalise button shows, its dependent attributes and
+whether it can be bought from every variation. `Storefront\ProductPageCache`
+keeps each in a transient (the object cache, where the site has a persistent
+one) for a day at most, and the next request takes it from there. The form
+is then given no variations by WooCommerce (`woocommerce_ajax_variation_threshold`
+answers −1 for it) and is handed the kept ones by a script at the top of the
+form, which sets its `data-product_variations` before WooCommerce's script
+reads it; a product with no variation to offer keeps WooCommerce's own.
+
+A kept read is found under a key of the plugin's version, a generation, the
+product's version, the locale, the currency, the signed-in shopper's roles,
+and, while the store charges taxes, how prices show them, the shopper's VAT
+exemption and the rates of every tax class at the shopper's location and at
+the shop's (the rates, not the address), and the callbacks (by name, not by
+object) on the filters that shape prices, stock, variations and the
+designer. The product's version is the time it was last written: the
+product or one of its variations (a post, meta or term write, a save, a
+stock change, a deletion), or the image of one of them, and again at the end
+of that request. The generation is the time everything was last dropped:
+when one of WooCommerce's options or one of the plugin's (but its locks,
+logs and other bookkeeping) is written, which an attribute or value change
+does through `FilterIndex`'s generation, and when a plugin, the theme or a
+translation changes. A request keeps a read only while both are older than
+the request and the version is unchanged once the read is built, so nothing
+read while a change was being written is kept. A page that edits a cart or
+order line builds its designer for itself, and one whose address names
+attribute values no enabled variation holds together its designer and the
+defaults it opens on.
+
+Nothing about the shopper is kept. A store whose extensions answer those
+filters for one shopper alone, such as with customer-specific prices,
+returns false from `pixonaut_wc_storefront_keeps_product_pages`
+([Hooks](../hooks/)), and its product pages keep nothing.
+
 ### Price
 
 Every variation carries `priceHtml`, its price as WooCommerce formats it

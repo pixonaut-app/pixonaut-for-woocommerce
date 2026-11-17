@@ -243,6 +243,7 @@ use Pixonaut\WooCommerce\Storefront\ReadsAhead;
 use Pixonaut\WooCommerce\Storefront\UnavailableReports;
 use Pixonaut\WooCommerce\Storefront\UnavailableProduct;
 use Pixonaut\WooCommerce\Storefront\VariationsUpFront;
+use Pixonaut\WooCommerce\Storefront\ProductPageCache;
 use Pixonaut\WooCommerce\Theme\ThemeSettings;
 use Pixonaut\WooCommerce\Storefront\VariationSlots;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
@@ -514,6 +515,7 @@ final class Plugin {
 		( new UnavailableProduct( $this->labels() ) )->register();
 		SplitCards::register();
 		FilterIndex::register();
+		ProductPageCache::register();
 		ArchiveIndexes::register();
 		SplitCardImageCopies::register();
 		$this->product_recheck()->register();
