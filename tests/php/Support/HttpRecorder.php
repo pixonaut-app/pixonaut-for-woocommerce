@@ -63,11 +63,12 @@ final class HttpRecorder {
 	 * Queues a JSON answer the spec does not declare, such as a `200`
 	 * missing a required field.
 	 *
-	 * @param int                  $status Status.
-	 * @param array<string, mixed> $body   JSON body.
+	 * @param int                   $status  Status.
+	 * @param array<string, mixed>  $body    JSON body.
+	 * @param array<string, string> $headers Response headers.
 	 */
-	public function off_spec( int $status, array $body ): self {
-		$this->json( $status, $body );
+	public function off_spec( int $status, array $body, array $headers = array() ): self {
+		$this->json( $status, $body, $headers );
 		$this->script[ count( $this->script ) - 1 ]['checked'] = false;
 		return $this;
 	}

@@ -1854,6 +1854,8 @@ declare function operations({ json, raw }: Reads): {
     storage: {
         /** Read the tenant's storage use */
         get: () => Promise<AnswerOf<"/v1/storage">>;
+        /** Page a connected store's reported products */
+        storeProducts: (connectionId: string, query?: QueryOf<"/v1/storage/stores/{connectionId}/products">) => Promise<AnswerOf<"/v1/storage/stores/{connectionId}/products">>;
     };
     templates: {
         constraints: {

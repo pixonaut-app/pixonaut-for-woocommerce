@@ -1248,6 +1248,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/connect/picture-storage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Report the pictures this store keeps
+         * @description Called with the store's own integration key, after a picture job changes what the shop holds and at least once a day. Reports the Pixonaut pictures the shop keeps in its own media library, what they take, how much of that is pictures of single variations, and the free space left there. The report replaces the one before it whole. The studio's storage view and `GET /v1/storage` show the last one beside the workspace's storage, never counted in its quota; one older than three days shows its age. Disconnecting drops it. A link off the shop's own site is `400 invalid_link`, naming it, and nothing is kept. A field this route does not know is ignored, so a newer store may send more.
+         */
+        put: operations["connectedStore.reportPictureStorage"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/connect/store-access": {
         parameters: {
             query?: never;
@@ -2568,9 +2588,29 @@ export interface paths {
         };
         /**
          * Read the tenant's storage use
-         * @description Bytes used against the quota, counting every finished asset at its full size, and how many there are, in all and by category: library pictures (`assets`), customers' design uploads (`customerUploads`), blanks' photos (`blankPhotos`) and everything in the sandbox (`sandbox`). A workspace and its sandbox share the quota, so both read the same numbers; a copy Sync made counts only once live has deleted the upload it copies. The categories add up to `usedBytes` and `fileCount`.
+         * @description Bytes used against the quota, counting every finished asset at its full size, and how many there are, in all and by category: library pictures (`assets`), customers' design uploads (`customerUploads`), blanks' photos (`blankPhotos`) and everything in the sandbox (`sandbox`). A workspace and its sandbox share the quota, so both read the same numbers; a copy Sync made counts only once live has deleted the upload it copies. The categories add up to `usedBytes` and `fileCount`. `stores` is apart from all of it: for each connected store that reported them, the product pictures Pixonaut drew that the shop keeps on its own server, which no Pixonaut plan makes room for.
          */
         get: operations["storage.get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/storage/stores/{connectionId}/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Page a connected store's reported products
+         * @description The products a connected store last reported, largest first, those whose name holds `query` (any case) when one is given. `total` counts every match. A store with no report is `404 not_found`.
+         */
+        get: operations["storage.storeProducts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -34656,6 +34696,148 @@ export interface operations {
             };
         };
     };
+    "connectedStore.reportPictureStorage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Free space where the shop keeps its media (on a multisite, the site's upload quota left), or null when it cannot be read. */
+                    freeBytes: number | null;
+                    links: {
+                        /** @description Where variation pictures are cleaned up, or null. */
+                        cleanUp: string | null;
+                        /** @description Where the store-wide setting is turned off, or null. */
+                        variationSetting: string | null;
+                    };
+                    /** @description Their bytes: each attachment's file and the image sizes WordPress made from it. */
+                    pictureBytes: number;
+                    /** @description How many Pixonaut pictures it holds: attachments, each counted once. */
+                    pictureCount: number;
+                    /** @description How many products hold at least one Pixonaut picture, those past the cap included. Left out, the products listed. */
+                    productCount?: number;
+                    /** @description Products holding at least one Pixonaut picture, at most 1000: the largest by pictureBytes when there are more. */
+                    products: {
+                        /** @description Where its choice is set in the shop's admin, or null. */
+                        editUrl: string | null;
+                        name: string;
+                        /** @description Their bytes: each attachment's file and the image sizes WordPress made from it. */
+                        pictureBytes: number;
+                        /** @description How many Pixonaut pictures it holds: attachments, each counted once. */
+                        pictureCount: number;
+                        /** @description The product's id in the shop, unique in the list. */
+                        storeProductId: string;
+                        /** @description The bytes of those. */
+                        variationPictureBytes: number;
+                        /** @description How many of them were drawn for one variation. */
+                        variationPictureCount: number;
+                        /** @description Whether it draws a picture for every variation: its own choice, else the store-wide default. */
+                        variationPicturesOn: boolean;
+                    }[];
+                    /** @description The bytes of those. */
+                    variationPictureBytes: number;
+                    /** @description How many of them were drawn for one variation. */
+                    variationPictureCount: number;
+                    /** @description The store-wide default of drawing a picture for every variation. */
+                    variationPicturesOn: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description The report is kept */
+            204: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refused: invalid_link, invalid_input */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `invalid_link`. */
+                        url?: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, forbidden, feature_disabled */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
     "connectedStore.holdAccess": {
         parameters: {
             query?: never;
@@ -44451,6 +44633,13 @@ export interface operations {
                                         name: string;
                                     }[];
                                     status: string;
+                                    storage?: {
+                                        bytes: number;
+                                        draws: boolean;
+                                        percentOfFree: number | null;
+                                        pictures: number;
+                                        warning: string | null;
+                                    };
                                     storeRefusal?: {
                                         message: string;
                                         store: string;
@@ -44711,6 +44900,13 @@ export interface operations {
                                         name: string;
                                     }[];
                                     status: string;
+                                    storage?: {
+                                        bytes: number;
+                                        draws: boolean;
+                                        percentOfFree: number | null;
+                                        pictures: number;
+                                        warning: string | null;
+                                    };
                                     storeRefusal?: {
                                         message: string;
                                         store: string;
@@ -44935,6 +45131,13 @@ export interface operations {
                                         name: string;
                                     }[];
                                     status: string;
+                                    storage?: {
+                                        bytes: number;
+                                        draws: boolean;
+                                        percentOfFree: number | null;
+                                        pictures: number;
+                                        warning: string | null;
+                                    };
                                     storeRefusal?: {
                                         message: string;
                                         store: string;
@@ -45218,6 +45421,13 @@ export interface operations {
                                         name: string;
                                     }[];
                                     status: string;
+                                    storage?: {
+                                        bytes: number;
+                                        draws: boolean;
+                                        percentOfFree: number | null;
+                                        pictures: number;
+                                        warning: string | null;
+                                    };
                                     storeRefusal?: {
                                         message: string;
                                         store: string;
@@ -45669,6 +45879,13 @@ export interface operations {
                                         name: string;
                                     }[];
                                     status: string;
+                                    storage?: {
+                                        bytes: number;
+                                        draws: boolean;
+                                        percentOfFree: number | null;
+                                        pictures: number;
+                                        warning: string | null;
+                                    };
                                     storeRefusal?: {
                                         message: string;
                                         store: string;
@@ -52986,6 +53203,53 @@ export interface operations {
                         }[];
                         fileCount: number;
                         quotaBytes: number;
+                        /** @description Each connected store's last picture report, by name; a store that never reported is left out. Not counted in usedBytes. */
+                        stores: {
+                            connectionId: string;
+                            /** @description Free space where the shop keeps its media; null when the shop cannot read it. */
+                            freeBytes: number | null;
+                            links: {
+                                /** @description Where variation pictures are cleaned up, or null. */
+                                cleanUp: string | null;
+                                /** @description Where the store-wide setting is turned off, or null. */
+                                variationSetting: string | null;
+                            };
+                            /** @description How many of them the shop listed, largest first: the ones the products route pages. */
+                            listedProductCount: number;
+                            /** @description freeBytes is under 1073741824 and variation pictures are more than half of pictureBytes: turn variation pictures off (links.variationSetting), clean them up (links.cleanUp), or get more room from the shop's hosting. A Pixonaut plan adds none. */
+                            lowSpace: boolean;
+                            /** @description The connected store's name. */
+                            name: string;
+                            /** @description What the Pixonaut pictures in the shop's media library take, with their image sizes. */
+                            pictureBytes: number;
+                            pictureCount: number;
+                            /** @description How many products hold pictures in the shop. */
+                            productCount: number;
+                            /** @description The largest, at most 5; GET /v1/storage/stores/{connectionId}/products pages and searches the rest. */
+                            products: {
+                                /** @description Where that is set in the shop's admin, or null. */
+                                editUrl: string | null;
+                                name: string;
+                                pictureBytes: number;
+                                pictureCount: number;
+                                /** @description The product's id in the shop. */
+                                storeProductId: string;
+                                variationPictureBytes: number;
+                                variationPictureCount: number;
+                                /** @description Whether "Generate a picture for every variation" is on for it in the shop. */
+                                variationPicturesOn: boolean;
+                            }[];
+                            /** @description When the shop last reported, in ms. */
+                            reportedAt: number;
+                            siteUrl: string;
+                            /** @description The report is more than three days old: the shop stopped. */
+                            stale: boolean;
+                            /** @description The part of pictureBytes drawn for single variations. */
+                            variationPictureBytes: number;
+                            variationPictureCount: number;
+                            /** @description The shop's store-wide default. */
+                            variationPicturesOn: boolean;
+                        }[];
                         usedBytes: number;
                     };
                 };
@@ -53013,6 +53277,113 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
+    "storage.storeProducts": {
+        parameters: {
+            query?: {
+                query?: string;
+                offset?: number | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                connectionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of the store's products */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        products: {
+                            /** @description Where that is set in the shop's admin, or null. */
+                            editUrl: string | null;
+                            name: string;
+                            pictureBytes: number;
+                            pictureCount: number;
+                            /** @description The product's id in the shop. */
+                            storeProductId: string;
+                            variationPictureBytes: number;
+                            variationPictureCount: number;
+                            /** @description Whether "Generate a picture for every variation" is on for it in the shop. */
+                            variationPicturesOn: boolean;
+                        }[];
+                        /** @description When the report this page is of arrived: a page of a later report may order the products otherwise, so start again from offset 0 when it moves. */
+                        reportedAt: number;
+                        total: number;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: invalid_query */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
                     };
                 };
             };
