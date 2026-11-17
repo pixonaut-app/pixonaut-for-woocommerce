@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.15.0...v1.15.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **catalogue:** send the picture report within the api's limits ([#249](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/249)) ([c0a0150](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/c0a0150e9e3accd53b63a68431b07faee17d515b))
+
 ## [1.15.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.14.0...v1.15.0) (2026-11-17)
 
 
