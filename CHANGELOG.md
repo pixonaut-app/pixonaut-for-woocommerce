@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.4](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.20.3...v1.20.4) (2026-11-17)
+
+
+### Bug Fixes
+
+* **storefront:** the poster's cover rule is printed before the poster ([#282](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/282)) ([d1103a0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/d1103a05c81cb5891449cfc61d38191f95439f26))
+
 ## [1.20.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.20.2...v1.20.3) (2026-11-17)
 
 
