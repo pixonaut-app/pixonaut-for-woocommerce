@@ -167,6 +167,11 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 		$this->assert_index_lists_as_the_server( 'split-colour' );
 	}
 
+	public function test_posters_listed_by_colour_only_while_filtered(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::COLOUR ], SplitListing::FILTERED );
+		$this->assert_index_lists_as_the_server( 'split-colour-while-filtered' );
+	}
+
 	public function test_posters_listed_by_framing_and_by_colour_only_while_filtered(): void {
 		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		SplitListing::set_attribute_mode( $this->attributes[ self::COLOUR ], SplitListing::FILTERED );
@@ -325,6 +330,7 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 						fn ( array $swatch ): array => array(
 							'link'  => $this->normal( $swatch['link'] ),
 							'image' => $swatch['image'],
+							'title' => $swatch['title'],
 						),
 						$card['swatches']
 					),
@@ -469,6 +475,9 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 				$this->assertTrue( $swatches[0]['current'], 'the card itself first' );
 				$this->assertSame( $this->normal( (string) get_permalink() ), $this->normal( $swatches[0]['url'] ) );
 				$this->assertCount( 1, array_filter( array_column( $swatches, 'current' ) ) );
+				foreach ( $swatches as $swatch ) {
+					$this->assertNotSame( array(), $swatch['values'], 'each swatch, the shown card too, names the values its card differs by' );
+				}
 			}
 			$cards[] = array(
 				'link'     => (string) get_permalink(),
@@ -477,6 +486,7 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 					fn ( array $swatch ): array => array(
 						'link'  => $this->normal( $swatch['url'] ),
 						'image' => $swatch['image']['src'],
+						'title' => $swatch['title'],
 					),
 					array_values( array_filter( $swatches, static fn ( array $swatch ): bool => ! $swatch['current'] ) )
 				),

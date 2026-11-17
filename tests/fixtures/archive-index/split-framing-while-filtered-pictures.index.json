@@ -78,13 +78,13 @@
 	"sorts": [],
 	"cards": [
 		{
-			"id": "90",
-			"productId": 90,
+			"id": "104",
+			"productId": 104,
 			"title": "Hav",
 			"url": "http://localhost:8862/?product=hav",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8862/wp-content/uploads/variation-91.png",
+				"src": "http://localhost:8862/wp-content/uploads/variation-105.png",
 				"srcset": "",
 				"width": 1,
 				"height": 1,
@@ -139,13 +139,13 @@
 			]
 		},
 		{
-			"id": "90-58",
-			"productId": 90,
+			"id": "104-66",
+			"productId": 104,
 			"title": "Hav",
 			"url": "http://localhost:8862/?product=hav&inramning=hangare&storlek=50x70",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8862/wp-content/uploads/variation-92.png",
+				"src": "http://localhost:8862/wp-content/uploads/variation-106.png",
 				"srcset": "",
 				"width": 1,
 				"height": 1,
@@ -191,13 +191,13 @@
 			]
 		},
 		{
-			"id": "90-56",
-			"productId": 90,
+			"id": "104-64",
+			"productId": 104,
 			"title": "Hav",
 			"url": "http://localhost:8862/?product=hav&inramning=ingen&storlek=30x40",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8862/wp-content/uploads/variation-91.png",
+				"src": "http://localhost:8862/wp-content/uploads/variation-105.png",
 				"srcset": "",
 				"width": 1,
 				"height": 1,
@@ -232,13 +232,13 @@
 			]
 		},
 		{
-			"id": "80",
-			"productId": 80,
+			"id": "94",
+			"productId": 94,
 			"title": "Safari",
 			"url": "http://localhost:8862/?product=safari",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8862/wp-content/uploads/variation-81.png",
+				"src": "http://localhost:8862/wp-content/uploads/variation-95.png",
 				"srcset": "",
 				"width": 1,
 				"height": 1,
@@ -326,13 +326,13 @@
 			]
 		},
 		{
-			"id": "80-58",
-			"productId": 80,
+			"id": "94-66",
+			"productId": 94,
 			"title": "Safari",
 			"url": "http://localhost:8862/?product=safari&inramning=hangare&storlek=50x70&ramfarg=svart",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8862/wp-content/uploads/variation-86.png",
+				"src": "http://localhost:8862/wp-content/uploads/variation-100.png",
 				"srcset": "",
 				"width": 1,
 				"height": 1,
@@ -367,13 +367,13 @@
 			]
 		},
 		{
-			"id": "80-56",
-			"productId": 80,
+			"id": "94-64",
+			"productId": 94,
 			"title": "Safari",
 			"url": "http://localhost:8862/?product=safari&inramning=ingen",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8862/wp-content/uploads/variation-81.png",
+				"src": "http://localhost:8862/wp-content/uploads/variation-95.png",
 				"srcset": "",
 				"width": 1,
 				"height": 1,
@@ -419,13 +419,13 @@
 			]
 		},
 		{
-			"id": "80-57",
-			"productId": 80,
+			"id": "94-65",
+			"productId": 94,
 			"title": "Safari",
 			"url": "http://localhost:8862/?product=safari&inramning=ram",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8862/wp-content/uploads/variation-83.png",
+				"src": "http://localhost:8862/wp-content/uploads/variation-97.png",
 				"srcset": "",
 				"width": 1,
 				"height": 1,
@@ -482,13 +482,13 @@
 			]
 		},
 		{
-			"id": "87",
-			"productId": 87,
+			"id": "101",
+			"productId": 101,
 			"title": "Skog",
 			"url": "http://localhost:8862/?product=skog",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8862/wp-content/uploads/variation-88.png",
+				"src": "http://localhost:8862/wp-content/uploads/variation-102.png",
 				"srcset": "",
 				"width": 1,
 				"height": 1,
@@ -532,13 +532,13 @@
 			]
 		},
 		{
-			"id": "87-56",
-			"productId": 87,
+			"id": "101-64",
+			"productId": 101,
 			"title": "Skog",
 			"url": "http://localhost:8862/?product=skog&inramning=ingen&storlek=30x40",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8862/wp-content/uploads/variation-88.png",
+				"src": "http://localhost:8862/wp-content/uploads/variation-102.png",
 				"srcset": "",
 				"width": 1,
 				"height": 1,
@@ -573,13 +573,13 @@
 			]
 		},
 		{
-			"id": "87-57",
-			"productId": 87,
+			"id": "101-65",
+			"productId": 101,
 			"title": "Skog",
 			"url": "http://localhost:8862/?product=skog&inramning=ram&storlek=50x70&ramfarg=ek",
 			"summary": "",
 			"image": {
-				"src": "http://localhost:8862/wp-content/uploads/variation-89.png",
+				"src": "http://localhost:8862/wp-content/uploads/variation-103.png",
 				"srcset": "",
 				"width": 1,
 				"height": 1,
@@ -616,67 +616,67 @@
 	],
 	"images": [
 		{
-			"src": "http://localhost:8862/wp-content/uploads/variation-91.png",
+			"src": "http://localhost:8862/wp-content/uploads/variation-105.png",
 			"srcset": "",
 			"width": 1,
 			"height": 1
 		},
 		{
-			"src": "http://localhost:8862/wp-content/uploads/variation-92.png",
+			"src": "http://localhost:8862/wp-content/uploads/variation-106.png",
 			"srcset": "",
 			"width": 1,
 			"height": 1
 		},
 		{
-			"src": "http://localhost:8862/wp-content/uploads/variation-93.png",
+			"src": "http://localhost:8862/wp-content/uploads/variation-107.png",
 			"srcset": "",
 			"width": 1,
 			"height": 1
 		},
 		{
-			"src": "http://localhost:8862/wp-content/uploads/variation-82.png",
+			"src": "http://localhost:8862/wp-content/uploads/variation-96.png",
 			"srcset": "",
 			"width": 1,
 			"height": 1
 		},
 		{
-			"src": "http://localhost:8862/wp-content/uploads/variation-86.png",
+			"src": "http://localhost:8862/wp-content/uploads/variation-100.png",
 			"srcset": "",
 			"width": 1,
 			"height": 1
 		},
 		{
-			"src": "http://localhost:8862/wp-content/uploads/variation-85.png",
+			"src": "http://localhost:8862/wp-content/uploads/variation-99.png",
 			"srcset": "",
 			"width": 1,
 			"height": 1
 		},
 		{
-			"src": "http://localhost:8862/wp-content/uploads/variation-81.png",
+			"src": "http://localhost:8862/wp-content/uploads/variation-95.png",
 			"srcset": "",
 			"width": 1,
 			"height": 1
 		},
 		{
-			"src": "http://localhost:8862/wp-content/uploads/variation-83.png",
+			"src": "http://localhost:8862/wp-content/uploads/variation-97.png",
 			"srcset": "",
 			"width": 1,
 			"height": 1
 		},
 		{
-			"src": "http://localhost:8862/wp-content/uploads/variation-84.png",
+			"src": "http://localhost:8862/wp-content/uploads/variation-98.png",
 			"srcset": "",
 			"width": 1,
 			"height": 1
 		},
 		{
-			"src": "http://localhost:8862/wp-content/uploads/variation-88.png",
+			"src": "http://localhost:8862/wp-content/uploads/variation-102.png",
 			"srcset": "",
 			"width": 1,
 			"height": 1
 		},
 		{
-			"src": "http://localhost:8862/wp-content/uploads/variation-89.png",
+			"src": "http://localhost:8862/wp-content/uploads/variation-103.png",
 			"srcset": "",
 			"width": 1,
 			"height": 1
