@@ -44632,6 +44632,13 @@ export interface operations {
                                         name: string;
                                     }[];
                                     status: string;
+                                    storage?: {
+                                        bytes: number;
+                                        draws: boolean;
+                                        percentOfFree: number | null;
+                                        pictures: number;
+                                        warning: string | null;
+                                    };
                                     storeRefusal?: {
                                         message: string;
                                         store: string;
@@ -44892,6 +44899,13 @@ export interface operations {
                                         name: string;
                                     }[];
                                     status: string;
+                                    storage?: {
+                                        bytes: number;
+                                        draws: boolean;
+                                        percentOfFree: number | null;
+                                        pictures: number;
+                                        warning: string | null;
+                                    };
                                     storeRefusal?: {
                                         message: string;
                                         store: string;
@@ -45116,6 +45130,13 @@ export interface operations {
                                         name: string;
                                     }[];
                                     status: string;
+                                    storage?: {
+                                        bytes: number;
+                                        draws: boolean;
+                                        percentOfFree: number | null;
+                                        pictures: number;
+                                        warning: string | null;
+                                    };
                                     storeRefusal?: {
                                         message: string;
                                         store: string;
@@ -45399,6 +45420,13 @@ export interface operations {
                                         name: string;
                                     }[];
                                     status: string;
+                                    storage?: {
+                                        bytes: number;
+                                        draws: boolean;
+                                        percentOfFree: number | null;
+                                        pictures: number;
+                                        warning: string | null;
+                                    };
                                     storeRefusal?: {
                                         message: string;
                                         store: string;
@@ -45850,6 +45878,13 @@ export interface operations {
                                         name: string;
                                     }[];
                                     status: string;
+                                    storage?: {
+                                        bytes: number;
+                                        draws: boolean;
+                                        percentOfFree: number | null;
+                                        pictures: number;
+                                        warning: string | null;
+                                    };
                                     storeRefusal?: {
                                         message: string;
                                         store: string;
