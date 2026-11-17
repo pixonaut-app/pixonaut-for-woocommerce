@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.17.2...v1.18.0) (2026-11-17)
+
+
+### Features
+
+* **storefront:** publish each product archive's cards as a cached index a theme can filter in the browser ([#270](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/270)) ([45c9d01](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/45c9d01fd5a9920239c13b800ece325213b10f2d))
+
 ## [1.17.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.17.1...v1.17.2) (2026-11-17)
 
 
