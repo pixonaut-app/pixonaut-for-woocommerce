@@ -1,12 +1,18 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { followVariationSlots, showVariation } from './variation-slots';
+import { followVariationSlots, formOf, showVariation } from './variation-slots';
 import { VARIATION_SETTLE_MS } from './variations';
 
-const SLOT = `<div data-pixonaut-variation-slot style="display:grid">
-	<p data-pixonaut-variations="11 12" style="grid-area:1/1;visibility:hidden">Short</p>
-	<p data-pixonaut-variations="13" style="grid-area:1/1;visibility:hidden">A longer text</p>
+/** The variable product the form is of. */
+const PRODUCT_ID = '10';
+
+const SLOT = `<div data-pixonaut-variation-slot data-pixonaut-variation-product="${PRODUCT_ID}" style="display:grid">
+	<p data-pixonaut-variations="11 12" style="grid-row:1;grid-column:1;visibility:hidden">Short</p>
+	<p data-pixonaut-variations="13" style="grid-row:1;grid-column:1;visibility:hidden">A longer text</p>
 </div>`;
+
+/** A form of another product, ahead of the one the place follows. */
+const OTHER_FORM = `<form><input type="hidden" name="add-to-cart" value="20"><input type="hidden" name="variation_id" value="21"></form>`;
 
 function page(): { form: HTMLFormElement; field: HTMLInputElement } {
 	document.body.innerHTML = `<form>${SLOT}<input type="hidden" name="variation_id" value=""></form>`;
@@ -91,6 +97,24 @@ describe('followVariationSlots', () => {
 
 		found?.[1]({});
 		expect(shown(), 'none once the form holds no variation').toEqual([]);
+	});
+
+	it("follows its product's form from the attributes table, outside any form", () => {
+		vi.useFakeTimers();
+		document.body.innerHTML = `${OTHER_FORM}<form><input type="hidden" name="add-to-cart" value="${PRODUCT_ID}"><input type="hidden" name="variation_id" value=""></form><table><tr><td>${SLOT}</td></tr></table>`;
+		const forms = document.querySelectorAll('form');
+		const form = forms[1] as HTMLFormElement;
+		const field = form.querySelector<HTMLInputElement>('[name="variation_id"]');
+		const slot = document.querySelector('[data-pixonaut-variation-slot]');
+		expect(slot === null ? null : formOf(slot)).toBe(form);
+		followVariationSlots(document);
+
+		if (field !== null) {
+			field.value = '13';
+		}
+		form.dispatchEvent(new Event('change'));
+		vi.advanceTimersByTime(VARIATION_SETTLE_MS);
+		expect(shown()).toEqual(['A longer text']);
 	});
 
 	it('follows the variation the form holds', () => {

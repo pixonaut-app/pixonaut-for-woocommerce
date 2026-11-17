@@ -6,7 +6,7 @@ import { connectFixtureStore, PERSONALISED } from '../personalised';
 // The designer takes the add-to-cart form's option fields into its own
 // first step. What they leave behind in the form must take no room, so the
 // designer starts where the form does, at the theme's own spacing under the
-// short description, or under the title when there is none.
+// title: a designer product's purchase panel prints no short description.
 
 /** The first configuration version with an option's own group. */
 const SCHEMA_VERSION = 12;
@@ -71,6 +71,9 @@ const OPTIONS_FIRST = {
 
 const DESIGNER_FORM = '#pixonaut-form-front [data-testid="pixonaut-form"]';
 
+/** The product's short description, which its purchase panel leaves out. */
+const SHORT_DESCRIPTION = 'A birth poster, printed to order.';
+
 test.beforeEach(async ({ request, baseURL }) => {
 	await connectFixtureStore(request, baseURL ?? '');
 });
@@ -86,8 +89,7 @@ async function top(locator: Locator): Promise<number> {
 }
 
 /** The bottom of the last line printed above the add-to-cart form: the
- *  short description's, or the title's and whatever the theme prints with
- *  it when there is none. */
+ *  title's and whatever the theme prints with it. */
 async function bottomAbove(page: Page): Promise<number> {
 	return page.locator('form.cart').evaluate((form, selector) => {
 		const outer = form.closest(selector) ?? form;
@@ -140,56 +142,42 @@ async function openProduct(
 }
 
 for (const [device, viewport] of Object.entries(VIEWPORTS)) {
-	for (const described of [true, false]) {
-		test(`the designer starts one block gap under the ${described ? 'short description' : 'title, with no short description'} on a ${device}`, async ({
-			page,
-			request,
-			theme,
-		}) => {
-			await page.setViewportSize(viewport);
-			await openProduct(
-				page,
-				request,
-				`Form start ${theme}`,
-				described ? 'A birth poster, printed to order.' : '',
-			);
+	test(`the designer starts one block gap under the title, with no short description, on a ${device}`, async ({
+		page,
+		request,
+		theme,
+	}) => {
+		await page.setViewportSize(viewport);
+		await openProduct(page, request, `Form start ${theme}`, SHORT_DESCRIPTION);
 
-			// What the designer emptied is not drawn.
-			const emptied = page.locator(
-				'form.cart table.variations:not(:has(tr)), form.cart .wp-block-woocommerce-add-to-cart-with-options-variation-selector:not(:has(.wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute))',
-			);
-			// Playwright counts an empty box as hidden already: ask for the
-			// box itself, which a flex or grid form spaces like any other.
-			const displays = await emptied.evaluateAll((parts) =>
-				parts.map((part) => getComputedStyle(part).display),
-			);
-			expect(displays.length, 'parts the designer emptied').toBeGreaterThan(0);
-			expect(
-				displays.filter((display) => display !== 'none'),
-				'emptied parts drawn',
-			).toEqual([]);
+		// What the designer emptied is not drawn.
+		const emptied = page.locator(
+			'form.cart table.variations:not(:has(tr)), form.cart .wp-block-woocommerce-add-to-cart-with-options-variation-selector:not(:has(.wp-block-woocommerce-add-to-cart-with-options-variation-selector-attribute))',
+		);
+		// Playwright counts an empty box as hidden already: ask for the
+		// box itself, which a flex or grid form spaces like any other.
+		const displays = await emptied.evaluateAll((parts) =>
+			parts.map((part) => getComputedStyle(part).display),
+		);
+		expect(displays.length, 'parts the designer emptied').toBeGreaterThan(0);
+		expect(
+			displays.filter((display) => display !== 'none'),
+			'emptied parts drawn',
+		).toEqual([]);
 
-			// The designer is the first thing in the form.
-			const designer = await top(page.locator(DESIGNER_FORM));
-			expect(
-				Math.abs(designer - (await top(page.locator('form.cart')))),
-				'space above the designer in the add-to-cart form',
-			).toBeLessThanOrEqual(ROUNDING_PX);
+		// The designer is the first thing in the form.
+		const designer = await top(page.locator(DESIGNER_FORM));
+		expect(
+			Math.abs(designer - (await top(page.locator('form.cart')))),
+			'space above the designer in the add-to-cart form',
+		).toBeLessThanOrEqual(ROUNDING_PX);
 
-			// And it stands one block gap under what is printed above the form.
-			if (described) {
-				await expect(
-					page
-						.locator(
-							'.woocommerce-product-details__short-description, .wp-block-post-excerpt',
-						)
-						.getByText('A birth poster, printed to order.'),
-				).toBeVisible();
-			}
-			expect(
-				Math.abs(designer - (await bottomAbove(page)) - BLOCK_GAP_PX),
-				'space between the summary and the designer, beyond one block gap',
-			).toBeLessThanOrEqual(ROUNDING_PX);
-		});
-	}
+		// The product's short description is not printed: the designer
+		// stands one block gap under the title.
+		await expect(page.getByText(SHORT_DESCRIPTION)).toHaveCount(0);
+		expect(
+			Math.abs(designer - (await bottomAbove(page)) - BLOCK_GAP_PX),
+			'space between the summary and the designer, beyond one block gap',
+		).toBeLessThanOrEqual(ROUNDING_PX);
+	});
 }

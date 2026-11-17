@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-16T14:20:16+00:00\n"
+"POT-Creation-Date: 2026-11-17T09:41:59+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: da_DK\n"
@@ -8345,18 +8345,13 @@ msgstr "Vis leveringstiden"
 
 #: src/Settings/Settings.php:576
 msgid ""
-"Say on the product page how long the printshop says the chosen variation "
-"takes, such as “Delivered in 4–7 days”. Only what the printshop itself tells "
-"is shown: a printshop that tells how long it takes to make the product and "
-"nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing "
-"gets no line. The times are read with the costs, once a day."
-msgstr ""
-"Vis på varesiden, hvor lang tid trykkeriet siger, den valgte variant tager, "
-"f.eks. »Leveres inden for 4–7 dage«. Kun det, trykkeriet selv oplyser, "
-"vises: et trykkeri, der oplyser, hvor lang tid det tager at fremstille "
-"varen, men intet om leveringen, får »Fremstilles på 2–3 dage«, og et, der "
-"intet oplyser, får ingen linje. Tiderne hentes sammen med omkostningerne én "
-"gang om dagen."
+"Say in a “Delivery time” row of the product’s attributes table how long the "
+"printshop says the chosen variation takes, such as “4–7 days”. Only what the "
+"printshop itself tells is shown: a printshop that tells how long it takes to "
+"make the product and nothing of the delivery gets “Made in 2–3 days”, and "
+"one that tells nothing gets no row. The times are read with the costs, once "
+"a day."
+msgstr "Vis i rækken »Leveringstid« i varens egenskabstabel, hvor lang tid trykkeriet siger, den valgte variant tager, f.eks. »4–7 dage«. Kun det, trykkeriet selv oplyser, vises: et trykkeri, der oplyser, hvor lang tid det tager at fremstille varen, men intet om leveringen, får »Fremstilles på 2–3 dage«, og et, der intet oplyser, får ingen række. Tiderne hentes sammen med omkostningerne én gang om dagen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days the store adds to the printshop's delivery time.
 #: src/Settings/Settings.php:588
@@ -8623,7 +8618,8 @@ msgstr ""
 "En vare kan ændre enhver del af reglen for sig selv."
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
-#: src/Settings/SettingsPage.php:659
+#. translators: Label of a row of the product's attributes table: how long until the customer has the order, e.g. "5–8 days".
+#: src/Settings/SettingsPage.php:659 src/Storefront/DeliveryRows.php:149
 msgid "Delivery time"
 msgstr "Leveringstid"
 
@@ -8685,28 +8681,33 @@ msgstr "Som temaet viser dem"
 msgid "As swatches, like the designer's own choices"
 msgstr "Som knapper, ligesom designværktøjets egne valg"
 
-#. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 4 and 7. Shown on the product page: how long until the customer has the order.
-#: src/Storefront/DeliveryTime.php:77
-#, php-format
-msgid "Delivered in %1$d–%2$d days"
-msgstr "Leveres inden for %1$d–%2$d dage"
+#. translators: Label of a row of the product's attributes table: how the product is delivered, as the chosen variation describes it, e.g. "as a poster, without a frame".
+#: src/Storefront/DeliveryRows.php:133
+msgid "Delivery"
+msgstr "Levering"
 
-#. translators: %d: a number of days. Shown on the product page: how long until the customer has the order.
-#: src/Storefront/DeliveryTime.php:79
+#. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 4 and 7. Shown on the product page after the label "Delivery time": how long until the customer has the order.
+#: src/Storefront/DeliveryTime.php:70
 #, php-format
-msgid "Delivered in %d day"
-msgid_plural "Delivered in %d days"
-msgstr[0] "Leveres inden for %d dag"
-msgstr[1] "Leveres inden for %d dage"
+msgid "%1$d–%2$d days"
+msgstr "%1$d–%2$d dage"
+
+#. translators: %d: a number of days. Shown on the product page after the label "Delivery time": how long until the customer has the order.
+#: src/Storefront/DeliveryTime.php:72
+#, php-format
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] "%d dag"
+msgstr[1] "%d dage"
 
 #. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 2 and 3. Shown on the product page: how long the product takes to make before it is sent.
-#: src/Storefront/DeliveryTime.php:87
+#: src/Storefront/DeliveryTime.php:80
 #, php-format
 msgid "Made in %1$d–%2$d days"
 msgstr "Fremstilles på %1$d–%2$d dage"
 
 #. translators: %d: a number of days. Shown on the product page: how long the product takes to make before it is sent.
-#: src/Storefront/DeliveryTime.php:89
+#: src/Storefront/DeliveryTime.php:82
 #, php-format
 msgid "Made in %d day"
 msgid_plural "Made in %d days"
@@ -8714,13 +8715,13 @@ msgstr[0] "Fremstilles på %d dag"
 msgstr[1] "Fremstilles på %d dage"
 
 #. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 5 and 10. Shown on the product page: how long the parcel is on its way once it is sent.
-#: src/Storefront/DeliveryTime.php:97
+#: src/Storefront/DeliveryTime.php:90
 #, php-format
 msgid "Shipping takes %1$d–%2$d days"
 msgstr "Forsendelsen tager %1$d–%2$d dage"
 
 #. translators: %d: a number of days. Shown on the product page: how long the parcel is on its way once it is sent.
-#: src/Storefront/DeliveryTime.php:99
+#: src/Storefront/DeliveryTime.php:92
 #, php-format
 msgid "Shipping takes %d day"
 msgid_plural "Shipping takes %d days"
@@ -11785,6 +11786,16 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s visning"
 msgstr[1] "%s visninger"
+
+#, php-format
+#~ msgid "Delivered in %1$d–%2$d days"
+#~ msgstr "Leveres inden for %1$d–%2$d dage"
+
+#, php-format
+#~ msgid "Delivered in %d day"
+#~ msgid_plural "Delivered in %d days"
+#~ msgstr[0] "Leveres inden for %d dag"
+#~ msgstr[1] "Leveres inden for %d dage"
 
 #~ msgid "Auto: off, as the attribute is"
 #~ msgstr "Auto: fra, som egenskaben"

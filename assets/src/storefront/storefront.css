@@ -850,17 +850,16 @@ form:has(.pixonaut-personalise:not([hidden]))
 	display: none;
 }
 
-/* A variation's description shows once, in the place that keeps the height
- * of the longest (`VariationSlots`), so the one WooCommerce redraws with
- * each choice, which would move the price row under it, is left out: the
- * classic form's, and the Add to Cart + Options block's, which prints the
- * place through the same hooks. */
-.variations_form:has(.pixonaut-variation-description)
+/* On a variable product the designer shows on, the form holds the designer
+ * and the buy row alone: the chosen variation's description is a row of the
+ * product's attributes table (`DeliveryRows`), so the one WooCommerce
+ * redraws in the form with each choice, which would move the price row
+ * under it, is left out: the classic form's, and the Add to Cart + Options
+ * block's. */
+.variations_form:has(.pixonaut-form)
 	.single_variation
 	.woocommerce-variation-description,
-.wp-block-woocommerce-add-to-cart-with-options:has(
-		.pixonaut-variation-description
-	)
+.wp-block-woocommerce-add-to-cart-with-options:has(.pixonaut-form)
 	.wp-block-woocommerce-add-to-cart-with-options-variation-description {
 	display: none;
 }

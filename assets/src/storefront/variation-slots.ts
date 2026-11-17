@@ -18,6 +18,13 @@ type JQueryLike = (element: Element) => {
  *  (`VariationSlots`). */
 export const SLOT_SELECTOR = '[data-pixonaut-variation-slot]';
 
+/** The product whose add-to-cart form a place follows. */
+const PRODUCT_ATTRIBUTE = 'data-pixonaut-variation-product';
+
+/** The add-to-cart form's field that names its product, in the classic
+ *  form and in the block one alike. */
+const PRODUCT_FIELD = 'add-to-cart';
+
 /** The variations, by id and space-separated, a text in a place is of. */
 const VARIATIONS_ATTRIBUTE = 'data-pixonaut-variations';
 
@@ -74,13 +81,34 @@ export function showVariation(slot: Element, id: string): void {
 	}
 }
 
-/** Has each place in `root` follow the variation its add-to-cart form
- *  holds: in the classic form at once, in the frame the choice is made in,
- *  as WooCommerce finds the variation; in either form once the choice
- *  settled. */
+/** The add-to-cart form `slot` follows: the one it is in, or else the form
+ *  of the product it names, wherever on the page it is printed, such as in
+ *  the product's attributes table. */
+export function formOf(slot: Element): HTMLFormElement | null {
+	const own = slot.closest('form');
+	if (own !== null) {
+		return own;
+	}
+	const product = slot.getAttribute(PRODUCT_ATTRIBUTE);
+	if (product === null || product === '') {
+		return null;
+	}
+	for (const field of slot.ownerDocument.getElementsByName(PRODUCT_FIELD)) {
+		const form = (field as HTMLInputElement).form;
+		if ((field as HTMLInputElement).value === product && form !== null) {
+			return form;
+		}
+	}
+	return null;
+}
+
+/** Has each place in `root` follow the variation its product's add-to-cart
+ *  form holds: in the classic form at once, in the frame the choice is
+ *  made in, as WooCommerce finds the variation; in either form once the
+ *  choice settled. */
 export function followVariationSlots(root: ParentNode): void {
 	for (const slot of root.querySelectorAll(SLOT_SELECTOR)) {
-		const form = slot.closest('form');
+		const form = formOf(slot);
 		if (form === null) {
 			continue;
 		}

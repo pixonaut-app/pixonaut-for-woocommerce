@@ -45,25 +45,31 @@ with the cost in the `_pixonaut_price` meta. A printshop answers the spans
 it knows: a span that is not two whole day counts, shortest first, reads as
 none, and so does a cost read before Pixonaut answered times.
 
-With the store's `delivery_time_show` on, `Storefront\DeliveryTime` prints
-a line under Add to cart (`woocommerce_after_add_to_cart_button`, priority
-20, after a theme's price row) for a product or variation in stock, in
-`div.pixonaut-delivery-time`. On a variable product's page it holds every
-variation's line up front, each distinct line once, stacked in one grid
-cell so the place keeps the height of the longest; the chosen variation's
-carries `is-chosen` and the others are `visibility: hidden`
-(`Storefront\VariationSlots`). On the page of a variable product the
-inline designer shows on, the variation's description is held the same way
-in `div.pixonaut-variation-description`, above the quantity, in place of
-the one WooCommerce redraws with each choice. The line says only what the
-printshop tells:
+With the store's `delivery_time_show` on, `Storefront\DeliveryRows` adds a
+**Delivery time** row (`pixonaut_delivery_time`) to the product's attributes
+table, in `div.pixonaut-delivery-time`, for a product or variation in stock:
+WooCommerce's table through `woocommerce_display_product_attributes`, and
+the Product Specifications block's through
+`render_block_woocommerce/product-specifications`, which has no such filter.
+On a variable product's page the row holds every variation's text up front,
+each distinct text once, stacked in one grid cell so the row keeps the
+height of the longest; the chosen variation's carries `is-chosen` and the
+others are `visibility: hidden` (`Storefront\VariationSlots`, whose
+script follows the form of the product the place names in
+`data-pixonaut-variation-product`). On the page of a variable product the
+inline designer shows on, a **Delivery** row (`pixonaut_delivery`) holds
+the variation's description the same way, in
+`div.pixonaut-variation-description`, and the one WooCommerce redraws in
+the add-to-cart form is hidden, so the form holds the designer and the buy
+row alone. A row no variation has a text for is left out. The time says
+only what the printshop tells:
 
-| The printshop tells | The line |
+| The printshop tells | The row says |
 | --- | --- |
-| `delivery`, or both `production` and `shipping` (added together) | Delivered in 4–7 days |
+| `delivery`, or both `production` and `shipping` (added together) | 4–7 days |
 | `production` alone | Made in 2–3 days |
 | `shipping` alone | Shipping takes 5–10 days |
-| nothing | no line |
+| nothing | no row |
 
 `delivery_time_handling_days` is added to the days that start at the order
 (the first two rows), never to the post alone. The time is the one stored

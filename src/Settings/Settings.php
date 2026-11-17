@@ -573,7 +573,7 @@ final class Settings {
 				static fn (): array => array(
 					/* translators: Title of a setting on the settings page, shown to the merchant: whether product pages say how long delivery takes. */
 					'title' => __( 'Show the delivery time', 'pixonaut-for-woocommerce' ),
-					'desc'  => __( 'Say on the product page how long the printshop says the chosen variation takes, such as “Delivered in 4–7 days”. Only what the printshop itself tells is shown: a printshop that tells how long it takes to make the product and nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing gets no line. The times are read with the costs, once a day.', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'Say in a “Delivery time” row of the product’s attributes table how long the printshop says the chosen variation takes, such as “4–7 days”. Only what the printshop itself tells is shown: a printshop that tells how long it takes to make the product and nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing gets no row. The times are read with the costs, once a day.', 'pixonaut-for-woocommerce' ),
 				)
 			)
 		);

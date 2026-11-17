@@ -23,9 +23,22 @@ const SHOW = '[id="pixonaut_wc_settings[delivery_time_show]"]';
 const HANDLING_DAYS =
 	'[id="pixonaut_wc_settings[delivery_time_handling_days]"]';
 
-/** The line a product page says the delivery time in: the chosen
+/** The "Delivery time" row of the product's attributes table: the chosen
  *  variation's, of the place that holds every variation's. */
-const LINE = '.pixonaut-delivery-time .is-chosen';
+const LINE =
+	':is(table.woocommerce-product-attributes, .wp-block-woocommerce-product-specifications table) .pixonaut-delivery-time .is-chosen';
+
+/** The tab the classic attributes table is in, closed as the page opens. */
+const TABLE_TAB = '.additional_information_tab a';
+
+/** Opens the product page with its attributes table in view. */
+async function openProduct(page: Page, permalink: string): Promise<void> {
+	await page.goto(permalink);
+	const tab = page.locator(TABLE_TAB);
+	if ((await tab.count()) > 0) {
+		await tab.click();
+	}
+}
 
 async function createProduct(
 	request: APIRequestContext,
@@ -58,7 +71,7 @@ async function showDeliveryTime(
 	await expect(admin.getByText('Your settings have been saved.')).toBeVisible();
 }
 
-test('a product page says how long the printshop says the chosen variation takes, once the store shows delivery times', async ({
+test('a product page lists how long the printshop says the chosen variation takes in its attributes table, once the store shows delivery times', async ({
 	connectedStore: admin,
 	request,
 	baseURL,
@@ -78,24 +91,28 @@ test('a product page says how long the printshop says the chosen variation takes
 		).toContainText('$124.90');
 
 		// Off, as a store starts: the page says nothing of time.
-		await admin.goto(permalink);
+		await openProduct(admin, permalink);
 		await admin.locator('select[name="attribute_size"]').selectOption('Small');
 		await expect(addToCartButton(admin)).not.toHaveClass(/\bdisabled\b/);
 		await expect(admin.locator(LINE)).toHaveCount(0);
 
 		await showDeliveryTime(admin, true, 0);
-		await admin.goto(permalink);
+		await openProduct(admin, permalink);
 		// Nothing is chosen yet, so there is no variation to tell the time of.
 		await admin.locator('select[name="attribute_size"]').selectOption('');
 		await expect(admin.locator(LINE)).toBeHidden();
 		await admin.locator('select[name="attribute_size"]').selectOption('Small');
-		await expect(admin.locator(LINE)).toHaveText('Delivered in 4–7 days');
+		await expect(admin.locator(LINE)).toHaveText('4–7 days');
+		await expect(
+			admin.locator('form .pixonaut-delivery-time'),
+			'not in the form',
+		).toHaveCount(0);
 
 		// The store's own days are added to the printshop's.
 		await showDeliveryTime(admin, true, 2);
-		await admin.goto(permalink);
+		await openProduct(admin, permalink);
 		await admin.locator('select[name="attribute_size"]').selectOption('Large');
-		await expect(admin.locator(LINE)).toHaveText('Delivered in 6–9 days');
+		await expect(admin.locator(LINE)).toHaveText('6–9 days');
 	} finally {
 		await showDeliveryTime(admin, false, 0);
 	}

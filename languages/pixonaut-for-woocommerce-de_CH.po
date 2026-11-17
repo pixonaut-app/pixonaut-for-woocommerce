@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-16T14:20:16+00:00\n"
+"POT-Creation-Date: 2026-11-17T09:41:59+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -592,9 +592,9 @@ msgstr ""
 "trägt den Namen, den der Shop ihm gegeben hat (`own`), sonst seinen Slug. "
 "Legen Sie einen mit `set-attribute-query-name` fest."
 
+#
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetProductForm.php:52
-#
 msgid "Read how a product's designer form is arranged"
 msgstr "Abrufen, wie das Formular des Designers eines Produkts angeordnet ist"
 
@@ -623,13 +623,13 @@ msgstr ""
 "`template_groups`, die Gruppen und Felder ihrer Vorlage (null, wenn Pixonaut "
 "nicht gefragt werden konnte). Festgelegt wird sie mit `set-product-form`."
 
-#: src/Abilities/GetProductForm.php:59 src/Abilities/SetProductForm.php:71
 #
+#: src/Abilities/GetProductForm.php:59 src/Abilities/SetProductForm.php:71
 msgid "A simple or variable product."
 msgstr "Ein einfaches oder variables Produkt."
 
-#: src/Abilities/GetProductForm.php:188
 #
+#: src/Abilities/GetProductForm.php:188
 msgid "The side's groups, in order; null for the template's own form."
 msgstr ""
 "Die Gruppen der Seite in ihrer Reihenfolge; null für das eigene Formular der "
@@ -651,8 +651,8 @@ msgstr "Der Titel der Gruppe anstelle dessen der Vorlage."
 msgid "One of the template's fields, as `\"<layerId>:<prop>\"`."
 msgstr "Eines der Felder der Vorlage, als `\"<layerId>:<prop>\"`."
 
-#: src/Abilities/GetProductForm.php:216
 #
+#: src/Abilities/GetProductForm.php:216
 msgid ""
 "One of the product's options, by its attribute's slug, in place of a field."
 msgstr ""
@@ -663,18 +663,18 @@ msgstr ""
 msgid "Words in place of the field's offered values, by value."
 msgstr "Wörter anstelle der angebotenen Werte des Felds, nach Wert."
 
-#: src/Abilities/GetProductForm.php:251
 #
+#: src/Abilities/GetProductForm.php:251
 msgid "The product page layout; null for the store's."
 msgstr "Das Layout der Produktseite; null für das des Shops."
 
-#: src/Abilities/GetProductForm.php:252
 #
+#: src/Abilities/GetProductForm.php:252
 msgid "The form layout; null for the store's."
 msgstr "Das Formular-Layout; null für das des Shops."
 
-#: src/Abilities/GetProductForm.php:253
 #
+#: src/Abilities/GetProductForm.php:253
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "`first` or `last`; null for the store's."
@@ -682,8 +682,8 @@ msgstr ""
 "Wo die Optionen des Produkts auf einer nicht von Hand angeordneten Seite "
 "stehen: `on_top`, `first` oder `last`; null für die Einstellung des Shops."
 
-#: src/Abilities/GetProductForm.php:254
 #
+#: src/Abilities/GetProductForm.php:254
 msgid ""
 "Whether the form numbers its groups: `on` or `off`; null for the store's."
 msgstr ""
@@ -2028,8 +2028,8 @@ msgstr ""
 msgid "Read the pricing settings"
 msgstr "Preiseinstellungen lesen"
 
-#: src/Abilities/ReadPricingSettings.php:57
 #
+#: src/Abilities/ReadPricingSettings.php:57
 msgid ""
 "Gives the store's pricing rule, by which prices follow the printshop's "
 "costs: the target margin, the tolerance around it, the price step and what "
@@ -2277,14 +2277,14 @@ msgstr ""
 "`group_numbers`, `form_layout` und `layout`. Nur was angegeben ist, ändert "
 "sich: Eine weggelassene Seite behält ihre Anordnung, und die Seiten, ihre "
 "Vorlagen, Druckpositionen und Druckgrössen sowie die eigenen Einrichtungen "
-"der Varianten bleiben erhalten. Was eine Anordnung nennen darf, mit "
-"`get-product-form` lesen: Eine Option, die das Produkt nicht hat, oder ein "
-"Feld oder eine Gruppe, die seine Vorlage nicht anbietet, lässt den ganzen "
-"Aufruf ablehnen, und die Antwort nennt jede davon. Die Antwort ist das "
-"jetzige Formular des Produkts, so wie `get-product-form` es liefert."
+"der Varianten bleiben erhalten. Was eine Anordnung nennen darf, mit `get-"
+"product-form` lesen: Eine Option, die das Produkt nicht hat, oder ein Feld "
+"oder eine Gruppe, die seine Vorlage nicht anbietet, lässt den ganzen Aufruf "
+"ablehnen, und die Antwort nennt jede davon. Die Antwort ist das jetzige "
+"Formular des Produkts, so wie `get-product-form` es liefert."
 
-#: src/Abilities/SetProductForm.php:82
 #
+#: src/Abilities/SetProductForm.php:82
 msgid "One of the product's sides, by its key."
 msgstr "Eine der Seiten des Produkts, nach ihrem Schlüssel."
 
@@ -2296,8 +2296,8 @@ msgstr "Das Layout der Produktseite; leer für das des Shops."
 msgid "The form layout; empty for the store's."
 msgstr "Das Formular-Layout; leer für das des Shops."
 
-#: src/Abilities/SetProductForm.php:92
 #
+#: src/Abilities/SetProductForm.php:92
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "unnumbered, or each in a group of its own, `first` or `last`; empty for the "
@@ -2307,8 +2307,8 @@ msgstr ""
 "stehen: `on_top`, ohne Nummer, oder jeweils in einer eigenen Gruppe, `first` "
 "oder `last`; leer für die Einstellung des Shops."
 
-#: src/Abilities/SetProductForm.php:93
 #
+#: src/Abilities/SetProductForm.php:93
 msgid "Whether the form numbers its groups; empty for the store's."
 msgstr ""
 "Ob das Formular seine Gruppen nummeriert; leer für die Einstellung des Shops."
@@ -2320,8 +2320,8 @@ msgstr ""
 "Geben Sie `sides`, `option_groups`, `group_numbers`, `form_layout` oder "
 "`layout` an."
 
-#: src/Abilities/SetProductForm.php:127
 #
+#: src/Abilities/SetProductForm.php:127
 msgid ""
 "The product has no Pixonaut setup, so it has no form to arrange. Link it to "
 "a template first."
@@ -2329,15 +2329,15 @@ msgstr ""
 "Das Produkt hat keine Pixonaut-Einrichtung und daher kein Formular, das sich "
 "anordnen liesse. Verknüpfen Sie es zuerst mit einer Vorlage."
 
-#: src/Abilities/SetProductForm.php:137
 #
+#: src/Abilities/SetProductForm.php:137
 msgid ""
 "The product's Pixonaut setup was changed while this was saved, so nothing "
 "was changed. Read it again with `get-product-form`, then set it."
 msgstr ""
 "Die Pixonaut-Einrichtung des Produkts wurde geändert, während dies "
-"gespeichert wurde, daher wurde nichts geändert. Lesen Sie sie mit "
-"`get-product-form` erneut und legen Sie sie dann fest."
+"gespeichert wurde, daher wurde nichts geändert. Lesen Sie sie mit `get-"
+"product-form` erneut und legen Sie sie dann fest."
 
 #. translators: %s: a side's key. Why an AI assistant's change to the store was refused.
 #: src/Abilities/SetProductForm.php:165
@@ -2363,8 +2363,8 @@ msgstr "Es wurde nichts gespeichert: %s."
 msgid "side `%s` has no template to arrange"
 msgstr "Seite `%s` hat keine Vorlage, deren Gruppen sich anordnen liessen"
 
-#: src/Abilities/SetProductForm.php:217
 #
+#: src/Abilities/SetProductForm.php:217
 msgid ""
 "Pixonaut could not be asked for the template's fields, so the arrangement "
 "was not checked and nothing was saved. Try again."
@@ -8616,18 +8616,13 @@ msgstr "Lieferzeit anzeigen"
 
 #: src/Settings/Settings.php:576
 msgid ""
-"Say on the product page how long the printshop says the chosen variation "
-"takes, such as “Delivered in 4–7 days”. Only what the printshop itself tells "
-"is shown: a printshop that tells how long it takes to make the product and "
-"nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing "
-"gets no line. The times are read with the costs, once a day."
-msgstr ""
-"Auf der Produktseite angeben, wie lange die gewählte Variante laut Druckerei "
-"dauert, etwa «Lieferung in 4–7 Tagen». Angezeigt wird nur, was die Druckerei "
-"selbst angibt: Bei einer Druckerei, die angibt, wie lange die Herstellung "
-"des Produkts dauert, aber nichts zur Lieferung, steht «Hergestellt in 2–3 "
-"Tagen», und bei einer, die nichts angibt, steht keine Zeile. Die Zeiten "
-"werden einmal täglich mit den Kosten gelesen."
+"Say in a “Delivery time” row of the product’s attributes table how long the "
+"printshop says the chosen variation takes, such as “4–7 days”. Only what the "
+"printshop itself tells is shown: a printshop that tells how long it takes to "
+"make the product and nothing of the delivery gets “Made in 2–3 days”, and "
+"one that tells nothing gets no row. The times are read with the costs, once "
+"a day."
+msgstr "In der Zeile «Lieferzeit» der Attributtabelle des Produkts angeben, wie lange die gewählte Variante laut Druckerei dauert, etwa «4–7 Tage». Angezeigt wird nur, was die Druckerei selbst angibt: Bei einer Druckerei, die angibt, wie lange die Herstellung des Produkts dauert, aber nichts zur Lieferung, steht «Hergestellt in 2–3 Tagen», und bei einer, die nichts angibt, steht keine Zeile. Die Zeiten werden einmal täglich mit den Kosten gelesen."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of days the store adds to the printshop's delivery time.
 #: src/Settings/Settings.php:588
@@ -8898,9 +8893,10 @@ msgstr ""
 "«Preise» an; von da an folgen seine Preise der Regel. Ein Produkt kann jeden "
 "Teil der Regel für sich ändern."
 
-#. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
-#: src/Settings/SettingsPage.php:659
 #
+#. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
+#. translators: Label of a row of the product's attributes table: how long until the customer has the order, e.g. "5–8 days".
+#: src/Settings/SettingsPage.php:659 src/Storefront/DeliveryRows.php:149
 msgid "Delivery time"
 msgstr "Lieferzeit"
 
@@ -8963,28 +8959,34 @@ msgstr "Wie das Theme sie anzeigt"
 msgid "As swatches, like the designer's own choices"
 msgstr "Als Schaltflächen wie die eigenen Auswahlmöglichkeiten des Designers"
 
-#. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 4 and 7. Shown on the product page: how long until the customer has the order.
-#: src/Storefront/DeliveryTime.php:77
-#, php-format
-msgid "Delivered in %1$d–%2$d days"
-msgstr "Lieferung in %1$d–%2$d Tagen"
+#
+#. translators: Label of a row of the product's attributes table: how the product is delivered, as the chosen variation describes it, e.g. "as a poster, without a frame".
+#: src/Storefront/DeliveryRows.php:133
+msgid "Delivery"
+msgstr "Lieferung"
 
-#. translators: %d: a number of days. Shown on the product page: how long until the customer has the order.
-#: src/Storefront/DeliveryTime.php:79
+#. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 4 and 7. Shown on the product page after the label "Delivery time": how long until the customer has the order.
+#: src/Storefront/DeliveryTime.php:70
 #, php-format
-msgid "Delivered in %d day"
-msgid_plural "Delivered in %d days"
-msgstr[0] "Lieferung in %d Tag"
-msgstr[1] "Lieferung in %d Tagen"
+msgid "%1$d–%2$d days"
+msgstr "%1$d–%2$d Tage"
+
+#. translators: %d: a number of days. Shown on the product page after the label "Delivery time": how long until the customer has the order.
+#: src/Storefront/DeliveryTime.php:72
+#, php-format
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] "%d Tag"
+msgstr[1] "%d Tage"
 
 #. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 2 and 3. Shown on the product page: how long the product takes to make before it is sent.
-#: src/Storefront/DeliveryTime.php:87
+#: src/Storefront/DeliveryTime.php:80
 #, php-format
 msgid "Made in %1$d–%2$d days"
 msgstr "Hergestellt in %1$d–%2$d Tagen"
 
 #. translators: %d: a number of days. Shown on the product page: how long the product takes to make before it is sent.
-#: src/Storefront/DeliveryTime.php:89
+#: src/Storefront/DeliveryTime.php:82
 #, php-format
 msgid "Made in %d day"
 msgid_plural "Made in %d days"
@@ -8992,13 +8994,13 @@ msgstr[0] "Hergestellt in %d Tag"
 msgstr[1] "Hergestellt in %d Tagen"
 
 #. translators: %1$d and %2$d: the shortest and the longest number of days, e.g. 5 and 10. Shown on the product page: how long the parcel is on its way once it is sent.
-#: src/Storefront/DeliveryTime.php:97
+#: src/Storefront/DeliveryTime.php:90
 #, php-format
 msgid "Shipping takes %1$d–%2$d days"
 msgstr "Der Versand dauert %1$d–%2$d Tage"
 
 #. translators: %d: a number of days. Shown on the product page: how long the parcel is on its way once it is sent.
-#: src/Storefront/DeliveryTime.php:99
+#: src/Storefront/DeliveryTime.php:92
 #, php-format
 msgid "Shipping takes %d day"
 msgid_plural "Shipping takes %d days"
@@ -12119,6 +12121,16 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s Ansicht"
 msgstr[1] "%s Ansichten"
+
+#, php-format
+#~ msgid "Delivered in %1$d–%2$d days"
+#~ msgstr "Lieferung in %1$d–%2$d Tagen"
+
+#, php-format
+#~ msgid "Delivered in %d day"
+#~ msgid_plural "Delivered in %d days"
+#~ msgstr[0] "Lieferung in %d Tag"
+#~ msgstr[1] "Lieferung in %d Tagen"
 
 #~ msgid "Auto: off, as the attribute is"
 #~ msgstr "Auto: aus, wie beim Attribut"

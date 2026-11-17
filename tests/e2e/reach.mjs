@@ -346,6 +346,7 @@ export const REACH = {
 	],
 	'delivery-time.spec.ts': [
 		'src/Storefront/DeliveryTime.php',
+		'src/Storefront/DeliveryRows.php',
 		'src/Storefront/VariationSlots.php',
 		'assets/src/storefront/variation-slots.ts',
 		'assets/src/storefront/variation-slots-index.ts',
@@ -421,6 +422,7 @@ export const REACH = {
 		'assets/src/storefront/form-groups.ts',
 	],
 	'form-start.spec.ts': [
+		'src/Storefront/DesignerSummary.php',
 		'assets/src/storefront/storefront.css',
 		'assets/src/storefront/shop-parts.ts',
 	],
@@ -838,6 +840,7 @@ export const REACH = {
 		'src/Storefront/VariationsUpFront.php',
 		'src/Storefront/VariationSlots.php',
 		'src/Storefront/DeliveryTime.php',
+		'src/Storefront/DeliveryRows.php',
 		'assets/src/storefront/variation-slots.ts',
 		'assets/src/storefront/variation-slots-index.ts',
 		'assets/src/storefront/applicable-form.ts',
