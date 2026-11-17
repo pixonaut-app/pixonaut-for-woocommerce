@@ -209,8 +209,9 @@ add_filter(
 
 /**
  * Query argument naming attribute ids whose Product Filters block a listing
- * renders at its foot, with counts, so a test reads the counts the block
- * would show beside any theme's listing.
+ * renders at its foot, with counts and a checkbox per value, so a test reads
+ * the counts the block would show beside any theme's listing, and ticks
+ * them.
  */
 const PIXONAUT_E2E_FILTER_COUNTS_ARG = 'pixonaut_e2e_counts';
 
@@ -231,7 +232,7 @@ add_action(
 					'queryType'   => 'or',
 					'hideEmpty'   => true,
 				)
-			) . ' /-->';
+			) . ' --><div class="wp-block-woocommerce-product-filter-attribute"><!-- wp:woocommerce/product-filter-checkbox-list /--></div><!-- /wp:woocommerce/product-filter-attribute -->';
 		}
 		echo '<div data-pixonaut-e2e-counts>' . do_blocks( '<!-- wp:woocommerce/product-filters --><div class="wp-block-woocommerce-product-filters">' . $filters . '</div><!-- /wp:woocommerce/product-filters -->' ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WooCommerce's own block markup.
 	}

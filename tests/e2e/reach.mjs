@@ -245,6 +245,13 @@ export const REACH = {
 		'assets/src/admin/settings.css',
 		'src/Storefront/Accent.php',
 	],
+	'archive-history.spec.ts': [
+		'assets/src/storefront/query-names.ts',
+		'assets/src/storefront/short-addresses.ts',
+		'assets/src/storefront/short-addresses-index.ts',
+		'src/Storefront/ShortAddresses.php',
+		'src/Storefront/QueryNames.php',
+	],
 	'attribute-rows.spec.ts': [
 		'assets/src/storefront/attribute-rows.css',
 		'assets/src/storefront/attribute-swatches.css',

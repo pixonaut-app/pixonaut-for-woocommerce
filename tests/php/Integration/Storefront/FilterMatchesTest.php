@@ -349,6 +349,22 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		);
 	}
 
+	public function test_several_values_of_an_attribute_listed_while_filtered_list_and_count_each_card_once(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::FILTERED );
+		$every_framing = array( 'filter_inramning' => 'ingen,ram,hangare' );
+
+		$listed = $this->shop( $every_framing );
+		$links  = array_merge( ...array_values( $listed['card_links'] ) );
+		$this->assertSame( 5, $listed['found'], 'the safari\'s bare, framed and hanger cards, and the forest\'s bare and framed ones' );
+		$this->assertCount( $listed['found'], array_unique( $links ), 'each card once, though the product holds every chosen value' );
+		foreach ( $links as $link ) {
+			wp_parse_str( (string) wp_parse_url( $link, PHP_URL_QUERY ), $chosen );
+			$this->assertContains( $chosen['inramning'] ?? null, array( 'ingen', 'ram', 'hangare' ), "{$link} opens on one framing" );
+		}
+		$this->assert_counts_follow_the_listing( $every_framing );
+		$this->assert_counts_follow_the_listing( $every_framing + array( 'filter_storlek' => '50x70' ) );
+	}
+
 	public function test_the_counts_keep_the_blocks_other_filters_and_their_query_types(): void {
 		$sold_out = new WC_Product_Simple();
 		$sold_out->set_name( 'Slutsåld' );
