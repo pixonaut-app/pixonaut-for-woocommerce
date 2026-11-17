@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.13.1...v1.13.2) (2026-11-17)
+
+
+### Bug Fixes
+
+* **storefront:** switching to a variation on another blank changes the form at once and moves nothing later ([#236](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/236)) ([251dc71](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/251dc713cb954c392a56fdcaa774536228ead6ea))
+
 ## [1.13.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.13.0...v1.13.1) (2026-11-17)
 
 
