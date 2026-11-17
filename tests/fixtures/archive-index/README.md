@@ -8,6 +8,7 @@ address against the server's own listing and writes these files:
 ```sh
 node bin/php.mjs --hpos=off env PIXONAUT_ARCHIVE_FIXTURES=/tmp/archive-index vendor/bin/phpunit -c phpunit-integration.xml.dist --filter ArchiveIndexTest
 docker cp <tests-cli container>:/tmp/archive-index/. tests/fixtures/archive-index/
+pnpm exec biome format --write tests/fixtures/archive-index
 ```
 
 Each case is a pair:

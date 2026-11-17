@@ -1,583 +1,462 @@
 {
-    "version": "test",
-    "currency": {
-        "code": "USD",
-        "symbol": "$",
-        "position": "left",
-        "decimals": 2,
-        "decimalSeparator": ".",
-        "thousandSeparator": ","
-    },
-    "filters": [
-        {
-            "key": "inramning",
-            "label": "Inramning",
-            "type": "attribute",
-            "values": [
-                {
-                    "id": "hangare",
-                    "label": "Hängare",
-                    "order": 0
-                },
-                {
-                    "id": "ingen",
-                    "label": "Ingen",
-                    "order": 1
-                },
-                {
-                    "id": "ram",
-                    "label": "Ram",
-                    "order": 2
-                }
-            ]
-        },
-        {
-            "key": "ramfarg",
-            "label": "Ramfärg",
-            "type": "attribute",
-            "values": [
-                {
-                    "id": "ek",
-                    "label": "Ek",
-                    "order": 0
-                },
-                {
-                    "id": "svart",
-                    "label": "Svart",
-                    "order": 1
-                }
-            ],
-            "parent": {
-                "key": "inramning",
-                "values": [
-                    "ram",
-                    "hangare"
-                ]
-            }
-        },
-        {
-            "key": "storlek",
-            "label": "Storlek",
-            "type": "attribute",
-            "values": [
-                {
-                    "id": "30x40",
-                    "label": "30x40",
-                    "order": 0
-                },
-                {
-                    "id": "50x70",
-                    "label": "50x70",
-                    "order": 1
-                }
-            ]
-        },
-        {
-            "key": "price",
-            "label": "Price",
-            "type": "price"
-        }
-    ],
-    "sorts": [],
-    "cards": [
-        {
-            "id": "140-74",
-            "productId": 140,
-            "title": "Hav",
-            "url": "http://localhost:8872/?product=hav&inramning=hangare&storlek=50x70",
-            "summary": "",
-            "image": {
-                "src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
-                "srcset": "",
-                "width": 300,
-                "height": 300,
-                "alt": ""
-            },
-            "sort": {
-                "menu_order": 0,
-                "popularity": 2,
-                "rating": 2,
-                "date": 2,
-                "price": 3,
-                "price-desc": 2
-            },
-            "holds": {
-                "inramning": [
-                    "hangare"
-                ]
-            },
-            "listedBy": [
-                "inramning"
-            ],
-            "onlyFiltered": [],
-            "choices": [
-                "storlek",
-                "inramning",
-                "ramfarg"
-            ],
-            "variations": [
-                {
-                    "values": {
-                        "storlek": [
-                            "50x70"
-                        ],
-                        "inramning": [
-                            "hangare"
-                        ],
-                        "ramfarg": [
-                            "ek"
-                        ]
-                    },
-                    "price": 450,
-                    "regularPrice": 450
-                },
-                {
-                    "values": {
-                        "storlek": [
-                            "50x70"
-                        ],
-                        "inramning": [
-                            "hangare"
-                        ],
-                        "ramfarg": [
-                            "svart"
-                        ]
-                    },
-                    "price": 450,
-                    "regularPrice": 450
-                }
-            ]
-        },
-        {
-            "id": "140-72",
-            "productId": 140,
-            "title": "Hav",
-            "url": "http://localhost:8872/?product=hav&inramning=ingen&storlek=30x40",
-            "summary": "",
-            "image": {
-                "src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
-                "srcset": "",
-                "width": 300,
-                "height": 300,
-                "alt": ""
-            },
-            "sort": {
-                "menu_order": 0,
-                "popularity": 2,
-                "rating": 2,
-                "date": 2,
-                "price": 3,
-                "price-desc": 2
-            },
-            "holds": {
-                "inramning": [
-                    "ingen"
-                ]
-            },
-            "listedBy": [
-                "inramning"
-            ],
-            "onlyFiltered": [],
-            "choices": [
-                "storlek",
-                "inramning",
-                "ramfarg"
-            ],
-            "variations": [
-                {
-                    "values": {
-                        "storlek": [
-                            "30x40"
-                        ],
-                        "inramning": [
-                            "ingen"
-                        ],
-                        "ramfarg": []
-                    },
-                    "price": 199,
-                    "regularPrice": 199
-                }
-            ]
-        },
-        {
-            "id": "148",
-            "productId": 148,
-            "title": "Paket",
-            "url": "http://localhost:8872/?product=paket",
-            "summary": "",
-            "image": {
-                "src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
-                "srcset": "",
-                "width": 300,
-                "height": 300,
-                "alt": ""
-            },
-            "sort": {
-                "menu_order": 1,
-                "popularity": 0,
-                "rating": 0,
-                "date": 0,
-                "price": 0,
-                "price-desc": 0
-            },
-            "holds": [],
-            "listedBy": [],
-            "onlyFiltered": [],
-            "choices": [],
-            "variations": [
-                {
-                    "values": {
-                        "storlek": [
-                            "30x40"
-                        ]
-                    },
-                    "price": 100,
-                    "regularPrice": 100,
-                    "priceMax": 500
-                }
-            ]
-        },
-        {
-            "id": "145",
-            "productId": 145,
-            "title": "Rea",
-            "url": "http://localhost:8872/?product=rea",
-            "summary": "",
-            "image": {
-                "src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
-                "srcset": "",
-                "width": 300,
-                "height": 300,
-                "alt": ""
-            },
-            "sort": {
-                "menu_order": 2,
-                "popularity": 1,
-                "rating": 1,
-                "date": 1,
-                "price": 4,
-                "price-desc": 3
-            },
-            "holds": [],
-            "listedBy": [],
-            "onlyFiltered": [],
-            "choices": [],
-            "variations": [
-                {
-                    "values": {
-                        "storlek": [
-                            "50x70"
-                        ]
-                    },
-                    "price": 420,
-                    "regularPrice": 500
-                }
-            ]
-        },
-        {
-            "id": "130-74",
-            "productId": 130,
-            "title": "Safari",
-            "url": "http://localhost:8872/?product=safari&inramning=hangare&storlek=50x70&ramfarg=svart",
-            "summary": "",
-            "image": {
-                "src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
-                "srcset": "",
-                "width": 300,
-                "height": 300,
-                "alt": ""
-            },
-            "sort": {
-                "menu_order": 3,
-                "popularity": 4,
-                "rating": 4,
-                "date": 4,
-                "price": 1,
-                "price-desc": 1
-            },
-            "holds": {
-                "inramning": [
-                    "hangare"
-                ]
-            },
-            "listedBy": [
-                "inramning"
-            ],
-            "onlyFiltered": [],
-            "choices": [
-                "storlek",
-                "inramning",
-                "ramfarg"
-            ],
-            "variations": [
-                {
-                    "values": {
-                        "storlek": [
-                            "50x70"
-                        ],
-                        "inramning": [
-                            "hangare"
-                        ],
-                        "ramfarg": [
-                            "svart"
-                        ]
-                    },
-                    "price": 450,
-                    "regularPrice": 450
-                }
-            ]
-        },
-        {
-            "id": "130-72",
-            "productId": 130,
-            "title": "Safari",
-            "url": "http://localhost:8872/?product=safari&inramning=ingen",
-            "summary": "",
-            "image": {
-                "src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
-                "srcset": "",
-                "width": 300,
-                "height": 300,
-                "alt": ""
-            },
-            "sort": {
-                "menu_order": 3,
-                "popularity": 4,
-                "rating": 4,
-                "date": 4,
-                "price": 1,
-                "price-desc": 1
-            },
-            "holds": {
-                "inramning": [
-                    "ingen"
-                ]
-            },
-            "listedBy": [
-                "inramning"
-            ],
-            "onlyFiltered": [],
-            "choices": [
-                "storlek",
-                "inramning",
-                "ramfarg"
-            ],
-            "variations": [
-                {
-                    "values": {
-                        "storlek": [
-                            "50x70"
-                        ],
-                        "inramning": [
-                            "ingen"
-                        ],
-                        "ramfarg": []
-                    },
-                    "price": 299,
-                    "regularPrice": 299
-                },
-                {
-                    "values": {
-                        "storlek": [
-                            "30x40"
-                        ],
-                        "inramning": [
-                            "ingen"
-                        ],
-                        "ramfarg": []
-                    },
-                    "price": 199,
-                    "regularPrice": 199
-                }
-            ]
-        },
-        {
-            "id": "130-73",
-            "productId": 130,
-            "title": "Safari",
-            "url": "http://localhost:8872/?product=safari&inramning=ram",
-            "summary": "",
-            "image": {
-                "src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
-                "srcset": "",
-                "width": 300,
-                "height": 300,
-                "alt": ""
-            },
-            "sort": {
-                "menu_order": 3,
-                "popularity": 4,
-                "rating": 4,
-                "date": 4,
-                "price": 1,
-                "price-desc": 1
-            },
-            "holds": {
-                "inramning": [
-                    "ram"
-                ]
-            },
-            "listedBy": [
-                "inramning"
-            ],
-            "onlyFiltered": [],
-            "choices": [
-                "storlek",
-                "inramning",
-                "ramfarg"
-            ],
-            "variations": [
-                {
-                    "values": {
-                        "storlek": [
-                            "50x70"
-                        ],
-                        "inramning": [
-                            "ram"
-                        ],
-                        "ramfarg": [
-                            "ek"
-                        ]
-                    },
-                    "price": 499,
-                    "regularPrice": 499
-                },
-                {
-                    "values": {
-                        "storlek": [
-                            "30x40"
-                        ],
-                        "inramning": [
-                            "ram"
-                        ],
-                        "ramfarg": [
-                            "ek"
-                        ]
-                    },
-                    "price": 349,
-                    "regularPrice": 349
-                },
-                {
-                    "values": {
-                        "storlek": [
-                            "30x40"
-                        ],
-                        "inramning": [
-                            "ram"
-                        ],
-                        "ramfarg": [
-                            "svart"
-                        ]
-                    },
-                    "price": 349,
-                    "regularPrice": 349
-                }
-            ]
-        },
-        {
-            "id": "137-72",
-            "productId": 137,
-            "title": "Skog",
-            "url": "http://localhost:8872/?product=skog&inramning=ingen&storlek=30x40",
-            "summary": "",
-            "image": {
-                "src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
-                "srcset": "",
-                "width": 300,
-                "height": 300,
-                "alt": ""
-            },
-            "sort": {
-                "menu_order": 4,
-                "popularity": 3,
-                "rating": 3,
-                "date": 3,
-                "price": 2,
-                "price-desc": 4
-            },
-            "holds": {
-                "inramning": [
-                    "ingen"
-                ]
-            },
-            "listedBy": [
-                "inramning"
-            ],
-            "onlyFiltered": [],
-            "choices": [
-                "storlek",
-                "inramning",
-                "ramfarg"
-            ],
-            "variations": [
-                {
-                    "values": {
-                        "storlek": [
-                            "30x40"
-                        ],
-                        "inramning": [
-                            "ingen"
-                        ],
-                        "ramfarg": []
-                    },
-                    "price": 199,
-                    "regularPrice": 199
-                }
-            ]
-        },
-        {
-            "id": "137-73",
-            "productId": 137,
-            "title": "Skog",
-            "url": "http://localhost:8872/?product=skog&inramning=ram&storlek=50x70&ramfarg=ek",
-            "summary": "",
-            "image": {
-                "src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
-                "srcset": "",
-                "width": 300,
-                "height": 300,
-                "alt": ""
-            },
-            "sort": {
-                "menu_order": 4,
-                "popularity": 3,
-                "rating": 3,
-                "date": 3,
-                "price": 2,
-                "price-desc": 4
-            },
-            "holds": {
-                "inramning": [
-                    "ram"
-                ]
-            },
-            "listedBy": [
-                "inramning"
-            ],
-            "onlyFiltered": [],
-            "choices": [
-                "storlek",
-                "inramning",
-                "ramfarg"
-            ],
-            "variations": [
-                {
-                    "values": {
-                        "storlek": [
-                            "50x70"
-                        ],
-                        "inramning": [
-                            "ram"
-                        ],
-                        "ramfarg": [
-                            "ek"
-                        ]
-                    },
-                    "price": 350,
-                    "regularPrice": 350
-                }
-            ]
-        }
-    ],
-    "images": []
+	"version": "test",
+	"currency": {
+		"code": "USD",
+		"symbol": "$",
+		"position": "left",
+		"decimals": 2,
+		"decimalSeparator": ".",
+		"thousandSeparator": ","
+	},
+	"filters": [
+		{
+			"key": "inramning",
+			"label": "Inramning",
+			"type": "attribute",
+			"values": [
+				{
+					"id": "hangare",
+					"label": "Hängare",
+					"order": 0
+				},
+				{
+					"id": "ingen",
+					"label": "Ingen",
+					"order": 1
+				},
+				{
+					"id": "ram",
+					"label": "Ram",
+					"order": 2
+				}
+			]
+		},
+		{
+			"key": "ramfarg",
+			"label": "Ramfärg",
+			"type": "attribute",
+			"values": [
+				{
+					"id": "ek",
+					"label": "Ek",
+					"order": 0
+				},
+				{
+					"id": "svart",
+					"label": "Svart",
+					"order": 1
+				}
+			],
+			"parent": {
+				"key": "inramning",
+				"values": ["ram", "hangare"]
+			}
+		},
+		{
+			"key": "storlek",
+			"label": "Storlek",
+			"type": "attribute",
+			"values": [
+				{
+					"id": "30x40",
+					"label": "30x40",
+					"order": 0
+				},
+				{
+					"id": "50x70",
+					"label": "50x70",
+					"order": 1
+				}
+			]
+		},
+		{
+			"key": "price",
+			"label": "Price",
+			"type": "price"
+		}
+	],
+	"sorts": [],
+	"cards": [
+		{
+			"id": "140-74",
+			"productId": 140,
+			"title": "Hav",
+			"url": "http://localhost:8872/?product=hav&inramning=hangare&storlek=50x70",
+			"summary": "",
+			"image": {
+				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"srcset": "",
+				"width": 300,
+				"height": 300,
+				"alt": ""
+			},
+			"sort": {
+				"menu_order": 0,
+				"popularity": 2,
+				"rating": 2,
+				"date": 2,
+				"price": 3,
+				"price-desc": 2
+			},
+			"holds": {
+				"inramning": ["hangare"]
+			},
+			"listedBy": ["inramning"],
+			"onlyFiltered": [],
+			"choices": ["storlek", "inramning", "ramfarg"],
+			"variations": [
+				{
+					"values": {
+						"storlek": ["50x70"],
+						"inramning": ["hangare"],
+						"ramfarg": ["ek"]
+					},
+					"price": 450,
+					"regularPrice": 450
+				},
+				{
+					"values": {
+						"storlek": ["50x70"],
+						"inramning": ["hangare"],
+						"ramfarg": ["svart"]
+					},
+					"price": 450,
+					"regularPrice": 450
+				}
+			]
+		},
+		{
+			"id": "140-72",
+			"productId": 140,
+			"title": "Hav",
+			"url": "http://localhost:8872/?product=hav&inramning=ingen&storlek=30x40",
+			"summary": "",
+			"image": {
+				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"srcset": "",
+				"width": 300,
+				"height": 300,
+				"alt": ""
+			},
+			"sort": {
+				"menu_order": 0,
+				"popularity": 2,
+				"rating": 2,
+				"date": 2,
+				"price": 3,
+				"price-desc": 2
+			},
+			"holds": {
+				"inramning": ["ingen"]
+			},
+			"listedBy": ["inramning"],
+			"onlyFiltered": [],
+			"choices": ["storlek", "inramning", "ramfarg"],
+			"variations": [
+				{
+					"values": {
+						"storlek": ["30x40"],
+						"inramning": ["ingen"],
+						"ramfarg": []
+					},
+					"price": 199,
+					"regularPrice": 199
+				}
+			]
+		},
+		{
+			"id": "148",
+			"productId": 148,
+			"title": "Paket",
+			"url": "http://localhost:8872/?product=paket",
+			"summary": "",
+			"image": {
+				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"srcset": "",
+				"width": 300,
+				"height": 300,
+				"alt": ""
+			},
+			"sort": {
+				"menu_order": 1,
+				"popularity": 0,
+				"rating": 0,
+				"date": 0,
+				"price": 0,
+				"price-desc": 0
+			},
+			"holds": [],
+			"listedBy": [],
+			"onlyFiltered": [],
+			"choices": [],
+			"variations": [
+				{
+					"values": {
+						"storlek": ["30x40"]
+					},
+					"price": 100,
+					"regularPrice": 100,
+					"priceMax": 500
+				}
+			]
+		},
+		{
+			"id": "145",
+			"productId": 145,
+			"title": "Rea",
+			"url": "http://localhost:8872/?product=rea",
+			"summary": "",
+			"image": {
+				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"srcset": "",
+				"width": 300,
+				"height": 300,
+				"alt": ""
+			},
+			"sort": {
+				"menu_order": 2,
+				"popularity": 1,
+				"rating": 1,
+				"date": 1,
+				"price": 4,
+				"price-desc": 3
+			},
+			"holds": [],
+			"listedBy": [],
+			"onlyFiltered": [],
+			"choices": [],
+			"variations": [
+				{
+					"values": {
+						"storlek": ["50x70"]
+					},
+					"price": 420,
+					"regularPrice": 500
+				}
+			]
+		},
+		{
+			"id": "130-74",
+			"productId": 130,
+			"title": "Safari",
+			"url": "http://localhost:8872/?product=safari&inramning=hangare&storlek=50x70&ramfarg=svart",
+			"summary": "",
+			"image": {
+				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"srcset": "",
+				"width": 300,
+				"height": 300,
+				"alt": ""
+			},
+			"sort": {
+				"menu_order": 3,
+				"popularity": 4,
+				"rating": 4,
+				"date": 4,
+				"price": 1,
+				"price-desc": 1
+			},
+			"holds": {
+				"inramning": ["hangare"]
+			},
+			"listedBy": ["inramning"],
+			"onlyFiltered": [],
+			"choices": ["storlek", "inramning", "ramfarg"],
+			"variations": [
+				{
+					"values": {
+						"storlek": ["50x70"],
+						"inramning": ["hangare"],
+						"ramfarg": ["svart"]
+					},
+					"price": 450,
+					"regularPrice": 450
+				}
+			]
+		},
+		{
+			"id": "130-72",
+			"productId": 130,
+			"title": "Safari",
+			"url": "http://localhost:8872/?product=safari&inramning=ingen",
+			"summary": "",
+			"image": {
+				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"srcset": "",
+				"width": 300,
+				"height": 300,
+				"alt": ""
+			},
+			"sort": {
+				"menu_order": 3,
+				"popularity": 4,
+				"rating": 4,
+				"date": 4,
+				"price": 1,
+				"price-desc": 1
+			},
+			"holds": {
+				"inramning": ["ingen"]
+			},
+			"listedBy": ["inramning"],
+			"onlyFiltered": [],
+			"choices": ["storlek", "inramning", "ramfarg"],
+			"variations": [
+				{
+					"values": {
+						"storlek": ["50x70"],
+						"inramning": ["ingen"],
+						"ramfarg": []
+					},
+					"price": 299,
+					"regularPrice": 299
+				},
+				{
+					"values": {
+						"storlek": ["30x40"],
+						"inramning": ["ingen"],
+						"ramfarg": []
+					},
+					"price": 199,
+					"regularPrice": 199
+				}
+			]
+		},
+		{
+			"id": "130-73",
+			"productId": 130,
+			"title": "Safari",
+			"url": "http://localhost:8872/?product=safari&inramning=ram",
+			"summary": "",
+			"image": {
+				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"srcset": "",
+				"width": 300,
+				"height": 300,
+				"alt": ""
+			},
+			"sort": {
+				"menu_order": 3,
+				"popularity": 4,
+				"rating": 4,
+				"date": 4,
+				"price": 1,
+				"price-desc": 1
+			},
+			"holds": {
+				"inramning": ["ram"]
+			},
+			"listedBy": ["inramning"],
+			"onlyFiltered": [],
+			"choices": ["storlek", "inramning", "ramfarg"],
+			"variations": [
+				{
+					"values": {
+						"storlek": ["50x70"],
+						"inramning": ["ram"],
+						"ramfarg": ["ek"]
+					},
+					"price": 499,
+					"regularPrice": 499
+				},
+				{
+					"values": {
+						"storlek": ["30x40"],
+						"inramning": ["ram"],
+						"ramfarg": ["ek"]
+					},
+					"price": 349,
+					"regularPrice": 349
+				},
+				{
+					"values": {
+						"storlek": ["30x40"],
+						"inramning": ["ram"],
+						"ramfarg": ["svart"]
+					},
+					"price": 349,
+					"regularPrice": 349
+				}
+			]
+		},
+		{
+			"id": "137-72",
+			"productId": 137,
+			"title": "Skog",
+			"url": "http://localhost:8872/?product=skog&inramning=ingen&storlek=30x40",
+			"summary": "",
+			"image": {
+				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"srcset": "",
+				"width": 300,
+				"height": 300,
+				"alt": ""
+			},
+			"sort": {
+				"menu_order": 4,
+				"popularity": 3,
+				"rating": 3,
+				"date": 3,
+				"price": 2,
+				"price-desc": 4
+			},
+			"holds": {
+				"inramning": ["ingen"]
+			},
+			"listedBy": ["inramning"],
+			"onlyFiltered": [],
+			"choices": ["storlek", "inramning", "ramfarg"],
+			"variations": [
+				{
+					"values": {
+						"storlek": ["30x40"],
+						"inramning": ["ingen"],
+						"ramfarg": []
+					},
+					"price": 199,
+					"regularPrice": 199
+				}
+			]
+		},
+		{
+			"id": "137-73",
+			"productId": 137,
+			"title": "Skog",
+			"url": "http://localhost:8872/?product=skog&inramning=ram&storlek=50x70&ramfarg=ek",
+			"summary": "",
+			"image": {
+				"src": "http://localhost:8872/wp-content/plugins/woocommerce/assets/images/placeholder.webp",
+				"srcset": "",
+				"width": 300,
+				"height": 300,
+				"alt": ""
+			},
+			"sort": {
+				"menu_order": 4,
+				"popularity": 3,
+				"rating": 3,
+				"date": 3,
+				"price": 2,
+				"price-desc": 4
+			},
+			"holds": {
+				"inramning": ["ram"]
+			},
+			"listedBy": ["inramning"],
+			"onlyFiltered": [],
+			"choices": ["storlek", "inramning", "ramfarg"],
+			"variations": [
+				{
+					"values": {
+						"storlek": ["50x70"],
+						"inramning": ["ram"],
+						"ramfarg": ["ek"]
+					},
+					"price": 350,
+					"regularPrice": 350
+				}
+			]
+		}
+	],
+	"images": []
 }
