@@ -11,6 +11,7 @@ use MO;
 use Pixonaut\WooCommerce\Api\Catalogue;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\HookListener;
+use Pixonaut\WooCommerce\Api\Pictures;
 use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
@@ -25,9 +26,11 @@ use Pixonaut\WooCommerce\FormLayout;
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\ServerReads;
+use Pixonaut\WooCommerce\Storefront\StagePosters;
 use Pixonaut\WooCommerce\Storefront\Storefront;
 use Pixonaut\WooCommerce\Tests\Support\HttpRecorder;
 use Pixonaut\WooCommerce\Tests\Support\OpenApiAssert;
+use Pixonaut\WooCommerce\Tests\Support\PngFixture;
 use Translation_Entry;
 use WP_UnitTestCase;
 
@@ -408,6 +411,31 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '"constraints":{}', $match[1] ?? '', 'an empty object stays one' );
 	}
 
+	public function test_the_preview_shows_its_poster_from_the_first_paint_once_one_is_drawn(): void {
+		$this->answer_side();
+		$this->recorder->raw( 200, PngFixture::white(), 'image/png' );
+		$client  = ( new Pixonaut( $this->store, new WcLogger(), new HookListener( new Deprecations() ), null, self::BASE_URL ) );
+		$posters = new StagePosters( new Pictures( $client ), static fn (): bool => true );
+		$product = StorefrontTest::product( StorefrontTest::personalised() );
+		$this->go_to( (string) get_permalink( $product->get_id() ) );
+		$GLOBALS['product'] = $product;
+
+		$first = $this->preview( $posters );
+		$posters->draw_queued();
+		$again = $this->preview( $posters );
+
+		$this->assertStringNotContainsString( 'pixonaut-preview__poster', $first );
+		$this->assertSame( 1, preg_match( '#<span class="pixonaut-preview__placeholder" aria-hidden="true">\s*<img class="pixonaut-preview__poster" src="([^"]+)" width="8" height="8" alt="" fetchpriority="high" data-pixonaut-template="mini-tee@2" data-pixonaut-variant="([^"]*)" />\s*</span>#', $again, $poster ) );
+		$this->assertStringStartsWith( wp_upload_dir()['baseurl'] . '/' . StagePosters::DIRECTORY . '/', $poster[1] ?? '' );
+		// The preview's top is measured inline, before the deferred script runs.
+		$this->assertSame( 1, preg_match( '#</div>\s*<script>(.*?)</script>$#s', trim( $again ), $script ) );
+		$this->assertStringContainsString( '--pixonaut-preview-top', $script[1] ?? '' );
+		$this->assertStringNotContainsString( '<', $script[1] ?? '<', 'a block theme\'s wptexturize() would read a less-than sign as a tag' );
+		foreach ( (array) glob( (string) StagePosters::directory() . '/*' ) as $file ) {
+			wp_delete_file( (string) $file );
+		}
+	}
+
 	public function test_a_product_page_whose_reads_are_kept_asks_pixonaut_nothing(): void {
 		$this->answer_side();
 		$product = StorefrontTest::product( StorefrontTest::personalised() );
@@ -542,6 +570,19 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		ob_start();
 		$storefront->render_classic_preview();
 		$storefront->render_form();
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * The classic preview a page view prints, with `$posters`.
+	 *
+	 * @param StagePosters $posters The pictures the preview shows until its designer has drawn.
+	 */
+	private function preview( StagePosters $posters ): string {
+		$storefront = new Storefront( $this->plugin->inline_products(), $this->plugin->templates(), $this->plugin->labels(), $this->plugin->settings(), dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php', $this->reads, null, null, $posters );
+		$storefront->replace_classic_gallery();
+		ob_start();
+		$storefront->render_classic_preview();
 		return (string) ob_get_clean();
 	}
 

@@ -105,6 +105,27 @@
 	display: block;
 }
 
+/* A poster stands in the placeholder at the preview's size until the SDK
+ * replaces it with its own drawing, which it is a picture of; it shows in
+ * place of the spinner. */
+.pixonaut-preview__placeholder:has(.pixonaut-preview__poster) {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.pixonaut-preview__poster {
+	display: block;
+	width: 100%;
+	max-width: none;
+	height: 100%;
+	object-fit: contain;
+}
+
+.pixonaut-preview__stage:has(.pixonaut-preview__poster) .pixonaut-spinner {
+	display: none;
+}
+
 .pixonaut-spinner .screen-reader-text {
 	position: absolute;
 	width: 1px;

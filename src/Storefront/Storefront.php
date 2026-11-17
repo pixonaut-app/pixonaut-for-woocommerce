@@ -77,6 +77,11 @@ final class Storefront {
 	private const PARTS_SCRIPT = 'storefront-parts.js';
 
 	/**
+	 * The build of `preview-top-inline.ts`, printed inline after the preview.
+	 */
+	private const PREVIEW_TOP_SCRIPT = 'storefront-preview-top.js';
+
+	/**
 	 * The product whose designer the page shows, once it printed a part.
 	 *
 	 * @var int|null
@@ -136,6 +141,7 @@ final class Storefront {
 	 * @param ServerReads       $server      Reads what the designer starts from, before the page prints.
 	 * @param OpeningPrice|null $opening_price Prints a variable product's price as its opening variation's; null leaves the range.
 	 * @param SwatchLooks|null  $swatch_looks  How each attribute value looks as a swatch; null draws every value as its name.
+	 * @param StagePosters|null $posters       The pictures a preview shows until its designer has drawn; null shows none.
 	 */
 	public function __construct(
 		private readonly InlineProducts $products,
@@ -146,6 +152,7 @@ final class Storefront {
 		private readonly ServerReads $server,
 		private readonly ?OpeningPrice $opening_price = null,
 		private readonly ?SwatchLooks $swatch_looks = null,
+		private readonly ?StagePosters $posters = null,
 	) {
 	}
 
@@ -153,6 +160,7 @@ final class Storefront {
 		add_action( 'wp', array( $this, 'forget_page' ) );
 		add_action( 'wp', array( $this, 'replace_classic_gallery' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_on_product_page' ) );
+		add_filter( 'wp_preload_resources', array( $this, 'preload_renderer' ) );
 		foreach ( self::GALLERY_BLOCKS as $block ) {
 			add_filter( 'render_block_' . $block, array( $this, 'replace_gallery_block' ), 10, 3 );
 		}
@@ -314,11 +322,31 @@ final class Storefront {
 			return;
 		}
 		$this->parts_to_place = false;
-		$file                 = dirname( $this->plugin_file ) . '/assets/build/' . self::PARTS_SCRIPT;
-		if ( is_readable( $file ) ) {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- This plugin's own build output, on disk.
-			wp_print_inline_script_tag( (string) file_get_contents( $file ) );
+		echo $this->inline_build( self::PARTS_SCRIPT ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a script tag of this plugin's own build.
+	}
+
+	/**
+	 * On a product page that shows the designer, asks for the SDK's renderer
+	 * with the page's head, so it downloads while the page is read rather
+	 * than once the deferred scripts have run.
+	 *
+	 * @param mixed $resources The resources to preload, as `wp_preload_resources` passes them.
+	 * @return mixed
+	 */
+	public function preload_renderer( mixed $resources ): mixed {
+		$designer = is_array( $resources ) ? $this->page_designer() : null;
+		if ( null === $designer || ! $designer->available() ) {
+			return $resources;
 		}
+		$beside = dirname( Sdk::script( $this->settings )['url'] );
+		foreach ( Sdk::RENDERER_FILES as $file ) {
+			$resources[] = array(
+				'href'        => $beside . '/' . $file,
+				'as'          => 'fetch',
+				'crossorigin' => 'anonymous',
+			);
+		}
+		return $resources;
 	}
 
 	public function enqueue_on_product_page(): void {
@@ -450,8 +478,35 @@ final class Storefront {
 				'loading'    => $this->labels->get( Labels::DESIGNER_LOADING, array( 'product_id' => $designer->product->get_id() ) ),
 				'layouts'    => $this->layouts( $designer ),
 				'images'     => self::image_ids( $designer->product ),
+				'posters'    => $this->posters( $designer ),
 			)
-		);
+		) . $this->inline_build( self::PREVIEW_TOP_SCRIPT );
+	}
+
+	/**
+	 * The picture the first side's preview shows until its designer has
+	 * drawn, by side key; empty when there is none yet.
+	 *
+	 * @param InlineDesigner $designer An available designer.
+	 * @return array<string, array{url: string, width: int, height: int, template: string, variant: string}>
+	 */
+	private function posters( InlineDesigner $designer ): array {
+		$side   = array_key_first( $designer->mounts );
+		$layout = null === $side ? null : ( $this->layouts( $designer )[ (string) $side ] ?? null );
+		$poster = null === $this->posters || null === $side || null === $layout ? null : $this->posters->for_side( $designer->mounts[ $side ], $layout, $designer->shown_variant() );
+		return null === $poster ? array() : array( (string) $side => $poster );
+	}
+
+	/**
+	 * One of this plugin's builds as an inline script tag; empty when it is
+	 * not built.
+	 *
+	 * @param string $build The build's file name.
+	 */
+	private function inline_build( string $build ): string {
+		$file = dirname( $this->plugin_file ) . '/assets/build/' . $build;
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- This plugin's own build output, on disk.
+		return is_readable( $file ) ? wp_get_inline_script_tag( (string) file_get_contents( $file ) ) : '';
 	}
 
 	/**

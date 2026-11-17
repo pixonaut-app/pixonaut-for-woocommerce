@@ -61,26 +61,7 @@ export function fitPreviews(doc: Document): void {
 	if (win === null || previews.length === 0) {
 		return;
 	}
-	const measure = (): void => {
-		for (const preview of previews) {
-			const box = preview.getBoundingClientRect();
-			preview.style.setProperty(
-				TOP_PROPERTY,
-				`${Math.max(0, restingTop(preview, win))}px`,
-			);
-			// The document's height, unlike the window's, stays put as a phone's
-			// browser bars come and go, so scrolling never flips this. Only the
-			// visual viewport shrinks for an open keyboard.
-			const screen = Math.min(
-				doc.documentElement.clientHeight,
-				win.visualViewport?.height ?? Number.POSITIVE_INFINITY,
-			);
-			preview.toggleAttribute(
-				PINNED_ATTRIBUTE,
-				box.height <= screen * PINNED_SCREEN_SHARE,
-			);
-		}
-	};
+	const measure = (): void => measurePreviews(doc);
 	measure();
 	win.addEventListener('load', measure);
 	win.addEventListener('resize', measure);
@@ -109,6 +90,40 @@ export function fitPreviews(doc: Document): void {
 	// The SDK draws its mark there, or none, after the preview may be done.
 	for (const mark of doc.querySelectorAll<HTMLElement>(MARK_TARGET_SELECTOR)) {
 		shapes.observe(mark);
+	}
+}
+
+/**
+ * Measures each preview the page has printed so far once: tells the
+ * stylesheet where it starts, and whether it is short enough to stay pinned
+ * on a phone. Printed inline after the preview too
+ * (`Storefront::preview_html()`), so the first paint already holds the
+ * preview under the window: the storefront script is deferred. Free of a
+ * less-than sign, as everything that inline script runs: a block theme's
+ * template passes through `wptexturize()`, which would read one as a tag.
+ */
+export function measurePreviews(doc: Document): void {
+	const win = doc.defaultView;
+	if (win === null) {
+		return;
+	}
+	for (const preview of doc.querySelectorAll<HTMLElement>(PREVIEW_SELECTOR)) {
+		const box = preview.getBoundingClientRect();
+		preview.style.setProperty(
+			TOP_PROPERTY,
+			`${Math.max(0, restingTop(preview, win))}px`,
+		);
+		// The document's height, unlike the window's, stays put as a phone's
+		// browser bars come and go, so scrolling never flips this. Only the
+		// visual viewport shrinks for an open keyboard.
+		const screen = Math.min(
+			doc.documentElement.clientHeight,
+			win.visualViewport?.height ?? Number.POSITIVE_INFINITY,
+		);
+		preview.toggleAttribute(
+			PINNED_ATTRIBUTE,
+			screen * PINNED_SCREEN_SHARE >= box.height,
+		);
 	}
 }
 

@@ -82,6 +82,7 @@ import {
 	shopStepOptions,
 } from './shop-parts';
 import { SidePreloads } from './side-preload';
+import { dropPosterUnlike } from './stage-poster';
 import { SubmitHold } from './submit-hold';
 import { SideTabs } from './tabs';
 import { carryUnkeyedValues } from './template-carry';
@@ -1080,6 +1081,15 @@ export class ProductDesigner {
 	/** Follows the form to another variation, after any switch under way. */
 	private chooseVariation(id: string): void {
 		this.variation = id;
+		const chosen = this.variations?.[id];
+		if (chosen?.state === 'personalised') {
+			for (const [side, target] of Object.entries(chosen.sides)) {
+				dropPosterUnlike(this.existingPreview(side), {
+					templateId: target.templateId,
+					variant: chosen.variant,
+				});
+			}
+		}
 		this.unmatched = false;
 		this.picked = undefined;
 		this.showPrice();

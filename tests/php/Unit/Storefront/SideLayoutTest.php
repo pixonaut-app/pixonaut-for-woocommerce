@@ -125,8 +125,8 @@ final class SideLayoutTest extends TestCase {
 	}
 
 	public function test_a_photo_of_a_setting_counts_though_it_has_no_mount(): void {
-		$reads = self::reads();
-		$photo = &$reads['blank']['mockups']['placements'][1]['views'][0]['photos'][1];
+		$reads               = self::reads();
+		$photo               = &$reads['blank']['mockups']['placements'][1]['views'][0]['photos'][1];
 		$photo['mount']      = null;
 		$photo['photoScene'] = array(
 			'bakeKey'     => 'bake',

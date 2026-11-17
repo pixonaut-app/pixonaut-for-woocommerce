@@ -230,6 +230,7 @@ use Pixonaut\WooCommerce\Storefront\SplitCardListings;
 use Pixonaut\WooCommerce\Storefront\FilterMatches;
 use Pixonaut\WooCommerce\Storefront\DependentFilterQuery;
 use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
+use Pixonaut\WooCommerce\Storefront\StagePosters;
 use Pixonaut\WooCommerce\Storefront\Storefront;
 use Pixonaut\WooCommerce\Storefront\SwatchLooks;
 use Pixonaut\WooCommerce\Storefront\SwatchNames;
@@ -1187,7 +1188,7 @@ final class Plugin {
 	}
 
 	public function storefront(): Storefront {
-		$this->storefront ??= new Storefront( $this->inline_products(), $this->templates(), $this->labels(), $this->settings(), $this->file, $this->server_reads(), $this->opening_price(), $this->swatch_looks() );
+		$this->storefront ??= new Storefront( $this->inline_products(), $this->templates(), $this->labels(), $this->settings(), $this->file, $this->server_reads(), $this->opening_price(), $this->swatch_looks(), new StagePosters( new Pictures( $this->pixonaut() ) ) );
 		return $this->storefront;
 	}
 

@@ -82,6 +82,13 @@ final class Sdk {
 	);
 
 	/**
+	 * The renderer the SDK fetches beside its script, its glue and its
+	 * WebAssembly, which a page may ask for with its head (`rel=preload`,
+	 * `as=fetch`, CORS) so the download starts before the script runs.
+	 */
+	public const RENDERER_FILES = array( 'pixonaut_wasm.js', 'pixonaut_wasm_bg.wasm' );
+
+	/**
 	 * The script the storefront loads, and its Subresource Integrity: the
 	 * pinned release from the CDN in use, checked; or the developer tools'
 	 * custom script, which is not the release the integrity names, unchecked.
