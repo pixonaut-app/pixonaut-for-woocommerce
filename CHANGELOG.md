@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.20.2...v1.20.3) (2026-11-17)
+
+
+### Bug Fixes
+
+* **storefront:** a stage poster in a box of its shape covers it ([#280](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/280)) ([7230ae3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/7230ae3a7991471aca6c1bb6fbb7ec9f968edea2))
+
 ## [1.20.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.20.1...v1.20.2) (2026-11-17)
 
 
