@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fitPreviews } from './preview-fit';
+import { applyKeptTop, fitPreviews, measurePreviews } from './preview-fit';
 
 /** Where the theme's header ends, in the page. */
 const HEADER_PX = 240;
@@ -89,6 +89,8 @@ function startsAt(element: HTMLElement, viewportTop: number): void {
 }
 
 afterEach(() => {
+	localStorage.clear();
+	document.documentElement.style.removeProperty('--pixonaut-preview-top');
 	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
 	FakeResizeObserver.last = undefined;
@@ -304,5 +306,50 @@ describe('fitPreviews', () => {
 		expect(
 			element.style.getPropertyValue('--pixonaut-preview-drawn-aspect'),
 		).toBe('');
+	});
+});
+
+describe('applyKeptTop', () => {
+	it('starts the next page in a window as wide from the top the last one measured', () => {
+		startsAt(preview(), HEADER_PX);
+		measurePreviews(document);
+		document.body.innerHTML = '';
+
+		applyKeptTop(document);
+
+		expect(
+			document.documentElement.style.getPropertyValue('--pixonaut-preview-top'),
+		).toBe(`${HEADER_PX}px`);
+	});
+
+	it('starts a page in a window of another width from nothing', () => {
+		startsAt(preview(), HEADER_PX);
+		measurePreviews(document);
+		vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(
+			window.innerWidth + 1,
+		);
+
+		applyKeptTop(document);
+
+		expect(
+			document.documentElement.style.getPropertyValue('--pixonaut-preview-top'),
+		).toBe('');
+	});
+
+	it('measures the page alone without storage', () => {
+		vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+			throw new Error('blocked');
+		});
+		vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+			throw new Error('blocked');
+		});
+		const element = preview();
+		startsAt(element, HEADER_PX);
+
+		expect(() => measurePreviews(document)).not.toThrow();
+		expect(() => applyKeptTop(document)).not.toThrow();
+		expect(element.style.getPropertyValue('--pixonaut-preview-top')).toBe(
+			`${HEADER_PX}px`,
+		);
 	});
 });

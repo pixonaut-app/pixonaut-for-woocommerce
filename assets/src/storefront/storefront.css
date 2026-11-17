@@ -107,7 +107,10 @@
 
 /* A poster stands in the placeholder at the preview's size until the SDK
  * replaces it with its own drawing, which it is a picture of; it shows in
- * place of the spinner. */
+ * place of the spinner. It is painted a hair larger than its box, which
+ * moves nothing: the SDK rounds its picture's width up to a whole pixel,
+ * and a browser counts a picture painted larger in the same place as the
+ * page's largest paint, after the poster, though it shows nothing new. */
 .pixonaut-preview__placeholder:has(.pixonaut-preview__poster) {
 	display: block;
 	width: 100%;
@@ -120,6 +123,8 @@
 	max-width: none;
 	height: 100%;
 	object-fit: contain;
+	/* 0.3%: more than a pixel's rounding at any preview width up to 2000px. */
+	transform: scale(1.003);
 }
 
 .pixonaut-preview__stage:has(.pixonaut-preview__poster) .pixonaut-spinner {

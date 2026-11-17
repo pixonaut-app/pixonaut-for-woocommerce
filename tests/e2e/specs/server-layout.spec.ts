@@ -571,7 +571,10 @@ test("the preview shows a picture of the designer's first drawing from the first
 	await page.evaluate(() => document.fonts.ready);
 	const side = `${FRONT_FRAME} .pixonaut-preview__side`;
 	const printed = await box(page, side);
-	const shown = await box(page, `${FRONT_FRAME} .pixonaut-preview__poster`);
+	const shown = await box(
+		page,
+		`${FRONT_FRAME} .pixonaut-preview__placeholder`,
+	);
 	expect(Math.abs(shown.width - printed.width)).toBeLessThanOrEqual(
 		SAME_BOX_PX,
 	);

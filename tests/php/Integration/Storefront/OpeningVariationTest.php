@@ -274,7 +274,11 @@ final class OpeningVariationTest extends WP_UnitTestCase {
 		$this->go_to( (string) get_permalink( $product->get_id() ) );
 		$this->form_html( $product );
 
-		$this->assertStringContainsString( '<script', $this->after_form() );
+		$script = $this->after_form();
+
+		$this->assertStringContainsString( '<script', $script );
+		$this->assertStringContainsString( '--pixonaut-preview-top', $script, 'it holds the preview under the window from the first paint' );
+		$this->assertSame( 0, substr_count( (string) preg_replace( '#</?script[^>]*>#', '', $script ), '<' ), 'a block theme\'s wptexturize() would read a less-than sign as a tag' );
 		$this->assertSame( '', $this->after_form() );
 	}
 

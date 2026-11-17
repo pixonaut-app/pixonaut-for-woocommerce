@@ -427,10 +427,6 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'pixonaut-preview__poster', $first );
 		$this->assertSame( 1, preg_match( '#<span class="pixonaut-preview__placeholder" aria-hidden="true">\s*<img class="pixonaut-preview__poster" src="([^"]+)" width="8" height="8" alt="" fetchpriority="high" data-pixonaut-template="mini-tee@2" data-pixonaut-variant="([^"]*)" />\s*</span>#', $again, $poster ) );
 		$this->assertStringStartsWith( wp_upload_dir()['baseurl'] . '/' . StagePosters::DIRECTORY . '/', $poster[1] ?? '' );
-		// The preview's top is measured inline, before the deferred script runs.
-		$this->assertSame( 1, preg_match( '#</div>\s*<script>(.*?)</script>$#s', trim( $again ), $script ) );
-		$this->assertStringContainsString( '--pixonaut-preview-top', $script[1] ?? '' );
-		$this->assertStringNotContainsString( '<', $script[1] ?? '<', 'a block theme\'s wptexturize() would read a less-than sign as a tag' );
 		foreach ( (array) glob( (string) StagePosters::directory() . '/*' ) as $file ) {
 			wp_delete_file( (string) $file );
 		}

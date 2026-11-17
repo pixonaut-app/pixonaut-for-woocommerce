@@ -77,9 +77,9 @@ final class Storefront {
 	private const PARTS_SCRIPT = 'storefront-parts.js';
 
 	/**
-	 * The build of `preview-top-inline.ts`, printed inline after the preview.
+	 * The build of `kept-top-inline.ts`, printed inline in the head.
 	 */
-	private const PREVIEW_TOP_SCRIPT = 'storefront-preview-top.js';
+	private const KEPT_TOP_SCRIPT = 'storefront-kept-top.js';
 
 	/**
 	 * The product whose designer the page shows, once it printed a part.
@@ -161,6 +161,7 @@ final class Storefront {
 		add_action( 'wp', array( $this, 'replace_classic_gallery' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_on_product_page' ) );
 		add_filter( 'wp_preload_resources', array( $this, 'preload_renderer' ) );
+		add_action( 'wp_head', array( $this, 'print_kept_top_script' ), 1 );
 		foreach ( self::GALLERY_BLOCKS as $block ) {
 			add_filter( 'render_block_' . $block, array( $this, 'replace_gallery_block' ), 10, 3 );
 		}
@@ -314,8 +315,11 @@ final class Storefront {
 	 * form as the page is read, so the first paint already shows them where
 	 * the designer draws them. They are the theme's own elements, printed by
 	 * WooCommerce around the printed form, so only a script can move them,
-	 * and the storefront script is deferred. It does the same when this one
-	 * did not run, such as under a policy against inline scripts.
+	 * and the storefront script is deferred. It also tells the stylesheet
+	 * where the preview starts, which holds the preview under the window: by
+	 * the end of the form, a theme's columns beside the preview are laid
+	 * out. The storefront script does the same when this one did not run,
+	 * such as under a policy against inline scripts.
 	 */
 	public function print_parts_script(): void {
 		if ( ! $this->parts_to_place ) {
@@ -347,6 +351,19 @@ final class Storefront {
 			);
 		}
 		return $resources;
+	}
+
+	/**
+	 * On a product page that shows the designer, starts the page from where
+	 * the preview started on the last product page in a window as wide, so
+	 * the first paint holds it under the window before any script after it
+	 * has measured it.
+	 */
+	public function print_kept_top_script(): void {
+		$designer = $this->page_designer();
+		if ( null !== $designer && $designer->available() ) {
+			echo $this->inline_build( self::KEPT_TOP_SCRIPT ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a script tag of this plugin's own build.
+		}
 	}
 
 	public function enqueue_on_product_page(): void {
@@ -480,7 +497,7 @@ final class Storefront {
 				'images'     => self::image_ids( $designer->product ),
 				'posters'    => $this->posters( $designer ),
 			)
-		) . $this->inline_build( self::PREVIEW_TOP_SCRIPT );
+		);
 	}
 
 	/**

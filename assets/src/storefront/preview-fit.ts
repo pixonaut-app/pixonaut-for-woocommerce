@@ -15,6 +15,10 @@ const DRAWN_CLASS = 'is-drawn';
  *  preview's height under the window by. */
 const TOP_PROPERTY = '--pixonaut-preview-top';
 
+/** Where the page keeps the last top it measured, for the next page to
+ *  start from (`applyKeptTop()`). */
+const KEPT_TOP_KEY = 'pixonaut-preview-top';
+
 /** A theme's fixed preview height, under which the SDK fits whatever it
  *  draws, so the drawn box's shape says nothing about the photo's. */
 const HELD_HEIGHT_PROPERTY = '--pixonaut-preview-height';
@@ -96,9 +100,9 @@ export function fitPreviews(doc: Document): void {
 /**
  * Measures each preview the page has printed so far once: tells the
  * stylesheet where it starts, and whether it is short enough to stay pinned
- * on a phone. Printed inline after the preview too
- * (`Storefront::preview_html()`), so the first paint already holds the
- * preview under the window: the storefront script is deferred. Free of a
+ * on a phone. Run inline after the add-to-cart form too
+ * (`Storefront::print_parts_script()`), so the first paint already holds
+ * the preview under the window: the storefront script is deferred. Free of a
  * less-than sign, as everything that inline script runs: a block theme's
  * template passes through `wptexturize()`, which would read one as a tag.
  */
@@ -109,10 +113,9 @@ export function measurePreviews(doc: Document): void {
 	}
 	for (const preview of doc.querySelectorAll<HTMLElement>(PREVIEW_SELECTOR)) {
 		const box = preview.getBoundingClientRect();
-		preview.style.setProperty(
-			TOP_PROPERTY,
-			`${Math.max(0, restingTop(preview, win))}px`,
-		);
+		const top = Math.max(0, restingTop(preview, win));
+		preview.style.setProperty(TOP_PROPERTY, `${top}px`);
+		keepTop(win, top);
 		// The document's height, unlike the window's, stays put as a phone's
 		// browser bars come and go, so scrolling never flips this. Only the
 		// visual viewport shrinks for an open keyboard.
@@ -124,6 +127,46 @@ export function measurePreviews(doc: Document): void {
 			PINNED_ATTRIBUTE,
 			screen * PINNED_SCREEN_SHARE >= box.height,
 		);
+	}
+}
+
+/**
+ * Starts the page from the top the last product page measured in a window
+ * as wide, set on the root before the body is painted, so the first paint
+ * holds the preview under the window: a browser paints the page as it reads
+ * it, before any script after the preview has measured it. Each preview's
+ * own measurement overrides it. Printed inline in the head
+ * (`Storefront::print_kept_top_script()`), so free of a less-than sign like
+ * the inline script after the form.
+ */
+export function applyKeptTop(doc: Document): void {
+	const win = doc.defaultView;
+	try {
+		const kept = JSON.parse(
+			win?.localStorage.getItem(KEPT_TOP_KEY) ?? 'null',
+		) as { width?: unknown; top?: unknown } | null;
+		if (
+			win !== null &&
+			kept !== null &&
+			kept.width === win.innerWidth &&
+			typeof kept.top === 'number'
+		) {
+			doc.documentElement.style.setProperty(TOP_PROPERTY, `${kept.top}px`);
+		}
+	} catch {
+		// No storage (a private window, blocked site data): measured on the page alone.
+	}
+}
+
+/** Keeps the top measured in a window as wide, for `applyKeptTop()`. */
+function keepTop(win: Window, top: number): void {
+	try {
+		win.localStorage.setItem(
+			KEPT_TOP_KEY,
+			JSON.stringify({ width: win.innerWidth, top }),
+		);
+	} catch {
+		// No storage: the next page measures its own.
 	}
 }
 
