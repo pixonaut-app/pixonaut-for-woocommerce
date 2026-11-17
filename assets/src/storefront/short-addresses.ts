@@ -37,8 +37,10 @@ export function followShortAddresses(view: Window, names: QueryNames): void {
 	const { history } = view;
 	const push = history.pushState.bind(history);
 	const replace = history.replaceState.bind(history);
-	/** By a shortened address, the address it was given as. */
+	/** By a shortened address's path and query, as the router keys its
+	 *  pages, the path and query it was given as. */
 	const given = new Map<string, string>();
+	const pageOf = (address: URL) => address.pathname + address.search;
 	const follow =
 		(write: History['pushState']): History['pushState'] =>
 		(data, unused, url) => {
@@ -46,10 +48,10 @@ export function followShortAddresses(view: Window, names: QueryNames): void {
 			const long =
 				short === url || url === null || url === undefined
 					? null
-					: new URL(url, view.location.href).href;
+					: pageOf(new URL(url, view.location.href));
 			write(data, unused, short);
 			if (long !== null) {
-				given.set(view.location.href, long);
+				given.set(pageOf(new URL(view.location.href)), long);
 			}
 		};
 	history.pushState = follow(push);
@@ -63,10 +65,12 @@ export function followShortAddresses(view: Window, names: QueryNames): void {
 		'popstate',
 		() => {
 			const short = view.location.href;
-			const long = given.get(short);
-			if (long === undefined) {
+			const page = given.get(pageOf(new URL(short)));
+			if (page === undefined) {
 				return;
 			}
+			// The entry's own fragment, which may be another than the navigation's.
+			const long = new URL(page + view.location.hash, short).href;
 			replace(history.state, '', long);
 			// Once every listener has run: the short address back.
 			view.setTimeout(() => {

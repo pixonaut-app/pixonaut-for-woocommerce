@@ -135,6 +135,27 @@ describe('followShortAddresses on back and forward', () => {
 		expect(history.state).toEqual({ router: true });
 	});
 
+	it('gives the address the filters went to on an entry of an anchor on it, keeping the anchor', () => {
+		followShortAddresses(window, NAMES);
+		history.pushState(
+			null,
+			'',
+			'/shop/?filter_storlek=30x40-cm&query_type_storlek=or',
+		);
+		// An anchor's entry, which no script writes.
+		replace.call(history, null, '', '/shop/?storlek=30x40-cm#products');
+
+		expect(addressSeenOnPopstate()).toBe(
+			'/shop/?filter_storlek=30x40-cm&query_type_storlek=or',
+		);
+		expect(location.hash).toBe('#products');
+
+		vi.runAllTimers();
+		expect(location.pathname + location.search + location.hash).toBe(
+			'/shop/?storlek=30x40-cm#products',
+		);
+	});
+
 	it('leaves an address that was not shortened as it is', () => {
 		followShortAddresses(window, NAMES);
 		history.pushState(null, '', '/shop/?orderby=price');

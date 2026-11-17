@@ -31,7 +31,7 @@ test('back and forward on a filtered archive show each address’s results in pl
 	const key = String(Date.now()).slice(-SLUG_CLOCK_DIGITS);
 	const response = await request.post(
 		restUrl('/pixonaut-e2e/v1/dependent-poster'),
-		{ data: { key, split: [] } },
+		{ data: { key, split: ['inramning'] } },
 	);
 	expect(response.status()).toBe(201);
 	const poster = (await response.json()) as Poster;
@@ -54,12 +54,32 @@ test('back and forward on a filtered archive show each address’s results in pl
 		const loads = () =>
 			page.evaluate(() => Number(sessionStorage.getItem('pixonaut-e2e-loads')));
 		const filters = page.locator('[data-pixonaut-e2e-counts]');
+		// The framing each listed card opens on: a card per framing.
+		const cards = () =>
+			page
+				.locator('main li.product a[href]:has(img)')
+				.evaluateAll(
+					(links, query) =>
+						links
+							.map((link) =>
+								new URL((link as HTMLAnchorElement).href).searchParams.get(
+									query,
+								),
+							)
+							.sort(),
+					name,
+				);
+		const unfiltered = await cards();
+		expect(unfiltered).toEqual(
+			expect.arrayContaining(['hangare', 'ingen', 'ram']),
+		);
 		const start = address(page);
 
 		await filters.getByRole('checkbox', { name: /Hängare/ }).check();
 		await expect
 			.poll(() => new URL(page.url()).searchParams.get(name))
 			.toBe('hangare');
+		await expect.poll(cards).toEqual(['hangare']);
 		const one = address(page);
 		await filters.getByRole('checkbox', { name: /Ingen/ }).check();
 		await expect
@@ -67,9 +87,11 @@ test('back and forward on a filtered archive show each address’s results in pl
 			.toBe('hangare,ingen');
 		const two = address(page);
 		expect(two).not.toContain(`filter_${name}`);
+		await expect.poll(cards).toEqual(['hangare', 'ingen']);
 
 		await page.goBack();
 		await expect.poll(() => address(page)).toBe(one);
+		await expect.poll(cards).toEqual(['hangare']);
 		await expect(
 			filters.getByRole('checkbox', { name: /Ingen/ }),
 		).not.toBeChecked();
@@ -79,12 +101,14 @@ test('back and forward on a filtered archive show each address’s results in pl
 
 		await page.goBack();
 		await expect.poll(() => address(page)).toBe(start);
+		await expect.poll(cards).toEqual(unfiltered);
 		await expect(
 			filters.getByRole('checkbox', { name: /Hängare/ }),
 		).not.toBeChecked();
 
 		await page.goForward();
 		await expect.poll(() => address(page)).toBe(one);
+		await expect.poll(cards).toEqual(['hangare']);
 		await expect(
 			filters.getByRole('checkbox', { name: /Hängare/ }),
 		).toBeChecked();
