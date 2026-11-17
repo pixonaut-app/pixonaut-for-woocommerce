@@ -648,8 +648,9 @@ export class ProductDesigner {
 		// for once this one is shown, off the way of its own.
 		if (this.variations !== null) {
 			const ahead = this.deps.readsAhead;
+			const printed = Object.values(this.readFor);
 			void designer.shown().then(
-				() => ahead?.ask(),
+				() => ahead?.ask(printed),
 				() => undefined,
 			);
 		}
@@ -855,6 +856,11 @@ export class ProductDesigner {
 			}
 			const inapplicable = inapplicableHosts(arranged, form);
 			if (sameList(groups.inapplicable, inapplicable)) {
+				continue;
+			}
+			// An SDK from before hidden host items (a developer's own script)
+			// keeps the groups it mounted with.
+			if (typeof designer.setHostItemHidden !== 'function') {
 				continue;
 			}
 			for (const host of groups.hosts) {

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ReadsAhead } from './reads-ahead';
-import type { SideReads } from './server-reads';
+import { MS_PER_S, READS_MAX_AGE_S, type SideReads } from './server-reads';
 
 const PRINTED: SideReads = { template: { id: 'printed' } as never };
 const HOODIE: SideReads = { template: { id: 'hoodie' } as never };
@@ -43,14 +43,14 @@ describe('ReadsAhead', () => {
 			fetcher,
 		);
 
-		ahead.ask();
-		ahead.ask();
+		ahead.ask([TEE]);
+		ahead.ask([TEE]);
 		expect(fetcher).not.toHaveBeenCalled();
 		await idle();
 
 		expect(fetcher).toHaveBeenCalledOnce();
 		expect(String(fetcher.mock.calls[0]?.[0])).toBe(
-			'https://shop.test/wp-json/pixonaut/v1/storefront/reads-ahead?product=42',
+			'https://shop.test/wp-json/pixonaut/v1/storefront/reads-ahead?product=42&printed%5B%5D=mini-tee%402%7Cblank_tee%7Cfront',
 		);
 	});
 
@@ -61,7 +61,7 @@ describe('ReadsAhead', () => {
 			'https://shop.test/?rest_route=/pixonaut/v1/storefront/reads-ahead',
 			42,
 			fetcher,
-		).ask();
+		).ask([]);
 		await idle();
 
 		expect(String(fetcher.mock.calls[0]?.[0])).toBe(
@@ -77,7 +77,7 @@ describe('ReadsAhead', () => {
 			readFor: TEE,
 		});
 
-		ahead.ask();
+		ahead.ask([]);
 		await idle();
 
 		expect(ahead.readsFor(ON_HOODIE, PRINTED, TEE)).toEqual({
@@ -93,13 +93,38 @@ describe('ReadsAhead', () => {
 		});
 	});
 
+	it('lets reads go once their photo links may have closed, and asks again', async () => {
+		vi.useFakeTimers();
+		let now = 0;
+		const fetcher = answering();
+		const ahead = new ReadsAhead(
+			'https://shop.test/reads',
+			42,
+			fetcher,
+			() => now,
+		);
+		ahead.ask([TEE]);
+		await idle();
+		expect(ahead.readsFor(ON_HOODIE, undefined, undefined)?.reads).toEqual(
+			HOODIE,
+		);
+
+		now = (READS_MAX_AGE_S + 1) * MS_PER_S;
+
+		expect(ahead.readsFor(ON_HOODIE, undefined, undefined)).toBeUndefined();
+		vi.useFakeTimers();
+		ahead.ask([TEE]);
+		await idle();
+		expect(fetcher).toHaveBeenCalledTimes(2);
+	});
+
 	it('leaves each switch to read for itself when the ask fails', async () => {
 		vi.useFakeTimers();
 		const fetcher = vi.fn<typeof fetch>(
 			async () => new Response('', { status: 500 }),
 		);
 		const ahead = new ReadsAhead('https://shop.test/reads', 42, fetcher);
-		ahead.ask();
+		ahead.ask([]);
 		await idle();
 
 		expect(ahead.readsFor(ON_HOODIE, undefined, undefined)).toBeUndefined();
@@ -107,7 +132,7 @@ describe('ReadsAhead', () => {
 
 	it('asks nothing without a route', () => {
 		const fetcher = answering();
-		new ReadsAhead(undefined, 42, fetcher).ask();
+		new ReadsAhead(undefined, 42, fetcher).ask([]);
 
 		expect(fetcher).not.toHaveBeenCalled();
 	});

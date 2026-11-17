@@ -37,6 +37,16 @@ final class ReadsAhead {
 	 */
 	private const TARGET_KEYS = array( 'templateId', 'blankId', 'placementId' );
 
+	/**
+	 * The most targets a page names as printed: one per side it mounts.
+	 */
+	private const MAX_PRINTED = 8;
+
+	/**
+	 * The longest target key accepted: three ids of Pixonaut's, with room.
+	 */
+	private const MAX_KEY_LENGTH = 300;
+
 	public function __construct(
 		private readonly InlineProducts $products,
 		private readonly ServerReads $reads,
@@ -66,6 +76,15 @@ final class ReadsAhead {
 						'required' => true,
 						'minimum'  => 1,
 					),
+					'printed' => array(
+						'type'     => 'array',
+						'items'    => array(
+							'type'      => 'string',
+							'maxLength' => self::MAX_KEY_LENGTH,
+						),
+						'maxItems' => self::MAX_PRINTED,
+						'default'  => array(),
+					),
 				),
 			)
 		);
@@ -73,11 +92,12 @@ final class ReadsAhead {
 
 	public function handle( WP_REST_Request $request ): WP_REST_Response {
 		$product  = wc_get_product( (int) $request['product'] );
-		$designer = $product instanceof WC_Product ? $this->products->for_product( $product ) : null;
+		$designer = $product instanceof WC_Product && self::shown_to_anyone( $product ) ? $this->products->for_product( $product ) : null;
 		if ( null === $designer ) {
 			return new WP_REST_Response( array( 'error' => 'not_found' ), 404 );
 		}
-		$targets = self::targets( $designer );
+		$printed = is_array( $request['printed'] ) ? array_map( 'strval', $request['printed'] ) : array();
+		$targets = self::targets( $designer, $printed );
 		$reads   = $this->reads->for_mounts( $targets );
 		$answer  = array();
 		foreach ( $targets as $key => $target ) {
@@ -89,18 +109,29 @@ final class ReadsAhead {
 	}
 
 	/**
-	 * The variations' side targets the page's own mounts are not on, each
-	 * once, in the variations' order, with the locale of the side they
-	 * mount for; at most `MAX_TARGETS`.
+	 * Whether the product's page is open to a shopper who is not signed in:
+	 * published and not behind a password. The route answers no one else,
+	 * so a draft's or a private product's reads stay with its page.
+	 *
+	 * @param WC_Product $product The product asked for.
+	 */
+	private static function shown_to_anyone( WC_Product $product ): bool {
+		$post = get_post( $product->get_id() );
+		return null !== $post && 'product' === $post->post_type && 'publish' === $post->post_status && '' === $post->post_password;
+	}
+
+	/**
+	 * The variations' side targets the page did not print reads for
+	 * (`$printed`, by `key()`), each once, in the variations' order, with
+	 * the locale of the side they mount for; at most `MAX_TARGETS`. The page
+	 * names what it printed: it may have opened on any variation.
 	 *
 	 * @param InlineDesigner $designer An available designer.
+	 * @param string[]       $printed  The targets the page has reads for, by `key()`.
 	 * @return array<string, array<string, mixed>> Mount options by target key.
 	 */
-	public static function targets( InlineDesigner $designer ): array {
-		$targets = array();
-		foreach ( $designer->mounts as $options ) {
-			$targets[ self::key( $options ) ] = null;
-		}
+	public static function targets( InlineDesigner $designer, array $printed = array() ): array {
+		$targets = array_fill_keys( $printed, null );
 		foreach ( $designer->variations as $variation ) {
 			$sides = isset( $variation['sides'] ) && is_object( $variation['sides'] ) ? (array) $variation['sides'] : array();
 			foreach ( $sides as $side => $target ) {
@@ -119,9 +150,12 @@ final class ReadsAhead {
 	}
 
 	/**
+	 * A target's key: its template, blank and placement, joined by `|`, as
+	 * the storefront names the targets it printed reads for.
+	 *
 	 * @param array<string, mixed> $options Mount options or a variation's side.
 	 */
-	private static function key( array $options ): string {
+	public static function key( array $options ): string {
 		$parts = array();
 		foreach ( self::TARGET_KEYS as $name ) {
 			$parts[] = is_string( $options[ $name ] ?? null ) ? $options[ $name ] : '';

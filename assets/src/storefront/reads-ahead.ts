@@ -1,5 +1,5 @@
 import type { SplitMountOptions } from '../types/sdk';
-import type { SideReads } from './server-reads';
+import { MS_PER_S, READS_MAX_AGE_S, type SideReads } from './server-reads';
 
 /** The mount options a side's reads are made for (`ReadsAhead::TARGET_KEYS`). */
 const TARGET_KEYS = ['templateId', 'blankId', 'placementId'] as const;
@@ -27,22 +27,28 @@ export class ReadsAhead {
 
 	private asked = false;
 
+	/** When the reads came, on `Date.now()`'s clock. */
+	private readAt = 0;
+
 	constructor(
 		private readonly url: string | undefined,
 		private readonly productId: number,
 		private readonly fetcher: typeof fetch = (input, init) =>
 			fetch(input, init),
+		private readonly now: () => number = () => Date.now(),
 	) {}
 
-	/** Asks for the reads, once, when the page falls idle. A failed ask
-	 *  leaves each switch to read as it did. */
-	ask(): void {
+	/** Asks for the reads of every target but those in `printed`, which the
+	 *  page has reads of its own for, once, when the page falls idle; again
+	 *  once they grew too old. A failed ask leaves each switch to read as it
+	 *  did. */
+	ask(printed: readonly ReadTarget[]): void {
 		if (this.asked || this.url === undefined || this.url === '') {
 			return;
 		}
 		this.asked = true;
 		whenIdle(() => {
-			void this.fetchReads(this.url as string);
+			void this.fetchReads(this.url as string, printed);
 		});
 	}
 
@@ -61,6 +67,14 @@ export class ReadsAhead {
 		) {
 			return { reads: printed, readFor: printedFor };
 		}
+		// Their photo links open for a while only, as the page's own reads'.
+		if (
+			this.reads.length > 0 &&
+			(this.now() - this.readAt) / MS_PER_S > READS_MAX_AGE_S
+		) {
+			this.reads = [];
+			this.asked = false;
+		}
 		const ahead = this.reads.find((read) => sameTarget(options, read));
 		if (ahead === undefined) {
 			return printed === undefined || printedFor === undefined
@@ -71,10 +85,16 @@ export class ReadsAhead {
 		return { reads, readFor };
 	}
 
-	private async fetchReads(url: string): Promise<void> {
+	private async fetchReads(
+		url: string,
+		printed: readonly ReadTarget[],
+	): Promise<void> {
 		try {
 			const asked = new URL(url, window.location.href);
 			asked.searchParams.set('product', String(this.productId));
+			for (const target of printed) {
+				asked.searchParams.append('printed[]', targetKey(target));
+			}
 			const response = await this.fetcher(asked, {
 				credentials: 'same-origin',
 			});
@@ -84,10 +104,16 @@ export class ReadsAhead {
 			const body: unknown = await response.json();
 			const reads = (body as { reads?: unknown } | null)?.reads;
 			this.reads = Array.isArray(reads) ? (reads as AheadRead[]) : [];
+			this.readAt = this.now();
 		} catch {
 			// Each switch reads for itself, as without the reads.
 		}
 	}
+}
+
+/** A target's key as the server names it (`ReadsAhead::key()`). */
+function targetKey(target: ReadTarget): string {
+	return TARGET_KEYS.map((key) => target[key] ?? '').join('|');
 }
 
 function sameTarget(first: ReadTarget, second: ReadTarget): boolean {

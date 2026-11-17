@@ -40,16 +40,37 @@ final class ReadsAheadTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_product_without_a_designer_is_not_found(): void {
-		$product = StorefrontTest::product( null );
-		$request = new WP_REST_Request( 'GET', '/' . Plugin::REST_NAMESPACE . ReadsAhead::ROUTE );
-		$request->set_param( 'product', $product->get_id() );
-
-		$response = ( new ReadsAhead( $this->plugin->inline_products(), $this->plugin->server_reads() ) )->handle( $request );
-
-		$this->assertSame( 404, $response->get_status() );
+		$this->assertSame( 404, $this->handle( StorefrontTest::product( null )->get_id() )->get_status() );
 	}
 
-	public function test_the_targets_are_the_variations_sides_the_page_is_not_on_each_once_in_the_sides_locale(): void {
+	public function test_a_published_product_with_a_designer_is_answered(): void {
+		$response = $this->handle( StorefrontTest::product( StorefrontTest::personalised() )->get_id() );
+
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertSame( array( 'reads' => array() ), $response->get_data() );
+	}
+
+	public function test_a_product_whose_page_a_shopper_cannot_open_is_not_found(): void {
+		$draft = StorefrontTest::product( StorefrontTest::personalised() );
+		wp_update_post(
+			array(
+				'ID'          => $draft->get_id(),
+				'post_status' => 'draft',
+			)
+		);
+		$locked = StorefrontTest::product( StorefrontTest::personalised() );
+		wp_update_post(
+			array(
+				'ID'            => $locked->get_id(),
+				'post_password' => 'secret',
+			)
+		);
+
+		$this->assertSame( 404, $this->handle( $draft->get_id() )->get_status() );
+		$this->assertSame( 404, $this->handle( $locked->get_id() )->get_status() );
+	}
+
+	public function test_the_targets_are_the_variations_sides_the_page_printed_no_reads_for_each_once_in_the_sides_locale(): void {
 		$designer = $this->designer(
 			array(
 				11 => array( 'front' => self::TEE + array( 'printSizes' => array( 1 ) ) ),
@@ -64,8 +85,9 @@ final class ReadsAheadTest extends WP_UnitTestCase {
 				'mini-tee@2|blank_hoodie|front' => self::HOODIE + array( 'locale' => 'sv' ),
 				'mini-poster@1|blank_tee|front' => array( 'templateId' => 'mini-poster@1' ) + self::TEE + array( 'locale' => 'sv' ),
 			),
-			ReadsAhead::targets( $designer )
+			ReadsAhead::targets( $designer, array( ReadsAhead::key( self::TEE ) ) )
 		);
+		$this->assertArrayHasKey( ReadsAhead::key( self::TEE ), ReadsAhead::targets( $designer ), 'the opening blank too, for a page that printed none' );
 	}
 
 	public function test_no_more_than_the_most_targets_are_read_ahead(): void {
@@ -75,6 +97,12 @@ final class ReadsAheadTest extends WP_UnitTestCase {
 		}
 
 		$this->assertCount( ReadsAhead::MAX_TARGETS, ReadsAhead::targets( $this->designer( $variations ) ) );
+	}
+
+	private function handle( int $product ): \WP_REST_Response {
+		$request = new WP_REST_Request( 'GET', '/' . Plugin::REST_NAMESPACE . ReadsAhead::ROUTE );
+		$request->set_param( 'product', $product );
+		return ( new ReadsAhead( $this->plugin->inline_products(), $this->plugin->server_reads() ) )->handle( $request );
 	}
 
 	/**
