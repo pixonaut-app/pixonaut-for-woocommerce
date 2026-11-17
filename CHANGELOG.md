@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.13.0...v1.13.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **storefront:** a filtered card shows the chosen colour's picture, even over its own image ([#234](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/234)) ([061d89a](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/061d89a5febc7604c230065d0a4c69cd63cc90b5))
+
 ## [1.13.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.12.2...v1.13.0) (2026-11-17)
 
 

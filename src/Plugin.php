@@ -242,7 +242,7 @@ use WC_Product;
  */
 final class Plugin {
 
-	public const VERSION = '1.13.0'; // phpcs:ignore Squiz.Commenting.InlineComment.InvalidEndChar -- x-release-please-version
+	public const VERSION = '1.13.1'; // phpcs:ignore Squiz.Commenting.InlineComment.InvalidEndChar -- x-release-please-version
 
 	/**
 	 * The plugin's slug: its directory and main file on a store, and its text domain.
