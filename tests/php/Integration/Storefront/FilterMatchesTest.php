@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
+use Automattic\WooCommerce\Internal\ProductFilters\FilterDataProvider;
+use Automattic\WooCommerce\Internal\ProductFilters\QueryClauses;
 use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Schema;
@@ -316,6 +318,29 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 
 		$colour = $this->counts( 'pa_ramfarg', array( 'filter_inramning' => 'hangare' ) );
 		$this->assertSame( array( $this->term( 'svart' ) => 1 ), $colour );
+	}
+
+	public function test_the_counts_list_the_products_woocommerce_read_for_its_price_filter_first(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
+		$this->go_to_listing( array() );
+		global $wp_query;
+		// The filter blocks' query, as they read it: published products, paged by nothing of its own.
+		$query_vars = array_merge( $wp_query->query_vars, array( 'post_status' => 'publish' ) );
+		unset( $query_vars['nopaging'] );
+		// The price filter's read runs the same query with no results, and WordPress keeps that answer for it.
+		$container = wc_get_container();
+		$container->get( FilterDataProvider::class )->with( $container->get( QueryClauses::class ) )->get_filtered_price( $query_vars );
+
+		$counts = apply_filters( 'woocommerce_pre_product_filter_data', null, 'attribute', $query_vars, array( 'taxonomy' => 'pa_storlek' ) );
+		$this->assertIsArray( $counts );
+		ksort( $counts );
+		$this->assertSame(
+			array(
+				$this->term( '30x40' ) => 3,
+				$this->term( '50x70' ) => 4,
+			),
+			$counts
+		);
 	}
 
 	public function test_an_attribute_listed_while_filtered_counts_its_cards_only_while_chosen(): void {

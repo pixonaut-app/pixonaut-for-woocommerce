@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Pixonaut\WooCommerce\Catalogue\ApplicableAttributes;
+use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use WC_Cache_Helper;
 use WC_Product_Attribute;
@@ -104,7 +105,10 @@ final class AttributeDependencies {
 					'order'   => 'ASC',
 				)
 			);
-			$ids = is_array( $ids ) ? $ids : array();
+			$ids = is_array( $ids ) ? array_values( array_map( 'intval', $ids ) ) : array();
+			// What was kept of each product's variations since it last changed: only a changed product's are read again.
+			FilterIndex::look_up( $ids );
+			_prime_post_caches( $ids, true, true );
 			foreach ( $ids as $id ) {
 				$product = wc_get_product( (int) $id );
 				if ( $product instanceof WC_Product_Variable ) {

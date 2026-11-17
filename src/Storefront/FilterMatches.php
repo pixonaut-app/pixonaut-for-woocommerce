@@ -342,12 +342,16 @@ final class FilterMatches {
 		if ( ! isset( $chosen[ $taxonomy ] ) && array() !== $own ) {
 			$chosen[ $taxonomy ] = $own;
 		}
-		$all      = self::all_values_in( $query_vars );
-		$range    = self::range(
+		$all   = self::all_values_in( $query_vars );
+		$range = self::range(
 			is_scalar( $query_vars[ self::MIN_PRICE ] ?? null ) ? (string) $query_vars[ self::MIN_PRICE ] : null,
 			is_scalar( $query_vars[ self::MAX_PRICE ] ?? null ) ? (string) $query_vars[ self::MAX_PRICE ] : null
 		);
-		$products = array_values( array_filter( array_map( 'wc_get_product', self::listed( $query_vars ) ), static fn ( mixed $product ): bool => $product instanceof WC_Product ) );
+		$ids   = self::listed( $query_vars );
+		// What was kept of the products' variations since they last changed; the others are read below.
+		FilterIndex::look_up( $ids );
+		_prime_post_caches( $ids, true, true );
+		$products = array_values( array_filter( array_map( 'wc_get_product', $ids ), static fn ( mixed $product ): bool => $product instanceof WC_Product ) );
 		$values   = array();
 		foreach ( $products as $product ) {
 			$values = array_merge( $values, self::values_held( $product, $taxonomy ) );
@@ -510,6 +514,8 @@ final class FilterMatches {
 		$query_vars['posts_per_page'] = -1;
 		$query_vars['nopaging']       = true;
 		$query_vars['no_found_rows']  = true;
+		// WooCommerce's price filter runs this very query with no results (`posts_pre_query`), and WordPress keeps that empty answer for the query: for the rest of the request, and with a persistent object cache for later ones too.
+		$query_vars['cache_results'] = false;
 		// WooCommerce's own clauses for the block's other filters, such as stock and taxonomies; attributes and price are gone from the query.
 		$clauses = null;
 		if ( class_exists( self::QUERY_CLAUSES ) && function_exists( 'wc_get_container' ) ) {

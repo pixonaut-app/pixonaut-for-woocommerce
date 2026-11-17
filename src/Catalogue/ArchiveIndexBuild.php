@@ -172,7 +172,8 @@ final class ArchiveIndexBuild {
 		list( $orderby, $order ) = array_pad( explode( '-', $sort, 2 ), 2, '' );
 		$ordering                = WC()->query->get_catalog_ordering_args( $orderby, $order );
 		try {
-			$ids = ( new WP_Query() )->query( array_merge( $args, $ordering ) );
+			// Not from the query cache: WooCommerce's price filter runs an archive's query with no results (`posts_pre_query`), and WordPress keeps that empty answer for the query.
+			$ids = ( new WP_Query() )->query( array_merge( $args, $ordering, array( 'cache_results' => false ) ) );
 		} finally {
 			WC()->query->remove_ordering_args();
 		}
