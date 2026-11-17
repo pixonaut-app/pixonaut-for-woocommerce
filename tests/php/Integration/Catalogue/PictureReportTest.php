@@ -177,7 +177,9 @@ final class PictureReportTest extends WP_UnitTestCase {
 	}
 
 	public function test_slowed_down_it_is_sent_again_later(): void {
-		$this->recorder->json( 429, array( 'error' => 'rate_limited' ), array( 'Retry-After' => (string) self::RETRY_AFTER ) );
+		// Pixonaut's per-key limits answer 429 on every route, though the
+		// picture report's operation does not list it.
+		$this->recorder->off_spec( 429, array( 'error' => 'rate_limited' ), array( 'Retry-After' => (string) self::RETRY_AFTER ) );
 		as_unschedule_all_actions( PictureReport::ACTION );
 
 		$this->report()->send();
