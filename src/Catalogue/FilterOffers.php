@@ -46,8 +46,10 @@ final class FilterOffers {
 	 * Whether an offer holds a chosen value of each filtered attribute and
 	 * costs within the chosen range. A filter whose values name no term
 	 * matches nothing. A filter on an attribute that does not apply to the
-	 * offer passes it when the offer holds one of the values the filter is
-	 * waived under, such as a chosen "no frame" for a frame colour's filter.
+	 * offer, which holds no value of it, passes it when the offer holds one
+	 * of the values the filter is waived under, such as a chosen "no frame"
+	 * for a frame colour's filter. An offer holding a value of the attribute
+	 * is filtered by it whatever else it holds.
 	 *
 	 * @param array{values: array<string, list<int>>, min: float, max: float} $offer  An offer.
 	 * @param array<string, list<int>>                                        $chosen Chosen term ids by taxonomy.
@@ -57,7 +59,8 @@ final class FilterOffers {
 	 */
 	public static function matches( array $offer, array $chosen, ?float $min, ?float $max, array $exempt = array() ): bool {
 		foreach ( $chosen as $taxonomy => $ids ) {
-			if ( array() === array_intersect( $offer['values'][ $taxonomy ] ?? array(), $ids ) && ! self::holds_any( $offer, $exempt[ $taxonomy ] ?? array() ) ) {
+			$held = $offer['values'][ $taxonomy ] ?? array();
+			if ( array() === array_intersect( $held, $ids ) && ( array() !== $held || ! self::holds_any( $offer, $exempt[ $taxonomy ] ?? array() ) ) ) {
 				return false;
 			}
 		}

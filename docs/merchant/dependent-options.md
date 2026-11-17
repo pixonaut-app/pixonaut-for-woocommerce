@@ -80,13 +80,17 @@ The shop's and its categories' attribute and price filters keep a product
 only while one variation a customer can buy matches every filter at once:
 
 - Values chosen of one attribute combine with *or*, attributes with *and*:
-  **Framing: Hanger** or **None**, and **Frame colour: Oak**.
+  **Framing: Hanger** or **None**, and **Frame colour: Oak**. This holds
+  for WooCommerce's classic **Filter Products by Attribute** widget too,
+  unless its address asks for *and*.
 - An option that applies only under some values of another filters only
   the variations it applies to. **Framing: Hanger** and **None** with
   **Frame colour: Oak** lists every bare poster and the hangers in oak:
-  the frame colour does not apply to a bare poster. Which values an option
-  applies under is read from the variations, never from names. With no
-  framing chosen, **Frame colour: Oak** lists only what comes in oak.
+  the frame colour does not apply to a bare poster, even one never sold in
+  oak at all. Which values an option applies under is read from the
+  variations, never from names. A bare variation that does set a frame
+  colour is filtered by it. With no framing chosen, **Frame colour: Oak**
+  lists only what comes in oak.
 - **Size: 30×40** with a price of **299–391** lists a product only when
   its 30×40 variation costs within that range, not when another size does.
 - Within one attribute, any chosen value matches (**Oak** or **Black**). A

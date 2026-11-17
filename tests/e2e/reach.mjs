@@ -362,6 +362,8 @@ export const REACH = {
 		'src/Catalogue/ApplicableAttributes.php',
 		'src/Catalogue/SplitCards.php',
 		'src/Storefront/ApplicableAttributeForm.php',
+		'src/Storefront/DependentFilterQuery.php',
+		'src/Storefront/FilterMatches.php',
 	],
 	'designer-pixel.spec.ts': [
 		'src/Storefront/Sdk.php',

@@ -175,23 +175,61 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
 		$this->sea();
 
-		foreach ( array( 'inramning', 'ramfarg', 'storlek' ) as $attribute ) {
-			$counts = $this->counts( 'pa_' . $attribute, self::HANGER_OR_BARE_IN_OAK );
-			$terms  = get_terms(
-				array(
-					'taxonomy'   => 'pa_' . $attribute,
-					'hide_empty' => false,
-				)
-			);
-			$this->assertIsArray( $terms );
-			foreach ( $terms as $term ) {
-				$this->assertInstanceOf( \WP_Term::class, $term );
-				$filters            = self::HANGER_OR_BARE_IN_OAK;
-				$filter             = 'filter_' . $attribute;
-				$filters[ $filter ] = isset( $filters[ $filter ] ) ? $filters[ $filter ] . ',' . $term->slug : $term->slug;
-				$this->assertSame( $this->shop( $filters )['found'], $counts[ $term->term_id ] ?? 0, "{$attribute} {$term->slug}" );
-			}
+		$this->assert_counts_follow_the_listing( self::HANGER_OR_BARE_IN_OAK );
+	}
+
+	public function test_a_poster_never_sold_in_the_colour_keeps_its_bare_card(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
+		$fell   = $this->product(
+			'Fjäll',
+			array(
+				array( '30x40', 'ingen', '', '199' ),
+				array( '50x70', 'ram', 'svart', '350' ),
+			),
+			array( 'svart' )
+		);
+		$meadow = $this->product( 'Äng', array( array( '30x40', 'ingen', '', '199' ) ), null );
+
+		foreach ( array( 'no', 'yes' ) as $lookup ) {
+			update_option( 'woocommerce_attribute_lookup_enabled', $lookup );
+			$listed = $this->shop( self::HANGER_OR_BARE_IN_OAK );
+			$this->assertEqualsCanonicalizing( array( $this->poster->get_id(), $this->skog->get_id(), $fell->get_id(), $meadow->get_id() ), $listed['ids'], "lookup table {$lookup}: neither the fell nor the meadow holds oak; both are sold bare" );
+			$this->assertSame( 4, $listed['found'], "lookup table {$lookup}: each bare card" );
+			$this->assert_counts_follow_the_listing( self::HANGER_OR_BARE_IN_OAK );
 		}
+		delete_option( 'woocommerce_attribute_lookup_enabled' );
+	}
+
+	public function test_a_colour_every_variation_of_a_product_sets_is_not_waived_for_it(): void {
+		$beach = $this->product(
+			'Strand',
+			array(
+				array( '30x40', 'ingen', 'svart', '199' ),
+				array( '30x40', 'ram', 'svart', '349' ),
+			)
+		);
+
+		$listed = $this->shop(
+			array(
+				'filter_inramning' => 'ingen',
+				'filter_ramfarg'   => 'ek',
+			)
+		);
+
+		$this->assertNotContains( $beach->get_id(), $listed['ids'], 'the beach is bare in black, not in oak' );
+		$this->assertEqualsCanonicalizing( array( $this->poster->get_id(), $this->skog->get_id() ), $listed['ids'] );
+	}
+
+	public function test_a_card_listed_by_the_colour_alone_keeps_the_bare_card(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::COLOUR ], SplitListing::ON );
+		$bare_or_framed_in_oak = array(
+			'filter_inramning' => 'ingen,ram',
+			'filter_ramfarg'   => 'ek',
+		);
+
+		$this->assertSame( 4, $this->shop( $bare_or_framed_in_oak )['found'], 'each product\'s bare card, holding no colour, and its oak card' );
+		$this->assertSame( 2, $this->shop( self::HANGER_OR_BARE_IN_OAK )['found'], 'each bare card; the oak cards are framed' );
+		$this->assert_counts_follow_the_listing( $bare_or_framed_in_oak );
 	}
 
 	public function test_a_size_and_a_price_list_only_products_with_that_size_in_the_range(): void {
@@ -740,17 +778,52 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Each value's count of the three attributes is the listing's card
+	 * count with that value added to the filters.
+	 *
+	 * @param array<string, string> $filters Query parameters.
+	 */
+	private function assert_counts_follow_the_listing( array $filters ): void {
+		foreach ( array( 'inramning', 'ramfarg', 'storlek' ) as $attribute ) {
+			$counts = $this->counts( 'pa_' . $attribute, $filters );
+			$terms  = get_terms(
+				array(
+					'taxonomy'   => 'pa_' . $attribute,
+					'hide_empty' => false,
+				)
+			);
+			$this->assertIsArray( $terms );
+			foreach ( $terms as $term ) {
+				$this->assertInstanceOf( \WP_Term::class, $term );
+				$with            = $filters;
+				$filter          = 'filter_' . $attribute;
+				$with[ $filter ] = isset( $with[ $filter ] ) ? $with[ $filter ] . ',' . $term->slug : $term->slug;
+				$this->assertSame( $this->shop( $with )['found'], $counts[ $term->term_id ] ?? 0, "{$attribute} {$term->slug}" );
+			}
+		}
+	}
+
+	/**
 	 * A variable product in the category with the three attributes.
 	 *
 	 * @param string                                                  $name       Its name.
 	 * @param list<array{0: string, 1: string, 2: string, 3: string}> $variations Size, framing, colour and price of each.
+	 * @param list<string>|false|null                                 $colours    The colours it lists, by slug; every colour when false, no colour attribute when null.
 	 */
-	private function product( string $name, array $variations ): WC_Product {
+	private function product( string $name, array $variations, array|false|null $colours = false ): WC_Product {
 		$product = new WC_Product_Variable();
 		$product->set_name( $name );
 		$product->set_status( 'publish' );
 		$product->set_category_ids( array( $this->category ) );
-		$product->set_attributes( array( $this->product_attribute( self::SIZE ), $this->product_attribute( self::PICTURE ), $this->product_attribute( self::COLOUR ) ) );
+		$attributes = array( $this->product_attribute( self::SIZE ), $this->product_attribute( self::PICTURE ) );
+		if ( null !== $colours ) {
+			$colour = $this->product_attribute( self::COLOUR );
+			if ( false !== $colours ) {
+				$colour->set_options( array_map( array( $this, 'term' ), $colours ) );
+			}
+			$attributes[] = $colour;
+		}
+		$product->set_attributes( $attributes );
 		$product->save();
 		foreach ( $variations as list( $size, $framing, $colour, $price ) ) {
 			$this->sell( $product, $size, $framing, $colour, $price );

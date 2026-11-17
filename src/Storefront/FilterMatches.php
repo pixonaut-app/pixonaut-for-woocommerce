@@ -69,6 +69,11 @@ final class FilterMatches {
 	private const ALL_VALUES = 'and';
 
 	/**
+	 * The query type under which any chosen value of an attribute is enough.
+	 */
+	private const ANY_VALUE = 'or';
+
+	/**
 	 * Prefix of the transient each query's counts are kept in.
 	 */
 	private const COUNTS_TRANSIENT = 'pixonaut_wc_filter_counts_';
@@ -89,6 +94,8 @@ final class FilterMatches {
 
 	public function register(): void {
 		add_filter( 'woocommerce_pre_product_filter_data', array( $this, 'counts' ), self::COUNTS_PRIORITY, 4 );
+		// Values chosen of one attribute combine with "or" unless the address asks for "and", as the Product Filters block's do.
+		add_filter( 'woocommerce_layered_nav_default_query_type', static fn (): string => self::ANY_VALUE );
 	}
 
 	/**
@@ -201,7 +208,9 @@ final class FilterMatches {
 	 * finds, by WooCommerce's own reading of the filters: the products none
 	 * of whose offers matches, and of the others the cards none of whose
 	 * offers does. Any other product is one offer, which WooCommerce's
-	 * reading already matches.
+	 * reading already matches, unless a filter is waived under some values
+	 * (`exempt()`): WooCommerce's query then admits what holds them
+	 * (`DependentFilterQuery`), and every product is read.
 	 *
 	 * @param string                   $join   The listing's joins.
 	 * @param string                   $where  The listing's conditions.
@@ -212,14 +221,13 @@ final class FilterMatches {
 	 */
 	public static function left_out_of_listing( string $join, string $where, array $chosen, ?float $min, ?float $max ): array {
 		global $wpdb;
+		$exempt   = self::exempt( $chosen );
+		$variable = array() === $exempt ? " AND {$wpdb->posts}.ID IN ( SELECT type_rel.object_id FROM {$wpdb->term_relationships} type_rel INNER JOIN {$wpdb->term_taxonomy} type_tax ON type_tax.term_taxonomy_id = type_rel.term_taxonomy_id INNER JOIN {$wpdb->terms} type_term ON type_term.term_id = type_tax.term_id WHERE type_tax.taxonomy = 'product_type' AND type_term.slug = 'variable' )" : '';
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- the listing's own clauses, which WP_Query prepared; read once a listing.
-		$ids = $wpdb->get_col(
-			"SELECT DISTINCT {$wpdb->posts}.ID FROM {$wpdb->posts} {$join} WHERE 1=1 {$where} AND {$wpdb->posts}.ID IN ( SELECT type_rel.object_id FROM {$wpdb->term_relationships} type_rel INNER JOIN {$wpdb->term_taxonomy} type_tax ON type_tax.term_taxonomy_id = type_rel.term_taxonomy_id INNER JOIN {$wpdb->terms} type_term ON type_term.term_id = type_tax.term_id WHERE type_tax.taxonomy = 'product_type' AND type_term.slug = 'variable' )"
-		);
+		$ids = $wpdb->get_col( "SELECT DISTINCT {$wpdb->posts}.ID FROM {$wpdb->posts} {$join} WHERE 1=1 {$where}{$variable}" );
 		// phpcs:enable
-		$ids    = array_values( array_map( 'intval', is_array( $ids ) ? $ids : array() ) );
-		$exempt = self::exempt( $chosen );
-		$left   = array(
+		$ids  = array_values( array_map( 'intval', is_array( $ids ) ? $ids : array() ) );
+		$left = array(
 			'products' => array(),
 			'cards'    => array(),
 		);
@@ -377,8 +385,8 @@ final class FilterMatches {
 				continue;
 			}
 			foreach ( $chosen as $taxonomy => $ids ) {
-				// A filter on an attribute the product is listed by keeps the cards holding a chosen value, or one it is waived under.
-				if ( isset( $listed[ $taxonomy ] ) && array() === array_intersect( $held, array_merge( $ids, $exempt[ $taxonomy ] ?? array() ) ) ) {
+				// A filter on an attribute the product is listed by keeps the cards holding a chosen value; while it is waived, those holding none of its values too.
+				if ( isset( $listed[ $taxonomy ] ) && array() === array_intersect( $held, $ids ) && ( array() === ( $exempt[ $taxonomy ] ?? array() ) || isset( self::listed_taxonomies( array( $key ) )[ $taxonomy ] ) ) ) {
 					continue 2;
 				}
 			}

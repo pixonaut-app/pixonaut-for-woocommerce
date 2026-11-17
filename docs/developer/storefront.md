@@ -1286,9 +1286,16 @@ plugin, the filter returns the default given.
 The shop's own filters read the same store-wide answer
 (`AttributeDependencies::store()`): a dependent attribute's filter passes a
 variation, and a card, holding a chosen value of the attribute it depends
-on that it does not apply under (`FilterMatches::exempt()`). With
+on that it does not apply under (`FilterMatches::exempt()`), while the
+variation holds no value of the dependent attribute itself. With
 `filter_inramning=hangare,ingen&filter_ramfarg=ek`, the bare variations
 pass the frame colour's filter; with only `filter_ramfarg=ek`, none does.
+While a filter is waived, `Storefront\DependentFilterQuery` widens the
+listing's tax query so a product holding a waiving value is read too, and
+filters by terms rather than WooCommerce's attribute lookup table for that
+listing. The plugin sets `woocommerce_layered_nav_default_query_type` to
+`or`, so values of one attribute combine with "or" unless the address
+carries `query_type_<attribute>=and`.
 
 ## JavaScript hooks
 
