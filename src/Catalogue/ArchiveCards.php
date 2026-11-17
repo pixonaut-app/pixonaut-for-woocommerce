@@ -35,10 +35,11 @@ use WC_Product_Variable;
 final class ArchiveCards {
 
 	/**
-	 * The size a card's picture is listed in, as the shop's cards print it:
-	 * WooCommerce's Product Image block, which block themes' loops use,
-	 * prints `large` whatever its image sizing (that sets only the aspect
-	 * ratio), so the picture is shown whole rather than cropped square.
+	 * The size a card's picture is listed in unless a theme names another
+	 * (`image_size()`), as block themes' cards print it: WooCommerce's
+	 * Product Image block prints `large` whatever its image sizing (that
+	 * sets only the aspect ratio), so the picture is shown whole rather
+	 * than cropped square.
 	 */
 	public const IMAGE_SIZE = 'large';
 
@@ -67,9 +68,41 @@ final class ArchiveCards {
 	private array $pictures = array();
 
 	/**
+	 * The size this build lists pictures in (`image_size()`).
+	 *
+	 * @var string
+	 */
+	private readonly string $size;
+
+	/**
 	 * @param ArchiveTerms $terms How attributes and values are named.
 	 */
 	public function __construct( private readonly ArchiveTerms $terms ) {
+		$this->size = self::image_size();
+	}
+
+	/**
+	 * The image size cards' pictures are listed in, by the archive index
+	 * and by the swatches the shop's cards print.
+	 */
+	public static function image_size(): string {
+		/**
+		 * Filters the image size the archive index lists cards' and
+		 * variations' pictures in, and the card swatches print theirs in:
+		 * a theme whose cards print another size, as a classic theme's loop
+		 * prints `woocommerce_thumbnail`, names it so a card drawn from the
+		 * index shows the picture as the server's card does. Read once a
+		 * build, and once for each card's swatches.
+		 *
+		 * @since 1.21.0
+		 *
+		 * @param string $size A registered image size; `large` by default, the size WooCommerce's Product Image block prints.
+		 *
+		 * @example
+		 * add_filter( 'pixonaut_wc_archive_index_image_size', fn (): string => 'woocommerce_thumbnail' );
+		 */
+		$size = (string) apply_filters( 'pixonaut_wc_archive_index_image_size', self::IMAGE_SIZE );
+		return '' !== $size ? $size : self::IMAGE_SIZE;
 	}
 
 	/**
@@ -107,7 +140,7 @@ final class ArchiveCards {
 				'title'        => $product->get_name(),
 				'url'          => $permalink,
 				'summary'      => $summary,
-				'image'        => self::image( (int) $product->get_image_id() ),
+				'image'        => self::image( (int) $product->get_image_id(), $this->size ),
 				'holds'        => (object) array(),
 				'listedBy'     => array(),
 				'onlyFiltered' => array(),
@@ -140,7 +173,7 @@ final class ArchiveCards {
 					'title'        => '' !== $own['title'] ? $own['title'] : $product->get_name(),
 					'url'          => CardPages::url( $product, $key, $permalink ),
 					'summary'      => $summary,
-					'image'        => self::image( $image > 0 ? $image : (int) $product->get_image_id() ),
+					'image'        => self::image( $image > 0 ? $image : (int) $product->get_image_id(), $this->size ),
 					'holds'        => (object) $holds,
 					'listedBy'     => $listed_by,
 					'onlyFiltered' => array_values( array_intersect( array_keys( $holds ), $only ) ),
@@ -403,7 +436,7 @@ final class ArchiveCards {
 	 */
 	public function picture( int $attachment ): array {
 		if ( ! isset( $this->pictures[ $attachment ] ) ) {
-			$image                         = self::image( $attachment );
+			$image                         = self::image( $attachment, $this->size );
 			$this->pictures[ $attachment ] = array(
 				'src'    => $image['src'],
 				'srcset' => $image['srcset'],
@@ -418,13 +451,14 @@ final class ArchiveCards {
 	 * A card's picture as the shop's cards print it; the store's placeholder
 	 * for none, at the dimensions WooCommerce prints it with.
 	 *
-	 * @param int $attachment An image; 0 for none.
+	 * @param int    $attachment An image; 0 for none.
+	 * @param string $size       The image size (`image_size()`).
 	 * @return array{src: string, srcset: string, width: int, height: int, alt: string}
 	 */
-	public static function image( int $attachment ): array {
-		$source = $attachment > 0 ? wp_get_attachment_image_src( $attachment, self::IMAGE_SIZE ) : false;
+	public static function image( int $attachment, string $size ): array {
+		$source = $attachment > 0 ? wp_get_attachment_image_src( $attachment, $size ) : false;
 		if ( is_array( $source ) ) {
-			$srcset = wp_get_attachment_image_srcset( $attachment, self::IMAGE_SIZE );
+			$srcset = wp_get_attachment_image_srcset( $attachment, $size );
 			return array(
 				'src'    => (string) $source[0],
 				'srcset' => is_string( $srcset ) ? $srcset : '',
@@ -433,12 +467,12 @@ final class ArchiveCards {
 				'alt'    => trim( wp_strip_all_tags( (string) get_post_meta( $attachment, '_wp_attachment_image_alt', true ) ) ),
 			);
 		}
-		$size = wc_get_image_size( self::IMAGE_SIZE );
+		$dimensions = wc_get_image_size( $size );
 		return array(
-			'src'    => (string) wc_placeholder_img_src( self::IMAGE_SIZE ),
+			'src'    => (string) wc_placeholder_img_src( $size ),
 			'srcset' => '',
-			'width'  => (int) ( $size['width'] ?? 0 ),
-			'height' => (int) ( $size['height'] ?? 0 ),
+			'width'  => (int) ( $dimensions['width'] ?? 0 ),
+			'height' => (int) ( $dimensions['height'] ?? 0 ),
 			'alt'    => '',
 		);
 	}

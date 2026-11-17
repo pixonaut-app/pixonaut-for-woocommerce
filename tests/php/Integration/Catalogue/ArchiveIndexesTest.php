@@ -51,6 +51,12 @@ final class ArchiveIndexesTest extends WP_UnitTestCase {
 	 */
 	private const LARGE_HEIGHT = 300;
 
+	/**
+	 * How far ahead a build queued before an upgrade waits: later than any
+	 * build a visit would queue now, so keeping its time shows.
+	 */
+	private const EARLIER_BUILD_DELAY_SECONDS = 3600;
+
 	private int $category;
 
 	private WC_Product $print;
@@ -69,6 +75,7 @@ final class ArchiveIndexesTest extends WP_UnitTestCase {
 	public function tear_down(): void {
 		remove_theme_support( ArchiveIndexes::THEME_SUPPORT );
 		remove_all_filters( 'pixonaut_wc_archive_index_card' );
+		remove_all_filters( 'pixonaut_wc_archive_index_image_size' );
 		remove_all_filters( 'pixonaut_wc_archive_index_variation' );
 		as_unschedule_all_actions( ArchiveIndexes::ACTION );
 		delete_option( Schema::ARCHIVE_INDEXES_OPTION );
@@ -106,6 +113,53 @@ final class ArchiveIndexesTest extends WP_UnitTestCase {
 		$priority = ActionScheduler::store()->fetch_action( (string) $queued[0] )->get_priority();
 		$this->assertSame( ArchiveIndexes::PRIORITY, $priority );
 		$this->assertLessThan( self::DEFAULT_JOB_PRIORITY, $priority, 'picture jobs queued before it do not hold it back' );
+	}
+
+	public function test_a_build_waiting_at_another_priority_is_queued_again_at_the_builds_own_for_the_same_time(): void {
+		$due = time() + self::EARLIER_BUILD_DELAY_SECONDS;
+		as_schedule_single_action( $due, ArchiveIndexes::ACTION, array(), ArchiveIndexes::GROUP );
+
+		$this->head();
+		$queued = as_get_scheduled_actions(
+			array(
+				'hook'   => ArchiveIndexes::ACTION,
+				'status' => \ActionScheduler_Store::STATUS_PENDING,
+			),
+			'ids'
+		);
+		$this->assertCount( 1, $queued, 'the earlier build is replaced, not joined' );
+		$action = ActionScheduler::store()->fetch_action( (string) reset( $queued ) );
+		$this->assertSame( ArchiveIndexes::PRIORITY, $action->get_priority() );
+		$this->assertSame( $due, $action->get_schedule()->get_date()?->getTimestamp() );
+
+		$this->head();
+		$kept = as_get_scheduled_actions(
+			array(
+				'hook'   => ArchiveIndexes::ACTION,
+				'status' => \ActionScheduler_Store::STATUS_PENDING,
+			),
+			'ids'
+		);
+		$this->assertSame( array_values( $queued ), array_values( $kept ), 'a build at its own priority is kept' );
+	}
+
+	public function test_a_theme_names_the_size_the_index_lists_pictures_in(): void {
+		$image = $this->factory()->attachment->create_upload_object( DIR_TESTDATA . '/images/canola.jpg' );
+		$this->assertIsInt( $image );
+		$this->print->set_image_id( $image );
+		$this->print->save();
+		add_filter( 'pixonaut_wc_archive_index_image_size', static fn (): string => 'woocommerce_thumbnail' );
+
+		$this->built();
+		$thumbnail = wp_get_attachment_image_src( $image, 'woocommerce_thumbnail' );
+		$this->assertIsArray( $thumbnail );
+		$this->assertNotSame( wp_get_attachment_image_url( $image, 'large' ), $thumbnail[0], 'the sizes are other files' );
+		$card = array_column( $this->stored()['cards'], 'image', 'title' )['Skog'];
+		$this->assertSame( $thumbnail[0], $card['src'] );
+		$this->assertSame( array( $thumbnail[1], $thumbnail[2] ), array( $card['width'], $card['height'] ) );
+		$placeholder = array_column( $this->stored()['cards'], 'image', 'title' )['Hav'];
+		$size        = wc_get_image_size( 'woocommerce_thumbnail' );
+		$this->assertSame( array( $size['width'], $size['height'] ), array( $placeholder['width'], $placeholder['height'] ) );
 	}
 
 	public function test_card_and_variation_pictures_are_listed_at_the_large_size(): void {

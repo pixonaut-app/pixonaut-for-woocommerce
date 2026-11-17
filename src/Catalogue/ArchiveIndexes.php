@@ -9,7 +9,9 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use ActionScheduler;
 use ActionScheduler_Store;
+use DateTimeInterface;
 use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Schema;
 use WP_Post;
@@ -471,7 +473,10 @@ final class ArchiveIndexes {
 
 	/**
 	 * Queues the build, unless one is waiting to start already; a build
-	 * running now does not count, as it may have read what changed.
+	 * running now does not count, as it may have read what changed. A
+	 * waiting build queued at another priority, as before `PRIORITY`, is
+	 * queued again at it for the same time, so it no longer waits behind
+	 * the picture jobs.
 	 *
 	 * @param int $delay Seconds from now.
 	 */
@@ -488,10 +493,17 @@ final class ArchiveIndexes {
 			),
 			'ids'
 		);
+		$at      = max( time() + $delay, self::state()['ran'] + self::MIN_INTERVAL_SECONDS );
 		if ( array() !== $waiting ) {
-			return;
+			$action = ActionScheduler::store()->fetch_action( (string) reset( $waiting ) );
+			if ( $action->get_priority() === self::PRIORITY ) {
+				return;
+			}
+			$due = $action->get_schedule()->get_date();
+			$at  = $due instanceof DateTimeInterface ? $due->getTimestamp() : $at;
+			as_unschedule_action( self::ACTION, array(), self::GROUP );
 		}
-		as_schedule_single_action( max( time() + $delay, self::state()['ran'] + self::MIN_INTERVAL_SECONDS ), self::ACTION, array(), self::GROUP, false, self::PRIORITY );
+		as_schedule_single_action( $at, self::ACTION, array(), self::GROUP, false, self::PRIORITY );
 	}
 
 	/**

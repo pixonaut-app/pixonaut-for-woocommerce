@@ -1345,7 +1345,11 @@ archives work as they always have.
   order a filtered listing prefers to open the card on, each with the values
   it is sold in, its displayed price and regular price, and the pictures a
   filtered card shows of it. Pictures are listed at the `large` size, the
-  one WooCommerce's Product Image block prints on a card. The rules a client applies to reproduce the
+  one WooCommerce's Product Image block prints on a card; a theme whose
+  cards print another size, as a classic theme's loop prints
+  `woocommerce_thumbnail`, names it with
+  `pixonaut_wc_archive_index_image_size`, which the card swatches follow
+  too. The rules a client applies to reproduce the
   server's listing, links, pictures and counts, and fixtures generated from
   the server's own listing, are in `tests/fixtures/archive-index/`.
 - **When it is built**: by the Action Scheduler job
@@ -1361,7 +1365,8 @@ archives work as they always have.
   the option `pixonaut_wc_archive_index_<archive>`.
 - **A theme's own fields**: `pixonaut_wc_archive_index_card` and
   `pixonaut_wc_archive_index_variation` filter each card and each variation
-  row while the index is built ([hooks](../hooks/)).
+  row while the index is built, and `pixonaut_wc_archive_index_image_size`
+  names the size its pictures are listed in ([hooks](../hooks/)).
 
 ## JavaScript hooks
 

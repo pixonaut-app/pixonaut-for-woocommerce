@@ -241,7 +241,7 @@ final class FilteredCardPicturesTest extends WP_UnitTestCase {
 				$chosen[ substr( $name, strlen( 'filter_' ) ) ] = explode( ',', $values );
 			}
 			$this->assertSame(
-				array_map( static fn ( int $image ): string => ArchiveCards::image( $image )['src'], $this->shop( $filter ) ),
+				array_map( static fn ( int $image ): string => ArchiveCards::image( $image, ArchiveCards::image_size() )['src'], $this->shop( $filter ) ),
 				array_column( $client->shown( $chosen ), 'image' ),
 				(string) wp_json_encode( $filter )
 			);

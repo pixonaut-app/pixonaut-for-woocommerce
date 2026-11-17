@@ -113,6 +113,20 @@ add_filter( 'pixonaut_wc_archive_index_card', function ( array $card, WC_Product
 }, 10, 2 );
 ```
 
+### `pixonaut_wc_archive_index_image_size`
+
+Filters the image size the archive index lists cards' and variations' pictures in, and the card swatches print theirs in: a theme whose cards print another size, as a classic theme's loop prints `woocommerce_thumbnail`, names it so a card drawn from the index shows the picture as the server's card does. Read once a build, and once for each card's swatches.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `$size` | `string` | A registered image size; `large` by default, the size WooCommerce's Product Image block prints. |
+
+Since 1.21.0. Fired in `src/Catalogue/ArchiveCards.php`.
+
+```php
+add_filter( 'pixonaut_wc_archive_index_image_size', fn (): string => 'woocommerce_thumbnail' );
+```
+
 ### `pixonaut_wc_archive_index_variation`
 
 Filters a variation's row on a card of an archive's index, before the index is kept: a theme adds the fields it shows with a filtered card, such as its lowest price of the last 30 days. Runs while the index is built in the background.
