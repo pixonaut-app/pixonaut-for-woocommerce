@@ -31143,6 +31143,18 @@ export interface operations {
                                 camera?: string;
                                 /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
                                 cutOut?: string;
+                                /** @description What the scene is called as a view of this blank in each customer-facing language, by code: only the languages it has a name in. A shopper whose designer is shown in a language left out reads the scene's own label. A studio style has names for each camera it is shown from. */
+                                localizedLabels?: {
+                                    da?: string;
+                                    de?: string;
+                                    en?: string;
+                                    es?: string;
+                                    fi?: string;
+                                    fr?: string;
+                                    nb?: string;
+                                    nl?: string;
+                                    sv?: string;
+                                };
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
@@ -32052,6 +32064,18 @@ export interface operations {
                             camera?: string;
                             /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
                             cutOut?: string;
+                            /** @description What the scene is called as a view of this blank in each customer-facing language, by code: only the languages it has a name in. A shopper whose designer is shown in a language left out reads the scene's own label. A studio style has names for each camera it is shown from. */
+                            localizedLabels?: {
+                                da?: string;
+                                de?: string;
+                                en?: string;
+                                es?: string;
+                                fi?: string;
+                                fr?: string;
+                                nb?: string;
+                                nl?: string;
+                                sv?: string;
+                            };
                             /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                             row?: {
                                 [key: string]: string;
@@ -48445,6 +48469,18 @@ export interface operations {
                                 camera?: string;
                                 /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
                                 cutOut?: string;
+                                /** @description What the scene is called as a view of this blank in each customer-facing language, by code: only the languages it has a name in. A shopper whose designer is shown in a language left out reads the scene's own label. A studio style has names for each camera it is shown from. */
+                                localizedLabels?: {
+                                    da?: string;
+                                    de?: string;
+                                    en?: string;
+                                    es?: string;
+                                    fi?: string;
+                                    fr?: string;
+                                    nb?: string;
+                                    nl?: string;
+                                    sv?: string;
+                                };
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
@@ -49306,6 +49342,18 @@ export interface operations {
                                 camera?: string;
                                 /** @description For a studio style showing a garment: the id of the garment's cut-out, a scene whose `cutOut` is true, laid over the style's backdrop with a shadow. Left out for a product the style draws from its measures, and for any other scene. */
                                 cutOut?: string;
+                                /** @description What the scene is called as a view of this blank in each customer-facing language, by code: only the languages it has a name in. A shopper whose designer is shown in a language left out reads the scene's own label. A studio style has names for each camera it is shown from. */
+                                localizedLabels?: {
+                                    da?: string;
+                                    de?: string;
+                                    en?: string;
+                                    es?: string;
+                                    fi?: string;
+                                    fr?: string;
+                                    nb?: string;
+                                    nl?: string;
+                                    sv?: string;
+                                };
                                 /** @description The option values the stock photo shows, by option name, of the options the blank's photos change with (`photosVaryBy`): shoppers see it only for the variants with these values. Absent or empty: every variant. */
                                 row?: {
                                     [key: string]: string;
