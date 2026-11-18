@@ -7,7 +7,7 @@
  * Field names are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.26.0
+ * @version 1.27.0
  *
  * @var string                $name      The posted field holding the variation's parts and the section's nonce.
  * @var string                $id        The section's id, which each field's id starts with.
