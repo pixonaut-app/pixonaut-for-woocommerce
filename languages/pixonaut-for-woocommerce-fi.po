@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T15:24:19+00:00\n"
+"POT-Creation-Date: 2026-11-18T15:36:15+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -1000,16 +1000,15 @@ msgid ""
 "`ignore_discounts`. Change or add a method with %s."
 msgstr ""
 "Antaa jokaisen toimitusvyöhykkeen siinä järjestyksessä, jossa WooCommerce "
-"vertaa asiakkaan osoitetta niihin, ja sen jälkeen vyöhykkeen 0 "
-"sijainneille, joita mikään muu vyöhyke ei kata: vyöhykkeen sijainnit ja "
-"toimitustavat, käytössä olevat ja muut. Kiinteä toimituskulu tai nouto "
-"antaa hintansa verottomana, kuten WooCommerce sen tallentaa, ja veroineen, "
-"kuten asiakkaat kaupan osoitteessa sen maksavat; maksuton toimitus antaa "
-"pienimmän hyväksyttävän tilauksen summan ja sen, mitä se edellyttää. "
-"WooCommerce vertaa vähimmäissummaa ostoskorin välisummaan sellaisena kuin "
-"ostoskori sen näyttää, kuponkien alennusten jälkeen, paitsi kun "
-"`ignore_discounts` on annettu. Toimitustapaa muutetaan tai uusi lisätään "
-"kyvyllä %s."
+"vertaa asiakkaan osoitetta niihin, ja sen jälkeen vyöhykkeen 0 sijainneille, "
+"joita mikään muu vyöhyke ei kata: vyöhykkeen sijainnit ja toimitustavat, "
+"käytössä olevat ja muut. Kiinteä toimituskulu tai nouto antaa hintansa "
+"verottomana, kuten WooCommerce sen tallentaa, ja veroineen, kuten asiakkaat "
+"kaupan osoitteessa sen maksavat; maksuton toimitus antaa pienimmän "
+"hyväksyttävän tilauksen summan ja sen, mitä se edellyttää. WooCommerce "
+"vertaa vähimmäissummaa ostoskorin välisummaan sellaisena kuin ostoskori sen "
+"näyttää, kuponkien alennusten jälkeen, paitsi kun `ignore_discounts` on "
+"annettu. Toimitustapaa muutetaan tai uusi lisätään kyvyllä %s."
 
 #: src/Abilities/GetShipping.php:48
 msgid "The currency amounts are in, as its code."
@@ -2990,15 +2989,15 @@ msgstr ""
 "asetukset muuttuvat. `cost` on kiinteän toimituskulun tai noudon hinta, "
 "tallennettuna verottomana; kun `cost_includes_tax` on annettu, se on hinta, "
 "jonka asiakkaat kaupan osoitteessa maksavat toimituksen veroineen, ja "
-"tallennettava hinta lasketaan siitä. `min_amount` on maksuttoman "
-"toimituksen pienin hyväksyttävä tilaus, jota WooCommerce vertaa ostoskorin "
-"välisummaan sellaisena kuin ostoskori sen näyttää, kuponkien alennusten "
-"jälkeen, paitsi kun `ignore_discounts` on annettu; kun vähimmäissumma "
-"annetaan, maksuton toimitus, joka ei edellyttänyt mitään, alkaa edellyttää "
-"sitä. `enabled` false piilottaa toimitustavan kassalta poistamatta sitä. "
-"Vastaus on toimitustapa sellaisena kuin se nyt on."
+"tallennettava hinta lasketaan siitä. `min_amount` on maksuttoman toimituksen "
+"pienin hyväksyttävä tilaus, jota WooCommerce vertaa ostoskorin välisummaan "
+"sellaisena kuin ostoskori sen näyttää, kuponkien alennusten jälkeen, paitsi "
+"kun `ignore_discounts` on annettu; kun vähimmäissumma annetaan, maksuton "
+"toimitus, joka ei edellyttänyt mitään, alkaa edellyttää sitä. `enabled` "
+"false piilottaa toimitustavan kassalta poistamatta sitä. Vastaus on "
+"toimitustapa sellaisena kuin se nyt on."
 
-#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:193
+#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr "Vyöhyke; 0 on vyöhyke sijainneille, joita mikään muu vyöhyke ei kata."
 
@@ -3031,14 +3030,28 @@ msgstr ""
 "toimitustapa."
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
+#. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
 #: src/Abilities/SetShippingMethod.php:164
+#: src/Abilities/SetShippingMethod.php:181
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "Tyypin %2$s toimitustavalla ei ole asetusta %1$s."
 
-#: src/Abilities/SetShippingMethod.php:187
+#: src/Abilities/SetShippingMethod.php:196
 msgid "The store did not keep the shipping method."
 msgstr "Kauppa ei tallentanut toimitustapaa."
+
+#: src/Abilities/SetShippingMethod.php:245
+msgid ""
+"Shipping is taxed as the cart's items are, and the store's taxable products "
+"have different rates, so a cost including tax depends on the cart. Give the "
+"cost excluding tax, or set a shipping tax class in WooCommerce's tax "
+"settings."
+msgstr ""
+"Toimitus verotetaan kuten ostoskorin tuotteet, ja kaupan verotettavilla "
+"tuotteilla on eri verokannat, joten verollinen hinta riippuu ostoskorista. "
+"Anna hinta verottomana tai valitse toimituskulujen veroluokka WooCommercen "
+"veroasetuksissa."
 
 #: src/Abilities/SetupFields.php:165
 msgid ""
@@ -3388,43 +3401,47 @@ msgstr ""
 msgid "Pixonaut could not be reached to read the blank's variants."
 msgstr "Pixonautiin ei saatu yhteyttä pohjatuotteen versioiden lukemiseksi."
 
-#: src/Abilities/ShippingMethods.php:205
+#: src/Abilities/ShippingMethods.php:221
 msgid "country, state, postcode or continent."
 msgstr "country, state, postcode tai continent."
 
-#: src/Abilities/ShippingMethods.php:231
+#: src/Abilities/ShippingMethods.php:247
 msgid "flat_rate, free_shipping, local_pickup, or another plugin's method."
 msgstr ""
 "flat_rate, free_shipping, local_pickup tai toisen lisäosan toimitustapa."
 
-#: src/Abilities/ShippingMethods.php:235
+#: src/Abilities/ShippingMethods.php:251
 msgid "What shoppers see the method as at checkout."
 msgstr "Nimi, jolla asiakkaat näkevät toimitustavan kassalla."
 
-#: src/Abilities/ShippingMethods.php:241
+#: src/Abilities/ShippingMethods.php:257
 msgid ""
 "A flat rate's or pickup's cost as WooCommerce keeps it, excluding tax; it "
 "may be a formula such as `10 + [qty] * 2`. Empty for nothing, null for a "
 "method without a cost."
 msgstr ""
 "Kiinteän toimituskulun tai noudon hinta verottomana, kuten WooCommerce sen "
-"tallentaa; se voi olla kaava, kuten `10 + [qty] * 2`. Tyhjä, jos se ei "
-"maksa mitään, null toimitustavalle, jolla ei ole hintaa."
+"tallentaa; se voi olla kaava, kuten `10 + [qty] * 2`. Tyhjä, jos se ei maksa "
+"mitään, null toimitustavalle, jolla ei ole hintaa."
 
-#: src/Abilities/ShippingMethods.php:245
+#: src/Abilities/ShippingMethods.php:261
 msgid ""
 "The cost as shoppers at the store's address pay it, with the shipping tax "
-"when the method is taxable. Null for a formula or a method without a cost."
+"when the method is taxable. Null for a formula, a method without a cost, or "
+"when shipping is taxed as the cart's items are and the store's taxable "
+"products have different rates, so the tax depends on the cart."
 msgstr ""
 "Hinta, jonka asiakkaat kaupan osoitteessa maksavat, toimituksen veroineen, "
-"kun toimitustapa on verotettava. Null kaavalle tai toimitustavalle, jolla "
-"ei ole hintaa."
+"kun toimitustapa on verotettava. Null kaavalle, toimitustavalle, jolla ei "
+"ole hintaa, tai kun toimitus verotetaan kuten ostoskorin tuotteet ja kaupan "
+"verotettavilla tuotteilla on eri verokannat, jolloin vero riippuu "
+"ostoskorista."
 
-#: src/Abilities/ShippingMethods.php:249
+#: src/Abilities/ShippingMethods.php:265
 msgid "taxable or none; null for a method without a cost."
 msgstr "taxable tai none; null toimitustavalle, jolla ei ole hintaa."
 
-#: src/Abilities/ShippingMethods.php:253
+#: src/Abilities/ShippingMethods.php:269
 msgid ""
 "Free shipping's minimum order amount, empty for none; null for another "
 "method."
@@ -3432,16 +3449,15 @@ msgstr ""
 "Maksuttoman toimituksen pienin hyväksyttävä tilaus, tyhjä, jos sitä ei ole; "
 "null muille toimitustavoille."
 
-#: src/Abilities/ShippingMethods.php:257
+#: src/Abilities/ShippingMethods.php:273
 msgid ""
 "What free shipping requires: empty for nothing, coupon, min_amount, either "
 "(a coupon or the minimum) or both; null for another method."
 msgstr ""
-"Mitä maksuton toimitus edellyttää: tyhjä, jos ei mitään, coupon, "
-"min_amount, either (kuponki tai vähimmäissumma) tai both; null muille "
-"toimitustavoille."
+"Mitä maksuton toimitus edellyttää: tyhjä, jos ei mitään, coupon, min_amount, "
+"either (kuponki tai vähimmäissumma) tai both; null muille toimitustavoille."
 
-#: src/Abilities/ShippingMethods.php:261
+#: src/Abilities/ShippingMethods.php:277
 msgid ""
 "Whether free shipping's minimum counts the subtotal before coupon discounts; "
 "null for another method."

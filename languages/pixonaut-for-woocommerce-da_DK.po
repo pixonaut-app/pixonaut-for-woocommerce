@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T15:24:19+00:00\n"
+"POT-Creation-Date: 2026-11-18T15:36:15+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: da_DK\n"
@@ -1003,11 +1003,11 @@ msgstr ""
 "adresse med dem, og derefter zone 0 for de lokationer, ingen anden zone "
 "dækker: zonens lokationer og forsendelsesmetoder, aktiverede eller ej. En "
 "fast sats eller lokal afhentning giver sin omkostning eksklusive moms, som "
-"WooCommerce gemmer den, og inklusive moms, som kunder på webshoppens "
-"adresse betaler den; gratis forsendelse giver sit minimumsordrebeløb og "
-"det, den kræver. WooCommerce sammenholder minimummet med kurvens subtotal, "
-"som kurven viser den, efter rabatter fra rabatkuponer, undtagen med "
-"`ignore_discounts`. Skift eller tilføj en forsendelsesmetode med %s."
+"WooCommerce gemmer den, og inklusive moms, som kunder på webshoppens adresse "
+"betaler den; gratis forsendelse giver sit minimumsordrebeløb og det, den "
+"kræver. WooCommerce sammenholder minimummet med kurvens subtotal, som kurven "
+"viser den, efter rabatter fra rabatkuponer, undtagen med `ignore_discounts`. "
+"Skift eller tilføj en forsendelsesmetode med %s."
 
 #: src/Abilities/GetShipping.php:48
 msgid "The currency amounts are in, as its code."
@@ -2970,14 +2970,14 @@ msgstr ""
 "er omkostningen for en fast sats eller lokal afhentning, gemt eksklusive "
 "moms; med `cost_includes_tax` er det det, kunder på webshoppens adresse "
 "betaler inklusive momsen på forsendelsen, og den gemte omkostning beregnes "
-"ud fra det. `min_amount` er minimumsordrebeløbet for gratis forsendelse, "
-"som WooCommerce sammenholder med kurvens subtotal, som kurven viser den, "
-"efter rabatter fra rabatkuponer, undtagen med `ignore_discounts`; angives "
-"et minimum, kommer gratis forsendelse, der ikke krævede noget, til at kræve "
-"det. `enabled` false fjerner en forsendelsesmetode fra kassen uden at "
-"slette den. Svaret er forsendelsesmetoden, som den er nu."
+"ud fra det. `min_amount` er minimumsordrebeløbet for gratis forsendelse, som "
+"WooCommerce sammenholder med kurvens subtotal, som kurven viser den, efter "
+"rabatter fra rabatkuponer, undtagen med `ignore_discounts`; angives et "
+"minimum, kommer gratis forsendelse, der ikke krævede noget, til at kræve "
+"det. `enabled` false fjerner en forsendelsesmetode fra kassen uden at slette "
+"den. Svaret er forsendelsesmetoden, som den er nu."
 
-#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:193
+#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr "Zonen; 0 er zonen for de lokationer, ingen anden zone dækker."
 
@@ -3010,14 +3010,28 @@ msgstr ""
 "forsendelsesmetode af den anden type."
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
+#. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
 #: src/Abilities/SetShippingMethod.php:164
+#: src/Abilities/SetShippingMethod.php:181
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "En forsendelsesmetode af typen %2$s har ingen indstilling %1$s."
 
-#: src/Abilities/SetShippingMethod.php:187
+#: src/Abilities/SetShippingMethod.php:196
 msgid "The store did not keep the shipping method."
 msgstr "Webshoppen gemte ikke forsendelsesmetoden."
+
+#: src/Abilities/SetShippingMethod.php:245
+msgid ""
+"Shipping is taxed as the cart's items are, and the store's taxable products "
+"have different rates, so a cost including tax depends on the cart. Give the "
+"cost excluding tax, or set a shipping tax class in WooCommerce's tax "
+"settings."
+msgstr ""
+"Forsendelse beskattes som varerne i kurven, og webshoppens momspligtige "
+"varer har forskellige momssatser, så en omkostning inklusive moms afhænger "
+"af kurven. Angiv omkostningen eksklusive moms, eller vælg en "
+"forsendelsesmomsklasse i WooCommerces momsindstillinger."
 
 #: src/Abilities/SetupFields.php:165
 msgid ""
@@ -3367,45 +3381,48 @@ msgstr ""
 msgid "Pixonaut could not be reached to read the blank's variants."
 msgstr "Pixonaut kunne ikke nås for at hente basisproduktets varianter."
 
-#: src/Abilities/ShippingMethods.php:205
+#: src/Abilities/ShippingMethods.php:221
 msgid "country, state, postcode or continent."
 msgstr "country, state, postcode eller continent."
 
-#: src/Abilities/ShippingMethods.php:231
+#: src/Abilities/ShippingMethods.php:247
 msgid "flat_rate, free_shipping, local_pickup, or another plugin's method."
 msgstr ""
 "flat_rate, free_shipping, local_pickup eller et andet plugins "
 "forsendelsesmetode."
 
-#: src/Abilities/ShippingMethods.php:235
+#: src/Abilities/ShippingMethods.php:251
 msgid "What shoppers see the method as at checkout."
 msgstr "Det navn, kunderne ser forsendelsesmetoden under i kassen."
 
-#: src/Abilities/ShippingMethods.php:241
+#: src/Abilities/ShippingMethods.php:257
 msgid ""
 "A flat rate's or pickup's cost as WooCommerce keeps it, excluding tax; it "
 "may be a formula such as `10 + [qty] * 2`. Empty for nothing, null for a "
 "method without a cost."
 msgstr ""
-"Omkostningen for en fast sats eller lokal afhentning, som WooCommerce "
-"gemmer den, eksklusive moms; den kan være en formel som `10 + [qty] * 2`. "
-"Tom, når den ikke koster noget, null for en forsendelsesmetode uden "
-"omkostning."
+"Omkostningen for en fast sats eller lokal afhentning, som WooCommerce gemmer "
+"den, eksklusive moms; den kan være en formel som `10 + [qty] * 2`. Tom, når "
+"den ikke koster noget, null for en forsendelsesmetode uden omkostning."
 
-#: src/Abilities/ShippingMethods.php:245
+#: src/Abilities/ShippingMethods.php:261
 msgid ""
 "The cost as shoppers at the store's address pay it, with the shipping tax "
-"when the method is taxable. Null for a formula or a method without a cost."
+"when the method is taxable. Null for a formula, a method without a cost, or "
+"when shipping is taxed as the cart's items are and the store's taxable "
+"products have different rates, so the tax depends on the cart."
 msgstr ""
 "Omkostningen, som kunder på webshoppens adresse betaler den, med momsen på "
-"forsendelsen, når forsendelsesmetoden er momspligtig. Null for en formel "
-"eller en forsendelsesmetode uden omkostning."
+"forsendelsen, når forsendelsesmetoden er momspligtig. Null for en formel, "
+"for en forsendelsesmetode uden omkostning, eller når forsendelse beskattes "
+"som varerne i kurven, og webshoppens momspligtige varer har forskellige "
+"momssatser, så momsen afhænger af kurven."
 
-#: src/Abilities/ShippingMethods.php:249
+#: src/Abilities/ShippingMethods.php:265
 msgid "taxable or none; null for a method without a cost."
 msgstr "taxable eller none; null for en forsendelsesmetode uden omkostning."
 
-#: src/Abilities/ShippingMethods.php:253
+#: src/Abilities/ShippingMethods.php:269
 msgid ""
 "Free shipping's minimum order amount, empty for none; null for another "
 "method."
@@ -3413,7 +3430,7 @@ msgstr ""
 "Minimumsordrebeløbet for gratis forsendelse, tomt, når der ikke er noget; "
 "null for andre forsendelsesmetoder."
 
-#: src/Abilities/ShippingMethods.php:257
+#: src/Abilities/ShippingMethods.php:273
 msgid ""
 "What free shipping requires: empty for nothing, coupon, min_amount, either "
 "(a coupon or the minimum) or both; null for another method."
@@ -3422,7 +3439,7 @@ msgstr ""
 "(en rabatkupon eller minimummet) eller both; null for andre "
 "forsendelsesmetoder."
 
-#: src/Abilities/ShippingMethods.php:261
+#: src/Abilities/ShippingMethods.php:277
 msgid ""
 "Whether free shipping's minimum counts the subtotal before coupon discounts; "
 "null for another method."

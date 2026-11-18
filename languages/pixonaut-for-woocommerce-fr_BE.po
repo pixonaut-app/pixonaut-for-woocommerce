@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T15:24:19+00:00\n"
+"POT-Creation-Date: 2026-11-18T15:36:15+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1040,13 +1040,13 @@ msgid ""
 msgstr ""
 "Donne chaque zone d'expédition dans l'ordre où WooCommerce y compare "
 "l'adresse d'un client, puis la zone 0 pour les emplacements qu'aucune autre "
-"zone ne couvre : ses emplacements et ses modes d'expédition, activés ou "
-"non. Un forfait ou un point de vente donne son coût hors taxes, tel que "
-"WooCommerce le conserve, et taxes comprises, tel que le paient les clients "
-"à l'adresse de la boutique ; la livraison gratuite donne son montant "
-"minimum de commande et ce qu'elle requiert. WooCommerce compare le minimum "
-"au sous-total du panier tel que le panier l'affiche, après les remises des "
-"codes promo, sauf avec `ignore_discounts`. Modifiez ou ajoutez un mode "
+"zone ne couvre : ses emplacements et ses modes d'expédition, activés ou non. "
+"Un forfait ou un point de vente donne son coût hors taxes, tel que "
+"WooCommerce le conserve, et taxes comprises, tel que le paient les clients à "
+"l'adresse de la boutique ; la livraison gratuite donne son montant minimum "
+"de commande et ce qu'elle requiert. WooCommerce compare le minimum au sous-"
+"total du panier tel que le panier l'affiche, après les remises des codes "
+"promo, sauf avec `ignore_discounts`. Modifiez ou ajoutez un mode "
 "d'expédition avec %s."
 
 #: src/Abilities/GetShipping.php:48
@@ -3068,21 +3068,21 @@ msgid ""
 "required nothing comes to require it. `enabled` false takes a method away "
 "from checkout without deleting it. Answers the method as it is now."
 msgstr ""
-"Modifie un mode d'expédition d'une zone, par son `instance_id` tel que %s "
-"le lit, ou, sans celui-ci, ajoute à la zone un forfait ou la livraison "
-"gratuite (`kind`). Seuls les réglages indiqués changent. `cost` est le coût "
-"d'un forfait ou d'un point de vente, conservé hors taxes ; avec "
+"Modifie un mode d'expédition d'une zone, par son `instance_id` tel que %s le "
+"lit, ou, sans celui-ci, ajoute à la zone un forfait ou la livraison gratuite "
+"(`kind`). Seuls les réglages indiqués changent. `cost` est le coût d'un "
+"forfait ou d'un point de vente, conservé hors taxes ; avec "
 "`cost_includes_tax`, c'est ce que paient les clients à l'adresse de la "
-"boutique, taxe sur l'expédition comprise, et le coût conservé en est "
-"déduit. `min_amount` est le montant minimum de commande de la livraison "
-"gratuite, que WooCommerce compare au sous-total du panier tel que le panier "
-"l'affiche, après les remises des codes promo, sauf avec `ignore_discounts` "
-"; avec un minimum, une livraison gratuite qui ne requérait rien se met à le "
-"requérir. `enabled` à false retire un mode d'expédition de la validation de "
-"la commande sans le supprimer. Répond avec le mode d'expédition tel qu'il "
-"est maintenant."
+"boutique, taxe sur l'expédition comprise, et le coût conservé en est déduit. "
+"`min_amount` est le montant minimum de commande de la livraison gratuite, "
+"que WooCommerce compare au sous-total du panier tel que le panier l'affiche, "
+"après les remises des codes promo, sauf avec `ignore_discounts` ; avec un "
+"minimum, une livraison gratuite qui ne requérait rien se met à le requérir. "
+"`enabled` à false retire un mode d'expédition de la validation de la "
+"commande sans le supprimer. Répond avec le mode d'expédition tel qu'il est "
+"maintenant."
 
-#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:193
+#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr ""
 "La zone ; 0 est la zone des emplacements qu'aucune autre zone ne couvre."
@@ -3116,14 +3116,28 @@ msgstr ""
 "d'expédition de l'autre type."
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
+#. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
 #: src/Abilities/SetShippingMethod.php:164
+#: src/Abilities/SetShippingMethod.php:181
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "Un mode d'expédition de type %2$s n'a pas de réglage %1$s."
 
-#: src/Abilities/SetShippingMethod.php:187
+#: src/Abilities/SetShippingMethod.php:196
 msgid "The store did not keep the shipping method."
 msgstr "La boutique n'a pas conservé le mode d'expédition."
+
+#: src/Abilities/SetShippingMethod.php:245
+msgid ""
+"Shipping is taxed as the cart's items are, and the store's taxable products "
+"have different rates, so a cost including tax depends on the cart. Give the "
+"cost excluding tax, or set a shipping tax class in WooCommerce's tax "
+"settings."
+msgstr ""
+"L'expédition est taxée comme les articles du panier, et les produits "
+"taxables de la boutique ont des taux différents : un coût taxes comprises "
+"dépend donc du panier. Indiquez le coût hors taxes, ou définissez une "
+"classe de TVA de livraison dans les réglages de TVA de WooCommerce."
 
 #: src/Abilities/SetupFields.php:165
 msgid ""
@@ -3493,46 +3507,50 @@ msgid "Pixonaut could not be reached to read the blank's variants."
 msgstr ""
 "Impossible de joindre Pixonaut pour lire les variantes du produit vierge."
 
-#: src/Abilities/ShippingMethods.php:205
+#: src/Abilities/ShippingMethods.php:221
 msgid "country, state, postcode or continent."
 msgstr "country, state, postcode ou continent."
 
-#: src/Abilities/ShippingMethods.php:231
+#: src/Abilities/ShippingMethods.php:247
 msgid "flat_rate, free_shipping, local_pickup, or another plugin's method."
 msgstr ""
 "flat_rate, free_shipping, local_pickup, ou le mode d'expédition d'une autre "
 "extension."
 
-#: src/Abilities/ShippingMethods.php:235
+#: src/Abilities/ShippingMethods.php:251
 msgid "What shoppers see the method as at checkout."
 msgstr ""
 "Le nom sous lequel les clients voient le mode d'expédition lors de la "
 "validation de la commande."
 
-#: src/Abilities/ShippingMethods.php:241
+#: src/Abilities/ShippingMethods.php:257
 msgid ""
 "A flat rate's or pickup's cost as WooCommerce keeps it, excluding tax; it "
 "may be a formula such as `10 + [qty] * 2`. Empty for nothing, null for a "
 "method without a cost."
 msgstr ""
-"Le coût d'un forfait ou d'un point de vente tel que WooCommerce le "
-"conserve, hors taxes ; il peut s'agir d'une formule comme `10 + [qty] * 2`. "
-"Vide s'il ne coûte rien, null pour un mode d'expédition sans coût."
+"Le coût d'un forfait ou d'un point de vente tel que WooCommerce le conserve, "
+"hors taxes ; il peut s'agir d'une formule comme `10 + [qty] * 2`. Vide s'il "
+"ne coûte rien, null pour un mode d'expédition sans coût."
 
-#: src/Abilities/ShippingMethods.php:245
+#: src/Abilities/ShippingMethods.php:261
 msgid ""
 "The cost as shoppers at the store's address pay it, with the shipping tax "
-"when the method is taxable. Null for a formula or a method without a cost."
+"when the method is taxable. Null for a formula, a method without a cost, or "
+"when shipping is taxed as the cart's items are and the store's taxable "
+"products have different rates, so the tax depends on the cart."
 msgstr ""
 "Le coût tel que le paient les clients à l'adresse de la boutique, avec la "
 "taxe sur l'expédition lorsque le mode d'expédition est taxable. Null pour "
-"une formule ou un mode d'expédition sans coût."
+"une formule, pour un mode d'expédition sans coût, ou lorsque l'expédition "
+"est taxée comme les articles du panier et que les produits taxables de la "
+"boutique ont des taux différents, si bien que la taxe dépend du panier."
 
-#: src/Abilities/ShippingMethods.php:249
+#: src/Abilities/ShippingMethods.php:265
 msgid "taxable or none; null for a method without a cost."
 msgstr "taxable ou none ; null pour un mode d'expédition sans coût."
 
-#: src/Abilities/ShippingMethods.php:253
+#: src/Abilities/ShippingMethods.php:269
 msgid ""
 "Free shipping's minimum order amount, empty for none; null for another "
 "method."
@@ -3540,7 +3558,7 @@ msgstr ""
 "Le montant minimum de commande de la livraison gratuite, vide s'il n'y en a "
 "pas ; null pour un autre mode d'expédition."
 
-#: src/Abilities/ShippingMethods.php:257
+#: src/Abilities/ShippingMethods.php:273
 msgid ""
 "What free shipping requires: empty for nothing, coupon, min_amount, either "
 "(a coupon or the minimum) or both; null for another method."
@@ -3549,13 +3567,13 @@ msgstr ""
 "either (un code promo ou le minimum) ou both ; null pour un autre mode "
 "d'expédition."
 
-#: src/Abilities/ShippingMethods.php:261
+#: src/Abilities/ShippingMethods.php:277
 msgid ""
 "Whether free shipping's minimum counts the subtotal before coupon discounts; "
 "null for another method."
 msgstr ""
-"Indique si le minimum de la livraison gratuite porte sur le sous-total "
-"avant les remises des codes promo ; null pour un autre mode d'expédition."
+"Indique si le minimum de la livraison gratuite porte sur le sous-total avant "
+"les remises des codes promo ; null pour un autre mode d'expédition."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/Store/DescribeResource.php:56

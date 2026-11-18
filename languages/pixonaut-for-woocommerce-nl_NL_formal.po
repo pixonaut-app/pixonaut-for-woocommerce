@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T15:24:19+00:00\n"
+"POT-Creation-Date: 2026-11-18T15:36:15+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -3053,9 +3053,9 @@ msgid ""
 "from checkout without deleting it. Answers the method as it is now."
 msgstr ""
 "Wijzigt een verzendmethode in een zone, via de `instance_id` zoals %s die "
-"leest, of voegt zonder die een vast tarief of gratis verzending (`kind`) "
-"toe aan de zone. Alleen de opgegeven instellingen veranderen. `cost` zijn "
-"de kosten van een vast tarief of lokaal afhalen, exclusief btw bewaard; met "
+"leest, of voegt zonder die een vast tarief of gratis verzending (`kind`) toe "
+"aan de zone. Alleen de opgegeven instellingen veranderen. `cost` zijn de "
+"kosten van een vast tarief of lokaal afhalen, exclusief btw bewaard; met "
 "`cost_includes_tax` is het wat klanten op het adres van de winkel betalen "
 "inclusief de btw over de verzending, en worden de bewaarde kosten daaruit "
 "berekend. `min_amount` is het minimum bestelbedrag voor gratis verzending, "
@@ -3066,7 +3066,7 @@ msgstr ""
 "bij het afrekenen zonder haar te verwijderen. Het antwoord is de "
 "verzendmethode zoals die nu is."
 
-#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:193
+#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr "De zone; 0 is de zone voor de locaties die geen andere zone dekt."
 
@@ -3095,18 +3095,33 @@ msgstr ""
 #: src/Abilities/SetShippingMethod.php:159
 msgid "A method's kind cannot change: add a method of the other kind instead."
 msgstr ""
-"Het soort van een verzendmethode kan niet veranderen: voeg in plaats "
-"daarvan een verzendmethode van het andere soort toe."
+"Het soort van een verzendmethode kan niet veranderen: voeg in plaats daarvan "
+"een verzendmethode van het andere soort toe."
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
+#. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
 #: src/Abilities/SetShippingMethod.php:164
+#: src/Abilities/SetShippingMethod.php:181
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "Een verzendmethode van het soort %2$s heeft geen instelling %1$s."
 
-#: src/Abilities/SetShippingMethod.php:187
+#: src/Abilities/SetShippingMethod.php:196
 msgid "The store did not keep the shipping method."
 msgstr "De winkel heeft de verzendmethode niet bewaard."
+
+#: src/Abilities/SetShippingMethod.php:245
+msgid ""
+"Shipping is taxed as the cart's items are, and the store's taxable products "
+"have different rates, so a cost including tax depends on the cart. Give the "
+"cost excluding tax, or set a shipping tax class in WooCommerce's tax "
+"settings."
+msgstr ""
+"Verzending wordt belast zoals de artikelen in de winkelwagen, en de "
+"belastbare producten van de winkel hebben verschillende tarieven, dus "
+"kosten inclusief btw hangen af van de winkelwagen. Geef de kosten exclusief "
+"btw op, of stel een belastingklasse voor verzendkosten in bij de "
+"belastinginstellingen van WooCommerce."
 
 #: src/Abilities/SetupFields.php:165
 msgid ""
@@ -3469,21 +3484,21 @@ msgid "Pixonaut could not be reached to read the blank's variants."
 msgstr ""
 "Pixonaut was niet bereikbaar om de varianten van het blanco product te lezen."
 
-#: src/Abilities/ShippingMethods.php:205
+#: src/Abilities/ShippingMethods.php:221
 msgid "country, state, postcode or continent."
 msgstr "country, state, postcode of continent."
 
-#: src/Abilities/ShippingMethods.php:231
+#: src/Abilities/ShippingMethods.php:247
 msgid "flat_rate, free_shipping, local_pickup, or another plugin's method."
 msgstr ""
 "flat_rate, free_shipping, local_pickup of de verzendmethode van een andere "
 "plugin."
 
-#: src/Abilities/ShippingMethods.php:235
+#: src/Abilities/ShippingMethods.php:251
 msgid "What shoppers see the method as at checkout."
 msgstr "De naam waaronder klanten de verzendmethode zien bij het afrekenen."
 
-#: src/Abilities/ShippingMethods.php:241
+#: src/Abilities/ShippingMethods.php:257
 msgid ""
 "A flat rate's or pickup's cost as WooCommerce keeps it, excluding tax; it "
 "may be a formula such as `10 + [qty] * 2`. Empty for nothing, null for a "
@@ -3493,20 +3508,25 @@ msgstr ""
 "bewaart, exclusief btw; dit kan een formule zijn zoals `10 + [qty] * 2`. "
 "Leeg als het niets kost, null voor een verzendmethode zonder kosten."
 
-#: src/Abilities/ShippingMethods.php:245
+#: src/Abilities/ShippingMethods.php:261
 msgid ""
 "The cost as shoppers at the store's address pay it, with the shipping tax "
-"when the method is taxable. Null for a formula or a method without a cost."
+"when the method is taxable. Null for a formula, a method without a cost, or "
+"when shipping is taxed as the cart's items are and the store's taxable "
+"products have different rates, so the tax depends on the cart."
 msgstr ""
 "De kosten zoals klanten op het adres van de winkel ze betalen, met de btw "
 "over de verzending als de verzendmethode belastbaar is. Null voor een "
-"formule of een verzendmethode zonder kosten."
+"formule, voor een verzendmethode zonder kosten, of als verzending wordt "
+"belast zoals de artikelen in de winkelwagen en de belastbare producten van "
+"de winkel verschillende tarieven hebben, zodat de btw afhangt van de "
+"winkelwagen."
 
-#: src/Abilities/ShippingMethods.php:249
+#: src/Abilities/ShippingMethods.php:265
 msgid "taxable or none; null for a method without a cost."
 msgstr "taxable of none; null voor een verzendmethode zonder kosten."
 
-#: src/Abilities/ShippingMethods.php:253
+#: src/Abilities/ShippingMethods.php:269
 msgid ""
 "Free shipping's minimum order amount, empty for none; null for another "
 "method."
@@ -3514,7 +3534,7 @@ msgstr ""
 "Het minimum bestelbedrag voor gratis verzending, leeg als er geen is; null "
 "voor een andere verzendmethode."
 
-#: src/Abilities/ShippingMethods.php:257
+#: src/Abilities/ShippingMethods.php:273
 msgid ""
 "What free shipping requires: empty for nothing, coupon, min_amount, either "
 "(a coupon or the minimum) or both; null for another method."
@@ -3522,7 +3542,7 @@ msgstr ""
 "Wat gratis verzending vereist: leeg voor niets, coupon, min_amount, either "
 "(een waardebon of het minimum) of both; null voor een andere verzendmethode."
 
-#: src/Abilities/ShippingMethods.php:261
+#: src/Abilities/ShippingMethods.php:277
 msgid ""
 "Whether free shipping's minimum counts the subtotal before coupon discounts; "
 "null for another method."

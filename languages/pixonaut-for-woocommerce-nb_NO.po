@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T15:24:19+00:00\n"
+"POT-Creation-Date: 2026-11-18T15:36:15+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: nb_NO\n"
@@ -993,11 +993,11 @@ msgid ""
 "`ignore_discounts`. Change or add a method with %s."
 msgstr ""
 "Gir hver leveringssone i den rekkefølgen WooCommerce matcher en kundes "
-"adresse mot dem, deretter sone 0 for stedene ingen annen sone dekker: "
-"sonens steder og leveringsmåter, aktivert eller ikke. En fastpris eller "
-"lokal henting gir kostnaden sin eksklusive mva, slik WooCommerce lagrer "
-"den, og inkludert mva, slik kunder på butikkens adresse betaler den; gratis "
-"levering gir minste ordrebeløp og hva den krever. WooCommerce sammenligner "
+"adresse mot dem, deretter sone 0 for stedene ingen annen sone dekker: sonens "
+"steder og leveringsmåter, aktivert eller ikke. En fastpris eller lokal "
+"henting gir kostnaden sin eksklusive mva, slik WooCommerce lagrer den, og "
+"inkludert mva, slik kunder på butikkens adresse betaler den; gratis levering "
+"gir minste ordrebeløp og hva den krever. WooCommerce sammenligner "
 "minstebeløpet med handlekurvens delsum slik handlekurven viser den, etter "
 "rabatter fra rabattkoder, unntatt med `ignore_discounts`. Endre eller legg "
 "til en leveringsmåte med %s."
@@ -2939,16 +2939,16 @@ msgstr ""
 "den, eller legger uten en slik til en fastpris eller gratis levering "
 "(`kind`) i sonen. Bare innstillingene som oppgis, endres. `cost` er "
 "kostnaden for en fastpris eller lokal henting, lagret eksklusive mva; med "
-"`cost_includes_tax` er den det kunder på butikkens adresse betaler "
-"inkludert mva på leveringen, og den lagrede kostnaden regnes ut fra den. "
-"`min_amount` er minste ordrebeløp for gratis levering, som WooCommerce "
-"sammenligner med handlekurvens delsum slik handlekurven viser den, etter "
-"rabatter fra rabattkoder, unntatt med `ignore_discounts`; oppgis et "
-"minstebeløp, kommer gratis levering som ikke krevde noe, til å kreve det. "
-"`enabled` false tar en leveringsmåte bort fra kassen uten å slette den. "
-"Svaret er leveringsmåten slik den er nå."
+"`cost_includes_tax` er den det kunder på butikkens adresse betaler inkludert "
+"mva på leveringen, og den lagrede kostnaden regnes ut fra den. `min_amount` "
+"er minste ordrebeløp for gratis levering, som WooCommerce sammenligner med "
+"handlekurvens delsum slik handlekurven viser den, etter rabatter fra "
+"rabattkoder, unntatt med `ignore_discounts`; oppgis et minstebeløp, kommer "
+"gratis levering som ikke krevde noe, til å kreve det. `enabled` false tar en "
+"leveringsmåte bort fra kassen uten å slette den. Svaret er leveringsmåten "
+"slik den er nå."
 
-#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:193
+#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr "Sonen; 0 er sonen for stedene ingen annen sone dekker."
 
@@ -2977,18 +2977,32 @@ msgstr ""
 #: src/Abilities/SetShippingMethod.php:159
 msgid "A method's kind cannot change: add a method of the other kind instead."
 msgstr ""
-"Typen til en leveringsmåte kan ikke endres: Legg heller til en "
-"leveringsmåte av den andre typen."
+"Typen til en leveringsmåte kan ikke endres: Legg heller til en leveringsmåte "
+"av den andre typen."
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
+#. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
 #: src/Abilities/SetShippingMethod.php:164
+#: src/Abilities/SetShippingMethod.php:181
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "En leveringsmåte av typen %2$s har ingen innstilling %1$s."
 
-#: src/Abilities/SetShippingMethod.php:187
+#: src/Abilities/SetShippingMethod.php:196
 msgid "The store did not keep the shipping method."
 msgstr "Butikken lagret ikke leveringsmåten."
+
+#: src/Abilities/SetShippingMethod.php:245
+msgid ""
+"Shipping is taxed as the cart's items are, and the store's taxable products "
+"have different rates, so a cost including tax depends on the cart. Give the "
+"cost excluding tax, or set a shipping tax class in WooCommerce's tax "
+"settings."
+msgstr ""
+"Levering avgiftsberegnes som produktene i handlekurven, og butikkens "
+"avgiftspliktige produkter har ulike satser, så en kostnad inkludert mva "
+"avhenger av handlekurven. Oppgi kostnaden eksklusive mva, eller velg en "
+"avgiftsklasse for levering i WooCommerces avgiftsinnstillinger."
 
 #: src/Abilities/SetupFields.php:165
 msgid ""
@@ -3333,21 +3347,21 @@ msgstr ""
 msgid "Pixonaut could not be reached to read the blank's variants."
 msgstr "Pixonaut kunne ikke nås for å hente basisproduktvariantene."
 
-#: src/Abilities/ShippingMethods.php:205
+#: src/Abilities/ShippingMethods.php:221
 msgid "country, state, postcode or continent."
 msgstr "country, state, postcode eller continent."
 
-#: src/Abilities/ShippingMethods.php:231
+#: src/Abilities/ShippingMethods.php:247
 msgid "flat_rate, free_shipping, local_pickup, or another plugin's method."
 msgstr ""
 "flat_rate, free_shipping, local_pickup eller en annen utvidelses "
 "leveringsmåte."
 
-#: src/Abilities/ShippingMethods.php:235
+#: src/Abilities/ShippingMethods.php:251
 msgid "What shoppers see the method as at checkout."
 msgstr "Navnet kundene ser leveringsmåten under i kassen."
 
-#: src/Abilities/ShippingMethods.php:241
+#: src/Abilities/ShippingMethods.php:257
 msgid ""
 "A flat rate's or pickup's cost as WooCommerce keeps it, excluding tax; it "
 "may be a formula such as `10 + [qty] * 2`. Empty for nothing, null for a "
@@ -3357,20 +3371,24 @@ msgstr ""
 "eksklusive mva; den kan være en formel som `10 + [qty] * 2`. Tom når den "
 "ikke koster noe, null for en leveringsmåte uten kostnad."
 
-#: src/Abilities/ShippingMethods.php:245
+#: src/Abilities/ShippingMethods.php:261
 msgid ""
 "The cost as shoppers at the store's address pay it, with the shipping tax "
-"when the method is taxable. Null for a formula or a method without a cost."
+"when the method is taxable. Null for a formula, a method without a cost, or "
+"when shipping is taxed as the cart's items are and the store's taxable "
+"products have different rates, so the tax depends on the cart."
 msgstr ""
 "Kostnaden slik kunder på butikkens adresse betaler den, med mva på "
-"leveringen når leveringsmåten er avgiftspliktig. Null for en formel eller "
-"en leveringsmåte uten kostnad."
+"leveringen når leveringsmåten er avgiftspliktig. Null for en formel, for en "
+"leveringsmåte uten kostnad, eller når levering avgiftsberegnes som "
+"produktene i handlekurven og butikkens avgiftspliktige produkter har ulike "
+"satser, slik at mva avhenger av handlekurven."
 
-#: src/Abilities/ShippingMethods.php:249
+#: src/Abilities/ShippingMethods.php:265
 msgid "taxable or none; null for a method without a cost."
 msgstr "taxable eller none; null for en leveringsmåte uten kostnad."
 
-#: src/Abilities/ShippingMethods.php:253
+#: src/Abilities/ShippingMethods.php:269
 msgid ""
 "Free shipping's minimum order amount, empty for none; null for another "
 "method."
@@ -3378,7 +3396,7 @@ msgstr ""
 "Minste ordrebeløp for gratis levering, tomt når det ikke finnes noe; null "
 "for andre leveringsmåter."
 
-#: src/Abilities/ShippingMethods.php:257
+#: src/Abilities/ShippingMethods.php:273
 msgid ""
 "What free shipping requires: empty for nothing, coupon, min_amount, either "
 "(a coupon or the minimum) or both; null for another method."
@@ -3387,7 +3405,7 @@ msgstr ""
 "(en rabattkode eller minstebeløpet) eller both; null for andre "
 "leveringsmåter."
 
-#: src/Abilities/ShippingMethods.php:261
+#: src/Abilities/ShippingMethods.php:277
 msgid ""
 "Whether free shipping's minimum counts the subtotal before coupon discounts; "
 "null for another method."

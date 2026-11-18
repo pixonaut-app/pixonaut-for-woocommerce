@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-18T15:24:19+00:00\n"
+"POT-Creation-Date: 2026-11-18T15:36:15+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -1706,7 +1706,7 @@ msgid "Changes a shipping method in a zone, by its `instance_id` as %s reads it,
 msgstr ""
 
 #: src/Abilities/SetShippingMethod.php:86
-#: src/Abilities/ShippingMethods.php:193
+#: src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr ""
 
@@ -1735,13 +1735,19 @@ msgid "A method's kind cannot change: add a method of the other kind instead."
 msgstr ""
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
+#. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
 #: src/Abilities/SetShippingMethod.php:164
+#: src/Abilities/SetShippingMethod.php:181
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr ""
 
-#: src/Abilities/SetShippingMethod.php:187
+#: src/Abilities/SetShippingMethod.php:196
 msgid "The store did not keep the shipping method."
+msgstr ""
+
+#: src/Abilities/SetShippingMethod.php:245
+msgid "Shipping is taxed as the cart's items are, and the store's taxable products have different rates, so a cost including tax depends on the cart. Give the cost excluding tax, or set a shipping tax class in WooCommerce's tax settings."
 msgstr ""
 
 #: src/Abilities/SetupFields.php:165
@@ -1939,39 +1945,39 @@ msgstr ""
 msgid "Pixonaut could not be reached to read the blank's variants."
 msgstr ""
 
-#: src/Abilities/ShippingMethods.php:205
+#: src/Abilities/ShippingMethods.php:221
 msgid "country, state, postcode or continent."
 msgstr ""
 
-#: src/Abilities/ShippingMethods.php:231
+#: src/Abilities/ShippingMethods.php:247
 msgid "flat_rate, free_shipping, local_pickup, or another plugin's method."
 msgstr ""
 
-#: src/Abilities/ShippingMethods.php:235
+#: src/Abilities/ShippingMethods.php:251
 msgid "What shoppers see the method as at checkout."
 msgstr ""
 
-#: src/Abilities/ShippingMethods.php:241
+#: src/Abilities/ShippingMethods.php:257
 msgid "A flat rate's or pickup's cost as WooCommerce keeps it, excluding tax; it may be a formula such as `10 + [qty] * 2`. Empty for nothing, null for a method without a cost."
 msgstr ""
 
-#: src/Abilities/ShippingMethods.php:245
-msgid "The cost as shoppers at the store's address pay it, with the shipping tax when the method is taxable. Null for a formula or a method without a cost."
+#: src/Abilities/ShippingMethods.php:261
+msgid "The cost as shoppers at the store's address pay it, with the shipping tax when the method is taxable. Null for a formula, a method without a cost, or when shipping is taxed as the cart's items are and the store's taxable products have different rates, so the tax depends on the cart."
 msgstr ""
 
-#: src/Abilities/ShippingMethods.php:249
+#: src/Abilities/ShippingMethods.php:265
 msgid "taxable or none; null for a method without a cost."
 msgstr ""
 
-#: src/Abilities/ShippingMethods.php:253
+#: src/Abilities/ShippingMethods.php:269
 msgid "Free shipping's minimum order amount, empty for none; null for another method."
 msgstr ""
 
-#: src/Abilities/ShippingMethods.php:257
+#: src/Abilities/ShippingMethods.php:273
 msgid "What free shipping requires: empty for nothing, coupon, min_amount, either (a coupon or the minimum) or both; null for another method."
 msgstr ""
 
-#: src/Abilities/ShippingMethods.php:261
+#: src/Abilities/ShippingMethods.php:277
 msgid "Whether free shipping's minimum counts the subtotal before coupon discounts; null for another method."
 msgstr ""
 
