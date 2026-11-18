@@ -130,21 +130,52 @@ final class ServerReadsWarmUpTest extends WP_UnitTestCase {
 		$this->assertFalse( as_next_scheduled_action( ServerReadsWarmUp::HOOK, array(), Schema::ACTION_GROUP ), 'and the job stops' );
 	}
 
-	public function test_a_failed_read_leaves_the_copies_serving_and_is_tried_again(): void {
+	public function test_a_failed_read_waits_while_the_others_are_read_again(): void {
 		$this->answer_side();
 		$this->reads->for_mounts( array( 'front' => self::FRONT ) );
 		$this->recorder->requests = array();
 		$due                      = as_next_scheduled_action( ServerReadsWarmUp::HOOK, array(), Schema::ACTION_GROUP );
 		$this->assertIsInt( $due );
 		$this->now = $due;
-		$this->recorder->json( 500, array( 'error' => 'internal_error' ) );
+		// The template's read fails; the placement's and the blank's views answer.
+		$this->recorder->json( 404, array( 'error' => 'not_found' ) );
+		$this->answer_side( false );
 
 		$this->warm();
 
-		$this->assertCount( 1, $this->recorder->requests, 'the run stops at the failure' );
+		$this->assertCount( self::SIDE_READS, $this->recorder->requests, 'the others are read all the same' );
 		$again = as_next_scheduled_action( ServerReadsWarmUp::HOOK, array(), Schema::ACTION_GROUP );
 		$this->assertIsInt( $again );
-		$this->assertLessThanOrEqual( $this->now + MINUTE_IN_SECONDS, $again, 'tried again in a minute' );
+		$this->assertGreaterThan( $this->now + MINUTE_IN_SECONDS, $again, 'the failed read waits before it is tried again' );
+		$this->assertLessThan( $this->now + HOUR_IN_SECONDS, $again );
+	}
+
+	public function test_a_read_pages_keep_asking_for_from_the_cache_stays_warm(): void {
+		$this->answer_side();
+		$this->reads->for_mounts( array( 'front' => self::FRONT ) );
+		$this->now               += 2 * DAY_IN_SECONDS;
+		$this->recorder->requests = array();
+
+		$this->reads->for_mounts( array( 'front' => self::FRONT ) );
+		$this->assertSame( array(), $this->recorder->requests, 'served from the cache' );
+		$this->now += 2 * DAY_IN_SECONDS;
+		$this->answer_side();
+		$this->warm();
+
+		$this->assertCount( self::SIDE_READS, $this->recorder->requests, 'still in use, so read again' );
+	}
+
+	public function test_a_read_the_notes_lost_is_noted_again_by_the_next_page_and_read_soon(): void {
+		$this->answer_side();
+		$this->reads->for_mounts( array( 'front' => self::FRONT ) );
+		delete_option( ServerReadsWarmUp::OPTION );
+		as_unschedule_all_actions( ServerReadsWarmUp::HOOK, array(), Schema::ACTION_GROUP );
+
+		$this->reads->for_mounts( array( 'front' => self::FRONT ) );
+
+		$due = as_next_scheduled_action( ServerReadsWarmUp::HOOK, array(), Schema::ACTION_GROUP );
+		$this->assertIsInt( $due );
+		$this->assertLessThanOrEqual( $this->now + MINUTE_IN_SECONDS, $due, 'its copy may be of any age' );
 	}
 
 	/**
@@ -157,15 +188,19 @@ final class ServerReadsWarmUpTest extends WP_UnitTestCase {
 
 	/**
 	 * Pixonaut's answers to a side's four reads, from the pinned spec's examples.
+	 *
+	 * @param bool $template Whether to answer the template's read too, the first.
 	 */
-	private function answer_side(): void {
+	private function answer_side( bool $template = true ): void {
 		$constraints                   = json_decode( self::example_json( '/v1/templates/{id}/constraints' ) );
 		$constraints->placement->sizes = array(
 			'fits'    => array(),
 			'misfits' => array(),
 		);
+		if ( $template ) {
+			$this->recorder->raw( 200, self::example_json( '/v1/templates/{id}' ), self::JSON );
+		}
 		$this->recorder
-			->raw( 200, self::example_json( '/v1/templates/{id}' ), self::JSON )
 			->raw( 200, (string) wp_json_encode( $constraints ), self::JSON )
 			->raw( 200, self::example_json( '/v1/blanks/{id}/mockups' ), self::JSON )
 			->raw( 200, self::example_json( '/v1/blanks/{id}/variants' ), self::JSON );

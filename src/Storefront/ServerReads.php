@@ -98,7 +98,7 @@ final class ServerReads {
 		} catch ( ApiException ) {
 			return false;
 		}
-		$this->warm_up?->note( $what, $args, false );
+		$this->warm_up?->read( $what, $args );
 		return true;
 	}
 
@@ -387,16 +387,19 @@ final class ServerReads {
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function kept( string $what, array $args ): array {
-		$load = $this->loader( $what, $args ) ?? static fn (): array => array();
-		return $this->cache->remember_or_kept(
+		$load   = $this->loader( $what, $args ) ?? static fn (): array => array();
+		$answer = $this->cache->remember_or_kept(
 			$what,
 			$args,
 			function () use ( $what, $args, $load ): array {
 				$answer = $load();
-				$this->warm_up?->note( $what, $args, true );
+				$this->warm_up?->read( $what, $args );
 				return $answer;
 			}
 		);
+		// After the read, which notes an answer it loaded as read now.
+		$this->warm_up?->asked( $what, $args );
+		return $answer;
 	}
 
 	/**
