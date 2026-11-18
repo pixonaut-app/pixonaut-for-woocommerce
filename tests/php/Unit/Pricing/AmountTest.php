@@ -34,4 +34,10 @@ final class AmountTest extends TestCase {
 		$this->assertSame( '0.005', Amount::decimal( 5 ) );
 		$this->assertSame( 399000, Amount::parse( Amount::decimal( 399000 ) ) );
 	}
+
+	public function test_writes_a_negative_amount_with_a_minus(): void {
+		$this->assertSame( '-10.5', Amount::decimal( -10500 ) );
+		$this->assertSame( '-0.5', Amount::decimal( -500 ) );
+		$this->assertSame( '-10', Amount::decimal( -10000 ) );
+	}
 }

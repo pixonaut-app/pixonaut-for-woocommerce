@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
 use Pixonaut\WooCommerce\Settings\Settings;
 use WC_Product_Simple;
+use WC_Tax;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -371,6 +372,25 @@ final class PricingPanelTest extends PricingTestCase {
 		$html = (string) ob_get_clean();
 		$this->assertStringContainsString( 'data-pixonaut-price-example', $html );
 		$this->assertStringContainsString( '&quot;fixed&quot;:&quot;' . Settings::OPTION . '[' . Settings::PRICE_FIXED . ']&quot;', $html );
+
+		update_option( 'woocommerce_calc_taxes', 'yes' );
+		update_option( 'woocommerce_prices_include_tax', 'yes' );
+		// 10 %, and a compound 10 % on top of it.
+		foreach ( array( 0, 1 ) as $compound ) {
+			WC_Tax::_insert_tax_rate(
+				array(
+					'tax_rate_country'  => '',
+					'tax_rate'          => '10.0000',
+					'tax_rate_name'     => 'Tax ' . $compound,
+					'tax_rate_priority' => 1 + $compound,
+					'tax_rate_compound' => $compound,
+					'tax_rate_shipping' => 1,
+					'tax_rate_order'    => $compound,
+					'tax_rate_class'    => '',
+				)
+			);
+		}
+		$this->assertEqualsWithDelta( 21.0, PriceExample::vat_percent(), 0.001, 'a compound rate is taxed on top of the other' );
 
 		$this->store_rule( array( PriceRule::MARGIN => '' ) );
 		$this->assertSame( array( '', '', '', '' ), array_column( $example->rows( $this->pricing->rule_with( array() ), 0.0 ), 'price' ), 'no margin, no example prices' );

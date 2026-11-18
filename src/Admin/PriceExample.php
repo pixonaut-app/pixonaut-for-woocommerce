@@ -38,6 +38,11 @@ final class PriceExample {
 	 */
 	public const COSTS = array( '100', '300', '600', '1000' );
 
+	/**
+	 * A price of a hundred, whose tax is its rate in percent.
+	 */
+	private const WHOLE_PERCENT = 100.0;
+
 	public function __construct(
 		private readonly ProductPricing $pricing,
 		private readonly Templates $templates,
@@ -104,13 +109,15 @@ final class PriceExample {
 	/**
 	 * The tax rate in a price as the store enters it, at the shop's base
 	 * address and the standard class: 0 when prices are entered without tax.
+	 * WooCommerce's own arithmetic adds the rates, a compound one on top of
+	 * the others, as `PriceTax::of()` does for a product.
 	 */
 	public static function vat_percent(): float {
 		if ( ! wc_tax_enabled() || ! wc_prices_include_tax() ) {
 			return 0.0;
 		}
 		$rates = WC_Tax::get_base_tax_rates( '' );
-		return (float) array_sum( array_map( static fn ( array $rate ): float => (float) ( $rate['rate'] ?? 0 ), $rates ) );
+		return array() === $rates ? 0.0 : (float) array_sum( WC_Tax::calc_tax( self::WHOLE_PERCENT, $rates, false ) );
 	}
 
 	/**
