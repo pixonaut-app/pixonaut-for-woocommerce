@@ -21,6 +21,8 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/link-product` | Links a simple or variable product to one template, optionally on a blank's placement | `edit_product` on that product |
 | `pixonaut-for-woocommerce/unlink-product` | Turns personalisation off for a product, keeping its link | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-variation-variants` | Sets which variant of its blank each listed variation of a variable product is printed as, by the variant's options | `edit_product` on that product |
+| `pixonaut-for-woocommerce/get-product-variation-plan` | A variable product's variation plan (the blanks its variations are printed on, the attribute values that pick each, fixed options), its variation attributes with the blank option each stands for, and the blanks it uses | `edit_product` on that product |
+| `pixonaut-for-woocommerce/generate-product-variations` | Makes, changes and disables a variable product's variations from its plan, one per combination of its attribute values; a dry run by default | `edit_product` on that product |
 | `pixonaut-for-woocommerce/set-variation-print-size` | Gives one variation its own print size, checked with Pixonaut; a size it cannot print is refused | `edit_product` on that variation and its product |
 | `pixonaut-for-woocommerce/set-product-setup` | Sets up a simple or variable product, or a variation, as its Pixonaut tab does: blank, sides, settings, views, printshop and blank variant | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/set-product-showcase` | Sets which of its template's showcase sets a product's images are drawn with | `edit_product` on that product |
@@ -381,6 +383,41 @@ does a blank whose variants Pixonaut could not give. The answer gives
 `purchasable` and `variant_issue` as `link-product` does, and `variations`,
 every variation of the product with its `variant` as `pixonaut_variant`
 gives it.
+
+`get-product-variation-plan` takes a variable product's `product_id` and
+answers its `entries` (empty without a plan), each a `blank_id`, `when` (the
+attribute values that pick the blank, by attribute name) and `fixed` (the
+value of each blank option no attribute offers), its `attributes` used for
+variations, each with its `name`, the blank `option` it stands for (null
+when unlinked), `picks_blank`, and `values` (`value` as a variation holds
+it, `label`, and the option value it `stands_for`), and the `blanks` the
+product and its variations are set up on. `generate-product-variations`
+takes `product_id`, optional `entries` (which replace the plan, saved only
+when not a dry run) and `dry_run`, true by default. Every combination of the
+product's attribute values is a variation: an attribute linked to a blank
+option multiplies the variations of a blank with that option and is `''`
+("Any") on the others, an attribute an entry picks its blank by holds that
+entry's value and is "Any" on the others, and any other attribute multiplies
+every blank's variations. A combination is sold as the one variant on sale
+its option values and the entry's fixed options name; a blank option no
+attribute offers takes its one value on sale, and one with several needs a
+fixed value. A plan whose entries are not told apart by a value of an
+attribute both name, that names an attribute or value the product lacks, or
+leaves an option open is refused with a `400`. The answer lists `add`,
+`change` (`why`: `enable` for a variation an earlier run disabled, now
+offered again, `variant` for one selling no variant), `disable` (`why`:
+`not_offered` or `retired`), `skipped` (`why`: `no_variant`,
+`several_variants`, `retired`) and how many are `kept`; existing variations
+are matched by their values, so their ids, orders and own prices stay. A
+run makes at most 100 variations (`remaining` says how many are left), each
+following the product's setup on its blank, else copying a variation's own
+setup on that blank, else the product's checked with the blank changed, and
+picks each its variant; it disables, never deletes, and marks what it
+disabled in the variation's `_pixonaut_generated` meta so a variation
+disabled by hand is never published again by a run. The new and changed
+variations' costs are then read and the price rule applied to them alone:
+`made`, `priced`, `prices_read` and `unpriced` (those still without a price,
+which cannot be bought) say how that went.
 
 `move-product-template` moves every side on `template_id` (any version), on
 the product and on each variation with a setup of its own, when it is

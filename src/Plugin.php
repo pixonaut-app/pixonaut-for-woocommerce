@@ -22,6 +22,7 @@ use Pixonaut\WooCommerce\Admin\PriceExample;
 use Pixonaut\WooCommerce\Admin\AttributePriceRuleFields;
 use Pixonaut\WooCommerce\Admin\PricingList;
 use Pixonaut\WooCommerce\Admin\PricingPanel;
+use Pixonaut\WooCommerce\Admin\VariationPlanPanel;
 use Pixonaut\WooCommerce\Api\VariantCosts;
 use Pixonaut\WooCommerce\Bridge\Discovery;
 use Pixonaut\WooCommerce\Bridge\Status;
@@ -53,6 +54,9 @@ use Pixonaut\WooCommerce\Abilities\SetAttributeQueryName;
 use Pixonaut\WooCommerce\Abilities\SetShippingMethod;
 use Pixonaut\WooCommerce\Abilities\GetAttributeBlankOptions;
 use Pixonaut\WooCommerce\Abilities\SetAttributeBlankOption;
+use Pixonaut\WooCommerce\Abilities\GetProductVariationPlan;
+use Pixonaut\WooCommerce\Abilities\GenerateProductVariations;
+use Pixonaut\WooCommerce\Abilities\VariationGenerator;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductForm;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
@@ -480,7 +484,7 @@ final class Plugin {
 		( new InvalidProductNotice( $this->notices() ) )->register();
 		$this->connection()->register();
 		$this->store_access()->register();
-		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ), fn (): array => $this->pricing_abilities(), fn (): array => $this->settings_abilities(), fn (): array => $this->form_abilities() ), new WcLogger() ) )->register();
+		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ), fn (): array => $this->pricing_abilities(), fn (): array => $this->settings_abilities(), fn (): array => $this->form_abilities(), fn (): array => $this->variation_abilities() ), new WcLogger() ) )->register();
 		$this->workspace_settings()->register();
 		$this->webhook_processor()->register();
 		( new Receiver( $this->connection(), $this->intake(), new WcLogger() ) )->register();
@@ -570,6 +574,7 @@ final class Plugin {
 		$this->cost_refresh()->register();
 		( new RuleChange( $this->product_pricing() ) )->register();
 		$this->pricing_panel()->register();
+		$this->variation_plan_panel()->register();
 		if ( is_admin() ) {
 			( new PricingList( $this->product_pricing() ) )->register();
 			( new AttributePriceRuleFields( $this->product_pricing(), $this->templates() ) )->register();
@@ -659,6 +664,7 @@ final class Plugin {
 					new SetShippingMethod(),
 					new GetAttributeBlankOptions( $this->blank_option_choices() ),
 					new SetAttributeBlankOption( $this->blank_option_choices() ),
+					...$this->variation_abilities(),
 					new MoveProductTemplate( $links, $fields ),
 					new MoveProductAttribute( new WcLogger() ),
 					new UseProductPicture( $links, $this->settings() ),
@@ -730,6 +736,26 @@ final class Plugin {
 
 	private function picture_views(): GetProductPictureViews {
 		return new GetProductPictureViews( new LinkedBlank( $this->catalogue(), $this->catalogue_cache() ), $this->showcase_field() );
+	}
+
+	/**
+	 * The abilities that read a product's variation plan and generate its
+	 * variations.
+	 *
+	 * @return list<Ability>
+	 */
+	private function variation_abilities(): array {
+		return array( new GetProductVariationPlan(), new GenerateProductVariations( $this->variation_generator() ) );
+	}
+
+	/**
+	 * Makes a variable product's variations from its plan.
+	 *
+	 * @param Closure|null $pricing Gives what prices the variations made; null for the plugin's.
+	 * @phpstan-param (Closure(): ProductPricing)|null $pricing
+	 */
+	public function variation_generator( ?Closure $pricing = null ): VariationGenerator {
+		return new VariationGenerator( $this->product_links(), $this->setup_fields(), $this->product_variants(), $pricing ?? fn (): ProductPricing => $this->product_pricing() );
 	}
 
 	private function variation_print_size(): SetVariationPrintSize {
@@ -932,6 +958,14 @@ final class Plugin {
 	/**
 	 * The Prices section of a product's Pixonaut tab, and its route.
 	 */
+	/**
+	 * Variations from the blank, in a variable product's Variations tab.
+	 */
+	public function variation_plan_panel(): VariationPlanPanel {
+		$connection = $this->active_connection();
+		return new VariationPlanPanel( fn (): GenerateProductVariations => new GenerateProductVariations( $this->variation_generator() ), $this->templates(), static fn (): bool => null !== $connection() );
+	}
+
 	public function pricing_panel(): PricingPanel {
 		$connection = $this->active_connection();
 		return new PricingPanel( $this->product_pricing(), $this->templates(), static fn (): bool => null !== $connection() );

@@ -622,6 +622,50 @@ Untick the override and save to make the variation follow the product
 again. Its own link is kept, unused and unchecked, so ticking the override
 again restores it, checked again on the next save.
 
+### Variations from the blank
+
+A product that sells every combination of its blank's options (each
+poster size in each frame colour, with or without a photo) can have its
+variations made for it, one per combination, instead of by hand.
+
+1. Give the product its attributes and the values it offers, in the
+   **Attributes** tab, ticked **Used for variations**.
+2. Link each attribute that stands for an option of the blank, once per
+   attribute, on its edit screen under **Products → Attributes** (**Blank
+   option**; see [Product page layouts](../layouts/)): Ramfärg for Color, Posterstorlek
+   for Size.
+3. In the **Variations** tab, under **Variations from the blank**, name the
+   blank. A product sold on several blanks (unframed, with a hanger, framed)
+   gets one row per blank: **Add a blank**, and choose under **When … is**
+   the attribute value that picks each. **Fixed options** names the value
+   of an option of the blank no attribute offers, such as `Orientation:
+   Vertical`, when the blank sells more than one.
+4. Click **Preview**. It lists the variations generating would add, change
+   and disable, and the combinations no variation is made for, with why.
+5. Click **Generate from the blank**.
+
+Each variation made is on its blank and sold as the variant its values name.
+On the product's own blank it follows the product's setup; on another blank
+it takes the setup of a variation already on that blank, or the product's
+with the blank changed. Its price is set by the pricing rule; without a
+target margin it has no price and cannot be bought until you price it.
+
+An attribute linked to an option the blank does not have (a frame colour on
+an unframed poster) is "Any" on that blank's variations, as is an attribute
+another row picks its blank by. Any other attribute, such as with or without
+a photo, gives each blank's variations once per value.
+
+Generate again whenever the blank or the values change: after you add a
+value to the product (once the blank sells it), or when Pixonaut retires one
+of the blank's variants. The variations you have are kept, with their ids,
+orders and prices; only missing ones are added. A variation whose values
+are no longer offered, or whose variant is retired, is disabled, never
+deleted, and published again once it is offered again. One you disabled
+yourself stays disabled. Nothing changes until you click Generate, and an
+assistant does the same with `get-product-variation-plan` and
+`generate-product-variations` (a dry run unless it says otherwise). At most
+100 variations are made at a time; generate again for the rest.
+
 ### Print sizes by attribute
 
 On a variable product, a side can take its print size from one attribute

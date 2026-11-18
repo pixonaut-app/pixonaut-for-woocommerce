@@ -131,6 +131,18 @@ final class Schema {
 	const PRODUCT_VARIANT_META = '_pixonaut_variant';
 
 	/**
+	 * Variable product meta holding the blanks its variations are generated
+	 * from, and which of its attribute values picks each.
+	 */
+	const PRODUCT_VARIATION_PLAN_META = '_pixonaut_variation_plan';
+
+	/**
+	 * Variation meta set on a variation its product's plan made or
+	 * disabled: what it was made as, and whether the plan disabled it.
+	 */
+	const VARIATION_GENERATED_META = '_pixonaut_generated';
+
+	/**
 	 * Variation meta holding the print size it is sold at instead of its
 	 * product's, per side, with Pixonaut's verdict on it.
 	 */
