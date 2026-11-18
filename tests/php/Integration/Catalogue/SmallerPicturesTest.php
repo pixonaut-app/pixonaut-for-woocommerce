@@ -36,6 +36,7 @@ final class SmallerPicturesTest extends WP_UnitTestCase {
 
 	public function tear_down(): void {
 		remove_all_filters( 'wp_image_editors' );
+		remove_all_filters( 'update_attached_file' );
 		delete_option( SmallerPictures::BACKFILL_OPTION );
 		as_unschedule_all_actions( SmallerPictures::ALL_HOOK );
 		$this->tear_down_pictures();
@@ -66,7 +67,8 @@ final class SmallerPicturesTest extends WP_UnitTestCase {
 		$png_files = $this->files_of( $picture );
 		$this->assertGreaterThan( 1, count( $png_files ) );
 
-		SmallerPictures::convert_all( 0 );
+		SmallerPictures::ask();
+		SmallerPictures::convert_all();
 
 		$this->assertSame( 'image/webp', get_post_mime_type( $picture ) );
 		$metadata = wp_get_attachment_metadata( $picture );
@@ -92,7 +94,8 @@ final class SmallerPicturesTest extends WP_UnitTestCase {
 		$picture = $this->kept_png( 'source-b' );
 		delete_post_meta( $picture, SharedPictures::SOURCE_META );
 
-		SmallerPictures::convert_all( 0 );
+		SmallerPictures::ask();
+		SmallerPictures::convert_all();
 
 		$this->assertSame( 'image/png', get_post_mime_type( $picture ) );
 		$this->assertFileExists( (string) get_attached_file( $picture ) );
@@ -110,25 +113,97 @@ final class SmallerPicturesTest extends WP_UnitTestCase {
 		$this->assertFileExists( $file );
 	}
 
-	public function test_a_full_batch_queues_the_next_from_its_last_picture(): void {
+	public function test_a_png_picture_stays_when_its_webp_misses_a_size_its_png_has(): void {
+		$picture  = $this->kept_png( 'source-d' );
+		$metadata = wp_get_attachment_metadata( $picture );
+		$this->assertIsArray( $metadata );
+		// A size larger than the picture, which its WebP cannot be made in.
+		$metadata['sizes']['large'] = array(
+			'file'      => 'pixonaut-kept-source-d-1024x1280.png',
+			'width'     => 1024,
+			'height'    => 1280,
+			'mime-type' => 'image/png',
+		);
+		wp_update_attachment_metadata( $picture, $metadata );
+		$files = $this->png_files_beside( $picture );
+
+		$this->assertFalse( SmallerPictures::convert( $picture ) );
+
+		$this->assertSame( 'image/png', get_post_mime_type( $picture ) );
+		$this->assertSame( $metadata, wp_get_attachment_metadata( $picture ) );
+		$this->assertSame( $files, $this->png_files_beside( $picture ) );
+		$this->assertSame( array(), glob( dirname( (string) get_attached_file( $picture ) ) . '/pixonaut-kept-source-d*.webp' ) );
+	}
+
+	public function test_a_png_picture_is_put_back_when_the_attachment_cannot_be_changed(): void {
+		$picture  = $this->kept_png( 'source-e' );
+		$file     = (string) get_attached_file( $picture );
+		$metadata = wp_get_attachment_metadata( $picture );
+		add_filter( 'update_attached_file', static fn ( string $path ): string => str_ends_with( $path, '.webp' ) ? $path . '.lost' : $path );
+
+		$this->assertFalse( SmallerPictures::convert( $picture ) );
+
+		remove_all_filters( 'update_attached_file' );
+		$this->assertSame( 'image/png', get_post_mime_type( $picture ) );
+		$this->assertSame( $file, get_attached_file( $picture ) );
+		$this->assertSame( $metadata, wp_get_attachment_metadata( $picture ) );
+		foreach ( $this->files_of( $picture ) as $png ) {
+			$this->assertFileExists( $png );
+		}
+		$this->assertSame( array(), glob( dirname( $file ) . '/pixonaut-kept-source-e*.webp' ) );
+	}
+
+	public function test_a_full_batch_keeps_its_last_picture_and_queues_the_next(): void {
 		$pictures = array();
 		for ( $index = 0; $index < SmallerPictures::BATCH; ++$index ) {
 			$pictures[] = $this->kept_png( 'source-' . $index, 1, 1 );
 		}
+		SmallerPictures::ask();
 
-		SmallerPictures::convert_all( 0 );
+		SmallerPictures::convert_all();
 
-		$this->assertTrue( as_has_scheduled_action( SmallerPictures::ALL_HOOK, array( max( $pictures ) ) ) );
+		$this->assertSame( (string) max( $pictures ), get_option( SmallerPictures::BACKFILL_OPTION ) );
+		$this->assertTrue( as_has_scheduled_action( SmallerPictures::ALL_HOOK ) );
 	}
 
-	public function test_the_upgrade_asks_for_the_job_until_it_is_queued(): void {
+	public function test_a_job_that_stopped_is_queued_again_from_the_last_picture_taken_up(): void {
+		$taken   = $this->kept_png( 'source-f', 1, 1 );
+		$waiting = $this->kept_png( 'source-g', 1, 1 );
+		update_option( SmallerPictures::BACKFILL_OPTION, (string) $taken );
+
+		SmallerPictures::queue_backfill();
+		SmallerPictures::queue_backfill();
+
+		$pending = array(
+			'hook'   => SmallerPictures::ALL_HOOK,
+			'status' => \ActionScheduler_Store::STATUS_PENDING,
+		);
+		$this->assertCount( 1, as_get_scheduled_actions( $pending, 'ids' ) );
+		SmallerPictures::convert_all();
+		$this->assertSame( 'image/png', get_post_mime_type( $taken ) );
+		$this->assertSame( 'image/webp', get_post_mime_type( $waiting ) );
+		$this->assertFalse( get_option( SmallerPictures::BACKFILL_OPTION ) );
+	}
+
+	public function test_the_upgrade_asks_for_every_picture_to_be_converted(): void {
 		( new WriteSmallerPictures() )->up();
 
-		$this->assertSame( SmallerPictures::BACKFILL_PENDING, get_option( SmallerPictures::BACKFILL_OPTION ) );
+		$this->assertSame( '0', get_option( SmallerPictures::BACKFILL_OPTION ) );
 		SmallerPictures::queue_backfill();
-		$this->assertFalse( get_option( SmallerPictures::BACKFILL_OPTION ) );
-		$this->assertTrue( as_has_scheduled_action( SmallerPictures::ALL_HOOK, array( 0 ) ) );
+		$this->assertTrue( as_has_scheduled_action( SmallerPictures::ALL_HOOK ) );
 		$this->assertContains( WriteSmallerPictures::class, array_map( 'get_class', Migrations::all() ) );
+	}
+
+	/**
+	 * The PNG files beside the picture's file named after it.
+	 *
+	 * @param int $attachment A picture.
+	 * @return list<string>
+	 */
+	private function png_files_beside( int $attachment ): array {
+		$file  = (string) get_attached_file( $attachment );
+		$found = glob( substr( $file, 0, -strlen( '.png' ) ) . '*.png' );
+		return false === $found ? array() : $found;
 	}
 
 	/**

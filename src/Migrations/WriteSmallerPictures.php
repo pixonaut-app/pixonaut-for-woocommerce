@@ -16,7 +16,7 @@ use Pixonaut\WooCommerce\Catalogue\SmallerPictures;
  * WebP, in place, deleting the PNG and its sizes. Migrations run before
  * Action Scheduler can queue, so this leaves an option that
  * `SmallerPictures` turns into the job, on this request or a later one,
- * once it could be queued.
+ * once it could be queued, and keeps until every picture was taken up.
  */
 final class WriteSmallerPictures implements Migration {
 
@@ -25,6 +25,6 @@ final class WriteSmallerPictures implements Migration {
 	}
 
 	public function up(): void {
-		update_option( SmallerPictures::BACKFILL_OPTION, SmallerPictures::BACKFILL_PENDING, false );
+		SmallerPictures::ask();
 	}
 }

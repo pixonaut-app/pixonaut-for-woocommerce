@@ -320,7 +320,11 @@ or GD) writes no WebP, the PNG is kept. Pictures kept as PNGs by an earlier
 version are written again as WebP after the upgrade, in the
 `pixonaut_wc_smaller_pictures_all` job, a batch at a time: each keeps its
 attachment id, its PNG and the PNG's sizes are deleted, and the products
-showing it show the WebP.
+showing it show the WebP. The WebP and its sizes are all made before the
+attachment changes; a picture whose WebP misses a size its PNG has, or
+whose attachment could not be changed, stays the PNG it was, with a
+warning in the WooCommerce log. A job that stops is queued again from the
+picture after the last one it took up.
 
 | Template | Printed | Holds |
 | --- | --- | --- |
