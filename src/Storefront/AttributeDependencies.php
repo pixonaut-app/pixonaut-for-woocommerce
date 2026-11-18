@@ -88,6 +88,15 @@ final class AttributeDependencies {
 	}
 
 	/**
+	 * Whether the dependencies kept are from before a product last changed:
+	 * what is worked out from them now is out of date too.
+	 */
+	public static function stale(): bool {
+		$cached = get_transient( self::TRANSIENT );
+		return is_array( $cached ) && ( $cached['version'] ?? null ) !== self::version();
+	}
+
+	/**
 	 * The store's dependencies as its products are now, read again unless
 	 * kept since the last change, and kept: for work that does not keep a
 	 * shopper waiting.

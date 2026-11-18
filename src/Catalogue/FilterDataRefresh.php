@@ -100,6 +100,15 @@ final class FilterDataRefresh {
 	 */
 	private static ?array $noted = null;
 
+	/**
+	 * Whether this request noted the dependencies for a change: a note it
+	 * made for finding them out of date does not stand for one, which a
+	 * job reading them meanwhile would take off.
+	 *
+	 * @var bool
+	 */
+	private static bool $dependencies_changed = false;
+
 	public static function register(): void {
 		add_action( self::HOOK, array( self::class, 'run' ) );
 		// Another site has notes of its own.
@@ -110,7 +119,8 @@ final class FilterDataRefresh {
 	 * Forgets what this request noted, after it switched to another site.
 	 */
 	public static function site_switched(): void {
-		self::$noted = null;
+		self::$noted                = null;
+		self::$dependencies_changed = false;
 	}
 
 	/**
@@ -122,7 +132,8 @@ final class FilterDataRefresh {
 	public static function products( array $product_ids, bool $changed = false ): void {
 		self::note( self::PRODUCTS, $product_ids, $changed );
 		// What the store's attributes depend on may have changed with them: noted once a request, however many products it saves.
-		if ( $changed && ! isset( self::$noted[ self::DEPENDENCIES ][ self::STORE ] ) ) {
+		if ( $changed && ! self::$dependencies_changed ) {
+			self::$dependencies_changed = true;
 			self::note( self::DEPENDENCIES, array( self::STORE ), true );
 		}
 	}
@@ -169,7 +180,9 @@ final class FilterDataRefresh {
 			if ( array() !== $due[ self::DEPENDENCIES ] && microtime( true ) - $started < self::RUN_SECONDS && AttributeDependencies::rebuild() ) {
 				$done[ self::DEPENDENCIES ][] = self::STORE;
 			}
-			foreach ( array_keys( $due[ self::COUNTS ] ) as $transient ) {
+			// Counts read the dependencies: they wait for them.
+			$counts = array() === $due[ self::DEPENDENCIES ] || array() !== $done[ self::DEPENDENCIES ] ? array_keys( $due[ self::COUNTS ] ) : array();
+			foreach ( $counts as $transient ) {
 				if ( microtime( true ) - $started >= self::RUN_SECONDS ) {
 					break;
 				}
@@ -178,7 +191,7 @@ final class FilterDataRefresh {
 				}
 			}
 		} finally {
-			$left          = self::change(
+			$left                       = self::change(
 				static function ( array $now ) use ( $done, $due ): array {
 					foreach ( $done as $kind => $keys ) {
 						foreach ( $keys as $key ) {
@@ -191,8 +204,9 @@ final class FilterDataRefresh {
 					return $now;
 				}
 			);
-			self::$running = false;
-			self::$noted   = null;
+			self::$running              = false;
+			self::$noted                = null;
+			self::$dependencies_changed = false;
 			if ( array() !== array_filter( $left ) ) {
 				self::schedule();
 			}

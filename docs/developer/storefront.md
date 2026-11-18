@@ -1321,12 +1321,14 @@ tax and shown with it.
   after the first note, at priority 5, ahead of the picture jobs: it reads
   each noted product again (one changed in the last two seconds waits for
   its next run), then the attribute dependencies, then works out each
-  noted count again, for up to 30
+  noted count again (counts wait while noted dependencies are left), for up to 30
   seconds a run, and runs again while some are left. At most 200 counts
   wait at once. A product saved while the job reads it is noted anew and
   read again on the next run; a run whose database query failed leaves its
   notes and what was kept for the next. Counts first worked out from reads
-  taken as they were are kept out of date and noted too. The archive index
+  taken as they were, or from attribute dependencies kept from before
+  WooCommerce's product data last changed, are kept out of date and noted
+  too. The archive index
   build reads each product, and the attribute dependencies, as they are
   now. Only
   a product with nothing kept, such as one no listing or save has read

@@ -358,8 +358,10 @@ final class FilterMatches {
 	/**
 	 * Works out counts and keeps them, with what they were worked out
 	 * from, to be worked out again later. Counts worked out from products
-	 * taken as they were kept under another stamp are kept out of date and
-	 * noted for the job; none are kept when a database query failed.
+	 * taken as they were kept under another stamp, or from attribute
+	 * dependencies kept from before a product changed, are kept out of
+	 * date and noted for the job; none are kept when a database query
+	 * failed.
 	 *
 	 * @param string                  $transient  The transient they are kept in.
 	 * @param array<array-key, mixed> $query_vars The listing's query.
@@ -377,7 +379,7 @@ final class FilterMatches {
 		if ( FilterIndex::database_errors() !== $errors ) {
 			return $counts;
 		}
-		if ( $outdated ) {
+		if ( $outdated || AttributeDependencies::stale() ) {
 			$version = '';
 			FilterDataRefresh::counts( $transient, true );
 		}

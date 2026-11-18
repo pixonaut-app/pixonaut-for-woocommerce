@@ -693,6 +693,36 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		as_unschedule_all_actions( FilterDataRefresh::HOOK );
 	}
 
+	public function test_a_save_notes_the_dependencies_anew_after_the_request_found_them_out_of_date(): void {
+		AttributeDependencies::store();
+		FreshRequest::forget_filter_reads();
+		\WC_Cache_Helper::get_transient_version( 'product', true );
+		AttributeDependencies::store();
+		$found = $this->due()['dependencies']['store'] ?? null;
+		$this->assertNotNull( $found );
+
+		FilterIndex::forget( $this->poster->get_id() );
+
+		$this->assertNotSame( $found, $this->due()['dependencies']['store'] ?? null, 'a job that read the note before the save leaves it' );
+		as_unschedule_all_actions( FilterDataRefresh::HOOK );
+	}
+
+	public function test_counts_worked_out_from_out_of_date_dependencies_wait_for_the_job(): void {
+		$this->settle();
+		AttributeDependencies::store();
+		FreshRequest::forget_filter_reads();
+		\WC_Cache_Helper::get_transient_version( 'product', true );
+		update_option( Schema::FILTER_DATA_DUE_OPTION, array(), false );
+
+		$this->counts( 'pa_ramfarg', array( 'filter_inramning' => 'hangare' ) );
+
+		$this->assertNotSame( array(), $this->due()['counts'], 'kept out of date and noted' );
+		$this->run_refresh();
+		$this->assertSame( array(), $this->due()['dependencies'] );
+		$this->assertSame( array(), $this->due()['counts'] );
+		$this->assertFalse( AttributeDependencies::stale() );
+	}
+
 	public function test_a_listing_takes_what_was_kept_of_a_product_until_woocommerce_saves_a_change(): void {
 		$filters = array(
 			'filter_storlek' => '30x40',
@@ -825,6 +855,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 
 		$this->assertArrayHasKey( $this->poster->get_id(), $this->due()['products'], 'read again on the next run' );
 		$this->assertArrayHasKey( $counts, $this->due()['counts'] );
+		$this->assertArrayHasKey( 'store', $this->due()['dependencies'] );
 		$this->assertSame( array( 'stamp' => '' ) + (array) $kept, get_transient( $transient ), 'kept as it was, out of date' );
 	}
 
