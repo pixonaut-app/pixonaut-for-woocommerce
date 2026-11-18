@@ -89,15 +89,21 @@ describe('firstMarkedField', () => {
 });
 
 describe('bringRefusalIntoView', () => {
-	it('scrolls to the message above the field, and focuses the field, when both fit', () => {
+	it('centres the message and the field below it, and focuses the field, when both fit', () => {
 		const name = field('name', '<input type="text">', 'Change this first');
 		const { root, message, scrolled } = page(name);
+		const scrolledBy = vi
+			.spyOn(window, 'scrollBy')
+			.mockImplementation(() => {});
 		drawnAt(message, -FAR_PX, FIELD_PX / 2);
 		fieldAt(name, -FAR_PX + NEAR_PX);
 
 		bringRefusalIntoView(root, message);
 
-		expect(scrolled).toHaveBeenCalledWith(message, { block: 'start' });
+		// The message's top to the field's bottom is NEAR_PX + FIELD_PX tall.
+		const margin = (WINDOW_PX - NEAR_PX - FIELD_PX) / 2;
+		expect(scrolledBy).toHaveBeenCalledWith({ top: -FAR_PX - margin });
+		expect(scrolled).not.toHaveBeenCalled();
 		expect(document.activeElement).toBe(name.querySelector('input'));
 	});
 

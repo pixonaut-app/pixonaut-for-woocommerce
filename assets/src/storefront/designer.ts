@@ -1849,6 +1849,7 @@ export class ProductDesigner {
 		const text = message !== '' ? message : this.refusalLabel(code);
 		if (CLOSING_CODES.has(code)) {
 			this.closeEdit(text);
+			bringRefusalIntoView(this.container, this.unavailableMessage());
 		} else {
 			this.showRefusal(text);
 		}

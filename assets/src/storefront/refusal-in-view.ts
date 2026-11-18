@@ -54,18 +54,6 @@ function controlOf(field: HTMLElement): HTMLElement | null {
 	return null;
 }
 
-/** The room `element` keeps above itself when scrolled to: its
- *  stylesheet's `scroll-margin-top`, clear of a theme's sticky header. */
-function scrollMarginTop(element: HTMLElement | null, view: Window): number {
-	if (element === null) {
-		return 0;
-	}
-	const margin = Number.parseFloat(
-		view.getComputedStyle(element).scrollMarginTop,
-	);
-	return Number.isFinite(margin) ? margin : 0;
-}
-
 /** Whether `element` lies wholly inside the window. */
 function inView(element: HTMLElement): boolean {
 	const rect = element.getBoundingClientRect();
@@ -75,8 +63,8 @@ function inView(element: HTMLElement): boolean {
 
 /**
  * Shows the customer why the add to cart was refused: the first field the
- * SDK marks in `root`, focused, with `message` above it when both fit in the
- * window, else the field alone in the middle of it; with no field marked,
+ * SDK marks in `root`, focused, with `message` above it, the two in the middle
+ * of the window when they fit in it, else the field alone in the middle of it; with no field marked,
  * `message` alone, when it is out of view.
  */
 export function bringRefusalIntoView(
@@ -96,14 +84,18 @@ export function bringRefusalIntoView(
 		message !== null && !message.hidden
 			? message.getBoundingClientRect()
 			: null;
+	const region = messageRect === null ? 0 : fieldRect.bottom - messageRect.top;
 	if (
 		messageRect !== null &&
 		view !== null &&
 		messageRect.top <= fieldRect.top &&
-		fieldRect.bottom - messageRect.top + scrollMarginTop(message, view) <=
-			view.innerHeight
+		region <= view.innerHeight
 	) {
-		message?.scrollIntoView({ block: 'start' });
+		// Both in the middle of the window, clear of a theme's sticky header
+		// wherever the space allows.
+		view.scrollBy({
+			top: messageRect.top - (view.innerHeight - region) / 2,
+		});
 	} else {
 		field.scrollIntoView({ block: 'center' });
 	}
