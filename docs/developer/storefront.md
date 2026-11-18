@@ -32,7 +32,12 @@ move when the designer starts. For each side the server reads what the SDK
 opens with (`GET /v1/templates/{id}`, and with a blank
 `GET /v1/templates/{id}/constraints`, `GET /v1/blanks/{id}/mockups` and
 `GET /v1/blanks/{id}/variants`), with the integration key, cached for five
-minutes like the product screen's catalogue reads. The template is read in
+minutes like the product screen's catalogue reads. Past those minutes a copy
+serves for up to an hour while a new answer is read after the page is sent,
+and an Action Scheduler job (`pixonaut_wc_warm_server_reads`,
+`Storefront\ServerReadsWarmUp`) reads each answer again 15 minutes before
+its copy runs out, for as long as a page asked for it in the last three days,
+so the first visitor after a quiet hour waits on no read. The template is read in
 the mount's `locale` (`?lang=`), else in the workspace's default language,
 as the designer would show it. The blank's reads name its options and views
 in the designer's language (`?lang=`: the mount's `locale`, else the

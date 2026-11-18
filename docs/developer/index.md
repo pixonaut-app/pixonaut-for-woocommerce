@@ -101,6 +101,7 @@ not recorded and it runs again. What it throws decides what the store sees:
 | Option | `pixonaut_wc_split_attributes` | The ids of the global attributes whose values are listed as their own products by default ([Listing each value as its own product](../merchant/split-listings/)) |
 | Option | `pixonaut_wc_split_filtered_attributes` | The ids of the global attributes whose values are listed as their own products by default only while a filter chooses one ([Only while filtered](../merchant/split-listings/#only-while-filtered)) |
 | Option | `pixonaut_wc_catalogue_generation` | The generation every cached catalogue answer's key carries; raising it drops them all |
+| Option | `pixonaut_wc_server_reads_in_use` | The Pixonaut reads product pages made (`{what, args, read_at, viewed_at}` by key), which the `pixonaut_wc_warm_server_reads` job reads again before their kept copies run out; one no page asked for in three days is dropped ([Storefront](./storefront/#server-rendered-layout)) |
 | Option | `pixonaut_wc_proof_lock_<…>`, `pixonaut_wc_report_<…>` | One proof image fetch at a time; the throttle on reports from product pages whose designer could not load |
 | Site option | `pixonaut_wc_update_state_stable`, `pixonaut_wc_update_state_beta` | The update checker's last check per channel ([Releasing](./releasing/)) |
 | Transient | `pixonaut_wc_catalogue_<…>`, `pixonaut_wc_proof_<…>` | Cached catalogue answers for the admin, and cached proof images |

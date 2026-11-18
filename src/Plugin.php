@@ -225,6 +225,7 @@ use Pixonaut\WooCommerce\Storefront\OpeningDefaults;
 use Pixonaut\WooCommerce\Storefront\OpeningPrice;
 use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
 use Pixonaut\WooCommerce\Storefront\ServerReads;
+use Pixonaut\WooCommerce\Storefront\ServerReadsWarmUp;
 use Pixonaut\WooCommerce\Storefront\CardHydration;
 use Pixonaut\WooCommerce\Storefront\CardStructuredData;
 use Pixonaut\WooCommerce\Storefront\SplitCardFaces;
@@ -585,6 +586,7 @@ final class Plugin {
 		$this->designer_link_withdrawals()->register();
 		( new UnavailableReports( $this->inline_products(), $this->catalogue(), $this->notices(), new WcLogger() ) )->register();
 		( new ReadsAhead( $this->inline_products(), $this->server_reads() ) )->register();
+		add_action( ServerReadsWarmUp::HOOK, array( $this, 'warm_server_reads' ) );
 		$this->abilities()->register();
 	}
 
@@ -1186,9 +1188,20 @@ final class Plugin {
 		if ( null === $this->server_reads ) {
 			// A page waits for these reads while it renders: they give up sooner than the admin's.
 			$storefront_sdk     = $this->pixonaut()->sdk( Pixonaut::STOREFRONT_TIMEOUT_SECONDS );
-			$this->server_reads = new ServerReads( new Catalogue( $storefront_sdk ), $this->catalogue_cache(), $storefront_sdk );
+			$this->server_reads = new ServerReads( new Catalogue( $storefront_sdk ), $this->catalogue_cache(), $storefront_sdk, new ServerReadsWarmUp() );
 		}
 		return $this->server_reads;
+	}
+
+	/**
+	 * The job reading product pages' Pixonaut reads again before their
+	 * kept copies run out, while the store is connected.
+	 */
+	public function warm_server_reads(): void {
+		if ( null === $this->connection_store()->load() ) {
+			return;
+		}
+		( new ServerReadsWarmUp() )->warm( fn ( string $what, array $args ): bool => $this->server_reads()->read_again( $what, $args ) );
 	}
 
 	/**

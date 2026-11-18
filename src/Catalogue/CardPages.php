@@ -201,13 +201,16 @@ final class CardPages {
 
 	/**
 	 * Reads ahead, in a few queries, what a listing's cards show their
-	 * pictures from (`image()`): of each card, its first variation, with
-	 * its meta and terms, and the pictures that variation has, rather than
-	 * each card reading its own one query at a time.
+	 * pictures from (`image()`): each product's own meta, and of each
+	 * card its first variation, with its meta and terms, and the pictures
+	 * that variation has, rather than each card reading its own one query
+	 * at a time.
 	 *
 	 * @param array<int, list<string>> $cards The keys of the cards listed, by product id.
 	 */
 	public static function prime( array $cards ): void {
+		// Each card's product's own meta: which design it is on.
+		ProductMeta::prime( array_keys( $cards ) );
 		$firsts = array();
 		foreach ( $cards as $product_id => $keys ) {
 			$product = wc_get_product( $product_id );

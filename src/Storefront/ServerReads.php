@@ -27,8 +27,9 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
  * Answers are cached like the admin's catalogue reads, as the JSON text
  * Pixonaut sent, which the page passes on unchanged; once one's minutes
  * are up, the one from before serves while a new one is read after the
- * page is sent, so a visitor waits on Pixonaut only for an answer the
- * store has not read in the last hour. When Pixonaut fails,
+ * page is sent, and a job reads each again before that copy runs out
+ * (`ServerReadsWarmUp`), so a visitor waits on Pixonaut only for an answer
+ * no page asked for in days. When Pixonaut fails,
  * the page stops reading for a minute and the SDK reads in the browser as it
  * would without them, so an outage does not hold every product page up for
  * the API's timeout.
@@ -47,6 +48,16 @@ final class ServerReads {
 	public const PAUSE_SECONDS = 60;
 
 	/**
+	 * The reads a product page makes from the template, its placement and
+	 * its blank, as they are cached.
+	 */
+	private const TEMPLATE_READ = 'storefront-template';
+
+	private const CONSTRAINTS_READ = 'storefront-constraints';
+
+	private const BLANK_VIEWS_READ = 'storefront-blank-views';
+
+	/**
 	 * The template `template_read()` decoded last, by template id and
 	 * language, with the answer it was decoded from: a product page asks
 	 * for the same template for each variation on it.
@@ -56,15 +67,39 @@ final class ServerReads {
 	private array $decoded = array();
 
 	/**
-	 * @param Catalogue      $catalogue Reads Pixonaut.
-	 * @param CatalogueCache $cache     Keeps the answers for a few minutes.
-	 * @param Sdk            $pixonaut  Reads the designs a correction opens.
+	 * @param Catalogue              $catalogue Reads Pixonaut.
+	 * @param CatalogueCache         $cache     Keeps the answers for a few minutes.
+	 * @param Sdk                    $pixonaut  Reads the designs a correction opens.
+	 * @param ServerReadsWarmUp|null $warm_up   Notes each read, to read it again before its kept copy runs out; null notes none.
 	 */
 	public function __construct(
 		private readonly Catalogue $catalogue,
 		private readonly CatalogueCache $cache,
 		private readonly Sdk $pixonaut,
+		private readonly ?ServerReadsWarmUp $warm_up = null,
 	) {
+	}
+
+	/**
+	 * Reads one of a product page's answers again and keeps it, for the
+	 * job keeping them from running out (`ServerReadsWarmUp`). False when
+	 * Pixonaut failed; a read no page makes has nothing to read.
+	 *
+	 * @param string                $what Which read.
+	 * @param array<string, string> $args What it was asked with.
+	 */
+	public function read_again( string $what, array $args ): bool {
+		$load = $this->loader( $what, $args );
+		if ( null === $load ) {
+			return true;
+		}
+		try {
+			$this->cache->read_again( $what, $args, $load );
+		} catch ( ApiException ) {
+			return false;
+		}
+		$this->warm_up?->note( $what, $args, false );
+		return true;
 	}
 
 	/**
@@ -163,11 +198,7 @@ final class ServerReads {
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function template( string $template_id, ?string $language ): string {
-		return $this->remember(
-			'storefront-template',
-			array( 'id' => $template_id ) + ( null === $language ? array() : array( 'lang' => $language ) ),
-			fn (): string => $this->catalogue->template_answer( $template_id, $language )
-		);
+		return $this->json( self::TEMPLATE_READ, array( 'id' => $template_id ) + ( null === $language ? array() : array( 'lang' => $language ) ) );
 	}
 
 	/**
@@ -186,14 +217,13 @@ final class ServerReads {
 		if ( ! is_string( $blank_id ) || ! is_string( $placement_id ) ) {
 			return $reads;
 		}
-		$reads['placement'] = $this->remember(
-			'storefront-constraints',
+		$reads['placement'] = $this->json(
+			self::CONSTRAINTS_READ,
 			array(
 				'id'          => $template_id,
 				'blankId'     => $blank_id,
 				'placementId' => $placement_id,
-			),
-			fn (): string => $this->catalogue->constraints_answer( $template_id, $blank_id, $placement_id )
+			)
 		);
 		$template           = json_decode( $reads['template'], true );
 		$reads['blank']     = $this->blank( $blank_id, self::language( $locale, is_array( $template ) ? ( $template['workspaceLanguage'] ?? null ) : null ) );
@@ -325,12 +355,67 @@ final class ServerReads {
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	private function blank( string $blank_id, ?string $language ): array {
-		$args  = array( 'id' => $blank_id ) + ( null === $language ? array() : array( 'lang' => $language ) );
-		$blank = $this->cache->remember_or_kept( 'storefront-blank-views', $args, fn (): array => $this->catalogue->blank_views_answers( $blank_id, $language ) );
+		$blank = $this->kept( self::BLANK_VIEWS_READ, array( 'id' => $blank_id ) + ( null === $language ? array() : array( 'lang' => $language ) ) );
 		return array(
 			'mockups'  => is_string( $blank['mockups'] ?? null ) ? $blank['mockups'] : '{}',
 			'variants' => is_string( $blank['variants'] ?? null ) ? $blank['variants'] : '{}',
 		);
+	}
+
+	/**
+	 * One of a product page's answers' text, cached, and noted to be read
+	 * again before its kept copy runs out.
+	 *
+	 * @param string                $what Which read.
+	 * @param array<string, string> $args What it was asked with.
+	 *
+	 * @throws ApiException When Pixonaut refused or could not be reached.
+	 */
+	private function json( string $what, array $args ): string {
+		$answer = $this->kept( $what, $args );
+		return is_string( $answer['json'] ?? null ) ? $answer['json'] : '{}';
+	}
+
+	/**
+	 * One of a product page's answers, cached, and noted to be read again
+	 * before its kept copy runs out.
+	 *
+	 * @param string                $what Which read.
+	 * @param array<string, string> $args What it was asked with.
+	 * @return array<int|string, mixed>
+	 *
+	 * @throws ApiException When Pixonaut refused or could not be reached.
+	 */
+	private function kept( string $what, array $args ): array {
+		$load = $this->loader( $what, $args ) ?? static fn (): array => array();
+		return $this->cache->remember_or_kept(
+			$what,
+			$args,
+			function () use ( $what, $args, $load ): array {
+				$answer = $load();
+				$this->warm_up?->note( $what, $args, true );
+				return $answer;
+			}
+		);
+	}
+
+	/**
+	 * How one of a product page's reads asks Pixonaut, the same for the
+	 * page and for the job reading it again; null for another read.
+	 *
+	 * @param string                $what Which read.
+	 * @param array<string, string> $args What it was asked with.
+	 * @return (Closure(): array<int|string, mixed>)|null
+	 */
+	private function loader( string $what, array $args ): ?Closure {
+		$id       = $args['id'] ?? '';
+		$language = $args['lang'] ?? null;
+		return match ( $what ) {
+			self::TEMPLATE_READ    => fn (): array => array( 'json' => $this->catalogue->template_answer( $id, $language ) ),
+			self::CONSTRAINTS_READ => fn (): array => array( 'json' => $this->catalogue->constraints_answer( $id, $args['blankId'] ?? '', $args['placementId'] ?? '' ) ),
+			self::BLANK_VIEWS_READ => fn (): array => $this->catalogue->blank_views_answers( $id, $language ),
+			default                => null,
+		};
 	}
 
 	/**
