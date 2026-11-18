@@ -121,7 +121,7 @@ final class LinePicturesTest extends PersonalisedCartTestCase {
 	public function test_an_order_page_shows_the_design_on_its_blank_under_the_lines_name(): void {
 		$html = $this->page_html();
 
-		$this->assert_picture_url( self::src( $html ), ProofPicture::on_blank() );
+		$this->assert_picture_url( self::src( $html ), ProofPicture::on_blank( null, BlankFixture::VARIANT_REF ) );
 		$this->assertStringContainsString( 'width="' . LinePictures::PAGE_WIDTH . '"', $html );
 		$this->assertStringNotContainsString( Hosts::server_api(), $html );
 	}
@@ -129,14 +129,24 @@ final class LinePicturesTest extends PersonalisedCartTestCase {
 	public function test_the_setting_shows_the_placements_first_view_on_the_order_page(): void {
 		$this->plugin->settings()->set( Settings::LINE_PICTURE_VIEW, PictureView::FIRST );
 
-		$this->assert_picture_url( self::src( $this->page_html() ), ProofPicture::on_blank( BlankFixture::VIEW_ID ) );
+		$this->assert_picture_url( self::src( $this->page_html() ), ProofPicture::on_blank( BlankFixture::VIEW_ID, BlankFixture::VARIANT_REF ) );
+	}
+
+	public function test_an_order_page_shows_the_variant_the_line_was_sold_as_after_the_product_moved_on(): void {
+		$line = LineState::of( $this->item );
+		$line->set_ref( LineState::REF_VARIANT, 'v_sold' );
+		$this->assertTrue( $line->save() );
+		$this->plugin->settings()->set( Settings::LINE_PICTURE_VIEW, PictureView::FIRST );
+
+		// The product sells another variant now, whose views say nothing of the one sold.
+		$this->assert_picture_url( self::src( $this->page_html() ), ProofPicture::on_blank( null, 'v_sold' ) );
 	}
 
 	public function test_an_email_shows_the_picture_in_place_of_the_product_image_once(): void {
 		$html = wc_get_email_order_items( $this->order, array( 'show_image' => false ) );
 
 		$this->assertSame( 1, substr_count( $html, self::PICTURE_CLASS ), 'shown as the line\'s image, not again under its name' );
-		$this->assert_picture_url( self::src( $html ), ProofPicture::on_blank() );
+		$this->assert_picture_url( self::src( $html ), ProofPicture::on_blank( null, BlankFixture::VARIANT_REF ) );
 	}
 
 	public function test_a_plain_text_email_shows_no_picture(): void {
@@ -179,7 +189,7 @@ final class LinePicturesTest extends PersonalisedCartTestCase {
 		// The line's image cell, which WooCommerce 10.6 gives no class.
 		$this->assertMatchesRegularExpression( '/<td(?: class="email-order-item-thumbnail"[^>]*)?><img[^>]+class="' . self::PICTURE_CLASS . '"/', $html );
 		$this->assertStringContainsString( 'width="' . self::EMAIL_IMAGE_WIDTH . '"', $html );
-		$this->assert_picture_url( self::src( $html ), ProofPicture::on_blank() );
+		$this->assert_picture_url( self::src( $html ), ProofPicture::on_blank( null, BlankFixture::VARIANT_REF ) );
 	}
 
 	public function test_a_plain_text_fulfilment_email_shows_no_picture(): void {

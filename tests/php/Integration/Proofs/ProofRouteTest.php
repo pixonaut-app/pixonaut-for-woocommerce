@@ -98,6 +98,28 @@ final class ProofRouteTest extends PersonalisedCartTestCase {
 		$this->assertStringContainsString( 'viewId=' . BlankFixture::VIEW_ID, $fetch['url'] );
 	}
 
+	public function test_serves_the_design_on_the_photo_of_the_variant_the_url_names(): void {
+		$this->script_picture();
+
+		$this->assertSame( 200, rest_do_request( $this->minted( array(), ProofPicture::on_blank( null, BlankFixture::VARIANT_REF ) ) )->get_status() );
+
+		[ $fetch ] = $this->recorder->requests;
+		$this->assertStringContainsString( 'variant=' . BlankFixture::VARIANT_REF, $fetch['url'] );
+		$this->assertStringNotContainsString( 'viewId=', $fetch['url'] );
+	}
+
+	public function test_a_variant_with_no_photo_to_draw_on_is_answered_with_the_flat_proof(): void {
+		// Pixonaut answers a named variant without a photo in the view not found.
+		$this->recorder->json( 404, array( 'error' => 'not_found' ) );
+		$this->script_image();
+
+		$response = rest_do_request( $this->minted( array(), ProofPicture::on_blank( null, BlankFixture::VARIANT_REF ) ) );
+
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertSame( self::JPEG, $response->get_data() );
+		$this->assertSame( ProofRoute::STAND_IN_CACHE_CONTROL, $response->get_headers()['Cache-Control'] );
+	}
+
 	public function test_the_picture_on_the_blank_and_the_flat_proof_are_cached_apart(): void {
 		$this->script_picture();
 		$this->script_image();
