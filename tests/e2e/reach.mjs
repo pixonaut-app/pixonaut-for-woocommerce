@@ -771,6 +771,7 @@ export const REACH = {
 		'src/Storefront/FilteredOpening.php',
 		'src/Catalogue/FilterOffers.php',
 		'src/Catalogue/FilterIndex.php',
+		'src/Catalogue/FilterDataRefresh.php',
 		'templates/admin/split-card-looks.php',
 		'assets/src/admin/split-listing.ts',
 	],
