@@ -38,10 +38,6 @@ final class ArchiveIndexRoute {
 	 */
 	private const STALE_CACHE_CONTROL = 'public, max-age=60';
 
-	private const STATUS_OK = 200;
-
-	private const STATUS_NOT_MODIFIED = 304;
-
 	private const STATUS_NOT_FOUND = 404;
 
 	public function register(): void {
@@ -106,24 +102,15 @@ final class ArchiveIndexRoute {
 			'X-Content-Type-Options' => 'nosniff',
 		);
 		if ( trim( (string) $request->get_header( 'if_none_match' ) ) === $etag ) {
-			return new WP_REST_Response( null, self::STATUS_NOT_MODIFIED, $headers );
+			return new WP_REST_Response( null, RawRestAnswer::STATUS_NOT_MODIFIED, $headers );
 		}
-		if ( self::takes_gzip( (string) $request->get_header( 'accept_encoding' ) ) ) {
+		if ( RawRestAnswer::takes_gzip( (string) $request->get_header( 'accept_encoding' ) ) ) {
 			$headers['Content-Encoding'] = 'gzip';
 		} else {
 			$body = (string) gzdecode( $body );
 		}
 		$headers['Content-Length'] = (string) strlen( $body );
-		return new WP_REST_Response( $body, self::STATUS_OK, $headers );
-	}
-
-	/**
-	 * Whether a request takes a gzip answer, and PHP does not compress it again.
-	 *
-	 * @param string $accepted The request's `Accept-Encoding`.
-	 */
-	private static function takes_gzip( string $accepted ): bool {
-		return 1 === preg_match( '/\bgzip\b(?!\s*;\s*q=0(?:\.0*)?\s*(?:,|$))/i', $accepted ) && ! filter_var( ini_get( 'zlib.output_compression' ), FILTER_VALIDATE_BOOLEAN );
+		return new WP_REST_Response( $body, RawRestAnswer::STATUS_OK, $headers );
 	}
 
 	/**
@@ -134,21 +121,6 @@ final class ArchiveIndexRoute {
 	 * @param mixed $request The request.
 	 */
 	public function serve( mixed $served, mixed $result, mixed $request ): mixed {
-		if ( $served || ! $result instanceof WP_REST_Response || ! $request instanceof WP_REST_Request
-			|| ! str_starts_with( $request->get_route(), '/' . Plugin::REST_NAMESPACE . self::ROUTE . '/' ) || ! in_array( $result->get_status(), array( self::STATUS_OK, self::STATUS_NOT_MODIFIED ), true ) ) {
-			return $served;
-		}
-		// For a signed-in visitor the REST server sends its no-cache headers after the answer's own.
-		if ( ! headers_sent() ) {
-			header_remove( 'Expires' );
-			header_remove( 'Pragma' );
-			$cache_control = $result->get_headers()['Cache-Control'] ?? self::STALE_CACHE_CONTROL;
-			header( 'Cache-Control: ' . ( is_string( $cache_control ) ? $cache_control : self::STALE_CACHE_CONTROL ) );
-		}
-		$data = $result->get_data();
-		if ( is_string( $data ) ) {
-			echo $data; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the index's JSON, or its gzip bytes.
-		}
-		return true;
+		return RawRestAnswer::serve( $served, $result, $request, '/' . Plugin::REST_NAMESPACE . self::ROUTE . '/', self::STALE_CACHE_CONTROL );
 	}
 }

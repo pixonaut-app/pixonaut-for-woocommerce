@@ -284,7 +284,22 @@ for (const viewport of VIEWPORTS) {
 		const key = String(Date.now()).slice(-SLUG_CLOCK_DIGITS);
 		const poster = await createPoster(request, key);
 		try {
+			const readsAhead = page.waitForResponse(
+				(response) =>
+					response.url().includes('storefront%2Freads-ahead') ||
+					response.url().includes('storefront/reads-ahead'),
+			);
 			await openPoster(page, poster);
+			const ahead = await readsAhead;
+			expect(
+				ahead.headers()['content-encoding'],
+				'the reads ahead come compressed',
+			).toBe('gzip');
+			expect(ahead.headers().etag).toMatch(/^"[0-9a-f]{32}"$/);
+			expect(
+				((await ahead.json()) as { targets: unknown[] }).targets.length,
+				'the other blank’s reads',
+			).toBeGreaterThan(0);
 			let before = (await switchFrames(page)).at(-1)?.price ?? '';
 			expect(before, 'the bare poster’s price shows').toContain(OPENING_PRICE);
 			await expect(page.locator(DESCRIPTION)).toHaveCount(0);

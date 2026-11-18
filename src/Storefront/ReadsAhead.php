@@ -19,6 +19,13 @@ use WP_REST_Server;
  * storefront asks for once the page is idle: a switch to such a variation
  * then mounts its side from them, as the page's first side mounts from the
  * reads printed in the form, with no read of its own to wait for.
+ *
+ * Targets share their template, placement and blank reads with one another
+ * often (one template on several blanks, one blank under several
+ * templates), so each answer Pixonaut sent is in the answer once, under
+ * `parts`, and each target names its reads by their index there. The answer
+ * is compressed with gzip when the browser takes it, and a request naming
+ * its `ETag` is answered `304`.
  */
 final class ReadsAhead {
 
@@ -47,6 +54,18 @@ final class ReadsAhead {
 	 */
 	private const MAX_KEY_LENGTH = 300;
 
+	/**
+	 * Kept by the browser, asked again each time: the answer changes when the
+	 * product's variations or Pixonaut's reads do, which only the server knows.
+	 */
+	private const CACHE_CONTROL = 'public, no-cache';
+
+	/**
+	 * The default level of zlib: the answer is compressed for each request, and
+	 * stronger levels take several times as long for a few percent less.
+	 */
+	private const GZIP_LEVEL = 6;
+
 	public function __construct(
 		private readonly InlineProducts $products,
 		private readonly ServerReads $reads,
@@ -55,6 +74,7 @@ final class ReadsAhead {
 
 	public function register(): void {
 		add_action( 'rest_api_init', array( $this, 'register_route' ) );
+		add_filter( 'rest_pre_serve_request', array( $this, 'serve' ), 10, 3 );
 	}
 
 	public static function url(): string {
@@ -98,14 +118,80 @@ final class ReadsAhead {
 		}
 		$printed = is_array( $request['printed'] ) ? array_map( 'strval', $request['printed'] ) : array();
 		$targets = self::targets( $designer, $printed );
-		$reads   = $this->reads->for_mounts( $targets );
-		$answer  = array();
+		$body    = self::answer( $targets, $this->reads->for_mounts( $targets ) );
+		$etag    = '"' . md5( $body ) . '"';
+		$headers = array(
+			'Content-Type'           => 'application/json; charset=utf-8',
+			'Cache-Control'          => self::CACHE_CONTROL,
+			'ETag'                   => $etag,
+			'Vary'                   => 'Accept-Encoding',
+			'X-Content-Type-Options' => 'nosniff',
+		);
+		if ( in_array( $etag, array_map( 'trim', explode( ',', (string) $request->get_header( 'if_none_match' ) ) ), true ) ) {
+			return new WP_REST_Response( null, RawRestAnswer::STATUS_NOT_MODIFIED, $headers );
+		}
+		if ( RawRestAnswer::takes_gzip( (string) $request->get_header( 'accept_encoding' ) ) ) {
+			$body                        = (string) gzencode( $body, self::GZIP_LEVEL );
+			$headers['Content-Encoding'] = 'gzip';
+		}
+		$headers['Content-Length'] = (string) strlen( $body );
+		return new WP_REST_Response( $body, RawRestAnswer::STATUS_OK, $headers );
+	}
+
+	/**
+	 * Sends the answer's bytes as they are; the REST server would encode them as JSON.
+	 *
+	 * @param mixed $served  Whether the answer was sent already.
+	 * @param mixed $result  The answer.
+	 * @param mixed $request The request.
+	 */
+	public function serve( mixed $served, mixed $result, mixed $request ): mixed {
+		return RawRestAnswer::serve( $served, $result, $request, '/' . Plugin::REST_NAMESPACE . self::ROUTE, self::CACHE_CONTROL );
+	}
+
+	/**
+	 * The answer's JSON text: `targets`, each a target's template, blank and
+	 * placement with its `reads` (`template`, `placement`, `blank`'s
+	 * `mockups` and `variants`) as indexes into `parts`, which holds each of
+	 * Pixonaut's answers once, as it sent them. A target whose reads failed
+	 * is left out.
+	 *
+	 * @param array<string, array<string, mixed>> $targets Mount options by target key, from `targets()`.
+	 * @param array<string, array<string, mixed>> $reads   Their reads by target key, from `ServerReads::for_mounts()`.
+	 */
+	public static function answer( array $targets, array $reads ): string {
+		$parts   = array();
+		$members = array();
 		foreach ( $targets as $key => $target ) {
 			if ( isset( $reads[ $key ] ) ) {
-				$answer[] = array_intersect_key( $target, array_flip( self::TARGET_KEYS ) ) + array( 'reads' => ServerReads::decoded( $reads[ $key ] ) );
+				$members[] = (string) wp_json_encode( array_intersect_key( $target, array_flip( self::TARGET_KEYS ) ) + array( 'reads' => self::indexed( $reads[ $key ], $parts ) ) );
 			}
 		}
-		return new WP_REST_Response( array( 'reads' => $answer ), 200 );
+		return '{"targets":[' . implode( ',', $members ) . '],"parts":[' . implode( ',', array_keys( $parts ) ) . ']}';
+	}
+
+	/**
+	 * A target's reads with each answer's text replaced by its index in
+	 * `$parts`, which gains the texts it did not hold.
+	 *
+	 * @param array<string, mixed> $reads A target's reads, or its blank's.
+	 * @param array<string, int>   $parts The answers' texts so far, each with its index.
+	 * @return array<string, mixed>
+	 */
+	private static function indexed( array $reads, array &$parts ): array {
+		$indexed = array();
+		foreach ( $reads as $name => $read ) {
+			if ( is_array( $read ) ) {
+				$indexed[ $name ] = self::indexed( $read, $parts );
+				continue;
+			}
+			$text = (string) $read;
+			if ( ! isset( $parts[ $text ] ) ) {
+				$parts[ $text ] = count( $parts );
+			}
+			$indexed[ $name ] = $parts[ $text ];
+		}
+		return $indexed;
 	}
 
 	/**

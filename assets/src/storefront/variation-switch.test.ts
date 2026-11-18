@@ -585,14 +585,15 @@ describe('ProductDesigner on a variable product', () => {
 			async () =>
 				new Response(
 					JSON.stringify({
-						reads: [
+						targets: [
 							{
 								templateId: 'mini-tee@2',
 								blankId: 'blank_hoodie',
 								placementId: 'front',
-								reads: { template },
+								reads: { template: 0 },
 							},
 						],
+						parts: [template],
 					}),
 				),
 		);
