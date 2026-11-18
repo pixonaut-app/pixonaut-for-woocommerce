@@ -37,6 +37,14 @@ final class VariantsAnswer {
 	public array $answer;
 
 	/**
+	 * The answer a read of one blank gets, by blank id; a blank left out
+	 * gets `$answer`.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	public array $by_blank = array();
+
+	/**
 	 * The answer a read in a language gets, by `lang`; a language left out
 	 * gets `$answer`, as a blank without names in it reads as written.
 	 *
@@ -108,7 +116,9 @@ final class VariantsAnswer {
 		if ( null !== $this->error ) {
 			return $this->error;
 		}
-		$body = (string) wp_json_encode( null === $language ? $this->answer : ( $this->in_language[ $language ] ?? $this->answer ) );
+		$blank  = 1 === preg_match( '#/v1/blanks/([^/?]+)/variants$#', $path, $found ) ? rawurldecode( $found[1] ) : '';
+		$answer = $this->by_blank[ $blank ] ?? $this->answer;
+		$body   = (string) wp_json_encode( null === $language ? $answer : ( $this->in_language[ $language ] ?? $answer ) );
 		OpenApiAssert::response( 'GET', ScriptedClient::target( $url ), 200, $body, 'application/json' );
 		return array(
 			'headers'  => array( 'content-type' => 'application/json' ),

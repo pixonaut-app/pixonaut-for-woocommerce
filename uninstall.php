@@ -121,6 +121,8 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_TEMPLATE_INDEX_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_BLANK_INDEX_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_VARIANT_META );
+		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_VARIATION_PLAN_META );
+		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::VARIATION_GENERATED_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::VARIATION_PRINT_SIZE_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRODUCT_RECHECK_JOB_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::LOW_RESOLUTION_ACCEPTED_META );

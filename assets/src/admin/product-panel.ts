@@ -6,7 +6,7 @@
 // a required field left empty says what is missing under it, and the link
 // beside a product's own image puts its Pixonaut picture back. Each global
 // attribute's row in the Attributes tab has its "Show each value as its own
-// product" control.
+// product" control. The Variations tab has Variations from the blank.
 import './product-panel.css';
 import { domReady } from '../shared/dom-ready';
 import {
@@ -81,6 +81,7 @@ import { chosenThumbnail, thumbnailOptions } from './thumbnails';
 import { initUsePicture } from './use-picture';
 import { initValueSizes } from './value-sizes';
 import { initVariationPictures } from './variation-pictures';
+import { initVariationPlan } from './variation-plan';
 import {
 	initOverride,
 	initVariationSizes,
@@ -1142,6 +1143,7 @@ function initVariations(): void {
 domReady(() => {
 	initUsePicture(document);
 	initSplitListing(document);
+	initVariationPlan(document);
 	const panel = document.querySelector<HTMLElement>('.pixonaut-product-panel');
 	if (panel) {
 		initPanel(panel);
