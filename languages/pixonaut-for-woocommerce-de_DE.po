@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T23:55:57+00:00\n"
+"POT-Creation-Date: 2026-11-18T23:59:16+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -4823,7 +4823,17 @@ msgstr ""
 msgid "The blank variant it is sold as."
 msgstr "Die Rohling-Variante, als die sie verkauft wird."
 
-#: src/Abilities/VariationPlanRows.php:192
+#: src/Abilities/VariationPlanRows.php:185
+msgid ""
+"The template it is sold on, one per side: the one the product's variations "
+"holding its other values carry (with or without a photo), else the product's "
+"own."
+msgstr ""
+"Die Vorlage, auf der sie verkauft wird, eine je Seite: die der Varianten des "
+"Produkts mit denselben übrigen Werten (mit oder ohne Foto), sonst die des "
+"Produkts selbst."
+
+#: src/Abilities/VariationPlanRows.php:196
 msgid ""
 "`enable`: disabled by an earlier run, offered again. `variant`: sold no "
 "variant of its blank, now the plan's."
@@ -4831,7 +4841,7 @@ msgstr ""
 "`enable`: von einem früheren Durchlauf deaktiviert, wieder angeboten. "
 "`variant`: verkaufte keine Variante ihres Rohlings, jetzt die des Plans."
 
-#: src/Abilities/VariationPlanRows.php:210
+#: src/Abilities/VariationPlanRows.php:214
 msgid ""
 "Why no variation is made for these values: they name no variant of the "
 "blank, several (an option is left open), or a retired one."
@@ -4840,7 +4850,7 @@ msgstr ""
 "Variante des Rohlings, mehrere (eine Option bleibt offen) oder eine "
 "eingestellte."
 
-#: src/Abilities/VariationPlanRows.php:216
+#: src/Abilities/VariationPlanRows.php:220
 msgid "How many variations are kept as they are."
 msgstr "Wie viele Varianten unverändert bleiben."
 
@@ -13246,8 +13256,14 @@ msgstr "Vorschau"
 msgid "Generate from the blank"
 msgstr "Aus dem Rohling erstellen"
 
+#. translators: %s: the names of the templates a variation is sold on, e.g. "Birth poster without photo". Shown after a variation in the list of what generating adds or changes.
+#: templates/admin/product-variation-plan.php:115
+#, php-format
+msgid "template: %s"
+msgstr "Vorlage: %s"
+
 #. translators: %d: how many variations.
-#: templates/admin/product-variation-plan.php:123
+#: templates/admin/product-variation-plan.php:131
 #, php-format
 msgid "%d variation kept as it is."
 msgid_plural "%d variations kept as they are."
@@ -13255,14 +13271,14 @@ msgstr[0] "%d Variante bleibt unverändert."
 msgstr[1] "%d Varianten bleiben unverändert."
 
 #. translators: %d: how many variations.
-#: templates/admin/product-variation-plan.php:128
+#: templates/admin/product-variation-plan.php:136
 #, php-format
 msgid "%d more variation is made when you generate again."
 msgid_plural "%d more variations are made when you generate again."
 msgstr[0] "%d weitere Variante wird erstellt, wenn du erneut erstellst."
 msgstr[1] "%d weitere Varianten werden erstellt, wenn du erneut erstellst."
 
-#: templates/admin/product-variation-plan.php:132
+#: templates/admin/product-variation-plan.php:140
 msgid ""
 "Pixonaut could not be reached to read the printshop's costs, so the new "
 "variations are not priced yet: click Apply under Prices in the Pixonaut tab "
@@ -13273,7 +13289,7 @@ msgstr ""
 "unter „Preise“ auf „Übernehmen“."
 
 #. translators: %d: how many variations.
-#: templates/admin/product-variation-plan.php:137
+#: templates/admin/product-variation-plan.php:145
 #, php-format
 msgid ""
 "%d variation has no price yet, so customers cannot buy it: set a target "
@@ -13728,8 +13744,12 @@ msgid ""
 msgid_plural ""
 "%d more prices fell below your lowest margin and will be named in later "
 "emails."
-msgstr[0] "%d weiterer Preis ist unter deine Mindestmarge gefallen und wird in einer späteren E-Mail genannt."
-msgstr[1] "%d weitere Preise sind unter deine Mindestmarge gefallen und werden in späteren E-Mails genannt."
+msgstr[0] ""
+"%d weiterer Preis ist unter deine Mindestmarge gefallen und wird in einer "
+"späteren E-Mail genannt."
+msgstr[1] ""
+"%d weitere Preise sind unter deine Mindestmarge gefallen und werden in "
+"späteren E-Mails genannt."
 
 #: templates/emails/margin-floor.php:72
 #: templates/emails/plain/margin-floor.php:48
@@ -14028,6 +14048,91 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s Ansicht"
 msgstr[1] "%s Ansichten"
+
+#
+#~ msgid ""
+#~ "Gives the store's pricing rule, by which prices follow the printshop's "
+#~ "costs: the target margin and the fixed amount per item on top of it "
+#~ "(price excluding tax = cost ÷ (1 − margin) + fixed amount), the tolerance "
+#~ "around the margin the rule's own price leaves at a cost, the price step "
+#~ "and what prices end in, the lowest and highest price, the currency buffer "
+#~ "added to a cost converted from another currency, and whether prices "
+#~ "change by themselves when a cost changes. Amounts and percentages are "
+#~ "decimal strings, empty for none. Without a target margin the store has no "
+#~ "rule. `attribute_rules` lists each value of a global attribute that "
+#~ "changes parts of the rule for every variation with it, in every product, "
+#~ "in the store's attribute order, with the parts another attribute's value "
+#~ "sets too on a variation with both (`conflicts`: the one whose attribute "
+#~ "comes first wins); a product and a variation may change parts too, and "
+#~ "each part comes from the most specific level that sets it. Also the "
+#~ "store's currency, and whether prices are entered including tax. "
+#~ "`delivery_time_show` says whether a product page tells how long the "
+#~ "printshop says the chosen variation takes, which Pixonaut reads with its "
+#~ "cost, and `delivery_time_handling_days` the days of its own the store "
+#~ "adds to that."
+#~ msgstr ""
+#~ "Gibt die Preisregel des Shops an, nach der die Preise den Kosten der "
+#~ "Druckerei folgen: die Zielmarge und den Fixbetrag pro Artikel zusätzlich "
+#~ "dazu (Preis ohne Steuern = Kosten ÷ (1 − Marge) + Fixbetrag), die "
+#~ "Toleranz um die Marge, die der eigene Preis der Regel bei bestimmten "
+#~ "Kosten lässt, den Preisschritt und worauf Preise enden, den niedrigsten "
+#~ "und höchsten Preis, den Währungspuffer, der auf Kosten aus einer anderen "
+#~ "Währung aufgeschlagen wird, und ob sich Preise von selbst ändern, wenn "
+#~ "sich Kosten ändern. Beträge und Prozentwerte sind Dezimalzeichenfolgen, "
+#~ "leer, wenn es keine gibt. Ohne Zielmarge hat der Shop keine Regel. "
+#~ "`attribute_rules` listet jeden Wert eines globalen Attributs, der Teile "
+#~ "der Regel für jede Variante mit diesem Wert in allen Produkten ändert, in "
+#~ "der Attributreihenfolge des Shops, mit den Teilen, die auf einer Variante "
+#~ "mit beiden auch der Wert eines anderen Attributs festlegt (`conflicts`: "
+#~ "Es gewinnt der Wert, dessen Attribut zuerst kommt); auch ein Produkt und "
+#~ "eine Variante können Teile ändern, und jeder Teil kommt von der "
+#~ "spezifischsten Ebene, die ihn festlegt. Außerdem die Währung des Shops "
+#~ "und ob Preise inklusive Steuern eingegeben werden. `delivery_time_show` "
+#~ "sagt, ob eine Produktseite angibt, wie lange die gewählte Variante laut "
+#~ "Druckerei dauert, was Pixonaut mit ihren Kosten liest, und "
+#~ "`delivery_time_handling_days` die eigenen Tage, die der Shop dazu addiert."
+
+#, php-format
+#~ msgid ""
+#~ "Changes the pricing settings given, by their keys as %1$s reads them; the "
+#~ "others keep their values. `price_automatic` switches automatic price "
+#~ "changes on or off: on, a price that follows the rule is set to the rule's "
+#~ "price when its cost changes and its margin left the tolerance; off, the "
+#~ "new price is only suggested; a product or variation set to always or "
+#~ "never keeps to that, whatever the switch says. `delivery_time_show` has a "
+#~ "product page say how long the printshop says the chosen variation takes, "
+#~ "as Pixonaut read it with the cost (only what the printshop tells: nothing "
+#~ "is shown where it tells nothing), and `delivery_time_handling_days` adds "
+#~ "days of the store's own to it. `price_ending` must be below `price_step`. "
+#~ "`attribute_rules` sets the parts of the rule values of global attributes "
+#~ "change for every variation with them, in every product, each entry "
+#~ "replacing the value's parts (all empty to clear them); values not named "
+#~ "keep theirs. Changing the store's rule or a value's settles the prices "
+#~ "that follow the rule in the background: set to the rule's price where "
+#~ "prices change automatically, else suggested. To set prices at once, price "
+#~ "a product with %2$s. Answers with every pricing setting."
+#~ msgstr ""
+#~ "Ändert die angegebenen Preiseinstellungen anhand ihrer Schlüssel, wie "
+#~ "%1$s sie liest; die übrigen behalten ihre Werte. `price_automatic` "
+#~ "schaltet automatische Preisänderungen ein oder aus: Eingeschaltet wird "
+#~ "ein Preis, der der Regel folgt, auf den Preis der Regel gesetzt, wenn "
+#~ "sich seine Kosten ändern und seine Marge außerhalb der Toleranz liegt; "
+#~ "ausgeschaltet wird der neue Preis nur vorgeschlagen; ein Produkt oder "
+#~ "eine Variante, die auf always oder never eingestellt ist, bleibt dabei, "
+#~ "was auch immer der Schalter sagt. `delivery_time_show` lässt eine "
+#~ "Produktseite angeben, wie lange die gewählte Variante laut Druckerei "
+#~ "dauert, so wie Pixonaut es mit den Kosten gelesen hat (nur was die "
+#~ "Druckerei angibt: Wo sie nichts angibt, wird nichts angezeigt), und "
+#~ "`delivery_time_handling_days` addiert eigene Tage des Shops dazu. "
+#~ "`price_ending` muss unter `price_step` liegen. `attribute_rules` legt die "
+#~ "Teile der Regel fest, die Werte globaler Attribute für jede Variante mit "
+#~ "ihnen in allen Produkten ändern; jeder Eintrag ersetzt die Teile des "
+#~ "Werts (alle leer, um sie zu löschen), nicht genannte Werte behalten ihre. "
+#~ "Eine Änderung der Regel des Shops oder eines Werts gleicht die Preise, "
+#~ "die der Regel folgen, im Hintergrund an: Wo sich Preise automatisch "
+#~ "ändern, werden sie auf den Preis der Regel gesetzt, sonst vorgeschlagen. "
+#~ "Um Preise sofort festzulegen, wird ein Produkt mit %2$s bepreist. "
+#~ "Antwortet mit allen Preiseinstellungen."
 
 #~ msgid ""
 #~ "Reads the printshop's costs of a product printed on a blank again, and "

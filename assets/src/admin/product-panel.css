@@ -1952,7 +1952,11 @@
 }
 
 #variable_product_options
-	:is(.pixonaut-variation-plan__variant, .pixonaut-variation-plan__why) {
+	:is(
+		.pixonaut-variation-plan__variant,
+		.pixonaut-variation-plan__template,
+		.pixonaut-variation-plan__why
+	) {
 	color: #646970;
 }
 
