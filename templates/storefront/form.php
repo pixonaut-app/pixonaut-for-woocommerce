@@ -66,7 +66,7 @@
  * one, each variation's values and price, and how the shop writes a price.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.25.0
+ * @version 1.26.0
  *
  * @var int                                 $product_id      The product.
  * @var array<string, array<string, mixed>> $mounts          Mount options by side key; empty when personalisation is unavailable.

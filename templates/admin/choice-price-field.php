@@ -6,7 +6,7 @@
  * Override by copying to yourtheme/woocommerce/pixonaut/admin/choice-price-field.php.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.25.0
+ * @version 1.26.0
  *
  * @var bool                  $editing     Whether the attribute's edit screen shows it, a table row; else the add form.
  * @var string                $field       The select's name and id.
