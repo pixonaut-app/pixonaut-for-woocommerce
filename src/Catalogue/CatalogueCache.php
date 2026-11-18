@@ -43,7 +43,7 @@ final class CatalogueCache {
 	 * links an answer carries, such as a mockup's `thumbnailUrl`, open for
 	 * at least that long.
 	 */
-	private const KEPT_SECONDS = 3600;
+	public const KEPT_SECONDS = 3600;
 
 	/**
 	 * A minute, in seconds: how long a read in a kept answer's place holds
@@ -161,6 +161,21 @@ final class CatalogueCache {
 			}
 			delete_option( self::refresh_hold_option( $key ) );
 		}
+	}
+
+	/**
+	 * Reads an answer again now, as `remember_or_kept()` would once its
+	 * minutes are up, and keeps it: for a job that reads answers before
+	 * their kept copy runs out.
+	 *
+	 * @param string                              $what Which answer.
+	 * @param array<string, string>               $args What it was asked with.
+	 * @param Closure(): array<int|string, mixed> $load Asks Pixonaut; may throw, which keeps nothing.
+	 *
+	 * @throws ApiException When Pixonaut refused or could not be reached.
+	 */
+	public function read_again( string $what, array $args, Closure $load ): void {
+		$this->keep( $this->key( $what, $args ), $load() );
 	}
 
 	/**

@@ -333,6 +333,7 @@ final class SplitCardListings {
 			return $posts;
 		}
 		$carded = array();
+		$keys   = array();
 		foreach ( $posts as $post ) {
 			if ( $post instanceof WP_Post ) {
 				$this->listed[ $post ] = true;
@@ -345,10 +346,13 @@ final class SplitCardListings {
 			if ( SplitCards::is_key( $key ) ) {
 				$this->cards[ $post ] = (string) $key;
 				$carded[]             = $post->ID;
+				$keys[ $post->ID ][]  = (string) $key;
 			}
 		}
 		// Each card's link reads its product's variations.
 		FilterIndex::look_up( $carded );
+		// Each card's picture reads one of them.
+		CardPages::prime( $keys );
 		return $posts;
 	}
 

@@ -200,6 +200,50 @@ final class CardPages {
 	}
 
 	/**
+	 * Reads ahead, in a few queries, what a listing's cards show their
+	 * pictures from (`image()`): each product's own meta, and of each
+	 * card its first variation, with its meta and terms, and the pictures
+	 * that variation has, rather than each card reading its own one query
+	 * at a time.
+	 *
+	 * @param array<int, list<string>> $cards The keys of the cards listed, by product id.
+	 */
+	public static function prime( array $cards ): void {
+		// Each card's product's own meta: which design it is on.
+		ProductMeta::prime( array_keys( $cards ) );
+		$firsts = array();
+		foreach ( $cards as $product_id => $keys ) {
+			$product = wc_get_product( $product_id );
+			if ( ! $product instanceof WC_Product ) {
+				continue;
+			}
+			foreach ( $keys as $key ) {
+				$first = SplitCards::card_variations( $product, $key )[0] ?? 0;
+				if ( $first > 0 ) {
+					$firsts[] = $first;
+				}
+			}
+		}
+		if ( array() === $firsts ) {
+			return;
+		}
+		_prime_post_caches( $firsts, true, true );
+		ProductMeta::prime( $firsts );
+		$pictures = array();
+		foreach ( $firsts as $id ) {
+			$variation = wc_get_product( $id );
+			if ( $variation instanceof WC_Product ) {
+				$pictures[] = (int) $variation->get_image_id( 'edit' );
+				array_push( $pictures, ...ProductPictures::attachments( ProductPictures::stored( $variation ) ) );
+			}
+		}
+		$pictures = array_values( array_unique( array_filter( $pictures ) ) );
+		if ( array() !== $pictures ) {
+			_prime_post_caches( $pictures, false, true );
+		}
+	}
+
+	/**
 	 * The picture of a variation in its setting, its blank's photo: the
 	 * Pixonaut picture of it there (`ProductPictures::on_photo()`), else an
 	 * image the store gave it, which shows it as the store chose; 0 while

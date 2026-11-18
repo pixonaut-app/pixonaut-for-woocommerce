@@ -203,6 +203,57 @@ final class SplitCardFacesTest extends WP_UnitTestCase {
 		);
 	}
 
+	public function test_a_listings_cards_read_their_pictures_ahead_rather_than_one_card_at_a_time(): void {
+		$flats = array();
+		foreach ( array( $this->poster(), $this->poster() ) as $poster ) {
+			foreach ( array( 'med-bild', 'utan-bild' ) as $picture ) {
+				foreach ( $this->variations_of( $poster, $picture ) as $variation ) {
+					$flat = $this->image();
+					$variation->set_image_id( $this->image() );
+					$variation->update_meta_data(
+						ProductPictures::META_KEY,
+						(string) wp_json_encode(
+							array(
+								'basis'      => 'drawn',
+								'source'     => 'studio',
+								'attachment' => $variation->get_image_id(),
+								'gallery'    => array(
+									array(
+										'source'     => 'flat',
+										'attachment' => $flat,
+									),
+								),
+							)
+						)
+					);
+					$variation->save();
+					$flats[] = $flat;
+				}
+			}
+		}
+		// As a new request finds them: nothing read yet.
+		wp_cache_flush();
+		$page = get_term_link( $this->category, 'product_cat' );
+		$this->assertIsString( $page );
+		$this->go_to( $page );
+		global $wp_query, $wpdb;
+		$images  = array();
+		$queries = 0;
+		while ( $wp_query->have_posts() ) {
+			$wp_query->the_post();
+			$product = wc_get_product( (int) get_the_ID() );
+			$this->assertInstanceOf( WC_Product::class, $product );
+			$before   = $wpdb->num_queries;
+			$images[] = (int) $product->get_image_id();
+			$queries += $wpdb->num_queries - $before;
+		}
+		wp_reset_postdata();
+
+		$this->assertCount( 4, $images );
+		$this->assertSame( array(), array_diff( $images, $flats ), 'each card its flat picture' );
+		$this->assertSame( 0, $queries, 'read with the listing' );
+	}
+
 	public function test_a_card_shows_from_its_variations_lowest_price(): void {
 		$poster = new WC_Product_Variable();
 		$poster->set_name( 'Safari' );

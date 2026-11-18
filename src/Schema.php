@@ -387,6 +387,13 @@ final class Schema {
 	const CATALOGUE_CACHE_GENERATION_OPTION = 'pixonaut_wc_catalogue_generation';
 
 	/**
+	 * Option holding the Pixonaut reads product pages made, each with when
+	 * it was last read and last asked for by a page, which a job reads
+	 * again before their kept copies run out (`ServerReadsWarmUp`).
+	 */
+	const SERVER_READS_IN_USE_OPTION = 'pixonaut_wc_server_reads_in_use';
+
+	/**
 	 * Transient set for a minute after a product page's Pixonaut read failed,
 	 * under the catalogue cache's prefix so it goes with the cache.
 	 */

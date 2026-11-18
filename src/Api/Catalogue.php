@@ -256,8 +256,23 @@ final class Catalogue {
 	public function blank_views_answers( string $blank_id, ?string $language = null ): array {
 		return array(
 			'mockups'  => $this->answer( 'blanks.mockups.list', array( 'id' => $blank_id ), array( self::LANGUAGE => $language ) ),
-			'variants' => $this->answer( 'blanks.variants.list', array( 'id' => $blank_id ), array( self::LANGUAGE => $language ) ),
+			'variants' => $this->blank_variants_answer( $blank_id, $language ),
 		);
+	}
+
+	/**
+	 * `GET /v1/blanks/{id}/variants`, as Pixonaut sent it (see
+	 * `template_answer()`).
+	 *
+	 * @param string      $blank_id The blank.
+	 * @param string|null $language One of `DesignerLanguage::languages()` to name the options in; null for their names as written.
+	 *
+	 * @return string A JSON object.
+	 *
+	 * @throws ApiException When Pixonaut refused (`404` for an unknown blank), could not be reached, or answered with something else than a JSON object.
+	 */
+	public function blank_variants_answer( string $blank_id, ?string $language = null ): string {
+		return $this->answer( 'blanks.variants.list', array( 'id' => $blank_id ), array( self::LANGUAGE => $language ) );
 	}
 
 	/**
