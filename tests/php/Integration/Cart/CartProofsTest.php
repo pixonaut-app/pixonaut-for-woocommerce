@@ -53,10 +53,10 @@ final class CartProofsTest extends PersonalisedCartTestCase {
 	 * as the picture expected.
 	 *
 	 * @param string            $url     The URL.
-	 * @param ProofPicture|null $picture The picture it must name; null for the design on its blank in the previewed view.
+	 * @param ProofPicture|null $picture The picture it must name; null for the design on its blank in the previewed view, on the variant the product sells.
 	 */
 	private function assert_proof_url( string $url, ?ProofPicture $picture = null ): void {
-		$picture ??= ProofPicture::on_blank();
+		$picture ??= ProofPicture::on_blank( null, BlankFixture::VARIANT_REF );
 		// Decoded: on plain permalinks the route is itself a query value.
 		$this->assertStringStartsWith( rest_url( Plugin::REST_NAMESPACE . ProofUrls::ROUTE . '/' . DesignFixture::ID ), rawurldecode( $url ) );
 		parse_str( (string) wp_parse_url( $url, PHP_URL_QUERY ), $query );
@@ -79,14 +79,17 @@ final class CartProofsTest extends PersonalisedCartTestCase {
 	public function test_the_line_shows_the_design_on_its_blank_in_the_view_the_customer_previewed(): void {
 		[ $key, $item ] = $this->added();
 
-		$this->assert_proof_url( self::thumbnail_src( $key, $item ), ProofPicture::on_blank() );
+		// On the photo of the variant the line sells: a proof previewed on no
+		// variant is otherwise drawn on the view's default photo, which shows
+		// a portrait poster as a landscape one.
+		$this->assert_proof_url( self::thumbnail_src( $key, $item ), ProofPicture::on_blank( null, BlankFixture::VARIANT_REF ) );
 	}
 
 	public function test_the_setting_can_show_the_placements_first_view_instead(): void {
 		$this->plugin->settings()->set( Settings::LINE_PICTURE_VIEW, PictureView::FIRST );
 		[ $key, $item ] = $this->added();
 
-		$this->assert_proof_url( self::thumbnail_src( $key, $item ), ProofPicture::on_blank( BlankFixture::VIEW_ID ) );
+		$this->assert_proof_url( self::thumbnail_src( $key, $item ), ProofPicture::on_blank( BlankFixture::VIEW_ID, BlankFixture::VARIANT_REF ) );
 	}
 
 	public function test_the_first_view_is_the_first_the_product_is_shown_in(): void {
@@ -117,7 +120,7 @@ final class CartProofsTest extends PersonalisedCartTestCase {
 		self::config()->with_views( array( 'view_back', BlankFixture::VIEW_ID ) )->save_to( $product );
 		[ $key, $item ] = $this->added();
 
-		$this->assert_proof_url( self::thumbnail_src( $key, $item ), ProofPicture::on_blank( BlankFixture::VIEW_ID ) );
+		$this->assert_proof_url( self::thumbnail_src( $key, $item ), ProofPicture::on_blank( BlankFixture::VIEW_ID, BlankFixture::VARIANT_REF ) );
 	}
 
 	public function test_a_product_on_no_blank_shows_the_flat_proof(): void {
