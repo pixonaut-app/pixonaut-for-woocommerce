@@ -50,6 +50,11 @@ final class ShippingShopToolsTest extends WP_UnitTestCase {
 	private const VAT_PERCENT = '25.0000';
 
 	/**
+	 * Swedish VAT on books.
+	 */
+	private const REDUCED_VAT_PERCENT = '6.0000';
+
+	/**
 	 * The flat rate as the store had it: 99 including VAT.
 	 */
 	private const OLD_COST = '79.20';
@@ -256,6 +261,44 @@ final class ShippingShopToolsTest extends WP_UnitTestCase {
 		$this->assertFalse( $this->succeed( self::GET, array() )['zones'][0]['methods'][0]['enabled'] );
 	}
 
+	public function test_shipping_taxed_as_the_carts_items_counts_including_tax_only_while_every_taxable_product_has_the_same_rate(): void {
+		update_option( 'woocommerce_shipping_tax_class', 'inherit' );
+		$reduced = $this->reduced_rate_class();
+		$this->product_in_class( '' );
+		$same = $this->product_in_class( $reduced );
+		$same->set_tax_status( 'none' );
+		$same->save();
+
+		$this->assertSame( '99.00', $this->succeed( self::GET, array() )['zones'][0]['methods'][0]['cost_including_tax'], 'an untaxed product counts for nothing' );
+
+		$this->product_in_class( $reduced );
+
+		$this->assertNull( $this->succeed( self::GET, array() )['zones'][0]['methods'][0]['cost_including_tax'], 'the tax depends on the cart' );
+		$refused = $this->call(
+			self::SET,
+			array(
+				'zone_id'           => $this->zone_id,
+				'instance_id'       => $this->flat_rate_id,
+				'cost'              => self::COST_INCLUDING_VAT,
+				'cost_includes_tax' => true,
+			)
+		);
+		$this->assertSame( self::UNPROCESSABLE, $refused->get_status() );
+		$this->assertSame( self::OLD_COST, $this->succeed( self::GET, array() )['zones'][0]['methods'][0]['cost'] );
+		$this->assertSame(
+			self::COST_EXCLUDING_VAT,
+			$this->succeed(
+				self::SET,
+				array(
+					'zone_id'     => $this->zone_id,
+					'instance_id' => $this->flat_rate_id,
+					'cost'        => self::COST_EXCLUDING_VAT,
+				)
+			)['cost'],
+			'a cost excluding tax is kept as given'
+		);
+	}
+
 	public function test_a_setting_the_method_does_not_have_or_a_method_that_is_not_there_changes_nothing(): void {
 		$minimum_on_flat_rate = $this->call(
 			self::SET,
@@ -295,6 +338,40 @@ final class ShippingShopToolsTest extends WP_UnitTestCase {
 			$this->assertSame( 'invalid_input', $answer->get_data()['code'] );
 		}
 		$this->assertSame( self::OLD_COST, $this->succeed( self::GET, array() )['zones'][0]['methods'][0]['cost'] );
+	}
+
+	/**
+	 * A tax class with a lower Swedish rate, shipping included, by slug.
+	 */
+	private function reduced_rate_class(): string {
+		$class = WC_Tax::create_tax_class( 'Nedsatt moms' );
+		$this->assertIsArray( $class );
+		WC_Tax::_insert_tax_rate(
+			array(
+				'tax_rate_country'  => self::COUNTRY,
+				'tax_rate'          => self::REDUCED_VAT_PERCENT,
+				'tax_rate_name'     => 'Moms',
+				'tax_rate_priority' => 1,
+				'tax_rate_shipping' => 1,
+				'tax_rate_order'    => 1,
+				'tax_rate_class'    => $class['slug'],
+			)
+		);
+		return $class['slug'];
+	}
+
+	/**
+	 * A product in a tax class.
+	 *
+	 * @param string $tax_class The class's slug, empty for standard.
+	 */
+	private function product_in_class( string $tax_class ): WC_Product_Simple {
+		$product = new WC_Product_Simple();
+		$product->set_name( 'Bok' );
+		$product->set_regular_price( self::UNDER_MINIMUM );
+		$product->set_tax_class( $tax_class );
+		$product->save();
+		return $product;
 	}
 
 	/**

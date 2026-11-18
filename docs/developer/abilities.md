@@ -458,15 +458,19 @@ its `instance_id`, `kind` (`flat_rate`, `free_shipping`, `local_pickup` or
 another plugin's), `title`, `enabled` and `order`; a flat rate or pickup its
 `cost` as WooCommerce keeps it (excluding tax, possibly a formula),
 `cost_including_tax` (with the shipping tax rates of the store's own address
-when the method is `taxable`; null for a formula) and `tax_status`; free
+when the method is `taxable`; null for a formula, or when shipping is taxed
+as the cart's items are and the store's taxable products have different
+rates) and `tax_status`; free
 shipping its `min_amount`, `requires` and `ignore_discounts`. A setting the
 method does not have is null.
 `set-shipping-method` takes a `zone_id` and either the `instance_id` of a
 method to change or the `kind` (`flat_rate` or `free_shipping`) of one to
 add, and only the settings to change: `title`, `enabled`, `cost` (a plain
-amount; with `cost_includes_tax` it is counted back to the cost kept),
+amount; with `cost_includes_tax` it is counted back to the cost kept, and
+refused when the tax depends on the cart),
 `tax_status`, `min_amount`, `requires` and `ignore_discounts`. A minimum given
-to free shipping that required nothing makes it require the minimum. It goes
+to free shipping that required nothing makes it require the minimum. A
+setting the method's own form does not have is refused. It goes
 through WooCommerce's own shipping zone method route, so WooCommerce validates
 and keeps the settings, and answers the method's row.
 

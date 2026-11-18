@@ -171,6 +171,15 @@ final class SetShippingMethod implements Ability {
 			$request->set_param( 'method_id', $kind );
 		}
 		$settings = self::settings( $input, $method );
+		if ( $settings instanceof WP_Error ) {
+			return $settings;
+		}
+		$unkept = null === $method ? array() : array_diff( array_keys( $settings ), array_keys( $method->get_instance_form_fields() ) );
+		if ( array() !== $unkept ) {
+			// WooCommerce's route would skip a setting the method's form does not have and answer as if it were kept.
+			/* translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate. */
+			return self::refusal( 'pixonaut_wc_ability_shipping_setting_foreign', sprintf( __( 'A %2$s method has no setting %1$s.', 'pixonaut-for-woocommerce' ), reset( $unkept ), $kind ), WP_Http::UNPROCESSABLE_ENTITY );
+		}
 		if ( array() !== $settings ) {
 			$request->set_param( 'settings', $settings );
 		}
@@ -217,9 +226,9 @@ final class SetShippingMethod implements Ability {
 	 *
 	 * @param array<string, mixed>    $input  The ability's input, which its schema has checked.
 	 * @param WC_Shipping_Method|null $method The method to change, null for a new one.
-	 * @return array<string, string>
+	 * @return array<string, string>|WP_Error The settings, or why a cost including tax cannot be counted.
 	 */
-	private static function settings( array $input, ?WC_Shipping_Method $method ): array {
+	private static function settings( array $input, ?WC_Shipping_Method $method ): array|WP_Error {
 		$settings = array();
 		foreach ( array( self::TITLE, self::TAX_STATUS, ShippingMethods::MIN_AMOUNT, self::REQUIRES ) as $key ) {
 			if ( is_string( $input[ $key ] ?? null ) ) {
@@ -230,8 +239,12 @@ final class SetShippingMethod implements Ability {
 			$settings[ ShippingMethods::IGNORE_DISCOUNTS ] = $input[ ShippingMethods::IGNORE_DISCOUNTS ] ? self::YES : self::NO;
 		}
 		if ( is_string( $input[ self::COST ] ?? null ) ) {
-			$tax_status             = $settings[ self::TAX_STATUS ] ?? (string) ( null === $method ? ShippingMethods::TAXABLE : $method->get_instance_option( self::TAX_STATUS, ShippingMethods::TAXABLE ) );
-			$settings[ self::COST ] = true === ( $input[ self::COST_INCLUDES_TAX ] ?? false ) ? ShippingMethods::excluding_tax( $input[ self::COST ], $tax_status ) : $input[ self::COST ];
+			$tax_status = $settings[ self::TAX_STATUS ] ?? (string) ( null === $method ? ShippingMethods::TAXABLE : $method->get_instance_option( self::TAX_STATUS, ShippingMethods::TAXABLE ) );
+			$cost       = true === ( $input[ self::COST_INCLUDES_TAX ] ?? false ) ? ShippingMethods::excluding_tax( $input[ self::COST ], $tax_status ) : $input[ self::COST ];
+			if ( null === $cost ) {
+				return self::refusal( 'pixonaut_wc_ability_shipping_tax_depends_on_cart', __( 'Shipping is taxed as the cart\'s items are, and the store\'s taxable products have different rates, so a cost including tax depends on the cart. Give the cost excluding tax, or set a shipping tax class in WooCommerce\'s tax settings.', 'pixonaut-for-woocommerce' ), WP_Http::UNPROCESSABLE_ENTITY );
+			}
+			$settings[ self::COST ] = $cost;
 		}
 		$minimum = $settings[ ShippingMethods::MIN_AMOUNT ] ?? '';
 		if ( '' === $minimum || isset( $settings[ self::REQUIRES ] ) ) {

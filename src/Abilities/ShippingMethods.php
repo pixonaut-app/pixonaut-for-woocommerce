@@ -83,6 +83,11 @@ final class ShippingMethods {
 	private const YES = 'yes';
 
 	/**
+	 * A variation's tax class when it takes its product's.
+	 */
+	private const FROM_PRODUCT = 'parent';
+
+	/**
 	 * Whether the current user may change the store's shipping.
 	 */
 	public static function can_manage(): bool {
@@ -160,23 +165,34 @@ final class ShippingMethods {
 		if ( ! self::taxed( $tax_status ) ) {
 			return $cost;
 		}
+		$rates = self::rates();
+		if ( null === $rates ) {
+			return null;
+		}
 		$amount = (float) $cost;
-		return wc_format_decimal( $amount + array_sum( WC_Tax::calc_exclusive_tax( $amount, self::rates() ) ), wc_get_price_decimals() );
+		return wc_format_decimal( $amount + array_sum( WC_Tax::calc_exclusive_tax( $amount, $rates ) ), wc_get_price_decimals() );
 	}
 
 	/**
 	 * A cost shoppers at the store's address pay, including tax, as
 	 * WooCommerce keeps it, excluding tax.
 	 *
+	 * Null when shipping is taxed as the cart's items are and the store
+	 * sells items whose rates differ, so the tax depends on the cart.
+	 *
 	 * @param string $cost       A plain amount, including tax.
 	 * @param string $tax_status The method's tax status.
 	 */
-	public static function excluding_tax( string $cost, string $tax_status ): string {
+	public static function excluding_tax( string $cost, string $tax_status ): ?string {
 		if ( ! self::taxed( $tax_status ) ) {
 			return $cost;
 		}
+		$rates = self::rates();
+		if ( null === $rates ) {
+			return null;
+		}
 		$amount = (float) $cost;
-		return wc_format_decimal( $amount - array_sum( WC_Tax::calc_inclusive_tax( $amount, self::rates() ) ), wc_get_price_decimals() );
+		return wc_format_decimal( $amount - array_sum( WC_Tax::calc_inclusive_tax( $amount, $rates ) ), wc_get_price_decimals() );
 	}
 
 	/**
@@ -242,7 +258,7 @@ final class ShippingMethods {
 				),
 				'cost_including_tax' => array(
 					'type'        => $string_or_null,
-					'description' => __( 'The cost as shoppers at the store\'s address pay it, with the shipping tax when the method is taxable. Null for a formula or a method without a cost.', 'pixonaut-for-woocommerce' ),
+					'description' => __( 'The cost as shoppers at the store\'s address pay it, with the shipping tax when the method is taxable. Null for a formula, a method without a cost, or when shipping is taxed as the cart\'s items are and the store\'s taxable products have different rates, so the tax depends on the cart.', 'pixonaut-for-woocommerce' ),
 				),
 				'tax_status'         => array(
 					'type'        => $string_or_null,
@@ -274,13 +290,37 @@ final class ShippingMethods {
 	}
 
 	/**
-	 * The shipping tax rates at the store's address, in the shipping tax
-	 * class; one that follows the cart's items counts as standard.
+	 * The shipping tax rates at the store's address. A shipping tax class
+	 * set on the store gives its rates; one that follows the cart's items
+	 * gives the rates every taxable product's class has there, and null when
+	 * they differ, as when some products are reduced rate.
 	 *
+	 * @return array<int, array<string, mixed>>|null
+	 */
+	private static function rates(): ?array {
+		$tax_class = (string) get_option( 'woocommerce_shipping_tax_class' );
+		if ( self::INHERIT !== $tax_class ) {
+			return self::rates_of( $tax_class );
+		}
+		$rates = null;
+		foreach ( self::product_tax_classes() as $class ) {
+			$of_class = self::rates_of( $class );
+			if ( null !== $rates && self::shape( $rates ) !== self::shape( $of_class ) ) {
+				return null;
+			}
+			$rates = $of_class;
+		}
+		// With no taxable product, the standard rate is the one a cart would meet first.
+		return $rates ?? self::rates_of( '' );
+	}
+
+	/**
+	 * The shipping rates of one tax class at the store's address.
+	 *
+	 * @param string $tax_class A tax class's slug, empty for standard.
 	 * @return array<int, array<string, mixed>>
 	 */
-	private static function rates(): array {
-		$tax_class = (string) get_option( 'woocommerce_shipping_tax_class' );
+	private static function rates_of( string $tax_class ): array {
 		$countries = WC()->countries;
 		return WC_Tax::find_shipping_rates(
 			array(
@@ -288,8 +328,47 @@ final class ShippingMethods {
 				'state'     => $countries->get_base_state(),
 				'postcode'  => $countries->get_base_postcode(),
 				'city'      => $countries->get_base_city(),
-				'tax_class' => self::INHERIT === $tax_class ? '' : $tax_class,
+				'tax_class' => $tax_class,
 			)
 		);
+	}
+
+	/**
+	 * What a set of rates charges, whatever their ids and names.
+	 *
+	 * @param array<int, array<string, mixed>> $rates Tax rates.
+	 * @return list<string>
+	 */
+	private static function shape( array $rates ): array {
+		$shape = array();
+		foreach ( $rates as $rate ) {
+			$shape[] = wc_format_decimal( $rate['rate'] ?? 0 ) . ( self::YES === ( $rate['compound'] ?? '' ) ? '+' : '' );
+		}
+		sort( $shape );
+		return $shape;
+	}
+
+	/**
+	 * The tax classes of the store's taxable products and variations, empty
+	 * for standard; a variation that takes its product's class is counted as
+	 * its product.
+	 *
+	 * @return list<string>
+	 */
+	private static function product_tax_classes(): array {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one read for an ability's answer.
+		$classes = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT COALESCE( class.meta_value, '' ) FROM {$wpdb->posts} AS p
+				LEFT JOIN {$wpdb->postmeta} AS class ON class.post_id = p.ID AND class.meta_key = '_tax_class'
+				LEFT JOIN {$wpdb->postmeta} AS status ON status.post_id = p.ID AND status.meta_key = '_tax_status'
+				WHERE p.post_type IN ( 'product', 'product_variation' ) AND p.post_status NOT IN ( 'trash', 'auto-draft' )
+				AND COALESCE( status.meta_value, %s ) <> %s",
+				self::TAXABLE,
+				self::NOT_TAXED
+			)
+		);
+		return array_values( array_diff( array_map( 'strval', $classes ), array( self::FROM_PRODUCT ) ) );
 	}
 }
