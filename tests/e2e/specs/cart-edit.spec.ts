@@ -10,10 +10,7 @@ import {
 
 /** A phone's HEIC photo as far as Pixonaut reads it: the opening `ftyp` box
  *  naming its brand. Pixonaut keeps it as a JPEG. */
-const HEIC_PHOTO = Buffer.from(
-	'\0\0\0\x18ftypheic\0\0\0\0mif1heic',
-	'latin1',
-);
+const HEIC_PHOTO = Buffer.from('\0\0\0\x18ftypheic\0\0\0\0mif1heic', 'latin1');
 
 /** A phone, where shoppers come back to their cart, and a desktop. */
 const SCREENS = [
