@@ -60,12 +60,11 @@ final class StoppedPictureJobs {
 		$args       = $action->get_args();
 		$product_id = (int) ( $args[0] ?? 0 );
 		// A drawing still within its time records itself, or PHP's stopping it does.
-		$given_up = self::GIVEN_UP_ACTION === current_action();
-		if ( $given_up && $this->pictures->drawing_now( $product_id ) ) {
+		if ( self::GIVEN_UP_ACTION === current_action() && $this->pictures->drawing_now( $product_id ) ) {
 			return;
 		}
-		// A job that stopped in this request saves nothing more, up to this second; one given up may have run past its lock.
-		UnfinishedPictures::delete_of( $product_id, $given_up ? time() - ProductPictures::LOCK_SECONDS : time() + 1 );
+		// The pictures the job stopped while saving, when it ran in this request; one given up ran in another, and its product's next drawing deletes them.
+		UnfinishedPictures::delete_stopped();
 		$product = PictureQueue::fresh( $product_id );
 		if ( null !== $product ) {
 			$this->pictures->cut_off( $product );

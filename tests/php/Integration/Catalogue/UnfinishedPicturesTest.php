@@ -37,7 +37,6 @@ final class UnfinishedPicturesTest extends WP_UnitTestCase {
 		parent::set_up();
 		$this->set_up_pictures();
 		SlowImageEditor::use();
-		$this->inserted = array();
 		add_action( 'add_attachment', array( $this, 'inserted' ) );
 	}
 
@@ -59,15 +58,20 @@ final class UnfinishedPicturesTest extends WP_UnitTestCase {
 	}
 
 	public function test_a_job_stopped_while_the_image_sizes_are_made_leaves_no_picture(): void {
-		$product                      = $this->product( self::config() );
+		$product = $this->product( self::config() );
+		// Another drawing of it, which took over the lock, is saving its own picture.
+		$replacement                  = $this->unfinished( $product, 0 );
 		SlowImageEditor::$limit_fixed = true;
 		$this->recorder->raw( 200, self::png(), 'image/png' );
 
 		ActionSchedulerRunner::run_once( ProductPictures::ACTION );
 
 		$this->assertCount( 1, ActionSchedulerRunner::failed( ProductPictures::ACTION ), 'The job stopped.' );
-		$this->assertCount( 1, $this->inserted );
-		$this->assertNull( get_post( $this->inserted[0] ) );
+		$this->assertSame( $replacement, $this->inserted[0] );
+		$this->assertCount( 2, $this->inserted );
+		$this->assertNull( get_post( $this->inserted[1] ) );
+		$this->assertNotNull( get_post( $replacement ), 'Only the stopped job\'s picture is deleted.' );
+		wp_delete_attachment( $replacement, true );
 		$this->assertSame( array(), glob( wp_upload_dir()['path'] . '/pixonaut-' . $product->get_id() . '-*' ) );
 		$this->assertSame( $this->own_image, (int) $this->reload( $product )->get_image_id() );
 	}
@@ -109,8 +113,9 @@ final class UnfinishedPicturesTest extends WP_UnitTestCase {
 
 		( new DeleteUnfinishedPictures() )->up();
 		UnfinishedPictures::queue_backfill();
-		ActionSchedulerRunner::run_pending( UnfinishedPictures::ALL_HOOK );
-		delete_option( $lock );
+		$this->assertTrue( as_has_scheduled_action( UnfinishedPictures::ALL_HOOK ) );
+		as_unschedule_all_actions( UnfinishedPictures::ALL_HOOK );
+		UnfinishedPictures::delete_all();
 
 		$this->assertContains( DeleteUnfinishedPictures::class, array_map( 'get_class', Migrations::all() ) );
 		$this->assertNull( get_post( $left ) );
@@ -118,6 +123,18 @@ final class UnfinishedPicturesTest extends WP_UnitTestCase {
 		$this->assertNotNull( get_post( $recent ), 'A job may still be saving it.' );
 		$this->assertNotNull( get_post( $drawing ), 'Its product is being drawn.' );
 		$this->assertNotNull( get_post( $shown ), 'A product shows it.' );
+		$looks_again = ActionSchedulerRunner::due_at( UnfinishedPictures::ALL_HOOK );
+		$this->assertCount( 1, $looks_again, 'The pictures passed over are looked at again.' );
+		$this->assertGreaterThanOrEqual( time() + ProductPictures::LOCK_SECONDS - MINUTE_IN_SECONDS, $looks_again[0] );
+
+		// Once no job can still be saving them.
+		delete_option( $lock );
+		$this->age( $recent, ProductPictures::LOCK_SECONDS + 1 );
+		UnfinishedPictures::delete_all();
+
+		$this->assertNull( get_post( $recent ) );
+		$this->assertNull( get_post( $drawing ) );
+		$this->assertNotNull( get_post( $shown ) );
 		$this->assertFalse( get_option( UnfinishedPictures::BACKFILL_OPTION ) );
 	}
 
@@ -131,7 +148,13 @@ final class UnfinishedPicturesTest extends WP_UnitTestCase {
 
 		UnfinishedPictures::delete_all();
 
-		$this->assertSame( (string) max( $left ), get_option( UnfinishedPictures::BACKFILL_OPTION ) );
+		$this->assertSame(
+			array(
+				'after'    => max( $left ),
+				'deferred' => false,
+			),
+			get_option( UnfinishedPictures::BACKFILL_OPTION )
+		);
 		$this->assertTrue( as_has_scheduled_action( UnfinishedPictures::ALL_HOOK ) );
 		UnfinishedPictures::delete_all();
 		$this->assertFalse( get_option( UnfinishedPictures::BACKFILL_OPTION ) );
@@ -148,7 +171,6 @@ final class UnfinishedPicturesTest extends WP_UnitTestCase {
 	 * @return int The attachment.
 	 */
 	private function unfinished( WC_Product $product, int $ago ): int {
-		global $wpdb;
 		$upload = wp_upload_bits( sprintf( 'pixonaut-%d-unfinished.png', $product->get_id() ), null, self::png() );
 		$this->assertFalse( $upload['error'] );
 		$attachment = wp_insert_attachment(
@@ -162,6 +184,18 @@ final class UnfinishedPicturesTest extends WP_UnitTestCase {
 		);
 		$this->assertGreaterThan( 0, $attachment );
 		add_post_meta( $attachment, SharedPictures::PICTURE_OF_META, $product->get_id() );
+		$this->age( $attachment, $ago );
+		return $attachment;
+	}
+
+	/**
+	 * Moves the attachment's insertion back in time.
+	 *
+	 * @param int $attachment An attachment.
+	 * @param int $ago        How long ago it was inserted, in seconds.
+	 */
+	private function age( int $attachment, int $ago ): void {
+		global $wpdb;
 		$inserted = gmdate( 'Y-m-d H:i:s', time() - $ago );
 		$wpdb->update(
 			$wpdb->posts,
@@ -172,6 +206,5 @@ final class UnfinishedPicturesTest extends WP_UnitTestCase {
 			array( 'ID' => $attachment )
 		);
 		clean_post_cache( $attachment );
-		return $attachment;
 	}
 }
