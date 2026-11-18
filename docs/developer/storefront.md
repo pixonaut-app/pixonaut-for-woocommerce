@@ -1419,6 +1419,14 @@ archives work as they always have.
   index older than a day is built again on the next visit, and an archive
   nobody opened for thirty days is dropped. Each index is kept compressed in
   the option `pixonaut_wc_archive_index_<archive>`.
+- **Counts elsewhere**: a theme printing how many products a category or
+  tag holds outside its archive, such as on the category's tile, asks
+  `apply_filters( 'pixonaut_wc_archive_card_count', $count, $term )` for
+  the cards the archive lists unfiltered, the index's `count`, so a product
+  listed once per card counts once per card there too
+  (`Storefront\ArchiveIndexDiscovery`). The count passed in stands for any
+  other term, without the theme's support, and until the archive's index
+  is built; asking queues its build, as a visit does.
 - **A theme's own fields**: `pixonaut_wc_archive_index_card` and
   `pixonaut_wc_archive_index_variation` filter each card and each variation
   row while the index is built, and `pixonaut_wc_archive_index_image_size`
