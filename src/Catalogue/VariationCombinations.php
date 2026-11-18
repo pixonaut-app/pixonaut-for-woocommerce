@@ -314,7 +314,7 @@ final class VariationCombinations {
 	 * @param array<string, Added>       $wanted  The combinations offered, by key.
 	 * @param array<string, Skipped>     $skipped The combinations skipped, by key.
 	 */
-	private function against( WC_Product $product, array $offered, array $wanted, array $skipped ): VariationChanges {
+	private function against( WC_Product $product, array $offered, array $wanted, array $skipped ): VariationChanges|WP_Error {
 		$change  = array();
 		$disable = array();
 		$kept    = array();
@@ -333,6 +333,13 @@ final class VariationCombinations {
 			$one    = $wanted[ $key ] ?? null;
 			$public = ProductConfig::PUBLIC_STATUS === $variation->get_status( 'edit' );
 			if ( null === $one || isset( $matched[ $key ] ) ) {
+				$covered = $public && null === $one ? self::covered( $attributes, $wanted ) : null;
+				if ( null !== $covered ) {
+					return self::refused(
+						/* translators: 1: a variation's id. 2: its values, e.g. "Size: Any, Frame: Black". 3: values the plan offers, e.g. "Size: M, Frame: Black". */
+						sprintf( __( 'Variation #%1$d (%2$s) is sold for "Any" value, and so for %3$s, which the plan offers as a variation of its own. Give the variation its values, or disable it, first.', 'pixonaut-for-woocommerce' ), $variation->get_id(), self::label( $product, $attributes ), $covered )
+					);
+				}
 				if ( $public ) {
 					$disable[] = array(
 						'variation_id' => $variation->get_id(),
@@ -373,8 +380,31 @@ final class VariationCombinations {
 			// One the store manager disabled stays disabled.
 			return GeneratedVariation::disabled( $variation ) ? VariationChanges::ENABLE : null;
 		}
-		$variant = ProductVariant::stored_on( $variation );
-		return null === $variant || null !== $variant->problem() ? VariationChanges::VARIANT : null;
+		return null === ProductVariant::sold_on( $variation, ProductConfig::config_for( $variation ) ) ? VariationChanges::VARIANT : null;
+	}
+
+	/**
+	 * The label of a combination offered that a variation set to "Any" for
+	 * some attribute is sold for too; null for none. WooCommerce sells such
+	 * a variation for every value, so the plan's own one would never be.
+	 *
+	 * @param array<string, string> $attributes The variation's values, `''` for "Any".
+	 * @param array<string, Added>  $wanted     The combinations offered, by key.
+	 */
+	private static function covered( array $attributes, array $wanted ): ?string {
+		if ( ! in_array( '', $attributes, true ) ) {
+			return null;
+		}
+		foreach ( $wanted as $one ) {
+			$covers = true;
+			foreach ( $attributes as $name => $value ) {
+				$covers = $covers && ( '' === $value || $value === $one['attributes'][ $name ] );
+			}
+			if ( $covers ) {
+				return $one['label'];
+			}
+		}
+		return null;
 	}
 
 	/**

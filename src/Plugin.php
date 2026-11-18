@@ -98,6 +98,7 @@ use Pixonaut\WooCommerce\Admin\SwatchNamesField;
 use Pixonaut\WooCommerce\Admin\ChoicePriceField;
 use Pixonaut\WooCommerce\Admin\BlankOptionField;
 use Pixonaut\WooCommerce\Catalogue\BlankOptionChoices;
+use Pixonaut\WooCommerce\Catalogue\GeneratedVariation;
 use Pixonaut\WooCommerce\Admin\QueryNameField;
 use Pixonaut\WooCommerce\Admin\LayoutAdjustments;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
@@ -575,6 +576,7 @@ final class Plugin {
 		( new RuleChange( $this->product_pricing() ) )->register();
 		$this->pricing_panel()->register();
 		$this->variation_plan_panel()->register();
+		GeneratedVariation::register();
 		if ( is_admin() ) {
 			( new PricingList( $this->product_pricing() ) )->register();
 			( new AttributePriceRuleFields( $this->product_pricing(), $this->templates() ) )->register();

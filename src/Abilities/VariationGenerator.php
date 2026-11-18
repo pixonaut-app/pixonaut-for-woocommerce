@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Abilities;
 
 use Closure;
-use Pixonaut\WooCommerce\Admin\VariationPanel;
 use Pixonaut\WooCommerce\Catalogue\GeneratedVariation;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariants;
@@ -81,59 +80,70 @@ final class VariationGenerator {
 	/**
 	 * Carries the changes out, at most `MAX_MADE` new variations at a time.
 	 *
+	 * The setup of each blank is worked out, and checked with Pixonaut where
+	 * needed, before any variation is written, so a setup Pixonaut cannot
+	 * check refuses the run with nothing changed. A new variation, or one
+	 * published again, stays disabled until it is on its blank and sells its
+	 * variant: a run cut short leaves it disabled for the plan, so the next
+	 * run finishes it. A variation the store manager changed while the
+	 * changes were worked out is left as it now is.
+	 *
 	 * @param WC_Product       $product A variable product.
 	 * @param VariationChanges $changes What to do, as `changes()` worked it out.
 	 * @return array{made: list<int>, changed: list<int>, disabled: list<int>, priced: int, prices_read: bool, unpriced: list<int>}|WP_Error
 	 * @throws ApiException When a blank's variants could not be read; what is done is kept.
 	 */
 	public function apply( WC_Product $product, VariationChanges $changes ): array|WP_Error {
-		$setups   = array();
+		$add    = array_slice( $changes->add, 0, self::MAX_MADE );
+		$setups = array();
+		foreach ( array_unique( array_column( array_merge( $add, $changes->change ), 'blank_id' ) ) as $blank_id ) {
+			$setup = $this->setup_of( $product, (string) $blank_id );
+			if ( $setup instanceof WP_Error ) {
+				return $setup;
+			}
+			$setups[ $blank_id ] = $setup;
+		}
 		$made     = array();
 		$changed  = array();
 		$disabled = array();
 		$order    = count( $product->get_children() );
-		foreach ( array_slice( $changes->add, 0, self::MAX_MADE ) as $one ) {
-			$variation = new WC_Product_Variation();
-			$variation->set_parent_id( $product->get_id() );
-			$variation->set_attributes( $one['attributes'] );
-			$variation->set_status( ProductConfig::PUBLIC_STATUS );
-			$variation->set_menu_order( $order++ );
-			GeneratedVariation::mark( $variation, GeneratedVariation::MADE );
-			$variation->save();
-			$set = $this->sell( $product, $variation, $one, $setups );
-			if ( $set instanceof WP_Error ) {
-				return $set;
-			}
-			$made[] = $variation->get_id();
-		}
-		foreach ( $changes->change as $one ) {
-			$variation = wc_get_product( $one['variation_id'] );
-			if ( ! $variation instanceof WC_Product ) {
-				continue;
-			}
-			if ( VariationChanges::ENABLE === $one['why'] ) {
-				$variation->set_status( ProductConfig::PUBLIC_STATUS );
-				GeneratedVariation::mark( $variation, GeneratedVariation::MADE );
-				$variation->save();
-			} else {
-				$set = $this->sell( $product, $variation, $one, $setups );
-				if ( $set instanceof WP_Error ) {
-					return $set;
-				}
-			}
-			$changed[] = $variation->get_id();
-		}
-		foreach ( $changes->disable as $one ) {
-			$variation = wc_get_product( $one['variation_id'] );
-			if ( $variation instanceof WC_Product ) {
+		try {
+			GeneratedVariation::$writing = true;
+			foreach ( $add as $one ) {
+				$variation = new WC_Product_Variation();
+				$variation->set_parent_id( $product->get_id() );
+				$variation->set_attributes( $one['attributes'] );
 				$variation->set_status( self::DISABLED_STATUS );
+				$variation->set_menu_order( $order++ );
 				GeneratedVariation::mark( $variation, GeneratedVariation::DISABLED );
 				$variation->save();
-				$disabled[] = $variation->get_id();
+				$this->sell( $variation, $one, $setups );
+				$made[] = $variation->get_id();
 			}
+			foreach ( $changes->change as $one ) {
+				$variation = wc_get_product( $one['variation_id'] );
+				$enable    = VariationChanges::ENABLE === $one['why'];
+				// Changed by the store manager meanwhile: published or disabled by hand.
+				if ( ! $variation instanceof WC_Product || ( $enable && ! GeneratedVariation::disabled( $variation ) ) ) {
+					continue;
+				}
+				$this->sell( $variation, $one, $setups, $enable );
+				$changed[] = $variation->get_id();
+			}
+			foreach ( $changes->disable as $one ) {
+				$variation = wc_get_product( $one['variation_id'] );
+				if ( $variation instanceof WC_Product && ProductConfig::PUBLIC_STATUS === $variation->get_status( 'edit' ) ) {
+					$variation->set_status( self::DISABLED_STATUS );
+					GeneratedVariation::mark( $variation, GeneratedVariation::DISABLED );
+					$variation->save();
+					$disabled[] = $variation->get_id();
+				}
+			}
+		} finally {
+			GeneratedVariation::$writing = false;
+			WC_Product_Variable::sync( $product->get_id() );
+			$this->variants->note( $product );
 		}
-		WC_Product_Variable::sync( $product->get_id() );
-		$this->variants->note( $product );
 		return array(
 			'made'     => $made,
 			'changed'  => $changed,
@@ -142,53 +152,48 @@ final class VariationGenerator {
 	}
 
 	/**
-	 * Puts a variation on its entry's blank, unless it already is, and
-	 * sells it as the plan's variant.
+	 * Puts a variation on its entry's blank, unless it already is, sells it
+	 * as the plan's variant, and publishes it.
 	 *
-	 * @param WC_Product                        $product   The variable product.
 	 * @param WC_Product                        $variation The variation.
 	 * @param array                             $one       What the plan sells it as.
-	 * @param array<string, ProductConfig|null> $setups    The setup each blank's variations get, as worked out so far; null to follow the product.
+	 * @param array<string, ProductConfig|null> $setups    The setup each blank's variations get; null to follow the product.
+	 * @param bool                              $publish   Whether to publish it; a new one always is.
 	 * @phpstan-param Added $one
 	 * @throws ApiException When the blank's variants could not be read.
 	 */
-	private function sell( WC_Product $product, WC_Product $variation, array $one, array &$setups ): ?WP_Error {
+	private function sell( WC_Product $variation, array $one, array $setups, bool $publish = true ): void {
 		$blank_id = $one['blank_id'];
 		if ( ProductConfig::config_for( $variation )->blank_id !== $blank_id ) {
-			if ( ! array_key_exists( $blank_id, $setups ) ) {
-				$setups[ $blank_id ] = $this->setup_of( $product, $blank_id );
-			}
-			$setup = $setups[ $blank_id ];
+			$setup = $setups[ $blank_id ] ?? null;
 			if ( null === $setup ) {
 				$this->links->configure_variation( $variation, null );
 			} else {
-				$checked = $setup->blank_id === $blank_id && $setup->override ? $setup : null;
-				if ( null === $checked ) {
-					$posted = $this->fields->posted( array( 'blank_id' => $blank_id ), VariationPanel::own_or_inherited( $variation ) );
-					if ( $posted instanceof WP_Error ) {
-						return $posted;
-					}
-					$checked             = $this->links->check_variation( $variation, $posted );
-					$setups[ $blank_id ] = $checked;
-				}
-				$this->links->save_variation( $variation, $checked );
+				$this->links->save_variation( $variation, $setup );
 			}
-			$saved     = wc_get_product( $variation->get_id() );
-			$variation = $saved instanceof WC_Product ? $saved : $variation;
 		}
-		$this->variants->pick( $variation, $one['ref'] );
-		return null;
+		$saved = wc_get_product( $variation->get_id() );
+		$saved = $saved instanceof WC_Product ? $saved : $variation;
+		$this->variants->pick( $saved, $one['ref'] );
+		if ( $publish ) {
+			$saved = wc_get_product( $variation->get_id() );
+			if ( $saved instanceof WC_Product ) {
+				$saved->set_status( ProductConfig::PUBLIC_STATUS );
+				GeneratedVariation::mark( $saved, GeneratedVariation::MADE );
+				$saved->save();
+			}
+		}
 	}
 
 	/**
 	 * The setup a variation on a blank gets: null to follow the product's,
 	 * on its blank; a variation's own setup already on the blank; else the
-	 * product's, to be checked with the blank changed.
+	 * product's with the blank changed, checked with Pixonaut.
 	 *
 	 * @param WC_Product $product  The variable product.
 	 * @param string     $blank_id The blank.
 	 */
-	private function setup_of( WC_Product $product, string $blank_id ): ?ProductConfig {
+	private function setup_of( WC_Product $product, string $blank_id ): ProductConfig|WP_Error|null {
 		$own = ProductConfig::stored_on( $product );
 		if ( $own->blank_id === $blank_id ) {
 			return null;
@@ -200,7 +205,11 @@ final class VariationGenerator {
 				return $config;
 			}
 		}
-		return $own;
+		// Checked on a variation not saved yet, which starts from the product's setup.
+		$unsaved = new WC_Product_Variation();
+		$unsaved->set_parent_id( $product->get_id() );
+		$posted = $this->fields->posted( array( 'blank_id' => $blank_id ), $own );
+		return $posted instanceof WP_Error ? $posted : $this->links->check_variation( $unsaved, $posted, $own );
 	}
 
 	/**
@@ -213,6 +222,7 @@ final class VariationGenerator {
 	 * @return array{priced: int, prices_read: bool, unpriced: list<int>}
 	 */
 	private function price( int $product_id, array $ids ): array {
+		$ids    = array_values( array_unique( array_merge( $ids, self::unpriced_made( $product_id ) ) ) );
 		$priced = 0;
 		$read   = true;
 		if ( array() !== $ids ) {
@@ -240,5 +250,24 @@ final class VariationGenerator {
 			'prices_read' => $read,
 			'unpriced'    => $unpriced,
 		);
+	}
+
+	/**
+	 * The variations an earlier run made that still have no price: a run cut
+	 * short, or one Pixonaut gave no costs to.
+	 *
+	 * @param int $product_id The variable product.
+	 * @return list<int>
+	 */
+	private static function unpriced_made( int $product_id ): array {
+		$product = wc_get_product( $product_id );
+		$ids     = array();
+		foreach ( $product instanceof WC_Product ? $product->get_children() : array() as $child_id ) {
+			$child = wc_get_product( $child_id );
+			if ( $child instanceof WC_Product && GeneratedVariation::MADE === $child->get_meta( GeneratedVariation::META_KEY, true, 'edit' ) && null === Amount::parse( $child->get_regular_price( 'edit' ) ) ) {
+				$ids[] = (int) $child_id;
+			}
+		}
+		return $ids;
 	}
 }

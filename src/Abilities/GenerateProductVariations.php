@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Abilities;
 
 use Pixonaut\WooCommerce\Catalogue\VariationChanges;
 use Pixonaut\WooCommerce\Catalogue\VariationPlan;
+use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use WC_Product;
 use WP_Error;
@@ -25,6 +26,11 @@ use WP_Http;
  * generate its variations.
  */
 final class GenerateProductVariations implements Ability {
+
+	/**
+	 * A run's hold on its product older than this is taken over: the run died.
+	 */
+	private const LOCK_SECONDS = 10 * MINUTE_IN_SECONDS;
 
 	/**
 	 * @param VariationGenerator $generator Works out and carries out the changes.
@@ -137,6 +143,29 @@ final class GenerateProductVariations implements Ability {
 	 * @return array<string, mixed>|WP_Error
 	 */
 	public function run( WC_Product $product, VariationPlan $plan, bool $dry_run, bool $save ): array|WP_Error {
+		$held = $dry_run ? null : self::lock( $product->get_id() );
+		if ( ! $dry_run && null === $held ) {
+			return new WP_Error( 'pixonaut_wc_ability_variations_generating', __( 'The product\'s variations are being generated already. Try again once that run is done.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::CONFLICT ) );
+		}
+		try {
+			// Worked out once the product is held, from its variations as they are now.
+			$fresh = wc_get_product( $product->get_id() );
+			return $this->generate( $fresh instanceof WC_Product ? $fresh : $product, $plan, $dry_run, $save );
+		} finally {
+			if ( null !== $held ) {
+				self::unlock( $product->get_id(), $held );
+			}
+		}
+	}
+
+	/**
+	 * @param WC_Product    $product The variable product.
+	 * @param VariationPlan $plan    The plan.
+	 * @param bool          $dry_run Whether only to list the changes.
+	 * @param bool          $save    Whether to store the plan on the product.
+	 * @return array<string, mixed>|WP_Error
+	 */
+	private function generate( WC_Product $product, VariationPlan $plan, bool $dry_run, bool $save ): array|WP_Error {
 		try {
 			$changes = $this->generator->changes( $product, $plan );
 			if ( $changes instanceof WP_Error ) {
@@ -177,5 +206,51 @@ final class GenerateProductVariations implements Ability {
 	 */
 	private static function listed( VariationChanges $changes, bool $dry_run ): VariationChanges {
 		return $dry_run ? $changes : new VariationChanges( array_slice( $changes->add, 0, VariationGenerator::MAX_MADE ), $changes->change, $changes->disable, $changes->skipped, $changes->kept );
+	}
+
+	/**
+	 * Takes the product's hold, or one older than `LOCK_SECONDS`.
+	 *
+	 * @param int $product_id The variable product.
+	 * @return string|null The hold's value, for `unlock()`; null when another run holds it.
+	 */
+	private static function lock( int $product_id ): ?string {
+		$option = Schema::VARIATION_PLAN_LOCK_OPTION_PREFIX . $product_id;
+		$now    = (string) time();
+		if ( null !== self::take( $option, $now ) ) {
+			return $now;
+		}
+		wp_cache_delete( $option, 'options' );
+		$since = get_option( $option );
+		if ( is_numeric( $since ) && (int) $now - (int) $since < self::LOCK_SECONDS ) {
+			return null;
+		}
+		delete_option( $option );
+		return self::take( $option, $now );
+	}
+
+	/**
+	 * Adds the hold's option, which fails when it is there already.
+	 *
+	 * @param string $option The hold's option.
+	 * @param string $value  When it is taken, as Unix time.
+	 * @return string|null The value; null when the option was there.
+	 */
+	private static function take( string $option, string $value ): ?string {
+		return add_option( $option, $value, '', false ) ? $value : null;
+	}
+
+	/**
+	 * Gives up the product's hold, unless another run took it over.
+	 *
+	 * @param int    $product_id The variable product.
+	 * @param string $held       The hold's value when this run took it.
+	 */
+	private static function unlock( int $product_id, string $held ): void {
+		$option = Schema::VARIATION_PLAN_LOCK_OPTION_PREFIX . $product_id;
+		wp_cache_delete( $option, 'options' );
+		if ( get_option( $option ) === $held ) {
+			delete_option( $option );
+		}
 	}
 }

@@ -168,7 +168,7 @@ final class VariationPlanPanel {
 	 * The lists the section shows of an answer.
 	 *
 	 * @param array<string, mixed> $answer What `generate-product-variations` answered.
-	 * @return array{add: list<array<string, mixed>>, change: list<array<string, mixed>>, disable: list<array<string, mixed>>, skipped: list<array<string, mixed>>, kept: int, remaining: int, unpriced: int}
+	 * @return array{add: list<array<string, mixed>>, change: list<array<string, mixed>>, disable: list<array<string, mixed>>, skipped: list<array<string, mixed>>, kept: int, remaining: int, unpriced: int, unread: bool}
 	 */
 	private static function listed( array $answer ): array {
 		$list = static fn ( string $key ): array => is_array( $answer[ $key ] ?? null ) ? array_values( $answer[ $key ] ) : array();
@@ -180,6 +180,7 @@ final class VariationPlanPanel {
 			'kept'      => (int) ( $answer['kept'] ?? 0 ),
 			'remaining' => (int) ( $answer['remaining'] ?? 0 ),
 			'unpriced'  => count( $list( 'unpriced' ) ),
+			'unread'    => false === ( $answer['prices_read'] ?? true ),
 		);
 	}
 

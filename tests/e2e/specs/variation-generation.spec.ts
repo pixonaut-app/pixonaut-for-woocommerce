@@ -51,7 +51,10 @@ test('a variable product’s variations are previewed and generated from its bla
 		},
 	});
 	expect(created.status()).toBe(201);
-	const { id } = (await created.json()) as { id: number };
+	const { id, variations } = (await created.json()) as {
+		id: number;
+		variations: Record<string, number>;
+	};
 
 	const mcp = await mcpSession(page);
 	const clock = String(Date.now()).slice(-SLUG_CLOCK_DIGITS);
@@ -82,6 +85,12 @@ test('a variable product’s variations are previewed and generated from its bla
 				visible: true,
 			});
 		}
+		// The old size variation is retired by hand: WooCommerce would sell it for any value of the new attributes.
+		await mcp.run(ABILITY('update-product-variation'), {
+			product_id: id,
+			id: variations.Old,
+			fields: { status: 'private' },
+		});
 		// The old custom size gives way to the global colour and size.
 		await mcp.run(ABILITY('update-product'), {
 			id,
@@ -109,11 +118,10 @@ test('a variable product’s variations are previewed and generated from its bla
 		await section.getByRole('button', { name: 'Preview' }).click();
 		await expect(
 			section.locator('.pixonaut-variation-plan__status'),
-		).toHaveText('Generating would add 4, change 0 and disable 1 variations.');
+		).toHaveText('Generating would add 4, change 0 and disable 0 variations.');
 		const previewed = page.locator('.pixonaut-variation-plan');
 		await expect(previewed.getByText('To add (4)')).toBeVisible();
 		await expect(previewed.getByText(/Color: White, Size: M/)).toBeVisible();
-		await expect(previewed.getByText('To disable (1)')).toBeVisible();
 
 		await previewed
 			.getByRole('button', { name: 'Generate from the blank' })
@@ -121,8 +129,8 @@ test('a variable product’s variations are previewed and generated from its bla
 		const generated = page.locator('.pixonaut-variation-plan');
 		await expect(
 			generated.locator('.pixonaut-variation-plan__status'),
-		).toHaveText('Added 4, changed 0 and disabled 1 variations.');
-		// WooCommerce's panel loads the variations again: the four made and the one disabled.
+		).toHaveText('Added 4, changed 0 and disabled 0 variations.');
+		// WooCommerce's panel loads the variations again: the four made and the one disabled by hand.
 		await expect(page.locator('.woocommerce_variation')).toHaveCount(5);
 
 		const plan = await mcp.run<Plan>(ABILITY('get-product-variation-plan'), {

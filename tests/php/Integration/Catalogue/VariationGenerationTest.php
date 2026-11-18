@@ -33,6 +33,7 @@ use WC_Product_Attribute;
 use WC_Product_Variable;
 use WC_Product_Variation;
 use WP_Error;
+use Pixonaut\WooCommerce\Schema;
 use WP_REST_Request;
 use WP_REST_Response;
 use Pixonaut\WooCommerce\Admin\VariationPlanPanel;
@@ -335,6 +336,93 @@ final class VariationGenerationTest extends PricingTestCase {
 		$this->assertSame( array( VariationChanges::ENABLE ), array_values( array_unique( array_column( $again['change'], 'why' ) ) ) );
 		$this->assertSame( ProductConfig::PUBLIC_STATUS, $this->reread( $white )->get_status() );
 		$this->assertSame( 'private', $this->reread( $disabled_self )->get_status(), 'a variation the store manager disabled stays disabled' );
+	}
+
+	public function test_a_run_cut_short_leaves_its_unfinished_variation_disabled_and_the_next_run_finishes_and_prices_it(): void {
+		$product = $this->poster();
+		$this->framed_variation( $product );
+		$made  = 0;
+		$crash = static function () use ( &$made ): void {
+			if ( 3 === ++$made ) {
+				throw new \RuntimeException( 'The request died.' );
+			}
+		};
+		add_action( 'woocommerce_new_product_variation', $crash );
+		try {
+			$this->generated( $product );
+			$this->fail( 'the run should have been cut short' );
+		} catch ( \RuntimeException $e ) {
+			$this->assertSame( 'The request died.', $e->getMessage() );
+		} finally {
+			remove_action( 'woocommerce_new_product_variation', $crash );
+		}
+		$cut = $this->sold( $product );
+		$this->assertCount( 4, $cut );
+		$this->assertSame( array( ProductConfig::PUBLIC_STATUS, ProductConfig::PUBLIC_STATUS, ProductConfig::PUBLIC_STATUS, 'private' ), array_column( $cut, 'status' ), 'the unfinished variation is not sold' );
+
+		FreshRequest::begin( $this->plugin );
+		$this->script_costs_twice();
+		$again = $this->generated( $product );
+
+		$this->assertCount( 8, $again['made'] );
+		$this->assertCount( 1, $again['change'] );
+		$this->assertSame( VariationChanges::ENABLE, $again['change'][0]['why'] );
+		$sold = $this->sold( $product );
+		$this->assertCount( 12, $sold );
+		$this->assertSame( array( ProductConfig::PUBLIC_STATUS ), array_values( array_unique( array_column( $sold, 'status' ) ) ) );
+		$this->assertNotContains( null, array_column( $sold, 'ref' ) );
+		$this->assertSame( array( 's30|framed|black|With' ), array_keys( array_filter( $sold, static fn ( array $one ): bool => '' === $one['price'] ) ), 'every variation made is priced, those of the run cut short too' );
+	}
+
+	public function test_a_variation_sold_for_any_value_the_plan_offers_one_by_one_refuses_the_plan(): void {
+		$product   = $this->poster();
+		$variation = new WC_Product_Variation();
+		$variation->set_parent_id( $product->get_id() );
+		$variation->set_attributes(
+			array(
+				'pa_size'  => 's30',
+				'pa_mount' => 'none',
+			)
+		);
+		$variation->set_status( ProductConfig::PUBLIC_STATUS );
+		$variation->save();
+
+		$answer = $this->generate->execute(
+			array(
+				'product_id' => $product->get_id(),
+				'entries'    => self::PLAN,
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $answer );
+		$this->assertStringContainsString( sprintf( 'Variation #%d', $variation->get_id() ), $answer->get_error_message() );
+	}
+
+	public function test_a_product_whose_variations_are_being_generated_is_not_generated_twice_at_once(): void {
+		$product = $this->poster();
+		add_option( Schema::VARIATION_PLAN_LOCK_OPTION_PREFIX . $product->get_id(), (string) time(), '', false );
+
+		$answer = $this->generate->execute(
+			array(
+				'product_id' => $product->get_id(),
+				'entries'    => self::PLAN,
+				'dry_run'    => false,
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $answer );
+		$this->assertSame( 'pixonaut_wc_ability_variations_generating', $answer->get_error_code() );
+		$this->assertSame( array(), $this->reread( $product )->get_children() );
+		$this->assertIsArray(
+			$this->generate->execute(
+				array(
+					'product_id' => $product->get_id(),
+					'entries'    => self::PLAN,
+				)
+			),
+			'a dry run still lists'
+		);
+		delete_option( Schema::VARIATION_PLAN_LOCK_OPTION_PREFIX . $product->get_id() );
 	}
 
 	/**

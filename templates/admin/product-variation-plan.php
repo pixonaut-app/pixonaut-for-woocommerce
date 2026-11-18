@@ -17,7 +17,7 @@
  * @var list<array{blank_id: string, name: string}> $blanks The blanks the product and its variations are set up on.
  * @var list<array<string, mixed>> $pickers The product's variation attributes not linked to a blank option, which can pick a blank: `attribute`, `name`, `values` (`value`, `label`).
  * @var list<array<string, mixed>> $linked  The ones linked to a blank option: `name`, `option`.
- * @var array{add: list<array<string, mixed>>, change: list<array<string, mixed>>, disable: list<array<string, mixed>>, skipped: list<array<string, mixed>>, kept: int, remaining: int, unpriced: int}|null $answer What Preview or Generate found or did; null before either.
+ * @var array{add: list<array<string, mixed>>, change: list<array<string, mixed>>, disable: list<array<string, mixed>>, skipped: list<array<string, mixed>>, kept: int, remaining: int, unpriced: int, unread: bool}|null $answer What Preview or Generate found or did; null before either.
  * @var bool   $dry_run   Whether `$answer` is a preview.
  * @var array<string, string> $why_texts What each reason in the lists says, by reason.
  */
@@ -127,6 +127,9 @@ $pixonaut_lists = null === $answer ? array() : array(
 					/* translators: %d: how many variations. */
 					echo esc_html( sprintf( _n( '%d more variation is made when you generate again.', '%d more variations are made when you generate again.', $answer['remaining'], 'pixonaut-for-woocommerce' ), $answer['remaining'] ) );
 					?>
+				<?php endif; ?>
+				<?php if ( $answer['unread'] ) : ?>
+					<?php esc_html_e( 'Pixonaut could not be reached to read the printshop\'s costs, so the new variations are not priced yet: click Apply under Prices in the Pixonaut tab in a moment.', 'pixonaut-for-woocommerce' ); ?>
 				<?php endif; ?>
 				<?php if ( $answer['unpriced'] > 0 ) : ?>
 					<?php
