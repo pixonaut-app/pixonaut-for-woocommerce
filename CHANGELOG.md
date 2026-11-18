@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.21.2...v1.22.0) (2026-11-18)
+
+
+### Features
+
+* **storefront:** tell a theme how many cards a category's archive lists ([#299](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/299)) ([42380ad](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/42380ada234e8457d2ae2fb8d75497eb5db148af))
+
 ## [1.21.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.21.1...v1.21.2) (2026-11-18)
 
 
