@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.4](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.3...v1.22.4) (2026-11-18)
+
+
+### Bug Fixes
+
+* **storefront:** archives serve kept filter data while a job rebuilds it ([#311](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/311)) ([12d0bc8](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/12d0bc8ce714272bfc5b06340bb5ee723873eada))
+
 ## [1.22.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.2...v1.22.3) (2026-11-18)
 
 
