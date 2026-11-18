@@ -63,7 +63,7 @@ final class ProductPicturesTest extends WP_UnitTestCase {
 		$this->assertSame( Connection::origin( home_url() ), $request['headers']['Origin'] );
 		$picture = $this->reload( $product )->get_image_id();
 		$this->assertNotSame( $this->own_image, $picture );
-		$this->assertSame( 'image/png', get_post_mime_type( (int) $picture ) );
+		$this->assertSame( 'image/webp', get_post_mime_type( (int) $picture ) );
 		$this->assertSame( (int) $picture, get_post_thumbnail_id( $product->get_id() ) );
 		$this->assertStringContainsString( (string) wp_get_attachment_image_url( (int) $picture, 'woocommerce_thumbnail' ), $this->reload( $product )->get_image() );
 		$this->assertSame( array(), ActionSchedulerRunner::pending( ProductPictures::ACTION ) );

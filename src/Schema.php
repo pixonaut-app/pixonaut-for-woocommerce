@@ -353,6 +353,12 @@ final class Schema {
 	const SPLIT_CARDS_BACKFILL_OPTION = 'pixonaut_wc_split_cards_backfill';
 
 	/**
+	 * Option set while every Pixonaut picture kept as a PNG waits to be
+	 * written again as WebP after an upgrade, until the job doing it is queued.
+	 */
+	const SMALLER_PICTURES_BACKFILL_OPTION = 'pixonaut_wc_smaller_pictures_backfill';
+
+	/**
 	 * Prefix of the transients caching Pixonaut catalogue answers for the admin.
 	 */
 	const CATALOGUE_CACHE_PREFIX = 'pixonaut_wc_catalogue_';
