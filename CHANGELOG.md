@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.27.0...v1.27.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* **storefront:** write a whole add-on amount without decimals where the shop does ([#347](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/347)) ([a1b7313](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/a1b7313dac0d723d8305e2632004cab031cef8dd))
+
 ## [1.27.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.26.0...v1.27.0) (2026-11-18)
 
 
