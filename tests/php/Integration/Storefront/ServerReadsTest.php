@@ -279,6 +279,15 @@ final class ServerReadsTest extends WP_UnitTestCase {
 		$this->assertCount( 4, $this->recorder->requests );
 	}
 
+	public function test_a_blanks_options_as_written_read_its_variants_alone(): void {
+		$this->recorder->raw( 200, self::example_json( '/v1/blanks/{id}/variants' ), self::JSON );
+
+		$options = $this->reads->written_options( 'blank_tee' );
+
+		$this->assertNotSame( array(), $options );
+		$this->assertSame( array( '/v1/blanks/blank_tee/variants' ), $this->paths(), 'not its views, which no designer reads untranslated' );
+	}
+
 	public function test_a_side_without_a_blank_reads_its_template_alone(): void {
 		$this->recorder->raw( 200, self::example_json( '/v1/templates/{id}' ), self::JSON );
 

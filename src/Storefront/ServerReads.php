@@ -58,6 +58,12 @@ final class ServerReads {
 	private const BLANK_VIEWS_READ = 'storefront-blank-views';
 
 	/**
+	 * A blank's variants with their options named as written, which no
+	 * designer shows: its views are not read again for them.
+	 */
+	private const WRITTEN_VARIANTS_READ = 'storefront-blank-written-variants';
+
+	/**
 	 * The template `template_read()` decoded last, by template id and
 	 * language, with the answer it was decoded from: a product page asks
 	 * for the same template for each variation on it.
@@ -326,7 +332,7 @@ final class ServerReads {
 			return array();
 		}
 		try {
-			$variants = json_decode( $this->blank( $blank_id, null )['variants'], true );
+			$variants = json_decode( $this->json( self::WRITTEN_VARIANTS_READ, array( 'id' => $blank_id ) ), true );
 		} catch ( ApiException ) {
 			set_transient( self::PAUSE_TRANSIENT, 1, self::PAUSE_SECONDS );
 			return array();
@@ -414,10 +420,11 @@ final class ServerReads {
 		$id       = $args['id'] ?? '';
 		$language = $args['lang'] ?? null;
 		return match ( $what ) {
-			self::TEMPLATE_READ    => fn (): array => array( 'json' => $this->catalogue->template_answer( $id, $language ) ),
-			self::CONSTRAINTS_READ => fn (): array => array( 'json' => $this->catalogue->constraints_answer( $id, $args['blankId'] ?? '', $args['placementId'] ?? '' ) ),
-			self::BLANK_VIEWS_READ => fn (): array => $this->catalogue->blank_views_answers( $id, $language ),
-			default                => null,
+			self::TEMPLATE_READ         => fn (): array => array( 'json' => $this->catalogue->template_answer( $id, $language ) ),
+			self::CONSTRAINTS_READ      => fn (): array => array( 'json' => $this->catalogue->constraints_answer( $id, $args['blankId'] ?? '', $args['placementId'] ?? '' ) ),
+			self::BLANK_VIEWS_READ      => fn (): array => $this->catalogue->blank_views_answers( $id, $language ),
+			self::WRITTEN_VARIANTS_READ => fn (): array => array( 'json' => $this->catalogue->blank_variants_answer( $id ) ),
+			default                     => null,
 		};
 	}
 
