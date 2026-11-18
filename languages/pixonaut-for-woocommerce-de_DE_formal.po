@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:06:30+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:32:38+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -313,24 +313,34 @@ msgstr ""
 msgid ""
 "The blank option the attribute stands for, as Pixonaut writes it; null when "
 "it is not linked."
-msgstr "Die Option des Rohlings, für die das Attribut steht, wie Pixonaut sie schreibt; null, wenn es nicht verknüpft ist."
+msgstr ""
+"Die Option des Rohlings, für die das Attribut steht, wie Pixonaut sie "
+"schreibt; null, wenn es nicht verknüpft ist."
 
 #: src/Abilities/BlankOptionRows.php:82
 msgid "The option value the value was linked to; null when it was given none."
-msgstr "Der Optionswert, mit dem der Wert verknüpft wurde; null, wenn er keinen erhalten hat."
+msgstr ""
+"Der Optionswert, mit dem der Wert verknüpft wurde; null, wenn er keinen "
+"erhalten hat."
 
 #: src/Abilities/BlankOptionRows.php:86
 msgid ""
 "The option value it stands for: the one it was linked to, else the option's "
 "value of its name; null when it is not linked, and then shows as text."
-msgstr "Der Optionswert, für den er steht: der verknüpfte, sonst der gleichnamige Wert der Option; null, wenn er nicht verknüpft ist und dann als Text erscheint."
+msgstr ""
+"Der Optionswert, für den er steht: der verknüpfte, sonst der gleichnamige "
+"Wert der Option; null, wenn er nicht verknüpft ist und dann als Text "
+"erscheint."
 
 #: src/Abilities/BlankOptionRows.php:93
 msgid ""
 "The options the attribute can be linked to, each with its values: those of "
 "the blanks the products with this attribute use, themselves or through their "
 "variations."
-msgstr "Die Optionen, mit denen das Attribut verknüpft werden kann, jeweils mit ihren Werten: die der Rohlinge, die die Produkte mit diesem Attribut selbst oder über ihre Varianten verwenden."
+msgstr ""
+"Die Optionen, mit denen das Attribut verknüpft werden kann, jeweils mit "
+"ihren Werten: die der Rohlinge, die die Produkte mit diesem Attribut selbst "
+"oder über ihre Varianten verwenden."
 
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
@@ -612,7 +622,16 @@ msgid ""
 "in the designer as the option values' colour or picture swatches; a value "
 "whose `stands_for` is null is not linked and shows as text. Link one with "
 "`set-attribute-blank-option`."
-msgstr "Liest für jedes globale Attribut oder das angegebene, für welche Option des Pixonaut-Rohlings es steht (ein Rahmenfarben-Attribut für die Option Color des Rohlings), für welchen Optionswert jeder seiner Werte steht, und `options`: die Optionen, mit denen es verknüpft werden kann, jeweils mit ihren Werten, aus den Rohlingen, die seine Produkte verwenden. Die Werte eines verknüpften Attributs wählen die Rohling-Variante und erscheinen im Designer als Farb- oder Bildschaltflächen der Optionswerte; ein Wert, dessen `stands_for` null ist, ist nicht verknüpft und erscheint als Text. Verknüpfen mit `set-attribute-blank-option`."
+msgstr ""
+"Liest für jedes globale Attribut oder das angegebene, für welche Option des "
+"Pixonaut-Rohlings es steht (ein Rahmenfarben-Attribut für die Option Color "
+"des Rohlings), für welchen Optionswert jeder seiner Werte steht, und "
+"`options`: die Optionen, mit denen es verknüpft werden kann, jeweils mit "
+"ihren Werten, aus den Rohlingen, die seine Produkte verwenden. Die Werte "
+"eines verknüpften Attributs wählen die Rohling-Variante und erscheinen im "
+"Designer als Farb- oder Bildschaltflächen der Optionswerte; ein Wert, dessen "
+"`stands_for` null ist, ist nicht verknüpft und erscheint als Text. "
+"Verknüpfen mit `set-attribute-blank-option`."
 
 #: src/Abilities/GetAttributeBlankOptions.php:44
 msgid "Only this global attribute, by id."
@@ -2388,7 +2407,21 @@ msgid ""
 "attribute. Products with the attribute are re-checked in the background. The "
 "answer is the attribute's row; a `503` when the re-check could not be "
 "queued, the link being saved."
-msgstr "Verknüpft ein globales Attribut mit einer Option der Pixonaut-Rohlinge, die seine Produkte verwenden, und seine Werte mit den Werten der Option, wie es das Feld „Rohling-Option“ auf der Bearbeitungsseite des Attributs tut: ein Rahmenfarben-Attribut mit der Option Color des Rohlings, seinen Wert Svart mit Black. Seine Werte wählen dann die Rohling-Variante und erscheinen im Designer als Farb- oder Bildschaltflächen der Optionswerte. `option` und jeder Wert werden so angegeben, wie `get-attribute-blank-options` sie in `options` auflistet. Ein Wert mit leerem `value` oder noch ohne Verknüpfung steht für den gleichnamigen Wert der Option; nicht angegebene Werte behalten ihre Verknüpfung, solange die Option gleich bleibt, und verlieren sie, wenn sie sich ändert. Eine leere `option` hebt die Verknüpfung des Attributs auf. Die Produkte mit dem Attribut werden im Hintergrund erneut geprüft. Die Antwort ist die Zeile des Attributs; ein `503`, wenn die erneute Prüfung nicht eingeplant werden konnte, die Verknüpfung aber gespeichert ist."
+msgstr ""
+"Verknüpft ein globales Attribut mit einer Option der Pixonaut-Rohlinge, die "
+"seine Produkte verwenden, und seine Werte mit den Werten der Option, wie es "
+"das Feld „Rohling-Option“ auf der Bearbeitungsseite des Attributs tut: ein "
+"Rahmenfarben-Attribut mit der Option Color des Rohlings, seinen Wert Svart "
+"mit Black. Seine Werte wählen dann die Rohling-Variante und erscheinen im "
+"Designer als Farb- oder Bildschaltflächen der Optionswerte. `option` und "
+"jeder Wert werden so angegeben, wie `get-attribute-blank-options` sie in "
+"`options` auflistet. Ein Wert mit leerem `value` oder noch ohne Verknüpfung "
+"steht für den gleichnamigen Wert der Option; nicht angegebene Werte behalten "
+"ihre Verknüpfung, solange die Option gleich bleibt, und verlieren sie, wenn "
+"sie sich ändert. Eine leere `option` hebt die Verknüpfung des Attributs auf. "
+"Die Produkte mit dem Attribut werden im Hintergrund erneut geprüft. Die "
+"Antwort ist die Zeile des Attributs; ein `503`, wenn die erneute Prüfung "
+"nicht eingeplant werden konnte, die Verknüpfung aber gespeichert ist."
 
 #: src/Abilities/SetAttributeBlankOption.php:48
 #: src/Abilities/SetAttributeQueryName.php:38
@@ -2412,13 +2445,17 @@ msgstr "Kein globales Attribut hat diese ID."
 msgid ""
 "No blank the products with this attribute use has the option \"%1$s\". "
 "Options: %2$s."
-msgstr "Kein Rohling, den die Produkte mit diesem Attribut verwenden, hat die Option „%1$s“. Optionen: %2$s."
+msgstr ""
+"Kein Rohling, den die Produkte mit diesem Attribut verwenden, hat die Option "
+"„%1$s“. Optionen: %2$s."
 
 #: src/Abilities/SetAttributeBlankOption.php:117
 msgid ""
 "A value given is not one of the attribute's values: name each by its "
 "`term_id` or `slug`."
-msgstr "Ein angegebener Wert ist keiner der Werte des Attributs: Geben Sie jeden per `term_id` oder `slug` an."
+msgstr ""
+"Ein angegebener Wert ist keiner der Werte des Attributs: Geben Sie jeden per "
+"`term_id` oder `slug` an."
 
 #. translators: 1: the option value asked for. 2: the blank option. 3: its values, comma-separated. Error an AI assistant or an MCP client reads.
 #: src/Abilities/SetAttributeBlankOption.php:123
@@ -2432,7 +2469,11 @@ msgid ""
 "The link is saved, but the products with this attribute could not be queued "
 "for a re-check, so they keep the blank variants they had. Run `recheck-"
 "products` to re-check them."
-msgstr "Die Verknüpfung ist gespeichert, aber die Produkte mit diesem Attribut konnten nicht zur erneuten Prüfung eingeplant werden und behalten daher ihre bisherigen Rohling-Varianten. Führen Sie `recheck-products` aus, um sie erneut zu prüfen."
+msgstr ""
+"Die Verknüpfung ist gespeichert, aber die Produkte mit diesem Attribut "
+"konnten nicht zur erneuten Prüfung eingeplant werden und behalten daher ihre "
+"bisherigen Rohling-Varianten. Führen Sie `recheck-products` aus, um sie "
+"erneut zu prüfen."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
@@ -3176,12 +3217,12 @@ msgid "The image of card %s is not a public URL."
 msgstr "Das Bild von Karte %s ist keine öffentliche URL."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetShippingMethod.php:74
+#: src/Abilities/SetShippingMethod.php:79
 msgid "Change or add a shipping method"
 msgstr "Versandart ändern oder hinzufügen"
 
 #. translators: %s: the name of the ability that reads the shipping zones.
-#: src/Abilities/SetShippingMethod.php:77
+#: src/Abilities/SetShippingMethod.php:82
 #, php-format
 msgid ""
 "Changes a shipping method in a zone, by its `instance_id` as %s reads it, or "
@@ -3209,33 +3250,47 @@ msgstr ""
 "dann diesen. `enabled` false nimmt eine Versandart aus der Kasse, ohne sie "
 "zu löschen. Die Antwort ist die Versandart, wie sie jetzt ist."
 
-#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:209
+#: src/Abilities/SetShippingMethod.php:91 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr "Die Zone; 0 ist die Zone für die Orte, die keine andere Zone abdeckt."
 
-#: src/Abilities/SetShippingMethod.php:91
+#: src/Abilities/SetShippingMethod.php:96
 msgid "The method to change; leave it out to add one."
 msgstr "Die zu ändernde Versandart; lassen Sie sie weg, um eine hinzuzufügen."
 
-#: src/Abilities/SetShippingMethod.php:96
+#: src/Abilities/SetShippingMethod.php:101
 msgid "The kind of method to add."
 msgstr "Der Typ der hinzuzufügenden Versandart."
 
-#: src/Abilities/SetShippingMethod.php:118
+#: src/Abilities/SetShippingMethod.php:123
 msgid "Empty for no minimum."
 msgstr "Leer, wenn es keinen Mindestbetrag gibt."
 
-#: src/Abilities/SetShippingMethod.php:152
+#: src/Abilities/SetShippingMethod.php:133
+msgid ""
+"The method's place among the zone's methods, lowest first; the other methods "
+"keep theirs. A cart that starts qualifying for another rate gets the first "
+"one it can have, so free shipping that is to be chosen once a cart reaches "
+"its minimum goes before a flat rate."
+msgstr ""
+"Die Position der Versandart unter den Versandarten der Zone, die niedrigste "
+"zuerst; die anderen Versandarten behalten ihre. Ein Warenkorb, der neu die "
+"Bedingungen für eine andere Versandoption erfüllt, erhält die erste, die für "
+"ihn infrage kommt; kostenloser Versand, der gewählt werden soll, sobald ein "
+"Warenkorb seinen Mindestbetrag erreicht, steht daher vor einer "
+"Versandkostenpauschale."
+
+#: src/Abilities/SetShippingMethod.php:162
 msgid "No shipping method has this instance id."
 msgstr "Keine Versandart hat diese Instanz-ID."
 
-#: src/Abilities/SetShippingMethod.php:156
+#: src/Abilities/SetShippingMethod.php:166
 msgid "Give the method's instance_id to change it, or a kind to add one."
 msgstr ""
 "Geben Sie die instance_id der Versandart an, um sie zu ändern, oder einen "
 "Typ (kind), um eine hinzuzufügen."
 
-#: src/Abilities/SetShippingMethod.php:159
+#: src/Abilities/SetShippingMethod.php:169
 msgid "A method's kind cannot change: add a method of the other kind instead."
 msgstr ""
 "Der Typ einer Versandart kann sich nicht ändern: Fügen Sie stattdessen eine "
@@ -3243,17 +3298,17 @@ msgstr ""
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
 #. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
-#: src/Abilities/SetShippingMethod.php:164
-#: src/Abilities/SetShippingMethod.php:181
+#: src/Abilities/SetShippingMethod.php:174
+#: src/Abilities/SetShippingMethod.php:191
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "Eine Versandart vom Typ %2$s hat keine Einstellung %1$s."
 
-#: src/Abilities/SetShippingMethod.php:196
+#: src/Abilities/SetShippingMethod.php:209
 msgid "The store did not keep the shipping method."
 msgstr "Der Shop hat die Versandart nicht gespeichert."
 
-#: src/Abilities/SetShippingMethod.php:245
+#: src/Abilities/SetShippingMethod.php:258
 msgid ""
 "Shipping is taxed as the cart's items are, and the store's taxable products "
 "have different rates, so a cost including tax depends on the cart. Give the "
@@ -9930,7 +9985,12 @@ msgid ""
 "frame's colour. Its values then pick the blank's variant and show in the "
 "designer as the option's colour or picture swatches. The options listed are "
 "those of the blanks the products with this attribute use."
-msgstr "Die Option des Pixonaut-Rohlings, für die dieses Attribut steht, etwa die Farbe eines Rahmens. Seine Werte wählen dann die Rohling-Variante und erscheinen im Designer als Farb- oder Bildschaltflächen der Option. Aufgelistet sind die Optionen der Rohlinge, die die Produkte mit diesem Attribut verwenden."
+msgstr ""
+"Die Option des Pixonaut-Rohlings, für die dieses Attribut steht, etwa die "
+"Farbe eines Rahmens. Seine Werte wählen dann die Rohling-Variante und "
+"erscheinen im Designer als Farb- oder Bildschaltflächen der Option. "
+"Aufgelistet sind die Optionen der Rohlinge, die die Produkte mit diesem "
+"Attribut verwenden."
 
 #. translators: Column heading in the table of an attribute's values on the screen that edits a product attribute.
 #: templates/admin/blank-option-field.php:28
@@ -9960,14 +10020,19 @@ msgstr "Gleicher Name: %s"
 msgid ""
 "A value that is not linked shows as text and picks no variant by this "
 "option. Save after choosing another option to list its values."
-msgstr "Ein nicht verknüpfter Wert erscheint als Text und wählt über diese Option keine Variante. Nach Wahl einer anderen Option speichern, um ihre Werte aufzulisten."
+msgstr ""
+"Ein nicht verknüpfter Wert erscheint als Text und wählt über diese Option "
+"keine Variante. Nach Wahl einer anderen Option speichern, um ihre Werte "
+"aufzulisten."
 
 #. translators: Shown under the "Blank option" select on the screen that edits a product attribute, while the attribute stands for no option.
 #: templates/admin/blank-option-field.php:40
 msgid ""
 "Not linked: its values show as text, and pick the blank's variant only where "
 "they have the names of an option and its values."
-msgstr "Nicht verknüpft: Seine Werte erscheinen als Text und wählen die Rohling-Variante nur, wo sie die Namen einer Option und ihrer Werte tragen."
+msgstr ""
+"Nicht verknüpft: Seine Werte erscheinen als Text und wählen die Rohling-"
+"Variante nur, wo sie die Namen einer Option und ihrer Werte tragen."
 
 #: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."

@@ -470,7 +470,11 @@ method to change or the `kind` (`flat_rate` or `free_shipping`) of one to
 add, and only the settings to change: `title`, `enabled`, `cost` (a plain
 amount; with `cost_includes_tax` it is counted back to the cost kept, and
 refused when the tax depends on the cart),
-`tax_status`, `min_amount`, `requires` and `ignore_discounts`. A minimum given
+`tax_status`, `min_amount`, `requires`, `ignore_discounts` and `order`, the
+method's place among the zone's methods (WooCommerce's `method_order`, lowest
+first; the other methods keep theirs). A cart that starts qualifying for
+another rate gets the first one it can have, so free shipping meant to be
+chosen once a cart reaches its minimum goes before a flat rate. A minimum given
 to free shipping that required nothing makes it require the minimum. A
 setting the method's own form does not have is refused. It goes
 through WooCommerce's own shipping zone method route, so WooCommerce validates

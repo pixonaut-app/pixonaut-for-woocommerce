@@ -50,6 +50,11 @@ final class SetShippingMethod implements Ability {
 
 	private const REQUIRES = 'requires';
 
+	/**
+	 * The method's place among the zone's, which WooCommerce keeps as `method_order`.
+	 */
+	private const ORDER = 'order';
+
 	private const YES = 'yes';
 
 	private const NO = 'no';
@@ -122,6 +127,11 @@ final class SetShippingMethod implements Ability {
 						'enum' => ShippingMethods::REQUIRES,
 					),
 					ShippingMethods::IGNORE_DISCOUNTS => array( 'type' => 'boolean' ),
+					self::ORDER                       => array(
+						'type'        => 'integer',
+						'minimum'     => 0,
+						'description' => __( 'The method\'s place among the zone\'s methods, lowest first; the other methods keep theirs. A cart that starts qualifying for another rate gets the first one it can have, so free shipping that is to be chosen once a cart reaches its minimum goes before a flat rate.', 'pixonaut-for-woocommerce' ),
+					),
 				),
 				'required'             => array( self::ZONE_ID ),
 				'additionalProperties' => false,
@@ -185,6 +195,9 @@ final class SetShippingMethod implements Ability {
 		}
 		if ( is_bool( $input[ self::ENABLED ] ?? null ) ) {
 			$request->set_param( self::ENABLED, $input[ self::ENABLED ] );
+		}
+		if ( is_int( $input[ self::ORDER ] ?? null ) ) {
+			$request->set_param( self::ORDER, $input[ self::ORDER ] );
 		}
 		$response = rest_do_request( $request );
 		if ( $response->is_error() ) {
