@@ -132,6 +132,23 @@ final class ChoicePricesTest extends WP_UnitTestCase {
 		$this->assertSame( array(), $prices->texts( $product, 'attribute_pa_other', $chosen ) );
 	}
 
+	public function test_a_whole_amount_drops_its_decimals_where_the_shop_trims_them(): void {
+		ChoicePrices::set_choice( $this->attributes[ self::FRAME ], ChoicePrices::ADD_ON );
+		update_option( 'woocommerce_currency', 'SEK' );
+		update_option( 'woocommerce_currency_pos', 'right_space' );
+		update_option( 'woocommerce_price_decimal_sep', ',' );
+		update_option( 'woocommerce_price_num_decimals', '2' );
+		add_filter( 'woocommerce_price_trim_zeros', '__return_true' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WooCommerce's own filter.
+		$chosen = array( 'attribute_pa_size' => 's' );
+
+		$trimmed = ( new ProductChoicePrices() )->texts( $this->poster(), 'attribute_pa_frame', $chosen );
+		remove_filter( 'woocommerce_price_trim_zeros', '__return_true' );
+		$kept = ( new ProductChoicePrices() )->texts( $this->poster(), 'attribute_pa_frame', $chosen );
+
+		$this->assertSame( array( 'oak' => "+50\u{a0}kr" ), $trimmed );
+		$this->assertSame( array( 'oak' => "+50,00\u{a0}kr" ), $kept );
+	}
+
 	public function test_a_printed_swatch_carries_its_price_after_its_name(): void {
 		$swatches = new ReflectionMethod( PrintedSwatches::class, 'swatches' );
 		$swatches->setAccessible( true );

@@ -25,7 +25,7 @@ use WC_Product_Variable;
  *
  * @phpstan-import-type PricedVariation from ChoicePriceTable
  * @phpstan-import-type Amount from ChoicePriceTable
- * @phpstan-type Format array{pattern: string, symbol: string, decimalSeparator: string, thousandSeparator: string}
+ * @phpstan-type Format array{pattern: string, symbol: string, decimalSeparator: string, thousandSeparator: string, trimZeros: bool}
  * @phpstan-type Data array{fields: list<string>, roles: array<string, string>, decimals: int, variations: list<PricedVariation>, options: array<string, list<string>>, format: Format, words: array<string, string>}
  */
 final class ProductChoicePrices {
@@ -100,7 +100,11 @@ final class ProductChoicePrices {
 	public static function text( array $amount, array $data ): string {
 		$format = $data['format'];
 		$number = number_format( $amount['amount'], $data['decimals'], $format['decimalSeparator'], $format['thousandSeparator'] );
-		$price  = str_replace( array( '%1$s', '%2$s' ), array( $format['symbol'], $number ), $format['pattern'] );
+		if ( $format['trimZeros'] && $data['decimals'] > 0 ) {
+			// As `wc_trim_zeros()`: a whole amount shows no decimals.
+			$number = (string) preg_replace( '/' . preg_quote( $format['decimalSeparator'], '/' ) . '0++$/', '', $number );
+		}
+		$price = str_replace( array( '%1$s', '%2$s' ), array( $format['symbol'], $number ), $format['pattern'] );
 		return str_replace( '%s', $price, $data['words'][ $amount['kind'] ] ?? '%s' );
 	}
 
@@ -135,8 +139,9 @@ final class ProductChoicePrices {
 			'format'     => array(
 				'pattern'           => self::decoded( get_woocommerce_price_format() ),
 				'symbol'            => self::decoded( get_woocommerce_currency_symbol() ),
-				'decimalSeparator'  => wc_get_price_decimal_separator(),
+				'decimalSeparator'  => self::decoded( wc_get_price_decimal_separator() ),
 				'thousandSeparator' => self::decoded( wc_get_price_thousand_separator() ),
+				'trimZeros'         => self::trims_zeros(),
 			),
 			'words'      => array(
 				/* translators: %s: a price, such as "180 kr". Beside an option of a product, such as a frame, on its page: what choosing it adds to the product's price. The customer reads it. */
@@ -183,6 +188,16 @@ final class ProductChoicePrices {
 			$options[ 'attribute_' . sanitize_title( (string) $name ) ] = array_values( array_map( 'strval', $values ) );
 		}
 		return $options;
+	}
+
+	/**
+	 * Whether the shop writes a whole price without its decimals, as
+	 * WooCommerce does when its filter for it says so: read from how it
+	 * writes one.
+	 */
+	private static function trims_zeros(): bool {
+		$decimals = wc_get_price_decimals();
+		return $decimals > 0 && ! str_contains( self::decoded( wp_strip_all_tags( wc_price( 1 ) ) ), self::decoded( wc_get_price_decimal_separator() ) . str_repeat( '0', $decimals ) );
 	}
 
 	/**

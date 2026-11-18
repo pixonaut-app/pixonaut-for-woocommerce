@@ -43,6 +43,9 @@ export type PriceFormat = {
 	symbol: string;
 	decimalSeparator: string;
 	thousandSeparator: string;
+	/** Whether a whole price is written without its decimals, as
+	 *  WooCommerce's `wc_trim_zeros()` writes it for the shop. */
+	trimZeros?: boolean;
 };
 
 /** What the form prints: the product, the price format and the words an
@@ -214,7 +217,7 @@ export function amountText(
 		format.thousandSeparator,
 	);
 	const number =
-		fraction === undefined
+		fraction === undefined || (format.trimZeros && /^0+$/.test(fraction))
 			? grouped
 			: grouped + format.decimalSeparator + fraction;
 	const price = format.pattern
