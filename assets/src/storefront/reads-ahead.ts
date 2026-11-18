@@ -9,8 +9,12 @@ export type ReadTarget = Partial<
 	Pick<SplitMountOptions, (typeof TARGET_KEYS)[number]>
 >;
 
-/** One target's reads, as the server answers them. */
+/** One target's reads. */
 type AheadRead = ReadTarget & { reads: SideReads };
+
+/** A target's reads as the server names them: each answer by its index in
+ *  the answer's `parts` (`ReadsAhead::answer()`). */
+type IndexedReads = { [name: string]: number | IndexedReads };
 
 /** The longest the ask waits for the page to fall idle once the designer
  *  is shown: the reads are wanted before the shopper's next switch. */
@@ -101,14 +105,52 @@ export class ReadsAhead {
 			if (!response.ok) {
 				return;
 			}
-			const body: unknown = await response.json();
-			const reads = (body as { reads?: unknown } | null)?.reads;
-			this.reads = Array.isArray(reads) ? (reads as AheadRead[]) : [];
+			this.reads = aheadReads(await response.json());
 			this.readAt = this.now();
 		} catch {
 			// Each switch reads for itself, as without the reads.
 		}
 	}
+}
+
+/** Each target's reads, from the server's answer: its reads named by index
+ *  in `parts`, as each of Pixonaut's answers is sent once. Targets sharing
+ *  an answer share its object. A target naming a part the answer lacks is
+ *  left out. */
+function aheadReads(body: unknown): AheadRead[] {
+	const { targets, parts } = (body ?? {}) as {
+		targets?: unknown;
+		parts?: unknown;
+	};
+	if (!Array.isArray(targets) || !Array.isArray(parts)) {
+		return [];
+	}
+	const found: AheadRead[] = [];
+	for (const target of targets as (ReadTarget & {
+		reads?: IndexedReads;
+	})[]) {
+		const reads =
+			target.reads === undefined ? undefined : partsOf(target.reads, parts);
+		if (reads !== undefined) {
+			found.push({ ...target, reads: reads as SideReads });
+		}
+	}
+	return found;
+}
+
+function partsOf(
+	indexed: IndexedReads,
+	parts: readonly unknown[],
+): Record<string, unknown> | undefined {
+	const reads: Record<string, unknown> = {};
+	for (const [name, read] of Object.entries(indexed)) {
+		const part = typeof read === 'number' ? parts[read] : partsOf(read, parts);
+		if (part === undefined) {
+			return undefined;
+		}
+		reads[name] = part;
+	}
+	return reads;
 }
 
 /** A target's key as the server names it (`ReadsAhead::key()`). */

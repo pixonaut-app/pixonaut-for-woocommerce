@@ -15,7 +15,10 @@ const ON_HOODIE = { ...TEE, blankId: 'blank_hoodie' };
 
 /** A fetch answering the route with the hoodie's reads. */
 function answering(
-	body: unknown = { reads: [{ ...ON_HOODIE, reads: HOODIE }] },
+	body: unknown = {
+		targets: [{ ...ON_HOODIE, reads: { template: 0 } }],
+		parts: [HOODIE.template],
+	},
 ) {
 	return vi.fn<typeof fetch>(
 		async () => new Response(JSON.stringify(body), { status: 200 }),
@@ -91,6 +94,59 @@ describe('ReadsAhead', () => {
 			reads: PRINTED,
 			readFor: TEE,
 		});
+	});
+
+	it('gives each target the answers it names, shared with the other targets', async () => {
+		vi.useFakeTimers();
+		const mockups = { views: [] };
+		const variants = { axes: [] };
+		const ON_POSTER = { ...ON_HOODIE, templateId: 'mini-poster@1' };
+		const ahead = new ReadsAhead(
+			'https://shop.test/reads',
+			42,
+			answering({
+				targets: [
+					{
+						...ON_HOODIE,
+						reads: { template: 0, blank: { mockups: 1, variants: 2 } },
+					},
+					{
+						...ON_POSTER,
+						reads: { template: 3, blank: { mockups: 1, variants: 2 } },
+					},
+					{ ...TEE, blankId: 'blank_lost', reads: { template: 9 } },
+				],
+				parts: [HOODIE.template, mockups, variants, { id: 'poster' }],
+			}),
+		);
+		ahead.ask([]);
+		await idle();
+
+		const hoodie = ahead.readsFor(ON_HOODIE, undefined, undefined)?.reads;
+		const poster = ahead.readsFor(ON_POSTER, undefined, undefined)?.reads;
+		expect(hoodie).toEqual({ ...HOODIE, blank: { mockups, variants } });
+		expect(poster).toEqual({
+			template: { id: 'poster' },
+			blank: { mockups, variants },
+		});
+		expect(poster?.blank?.mockups).toBe(hoodie?.blank?.mockups);
+		expect(
+			ahead.readsFor({ ...TEE, blankId: 'blank_lost' }, undefined, undefined),
+			'a target naming a part the answer lacks',
+		).toBeUndefined();
+	});
+
+	it('takes no reads from an answer of another shape', async () => {
+		vi.useFakeTimers();
+		const ahead = new ReadsAhead(
+			'https://shop.test/reads',
+			42,
+			answering({ reads: [{ ...ON_HOODIE, reads: HOODIE }] }),
+		);
+		ahead.ask([]);
+		await idle();
+
+		expect(ahead.readsFor(ON_HOODIE, undefined, undefined)).toBeUndefined();
 	});
 
 	it('lets reads go once their photo links may have closed, and asks again', async () => {

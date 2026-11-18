@@ -161,8 +161,13 @@ idle, the script asks `GET /wp-json/pixonaut/v1/storefront/reads-ahead?product=<
 (with `printed[]=<templateId>|<blankId>|<placementId>` for each target the
 page printed reads for) for the server's reads of the others, at most six,
 and a side mounted again on one of them starts from them as above. The
-route answers only a published product without a password, and the script
-lets its reads go after the same 30 minutes, asking again at the next mount.
+answer holds each of Pixonaut's answers once, under `parts`, and each of
+its `targets` names its template, placement and blank reads by their index
+there, as targets often share a template or a blank. It is compressed with
+gzip when the browser takes it and carries a weak `ETag` with `Cache-Control:
+public, no-cache`, so a browser holding it is answered `304`. The route
+answers only a published product without a password, and the script lets
+its reads go after the same 30 minutes, asking again at the next mount.
 
 The spinner shows until the side's design is drawn, when the script marks
 its `.pixonaut-preview__frame` `is-drawn` (once the SDK has replaced the
