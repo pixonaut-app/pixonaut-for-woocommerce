@@ -29,7 +29,8 @@ use WP_Error;
  * plan: makes each variation missing, on its blank (following the
  * product's setup when the blank is the product's, else the setup of a
  * variation already on that blank, else the product's with the blank
- * changed, checked with Pixonaut once per blank) and sold as its variant;
+ * changed and each side at its whole area there, checked with Pixonaut
+ * once per blank) and sold as its variant;
  * publishes again those the plan had disabled; gives the plan's variant to
  * those selling none; disables those no longer offered. Then the new and
  * changed variations' costs are read and the price rule sets their prices.
@@ -188,7 +189,8 @@ final class VariationGenerator {
 	/**
 	 * The setup a variation on a blank gets: null to follow the product's,
 	 * on its blank; a variation's own setup already on the blank; else the
-	 * product's with the blank changed, checked with Pixonaut.
+	 * product's with the blank changed, each side at its placement's whole
+	 * area, checked with Pixonaut.
 	 *
 	 * @param WC_Product $product  The variable product.
 	 * @param string     $blank_id The blank.
@@ -208,7 +210,22 @@ final class VariationGenerator {
 		// Checked on a variation not saved yet, which starts from the product's setup.
 		$unsaved = new WC_Product_Variation();
 		$unsaved->set_parent_id( $product->get_id() );
-		$posted = $this->fields->posted( array( 'blank_id' => $blank_id ), $own );
+		// A size picked for the product's blank names an area of that blank: on another, each side is sold at its placement's whole area, as each of its variants has it.
+		$sides  = array_map(
+			static fn ( array $side ): array => array(
+				'print_sizes' => array(),
+				'start_size'  => 0,
+			) + $side,
+			SetupFields::sides_of( $own )
+		);
+		$posted = $this->fields->posted(
+			array(
+				'blank_id'     => $blank_id,
+				'sides'        => $sides,
+				'personalised' => $own->personalise,
+			),
+			$own
+		);
 		return $posted instanceof WP_Error ? $posted : $this->links->check_variation( $unsaved, $posted, $own );
 	}
 
