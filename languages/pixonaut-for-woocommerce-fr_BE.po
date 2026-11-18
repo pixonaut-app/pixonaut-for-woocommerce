@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:32:38+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:44:44+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -3213,12 +3213,12 @@ msgid "The image of card %s is not a public URL."
 msgstr "L'image de la carte %s n'est pas une URL publique."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetShippingMethod.php:79
+#: src/Abilities/SetShippingMethod.php:80
 msgid "Change or add a shipping method"
 msgstr "Modifier ou ajouter un mode d'expédition"
 
 #. translators: %s: the name of the ability that reads the shipping zones.
-#: src/Abilities/SetShippingMethod.php:82
+#: src/Abilities/SetShippingMethod.php:83
 #, php-format
 msgid ""
 "Changes a shipping method in a zone, by its `instance_id` as %s reads it, or "
@@ -3246,42 +3246,43 @@ msgstr ""
 "commande sans le supprimer. Répond avec le mode d'expédition tel qu'il est "
 "maintenant."
 
-#: src/Abilities/SetShippingMethod.php:91 src/Abilities/ShippingMethods.php:209
+#: src/Abilities/SetShippingMethod.php:92 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr ""
 "La zone ; 0 est la zone des emplacements qu'aucune autre zone ne couvre."
 
-#: src/Abilities/SetShippingMethod.php:96
+#: src/Abilities/SetShippingMethod.php:97
 msgid "The method to change; leave it out to add one."
 msgstr "Le mode d'expédition à modifier ; omettez-le pour en ajouter un."
 
-#: src/Abilities/SetShippingMethod.php:101
+#: src/Abilities/SetShippingMethod.php:102
 msgid "The kind of method to add."
 msgstr "Le type de mode d'expédition à ajouter."
 
-#: src/Abilities/SetShippingMethod.php:123
+#: src/Abilities/SetShippingMethod.php:124
 msgid "Empty for no minimum."
 msgstr "Vide s'il n'y a pas de minimum."
 
-#: src/Abilities/SetShippingMethod.php:133
+#: src/Abilities/SetShippingMethod.php:134
 msgid ""
-"The method's place among the zone's methods, lowest first; the other methods "
-"keep theirs. A cart that starts qualifying for another rate gets the first "
-"one it can have, so free shipping that is to be chosen once a cart reaches "
-"its minimum goes before a flat rate."
+"The method's place among the zone's methods, lowest first. A method already "
+"at that place, and those after it, move one place down; the others keep "
+"theirs. A cart that starts qualifying for another rate gets the first one it "
+"can have that is not pickup, so free shipping that is to be chosen once a "
+"cart reaches its minimum goes before a flat rate."
 msgstr ""
 
-#: src/Abilities/SetShippingMethod.php:162
+#: src/Abilities/SetShippingMethod.php:163
 msgid "No shipping method has this instance id."
 msgstr "Aucun mode d'expédition n'a cet identifiant d'instance."
 
-#: src/Abilities/SetShippingMethod.php:166
+#: src/Abilities/SetShippingMethod.php:167
 msgid "Give the method's instance_id to change it, or a kind to add one."
 msgstr ""
 "Indiquez l'instance_id du mode d'expédition pour le modifier, ou un type "
 "(kind) pour en ajouter un."
 
-#: src/Abilities/SetShippingMethod.php:169
+#: src/Abilities/SetShippingMethod.php:170
 msgid "A method's kind cannot change: add a method of the other kind instead."
 msgstr ""
 "Le type d'un mode d'expédition ne peut pas changer : ajoutez plutôt un mode "
@@ -3289,17 +3290,17 @@ msgstr ""
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
 #. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
-#: src/Abilities/SetShippingMethod.php:174
-#: src/Abilities/SetShippingMethod.php:191
+#: src/Abilities/SetShippingMethod.php:175
+#: src/Abilities/SetShippingMethod.php:192
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "Un mode d'expédition de type %2$s n'a pas de réglage %1$s."
 
-#: src/Abilities/SetShippingMethod.php:209
+#: src/Abilities/SetShippingMethod.php:210
 msgid "The store did not keep the shipping method."
 msgstr "La boutique n'a pas conservé le mode d'expédition."
 
-#: src/Abilities/SetShippingMethod.php:258
+#: src/Abilities/SetShippingMethod.php:294
 msgid ""
 "Shipping is taxed as the cart's items are, and the store's taxable products "
 "have different rates, so a cost including tax depends on the cart. Give the "

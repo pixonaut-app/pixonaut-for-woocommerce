@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Abilities;
 use Pixonaut\WooCommerce\Abilities\Store\ResourceAbility;
 use WC_Cache_Helper;
 use WC_Shipping_Method;
+use WC_Shipping_Zone;
 use WC_Shipping_Zones;
 use WP_Error;
 use WP_Http;
@@ -130,7 +131,7 @@ final class SetShippingMethod implements Ability {
 					self::ORDER                       => array(
 						'type'        => 'integer',
 						'minimum'     => 0,
-						'description' => __( 'The method\'s place among the zone\'s methods, lowest first; the other methods keep theirs. A cart that starts qualifying for another rate gets the first one it can have, so free shipping that is to be chosen once a cart reaches its minimum goes before a flat rate.', 'pixonaut-for-woocommerce' ),
+						'description' => __( 'The method\'s place among the zone\'s methods, lowest first. A method already at that place, and those after it, move one place down; the others keep theirs. A cart that starts qualifying for another rate gets the first one it can have that is not pickup, so free shipping that is to be chosen once a cart reaches its minimum goes before a flat rate.', 'pixonaut-for-woocommerce' ),
 					),
 				),
 				'required'             => array( self::ZONE_ID ),
@@ -208,9 +209,44 @@ final class SetShippingMethod implements Ability {
 		if ( ! $saved instanceof WC_Shipping_Method ) {
 			return self::refusal( 'pixonaut_wc_ability_shipping_not_saved', __( 'The store did not keep the shipping method.', 'pixonaut-for-woocommerce' ), WP_Http::INTERNAL_SERVER_ERROR );
 		}
+		if ( is_int( $input[ self::ORDER ] ?? null ) ) {
+			self::make_room( $zone_id, $saved, $input[ self::ORDER ] );
+		}
 		// Carts keep the rates they were quoted until the shipping version changes, as WooCommerce's shipping screen changes it.
 		WC_Cache_Helper::get_transient_version( 'shipping', true );
 		return ShippingMethods::method( $saved );
+	}
+
+	/**
+	 * Moves the zone's other methods at the method's place or after it one
+	 * place down, when one of them is at that place: WooCommerce lists
+	 * methods of the same order as it finds them, so the method would not
+	 * otherwise come first among them.
+	 *
+	 * @param int                $zone_id The zone.
+	 * @param WC_Shipping_Method $method  The method just placed.
+	 * @param int                $order   Its place.
+	 */
+	private static function make_room( int $zone_id, WC_Shipping_Method $method, int $order ): void {
+		$zone = WC_Shipping_Zones::get_zone( $zone_id );
+		if ( ! $zone instanceof WC_Shipping_Zone ) {
+			return;
+		}
+		$others = array_filter(
+			$zone->get_shipping_methods(),
+			static fn ( WC_Shipping_Method $other ): bool => (int) $other->instance_id !== (int) $method->instance_id
+		);
+		$taken  = array_filter( $others, static fn ( WC_Shipping_Method $other ): bool => (int) $other->method_order === $order );
+		if ( array() === $taken ) {
+			return;
+		}
+		foreach ( $others as $other ) {
+			if ( (int) $other->method_order >= $order ) {
+				$request = new WP_REST_Request( 'PUT', sprintf( self::ROUTE, $zone_id ) . '/' . (int) $other->instance_id );
+				$request->set_param( self::ORDER, (int) $other->method_order + 1 );
+				rest_do_request( $request );
+			}
+		}
 	}
 
 	/**

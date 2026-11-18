@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:32:38+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:44:44+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -3092,12 +3092,12 @@ msgid "The image of card %s is not a public URL."
 msgstr "Bilden för kort %s är ingen offentlig URL."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetShippingMethod.php:79
+#: src/Abilities/SetShippingMethod.php:80
 msgid "Change or add a shipping method"
 msgstr "Ändra eller lägg till ett leveranssätt"
 
 #. translators: %s: the name of the ability that reads the shipping zones.
-#: src/Abilities/SetShippingMethod.php:82
+#: src/Abilities/SetShippingMethod.php:83
 #, php-format
 msgid ""
 "Changes a shipping method in a zone, by its `instance_id` as %s reads it, or "
@@ -3123,45 +3123,48 @@ msgstr ""
 "krävde något att kräva det. `enabled` false tar bort ett leveranssätt från "
 "kassan utan att radera det. Svaret är leveranssättet som det är nu."
 
-#: src/Abilities/SetShippingMethod.php:91 src/Abilities/ShippingMethods.php:209
+#: src/Abilities/SetShippingMethod.php:92 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr "Zonen; 0 är zonen för de platser som ingen annan zon omfattar."
 
-#: src/Abilities/SetShippingMethod.php:96
+#: src/Abilities/SetShippingMethod.php:97
 msgid "The method to change; leave it out to add one."
 msgstr "Leveranssättet som ska ändras; utelämna det för att lägga till ett."
 
-#: src/Abilities/SetShippingMethod.php:101
+#: src/Abilities/SetShippingMethod.php:102
 msgid "The kind of method to add."
 msgstr "Typen av leveranssätt som ska läggas till."
 
-#: src/Abilities/SetShippingMethod.php:123
+#: src/Abilities/SetShippingMethod.php:124
 msgid "Empty for no minimum."
 msgstr "Tomt när det inte finns något lägsta belopp."
 
-#: src/Abilities/SetShippingMethod.php:133
+#: src/Abilities/SetShippingMethod.php:134
 msgid ""
-"The method's place among the zone's methods, lowest first; the other methods "
-"keep theirs. A cart that starts qualifying for another rate gets the first "
-"one it can have, so free shipping that is to be chosen once a cart reaches "
-"its minimum goes before a flat rate."
+"The method's place among the zone's methods, lowest first. A method already "
+"at that place, and those after it, move one place down; the others keep "
+"theirs. A cart that starts qualifying for another rate gets the first one it "
+"can have that is not pickup, so free shipping that is to be chosen once a "
+"cart reaches its minimum goes before a flat rate."
 msgstr ""
-"Leveranssättets plats bland zonens leveranssätt, lägst först; de andra "
-"leveranssätten behåller sina. En varukorg som börjar uppfylla villkoren för "
-"en annan fraktkostnad får den första den kan få, så gratis frakt som ska "
-"väljas när en varukorg når sitt lägsta belopp läggs före fast pris."
+"Leveranssättets plats bland zonens leveranssätt, lägst först. Ett "
+"leveranssätt som redan har den platsen, och de efter det, flyttas ett steg "
+"ned; de andra behåller sina. En varukorg som börjar uppfylla villkoren för "
+"en annan fraktkostnad får den första den kan få som inte är hämta själv, så "
+"gratis frakt som ska väljas när en varukorg når sitt lägsta belopp läggs "
+"före fast pris."
 
-#: src/Abilities/SetShippingMethod.php:162
+#: src/Abilities/SetShippingMethod.php:163
 msgid "No shipping method has this instance id."
 msgstr "Inget leveranssätt har detta instans-id."
 
-#: src/Abilities/SetShippingMethod.php:166
+#: src/Abilities/SetShippingMethod.php:167
 msgid "Give the method's instance_id to change it, or a kind to add one."
 msgstr ""
 "Ange leveranssättets instance_id för att ändra det, eller en typ (kind) för "
 "att lägga till ett."
 
-#: src/Abilities/SetShippingMethod.php:169
+#: src/Abilities/SetShippingMethod.php:170
 msgid "A method's kind cannot change: add a method of the other kind instead."
 msgstr ""
 "Ett leveranssätts typ kan inte ändras: lägg i stället till ett leveranssätt "
@@ -3169,17 +3172,17 @@ msgstr ""
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
 #. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
-#: src/Abilities/SetShippingMethod.php:174
-#: src/Abilities/SetShippingMethod.php:191
+#: src/Abilities/SetShippingMethod.php:175
+#: src/Abilities/SetShippingMethod.php:192
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "Ett leveranssätt av typen %2$s har ingen inställning %1$s."
 
-#: src/Abilities/SetShippingMethod.php:209
+#: src/Abilities/SetShippingMethod.php:210
 msgid "The store did not keep the shipping method."
 msgstr "Butiken sparade inte leveranssättet."
 
-#: src/Abilities/SetShippingMethod.php:258
+#: src/Abilities/SetShippingMethod.php:294
 msgid ""
 "Shipping is taxed as the cart's items are, and the store's taxable products "
 "have different rates, so a cost including tax depends on the cart. Give the "
