@@ -22,6 +22,11 @@ use WP_Term;
  * unfiltered. An archive whose index is not built yet names none, and
  * queues its build. A search names none: its results are not an archive's.
  *
+ * A theme printing how many products a category or tag holds elsewhere,
+ * such as on the category's tile, asks for the cards its archive lists
+ * unfiltered, `apply_filters( 'pixonaut_wc_archive_card_count', $count, $term )`,
+ * so every count a shopper sees counts the same thing (`card_count()`).
+ *
  * WooCommerce's sort menu is worked out per request, through filters other
  * plugins add to; the menu it last showed on an archive is kept for the
  * indexes (`sorts()`).
@@ -34,6 +39,11 @@ final class ArchiveIndexDiscovery {
 	public const ELEMENT_ID = 'pixonaut-archive-index';
 
 	/**
+	 * What a theme asks for the cards a category's or tag's archive lists.
+	 */
+	public const CARD_COUNT_FILTER = 'pixonaut_wc_archive_card_count';
+
+	/**
 	 * After the filters of the store and its other plugins, so the menu
 	 * kept is the one shown.
 	 */
@@ -42,6 +52,31 @@ final class ArchiveIndexDiscovery {
 	public function register(): void {
 		add_action( 'wp_head', array( $this, 'print_element' ) );
 		add_filter( 'woocommerce_catalog_orderby', array( $this, 'sorts' ), self::SORTS_PRIORITY );
+		add_filter( self::CARD_COUNT_FILTER, array( $this, 'card_count' ), 10, 2 );
+	}
+
+	/**
+	 * How many cards a category's or tag's archive lists unfiltered, as its
+	 * index counts them: a product listed once per card counts once per
+	 * card. The count given stands for any other term, without the theme's
+	 * support, and until the index is built. Asking counts as a visit to the
+	 * archive: it queues the build of an index that is missing or a day old,
+	 * and keeps the archive's index while its count is shown, though nobody
+	 * opens the archive. An index is built in the background, never on the
+	 * request asking.
+	 *
+	 * @param mixed $count The count the theme would print otherwise, such as WooCommerce's.
+	 * @param mixed $term  The category or tag.
+	 * @return mixed
+	 */
+	public function card_count( mixed $count, mixed $term ): mixed {
+		$archive = $term instanceof WP_Term && ArchiveIndexes::wanted() ? ArchiveIndexes::name( $term ) : null;
+		if ( null === $archive ) {
+			return $count;
+		}
+		ArchiveIndexes::visited( $archive );
+		$current = ArchiveIndexes::current( $archive );
+		return null === $current ? $count : $current['count'];
 	}
 
 	/**
