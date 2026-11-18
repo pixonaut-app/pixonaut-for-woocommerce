@@ -9,7 +9,7 @@
  * Classes and `data-` attributes are what the plugin's script reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.25.0
+ * @version 1.27.1
  *
  * @var string $url        The product's variation plan route, which the buttons post to.
  * @var string $rest_nonce Nonce for the route.

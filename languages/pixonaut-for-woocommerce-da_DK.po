@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T17:24:45+00:00\n"
+"POT-Creation-Date: 2026-11-18T17:56:55+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: da_DK\n"
@@ -587,6 +587,114 @@ msgstr ""
 "kunne nås."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GenerateProductVariations.php:48
+msgid "Generate a product's variations from its blank options"
+msgstr "Opret en vares varianter ud fra basisproduktets valgmuligheder"
+
+#: src/Abilities/GenerateProductVariations.php:49
+msgid ""
+"Makes a variable product's variations from its plan: one for every "
+"combination of the values its variation attributes offer, each on its blank, "
+"sold as the blank variant the values name, priced by the price rule. A "
+"global attribute linked to a blank option (`set-attribute-blank-option`) "
+"names the option's values, and is \"Any\" on a blank without that option; an "
+"attribute an entry picks its blank by holds that value, and is \"Any\" on "
+"the other blanks; any other attribute, such as with or without a photo, "
+"multiplies every blank's variations. Existing variations are matched by "
+"their values and kept, with their ids, orders and own prices; one no longer "
+"offered, or whose variant is retired, is disabled, never deleted; one an "
+"earlier run disabled is published again once offered; one selling no variant "
+"gets the plan's. Values naming no variant are skipped and listed. `entries` "
+"replaces the plan (saved only when not a dry run); left out, the product's "
+"plan is used. With `dry_run` true, the default, nothing changes: the answer "
+"lists what would. At most 100 variations are made per run; run again for the "
+"rest (`remaining`). Read the plan and the attributes with `get-product-"
+"variation-plan`; add or remove offered values in the product's attributes."
+msgstr ""
+"Opretter en variabel vares varianter ud fra dens plan: én for hver "
+"kombination af de værdier, dens egenskaber til varianter tilbyder, hver på "
+"sit basisprodukt, solgt som den basisproduktvariant, værdierne angiver, og "
+"prissat efter prisreglen. En global egenskab, der er tilknyttet en "
+"basisproduktvalgmulighed (`set-attribute-blank-option`), angiver "
+"valgmulighedens værdier og er \"Alle\" på et basisprodukt uden den "
+"valgmulighed; en egenskab, som en post vælger sit basisprodukt efter, har "
+"den værdi og er \"Alle\" på de andre basisprodukter; enhver anden egenskab, "
+"som med eller uden foto, ganger hvert basisprodukts varianter. Eksisterende "
+"varianter matches på deres værdier og beholdes med deres id'er, ordrer og "
+"egne priser; en variant, der ikke længere tilbydes, eller hvis "
+"basisproduktvariant er udgået, deaktiveres, men slettes aldrig; en, som en "
+"tidligere kørsel deaktiverede, udgives igen, når den tilbydes igen; en, der "
+"ikke sælges som nogen basisproduktvariant, får planens. Værdier, der ikke "
+"svarer til nogen basisproduktvariant, springes over og vises. `entries` "
+"erstatter planen (gemmes kun, når det ikke er en prøvekørsel); udelades den, "
+"bruges varens plan. Med `dry_run` true, som er standard, ændres intet: "
+"svaret viser, hvad der ville blive ændret. Der oprettes højst 100 varianter "
+"pr. kørsel; kør igen for resten (`remaining`). Læs planen og egenskaberne "
+"med `get-product-variation-plan`; tilføj eller fjern tilbudte værdier i "
+"varens egenskaber."
+
+#: src/Abilities/GenerateProductVariations.php:59
+msgid ""
+"The blanks the variations are printed on, one entry each; replaces the "
+"product's plan."
+msgstr ""
+"De basisprodukter, varianterne trykkes på, én post for hvert; erstatter "
+"varens plan."
+
+#: src/Abilities/GenerateProductVariations.php:67
+msgid ""
+"True, the default, to list what would change without changing anything; "
+"false to generate."
+msgstr ""
+"True, som er standard, for at vise, hvad der ville blive ændret, uden at "
+"ændre noget; false for at oprette varianterne."
+
+#: src/Abilities/GenerateProductVariations.php:84
+msgid "Variations left to make by another run."
+msgstr "Varianter, der mangler at blive oprettet i en senere kørsel."
+
+#: src/Abilities/GenerateProductVariations.php:88
+msgid "The variations made, by id; empty on a dry run."
+msgstr "De oprettede varianter, angivet med id; tom ved en prøvekørsel."
+
+#: src/Abilities/GenerateProductVariations.php:93
+msgid "How many prices the rule set."
+msgstr "Hvor mange priser reglen satte."
+
+#: src/Abilities/GenerateProductVariations.php:97
+msgid ""
+"False when Pixonaut could not be asked for the costs: price them later with "
+"`price-product`."
+msgstr ""
+"False, når Pixonaut ikke kunne spørges om omkostningerne: prissæt dem senere "
+"med `price-product`."
+
+#: src/Abilities/GenerateProductVariations.php:101
+msgid ""
+"Variations made or changed that have no price, so customers cannot buy them "
+"yet: no price rule is set, or no cost is known."
+msgstr ""
+"Oprettede eller ændrede varianter uden pris, så kunderne ikke kan købe dem "
+"endnu: der er ikke angivet nogen prisregel, eller ingen omkostning er kendt."
+
+#: src/Abilities/GenerateProductVariations.php:130
+msgid "The product has no variation plan: give its `entries`."
+msgstr "Varen har ingen variantplan: angiv dens `entries`."
+
+#: src/Abilities/GenerateProductVariations.php:148
+msgid ""
+"The product's variations are being generated already. Try again once that "
+"run is done."
+msgstr ""
+"Varens varianter er allerede ved at blive oprettet. Prøv igen, når den "
+"kørsel er færdig."
+
+#: src/Abilities/GenerateProductVariations.php:191
+#: src/Abilities/SetVariationVariants.php:270
+msgid "Pixonaut could not be reached to read the blank's variants."
+msgstr "Pixonaut kunne ikke nås for at hente basisproduktets varianter."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetAttributeBlankOptions.php:36
 msgid "Read the blank options attributes stand for"
 msgstr "Læs, hvilke basisproduktvalgmuligheder egenskaber står for"
@@ -1078,6 +1186,43 @@ msgid ""
 msgstr ""
 "Term-id'erne for kortets værdier, ét for hver egenskab, som varen vises "
 "opdelt efter, og som gælder for kortet, i varens rækkefølge af egenskaber."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetProductVariationPlan.php:30
+msgid "Read what a product's variations are generated from"
+msgstr "Læs, hvad en vares varianter oprettes ud fra"
+
+#: src/Abilities/GetProductVariationPlan.php:31
+msgid ""
+"Gives a variable product's variation plan: the blanks its variations are "
+"printed on, the attribute values that pick each, and fixed option values. "
+"Also gives the product's variation attributes with the values they offer, "
+"the blank option each stands for (`option`, linked once per attribute with "
+"`set-attribute-blank-option`) and what each value stands for, and the blanks "
+"the product and its variations are set up on now. Change the plan and "
+"generate with `generate-product-variations`."
+msgstr ""
+"Giver en variabel vares variantplan: de basisprodukter, dens varianter "
+"trykkes på, de egenskabsværdier, der vælger hvert af dem, og faste værdier "
+"for valgmuligheder. Giver også varens egenskaber til varianter med de "
+"værdier, de tilbyder, den basisproduktvalgmulighed, hver af dem står for "
+"(`option`, tilknyttes én gang pr. egenskab med `set-attribute-blank-"
+"option`), og hvad hver værdi står for, samt de basisprodukter, varen og dens "
+"varianter er sat op på nu. Ændr planen, og opret varianterne med `generate-"
+"product-variations`."
+
+#: src/Abilities/GetProductVariationPlan.php:49
+msgid "The plan's blanks; empty when the product has no plan."
+msgstr "Planens basisprodukter; tom, når varen ikke har nogen plan."
+
+#: src/Abilities/GetProductVariationPlan.php:61
+msgid ""
+"The blank option the attribute stands for; null when it is not linked: then "
+"it is a choice of its own, such as with or without a photo, or picks a blank."
+msgstr ""
+"Den basisproduktvalgmulighed, egenskaben står for; null, når den ikke er "
+"tilknyttet: så er egenskaben et valg for sig, som med eller uden foto, eller "
+"vælger et basisprodukt."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetShipping.php:31
@@ -3707,6 +3852,7 @@ msgstr ""
 "null, når de alle gør."
 
 #: src/Abilities/SetVariationVariants.php:131
+#: src/Abilities/VariationPlanRows.php:39 src/Admin/VariationPlanPanel.php:97
 msgid "No variable product has this id."
 msgstr "Ingen varevariant har dette id."
 
@@ -3750,10 +3896,6 @@ msgid ""
 msgstr ""
 "Valgmulighederne for variant %d svarer til en basisproduktvariant, der er "
 "udgået."
-
-#: src/Abilities/SetVariationVariants.php:270
-msgid "Pixonaut could not be reached to read the blank's variants."
-msgstr "Pixonaut kunne ikke nås for at hente basisproduktets varianter."
 
 #: src/Abilities/ShippingMethods.php:221
 msgid "country, state, postcode or continent."
@@ -4482,6 +4624,61 @@ msgid ""
 msgstr ""
 "Vare %d er ikke en varevariant: Kun en varevariants varianter får deres egne "
 "billeder."
+
+#: src/Abilities/VariationPlanRows.php:146
+msgid "The Pixonaut blank these variations are printed on."
+msgstr "Det Pixonaut-basisprodukt, disse varianter trykkes på."
+
+#: src/Abilities/VariationPlanRows.php:148
+msgid ""
+"The attribute values that pick this blank, by attribute name (`pa_frame`) "
+"with a value's slug or name, e.g. `{\"pa_frame\": \"framed\"}`; empty when "
+"the product is sold on this blank alone."
+msgstr ""
+"De egenskabsværdier, der vælger dette basisprodukt, efter egenskabsnavn "
+"(`pa_frame`) med en værdis slug eller navn, f.eks. `{\"pa_frame\": "
+"\"framed\"}`; tom, når varen kun sælges på dette basisprodukt."
+
+#: src/Abilities/VariationPlanRows.php:149
+msgid ""
+"The value sold of each option of the blank no attribute offers, as Pixonaut "
+"writes them, e.g. `{\"Orientation\": \"Vertical\"}`; needed only where the "
+"blank sells more than one value."
+msgstr ""
+"Den værdi, der sælges, for hver af basisproduktets valgmuligheder, som ingen "
+"egenskab tilbyder, som Pixonaut skriver dem, f.eks. `{\"Orientation\": "
+"\"Vertical\"}`; kun nødvendig, hvor basisproduktet sælger mere end én værdi."
+
+#: src/Abilities/VariationPlanRows.php:169
+msgid ""
+"The values by attribute name, as the variation holds them; empty for \"Any\"."
+msgstr ""
+"Værdierne efter egenskabsnavn, som varianten har dem; tom for \"Alle\"."
+
+#: src/Abilities/VariationPlanRows.php:180
+msgid "The blank variant it is sold as."
+msgstr "Den basisproduktvariant, den sælges som."
+
+#: src/Abilities/VariationPlanRows.php:192
+msgid ""
+"`enable`: disabled by an earlier run, offered again. `variant`: sold no "
+"variant of its blank, now the plan's."
+msgstr ""
+"`enable`: deaktiveret af en tidligere kørsel, tilbydes igen. `variant`: blev "
+"ikke solgt som nogen variant af sit basisprodukt, sælges nu som planens."
+
+#: src/Abilities/VariationPlanRows.php:210
+msgid ""
+"Why no variation is made for these values: they name no variant of the "
+"blank, several (an option is left open), or a retired one."
+msgstr ""
+"Hvorfor der ikke oprettes nogen variant for disse værdier: de svarer ikke "
+"til nogen variant af basisproduktet, til flere (en valgmulighed står åben) "
+"eller til en udgået."
+
+#: src/Abilities/VariationPlanRows.php:216
+msgid "How many variations are kept as they are."
+msgstr "Hvor mange varianter der beholdes, som de er."
 
 #. translators: 1: a value of another product attribute, e.g. Ram; 2: that attribute, e.g. Frame; 3: a part of the pricing rule, e.g. Fixed amount per item; 4: the attribute of this value, e.g. Size. On the screen that edits a product attribute's value.
 #: src/Admin/AttributePriceRuleFields.php:123
@@ -5657,7 +5854,7 @@ msgstr ""
 "basisproduktvariant på %l, så kunderne kan ikke designe den."
 
 #. translators: Part of an admin notice, shown to the merchant, after "Customers cannot buy %s:"; says why the product cannot be bought. Lower case, as it ends a sentence.
-#: src/Admin/VariantNotice.php:61
+#: src/Admin/VariantNotice.php:61 src/Admin/VariationPlanPanel.php:216
 msgid "its blank variant is retired"
 msgstr "dens basisproduktvariant er udgået"
 
@@ -5688,7 +5885,9 @@ msgstr ""
 "Kunder kan ikke købe alle varianter af %1$s: %2$s. Vælg "
 "basisproduktvarianten i varens Pixonaut-felter."
 
+#. translators: Label of a field naming the Pixonaut blank (product base) some of a product's variations are printed on.
 #: src/Admin/VariantPairing.php:125
+#: templates/admin/product-variation-plan.php:61
 msgid "Blank"
 msgstr "Basisprodukt"
 
@@ -5724,6 +5923,44 @@ msgstr ""
 "billede til hver variant så ville få alle deres variantbilleder lavet: Sæt "
 "flueben ved \"Slå til alligevel\" under Lav et billede til hver variant for "
 "at bekræfte, eller slå den indstilling fra, og gem så igen."
+
+#: src/Admin/VariationPlanPanel.php:197
+msgid "The variations already match the plan."
+msgstr "Varianterne stemmer allerede med planen."
+
+#. translators: 1: variations to add, 2: to change, 3: to disable. Said in the Variations tab of the product edit page after Preview.
+#: src/Admin/VariationPlanPanel.php:201
+#, php-format
+msgid "Generating would add %1$d, change %2$d and disable %3$d variations."
+msgstr ""
+"Hvis du opretter varianterne, tilføjes %1$d, %2$d ændres, og %3$d "
+"deaktiveres."
+
+#. translators: 1: variations added, 2: changed, 3: disabled. Said in the Variations tab of the product edit page after Generate.
+#: src/Admin/VariationPlanPanel.php:203
+#, php-format
+msgid "Added %1$d, changed %2$d and disabled %3$d variations."
+msgstr "Varianter: %1$d tilføjet, %2$d ændret og %3$d deaktiveret."
+
+#: src/Admin/VariationPlanPanel.php:213
+msgid "offered again"
+msgstr "tilbydes igen"
+
+#: src/Admin/VariationPlanPanel.php:214
+msgid "sold no blank variant"
+msgstr "blev ikke solgt som nogen basisproduktvariant"
+
+#: src/Admin/VariationPlanPanel.php:215
+msgid "no longer offered"
+msgstr "tilbydes ikke længere"
+
+#: src/Admin/VariationPlanPanel.php:217
+msgid "the blank has no such variant"
+msgstr "basisproduktet har ingen sådan variant"
+
+#: src/Admin/VariationPlanPanel.php:218
+msgid "an option of the blank is left open"
+msgstr "en af basisproduktets valgmuligheder står åben"
 
 #. translators: 1: the product attribute whose value gives the print size, e.g. "Size"; 2: the print size, e.g. "30×40 cm". Option in a variation's print size dropdown: print the side at the size the product gives the variation's value of that attribute. Admin product page.
 #: src/Admin/VariationSizeField.php:188
@@ -6634,6 +6871,92 @@ msgstr ""
 #: src/Catalogue/SplitCardImageCopies.php:302
 msgid "The card's image could not be copied from its URL."
 msgstr "Kortets billede kunne ikke kopieres fra dets URL."
+
+#: src/Catalogue/VariationCombinations.php:77
+msgid ""
+"The product has no attribute used for variations: add the attributes and "
+"values it offers first."
+msgstr ""
+"Varen har ingen egenskab, der anvendes til varianter: tilføj først de "
+"egenskaber og værdier, den tilbyder."
+
+#: src/Catalogue/VariationCombinations.php:80
+msgid "The plan names no blank."
+msgstr "Planen angiver intet basisprodukt."
+
+#. translators: 1: a variation's values, e.g. "Size: M, Frame: Black". 2 and 3: two blanks' ids.
+#: src/Catalogue/VariationCombinations.php:98
+#, php-format
+msgid ""
+"Both %2$s and %3$s would sell %1$s: give each blank values of its own to "
+"pick it by."
+msgstr ""
+"Både %2$s og %3$s ville sælge %1$s: giv hvert basisprodukt sine egne værdier "
+"at blive valgt efter."
+
+#. translators: 1 and 2: two blanks' ids.
+#: src/Catalogue/VariationCombinations.php:128
+#, php-format
+msgid ""
+"Both %1$s and %2$s would sell the same values: give each blank a value of "
+"its own, of an attribute both name, to pick it by."
+msgstr ""
+"Både %1$s og %2$s ville sælge de samme værdier: giv hvert basisprodukt sin "
+"egen værdi at blive valgt efter, af en egenskab, begge angiver."
+
+#: src/Catalogue/VariationCombinations.php:207
+msgid "Any"
+msgstr "Alle"
+
+#. translators: 1: an attribute's name, e.g. pa_frame. 2: a blank's id.
+#: src/Catalogue/VariationCombinations.php:233
+#, php-format
+msgid "The product has no attribute %1$s used for variations to pick %2$s by."
+msgstr ""
+"Varen har ingen egenskab %1$s, der anvendes til varianter, at vælge %2$s "
+"efter."
+
+#. translators: 1: a value. 2: an attribute's name.
+#: src/Catalogue/VariationCombinations.php:240
+#, php-format
+msgid "The product does not offer %1$s for %2$s."
+msgstr "Varen tilbyder ikke %1$s for %2$s."
+
+#. translators: 1: a variation's id. 2: its values, e.g. "Size: Any, Frame: Black". 3: values the plan offers, e.g. "Size: M, Frame: Black".
+#: src/Catalogue/VariationCombinations.php:340
+#, php-format
+msgid ""
+"Variation #%1$d (%2$s) is sold for \"Any\" value, and so for %3$s, which the "
+"plan offers as a variation of its own. Give the variation its values, or "
+"disable it, first."
+msgstr ""
+"Variant #%1$d (%2$s) sælges med \"Alle\" som værdi og dermed også som %3$s, "
+"som planen tilbyder som en selvstændig variant. Giv først varianten dens "
+"egne værdier, eller deaktiver den."
+
+#. translators: 1: an option's name. 2: a blank's id.
+#: src/Catalogue/VariationCombinations.php:466
+#, php-format
+msgid "The blank %2$s has no option %1$s."
+msgstr "Basisproduktet %2$s har ingen valgmulighed %1$s."
+
+#. translators: 1: an option's name. 2: a blank's id. 3: its values, comma-separated.
+#: src/Catalogue/VariationCombinations.php:482
+#, php-format
+msgid ""
+"No attribute offers the option %1$s of %2$s, which has several values "
+"(%3$s): name the one to sell in the entry's fixed options, or link an "
+"attribute to it."
+msgstr ""
+"Ingen egenskab tilbyder valgmuligheden %1$s i %2$s, som har flere værdier "
+"(%3$s): angiv den, der skal sælges, i postens faste valgmuligheder, eller "
+"tilknyt en egenskab til den."
+
+#. translators: %d: the most variations a plan may make.
+#: src/Catalogue/VariationCombinations.php:543
+#, php-format
+msgid "The plan offers more than %d variations."
+msgstr "Planen tilbyder mere end %d varianter."
 
 #: src/Catalogue/VariationPictureCost.php:216
 msgid "No variation pictures are deleted: no variation has one only it shows."
@@ -9852,13 +10175,13 @@ msgid "Off: load each one when it is shown"
 msgstr "Fra: indlæs hver enkelt, når den vises"
 
 #. translators: %s: a price, such as "180 kr". Beside an option of a product, such as a frame, on its page: what choosing it adds to the product's price. The customer reads it.
-#: src/Storefront/ProductChoicePrices.php:143
+#: src/Storefront/ProductChoicePrices.php:148
 #, php-format
 msgid "+%s"
 msgstr "+%s"
 
 #. translators: %s: a price, such as "469 kr". Beside an option of a product, such as a size, on its page: the lowest price the product has with it. The customer reads it.
-#: src/Storefront/ProductChoicePrices.php:145
+#: src/Storefront/ProductChoicePrices.php:150
 #, php-format
 msgid "from %s"
 msgstr "fra %s"
@@ -12388,6 +12711,159 @@ msgstr ""
 "så varesiden viser den variant, kunden vælger. Billederne gemmes i din "
 "webshops mediebibliotek, på webshoppens egen server, ikke i Pixonaut. Slået "
 "fra slettes de variantbilleder, som intet andet bruger."
+
+#. translators: Heading of the list of variations Generate would make, or made. Variations tab of the product edit page.
+#: templates/admin/product-variation-plan.php:29
+msgid "To add"
+msgstr "Tilføjes"
+
+#. translators: Heading of the list of variations Generate would make, or made. Variations tab of the product edit page.
+#: templates/admin/product-variation-plan.php:29
+msgid "Added"
+msgstr "Tilføjet"
+
+#. translators: Heading of the list of variations Generate would change, or changed.
+#: templates/admin/product-variation-plan.php:31
+msgid "To change"
+msgstr "Ændres"
+
+#. translators: Heading of the list of variations Generate would change, or changed.
+#: templates/admin/product-variation-plan.php:31
+msgid "Changed"
+msgstr "Ændret"
+
+#. translators: Heading of the list of variations Generate would disable, or disabled. They are never deleted.
+#: templates/admin/product-variation-plan.php:33
+msgid "To disable"
+msgstr "Deaktiveres"
+
+#. translators: Heading of the list of variations Generate would disable, or disabled. They are never deleted.
+#: templates/admin/product-variation-plan.php:33
+msgid "Disabled"
+msgstr "Deaktiveret"
+
+#. translators: Heading of the list of combinations of values no variation is made for.
+#: templates/admin/product-variation-plan.php:35
+msgid "Not made"
+msgstr "Oprettes ikke"
+
+#: templates/admin/product-variation-plan.php:39
+msgid "The variations could not be worked out. Try again in a moment."
+msgstr "Varianterne kunne ikke beregnes. Prøv igen om lidt."
+
+#. translators: Heading of a section above the variations in the Variations tab of the product edit page.
+#: templates/admin/product-variation-plan.php:40
+msgid "Variations from the blank"
+msgstr "Varianter fra basisproduktet"
+
+#: templates/admin/product-variation-plan.php:42
+msgid ""
+"Makes one variation for every combination of the values in the Attributes "
+"tab, each on its blank and sold as the blank variant its values name, priced "
+"by the pricing rule. Variations you have are kept; one no longer offered is "
+"disabled, never deleted."
+msgstr ""
+"Opretter én variant for hver kombination af værdierne under fanen "
+"Egenskaber, hver på sit basisprodukt og solgt som den basisproduktvariant, "
+"værdierne angiver, prissat efter prisreglen. Varianter, du allerede har, "
+"beholdes; en variant, der ikke længere tilbydes, deaktiveres, men slettes "
+"aldrig."
+
+#. translators: %s: attributes with the blank option each stands for, e.g. "Frame (Color), Size (Size)".
+#: templates/admin/product-variation-plan.php:46
+#, php-format
+msgid "Linked to blank options: %s."
+msgstr "Tilknyttet basisproduktvalgmuligheder: %s."
+
+#: templates/admin/product-variation-plan.php:49
+msgid ""
+"No attribute is linked to a blank option yet: link one on its edit screen "
+"under Products › Attributes."
+msgstr ""
+"Ingen egenskab er tilknyttet en basisproduktvalgmulighed endnu: tilknyt en "
+"på egenskabens redigeringsside under Varer › Egenskaber."
+
+#. translators: %s: an attribute's name, e.g. Frame. Label of a select choosing the attribute value that picks this blank.
+#: templates/admin/product-variation-plan.php:70
+#, php-format
+msgid "When %s is"
+msgstr "Når %s er"
+
+#. translators: Option of a "When … is" select: the attribute does not pick this blank.
+#: templates/admin/product-variation-plan.php:74
+msgid "Any value"
+msgstr "Alle værdier"
+
+#. translators: Label of a field naming the value sold of each option of the blank no attribute offers, e.g. Orientation: Vertical.
+#: templates/admin/product-variation-plan.php:82
+msgid "Fixed options"
+msgstr "Faste valgmuligheder"
+
+#: templates/admin/product-variation-plan.php:85
+msgid "Orientation: Vertical"
+msgstr "Orientation: Vertical"
+
+#. translators: Button removing a blank from the variations' plan.
+#: templates/admin/product-variation-plan.php:87
+msgid "Remove this blank"
+msgstr "Fjern dette basisprodukt"
+
+#. translators: Button adding another blank to the variations' plan.
+#: templates/admin/product-variation-plan.php:92
+msgid "Add a blank"
+msgstr "Tilføj et basisprodukt"
+
+#. translators: Button listing what generating the variations would add, change and disable, without changing anything.
+#: templates/admin/product-variation-plan.php:93
+msgid "Preview"
+msgstr "Forhåndsvisning"
+
+#. translators: Button making, changing and disabling the variations as the plan says.
+#: templates/admin/product-variation-plan.php:94
+msgid "Generate from the blank"
+msgstr "Opret ud fra basisproduktet"
+
+#. translators: %d: how many variations.
+#: templates/admin/product-variation-plan.php:123
+#, php-format
+msgid "%d variation kept as it is."
+msgid_plural "%d variations kept as they are."
+msgstr[0] "%d variant beholdes, som den er."
+msgstr[1] "%d varianter beholdes, som de er."
+
+#. translators: %d: how many variations.
+#: templates/admin/product-variation-plan.php:128
+#, php-format
+msgid "%d more variation is made when you generate again."
+msgid_plural "%d more variations are made when you generate again."
+msgstr[0] "%d variant mere oprettes, når du opretter igen."
+msgstr[1] "%d varianter mere oprettes, når du opretter igen."
+
+#: templates/admin/product-variation-plan.php:132
+msgid ""
+"Pixonaut could not be reached to read the printshop's costs, so the new "
+"variations are not priced yet: click Apply under Prices in the Pixonaut tab "
+"in a moment."
+msgstr ""
+"Pixonaut kunne ikke nås for at hente trykkeriets omkostninger, så de nye "
+"varianter har endnu ingen pris: klik om lidt på Anvend under Priser på "
+"varens Pixonaut-fane."
+
+#. translators: %d: how many variations.
+#: templates/admin/product-variation-plan.php:137
+#, php-format
+msgid ""
+"%d variation has no price yet, so customers cannot buy it: set a target "
+"margin, or price it."
+msgid_plural ""
+"%d variations have no price yet, so customers cannot buy them: set a target "
+"margin, or price them."
+msgstr[0] ""
+"%d variant har endnu ingen pris, så kunderne kan ikke købe den: angiv en "
+"målmargin, eller prissæt den."
+msgstr[1] ""
+"%d varianter har endnu ingen pris, så kunderne kan ikke købe dem: angiv en "
+"målmargin, eller prissæt dem."
 
 #. translators: Checkbox label on a variable product's variation panel: this variation uses its own personalisation settings. Admin product page.
 #: templates/admin/product-variation.php:46
