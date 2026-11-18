@@ -189,9 +189,16 @@ for (const screen of SCREENS) {
 		// The add lands on the line's edit page, opened on the design.
 		await expect(page).toHaveURL(/[?&]pixonaut_edit=[0-9a-f]+/);
 		await expect(photo).toHaveAttribute('aria-label', 'Current picture');
-		await expect(photo.locator('img')).toHaveJSProperty('complete', true);
 		await expect(form.getByRole('textbox').first()).toHaveValue('Alma');
 		await photo.scrollIntoViewIfNeeded();
+		// The photo itself, as Pixonaut keeps it, drawn on the tile.
+		const thumbnail = photo.locator('img');
+		await expect(thumbnail).toHaveAttribute('src', /^blob:/);
+		await expect
+			.poll(() =>
+				thumbnail.evaluate((img: HTMLImageElement) => img.naturalWidth),
+			)
+			.toBeGreaterThan(0);
 		await page.screenshot({
 			path: test.info().outputPath(`heic-edit-${screen.name}.png`),
 		});
