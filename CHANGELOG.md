@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.25.0...v1.26.0) (2026-11-18)
+
+
+### Features
+
+* **storefront:** show what each add-on adds beside its swatch ([#343](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/343)) ([abe89c2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/abe89c2608275bb83b567c447642a6611991eafb))
+
 ## [1.25.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.24.0...v1.25.0) (2026-11-18)
 
 
