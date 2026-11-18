@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.22.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.0...v1.22.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* **contracts:** pin Pixonaut SDK 0.44.5 ([#305](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/305)) ([f60387f](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/f60387fb540a48c4403a2768f20bce9b7390daa4))
+
+
+### Performance Improvements
+
+* **storefront:** archive cards read their pictures together, and product pages' reads stay warm through a quiet hour ([#301](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/301)) ([77f5813](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/77f58138a514865ec00a7f144d2be5ebb93cfa55))
+
 ## [1.22.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.21.2...v1.22.0) (2026-11-18)
 
 
