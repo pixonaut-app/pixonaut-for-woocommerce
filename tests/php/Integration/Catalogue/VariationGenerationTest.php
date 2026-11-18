@@ -10,8 +10,10 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 use Pixonaut\WooCommerce\Abilities\GenerateProductVariations;
 use Pixonaut\WooCommerce\Abilities\GetProductVariationPlan;
 use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
+use Pixonaut\WooCommerce\Catalogue\FormGroups;
 use Pixonaut\WooCommerce\Catalogue\GeneratedVariation;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Catalogue\Side;
 use Pixonaut\WooCommerce\Catalogue\VariationChanges;
@@ -74,6 +76,19 @@ final class VariationGenerationTest extends PricingTestCase {
 			'values' => array(
 				'black' => array( 'Svart', 'Black' ),
 				'white' => array( 'Vit', 'White' ),
+			),
+		),
+	);
+
+	/**
+	 * The poster's form: its sizes in a group of their own.
+	 */
+	private const ARRANGEMENT = array(
+		'groups' => array(
+			array(
+				'id'    => 'wc-sizes',
+				'title' => 'Storlek',
+				'items' => array( array( 'attribute' => 'pa_size' ) ),
 			),
 		),
 	);
@@ -220,39 +235,7 @@ final class VariationGenerationTest extends PricingTestCase {
 	public function test_a_blank_no_variation_is_on_yet_gets_the_products_setup_on_it_checked_once(): void {
 		$product = $this->poster();
 		$checks  = ( new HttpRecorder( Hosts::server_api() ) )->start();
-		$checks->json( 200, BlankFixture::answer( array( 'front' => 'Front' ) ) );
-		$checks->json(
-			200,
-			array(
-				'templateId'     => 'mini-poster@1',
-				'ratio'          => array(
-					'w' => 280,
-					'h' => 360,
-				),
-				'ratioTolerance' => 0,
-				'fit'            => 'contain',
-				'placement'      => array(
-					'blankId'            => self::FRAMED,
-					'placementId'        => 'front',
-					'maxWidthMm'         => 330,
-					'maxHeightMm'        => 420,
-					'defaultWidthMm'     => 300,
-					'defaultHeightMm'    => 360,
-					'printWidthMm'       => 280,
-					'printHeightMm'      => 360,
-					'bleedMm'            => 3,
-					'safeAreaMm'         => 5,
-					'cmykPreviewProfile' => 'ISOcoated_v2_eci',
-					'coverage'           => 'within',
-					'sizes'              => array(
-						'fits'    => array(),
-						'misfits' => array(),
-					),
-				),
-			)
-		);
-		$checks->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
-		$checks->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
+		self::script_framed_check( $checks );
 		try {
 			$this->script_costs_twice();
 
@@ -267,6 +250,45 @@ final class VariationGenerationTest extends PricingTestCase {
 		$this->assertTrue( $sold['s50|framed|white|Without']['own'] );
 		$this->assertSame( 'v_framed_s50_white', $sold['s50|framed|white|Without']['ref'] );
 		$this->assertCount( 4, $checks->requests, 'the framed setup is checked once for all eight framed variations' );
+	}
+
+	public function test_another_blank_takes_neither_the_size_picked_for_the_products_blank_nor_a_copy_of_its_form(): void {
+		$arranged = FormGroups::from_array( self::ARRANGEMENT );
+		$product  = $this->poster( new PrintSize( 280, 360, 'Poster' ), $arranged );
+		$checks   = ( new HttpRecorder( Hosts::server_api() ) )->start();
+		self::script_framed_check( $checks );
+		try {
+			$this->script_costs_twice();
+
+			$this->generated( $product );
+		} finally {
+			$checks->stop();
+		}
+
+		foreach ( $this->reread( $product )->get_children() as $child_id ) {
+			$variation = wc_get_product( $child_id );
+			$this->assertInstanceOf( WC_Product::class, $variation );
+			$config = ProductConfig::config_for( $variation );
+			if ( self::FRAMED !== $config->blank_id ) {
+				continue;
+			}
+			$sizes = $config->sides[0]->print_sizes;
+			$this->assertCount( 1, $sizes );
+			$this->assertTrue( $sizes[0]->placement_default, 'each framed variation is sold at the framed placement\'s whole area, not the poster\'s size' );
+			$this->assertNull( ProductConfig::stored_on( $variation )->sides[0]->form_groups, 'it keeps no copy of the product\'s form' );
+			$this->assertSame( self::ARRANGEMENT['groups'], $config->sides[0]->form_groups?->groups, 'it shows the product\'s form' );
+			$framed = $variation;
+		}
+		$stored = ProductConfig::stored_on( $this->reread( $product ) );
+		$this->assertSame( 'Poster', $stored->sides[0]->print_sizes[0]->label, 'the product keeps its own size' );
+		$this->assertTrue( isset( $framed ) );
+
+		$moved = self::ARRANGEMENT;
+		// The photo choice joins the sizes.
+		$moved['groups'][0]['items'][] = array( 'attribute' => 'photo' );
+		$stored->with_sides( array( $stored->sides[0]->with_form_groups( FormGroups::from_array( $moved ) ) ) )->save_to( $this->reread( $product ) );
+
+		$this->assertSame( $moved['groups'], ProductConfig::config_for( $this->reread( $framed ) )->sides[0]->form_groups?->groups, 'a later arrangement of the product reaches it too' );
 	}
 
 	public function test_a_value_the_blank_gains_is_made_once_the_product_offers_it_keeping_every_variation(): void {
@@ -585,9 +607,56 @@ final class VariationGenerationTest extends PricingTestCase {
 	}
 
 	/**
+	 * Scripts Pixonaut's answers to one check of the framed setup: the
+	 * blank, the template on its placement, the verdict and the template's
+	 * status.
+	 *
+	 * @param HttpRecorder $checks The recorder of Pixonaut's server API.
+	 */
+	private static function script_framed_check( HttpRecorder $checks ): void {
+		$checks->json( 200, BlankFixture::answer( array( 'front' => 'Front' ) ) );
+		$checks->json(
+			200,
+			array(
+				'templateId'     => 'mini-poster@1',
+				'ratio'          => array(
+					'w' => 280,
+					'h' => 360,
+				),
+				'ratioTolerance' => 0,
+				'fit'            => 'contain',
+				'placement'      => array(
+					'blankId'            => self::FRAMED,
+					'placementId'        => 'front',
+					'maxWidthMm'         => 330,
+					'maxHeightMm'        => 420,
+					'defaultWidthMm'     => 300,
+					'defaultHeightMm'    => 360,
+					'printWidthMm'       => 280,
+					'printHeightMm'      => 360,
+					'bleedMm'            => 3,
+					'safeAreaMm'         => 5,
+					'cmykPreviewProfile' => 'ISOcoated_v2_eci',
+					'coverage'           => 'within',
+					'sizes'              => array(
+						'fits'    => array(),
+						'misfits' => array(),
+					),
+				),
+			)
+		);
+		$checks->json( 200, array( 'verdicts' => array( VerdictAnswers::LEGAL ) ) );
+		$checks->raw( 200, OpenApiAssert::example( 'GET', '/v1/templates/{id}', 200, array( 'status' => Catalogue::LIVE ) ), 'application/json' );
+	}
+
+	/**
 	 * The poster, on the poster blank, offering every value but no variation yet.
 	 */
-	private function poster(): WC_Product_Variable {
+	/**
+	 * @param PrintSize|null  $size        The size its side is sold in; null for none picked.
+	 * @param FormGroups|null $arrangement Its form's arrangement; null for the template's own form.
+	 */
+	private function poster( ?PrintSize $size = null, ?FormGroups $arrangement = null ): WC_Product_Variable {
 		$product    = new WC_Product_Variable();
 		$attributes = array();
 		foreach ( array_keys( self::ATTRIBUTES ) as $slug ) {
@@ -606,7 +675,7 @@ final class VariationGenerationTest extends PricingTestCase {
 		$product->set_name( 'Birth poster' );
 		$product->set_attributes( $attributes );
 		$product->save();
-		( new ProductConfig( personalise: true, blank_id: self::POSTER, sides: array( self::side() ) ) )->save_to( $product );
+		( new ProductConfig( personalise: true, blank_id: self::POSTER, sides: array( self::side( $size )->with_form_groups( $arrangement ) ) ) )->save_to( $product );
 		return $product;
 	}
 
@@ -779,8 +848,11 @@ final class VariationGenerationTest extends PricingTestCase {
 		return $costs;
 	}
 
-	private static function side(): Side {
-		return new Side( 'front', 'Front', 'front', 'Front', 'mini-poster', 1, null, 'Mini poster' );
+	/**
+	 * @param PrintSize|null $size The size it is sold in; null for none picked.
+	 */
+	private static function side( ?PrintSize $size = null ): Side {
+		return new Side( 'front', 'Front', 'front', 'Front', 'mini-poster', 1, null, 'Mini poster', null === $size ? array() : array( $size ) );
 	}
 
 	private static function connection(): StoredConnection {
