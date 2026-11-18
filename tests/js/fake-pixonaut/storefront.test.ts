@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createFake } from '../../fake-pixonaut/src/app';
 import { FIXTURE } from '../../fake-pixonaut/src/fixture-ids';
@@ -28,6 +30,16 @@ import {
 	SITE_URL,
 	send,
 } from './support';
+
+/** A phone's HEIC photo, as the storefront e2e uploads it. */
+const HEIC_PHOTO = join(
+	import.meta.dirname,
+	'..',
+	'..',
+	'e2e',
+	'fixtures',
+	'selfie.heic',
+);
 
 /** The fake's clock, standing still so an expiry can be compared exactly. */
 const NOW = Date.UTC(2026, 9, 14, 12);
@@ -383,6 +395,51 @@ describe('uploading a picture', () => {
 			widthPx: PROOF_IMAGE_EDGE_PX,
 			heightPx: PROOF_IMAGE_EDGE_PX,
 		});
+	});
+
+	/** Declares an upload of `bytes` as `mime` and puts them. */
+	async function uploadAs(mime: string, bytes: Uint8Array<ArrayBuffer>) {
+		const declared = await send(fake, '/v1/assets', {
+			method: 'POST',
+			headers: storefront(),
+			json: { mime, sizeBytes: bytes.length },
+		});
+		const { assetId, uploadUrl } = await declared.json();
+		const uploaded = await send(fake, uploadUrl, {
+			method: 'PUT',
+			headers: { 'content-type': mime },
+			body: bytes,
+		});
+		return { assetId, uploaded };
+	}
+
+	it('keeps a HEIC photo as a JPEG, as Pixonaut converts it', async () => {
+		const heic = new Uint8Array(readFileSync(HEIC_PHOTO));
+
+		const { assetId, uploaded } = await uploadAs('image/heic', heic);
+
+		expect(uploaded.status).toBe(200);
+		const content = await send(fake, `/v1/assets/${assetId}/content`, {
+			headers: storefront(),
+		});
+		expect(content.headers.get('content-type')).toBe('image/jpeg');
+	});
+
+	it.each([
+		['no ISO media file', PICTURE],
+		[
+			'a box cut short',
+			new Uint8Array(Buffer.from('\0\0\0\x40ftypheic\0\0\0\0', 'latin1')),
+		],
+		[
+			'a video',
+			new Uint8Array(Buffer.from('\0\0\0\x10ftypmp42\0\0\0\0', 'latin1')),
+		],
+	])('refuses a HEIC that is %s', async (_, bytes) => {
+		const { uploaded } = await uploadAs('image/heic', bytes);
+
+		expect(uploaded.status).toBe(422);
+		expect(await uploaded.json()).toEqual({ error: 'not_a_valid_image' });
 	});
 
 	it('caches the content for good when asked by its contentKey', async () => {

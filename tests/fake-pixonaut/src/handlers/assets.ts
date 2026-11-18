@@ -5,6 +5,9 @@
 // `GET /v1/assets/{id}/cut-out` reads back, and
 // `POST /v1/assets/{id}/threads` reads it for embroidery.
 import { createHash, randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { FIXTURES_DIR } from '../fixtures';
 import { allOwned, findOwned, putOwned, type State } from '../state';
 import { IMMUTABLE } from './fonts';
 import { sessionOf } from './session';
@@ -25,6 +28,20 @@ export const UPLOAD_LIFETIME_MS = 10 * MS_PER_MINUTE;
 
 const PNG = 'image/png';
 const JPEG = 'image/jpeg';
+/** A phone's photo formats, which Pixonaut keeps converted to JPEG. */
+const HEIF_MIMES = ['image/heic', 'image/heif'];
+/** An ISO base media file (HEIC is one) opens with its `ftyp` box: the
+ *  box's size, `ftyp`, then the file's major brand. */
+const FTYP = 'ftyp';
+const FTYP_OFFSET = 4;
+const BRAND_OFFSET = 8;
+const BRAND_BYTES = 4;
+/** The smallest `ftyp` box: size, type, major brand, minor version. */
+const MIN_FTYP_BYTES = 16;
+/** The major brands of a HEIF image file; a video or an AVIF is none. */
+const HEIF_BRANDS = ['heic', 'heix', 'heim', 'heis', 'mif1', 'msf1'];
+/** What the fake keeps of any HEIC: one JPEG, the conversion it makes. */
+const CONVERTED_HEIC = join(FIXTURES_DIR, 'uploads', 'heic-converted.jpg');
 /** The largest upload Pixonaut takes: a PNG may be larger than the rest. */
 const MAX_PNG_BYTES = 268_435_456;
 const MAX_OTHER_BYTES = 83_886_080;
@@ -161,6 +178,38 @@ function pixelSize(mime: string, bytes: Uint8Array): Size | null {
 	return mime === JPEG ? jpegSize(view) : null;
 }
 
+/** The picture Pixonaut keeps of an upload: the file as it came, or, for a
+ *  HEIC or HEIF photo, a JPEG of it; null for a HEIC that is not one. */
+function keptPicture(
+	mime: string,
+	bytes: Uint8Array,
+): { mime: string; bytes: Uint8Array } | null {
+	if (!HEIF_MIMES.includes(mime)) {
+		return { mime, bytes };
+	}
+	return isHeif(bytes)
+		? { mime: JPEG, bytes: new Uint8Array(readFileSync(CONVERTED_HEIC)) }
+		: null;
+}
+
+/** Whether `bytes` open as a HEIF image file: a whole `ftyp` box naming a
+ *  HEIF brand. The fake decodes no image, so this is all it checks. */
+function isHeif(bytes: Uint8Array): boolean {
+	if (bytes.length < MIN_FTYP_BYTES) {
+		return false;
+	}
+	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
+	const boxBytes = view.getUint32(0);
+	const text = (at: number, length: number) =>
+		new TextDecoder().decode(bytes.subarray(at, at + length));
+	return (
+		boxBytes >= MIN_FTYP_BYTES &&
+		boxBytes <= bytes.length &&
+		text(FTYP_OFFSET, FTYP.length) === FTYP &&
+		HEIF_BRANDS.includes(text(BRAND_OFFSET, BRAND_BYTES))
+	);
+}
+
 type AssetRequest = {
 	mime: string;
 	sizeBytes: number;
@@ -230,11 +279,17 @@ export const uploadAssetBytes: Handler = (context) => {
 	if (bytes.length !== asset.sizeBytes) {
 		return refusal(422, 'size_mismatch');
 	}
-	const size = pixelSize(asset.mime, bytes);
-	if (size === null) {
+	const kept = keptPicture(asset.mime, bytes);
+	const size = kept === null ? null : pixelSize(kept.mime, kept.bytes);
+	if (kept === null || size === null) {
 		return refusal(422, 'not_a_valid_image');
 	}
-	asset.upload = { bytes, ...size, contentKey: contentKey(asset.id, bytes) };
+	asset.mime = kept.mime;
+	asset.upload = {
+		bytes: kept.bytes,
+		...size,
+		contentKey: contentKey(asset.id, kept.bytes),
+	};
 	return {
 		status: 200,
 		body: {
