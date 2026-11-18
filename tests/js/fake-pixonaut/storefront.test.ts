@@ -385,6 +385,49 @@ describe('uploading a picture', () => {
 		});
 	});
 
+	it('keeps a HEIC photo as a JPEG, as Pixonaut converts it', async () => {
+		// An ISO base media file's opening box: its size, `ftyp`, the brand.
+		const heic = new Uint8Array(
+			Buffer.from('\0\0\0\x18ftypheic\0\0\0\0mif1heic', 'latin1'),
+		);
+		const declared = await send(fake, '/v1/assets', {
+			method: 'POST',
+			headers: storefront(),
+			json: { mime: 'image/heic', sizeBytes: heic.length },
+		});
+		const { assetId, uploadUrl } = await declared.json();
+
+		const uploaded = await send(fake, uploadUrl, {
+			method: 'PUT',
+			headers: { 'content-type': 'image/heic' },
+			body: heic,
+		});
+
+		expect(uploaded.status).toBe(200);
+		const content = await send(fake, `/v1/assets/${assetId}/content`, {
+			headers: storefront(),
+		});
+		expect(content.headers.get('content-type')).toBe('image/jpeg');
+	});
+
+	it('refuses a HEIC that is none', async () => {
+		const declared = await send(fake, '/v1/assets', {
+			method: 'POST',
+			headers: storefront(),
+			json: { mime: 'image/heic', sizeBytes: PICTURE.length },
+		});
+		const { uploadUrl } = await declared.json();
+
+		const uploaded = await send(fake, uploadUrl, {
+			method: 'PUT',
+			headers: { 'content-type': 'image/heic' },
+			body: PICTURE,
+		});
+
+		expect(uploaded.status).toBe(422);
+		expect(await uploaded.json()).toEqual({ error: 'not_a_valid_image' });
+	});
+
 	it('caches the content for good when asked by its contentKey', async () => {
 		const { assetId, uploadUrl } = await declare();
 		const { contentKey } = await (await put(uploadUrl)).json();

@@ -8,6 +8,19 @@ import {
 	PERSONALISED,
 } from '../personalised';
 
+/** A phone's HEIC photo as far as Pixonaut reads it: the opening `ftyp` box
+ *  naming its brand. Pixonaut keeps it as a JPEG. */
+const HEIC_PHOTO = Buffer.from(
+	'\0\0\0\x18ftypheic\0\0\0\0mif1heic',
+	'latin1',
+);
+
+/** A phone, where shoppers come back to their cart, and a desktop. */
+const SCREENS = [
+	{ name: 'phone', width: 390, height: 844 },
+	{ name: 'desktop', width: 1280, height: 800 },
+];
+
 /** Each cart's address on the tests site. */
 let cartUrls: Record<'classic' | 'block' | 'mini', string>;
 
@@ -147,5 +160,56 @@ for (const cart of ['classic', 'block'] as const) {
 		await expect(form.getByRole('textbox').first()).toHaveValue(
 			`Edited in the ${cart} cart`,
 		);
+	});
+}
+
+for (const screen of SCREENS) {
+	test(`on a ${screen.name}, a photo uploaded as HEIC is the design's photo when its cart line is edited, and saving keeps it`, async ({
+		page,
+		request,
+		theme,
+	}) => {
+		await page.setViewportSize(screen);
+		await page.goto(
+			await createProduct(
+				request,
+				`HEIC photo ${screen.name} ${theme} ${Date.now()}`,
+				PERSONALISED,
+			),
+		);
+		const form = page.locator('#pixonaut-form-front');
+		const photo = form.getByTestId('field-motiv-upload-tile');
+		await expect(photo).toBeVisible();
+		await form.getByTestId('field-motiv-upload').setInputFiles({
+			name: 'selfie.heic',
+			mimeType: 'image/heic',
+			buffer: HEIC_PHOTO,
+		});
+		await expect(photo).toHaveAttribute('aria-label', 'selfie.heic');
+		await form.getByRole('textbox').first().fill('Alma');
+		await addToCartButton(page).click();
+
+		// The add lands on the line's edit page, opened on the design.
+		await expect(page).toHaveURL(/[?&]pixonaut_edit=[0-9a-f]+/);
+		await expect(photo).toHaveAttribute('aria-label', 'Current picture');
+		await expect(photo.locator('img')).toHaveJSProperty('complete', true);
+		await expect(form.getByRole('textbox').first()).toHaveValue('Alma');
+		await photo.scrollIntoViewIfNeeded();
+		await page.screenshot({
+			path: test.info().outputPath(`heic-edit-${screen.name}.png`),
+		});
+
+		await form.getByRole('textbox').first().fill('Alma Maria');
+		await page
+			.locator('form.cart, form[data-wp-interactive]')
+			.getByRole('button', { name: 'Update design' })
+			.click();
+		await page.waitForURL((url) => !url.search.includes('pixonaut_edit'));
+
+		await page.goto(cartUrls.classic);
+		await CARTS.classic(page).name.click();
+		await expect(page).toHaveURL(/pixonaut_edit=/);
+		await expect(photo).toHaveAttribute('aria-label', 'Current picture');
+		await expect(form.getByRole('textbox').first()).toHaveValue('Alma Maria');
 	});
 }
