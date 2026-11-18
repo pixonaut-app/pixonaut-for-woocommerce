@@ -160,6 +160,7 @@ final class SharedPictures {
 			wp_delete_file( $file );
 			return 0;
 		}
+		UnfinishedPictures::saving( $attachment );
 		add_post_meta( $attachment, self::PICTURE_OF_META, $product->get_id() );
 		update_post_meta( $attachment, '_wp_attachment_image_alt', $product->get_name() );
 		require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -167,12 +168,14 @@ final class SharedPictures {
 		// Bytes WordPress cannot read as an image must not replace the last good picture.
 		if ( ! is_int( $metadata['width'] ?? null ) || $metadata['width'] <= 0 ) {
 			wp_delete_attachment( $attachment, true );
+			UnfinishedPictures::saved( $attachment );
 			return 0;
 		}
 		wp_update_attachment_metadata( $attachment, $metadata );
 		update_post_meta( $attachment, self::SHOWCASE_META, $showcase ?? '' );
 		// Last, so `find()` never gives another product a picture that is not yet a valid image.
 		update_post_meta( $attachment, self::SOURCE_META, $key );
+		UnfinishedPictures::saved( $attachment );
 		return $attachment;
 	}
 

@@ -63,6 +63,8 @@ final class StoppedPictureJobs {
 		if ( self::GIVEN_UP_ACTION === current_action() && $this->pictures->drawing_now( $product_id ) ) {
 			return;
 		}
+		// The pictures the job stopped while saving, when it ran in this request; one given up ran in another, and its product's next drawing deletes them.
+		UnfinishedPictures::delete_stopped();
 		$product = PictureQueue::fresh( $product_id );
 		if ( null !== $product ) {
 			$this->pictures->cut_off( $product );

@@ -237,6 +237,8 @@ final class ProductPictures {
 		// Action Scheduler's WP-Cron runner keeps a web request's limit, often 30 seconds, which making the image sizes alone can pass.
 		wc_set_time_limit( self::LOCK_SECONDS );
 		try {
+			// Pictures an earlier drawing of it left unfinished when it stopped; one saved meanwhile by a drawing past its lock is newer.
+			UnfinishedPictures::delete_of( $product->get_id(), $this->now() - self::LOCK_SECONDS );
 			$this->draw( $product );
 		} finally {
 			foreach ( $this->claims as $key => $claim ) {
@@ -574,10 +576,21 @@ final class ProductPictures {
 	 * @param int $product_id A product or variation.
 	 */
 	public function drawing_now( int $product_id ): bool {
+		return self::drawing( $product_id, $this->now() );
+	}
+
+	/**
+	 * Whether a drawing of the product holds its lock and was still within
+	 * `LOCK_SECONDS` at the time, so may still be running.
+	 *
+	 * @param int $product_id A product or variation.
+	 * @param int $now        Unix time.
+	 */
+	public static function drawing( int $product_id, int $now ): bool {
 		$option = self::LOCK_OPTION_PREFIX . $product_id;
 		wp_cache_delete( $option, 'options' );
 		$held_since = get_option( $option );
-		return is_numeric( $held_since ) && $this->now() - (int) $held_since < self::LOCK_SECONDS;
+		return is_numeric( $held_since ) && $now - (int) $held_since < self::LOCK_SECONDS;
 	}
 
 	/**

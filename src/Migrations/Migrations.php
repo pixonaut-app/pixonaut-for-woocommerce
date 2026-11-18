@@ -36,6 +36,7 @@ final class Migrations {
 			new DrawFlatCardPictures(),
 			new DrawStoppedPictures(),
 			new WriteSmallerPictures(),
+			new DeleteUnfinishedPictures(),
 		);
 	}
 }

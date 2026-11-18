@@ -131,6 +131,7 @@ use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
 use Pixonaut\WooCommerce\Catalogue\RequestCache;
 use Pixonaut\WooCommerce\Catalogue\Purchasability;
 use Pixonaut\WooCommerce\Catalogue\SmallerPictures;
+use Pixonaut\WooCommerce\Catalogue\UnfinishedPictures;
 use Pixonaut\WooCommerce\Catalogue\SplitCardImageCopies;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
@@ -517,6 +518,7 @@ final class Plugin {
 		( new UnavailableProduct( $this->labels() ) )->register();
 		SplitCards::register();
 		SmallerPictures::register();
+		UnfinishedPictures::register();
 		FilterIndex::register();
 		ProductPageCache::register();
 		ArchiveIndexes::register();
