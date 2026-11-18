@@ -20,9 +20,13 @@ use Pixonaut\WooCommerce\Storefront\FilterMatches;
  * noted here; a job, queued ahead of the picture jobs, reads each noted
  * product and count again, so no shopper waits for it.
  *
- * The notes share one option. Each change reads it afresh and writes it at
- * once; a note the option lost, as when two requests wrote it at the same
- * moment, is noted again by the next request served the old data.
+ * The notes share one option, each with a token. A change, such as a save,
+ * gives its note a new token, and the job takes off only the notes whose
+ * token is still the one it read: a product saved while the job reads it
+ * is read again on the next run. Each change reads the option afresh and
+ * writes it at once; a note the option lost, as when two requests wrote it
+ * at the same moment, is noted again by the next request served the old
+ * data.
  */
 final class FilterDataRefresh {
 
@@ -79,32 +83,44 @@ final class FilterDataRefresh {
 	private static bool $running = false;
 
 	/**
-	 * What this request noted already, so it writes the option once for each.
+	 * What this request noted already, so it writes the option once for
+	 * each; null before its first note.
 	 *
-	 * @var array<string, array<int|string, true>>
+	 * @var array<string, array<int|string, true>>|null
 	 */
-	private static array $noted = array();
+	private static ?array $noted = null;
 
 	public static function register(): void {
 		add_action( self::HOOK, array( self::class, 'run' ) );
+		// Another site has notes of its own.
+		add_action( 'switch_blog', array( self::class, 'site_switched' ) );
+	}
+
+	/**
+	 * Forgets what this request noted, after it switched to another site.
+	 */
+	public static function site_switched(): void {
+		self::$noted = null;
 	}
 
 	/**
 	 * Notes products whose kept filter reads are to be read again.
 	 *
 	 * @param int[] $product_ids Products.
+	 * @param bool  $changed     Whether they changed now, rather than were found out of date: a change is read again even when the job is reading them already.
 	 */
-	public static function products( array $product_ids ): void {
-		self::note( self::PRODUCTS, $product_ids );
+	public static function products( array $product_ids, bool $changed = false ): void {
+		self::note( self::PRODUCTS, $product_ids, $changed );
 	}
 
 	/**
 	 * Notes a count to work out again.
 	 *
 	 * @param string $transient The transient it is kept in.
+	 * @param bool   $changed   Whether it was just worked out from what is out of date.
 	 */
-	public static function counts( string $transient ): void {
-		self::note( self::COUNTS, array( $transient ) );
+	public static function counts( string $transient, bool $changed = false ): void {
+		self::note( self::COUNTS, array( $transient ), $changed );
 	}
 
 	/**
@@ -119,8 +135,8 @@ final class FilterDataRefresh {
 			self::PRODUCTS => array(),
 			self::COUNTS   => array(),
 		);
+		$due           = self::due();
 		try {
-			$due = self::due();
 			foreach ( array_chunk( array_map( 'intval', array_keys( $due[ self::PRODUCTS ] ) ), self::BATCH ) as $batch ) {
 				if ( microtime( true ) - $started >= self::RUN_SECONDS ) {
 					break;
@@ -131,20 +147,26 @@ final class FilterDataRefresh {
 				if ( microtime( true ) - $started >= self::RUN_SECONDS ) {
 					break;
 				}
-				FilterMatches::recount( (string) $transient );
-				$done[ self::COUNTS ][] = (string) $transient;
+				if ( FilterMatches::recount( (string) $transient ) ) {
+					$done[ self::COUNTS ][] = (string) $transient;
+				}
 			}
 		} finally {
 			$left          = self::change(
-				static function ( array $due ) use ( $done ): array {
+				static function ( array $now ) use ( $done, $due ): array {
 					foreach ( $done as $kind => $keys ) {
-						$due[ $kind ] = array_diff_key( $due[ $kind ], array_flip( $keys ) );
+						foreach ( $keys as $key ) {
+							// A note changed since the job read it stays for the next run.
+							if ( isset( $now[ $kind ][ $key ] ) && $now[ $kind ][ $key ] === $due[ $kind ][ $key ] ) {
+								unset( $now[ $kind ][ $key ] );
+							}
+						}
 					}
-					return $due;
+					return $now;
 				}
 			);
 			self::$running = false;
-			self::$noted   = array();
+			self::$noted   = null;
 			if ( array() !== $left[ self::PRODUCTS ] || array() !== $left[ self::COUNTS ] ) {
 				self::schedule();
 			}
@@ -152,29 +174,44 @@ final class FilterDataRefresh {
 	}
 
 	/**
-	 * Notes keys of one kind, and queues the job for them.
+	 * Notes keys of one kind, and queues the job for them. A key found out
+	 * of date is noted once; a change gives it a new token. The first note
+	 * a request makes queues the job if none waits, as for notes left by a
+	 * request that could not queue it.
 	 *
-	 * @param string            $kind `PRODUCTS` or `COUNTS`.
-	 * @param array<int|string> $keys Product ids or transients.
+	 * @param string            $kind    `PRODUCTS` or `COUNTS`.
+	 * @param array<int|string> $keys    Product ids or transients.
+	 * @param bool              $changed Whether they changed now.
 	 */
-	private static function note( string $kind, array $keys ): void {
-		$new = array_diff_key( array_fill_keys( $keys, true ), self::$noted[ $kind ] ?? array() );
+	private static function note( string $kind, array $keys, bool $changed ): void {
+		$first         = null === self::$noted;
+		self::$noted ??= array();
+		$new           = array_fill_keys( $keys, true );
+		if ( ! $changed ) {
+			$new = array_diff_key( $new, self::$noted[ $kind ] ?? array() );
+		}
 		if ( array() === $new ) {
 			return;
 		}
 		self::$noted[ $kind ] = ( self::$noted[ $kind ] ?? array() ) + $new;
-		if ( array() === array_diff_key( $new, self::due()[ $kind ] ) ) {
+		if ( $changed || array() !== array_diff_key( $new, self::due()[ $kind ] ) ) {
+			$token = wp_generate_uuid4();
+			self::change(
+				static function ( array $due ) use ( $kind, $new, $changed, $token ): array {
+					foreach ( array_keys( $new ) as $key ) {
+						if ( $changed || ! isset( $due[ $kind ][ $key ] ) ) {
+							$due[ $kind ][ $key ] = $token;
+						}
+					}
+					if ( self::COUNTS === $kind ) {
+						$due[ $kind ] = array_slice( $due[ $kind ], 0, self::MAX_COUNTS, true );
+					}
+					return $due;
+				}
+			);
+		} elseif ( ! $first ) {
 			return;
 		}
-		self::change(
-			static function ( array $due ) use ( $kind, $new ): array {
-				$due[ $kind ] += $new;
-				if ( self::COUNTS === $kind ) {
-					$due[ $kind ] = array_slice( $due[ $kind ], 0, self::MAX_COUNTS, true );
-				}
-				return $due;
-			}
-		);
 		self::schedule();
 	}
 
@@ -193,10 +230,10 @@ final class FilterDataRefresh {
 	 * read them, and stores them at once.
 	 *
 	 * @param \Closure $change `fn(array $due): array`.
-	 * @return array{products: array<int|string, true>, counts: array<int|string, true>}
+	 * @return array{products: array<int|string, string>, counts: array<int|string, string>}
 	 */
 	private static function change( \Closure $change ): array {
-		/** @var array{products: array<int|string, true>, counts: array<int|string, true>} $due */
+		/** @var array{products: array<int|string, string>, counts: array<int|string, string>} $due */
 		$due = $change( self::due() );
 		update_option( self::OPTION, $due, false );
 		return $due;
@@ -205,7 +242,7 @@ final class FilterDataRefresh {
 	/**
 	 * The notes as stored now.
 	 *
-	 * @return array{products: array<int|string, true>, counts: array<int|string, true>}
+	 * @return array{products: array<int|string, string>, counts: array<int|string, string>}
 	 */
 	private static function due(): array {
 		wp_cache_delete( self::OPTION, 'options' );
@@ -216,8 +253,8 @@ final class FilterDataRefresh {
 		);
 		foreach ( array_keys( $due ) as $kind ) {
 			$keys = is_array( $stored ) && is_array( $stored[ $kind ] ?? null ) ? $stored[ $kind ] : array();
-			foreach ( array_keys( $keys ) as $key ) {
-				$due[ $kind ][ $key ] = true;
+			foreach ( $keys as $key => $token ) {
+				$due[ $kind ][ $key ] = is_string( $token ) ? $token : '';
 			}
 		}
 		return $due;

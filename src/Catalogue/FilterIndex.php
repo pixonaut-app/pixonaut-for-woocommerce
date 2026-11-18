@@ -151,6 +151,11 @@ final class FilterIndex {
 	public static function look_up( array $product_ids, bool $stale = false ): void {
 		$ids = array();
 		foreach ( $product_ids as $id ) {
+			// One a listing took as it was is looked up again by a reader that needs it as it is now.
+			if ( $id > 0 && ! $stale && ( self::$looked_up[ $id ]['stale'] ?? false ) ) {
+				unset( self::$looked_up[ $id ] );
+				SplitCards::release( array( $id ) );
+			}
 			if ( $id > 0 && ! isset( self::$looked_up[ $id ] ) ) {
 				$ids[ $id ] = $id;
 			}
@@ -159,7 +164,7 @@ final class FilterIndex {
 			return;
 		}
 		// Errors from here on mean a read may have failed.
-		self::$errors ??= self::errors();
+		self::$errors ??= self::database_errors();
 
 		$stamps = self::stamps( array_values( $ids ) );
 		$names  = array();
@@ -194,13 +199,29 @@ final class FilterIndex {
 	}
 
 	/**
+	 * Whether any of some products was taken this request as kept under
+	 * another stamp.
+	 *
+	 * @param int[] $product_ids Products.
+	 */
+	public static function took_stale( array $product_ids ): bool {
+		foreach ( $product_ids as $id ) {
+			if ( self::$looked_up[ $id ]['stale'] ?? false ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Reads some products' variations again and keeps what was read, as
 	 * the background job does: nothing kept of them is taken. A product
-	 * changed moments ago is left for later.
+	 * changed moments ago is left for later, as is every one when a
+	 * database query failed.
 	 *
 	 * @param int[] $product_ids Products.
 	 * @phpstan-param list<int> $product_ids
-	 * @return list<int> The products read, or gone.
+	 * @return list<int> The products read and kept, or gone.
 	 */
 	public static function rebuild( array $product_ids ): array {
 		if ( array() === $product_ids || self::$switched ) {
@@ -210,15 +231,19 @@ final class FilterIndex {
 		foreach ( $product_ids as $id ) {
 			unset( self::$looked_up[ $id ] );
 		}
-		self::$errors = self::errors();
+		$errors       = self::database_errors();
+		self::$errors = $errors;
 		$stamps       = self::stamps( $product_ids );
+		if ( self::database_errors() !== $errors ) {
+			return array();
+		}
 		_prime_post_caches( array_keys( $stamps ), true, true );
 		$done = array();
+		$gone = array();
 		foreach ( $product_ids as $id ) {
 			$product = isset( $stamps[ $id ] ) ? wc_get_product( $id ) : null;
 			if ( ! $product instanceof WC_Product ) {
-				delete_transient( self::transient( $id ) );
-				$done[] = $id;
+				$gone[] = $id;
 				continue;
 			}
 			if ( ! $stamps[ $id ]['settled'] ) {
@@ -239,9 +264,17 @@ final class FilterIndex {
 			}
 			$done[] = $id;
 		}
+		// What was read is kept only while no query failed; the products are then read again on the next run.
+		$failed = self::database_errors() !== $errors;
 		self::keep();
 		SplitCards::release( $product_ids );
-		return $done;
+		if ( $failed ) {
+			return array();
+		}
+		foreach ( $gone as $id ) {
+			delete_transient( self::transient( $id ) );
+		}
+		return array_merge( $done, $gone );
 	}
 
 	/**
@@ -336,7 +369,7 @@ final class FilterIndex {
 	 * whose kept reads were missing or partial.
 	 */
 	public static function keep(): void {
-		$looked_up_all   = self::$switched || self::errors() !== self::$errors ? array() : self::$looked_up;
+		$looked_up_all   = self::$switched || self::database_errors() !== self::$errors ? array() : self::$looked_up;
 		self::$looked_up = array();
 		self::$errors    = null;
 		foreach ( $looked_up_all as $looked_up ) {
@@ -393,7 +426,7 @@ final class FilterIndex {
 		if ( null !== $kept && self::OUT_OF_DATE !== $kept['stamp'] ) {
 			set_transient( self::transient( $product_id ), array( 'stamp' => self::OUT_OF_DATE ) + $kept, self::LIFETIME );
 		}
-		FilterDataRefresh::products( array( $product_id ) );
+		FilterDataRefresh::products( array( $product_id ), true );
 	}
 
 	/**
@@ -434,9 +467,10 @@ final class FilterIndex {
 	}
 
 	/**
-	 * How many database errors this request has had.
+	 * How many database errors this request has had: a read across a
+	 * failed query may have found nothing.
 	 */
-	private static function errors(): int {
+	public static function database_errors(): int {
 		global $EZSQL_ERROR;
 		return is_array( $EZSQL_ERROR ) ? count( $EZSQL_ERROR ) : 0;
 	}

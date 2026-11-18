@@ -11,6 +11,7 @@ use Automattic\WooCommerce\Internal\ProductFilters\FilterDataProvider;
 use Automattic\WooCommerce\Internal\ProductFilters\QueryClauses;
 use Pixonaut\WooCommerce\Catalogue\FilterDataRefresh;
 use Pixonaut\WooCommerce\Catalogue\FilterIndex;
+use Pixonaut\WooCommerce\Catalogue\FilterOffers;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Schema;
@@ -702,17 +703,117 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		$this->assertSame( array(), $this->due()['products'], 'nothing left for the job' );
 	}
 
-	public function test_a_product_page_reads_a_changed_product_as_it_is_now(): void {
+	public function test_a_reader_needing_a_product_as_it_is_reads_it_after_a_listing_took_it_as_kept(): void {
+		$filters = array(
+			'filter_storlek' => '30x40',
+			'max_price'      => self::PRICE_HIGH,
+		);
+		$this->settle();
+		$this->shop( $filters );
+		FilterIndex::keep();
+		$sizes = $this->variations_in( $this->poster, '30x40' );
+		$this->price_unseen( $sizes, '999' );
+		FilterIndex::forget( $this->poster->get_id() );
+		FreshRequest::forget_filter_reads();
+		$this->assertContains( $this->poster->get_id(), $this->shop( $filters )['ids'], 'the listing took it as kept' );
+
+		FilterIndex::look_up( array( $this->poster->get_id() ) );
+		$product = wc_get_product( $this->poster->get_id() );
+		$this->assertInstanceOf( WC_Product::class, $product );
+		$prices = array_column( FilterOffers::of( $product ), 'min', 'id' );
+
+		$this->assertEqualsWithDelta( 999.0, $prices[ $sizes[0] ] ?? null, 0.001, 'read as it is now, in the same request as the listing' );
+	}
+
+	public function test_a_product_saved_while_the_job_reads_it_is_read_again_on_its_next_run(): void {
 		$this->settle();
 		$this->shop( array( 'filter_storlek' => '30x40' ) );
 		FilterIndex::keep();
-		$this->sell( $this->poster, '30x40', 'hangare', 'ek', '450' );
+		FilterIndex::forget( $this->poster->get_id() );
+		$poster = $this->poster->get_id();
+		$saved  = false;
+		// The job reads each product through WooCommerce, which asks for its class first.
+		$during = static function ( mixed $product_class ) use ( $poster, &$saved ): mixed {
+			if ( ! $saved ) {
+				$saved = true;
+				FilterIndex::forget( $poster );
+			}
+			return $product_class;
+		};
+		add_filter( 'woocommerce_product_class', $during );
+		$this->run_refresh();
+		remove_filter( 'woocommerce_product_class', $during );
+
+		$this->assertTrue( $saved );
+		$this->assertArrayHasKey( $poster, $this->due()['products'], 'saved after the job read it' );
+		$this->run_refresh();
+		$this->assertSame( array(), $this->due()['products'] );
+	}
+
+	public function test_a_failed_query_leaves_the_notes_and_what_was_kept(): void {
+		$this->settle();
+		$this->counts( 'pa_storlek', array() );
+		$this->shop( array( 'filter_storlek' => '30x40' ) );
+		FilterIndex::keep();
+		$transient = Schema::FILTER_INDEX_PREFIX . $this->poster->get_id();
+		$kept      = get_transient( $transient );
+		FilterIndex::forget( $this->poster->get_id() );
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the kept counts, as stored.
+		$counts = substr( (string) $wpdb->get_var( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( '_transient_' . Schema::FILTER_COUNTS_PREFIX ) . '%' ) ), strlen( '_transient_' ) );
+		FilterDataRefresh::counts( $counts, true );
+		$failing = static function ( mixed $product_class ): mixed {
+			global $EZSQL_ERROR;
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- a failed query, as wpdb records it.
+			$EZSQL_ERROR[] = array(
+				'query'     => 'SELECT 1',
+				'error_str' => 'Lost connection',
+			);
+			return $product_class;
+		};
+		global $EZSQL_ERROR;
+		$errors = $EZSQL_ERROR;
+		add_filter( 'woocommerce_product_class', $failing );
+		$this->run_refresh();
+		remove_filter( 'woocommerce_product_class', $failing );
+		$EZSQL_ERROR = $errors; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- restores what the test added.
+
+		$this->assertArrayHasKey( $this->poster->get_id(), $this->due()['products'], 'read again on the next run' );
+		$this->assertArrayHasKey( $counts, $this->due()['counts'] );
+		$this->assertSame( array( 'stamp' => '' ) + (array) $kept, get_transient( $transient ), 'kept as it was, out of date' );
+	}
+
+	public function test_a_note_left_without_a_job_is_queued_by_the_next_request_noting_it(): void {
+		$this->settle();
+		$this->shop( array( 'filter_storlek' => '30x40' ) );
+		FilterIndex::keep();
+		FilterIndex::forget( $this->poster->get_id() );
+		as_unschedule_all_actions( FilterDataRefresh::HOOK );
 		FreshRequest::forget_filter_reads();
 
-		FilterIndex::look_up( array( $this->poster->get_id() ) );
-		$values = array_column( SplitCards::variation_values( $this->poster->get_id() ), 'attribute_pa_inramning' );
+		$this->shop( array( 'filter_storlek' => '30x40' ) );
 
-		$this->assertContains( 'hangare', $values, 'the hanger sold since, though the kept read is listings\' until the job runs' );
+		$this->assertNotFalse( as_next_scheduled_action( FilterDataRefresh::HOOK ) );
+		as_unschedule_all_actions( FilterDataRefresh::HOOK );
+	}
+
+	public function test_counts_first_worked_out_from_reads_out_of_date_are_worked_out_again(): void {
+		$filters = array( 'max_price' => self::PRICE_HIGH );
+		$this->settle();
+		$this->shop( array( 'filter_storlek' => '30x40' ) );
+		FilterIndex::keep();
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the test's own posts, changed as a save would.
+		$wpdb->query( "UPDATE {$wpdb->posts} SET post_modified_gmt = '2021-01-01 00:00:00' WHERE post_type = 'product'" );
+		$this->price_unseen( $this->variations_in( $this->poster, '30x40' ), '999' );
+		FreshRequest::forget_filter_reads();
+
+		$before = $this->counts( 'pa_storlek', $filters );
+		$this->assertSame( 2, $before[ $this->term( '30x40' ) ] ?? null, 'the poster\'s 30x40 as kept' );
+		$this->assertCount( 1, $this->due()['counts'], 'never counted before, from reads out of date: noted' );
+
+		$this->run_refresh();
+		$this->assertSame( 1, $this->counts( 'pa_storlek', $filters )[ $this->term( '30x40' ) ] ?? null, 'only the print in 30x40 within the range' );
 	}
 
 	public function test_a_read_kept_for_a_day_is_read_again_by_the_job_and_kept_a_week(): void {

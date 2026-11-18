@@ -341,19 +341,25 @@ final class FilterMatches {
 	 * Works out kept counts again, as the background job does.
 	 *
 	 * @param string $transient The transient they are kept in.
+	 * @return bool False when a database query failed: the kept counts stay, to be worked out again.
 	 */
-	public static function recount( string $transient ): void {
+	public static function recount( string $transient ): bool {
 		$kept = self::kept_counts( $transient );
-		if ( null !== $kept ) {
-			self::keep_counts( $transient, $kept['query_vars'], $kept['taxonomy'], $kept['own'], false );
-			// What the count read of the products is kept, and let go of.
-			FilterIndex::keep();
+		if ( null === $kept ) {
+			return true;
 		}
+		$errors = FilterIndex::database_errors();
+		self::keep_counts( $transient, $kept['query_vars'], $kept['taxonomy'], $kept['own'], false );
+		// What the count read of the products is kept, and let go of.
+		FilterIndex::keep();
+		return FilterIndex::database_errors() === $errors;
 	}
 
 	/**
 	 * Works out counts and keeps them, with what they were worked out
-	 * from, to be worked out again later.
+	 * from, to be worked out again later. Counts worked out from products
+	 * taken as they were kept under another stamp are kept out of date and
+	 * noted for the job; none are kept when a database query failed.
 	 *
 	 * @param string                  $transient  The transient they are kept in.
 	 * @param array<array-key, mixed> $query_vars The listing's query.
@@ -365,8 +371,16 @@ final class FilterMatches {
 	 */
 	private static function keep_counts( string $transient, array $query_vars, string $taxonomy, array $own, bool $stale ): array {
 		// Read before the products: one saved while they are read moves it, and the counts are worked out again.
-		$version = self::products_version();
-		$counts  = self::count( $query_vars, $taxonomy, $own, $stale );
+		$version                   = self::products_version();
+		$errors                    = FilterIndex::database_errors();
+		list( $counts, $outdated ) = self::count( $query_vars, $taxonomy, $own, $stale );
+		if ( FilterIndex::database_errors() !== $errors ) {
+			return $counts;
+		}
+		if ( $outdated ) {
+			$version = '';
+			FilterDataRefresh::counts( $transient, true );
+		}
 		set_transient(
 			$transient,
 			array(
@@ -422,7 +436,7 @@ final class FilterMatches {
 	 * @param int[]                   $own        The counted attribute's chosen values the query leaves out.
 	 * @param bool                    $stale      Whether products' reads kept under another stamp are taken as they were.
 	 * @phpstan-param list<int> $own
-	 * @return array<int, int> Counts by term id.
+	 * @return array{0: array<int, int>, 1: bool} Counts by term id, and whether a product was taken as kept under another stamp.
 	 */
 	private static function count( array $query_vars, string $taxonomy, array $own, bool $stale ): array {
 		$chosen = self::chosen_in( $query_vars );
@@ -437,6 +451,7 @@ final class FilterMatches {
 		$ids   = self::listed( $query_vars );
 		// What was kept of the products' variations; the others are read below.
 		FilterIndex::look_up( $ids, $stale );
+		$outdated = FilterIndex::took_stale( $ids );
 		_prime_post_caches( $ids, true, true );
 		$products = array_values( array_filter( array_map( 'wc_get_product', $ids ), static fn ( mixed $product ): bool => $product instanceof WC_Product ) );
 		$values   = array();
@@ -470,7 +485,7 @@ final class FilterMatches {
 				}
 			}
 		}
-		return $counts;
+		return array( $counts, $outdated );
 	}
 
 	/**

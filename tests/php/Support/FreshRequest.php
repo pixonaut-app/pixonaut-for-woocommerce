@@ -57,7 +57,7 @@ final class FreshRequest {
 		( new ReflectionProperty( FilterIndex::class, 'looked_up' ) )->setValue( null, array() );
 		( new ReflectionProperty( FilterIndex::class, 'switched' ) )->setValue( null, false );
 		( new ReflectionProperty( FilterIndex::class, 'errors' ) )->setValue( null, null );
-		( new ReflectionProperty( FilterDataRefresh::class, 'noted' ) )->setValue( null, array() );
+		( new ReflectionProperty( FilterDataRefresh::class, 'noted' ) )->setValue( null, null );
 		RequestCache::forget();
 	}
 

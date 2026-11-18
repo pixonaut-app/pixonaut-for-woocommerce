@@ -1319,10 +1319,13 @@ tax and shown with it.
   each noted product again (one changed in the last two seconds waits for
   its next run), then works out each noted count again, for up to 30
   seconds a run, and runs again while some are left. At most 200 counts
-  wait at once. A product page opening on a filtered variation reads the
-  product as it is now. Only a product with nothing kept, such as one no
-  listing or save has read since it was created, is read while a page
-  waits.
+  wait at once. A product saved while the job reads it is noted anew and
+  read again on the next run; a run whose database query failed leaves its
+  notes and what was kept for the next. Counts first worked out from reads
+  taken as they were are kept out of date and noted too. The archive index
+  build and the attribute dependencies read each product as it is now. Only
+  a product with nothing kept, such as one no listing or save has read
+  since it was created, is read while a page waits.
 
 #### Short names in addresses
 
