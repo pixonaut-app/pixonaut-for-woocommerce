@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.6](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.5...v1.22.6) (2026-11-18)
+
+
+### Bug Fixes
+
+* **cart:** draw a line's picture on the photo of the variant it sells ([#328](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/328)) ([37f59ec](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/37f59ecdd8e1551b026fe3cdc0226b6b53f1a776))
+
 ## [1.22.5](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.4...v1.22.5) (2026-11-18)
 
 
