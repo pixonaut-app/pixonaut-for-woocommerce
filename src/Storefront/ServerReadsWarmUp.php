@@ -44,28 +44,36 @@ final class ServerReadsWarmUp {
 	public const OPTION = Schema::SERVER_READS_IN_USE_OPTION;
 
 	/**
+	 * A minute and a day, in seconds; WordPress's own constants are not
+	 * defined where the class may load before it.
+	 */
+	private const MINUTE = 60;
+
+	private const DAY = 86400;
+
+	/**
 	 * How long before a kept copy runs out it is read again: a few runs of
 	 * WordPress's cron, which only starts jobs on its own schedule.
 	 */
-	private const LEAD_SECONDS = 15 * MINUTE_IN_SECONDS;
+	private const LEAD_SECONDS = 15 * self::MINUTE;
 
 	/**
 	 * How long after a page last asked for an answer it is still read
 	 * again: over a weekend, not for a product nobody looks at.
 	 */
-	private const IN_USE_SECONDS = 3 * DAY_IN_SECONDS;
+	private const IN_USE_SECONDS = 3 * self::DAY;
 
 	/**
 	 * How often a page asking for an answer renews when it was last asked
 	 * for: well within `IN_USE_SECONDS`, and no write on every view.
 	 */
-	private const ASKED_RENEWAL_SECONDS = DAY_IN_SECONDS;
+	private const ASKED_RENEWAL_SECONDS = self::DAY;
 
 	/**
 	 * How long a read Pixonaut failed waits before the job tries it again,
 	 * while the others go on.
 	 */
-	private const RETRY_SECONDS = 10 * MINUTE_IN_SECONDS;
+	private const RETRY_SECONDS = 10 * self::MINUTE;
 
 	/**
 	 * After this many failed reads in a row the run stops: Pixonaut is
@@ -82,7 +90,7 @@ final class ServerReadsWarmUp {
 	/**
 	 * How soon a run that left answers due runs again.
 	 */
-	private const NEXT_RUN_SECONDS = MINUTE_IN_SECONDS;
+	private const NEXT_RUN_SECONDS = self::MINUTE;
 
 	private readonly Closure $clock;
 

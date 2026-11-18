@@ -182,6 +182,8 @@ export const NO_SPEC = [
 	'src/Catalogue/VariationPictures.php',
 	'templates/admin/product-variation-pictures.php',
 	'assets/src/admin/variation-pictures.ts',
+	// Reads kept warm through a quiet hour by a timed job: the PHP suites.
+	'src/Storefront/ServerReadsWarmUp.php',
 ];
 
 /**
