@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.5](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.4...v1.22.5) (2026-11-18)
+
+
+### Bug Fixes
+
+* **storefront:** attribute dependencies are served as kept while a job works them out ([#314](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/314)) ([b22abf0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/b22abf0fb3b24dd40a78c2fa1c04471f6fe03193))
+
 ## [1.22.4](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.3...v1.22.4) (2026-11-18)
 
 
