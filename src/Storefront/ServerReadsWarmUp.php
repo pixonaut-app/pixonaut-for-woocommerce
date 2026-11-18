@@ -220,20 +220,25 @@ final class ServerReadsWarmUp {
 			return;
 		}
 		$next    = max( min( array_map( static fn ( array $entry ): int => self::due( $entry ), $entries ) ), $now + self::NEXT_RUN_SECONDS );
-		$pending = self::pending_at();
-		if ( null !== $pending && $pending <= $next ) {
+		$pending = self::pending();
+		// One queued before the job had its priority keeps its place behind any backlog: it is queued again.
+		if ( null !== $pending && $pending['at'] <= $next && self::PRIORITY === $pending['priority'] ) {
 			return;
 		}
 		if ( null !== $pending ) {
+			$next = min( $next, $pending['at'] );
 			as_unschedule_action( self::HOOK, array(), Schema::ACTION_GROUP );
 		}
 		as_schedule_single_action( $next, self::HOOK, array(), Schema::ACTION_GROUP, false, self::PRIORITY );
 	}
 
 	/**
-	 * When the queued job runs; null while none waits (one running does not).
+	 * When the queued job runs, and at which priority; null while none
+	 * waits (one running does not).
+	 *
+	 * @return array{at: int, priority: int}|null
 	 */
-	private static function pending_at(): ?int {
+	private static function pending(): ?array {
 		$actions = as_get_scheduled_actions(
 			array(
 				'hook'     => self::HOOK,
@@ -250,8 +255,12 @@ final class ServerReadsWarmUp {
 		}
 		$schedule = $action->get_schedule();
 		$date     = $schedule instanceof ActionScheduler_Abstract_Schedule ? $schedule->get_date() : null;
-		return $date instanceof DateTimeInterface ? $date->getTimestamp() : null;
+		return $date instanceof DateTimeInterface ? array(
+			'at'       => $date->getTimestamp(),
+			'priority' => $action->get_priority(),
+		) : null;
 	}
+
 
 	/**
 	 * When an answer is to be read again: before its copy runs out, and

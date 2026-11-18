@@ -185,6 +185,24 @@ final class ServerReadsWarmUpTest extends WP_UnitTestCase {
 		$this->assertLessThanOrEqual( $this->now + MINUTE_IN_SECONDS, $due, 'its copy may be of any age' );
 	}
 
+	public function test_a_job_queued_at_the_queues_default_priority_is_queued_again_ahead_of_a_backlog(): void {
+		as_schedule_single_action( $this->now - HOUR_IN_SECONDS, ServerReadsWarmUp::HOOK, array(), Schema::ACTION_GROUP );
+		$this->answer_side();
+
+		$this->reads->for_mounts( array( 'front' => self::FRONT ) );
+
+		$queued = as_get_scheduled_actions(
+			array(
+				'hook'   => ServerReadsWarmUp::HOOK,
+				'status' => \ActionScheduler_Store::STATUS_PENDING,
+			)
+		);
+		$this->assertCount( 1, $queued );
+		$action = reset( $queued );
+		$this->assertSame( ServerReadsWarmUp::PRIORITY, $action->get_priority() );
+		$this->assertSame( $this->now - HOUR_IN_SECONDS, as_next_scheduled_action( ServerReadsWarmUp::HOOK, array(), Schema::ACTION_GROUP ), 'when it was due' );
+	}
+
 	/**
 	 * Runs the job as the plugin does, against this test's Pixonaut.
 	 */
