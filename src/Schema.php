@@ -537,6 +537,12 @@ final class Schema {
 	const ATTRIBUTE_QUERY_NAMES_OPTION = 'pixonaut_wc_attribute_query_names';
 
 	/**
+	 * Option holding, by global attribute id, the blank option an attribute
+	 * stands for and the option value each of its terms stands for.
+	 */
+	const BLANK_OPTION_LINKS_OPTION = 'pixonaut_wc_blank_option_links';
+
+	/**
 	 * Option holding the ids of designer links Pixonaut could not be asked
 	 * to withdraw yet, which a job asks again.
 	 */

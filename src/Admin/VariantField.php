@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Admin;
 
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
+use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
 use Pixonaut\WooCommerce\Catalogue\BlankVariant;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
@@ -86,9 +87,9 @@ final class VariantField {
 		if ( null === $stored && null !== $listed ) {
 			// Not saved on this blank yet: the variant the product's attributes find, by the names saving matches too.
 			try {
-				$stored = ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $product ), $this->variants->named( $blank_id ) );
+				$stored = ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $product ), $this->variants->named( $blank_id ), BlankOptionLinks::labels( $product ) );
 			} catch ( ApiException $e ) {
-				$stored = ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $product ), $listed );
+				$stored = ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $product ), $listed, BlankOptionLinks::labels( $product ) );
 			}
 		}
 		if ( null !== $stored?->pick && ! isset( $choices[ $stored->pick ] ) ) {

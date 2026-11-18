@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
+use Pixonaut\WooCommerce\Catalogue\ProductIndex;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Settings\Settings;
 use WC_Product;
@@ -22,7 +24,9 @@ use WP_Term;
  * draws for them. An attribute names an option, and its value one of the
  * option's values, by label, as a product's attributes name its blank
  * variant (`ProductVariant`): in the language the designer reads the blank
- * in, or as written in Pixonaut.
+ * in, or as written in Pixonaut. A linked attribute (`BlankOptionLinks`)
+ * names the option it was linked to, and its values the option values
+ * they stand for, on any blank the product's variations use.
  *
  * @phpstan-type Look array{kind: 'fill', colours: list<string>}|array{kind: 'image', url: string}
  * @phpstan-type AttributeLooks array{names: bool, looks: array<string, Look>}
@@ -87,15 +91,20 @@ final class SwatchLooks {
 		if ( ! $product instanceof WC_Product_Variable || 1 !== count( $designer->mounts ) || ! is_string( $blank ) ) {
 			return array();
 		}
-		$named = ServerReads::decoded( $this->reads->for_mounts( $designer->mounts )[ (string) $side ] ?? array() );
-		return self::for_product(
-			$product,
-			array(
-				ServerReads::options_of( $named['blank']['variants'] ?? null ),
-				$this->reads->written_options( $blank ),
-			),
-			$this->settings
+		$named   = ServerReads::decoded( $this->reads->for_mounts( $designer->mounts )[ (string) $side ] ?? array() );
+		$options = array(
+			ServerReads::options_of( $named['blank']['variants'] ?? null ),
+			$this->reads->written_options( $blank ),
 		);
+		if ( array() !== BlankOptionLinks::linked_in( $product ) ) {
+			// A linked attribute often picks the blank too (a frame's colour on a framed poster): its looks are the variations' blanks'.
+			foreach ( ProductIndex::blanks_of( $product->get_id() ) as $other ) {
+				if ( $other !== $blank ) {
+					$options[] = $this->reads->written_options( $other );
+				}
+			}
+		}
+		return self::for_product( $product, $options, $this->settings );
 	}
 
 	/**
@@ -129,7 +138,8 @@ final class SwatchLooks {
 	 * @return AttributeLooks
 	 */
 	private static function attribute( WC_Product $product, string $name, array $values, array $options, Settings $settings ): array {
-		$label   = ProductVariant::normalise( wc_attribute_label( $name, $product ) );
+		$linked  = BlankOptionLinks::option_of( $name );
+		$label   = ProductVariant::normalise( $linked ?? wc_attribute_label( $name, $product ) );
 		$matched = array();
 		foreach ( $options as $list ) {
 			foreach ( $list as $option ) {
@@ -143,7 +153,7 @@ final class SwatchLooks {
 			$value = (string) $value;
 			$look  = null;
 			foreach ( $matched as $appearances ) {
-				$look ??= self::look( self::appearance_of( $appearances, self::value_label( $name, $value ) ) );
+				$look ??= self::look( self::appearance_of( $appearances, self::value_label( $name, $value, null !== $linked ) ) );
 			}
 			if ( null !== $look ) {
 				$looks[ $value ] = $look;
@@ -156,14 +166,19 @@ final class SwatchLooks {
 	}
 
 	/**
-	 * A value's words: a global attribute's term name, else the value as entered.
+	 * A value's words: the option value a linked attribute's value stands
+	 * for, a global attribute's term name, else the value as entered.
 	 *
-	 * @param string $name  The attribute's name.
-	 * @param string $value The value the field posts.
+	 * @param string $name   The attribute's name.
+	 * @param string $value  The value the field posts.
+	 * @param bool   $linked Whether the attribute is linked to an option.
 	 */
-	private static function value_label( string $name, string $value ): string {
+	private static function value_label( string $name, string $value, bool $linked ): string {
 		$term = taxonomy_exists( $name ) ? get_term_by( 'slug', $value, $name ) : null;
-		return $term instanceof WP_Term ? $term->name : $value;
+		if ( ! $term instanceof WP_Term ) {
+			return $value;
+		}
+		return $linked ? BlankOptionLinks::stands_for( $name, $term ) : $term->name;
 	}
 
 	/**

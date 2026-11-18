@@ -111,6 +111,8 @@ export const NO_SPEC = [
 	'templates/admin/split-listing-control.php',
 	'src/Admin/SwatchNamesField.php', // an attribute's swatch names choice
 	'templates/admin/swatch-names-field.php',
+	'src/Admin/BlankOptionField.php', // an attribute's blank option, on its edit screen
+	'templates/admin/blank-option-field.php',
 	'assets/src/admin/wp-media.ts', // types of WordPress's media script
 	'templates/admin/product-not-connected.php',
 	'src/Cart/CheckoutCheck.php',
@@ -284,6 +286,14 @@ export const REACH = {
 		'src/Storefront/PrintedSwatches.php',
 		'src/Storefront/SwatchLooks.php',
 		'src/Storefront/SwatchNames.php',
+	],
+	'blank-option-swatches.spec.ts': [
+		'src/Catalogue/BlankOptionLinks.php',
+		'src/Catalogue/BlankOptionChoices.php',
+		'src/Abilities/BlankOptionRows.php',
+		'src/Abilities/GetAttributeBlankOptions.php',
+		'src/Abilities/SetAttributeBlankOption.php',
+		'src/Storefront/SwatchLooks.php',
 	],
 	'blank-variants.spec.ts': [
 		'src/Admin/VariantField.php',

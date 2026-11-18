@@ -48,6 +48,8 @@ use Pixonaut\WooCommerce\Abilities\GetAttributeQueryNames;
 use Pixonaut\WooCommerce\Abilities\GetShipping;
 use Pixonaut\WooCommerce\Abilities\SetAttributeQueryName;
 use Pixonaut\WooCommerce\Abilities\SetShippingMethod;
+use Pixonaut\WooCommerce\Abilities\GetAttributeBlankOptions;
+use Pixonaut\WooCommerce\Abilities\SetAttributeBlankOption;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductForm;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
@@ -86,6 +88,8 @@ use Pixonaut\WooCommerce\Admin\ShowcaseField;
 use Pixonaut\WooCommerce\Admin\SoldRows;
 use Pixonaut\WooCommerce\Admin\SplitListingFields;
 use Pixonaut\WooCommerce\Admin\SwatchNamesField;
+use Pixonaut\WooCommerce\Admin\BlankOptionField;
+use Pixonaut\WooCommerce\Catalogue\BlankOptionChoices;
 use Pixonaut\WooCommerce\Admin\QueryNameField;
 use Pixonaut\WooCommerce\Admin\LayoutAdjustments;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
@@ -118,6 +122,7 @@ use Pixonaut\WooCommerce\Api\Pixonaut;
 use Pixonaut\WooCommerce\Api\PrintshopCatalogue;
 use Pixonaut\WooCommerce\Api\RequestLog;
 use Pixonaut\WooCommerce\Api\WcLogger;
+use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\ProductLinker;
 use Pixonaut\WooCommerce\Catalogue\MediaSpace;
@@ -518,6 +523,7 @@ final class Plugin {
 		SplitListing::register();
 		RequestCache::register();
 		SwatchNames::register();
+		BlankOptionLinks::register();
 		QueryNames::register();
 		( new NotLiveProducts() )->register();
 		( new UnavailableProduct( $this->labels() ) )->register();
@@ -563,6 +569,7 @@ final class Plugin {
 			$this->showcase_field()->register();
 			( new SplitListingFields( $this->templates() ) )->register();
 			( new SwatchNamesField( $this->templates() ) )->register();
+			( new BlankOptionField( $this->templates(), $this->blank_option_choices() ) )->register();
 			( new QueryNameField( $this->templates() ) )->register();
 			( new StatusReport( $this->templates() ) )->register();
 			( new OrderBox( $this->line_actions(), $this->proof_urls(), $this->templates() ) )->register();
@@ -633,6 +640,8 @@ final class Plugin {
 					new SetAttributeQueryName(),
 					new GetShipping(),
 					new SetShippingMethod(),
+					new GetAttributeBlankOptions( $this->blank_option_choices() ),
+					new SetAttributeBlankOption( $this->blank_option_choices() ),
 					new MoveProductTemplate( $links, $fields ),
 					new MoveProductAttribute( new WcLogger() ),
 					new UseProductPicture( $links, $this->settings() ),
@@ -1214,6 +1223,13 @@ final class Plugin {
 			return;
 		}
 		( new ServerReadsWarmUp() )->warm( fn ( string $what, array $args ): bool => $this->server_reads()->read_again( $what, $args ) );
+	}
+
+	/**
+	 * The blank options each global attribute can be linked to.
+	 */
+	public function blank_option_choices(): BlankOptionChoices {
+		return new BlankOptionChoices( fn ( string $blank_id ): array => $this->server_reads()->written_options( $blank_id ) );
 	}
 
 	/**

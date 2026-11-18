@@ -170,6 +170,79 @@ final class ProductIndex {
 	}
 
 	/**
+	 * The blanks a product and its variations use, sorted.
+	 *
+	 * @param int $product_id A product.
+	 * @return list<string>
+	 */
+	public static function blanks_of( int $product_id ): array {
+		global $wpdb;
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one indexed read of the product's and its variations' blank rows.
+		$blanks = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT meta.meta_value FROM {$wpdb->postmeta} meta INNER JOIN {$wpdb->posts} post ON post.ID = meta.post_id WHERE meta.meta_key = %s AND ( post.ID = %d OR post.post_parent = %d ) ORDER BY meta.meta_value",
+				self::BLANK_META,
+				$product_id,
+				$product_id
+			)
+		);
+		// phpcs:enable
+		return self::blank_ids( $blanks );
+	}
+
+	/**
+	 * The blanks used by the products with values of an attribute, by the
+	 * products themselves or by their variations, sorted.
+	 *
+	 * @param string $taxonomy A global attribute's taxonomy.
+	 * @return list<string>
+	 */
+	public static function blanks_with_attribute( string $taxonomy ): array {
+		global $wpdb;
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one read over the blank index for an attribute's screen and its tools; a variation's row counts for its product's terms.
+		$blanks = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT meta.meta_value FROM {$wpdb->postmeta} meta INNER JOIN {$wpdb->posts} post ON post.ID = meta.post_id INNER JOIN {$wpdb->term_relationships} rel ON rel.object_id = CASE WHEN post.post_type = 'product_variation' THEN post.post_parent ELSE post.ID END INNER JOIN {$wpdb->term_taxonomy} tax ON tax.term_taxonomy_id = rel.term_taxonomy_id WHERE meta.meta_key = %s AND tax.taxonomy = %s ORDER BY meta.meta_value",
+				self::BLANK_META,
+				$taxonomy
+			)
+		);
+		// phpcs:enable
+		return self::blank_ids( $blanks );
+	}
+
+	/**
+	 * The products with values of an attribute that use a blank, themselves
+	 * or through their variations, in id order.
+	 *
+	 * @param string $taxonomy A global attribute's taxonomy.
+	 * @return list<int>
+	 */
+	public static function products_with_attribute( string $taxonomy ): array {
+		global $wpdb;
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one read over the blank index when an attribute's link changes; a variation's row counts for its product.
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT CASE WHEN post.post_type = 'product_variation' THEN post.post_parent ELSE post.ID END AS product_id FROM {$wpdb->postmeta} meta INNER JOIN {$wpdb->posts} post ON post.ID = meta.post_id INNER JOIN {$wpdb->term_relationships} rel ON rel.object_id = CASE WHEN post.post_type = 'product_variation' THEN post.post_parent ELSE post.ID END INNER JOIN {$wpdb->term_taxonomy} tax ON tax.term_taxonomy_id = rel.term_taxonomy_id WHERE meta.meta_key = %s AND tax.taxonomy = %s ORDER BY product_id",
+				self::BLANK_META,
+				$taxonomy
+			)
+		);
+		// phpcs:enable
+		return array_values( array_map( 'intval', $ids ) );
+	}
+
+	/**
+	 * Blank ids as read: empty ones left out.
+	 *
+	 * @param array<mixed> $rows The read column.
+	 * @return list<string>
+	 */
+	private static function blank_ids( array $rows ): array {
+		return array_values( array_filter( array_map( 'strval', $rows ), static fn ( string $blank ): bool => '' !== $blank ) );
+	}
+
+	/**
 	 * Products and variations with a configuration stored, in id order.
 	 *
 	 * @param int $after Only ids above this one.

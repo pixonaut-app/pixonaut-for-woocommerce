@@ -35,6 +35,8 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/set-attribute-query-name` | Sets a global attribute's "Name in addresses", refusing one WordPress or WooCommerce reads or another attribute goes by | `manage_product_terms` |
 | `pixonaut-for-woocommerce/get-shipping` | Every shipping zone with its locations and methods: a flat rate's cost excluding and including tax, free shipping's minimum order amount | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/set-shipping-method` | Changes a zone's shipping method, or adds a flat rate or free shipping; a cost can be given including tax | `manage_woocommerce` |
+| `pixonaut-for-woocommerce/get-attribute-blank-options` | The blank option each global attribute stands for, the option value each of its values stands for, and the options it can be linked to | `manage_product_terms` |
+| `pixonaut-for-woocommerce/set-attribute-blank-option` | Links a global attribute to a blank option and its values to the option's values, or unlinks it | `manage_product_terms` |
 | `pixonaut-for-woocommerce/move-product-template` | Moves a product and its variations' own setups to another template version, keeping their sides | `edit_product` on that product |
 | `pixonaut-for-woocommerce/use-product-picture` | Puts the Pixonaut picture back in place of the store manager's own image | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/reset-standing-layout` | Undoes the layout adjusted by hand for one option of a standing side | `edit_product` on that product (and on a variation's product) |
@@ -473,6 +475,28 @@ to free shipping that required nothing makes it require the minimum. A
 setting the method's own form does not have is refused. It goes
 through WooCommerce's own shipping zone method route, so WooCommerce validates
 and keeps the settings, and answers the method's row.
+
+`get-attribute-blank-options` takes an optional `attribute_id` and answers
+`attributes`, one per global attribute: its `attribute_id`, `name`,
+`taxonomy`, the `option` of the Pixonaut blank it stands for (null when it is
+not linked), `values` (each term's `term_id`, `slug`, `name`, the option
+`value` it was linked to, null for none, and `stands_for`: that value, else
+the option's value of the term's name, null when neither exists, and the value
+then shows as text) and `options`, the options it can be linked to, each with
+its values, read from the blanks every product with the attribute uses,
+itself or through its variations. Options and values are named as Pixonaut writes them.
+`set-attribute-blank-option` takes an `attribute_id`, an `option` (empty to
+unlink) and `values`, each naming a term by `term_id` or `slug` with the
+option `value` it stands for (empty for the value of its name). Values not
+given keep their link while the option stays the same and lose it when the
+option changes. An option or value that is not among `options` is refused
+with a `400` listing those there are. It answers the attribute's row and
+queues a re-check of the products with the attribute (a `503` when that
+could not be queued: the link is saved, and `recheck-products` re-checks
+them), whose variants are
+matched with the link from then on: a linked value matches the variant whose
+option has the value it stands for, in place of an option of the attribute's
+own name.
 
 `set-product-split-listing` sets them, by `attributes`, `cards` or both:
 each attribute listed takes a `choice` and `values`, each a `term_id` with a

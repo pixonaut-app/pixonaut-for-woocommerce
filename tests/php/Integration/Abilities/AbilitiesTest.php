@@ -89,7 +89,11 @@ final class AbilitiesTest extends WP_UnitTestCase {
 
 	private const SET_SHIPPING_METHOD = Abilities::NAMESPACE . '/set-shipping-method';
 
-	private const ALL = array( self::GET_FORM, self::SET_FORM, self::GET_SPLIT_LISTING, self::SET_SPLIT_LISTING, self::SET_ATTRIBUTE_SPLIT_LISTING, self::GET_QUERY_NAMES, self::SET_QUERY_NAME, self::GET_SHIPPING, self::SET_SHIPPING_METHOD, self::LIST_TEMPLATES, self::LIST_PRODUCTS, self::LINK_PRODUCT, self::UNLINK_PRODUCT, self::LIST_ORDERS, self::ACT_ON_LINE, self::CHANGE_DELIVERY, self::CONNECTION_STATUS, ...ProductSetupAbilitiesTest::WRITES, MoveProductAttributeTest::MOVE, StoreAdminAbilitiesTest::READ_SETTINGS, ...StoreAdminAbilitiesTest::WRITES, PictureViewAbilitiesTest::GET, PictureViewAbilitiesTest::SET, VariationPicturesAbilitiesTest::READ, VariationPicturesAbilitiesTest::SET, SetVariationVariantsTest::ABILITY, VariationPrintSizeTest::ABILITY, ...PricingAbilitiesTest::ABILITIES, ThemeSettingsAbilitiesTest::READ, ThemeSettingsAbilitiesTest::UPDATE );
+	private const GET_BLANK_OPTIONS = Abilities::NAMESPACE . '/get-attribute-blank-options';
+
+	private const SET_BLANK_OPTION = Abilities::NAMESPACE . '/set-attribute-blank-option';
+
+	private const ALL = array( self::GET_FORM, self::SET_FORM, self::GET_SPLIT_LISTING, self::SET_SPLIT_LISTING, self::SET_ATTRIBUTE_SPLIT_LISTING, self::GET_QUERY_NAMES, self::SET_QUERY_NAME, self::GET_SHIPPING, self::SET_SHIPPING_METHOD, self::GET_BLANK_OPTIONS, self::SET_BLANK_OPTION, self::LIST_TEMPLATES, self::LIST_PRODUCTS, self::LINK_PRODUCT, self::UNLINK_PRODUCT, self::LIST_ORDERS, self::ACT_ON_LINE, self::CHANGE_DELIVERY, self::CONNECTION_STATUS, ...ProductSetupAbilitiesTest::WRITES, MoveProductAttributeTest::MOVE, StoreAdminAbilitiesTest::READ_SETTINGS, ...StoreAdminAbilitiesTest::WRITES, PictureViewAbilitiesTest::GET, PictureViewAbilitiesTest::SET, VariationPicturesAbilitiesTest::READ, VariationPicturesAbilitiesTest::SET, SetVariationVariantsTest::ABILITY, VariationPrintSizeTest::ABILITY, ...PricingAbilitiesTest::ABILITIES, ThemeSettingsAbilitiesTest::READ, ThemeSettingsAbilitiesTest::UPDATE );
 
 	private const TEMPLATE_ID = 'mini-tee@2';
 
