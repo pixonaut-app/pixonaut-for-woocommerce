@@ -565,6 +565,11 @@ export const REACH = {
 		'assets/src/storefront/form-placeholder.css',
 		'assets/src/admin/settings.ts',
 	],
+	'option-help.spec.ts': [
+		'src/Catalogue/FormGroups.php',
+		'src/Storefront/OptionHelp.php',
+		'assets/src/storefront/attribute-rows.css',
+	],
 	'order-box.spec.ts': [
 		'src/Admin/OrderBox.php',
 		'templates/admin/order-box.php',

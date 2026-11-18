@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T15:36:15+00:00\n"
+"POT-Creation-Date: 2026-11-18T15:51:38+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -657,22 +657,28 @@ msgstr ""
 "Eine der Optionen des Produkts, nach dem Slug ihres Attributs, anstelle "
 "eines Felds."
 
-#: src/Abilities/GetProductForm.php:223
+#: src/Abilities/GetProductForm.php:221
+msgid ""
+"Words in place of the field's help; for an option, a line printed under its "
+"field."
+msgstr "Wörter anstelle des Hilfetexts des Felds; bei einer Option eine Zeile, die unter ihrem Feld angezeigt wird."
+
+#: src/Abilities/GetProductForm.php:226
 msgid "Words in place of the field's offered values, by value."
 msgstr "Wörter anstelle der angebotenen Werte des Felds, nach Wert."
 
 #
-#: src/Abilities/GetProductForm.php:251
+#: src/Abilities/GetProductForm.php:254
 msgid "The product page layout; null for the store's."
 msgstr "Das Layout der Produktseite; null für das des Shops."
 
 #
-#: src/Abilities/GetProductForm.php:252
+#: src/Abilities/GetProductForm.php:255
 msgid "The form layout; null for the store's."
 msgstr "Das Formular-Layout; null für das des Shops."
 
 #
-#: src/Abilities/GetProductForm.php:253
+#: src/Abilities/GetProductForm.php:256
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "`first` or `last`; null for the store's."
@@ -681,14 +687,14 @@ msgstr ""
 "stehen: `on_top`, `first` oder `last`; null für die Einstellung des Shops."
 
 #
-#: src/Abilities/GetProductForm.php:254
+#: src/Abilities/GetProductForm.php:257
 msgid ""
 "Whether the form numbers its groups: `on` or `off`; null for the store's."
 msgstr ""
 "Ob das Formular seine Gruppen nummeriert: `on` oder `off`; null für die "
 "Einstellung des Shops."
 
-#: src/Abilities/GetProductForm.php:257
+#: src/Abilities/GetProductForm.php:260
 msgid ""
 "The options customers choose a variation by, as an arrangement names them: "
 "each attribute's slug and name. Empty for a simple product."
@@ -696,7 +702,7 @@ msgstr ""
 "Die Optionen, nach denen Kunden eine Variante wählen, so wie eine Anordnung "
 "sie nennt: Slug und Name jedes Attributs. Leer bei einem einfachen Produkt."
 
-#: src/Abilities/GetProductForm.php:283
+#: src/Abilities/GetProductForm.php:286
 msgid ""
 "The template's groups in its order, each with its fields; null without a "
 "template or when Pixonaut could not be asked."

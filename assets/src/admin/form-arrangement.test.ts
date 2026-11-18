@@ -76,6 +76,28 @@ describe('arrange', () => {
 		]);
 	});
 
+	it('keeps the line a placed option shows under it', () => {
+		const arrangement = arrange(TEMPLATE, ATTRIBUTES, [
+			{
+				id: 'wc-frame',
+				title: 'Frame',
+				items: [
+					{ attribute: 'colour', help: ' Pine with acrylic glass ' },
+					{ attribute: 'size', help: ' ' },
+				],
+			},
+		]);
+
+		expect(stored(arrangement)[0]).toEqual({
+			id: 'wc-frame',
+			title: 'Frame',
+			items: [
+				{ attribute: 'colour', help: 'Pine with acrylic glass' },
+				{ attribute: 'size' },
+			],
+		});
+	});
+
 	it('lays a saved arrangement over the template as it is now', () => {
 		const arrangement = arrange(TEMPLATE, ATTRIBUTES, [
 			{
