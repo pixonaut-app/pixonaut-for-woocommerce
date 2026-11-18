@@ -104,6 +104,35 @@
 	border-radius: 5px;
 }
 
+/* The price a value shows after its name (`choice-prices.ts`): what an
+ * add-on adds, or a base choice's lowest price, quieter than the name. */
+.pixonaut-swatches .pixonaut-swatches__price {
+	margin-left: 6px;
+	font-weight: 400;
+	opacity: 0.72;
+}
+
+/* After a look and a name, the swatch's gap already parts them. */
+.pixonaut-swatches
+	.pixonaut-swatches__swatch.has-look
+	.pixonaut-swatches__price {
+	margin-left: -2px;
+}
+
+/* A look alone with a price: the tile widens to hold the price after it. */
+.pixonaut-swatches
+.pixonaut-swatches__swatch.is-bare:has(> .pixonaut-swatches__price) {
+	gap: 8px;
+	width: auto;
+	padding-right: 12px;
+}
+
+.pixonaut-swatches
+	.pixonaut-swatches__swatch.is-bare:has(> .pixonaut-swatches__price)
+	.pixonaut-swatches__look {
+	width: calc(var(--pixonaut-swatches-size) - 6px);
+}
+
 /* The chosen value's name after the attribute's, when its swatches leave
  * the names out. */
 .pixonaut-swatches__chosen-name {

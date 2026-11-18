@@ -191,25 +191,14 @@ final class SwatchLooksTest extends WP_UnitTestCase {
 		$this->assertFalse( get_option( SwatchNames::OPTION ) );
 	}
 
-	public function test_a_block_field_takes_the_looks_of_its_own_attribute_not_one_its_name_begins_with(): void {
-		$frame  = array(
-			'names' => true,
-			'looks' => array(),
-		);
-		$colour = array(
-			'names' => false,
-			'looks' => array(),
-		);
-		$looks  = new ReflectionMethod( PrintedSwatches::class, 'block_looks' );
-		$looks->setAccessible( true );
-		$by_field = array(
-			'attribute_pa_frame'        => $frame,
-			'attribute_pa_frame-colour' => $colour,
-		);
+	public function test_a_block_field_is_its_own_attribute_not_one_its_name_begins_with(): void {
+		$field = new ReflectionMethod( PrintedSwatches::class, 'block_field' );
+		$field->setAccessible( true );
+		$fields = array( 'attribute_pa_frame', 'attribute_pa_frame-colour' );
 
-		$this->assertSame( $colour, $looks->invoke( null, $by_field, array( 'black' => 'attribute_pa_frame-colour-black' ) ) );
-		$this->assertSame( $frame, $looks->invoke( null, $by_field, array( 'colour-black' => 'attribute_pa_frame-colour-black' ) ) );
-		$this->assertNull( $looks->invoke( null, $by_field, array( 'oak' => 'attribute_pa_size-oak' ) ) );
+		$this->assertSame( 'attribute_pa_frame-colour', $field->invoke( null, $fields, array( 'black' => 'attribute_pa_frame-colour-black' ) ) );
+		$this->assertSame( 'attribute_pa_frame', $field->invoke( null, $fields, array( 'colour-black' => 'attribute_pa_frame-colour-black' ) ) );
+		$this->assertNull( $field->invoke( null, $fields, array( 'oak' => 'attribute_pa_size-oak' ) ) );
 	}
 
 	/**

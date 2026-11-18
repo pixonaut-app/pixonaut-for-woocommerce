@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\ApplicableAttributes;
 use Pixonaut\WooCommerce\Settings\Settings;
 use WC_Product;
 use WP_Block;
@@ -27,7 +28,9 @@ use WP_Block;
  * swaps them for live swatches. A value Pixonaut draws as a colour or a
  * picture (`SwatchLooks`) is printed as it, with its name beside it or, where
  * the attribute's names are hidden (`SwatchNames`), as its accessible name
- * and tooltip alone.
+ * and tooltip alone. A value whose attribute shows prices (`ChoicePrices`)
+ * carries the amount it shows for the choice the form opens on
+ * (`ProductChoicePrices`), after its name.
  *
  * @phpstan-import-type Look from SwatchLooks
  * @phpstan-import-type AttributeLooks from SwatchLooks
@@ -51,6 +54,7 @@ final class PrintedSwatches {
 	private const CHOSEN_CLASS = 'is-chosen';
 	private const LOOK_CLASS   = 'has-look';
 	private const BARE_CLASS   = 'is-bare';
+	private const PRICE_CLASS  = 'pixonaut-swatches__price';
 
 	/**
 	 * The designer each product's page prints swatches for, by product id;
@@ -61,14 +65,16 @@ final class PrintedSwatches {
 	private array $prints = array();
 
 	/**
-	 * @param InlineProducts $products Resolves a product to its designer.
-	 * @param Settings       $settings The store's attribute options setting.
-	 * @param SwatchLooks    $looks    How each attribute value looks.
+	 * @param InlineProducts           $products Resolves a product to its designer.
+	 * @param Settings                 $settings The store's attribute options setting.
+	 * @param SwatchLooks              $looks    How each attribute value looks.
+	 * @param ProductChoicePrices|null $prices The prices beside the swatches; null prints none.
 	 */
 	public function __construct(
 		private readonly InlineProducts $products,
 		private readonly Settings $settings,
 		private readonly SwatchLooks $looks,
+		private readonly ?ProductChoicePrices $prices = null,
 	) {
 	}
 
@@ -105,7 +111,9 @@ final class PrintedSwatches {
 				$ids[ (string) $item['value'] ]     = is_string( $item['id'] ?? null ) ? $item['id'] : '';
 			}
 		}
-		return $content . self::swatches( $choices, $chosen, self::block_looks( $this->looks->of( $designer ), $ids ) );
+		$looks = $this->looks->of( $designer );
+		$field = self::block_field( array_merge( array_keys( $looks ), ApplicableAttributes::fields( $product ) ), $ids );
+		return $content . self::swatches( $choices, $chosen, null === $field ? null : ( $looks[ $field ] ?? null ), null === $field ? array() : $this->prices( $product, $field ) );
 	}
 
 	/**
@@ -122,7 +130,7 @@ final class PrintedSwatches {
 			return $html;
 		}
 		$attribute = is_string( $args['attribute'] ?? null ) ? wc_variation_attribute_name( $args['attribute'] ) : '';
-		return $html . self::swatches( self::choices( $html ), (string) ( $args['selected'] ?? '' ), $this->looks->of( $designer )[ $attribute ] ?? null );
+		return $html . self::swatches( self::choices( $html ), (string) ( $args['selected'] ?? '' ), $this->looks->of( $designer )[ $attribute ] ?? null, $this->prices( $product, $attribute ) );
 	}
 
 	/**
@@ -131,8 +139,9 @@ final class PrintedSwatches {
 	 * @param array<string, string> $choices Each value's words, in order.
 	 * @param string                $chosen  The value the field opens on.
 	 * @param AttributeLooks|null   $looks   The attribute's looks; null when none of its values has one.
+	 * @param array<string, string> $prices  The price each value shows beside its name, by value.
 	 */
-	private static function swatches( array $choices, string $chosen, ?array $looks = null ): string {
+	private static function swatches( array $choices, string $chosen, ?array $looks = null, array $prices = array() ): string {
 		$swatches = '';
 		foreach ( $choices as $value => $label ) {
 			$look      = $looks['looks'][ (string) $value ] ?? null;
@@ -145,7 +154,8 @@ final class PrintedSwatches {
 			);
 			$swatches .= '<span class="' . esc_attr( implode( ' ', $classes ) ) . '"' . ( $bare ? ' title="' . esc_attr( $label ) . '"' : '' ) . '>'
 				. ( null === $look ? '' : self::look( $look ) )
-				. ( $bare ? '' : ( null === $look ? esc_html( $label ) : '<span class="pixonaut-swatches__name">' . esc_html( $label ) . '</span>' ) )
+				. ( $bare ? '' : ( null === $look && ! isset( $prices[ (string) $value ] ) ? esc_html( $label ) : '<span class="pixonaut-swatches__name">' . esc_html( $label ) . '</span>' ) )
+				. ( isset( $prices[ (string) $value ] ) ? '<span class="' . self::PRICE_CLASS . '">' . esc_html( $prices[ (string) $value ] ) . '</span>' : '' )
 				. '</span>';
 		}
 		return '' === $swatches ? '' : '<div class="pixonaut-swatches pixonaut-swatches--printed" aria-hidden="true" inert>' . $swatches . '</div>';
@@ -167,29 +177,39 @@ final class PrintedSwatches {
 	}
 
 	/**
-	 * The looks of the attribute a block field's items are of: the block
-	 * form names each item `<field slug>-<value slug>`. Every item's id must
-	 * be the field's, as one field's name can begin another's (`frame` and
-	 * `frame-colour`).
+	 * The field a block field's items are of: the block form names each item
+	 * `<field slug>-<value slug>`. Every item's id must be the field's, as
+	 * one field's name can begin another's (`frame` and `frame-colour`).
 	 *
-	 * @param array<string, AttributeLooks> $looks The product's looks, by field.
-	 * @param array<string, string>         $ids   The items' ids, by value.
-	 * @return AttributeLooks|null
+	 * @param array<string>         $fields The product's fields.
+	 * @param array<string, string> $ids    The items' ids, by value.
 	 */
-	private static function block_looks( array $looks, array $ids ): ?array {
+	private static function block_field( array $fields, array $ids ): ?string {
 		if ( array() === $ids ) {
 			return null;
 		}
-		foreach ( $looks as $field => $attribute ) {
+		foreach ( array_unique( $fields ) as $field ) {
 			$prefix = sanitize_title( $field ) . '-';
 			foreach ( $ids as $value => $id ) {
 				if ( $prefix . sanitize_title( (string) $value ) !== $id ) {
 					continue 2;
 				}
 			}
-			return $attribute;
+			return $field;
 		}
 		return null;
+	}
+
+	/**
+	 * The price each value of an attribute shows beside its swatch for the
+	 * choice the form opens on, by value.
+	 *
+	 * @param WC_Product $product The product.
+	 * @param string     $field   The attribute's field.
+	 * @return array<string, string>
+	 */
+	private function prices( WC_Product $product, string $field ): array {
+		return null === $this->prices || '' === $field ? array() : $this->prices->texts( $product, $field, OpeningChoice::values( $product ) );
 	}
 
 	/**

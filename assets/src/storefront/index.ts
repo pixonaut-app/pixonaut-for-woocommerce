@@ -2,6 +2,7 @@ import { domReady } from '../shared/dom-ready';
 import { createLabeler } from '../shared/labels';
 import { drawAttributeSwatches } from './attribute-swatches';
 import { CartEdit } from './cart-edit';
+import { readChoicePrices } from './choice-prices';
 import { ProductDesigner } from './designer';
 import { PersonaliseButton } from './personalise-button';
 import { fitPreviews } from './preview-fit';
@@ -36,6 +37,8 @@ domReady(() => {
 		if (badges || !numbered) {
 			drawStepNumbers(container, { badges, numbered });
 		}
+		// One read for every part, so their swatches share the amounts.
+		const choicePrices = readChoicePrices(container);
 		new ProductDesigner(container, {
 			loadSdk: () => loadSdk(settings.sdk),
 			label,
@@ -51,7 +54,11 @@ domReady(() => {
 			...(settings.attributeSwatches
 				? {
 						attributeSwatches: (part: HTMLElement) =>
-							drawAttributeSwatches(part, readSwatchLooks(container)),
+							drawAttributeSwatches(
+								part,
+								readSwatchLooks(container),
+								choicePrices,
+							),
 					}
 				: {}),
 			...(settings.debug

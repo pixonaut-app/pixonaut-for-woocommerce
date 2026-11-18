@@ -61,7 +61,12 @@ export function dependentAttributes({
 	});
 }
 
-function matches(variation: AttributeValues, chosen: AttributeValues): boolean {
+/** Whether a variation holds every chosen value, one it leaves unset
+ *  holding any. */
+export function matches(
+	variation: AttributeValues,
+	chosen: AttributeValues,
+): boolean {
 	return Object.entries(chosen).every(
 		([field, value]) =>
 			value === '' || isUnset(variation, field) || variation[field] === value,

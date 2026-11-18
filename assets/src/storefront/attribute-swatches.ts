@@ -10,8 +10,17 @@
  * clears the attribute, as the block form's own chips do, so a customer
  * whose choices leave no other option available can start again. A value
  * Pixonaut draws as a colour or a picture is drawn as it (`swatch-looks.ts`).
+ * An attribute the merchant shows prices for carries each value's amount
+ * after its name (`choice-prices.ts`), worked out again whenever any of the
+ * form's attributes changes.
  */
 
+import {
+	amountText,
+	type ChoicePrices,
+	choiceAmounts,
+	formChoice,
+} from './choice-prices';
 import {
 	type AttributeLooks,
 	drawSwatchFace,
@@ -38,6 +47,8 @@ export const PRINTED_CLASS = 'pixonaut-swatches--printed';
 const SWATCH_CLASS = 'pixonaut-swatches__swatch';
 const CHOSEN_CLASS = 'is-chosen';
 const UNAVAILABLE_CLASS = 'is-unavailable';
+const NAME_CLASS = 'pixonaut-swatches__name';
+const PRICE_CLASS = 'pixonaut-swatches__price';
 
 /** The classic form's jQuery events after which its fields may hold
  *  another choice or offer other options. */
@@ -71,18 +82,26 @@ export function removePrintedSwatches(root: HTMLElement): void {
 /**
  * Draws swatches for every attribute field in `root` (a part of the
  * add-to-cart form the designer draws in its form) that has none yet, each
- * value in its look from `looks`, by the field's posted name. Returns a
- * function that takes them away again and shows the fields as the theme
- * rendered them, for when the designer gives the part back.
+ * value in its look from `looks`, by the field's posted name, and with its
+ * price from `prices` when its attribute shows one. Returns a function that
+ * takes them away again and shows the fields as the theme rendered them,
+ * for when the designer gives the part back.
  */
 export function drawAttributeSwatches(
 	root: HTMLElement,
 	looks: SwatchLooks = {},
+	prices: ChoicePrices | null = null,
 ): () => void {
 	const removers = themeFields(root)
 		.filter((field) => !field.element.classList.contains(REPLACED_CLASS))
 		.map((field) =>
-			swatchesFor(field, field.name === null ? undefined : looks[field.name]),
+			swatchesFor(
+				field,
+				field.name === null ? undefined : looks[field.name],
+				field.name !== null && prices?.roles[field.name] !== undefined
+					? prices
+					: null,
+			),
 		);
 	return () => {
 		for (const remove of removers) {
@@ -92,9 +111,13 @@ export function drawAttributeSwatches(
 }
 
 /** Puts the swatches of `field` after it, each value in its look from
- *  `looks`, hides it, and keeps them drawn as it changes. Returns a
- *  function that takes them away again. */
-function swatchesFor(field: ThemeField, looks?: AttributeLooks): () => void {
+ *  `looks` and with its price from `prices`, hides it, and keeps them drawn
+ *  as it changes. Returns a function that takes them away again. */
+function swatchesFor(
+	field: ThemeField,
+	looks?: AttributeLooks,
+	prices: ChoicePrices | null = null,
+): () => void {
 	const document = field.element.ownerDocument;
 	const group = document.createElement('div');
 	group.className = GROUP_CLASS;
@@ -113,9 +136,25 @@ function swatchesFor(field: ThemeField, looks?: AttributeLooks): () => void {
 	const nameBeside = looks !== undefined && !looks.names;
 	const label = () =>
 		labelId === null ? null : document.getElementById(labelId);
+	const form = field.element.closest('form');
+	const priceTexts = (): Record<string, string> => {
+		if (prices === null || field.name === null) {
+			return {};
+		}
+		const amounts =
+			sharedAmounts(prices, formChoice(form ?? group, prices.fields))[
+				field.name
+			] ?? {};
+		return Object.fromEntries(
+			Object.entries(amounts).map(([value, amount]) => [
+				value,
+				amountText(amount, prices),
+			]),
+		);
+	};
 	const draw = () => {
 		const choices = field.choices();
-		drawSwatches(group, choices, looks);
+		drawSwatches(group, choices, looks, priceTexts());
 		if (nameBeside) {
 			showChosenName(
 				label(),
@@ -183,14 +222,34 @@ function swatchesFor(field: ThemeField, looks?: AttributeLooks): () => void {
 		attributes: true,
 		attributeFilter: ['disabled', 'hidden', 'aria-checked'],
 	});
-	const form = field.element.closest('form');
 	const jQuery = (document.defaultView as { jQuery?: JQueryLike } | null)
 		?.jQuery;
 	if (form !== null) {
 		jQuery?.(form).on(CLASSIC_EVENTS, draw);
 	}
+	// The prices follow every attribute's choice: a classic select's change,
+	// and the block form's chips, which tell no event.
+	const formObserver = new MutationObserver((records) => {
+		if (
+			records.some(
+				(record) => !(record.target as Element).closest?.(`.${GROUP_CLASS}`),
+			)
+		) {
+			draw();
+		}
+	});
+	if (prices !== null && form !== null) {
+		form.addEventListener('change', draw);
+		formObserver.observe(form, {
+			subtree: true,
+			attributes: true,
+			attributeFilter: ['aria-checked'],
+		});
+	}
 	return () => {
 		observer.disconnect();
+		formObserver.disconnect();
+		form?.removeEventListener('change', draw);
 		parent?.removeEventListener('change', draw);
 		if (form !== null) {
 			jQuery?.(form).off(CLASSIC_EVENTS, draw);
@@ -203,13 +262,14 @@ function swatchesFor(field: ThemeField, looks?: AttributeLooks): () => void {
 	};
 }
 
-/** Draws `choices` in `group`, in their looks, reusing the swatches it
- *  holds. One swatch takes the focus from Tab: the chosen one, else the
- *  first available. */
+/** Draws `choices` in `group`, in their looks and with their prices,
+ *  reusing the swatches it holds. One swatch takes the focus from Tab: the
+ *  chosen one, else the first available. */
 function drawSwatches(
 	group: HTMLElement,
 	choices: AttributeChoice[],
 	looks?: AttributeLooks,
+	prices: Record<string, string> = {},
 ): void {
 	const document = group.ownerDocument;
 	const kept = new Map(
@@ -229,12 +289,18 @@ function drawSwatches(
 		swatch.setAttribute('role', 'radio');
 		swatch.setAttribute('aria-checked', String(choice.chosen));
 		swatch.dataset.value = choice.value;
+		const price = Object.hasOwn(prices, choice.value)
+			? prices[choice.value]
+			: undefined;
+		const priced = () => drawPrice(swatch, choice.label, price);
 		drawSwatchFace(
 			swatch,
 			choice.label,
 			lookOf(looks, choice.value),
 			looks?.names ?? true,
+			priced,
 		);
+		priced();
 		if (choice.available) {
 			swatch.removeAttribute('aria-disabled');
 		} else {
@@ -253,6 +319,57 @@ function drawSwatches(
 			group.insertBefore(swatch, there);
 		}
 	});
+}
+
+/** The last amounts worked out for each product's prices, by the choice
+ *  they are for: every priced attribute redraws on one change, and each
+ *  takes its own from the same table. */
+const lastAmounts = new WeakMap<
+	ChoicePrices,
+	{ key: string; amounts: ReturnType<typeof choiceAmounts> }
+>();
+
+function sharedAmounts(
+	prices: ChoicePrices,
+	chosen: Record<string, string>,
+): ReturnType<typeof choiceAmounts> {
+	const key = JSON.stringify(prices.fields.map((field) => chosen[field] ?? ''));
+	const last = lastAmounts.get(prices);
+	if (last?.key === key) {
+		return last.amounts;
+	}
+	const amounts = choiceAmounts(prices, chosen);
+	lastAmounts.set(prices, { key, amounts });
+	return amounts;
+}
+
+/** Puts the price after the swatch's name, as `PrintedSwatches` prints it:
+ *  a swatch drawn as its name alone gets the name in a part of its own. A
+ *  swatch with no name beside its look says the price in its accessible
+ *  name. */
+function drawPrice(
+	swatch: HTMLElement,
+	label: string,
+	price: string | undefined,
+): void {
+	swatch.querySelector(`.${PRICE_CLASS}`)?.remove();
+	if (price === undefined) {
+		return;
+	}
+	const document = swatch.ownerDocument;
+	if (swatch.childElementCount === 0) {
+		const name = document.createElement('span');
+		name.className = NAME_CLASS;
+		name.textContent = label;
+		swatch.replaceChildren(name);
+	}
+	const part = document.createElement('span');
+	part.className = PRICE_CLASS;
+	part.textContent = price;
+	swatch.append(part);
+	if (swatch.hasAttribute('aria-label')) {
+		swatch.setAttribute('aria-label', `${label}, ${price}`);
+	}
 }
 
 /** The available swatch `step` places after `from`, going round; null

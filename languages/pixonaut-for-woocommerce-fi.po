@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:44:44+00:00\n"
+"POT-Creation-Date: 2026-11-18T17:04:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -616,6 +616,25 @@ msgstr ""
 #: src/Abilities/GetAttributeBlankOptions.php:44
 msgid "Only this global attribute, by id."
 msgstr "Vain tämä yleinen ominaisuus id:n mukaan."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetAttributeChoicePrices.php:28
+msgid "Read the price each attribute's choices show"
+msgstr "Lue, minkä hinnan kunkin ominaisuuden vaihtoehdot näyttävät"
+
+#: src/Abilities/GetAttributeChoicePrices.php:29
+msgid ""
+"Reads, for every global attribute, the price its options show beside their "
+"swatches on a product page: `none`, `add_on` (what each option adds to the "
+"product without add-ons in the chosen size and personalisation, such as "
+"\"+180 kr\" for a frame; the cheapest option shows nothing) or `from` (each "
+"option's lowest price, such as \"from 469 kr\" for a size). Set one with "
+"`set-attribute-choice-price`."
+msgstr "Lukee jokaisesta yleisestä ominaisuudesta, minkä hinnan sen vaihtoehdot näyttävät painikkeiden vieressä tuotesivulla: `none`, `add_on` (mitä kukin vaihtoehto lisää tuotteen hintaan ilman lisävalintoja valitussa koossa ja personoinnissa, esimerkiksi \"+18 €\" kehyksestä; edullisin vaihtoehto ei näytä mitään) tai `from` (kunkin vaihtoehdon alin hinta, esimerkiksi \"alk. 46,90 €\" koosta). Aseta se työkalulla `set-attribute-choice-price`."
+
+#: src/Abilities/GetAttributeChoicePrices.php:96
+msgid "Its slug without `pa_`."
+msgstr "Sen tunniste ilman `pa_`-alkua."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetAttributeQueryNames.php:26
@@ -2354,6 +2373,7 @@ msgstr ""
 "mutta linkitys on tallennettu."
 
 #: src/Abilities/SetAttributeBlankOption.php:48
+#: src/Abilities/SetAttributeChoicePrice.php:37
 #: src/Abilities/SetAttributeQueryName.php:38
 #: src/Abilities/SetAttributeSplitListing.php:44
 msgid "A global attribute, by id."
@@ -2365,6 +2385,7 @@ msgstr ""
 "Yksi ominaisuuden arvoista termin id:n mukaan; tai nimeä se `slug`-kentällä."
 
 #: src/Abilities/SetAttributeBlankOption.php:98
+#: src/Abilities/SetAttributeChoicePrice.php:67
 #: src/Abilities/SetAttributeQueryName.php:69
 #: src/Abilities/SetAttributeSplitListing.php:92
 msgid "No global attribute has this id."
@@ -2404,6 +2425,29 @@ msgstr ""
 "Linkitys on tallennettu, mutta tämän ominaisuuden tuotteita ei voitu ajastaa "
 "uudelleentarkistukseen, joten ne säilyttävät aiemmat pohjatuotteen "
 "versionsa. Tarkista ne uudelleen ajamalla `recheck-products`."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetAttributeChoicePrice.php:29
+msgid "Set the price an attribute's choices show"
+msgstr "Aseta, minkä hinnan ominaisuuden vaihtoehdot näyttävät"
+
+#: src/Abilities/SetAttributeChoicePrice.php:30
+msgid ""
+"Sets the price a global attribute's options show beside their swatches on a "
+"product page, as its edit screen's \"Price beside each choice\" field does. "
+"`add_on` for an add-on such as a hanger, a frame or a frame's finish: each "
+"option shows what it adds to the product without add-ons in the chosen size "
+"and personalisation (\"+180 kr\"), worked out from the variations' prices; "
+"the cheapest option shows nothing, and a finish shows its difference to the "
+"cheapest finish under the chosen framing. `from` for a base choice such as a "
+"size: each option shows its lowest price (\"from 469 kr\"). `none` shows no "
+"price. Prices show only where the store draws product options as swatches. "
+"The answer is the attribute's choice now."
+msgstr "Asettaa, minkä hinnan yleisen ominaisuuden vaihtoehdot näyttävät painikkeiden vieressä tuotesivulla, kuten sen muokkaussivun kenttä \"Hinta kunkin vaihtoehdon vieressä\". `add_on` lisävalinnalle, kuten ripustimelle, kehykselle tai kehyksen sävylle: kukin vaihtoehto näyttää, mitä se lisää tuotteen hintaan ilman lisävalintoja valitussa koossa ja personoinnissa (\"+18 €\"), muunnelmien hinnoista laskettuna; edullisin vaihtoehto ei näytä mitään, ja kehyksen sävy näyttää eronsa edullisimpaan sävyyn valitulla kehystyksellä. `from` perusvalinnalle, kuten koolle: kukin vaihtoehto näyttää alimman hintansa (\"alk. 46,90 €\"). `none` ei näytä hintaa. Hinnat näkyvät vain, kun kauppa näyttää tuotevaihtoehdot painikkeina. Vastaus on ominaisuuden valinta nyt."
+
+#: src/Abilities/SetAttributeChoicePrice.php:70
+msgid "The price must be none, add_on or from."
+msgstr "Hinnan on oltava none, add_on tai from."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
@@ -4326,6 +4370,24 @@ msgstr[1] "%d versiota"
 #, php-format
 msgid "%s · Imported"
 msgstr "%s · Tuotu"
+
+#. translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: its options show no price.
+#: src/Admin/ChoicePriceField.php:90
+msgctxt "price beside each choice"
+msgid "None"
+msgstr "Ei mitään"
+
+#. translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: each option, such as a frame, shows what it adds to the product's price, like "+180 kr".
+#: src/Admin/ChoicePriceField.php:92
+msgctxt "price beside each choice"
+msgid "What it adds, as an add-on (\"+180 kr\")"
+msgstr "Mitä se lisää, lisävalintana (\"+18 €\")"
+
+#. translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: each option, such as a size, shows the lowest price the product has with it, like "from 469 kr".
+#: src/Admin/ChoicePriceField.php:94
+msgctxt "price beside each choice"
+msgid "Its lowest price (\"from 469 kr\")"
+msgstr "Sen alin hinta (\"alk. 46,90 €\")"
 
 #: src/Admin/ConnectionScreen.php:497
 msgid "You are not allowed to change the Pixonaut connection."
@@ -9566,6 +9628,18 @@ msgstr "Taustalla, yksi kerrallaan"
 msgid "Off: load each one when it is shown"
 msgstr "Ei käytössä: kukin ladataan vasta, kun se näytetään"
 
+#. translators: %s: a price, such as "180 kr". Beside an option of a product, such as a frame, on its page: what choosing it adds to the product's price. The customer reads it.
+#: src/Storefront/ProductChoicePrices.php:129
+#, php-format
+msgid "+%s"
+msgstr "+%s"
+
+#. translators: %s: a price, such as "469 kr". Beside an option of a product, such as a size, on its page: the lowest price the product has with it. The customer reads it.
+#: src/Storefront/ProductChoicePrices.php:131
+#, php-format
+msgid "from %s"
+msgstr "alk. %s"
+
 #. translators: %d: The longest name, in characters. Refusal of the name an attribute goes by in the shop's addresses.
 #: src/Storefront/QueryNames.php:220
 #, php-format
@@ -9770,6 +9844,21 @@ msgid ""
 msgstr ""
 "Ei linkitetty: sen arvot näkyvät tekstinä ja valitsevat pohjatuotteen "
 "version vain, kun niillä on vaihtoehdon ja sen arvojen nimet."
+
+#. translators: Label of a select on the screen that adds or edits a product attribute: which price its options show on a product page.
+#: templates/admin/choice-price-field.php:21
+msgid "Price beside each choice"
+msgstr "Hinta kunkin vaihtoehdon vieressä"
+
+#. translators: Help under the "Price beside each choice" select on the screen that adds or edits a product attribute.
+#: templates/admin/choice-price-field.php:23
+msgid ""
+"For product options shown as swatches in the designer. An add-on, such as a "
+"hanger or a frame, shows what it adds to the product without add-ons in the "
+"chosen size; the cheapest option shows nothing. A base choice, such as a "
+"size, shows the lowest price the product has with it. Prices come from the "
+"variations, as the shop shows them."
+msgstr "Tuotevaihtoehdoille, jotka näytetään painikkeina suunnittelutyökalussa. Lisävalinta, kuten ripustin tai kehys, näyttää, mitä se lisää tuotteen hintaan ilman lisävalintoja valitussa koossa; edullisin vaihtoehto ei näytä mitään. Perusvalinta, kuten koko, näyttää tuotteen alimman hinnan sillä valinnalla. Hinnat tulevat muunnelmista sellaisina kuin kauppa ne näyttää."
 
 #: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."

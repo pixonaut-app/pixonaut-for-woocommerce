@@ -6,6 +6,7 @@ import {
 	REPLACED_CLASS,
 	removePrintedSwatches,
 } from './attribute-swatches';
+import type { ChoicePrices } from './choice-prices';
 
 function classicForm(): HTMLFormElement {
 	document.body.innerHTML = `
@@ -271,5 +272,128 @@ describe('drawAttributeSwatches on the block form', () => {
 		await observed();
 
 		expect(swatch('S').getAttribute('aria-disabled')).toBe('true');
+	});
+});
+
+/** A poster's size and framing selects, with the framing's prices. */
+function framedForm(): HTMLFormElement {
+	document.body.innerHTML = `
+		<form class="variations_form cart">
+			<label for="size">Size</label>
+			<select id="size" name="attribute_size">
+				<option value="">Choose an option</option>
+				<option value="s" selected>S</option>
+				<option value="m">M</option>
+			</select>
+			<label for="frame">Frame</label>
+			<select id="frame" name="attribute_frame">
+				<option value="">Choose an option</option>
+				<option value="none" selected>None</option>
+				<option value="oak">Oak</option>
+			</select>
+		</form>`;
+	return document.querySelector('form') as HTMLFormElement;
+}
+
+const FRAMED_PRICES: ChoicePrices = {
+	fields: ['attribute_size', 'attribute_frame'],
+	roles: { attribute_size: 'from', attribute_frame: 'add_on' },
+	decimals: 0,
+	variations: [
+		{ values: { attribute_size: 's', attribute_frame: 'none' }, price: 100 },
+		{ values: { attribute_size: 's', attribute_frame: 'oak' }, price: 150 },
+		{ values: { attribute_size: 'm', attribute_frame: 'none' }, price: 200 },
+		{ values: { attribute_size: 'm', attribute_frame: 'oak' }, price: 1280 },
+	],
+	format: {
+		pattern: '%2$s %1$s',
+		symbol: 'kr',
+		decimalSeparator: ',',
+		thousandSeparator: ' ',
+	},
+	words: { add_on: '+%s', from: 'from %s' },
+};
+
+function priceOf(name: string): string | null {
+	const found = swatches().find(
+		(one) =>
+			one.querySelector('.pixonaut-swatches__name')?.textContent === name,
+	);
+	return found?.querySelector('.pixonaut-swatches__price')?.textContent ?? null;
+}
+
+describe('drawAttributeSwatches with prices', () => {
+	it('shows what an add-on adds and a base choice from price, nothing for the base', () => {
+		const form = framedForm();
+
+		drawAttributeSwatches(form, {}, FRAMED_PRICES);
+
+		expect(priceOf('S')).toBe('from 100 kr');
+		expect(priceOf('M')).toBe('from 200 kr');
+		expect(priceOf('Oak')).toBe('+50 kr');
+		expect(
+			swatch('None').querySelector('.pixonaut-swatches__price'),
+		).toBeNull();
+	});
+
+	it('works the add-on out again for the size chosen', () => {
+		const form = framedForm();
+		drawAttributeSwatches(form, {}, FRAMED_PRICES);
+
+		const size = form.querySelector('#size') as HTMLSelectElement;
+		size.value = 'm';
+		size.dispatchEvent(new Event('change', { bubbles: true }));
+
+		expect(priceOf('Oak')).toBe('+1 080 kr');
+	});
+
+	it('keeps the add-on amount whatever add-on is chosen', () => {
+		const form = framedForm();
+		drawAttributeSwatches(form, {}, FRAMED_PRICES);
+
+		swatches()
+			.find((one) => one.dataset.value === 'oak')
+			?.click();
+
+		expect(priceOf('Oak')).toBe('+50 kr');
+	});
+
+	it('keeps the price when the swatch picture fails to load', () => {
+		const form = framedForm();
+		drawAttributeSwatches(
+			form,
+			{
+				attribute_frame: {
+					names: true,
+					looks: {
+						oak: { kind: 'image', url: 'https://cdn.example.test/oak.png' },
+					},
+				},
+			},
+			FRAMED_PRICES,
+		);
+
+		swatches()
+			.find((one) => one.dataset.value === 'oak')
+			?.querySelector('img')
+			?.dispatchEvent(new Event('error'));
+
+		expect(priceOf('Oak')).toBe('+50 kr');
+	});
+
+	it('shows no price for an attribute that shows none', () => {
+		const form = framedForm();
+
+		drawAttributeSwatches(
+			form,
+			{},
+			{
+				...FRAMED_PRICES,
+				roles: { attribute_frame: 'add_on' },
+			},
+		);
+
+		expect(swatch('S').querySelector('.pixonaut-swatches__price')).toBeNull();
+		expect(swatch('S').textContent).toBe('S');
 	});
 });
