@@ -110,3 +110,15 @@
 	> .reset_variations[style*="visibility: hidden"] {
 	display: none;
 }
+
+/* The line a product's arrangement prints under an attribute's field
+ * (`OptionHelp`), in the designer's help text's size, wherever the field is. */
+.pixonaut-option-help {
+	margin: 0.25em 0 0;
+	font-size: 0.8125em;
+	opacity: 0.75;
+}
+
+.pixonaut-form .pixonaut-option-help {
+	font: 400 12px system-ui;
+}

@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T15:36:15+00:00\n"
+"POT-Creation-Date: 2026-11-18T15:51:38+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -654,19 +654,25 @@ msgstr ""
 "L'une des options du produit, par le slug de son attribut, à la place d'un "
 "champ."
 
-#: src/Abilities/GetProductForm.php:223
+#: src/Abilities/GetProductForm.php:221
+msgid ""
+"Words in place of the field's help; for an option, a line printed under its "
+"field."
+msgstr "Des mots à la place de l'aide du champ ; pour une option, une ligne affichée sous son champ."
+
+#: src/Abilities/GetProductForm.php:226
 msgid "Words in place of the field's offered values, by value."
 msgstr "Des mots à la place des valeurs proposées par le champ, par valeur."
 
-#: src/Abilities/GetProductForm.php:251
+#: src/Abilities/GetProductForm.php:254
 msgid "The product page layout; null for the store's."
 msgstr "La mise en page de la page produit; null pour celle de la boutique."
 
-#: src/Abilities/GetProductForm.php:252
+#: src/Abilities/GetProductForm.php:255
 msgid "The form layout; null for the store's."
 msgstr "La mise en page du formulaire; null pour celle de la boutique."
 
-#: src/Abilities/GetProductForm.php:253
+#: src/Abilities/GetProductForm.php:256
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "`first` or `last`; null for the store's."
@@ -674,14 +680,14 @@ msgstr ""
 "La place des options du produit sur une face qui n'a pas été agencée à la "
 "main : `on_top`, `first` ou `last`; null pour celle de la boutique."
 
-#: src/Abilities/GetProductForm.php:254
+#: src/Abilities/GetProductForm.php:257
 msgid ""
 "Whether the form numbers its groups: `on` or `off`; null for the store's."
 msgstr ""
 "Si le formulaire numérote ses groupes : `on` ou `off`; null pour le réglage "
 "de la boutique."
 
-#: src/Abilities/GetProductForm.php:257
+#: src/Abilities/GetProductForm.php:260
 msgid ""
 "The options customers choose a variation by, as an arrangement names them: "
 "each attribute's slug and name. Empty for a simple product."
@@ -690,7 +696,7 @@ msgstr ""
 "qu'un agencement les nomme : le slug et le nom de chaque attribut. Vide pour "
 "un produit simple."
 
-#: src/Abilities/GetProductForm.php:283
+#: src/Abilities/GetProductForm.php:286
 msgid ""
 "The template's groups in its order, each with its fields; null without a "
 "template or when Pixonaut could not be asked."
@@ -3132,8 +3138,8 @@ msgid ""
 msgstr ""
 "L'expédition est taxée comme les articles du panier, et les produits "
 "taxables de la boutique ont des taux différents : un coût taxes comprises "
-"dépend donc du panier. Indiquez le coût hors taxes, ou définissez une "
-"classe de taxe de livraison dans les réglages de taxe de WooCommerce."
+"dépend donc du panier. Indiquez le coût hors taxes, ou définissez une classe "
+"de taxe de livraison dans les réglages de taxe de WooCommerce."
 
 #: src/Abilities/SetupFields.php:165
 msgid ""

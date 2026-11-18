@@ -216,7 +216,10 @@ final class GetProductForm implements Ability {
 											'description' => __( 'One of the product\'s options, by its attribute\'s slug, in place of a field.', 'pixonaut-for-woocommerce' ),
 										),
 										'label'       => $words,
-										'help'        => $words,
+										'help'        => array(
+											'type'        => 'string',
+											'description' => __( 'Words in place of the field\'s help; for an option, a line printed under its field.', 'pixonaut-for-woocommerce' ),
+										),
 										'placeholder' => $words,
 										'options'     => array(
 											'type'        => 'object',

@@ -19,8 +19,9 @@ namespace Pixonaut\WooCommerce\Catalogue;
  *
  * Stored as `{groups: [{id, title?, items: [...]}]}`, an item being
  * `{field: "<layerId>:<prop>", label?, help?, placeholder?, options?}` or
- * `{attribute: <attribute slug>}`. Anything else read is left out, so a
- * stored arrangement is always one the designer takes.
+ * `{attribute: <attribute slug>, help?}`, an attribute's help being a line
+ * the product page prints under its field. Anything else read is left out,
+ * so a stored arrangement is always one the designer takes.
  */
 final class FormGroups {
 
@@ -152,6 +153,23 @@ final class FormGroups {
 	}
 
 	/**
+	 * The help printed under an attribute's field: the first the arrangement
+	 * gives it; empty for none.
+	 *
+	 * @param string $slug The attribute's slug.
+	 */
+	public function attribute_help( string $slug ): string {
+		foreach ( $this->groups as $group ) {
+			foreach ( $group['items'] as $item ) {
+				if ( ( $item['attribute'] ?? null ) === $slug && is_string( $item['help'] ?? null ) ) {
+					return $item['help'];
+				}
+			}
+		}
+		return '';
+	}
+
+	/**
 	 * A copy naming an attribute by another slug.
 	 *
 	 * @param string $from The attribute's slug.
@@ -190,7 +208,8 @@ final class FormGroups {
 	private static function item( array $item ): ?array {
 		$attribute = self::id( $item['attribute'] ?? null );
 		if ( '' !== $attribute ) {
-			return array( 'attribute' => sanitize_title( $attribute ) );
+			$help = self::words( $item['help'] ?? null, self::HELP_MAX_LENGTH );
+			return array( 'attribute' => sanitize_title( $attribute ) ) + ( '' === $help ? array() : array( 'help' => $help ) );
 		}
 		$field = self::id( $item['field'] ?? null );
 		if ( '' === $field ) {

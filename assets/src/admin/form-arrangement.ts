@@ -35,8 +35,12 @@ export type FieldWords = {
 /** A template field with the words it shows on this product. */
 export type FieldItem = { field: string } & FieldWords;
 
+/** One of the product's attributes placed in a group, with the line the
+ *  product page prints under its field, set by tool. */
+export type AttributeItem = { attribute: string; help?: string };
+
 /** An item as stored: a template field with its words, or an attribute. */
-export type StoredItem = FieldItem | { attribute: string };
+export type StoredItem = FieldItem | AttributeItem;
 
 /** A group as stored. */
 export type StoredGroup = { id: string; title?: string; items: StoredItem[] };
@@ -62,7 +66,7 @@ export const OWN_GROUP_PREFIX = 'wc-';
 
 export const isOwn = (id: string): boolean => id.startsWith(OWN_GROUP_PREFIX);
 
-export const isAttribute = (item: StoredItem): item is { attribute: string } =>
+export const isAttribute = (item: StoredItem): item is AttributeItem =>
 	'attribute' in item;
 
 /** The key an item is found by: its field or its attribute. */
@@ -148,7 +152,10 @@ export function stored(arrangement: Arrangement): StoredGroup[] {
 
 function storedItem(item: Item): StoredItem {
 	if (isAttribute(item)) {
-		return { attribute: item.attribute };
+		const help = item.help?.trim() ?? '';
+		return help === ''
+			? { attribute: item.attribute }
+			: { attribute: item.attribute, help };
 	}
 	const words: FieldWords = {};
 	for (const key of ['label', 'help', 'placeholder'] as const) {

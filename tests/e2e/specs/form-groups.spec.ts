@@ -72,8 +72,10 @@ test.describe('on the product page', () => {
 		await expect(page.locator('select[name="attribute_size"]')).toHaveCount(1);
 		await expect(form.getByText('Name on the back').first()).toBeVisible();
 
-		// Next waits for a size.
+		// Next waits for a size. The page opens on the first variation, so
+		// the size is taken back first.
 		const next = form.getByRole('button', { name: /next/i });
+		await size.selectOption('');
 		await expect(next).toBeDisabled();
 		await size.selectOption('Dark');
 		await expect(next).toBeEnabled();

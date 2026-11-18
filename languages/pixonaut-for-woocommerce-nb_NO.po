@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T15:36:15+00:00\n"
+"POT-Creation-Date: 2026-11-18T15:51:38+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: nb_NO\n"
@@ -629,19 +629,25 @@ msgstr ""
 "Ett av produktets alternativer, angitt med attributtets slug, i stedet for "
 "et felt."
 
-#: src/Abilities/GetProductForm.php:223
+#: src/Abilities/GetProductForm.php:221
+msgid ""
+"Words in place of the field's help; for an option, a line printed under its "
+"field."
+msgstr "Ord i stedet for feltets hjelpetekst; for et valg en linje som vises under feltet."
+
+#: src/Abilities/GetProductForm.php:226
 msgid "Words in place of the field's offered values, by value."
 msgstr "Ord i stedet for feltets tilbudte verdier, angitt etter verdi."
 
-#: src/Abilities/GetProductForm.php:251
+#: src/Abilities/GetProductForm.php:254
 msgid "The product page layout; null for the store's."
 msgstr "Utformingen av produktsiden; null for butikkens."
 
-#: src/Abilities/GetProductForm.php:252
+#: src/Abilities/GetProductForm.php:255
 msgid "The form layout; null for the store's."
 msgstr "Skjemautformingen; null for butikkens."
 
-#: src/Abilities/GetProductForm.php:253
+#: src/Abilities/GetProductForm.php:256
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "`first` or `last`; null for the store's."
@@ -649,12 +655,12 @@ msgstr ""
 "Hvor produktets alternativer står på en side som ikke er ordnet for hånd: "
 "`on_top`, `first` eller `last`; null for butikkens."
 
-#: src/Abilities/GetProductForm.php:254
+#: src/Abilities/GetProductForm.php:257
 msgid ""
 "Whether the form numbers its groups: `on` or `off`; null for the store's."
 msgstr "Om skjemaet nummererer gruppene: `on` eller `off`; null for butikkens."
 
-#: src/Abilities/GetProductForm.php:257
+#: src/Abilities/GetProductForm.php:260
 msgid ""
 "The options customers choose a variation by, as an arrangement names them: "
 "each attribute's slug and name. Empty for a simple product."
@@ -662,7 +668,7 @@ msgstr ""
 "Alternativene kundene velger en variant etter, slik et skjemaoppsett nevner "
 "dem: hvert attributts slug og navn. Tom for et enkelt produkt."
 
-#: src/Abilities/GetProductForm.php:283
+#: src/Abilities/GetProductForm.php:286
 msgid ""
 "The template's groups in its order, each with its fields; null without a "
 "template or when Pixonaut could not be asked."

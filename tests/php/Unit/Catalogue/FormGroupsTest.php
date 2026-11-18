@@ -80,6 +80,45 @@ final class FormGroupsTest extends TestCase {
 		$this->assertSame( array( 'pa_size' ), $groups->attributes() );
 	}
 
+	public function test_an_attribute_keeps_its_help_alone(): void {
+		$groups = FormGroups::from_array(
+			array(
+				'groups' => array(
+					array(
+						'id'    => 'wc-frame',
+						'title' => 'Choose a frame',
+						'items' => array(
+							array(
+								'attribute' => 'pa_frame',
+								'help'      => ' <i>Pine frame with acrylic glass</i> ',
+								'label'     => 'Frame',
+							),
+							array(
+								'attribute' => 'pa_size',
+								'help'      => '',
+							),
+						),
+					),
+				),
+			)
+		);
+
+		$this->assertNotNull( $groups );
+		$this->assertSame(
+			array(
+				array(
+					'attribute' => 'pa_frame',
+					'help'      => 'Pine frame with acrylic glass',
+				),
+				array( 'attribute' => 'pa_size' ),
+			),
+			$groups->groups[0]['items']
+		);
+		$this->assertSame( 'Pine frame with acrylic glass', $groups->attribute_help( 'pa_frame' ) );
+		$this->assertSame( '', $groups->attribute_help( 'pa_size' ) );
+		$this->assertSame( 'Pine frame with acrylic glass', $groups->with_attribute_renamed( 'pa_frame', 'pa_ram' )->attribute_help( 'pa_ram' ) );
+	}
+
 	public function test_offered_values_stay_an_object_when_stored(): void {
 		Functions\when( 'wp_json_encode' )->alias( 'json_encode' );
 		$groups = FormGroups::from_array(

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T15:36:15+00:00\n"
+"POT-Creation-Date: 2026-11-18T15:51:38+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -633,19 +633,25 @@ msgstr ""
 "Ett av produktens alternativ, angivet med attributets slug, i stället för "
 "ett fält."
 
-#: src/Abilities/GetProductForm.php:223
+#: src/Abilities/GetProductForm.php:221
+msgid ""
+"Words in place of the field's help; for an option, a line printed under its "
+"field."
+msgstr "Ord i stället för fältets hjälptext; för ett alternativ en rad som visas under dess fält."
+
+#: src/Abilities/GetProductForm.php:226
 msgid "Words in place of the field's offered values, by value."
 msgstr "Ord i stället för fältets erbjudna värden, per värde."
 
-#: src/Abilities/GetProductForm.php:251
+#: src/Abilities/GetProductForm.php:254
 msgid "The product page layout; null for the store's."
 msgstr "Produktsidans layout; null för butikens."
 
-#: src/Abilities/GetProductForm.php:252
+#: src/Abilities/GetProductForm.php:255
 msgid "The form layout; null for the store's."
 msgstr "Formulärlayouten; null för butikens."
 
-#: src/Abilities/GetProductForm.php:253
+#: src/Abilities/GetProductForm.php:256
 msgid ""
 "Where the product's options stand on a side not arranged by hand: `on_top`, "
 "`first` or `last`; null for the store's."
@@ -653,13 +659,13 @@ msgstr ""
 "Var produktens alternativ står på en sida som inte har ordnats för hand: "
 "`on_top`, `first` eller `last`; null för butikens."
 
-#: src/Abilities/GetProductForm.php:254
+#: src/Abilities/GetProductForm.php:257
 msgid ""
 "Whether the form numbers its groups: `on` or `off`; null for the store's."
 msgstr ""
 "Om formuläret numrerar sina grupper: `on` eller `off`; null för butikens."
 
-#: src/Abilities/GetProductForm.php:257
+#: src/Abilities/GetProductForm.php:260
 msgid ""
 "The options customers choose a variation by, as an arrangement names them: "
 "each attribute's slug and name. Empty for a simple product."
@@ -667,7 +673,7 @@ msgstr ""
 "Alternativen som kunderna väljer en variant efter, så som en formulärordning "
 "nämner dem: varje attributs slug och namn. Tom för en enkel produkt."
 
-#: src/Abilities/GetProductForm.php:283
+#: src/Abilities/GetProductForm.php:286
 msgid ""
 "The template's groups in its order, each with its fields; null without a "
 "template or when Pixonaut could not be asked."
@@ -3015,10 +3021,10 @@ msgid ""
 "cost excluding tax, or set a shipping tax class in WooCommerce's tax "
 "settings."
 msgstr ""
-"Frakt beskattas som varukorgens artiklar, och butikens momsbelagda "
-"produkter har olika momssatser, så en kostnad inklusive moms beror på "
-"varukorgen. Ange kostnaden exklusive moms, eller välj en momsklass för "
-"frakt i WooCommerces momsinställningar."
+"Frakt beskattas som varukorgens artiklar, och butikens momsbelagda produkter "
+"har olika momssatser, så en kostnad inklusive moms beror på varukorgen. Ange "
+"kostnaden exklusive moms, eller välj en momsklass för frakt i WooCommerces "
+"momsinställningar."
 
 #: src/Abilities/SetupFields.php:165
 msgid ""
