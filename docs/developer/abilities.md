@@ -33,6 +33,8 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/set-attribute-split-listing` | Sets a global attribute's "Cards in the shop" setting, which the products on Auto follow | `manage_product_terms` |
 | `pixonaut-for-woocommerce/get-attribute-query-names` | The name each global attribute goes by in the shop's addresses (`?size=50x70-cm`) | `manage_product_terms` |
 | `pixonaut-for-woocommerce/set-attribute-query-name` | Sets a global attribute's "Name in addresses", refusing one WordPress or WooCommerce reads or another attribute goes by | `manage_product_terms` |
+| `pixonaut-for-woocommerce/get-shipping` | Every shipping zone with its locations and methods: a flat rate's cost excluding and including tax, free shipping's minimum order amount | `manage_woocommerce` |
+| `pixonaut-for-woocommerce/set-shipping-method` | Changes a zone's shipping method, or adds a flat rate or free shipping; a cost can be given including tax | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/move-product-template` | Moves a product and its variations' own setups to another template version, keeping their sides | `edit_product` on that product |
 | `pixonaut-for-woocommerce/use-product-picture` | Puts the Pixonaut picture back in place of the store manager's own image | `edit_product` on that product (and on a variation's product) |
 | `pixonaut-for-woocommerce/reset-standing-layout` | Undoes the layout adjusted by hand for one option of a standing side | `edit_product` on that product (and on a variation's product) |
@@ -447,6 +449,30 @@ it, empty for its slug) and `slug` (without `pa_`).
 characters; empty for the slug) and answers the same row, or a `400` saying
 why the name was refused: WordPress or WooCommerce reads it from an address,
 or another attribute goes by it.
+
+`get-shipping` answers the store's `currency`, `prices_include_tax` and
+`zones`: each zone in the order WooCommerce matches an address against them,
+then zone `0` for the locations no other zone covers, with its `zone_id`,
+`name`, `order`, `locations` (`code` and `type`) and `methods`. A method gives
+its `instance_id`, `kind` (`flat_rate`, `free_shipping`, `local_pickup` or
+another plugin's), `title`, `enabled` and `order`; a flat rate or pickup its
+`cost` as WooCommerce keeps it (excluding tax, possibly a formula),
+`cost_including_tax` (with the shipping tax rates of the store's own address
+when the method is `taxable`; null for a formula, or when shipping is taxed
+as the cart's items are and the store's taxable products have different
+rates) and `tax_status`; free
+shipping its `min_amount`, `requires` and `ignore_discounts`. A setting the
+method does not have is null.
+`set-shipping-method` takes a `zone_id` and either the `instance_id` of a
+method to change or the `kind` (`flat_rate` or `free_shipping`) of one to
+add, and only the settings to change: `title`, `enabled`, `cost` (a plain
+amount; with `cost_includes_tax` it is counted back to the cost kept, and
+refused when the tax depends on the cart),
+`tax_status`, `min_amount`, `requires` and `ignore_discounts`. A minimum given
+to free shipping that required nothing makes it require the minimum. A
+setting the method's own form does not have is refused. It goes
+through WooCommerce's own shipping zone method route, so WooCommerce validates
+and keeps the settings, and answers the method's row.
 
 `set-product-split-listing` sets them, by `attributes`, `cards` or both:
 each attribute listed takes a `choice` and `values`, each a `term_id` with a

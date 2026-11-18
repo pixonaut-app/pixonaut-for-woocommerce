@@ -44,7 +44,9 @@ use Pixonaut\WooCommerce\Abilities\RegenerateProductPictures;
 use Pixonaut\WooCommerce\Abilities\ResetStandingLayout;
 use Pixonaut\WooCommerce\Abilities\SetAttributeSplitListing;
 use Pixonaut\WooCommerce\Abilities\GetAttributeQueryNames;
+use Pixonaut\WooCommerce\Abilities\GetShipping;
 use Pixonaut\WooCommerce\Abilities\SetAttributeQueryName;
+use Pixonaut\WooCommerce\Abilities\SetShippingMethod;
 use Pixonaut\WooCommerce\Abilities\SetProductSetup;
 use Pixonaut\WooCommerce\Abilities\SetProductForm;
 use Pixonaut\WooCommerce\Abilities\SetProductPictureView;
@@ -625,6 +627,8 @@ final class Plugin {
 					new SetAttributeSplitListing(),
 					new GetAttributeQueryNames(),
 					new SetAttributeQueryName(),
+					new GetShipping(),
+					new SetShippingMethod(),
 					new MoveProductTemplate( $links, $fields ),
 					new MoveProductAttribute( new WcLogger() ),
 					new UseProductPicture( $links, $this->settings() ),

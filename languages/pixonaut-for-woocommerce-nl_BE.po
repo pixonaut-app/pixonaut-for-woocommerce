@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-17T15:29:02+00:00\n"
+"POT-Creation-Date: 2026-11-18T15:36:15+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -989,9 +989,9 @@ msgid ""
 "shows the Pixonaut picture of its design over it once that is drawn."
 msgstr ""
 "De eigen afbeelding van de kaart, met de ID en URL van de bijlage; null als "
-"de kaart de afbeelding van de waarde of die van het product toont. Een "
-"kaart die de winkel zonder filter toont, toont in plaats daarvan de "
-"Pixonaut-afbeelding van het ontwerp zodra die getekend is."
+"de kaart de afbeelding van de waarde of die van het product toont. Een kaart "
+"die de winkel zonder filter toont, toont in plaats daarvan de Pixonaut-"
+"afbeelding van het ontwerp zodra die getekend is."
 
 #: src/Abilities/GetProductSplitListing.php:297
 msgid ""
@@ -1011,6 +1011,46 @@ msgstr ""
 "De term-ID's van de waarden van de kaart: één van elke eigenschap waarnaar "
 "het product per waarde wordt getoond en die voor de kaart geldt, in de "
 "volgorde van de eigenschappen van het product."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetShipping.php:31
+msgid "Read the shipping zones and methods"
+msgstr "De verzendzones en verzendmethoden lezen"
+
+#. translators: %s: the name of the ability that changes or adds a shipping method.
+#: src/Abilities/GetShipping.php:34
+#, php-format
+msgid ""
+"Gives every shipping zone in the order WooCommerce matches a shopper's "
+"address against them, then zone 0 for the locations no other zone covers: "
+"its locations and its methods, enabled or not. A flat rate or pickup gives "
+"its cost excluding tax, as WooCommerce keeps it, and including tax, as "
+"shoppers at the store's address pay it; free shipping gives its minimum "
+"order amount and what it requires. WooCommerce checks the minimum against "
+"the cart's subtotal as the cart shows it, after coupon discounts unless "
+"`ignore_discounts`. Change or add a method with %s."
+msgstr ""
+"Geeft elke verzendzone in de volgorde waarin WooCommerce het adres van een "
+"klant ermee vergelijkt, daarna zone 0 voor de locaties die geen andere zone "
+"dekt: de locaties en verzendmethoden van de zone, ingeschakeld of niet. Een "
+"vast tarief of afhalen geeft de kosten exclusief btw, zoals WooCommerce ze "
+"bewaart, en inclusief btw, zoals klanten op het adres van de winkel ze "
+"betalen; gratis verzending geeft het minimum bestelbedrag en wat ervoor "
+"vereist is. WooCommerce vergelijkt het minimum met het subtotaal van de "
+"winkelwagen zoals de winkelwagen het toont, na kortingen van coupons, "
+"behalve met `ignore_discounts`. Wijzig of voeg een verzendmethode toe met %s."
+
+#: src/Abilities/GetShipping.php:48
+msgid "The currency amounts are in, as its code."
+msgstr "De valuta waarin de bedragen staan, als code."
+
+#: src/Abilities/GetShipping.php:52
+msgid ""
+"Whether the store's prices are entered including tax. A shipping cost is "
+"kept excluding tax either way."
+msgstr ""
+"Of de prijzen van de winkel inclusief btw worden ingevoerd. Verzendkosten "
+"worden hoe dan ook exclusief btw bewaard."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetThemeSettings.php:47
@@ -2993,6 +3033,97 @@ msgstr "De mediabibliotheek heeft geen afbeelding met ID %d."
 msgid "The image of card %s is not a public URL."
 msgstr "De afbeelding van kaart %s is geen openbare URL."
 
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetShippingMethod.php:74
+msgid "Change or add a shipping method"
+msgstr "Een verzendmethode wijzigen of toevoegen"
+
+#. translators: %s: the name of the ability that reads the shipping zones.
+#: src/Abilities/SetShippingMethod.php:77
+#, php-format
+msgid ""
+"Changes a shipping method in a zone, by its `instance_id` as %s reads it, or "
+"without one adds a flat rate or free shipping (`kind`) to the zone. Only the "
+"settings given change. `cost` is a flat rate's or pickup's cost, kept "
+"excluding tax; with `cost_includes_tax` it is what shoppers at the store's "
+"address pay including the shipping tax, and the cost kept is counted from "
+"it. `min_amount` is free shipping's minimum order amount, which WooCommerce "
+"checks against the cart's subtotal as the cart shows it, after coupon "
+"discounts unless `ignore_discounts`; given a minimum, free shipping that "
+"required nothing comes to require it. `enabled` false takes a method away "
+"from checkout without deleting it. Answers the method as it is now."
+msgstr ""
+"Wijzigt een verzendmethode in een zone, via de `instance_id` zoals %s die "
+"leest, of voegt zonder die een vast tarief of gratis verzending (`kind`) toe "
+"aan de zone. Alleen de opgegeven instellingen veranderen. `cost` zijn de "
+"kosten van een vast tarief of afhalen, exclusief btw bewaard; met "
+"`cost_includes_tax` is het wat klanten op het adres van de winkel betalen "
+"inclusief de btw over de verzending, en worden de bewaarde kosten daaruit "
+"berekend. `min_amount` is het minimum bestelbedrag voor gratis verzending, "
+"dat WooCommerce vergelijkt met het subtotaal van de winkelwagen zoals de "
+"winkelwagen het toont, na kortingen van coupons, behalve met "
+"`ignore_discounts`; met een minimum gaat gratis verzending die niets "
+"vereiste dat minimum vereisen. `enabled` false haalt een verzendmethode weg "
+"bij het afrekenen zonder haar te verwijderen. Het antwoord is de "
+"verzendmethode zoals die nu is."
+
+#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:209
+msgid "The zone; 0 is the zone for the locations no other zone covers."
+msgstr "De zone; 0 is de zone voor de locaties die geen andere zone dekt."
+
+#: src/Abilities/SetShippingMethod.php:91
+msgid "The method to change; leave it out to add one."
+msgstr "De te wijzigen verzendmethode; laat deze weg om er een toe te voegen."
+
+#: src/Abilities/SetShippingMethod.php:96
+msgid "The kind of method to add."
+msgstr "Het soort verzendmethode dat wordt toegevoegd."
+
+#: src/Abilities/SetShippingMethod.php:118
+msgid "Empty for no minimum."
+msgstr "Leeg als er geen minimum is."
+
+#: src/Abilities/SetShippingMethod.php:152
+msgid "No shipping method has this instance id."
+msgstr "Geen enkele verzendmethode heeft deze instance-ID."
+
+#: src/Abilities/SetShippingMethod.php:156
+msgid "Give the method's instance_id to change it, or a kind to add one."
+msgstr ""
+"Geef de instance_id van de verzendmethode op om deze te wijzigen, of een "
+"soort (kind) om er een toe te voegen."
+
+#: src/Abilities/SetShippingMethod.php:159
+msgid "A method's kind cannot change: add a method of the other kind instead."
+msgstr ""
+"Het soort van een verzendmethode kan niet veranderen: voeg in plaats daarvan "
+"een verzendmethode van het andere soort toe."
+
+#. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
+#. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
+#: src/Abilities/SetShippingMethod.php:164
+#: src/Abilities/SetShippingMethod.php:181
+#, php-format
+msgid "A %2$s method has no setting %1$s."
+msgstr "Een verzendmethode van het soort %2$s heeft geen instelling %1$s."
+
+#: src/Abilities/SetShippingMethod.php:196
+msgid "The store did not keep the shipping method."
+msgstr "De winkel heeft de verzendmethode niet bewaard."
+
+#: src/Abilities/SetShippingMethod.php:245
+msgid ""
+"Shipping is taxed as the cart's items are, and the store's taxable products "
+"have different rates, so a cost including tax depends on the cart. Give the "
+"cost excluding tax, or set a shipping tax class in WooCommerce's tax "
+"settings."
+msgstr ""
+"Verzending wordt belast zoals de artikelen in de winkelwagen, en de "
+"belastbare producten van de winkel hebben verschillende tarieven, dus "
+"kosten inclusief btw hangen af van de winkelwagen. Geef de kosten exclusief "
+"btw op, of stel een belastingklasse voor verzendkosten in bij de "
+"belastinginstellingen van WooCommerce."
+
 #: src/Abilities/SetupFields.php:165
 msgid ""
 "The side's key, unique on the product, e.g. `front`; left out for one made "
@@ -3353,6 +3484,72 @@ msgstr ""
 msgid "Pixonaut could not be reached to read the blank's variants."
 msgstr ""
 "Pixonaut was niet bereikbaar om de varianten van het blanco product te lezen."
+
+#: src/Abilities/ShippingMethods.php:221
+msgid "country, state, postcode or continent."
+msgstr "country, state, postcode of continent."
+
+#: src/Abilities/ShippingMethods.php:247
+msgid "flat_rate, free_shipping, local_pickup, or another plugin's method."
+msgstr ""
+"flat_rate, free_shipping, local_pickup of de verzendmethode van een andere "
+"plugin."
+
+#: src/Abilities/ShippingMethods.php:251
+msgid "What shoppers see the method as at checkout."
+msgstr "De naam waaronder klanten de verzendmethode zien bij het afrekenen."
+
+#: src/Abilities/ShippingMethods.php:257
+msgid ""
+"A flat rate's or pickup's cost as WooCommerce keeps it, excluding tax; it "
+"may be a formula such as `10 + [qty] * 2`. Empty for nothing, null for a "
+"method without a cost."
+msgstr ""
+"De kosten van een vast tarief of afhalen zoals WooCommerce ze bewaart, "
+"exclusief btw; dit kan een formule zijn zoals `10 + [qty] * 2`. Leeg als het "
+"niets kost, null voor een verzendmethode zonder kosten."
+
+#: src/Abilities/ShippingMethods.php:261
+msgid ""
+"The cost as shoppers at the store's address pay it, with the shipping tax "
+"when the method is taxable. Null for a formula, a method without a cost, or "
+"when shipping is taxed as the cart's items are and the store's taxable "
+"products have different rates, so the tax depends on the cart."
+msgstr ""
+"De kosten zoals klanten op het adres van de winkel ze betalen, met de btw "
+"over de verzending als de verzendmethode belastbaar is. Null voor een "
+"formule, voor een verzendmethode zonder kosten, of als verzending wordt "
+"belast zoals de artikelen in de winkelwagen en de belastbare producten van "
+"de winkel verschillende tarieven hebben, zodat de btw afhangt van de "
+"winkelwagen."
+
+#: src/Abilities/ShippingMethods.php:265
+msgid "taxable or none; null for a method without a cost."
+msgstr "taxable of none; null voor een verzendmethode zonder kosten."
+
+#: src/Abilities/ShippingMethods.php:269
+msgid ""
+"Free shipping's minimum order amount, empty for none; null for another "
+"method."
+msgstr ""
+"Het minimum bestelbedrag voor gratis verzending, leeg als er geen is; null "
+"voor een andere verzendmethode."
+
+#: src/Abilities/ShippingMethods.php:273
+msgid ""
+"What free shipping requires: empty for nothing, coupon, min_amount, either "
+"(a coupon or the minimum) or both; null for another method."
+msgstr ""
+"Wat gratis verzending vereist: leeg voor niets, coupon, min_amount, either "
+"(een coupon of het minimum) of both; null voor een andere verzendmethode."
+
+#: src/Abilities/ShippingMethods.php:277
+msgid ""
+"Whether free shipping's minimum counts the subtotal before coupon discounts; "
+"null for another method."
+msgstr ""
+"Of het minimum voor gratis verzending het subtotaal vóór kortingen van "
+"coupons telt; null voor een andere verzendmethode."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/Store/DescribeResource.php:56
@@ -5453,6 +5650,13 @@ msgstr "Het aanzicht van het voorbeeld dat de klant zag"
 #: src/Cart/PictureView.php:46
 msgid "The placement’s first view"
 msgstr "Het eerste aanzicht van de drukpositie"
+
+#. translators: The label of the price filter of the shop's product archives.
+#. translators: Column of the Prices table of the product edit page: the regular price in the store.
+#: src/Catalogue/ArchiveIndexBuild.php:245
+#: templates/admin/product-prices.php:97 templates/admin/product-prices.php:113
+msgid "Price"
+msgstr "Prijs"
 
 #. translators: 1: a custom product attribute's name; 2: a global product attribute's taxonomy, e.g. pa_size.
 #: src/Catalogue/AttributeMove.php:117
@@ -9178,7 +9382,7 @@ msgstr ""
 
 #. translators: Heading of a group of settings on the Pixonaut settings page, shown to the merchant: whether product pages say how long delivery takes.
 #. translators: Label of a row of the product's attributes table: how long until the customer has the order, e.g. "5–8 days".
-#: src/Settings/SettingsPage.php:738 src/Storefront/DeliveryRows.php:212
+#: src/Settings/SettingsPage.php:738 src/Storefront/DeliveryRows.php:202
 msgid "Delivery time"
 msgstr "Levertijd"
 
@@ -9247,7 +9451,7 @@ msgid "Additional information"
 msgstr "Aanvullende informatie"
 
 #. translators: Label of a row of the product's attributes table: how the product is delivered, as the chosen variation describes it, e.g. "as a poster, without a frame".
-#: src/Storefront/DeliveryRows.php:196
+#: src/Storefront/DeliveryRows.php:192
 msgid "Delivery"
 msgstr "Levering"
 
@@ -9331,7 +9535,7 @@ msgid "Customers cannot open the designer for %1$s: %2$s"
 msgstr "Klanten kunnen de ontwerptool voor %1$s niet openen: %2$s"
 
 #. translators: %s: how many of the product are in the cart, as a number. Short for pieces, after the size of a cart item: 1 pc, 2 pcs.
-#: src/Storefront/PersonaliseButton.php:520
+#: src/Storefront/PersonaliseButton.php:519
 #, php-format
 msgid "%s pc"
 msgid_plural "%s pcs"
@@ -11051,11 +11255,6 @@ msgstr "Variatie"
 msgid "Cost"
 msgstr "Kosten"
 
-#. translators: Column of the Prices table of the product edit page: the regular price in the store.
-#: templates/admin/product-prices.php:97 templates/admin/product-prices.php:113
-msgid "Price"
-msgstr "Prijs"
-
 #. translators: Column of the Prices table of the product edit page: the share of the price left after the cost.
 #: templates/admin/product-prices.php:98 templates/admin/product-prices.php:114
 msgid "Margin"
@@ -12429,7 +12628,7 @@ msgid "Next: %s"
 msgstr "Volgende: %s"
 
 #. translators: %s: How many views of the product the strip under its preview shows, as Pixonaut's designer counts them.
-#: templates/storefront/preview.php:57
+#: templates/storefront/preview.php:68
 #, php-format
 msgid "%s view"
 msgid_plural "%s views"

@@ -87,6 +87,7 @@ offered to a user:
 | The active theme's settings | `get-theme-settings`, `update-theme-settings` |
 | Pricing settings | `get-pricing-settings`, `update-pricing-settings` |
 | A product's prices | `get-product-prices`, `price-product`, `set-product-price-changes` |
+| Shipping zones and their methods | `get-shipping`, `set-shipping-method` |
 | Orders, read only | `list-orders`, `get-order` |
 
 The product and variation tools answer as the store abilities of the same
