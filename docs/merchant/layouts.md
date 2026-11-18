@@ -209,6 +209,21 @@ to your store:
   variant for a variation you have not paired by hand, so the designer and
   the product's pictures show the frame chosen.
 
+  A swatch can also show a price after its name, set per attribute on its
+  edit screen under **Products → Attributes**, **Price beside each
+  choice**. **What it adds, as an add-on** suits a hanger, a frame or a
+  frame's finish: each value shows what it adds to the product without
+  add-ons in the chosen size and personalisation (Hängare `+180 kr`, Ram
+  `+1 350 kr`), and the cheapest value, such as no frame, shows nothing.
+  A finish that only some framings have shows its difference to the
+  cheapest finish under the framing chosen. The amounts stay the same
+  whatever add-on is chosen, and follow the size when it changes.
+  **Its lowest price** suits a base choice such as a size: each value
+  shows the lowest price the product has with it (`from 469 kr`). The
+  prices come from your variations' prices, shown with or without tax as
+  your shop shows prices; an option the chosen size has no variation for
+  shows none.
+
 With a block theme that names its accent, border and error colours, fonts
 and corner radius, such as the Pixonaut Shop theme, the side tabs, the
 approval box and the error messages around the designer take them, and

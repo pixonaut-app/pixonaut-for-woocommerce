@@ -1,0 +1,414 @@
+{
+	"products": {
+		"poster": {
+			"about": "A poster in three sizes, sold bare, with a hanger or framed; the hanger and the frame come in two finishes. The large size has no hanger.",
+			"fields": [
+				"attribute_pa_storlek",
+				"attribute_pa_inramning",
+				"attribute_pa_ramfarg"
+			],
+			"roles": {
+				"attribute_pa_storlek": "from",
+				"attribute_pa_inramning": "add_on",
+				"attribute_pa_ramfarg": "add_on"
+			},
+			"decimals": 0,
+			"variations": [
+				{
+					"values": {
+						"attribute_pa_storlek": "s",
+						"attribute_pa_inramning": "ingen",
+						"attribute_pa_ramfarg": ""
+					},
+					"price": 389
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "m",
+						"attribute_pa_inramning": "ingen",
+						"attribute_pa_ramfarg": ""
+					},
+					"price": 469
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "l",
+						"attribute_pa_inramning": "ingen",
+						"attribute_pa_ramfarg": ""
+					},
+					"price": 519
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "s",
+						"attribute_pa_inramning": "hangare",
+						"attribute_pa_ramfarg": "svart"
+					},
+					"price": 559
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "s",
+						"attribute_pa_inramning": "hangare",
+						"attribute_pa_ramfarg": "ek"
+					},
+					"price": 579
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "m",
+						"attribute_pa_inramning": "hangare",
+						"attribute_pa_ramfarg": "svart"
+					},
+					"price": 649
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "m",
+						"attribute_pa_inramning": "hangare",
+						"attribute_pa_ramfarg": "ek"
+					},
+					"price": 669
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "s",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "svart"
+					},
+					"price": 939
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "s",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "ek"
+					},
+					"price": 989
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "m",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "svart"
+					},
+					"price": 1819
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "m",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "ek"
+					},
+					"price": 1939
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "l",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "svart"
+					},
+					"price": 2879
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "l",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "ek"
+					},
+					"price": 3099
+				}
+			]
+		},
+		"cents": {
+			"about": "A price with cents, shown with two decimals.",
+			"fields": ["attribute_size", "attribute_gift-wrap"],
+			"roles": {
+				"attribute_gift-wrap": "add_on"
+			},
+			"decimals": 2,
+			"variations": [
+				{
+					"values": {
+						"attribute_size": "s",
+						"attribute_gift-wrap": "no"
+					},
+					"price": 10.1
+				},
+				{
+					"values": {
+						"attribute_size": "s",
+						"attribute_gift-wrap": "yes"
+					},
+					"price": 12.35
+				},
+				{
+					"values": {
+						"attribute_size": "m",
+						"attribute_gift-wrap": "no"
+					},
+					"price": 20
+				},
+				{
+					"values": {
+						"attribute_size": "m",
+						"attribute_gift-wrap": "yes"
+					},
+					"price": 19
+				}
+			]
+		}
+	},
+	"cases": [
+		{
+			"name": "a frame and a finish show what they add at the chosen size",
+			"product": "poster",
+			"chosen": {
+				"attribute_pa_storlek": "m",
+				"attribute_pa_inramning": "ram",
+				"attribute_pa_ramfarg": "svart"
+			},
+			"amounts": {
+				"attribute_pa_storlek": {
+					"s": {
+						"kind": "from",
+						"amount": 389
+					},
+					"m": {
+						"kind": "from",
+						"amount": 469
+					},
+					"l": {
+						"kind": "from",
+						"amount": 519
+					}
+				},
+				"attribute_pa_inramning": {
+					"hangare": {
+						"kind": "add_on",
+						"amount": 180
+					},
+					"ram": {
+						"kind": "add_on",
+						"amount": 1350
+					}
+				},
+				"attribute_pa_ramfarg": {
+					"ek": {
+						"kind": "add_on",
+						"amount": 120
+					}
+				}
+			}
+		},
+		{
+			"name": "a finish shows its difference under the chosen framing",
+			"product": "poster",
+			"chosen": {
+				"attribute_pa_storlek": "m",
+				"attribute_pa_inramning": "hangare",
+				"attribute_pa_ramfarg": "ek"
+			},
+			"amounts": {
+				"attribute_pa_storlek": {
+					"s": {
+						"kind": "from",
+						"amount": 389
+					},
+					"m": {
+						"kind": "from",
+						"amount": 469
+					},
+					"l": {
+						"kind": "from",
+						"amount": 519
+					}
+				},
+				"attribute_pa_inramning": {
+					"hangare": {
+						"kind": "add_on",
+						"amount": 180
+					},
+					"ram": {
+						"kind": "add_on",
+						"amount": 1350
+					}
+				},
+				"attribute_pa_ramfarg": {
+					"ek": {
+						"kind": "add_on",
+						"amount": 20
+					}
+				}
+			}
+		},
+		{
+			"name": "the chosen finish does not change what the framings add",
+			"product": "poster",
+			"chosen": {
+				"attribute_pa_storlek": "m",
+				"attribute_pa_inramning": "ram",
+				"attribute_pa_ramfarg": "ek"
+			},
+			"amounts": {
+				"attribute_pa_storlek": {
+					"s": {
+						"kind": "from",
+						"amount": 389
+					},
+					"m": {
+						"kind": "from",
+						"amount": 469
+					},
+					"l": {
+						"kind": "from",
+						"amount": 519
+					}
+				},
+				"attribute_pa_inramning": {
+					"hangare": {
+						"kind": "add_on",
+						"amount": 180
+					},
+					"ram": {
+						"kind": "add_on",
+						"amount": 1350
+					}
+				},
+				"attribute_pa_ramfarg": {
+					"ek": {
+						"kind": "add_on",
+						"amount": 120
+					}
+				}
+			}
+		},
+		{
+			"name": "a finish under no framing shows nothing",
+			"product": "poster",
+			"chosen": {
+				"attribute_pa_storlek": "m",
+				"attribute_pa_inramning": "ingen"
+			},
+			"amounts": {
+				"attribute_pa_storlek": {
+					"s": {
+						"kind": "from",
+						"amount": 389
+					},
+					"m": {
+						"kind": "from",
+						"amount": 469
+					},
+					"l": {
+						"kind": "from",
+						"amount": 519
+					}
+				},
+				"attribute_pa_inramning": {
+					"hangare": {
+						"kind": "add_on",
+						"amount": 180
+					},
+					"ram": {
+						"kind": "add_on",
+						"amount": 1350
+					}
+				}
+			}
+		},
+		{
+			"name": "no add-on shows an amount until the size is chosen",
+			"product": "poster",
+			"chosen": {
+				"attribute_pa_storlek": "",
+				"attribute_pa_inramning": "ram",
+				"attribute_pa_ramfarg": "svart"
+			},
+			"amounts": {
+				"attribute_pa_storlek": {
+					"s": {
+						"kind": "from",
+						"amount": 389
+					},
+					"m": {
+						"kind": "from",
+						"amount": 469
+					},
+					"l": {
+						"kind": "from",
+						"amount": 519
+					}
+				}
+			}
+		},
+		{
+			"name": "a combination the size lacks shows nothing",
+			"product": "poster",
+			"chosen": {
+				"attribute_pa_storlek": "l",
+				"attribute_pa_inramning": "ram",
+				"attribute_pa_ramfarg": "svart"
+			},
+			"amounts": {
+				"attribute_pa_storlek": {
+					"s": {
+						"kind": "from",
+						"amount": 389
+					},
+					"m": {
+						"kind": "from",
+						"amount": 469
+					},
+					"l": {
+						"kind": "from",
+						"amount": 519
+					}
+				},
+				"attribute_pa_inramning": {
+					"ram": {
+						"kind": "add_on",
+						"amount": 2360
+					}
+				},
+				"attribute_pa_ramfarg": {
+					"ek": {
+						"kind": "add_on",
+						"amount": 220
+					}
+				}
+			}
+		},
+		{
+			"name": "amounts keep the shop's decimals",
+			"product": "cents",
+			"chosen": {
+				"attribute_size": "s"
+			},
+			"amounts": {
+				"attribute_gift-wrap": {
+					"yes": {
+						"kind": "add_on",
+						"amount": 2.25
+					}
+				}
+			}
+		},
+		{
+			"name": "the cheapest value is the base, so no amount is negative",
+			"product": "cents",
+			"chosen": {
+				"attribute_size": "m",
+				"attribute_gift-wrap": "yes"
+			},
+			"amounts": {
+				"attribute_gift-wrap": {
+					"no": {
+						"kind": "add_on",
+						"amount": 1
+					}
+				}
+			}
+		}
+	]
+}

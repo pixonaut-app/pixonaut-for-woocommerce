@@ -2,6 +2,7 @@ import { domReady } from '../shared/dom-ready';
 import { createLabeler } from '../shared/labels';
 import { drawAttributeSwatches } from './attribute-swatches';
 import { CartEdit } from './cart-edit';
+import { readChoicePrices } from './choice-prices';
 import { ProductDesigner } from './designer';
 import { PersonaliseButton } from './personalise-button';
 import { fitPreviews } from './preview-fit';
@@ -51,7 +52,11 @@ domReady(() => {
 			...(settings.attributeSwatches
 				? {
 						attributeSwatches: (part: HTMLElement) =>
-							drawAttributeSwatches(part, readSwatchLooks(container)),
+							drawAttributeSwatches(
+								part,
+								readSwatchLooks(container),
+								readChoicePrices(container),
+							),
 					}
 				: {}),
 			...(settings.debug

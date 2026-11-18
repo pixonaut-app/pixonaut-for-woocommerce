@@ -44,8 +44,10 @@ use Pixonaut\WooCommerce\Abilities\RecheckProducts;
 use Pixonaut\WooCommerce\Abilities\RegenerateProductPictures;
 use Pixonaut\WooCommerce\Abilities\ResetStandingLayout;
 use Pixonaut\WooCommerce\Abilities\SetAttributeSplitListing;
+use Pixonaut\WooCommerce\Abilities\GetAttributeChoicePrices;
 use Pixonaut\WooCommerce\Abilities\GetAttributeQueryNames;
 use Pixonaut\WooCommerce\Abilities\GetShipping;
+use Pixonaut\WooCommerce\Abilities\SetAttributeChoicePrice;
 use Pixonaut\WooCommerce\Abilities\SetAttributeQueryName;
 use Pixonaut\WooCommerce\Abilities\SetShippingMethod;
 use Pixonaut\WooCommerce\Abilities\GetAttributeBlankOptions;
@@ -88,6 +90,7 @@ use Pixonaut\WooCommerce\Admin\ShowcaseField;
 use Pixonaut\WooCommerce\Admin\SoldRows;
 use Pixonaut\WooCommerce\Admin\SplitListingFields;
 use Pixonaut\WooCommerce\Admin\SwatchNamesField;
+use Pixonaut\WooCommerce\Admin\ChoicePriceField;
 use Pixonaut\WooCommerce\Admin\BlankOptionField;
 use Pixonaut\WooCommerce\Catalogue\BlankOptionChoices;
 use Pixonaut\WooCommerce\Admin\QueryNameField;
@@ -235,6 +238,7 @@ use Pixonaut\WooCommerce\Storefront\OpeningDefaults;
 use Pixonaut\WooCommerce\Storefront\OpeningPrice;
 use Pixonaut\WooCommerce\Storefront\OptionHelp;
 use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
+use Pixonaut\WooCommerce\Storefront\ProductChoicePrices;
 use Pixonaut\WooCommerce\Storefront\ServerReads;
 use Pixonaut\WooCommerce\Storefront\ServerReadsWarmUp;
 use Pixonaut\WooCommerce\Storefront\CardHydration;
@@ -249,6 +253,7 @@ use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
 use Pixonaut\WooCommerce\Storefront\StagePosters;
 use Pixonaut\WooCommerce\Storefront\Storefront;
 use Pixonaut\WooCommerce\Storefront\SwatchLooks;
+use Pixonaut\WooCommerce\Storefront\ChoicePrices;
 use Pixonaut\WooCommerce\Storefront\SwatchNames;
 use Pixonaut\WooCommerce\Storefront\QueryNames;
 use Pixonaut\WooCommerce\Storefront\ShortAddresses;
@@ -387,6 +392,8 @@ final class Plugin {
 
 	private ?SwatchLooks $swatch_looks = null;
 
+	private ?ProductChoicePrices $choice_prices = null;
+
 	private ?PersonaliseButton $personalise_button = null;
 
 	private ?PersonalisedDesigns $personalised_designs = null;
@@ -523,6 +530,7 @@ final class Plugin {
 		SplitListing::register();
 		RequestCache::register();
 		SwatchNames::register();
+		ChoicePrices::register();
 		BlankOptionLinks::register();
 		QueryNames::register();
 		( new NotLiveProducts() )->register();
@@ -569,6 +577,7 @@ final class Plugin {
 			$this->showcase_field()->register();
 			( new SplitListingFields( $this->templates() ) )->register();
 			( new SwatchNamesField( $this->templates() ) )->register();
+			( new ChoicePriceField( $this->templates() ) )->register();
 			( new BlankOptionField( $this->templates(), $this->blank_option_choices() ) )->register();
 			( new QueryNameField( $this->templates() ) )->register();
 			( new StatusReport( $this->templates() ) )->register();
@@ -581,7 +590,7 @@ final class Plugin {
 		( new VariationsUpFront( $this->inline_products() ) )->register();
 		( new DeliveryRows( $this->inline_products(), new DeliveryTime( $this->settings() ), new VariationSlots( $this->file ) ) )->register();
 		( new DesignerSummary( $this->inline_products() ) )->register();
-		( new PrintedSwatches( $this->inline_products(), $this->settings(), $this->swatch_looks() ) )->register();
+		( new PrintedSwatches( $this->inline_products(), $this->settings(), $this->swatch_looks(), $this->choice_prices() ) )->register();
 		( new OptionHelp( $this->inline_products() ) )->register();
 		$this->personalise_button()->register();
 		$this->personalised_designs()->register();
@@ -638,6 +647,8 @@ final class Plugin {
 					new SetAttributeSplitListing(),
 					new GetAttributeQueryNames(),
 					new SetAttributeQueryName(),
+					new GetAttributeChoicePrices(),
+					new SetAttributeChoicePrice(),
 					new GetShipping(),
 					new SetShippingMethod(),
 					new GetAttributeBlankOptions( $this->blank_option_choices() ),
@@ -1241,6 +1252,11 @@ final class Plugin {
 		return $this->swatch_looks;
 	}
 
+	public function choice_prices(): ProductChoicePrices {
+		$this->choice_prices ??= new ProductChoicePrices();
+		return $this->choice_prices;
+	}
+
 	/**
 	 * The pictures a product page's preview shows until its designer has drawn.
 	 */
@@ -1250,7 +1266,7 @@ final class Plugin {
 	}
 
 	public function storefront(): Storefront {
-		$this->storefront ??= new Storefront( $this->inline_products(), $this->templates(), $this->labels(), $this->settings(), $this->file, $this->server_reads(), $this->opening_price(), $this->swatch_looks(), $this->stage_posters() );
+		$this->storefront ??= new Storefront( $this->inline_products(), $this->templates(), $this->labels(), $this->settings(), $this->file, $this->server_reads(), $this->opening_price(), $this->swatch_looks(), $this->stage_posters(), $this->choice_prices() );
 		return $this->storefront;
 	}
 

@@ -543,6 +543,12 @@ final class Schema {
 	const BLANK_OPTION_LINKS_OPTION = 'pixonaut_wc_blank_option_links';
 
 	/**
+	 * Option holding, by global attribute id, the price its choices show on
+	 * a product page: what an add-on adds, or a base choice's lowest price.
+	 */
+	const CHOICE_PRICES_OPTION = 'pixonaut_wc_choice_prices';
+
+	/**
 	 * Option holding the ids of designer links Pixonaut could not be asked
 	 * to withdraw yet, which a job asks again.
 	 */

@@ -133,15 +133,16 @@ final class Storefront {
 	private bool $parts_to_place = false;
 
 	/**
-	 * @param InlineProducts    $products    Resolves a product to its designer.
-	 * @param Templates         $templates   Renders the markup.
-	 * @param Labels            $labels      Customer-facing text.
-	 * @param Settings          $settings    The developer tools' SDK script and debug switch.
-	 * @param string            $plugin_file Absolute path of the main plugin file.
-	 * @param ServerReads       $server      Reads what the designer starts from, before the page prints.
-	 * @param OpeningPrice|null $opening_price Prints a variable product's price as its opening variation's; null leaves the range.
-	 * @param SwatchLooks|null  $swatch_looks  How each attribute value looks as a swatch; null draws every value as its name.
-	 * @param StagePosters|null $posters       The pictures a preview shows until its designer has drawn; null shows none.
+	 * @param InlineProducts           $products    Resolves a product to its designer.
+	 * @param Templates                $templates   Renders the markup.
+	 * @param Labels                   $labels      Customer-facing text.
+	 * @param Settings                 $settings    The developer tools' SDK script and debug switch.
+	 * @param string                   $plugin_file Absolute path of the main plugin file.
+	 * @param ServerReads              $server      Reads what the designer starts from, before the page prints.
+	 * @param OpeningPrice|null        $opening_price Prints a variable product's price as its opening variation's; null leaves the range.
+	 * @param SwatchLooks|null         $swatch_looks  How each attribute value looks as a swatch; null draws every value as its name.
+	 * @param StagePosters|null        $posters       The pictures a preview shows until its designer has drawn; null shows none.
+	 * @param ProductChoicePrices|null $choice_prices The prices beside the swatches; null shows none.
 	 */
 	public function __construct(
 		private readonly InlineProducts $products,
@@ -153,6 +154,7 @@ final class Storefront {
 		private readonly ?OpeningPrice $opening_price = null,
 		private readonly ?SwatchLooks $swatch_looks = null,
 		private readonly ?StagePosters $posters = null,
+		private readonly ?ProductChoicePrices $choice_prices = null,
 	) {
 	}
 
@@ -306,6 +308,7 @@ final class Storefront {
 				'look'            => ThemeLook::presets(),
 				'group_numbers'   => GroupNumbers::shown( $designer->config, $this->settings ),
 				'swatches'        => array() === $mounts || null === $this->swatch_looks || ! AttributeOptions::swatches( $this->settings ) ? array() : $this->swatch_looks->of( $designer ),
+				'choice_prices'   => array() === $mounts || null === $this->choice_prices || ! AttributeOptions::swatches( $this->settings ) ? array() : ( $this->choice_prices->of( $product ) ?? array() ),
 			)
 		);
 	}

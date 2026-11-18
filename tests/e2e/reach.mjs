@@ -113,6 +113,8 @@ export const NO_SPEC = [
 	'templates/admin/swatch-names-field.php',
 	'src/Admin/BlankOptionField.php', // an attribute's blank option, on its edit screen
 	'templates/admin/blank-option-field.php',
+	'src/Admin/ChoicePriceField.php', // an attribute's choice price, on its edit screen
+	'templates/admin/choice-price-field.php',
 	'assets/src/admin/wp-media.ts', // types of WordPress's media script
 	'templates/admin/product-not-connected.php',
 	'src/Cart/CheckoutCheck.php',
@@ -372,6 +374,17 @@ export const REACH = {
 	],
 	// Runs only in the Nightly's theme and page builder projects, never in
 	// ci:local: these are what it is about, for a run by hand.
+	'choice-prices.spec.ts': [
+		'src/Storefront/ChoicePrices.php',
+		'src/Storefront/ChoicePriceTable.php',
+		'src/Storefront/ProductChoicePrices.php',
+		'src/Abilities/GetAttributeChoicePrices.php',
+		'src/Abilities/SetAttributeChoicePrice.php',
+		'assets/src/storefront/choice-prices.ts',
+		'assets/src/storefront/attribute-swatches.ts',
+		'assets/src/storefront/attribute-swatches.css',
+		'src/Storefront/PrintedSwatches.php',
+	],
 	'compatibility.spec.ts': [
 		'src/Storefront/Storefront.php',
 		'templates/storefront/form.php',
