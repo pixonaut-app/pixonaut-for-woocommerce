@@ -334,6 +334,33 @@ final class VariationGenerationTest extends PricingTestCase {
 		}
 	}
 
+	public function test_a_choice_pinned_to_another_version_of_the_products_template_keeps_that_version(): void {
+		$product = $this->poster();
+		$this->unframed_variations( $product, new Side( 'front', 'Front', 'front', 'Front', 'mini-poster', 2, null, 'Mini poster', pinned: true ) );
+		$checks = ( new HttpRecorder( Hosts::server_api() ) )->start();
+		self::script_framed_check( $checks );
+		self::script_framed_check( $checks, 'mini-poster', 2 );
+		try {
+			$this->script_costs_twice();
+
+			$this->generated( $product );
+		} finally {
+			$checks->stop();
+		}
+
+		foreach ( $this->reread( $product )->get_children() as $child_id ) {
+			$variation = wc_get_product( $child_id );
+			$this->assertInstanceOf( WC_Product_Variation::class, $variation );
+			$side = ProductConfig::config_for( $variation )->sides[0];
+			if ( 'Without' === ( $variation->get_attributes( 'edit' )['photo'] ?? '' ) ) {
+				$this->assertTrue( $side->pinned, 'a variation without a photo stays on the version its siblings are pinned to' );
+				$this->assertSame( 2, $side->template_version );
+			} else {
+				$this->assertFalse( $side->pinned );
+			}
+		}
+	}
+
 	public function test_a_value_the_blank_gains_is_made_once_the_product_offers_it_keeping_every_variation(): void {
 		$product = $this->poster();
 		$this->framed_variation( $product );
@@ -656,13 +683,14 @@ final class VariationGenerationTest extends PricingTestCase {
 	 *
 	 * @param HttpRecorder $checks   The recorder of Pixonaut's server API.
 	 * @param string       $template The template's id.
+	 * @param int          $version  The template's version.
 	 */
-	private static function script_framed_check( HttpRecorder $checks, string $template = 'mini-poster' ): void {
+	private static function script_framed_check( HttpRecorder $checks, string $template = 'mini-poster', int $version = 1 ): void {
 		$checks->json( 200, BlankFixture::answer( array( 'front' => 'Front' ) ) );
 		$checks->json(
 			200,
 			array(
-				'templateId'     => $template . '@1',
+				'templateId'     => $template . '@' . $version,
 				'ratio'          => array(
 					'w' => 280,
 					'h' => 360,
@@ -753,8 +781,10 @@ final class VariationGenerationTest extends PricingTestCase {
 	 * without are on a template without a photo.
 	 *
 	 * @param WC_Product $product The product.
+	 * @param Side|null  $without The side of those without a photo; null for one on a template without a photo.
 	 */
-	private function unframed_variations( WC_Product $product ): void {
+	private function unframed_variations( WC_Product $product, ?Side $without = null ): void {
+		$without ??= new Side( 'front', 'Front', 'front', 'Front', 'plain-poster', 1, null, 'Plain poster' );
 		foreach ( array( 's30', 's50' ) as $size ) {
 			foreach ( self::PHOTO as $photo ) {
 				$variation = new WC_Product_Variation();
@@ -771,7 +801,7 @@ final class VariationGenerationTest extends PricingTestCase {
 				$variation->set_status( ProductConfig::PUBLIC_STATUS );
 				$variation->save();
 				if ( 'Without' === $photo ) {
-					( new ProductConfig( override: true, personalise: true, blank_id: self::POSTER, sides: array( new Side( 'front', 'Front', 'front', 'Front', 'plain-poster', 1, null, 'Plain poster' ) ) ) )->save_to( $variation );
+					( new ProductConfig( override: true, personalise: true, blank_id: self::POSTER, sides: array( $without ) ) )->save_to( $variation );
 				}
 				$ref = 'v_poster_' . $size . '_vertical';
 				( new ProductVariant( self::POSTER, $ref, $ref, 'Size: ' . ( 's30' === $size ? '30x40cm' : '50x70cm' ) . ', Orientation: Vertical' ) )->save_to( $variation );
