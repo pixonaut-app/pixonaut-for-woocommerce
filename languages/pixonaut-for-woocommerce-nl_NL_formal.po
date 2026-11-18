@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:44:44+00:00\n"
+"POT-Creation-Date: 2026-11-18T17:04:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -624,6 +624,25 @@ msgstr ""
 #: src/Abilities/GetAttributeBlankOptions.php:44
 msgid "Only this global attribute, by id."
 msgstr "Alleen dit globale attribuut, op ID."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetAttributeChoicePrices.php:28
+msgid "Read the price each attribute's choices show"
+msgstr "Prijs lezen die de keuzes van elk attribuut tonen"
+
+#: src/Abilities/GetAttributeChoicePrices.php:29
+msgid ""
+"Reads, for every global attribute, the price its options show beside their "
+"swatches on a product page: `none`, `add_on` (what each option adds to the "
+"product without add-ons in the chosen size and personalisation, such as "
+"\"+180 kr\" for a frame; the cheapest option shows nothing) or `from` (each "
+"option's lowest price, such as \"from 469 kr\" for a size). Set one with "
+"`set-attribute-choice-price`."
+msgstr "Leest voor elk globaal attribuut welke prijs de opties naast de knoppen op een productpagina tonen: `none`, `add_on` (wat elke optie toevoegt aan het product zonder extra's in de gekozen maat en personalisatie, zoals \"+€ 18\" voor een lijst; de goedkoopste optie toont niets) of `from` (de laagste prijs van elke optie, zoals \"vanaf € 46,90\" voor een maat). In te stellen met `set-attribute-choice-price`."
+
+#: src/Abilities/GetAttributeChoicePrices.php:96
+msgid "Its slug without `pa_`."
+msgstr "De slug zonder `pa_`."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetAttributeQueryNames.php:26
@@ -2416,6 +2435,7 @@ msgstr ""
 "ingepland, terwijl de koppeling wel is opgeslagen."
 
 #: src/Abilities/SetAttributeBlankOption.php:48
+#: src/Abilities/SetAttributeChoicePrice.php:37
 #: src/Abilities/SetAttributeQueryName.php:38
 #: src/Abilities/SetAttributeSplitListing.php:44
 msgid "A global attribute, by id."
@@ -2427,6 +2447,7 @@ msgstr ""
 "Een van de waarden van het attribuut, op term-ID; of benoem die met `slug`."
 
 #: src/Abilities/SetAttributeBlankOption.php:98
+#: src/Abilities/SetAttributeChoicePrice.php:67
 #: src/Abilities/SetAttributeQueryName.php:69
 #: src/Abilities/SetAttributeSplitListing.php:92
 msgid "No global attribute has this id."
@@ -2467,6 +2488,29 @@ msgstr ""
 "worden ingepland voor een nieuwe controle, dus houden ze de varianten van "
 "het blanco product die ze hadden. Voer `recheck-products` uit om ze opnieuw "
 "te controleren."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetAttributeChoicePrice.php:29
+msgid "Set the price an attribute's choices show"
+msgstr "Prijs instellen die de keuzes van een attribuut tonen"
+
+#: src/Abilities/SetAttributeChoicePrice.php:30
+msgid ""
+"Sets the price a global attribute's options show beside their swatches on a "
+"product page, as its edit screen's \"Price beside each choice\" field does. "
+"`add_on` for an add-on such as a hanger, a frame or a frame's finish: each "
+"option shows what it adds to the product without add-ons in the chosen size "
+"and personalisation (\"+180 kr\"), worked out from the variations' prices; "
+"the cheapest option shows nothing, and a finish shows its difference to the "
+"cheapest finish under the chosen framing. `from` for a base choice such as a "
+"size: each option shows its lowest price (\"from 469 kr\"). `none` shows no "
+"price. Prices show only where the store draws product options as swatches. "
+"The answer is the attribute's choice now."
+msgstr "Stelt in welke prijs de opties van een globaal attribuut naast de knoppen op een productpagina tonen, zoals het veld \"Prijs bij elke keuze\" op de bewerkpagina. `add_on` voor een extra zoals een ophangsysteem, een lijst of de afwerking van een lijst: elke optie toont wat ze toevoegt aan het product zonder extra's in de gekozen maat en personalisatie (\"+€ 18\"), berekend uit de prijzen van de variaties; de goedkoopste optie toont niets, en een afwerking toont het verschil met de goedkoopste afwerking bij de gekozen inlijsting. `from` voor een basiskeuze zoals een maat: elke optie toont haar laagste prijs (\"vanaf € 46,90\"). `none` toont geen prijs. Prijzen verschijnen alleen waar de winkel productopties als knoppen toont. Het antwoord is de keuze van het attribuut nu."
+
+#: src/Abilities/SetAttributeChoicePrice.php:70
+msgid "The price must be none, add_on or from."
+msgstr "De prijs moet none, add_on of from zijn."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
@@ -4422,6 +4466,24 @@ msgstr[1] "%d varianten"
 #, php-format
 msgid "%s · Imported"
 msgstr "%s · Geïmporteerd"
+
+#. translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: its options show no price.
+#: src/Admin/ChoicePriceField.php:90
+msgctxt "price beside each choice"
+msgid "None"
+msgstr "Geen"
+
+#. translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: each option, such as a frame, shows what it adds to the product's price, like "+180 kr".
+#: src/Admin/ChoicePriceField.php:92
+msgctxt "price beside each choice"
+msgid "What it adds, as an add-on (\"+180 kr\")"
+msgstr "Wat het toevoegt, als extra (\"+€ 18\")"
+
+#. translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: each option, such as a size, shows the lowest price the product has with it, like "from 469 kr".
+#: src/Admin/ChoicePriceField.php:94
+msgctxt "price beside each choice"
+msgid "Its lowest price (\"from 469 kr\")"
+msgstr "De laagste prijs (\"vanaf € 46,90\")"
 
 #: src/Admin/ConnectionScreen.php:497
 msgid "You are not allowed to change the Pixonaut connection."
@@ -9763,6 +9825,18 @@ msgstr "Op de achtergrond, één tegelijk"
 msgid "Off: load each one when it is shown"
 msgstr "Uit: elk pas laden wanneer het wordt getoond"
 
+#. translators: %s: a price, such as "180 kr". Beside an option of a product, such as a frame, on its page: what choosing it adds to the product's price. The customer reads it.
+#: src/Storefront/ProductChoicePrices.php:129
+#, php-format
+msgid "+%s"
+msgstr "+%s"
+
+#. translators: %s: a price, such as "469 kr". Beside an option of a product, such as a size, on its page: the lowest price the product has with it. The customer reads it.
+#: src/Storefront/ProductChoicePrices.php:131
+#, php-format
+msgid "from %s"
+msgstr "vanaf %s"
+
 #. translators: %d: The longest name, in characters. Refusal of the name an attribute goes by in the shop's addresses.
 #: src/Storefront/QueryNames.php:220
 #, php-format
@@ -9971,6 +10045,21 @@ msgstr ""
 "Niet gekoppeld: de waarden worden als tekst getoond en kiezen de variant van "
 "het blanco product alleen waar ze de namen van een optie en haar waarden "
 "hebben."
+
+#. translators: Label of a select on the screen that adds or edits a product attribute: which price its options show on a product page.
+#: templates/admin/choice-price-field.php:21
+msgid "Price beside each choice"
+msgstr "Prijs bij elke keuze"
+
+#. translators: Help under the "Price beside each choice" select on the screen that adds or edits a product attribute.
+#: templates/admin/choice-price-field.php:23
+msgid ""
+"For product options shown as swatches in the designer. An add-on, such as a "
+"hanger or a frame, shows what it adds to the product without add-ons in the "
+"chosen size; the cheapest option shows nothing. A base choice, such as a "
+"size, shows the lowest price the product has with it. Prices come from the "
+"variations, as the shop shows them."
+msgstr "Voor productopties die als knoppen in de ontwerptool verschijnen. Een extra, zoals een ophangsysteem of een lijst, toont wat het toevoegt aan het product zonder extra's in de gekozen maat; de goedkoopste optie toont niets. Een basiskeuze, zoals een maat, toont de laagste prijs van het product met die keuze. De prijzen komen uit de variaties, zoals de winkel ze toont."
 
 #: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."

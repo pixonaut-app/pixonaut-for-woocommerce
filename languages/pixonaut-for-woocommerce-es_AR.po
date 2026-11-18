@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:44:44+00:00\n"
+"POT-Creation-Date: 2026-11-18T17:04:12+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -625,6 +625,25 @@ msgstr ""
 #: src/Abilities/GetAttributeBlankOptions.php:44
 msgid "Only this global attribute, by id."
 msgstr "Solo este atributo global, por identificador."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetAttributeChoicePrices.php:28
+msgid "Read the price each attribute's choices show"
+msgstr "Leer el precio que muestran las opciones de cada atributo"
+
+#: src/Abilities/GetAttributeChoicePrices.php:29
+msgid ""
+"Reads, for every global attribute, the price its options show beside their "
+"swatches on a product page: `none`, `add_on` (what each option adds to the "
+"product without add-ons in the chosen size and personalisation, such as "
+"\"+180 kr\" for a frame; the cheapest option shows nothing) or `from` (each "
+"option's lowest price, such as \"from 469 kr\" for a size). Set one with "
+"`set-attribute-choice-price`."
+msgstr "Lee, para cada atributo global, el precio que sus opciones muestran junto a los botones en una página de producto: `none`, `add_on` (lo que cada opción añade al producto sin extras en el tamaño y la personalización elegidos, como \"+18 €\" por un marco; la opción más barata no muestra nada) o `from` (el precio más bajo de cada opción, como \"desde 46,90 €\" para un tamaño). Se define con `set-attribute-choice-price`."
+
+#: src/Abilities/GetAttributeChoicePrices.php:96
+msgid "Its slug without `pa_`."
+msgstr "Su slug sin `pa_`."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetAttributeQueryNames.php:26
@@ -2403,6 +2422,7 @@ msgstr ""
 "nueva comprobación, aunque el vínculo queda guardado."
 
 #: src/Abilities/SetAttributeBlankOption.php:48
+#: src/Abilities/SetAttributeChoicePrice.php:37
 #: src/Abilities/SetAttributeQueryName.php:38
 #: src/Abilities/SetAttributeSplitListing.php:44
 msgid "A global attribute, by id."
@@ -2415,6 +2435,7 @@ msgstr ""
 "por `slug`."
 
 #: src/Abilities/SetAttributeBlankOption.php:98
+#: src/Abilities/SetAttributeChoicePrice.php:67
 #: src/Abilities/SetAttributeQueryName.php:69
 #: src/Abilities/SetAttributeSplitListing.php:92
 msgid "No global attribute has this id."
@@ -2455,6 +2476,29 @@ msgstr ""
 "pudieron programar para una nueva comprobación, así que conservan las "
 "variantes del producto base que tenían. Ejecutá `recheck-products` para "
 "volver a comprobarlos."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetAttributeChoicePrice.php:29
+msgid "Set the price an attribute's choices show"
+msgstr "Definir el precio que muestran las opciones de un atributo"
+
+#: src/Abilities/SetAttributeChoicePrice.php:30
+msgid ""
+"Sets the price a global attribute's options show beside their swatches on a "
+"product page, as its edit screen's \"Price beside each choice\" field does. "
+"`add_on` for an add-on such as a hanger, a frame or a frame's finish: each "
+"option shows what it adds to the product without add-ons in the chosen size "
+"and personalisation (\"+180 kr\"), worked out from the variations' prices; "
+"the cheapest option shows nothing, and a finish shows its difference to the "
+"cheapest finish under the chosen framing. `from` for a base choice such as a "
+"size: each option shows its lowest price (\"from 469 kr\"). `none` shows no "
+"price. Prices show only where the store draws product options as swatches. "
+"The answer is the attribute's choice now."
+msgstr "Define el precio que las opciones de un atributo global muestran junto a los botones en una página de producto, como hace el campo \"Precio junto a cada opción\" de su página de edición. `add_on` para un extra como un colgador, un marco o el acabado de un marco: cada opción muestra lo que añade al producto sin extras en el tamaño y la personalización elegidos (\"+18 €\"), calculado a partir de los precios de las variaciones; la opción más barata no muestra nada, y un acabado muestra su diferencia con el acabado más barato para el enmarcado elegido. `from` para una opción base como un tamaño: cada opción muestra su precio más bajo (\"desde 46,90 €\"). `none` no muestra precio. Los precios solo se muestran donde la tienda presenta las opciones de producto como botones. La respuesta es la opción actual del atributo."
+
+#: src/Abilities/SetAttributeChoicePrice.php:70
+msgid "The price must be none, add_on or from."
+msgstr "El precio debe ser none, add_on o from."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
@@ -3248,7 +3292,7 @@ msgid ""
 "theirs. A cart that starts qualifying for another rate gets the first one it "
 "can have that is not pickup, so free shipping that is to be chosen once a "
 "cart reaches its minimum goes before a flat rate."
-msgstr ""
+msgstr "El lugar del método entre los métodos de la zona, de menor a mayor. Un método que ya esté en ese lugar, y los que le siguen, bajan un lugar; los demás conservan el suyo. Un carrito que empieza a cumplir los requisitos de otra tarifa recibe la primera que puede tener que no sea la recogida, así que el envío gratuito que debe elegirse cuando un carrito alcanza su mínimo va antes que una tarifa fija."
 
 #: src/Abilities/SetShippingMethod.php:163
 msgid "No shipping method has this instance id."
@@ -4410,6 +4454,24 @@ msgstr[1] "%d variantes"
 #, php-format
 msgid "%s · Imported"
 msgstr "%s · Importado"
+
+#. translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: its options show no price.
+#: src/Admin/ChoicePriceField.php:90
+msgctxt "price beside each choice"
+msgid "None"
+msgstr "Ninguno"
+
+#. translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: each option, such as a frame, shows what it adds to the product's price, like "+180 kr".
+#: src/Admin/ChoicePriceField.php:92
+msgctxt "price beside each choice"
+msgid "What it adds, as an add-on (\"+180 kr\")"
+msgstr "Lo que añade, como extra (\"+18 €\")"
+
+#. translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: each option, such as a size, shows the lowest price the product has with it, like "from 469 kr".
+#: src/Admin/ChoicePriceField.php:94
+msgctxt "price beside each choice"
+msgid "Its lowest price (\"from 469 kr\")"
+msgstr "Su precio más bajo (\"desde 46,90 €\")"
 
 #: src/Admin/ConnectionScreen.php:497
 msgid "You are not allowed to change the Pixonaut connection."
@@ -9701,6 +9763,18 @@ msgstr "En segundo plano, de uno en uno"
 msgid "Off: load each one when it is shown"
 msgstr "Desactivado: cargar cada uno cuando se muestra"
 
+#. translators: %s: a price, such as "180 kr". Beside an option of a product, such as a frame, on its page: what choosing it adds to the product's price. The customer reads it.
+#: src/Storefront/ProductChoicePrices.php:129
+#, php-format
+msgid "+%s"
+msgstr "+%s"
+
+#. translators: %s: a price, such as "469 kr". Beside an option of a product, such as a size, on its page: the lowest price the product has with it. The customer reads it.
+#: src/Storefront/ProductChoicePrices.php:131
+#, php-format
+msgid "from %s"
+msgstr "desde %s"
+
 #. translators: %d: The longest name, in characters. Refusal of the name an attribute goes by in the shop's addresses.
 #: src/Storefront/QueryNames.php:220
 #, php-format
@@ -9906,6 +9980,21 @@ msgid ""
 msgstr ""
 "Sin vincular: sus valores se muestran como texto y eligen la variante del "
 "producto base solo cuando tienen los nombres de una opción y de sus valores."
+
+#. translators: Label of a select on the screen that adds or edits a product attribute: which price its options show on a product page.
+#: templates/admin/choice-price-field.php:21
+msgid "Price beside each choice"
+msgstr "Precio junto a cada opción"
+
+#. translators: Help under the "Price beside each choice" select on the screen that adds or edits a product attribute.
+#: templates/admin/choice-price-field.php:23
+msgid ""
+"For product options shown as swatches in the designer. An add-on, such as a "
+"hanger or a frame, shows what it adds to the product without add-ons in the "
+"chosen size; the cheapest option shows nothing. A base choice, such as a "
+"size, shows the lowest price the product has with it. Prices come from the "
+"variations, as the shop shows them."
+msgstr "Para opciones de producto mostradas como botones en el personalizador. Un extra, como un colgador o un marco, muestra lo que añade al producto sin extras en el tamaño elegido; la opción más barata no muestra nada. Una opción base, como un tamaño, muestra el precio más bajo del producto con ella. Los precios salen de las variaciones, tal como la tienda los muestra."
 
 #: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."
