@@ -137,7 +137,7 @@ final class GetProductPrices implements Ability {
 				'type'        => 'boolean',
 				'description' => __( 'Whether there is a rule to price by: false without a target margin, and nothing is then priced.', 'pixonaut-for-woocommerce' ),
 			),
-			'rule'               => ProductPrices::parts_schema( __( 'The rule the product is priced by: margin and tolerance in percent, step, ending, min and max as amounts; empty for none.', 'pixonaut-for-woocommerce' ) ),
+			'rule'               => ProductPrices::parts_schema( __( 'The rule the product is priced by: margin and tolerance in percent, fixed (added to the price excluding tax on top of the margin), step, ending, min and max as amounts; empty for none.', 'pixonaut-for-woocommerce' ) ),
 			'own_rule'           => ProductPrices::parts_schema( __( 'The parts of the rule the product changes; a part it leaves to the store is empty.', 'pixonaut-for-woocommerce' ) ),
 			'automatic'          => array(
 				'type'        => 'boolean',

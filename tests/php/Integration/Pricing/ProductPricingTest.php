@@ -356,6 +356,73 @@ final class ProductPricingTest extends PricingTestCase {
 		$this->assertEqualsWithDelta( 50.2, (float) $this->row( $id )->margin, 0.05 );
 	}
 
+	public function test_a_fixed_amount_per_item_is_added_on_top_of_the_margin_excluding_vat(): void {
+		update_option( 'woocommerce_calc_taxes', 'yes' );
+		update_option( 'woocommerce_prices_include_tax', 'yes' );
+		WC_Tax::_insert_tax_rate(
+			array(
+				'tax_rate_country'  => '',
+				'tax_rate'          => '25.0000',
+				'tax_rate_name'     => 'VAT',
+				'tax_rate_priority' => 1,
+				'tax_rate_shipping' => 1,
+				'tax_rate_order'    => 1,
+				'tax_rate_class'    => '',
+			)
+		);
+		$this->store_rule(
+			array(
+				PriceRule::MARGIN    => '15',
+				PriceRule::FIXED     => '300',
+				PriceRule::TOLERANCE => '5',
+			)
+		);
+		$ids     = $this->variable_product(
+			array(
+				'v_a3' => '',
+				'v_a4' => '',
+			)
+		);
+		$product = fn () => $this->parent_of( $ids['v_a3'] );
+		$this->script_costs(
+			array(
+				'v_a3' => '143',
+				'v_a4' => '518',
+			)
+		);
+
+		$this->pricing->refresh( $product() );
+		$this->pricing->apply( $product() );
+
+		// 143 ÷ 0.85 + 300 = 468.24 excluding VAT, 585.29 with it; 518 ÷ 0.85 + 300 = 909.41, 1136.76.
+		$this->assertSame( '589', $this->price( $ids['v_a3'] ) );
+		$this->assertSame( '1139', $this->price( $ids['v_a4'] ) );
+		// 589 is 471.20 excluding VAT: 328.20 over the cost, 69.65 %.
+		$this->assertSame( self::amount( '328.20' ), $this->row( $ids['v_a3'] )->contribution );
+		$this->assertEqualsWithDelta( 69.65, (float) $this->row( $ids['v_a3'] )->margin, 0.01 );
+
+		// The cost rises to 160: 66.0 % against the rule's 67.2 % at that cost, held.
+		$this->script_costs(
+			array(
+				'v_a3' => '160',
+				'v_a4' => '518',
+			)
+		);
+		$this->pricing->refresh( $product() );
+		$this->assertNull( $this->row( $ids['v_a3'] )->flag );
+
+		// To 300: 36.3 % against 54.1 %, flagged with the rule's price: 652.94 excluding VAT, 816.18 with it.
+		$this->script_costs(
+			array(
+				'v_a3' => '300',
+				'v_a4' => '518',
+			)
+		);
+		$this->pricing->refresh( $product() );
+		$this->assertSame( PriceState::FLAG_MARGIN, $this->row( $ids['v_a3'] )->flag );
+		$this->assertSame( self::amount( '819' ), $this->row( $ids['v_a3'] )->suggested );
+	}
+
 	public function test_a_variant_without_a_published_price_is_left_unpriced_and_flagged(): void {
 		$this->store_rule();
 		$ids     = $this->variable_product(
@@ -439,6 +506,7 @@ final class ProductPricingTest extends PricingTestCase {
 		$this->assertSame(
 			array(
 				PriceRule::MARGIN    => '60',
+				PriceRule::FIXED     => '',
 				PriceRule::TOLERANCE => '',
 				PriceRule::STEP      => '5',
 				PriceRule::ENDING    => '0',

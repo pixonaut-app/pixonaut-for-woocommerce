@@ -86,6 +86,7 @@ final class PricingAbilitiesTest extends PricingTestCase {
 		$this->assertSame(
 			array(
 				Settings::PRICE_MARGIN                => '50',
+				Settings::PRICE_FIXED                 => '',
 				Settings::PRICE_TOLERANCE             => '10',
 				Settings::PRICE_STEP                  => '10',
 				Settings::PRICE_ENDING                => '9',
@@ -242,6 +243,7 @@ final class PricingAbilitiesTest extends PricingTestCase {
 		$by_id = array_column( $answer['prices'], null, 'id' );
 		$this->assertSame( PriceState::FOLLOWS, $by_id[ $ids['v_a3'] ]['standing'] );
 		$this->assertSame( 49.9, $by_id[ $ids['v_a3'] ]['margin'] );
+		$this->assertSame( '199', $by_id[ $ids['v_a3'] ]['contribution'], '399 over a cost of 200' );
 		$this->assertSame( PriceState::OWN, $by_id[ $ids['v_a4'] ]['standing'] );
 		$this->assertFalse( $by_id[ $ids['v_a4'] ]['changed'] );
 		$this->assertSame( '219', $by_id[ $ids['v_a4'] ]['suggested'] );
@@ -541,6 +543,44 @@ final class PricingAbilitiesTest extends PricingTestCase {
 		$this->assertSame( '499', $this->price( $ids['v_a3'] ) );
 		$this->assertSame( '60', $set['own_rule'][ PriceRule::MARGIN ] );
 		$this->assertSame( '60', ProductPricing::own_parts( $this->product( $product_id ) )[ PriceRule::MARGIN ] );
+	}
+
+	public function test_a_products_rule_takes_a_fixed_amount_and_the_store_one_reads_it(): void {
+		$this->store_rule();
+		$changed = $this->update_settings->execute( array( Settings::PRICE_FIXED => '25,5' ) );
+		$this->assertIsArray( $changed );
+		$this->assertSame( '25.5', $changed[ Settings::PRICE_FIXED ] );
+		$ids        = $this->variable_product( array( 'v_a3' => '' ) );
+		$product_id = $this->parent_of( $ids['v_a3'] )->get_id();
+
+		$this->script_costs( array( 'v_a3' => '200' ) );
+		$set = $this->price->execute(
+			array(
+				'product_id' => $product_id,
+				'rule'       => array( PriceRule::FIXED => '100' ),
+			)
+		);
+
+		$this->assertIsArray( $set );
+		// 200 ÷ 0.5 + 100 = 500: the step nearest is 499, which leaves 299.
+		$this->assertSame( '499', $this->price( $ids['v_a3'] ) );
+		$this->assertSame( '299', $set['prices'][0]['contribution'] );
+		$this->assertSame( '100', $set['own_rule'][ PriceRule::FIXED ] );
+		$read = $this->read->execute( array( 'product_id' => $product_id ) );
+		$this->assertIsArray( $read );
+		$this->assertSame( '100', $read['rule'][ PriceRule::FIXED ] );
+		$this->assertSame( '', $read['own_rule'][ PriceRule::MARGIN ] );
+
+		$this->script_costs( array( 'v_a3' => '200' ) );
+		$this->price->execute(
+			array(
+				'product_id' => $product_id,
+				'rule'       => array( PriceRule::FIXED => '' ),
+			)
+		);
+		$read = $this->read->execute( array( 'product_id' => $product_id ) );
+		$this->assertIsArray( $read );
+		$this->assertSame( '25.5', $read['rule'][ PriceRule::FIXED ], 'an empty part is the store\'s' );
 	}
 
 	public function test_a_cost_in_another_currency_is_priced_at_the_days_rate_with_the_buffer(): void {

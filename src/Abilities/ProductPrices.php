@@ -117,6 +117,7 @@ final class ProductPrices {
 			'rate_date'       => '' === $row->rate_date ? null : $row->rate_date,
 			'currency_buffer' => '' === $row->buffer ? null : $row->buffer,
 			'margin'          => null === $row->margin ? null : round( $row->margin, 1 ),
+			'contribution'    => self::money( $row->contribution ),
 			'suggested'       => self::money( $row->suggested ),
 			'standing'        => $row->standing,
 			'flag'            => $row->flag,
@@ -172,6 +173,7 @@ final class ProductPrices {
 					'type'        => array( 'number', 'null' ),
 					'description' => __( 'The share of the price excluding tax left after the cost, in percent.', 'pixonaut-for-woocommerce' ),
 				),
+				'contribution'    => $money( __( 'What the price leaves over the cost, excluding tax, in the store\'s currency.', 'pixonaut-for-woocommerce' ) ),
 				'suggested'       => $money( __( 'The price the rule would set, when it is another than the price it has.', 'pixonaut-for-woocommerce' ) ),
 				'standing'        => array(
 					'type'        => 'string',

@@ -10,7 +10,7 @@
  * Field names, classes and the `data-` attributes are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.10.0
+ * @version 1.23.0
  *
  * @var string                $url        The product's prices route, which the buttons post to.
  * @var string                $field      The posted field holding the parts of the rule the product changes.
@@ -22,7 +22,7 @@
  * @var array<string, string> $own_parts  The parts of the rule the product changes, by part; empty for the store's.
  * @var array<string, string> $store      The store's rule, by part.
  * @var array<string, string> $parts      Each part's label, by part, in the order shown.
- * @var list<array{id: int, label: string, cost: string, cost_parts: string, price: string, margin: string, suggested: string, standing: string, flag: string|null, rule_at: string, changes: string}> $rows Each price: its product or variation, what it is called, its cost, the cost's parts, its price, its margin, the price the rule suggests, how it stands to the rule (`own`, `follows`, `by_hand`), why it needs the store manager, when the rule last set it, and whether its price changes by itself (`always` or `never` on a variation that answers its product, else `product` or `store`).
+ * @var list<array{id: int, label: string, cost: string, cost_parts: string, price: string, margin: string, contribution: string, suggested: string, standing: string, flag: string|null, rule_at: string, changes: string}> $rows Each price: its product or variation, what it is called, its cost, the cost's parts, its price, its margin, what it leaves over the cost excluding VAT, the price the rule suggests, how it stands to the rule (`own`, `follows`, `by_hand`), why it needs the store manager, when the rule last set it, and whether its price changes by itself (`always` or `never` on a variation that answers its product, else `product` or `store`).
  * @var bool                  $unread     Whether no cost was read yet: the script reads them when the section opens.
  * @var int                   $flagged    Prices that follow the rule and need the store manager.
  * @var int                   $following  Prices the rule was applied to.
@@ -52,9 +52,9 @@ if ( $flagged > 0 ) {
 		<span class="pixonaut-disclosure__summary"><?php echo esc_html( $pixonaut_summary ); ?></span>
 	</summary>
 	<p class="pixonaut-group__intro">
-		<?php esc_html_e( 'What the printshop charges for the product and its shipping, and the margin each price leaves. Apply sets every price to the step nearest the target margin; from then on the prices follow the rule.', 'pixonaut-for-woocommerce' ); ?>
+		<?php esc_html_e( 'What the printshop charges for the product and its shipping, and the margin and contribution each price leaves. Apply sets every price to the step nearest the target margin plus the fixed amount; from then on the prices follow the rule.', 'pixonaut-for-woocommerce' ); ?>
 		<?php if ( $tax_note ) : ?>
-			<?php esc_html_e( 'Margins are worked out on the price excluding VAT.', 'pixonaut-for-woocommerce' ); ?>
+			<?php esc_html_e( 'Margins, contributions and the fixed amount are worked out on the price excluding VAT.', 'pixonaut-for-woocommerce' ); ?>
 		<?php endif; ?>
 	</p>
 	<fieldset class="pixonaut-prices__rule">
@@ -96,6 +96,7 @@ if ( $flagged > 0 ) {
 					<th scope="col" class="pixonaut-prices__number"><?php /* translators: Column of the Prices table of the product edit page: what the printshop charges for the product and its shipping. */ esc_html_e( 'Cost', 'pixonaut-for-woocommerce' ); ?></th>
 					<th scope="col" class="pixonaut-prices__number"><?php /* translators: Column of the Prices table of the product edit page: the regular price in the store. */ esc_html_e( 'Price', 'pixonaut-for-woocommerce' ); ?></th>
 					<th scope="col" class="pixonaut-prices__number"><?php /* translators: Column of the Prices table of the product edit page: the share of the price left after the cost. */ esc_html_e( 'Margin', 'pixonaut-for-woocommerce' ); ?></th>
+					<th scope="col" class="pixonaut-prices__number"><?php /* translators: Column of the Prices table of the product edit page: the amount of money the price leaves after the cost, excluding VAT. */ esc_html_e( 'Contribution', 'pixonaut-for-woocommerce' ); ?></th>
 					<th scope="col"><?php /* translators: Column of the Prices table of the product edit page: how the price stands to the pricing rule, and what the rule suggests. */ esc_html_e( 'Pricing rule', 'pixonaut-for-woocommerce' ); ?></th>
 				</tr>
 			</thead>
@@ -112,6 +113,7 @@ if ( $flagged > 0 ) {
 						</td>
 						<td class="pixonaut-prices__number pixonaut-prices__price" data-label="<?php esc_attr_e( 'Price', 'pixonaut-for-woocommerce' ); ?>"><?php echo esc_html( '' === $pixonaut_row['price'] ? '—' : $pixonaut_row['price'] ); ?></td>
 						<td class="pixonaut-prices__number" data-label="<?php esc_attr_e( 'Margin', 'pixonaut-for-woocommerce' ); ?>"><?php echo esc_html( '' === $pixonaut_row['margin'] ? '—' : $pixonaut_row['margin'] ); ?></td>
+						<td class="pixonaut-prices__number" data-label="<?php esc_attr_e( 'Contribution', 'pixonaut-for-woocommerce' ); ?>"><?php echo esc_html( '' === $pixonaut_row['contribution'] ? '—' : $pixonaut_row['contribution'] ); ?></td>
 						<td class="pixonaut-prices__rule-cell" data-label="<?php esc_attr_e( 'Pricing rule', 'pixonaut-for-woocommerce' ); ?>">
 							<?php if ( \Pixonaut\WooCommerce\Pricing\PriceState::BY_HAND === $pixonaut_row['standing'] ) : ?>
 								<span class="pixonaut-prices__standing"><?php /* translators: In the Prices table of the product edit page: the store manager changed this price after the pricing rule set it, so the rule leaves it alone. */ esc_html_e( 'Edited by hand: kept', 'pixonaut-for-woocommerce' ); ?></span>

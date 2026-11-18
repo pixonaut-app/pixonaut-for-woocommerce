@@ -162,3 +162,29 @@ test('a product set to always changes its price by itself when its cost leaves t
 	await openPrices(admin);
 	await expect(choice).toHaveValue('always');
 });
+
+test('the settings show what the rule prices a few costs at as its fields are typed', async ({
+	admin,
+}) => {
+	await admin.goto('/wp-admin/admin.php?page=pixonaut&tab=prices');
+	const example = admin.locator('[data-pixonaut-price-example]');
+	const first = example.locator('tr[data-cost="100"]');
+	await expect(example.locator('tr[data-cost]')).toHaveCount(4);
+
+	// Typed, not saved: the other specs keep the store's rule.
+	await admin.locator('[id="pixonaut_wc_settings[price_margin]"]').fill('15');
+	await admin.locator('[id="pixonaut_wc_settings[price_step]"]').fill('10');
+	await admin.locator('[id="pixonaut_wc_settings[price_ending]"]').fill('9');
+	await admin.locator('[id="pixonaut_wc_settings[price_fixed]"]').fill('300');
+
+	// 100 ÷ 0.85 + 300 = 417.65: the step nearest is 419, which leaves 319.
+	await expect(first.locator('[data-shows="price"]')).toHaveText('$419.00');
+	await expect(first.locator('[data-shows="contribution"]')).toHaveText(
+		'$319.00',
+	);
+	await expect(first.locator('[data-shows="margin"]')).toHaveText('76.1 %');
+
+	await admin.locator('[id="pixonaut_wc_settings[price_fixed]"]').fill('');
+	// 100 ÷ 0.85 = 117.65: 119.
+	await expect(first.locator('[data-shows="price"]')).toHaveText('$119.00');
+});

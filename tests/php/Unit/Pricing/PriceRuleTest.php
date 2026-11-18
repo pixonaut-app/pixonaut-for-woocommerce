@@ -97,6 +97,65 @@ final class PriceRuleTest extends TestCase {
 		$this->assertSame( self::sek( '489' ), $rule->price_for( self::sek( '245' ), $none ) );
 	}
 
+	public function test_without_a_fixed_amount_prices_are_as_before(): void {
+		$tax = PriceTax::rate( self::VAT_PERCENT );
+		$was = self::rule( self::fifty( '10', '9' ) );
+		foreach ( array( '', '0', ' 0,00 ' ) as $fixed ) {
+			$rule = self::rule( self::fifty( '10', '9' ) + array( PriceRule::FIXED => $fixed ) );
+
+			$this->assertSame( 0, $rule->fixed, $fixed );
+			for ( $cost = 1; $cost <= 1200; $cost += 37 ) {
+				$this->assertSame( $was->price_for( self::sek( (string) $cost ), $tax ), $rule->price_for( self::sek( (string) $cost ), $tax ) );
+				$this->assertSame( 50.0, $rule->margin_at( self::sek( (string) $cost ) ) );
+			}
+		}
+	}
+
+	public function test_a_fixed_amount_is_added_to_the_price_excluding_vat(): void {
+		$rule = self::rule(
+			array(
+				PriceRule::MARGIN => '15',
+				PriceRule::FIXED  => '300',
+				PriceRule::STEP   => '10',
+				PriceRule::ENDING => '9',
+			)
+		);
+		$tax  = PriceTax::rate( self::VAT_PERCENT );
+
+		// 143 ÷ 0.85 + 300 = 468.235 excluding VAT, 585.294 with it: 589 is the nearest step.
+		$this->assertSame( self::sek( '585.294' ), $rule->target( self::sek( '143' ), $tax ) );
+		$this->assertSame( self::sek( '589' ), $rule->price_for( self::sek( '143' ), $tax ) );
+		// 518 ÷ 0.85 + 300 = 909.412 excluding VAT, 1136.765 with it: 1139.
+		$this->assertSame( self::sek( '1136.765' ), $rule->target( self::sek( '518' ), $tax ) );
+		$this->assertSame( self::sek( '1139' ), $rule->price_for( self::sek( '518' ), $tax ) );
+	}
+
+	public function test_with_a_fixed_amount_the_tolerance_is_around_the_rules_margin_at_that_cost(): void {
+		$rule = self::rule(
+			array(
+				PriceRule::MARGIN    => '15',
+				PriceRule::FIXED     => '300',
+				PriceRule::TOLERANCE => '5',
+			)
+		);
+		$none = PriceTax::none();
+
+		// At a cost of 143 the rule's price is 468.24, which leaves 69.5 %.
+		$this->assertEqualsWithDelta( 69.46, $rule->margin_at( self::sek( '143' ) ), 0.01 );
+		// 471 leaves 69.6 %: held, though far above the target margin of 15 %.
+		$this->assertTrue( $rule->holds( self::sek( '471' ), self::sek( '143' ), $none ) );
+		// 389 leaves 63.2 %, more than 5 points under.
+		$this->assertFalse( $rule->holds( self::sek( '389' ), self::sek( '143' ), $none ) );
+		// At a cost of 518 the rule's price is 909.41, which leaves 43.0 %: 899 leaves 42.4 %.
+		$this->assertTrue( $rule->holds( self::sek( '899' ), self::sek( '518' ), $none ) );
+		$this->assertFalse( $rule->holds( self::sek( '589' ), self::sek( '518' ), $none ) );
+	}
+
+	public function test_contribution_is_what_a_price_leaves_over_a_cost_excluding_vat(): void {
+		$this->assertSame( self::sek( '328.20' ), PriceRule::contribution_of( self::sek( '589' ), self::sek( '143' ), PriceTax::rate( self::VAT_PERCENT ) ) );
+		$this->assertSame( -self::sek( '10' ), PriceRule::contribution_of( self::sek( '90' ), self::sek( '100' ), PriceTax::none() ) );
+	}
+
 	public function test_a_price_outside_the_minimum_and_maximum_is_not_held(): void {
 		$rule = self::rule(
 			self::fifty( '10', '9' ) + array(

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Settings;
 
+use Pixonaut\WooCommerce\Admin\PriceExample;
 use Pixonaut\WooCommerce\Admin\ConnectionScreen;
 use Pixonaut\WooCommerce\Admin\DeveloperTools;
 use Pixonaut\WooCommerce\Admin\Notices;
@@ -165,6 +166,7 @@ final class SettingsPage {
 		self::PRICES     => array(
 			'pixonaut_wc_prices'        => array(
 				Settings::PRICE_MARGIN,
+				Settings::PRICE_FIXED,
 				Settings::PRICE_TOLERANCE,
 				Settings::PRICE_STEP,
 				Settings::PRICE_ENDING,
@@ -454,6 +456,10 @@ final class SettingsPage {
 			$fields[] = array( 'id' => $id ) + self::heading( $id );
 			foreach ( $settings as $setting ) {
 				$fields[] = $this->field( $setting );
+				if ( Settings::PRICE_MAX === $setting->key ) {
+					// Under the rule's last part: what it prices a few costs at.
+					$fields[] = PriceExample::field();
+				}
 			}
 			$fields[] = array(
 				'id'   => $id,

@@ -89,6 +89,8 @@ final class Settings {
 
 	public const PRICE_MARGIN = 'price_margin';
 
+	public const PRICE_FIXED = 'price_fixed';
+
 	public const PRICE_TOLERANCE = 'price_tolerance';
 
 	public const PRICE_STEP = 'price_step';
@@ -123,6 +125,7 @@ final class Settings {
 	 */
 	public const PRICE_RULE = array(
 		PriceRule::MARGIN    => self::PRICE_MARGIN,
+		PriceRule::FIXED     => self::PRICE_FIXED,
 		PriceRule::TOLERANCE => self::PRICE_TOLERANCE,
 		PriceRule::STEP      => self::PRICE_STEP,
 		PriceRule::ENDING    => self::PRICE_ENDING,
@@ -504,12 +507,23 @@ final class Settings {
 		);
 		$this->register(
 			Setting::decimal(
+				self::PRICE_FIXED,
+				'',
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant; the value is an amount of money excluding VAT added to every price the pricing rule sets, on top of the target margin. */
+					'title' => __( 'Fixed amount per item', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'Added to every price, excluding VAT, on top of the target margin: what each item costs you whatever its price, such as ads, support, payment and reprints. Cheap items then get a high margin and expensive ones a lower one. Empty adds nothing.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::decimal(
 				self::PRICE_TOLERANCE,
 				PriceRule::DEFAULT_TOLERANCE,
 				static fn (): array => array(
 					/* translators: Title of a setting on the settings page, shown to the merchant; the value is a number of percentage points either side of the target margin. */
 					'title' => __( 'Tolerance (percentage points)', 'pixonaut-for-woocommerce' ),
-					'desc'  => __( 'How far a margin may drift from the target, either way, before the price moves. With a target of 50 and a tolerance of 10, a price is kept while its margin is between 40 and 60.', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'How far a margin may drift, either way, from the margin the rule’s own price leaves at that cost before the price moves. With a target of 50, no fixed amount and a tolerance of 10, a price is kept while its margin is between 40 and 60.', 'pixonaut-for-woocommerce' ),
 				)
 			)
 		);

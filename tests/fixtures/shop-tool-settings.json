@@ -28,6 +28,7 @@
 		"proof_reminder_every_days",
 		"proof_reminders",
 		"price_margin",
+		"price_fixed",
 		"price_tolerance",
 		"price_step",
 		"price_ending",
@@ -41,6 +42,7 @@
 	],
 	"get-pricing-settings": [
 		"price_margin",
+		"price_fixed",
 		"price_tolerance",
 		"price_step",
 		"price_ending",

@@ -58,11 +58,15 @@ final class Amount {
 
 	/**
 	 * An amount as a decimal string with a point, without trailing zeros:
-	 * `399`, `417.5`. What WooCommerce stores as a price.
+	 * `399`, `417.5`. What WooCommerce stores as a price. A negative amount,
+	 * such as what a price below its cost leaves, takes a minus: `-0.5`.
 	 *
 	 * @param int $amount Thousandths.
 	 */
 	public static function decimal( int $amount ): string {
+		if ( $amount < 0 ) {
+			return '-' . self::decimal( -$amount );
+		}
 		$whole    = intdiv( $amount, self::PER_UNIT );
 		$decimals = rtrim( str_pad( (string) ( $amount % self::PER_UNIT ), self::DECIMALS, '0', STR_PAD_LEFT ), '0' );
 		return '' === $decimals ? (string) $whole : $whole . '.' . $decimals;

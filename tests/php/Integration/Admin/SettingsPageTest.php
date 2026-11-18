@@ -132,6 +132,7 @@ final class SettingsPageTest extends WP_UnitTestCase {
 		$this->save(
 			array(
 				Settings::PRICE_MARGIN    => '49,5',
+				Settings::PRICE_FIXED     => '300,50',
 				Settings::PRICE_STEP      => '5',
 				Settings::PRICE_ENDING    => '4.99',
 				Settings::PRICE_AUTOMATIC => '1',
@@ -140,6 +141,9 @@ final class SettingsPageTest extends WP_UnitTestCase {
 		);
 
 		$this->assertSame( '49.5', $this->settings()->get( Settings::PRICE_MARGIN ) );
+		$this->assertSame( '300.50', $this->settings()->get( Settings::PRICE_FIXED ) );
+		$ids = array_column( ( new SettingsPage( $this->settings() ) )->fields( SettingsPage::PRICES ), 'id' );
+		$this->assertSame( array( 'pixonaut_wc_price_example' ), array_slice( $ids, (int) array_search( Settings::OPTION . '[' . Settings::PRICE_MAX . ']', $ids, true ) + 1, 1 ), 'the example comes under the rule' );
 		$this->assertSame( '5', $this->settings()->get( Settings::PRICE_STEP ) );
 		$this->assertSame( '4.99', $this->settings()->get( Settings::PRICE_ENDING ) );
 		$this->assertTrue( $this->settings()->get( Settings::PRICE_AUTOMATIC ) );

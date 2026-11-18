@@ -10,18 +10,25 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Pricing;
 
 /**
- * A target margin on the price excluding tax, the tolerance around it within
- * which a price is left alone, the steps a price lands on, and the lowest
- * and highest price. The store has one, and a product may change any part
+ * A target margin on the price excluding tax and a fixed amount on top of
+ * it, the tolerance within which a price is left alone, the steps a price
+ * lands on, and the lowest and highest price. The store has one, and a product may change any part
  * of it. Without a target margin there is no rule, and nothing is priced.
  *
  * Money is in thousandths (`Amount`). Steps, minimum and maximum count on
- * the price as the store enters it, including tax or not; the margin counts
- * on the price excluding tax (`PriceTax`).
+ * the price as the store enters it, including tax or not; the margin and
+ * the fixed amount count on the price excluding tax (`PriceTax`):
+ *
+ *     price excluding tax = cost ÷ (1 − margin) + fixed amount
+ *
+ * Every item carries much the same fixed costs, so the fixed amount gives a
+ * cheap item a high margin and an expensive one a lower, without jumps.
  */
 final class PriceRule {
 
 	public const MARGIN = 'margin';
+
+	public const FIXED = 'fixed';
 
 	public const TOLERANCE = 'tolerance';
 
@@ -36,7 +43,7 @@ final class PriceRule {
 	/**
 	 * The rule's parts, in the order they are shown.
 	 */
-	public const PARTS = array( self::MARGIN, self::TOLERANCE, self::STEP, self::ENDING, self::MIN, self::MAX );
+	public const PARTS = array( self::MARGIN, self::FIXED, self::TOLERANCE, self::STEP, self::ENDING, self::MIN, self::MAX );
 
 	/**
 	 * A margin is a share of the price, so it stays under all of it.
@@ -54,11 +61,12 @@ final class PriceRule {
 
 	/**
 	 * @param float|null $margin    Target margin in percent of the price excluding tax, above 0 and below 100; null for no rule.
-	 * @param float      $tolerance Percentage points either side of the target within which a price is kept.
+	 * @param float      $tolerance Percentage points either side of the rule's margin at a cost within which a price is kept.
 	 * @param int        $step      Distance between two prices the rule may set, in thousandths; above 0.
 	 * @param int        $ending    Where the steps start, in thousandths, below the step: 9 with a step of 10 gives 9, 19, 29.
 	 * @param int|null   $min       Lowest price the rule sets; null for none.
 	 * @param int|null   $max       Highest price the rule sets; null for none.
+	 * @param int        $fixed     Added to the price excluding tax the margin gives, in thousandths; 0 for none.
 	 */
 	public function __construct(
 		public readonly ?float $margin,
@@ -67,13 +75,14 @@ final class PriceRule {
 		public readonly int $ending,
 		public readonly ?int $min = null,
 		public readonly ?int $max = null,
+		public readonly int $fixed = 0,
 	) {
 	}
 
 	/**
 	 * The rule its parts as written give, each a decimal string or empty:
 	 * a margin outside 0 to 100 is no rule, a step of nothing is one unit,
-	 * an ending that is not below the step is none.
+	 * an ending that is not below the step is none, no fixed amount is 0.
 	 *
 	 * @param array<string, string> $parts The parts as written, by part; a missing one is empty.
 	 */
@@ -89,7 +98,8 @@ final class PriceRule {
 			$step,
 			$ending < $step ? $ending : 0,
 			Amount::parse( $parts[ self::MIN ] ?? '' ),
-			Amount::parse( $parts[ self::MAX ] ?? '' )
+			Amount::parse( $parts[ self::MAX ] ?? '' ),
+			Amount::parse( $parts[ self::FIXED ] ?? '' ) ?? 0
 		);
 	}
 
@@ -133,17 +143,54 @@ final class PriceRule {
 	}
 
 	/**
-	 * The price as entered that leaves exactly the target margin over a
-	 * cost, wherever the steps are; null without a rule.
+	 * What a price leaves over a cost, excluding tax: its contribution.
+	 *
+	 * @param int      $price A price as entered.
+	 * @param int      $cost  What the printshop charges.
+	 * @param PriceTax $tax   The tax in the price as entered.
+	 */
+	public static function contribution_of( int $price, int $cost, PriceTax $tax ): int {
+		return $tax->excluding( $price ) - $cost;
+	}
+
+	/**
+	 * The price as entered the rule aims at for a cost, wherever the steps
+	 * are: the target margin over the cost, and the fixed amount on top.
+	 * Null without a rule.
 	 *
 	 * @param int      $cost What the printshop charges.
 	 * @param PriceTax $tax  The tax in the price as entered.
 	 */
 	public function target( int $cost, PriceTax $tax ): ?int {
+		$excluding = $this->target_excluding( $cost );
+		return null === $excluding ? null : $tax->entered( $excluding );
+	}
+
+	/**
+	 * The margin the rule's own price leaves at a cost, in percent of the
+	 * price excluding tax: the target margin without a fixed amount, more
+	 * the cheaper the cost with one. Null without a rule.
+	 *
+	 * @param int $cost What the printshop charges.
+	 */
+	public function margin_at( int $cost ): ?float {
+		$excluding = $this->target_excluding( $cost );
+		if ( null === $excluding || 0 === $this->fixed || $excluding <= 0 ) {
+			return $this->margin;
+		}
+		return ( $excluding - $cost ) / $excluding * self::WHOLE_PRICE_PERCENT;
+	}
+
+	/**
+	 * The price excluding tax the rule aims at for a cost; null without a rule.
+	 *
+	 * @param int $cost What the printshop charges.
+	 */
+	private function target_excluding( int $cost ): ?int {
 		if ( null === $this->margin ) {
 			return null;
 		}
-		return $tax->entered( (int) round( $cost / ( 1 - $this->margin / self::WHOLE_PRICE_PERCENT ) ) );
+		return (int) round( $cost / ( 1 - $this->margin / self::WHOLE_PRICE_PERCENT ) ) + $this->fixed;
 	}
 
 	/**
@@ -162,8 +209,8 @@ final class PriceRule {
 
 	/**
 	 * Whether a price is one the rule leaves alone at a cost: its margin is
-	 * within the tolerance of the target, and it is within the minimum and
-	 * the maximum.
+	 * within the tolerance of the margin the rule's own price leaves at that
+	 * cost (`margin_at()`), and it is within the minimum and the maximum.
 	 *
 	 * @param int      $price A price as entered.
 	 * @param int      $cost  What the printshop charges.
@@ -171,7 +218,8 @@ final class PriceRule {
 	 */
 	public function holds( int $price, int $cost, PriceTax $tax ): bool {
 		$margin = self::margin_of( $price, $cost, $tax );
-		if ( null === $this->margin || null === $margin || abs( $margin - $this->margin ) > $this->tolerance ) {
+		$target = $this->margin_at( $cost );
+		if ( null === $target || null === $margin || abs( $margin - $target ) > $this->tolerance ) {
 			return false;
 		}
 		return ( null === $this->min || $price >= $this->min ) && ( null === $this->max || $price <= $this->max );

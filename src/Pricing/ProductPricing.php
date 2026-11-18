@@ -241,7 +241,8 @@ final class ProductPricing {
 					$store->rate_date,
 					$store->buffer,
 					self::automatic_of( $item, $automatic ),
-					PriceChanges::setting( $item )
+					PriceChanges::setting( $item ),
+					null === $cost || null === $price ? null : PriceRule::contribution_of( $price, $cost, $tax )
 				);
 			},
 			self::items( $product )
@@ -394,7 +395,8 @@ final class ProductPricing {
 					$store->rate_date,
 					$store->buffer,
 					self::automatic_of( $item, $automatic ),
-					PriceChanges::setting( $item )
+					PriceChanges::setting( $item ),
+					null === $cost || null === $after ? null : PriceRule::contribution_of( $after, $cost, $tax )
 				);
 			},
 			$items
