@@ -11,6 +11,8 @@ namespace Pixonaut\WooCommerce\Catalogue;
 
 use Pixonaut\WooCommerce\Plugin;
 use Pixonaut\WooCommerce\Schema;
+use WC_Product;
+use WC_Product_Variable;
 use WP_Term;
 
 /**
@@ -41,14 +43,37 @@ use WP_Term;
  * Nothing is kept from a request that switched to another site of a
  * network, whose products share ids, nor from one in which a database
  * query failed, which may have read a product's variations as none.
+ *
+ * A listing does not wait for a product's reads: one whose kept read no
+ * longer matches is listed as it was kept, and one changed is noted, as is
+ * one kept for a day, for a job to read again (`FilterDataRefresh`). Only
+ * a product with nothing kept at all is read while the page waits.
  */
 final class FilterIndex {
 
 	/**
-	 * How long a kept read is kept at most: a day, in seconds. A change
-	 * the stamp sees drops it sooner.
+	 * A day, in seconds; WordPress's own constant is not defined where the
+	 * class may load before it.
 	 */
-	private const LIFETIME = 86400;
+	private const DAY = 86400;
+
+	/**
+	 * How long a kept read is kept at most: a week, so one a listing reads
+	 * is read again (`REFRESH_SECONDS`) before it lapses.
+	 */
+	private const LIFETIME = 7 * self::DAY;
+
+	/**
+	 * How old a kept read may grow before a listing taking it has it read
+	 * again in the background.
+	 */
+	private const REFRESH_SECONDS = self::DAY;
+
+	/**
+	 * The stamp of a read whose product changed in a way its stamp does
+	 * not see: it matches no product's.
+	 */
+	private const OUT_OF_DATE = '';
 
 	/**
 	 * How many seconds after its product's last change a read is kept: a
@@ -75,9 +100,10 @@ final class FilterIndex {
 	/**
 	 * The products whose kept reads were looked up this request, by
 	 * product id: the stamp read before anything else of them, whether
-	 * it has settled, and what was kept.
+	 * it has settled, what was kept, and whether that was kept under
+	 * another stamp, to be read again rather than kept anew.
 	 *
-	 * @var array<int, array{id: int, stamp: string, settled: bool, kept: array<string, mixed>}>
+	 * @var array<int, array{id: int, stamp: string, settled: bool, kept: array<string, mixed>, stale: bool}>
 	 */
 	private static array $looked_up = array();
 
@@ -120,8 +146,9 @@ final class FilterIndex {
 	 * what to keep of the others once the request is done.
 	 *
 	 * @param int[] $product_ids Products a page may read.
+	 * @param bool  $stale       Whether a read kept under another stamp is taken as it was, for a listing that does not wait for it.
 	 */
-	public static function look_up( array $product_ids ): void {
+	public static function look_up( array $product_ids, bool $stale = false ): void {
 		$ids = array();
 		foreach ( $product_ids as $id ) {
 			if ( $id > 0 && ! isset( self::$looked_up[ $id ] ) ) {
@@ -142,8 +169,15 @@ final class FilterIndex {
 		}
 		// Two options a product, read in one query rather than two each.
 		wp_prime_option_caches( $names );
+		$again = array();
 		foreach ( $stamps as $id => $stamp ) {
-			$parts = self::kept( $id, $stamp['stamp'] );
+			$kept    = self::entry( $id );
+			$current = null !== $kept && $kept['stamp'] === $stamp['stamp'];
+			$taken   = $current || ( $stale && null !== $kept );
+			$parts   = $taken && null !== $kept ? $kept['parts'] : array();
+			if ( null !== $kept && $taken && ( ! $current || time() - $kept['kept_at'] >= self::REFRESH_SECONDS ) ) {
+				$again[] = $id;
+			}
 			SplitCards::take( $id, $parts );
 			FilterOffers::take( $id, $parts['filter_offers'] ?? null );
 			self::$looked_up[ $id ] = array(
@@ -151,8 +185,63 @@ final class FilterIndex {
 				'stamp'   => $stamp['stamp'],
 				'settled' => $stamp['settled'],
 				'kept'    => $parts,
+				'stale'   => ! $current && $taken,
 			);
 		}
+		if ( array() !== $again ) {
+			FilterDataRefresh::products( $again );
+		}
+	}
+
+	/**
+	 * Reads some products' variations again and keeps what was read, as
+	 * the background job does: nothing kept of them is taken. A product
+	 * changed moments ago is left for later.
+	 *
+	 * @param int[] $product_ids Products.
+	 * @phpstan-param list<int> $product_ids
+	 * @return list<int> The products read, or gone.
+	 */
+	public static function rebuild( array $product_ids ): array {
+		if ( array() === $product_ids || self::$switched ) {
+			return array();
+		}
+		SplitCards::release( $product_ids );
+		foreach ( $product_ids as $id ) {
+			unset( self::$looked_up[ $id ] );
+		}
+		self::$errors = self::errors();
+		$stamps       = self::stamps( $product_ids );
+		_prime_post_caches( array_keys( $stamps ), true, true );
+		$done = array();
+		foreach ( $product_ids as $id ) {
+			$product = isset( $stamps[ $id ] ) ? wc_get_product( $id ) : null;
+			if ( ! $product instanceof WC_Product ) {
+				delete_transient( self::transient( $id ) );
+				$done[] = $id;
+				continue;
+			}
+			if ( ! $stamps[ $id ]['settled'] ) {
+				continue;
+			}
+			self::$looked_up[ $id ] = array(
+				'id'      => $id,
+				'stamp'   => $stamps[ $id ]['stamp'],
+				'settled' => true,
+				'kept'    => array(),
+				'stale'   => false,
+			);
+			// What a listing, its counts and its cards' links read of it.
+			FilterOffers::of( $product );
+			if ( $product instanceof WC_Product_Variable ) {
+				SplitCards::sold_by_card( $product );
+				SplitCards::variation_values( $id );
+			}
+			$done[] = $id;
+		}
+		self::keep();
+		SplitCards::release( $product_ids );
+		return $done;
 	}
 
 	/**
@@ -177,7 +266,9 @@ final class FilterIndex {
 		wp_prime_option_caches( $names );
 		$values = array();
 		foreach ( $stamps as $id => $stamp ) {
-			$kept = self::$looked_up[ $id ]['kept']['values'] ?? self::kept( $id, $stamp['stamp'] )['values'] ?? null;
+			// Values a listing took as they were kept under another stamp are not the store's now.
+			$looked = self::$looked_up[ $id ] ?? null;
+			$kept   = ( null === $looked || $looked['stale'] ? null : $looked['kept']['values'] ?? null ) ?? self::kept( $id, $stamp['stamp'] )['values'] ?? null;
 			if ( is_array( $kept ) ) {
 				/** @var array<int, array<string, string>> $kept */
 				$values[ $id ] = $kept;
@@ -216,12 +307,28 @@ final class FilterIndex {
 	 * @return array<string, mixed>
 	 */
 	private static function kept( int $product_id, string $stamp ): array {
+		$kept = self::entry( $product_id );
+		return null !== $kept && $kept['stamp'] === $stamp ? $kept['parts'] : array();
+	}
+
+	/**
+	 * What is kept of a product, under whichever stamp; null for nothing.
+	 *
+	 * @param int $product_id A product.
+	 * @return array{stamp: string, parts: array<string, mixed>, kept_at: int}|null
+	 */
+	private static function entry( int $product_id ): ?array {
 		$kept = get_transient( self::transient( $product_id ) );
-		if ( ! is_array( $kept ) || ( $kept['stamp'] ?? null ) !== $stamp || ! is_array( $kept['parts'] ?? null ) ) {
-			return array();
+		if ( ! is_array( $kept ) || ! is_string( $kept['stamp'] ?? null ) || ! is_array( $kept['parts'] ?? null ) ) {
+			return null;
 		}
-		/** @var array<string, mixed> */
-		return $kept['parts'];
+		/** @var array<string, mixed> $parts */
+		$parts = $kept['parts'];
+		return array(
+			'stamp'   => $kept['stamp'],
+			'parts'   => $parts,
+			'kept_at' => is_int( $kept['kept_at'] ?? null ) ? $kept['kept_at'] : 0,
+		);
 	}
 
 	/**
@@ -233,7 +340,8 @@ final class FilterIndex {
 		self::$looked_up = array();
 		self::$errors    = null;
 		foreach ( $looked_up_all as $looked_up ) {
-			if ( ! $looked_up['settled'] ) {
+			// One taken as kept under another stamp is the job's to read again.
+			if ( ! $looked_up['settled'] || $looked_up['stale'] ) {
 				continue;
 			}
 			$id    = $looked_up['id'];
@@ -261,8 +369,9 @@ final class FilterIndex {
 				set_transient(
 					self::transient( $id ),
 					array(
-						'stamp' => $looked_up['stamp'],
-						'parts' => $parts,
+						'stamp'   => $looked_up['stamp'],
+						'parts'   => $parts,
+						'kept_at' => time(),
 					),
 					self::LIFETIME
 				);
@@ -271,15 +380,20 @@ final class FilterIndex {
 	}
 
 	/**
-	 * Forgets a product's kept reads once it, a variation of it or its
-	 * configuration is written: what this request read of it before is
-	 * not kept either.
+	 * Marks a product's kept reads out of date once it, a variation of it
+	 * or its configuration is written, and notes it for the job to read
+	 * again: a listing meanwhile takes them as they were. What this
+	 * request read of it before is not kept.
 	 *
 	 * @param int $product_id A product.
 	 */
 	public static function forget( int $product_id ): void {
 		unset( self::$looked_up[ $product_id ] );
-		delete_transient( self::transient( $product_id ) );
+		$kept = self::entry( $product_id );
+		if ( null !== $kept && self::OUT_OF_DATE !== $kept['stamp'] ) {
+			set_transient( self::transient( $product_id ), array( 'stamp' => self::OUT_OF_DATE ) + $kept, self::LIFETIME );
+		}
+		FilterDataRefresh::products( array( $product_id ) );
 	}
 
 	/**

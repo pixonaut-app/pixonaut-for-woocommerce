@@ -478,6 +478,18 @@ final class Schema {
 	const FILTER_INDEX_GENERATION_OPTION = 'pixonaut_wc_filter_index_generation';
 
 	/**
+	 * Before a hash of a listing's query: the transient keeping the
+	 * Product Filters block's counts for it.
+	 */
+	const FILTER_COUNTS_PREFIX = 'pixonaut_wc_filter_counts_';
+
+	/**
+	 * Option holding the products and counts whose filter data a job is
+	 * to read again (`FilterDataRefresh`).
+	 */
+	const FILTER_DATA_DUE_OPTION = 'pixonaut_wc_filter_data_due';
+
+	/**
 	 * Before what a product page keeps between requests: the transients
 	 * holding its designer, its variations' data and its delivery rows,
 	 * and each product's version.

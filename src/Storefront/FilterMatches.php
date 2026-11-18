@@ -9,10 +9,12 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Storefront;
 
+use Pixonaut\WooCommerce\Catalogue\FilterDataRefresh;
 use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\FilterOffers;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
+use Pixonaut\WooCommerce\Schema;
 use WC_Cache_Helper;
 use WC_Product;
 use WC_Query;
@@ -76,14 +78,21 @@ final class FilterMatches {
 	/**
 	 * Prefix of the transient each query's counts are kept in.
 	 */
-	private const COUNTS_TRANSIENT = 'pixonaut_wc_filter_counts_';
+	private const COUNTS_TRANSIENT = Schema::FILTER_COUNTS_PREFIX;
 
 	/**
-	 * How long counts are kept: they are read again sooner once a product
-	 * changes, and a template going live or paused shows within this time:
-	 * an hour, in seconds.
+	 * How old counts may grow before they are worked out again in the
+	 * background, as they are once a product changes: a template going
+	 * live or paused shows within this time, an hour, in seconds.
 	 */
-	private const COUNTS_LIFETIME = 3600;
+	private const COUNTS_FRESH_SECONDS = 3600;
+
+	/**
+	 * How long counts are kept at most: over a weekend, three days in
+	 * seconds, so a listing after a quiet spell is served them while they
+	 * are worked out again.
+	 */
+	private const COUNTS_LIFETIME = 259200;
 
 	/**
 	 * The price filter's query arguments.
@@ -235,8 +244,8 @@ final class FilterMatches {
 		// A product listed only while filtered by a chosen attribute may show one design as several cards: several values chosen, or a waived filter keeping a card of none beside one of a chosen value.
 		$several = self::listing_by_several( $ids, array_keys( $chosen ) );
 		_prime_post_caches( $several, true, true );
-		// What was kept of the products' variations since they last changed; the others, their meta and terms in three queries.
-		FilterIndex::look_up( $ids );
+		// What was kept of the products' variations, as it was until the job reads a changed one again; the others, their meta and terms in three queries.
+		FilterIndex::look_up( $ids, true );
 		$unread = array_values( array_filter( $ids, static fn ( int $id ): bool => null === FilterOffers::worked_out( $id ) || ! isset( SplitCards::worked_out( $id )['cards'] ) ) );
 		_prime_post_caches( $unread, true, true );
 		foreach ( $ids as $id ) {
@@ -312,19 +321,96 @@ final class FilterMatches {
 		if ( null !== $results || 'attribute' !== $type || ! is_array( $query_vars ) || '' === $taxonomy ) {
 			return $results;
 		}
-		$version = class_exists( WC_Cache_Helper::class ) ? (string) WC_Cache_Helper::get_transient_version( 'product' ) : '';
-		$normal  = $query_vars;
+		$normal = $query_vars;
 		ksort( $normal );
 		// WooCommerce leaves out the counted attribute's own filter when its values combine with "or": the request still has it.
 		$own       = isset( self::chosen_in( $query_vars )[ $taxonomy ] ) ? array() : ( self::chosen()[ $taxonomy ] ?? array() );
-		$transient = self::COUNTS_TRANSIENT . md5( (string) wp_json_encode( array( $normal, $taxonomy, $own, $version ) ) );
-		$cached    = get_transient( $transient );
-		if ( is_array( $cached ) ) {
-			return $cached;
+		$transient = self::COUNTS_TRANSIENT . md5( (string) wp_json_encode( array( $normal, $taxonomy, $own ) ) );
+		$kept      = self::kept_counts( $transient );
+		if ( null !== $kept ) {
+			// Counts from before a product changed, or an hour old, are served while the job works them out again.
+			if ( self::products_version() !== $kept['version'] || time() - $kept['at'] >= self::COUNTS_FRESH_SECONDS ) {
+				FilterDataRefresh::counts( $transient );
+			}
+			return $kept['counts'];
 		}
-		$counts = self::count( $query_vars, $taxonomy, $own );
-		set_transient( $transient, $counts, self::COUNTS_LIFETIME );
+		return self::keep_counts( $transient, $query_vars, $taxonomy, $own, true );
+	}
+
+	/**
+	 * Works out kept counts again, as the background job does.
+	 *
+	 * @param string $transient The transient they are kept in.
+	 */
+	public static function recount( string $transient ): void {
+		$kept = self::kept_counts( $transient );
+		if ( null !== $kept ) {
+			self::keep_counts( $transient, $kept['query_vars'], $kept['taxonomy'], $kept['own'], false );
+			// What the count read of the products is kept, and let go of.
+			FilterIndex::keep();
+		}
+	}
+
+	/**
+	 * Works out counts and keeps them, with what they were worked out
+	 * from, to be worked out again later.
+	 *
+	 * @param string                  $transient  The transient they are kept in.
+	 * @param array<array-key, mixed> $query_vars The listing's query.
+	 * @param string                  $taxonomy   The counted attribute.
+	 * @param int[]                   $own        The counted attribute's chosen values the query leaves out.
+	 * @param bool                    $stale      Whether products' reads kept under another stamp are taken as they were (`FilterIndex::look_up()`).
+	 * @phpstan-param list<int> $own
+	 * @return array<int, int> Counts by term id.
+	 */
+	private static function keep_counts( string $transient, array $query_vars, string $taxonomy, array $own, bool $stale ): array {
+		// Read before the products: one saved while they are read moves it, and the counts are worked out again.
+		$version = self::products_version();
+		$counts  = self::count( $query_vars, $taxonomy, $own, $stale );
+		set_transient(
+			$transient,
+			array(
+				'counts'     => $counts,
+				'version'    => $version,
+				'at'         => time(),
+				'query_vars' => $query_vars,
+				'taxonomy'   => $taxonomy,
+				'own'        => $own,
+			),
+			self::COUNTS_LIFETIME
+		);
 		return $counts;
+	}
+
+	/**
+	 * Counts as kept; null for none.
+	 *
+	 * @param string $transient The transient they are kept in.
+	 * @return array{counts: array<int, int>, version: string, at: int, query_vars: array<array-key, mixed>, taxonomy: string, own: list<int>}|null
+	 */
+	private static function kept_counts( string $transient ): ?array {
+		$kept = get_transient( $transient );
+		if ( ! is_array( $kept ) || ! is_array( $kept['counts'] ?? null ) || ! is_array( $kept['query_vars'] ?? null ) || ! is_string( $kept['taxonomy'] ?? null ) || ! is_array( $kept['own'] ?? null ) ) {
+			return null;
+		}
+		/** @var array<int, int> $counts */
+		$counts = $kept['counts'];
+		return array(
+			'counts'     => $counts,
+			'version'    => is_string( $kept['version'] ?? null ) ? $kept['version'] : '',
+			'at'         => is_int( $kept['at'] ?? null ) ? $kept['at'] : 0,
+			'query_vars' => $kept['query_vars'],
+			'taxonomy'   => $kept['taxonomy'],
+			'own'        => array_values( array_map( 'intval', $kept['own'] ) ),
+		);
+	}
+
+	/**
+	 * WooCommerce's version of its products' cached data, which moves
+	 * whenever a product is saved.
+	 */
+	private static function products_version(): string {
+		return class_exists( WC_Cache_Helper::class ) ? (string) WC_Cache_Helper::get_transient_version( 'product' ) : '';
 	}
 
 	/**
@@ -334,10 +420,11 @@ final class FilterMatches {
 	 * @param array<array-key, mixed> $query_vars The listing's query.
 	 * @param string                  $taxonomy   The counted attribute.
 	 * @param int[]                   $own        The counted attribute's chosen values the query leaves out.
+	 * @param bool                    $stale      Whether products' reads kept under another stamp are taken as they were.
 	 * @phpstan-param list<int> $own
 	 * @return array<int, int> Counts by term id.
 	 */
-	private static function count( array $query_vars, string $taxonomy, array $own ): array {
+	private static function count( array $query_vars, string $taxonomy, array $own, bool $stale ): array {
 		$chosen = self::chosen_in( $query_vars );
 		if ( ! isset( $chosen[ $taxonomy ] ) && array() !== $own ) {
 			$chosen[ $taxonomy ] = $own;
@@ -348,8 +435,8 @@ final class FilterMatches {
 			is_scalar( $query_vars[ self::MAX_PRICE ] ?? null ) ? (string) $query_vars[ self::MAX_PRICE ] : null
 		);
 		$ids   = self::listed( $query_vars );
-		// What was kept of the products' variations since they last changed; the others are read below.
-		FilterIndex::look_up( $ids );
+		// What was kept of the products' variations; the others are read below.
+		FilterIndex::look_up( $ids, $stale );
 		_prime_post_caches( $ids, true, true );
 		$products = array_values( array_filter( array_map( 'wc_get_product', $ids ), static fn ( mixed $product ): bool => $product instanceof WC_Product ) );
 		$values   = array();

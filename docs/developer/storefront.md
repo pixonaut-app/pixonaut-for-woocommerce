@@ -1271,7 +1271,9 @@ tax and shown with it.
   own clauses for the block's other filters, such as stock and taxonomies. An
   attribute whose values combine with `and` keeps a product only while its
   offers hold every chosen value, as WooCommerce's listing does. Counts are
-  cached per query until a product changes, or for an hour. Another
+  kept per query for three days; once a product changes, or after an hour,
+  a listing is served them as kept while a job works them out again (see
+  *Rebuilt in the background* below). Another
   callback's answer stands, and price, stock, rating and taxonomy data stay
   WooCommerce's.
 - **One card per design**: while a filter chooses several values of an
@@ -1292,7 +1294,7 @@ tax and shown with it.
 - **Kept between requests**: what the listing and the cards' links read of
   each product's variations (its offers, its cards and which variations
   each sells, its variations' values, and whether WooCommerce offers each)
-  is kept by `Catalogue\FilterIndex`, one transient per product, for a day.
+  is kept by `Catalogue\FilterIndex`, one transient per product, for a week.
   A kept read is used only while its stamp matches: the product's and its
   variations' last change and count (WooCommerce dates every save, prices
   and stock included), its stored configuration, the plugin's version, the
@@ -1304,6 +1306,23 @@ tax and shown with it.
   only when read while nothing filters a product's variations, their
   values, price, stock or visibility, and are not used for a product a
   stored configuration marks not live, nor while such a filter is on.
+- **Rebuilt in the background**: a listing never waits for a product's
+  kept read nor for its counts to be worked out again. A kept read whose
+  stamp no longer matches, or that a write the stamp does not see marked
+  out of date (a variation's configuration, say), is taken as it was by
+  the listing, its counts and its cards' links, and the product is noted
+  in the option `pixonaut_wc_filter_data_due`, as is one kept for a day,
+  and every product a save writes the cards of. Counts kept from before
+  WooCommerce's product data last changed, or an hour old, are noted too.
+  The Action Scheduler job `pixonaut_wc_refresh_filter_data` runs a minute
+  after the first note, at priority 5, ahead of the picture jobs: it reads
+  each noted product again (one changed in the last two seconds waits for
+  its next run), then works out each noted count again, for up to 30
+  seconds a run, and runs again while some are left. At most 200 counts
+  wait at once. A product page opening on a filtered variation reads the
+  product as it is now. Only a product with nothing kept, such as one no
+  listing or save has read since it was created, is read while a page
+  waits.
 
 #### Short names in addresses
 
