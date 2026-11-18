@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.2...v1.22.3) (2026-11-18)
+
+
+### Bug Fixes
+
+* **storefront:** the reads' warm-up runs ahead of a picture backlog ([#309](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/309)) ([4a6a4b6](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/4a6a4b6a191a8afc6a9b74c37b5a883f1892073e))
+
 ## [1.22.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.1...v1.22.2) (2026-11-18)
 
 
