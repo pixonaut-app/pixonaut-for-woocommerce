@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.24.0...v1.25.0) (2026-11-18)
+
+
+### Features
+
+* **shipping:** set a shipping method's order by tool ([#339](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/339)) ([3f0a804](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/3f0a804b093d4edb7c4f82393e987d914bfd8f6c))
+
 ## [1.24.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.23.0...v1.24.0) (2026-11-18)
 
 
