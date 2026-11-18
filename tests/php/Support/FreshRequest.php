@@ -58,6 +58,7 @@ final class FreshRequest {
 		( new ReflectionProperty( FilterIndex::class, 'switched' ) )->setValue( null, false );
 		( new ReflectionProperty( FilterIndex::class, 'errors' ) )->setValue( null, null );
 		( new ReflectionProperty( FilterDataRefresh::class, 'noted' ) )->setValue( null, null );
+		( new ReflectionProperty( FilterDataRefresh::class, 'dependencies_changed' ) )->setValue( null, false );
 		RequestCache::forget();
 	}
 

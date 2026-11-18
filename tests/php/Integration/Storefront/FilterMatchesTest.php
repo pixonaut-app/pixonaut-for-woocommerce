@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Catalogue\SplitListing;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
+use Pixonaut\WooCommerce\Storefront\FilterMatches;
 use Pixonaut\WooCommerce\Storefront\OpeningChoice;
 use Pixonaut\WooCommerce\Storefront\QueryNames;
 use Pixonaut\WooCommerce\Tests\Support\FreshRequest;
@@ -648,6 +649,80 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		$this->assertCount( $kept, (array) $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( '_transient_' . Schema::FILTER_INDEX_PREFIX ) . '%' ) ), 'nothing more kept by reading every product' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- what is kept, as stored.
 	}
 
+	public function test_the_dependencies_are_served_as_kept_after_a_change_and_follow_it_once_the_job_has_run(): void {
+		$this->settle();
+		$under = array( 'pa_ramfarg' => array( 'pa_inramning' => array( 'ram', 'hangare' ) ) );
+		$this->assertSame( $under, AttributeDependencies::store() );
+		FreshRequest::forget_filter_reads();
+		update_option( Schema::FILTER_DATA_DUE_OPTION, array(), false );
+		foreach ( $this->poster->get_children() as $variation_id ) {
+			$variation = wc_get_product( $variation_id );
+			if ( $variation instanceof WC_Product_Variation && 'hangare' === ( $variation->get_attributes()['pa_inramning'] ?? null ) ) {
+				$variation->delete( true );
+			}
+		}
+		$this->assertArrayHasKey( 'store', $this->due()['dependencies'], 'noted with the change' );
+		// WooCommerce moves its product version once the request that changed a product ends.
+		\WC_Cache_Helper::get_transient_version( 'product', true );
+		FreshRequest::forget_filter_reads();
+		as_unschedule_all_actions( FilterDataRefresh::HOOK );
+
+		$this->assertSame( $under, apply_filters( AttributeDependencies::FILTER, array() ), 'as kept: no shopper waits for every product to be read' );
+		$hanger_in_oak = array(
+			'pa_ramfarg'   => array( $this->term( 'ek' ) ),
+			'pa_inramning' => array( $this->term( 'hangare' ) ),
+		);
+		$this->assertSame( array(), FilterMatches::exempt( $hanger_in_oak ), 'the filters read the same: the frame colour still applies to a hanger' );
+		$this->assertNotFalse( as_next_scheduled_action( FilterDataRefresh::HOOK ), 'the job is queued' );
+
+		$this->run_refresh();
+		$this->assertSame( array(), $this->due()['dependencies'] );
+		$this->assertSame( array( 'pa_ramfarg' => array( 'pa_inramning' => array( 'ram' ) ) ), apply_filters( AttributeDependencies::FILTER, array() ), 'the hanger is gone' );
+		$this->assertSame( array( 'pa_ramfarg' => array( $this->term( 'hangare' ) ) ), FilterMatches::exempt( $hanger_in_oak ), 'nor does the frame colour apply to one now' );
+	}
+
+	public function test_dependencies_found_out_of_date_are_noted_for_the_job(): void {
+		AttributeDependencies::store();
+		FreshRequest::forget_filter_reads();
+		update_option( Schema::FILTER_DATA_DUE_OPTION, array(), false );
+		// As after a change WooCommerce sees, a sale's stock among them, that the plugin does not.
+		\WC_Cache_Helper::get_transient_version( 'product', true );
+
+		$this->assertSame( array( 'pa_ramfarg' => array( 'pa_inramning' => array( 'ram', 'hangare' ) ) ), AttributeDependencies::store() );
+		$this->assertArrayHasKey( 'store', $this->due()['dependencies'] );
+		as_unschedule_all_actions( FilterDataRefresh::HOOK );
+	}
+
+	public function test_a_save_notes_the_dependencies_anew_after_the_request_found_them_out_of_date(): void {
+		AttributeDependencies::store();
+		FreshRequest::forget_filter_reads();
+		\WC_Cache_Helper::get_transient_version( 'product', true );
+		AttributeDependencies::store();
+		$found = $this->due()['dependencies']['store'] ?? null;
+		$this->assertNotNull( $found );
+
+		FilterIndex::forget( $this->poster->get_id() );
+
+		$this->assertNotSame( $found, $this->due()['dependencies']['store'] ?? null, 'a job that read the note before the save leaves it' );
+		as_unschedule_all_actions( FilterDataRefresh::HOOK );
+	}
+
+	public function test_counts_worked_out_from_out_of_date_dependencies_wait_for_the_job(): void {
+		$this->settle();
+		AttributeDependencies::store();
+		FreshRequest::forget_filter_reads();
+		\WC_Cache_Helper::get_transient_version( 'product', true );
+		update_option( Schema::FILTER_DATA_DUE_OPTION, array(), false );
+
+		$this->counts( 'pa_ramfarg', array( 'filter_inramning' => 'hangare' ) );
+
+		$this->assertNotSame( array(), $this->due()['counts'], 'kept out of date and noted' );
+		$this->run_refresh();
+		$this->assertSame( array(), $this->due()['dependencies'] );
+		$this->assertSame( array(), $this->due()['counts'] );
+		$this->assertFalse( AttributeDependencies::stale() );
+	}
+
 	public function test_a_listing_takes_what_was_kept_of_a_product_until_woocommerce_saves_a_change(): void {
 		$filters = array(
 			'filter_storlek' => '30x40',
@@ -780,6 +855,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 
 		$this->assertArrayHasKey( $this->poster->get_id(), $this->due()['products'], 'read again on the next run' );
 		$this->assertArrayHasKey( $counts, $this->due()['counts'] );
+		$this->assertArrayHasKey( 'store', $this->due()['dependencies'] );
 		$this->assertSame( array( 'stamp' => '' ) + (array) $kept, get_transient( $transient ), 'kept as it was, out of date' );
 	}
 
@@ -1037,14 +1113,15 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	/**
 	 * The products and counts noted for the job.
 	 *
-	 * @return array{products: array<int|string, true>, counts: array<int|string, true>}
+	 * @return array{products: array<int|string, true>, dependencies: array<int|string, true>, counts: array<int|string, true>}
 	 */
 	private function due(): array {
 		wp_cache_delete( Schema::FILTER_DATA_DUE_OPTION, 'options' );
 		$due = get_option( Schema::FILTER_DATA_DUE_OPTION, array() );
 		return array(
-			'products' => is_array( $due ) && is_array( $due['products'] ?? null ) ? $due['products'] : array(),
-			'counts'   => is_array( $due ) && is_array( $due['counts'] ?? null ) ? $due['counts'] : array(),
+			'products'     => is_array( $due ) && is_array( $due['products'] ?? null ) ? $due['products'] : array(),
+			'dependencies' => is_array( $due ) && is_array( $due['dependencies'] ?? null ) ? $due['dependencies'] : array(),
+			'counts'       => is_array( $due ) && is_array( $due['counts'] ?? null ) ? $due['counts'] : array(),
 		);
 	}
 
