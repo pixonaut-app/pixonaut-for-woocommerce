@@ -184,9 +184,7 @@ final class PricingPanel {
 				case self::APPLY:
 					// Every price is set from what the printshop charges now. Read first: a read that fails stores no rule and no choice.
 					$moved = null === $ids ? $this->pricing->read_costs( $product ) : null;
-					if ( is_array( $request['rule'] ) ) {
-						$this->pricing->save_own_parts( self::reread( $product ), $request['rule'] );
-					}
+					$ruled = is_array( $request['rule'] ) && $this->pricing->save_own_parts( self::reread( $product ), $request['rule'] );
 					if ( is_string( $request['changes'] ) ) {
 						PriceChanges::save( self::reread( $product ), $request['changes'] );
 					}
@@ -194,6 +192,11 @@ final class PricingPanel {
 						$changed = $this->pricing->settle( self::reread( $product ), $moved );
 					}
 					$changed += $this->pricing->apply( self::reread( $product ), $ids );
+					if ( $ruled && null !== $ids ) {
+						// The prices the rule now has others for, and that were not chosen, are flagged with them.
+						$others = array_diff( array_map( static fn ( WC_Product $item ): int => $item->get_id(), ProductPricing::items( $product ) ), $ids );
+						$this->pricing->reprice( self::reread( $product ), array_values( $others ), true );
+					}
 					break;
 				default:
 					$changed = $this->pricing->apply( $product, $ids ?? array(), true );

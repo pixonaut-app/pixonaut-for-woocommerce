@@ -216,6 +216,90 @@ final class RuleLevelsTest extends PricingTestCase {
 		$this->assertSame( '1249', $this->price( $ids['frame']['large'] ) );
 	}
 
+	public function test_a_change_while_the_first_page_runs_queues_another_pass(): void {
+		RuleChange::queue( '', '' );
+		$waiting = as_get_scheduled_actions(
+			array(
+				'hook'   => RuleChange::HOOK,
+				'status' => \ActionScheduler_Store::STATUS_PENDING,
+			),
+			'ids'
+		);
+		$this->assertCount( 1, $waiting );
+		RuleChange::queue( '', '' );
+		$this->assertCount(
+			1,
+			as_get_scheduled_actions(
+				array(
+					'hook'   => RuleChange::HOOK,
+					'status' => \ActionScheduler_Store::STATUS_PENDING,
+				),
+				'ids'
+			),
+			'one waiting is enough'
+		);
+
+		\ActionScheduler::store()->log_execution( (int) current( $waiting ) );
+		RuleChange::queue( '', '' );
+
+		$this->assertCount(
+			1,
+			as_get_scheduled_actions(
+				array(
+					'hook'   => RuleChange::HOOK,
+					'status' => \ActionScheduler_Store::STATUS_PENDING,
+				),
+				'ids'
+			),
+			'a running pass may have passed what changed'
+		);
+	}
+
+	public function test_a_rule_change_waiting_behind_a_blocker_is_suggested_again_once_it_clears(): void {
+		$this->store_rule();
+		$ids     = $this->poster();
+		$product = $this->parent_of( $ids['none']['large'] );
+		$this->pricing->refresh( $product );
+		$this->pricing->apply( $this->product( $product->get_id() ) );
+		AttributeRules::save( $this->term( self::SIZE, 'large' ), array( PriceRule::FIXED => '50' ) );
+		$this->pricing->reprice( $this->product( $product->get_id() ) );
+		$this->assertSame( PriceState::FLAG_RULE, $this->row( $ids['none']['large'] )->flag );
+
+		// Paired with another variant for a while: no cost is known for it.
+		( new ProductVariant( self::BLANK_ID, 'v_other', 'v_other', 'other' ) )->save_to( $this->product( $ids['none']['large'] ) );
+		$this->pricing->settle( $this->product( $product->get_id() ) );
+		$this->assertSame( PriceState::FLAG_UNREAD, $this->row( $ids['none']['large'] )->flag );
+
+		( new ProductVariant( self::BLANK_ID, 'v_poster_large', 'v_poster_large', 'none large' ) )->save_to( $this->product( $ids['none']['large'] ) );
+		$this->pricing->settle( $this->product( $product->get_id() ) );
+		$this->assertSame( PriceState::FLAG_RULE, $this->row( $ids['none']['large'] )->flag, 'within the tolerance, yet the changed rule still has another price' );
+		$this->assertSame( self::amount( '349' ), $this->row( $ids['none']['large'] )->suggested );
+	}
+
+	public function test_pricing_some_variations_with_a_new_rule_flags_the_others_it_reaches(): void {
+		$this->store_rule();
+		$ids        = $this->poster();
+		$product_id = $this->parent_of( $ids['none']['small'] )->get_id();
+		$this->pricing->refresh( $this->product( $product_id ) );
+		$this->pricing->apply( $this->product( $product_id ) );
+		$this->plugin->settings()->set( Settings::PRICE_AUTOMATIC, true );
+		$this->script_costs( self::COSTS );
+
+		$answer = ( new PriceProduct( fn (): ProductPricing => $this->pricing ) )->execute(
+			array(
+				'product_id'    => $product_id,
+				'variation_ids' => array( $ids['none']['small'] ),
+				'rule'          => array( PriceRule::FIXED => '20' ),
+			)
+		);
+
+		$this->assertIsArray( $answer );
+		$this->assertSame( '219', $this->price( $ids['none']['small'] ), 'chosen: set' );
+		$this->assertSame( '299', $this->price( $ids['none']['large'] ), 'not chosen: never set, whatever changes automatically' );
+		$this->assertSame( PriceState::FLAG_RULE, $this->row( $ids['none']['large'] )->flag );
+		$this->assertSame( self::amount( '319' ), $this->row( $ids['none']['large'] )->suggested );
+	}
+
 	public function test_a_variations_own_price_rule_is_saved_from_its_section_and_settles_its_price(): void {
 		$this->store_rule();
 		$ids     = $this->poster();

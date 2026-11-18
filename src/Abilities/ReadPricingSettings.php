@@ -107,17 +107,29 @@ final class ReadPricingSettings implements Ability {
 		return $values + array(
 			'currency'           => get_woocommerce_currency(),
 			'prices_include_tax' => wc_tax_enabled() && wc_prices_include_tax(),
-			'attribute_rules'    => array_map( self::attribute_rule( ... ), AttributeRules::all() ),
+			'attribute_rules'    => self::attribute_rules(),
 		);
+	}
+
+	/**
+	 * Every attribute value with parts of the rule, as the abilities answer them.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	public static function attribute_rules(): array {
+		$clashes = AttributeRules::all_clashes();
+		return array_map( static fn ( WP_Term $term ): array => self::attribute_rule( $term, $clashes[ $term->term_id ] ?? array() ), AttributeRules::all() );
 	}
 
 	/**
 	 * One attribute value's parts, as the abilities answer them.
 	 *
-	 * @param WP_Term $term The value.
+	 * @param WP_Term $term    The value.
+	 * @param array[] $clashes The parts another attribute's value sets too, as `AttributeRules::clashes()` gives them.
+	 * @phpstan-param list<array{part: string, term: WP_Term, wins: bool}> $clashes
 	 * @return array<string, mixed>
 	 */
-	public static function attribute_rule( WP_Term $term ): array {
+	public static function attribute_rule( WP_Term $term, array $clashes ): array {
 		return array(
 			'attribute_id' => wc_attribute_taxonomy_id_by_name( $term->taxonomy ),
 			'attribute'    => wc_attribute_label( $term->taxonomy ),
@@ -134,7 +146,7 @@ final class ReadPricingSettings implements Ability {
 					'name'      => $clash['term']->name,
 					'wins'      => $clash['wins'],
 				),
-				AttributeRules::clashes( $term )
+				$clashes
 			),
 		);
 	}

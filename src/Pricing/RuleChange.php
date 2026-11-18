@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Pricing;
 
+use Pixonaut\WooCommerce\Catalogue\WaitingJob;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
 use WC_Product;
@@ -110,14 +111,19 @@ final class RuleChange {
 	}
 
 	/**
-	 * Starts settling at the first page, unless that is queued already.
+	 * Starts settling at the first page, unless that waits to run already.
+	 * A first page that runs now may have passed products the change
+	 * reaches, so another is queued beside it.
 	 *
 	 * @param string $taxonomy The attribute value's taxonomy; empty for the store's rule.
 	 * @param string $slug     The attribute value's slug; empty for the store's rule.
 	 */
 	public static function queue( string $taxonomy, string $slug ): void {
+		if ( ! function_exists( 'as_enqueue_async_action' ) ) {
+			return;
+		}
 		$args = array( 0, $taxonomy, $slug );
-		if ( function_exists( 'as_enqueue_async_action' ) && ! as_has_scheduled_action( self::HOOK, $args, self::GROUP ) ) {
+		if ( ! WaitingJob::exists( self::HOOK, $args, self::GROUP ) ) {
 			as_enqueue_async_action( self::HOOK, $args, self::GROUP );
 		}
 	}

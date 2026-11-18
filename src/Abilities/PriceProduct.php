@@ -179,16 +179,21 @@ final class PriceProduct implements Ability {
 			} else {
 				// Every price is set from what the printshop charges now. Read first: a read that fails stores no rule.
 				$pricing->read_costs( $product );
-				if ( isset( $input['rule'] ) ) {
-					$pricing->save_own_parts( self::reread( $product ), $own );
-				}
+				$product_ruled = isset( $input['rule'] ) && $pricing->save_own_parts( self::reread( $product ), $own );
+				$ruled         = array();
 				foreach ( $variations as $id => $parts ) {
 					$variation = wc_get_product( $id );
-					if ( $variation instanceof WC_Product ) {
-						$pricing->save_own_parts( $variation, $parts );
+					if ( $variation instanceof WC_Product && $pricing->save_own_parts( $variation, $parts ) ) {
+						$ruled[] = $id;
 					}
 				}
 				$pricing->apply( self::reread( $product ), $ids, $release );
+				$all      = array_map( static fn ( WC_Product $item ): int => $item->get_id(), ProductPricing::items( $product ) );
+				$unchosen = array_values( array_diff( $product_ruled ? $all : $ruled, $ids ?? $all ) );
+				if ( array() !== $unchosen ) {
+					// A following price whose rule changed and that was not chosen is flagged with the rule's price, never set.
+					$pricing->reprice( self::reread( $product ), $unchosen, true );
+				}
 				// The prices not chosen are only flagged: none of them is set, whatever the store changes by itself.
 				$pricing->settle( self::reread( $product ) );
 				$rows = $pricing->rows( self::reread( $product ) );

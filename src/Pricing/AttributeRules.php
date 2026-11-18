@@ -189,49 +189,85 @@ final class AttributeRules {
 	 * @return list<Clash>
 	 */
 	public static function clashes( WP_Term $term ): array {
-		$own = array_filter( self::parts( $term->term_id ), static fn ( string $part ): bool => '' !== $part );
-		if ( array() === $own ) {
-			return array();
+		return self::all_clashes()[ $term->term_id ] ?? array();
+	}
+
+	/**
+	 * Every value's clashes, by term id; a value without any is left out.
+	 * One query finds which values share a variation, whatever the number
+	 * of values with a rule.
+	 *
+	 * @return array<int, list<Clash>>
+	 */
+	public static function all_clashes(): array {
+		$terms = self::all();
+		$parts = array();
+		foreach ( $terms as $term ) {
+			$parts[ $term->term_id ] = array_filter( self::parts( $term->term_id ), static fn ( string $part ): bool => '' !== $part );
 		}
 		$order   = array_flip( self::taxonomies() );
+		$shared  = self::shared_variations( $terms );
 		$clashes = array();
-		foreach ( self::all() as $other ) {
-			if ( $other->taxonomy === $term->taxonomy ) {
-				continue;
-			}
-			$shared = array_intersect_key( $own, array_filter( self::parts( $other->term_id ), static fn ( string $part ): bool => '' !== $part ) );
-			if ( array() === $shared || ! self::together( $term, $other ) ) {
-				continue;
-			}
-			foreach ( array_keys( $shared ) as $part ) {
-				$clashes[] = array(
-					'part' => (string) $part,
-					'term' => $other,
-					'wins' => ( $order[ $term->taxonomy ] ?? 0 ) < ( $order[ $other->taxonomy ] ?? 0 ),
-				);
+		foreach ( $terms as $term ) {
+			foreach ( $terms as $other ) {
+				if ( $other->taxonomy === $term->taxonomy || ! isset( $shared[ self::pair_key( $term, $other ) ] ) ) {
+					continue;
+				}
+				foreach ( array_keys( array_intersect_key( $parts[ $term->term_id ], $parts[ $other->term_id ] ) ) as $part ) {
+					$clashes[ $term->term_id ][] = array(
+						'part' => (string) $part,
+						'term' => $other,
+						'wins' => ( $order[ $term->taxonomy ] ?? 0 ) < ( $order[ $other->taxonomy ] ?? 0 ),
+					);
+				}
 			}
 		}
 		return $clashes;
 	}
 
 	/**
-	 * Whether some variation has both values.
+	 * The pairs of values, of two attributes, that some variation has both
+	 * of, as `pair_key()` names them.
+	 *
+	 * @param WP_Term[] $terms Values with a rule.
+	 * @phpstan-param list<WP_Term> $terms
+	 * @return array<string, true>
+	 */
+	private static function shared_variations( array $terms ): array {
+		global $wpdb;
+		$keys  = array_values( array_unique( array_map( static fn ( WP_Term $term ): string => 'attribute_' . $term->taxonomy, $terms ) ) );
+		$slugs = array_values( array_unique( array_map( static fn ( WP_Term $term ): string => $term->slug, $terms ) ) );
+		if ( count( $keys ) < 2 ) {
+			return array();
+		}
+		$key_list  = implode( ', ', array_fill( 0, count( $keys ), '%s' ) );
+		$slug_list = implode( ', ', array_fill( 0, count( $slugs ), '%s' ) );
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- pairs of a variation's attribute values, which no meta query can join; the lists are placeholders; read on the admin's term screen and by the abilities only.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT DISTINCT a.meta_key AS ak, a.meta_value AS av, b.meta_key AS bk, b.meta_value AS bv FROM {$wpdb->postmeta} a JOIN {$wpdb->postmeta} b ON b.post_id = a.post_id AND b.meta_key > a.meta_key JOIN {$wpdb->posts} p ON p.ID = a.post_id WHERE p.post_type = 'product_variation' AND a.meta_key IN ($key_list) AND b.meta_key IN ($key_list) AND a.meta_value IN ($slug_list) AND b.meta_value IN ($slug_list)",
+				array_merge( $keys, $keys, $slugs, $slugs )
+			),
+			ARRAY_A
+		);
+		// phpcs:enable
+		$shared = array();
+		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
+			$one                           = substr( (string) $row['ak'], strlen( 'attribute_' ) ) . ' ' . $row['av'];
+			$other                         = substr( (string) $row['bk'], strlen( 'attribute_' ) ) . ' ' . $row['bv'];
+			$shared[ $one . '|' . $other ] = true;
+			$shared[ $other . '|' . $one ] = true;
+		}
+		return $shared;
+	}
+
+	/**
+	 * Two values as `shared_variations()` names their pair.
 	 *
 	 * @param WP_Term $one   A value.
 	 * @param WP_Term $other A value of another attribute.
 	 */
-	private static function together( WP_Term $one, WP_Term $other ): bool {
-		global $wpdb;
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- a pair of a variation's attribute values, which no meta query can join; read on the admin's term screen and by the abilities only.
-		$found = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT a.post_id FROM {$wpdb->postmeta} a JOIN {$wpdb->postmeta} b ON b.post_id = a.post_id JOIN {$wpdb->posts} p ON p.ID = a.post_id WHERE p.post_type = 'product_variation' AND a.meta_key = %s AND a.meta_value = %s AND b.meta_key = %s AND b.meta_value = %s LIMIT 1",
-				'attribute_' . $one->taxonomy,
-				$one->slug,
-				'attribute_' . $other->taxonomy,
-				$other->slug
-			)
-		);
-		return null !== $found;
+	private static function pair_key( WP_Term $one, WP_Term $other ): string {
+		return $one->taxonomy . ' ' . $one->slug . '|' . $other->taxonomy . ' ' . $other->slug;
 	}
 }

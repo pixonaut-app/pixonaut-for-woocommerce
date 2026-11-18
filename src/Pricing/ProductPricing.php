@@ -492,10 +492,11 @@ final class ProductPricing {
 			$cost  = $store->total;
 			$tax   = PriceTax::of( $item );
 			$wants = null === $cost ? null : $rule->price_for( $cost, $tax );
-			// A changed rule's price stays suggested until it is applied, whatever the tolerance says.
-			$ruled = PriceState::FLAG_RULE === $state->flag && null !== $wants && $wants !== $price;
+			// A changed rule's price stays suggested until the price is the rule's, whatever the tolerance or a passing blocker says.
+			$pending = $state->ruled && $wants !== $price;
+			$ruled   = $pending && null !== $wants;
 			if ( ! $ruled && null !== $cost && null !== $price && $rule->holds( $price, $cost, $tax ) ) {
-				$state->with_flag()->save_to( $item );
+				$state->with_ruled( $pending )->with_flag()->save_to( $item );
 				continue;
 			}
 			if ( self::automatic_of( $item, $automatic ) && in_array( $item->get_id(), $changed, true ) ) {
@@ -504,7 +505,7 @@ final class ProductPricing {
 			}
 			$flag = self::blocker( $item, $store, $wants ) ?? ( $ruled ? PriceState::FLAG_RULE : PriceState::FLAG_MARGIN );
 			// At the minimum or maximum already: the rule has no other price for it.
-			( $wants === $price ? $state->with_flag() : $state->with_flag( $flag, $wants ) )->save_to( $item );
+			( $wants === $price ? $state->with_ruled( false )->with_flag() : $state->with_ruled( $pending )->with_flag( $flag, $wants ) )->save_to( $item );
 		}
 		$this->watch( $product );
 		return $set;
@@ -516,34 +517,45 @@ final class ProductPricing {
 	 * it changes automatically, else the rule's price is suggested. Prices
 	 * kept by hand or never applied are left alone.
 	 *
-	 * @param WC_Product $product A simple or variable product.
-	 * @param int[]|null $ids     The product or variations whose rule changed; null for all.
+	 * Each price is read again, with its rule, just before it is settled: a
+	 * background job working through many products must not write a price
+	 * from a rule a store manager changed meanwhile.
+	 *
+	 * @param WC_Product $product  A simple or variable product.
+	 * @param int[]|null $ids      The product or variations whose rule changed; null for all.
+	 * @param bool       $set_none Whether no price is set, only suggested, whatever changes automatically.
 	 * @phpstan-param list<int>|null $ids
 	 * @return int How many prices were changed.
 	 */
-	public function reprice( WC_Product $product, ?array $ids = null ): int {
-		$rules     = $this->rules( $product );
-		$automatic = $this->automatic_for( $product );
-		$set       = 0;
-		foreach ( self::items( $product ) as $item ) {
+	public function reprice( WC_Product $product, ?array $ids = null, bool $set_none = false ): int {
+		$set = 0;
+		foreach ( self::items( $product ) as $listed ) {
+			if ( null !== $ids && ! in_array( $listed->get_id(), $ids, true ) ) {
+				continue;
+			}
+			$item  = self::fresh( $listed->get_id() );
+			$owner = null === $item ? null : ( $item->is_type( 'variation' ) ? self::fresh( $item->get_parent_id() ) : $item );
+			if ( null === $item || null === $owner ) {
+				continue;
+			}
 			$state = PriceState::stored_on( $item );
 			$price = Amount::parse( $item->get_regular_price( 'edit' ) );
-			if ( ( null !== $ids && ! in_array( $item->get_id(), $ids, true ) ) || PriceState::FOLLOWS !== $state->standing( $price ) ) {
+			if ( PriceState::FOLLOWS !== $state->standing( $price ) ) {
 				continue;
 			}
-			$rule = $rules[ $item->get_id() ]->rule;
+			$rule = $this->item_rule( $item, self::own_parts( $owner ) )->rule;
 			if ( ! $rule->is_set() ) {
-				$state->with_flag()->save_to( $item );
+				$state->with_ruled( false )->with_flag()->save_to( $item );
 				continue;
 			}
-			if ( self::automatic_of( $item, $automatic ) ) {
+			if ( ! $set_none && self::automatic_of( $item, $this->automatic_for( $owner ) ) ) {
 				$set += $this->price( $item, $state, $rule, true ) ? 1 : 0;
 				continue;
 			}
 			$store = $this->converter->in_store( self::known_cost( $item, $state ) );
 			$wants = null === $store->total ? null : $rule->price_for( $store->total, PriceTax::of( $item ) );
 			$flag  = self::blocker( $item, $store, $wants ) ?? PriceState::FLAG_RULE;
-			( $wants === $price ? $state->with_flag() : $state->with_flag( $flag, $wants ) )->save_to( $item );
+			( $wants === $price ? $state->with_ruled( false )->with_flag() : $state->with_ruled( true )->with_flag( $flag, $wants ) )->save_to( $item );
 		}
 		$this->watch( $product );
 		return $set;
