@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.7](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.6...v1.22.7) (2026-11-18)
+
+
+### Bug Fixes
+
+* **storefront:** a refused add to cart brings the field to change into view ([#329](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/329)) ([624aa32](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/624aa32ff9788f26362ad11302dd20bf02c1098b))
+
 ## [1.22.6](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.5...v1.22.6) (2026-11-18)
 
 
