@@ -43,6 +43,9 @@ const SLOW_FAKE_MS = 1500;
  *  several reads one after the other. */
 const DRAWN_TIMEOUT_MS = 30_000;
 
+/** The fewest views the strip shows thumbnails for. */
+const MIN_STRIP_VIEWS = 2;
+
 /** Painted frames sampled after a switch settled, so a late move shows. */
 const SETTLED_FRAMES = 30;
 
@@ -231,6 +234,15 @@ async function openPoster(page: Page, poster: Poster): Promise<void> {
 	await expect(page.locator(TABLE)).toBeVisible();
 	await watchSwitch(page, 'front');
 	await watchShifts(page);
+	// The strip shows each view, drawn, before the shopper switches.
+	await expect
+		.poll(async () => {
+			const last = (await switchFrames(page)).at(-1);
+			return last === undefined || last.blankThumbnails.length > 0
+				? 0
+				: last.thumbnails.length;
+		})
+		.toBeGreaterThanOrEqual(MIN_STRIP_VIEWS);
 }
 
 /** Switches Inramning to `value` and waits until the variation is shown,
@@ -301,6 +313,7 @@ for (const viewport of VIEWPORTS) {
 				'the other blank’s reads',
 			).toBeGreaterThan(0);
 			let before = (await switchFrames(page)).at(-1)?.price ?? '';
+			const views = (await switchFrames(page)).at(-1)?.thumbnails ?? [];
 			expect(before, 'the bare poster’s price shows').toContain(OPENING_PRICE);
 			await expect(page.locator(DESCRIPTION)).toHaveCount(0);
 			await expect(page.locator(DELIVERY)).toHaveText(TEE_LINE);
@@ -375,6 +388,16 @@ for (const viewport of VIEWPORTS) {
 				expect(
 					frames.filter((frame) => frame.blocked),
 					'the form is never blocked',
+				).toEqual([]);
+				// Both blanks show the same scenes: the strip keeps its views,
+				// each drawn, through the switch.
+				expect(
+					frames.filter(
+						(frame) =>
+							frame.blankThumbnails.length > 0 ||
+							frame.thumbnails.join() !== views.join(),
+					),
+					`switching to ${value} keeps every view's thumbnail drawn`,
 				).toEqual([]);
 				before = after;
 			}

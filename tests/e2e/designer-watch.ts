@@ -98,6 +98,10 @@ const PRICE_SELECTOR =
  *  shows, and the variation's price shown. */
 export type SwitchFrame = {
 	broken: string[];
+	/** The views whose thumbnail the strip shows, and of those the ones it
+	 *  shows without a picture: none given yet, or one that failed. */
+	thumbnails: string[];
+	blankThumbnails: string[];
 	cart: boolean;
 	price: string;
 	/** Whether the preview still shows the last designer's picture. */
@@ -137,6 +141,11 @@ export async function watchSwitch(page: Page, side: string): Promise<void> {
 					),
 				];
 				const preview = document.getElementById(`pixonaut-preview-${side}`);
+				const thumbnails = [
+					...document.querySelectorAll<HTMLElement>(
+						`#pixonaut-views-${side} [data-view-id]`,
+					),
+				].filter(shows);
 				const cart = [
 					...document.querySelectorAll('.single_add_to_cart_button'),
 				].filter(shows);
@@ -171,6 +180,19 @@ export async function watchSwitch(page: Page, side: string): Promise<void> {
 								shows(img),
 						)
 						.map((img) => img.getAttribute('src') ?? ''),
+					thumbnails: thumbnails.map((view) => view.dataset.viewId ?? ''),
+					blankThumbnails: thumbnails
+						.filter((view) => {
+							// One drawn again keeps showing its last picture until
+							// the next has loaded, though it measures none.
+							const picture = view.querySelector('img');
+							return (
+								picture === null ||
+								picture.getAttribute('src') === null ||
+								(picture.complete && picture.naturalWidth === 0)
+							);
+						})
+						.map((view) => view.dataset.viewId ?? ''),
 					cart: cart.length > 0,
 					price:
 						[...document.querySelectorAll(PRICE_SELECTOR)]

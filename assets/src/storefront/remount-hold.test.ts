@@ -147,6 +147,43 @@ describe('holdShown', () => {
 		expect(layer.isConnected).toBe(false);
 	});
 
+	it('lets the next designer’s view strip show the held thumbnail of a view it has not drawn yet, as soon as it is drawn', async () => {
+		const views = document.createElement('div');
+		views.innerHTML =
+			'<button data-view-id="studio"><img id="thumb" src="blob:http://localhost/studio" alt=""></button>';
+		document.body.append(views);
+		const thumb = views.querySelector('img') as HTMLImageElement;
+		Object.defineProperties(thumb, {
+			complete: { value: true },
+			naturalWidth: { value: 1 },
+			naturalHeight: { value: 1 },
+		});
+		vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+			drawImage: () => {},
+		} as unknown as CanvasRenderingContext2D);
+		vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue(
+			'data:image/png;base64,studio',
+		);
+		const hold = holdShown([views], [], []);
+		views.replaceChildren();
+		hold.place();
+		// The next designer draws its strip, the thumbnail's picture empty.
+		views.innerHTML = '<button data-view-id="studio"><img alt=""></button>';
+		await observed();
+
+		expect(views.querySelector('img')?.getAttribute('src')).toBe(
+			'data:image/png;base64,studio',
+		);
+
+		// Drawn after the hold let go, the strip shows it too.
+		views.innerHTML = '<button data-view-id="studio"><img alt=""></button>';
+		hold.release();
+
+		expect(views.querySelector('img')?.getAttribute('src')).toBe(
+			'data:image/png;base64,studio',
+		);
+	});
+
 	it('keeps a picture at the top of a target inert', () => {
 		const { preview, form, row, mark } = drawn();
 		const picture = document.createElement('img');
