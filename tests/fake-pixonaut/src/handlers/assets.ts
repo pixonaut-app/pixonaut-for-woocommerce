@@ -30,10 +30,16 @@ const PNG = 'image/png';
 const JPEG = 'image/jpeg';
 /** A phone's photo formats, which Pixonaut keeps converted to JPEG. */
 const HEIF_MIMES = ['image/heic', 'image/heif'];
-/** An ISO base media file (HEIC is one) names its brand in the `ftyp` box
- *  that opens it, after the box's four-byte size. */
+/** An ISO base media file (HEIC is one) opens with its `ftyp` box: the
+ *  box's size, `ftyp`, then the file's major brand. */
 const FTYP = 'ftyp';
 const FTYP_OFFSET = 4;
+const BRAND_OFFSET = 8;
+const BRAND_BYTES = 4;
+/** The smallest `ftyp` box: size, type, major brand, minor version. */
+const MIN_FTYP_BYTES = 16;
+/** The major brands of a HEIF image file; a video or an AVIF is none. */
+const HEIF_BRANDS = ['heic', 'heix', 'heim', 'heis', 'mif1', 'msf1'];
 /** What the fake keeps of any HEIC: one JPEG, the conversion it makes. */
 const CONVERTED_HEIC = join(FIXTURES_DIR, 'uploads', 'heic-converted.jpg');
 /** The largest upload Pixonaut takes: a PNG may be larger than the rest. */
@@ -181,12 +187,27 @@ function keptPicture(
 	if (!HEIF_MIMES.includes(mime)) {
 		return { mime, bytes };
 	}
-	const brand = new TextDecoder().decode(
-		bytes.subarray(FTYP_OFFSET, FTYP_OFFSET + FTYP.length),
-	);
-	return brand === FTYP
+	return isHeif(bytes)
 		? { mime: JPEG, bytes: new Uint8Array(readFileSync(CONVERTED_HEIC)) }
 		: null;
+}
+
+/** Whether `bytes` open as a HEIF image file: a whole `ftyp` box naming a
+ *  HEIF brand. The fake decodes no image, so this is all it checks. */
+function isHeif(bytes: Uint8Array): boolean {
+	if (bytes.length < MIN_FTYP_BYTES) {
+		return false;
+	}
+	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
+	const boxBytes = view.getUint32(0);
+	const text = (at: number, length: number) =>
+		new TextDecoder().decode(bytes.subarray(at, at + length));
+	return (
+		boxBytes >= MIN_FTYP_BYTES &&
+		boxBytes <= bytes.length &&
+		text(FTYP_OFFSET, FTYP.length) === FTYP &&
+		HEIF_BRANDS.includes(text(BRAND_OFFSET, BRAND_BYTES))
+	);
 }
 
 type AssetRequest = {

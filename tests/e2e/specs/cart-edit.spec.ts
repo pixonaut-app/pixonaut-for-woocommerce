@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import type { Locator, Page } from '@playwright/test';
 import { expect, restUrl, test } from '../fixtures';
 import {
@@ -8,9 +9,59 @@ import {
 	PERSONALISED,
 } from '../personalised';
 
-/** A phone's HEIC photo as far as Pixonaut reads it: the opening `ftyp` box
- *  naming its brand. Pixonaut keeps it as a JPEG. */
-const HEIC_PHOTO = Buffer.from('\0\0\0\x18ftypheic\0\0\0\0mif1heic', 'latin1');
+/** A phone's HEIC photo, which Pixonaut keeps as a JPEG: the fake's is a
+ *  test card of saturated colour bars. */
+const HEIC_PHOTO = join(__dirname, '..', 'fixtures', 'selfie.heic');
+
+/** How far apart a pixel's channels are, out of 255, to count as a colour
+ *  of the test card rather than the template's greys and its text. */
+const SATURATED_SPREAD = 150;
+/** The share of a view's pixels in that colour, at the least, where the
+ *  photo is drawn: the template alone draws none. */
+const PHOTO_SHARE = 0.05;
+
+/** The largest share of saturated pixels among the pictures of the views
+ *  beside the preview, which draw the side's print on each view; 0 while
+ *  none is drawn. */
+async function photoShareInViews(page: Page): Promise<number> {
+	const shares = await page
+		.getByTestId('pixonaut-view-strip')
+		.first()
+		.locator('img')
+		.evaluateAll(
+			(images: HTMLImageElement[], spread) =>
+				images.map((img) => {
+					if (!img.complete || img.naturalWidth === 0) {
+						return 0;
+					}
+					const canvas = document.createElement('canvas');
+					canvas.width = img.naturalWidth;
+					canvas.height = img.naturalHeight;
+					const context = canvas.getContext('2d');
+					if (context === null) {
+						return 0;
+					}
+					context.drawImage(img, 0, 0);
+					const { data } = context.getImageData(
+						0,
+						0,
+						canvas.width,
+						canvas.height,
+					);
+					let saturated = 0;
+					for (let at = 0; at < data.length; at += 4) {
+						const channels = [data[at], data[at + 1], data[at + 2]];
+						if (Math.max(...channels) - Math.min(...channels) > spread) {
+							saturated++;
+						}
+					}
+					return saturated / (data.length / 4);
+				}),
+			SATURATED_SPREAD,
+		)
+		.catch(() => []);
+	return Math.max(0, ...shares);
+}
 
 /** A phone, where shoppers come back to their cart, and a desktop. */
 const SCREENS = [
@@ -177,11 +228,7 @@ for (const screen of SCREENS) {
 		const form = page.locator('#pixonaut-form-front');
 		const photo = form.getByTestId('field-motiv-upload-tile');
 		await expect(photo).toBeVisible();
-		await form.getByTestId('field-motiv-upload').setInputFiles({
-			name: 'selfie.heic',
-			mimeType: 'image/heic',
-			buffer: HEIC_PHOTO,
-		});
+		await form.getByTestId('field-motiv-upload').setInputFiles(HEIC_PHOTO);
 		await expect(photo).toHaveAttribute('aria-label', 'selfie.heic');
 		await form.getByRole('textbox').first().fill('Alma');
 		await addToCartButton(page).click();
@@ -199,6 +246,10 @@ for (const screen of SCREENS) {
 				thumbnail.evaluate((img: HTMLImageElement) => img.naturalWidth),
 			)
 			.toBeGreaterThan(0);
+		// And drawn on the product's views, as the design holds it.
+		await expect
+			.poll(() => photoShareInViews(page))
+			.toBeGreaterThan(PHOTO_SHARE);
 		await page.screenshot({
 			path: test.info().outputPath(`heic-edit-${screen.name}.png`),
 		});
@@ -215,5 +266,10 @@ for (const screen of SCREENS) {
 		await expect(page).toHaveURL(/pixonaut_edit=/);
 		await expect(photo).toHaveAttribute('aria-label', 'Current picture');
 		await expect(form.getByRole('textbox').first()).toHaveValue('Alma Maria');
+		await photo.scrollIntoViewIfNeeded();
+		await expect(thumbnail).toHaveAttribute('src', /^blob:/);
+		await expect
+			.poll(() => photoShareInViews(page))
+			.toBeGreaterThan(PHOTO_SHARE);
 	});
 }
