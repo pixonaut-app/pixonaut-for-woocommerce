@@ -32,6 +32,7 @@ use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
 use WC_Product;
 use WC_Product_Simple;
+use WC_Product_Variable;
 use WP_REST_Request;
 
 final class CartEditTest extends PersonalisedCartTestCase {
@@ -46,6 +47,10 @@ final class CartEditTest extends PersonalisedCartTestCase {
 	 * When the update was made, in Unix seconds.
 	 */
 	private const UPDATED_AT = 1_800_000_600;
+
+	private const SMALL_PRICE = '249';
+
+	private const LARGE_PRICE = '349';
 
 	private RecordingLogger $logger;
 
@@ -356,6 +361,47 @@ final class CartEditTest extends PersonalisedCartTestCase {
 		$this->assertNotNull( $designer );
 		$this->assertSame( array( 'front' ), array_keys( $designer->mounts ) );
 		$this->assertSame( array( 'front' => 'Front' ), $designer->side_labels() );
+	}
+
+	public function test_the_edit_page_of_a_variation_s_line_prints_that_variation_s_price(): void {
+		$line                     = $this->line( $this->added() );
+		[ $product, $variations ] = VariationSwitchesTest::variable(
+			VariationSwitchesTest::front(),
+			array(
+				'S' => null,
+				'L' => null,
+			)
+		);
+		$variations['S']->set_regular_price( self::SMALL_PRICE );
+		$variations['S']->save();
+		$variations['L']->set_regular_price( self::LARGE_PRICE );
+		$variations['L']->save();
+		// The page would open on L, the product's default, were it not editing the line.
+		$product->set_default_attributes( array( 'size' => 'L' ) );
+		$product->save();
+		WC_Product_Variable::sync( $product->get_id() );
+		$key = str_repeat( 'b', 32 );
+		WC()->cart->set_cart_contents(
+			array(
+				$key => array(
+					'key'          => $key,
+					'product_id'   => $product->get_id(),
+					'variation_id' => $variations['S']->get_id(),
+					'variation'    => array( 'attribute_size' => 'S' ),
+					'quantity'     => 1,
+					'data'         => $variations['S'],
+					CartLine::KEY  => $line->to_array(),
+				),
+			)
+		);
+		$this->script_link();
+
+		$this->go_to( add_query_arg( CartEdit::PARAM, $key, (string) get_permalink( $product->get_id() ) ) );
+		$reloaded = wc_get_product( $product->get_id() );
+
+		$this->assertInstanceOf( WC_Product::class, $reloaded );
+		$this->assertStringContainsString( self::SMALL_PRICE, $reloaded->get_price_html() );
+		$this->assertStringNotContainsString( self::LARGE_PRICE, $reloaded->get_price_html() );
 	}
 
 	public function test_the_edit_page_s_button_reads_update_design(): void {
