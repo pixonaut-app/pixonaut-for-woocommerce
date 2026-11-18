@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.28.0...v1.28.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* **catalogue:** variations generated on another blank sell at its area and follow the product's form ([#352](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/352)) ([0669766](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/06697664995a2ab89cc46cb9330878fc22e30592))
+
 ## [1.28.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.27.2...v1.28.0) (2026-11-18)
 
 
