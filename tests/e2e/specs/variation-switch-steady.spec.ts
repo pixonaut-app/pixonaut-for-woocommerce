@@ -295,7 +295,7 @@ for (const viewport of VIEWPORTS) {
 				ahead.headers()['content-encoding'],
 				'the reads ahead come compressed',
 			).toBe('gzip');
-			expect(ahead.headers().etag).toMatch(/^"[0-9a-f]{32}"$/);
+			expect(ahead.headers().etag).toMatch(/^W\/"[0-9a-f]{32}"$/);
 			expect(
 				((await ahead.json()) as { targets: unknown[] }).targets.length,
 				'the other blank’s reads',

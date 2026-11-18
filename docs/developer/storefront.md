@@ -164,7 +164,7 @@ and a side mounted again on one of them starts from them as above. The
 answer holds each of Pixonaut's answers once, under `parts`, and each of
 its `targets` names its template, placement and blank reads by their index
 there, as targets often share a template or a blank. It is compressed with
-gzip when the browser takes it and carries an `ETag` with `Cache-Control:
+gzip when the browser takes it and carries a weak `ETag` with `Cache-Control:
 public, no-cache`, so a browser holding it is answered `304`. The route
 answers only a published product without a password, and the script lets
 its reads go after the same 30 minutes, asking again at the next mount.

@@ -50,7 +50,7 @@ final class ReadsAheadTest extends WP_UnitTestCase {
 		$this->assertSame( 200, $response->get_status() );
 		$this->assertSame( '{"targets":[],"parts":[]}', $response->get_data() );
 		$this->assertSame( 'public, no-cache', $response->get_headers()['Cache-Control'] );
-		$this->assertSame( '"' . md5( '{"targets":[],"parts":[]}' ) . '"', $response->get_headers()['ETag'] );
+		$this->assertSame( 'W/"' . md5( '{"targets":[],"parts":[]}' ) . '"', $response->get_headers()['ETag'] );
 		$this->assertArrayNotHasKey( 'Content-Encoding', $response->get_headers() );
 	}
 
@@ -74,6 +74,7 @@ final class ReadsAheadTest extends WP_UnitTestCase {
 		$this->assertNull( $held->get_data() );
 		$this->assertSame( $etag, $held->get_headers()['ETag'] );
 		$this->assertSame( 200, $this->handle( $product, array( 'if_none_match' => '"other"' ) )->get_status() );
+		$this->assertSame( 304, $this->handle( $product, array( 'if_none_match' => substr( $etag, 2 ) ) )->get_status(), 'compared weakly' );
 	}
 
 	public function test_each_of_pixonauts_answers_is_sent_once_and_named_by_each_target_reading_it(): void {

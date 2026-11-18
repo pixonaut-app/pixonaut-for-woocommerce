@@ -25,7 +25,7 @@ use WP_REST_Server;
  * templates), so each answer Pixonaut sent is in the answer once, under
  * `parts`, and each target names its reads by their index there. The answer
  * is compressed with gzip when the browser takes it, and a request naming
- * its `ETag` is answered `304`.
+ * its weak `ETag` is answered `304`.
  */
 final class ReadsAhead {
 
@@ -119,7 +119,8 @@ final class ReadsAhead {
 		$printed = is_array( $request['printed'] ) ? array_map( 'strval', $request['printed'] ) : array();
 		$targets = self::targets( $designer, $printed );
 		$body    = self::answer( $targets, $this->reads->for_mounts( $targets ) );
-		$etag    = '"' . md5( $body ) . '"';
+		// Weak: the same tag names the JSON and its gzip bytes.
+		$etag    = 'W/"' . md5( $body ) . '"';
 		$headers = array(
 			'Content-Type'           => 'application/json; charset=utf-8',
 			'Cache-Control'          => self::CACHE_CONTROL,
@@ -127,7 +128,7 @@ final class ReadsAhead {
 			'Vary'                   => 'Accept-Encoding',
 			'X-Content-Type-Options' => 'nosniff',
 		);
-		if ( in_array( $etag, array_map( 'trim', explode( ',', (string) $request->get_header( 'if_none_match' ) ) ), true ) ) {
+		if ( self::held( (string) $request->get_header( 'if_none_match' ), $etag ) ) {
 			return new WP_REST_Response( null, RawRestAnswer::STATUS_NOT_MODIFIED, $headers );
 		}
 		if ( RawRestAnswer::takes_gzip( (string) $request->get_header( 'accept_encoding' ) ) ) {
@@ -136,6 +137,23 @@ final class ReadsAhead {
 		}
 		$headers['Content-Length'] = (string) strlen( $body );
 		return new WP_REST_Response( $body, RawRestAnswer::STATUS_OK, $headers );
+	}
+
+	/**
+	 * Whether a request's `If-None-Match` names the answer's tag, compared
+	 * weakly: a browser sends back the tag of either encoding it was sent.
+	 *
+	 * @param string $if_none_match The request's `If-None-Match`.
+	 * @param string $etag          The answer's weak tag.
+	 */
+	private static function held( string $if_none_match, string $etag ): bool {
+		foreach ( explode( ',', $if_none_match ) as $named ) {
+			$named = trim( $named );
+			if ( '*' === $named || ( str_starts_with( $named, 'W/' ) ? $named : 'W/' . $named ) === $etag ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
