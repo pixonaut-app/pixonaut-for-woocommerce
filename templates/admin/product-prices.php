@@ -10,7 +10,7 @@
  * Field names, classes and the `data-` attributes are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.23.0
+ * @version 1.27.0
  *
  * @var string                $url        The product's prices route, which the buttons post to.
  * @var string                $field      The posted field holding the parts of the rule the product changes.
@@ -18,11 +18,11 @@
  * @var string                $changes         What the product is set to: `store`, `always` or `never`.
  * @var array<string, string> $changes_options What it can be set to, each with what the store manager reads, by value.
  * @var bool                  $open       Whether the section is open.
- * @var bool                  $rule_set   Whether the store or the product has a target margin.
+ * @var bool                  $rule_set   Whether any price has a target margin to follow, from the store, an attribute value, the product or a variation.
  * @var array<string, string> $own_parts  The parts of the rule the product changes, by part; empty for the store's.
  * @var array<string, string> $store      The store's rule, by part.
  * @var array<string, string> $parts      Each part's label, by part, in the order shown.
- * @var list<array{id: int, label: string, cost: string, cost_parts: string, price: string, margin: string, contribution: string, suggested: string, standing: string, flag: string|null, rule_at: string, changes: string}> $rows Each price: its product or variation, what it is called, its cost, the cost's parts, its price, its margin, what it leaves over the cost excluding VAT, the price the rule suggests, how it stands to the rule (`own`, `follows`, `by_hand`), why it needs the store manager, when the rule last set it, and whether its price changes by itself (`always` or `never` on a variation that answers its product, else `product` or `store`).
+ * @var list<array{id: int, label: string, cost: string, cost_parts: string, price: string, margin: string, contribution: string, suggested: string, standing: string, flag: string|null, rule_at: string, changes: string, source: string, source_parts: string, conflicts: list<string>}> $rows Each price: its product or variation, what it is called, its cost, the cost's parts, its price, its margin, what it leaves over the cost excluding VAT, the price the rule suggests, how it stands to the rule (`own`, `follows`, `by_hand`), why it needs the store manager, when the rule last set it, whether its price changes by itself (`always` or `never` on a variation that answers its product, else `product` or `store`), the levels its rule comes from, where each part comes from when they come from several (one per line), and what two of its attribute values both set.
  * @var bool                  $unread     Whether no cost was read yet: the script reads them when the section opens.
  * @var int                   $flagged    Prices that follow the rule and need the store manager.
  * @var int                   $following  Prices the rule was applied to.
@@ -75,7 +75,7 @@ if ( $flagged > 0 ) {
 			</select>
 		</p>
 		<p class="description pixonaut-prices__rule-hint">
-			<?php esc_html_e( 'An empty field follows the store’s pricing rule, shown in grey.', 'pixonaut-for-woocommerce' ); ?>
+			<?php echo esc_html( $variable ? __( 'An empty field follows the store’s pricing rule, shown in grey. A value of a global attribute may change a part for its variations (Products → Attributes), and a variation may change any part in its own price rule; the most specific wins.', 'pixonaut-for-woocommerce' ) : __( 'An empty field follows the store’s pricing rule, shown in grey.', 'pixonaut-for-woocommerce' ) ); ?>
 			<a href="<?php echo esc_url( $settings ); ?>"><?php /* translators: Link from the Prices section of the product edit page to the pricing rule on the Pixonaut settings page. */ esc_html_e( 'Store’s pricing rule', 'pixonaut-for-woocommerce' ); ?></a>
 		</p>
 	</fieldset>
@@ -139,6 +139,17 @@ if ( $flagged > 0 ) {
 							<?php elseif ( $variable && \Pixonaut\WooCommerce\Pricing\PriceChanges::NEVER === $pixonaut_row['changes'] ) : ?>
 								<span class="pixonaut-prices__changes-note"><?php /* translators: In the Prices table of the product edit page: this variation's price never changes by itself, whatever the product and the store say. */ esc_html_e( 'Automatic price changes: never', 'pixonaut-for-woocommerce' ); ?></span>
 							<?php endif; ?>
+							<?php if ( '' !== $pixonaut_row['source'] ) : ?>
+								<span class="pixonaut-prices__source" <?php echo '' === $pixonaut_row['source_parts'] ? '' : 'title="' . esc_attr( $pixonaut_row['source_parts'] ) . '" tabindex="0"'; ?>>
+									<?php
+									/* translators: %s: where a price's pricing rule comes from, e.g. "Store" or "Ram (Frame), Store". In the Prices table of the product edit page. */
+									echo esc_html( sprintf( __( 'Rule from: %s', 'pixonaut-for-woocommerce' ), $pixonaut_row['source'] ) );
+									?>
+								</span>
+							<?php endif; ?>
+							<?php foreach ( $pixonaut_row['conflicts'] as $pixonaut_conflict ) : ?>
+								<span class="pixonaut-prices__conflict"><?php echo esc_html( $pixonaut_conflict ); ?></span>
+							<?php endforeach; ?>
 							<?php if ( '' !== $pixonaut_row['suggested'] && \Pixonaut\WooCommerce\Pricing\PriceState::BY_HAND !== $pixonaut_row['standing'] ) : ?>
 								<span class="pixonaut-prices__suggested">
 									<?php

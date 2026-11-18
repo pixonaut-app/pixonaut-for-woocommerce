@@ -82,6 +82,12 @@ final class PriceState {
 	public const FLAG_SALE = 'sale';
 
 	/**
+	 * A level of the rule changed, and the rule's price is another now.
+	 * Kept until the price is the rule's, whatever the tolerance says.
+	 */
+	public const FLAG_RULE = 'rule';
+
+	/**
 	 * @param VariantCost|null $cost       The cost last read; null while Pixonaut listed none for its variant.
 	 * @param bool             $follows    Whether the rule was applied to it.
 	 * @param int|null         $rule_price The price the rule last set, in thousandths; null when it set none.
@@ -94,6 +100,9 @@ final class PriceState {
 	 * @param int|null         $total      The cost in the store's currency when it was last read, in thousandths: a
 	 *                                     later read with another total, because the printshop's price or the
 	 *                                     exchange rate moved, is a cost that changed.
+	 * @param bool             $ruled      Whether a level of the rule changed since the rule set its price, and the
+	 *                                     rule has another price for it: kept, whatever flag shows, until the price
+	 *                                     is the rule's.
 	 */
 	public function __construct(
 		public readonly ?VariantCost $cost = null,
@@ -106,6 +115,7 @@ final class PriceState {
 		public readonly ?string $blank_id = null,
 		public readonly ?string $ref = null,
 		public readonly ?int $total = null,
+		public readonly bool $ruled = false,
 	) {
 	}
 
@@ -146,7 +156,7 @@ final class PriceState {
 	 * @param int|null         $total    The cost in the store's currency, in thousandths.
 	 */
 	public function with_cost( ?VariantCost $cost, int $now, ?string $blank_id, ?string $ref, ?int $total ): self {
-		return new self( $cost, $this->follows, $this->rule_price, $this->rule_at, $this->suggested, $this->flag, $now, $blank_id, $ref, $total );
+		return new self( $cost, $this->follows, $this->rule_price, $this->rule_at, $this->suggested, $this->flag, $now, $blank_id, $ref, $total, $this->ruled );
 	}
 
 	/**
@@ -166,7 +176,16 @@ final class PriceState {
 	 * @param int|null    $suggested The price the rule would set.
 	 */
 	public function with_flag( ?string $flag = null, ?int $suggested = null ): self {
-		return new self( $this->cost, $this->follows, $this->rule_price, $this->rule_at, $suggested, $flag, $this->checked_at, $this->blank_id, $this->ref, $this->total );
+		return new self( $this->cost, $this->follows, $this->rule_price, $this->rule_at, $suggested, $flag, $this->checked_at, $this->blank_id, $this->ref, $this->total, $this->ruled );
+	}
+
+	/**
+	 * The state with whether a changed rule has another price for it.
+	 *
+	 * @param bool $ruled Whether it has.
+	 */
+	public function with_ruled( bool $ruled ): self {
+		return new self( $this->cost, $this->follows, $this->rule_price, $this->rule_at, $this->suggested, $this->flag, $this->checked_at, $this->blank_id, $this->ref, $this->total, $ruled );
 	}
 
 	/**
@@ -191,7 +210,8 @@ final class PriceState {
 			is_int( $data['checkedAt'] ?? null ) ? $data['checkedAt'] : null,
 			is_string( $data['blankId'] ?? null ) ? $data['blankId'] : null,
 			is_string( $data['ref'] ?? null ) ? $data['ref'] : null,
-			Amount::parse( $data['total'] ?? null )
+			Amount::parse( $data['total'] ?? null ),
+			true === ( $data['ruled'] ?? null )
 		);
 	}
 
@@ -213,7 +233,9 @@ final class PriceState {
 	 * @return array<string, mixed>
 	 */
 	public function to_array(): array {
-		return array(
+		// Written only while true, so a state from before it reads as it was written.
+		$ruled = $this->ruled ? array( 'ruled' => true ) : array();
+		return $ruled + array(
 			'v'         => self::SCHEMA_VERSION,
 			'cost'      => $this->cost?->to_array(),
 			'follows'   => $this->follows,

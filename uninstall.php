@@ -188,6 +188,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		// Prices the rule set stay as they are: they are the products' own prices now.
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRICE_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRICE_RULE_META );
+		delete_metadata( 'term', 0, \Pixonaut\WooCommerce\Schema::PRICE_RULE_META, '', true );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRICE_AUTOMATIC_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRICE_WATCH_META );
 		// Pixonaut withdrew the links when the store disconnected, or does when it is removed in the studio.

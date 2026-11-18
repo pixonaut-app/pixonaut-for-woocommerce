@@ -23,9 +23,9 @@ final class WaitingJob {
 	 * Whether a job of the hook with exactly these arguments waits to start.
 	 * One running does not count: it may have read what changed since.
 	 *
-	 * @param string              $hook  The job's hook.
-	 * @param array<string,mixed> $args  Its arguments.
-	 * @param string              $group Its group.
+	 * @param string       $hook  The job's hook.
+	 * @param array<mixed> $args  Its arguments.
+	 * @param string       $group Its group.
 	 */
 	public static function exists( string $hook, array $args, string $group ): bool {
 		$ids = as_get_scheduled_actions(

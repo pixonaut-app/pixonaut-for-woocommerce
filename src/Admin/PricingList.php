@@ -108,11 +108,20 @@ final class PricingList {
 		$lines = '';
 		foreach ( array_slice( $flagged, 0, self::MOST_NAMED ) as $row ) {
 			$shown = PricingPanel::row( $row );
-			$what  = null === $row->suggested || PriceState::FLAG_MARGIN !== $row->flag
+			$what  = null === $row->suggested || ! in_array( $row->flag, array( PriceState::FLAG_MARGIN, PriceState::FLAG_RULE ), true )
 				? ( $texts[ (string) $row->flag ] ?? '' )
 				/* translators: 1: the price now, 2: the price the pricing rule suggests. Under a product's name on the admin products list. */
 				: sprintf( __( '%1$s → %2$s suggested', 'pixonaut-for-woocommerce' ), $shown['price'], $shown['suggested'] );
-			if ( '' !== $shown['margin'] && '' !== $shown['contribution'] ) {
+			if ( '' !== $shown['margin'] && '' !== $shown['contribution'] && '' !== $shown['source'] ) {
+				$what = sprintf(
+					/* translators: 1: why a price is flagged, or the price now and the one suggested; 2: the margin the price now leaves, such as 32.5 %; 3: the amount of money it leaves over the cost excluding VAT; 4: where its pricing rule comes from, such as "Ram (Frame), Store". Under a product's name on the admin products list. */
+					__( '%1$s (margin %2$s, contribution %3$s, rule from %4$s)', 'pixonaut-for-woocommerce' ),
+					$what,
+					$shown['margin'],
+					$shown['contribution'],
+					$shown['source']
+				);
+			} elseif ( '' !== $shown['margin'] && '' !== $shown['contribution'] ) {
 				$what = sprintf(
 					/* translators: 1: why a price is flagged, or the price now and the one suggested; 2: the margin the price now leaves, such as 32.5 %; 3: the amount of money it leaves over the cost excluding VAT. Under a product's name on the admin products list. */
 					__( '%1$s (margin %2$s, contribution %3$s)', 'pixonaut-for-woocommerce' ),
@@ -150,8 +159,11 @@ final class PricingList {
 			'<span class="pixonaut-price-flag" style="display:block;margin-top:4px;color:#996800;"><strong>%1$s</strong><span style="display:block;">%2$s</span>%3$s</span>',
 			esc_html(
 				array() !== self::suggested( $flagged )
-					/* translators: Flag under a product's name on the admin products list: the margin of a price that follows the pricing rule left the tolerance. */
-					? __( 'Margin off target', 'pixonaut-for-woocommerce' )
+					? ( array() === array_filter( $flagged, static fn ( PriceRow $row ): bool => PriceState::FLAG_MARGIN === $row->flag )
+						/* translators: Flag under a product's name on the admin products list: a level of the pricing rule changed, and the rule has other prices for the product. */
+						? __( 'Pricing rule changed', 'pixonaut-for-woocommerce' )
+						/* translators: Flag under a product's name on the admin products list: the margin of a price that follows the pricing rule left the tolerance. */
+						: __( 'Margin off target', 'pixonaut-for-woocommerce' ) )
 					/* translators: Flag under a product's name on the admin products list: the pricing rule cannot set one of its prices. */
 					: __( 'Price not set by the pricing rule', 'pixonaut-for-woocommerce' )
 			),
@@ -232,7 +244,7 @@ final class PricingList {
 	 * @return list<int>
 	 */
 	private static function suggested( array $rows ): array {
-		return array_values( array_map( static fn ( PriceRow $row ): int => $row->id, array_filter( $rows, static fn ( PriceRow $row ): bool => PriceState::FLAG_MARGIN === $row->flag && null !== $row->suggested ) ) );
+		return array_values( array_map( static fn ( PriceRow $row ): int => $row->id, array_filter( $rows, static fn ( PriceRow $row ): bool => in_array( $row->flag, array( PriceState::FLAG_MARGIN, PriceState::FLAG_RULE ), true ) && null !== $row->suggested ) ) );
 	}
 
 	private static function label(): string {

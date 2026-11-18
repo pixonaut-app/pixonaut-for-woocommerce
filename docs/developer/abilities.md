@@ -779,10 +779,17 @@ either refusal answers `422 invalid_input`.
 (`price_margin`, `price_tolerance`, `price_step`, `price_ending`,
 `price_min`, `price_max`, `price_currency_buffer`, `price_automatic`,
 `delivery_time_show`, `delivery_time_handling_days`), with
-the store's `currency` and `prices_include_tax`. `update-pricing-settings`
+the store's `currency` and `prices_include_tax`, and `attribute_rules`: each
+value of a global attribute that changes parts of the rule (`attribute_id`,
+`term_id`, `slug`, `name`, `rule`), in the store's attribute order, with
+`conflicts`, the parts a value of another attribute sets too on some
+variation with both, and whether this value `wins`. `update-pricing-settings`
 takes any of the settings and changes only those; an ending that is not
-below the step is refused, as on the page. `price_automatic` is the switch
-for automatic price changes. Changing the rule sets no price.
+below the step is refused, as on the page. `attribute_rules` there takes
+entries of `attribute_id`, `term_id` or `slug`, and `rule`, each replacing
+that value's parts. `price_automatic` is the switch
+for automatic price changes. A change of the store's rule or of a value's
+settles the prices that follow the rule in the background (`Pricing\RuleChange`).
 `delivery_time_show` has product pages say how long the printshop says the
 chosen variation takes ([Delivery times](../pricing/#delivery-times)), and
 `delivery_time_handling_days` adds the store's own days to it.
@@ -795,9 +802,15 @@ its prices change by themselves) with `price_changes` (what the product is
 set to: `store`, `always` or `never`), and in
 `prices` one row per variation (a simple product has one): `price`, the
 printshop's `cost` in its own currency, `cost_total` in the store's,
-`margin`, `suggested`, `standing` (`own`, `follows` or `by_hand`), `flag`
-with its `flag_message`, and the row's own `automatic` and `price_changes`
-(`product` for a variation that follows its product). Money is a decimal string; a time is ISO 8601.
+`margin`, `contribution`, `suggested`, `standing` (`own`, `follows` or `by_hand`), `flag`
+with its `flag_message`, the row's own `automatic` and `price_changes`
+(`product` for a variation that follows its product), and the rule the row
+follows: `rule` (each part in force), `rule_sources` (per part, the `level`
+it comes from, `variation`, `product`, `attribute` or `store`, with the
+attribute value's `attribute`, `taxonomy`, `term_id` and `value`; null for a
+part no level sets), `own_rule` (the parts the variation sets itself) and
+`rule_conflicts` (each part two of its attribute values set, with the
+`winner` and the `loser`). Money is a decimal string; a time is ISO 8601.
 `prices` is a page of the rows: `page` and `per_page` (25 unless given, at
 most 100) choose which, and `total` and `pages` count them all.
 
@@ -809,8 +822,9 @@ not chosen is only flagged with the price suggested, also while its prices
 change automatically. `only: "unpriced"` prices the variations without a regular price and
 leaves the others; `variation_ids` names the ones to price. A price edited
 by hand is kept unless `release_held`. `rule` replaces the parts of the rule
-the product changes, once the costs are read: a read that fails stores no
-rule. With `dry_run` it reads the costs and
+the product changes, and `variation_rules` (entries of `variation_id` and
+`rule`) the parts variations change, once the costs are read: a read that
+fails stores no rule. With `dry_run` it reads the costs and
 answers the prices it would set, storing nothing on the product or its
 variations. Each row adds `before` and `changed` to what `get-product-prices`
 gives; `changed` beside them counts every price that changed, whichever

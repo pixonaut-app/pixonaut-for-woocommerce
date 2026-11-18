@@ -250,8 +250,9 @@ final class Schema {
 	const PRICE_META = '_pixonaut_price';
 
 	/**
-	 * Product meta holding the parts of the store's pricing rule the product
-	 * changes, by part. JSON.
+	 * Product, variation and attribute term meta holding the parts of the
+	 * store's pricing rule the product, the variation or every variation
+	 * with the attribute value changes, by part. JSON.
 	 */
 	const PRICE_RULE_META = '_pixonaut_price_rule';
 

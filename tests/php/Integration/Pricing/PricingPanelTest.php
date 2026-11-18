@@ -326,7 +326,7 @@ final class PricingPanelTest extends PricingTestCase {
 		$list->column( 'price', $parent_id );
 		$flag = (string) ob_get_clean();
 		$this->assertStringContainsString( 'Margin off target', $flag );
-		$this->assertStringContainsString( 'v_a3: ' . self::money( '399' ) . ' → ' . self::money( '309' ) . ' suggested (margin 61.2 %, contribution ' . self::money( '244' ) . ')', $flag );
+		$this->assertStringContainsString( 'v_a3: ' . self::money( '399' ) . ' → ' . self::money( '309' ) . ' suggested (margin 61.2 %, contribution ' . self::money( '244' ) . ', rule from Store)', $flag );
 		$this->assertStringContainsString( 'v_a4: The printshop publishes no price for it', $flag );
 		$this->assertStringContainsString( 'action=' . PricingList::BULK_ACTION, $flag );
 		$this->assertSame( 1, substr_count( $flag, 'pixonaut-price-flag"' ), 'only the name column carries the flag' );
