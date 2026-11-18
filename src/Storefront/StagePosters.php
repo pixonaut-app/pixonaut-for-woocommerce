@@ -13,11 +13,11 @@ use Closure;
 use Pixonaut\WooCommerce\Api\Pictures;
 use Pixonaut\WooCommerce\Catalogue\CatalogueCache;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Catalogue\SmallerImage;
 use Pixonaut\WooCommerce\Connection\ConnectionStore;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Psr\Log\LoggerInterface;
-use WP_Error;
 
 /**
  * The picture a side's preview shows from the first paint until the
@@ -313,19 +313,10 @@ final class StagePosters {
 	 * @return string The kept file's path.
 	 */
 	private function converted( string $drawn, string $name ): string {
-		$editor = wp_get_image_editor( $drawn );
-		if ( ! $editor instanceof WP_Error ) {
-			$editor->set_quality( self::QUALITY );
-			foreach ( self::FORMATS as $extension => $mime ) {
-				if ( ! wp_image_editor_supports( array( 'mime_type' => $mime ) ) ) {
-					continue;
-				}
-				$saved = $editor->save( $name . '.' . $extension, $mime );
-				if ( is_array( $saved ) ) {
-					wp_delete_file( $drawn );
-					return $name . '.' . $extension;
-				}
-			}
+		$smaller = SmallerImage::write( $drawn, $name, self::FORMATS, self::QUALITY );
+		if ( null !== $smaller ) {
+			wp_delete_file( $drawn );
+			return $smaller;
 		}
 		$kept = $name . '.' . self::PNG;
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- moves a file of the uploads within its directory.

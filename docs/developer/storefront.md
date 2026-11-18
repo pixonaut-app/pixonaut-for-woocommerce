@@ -313,6 +313,15 @@ deleted, or gets a new picture, or when the setting is turned off.
 Uninstalling the plugin puts each product's remembered image back before it
 deletes the pictures.
 
+Pixonaut draws PNGs; the attachment keeps a WebP of the drawing instead,
+and WordPress makes every size of it as WebP too, a fraction of the PNG's
+weight with its transparency kept. Where the site's image editor (Imagick
+or GD) writes no WebP, the PNG is kept. Pictures kept as PNGs by an earlier
+version are written again as WebP after the upgrade, in the
+`pixonaut_wc_smaller_pictures_all` job, a batch at a time: each keeps its
+attachment id, its PNG and the PNG's sizes are deleted, and the products
+showing it show the WebP.
+
 | Template | Printed | Holds |
 | --- | --- | --- |
 | `admin/product-picture.php` | In a personalised product's **Product image** box, and among a personalised variation's options, while the setting is on | `p.pixonaut-picture.pixonaut-picture--<state>` (`picture`, `own` or `waiting`); beside an own image, `a.pixonaut-use-picture` with `data-picture` (the drawn picture's id, `0` for none) and `data-picture-url` |

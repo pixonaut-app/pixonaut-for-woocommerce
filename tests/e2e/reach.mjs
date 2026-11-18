@@ -97,6 +97,7 @@ export const NO_SPEC = [
 	'src/Connection/UninstallRevoke.php',
 	'src/Migrations/',
 	'src/Catalogue/StoppedPictureJobs.php', // AS failure hooks; a job is never cut off in e2e
+	'src/Catalogue/SmallerPictures.php', // the upgrade's conversion of PNG pictures; new pictures go through SharedPictures
 	'src/Updates/',
 	'templates/admin/upgrade-notice.php',
 	'src/Privacy/',
@@ -641,6 +642,7 @@ export const REACH = {
 		'src/Catalogue/PicturedVariation.php',
 		'src/Catalogue/ProductPictures.php',
 		'src/Catalogue/SharedPictures.php',
+		'src/Catalogue/SmallerImage.php',
 		'src/Catalogue/ShowcaseImages.php',
 		'src/Catalogue/TemplateShowcases.php',
 		'templates/admin/picture-view-choices.php',

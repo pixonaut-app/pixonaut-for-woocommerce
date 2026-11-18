@@ -126,7 +126,8 @@ final class SharedPictures {
 	}
 
 	/**
-	 * Saves the PNG to the media library as the product's picture.
+	 * Saves the PNG to the media library as the product's picture, as WebP
+	 * where the image editor writes it (`SmallerPictures`).
 	 *
 	 * @param WC_Product  $product  A product or variation.
 	 * @param string      $png      The picture's bytes.
@@ -140,23 +141,29 @@ final class SharedPictures {
 		if ( false !== $upload['error'] ) {
 			return 0;
 		}
+		$file = SmallerPictures::file( $upload['file'] );
+		if ( null === $file ) {
+			$file = $upload['file'];
+		} else {
+			wp_delete_file( $upload['file'] );
+		}
 		$attachment = wp_insert_attachment(
 			array(
-				'post_mime_type' => 'image/png',
+				'post_mime_type' => wp_check_filetype( $file )['type'],
 				'post_title'     => $product->get_name(),
 				'post_status'    => 'inherit',
 			),
-			$upload['file'],
+			$file,
 			$product->get_id()
 		);
 		if ( 0 === $attachment ) {
-			wp_delete_file( $upload['file'] );
+			wp_delete_file( $file );
 			return 0;
 		}
 		add_post_meta( $attachment, self::PICTURE_OF_META, $product->get_id() );
 		update_post_meta( $attachment, '_wp_attachment_image_alt', $product->get_name() );
 		require_once ABSPATH . 'wp-admin/includes/image.php';
-		$metadata = wp_generate_attachment_metadata( $attachment, $upload['file'] );
+		$metadata = wp_generate_attachment_metadata( $attachment, $file );
 		// Bytes WordPress cannot read as an image must not replace the last good picture.
 		if ( ! is_int( $metadata['width'] ?? null ) || $metadata['width'] <= 0 ) {
 			wp_delete_attachment( $attachment, true );
