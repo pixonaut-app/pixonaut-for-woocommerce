@@ -706,7 +706,10 @@ export const REACH = {
 		'templates/emails/changes-link.php',
 		'templates/emails/plain/changes-link.php',
 	],
-	'required-change.spec.ts': ['assets/src/storefront/refused-fields.ts'],
+	'required-change.spec.ts': [
+		'assets/src/storefront/refused-fields.ts',
+		'assets/src/storefront/refusal-in-view.ts',
+	],
 	'sdk-mark.spec.ts': [
 		'templates/storefront/preview.php',
 		'assets/src/storefront/storefront.css',
