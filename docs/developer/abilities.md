@@ -889,7 +889,9 @@ pictures again through `RegeneratePictures::redraw()`, which the product
 screen's Regenerate in background button and the products list's bulk action use. It refuses the
 call, drawing nothing, when one of them shows no Pixonaut picture. Each
 product's `state` is `drawing`, `drawn`, `kept` (the store manager's own
-image), `failed` or `error`.
+image), `failed` or `error`. Pixonaut calls it as the shop tool of the same
+name with the store's credential ([REST API](../rest-api/)), where a product
+showing no picture, or more than 50, answers `422 invalid_input`.
 
 `get-variation-pictures` answers `store_wide`, `on`, and for a product its
 `choice` (`default`, `on`, `off`), with `turning_on` and `turning_off`:

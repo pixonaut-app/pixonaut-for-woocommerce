@@ -485,7 +485,7 @@ final class Plugin {
 		( new InvalidProductNotice( $this->notices() ) )->register();
 		$this->connection()->register();
 		$this->store_access()->register();
-		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ), fn (): array => $this->pricing_abilities(), fn (): array => $this->settings_abilities(), fn (): array => $this->form_abilities(), fn (): array => $this->variation_abilities() ), new WcLogger() ) )->register();
+		( new ShopToolRoute( $this->store_access(), new ShopTools( fn (): ProductLinks => $this->product_links(), fn (): ProductVariants => $this->product_variants(), fn (): ShowcaseField => $this->showcase_field(), fn (): GetProductPictureViews => $this->picture_views(), fn (): SetVariationPrintSize => $this->variation_print_size(), fn (): SetProductSetup => new SetProductSetup( $this->product_links(), $this->setup_fields() ), fn (): array => $this->pricing_abilities(), fn (): array => $this->settings_abilities(), fn (): array => $this->form_abilities(), fn (): array => $this->variation_abilities(), fn (): RegenerateProductPictures => new RegenerateProductPictures( $this->regenerate_pictures() ) ), new WcLogger() ) )->register();
 		$this->workspace_settings()->register();
 		$this->webhook_processor()->register();
 		( new Receiver( $this->connection(), $this->intake(), new WcLogger() ) )->register();

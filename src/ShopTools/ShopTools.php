@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Abilities\GetProductPictureViews;
 use Pixonaut\WooCommerce\Abilities\GetProductSplitListing;
 use Pixonaut\WooCommerce\Abilities\LinkProduct;
 use Pixonaut\WooCommerce\Abilities\ProductLinks;
+use Pixonaut\WooCommerce\Abilities\RegenerateProductPictures;
 use Pixonaut\WooCommerce\Abilities\SetAttributeSplitListing;
 use Pixonaut\WooCommerce\Abilities\GetAttributeChoicePrices;
 use Pixonaut\WooCommerce\Abilities\GetAttributeQueryNames;
@@ -65,6 +66,7 @@ final class ShopTools {
 	 * @param Closure $settings   Makes the abilities that read and change the plugin's settings and the active theme's, once a call needs them.
 	 * @param Closure $form       Makes the abilities that read and arrange a product's designer form, once a call needs them.
 	 * @param Closure $variations Makes the abilities that read a product's variation plan and generate its variations, once a call needs them.
+	 * @param Closure $pictures   Makes the ability that draws products' pictures again, once a call needs it.
 	 * @phpstan-param Closure(): ProductLinks $links
 	 * @phpstan-param Closure(): ProductVariants $variants
 	 * @phpstan-param Closure(): ShowcaseField $showcases
@@ -75,6 +77,7 @@ final class ShopTools {
 	 * @phpstan-param Closure(): list<Ability> $settings
 	 * @phpstan-param Closure(): list<Ability> $form
 	 * @phpstan-param Closure(): list<Ability> $variations
+	 * @phpstan-param Closure(): RegenerateProductPictures $pictures
 	 */
 	public function __construct(
 		private readonly Closure $links,
@@ -87,6 +90,7 @@ final class ShopTools {
 		private readonly Closure $settings,
 		private readonly Closure $form,
 		private readonly Closure $variations,
+		private readonly Closure $pictures,
 	) {
 	}
 
@@ -104,7 +108,7 @@ final class ShopTools {
 			}
 		}
 		$links = ( $this->links )();
-		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )(), ( $this->setup )(), new GetProductSplitListing(), new SetProductSplitListing(), new SetAttributeSplitListing(), new GetAttributeQueryNames(), new SetAttributeQueryName(), new GetAttributeChoicePrices(), new SetAttributeChoicePrice(), new GetShipping(), new SetShippingMethod(), ...( $this->pricing )(), ...( $this->settings )(), ...( $this->form )(), ...( $this->variations )() ) as $tool ) {
+		foreach ( array( new LinkProduct( $links ), new SetVariationVariants( $links, ( $this->variants )() ), new SetProductShowcase( $links, ( $this->showcases )() ), ( $this->views )(), ( $this->print_size )(), ( $this->setup )(), new GetProductSplitListing(), new SetProductSplitListing(), new SetAttributeSplitListing(), new GetAttributeQueryNames(), new SetAttributeQueryName(), new GetAttributeChoicePrices(), new SetAttributeChoicePrice(), new GetShipping(), new SetShippingMethod(), ...( $this->pricing )(), ...( $this->settings )(), ...( $this->form )(), ...( $this->variations )(), ( $this->pictures )() ) as $tool ) {
 			$tools[ $tool->name() ] = $tool;
 		}
 		return $tools;
