@@ -2480,27 +2480,6 @@ msgid "Read the pricing settings"
 msgstr "De prijsinstellingen lezen"
 
 #: src/Abilities/ReadPricingSettings.php:61
-#, fuzzy
-#| msgid ""
-#| "Gives the store's pricing rule, by which prices follow the printshop's "
-#| "costs: the target margin and the fixed amount per item on top of it "
-#| "(price excluding tax = cost ÷ (1 − margin) + fixed amount), the tolerance "
-#| "around the margin the rule's own price leaves at a cost, the price step "
-#| "and what prices end in, the lowest and highest price, the currency buffer "
-#| "added to a cost converted from another currency, and whether prices "
-#| "change by themselves when a cost changes. Amounts and percentages are "
-#| "decimal strings, empty for none. Without a target margin the store has no "
-#| "rule. `attribute_rules` lists each value of a global attribute that "
-#| "changes parts of the rule for every variation with it, in every product, "
-#| "in the store's attribute order, with the parts another attribute's value "
-#| "sets too on a variation with both (`conflicts`: the one whose attribute "
-#| "comes first wins); a product and a variation may change parts too, and "
-#| "each part comes from the most specific level that sets it. Also the "
-#| "store's currency, and whether prices are entered including tax. "
-#| "`delivery_time_show` says whether a product page tells how long the "
-#| "printshop says the chosen variation takes, which Pixonaut reads with its "
-#| "cost, and `delivery_time_handling_days` the days of its own the store "
-#| "adds to that."
 msgid ""
 "Gives the store's pricing rule, by which prices follow the printshop's "
 "costs: the target margin and the fixed amount per item on top of it (price "
@@ -2530,7 +2509,10 @@ msgstr ""
 "rond de marge die de eigen prijs van de regel bij bepaalde kosten overlaat, "
 "de prijsstap en waar prijzen op eindigen, de laagste en hoogste prijs, de "
 "valutabuffer die wordt opgeteld bij kosten die uit een andere valuta zijn "
-"omgerekend, en of prijzen vanzelf veranderen wanneer de kosten veranderen. "
+"omgerekend, of prijzen vanzelf veranderen wanneer de kosten veranderen, en "
+"`price_margin_floor`, de minimale marge die de winkel accepteert: een prijs "
+"waarvan de marge daaronder zakt, wat hij ook volgt, wordt in de "
+"productenlijst getoond en eenmaal per dag per e-mail aan de winkel gemeld. "
 "Bedragen en percentages zijn decimale strings, leeg als er geen is. Zonder "
 "doelmarge heeft de winkel geen regel. `attribute_rules` noemt elke waarde "
 "van een globaal attribuut die onderdelen van de regel wijzigt voor elke "
@@ -4606,25 +4588,7 @@ msgstr "De prijsinstellingen wijzigen"
 
 #. translators: 1: the name of the ability that reads the pricing settings, 2: the name of the ability that prices a product.
 #: src/Abilities/UpdatePricingSettings.php:48
-#, fuzzy, php-format
-#| msgid ""
-#| "Changes the pricing settings given, by their keys as %1$s reads them; the "
-#| "others keep their values. `price_automatic` switches automatic price "
-#| "changes on or off: on, a price that follows the rule is set to the rule's "
-#| "price when its cost changes and its margin left the tolerance; off, the "
-#| "new price is only suggested; a product or variation set to always or "
-#| "never keeps to that, whatever the switch says. `delivery_time_show` has a "
-#| "product page say how long the printshop says the chosen variation takes, "
-#| "as Pixonaut read it with the cost (only what the printshop tells: nothing "
-#| "is shown where it tells nothing), and `delivery_time_handling_days` adds "
-#| "days of the store's own to it. `price_ending` must be below `price_step`. "
-#| "`attribute_rules` sets the parts of the rule values of global attributes "
-#| "change for every variation with them, in every product, each entry "
-#| "replacing the value's parts (all empty to clear them); values not named "
-#| "keep theirs. Changing the store's rule or a value's settles the prices "
-#| "that follow the rule in the background: set to the rule's price where "
-#| "prices change automatically, else suggested. To set prices at once, price "
-#| "a product with %2$s. Answers with every pricing setting."
+#, php-format
 msgid ""
 "Changes the pricing settings given, by their keys as %1$s reads them; the "
 "others keep their values. `price_automatic` switches automatic price changes "
@@ -4659,15 +4623,21 @@ msgstr ""
 "Pixonaut het samen met de kosten ophaalde (alleen wat de drukkerij vermeldt: "
 "er wordt niets getoond waar ze niets vermeldt), en "
 "`delivery_time_handling_days` telt daar eigen dagen van de winkel bij op. "
-"`price_ending` moet lager zijn dan `price_step`. `attribute_rules` stelt de "
-"onderdelen van de regel in die waarden van globale attributen wijzigen voor "
-"elke variatie met die waarden, in alle producten, waarbij elk item de "
-"onderdelen van de waarde vervangt (alle leeg om ze te wissen); niet genoemde "
-"waarden behouden de hunne. Als de regel van de winkel of van een waarde "
-"wijzigt, worden de prijzen die de regel volgen op de achtergrond bijgewerkt: "
-"ingesteld op de prijs van de regel waar prijzen automatisch veranderen, "
-"anders voorgesteld. Prijzen worden meteen ingesteld door de prijs van een "
-"product te bepalen met %2$s. Antwoordt met alle prijsinstellingen."
+"`price_margin_floor` stelt de minimale marge in die de winkel accepteert, in "
+"procenten van een prijs exclusief btw, leeg als er geen is: een prijs "
+"waarvan de marge daaronder zakt, of hij nu de regel volgt, vastzit aan een "
+"laagste en hoogste prijs of met de hand is ingesteld, wordt in de "
+"productenlijst getoond, en een dagelijkse e-mail aan de winkel noemt elke "
+"prijs één keer, telkens wanneer hij eronder zakt. `price_ending` moet lager "
+"zijn dan `price_step`. `attribute_rules` stelt de onderdelen van de regel in "
+"die waarden van globale attributen wijzigen voor elke variatie met die "
+"waarden, in alle producten, waarbij elk item de onderdelen van de waarde "
+"vervangt (alle leeg om ze te wissen); niet genoemde waarden behouden de "
+"hunne. Als de regel van de winkel of van een waarde wijzigt, worden de "
+"prijzen die de regel volgen op de achtergrond bijgewerkt: ingesteld op de "
+"prijs van de regel waar prijzen automatisch veranderen, anders voorgesteld. "
+"Prijzen worden meteen ingesteld door de prijs van een product te bepalen met "
+"%2$s. Antwoordt met alle prijsinstellingen."
 
 #. translators: %s: the key of a setting, e.g. price_margin.
 #: src/Abilities/UpdatePricingSettings.php:79
@@ -5330,27 +5300,24 @@ msgstr ""
 #, php-format
 msgid "%1$d price has a margin below your lowest margin of %2$s."
 msgid_plural "%1$d prices have a margin below your lowest margin of %2$s."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%1$d prijs heeft een marge onder je minimale marge van %2$s."
+msgstr[1] "%1$d prijzen hebben een marge onder je minimale marge van %2$s."
 
 #. translators: Link in an admin notice to the products list, filtered to the products with a price below the lowest margin.
 #: src/Admin/MarginFloorList.php:113
-#, fuzzy
-#| msgid "As the product says"
 msgid "Show the products"
-msgstr "Zoals het product aangeeft"
+msgstr "Producten tonen"
 
 #. translators: A view of the admin products list: the products with a price whose margin is below the lowest margin the store accepts.
 #: src/Admin/MarginFloorList.php:135
 msgid "Below lowest margin"
-msgstr ""
+msgstr "Onder minimale marge"
 
 #. translators: 1: a variation's attribute values or a product's name, 2: the price, 3: the margin it leaves, such as 22.4 %. Under a product's name on the admin products list.
 #: src/Admin/MarginFloorList.php:191
-#, fuzzy, php-format
-#| msgid "%1$s: %2$s from %3$s"
+#, php-format
 msgid "%1$s: %2$s (margin %3$s)"
-msgstr "%1$s: %2$s van %3$s"
+msgstr "%1$s: %2$s (marge %3$s)"
 
 #. translators: %d: how many more prices. Under a product's name on the admin products list.
 #: src/Admin/MarginFloorList.php:200 src/Admin/PricingList.php:141
@@ -5364,7 +5331,7 @@ msgstr[1] "en nog %d"
 #: src/Admin/MarginFloorList.php:207
 #, php-format
 msgid "Below lowest margin of %s"
-msgstr ""
+msgstr "Onder minimale marge van %s"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the order waits for the printed items.
 #: src/Admin/OrderBox.php:281
@@ -7494,7 +7461,7 @@ msgstr "Ontwerp goedgekeurd"
 #. translators: Name of an email to the merchant, shown in WooCommerce > Settings > Emails.
 #: src/Emails/MarginFloorEmail.php:43
 msgid "Pixonaut margin below the lowest margin"
-msgstr ""
+msgstr "Pixonaut-marge onder minimale marge"
 
 #: src/Emails/MarginFloorEmail.php:44
 msgid ""
@@ -7502,16 +7469,20 @@ msgid ""
 "printshop charges for it and its shipping, fell below the lowest margin set "
 "under Pixonaut > Prices."
 msgstr ""
+"Wordt eenmaal per dag naar de winkel gestuurd wanneer de marge van een "
+"prijs, afgezet tegen wat de drukkerij voor het product en de verzending "
+"rekent, onder de minimale marge is gezakt die is ingesteld onder Pixonaut > "
+"Prijzen."
 
 #. translators: Default subject of the email to the merchant. {site_title} is filled in by WooCommerce; keep it as written.
 #: src/Emails/MarginFloorEmail.php:53
 msgid "[{site_title}]: Prices below your lowest margin"
-msgstr ""
+msgstr "[{site_title}]: Prijzen onder je minimale marge"
 
 #. translators: Default heading at the top of the email to the merchant.
 #: src/Emails/MarginFloorEmail.php:58
 msgid "Prices below your lowest margin"
-msgstr ""
+msgstr "Prijzen onder je minimale marge"
 
 #. translators: Name of an email to the merchant, shown in WooCommerce > Settings > Emails.
 #: src/Emails/NeedsAttentionEmail.php:41
@@ -10043,10 +10014,8 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a percentage: the lowest margin the merchant accepts on a price.
 #: src/Settings/Settings.php:604
-#, fuzzy
-#| msgid "Target margin (%)"
 msgid "Lowest margin (%)"
-msgstr "Doelmarge (%)"
+msgstr "Minimale marge (%)"
 
 #: src/Settings/Settings.php:605
 msgid ""
@@ -10056,6 +10025,12 @@ msgid ""
 "Below lowest margin on the products list and in a notice, and a daily email "
 "names each new one. Empty for no warning."
 msgstr ""
+"Wanneer de marge van een prijs, exclusief btw, hieronder zakt, om welke "
+"reden ook (de drukkerij rekent meer, een gewijzigde regel, een prijs die "
+"vastzit aan een laagste en hoogste prijs, of een prijs die met de hand is "
+"ingesteld), wordt het product in de productenlijst onder “Onder minimale "
+"marge” en in een melding getoond, en noemt een dagelijkse e-mail elk nieuw "
+"geval. Laat leeg voor geen waarschuwing."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether product pages say how long delivery takes.
 #: src/Settings/Settings.php:615
@@ -13695,6 +13670,9 @@ msgid ""
 "The margin of these prices fell below your lowest margin of %s, against what "
 "the printshop charges for the product and its shipping, excluding VAT:"
 msgstr ""
+"De marge van deze prijzen is onder je minimale marge van %s gezakt, afgezet "
+"tegen wat de drukkerij voor het product en de verzending rekent, exclusief "
+"btw:"
 
 #: templates/emails/margin-floor.php:56
 #: templates/emails/plain/margin-floor.php:37
@@ -13702,6 +13680,8 @@ msgid ""
 "Each price is named once, until its margin is back at your lowest margin and "
 "falls below it again."
 msgstr ""
+"Elke prijs wordt één keer genoemd, totdat de marge weer op je minimale marge "
+"zit en er opnieuw onder zakt."
 
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Email to the merchant.
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Plain text email to the merchant.
@@ -13732,7 +13712,7 @@ msgstr "Open de bestelling; in de notities staat wat er is gebeurd."
 #: templates/emails/plain/margin-floor.php:30
 #, php-format
 msgid "Price %1$s, cost %2$s, margin %3$s"
-msgstr ""
+msgstr "Prijs %1$s, kosten %2$s, marge %3$s"
 
 #. translators: %s: how far a picture is zoomed in, e.g. 1.5 for one and a half times. Beside the zoom slider of a picture in the product page's designer.
 #: templates/storefront/form-placeholder.php:90

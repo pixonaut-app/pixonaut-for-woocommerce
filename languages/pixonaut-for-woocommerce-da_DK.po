@@ -2401,27 +2401,6 @@ msgid "Read the pricing settings"
 msgstr "Læs prisindstillingerne"
 
 #: src/Abilities/ReadPricingSettings.php:61
-#, fuzzy
-#| msgid ""
-#| "Gives the store's pricing rule, by which prices follow the printshop's "
-#| "costs: the target margin and the fixed amount per item on top of it "
-#| "(price excluding tax = cost ÷ (1 − margin) + fixed amount), the tolerance "
-#| "around the margin the rule's own price leaves at a cost, the price step "
-#| "and what prices end in, the lowest and highest price, the currency buffer "
-#| "added to a cost converted from another currency, and whether prices "
-#| "change by themselves when a cost changes. Amounts and percentages are "
-#| "decimal strings, empty for none. Without a target margin the store has no "
-#| "rule. `attribute_rules` lists each value of a global attribute that "
-#| "changes parts of the rule for every variation with it, in every product, "
-#| "in the store's attribute order, with the parts another attribute's value "
-#| "sets too on a variation with both (`conflicts`: the one whose attribute "
-#| "comes first wins); a product and a variation may change parts too, and "
-#| "each part comes from the most specific level that sets it. Also the "
-#| "store's currency, and whether prices are entered including tax. "
-#| "`delivery_time_show` says whether a product page tells how long the "
-#| "printshop says the chosen variation takes, which Pixonaut reads with its "
-#| "cost, and `delivery_time_handling_days` the days of its own the store "
-#| "adds to that."
 msgid ""
 "Gives the store's pricing rule, by which prices follow the printshop's "
 "costs: the target margin and the fixed amount per item on top of it (price "
@@ -2450,19 +2429,22 @@ msgstr ""
 "= omkostning ÷ (1 − margin) + fast beløb), tolerancen omkring den margin, "
 "som reglens egen pris giver ved en omkostning, pristrinnet og hvad priser "
 "ender på, den laveste og den højeste pris, den valutabuffer, der lægges oven "
-"i en omkostning omregnet fra en anden valuta, og om priser ændrer sig af sig "
-"selv, når en omkostning ændrer sig. Beløb og procenter er decimalstrenge, "
-"tomme, når der ikke er nogen. Uden målmargin har webshoppen ingen regel. "
-"`attribute_rules` angiver hver værdi af en global egenskab, der ændrer dele "
-"af reglen for hver variant med værdien, i alle varer, i webshoppens "
-"egenskabsrækkefølge, med de dele, en værdi af en anden egenskab også angiver "
-"på en variant med begge (`conflicts`: den værdi, hvis egenskab kommer først, "
-"vinder); en vare og en variant kan også ændre dele, og hver del kommer fra "
-"det mest specifikke niveau, der angiver den. Også webshoppens valuta, og om "
-"priser angives inklusive moms. `delivery_time_show` angiver, om en vareside "
-"viser, hvor lang tid trykkeriet siger, den valgte variant tager, hvilket "
-"Pixonaut henter sammen med omkostningen, og `delivery_time_handling_days` de "
-"egne dage, webshoppen lægger oven i."
+"i en omkostning omregnet fra en anden valuta, om priser ændrer sig af sig "
+"selv, når en omkostning ændrer sig, og `price_margin_floor`, den laveste "
+"margin, webshoppen accepterer: en pris, hvis margin falder under den, uanset "
+"hvad den følger, vises på varelisten og sendes til webshoppen på e-mail én "
+"gang om dagen. Beløb og procenter er decimalstrenge, tomme, når der ikke er "
+"nogen. Uden målmargin har webshoppen ingen regel. `attribute_rules` angiver "
+"hver værdi af en global egenskab, der ændrer dele af reglen for hver variant "
+"med værdien, i alle varer, i webshoppens egenskabsrækkefølge, med de dele, "
+"en værdi af en anden egenskab også angiver på en variant med begge "
+"(`conflicts`: den værdi, hvis egenskab kommer først, vinder); en vare og en "
+"variant kan også ændre dele, og hver del kommer fra det mest specifikke "
+"niveau, der angiver den. Også webshoppens valuta, og om priser angives "
+"inklusive moms. `delivery_time_show` angiver, om en vareside viser, hvor "
+"lang tid trykkeriet siger, den valgte variant tager, hvilket Pixonaut henter "
+"sammen med omkostningen, og `delivery_time_handling_days` de egne dage, "
+"webshoppen lægger oven i."
 
 #: src/Abilities/ReadPricingSettings.php:166
 msgid "The global attribute, by id."
@@ -4485,25 +4467,7 @@ msgstr "Ændr prisindstillingerne"
 
 #. translators: 1: the name of the ability that reads the pricing settings, 2: the name of the ability that prices a product.
 #: src/Abilities/UpdatePricingSettings.php:48
-#, fuzzy, php-format
-#| msgid ""
-#| "Changes the pricing settings given, by their keys as %1$s reads them; the "
-#| "others keep their values. `price_automatic` switches automatic price "
-#| "changes on or off: on, a price that follows the rule is set to the rule's "
-#| "price when its cost changes and its margin left the tolerance; off, the "
-#| "new price is only suggested; a product or variation set to always or "
-#| "never keeps to that, whatever the switch says. `delivery_time_show` has a "
-#| "product page say how long the printshop says the chosen variation takes, "
-#| "as Pixonaut read it with the cost (only what the printshop tells: nothing "
-#| "is shown where it tells nothing), and `delivery_time_handling_days` adds "
-#| "days of the store's own to it. `price_ending` must be below `price_step`. "
-#| "`attribute_rules` sets the parts of the rule values of global attributes "
-#| "change for every variation with them, in every product, each entry "
-#| "replacing the value's parts (all empty to clear them); values not named "
-#| "keep theirs. Changing the store's rule or a value's settles the prices "
-#| "that follow the rule in the background: set to the rule's price where "
-#| "prices change automatically, else suggested. To set prices at once, price "
-#| "a product with %2$s. Answers with every pricing setting."
+#, php-format
 msgid ""
 "Changes the pricing settings given, by their keys as %1$s reads them; the "
 "others keep their values. `price_automatic` switches automatic price changes "
@@ -4537,14 +4501,20 @@ msgstr ""
 "trykkeriet siger, den valgte variant tager, sådan som Pixonaut hentede det "
 "sammen med omkostningen (kun det, trykkeriet oplyser: der vises intet, hvor "
 "det intet oplyser), og `delivery_time_handling_days` lægger webshoppens egne "
-"dage oven i. `price_ending` skal være lavere end `price_step`. "
-"`attribute_rules` angiver de dele af reglen, som værdier af globale "
-"egenskaber ændrer for hver variant med dem, i alle varer, hvor hver post "
-"erstatter værdiens dele (alle tomme for at rydde dem); værdier, der ikke "
-"angives, beholder deres. Når webshoppens regel eller en værdis regel ændres, "
-"tilpasses de priser, der følger reglen, i baggrunden: de sættes til reglens "
-"pris, hvor priser ændres automatisk, ellers foreslås de. For at sætte priser "
-"med det samme prissættes en vare med %2$s. Svarer med alle prisindstillinger."
+"dage oven i. `price_margin_floor` angiver den laveste margin, webshoppen "
+"accepterer, i procent af en pris eksklusive moms, tom, når der ikke er "
+"nogen: en pris, hvis margin falder under den, uanset om den følger reglen, "
+"er låst af en laveste og højeste pris eller er sat manuelt, vises på "
+"varelisten, og en daglig e-mail til webshoppen nævner hver af dem én gang, "
+"hver gang marginen falder under. `price_ending` skal være lavere end "
+"`price_step`. `attribute_rules` angiver de dele af reglen, som værdier af "
+"globale egenskaber ændrer for hver variant med dem, i alle varer, hvor hver "
+"post erstatter værdiens dele (alle tomme for at rydde dem); værdier, der "
+"ikke angives, beholder deres. Når webshoppens regel eller en værdis regel "
+"ændres, tilpasses de priser, der følger reglen, i baggrunden: de sættes til "
+"reglens pris, hvor priser ændres automatisk, ellers foreslås de. For at "
+"sætte priser med det samme prissættes en vare med %2$s. Svarer med alle "
+"prisindstillinger."
 
 #. translators: %s: the key of a setting, e.g. price_margin.
 #: src/Abilities/UpdatePricingSettings.php:79
@@ -5193,27 +5163,24 @@ msgstr ""
 #, php-format
 msgid "%1$d price has a margin below your lowest margin of %2$s."
 msgid_plural "%1$d prices have a margin below your lowest margin of %2$s."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%1$d pris har en margin under din laveste margin på %2$s."
+msgstr[1] "%1$d priser har en margin under din laveste margin på %2$s."
 
 #. translators: Link in an admin notice to the products list, filtered to the products with a price below the lowest margin.
 #: src/Admin/MarginFloorList.php:113
-#, fuzzy
-#| msgid "As the product says"
 msgid "Show the products"
-msgstr "Som varen angiver"
+msgstr "Vis varerne"
 
 #. translators: A view of the admin products list: the products with a price whose margin is below the lowest margin the store accepts.
 #: src/Admin/MarginFloorList.php:135
 msgid "Below lowest margin"
-msgstr ""
+msgstr "Under laveste margin"
 
 #. translators: 1: a variation's attribute values or a product's name, 2: the price, 3: the margin it leaves, such as 22.4 %. Under a product's name on the admin products list.
 #: src/Admin/MarginFloorList.php:191
-#, fuzzy, php-format
-#| msgid "%1$s: %2$s from %3$s"
+#, php-format
 msgid "%1$s: %2$s (margin %3$s)"
-msgstr "%1$s: %2$s fra %3$s"
+msgstr "%1$s: %2$s (margin %3$s)"
 
 #. translators: %d: how many more prices. Under a product's name on the admin products list.
 #: src/Admin/MarginFloorList.php:200 src/Admin/PricingList.php:141
@@ -5227,7 +5194,7 @@ msgstr[1] "og %d til"
 #: src/Admin/MarginFloorList.php:207
 #, php-format
 msgid "Below lowest margin of %s"
-msgstr ""
+msgstr "Under laveste margin på %s"
 
 #. translators: Status of an order line in the order box on the order screen, shown to the merchant: the order waits for the printed items.
 #: src/Admin/OrderBox.php:281
@@ -7315,7 +7282,7 @@ msgstr "Design godkendt"
 #. translators: Name of an email to the merchant, shown in WooCommerce > Settings > Emails.
 #: src/Emails/MarginFloorEmail.php:43
 msgid "Pixonaut margin below the lowest margin"
-msgstr ""
+msgstr "Pixonaut: margin under laveste margin"
 
 #: src/Emails/MarginFloorEmail.php:44
 msgid ""
@@ -7323,16 +7290,19 @@ msgid ""
 "printshop charges for it and its shipping, fell below the lowest margin set "
 "under Pixonaut > Prices."
 msgstr ""
+"Sendes til webshoppen én gang om dagen, når marginen på en pris, set i "
+"forhold til hvad trykkeriet opkræver for varen og dens forsendelse, er "
+"faldet under den laveste margin, der er angivet under Pixonaut > Priser."
 
 #. translators: Default subject of the email to the merchant. {site_title} is filled in by WooCommerce; keep it as written.
 #: src/Emails/MarginFloorEmail.php:53
 msgid "[{site_title}]: Prices below your lowest margin"
-msgstr ""
+msgstr "[{site_title}]: Priser under din laveste margin"
 
 #. translators: Default heading at the top of the email to the merchant.
 #: src/Emails/MarginFloorEmail.php:58
 msgid "Prices below your lowest margin"
-msgstr ""
+msgstr "Priser under din laveste margin"
 
 #. translators: Name of an email to the merchant, shown in WooCommerce > Settings > Emails.
 #: src/Emails/NeedsAttentionEmail.php:41
@@ -9802,10 +9772,8 @@ msgstr ""
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a percentage: the lowest margin the merchant accepts on a price.
 #: src/Settings/Settings.php:604
-#, fuzzy
-#| msgid "Target margin (%)"
 msgid "Lowest margin (%)"
-msgstr "Målmargin (%)"
+msgstr "Laveste margin (%)"
 
 #: src/Settings/Settings.php:605
 msgid ""
@@ -9815,6 +9783,11 @@ msgid ""
 "Below lowest margin on the products list and in a notice, and a daily email "
 "names each new one. Empty for no warning."
 msgstr ""
+"Når marginen på en pris ekskl. moms falder under dette, uanset årsagen (at "
+"trykkeriet opkræver mere, en ændret regel, en pris, der er låst af en "
+"laveste og højeste pris, eller en pris, der er sat manuelt), vises varen "
+"under »Under laveste margin« på varelisten og i en meddelelse, og en daglig "
+"e-mail nævner hvert nyt tilfælde. Lad feltet stå tomt for ingen advarsel."
 
 #. translators: Title of a setting on the settings page, shown to the merchant: whether product pages say how long delivery takes.
 #: src/Settings/Settings.php:615
@@ -13398,6 +13371,9 @@ msgid ""
 "The margin of these prices fell below your lowest margin of %s, against what "
 "the printshop charges for the product and its shipping, excluding VAT:"
 msgstr ""
+"Marginen på disse priser er faldet under din laveste margin på %s, set i "
+"forhold til hvad trykkeriet opkræver for varen og dens forsendelse, ekskl. "
+"moms:"
 
 #: templates/emails/margin-floor.php:56
 #: templates/emails/plain/margin-floor.php:37
@@ -13405,6 +13381,8 @@ msgid ""
 "Each price is named once, until its margin is back at your lowest margin and "
 "falls below it again."
 msgstr ""
+"Hver pris nævnes én gang, indtil dens margin igen når din laveste margin og "
+"falder under den igen."
 
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Email to the merchant.
 #. translators: 1: name of the ordered product, 2: WooCommerce order number. Plain text email to the merchant.
@@ -13435,7 +13413,7 @@ msgstr "Åbn ordren; dens bemærkninger fortæller, hvad der skete."
 #: templates/emails/plain/margin-floor.php:30
 #, php-format
 msgid "Price %1$s, cost %2$s, margin %3$s"
-msgstr ""
+msgstr "Pris %1$s, omkostning %2$s, margin %3$s"
 
 #. translators: %s: how far a picture is zoomed in, e.g. 1.5 for one and a half times. Beside the zoom slider of a picture in the product page's designer.
 #: templates/storefront/form-placeholder.php:90
