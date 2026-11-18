@@ -26,11 +26,13 @@ use WP_Error;
 
 /**
  * Carries out what `VariationCombinations` works out for a product and its
- * plan: makes each variation missing, on its blank (following the
- * product's setup when the blank is the product's, else the setup of a
- * variation already on that blank, else the product's with the blank
- * changed and each side at its whole area there, checked with Pixonaut
- * once per blank) and sold as its variant;
+ * plan: makes each variation missing, on its blank and the templates
+ * its other values pick (`VariationTemplates`): following the product's
+ * setup when both are the product's, else the setup of a variation
+ * already on that blank and templates, else the setup the templates come
+ * from with the blank changed and each side at its whole area there,
+ * checked with Pixonaut once per blank and templates; and sold as its
+ * variant;
  * publishes again those the plan had disabled; gives the plan's variant to
  * those selling none; disables those no longer offered. Then the new and
  * changed variations' costs are read and the price rule sets their prices.
@@ -75,7 +77,8 @@ final class VariationGenerator {
 	 * @throws ApiException When a blank's variants could not be read.
 	 */
 	public function changes( WC_Product $product, VariationPlan $plan ): VariationChanges|WP_Error {
-		return ( new VariationCombinations( fn ( string $blank_id ): array => $this->variants->named( $blank_id ) ) )->of( $product, $plan );
+		$changes = ( new VariationCombinations( fn ( string $blank_id ): array => $this->variants->named( $blank_id ) ) )->of( $product, $plan );
+		return $changes instanceof WP_Error ? $changes : VariationTemplates::given( $product, $plan->selectors(), $changes );
 	}
 
 	/**
@@ -97,12 +100,17 @@ final class VariationGenerator {
 	public function apply( WC_Product $product, VariationChanges $changes ): array|WP_Error {
 		$add    = array_slice( $changes->add, 0, self::MAX_MADE );
 		$setups = array();
-		foreach ( array_unique( array_column( array_merge( $add, $changes->change ), 'blank_id' ) ) as $blank_id ) {
-			$setup = $this->setup_of( $product, (string) $blank_id );
+		foreach ( array_merge( $add, $changes->change ) as $one ) {
+			$key = self::setup_key( $one );
+			// A variation kept on its blank keeps its setup.
+			if ( array_key_exists( $key, $setups ) || ( $one['variation_id'] ?? null ) === ( $one['template_from'] ?? null ) ) {
+				continue;
+			}
+			$setup = $this->setup_of( $product, $one['blank_id'], self::source_of( $one ) );
 			if ( $setup instanceof WP_Error ) {
 				return $setup;
 			}
-			$setups[ $blank_id ] = $setup;
+			$setups[ $key ] = $setup;
 		}
 		$made     = array();
 		$changed  = array();
@@ -118,7 +126,7 @@ final class VariationGenerator {
 				$variation->set_menu_order( $order++ );
 				GeneratedVariation::mark( $variation, GeneratedVariation::DISABLED );
 				$variation->save();
-				$this->sell( $variation, $one, $setups );
+				$this->sell( $variation, $one, $setups[ self::setup_key( $one ) ] ?? null, true );
 				$made[] = $variation->get_id();
 			}
 			foreach ( $changes->change as $one ) {
@@ -128,7 +136,7 @@ final class VariationGenerator {
 				if ( ! $variation instanceof WC_Product || ( $enable && ! GeneratedVariation::disabled( $variation ) ) ) {
 					continue;
 				}
-				$this->sell( $variation, $one, $setups, $enable );
+				$this->sell( $variation, $one, $setups[ self::setup_key( $one ) ] ?? null, false, $enable );
 				$changed[] = $variation->get_id();
 			}
 			foreach ( $changes->disable as $one ) {
@@ -153,20 +161,43 @@ final class VariationGenerator {
 	}
 
 	/**
-	 * Puts a variation on its entry's blank, unless it already is, sells it
-	 * as the plan's variant, and publishes it.
+	 * Which setup a variation to add or change gets: one per blank and
+	 * template choice.
 	 *
-	 * @param WC_Product                        $variation The variation.
-	 * @param array                             $one       What the plan sells it as.
-	 * @param array<string, ProductConfig|null> $setups    The setup each blank's variations get; null to follow the product.
-	 * @param bool                              $publish   Whether to publish it; a new one always is.
+	 * @param array $one A variation to add or change.
+	 * @phpstan-param Added $one
+	 */
+	private static function setup_key( array $one ): string {
+		return $one['blank_id'] . '#' . ( $one['template_from'] ?? VariationTemplates::PRODUCT );
+	}
+
+	/**
+	 * The setup of the variation whose templates a variation to add or
+	 * change is sold on; null for the product's.
+	 *
+	 * @param array $one A variation to add or change.
+	 * @phpstan-param Added $one
+	 */
+	private static function source_of( array $one ): ?ProductConfig {
+		$from      = $one['template_from'] ?? VariationTemplates::PRODUCT;
+		$variation = VariationTemplates::PRODUCT === $from ? null : wc_get_product( $from );
+		return $variation instanceof WC_Product ? ProductConfig::config_for( $variation ) : null;
+	}
+
+	/**
+	 * Puts a variation on its entry's blank and template, unless it already
+	 * is on that blank, sells it as the plan's variant, and publishes it.
+	 *
+	 * @param WC_Product         $variation The variation.
+	 * @param array              $one       What the plan sells it as.
+	 * @param ProductConfig|null $setup     The setup it gets; null to follow the product.
+	 * @param bool               $made      Whether it was just made, following the product until given its setup.
+	 * @param bool               $publish   Whether to publish it; a new one always is.
 	 * @phpstan-param Added $one
 	 * @throws ApiException When the blank's variants could not be read.
 	 */
-	private function sell( WC_Product $variation, array $one, array $setups, bool $publish = true ): void {
-		$blank_id = $one['blank_id'];
-		if ( ProductConfig::config_for( $variation )->blank_id !== $blank_id ) {
-			$setup = $setups[ $blank_id ] ?? null;
+	private function sell( WC_Product $variation, array $one, ?ProductConfig $setup, bool $made, bool $publish = true ): void {
+		if ( ProductConfig::config_for( $variation )->blank_id !== $one['blank_id'] || ( $made && null !== $setup ) ) {
 			if ( null === $setup ) {
 				$this->links->configure_variation( $variation, null );
 			} else {
@@ -187,24 +218,27 @@ final class VariationGenerator {
 	}
 
 	/**
-	 * The setup a variation on a blank gets: null to follow the product's,
-	 * on its blank; a variation's own setup already on the blank; else the
-	 * product's with the blank changed, each side at its placement's whole
-	 * area and following the product's form arrangement, checked with
-	 * Pixonaut.
+	 * The setup a variation on a blank and its templates gets: null to
+	 * follow the product's, on its blank and templates; a variation's own
+	 * setup already on the blank and templates; else the setup the
+	 * templates come from with the blank changed, each side at its
+	 * placement's whole area and following the product's form arrangement,
+	 * checked with Pixonaut.
 	 *
-	 * @param WC_Product $product  The variable product.
-	 * @param string     $blank_id The blank.
+	 * @param WC_Product         $product  The variable product.
+	 * @param string             $blank_id The blank.
+	 * @param ProductConfig|null $source   The setup of the variation whose templates it is sold on; null for the product's.
 	 */
-	private function setup_of( WC_Product $product, string $blank_id ): ProductConfig|WP_Error|null {
-		$own = ProductConfig::stored_on( $product );
-		if ( $own->blank_id === $blank_id ) {
+	private function setup_of( WC_Product $product, string $blank_id, ?ProductConfig $source ): ProductConfig|WP_Error|null {
+		$own  = ProductConfig::stored_on( $product );
+		$base = $source ?? $own;
+		if ( null === $source && $own->blank_id === $blank_id ) {
 			return null;
 		}
 		foreach ( $product->get_children() as $child_id ) {
 			$child  = wc_get_product( $child_id );
 			$config = $child instanceof WC_Product && ProductConfig::is_stored_on( $child ) ? ProductConfig::stored_on( $child ) : null;
-			if ( null !== $config && $config->override && $config->personalise && $config->blank_id === $blank_id && null === $config->invalid_reason ) {
+			if ( null !== $config && $config->override && $config->personalise && $config->blank_id === $blank_id && null === $config->invalid_reason && VariationTemplates::key_of( $config ) === VariationTemplates::key_of( $base ) ) {
 				return $config;
 			}
 		}
@@ -219,17 +253,17 @@ final class VariationGenerator {
 				'start_size'  => 0,
 				'form_groups' => null,
 			) + $side,
-			SetupFields::sides_of( $own )
+			SetupFields::sides_of( $base )
 		);
 		$posted = $this->fields->posted(
 			array(
 				'blank_id'     => $blank_id,
 				'sides'        => $sides,
-				'personalised' => $own->personalise,
+				'personalised' => $base->personalise,
 			),
-			$own
+			$base
 		);
-		return $posted instanceof WP_Error ? $posted : $this->links->check_variation( $unsaved, $posted, $own );
+		return $posted instanceof WP_Error ? $posted : $this->links->check_variation( $unsaved, $posted, $base );
 	}
 
 	/**

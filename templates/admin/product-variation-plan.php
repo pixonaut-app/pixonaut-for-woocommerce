@@ -108,6 +108,14 @@ $pixonaut_lists = null === $answer ? array() : array(
 									<?php if ( isset( $pixonaut_row['variant'] ) ) : ?>
 										<span class="pixonaut-variation-plan__variant">— <?php echo esc_html( (string) $pixonaut_row['variant'] ); ?></span>
 									<?php endif; ?>
+									<?php if ( isset( $pixonaut_row['template'] ) && '' !== $pixonaut_row['template'] ) : ?>
+										<span class="pixonaut-variation-plan__template">
+											<?php
+											/* translators: %s: the names of the templates a variation is sold on, e.g. "Birth poster without photo". Shown after a variation in the list of what generating adds or changes. */
+											echo esc_html( sprintf( __( 'template: %s', 'pixonaut-for-woocommerce' ), (string) $pixonaut_row['template'] ) );
+											?>
+										</span>
+									<?php endif; ?>
 									<?php if ( isset( $pixonaut_row['why'] ) ) : ?>
 										<span class="pixonaut-variation-plan__why">(<?php echo esc_html( $why_texts[ (string) $pixonaut_row['why'] ] ?? (string) $pixonaut_row['why'] ); ?>)</span>
 									<?php endif; ?>

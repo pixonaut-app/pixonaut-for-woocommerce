@@ -115,8 +115,8 @@ final class VariationPlanRows {
 			$changed
 		);
 		return array(
-			'add'     => $rows( $changes->add, array( 'attributes', 'label', 'blank_id', 'ref', 'variant' ) ),
-			'change'  => $rows( $changes->change, array( 'variation_id', 'attributes', 'label', 'blank_id', 'ref', 'variant', 'why' ) ),
+			'add'     => $rows( $changes->add, array( 'attributes', 'label', 'blank_id', 'ref', 'variant', 'template' ) ),
+			'change'  => $rows( $changes->change, array( 'variation_id', 'attributes', 'label', 'blank_id', 'ref', 'variant', 'template', 'why' ) ),
 			'disable' => $rows( $changes->disable, array( 'variation_id', 'attributes', 'label', 'why' ) ),
 			'skipped' => $rows( $changes->skipped, array( 'attributes', 'label', 'blank_id', 'why' ) ),
 			'kept'    => count( $changes->kept ),
@@ -180,6 +180,10 @@ final class VariationPlanRows {
 				'description' => __( 'The blank variant it is sold as.', 'pixonaut-for-woocommerce' ),
 			),
 			'variant'  => array( 'type' => 'string' ),
+			'template' => array(
+				'type'        => 'string',
+				'description' => __( 'The template it is sold on, one per side: the one the product\'s variations holding its other values carry (with or without a photo), else the product\'s own.', 'pixonaut-for-woocommerce' ),
+			),
 		);
 		$id   = array( 'variation_id' => array( 'type' => 'integer' ) );
 		return array(

@@ -894,6 +894,7 @@ export const REACH = {
 		'src/Catalogue/GeneratedVariation.php',
 		'src/Abilities/VariationGenerator.php',
 		'src/Abilities/VariationPlanRows.php',
+		'src/Abilities/VariationTemplates.php',
 		'src/Abilities/GetProductVariationPlan.php',
 		'src/Abilities/GenerateProductVariations.php',
 		'src/Admin/VariationPlanPanel.php',

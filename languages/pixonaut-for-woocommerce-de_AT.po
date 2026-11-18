@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T17:56:55+00:00\n"
+"POT-Creation-Date: 2026-11-18T23:39:43+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -4808,7 +4808,14 @@ msgstr ""
 msgid "The blank variant it is sold as."
 msgstr "Die Rohling-Variante, als die sie verkauft wird."
 
-#: src/Abilities/VariationPlanRows.php:192
+#: src/Abilities/VariationPlanRows.php:185
+msgid ""
+"The template it is sold on, one per side: the one the product's variations "
+"holding its other values carry (with or without a photo), else the product's "
+"own."
+msgstr "Die Vorlage, auf der sie verkauft wird, eine je Seite: die der Varianten des Produkts mit denselben übrigen Werten (mit oder ohne Foto), sonst die des Produkts selbst."
+
+#: src/Abilities/VariationPlanRows.php:196
 msgid ""
 "`enable`: disabled by an earlier run, offered again. `variant`: sold no "
 "variant of its blank, now the plan's."
@@ -4816,7 +4823,7 @@ msgstr ""
 "`enable`: von einem früheren Durchlauf deaktiviert, wieder angeboten. "
 "`variant`: verkaufte keine Variante ihres Rohlings, jetzt die des Plans."
 
-#: src/Abilities/VariationPlanRows.php:210
+#: src/Abilities/VariationPlanRows.php:214
 msgid ""
 "Why no variation is made for these values: they name no variant of the "
 "blank, several (an option is left open), or a retired one."
@@ -4825,7 +4832,7 @@ msgstr ""
 "Variante des Rohlings, mehrere (eine Option bleibt offen) oder eine "
 "eingestellte."
 
-#: src/Abilities/VariationPlanRows.php:216
+#: src/Abilities/VariationPlanRows.php:220
 msgid "How many variations are kept as they are."
 msgstr "Wie viele Varianten unverändert bleiben."
 
@@ -13149,8 +13156,14 @@ msgstr "Vorschau"
 msgid "Generate from the blank"
 msgstr "Aus dem Rohling erstellen"
 
+#. translators: %s: the names of the templates a variation is sold on, e.g. "Birth poster without photo". Shown after a variation in the list of what generating adds or changes.
+#: templates/admin/product-variation-plan.php:115
+#, php-format
+msgid "template: %s"
+msgstr "Vorlage: %s"
+
 #. translators: %d: how many variations.
-#: templates/admin/product-variation-plan.php:123
+#: templates/admin/product-variation-plan.php:131
 #, php-format
 msgid "%d variation kept as it is."
 msgid_plural "%d variations kept as they are."
@@ -13158,14 +13171,14 @@ msgstr[0] "%d Variante bleibt unverändert."
 msgstr[1] "%d Varianten bleiben unverändert."
 
 #. translators: %d: how many variations.
-#: templates/admin/product-variation-plan.php:128
+#: templates/admin/product-variation-plan.php:136
 #, php-format
 msgid "%d more variation is made when you generate again."
 msgid_plural "%d more variations are made when you generate again."
 msgstr[0] "%d weitere Variante wird erstellt, wenn du erneut erstellst."
 msgstr[1] "%d weitere Varianten werden erstellt, wenn du erneut erstellst."
 
-#: templates/admin/product-variation-plan.php:132
+#: templates/admin/product-variation-plan.php:140
 msgid ""
 "Pixonaut could not be reached to read the printshop's costs, so the new "
 "variations are not priced yet: click Apply under Prices in the Pixonaut tab "
@@ -13176,7 +13189,7 @@ msgstr ""
 "unter „Preise“ auf „Übernehmen“."
 
 #. translators: %d: how many variations.
-#: templates/admin/product-variation-plan.php:137
+#: templates/admin/product-variation-plan.php:145
 #, php-format
 msgid ""
 "%d variation has no price yet, so customers cannot buy it: set a target "
