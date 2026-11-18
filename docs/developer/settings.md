@@ -311,6 +311,12 @@ Default: `3`.
 
 Default: `false`.
 
+### `price_margin_floor`
+
+**Lowest margin (%)** (text). When the margin of a price, excluding VAT, falls below this, whatever the reason (the printshop charging more, a changed rule, a price pinned by a lowest and highest price, or one set by hand), the product is listed under Below lowest margin on the products list and in a notice, and a daily email names each new one. Empty for no warning.
+
+Default: empty.
+
 ### `delivery_time_show`
 
 **Show the delivery time** (checkbox). Say in a “Delivery time” row of the product’s attributes table how long the printshop says the chosen variation takes, such as “4–7 days”. Only what the printshop itself tells is shown: a printshop that tells how long it takes to make the product and nothing of the delivery gets “Made in 2–3 days”, and one that tells nothing gets no row. The times are read with the costs, once a day.

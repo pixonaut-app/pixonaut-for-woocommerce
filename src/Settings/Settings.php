@@ -105,6 +105,8 @@ final class Settings {
 
 	public const PRICE_CURRENCY_BUFFER = 'price_currency_buffer';
 
+	public const PRICE_MARGIN_FLOOR = 'price_margin_floor';
+
 	public const DELIVERY_TIME_SHOW = 'delivery_time_show';
 
 	public const DELIVERY_TIME_HANDLING_DAYS = 'delivery_time_handling_days';
@@ -590,6 +592,17 @@ final class Settings {
 					/* translators: Title of a setting on the settings page, shown to the merchant: whether the plugin changes prices by itself when a printshop's cost changes. */
 					'title' => __( 'Automatic price changes', 'pixonaut-for-woocommerce' ),
 					'desc'  => __( 'When a printshop changes what it charges, set the prices that follow the rule and whose margin left the tolerance to the rule’s price, and log each change under WooCommerce > Status > Logs. Off, such a price is flagged on the products list with the price the rule suggests, for you to apply.', 'pixonaut-for-woocommerce' ),
+				)
+			)
+		);
+		$this->register(
+			Setting::decimal(
+				self::PRICE_MARGIN_FLOOR,
+				'',
+				static fn (): array => array(
+					/* translators: Title of a setting on the settings page, shown to the merchant; the value is a percentage: the lowest margin the merchant accepts on a price. */
+					'title' => __( 'Lowest margin (%)', 'pixonaut-for-woocommerce' ),
+					'desc'  => __( 'When the margin of a price, excluding VAT, falls below this, whatever the reason (the printshop charging more, a changed rule, a price pinned by a lowest and highest price, or one set by hand), the product is listed under Below lowest margin on the products list and in a notice, and a daily email names each new one. Empty for no warning.', 'pixonaut-for-woocommerce' ),
 				)
 			)
 		);

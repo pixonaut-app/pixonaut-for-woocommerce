@@ -289,6 +289,13 @@ final class Schema {
 	const PRICE_WATCH_META = '_pixonaut_price_watch';
 
 	/**
+	 * Meta on a simple product or variation whose margin is below the
+	 * store's lowest margin: `new` until the daily email named it, then
+	 * `reported`. Taken away once the margin is back at the floor.
+	 */
+	const MARGIN_LOW_META = '_pixonaut_margin_low';
+
+	/**
 	 * Product and variation meta, `yes` when it showed its own image rather
 	 * than its Pixonaut picture. No longer written: `ReplaceKeptImages` turns
 	 * it into `PRODUCT_PREVIOUS_IMAGE_META`.

@@ -62,6 +62,10 @@ final class Emails {
 
 	public const DEADLINE_PASSED_PLAIN = 'emails/plain/deadline-passed.php';
 
+	public const MARGIN_FLOOR_HTML = 'emails/margin-floor.php';
+
+	public const MARGIN_FLOOR_PLAIN = 'emails/plain/margin-floor.php';
+
 	public function __construct(
 		private readonly Templates $templates,
 		private readonly Labels $labels,
@@ -92,6 +96,7 @@ final class Emails {
 		$emails[ ProofReminderEmail::class ]    = new ProofReminderEmail( $this->templates, $this->labels );
 		$emails[ ProofExpiredEmail::class ]     = new ProofExpiredEmail( $this->templates, $this->labels );
 		$emails[ DeadlinePassedEmail::class ]   = new DeadlinePassedEmail();
+		$emails[ MarginFloorEmail::class ]      = new MarginFloorEmail();
 		return $emails;
 	}
 

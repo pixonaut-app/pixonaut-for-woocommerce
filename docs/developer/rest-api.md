@@ -33,6 +33,7 @@ pretty permalinks).
 | `/pixonaut/v1/pictures/now` | POST |
 | `/pixonaut/v1/products/(?P<id>\d+)/pictures` | GET, POST |
 | `/pixonaut/v1/products/(?P<product>\d+)/prices` | POST |
+| `/pixonaut/v1/products/(?P<product>\d+)/variation-plan` | POST |
 | `/pixonaut/v1/proof/(?P<design>[A-Za-z0-9_-]{1,64})` | GET |
 | `/pixonaut/v1/shop-tools/(?P<tool>[^/]+)` | POST |
 | `/pixonaut/v1/storefront/reads-ahead` | GET |
