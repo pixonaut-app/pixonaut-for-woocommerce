@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:06:30+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:44:44+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -307,24 +307,34 @@ msgstr ""
 msgid ""
 "The blank option the attribute stands for, as Pixonaut writes it; null when "
 "it is not linked."
-msgstr "La opción del producto base que representa el atributo, tal como la escribe Pixonaut; null cuando no está vinculado."
+msgstr ""
+"La opción del producto base que representa el atributo, tal como la escribe "
+"Pixonaut; null cuando no está vinculado."
 
 #: src/Abilities/BlankOptionRows.php:82
 msgid "The option value the value was linked to; null when it was given none."
-msgstr "El valor de la opción al que se vinculó el valor; null cuando no recibió ninguno."
+msgstr ""
+"El valor de la opción al que se vinculó el valor; null cuando no recibió "
+"ninguno."
 
 #: src/Abilities/BlankOptionRows.php:86
 msgid ""
 "The option value it stands for: the one it was linked to, else the option's "
 "value of its name; null when it is not linked, and then shows as text."
-msgstr "El valor de la opción que representa: aquel al que se vinculó o, si no, el valor de la opción con su mismo nombre; null cuando no está vinculado, y entonces se muestra como texto."
+msgstr ""
+"El valor de la opción que representa: aquel al que se vinculó o, si no, el "
+"valor de la opción con su mismo nombre; null cuando no está vinculado, y "
+"entonces se muestra como texto."
 
 #: src/Abilities/BlankOptionRows.php:93
 msgid ""
 "The options the attribute can be linked to, each with its values: those of "
 "the blanks the products with this attribute use, themselves or through their "
 "variations."
-msgstr "Las opciones a las que se puede vincular el atributo, cada una con sus valores: las de los productos base que usan los productos con este atributo, por sí mismos o a través de sus variaciones."
+msgstr ""
+"Las opciones a las que se puede vincular el atributo, cada una con sus "
+"valores: las de los productos base que usan los productos con este atributo, "
+"por sí mismos o a través de sus variaciones."
 
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
@@ -601,7 +611,16 @@ msgid ""
 "in the designer as the option values' colour or picture swatches; a value "
 "whose `stands_for` is null is not linked and shows as text. Link one with "
 "`set-attribute-blank-option`."
-msgstr "Lee, para cada atributo global o el indicado, la opción del producto base de Pixonaut que representa (un atributo de color de marco para la opción Color del producto base), el valor de la opción que representa cada uno de sus valores, y `options`: las opciones a las que se puede vincular, cada una con sus valores, de los productos base que usan sus productos. Los valores de un atributo vinculado eligen la variante del producto base y se muestran en el personalizador como botones de color o de imagen de los valores de la opción; un valor cuyo `stands_for` es null no está vinculado y se muestra como texto. Vincula uno con `set-attribute-blank-option`."
+msgstr ""
+"Lee, para cada atributo global o el indicado, la opción del producto base de "
+"Pixonaut que representa (un atributo de color de marco para la opción Color "
+"del producto base), el valor de la opción que representa cada uno de sus "
+"valores, y `options`: las opciones a las que se puede vincular, cada una con "
+"sus valores, de los productos base que usan sus productos. Los valores de un "
+"atributo vinculado eligen la variante del producto base y se muestran en el "
+"personalizador como botones de color o de imagen de los valores de la "
+"opción; un valor cuyo `stands_for` es null no está vinculado y se muestra "
+"como texto. Vincula uno con `set-attribute-blank-option`."
 
 #: src/Abilities/GetAttributeBlankOptions.php:44
 msgid "Only this global attribute, by id."
@@ -2367,7 +2386,21 @@ msgid ""
 "attribute. Products with the attribute are re-checked in the background. The "
 "answer is the attribute's row; a `503` when the re-check could not be "
 "queued, the link being saved."
-msgstr "Vincula un atributo global a una opción de los productos base de Pixonaut que usan sus productos, y sus valores a los valores de la opción, como hace el campo «Opción del producto base» de su pantalla de edición: un atributo de color de marco a la opción Color del producto base, su valor Svart a Black. Sus valores eligen entonces la variante del producto base y se muestran en el personalizador como botones de color o de imagen de los valores de la opción. `option` y cada valor se nombran como los lista `get-attribute-blank-options` en `options`. Un valor con `value` vacío, o aún sin vincular, representa el valor de la opción con su mismo nombre; los valores no indicados conservan su vínculo mientras la opción sea la misma, y lo pierden cuando cambia. Una `option` vacía desvincula el atributo. Los productos con el atributo se vuelven a comprobar en segundo plano. La respuesta es la fila del atributo; un `503` cuando no se pudo programar la nueva comprobación, aunque el vínculo queda guardado."
+msgstr ""
+"Vincula un atributo global a una opción de los productos base de Pixonaut "
+"que usan sus productos, y sus valores a los valores de la opción, como hace "
+"el campo «Opción del producto base» de su pantalla de edición: un atributo "
+"de color de marco a la opción Color del producto base, su valor Svart a "
+"Black. Sus valores eligen entonces la variante del producto base y se "
+"muestran en el personalizador como botones de color o de imagen de los "
+"valores de la opción. `option` y cada valor se nombran como los lista `get-"
+"attribute-blank-options` en `options`. Un valor con `value` vacío, o aún sin "
+"vincular, representa el valor de la opción con su mismo nombre; los valores "
+"no indicados conservan su vínculo mientras la opción sea la misma, y lo "
+"pierden cuando cambia. Una `option` vacía desvincula el atributo. Los "
+"productos con el atributo se vuelven a comprobar en segundo plano. La "
+"respuesta es la fila del atributo; un `503` cuando no se pudo programar la "
+"nueva comprobación, aunque el vínculo queda guardado."
 
 #: src/Abilities/SetAttributeBlankOption.php:48
 #: src/Abilities/SetAttributeQueryName.php:38
@@ -2377,7 +2410,9 @@ msgstr "Un atributo global, por identificador."
 
 #: src/Abilities/SetAttributeBlankOption.php:62
 msgid "One of the attribute's values, by term id; or name it by `slug`."
-msgstr "Uno de los valores del atributo, por identificador de término; o nómbralo por `slug`."
+msgstr ""
+"Uno de los valores del atributo, por identificador de término; o nómbralo "
+"por `slug`."
 
 #: src/Abilities/SetAttributeBlankOption.php:98
 #: src/Abilities/SetAttributeQueryName.php:69
@@ -2391,13 +2426,17 @@ msgstr "Ningún atributo global tiene este identificador."
 msgid ""
 "No blank the products with this attribute use has the option \"%1$s\". "
 "Options: %2$s."
-msgstr "Ningún producto base de los que usan los productos con este atributo tiene la opción «%1$s». Opciones: %2$s."
+msgstr ""
+"Ningún producto base de los que usan los productos con este atributo tiene "
+"la opción «%1$s». Opciones: %2$s."
 
 #: src/Abilities/SetAttributeBlankOption.php:117
 msgid ""
 "A value given is not one of the attribute's values: name each by its "
 "`term_id` or `slug`."
-msgstr "Un valor indicado no es uno de los valores del atributo: nombra cada uno por su `term_id` o su `slug`."
+msgstr ""
+"Un valor indicado no es uno de los valores del atributo: nombra cada uno por "
+"su `term_id` o su `slug`."
 
 #. translators: 1: the option value asked for. 2: the blank option. 3: its values, comma-separated. Error an AI assistant or an MCP client reads.
 #: src/Abilities/SetAttributeBlankOption.php:123
@@ -2411,7 +2450,11 @@ msgid ""
 "The link is saved, but the products with this attribute could not be queued "
 "for a re-check, so they keep the blank variants they had. Run `recheck-"
 "products` to re-check them."
-msgstr "El vínculo está guardado, pero los productos con este atributo no se pudieron programar para una nueva comprobación, así que conservan las variantes del producto base que tenían. Ejecuta `recheck-products` para volver a comprobarlos."
+msgstr ""
+"El vínculo está guardado, pero los productos con este atributo no se "
+"pudieron programar para una nueva comprobación, así que conservan las "
+"variantes del producto base que tenían. Ejecuta `recheck-products` para "
+"volver a comprobarlos."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
@@ -3148,12 +3191,12 @@ msgid "The image of card %s is not a public URL."
 msgstr "La imagen de la tarjeta %s no es una URL pública."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetShippingMethod.php:74
+#: src/Abilities/SetShippingMethod.php:80
 msgid "Change or add a shipping method"
 msgstr "Cambiar o agregar un método de envío"
 
 #. translators: %s: the name of the ability that reads the shipping zones.
-#: src/Abilities/SetShippingMethod.php:77
+#: src/Abilities/SetShippingMethod.php:83
 #, php-format
 msgid ""
 "Changes a shipping method in a zone, by its `instance_id` as %s reads it, or "
@@ -3181,34 +3224,43 @@ msgstr ""
 "de la página de finalizar compra sin eliminarlo. Responde con el método de "
 "envío tal como está ahora."
 
-#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:209
+#: src/Abilities/SetShippingMethod.php:92 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr ""
 "La zona; 0 es la zona de las ubicaciones que no cubre ninguna otra zona."
 
-#: src/Abilities/SetShippingMethod.php:91
+#: src/Abilities/SetShippingMethod.php:97
 msgid "The method to change; leave it out to add one."
 msgstr "El método de envío que se cambia; omítelo para agregar uno."
 
-#: src/Abilities/SetShippingMethod.php:96
+#: src/Abilities/SetShippingMethod.php:102
 msgid "The kind of method to add."
 msgstr "El tipo de método de envío que se agrega."
 
-#: src/Abilities/SetShippingMethod.php:118
+#: src/Abilities/SetShippingMethod.php:124
 msgid "Empty for no minimum."
 msgstr "Vacío si no hay mínimo."
 
-#: src/Abilities/SetShippingMethod.php:152
+#: src/Abilities/SetShippingMethod.php:134
+msgid ""
+"The method's place among the zone's methods, lowest first. A method already "
+"at that place, and those after it, move one place down; the others keep "
+"theirs. A cart that starts qualifying for another rate gets the first one it "
+"can have that is not pickup, so free shipping that is to be chosen once a "
+"cart reaches its minimum goes before a flat rate."
+msgstr ""
+
+#: src/Abilities/SetShippingMethod.php:163
 msgid "No shipping method has this instance id."
 msgstr "Ningún método de envío tiene este ID de instancia."
 
-#: src/Abilities/SetShippingMethod.php:156
+#: src/Abilities/SetShippingMethod.php:167
 msgid "Give the method's instance_id to change it, or a kind to add one."
 msgstr ""
 "Indica el instance_id del método de envío para cambiarlo, o un tipo (kind) "
 "para agregar uno."
 
-#: src/Abilities/SetShippingMethod.php:159
+#: src/Abilities/SetShippingMethod.php:170
 msgid "A method's kind cannot change: add a method of the other kind instead."
 msgstr ""
 "El tipo de un método de envío no puede cambiar: agrega en su lugar un método "
@@ -3216,17 +3268,17 @@ msgstr ""
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
 #. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
-#: src/Abilities/SetShippingMethod.php:164
-#: src/Abilities/SetShippingMethod.php:181
+#: src/Abilities/SetShippingMethod.php:175
+#: src/Abilities/SetShippingMethod.php:192
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "Un método de envío de tipo %2$s no tiene el ajuste %1$s."
 
-#: src/Abilities/SetShippingMethod.php:196
+#: src/Abilities/SetShippingMethod.php:210
 msgid "The store did not keep the shipping method."
 msgstr "La tienda no guardó el método de envío."
 
-#: src/Abilities/SetShippingMethod.php:245
+#: src/Abilities/SetShippingMethod.php:294
 msgid ""
 "Shipping is taxed as the cart's items are, and the store's taxable products "
 "have different rates, so a cost including tax depends on the cart. Give the "
@@ -9809,7 +9861,12 @@ msgid ""
 "frame's colour. Its values then pick the blank's variant and show in the "
 "designer as the option's colour or picture swatches. The options listed are "
 "those of the blanks the products with this attribute use."
-msgstr "La opción del producto base de Pixonaut que representa este atributo, como el color de un marco. Sus valores eligen entonces la variante del producto base y se muestran en el personalizador como botones de color o de imagen de la opción. Las opciones de la lista son las de los productos base que usan los productos con este atributo."
+msgstr ""
+"La opción del producto base de Pixonaut que representa este atributo, como "
+"el color de un marco. Sus valores eligen entonces la variante del producto "
+"base y se muestran en el personalizador como botones de color o de imagen de "
+"la opción. Las opciones de la lista son las de los productos base que usan "
+"los productos con este atributo."
 
 #. translators: Column heading in the table of an attribute's values on the screen that edits a product attribute.
 #: templates/admin/blank-option-field.php:28
@@ -9839,14 +9896,18 @@ msgstr "Mismo nombre: %s"
 msgid ""
 "A value that is not linked shows as text and picks no variant by this "
 "option. Save after choosing another option to list its values."
-msgstr "Un valor sin vincular se muestra como texto y no elige ninguna variante por esta opción. Guarda después de elegir otra opción para ver sus valores."
+msgstr ""
+"Un valor sin vincular se muestra como texto y no elige ninguna variante por "
+"esta opción. Guarda después de elegir otra opción para ver sus valores."
 
 #. translators: Shown under the "Blank option" select on the screen that edits a product attribute, while the attribute stands for no option.
 #: templates/admin/blank-option-field.php:40
 msgid ""
 "Not linked: its values show as text, and pick the blank's variant only where "
 "they have the names of an option and its values."
-msgstr "Sin vincular: sus valores se muestran como texto y eligen la variante del producto base solo cuando tienen los nombres de una opción y de sus valores."
+msgstr ""
+"Sin vincular: sus valores se muestran como texto y eligen la variante del "
+"producto base solo cuando tienen los nombres de una opción y de sus valores."
 
 #: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."

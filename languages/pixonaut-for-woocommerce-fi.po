@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:06:30+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:44:44+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -307,24 +307,33 @@ msgstr ""
 msgid ""
 "The blank option the attribute stands for, as Pixonaut writes it; null when "
 "it is not linked."
-msgstr "Pohjatuotteen vaihtoehto, jota ominaisuus vastaa, Pixonautin kirjoittamana; null, kun sitä ei ole linkitetty."
+msgstr ""
+"Pohjatuotteen vaihtoehto, jota ominaisuus vastaa, Pixonautin kirjoittamana; "
+"null, kun sitä ei ole linkitetty."
 
 #: src/Abilities/BlankOptionRows.php:82
 msgid "The option value the value was linked to; null when it was given none."
-msgstr "Vaihtoehdon arvo, johon arvo linkitettiin; null, kun sille ei annettu arvoa."
+msgstr ""
+"Vaihtoehdon arvo, johon arvo linkitettiin; null, kun sille ei annettu arvoa."
 
 #: src/Abilities/BlankOptionRows.php:86
 msgid ""
 "The option value it stands for: the one it was linked to, else the option's "
 "value of its name; null when it is not linked, and then shows as text."
-msgstr "Vaihtoehdon arvo, jota se vastaa: se, johon se linkitettiin, muuten vaihtoehdon samanniminen arvo; null, kun sitä ei ole linkitetty, ja se näkyy silloin tekstinä."
+msgstr ""
+"Vaihtoehdon arvo, jota se vastaa: se, johon se linkitettiin, muuten "
+"vaihtoehdon samanniminen arvo; null, kun sitä ei ole linkitetty, ja se näkyy "
+"silloin tekstinä."
 
 #: src/Abilities/BlankOptionRows.php:93
 msgid ""
 "The options the attribute can be linked to, each with its values: those of "
 "the blanks the products with this attribute use, themselves or through their "
 "variations."
-msgstr "Vaihtoehdot, joihin ominaisuuden voi linkittää, kukin arvoineen: niiden pohjatuotteiden vaihtoehdot, joita tämän ominaisuuden tuotteet käyttävät itse tai muunnelmiensa kautta."
+msgstr ""
+"Vaihtoehdot, joihin ominaisuuden voi linkittää, kukin arvoineen: niiden "
+"pohjatuotteiden vaihtoehdot, joita tämän ominaisuuden tuotteet käyttävät "
+"itse tai muunnelmiensa kautta."
 
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
@@ -593,7 +602,16 @@ msgid ""
 "in the designer as the option values' colour or picture swatches; a value "
 "whose `stands_for` is null is not linked and shows as text. Link one with "
 "`set-attribute-blank-option`."
-msgstr "Lukee jokaisesta yleisestä ominaisuudesta tai annetusta ominaisuudesta, mitä Pixonaut-pohjatuotteen vaihtoehtoa se vastaa (kehyksen väri -ominaisuus pohjatuotteen Color-vaihtoehtoa), mitä vaihtoehdon arvoa kukin sen arvoista vastaa, ja `options`: vaihtoehdot, joihin sen voi linkittää, kukin arvoineen, sen tuotteiden käyttämistä pohjatuotteista. Linkitetyn ominaisuuden arvot valitsevat pohjatuotteen version ja näkyvät suunnittelutyökalussa vaihtoehdon arvojen väri- tai kuvapainikkeina; arvo, jonka `stands_for` on null, ei ole linkitetty ja näkyy tekstinä. Linkitä ominaisuus työkalulla `set-attribute-blank-option`."
+msgstr ""
+"Lukee jokaisesta yleisestä ominaisuudesta tai annetusta ominaisuudesta, mitä "
+"Pixonaut-pohjatuotteen vaihtoehtoa se vastaa (kehyksen väri -ominaisuus "
+"pohjatuotteen Color-vaihtoehtoa), mitä vaihtoehdon arvoa kukin sen arvoista "
+"vastaa, ja `options`: vaihtoehdot, joihin sen voi linkittää, kukin "
+"arvoineen, sen tuotteiden käyttämistä pohjatuotteista. Linkitetyn "
+"ominaisuuden arvot valitsevat pohjatuotteen version ja näkyvät "
+"suunnittelutyökalussa vaihtoehdon arvojen väri- tai kuvapainikkeina; arvo, "
+"jonka `stands_for` on null, ei ole linkitetty ja näkyy tekstinä. Linkitä "
+"ominaisuus työkalulla `set-attribute-blank-option`."
 
 #: src/Abilities/GetAttributeBlankOptions.php:44
 msgid "Only this global attribute, by id."
@@ -2319,7 +2337,21 @@ msgid ""
 "attribute. Products with the attribute are re-checked in the background. The "
 "answer is the attribute's row; a `503` when the re-check could not be "
 "queued, the link being saved."
-msgstr "Linkittää yleisen ominaisuuden sen tuotteiden käyttämien Pixonaut-pohjatuotteiden vaihtoehtoon ja sen arvot vaihtoehdon arvoihin, kuten ominaisuuden muokkaussivun kenttä ”Pohjatuotteen vaihtoehto” tekee: kehyksen väri -ominaisuuden pohjatuotteen Color-vaihtoehtoon ja sen arvon Svart arvoon Black. Sen arvot valitsevat silloin pohjatuotteen version ja näkyvät suunnittelutyökalussa vaihtoehdon arvojen väri- tai kuvapainikkeina. `option` ja kukin arvo nimetään niin kuin `get-attribute-blank-options` ne luettelee kohdassa `options`. Arvo, jonka `value` on tyhjä tai jota ei ole vielä linkitetty, vastaa vaihtoehdon samannimistä arvoa; antamatta jätetyt arvot säilyttävät linkityksensä niin kauan kuin vaihtoehto pysyy samana ja menettävät sen, kun se vaihtuu. Tyhjä `option` poistaa ominaisuuden linkityksen. Ominaisuuden tuotteet tarkistetaan uudelleen taustalla. Vastaus on ominaisuuden rivi; `503`, kun uudelleentarkistusta ei voitu ajastaa, mutta linkitys on tallennettu."
+msgstr ""
+"Linkittää yleisen ominaisuuden sen tuotteiden käyttämien Pixonaut-"
+"pohjatuotteiden vaihtoehtoon ja sen arvot vaihtoehdon arvoihin, kuten "
+"ominaisuuden muokkaussivun kenttä ”Pohjatuotteen vaihtoehto” tekee: kehyksen "
+"väri -ominaisuuden pohjatuotteen Color-vaihtoehtoon ja sen arvon Svart "
+"arvoon Black. Sen arvot valitsevat silloin pohjatuotteen version ja näkyvät "
+"suunnittelutyökalussa vaihtoehdon arvojen väri- tai kuvapainikkeina. "
+"`option` ja kukin arvo nimetään niin kuin `get-attribute-blank-options` ne "
+"luettelee kohdassa `options`. Arvo, jonka `value` on tyhjä tai jota ei ole "
+"vielä linkitetty, vastaa vaihtoehdon samannimistä arvoa; antamatta jätetyt "
+"arvot säilyttävät linkityksensä niin kauan kuin vaihtoehto pysyy samana ja "
+"menettävät sen, kun se vaihtuu. Tyhjä `option` poistaa ominaisuuden "
+"linkityksen. Ominaisuuden tuotteet tarkistetaan uudelleen taustalla. Vastaus "
+"on ominaisuuden rivi; `503`, kun uudelleentarkistusta ei voitu ajastaa, "
+"mutta linkitys on tallennettu."
 
 #: src/Abilities/SetAttributeBlankOption.php:48
 #: src/Abilities/SetAttributeQueryName.php:38
@@ -2329,7 +2361,8 @@ msgstr "Yleinen ominaisuus id:n mukaan."
 
 #: src/Abilities/SetAttributeBlankOption.php:62
 msgid "One of the attribute's values, by term id; or name it by `slug`."
-msgstr "Yksi ominaisuuden arvoista termin id:n mukaan; tai nimeä se `slug`-kentällä."
+msgstr ""
+"Yksi ominaisuuden arvoista termin id:n mukaan; tai nimeä se `slug`-kentällä."
 
 #: src/Abilities/SetAttributeBlankOption.php:98
 #: src/Abilities/SetAttributeQueryName.php:69
@@ -2343,13 +2376,17 @@ msgstr "Millään yleisellä ominaisuudella ei ole tätä id:tä."
 msgid ""
 "No blank the products with this attribute use has the option \"%1$s\". "
 "Options: %2$s."
-msgstr "Millään pohjatuotteella, jota tämän ominaisuuden tuotteet käyttävät, ei ole vaihtoehtoa ”%1$s”. Vaihtoehdot: %2$s."
+msgstr ""
+"Millään pohjatuotteella, jota tämän ominaisuuden tuotteet käyttävät, ei ole "
+"vaihtoehtoa ”%1$s”. Vaihtoehdot: %2$s."
 
 #: src/Abilities/SetAttributeBlankOption.php:117
 msgid ""
 "A value given is not one of the attribute's values: name each by its "
 "`term_id` or `slug`."
-msgstr "Annettu arvo ei ole ominaisuuden arvo: nimeä kukin sen `term_id`- tai `slug`-kentällä."
+msgstr ""
+"Annettu arvo ei ole ominaisuuden arvo: nimeä kukin sen `term_id`- tai `slug`-"
+"kentällä."
 
 #. translators: 1: the option value asked for. 2: the blank option. 3: its values, comma-separated. Error an AI assistant or an MCP client reads.
 #: src/Abilities/SetAttributeBlankOption.php:123
@@ -2363,7 +2400,10 @@ msgid ""
 "The link is saved, but the products with this attribute could not be queued "
 "for a re-check, so they keep the blank variants they had. Run `recheck-"
 "products` to re-check them."
-msgstr "Linkitys on tallennettu, mutta tämän ominaisuuden tuotteita ei voitu ajastaa uudelleentarkistukseen, joten ne säilyttävät aiemmat pohjatuotteen versionsa. Tarkista ne uudelleen ajamalla `recheck-products`."
+msgstr ""
+"Linkitys on tallennettu, mutta tämän ominaisuuden tuotteita ei voitu ajastaa "
+"uudelleentarkistukseen, joten ne säilyttävät aiemmat pohjatuotteen "
+"versionsa. Tarkista ne uudelleen ajamalla `recheck-products`."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
@@ -3085,12 +3125,12 @@ msgid "The image of card %s is not a public URL."
 msgstr "Kortin %s kuva ei ole julkinen URL."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetShippingMethod.php:74
+#: src/Abilities/SetShippingMethod.php:80
 msgid "Change or add a shipping method"
 msgstr "Muuta tai lisää toimitustapa"
 
 #. translators: %s: the name of the ability that reads the shipping zones.
-#: src/Abilities/SetShippingMethod.php:77
+#: src/Abilities/SetShippingMethod.php:83
 #, php-format
 msgid ""
 "Changes a shipping method in a zone, by its `instance_id` as %s reads it, or "
@@ -3118,33 +3158,48 @@ msgstr ""
 "false piilottaa toimitustavan kassalta poistamatta sitä. Vastaus on "
 "toimitustapa sellaisena kuin se nyt on."
 
-#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:209
+#: src/Abilities/SetShippingMethod.php:92 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr "Vyöhyke; 0 on vyöhyke sijainneille, joita mikään muu vyöhyke ei kata."
 
-#: src/Abilities/SetShippingMethod.php:91
+#: src/Abilities/SetShippingMethod.php:97
 msgid "The method to change; leave it out to add one."
 msgstr "Muutettava toimitustapa; jätetään pois, kun lisätään uusi."
 
-#: src/Abilities/SetShippingMethod.php:96
+#: src/Abilities/SetShippingMethod.php:102
 msgid "The kind of method to add."
 msgstr "Lisättävän toimitustavan tyyppi."
 
-#: src/Abilities/SetShippingMethod.php:118
+#: src/Abilities/SetShippingMethod.php:124
 msgid "Empty for no minimum."
 msgstr "Tyhjä, jos vähimmäissummaa ei ole."
 
-#: src/Abilities/SetShippingMethod.php:152
+#: src/Abilities/SetShippingMethod.php:134
+msgid ""
+"The method's place among the zone's methods, lowest first. A method already "
+"at that place, and those after it, move one place down; the others keep "
+"theirs. A cart that starts qualifying for another rate gets the first one it "
+"can have that is not pickup, so free shipping that is to be chosen once a "
+"cart reaches its minimum goes before a flat rate."
+msgstr ""
+"Toimitustavan paikka vyöhykkeen toimitustapojen joukossa, pienin ensin. "
+"Toimitustapa, jolla paikka jo on, ja sen jälkeiset siirtyvät yhden paikan "
+"alemmas; muut pitävät paikkansa. Ostoskori, joka alkaa täyttää toisen "
+"toimitusvaihtoehdon ehdot, saa ensimmäisen, jonka se voi saada ja joka ei "
+"ole nouto, joten maksuton toimitus, joka halutaan valituksi ostoskorin "
+"saavuttaessa vähimmäissumman, sijoitetaan ennen kiinteää toimituskulua."
+
+#: src/Abilities/SetShippingMethod.php:163
 msgid "No shipping method has this instance id."
 msgstr "Millään toimitustavalla ei ole tätä instanssitunnusta."
 
-#: src/Abilities/SetShippingMethod.php:156
+#: src/Abilities/SetShippingMethod.php:167
 msgid "Give the method's instance_id to change it, or a kind to add one."
 msgstr ""
 "Anna toimitustavan instance_id sen muuttamiseksi tai tyyppi (kind) uuden "
 "lisäämiseksi."
 
-#: src/Abilities/SetShippingMethod.php:159
+#: src/Abilities/SetShippingMethod.php:170
 msgid "A method's kind cannot change: add a method of the other kind instead."
 msgstr ""
 "Toimitustavan tyyppiä ei voi muuttaa: lisää sen sijaan toisen tyypin "
@@ -3152,17 +3207,17 @@ msgstr ""
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
 #. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
-#: src/Abilities/SetShippingMethod.php:164
-#: src/Abilities/SetShippingMethod.php:181
+#: src/Abilities/SetShippingMethod.php:175
+#: src/Abilities/SetShippingMethod.php:192
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "Tyypin %2$s toimitustavalla ei ole asetusta %1$s."
 
-#: src/Abilities/SetShippingMethod.php:196
+#: src/Abilities/SetShippingMethod.php:210
 msgid "The store did not keep the shipping method."
 msgstr "Kauppa ei tallentanut toimitustapaa."
 
-#: src/Abilities/SetShippingMethod.php:245
+#: src/Abilities/SetShippingMethod.php:294
 msgid ""
 "Shipping is taxed as the cart's items are, and the store's taxable products "
 "have different rates, so a cost including tax depends on the cart. Give the "
@@ -9668,7 +9723,12 @@ msgid ""
 "frame's colour. Its values then pick the blank's variant and show in the "
 "designer as the option's colour or picture swatches. The options listed are "
 "those of the blanks the products with this attribute use."
-msgstr "Pixonaut-pohjatuotteen vaihtoehto, jota tämä ominaisuus vastaa, esimerkiksi kehyksen väri. Sen arvot valitsevat silloin pohjatuotteen version ja näkyvät suunnittelutyökalussa vaihtoehdon väri- tai kuvapainikkeina. Luettelossa ovat niiden pohjatuotteiden vaihtoehdot, joita tämän ominaisuuden tuotteet käyttävät."
+msgstr ""
+"Pixonaut-pohjatuotteen vaihtoehto, jota tämä ominaisuus vastaa, esimerkiksi "
+"kehyksen väri. Sen arvot valitsevat silloin pohjatuotteen version ja näkyvät "
+"suunnittelutyökalussa vaihtoehdon väri- tai kuvapainikkeina. Luettelossa "
+"ovat niiden pohjatuotteiden vaihtoehdot, joita tämän ominaisuuden tuotteet "
+"käyttävät."
 
 #. translators: Column heading in the table of an attribute's values on the screen that edits a product attribute.
 #: templates/admin/blank-option-field.php:28
@@ -9698,14 +9758,18 @@ msgstr "Sama nimi: %s"
 msgid ""
 "A value that is not linked shows as text and picks no variant by this "
 "option. Save after choosing another option to list its values."
-msgstr "Linkittämätön arvo näkyy tekstinä eikä valitse versiota tämän vaihtoehdon kautta. Tallenna toisen vaihtoehdon valinnan jälkeen nähdäksesi sen arvot."
+msgstr ""
+"Linkittämätön arvo näkyy tekstinä eikä valitse versiota tämän vaihtoehdon "
+"kautta. Tallenna toisen vaihtoehdon valinnan jälkeen nähdäksesi sen arvot."
 
 #. translators: Shown under the "Blank option" select on the screen that edits a product attribute, while the attribute stands for no option.
 #: templates/admin/blank-option-field.php:40
 msgid ""
 "Not linked: its values show as text, and pick the blank's variant only where "
 "they have the names of an option and its values."
-msgstr "Ei linkitetty: sen arvot näkyvät tekstinä ja valitsevat pohjatuotteen version vain, kun niillä on vaihtoehdon ja sen arvojen nimet."
+msgstr ""
+"Ei linkitetty: sen arvot näkyvät tekstinä ja valitsevat pohjatuotteen "
+"version vain, kun niillä on vaihtoehdon ja sen arvojen nimet."
 
 #: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."

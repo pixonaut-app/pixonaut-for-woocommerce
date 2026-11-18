@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:06:30+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:44:44+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -307,24 +307,34 @@ msgstr ""
 msgid ""
 "The blank option the attribute stands for, as Pixonaut writes it; null when "
 "it is not linked."
-msgstr "De optie van het blanco product waar het attribuut voor staat, zoals Pixonaut die schrijft; null als het niet gekoppeld is."
+msgstr ""
+"De optie van het blanco product waar het attribuut voor staat, zoals "
+"Pixonaut die schrijft; null als het niet gekoppeld is."
 
 #: src/Abilities/BlankOptionRows.php:82
 msgid "The option value the value was linked to; null when it was given none."
-msgstr "De optiewaarde waaraan de waarde is gekoppeld; null als ze er geen heeft gekregen."
+msgstr ""
+"De optiewaarde waaraan de waarde is gekoppeld; null als ze er geen heeft "
+"gekregen."
 
 #: src/Abilities/BlankOptionRows.php:86
 msgid ""
 "The option value it stands for: the one it was linked to, else the option's "
 "value of its name; null when it is not linked, and then shows as text."
-msgstr "De optiewaarde waar ze voor staat: die waaraan ze is gekoppeld, anders de waarde van de optie met dezelfde naam; null als ze niet gekoppeld is en dan als tekst wordt getoond."
+msgstr ""
+"De optiewaarde waar ze voor staat: die waaraan ze is gekoppeld, anders de "
+"waarde van de optie met dezelfde naam; null als ze niet gekoppeld is en dan "
+"als tekst wordt getoond."
 
 #: src/Abilities/BlankOptionRows.php:93
 msgid ""
 "The options the attribute can be linked to, each with its values: those of "
 "the blanks the products with this attribute use, themselves or through their "
 "variations."
-msgstr "De opties waaraan het attribuut kan worden gekoppeld, elk met hun waarden: die van de blanco producten die de producten met dit attribuut gebruiken, zelf of via hun variaties."
+msgstr ""
+"De opties waaraan het attribuut kan worden gekoppeld, elk met hun waarden: "
+"die van de blanco producten die de producten met dit attribuut gebruiken, "
+"zelf of via hun variaties."
 
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
@@ -600,7 +610,16 @@ msgid ""
 "in the designer as the option values' colour or picture swatches; a value "
 "whose `stands_for` is null is not linked and shows as text. Link one with "
 "`set-attribute-blank-option`."
-msgstr "Leest voor elk globaal attribuut of het opgegeven attribuut voor welke optie van het blanco Pixonaut-product het staat (een lijstkleurattribuut voor de optie Color van het blanco product), voor welke optiewaarde elk van zijn waarden staat, en `options`: de opties waaraan het kan worden gekoppeld, elk met hun waarden, uit de blanco producten die zijn producten gebruiken. De waarden van een gekoppeld attribuut kiezen de variant van het blanco product en worden in de ontwerptool getoond als kleur- of afbeeldingsknoppen van de optiewaarden; een waarde waarvan `stands_for` null is, is niet gekoppeld en wordt als tekst getoond. Koppel er een met `set-attribute-blank-option`."
+msgstr ""
+"Leest voor elk globaal attribuut of het opgegeven attribuut voor welke optie "
+"van het blanco Pixonaut-product het staat (een lijstkleurattribuut voor de "
+"optie Color van het blanco product), voor welke optiewaarde elk van zijn "
+"waarden staat, en `options`: de opties waaraan het kan worden gekoppeld, elk "
+"met hun waarden, uit de blanco producten die zijn producten gebruiken. De "
+"waarden van een gekoppeld attribuut kiezen de variant van het blanco product "
+"en worden in de ontwerptool getoond als kleur- of afbeeldingsknoppen van de "
+"optiewaarden; een waarde waarvan `stands_for` null is, is niet gekoppeld en "
+"wordt als tekst getoond. Koppel er een met `set-attribute-blank-option`."
 
 #: src/Abilities/GetAttributeBlankOptions.php:44
 msgid "Only this global attribute, by id."
@@ -2379,7 +2398,22 @@ msgid ""
 "attribute. Products with the attribute are re-checked in the background. The "
 "answer is the attribute's row; a `503` when the re-check could not be "
 "queued, the link being saved."
-msgstr "Koppelt een globaal attribuut aan een optie van de blanco Pixonaut-producten die zijn producten gebruiken, en zijn waarden aan de waarden van de optie, zoals het veld ‘Optie van het blanco product’ op de bewerkpagina van het attribuut doet: een lijstkleurattribuut aan de optie Color van het blanco product, zijn waarde Svart aan Black. Zijn waarden kiezen dan de variant van het blanco product en worden in de ontwerptool getoond als kleur- of afbeeldingsknoppen van de optiewaarden. `option` en elke waarde worden benoemd zoals `get-attribute-blank-options` ze in `options` opsomt. Een waarde met een lege `value`, of die nog niet gekoppeld is, staat voor de waarde van de optie met dezelfde naam; niet opgegeven waarden behouden hun koppeling zolang de optie dezelfde blijft, en verliezen die als ze verandert. Een lege `option` ontkoppelt het attribuut. De producten met het attribuut worden op de achtergrond opnieuw gecontroleerd. Het antwoord is de rij van het attribuut; een `503` als de nieuwe controle niet kon worden ingepland, terwijl de koppeling wel is opgeslagen."
+msgstr ""
+"Koppelt een globaal attribuut aan een optie van de blanco Pixonaut-producten "
+"die zijn producten gebruiken, en zijn waarden aan de waarden van de optie, "
+"zoals het veld ‘Optie van het blanco product’ op de bewerkpagina van het "
+"attribuut doet: een lijstkleurattribuut aan de optie Color van het blanco "
+"product, zijn waarde Svart aan Black. Zijn waarden kiezen dan de variant van "
+"het blanco product en worden in de ontwerptool getoond als kleur- of "
+"afbeeldingsknoppen van de optiewaarden. `option` en elke waarde worden "
+"benoemd zoals `get-attribute-blank-options` ze in `options` opsomt. Een "
+"waarde met een lege `value`, of die nog niet gekoppeld is, staat voor de "
+"waarde van de optie met dezelfde naam; niet opgegeven waarden behouden hun "
+"koppeling zolang de optie dezelfde blijft, en verliezen die als ze "
+"verandert. Een lege `option` ontkoppelt het attribuut. De producten met het "
+"attribuut worden op de achtergrond opnieuw gecontroleerd. Het antwoord is de "
+"rij van het attribuut; een `503` als de nieuwe controle niet kon worden "
+"ingepland, terwijl de koppeling wel is opgeslagen."
 
 #: src/Abilities/SetAttributeBlankOption.php:48
 #: src/Abilities/SetAttributeQueryName.php:38
@@ -2389,7 +2423,8 @@ msgstr "Een globaal attribuut, op ID."
 
 #: src/Abilities/SetAttributeBlankOption.php:62
 msgid "One of the attribute's values, by term id; or name it by `slug`."
-msgstr "Een van de waarden van het attribuut, op term-ID; of benoem die met `slug`."
+msgstr ""
+"Een van de waarden van het attribuut, op term-ID; of benoem die met `slug`."
 
 #: src/Abilities/SetAttributeBlankOption.php:98
 #: src/Abilities/SetAttributeQueryName.php:69
@@ -2403,13 +2438,17 @@ msgstr "Er is geen globaal attribuut met deze ID."
 msgid ""
 "No blank the products with this attribute use has the option \"%1$s\". "
 "Options: %2$s."
-msgstr "Geen enkel blanco product dat de producten met dit attribuut gebruiken heeft de optie ‘%1$s’. Opties: %2$s."
+msgstr ""
+"Geen enkel blanco product dat de producten met dit attribuut gebruiken heeft "
+"de optie ‘%1$s’. Opties: %2$s."
 
 #: src/Abilities/SetAttributeBlankOption.php:117
 msgid ""
 "A value given is not one of the attribute's values: name each by its "
 "`term_id` or `slug`."
-msgstr "Een opgegeven waarde is geen van de waarden van het attribuut: benoem elke waarde met haar `term_id` of `slug`."
+msgstr ""
+"Een opgegeven waarde is geen van de waarden van het attribuut: benoem elke "
+"waarde met haar `term_id` of `slug`."
 
 #. translators: 1: the option value asked for. 2: the blank option. 3: its values, comma-separated. Error an AI assistant or an MCP client reads.
 #: src/Abilities/SetAttributeBlankOption.php:123
@@ -2423,7 +2462,11 @@ msgid ""
 "The link is saved, but the products with this attribute could not be queued "
 "for a re-check, so they keep the blank variants they had. Run `recheck-"
 "products` to re-check them."
-msgstr "De koppeling is opgeslagen, maar de producten met dit attribuut konden niet worden ingepland voor een nieuwe controle, dus houden ze de varianten van het blanco product die ze hadden. Voer `recheck-products` uit om ze opnieuw te controleren."
+msgstr ""
+"De koppeling is opgeslagen, maar de producten met dit attribuut konden niet "
+"worden ingepland voor een nieuwe controle, dus houden ze de varianten van "
+"het blanco product die ze hadden. Voer `recheck-products` uit om ze opnieuw "
+"te controleren."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
@@ -3155,12 +3198,12 @@ msgid "The image of card %s is not a public URL."
 msgstr "De afbeelding van kaart %s is geen openbare URL."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetShippingMethod.php:74
+#: src/Abilities/SetShippingMethod.php:80
 msgid "Change or add a shipping method"
 msgstr "Een verzendmethode wijzigen of toevoegen"
 
 #. translators: %s: the name of the ability that reads the shipping zones.
-#: src/Abilities/SetShippingMethod.php:77
+#: src/Abilities/SetShippingMethod.php:83
 #, php-format
 msgid ""
 "Changes a shipping method in a zone, by its `instance_id` as %s reads it, or "
@@ -3188,33 +3231,48 @@ msgstr ""
 "bij het afrekenen zonder haar te verwijderen. Het antwoord is de "
 "verzendmethode zoals die nu is."
 
-#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:209
+#: src/Abilities/SetShippingMethod.php:92 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr "De zone; 0 is de zone voor de locaties die geen andere zone dekt."
 
-#: src/Abilities/SetShippingMethod.php:91
+#: src/Abilities/SetShippingMethod.php:97
 msgid "The method to change; leave it out to add one."
 msgstr "De te wijzigen verzendmethode; laat deze weg om er een toe te voegen."
 
-#: src/Abilities/SetShippingMethod.php:96
+#: src/Abilities/SetShippingMethod.php:102
 msgid "The kind of method to add."
 msgstr "Het soort verzendmethode dat wordt toegevoegd."
 
-#: src/Abilities/SetShippingMethod.php:118
+#: src/Abilities/SetShippingMethod.php:124
 msgid "Empty for no minimum."
 msgstr "Leeg als er geen minimum is."
 
-#: src/Abilities/SetShippingMethod.php:152
+#: src/Abilities/SetShippingMethod.php:134
+msgid ""
+"The method's place among the zone's methods, lowest first. A method already "
+"at that place, and those after it, move one place down; the others keep "
+"theirs. A cart that starts qualifying for another rate gets the first one it "
+"can have that is not pickup, so free shipping that is to be chosen once a "
+"cart reaches its minimum goes before a flat rate."
+msgstr ""
+"De plaats van de verzendmethode tussen de verzendmethoden van de zone, "
+"laagste eerst. Een methode die die plaats al heeft, en die erna, schuiven "
+"één plaats op; de andere houden die van hen. Een winkelwagen die voor een "
+"ander verzendtarief in aanmerking begint te komen, krijgt het eerste dat hij "
+"kan krijgen en dat geen afhalen is, dus gratis verzending die gekozen moet "
+"worden zodra een winkelwagen het minimum bereikt, komt vóór een vast tarief."
+
+#: src/Abilities/SetShippingMethod.php:163
 msgid "No shipping method has this instance id."
 msgstr "Geen enkele verzendmethode heeft deze instance-ID."
 
-#: src/Abilities/SetShippingMethod.php:156
+#: src/Abilities/SetShippingMethod.php:167
 msgid "Give the method's instance_id to change it, or a kind to add one."
 msgstr ""
 "Geef de instance_id van de verzendmethode op om deze te wijzigen, of een "
 "soort (kind) om er een toe te voegen."
 
-#: src/Abilities/SetShippingMethod.php:159
+#: src/Abilities/SetShippingMethod.php:170
 msgid "A method's kind cannot change: add a method of the other kind instead."
 msgstr ""
 "Het soort van een verzendmethode kan niet veranderen: voeg in plaats daarvan "
@@ -3222,17 +3280,17 @@ msgstr ""
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
 #. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
-#: src/Abilities/SetShippingMethod.php:164
-#: src/Abilities/SetShippingMethod.php:181
+#: src/Abilities/SetShippingMethod.php:175
+#: src/Abilities/SetShippingMethod.php:192
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "Een verzendmethode van het soort %2$s heeft geen instelling %1$s."
 
-#: src/Abilities/SetShippingMethod.php:196
+#: src/Abilities/SetShippingMethod.php:210
 msgid "The store did not keep the shipping method."
 msgstr "De winkel heeft de verzendmethode niet bewaard."
 
-#: src/Abilities/SetShippingMethod.php:245
+#: src/Abilities/SetShippingMethod.php:294
 msgid ""
 "Shipping is taxed as the cart's items are, and the store's taxable products "
 "have different rates, so a cost including tax depends on the cart. Give the "
@@ -9864,7 +9922,12 @@ msgid ""
 "frame's colour. Its values then pick the blank's variant and show in the "
 "designer as the option's colour or picture swatches. The options listed are "
 "those of the blanks the products with this attribute use."
-msgstr "De optie van het blanco Pixonaut-product waar dit attribuut voor staat, zoals de kleur van een lijst. Zijn waarden kiezen dan de variant van het blanco product en worden in de ontwerptool getoond als kleur- of afbeeldingsknoppen van de optie. De vermelde opties zijn die van de blanco producten die de producten met dit attribuut gebruiken."
+msgstr ""
+"De optie van het blanco Pixonaut-product waar dit attribuut voor staat, "
+"zoals de kleur van een lijst. Zijn waarden kiezen dan de variant van het "
+"blanco product en worden in de ontwerptool getoond als kleur- of "
+"afbeeldingsknoppen van de optie. De vermelde opties zijn die van de blanco "
+"producten die de producten met dit attribuut gebruiken."
 
 #. translators: Column heading in the table of an attribute's values on the screen that edits a product attribute.
 #: templates/admin/blank-option-field.php:28
@@ -9894,14 +9957,20 @@ msgstr "Zelfde naam: %s"
 msgid ""
 "A value that is not linked shows as text and picks no variant by this "
 "option. Save after choosing another option to list its values."
-msgstr "Een niet-gekoppelde waarde wordt als tekst getoond en kiest via deze optie geen variant. Sla op na het kiezen van een andere optie om de waarden ervan te zien."
+msgstr ""
+"Een niet-gekoppelde waarde wordt als tekst getoond en kiest via deze optie "
+"geen variant. Sla op na het kiezen van een andere optie om de waarden ervan "
+"te zien."
 
 #. translators: Shown under the "Blank option" select on the screen that edits a product attribute, while the attribute stands for no option.
 #: templates/admin/blank-option-field.php:40
 msgid ""
 "Not linked: its values show as text, and pick the blank's variant only where "
 "they have the names of an option and its values."
-msgstr "Niet gekoppeld: de waarden worden als tekst getoond en kiezen de variant van het blanco product alleen waar ze de namen van een optie en haar waarden hebben."
+msgstr ""
+"Niet gekoppeld: de waarden worden als tekst getoond en kiezen de variant van "
+"het blanco product alleen waar ze de namen van een optie en haar waarden "
+"hebben."
 
 #: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."

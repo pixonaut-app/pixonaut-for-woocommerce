@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Pixonaut for WooCommerce 1.22.7\n"
+"Project-Id-Version: Pixonaut for WooCommerce 1.24.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-18T16:06:30+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:44:44+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -1768,58 +1768,62 @@ msgid "The image of card %s is not a public URL."
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetShippingMethod.php:74
+#: src/Abilities/SetShippingMethod.php:80
 msgid "Change or add a shipping method"
 msgstr ""
 
 #. translators: %s: the name of the ability that reads the shipping zones.
-#: src/Abilities/SetShippingMethod.php:77
+#: src/Abilities/SetShippingMethod.php:83
 #, php-format
 msgid "Changes a shipping method in a zone, by its `instance_id` as %s reads it, or without one adds a flat rate or free shipping (`kind`) to the zone. Only the settings given change. `cost` is a flat rate's or pickup's cost, kept excluding tax; with `cost_includes_tax` it is what shoppers at the store's address pay including the shipping tax, and the cost kept is counted from it. `min_amount` is free shipping's minimum order amount, which WooCommerce checks against the cart's subtotal as the cart shows it, after coupon discounts unless `ignore_discounts`; given a minimum, free shipping that required nothing comes to require it. `enabled` false takes a method away from checkout without deleting it. Answers the method as it is now."
 msgstr ""
 
-#: src/Abilities/SetShippingMethod.php:86
+#: src/Abilities/SetShippingMethod.php:92
 #: src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr ""
 
-#: src/Abilities/SetShippingMethod.php:91
+#: src/Abilities/SetShippingMethod.php:97
 msgid "The method to change; leave it out to add one."
 msgstr ""
 
-#: src/Abilities/SetShippingMethod.php:96
+#: src/Abilities/SetShippingMethod.php:102
 msgid "The kind of method to add."
 msgstr ""
 
-#: src/Abilities/SetShippingMethod.php:118
+#: src/Abilities/SetShippingMethod.php:124
 msgid "Empty for no minimum."
 msgstr ""
 
-#: src/Abilities/SetShippingMethod.php:152
+#: src/Abilities/SetShippingMethod.php:134
+msgid "The method's place among the zone's methods, lowest first. A method already at that place, and those after it, move one place down; the others keep theirs. A cart that starts qualifying for another rate gets the first one it can have that is not pickup, so free shipping that is to be chosen once a cart reaches its minimum goes before a flat rate."
+msgstr ""
+
+#: src/Abilities/SetShippingMethod.php:163
 msgid "No shipping method has this instance id."
 msgstr ""
 
-#: src/Abilities/SetShippingMethod.php:156
+#: src/Abilities/SetShippingMethod.php:167
 msgid "Give the method's instance_id to change it, or a kind to add one."
 msgstr ""
 
-#: src/Abilities/SetShippingMethod.php:159
+#: src/Abilities/SetShippingMethod.php:170
 msgid "A method's kind cannot change: add a method of the other kind instead."
 msgstr ""
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
 #. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
-#: src/Abilities/SetShippingMethod.php:164
-#: src/Abilities/SetShippingMethod.php:181
+#: src/Abilities/SetShippingMethod.php:175
+#: src/Abilities/SetShippingMethod.php:192
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr ""
 
-#: src/Abilities/SetShippingMethod.php:196
+#: src/Abilities/SetShippingMethod.php:210
 msgid "The store did not keep the shipping method."
 msgstr ""
 
-#: src/Abilities/SetShippingMethod.php:245
+#: src/Abilities/SetShippingMethod.php:294
 msgid "Shipping is taxed as the cart's items are, and the store's taxable products have different rates, so a cost including tax depends on the cart. Give the cost excluding tax, or set a shipping tax class in WooCommerce's tax settings."
 msgstr ""
 

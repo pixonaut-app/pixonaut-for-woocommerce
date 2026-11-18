@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:06:30+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:44:44+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: da_DK\n"
@@ -305,24 +305,34 @@ msgstr ""
 msgid ""
 "The blank option the attribute stands for, as Pixonaut writes it; null when "
 "it is not linked."
-msgstr "Basisproduktets valgmulighed, som egenskaben står for, som Pixonaut skriver den; null, når den ikke er tilknyttet."
+msgstr ""
+"Basisproduktets valgmulighed, som egenskaben står for, som Pixonaut skriver "
+"den; null, når den ikke er tilknyttet."
 
 #: src/Abilities/BlankOptionRows.php:82
 msgid "The option value the value was linked to; null when it was given none."
-msgstr "Værdien i valgmuligheden, som værdien blev tilknyttet; null, når den ikke har fået nogen."
+msgstr ""
+"Værdien i valgmuligheden, som værdien blev tilknyttet; null, når den ikke "
+"har fået nogen."
 
 #: src/Abilities/BlankOptionRows.php:86
 msgid ""
 "The option value it stands for: the one it was linked to, else the option's "
 "value of its name; null when it is not linked, and then shows as text."
-msgstr "Værdien i valgmuligheden, som den står for: den, den blev tilknyttet, ellers valgmulighedens værdi med samme navn; null, når den ikke er tilknyttet og så vises som tekst."
+msgstr ""
+"Værdien i valgmuligheden, som den står for: den, den blev tilknyttet, ellers "
+"valgmulighedens værdi med samme navn; null, når den ikke er tilknyttet og så "
+"vises som tekst."
 
 #: src/Abilities/BlankOptionRows.php:93
 msgid ""
 "The options the attribute can be linked to, each with its values: those of "
 "the blanks the products with this attribute use, themselves or through their "
 "variations."
-msgstr "Valgmulighederne, som egenskaben kan tilknyttes, hver med sine værdier: dem fra basisprodukterne, som produkterne med denne egenskab bruger, selv eller gennem deres varianter."
+msgstr ""
+"Valgmulighederne, som egenskaben kan tilknyttes, hver med sine værdier: dem "
+"fra basisprodukterne, som produkterne med denne egenskab bruger, selv eller "
+"gennem deres varianter."
 
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
@@ -591,7 +601,16 @@ msgid ""
 "in the designer as the option values' colour or picture swatches; a value "
 "whose `stands_for` is null is not linked and shows as text. Link one with "
 "`set-attribute-blank-option`."
-msgstr "Læser for hver global egenskab eller den angivne, hvilken valgmulighed i Pixonaut-basisproduktet den står for (en rammefarve-egenskab for basisproduktets Color), hvilken værdi i valgmuligheden hver af dens værdier står for, og `options`: valgmulighederne, den kan tilknyttes, hver med sine værdier, fra basisprodukterne, som dens produkter bruger. En tilknyttet egenskabs værdier vælger basisproduktvarianten og vises i designværktøjet som farve- eller billedknapper for valgmulighedens værdier; en værdi, hvis `stands_for` er null, er ikke tilknyttet og vises som tekst. Tilknyt en med `set-attribute-blank-option`."
+msgstr ""
+"Læser for hver global egenskab eller den angivne, hvilken valgmulighed i "
+"Pixonaut-basisproduktet den står for (en rammefarve-egenskab for "
+"basisproduktets Color), hvilken værdi i valgmuligheden hver af dens værdier "
+"står for, og `options`: valgmulighederne, den kan tilknyttes, hver med sine "
+"værdier, fra basisprodukterne, som dens produkter bruger. En tilknyttet "
+"egenskabs værdier vælger basisproduktvarianten og vises i designværktøjet "
+"som farve- eller billedknapper for valgmulighedens værdier; en værdi, hvis "
+"`stands_for` er null, er ikke tilknyttet og vises som tekst. Tilknyt en med "
+"`set-attribute-blank-option`."
 
 #: src/Abilities/GetAttributeBlankOptions.php:44
 msgid "Only this global attribute, by id."
@@ -2306,7 +2325,21 @@ msgid ""
 "attribute. Products with the attribute are re-checked in the background. The "
 "answer is the attribute's row; a `503` when the re-check could not be "
 "queued, the link being saved."
-msgstr "Tilknytter en global egenskab til en valgmulighed i Pixonaut-basisprodukterne, som dens produkter bruger, og dens værdier til valgmulighedens værdier, som feltet »Basisproduktets valgmulighed« på egenskabens redigeringsside gør: en rammefarve-egenskab til basisproduktets Color, dens værdi Svart til Black. Dens værdier vælger så basisproduktvarianten og vises i designværktøjet som farve- eller billedknapper for valgmulighedens værdier. `option` og hver værdi angives, som `get-attribute-blank-options` viser dem i `options`. En værdi med tom `value`, eller som endnu ikke er tilknyttet, står for valgmulighedens værdi med samme navn; værdier, der ikke angives, beholder deres tilknytning, så længe valgmuligheden er den samme, og mister den, når den skifter. En tom `option` fjerner egenskabens tilknytning. Produkterne med egenskaben kontrolleres igen i baggrunden. Svaret er egenskabens række; en `503`, når den nye kontrol ikke kunne sættes i kø, men tilknytningen er gemt."
+msgstr ""
+"Tilknytter en global egenskab til en valgmulighed i Pixonaut-"
+"basisprodukterne, som dens produkter bruger, og dens værdier til "
+"valgmulighedens værdier, som feltet »Basisproduktets valgmulighed« på "
+"egenskabens redigeringsside gør: en rammefarve-egenskab til basisproduktets "
+"Color, dens værdi Svart til Black. Dens værdier vælger så "
+"basisproduktvarianten og vises i designværktøjet som farve- eller "
+"billedknapper for valgmulighedens værdier. `option` og hver værdi angives, "
+"som `get-attribute-blank-options` viser dem i `options`. En værdi med tom "
+"`value`, eller som endnu ikke er tilknyttet, står for valgmulighedens værdi "
+"med samme navn; værdier, der ikke angives, beholder deres tilknytning, så "
+"længe valgmuligheden er den samme, og mister den, når den skifter. En tom "
+"`option` fjerner egenskabens tilknytning. Produkterne med egenskaben "
+"kontrolleres igen i baggrunden. Svaret er egenskabens række; en `503`, når "
+"den nye kontrol ikke kunne sættes i kø, men tilknytningen er gemt."
 
 #: src/Abilities/SetAttributeBlankOption.php:48
 #: src/Abilities/SetAttributeQueryName.php:38
@@ -2316,7 +2349,8 @@ msgstr "En global egenskab, angivet med id."
 
 #: src/Abilities/SetAttributeBlankOption.php:62
 msgid "One of the attribute's values, by term id; or name it by `slug`."
-msgstr "En af egenskabens værdier, angivet med term-id; eller angiv den med `slug`."
+msgstr ""
+"En af egenskabens værdier, angivet med term-id; eller angiv den med `slug`."
 
 #: src/Abilities/SetAttributeBlankOption.php:98
 #: src/Abilities/SetAttributeQueryName.php:69
@@ -2330,13 +2364,17 @@ msgstr "Ingen global egenskab har dette id."
 msgid ""
 "No blank the products with this attribute use has the option \"%1$s\". "
 "Options: %2$s."
-msgstr "Intet basisprodukt, som produkterne med denne egenskab bruger, har valgmuligheden »%1$s«. Valgmuligheder: %2$s."
+msgstr ""
+"Intet basisprodukt, som produkterne med denne egenskab bruger, har "
+"valgmuligheden »%1$s«. Valgmuligheder: %2$s."
 
 #: src/Abilities/SetAttributeBlankOption.php:117
 msgid ""
 "A value given is not one of the attribute's values: name each by its "
 "`term_id` or `slug`."
-msgstr "En angivet værdi er ikke en af egenskabens værdier: angiv hver med dens `term_id` eller `slug`."
+msgstr ""
+"En angivet værdi er ikke en af egenskabens værdier: angiv hver med dens "
+"`term_id` eller `slug`."
 
 #. translators: 1: the option value asked for. 2: the blank option. 3: its values, comma-separated. Error an AI assistant or an MCP client reads.
 #: src/Abilities/SetAttributeBlankOption.php:123
@@ -2350,7 +2388,10 @@ msgid ""
 "The link is saved, but the products with this attribute could not be queued "
 "for a re-check, so they keep the blank variants they had. Run `recheck-"
 "products` to re-check them."
-msgstr "Tilknytningen er gemt, men produkterne med denne egenskab kunne ikke sættes i kø til en ny kontrol, så de beholder de basisproduktvarianter, de havde. Kør `recheck-products` for at kontrollere dem igen."
+msgstr ""
+"Tilknytningen er gemt, men produkterne med denne egenskab kunne ikke sættes "
+"i kø til en ny kontrol, så de beholder de basisproduktvarianter, de havde. "
+"Kør `recheck-products` for at kontrollere dem igen."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
@@ -3066,12 +3107,12 @@ msgid "The image of card %s is not a public URL."
 msgstr "Billedet for kort %s er ikke en offentlig URL."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
-#: src/Abilities/SetShippingMethod.php:74
+#: src/Abilities/SetShippingMethod.php:80
 msgid "Change or add a shipping method"
 msgstr "Skift eller tilføj en forsendelsesmetode"
 
 #. translators: %s: the name of the ability that reads the shipping zones.
-#: src/Abilities/SetShippingMethod.php:77
+#: src/Abilities/SetShippingMethod.php:83
 #, php-format
 msgid ""
 "Changes a shipping method in a zone, by its `instance_id` as %s reads it, or "
@@ -3098,33 +3139,48 @@ msgstr ""
 "det. `enabled` false fjerner en forsendelsesmetode fra kassen uden at slette "
 "den. Svaret er forsendelsesmetoden, som den er nu."
 
-#: src/Abilities/SetShippingMethod.php:86 src/Abilities/ShippingMethods.php:209
+#: src/Abilities/SetShippingMethod.php:92 src/Abilities/ShippingMethods.php:209
 msgid "The zone; 0 is the zone for the locations no other zone covers."
 msgstr "Zonen; 0 er zonen for de lokationer, ingen anden zone dækker."
 
-#: src/Abilities/SetShippingMethod.php:91
+#: src/Abilities/SetShippingMethod.php:97
 msgid "The method to change; leave it out to add one."
 msgstr "Den forsendelsesmetode, der skal ændres; udelad den for at tilføje en."
 
-#: src/Abilities/SetShippingMethod.php:96
+#: src/Abilities/SetShippingMethod.php:102
 msgid "The kind of method to add."
 msgstr "Den type forsendelsesmetode, der skal tilføjes."
 
-#: src/Abilities/SetShippingMethod.php:118
+#: src/Abilities/SetShippingMethod.php:124
 msgid "Empty for no minimum."
 msgstr "Tom, når der ikke er noget minimum."
 
-#: src/Abilities/SetShippingMethod.php:152
+#: src/Abilities/SetShippingMethod.php:134
+msgid ""
+"The method's place among the zone's methods, lowest first. A method already "
+"at that place, and those after it, move one place down; the others keep "
+"theirs. A cart that starts qualifying for another rate gets the first one it "
+"can have that is not pickup, so free shipping that is to be chosen once a "
+"cart reaches its minimum goes before a flat rate."
+msgstr ""
+"Forsendelsesmetodens plads blandt zonens forsendelsesmetoder, laveste først. "
+"En metode, der allerede har den plads, og dem efter den, rykker én plads "
+"ned; de andre beholder deres. En kurv, der begynder at opfylde betingelserne "
+"for en anden fragtpris, får den første, den kan få, som ikke er afhentning, "
+"så gratis forsendelse, der skal vælges, når en kurv når sit minimum, "
+"placeres før en fast sats."
+
+#: src/Abilities/SetShippingMethod.php:163
 msgid "No shipping method has this instance id."
 msgstr "Ingen forsendelsesmetode har dette instans-id."
 
-#: src/Abilities/SetShippingMethod.php:156
+#: src/Abilities/SetShippingMethod.php:167
 msgid "Give the method's instance_id to change it, or a kind to add one."
 msgstr ""
 "Angiv forsendelsesmetodens instance_id for at ændre den, eller en type "
 "(kind) for at tilføje en."
 
-#: src/Abilities/SetShippingMethod.php:159
+#: src/Abilities/SetShippingMethod.php:170
 msgid "A method's kind cannot change: add a method of the other kind instead."
 msgstr ""
 "En forsendelsesmetodes type kan ikke ændres: Tilføj i stedet en "
@@ -3132,17 +3188,17 @@ msgstr ""
 
 #. translators: 1: a setting's key, e.g. min_amount; 2: a kind of shipping method, e.g. flat_rate.
 #. translators: 1: a setting's key, e.g. title; 2: a kind of shipping method, e.g. flat_rate.
-#: src/Abilities/SetShippingMethod.php:164
-#: src/Abilities/SetShippingMethod.php:181
+#: src/Abilities/SetShippingMethod.php:175
+#: src/Abilities/SetShippingMethod.php:192
 #, php-format
 msgid "A %2$s method has no setting %1$s."
 msgstr "En forsendelsesmetode af typen %2$s har ingen indstilling %1$s."
 
-#: src/Abilities/SetShippingMethod.php:196
+#: src/Abilities/SetShippingMethod.php:210
 msgid "The store did not keep the shipping method."
 msgstr "Webshoppen gemte ikke forsendelsesmetoden."
 
-#: src/Abilities/SetShippingMethod.php:245
+#: src/Abilities/SetShippingMethod.php:294
 msgid ""
 "Shipping is taxed as the cart's items are, and the store's taxable products "
 "have different rates, so a cost including tax depends on the cart. Give the "
@@ -9624,7 +9680,12 @@ msgid ""
 "frame's colour. Its values then pick the blank's variant and show in the "
 "designer as the option's colour or picture swatches. The options listed are "
 "those of the blanks the products with this attribute use."
-msgstr "Valgmuligheden i Pixonaut-basisproduktet, som denne egenskab står for, f.eks. en rammes farve. Dens værdier vælger så basisproduktvarianten og vises i designværktøjet som valgmulighedens farve- eller billedknapper. De viste valgmuligheder er dem fra basisprodukterne, som produkterne med denne egenskab bruger."
+msgstr ""
+"Valgmuligheden i Pixonaut-basisproduktet, som denne egenskab står for, "
+"f.eks. en rammes farve. Dens værdier vælger så basisproduktvarianten og "
+"vises i designværktøjet som valgmulighedens farve- eller billedknapper. De "
+"viste valgmuligheder er dem fra basisprodukterne, som produkterne med denne "
+"egenskab bruger."
 
 #. translators: Column heading in the table of an attribute's values on the screen that edits a product attribute.
 #: templates/admin/blank-option-field.php:28
@@ -9654,14 +9715,20 @@ msgstr "Samme navn: %s"
 msgid ""
 "A value that is not linked shows as text and picks no variant by this "
 "option. Save after choosing another option to list its values."
-msgstr "En værdi, der ikke er tilknyttet, vises som tekst og vælger ingen variant gennem denne valgmulighed. Gem, når du har valgt en anden valgmulighed, for at se dens værdier."
+msgstr ""
+"En værdi, der ikke er tilknyttet, vises som tekst og vælger ingen variant "
+"gennem denne valgmulighed. Gem, når du har valgt en anden valgmulighed, for "
+"at se dens værdier."
 
 #. translators: Shown under the "Blank option" select on the screen that edits a product attribute, while the attribute stands for no option.
 #: templates/admin/blank-option-field.php:40
 msgid ""
 "Not linked: its values show as text, and pick the blank's variant only where "
 "they have the names of an option and its values."
-msgstr "Ikke tilknyttet: dens værdier vises som tekst og vælger kun basisproduktvarianten, hvor de har navnene på en valgmulighed og dens værdier."
+msgstr ""
+"Ikke tilknyttet: dens værdier vises som tekst og vælger kun "
+"basisproduktvarianten, hvor de har navnene på en valgmulighed og dens "
+"værdier."
 
 #: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."

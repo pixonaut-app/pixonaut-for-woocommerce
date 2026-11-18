@@ -75,6 +75,11 @@ final class ShippingShopToolsTest extends WP_UnitTestCase {
 
 	private const AT_MINIMUM = '799';
 
+	/**
+	 * What a cart just under the free-shipping minimum adds to reach it.
+	 */
+	private const TO_MINIMUM = '1';
+
 	private const FLAT_RATE = 'flat_rate';
 
 	private const FREE_SHIPPING = 'free_shipping';
@@ -246,6 +251,53 @@ final class ShippingShopToolsTest extends WP_UnitTestCase {
 		$this->assertSame( array( self::FLAT_RATE, self::FREE_SHIPPING ), array_column( $read['zones'][0]['methods'], 'kind' ) );
 	}
 
+	public function test_free_shipping_placed_where_the_flat_rate_is_comes_first_and_is_the_carts_rate_once_the_cart_reaches_the_minimum(): void {
+		$free = $this->succeed(
+			self::SET,
+			array(
+				'zone_id'    => $this->zone_id,
+				'kind'       => self::FREE_SHIPPING,
+				'title'      => 'Fri frakt',
+				'min_amount' => self::FREE_FROM,
+				// Where the flat rate is: WooCommerce numbers a zone's methods from 1.
+				'order'      => 1,
+			)
+		);
+
+		$this->assertSame( 1, $free['order'] );
+		$methods = $this->succeed( self::GET, array() )['zones'][0]['methods'];
+		$this->assertSame( array( self::FREE_SHIPPING, self::FLAT_RATE ), array_column( $methods, 'kind' ) );
+		$this->assertSame( array( 1, 2 ), array_column( $methods, 'order' ), 'the flat rate moved one place down' );
+		$this->assertSame(
+			array( self::FLAT_RATE . ':' . $this->flat_rate_id, self::FREE_SHIPPING . ':' . $free['instance_id'] ),
+			$this->chosen_rates( array( self::UNDER_MINIMUM, self::TO_MINIMUM ) ),
+			'the flat rate under the minimum, free shipping once the cart reaches it'
+		);
+	}
+
+	public function test_a_method_placed_where_none_is_leaves_the_others_where_they_are(): void {
+		$set = $this->succeed(
+			self::SET,
+			array(
+				'zone_id'     => $this->zone_id,
+				'instance_id' => $this->flat_rate_id,
+				'order'       => 0,
+			)
+		);
+		$this->assertSame( 0, $set['order'] );
+		$free = $this->succeed(
+			self::SET,
+			array(
+				'zone_id' => $this->zone_id,
+				'kind'    => self::FREE_SHIPPING,
+				'order'   => 2,
+			)
+		);
+
+		$this->assertSame( 2, $free['order'] );
+		$this->assertSame( array( 0, 2 ), array_column( $this->succeed( self::GET, array() )['zones'][0]['methods'], 'order' ) );
+	}
+
 	public function test_a_method_switched_off_leaves_checkout_and_is_still_read(): void {
 		$set = $this->succeed(
 			self::SET,
@@ -394,6 +446,32 @@ final class ShippingShopToolsTest extends WP_UnitTestCase {
 		$packages = WC()->shipping()->get_packages();
 		$this->assertNotEmpty( $packages );
 		return $packages[0]['rates'];
+	}
+
+	/**
+	 * The rate WooCommerce chooses for the cart after each product is added
+	 * to it, as a shopper who never picks one is charged.
+	 *
+	 * @param string[] $prices Each product's price, including VAT.
+	 * @return list<string>
+	 */
+	private function chosen_rates( array $prices ): array {
+		wc_load_cart();
+		WC()->cart->empty_cart();
+		WC()->customer->set_billing_country( self::COUNTRY );
+		WC()->customer->set_shipping_country( self::COUNTRY );
+		$chosen = array();
+		foreach ( $prices as $price ) {
+			$product = new WC_Product_Simple();
+			$product->set_name( 'Poster' );
+			$product->set_regular_price( $price );
+			$product->save();
+			WC()->cart->add_to_cart( $product->get_id() );
+			WC()->cart->calculate_totals();
+			$methods  = WC()->session->get( 'chosen_shipping_methods' );
+			$chosen[] = is_array( $methods ) ? (string) reset( $methods ) : '';
+		}
+		return $chosen;
 	}
 
 	/**
