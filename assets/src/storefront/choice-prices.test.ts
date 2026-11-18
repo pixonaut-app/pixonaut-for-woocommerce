@@ -79,6 +79,26 @@ describe('amountText', () => {
 	});
 });
 
+describe('amountText with zeros trimmed', () => {
+	const trimmed = {
+		...SWEDISH,
+		decimals: 2,
+		format: { ...SWEDISH.format, trimZeros: true },
+	};
+
+	it('writes a whole amount without decimals, as the shop writes prices', () => {
+		expect(amountText({ kind: 'add_on', amount: 180 }, trimmed)).toBe(
+			'+180\u00a0kr',
+		);
+	});
+
+	it('keeps the decimals of an amount with cents', () => {
+		expect(amountText({ kind: 'add_on', amount: 2.5 }, trimmed)).toBe(
+			'+2,50\u00a0kr',
+		);
+	});
+});
+
 describe('readChoicePrices', () => {
 	it('reads what the form printed, and nothing from mangled JSON', () => {
 		const container = document.createElement('div');
