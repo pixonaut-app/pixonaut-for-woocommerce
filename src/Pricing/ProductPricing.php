@@ -25,7 +25,9 @@ use WC_Product_Variation;
  * A product personalised on a blank sells a blank variant per variation (a
  * simple product sells one), and Pixonaut knows what the printshop charges
  * for each. This reads those costs, and prices by the pricing rule: the
- * store's (`Settings`), with the parts the product changes.
+ * store's (`Settings`), with the parts the values of a variation's global
+ * attributes change (`AttributeRules`), then the ones its product changes,
+ * then the ones the variation changes (`ItemRule`).
  *
  * - **Apply** sets each price to the step nearest the rule's target, and
  *   from then on the price follows the rule.
@@ -102,23 +104,18 @@ final class ProductPricing {
 	}
 
 	/**
-	 * Stores the parts of the rule a product changes; a part that is not a
-	 * number is left to the store.
+	 * Stores the parts of the rule a product or variation changes; a part
+	 * that is not a number is left to the level after it.
 	 *
-	 * @param WC_Product           $product The product.
+	 * @param WC_Product           $product The product or variation.
 	 * @param array<string, mixed> $parts   The parts as posted, by part.
+	 * @return bool Whether what is stored changed.
 	 */
-	public function save_own_parts( WC_Product $product, array $parts ): void {
-		$own = array();
-		foreach ( PriceRule::PARTS as $part ) {
-			$written = $parts[ $part ] ?? '';
-			if ( PriceRule::is_part( $written ) && '' !== PriceRule::part( $written ) ) {
-				$own[ $part ] = PriceRule::part( $written );
-			}
-		}
-		$json = array() === $own ? '' : (string) wp_json_encode( $own );
-		if ( $product->get_meta( self::RULE_META_KEY, true ) === $json ) {
-			return;
+	public function save_own_parts( WC_Product $product, array $parts ): bool {
+		$json = AttributeRules::json( $parts );
+		$was  = $product->get_meta( self::RULE_META_KEY, true );
+		if ( ( is_string( $was ) ? $was : '' ) === $json ) {
+			return false;
 		}
 		if ( '' === $json ) {
 			$product->delete_meta_data( self::RULE_META_KEY );
@@ -126,6 +123,7 @@ final class ProductPricing {
 			$product->update_meta_data( self::RULE_META_KEY, $json );
 		}
 		$product->save_meta_data();
+		return true;
 	}
 
 	/**
@@ -143,8 +141,9 @@ final class ProductPricing {
 	}
 
 	/**
-	 * The rule a product is priced by: the store's, with the parts the
-	 * product changes.
+	 * The rule a product is priced by before its variations' attribute
+	 * values and their own parts: the store's, with the parts the product
+	 * changes.
 	 *
 	 * @param WC_Product $product The product.
 	 */
@@ -167,6 +166,62 @@ final class ProductPricing {
 			}
 		}
 		return PriceRule::from_parts( $parts + $this->store_parts() );
+	}
+
+	/**
+	 * The rule one of a product's prices follows, part by part: the
+	 * variation's own parts, then its product's, then its attribute
+	 * values', then the store's.
+	 *
+	 * @param WC_Product                $item     The product itself, or one of its variations.
+	 * @param array<string, mixed>      $product  The parts its product changes, as written.
+	 * @param array<string, mixed>|null $own      The parts the variation changes, as written; null for the ones it has.
+	 */
+	public function item_rule( WC_Product $item, array $product, ?array $own = null ): ItemRule {
+		$layers = array();
+		if ( $item->is_type( 'variation' ) ) {
+			$layers[] = array( new RuleSource( RuleSource::VARIATION ), $own ?? self::own_parts( $item ) );
+		}
+		$layers[] = array( new RuleSource( RuleSource::PRODUCT ), $product );
+		foreach ( AttributeRules::layers_of( $item ) as $layer ) {
+			$layers[] = $layer;
+		}
+		$layers[] = array( new RuleSource( RuleSource::STORE ), $this->store_parts() );
+		return ItemRule::resolve( $layers );
+	}
+
+	/**
+	 * The rule each of a product's prices follows, by product or variation id.
+	 *
+	 * @param WC_Product                       $product    A simple or variable product.
+	 * @param array<string, mixed>|null        $own        The parts the product changes, as written; null for the ones it has.
+	 * @param array<int, array<string, mixed>> $variations The parts variations change instead of the ones they have, as written, by variation id.
+	 * @return array<int, ItemRule>
+	 */
+	public function rules( WC_Product $product, ?array $own = null, array $variations = array() ): array {
+		$own   = $own ?? self::own_parts( $product );
+		$rules = array();
+		foreach ( self::items( $product ) as $item ) {
+			$rules[ $item->get_id() ] = $this->item_rule( $item, $own, $variations[ $item->get_id() ] ?? null );
+		}
+		return $rules;
+	}
+
+	/**
+	 * Whether any of a product's prices has a rule to follow: a target
+	 * margin set for it at some level.
+	 *
+	 * @param WC_Product                       $product    A simple or variable product.
+	 * @param array<string, mixed>|null        $own        The parts the product changes, as written; null for the ones it has.
+	 * @param array<int, array<string, mixed>> $variations The parts variations change instead of the ones they have, as written, by variation id.
+	 */
+	public function rule_set_for( WC_Product $product, ?array $own = null, array $variations = array() ): bool {
+		foreach ( $this->rules( $product, $own, $variations ) as $rule ) {
+			if ( $rule->rule->is_set() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -208,10 +263,11 @@ final class ProductPricing {
 	 * @return list<PriceRow>
 	 */
 	public function rows( WC_Product $product ): array {
-		$rule      = $this->rule_for( $product );
+		$rules     = $this->rules( $product );
 		$automatic = $this->automatic_for( $product );
 		return array_map(
-			function ( WC_Product $item ) use ( $rule, $automatic ): PriceRow {
+			function ( WC_Product $item ) use ( $rules, $automatic ): PriceRow {
+				$rule     = $rules[ $item->get_id() ]->rule;
 				$state    = PriceState::stored_on( $item );
 				$price    = Amount::parse( $item->get_regular_price( 'edit' ) );
 				$standing = $state->standing( $price );
@@ -242,7 +298,8 @@ final class ProductPricing {
 					$store->buffer,
 					self::automatic_of( $item, $automatic ),
 					PriceChanges::setting( $item ),
-					null === $cost || null === $price ? null : PriceRule::contribution_of( $price, $cost, $tax )
+					null === $cost || null === $price ? null : PriceRule::contribution_of( $price, $cost, $tax ),
+					$rules[ $item->get_id() ]
 				);
 			},
 			self::items( $product )
@@ -320,15 +377,13 @@ final class ProductPricing {
 	 * @return int How many prices changed.
 	 */
 	public function apply( WC_Product $product, ?array $ids = null, bool $release = false ): int {
-		$rule    = $this->rule_for( $product );
+		$rules   = $this->rules( $product );
 		$changed = 0;
-		if ( ! $rule->is_set() ) {
-			return $changed;
-		}
 		foreach ( self::items( $product ) as $item ) {
+			$rule  = $rules[ $item->get_id() ]->rule;
 			$state = PriceState::stored_on( $item );
 			$price = Amount::parse( $item->get_regular_price( 'edit' ) );
-			if ( ( null !== $ids && ! in_array( $item->get_id(), $ids, true ) ) || ( ! $release && PriceState::BY_HAND === $state->standing( $price ) ) ) {
+			if ( ! $rule->is_set() || ( null !== $ids && ! in_array( $item->get_id(), $ids, true ) ) || ( ! $release && PriceState::BY_HAND === $state->standing( $price ) ) ) {
 				continue;
 			}
 			$changed += $this->price( $item, $state, $rule ) ? 1 : 0;
@@ -344,18 +399,19 @@ final class ProductPricing {
 	 * rule, one it would leave reads as it stands, with what stops the rule
 	 * as its flag.
 	 *
-	 * @param WC_Product                $product A simple or variable product.
-	 * @param int[]|null                $ids     The product or variations to price; null for all.
-	 * @param bool                      $release Whether a price edited by hand is given back to the rule.
-	 * @param array<string, mixed>|null $own     The parts of the rule the product would change; null for the ones it has.
+	 * @param WC_Product                       $product A simple or variable product.
+	 * @param int[]|null                       $ids     The product or variations to price; null for all.
+	 * @param bool                             $release Whether a price edited by hand is given back to the rule.
+	 * @param array<string, mixed>|null        $own     The parts of the rule the product would change; null for the ones it has.
+	 * @param array<int, array<string, mixed>> $variations The parts of the rule variations would change instead of the ones they have, by variation id.
 	 * @phpstan-param list<int>|null $ids
 	 * @return list<PriceRow>
 	 * @throws ApiException When Pixonaut could not be asked.
 	 */
-	public function preview( WC_Product $product, ?array $ids = null, bool $release = false, ?array $own = null ): array {
+	public function preview( WC_Product $product, ?array $ids = null, bool $release = false, ?array $own = null, array $variations = array() ): array {
 		$this->read = array();
 		$region     = self::region();
-		$rule       = null === $own ? $this->rule_for( $product ) : $this->rule_with( $own );
+		$rules      = $this->rules( $product, $own, $variations );
 		$items      = self::items( $product );
 		$automatic  = $this->automatic_for( $product );
 		$costs      = array();
@@ -367,7 +423,8 @@ final class ProductPricing {
 		}
 		$this->converter->refresh_for( array_values( $costs ) );
 		return array_map(
-			function ( WC_Product $item ) use ( $rule, $costs, $ids, $release, $automatic ): PriceRow {
+			function ( WC_Product $item ) use ( $rules, $costs, $ids, $release, $automatic ): PriceRow {
+				$rule     = $rules[ $item->get_id() ]->rule;
 				$state    = PriceState::stored_on( $item );
 				$price    = Amount::parse( $item->get_regular_price( 'edit' ) );
 				$standing = $state->standing( $price );
@@ -396,7 +453,8 @@ final class ProductPricing {
 					$store->buffer,
 					self::automatic_of( $item, $automatic ),
 					PriceChanges::setting( $item ),
-					null === $cost || null === $after ? null : PriceRule::contribution_of( $after, $cost, $tax )
+					null === $cost || null === $after ? null : PriceRule::contribution_of( $after, $cost, $tax ),
+					$rules[ $item->get_id() ]
 				);
 			},
 			$items
@@ -415,10 +473,11 @@ final class ProductPricing {
 	 * @return int How many prices were changed.
 	 */
 	public function settle( WC_Product $product, array $changed = array() ): int {
-		$rule      = $this->rule_for( $product );
+		$rules     = $this->rules( $product );
 		$automatic = $this->automatic_for( $product );
 		$set       = 0;
 		foreach ( self::items( $product ) as $item ) {
+			$rule  = $rules[ $item->get_id() ]->rule;
 			$state = PriceState::stored_on( $item );
 			$price = Amount::parse( $item->get_regular_price( 'edit' ) );
 			if ( PriceState::OWN === $state->standing( $price ) ) {
@@ -432,7 +491,10 @@ final class ProductPricing {
 			$store = $this->converter->in_store( self::known_cost( $item, $state ) );
 			$cost  = $store->total;
 			$tax   = PriceTax::of( $item );
-			if ( null !== $cost && null !== $price && $rule->holds( $price, $cost, $tax ) ) {
+			$wants = null === $cost ? null : $rule->price_for( $cost, $tax );
+			// A changed rule's price stays suggested until it is applied, whatever the tolerance says.
+			$ruled = PriceState::FLAG_RULE === $state->flag && null !== $wants && $wants !== $price;
+			if ( ! $ruled && null !== $cost && null !== $price && $rule->holds( $price, $cost, $tax ) ) {
 				$state->with_flag()->save_to( $item );
 				continue;
 			}
@@ -440,9 +502,47 @@ final class ProductPricing {
 				$set += $this->price( $item, $state, $rule, true ) ? 1 : 0;
 				continue;
 			}
-			$wants = null === $cost ? null : $rule->price_for( $cost, $tax );
-			$flag  = self::blocker( $item, $store, $wants ) ?? PriceState::FLAG_MARGIN;
+			$flag = self::blocker( $item, $store, $wants ) ?? ( $ruled ? PriceState::FLAG_RULE : PriceState::FLAG_MARGIN );
 			// At the minimum or maximum already: the rule has no other price for it.
+			( $wants === $price ? $state->with_flag() : $state->with_flag( $flag, $wants ) )->save_to( $item );
+		}
+		$this->watch( $product );
+		return $set;
+	}
+
+	/**
+	 * Settles a product's prices that follow the rule after a level of the
+	 * rule changed: one that is not the rule's price now is set to it when
+	 * it changes automatically, else the rule's price is suggested. Prices
+	 * kept by hand or never applied are left alone.
+	 *
+	 * @param WC_Product $product A simple or variable product.
+	 * @param int[]|null $ids     The product or variations whose rule changed; null for all.
+	 * @phpstan-param list<int>|null $ids
+	 * @return int How many prices were changed.
+	 */
+	public function reprice( WC_Product $product, ?array $ids = null ): int {
+		$rules     = $this->rules( $product );
+		$automatic = $this->automatic_for( $product );
+		$set       = 0;
+		foreach ( self::items( $product ) as $item ) {
+			$state = PriceState::stored_on( $item );
+			$price = Amount::parse( $item->get_regular_price( 'edit' ) );
+			if ( ( null !== $ids && ! in_array( $item->get_id(), $ids, true ) ) || PriceState::FOLLOWS !== $state->standing( $price ) ) {
+				continue;
+			}
+			$rule = $rules[ $item->get_id() ]->rule;
+			if ( ! $rule->is_set() ) {
+				$state->with_flag()->save_to( $item );
+				continue;
+			}
+			if ( self::automatic_of( $item, $automatic ) ) {
+				$set += $this->price( $item, $state, $rule, true ) ? 1 : 0;
+				continue;
+			}
+			$store = $this->converter->in_store( self::known_cost( $item, $state ) );
+			$wants = null === $store->total ? null : $rule->price_for( $store->total, PriceTax::of( $item ) );
+			$flag  = self::blocker( $item, $store, $wants ) ?? PriceState::FLAG_RULE;
 			( $wants === $price ? $state->with_flag() : $state->with_flag( $flag, $wants ) )->save_to( $item );
 		}
 		$this->watch( $product );

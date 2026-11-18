@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Pricing\PriceRow;
 use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Pricing\PriceState;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
+use Pixonaut\WooCommerce\Pricing\RuleSource;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use WC_Product;
 use WP_Error;
@@ -126,6 +127,66 @@ final class ProductPrices {
 			'checked_at'      => self::time( $row->checked_at ),
 			'automatic'       => $row->automatic,
 			'price_changes'   => $row->changes,
+		) + self::rule_of( $row );
+	}
+
+	/**
+	 * The rule a price follows, as the abilities answer it: each part in
+	 * force, where it comes from, the parts the variation changes itself,
+	 * and the parts two of its attribute values both set.
+	 *
+	 * @param PriceRow $row The price.
+	 * @return array{rule: array<string, string>, rule_sources: array<string, array<string, mixed>|null>, own_rule: array<string, string>, rule_conflicts: list<array<string, mixed>>}
+	 */
+	private static function rule_of( PriceRow $row ): array {
+		$rule    = $row->rule;
+		$parts   = array();
+		$sources = array();
+		$own     = array();
+		foreach ( PriceRule::PARTS as $part ) {
+			$source           = $rule?->sources[ $part ] ?? null;
+			$parts[ $part ]   = $rule?->parts[ $part ] ?? '';
+			$sources[ $part ] = $source?->to_array();
+			$own[ $part ]     = RuleSource::VARIATION === $source?->level ? $parts[ $part ] : '';
+		}
+		return array(
+			'rule'           => $parts,
+			'rule_sources'   => $sources,
+			'own_rule'       => $own,
+			'rule_conflicts' => null === $rule ? array() : array_map(
+				static fn ( array $conflict ): array => array(
+					'part'   => $conflict['part'],
+					'winner' => $conflict['winner']->to_array(),
+					'loser'  => $conflict['loser']->to_array(),
+				),
+				$rule->conflicts
+			),
+		);
+	}
+
+	/**
+	 * The schema of a level the rule's parts come from.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function source_schema(): array {
+		$nullable = static fn ( string $type, string $description ): array => array(
+			'type'        => array( $type, 'null' ),
+			'description' => $description,
+		);
+		return array(
+			'type'       => 'object',
+			'properties' => array(
+				'level'     => array(
+					'type'        => 'string',
+					'enum'        => RuleSource::LEVELS,
+					'description' => __( 'variation: the variation\'s own rule. product: the product\'s. attribute: a value of a global attribute the variation has. store: the store\'s pricing settings.', 'pixonaut-for-woocommerce' ),
+				),
+				'attribute' => $nullable( 'string', __( 'The attribute\'s name, for an attribute value; else null.', 'pixonaut-for-woocommerce' ) ),
+				'taxonomy'  => $nullable( 'string', __( 'The attribute\'s taxonomy, such as pa_size, for an attribute value; else null.', 'pixonaut-for-woocommerce' ) ),
+				'term_id'   => $nullable( 'integer', __( 'The attribute value, by term id; else null.', 'pixonaut-for-woocommerce' ) ),
+				'value'     => $nullable( 'string', __( 'The attribute value\'s name; else null.', 'pixonaut-for-woocommerce' ) ),
+			),
 		);
 	}
 
@@ -182,7 +243,7 @@ final class ProductPrices {
 				),
 				'flag'            => array(
 					'type'        => array( 'string', 'null' ),
-					'description' => __( 'Why the rule cannot price it or suggests another price: margin, no_cost, unread, currency, rate_stale, no_step or sale; null when nothing does.', 'pixonaut-for-woocommerce' ),
+					'description' => __( 'Why the rule cannot price it or suggests another price: margin, rule (a level of the rule changed), no_cost, unread, currency, rate_stale, no_step or sale; null when nothing does.', 'pixonaut-for-woocommerce' ),
 				),
 				'flag_message'    => array( 'type' => array( 'string', 'null' ) ),
 				'rule_at'         => array(
@@ -201,6 +262,29 @@ final class ProductPrices {
 					'type'        => 'string',
 					'enum'        => array( PriceChanges::STORE, PriceChanges::PRODUCT, PriceChanges::ALWAYS, PriceChanges::NEVER ),
 					'description' => __( 'What it is set to: a variation says product when it follows its product, always or never when it answers it; a simple product\'s one row says what the product does.', 'pixonaut-for-woocommerce' ),
+				),
+				'rule'            => self::parts_schema( __( 'The rule this price follows, each part from the most specific level that sets it: the variation, its product, the values of its global attributes, the store; empty for a part no level sets.', 'pixonaut-for-woocommerce' ) ),
+				'rule_sources'    => array(
+					'type'                 => 'object',
+					'description'          => __( 'Where each part of `rule` comes from, by part; null for a part no level sets.', 'pixonaut-for-woocommerce' ),
+					'properties'           => array_fill_keys( PriceRule::PARTS, array( 'type' => array( 'object', 'null' ) ) + self::source_schema() ),
+					'additionalProperties' => false,
+				),
+				'own_rule'        => self::parts_schema( __( 'The parts of the rule the variation changes itself; empty for a part it leaves to the levels after it, and always empty for a simple product.', 'pixonaut-for-woocommerce' ) ),
+				'rule_conflicts'  => array(
+					'type'        => 'array',
+					'description' => __( 'Each part two of the variation\'s attribute values both set: the one whose attribute comes first in the store\'s attribute order wins.', 'pixonaut-for-woocommerce' ),
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'part'   => array(
+								'type' => 'string',
+								'enum' => PriceRule::PARTS,
+							),
+							'winner' => self::source_schema(),
+							'loser'  => self::source_schema(),
+						),
+					),
 				),
 			) + $more,
 		);

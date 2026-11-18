@@ -9,8 +9,10 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Abilities;
 
+use Pixonaut\WooCommerce\Pricing\AttributeRules;
 use Pixonaut\WooCommerce\Settings\Setting;
 use Pixonaut\WooCommerce\Settings\Settings;
+use WP_Term;
 
 /**
  * The settings on the Prices tab of the Pixonaut settings page, by their
@@ -55,7 +57,7 @@ final class ReadPricingSettings implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Read the pricing settings', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Gives the store\'s pricing rule, by which prices follow the printshop\'s costs: the target margin and the fixed amount per item on top of it (price excluding tax = cost ÷ (1 − margin) + fixed amount), the tolerance around the margin the rule\'s own price leaves at a cost, the price step and what prices end in, the lowest and highest price, the currency buffer added to a cost converted from another currency, and whether prices change by themselves when a cost changes. Amounts and percentages are decimal strings, empty for none. Without a target margin the store has no rule. Also the store\'s currency, and whether prices are entered including tax. `delivery_time_show` says whether a product page tells how long the printshop says the chosen variation takes, which Pixonaut reads with its cost, and `delivery_time_handling_days` the days of its own the store adds to that.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Gives the store\'s pricing rule, by which prices follow the printshop\'s costs: the target margin and the fixed amount per item on top of it (price excluding tax = cost ÷ (1 − margin) + fixed amount), the tolerance around the margin the rule\'s own price leaves at a cost, the price step and what prices end in, the lowest and highest price, the currency buffer added to a cost converted from another currency, and whether prices change by themselves when a cost changes. Amounts and percentages are decimal strings, empty for none. Without a target margin the store has no rule. `attribute_rules` lists each value of a global attribute that changes parts of the rule for every variation with it, in every product, in the store\'s attribute order, with the parts another attribute\'s value sets too on a variation with both (`conflicts`: the one whose attribute comes first wins); a product and a variation may change parts too, and each part comes from the most specific level that sets it. Also the store\'s currency, and whether prices are entered including tax. `delivery_time_show` says whether a product page tells how long the printshop says the chosen variation takes, which Pixonaut reads with its cost, and `delivery_time_handling_days` the days of its own the store adds to that.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(),
@@ -105,6 +107,78 @@ final class ReadPricingSettings implements Ability {
 		return $values + array(
 			'currency'           => get_woocommerce_currency(),
 			'prices_include_tax' => wc_tax_enabled() && wc_prices_include_tax(),
+			'attribute_rules'    => array_map( self::attribute_rule( ... ), AttributeRules::all() ),
+		);
+	}
+
+	/**
+	 * One attribute value's parts, as the abilities answer them.
+	 *
+	 * @param WP_Term $term The value.
+	 * @return array<string, mixed>
+	 */
+	public static function attribute_rule( WP_Term $term ): array {
+		return array(
+			'attribute_id' => wc_attribute_taxonomy_id_by_name( $term->taxonomy ),
+			'attribute'    => wc_attribute_label( $term->taxonomy ),
+			'taxonomy'     => $term->taxonomy,
+			'term_id'      => $term->term_id,
+			'slug'         => $term->slug,
+			'name'         => $term->name,
+			'rule'         => AttributeRules::parts( $term->term_id ),
+			'conflicts'    => array_map(
+				static fn ( array $clash ): array => array(
+					'part'      => $clash['part'],
+					'term_id'   => $clash['term']->term_id,
+					'attribute' => wc_attribute_label( $clash['term']->taxonomy ),
+					'name'      => $clash['term']->name,
+					'wins'      => $clash['wins'],
+				),
+				AttributeRules::clashes( $term )
+			),
+		);
+	}
+
+	/**
+	 * The schema of `attribute_rule()`.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function attribute_rule_schema(): array {
+		return array(
+			'type'       => 'object',
+			'properties' => array(
+				'attribute_id' => array(
+					'type'        => 'integer',
+					'description' => __( 'The global attribute, by id.', 'pixonaut-for-woocommerce' ),
+				),
+				'attribute'    => array( 'type' => 'string' ),
+				'taxonomy'     => array( 'type' => 'string' ),
+				'term_id'      => array(
+					'type'        => 'integer',
+					'description' => __( 'The value, by term id.', 'pixonaut-for-woocommerce' ),
+				),
+				'slug'         => array( 'type' => 'string' ),
+				'name'         => array( 'type' => 'string' ),
+				'rule'         => ProductPrices::parts_schema( __( 'The parts the value changes for every variation with it; empty for a part it leaves to the store.', 'pixonaut-for-woocommerce' ) ),
+				'conflicts'    => array(
+					'type'        => 'array',
+					'description' => __( 'Each part a value of another attribute sets too, on some variation with both.', 'pixonaut-for-woocommerce' ),
+					'items'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'part'      => array( 'type' => 'string' ),
+							'term_id'   => array( 'type' => 'integer' ),
+							'attribute' => array( 'type' => 'string' ),
+							'name'      => array( 'type' => 'string' ),
+							'wins'      => array(
+								'type'        => 'boolean',
+								'description' => __( 'Whether this value wins the part: its attribute comes first in the store\'s attribute order.', 'pixonaut-for-woocommerce' ),
+							),
+						),
+					),
+				),
+			),
 		);
 	}
 
@@ -136,6 +210,11 @@ final class ReadPricingSettings implements Ability {
 		$schema['properties']['prices_include_tax'] = array(
 			'type'        => 'boolean',
 			'description' => __( 'Whether prices are entered including tax. The price step, ending, lowest and highest price count on the price as entered; the margin and the fixed amount count on it excluding tax.', 'pixonaut-for-woocommerce' ),
+		);
+		$schema['properties']['attribute_rules']    = array(
+			'type'        => 'array',
+			'description' => __( 'Each value of a global attribute that changes parts of the rule, in the store\'s attribute order.', 'pixonaut-for-woocommerce' ),
+			'items'       => self::attribute_rule_schema(),
 		);
 		return $schema;
 	}

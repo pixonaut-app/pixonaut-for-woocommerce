@@ -33,6 +33,7 @@ final class PriceRow {
 	 * @param bool             $automatic  Whether its price changes by itself when its cost changes, once it follows the rule.
 	 * @param string           $changes    What it is set to, as `PriceChanges::setting()` says it.
 	 * @param int|null         $contribution What its price leaves over its cost, excluding tax.
+	 * @param ItemRule|null    $rule       The rule it follows, part by part, and where each part comes from.
 	 */
 	public function __construct(
 		public readonly int $id,
@@ -51,6 +52,7 @@ final class PriceRow {
 		public readonly bool $automatic = false,
 		public readonly string $changes = PriceChanges::STORE,
 		public readonly ?int $contribution = null,
+		public readonly ?ItemRule $rule = null,
 	) {
 	}
 }

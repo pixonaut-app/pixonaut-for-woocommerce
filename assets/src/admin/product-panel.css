@@ -1794,8 +1794,33 @@
 }
 
 #pixonaut_product_data
-	:is(.pixonaut-prices__standing, .pixonaut-prices__changes-note) {
+	:is(
+		.pixonaut-prices__standing,
+		.pixonaut-prices__changes-note,
+		.pixonaut-prices__source
+	) {
 	color: #646970;
+}
+
+/* Where each part comes from is in its tooltip. */
+#pixonaut_product_data .pixonaut-prices__source[title] {
+	text-decoration: underline dotted;
+	cursor: help;
+}
+
+#pixonaut_product_data .pixonaut-prices__conflict {
+	color: #996800;
+}
+
+.woocommerce_variation .pixonaut-variation-price-rule summary {
+	cursor: pointer;
+	padding: 6px 0;
+}
+
+.woocommerce_variation .pixonaut-variation-price-rule__parts {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: 0 12px;
 }
 
 #pixonaut_product_data .pixonaut-prices__flag {

@@ -90,9 +90,33 @@ at once.
 `Pricing\PriceRule` holds a target margin, a tolerance, a price step with an
 ending, and a lowest and highest price. The store's parts are the settings
 `price_margin`, `price_tolerance`, `price_step`, `price_ending`, `price_min`
-and `price_max` ([Settings](../settings/)); a product's own parts, in its
-`_pixonaut_price_rule` meta, come before them. Without a target margin there
-is no rule.
+and `price_max` ([Settings](../settings/)). Every part can also be set at
+three more levels, each in a `_pixonaut_price_rule` meta (JSON, by part):
+the term of a global attribute's value (`Pricing\AttributeRules`, for every
+variation with it), the product, and the variation.
+`ProductPricing::item_rule()` looks each part up on its own, the most
+specific level first: variation, product, attribute values in the store's
+attribute order (`wc_get_attribute_taxonomies()`), store
+(`Pricing\ItemRule`). An empty part follows the level after it. Two
+attribute values of a variation that set the same part are a conflict; the
+first attribute wins. Each part keeps its `Pricing\RuleSource`, which the
+Prices table and the abilities show. Without a target margin there is no
+rule.
+
+A change at any level settles the prices it reaches through
+`ProductPricing::reprice()`: a price that follows the rule and is not the
+rule's price now is set to it when it changes automatically, else flagged
+`rule` with the rule's price suggested; that flag stays until the price is
+the rule's, whatever the tolerance. A product's and a variation's own parts
+are settled when they are saved. A change of the store's rule (the
+`update_option` of the settings) or of a value's parts (its term meta) queues
+`pixonaut_wc_pricing_rule_changed` (`Pricing\RuleChange`), which settles the
+watched products a page of 50 at a time, for a value only the variations
+with it. The value's screen gets the fields through
+`{taxonomy}_add_form_fields` and `{taxonomy}_edit_form_fields`
+(`Admin\AttributePriceRuleFields`), the variation through
+`woocommerce_product_after_variable_attributes`
+(`Admin\VariationPriceRuleField`).
 
 - The margin counts on the price excluding tax, the steps and limits on the
   price as the store enters it. `Pricing\PriceTax` turns one into the other

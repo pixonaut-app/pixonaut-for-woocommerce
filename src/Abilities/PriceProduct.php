@@ -57,21 +57,21 @@ final class PriceProduct implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Price a product by the pricing rule', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Reads the printshop\'s costs of a product printed on a blank again, and sets the regular price of each variation (a simple product has one) to the rule\'s: the price step nearest the target margin, within the lowest and highest price. A price it sets follows the rule from then on. `only` unpriced leaves every variation that has a price alone; `variation_ids` names the ones to price. A price edited by hand after the rule set it is kept unless `release_held`. `rule` stores the parts of the rule this product changes, first. With `dry_run` nothing is stored on the product: the answer gives the prices it would set. Each price answers `before`, `price` and `changed`; one the rule cannot set keeps its price and says why in `flag`. No other price is set, whatever changes by itself. `changed` counts every price that changed; `prices` is a page of them, `page` and `per_page` choosing which. Refused without a target margin.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Reads the printshop\'s costs of a product printed on a blank again, and sets the regular price of each variation (a simple product has one) to the rule\'s: the price step nearest the target margin, within the lowest and highest price. A price it sets follows the rule from then on. `only` unpriced leaves every variation that has a price alone; `variation_ids` names the ones to price. A price edited by hand after the rule set it is kept unless `release_held`. `rule` stores the parts of the rule this product changes, first, and `variation_rules` the parts variations change themselves; each part of a price\'s rule comes from the most specific level that sets it: its variation, its product, its global attribute values (set with update-pricing-settings), the store. With `dry_run` nothing is stored on the product: the answer gives the prices it would set. Each price answers `before`, `price` and `changed`; one the rule cannot set keeps its price and says why in `flag`. No other price is set, whatever changes by itself. `changed` counts every price that changed; `prices` is a page of them, `page` and `per_page` choosing which. Refused without a target margin.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
-					'product_id'    => array(
+					'product_id'      => array(
 						'type'        => 'integer',
 						'minimum'     => 1,
 						'description' => __( 'A simple or variable product; never a variation.', 'pixonaut-for-woocommerce' ),
 					),
-					'only'          => array(
+					'only'            => array(
 						'type'    => 'string',
 						'enum'    => array( self::ALL, self::UNPRICED ),
 						'default' => self::ALL,
 					),
-					'variation_ids' => array(
+					'variation_ids'   => array(
 						'type'        => 'array',
 						'description' => __( 'The variations to price, or the product\'s own id for a simple product; left out for all.', 'pixonaut-for-woocommerce' ),
 						'items'       => array(
@@ -80,13 +80,30 @@ final class PriceProduct implements Ability {
 						),
 						'minItems'    => 1,
 					),
-					'release_held'  => array(
+					'release_held'    => array(
 						'type'        => 'boolean',
 						'default'     => false,
 						'description' => __( 'Whether a price edited by hand after the rule set it is given back to the rule.', 'pixonaut-for-woocommerce' ),
 					),
-					'rule'          => ProductPrices::parts_schema( __( 'The parts of the rule this product changes, replacing the ones it has: margin and tolerance in percent, fixed (added to the price excluding tax on top of the margin), step, ending, min and max as amounts. A part left out or empty is left to the store.', 'pixonaut-for-woocommerce' ) ),
-					'dry_run'       => array(
+					'rule'            => ProductPrices::parts_schema( __( 'The parts of the rule this product changes, replacing the ones it has: margin and tolerance in percent, fixed (added to the price excluding tax on top of the margin), step, ending, min and max as amounts. A part left out or empty is left to the store.', 'pixonaut-for-woocommerce' ) ),
+					'variation_rules' => array(
+						'type'        => 'array',
+						'description' => __( 'The parts of the rule variations change themselves, each replacing the ones the variation has; a part left out or empty follows its product, its attribute values and the store. Variations not named keep theirs.', 'pixonaut-for-woocommerce' ),
+						'items'       => array(
+							'type'                 => 'object',
+							'properties'           => array(
+								'variation_id' => array(
+									'type'        => 'integer',
+									'minimum'     => 1,
+									'description' => __( 'One of the product\'s variations.', 'pixonaut-for-woocommerce' ),
+								),
+								'rule'         => ProductPrices::parts_schema( __( 'The variation\'s own parts.', 'pixonaut-for-woocommerce' ) ),
+							),
+							'required'             => array( 'variation_id', 'rule' ),
+							'additionalProperties' => false,
+						),
+					),
+					'dry_run'         => array(
 						'type'    => 'boolean',
 						'default' => false,
 					),
@@ -123,7 +140,7 @@ final class PriceProduct implements Ability {
 	}
 
 	/**
-	 * @param mixed $input `product_id`, and optionally `only`, `variation_ids`, `release_held`, `rule`, `dry_run`, `page` and `per_page`.
+	 * @param mixed $input `product_id`, and optionally `only`, `variation_ids`, `release_held`, `rule`, `variation_rules`, `dry_run`, `page` and `per_page`.
 	 * @return array<string, mixed>|WP_Error
 	 */
 	public function execute( mixed $input = null ): array|WP_Error {
@@ -137,7 +154,11 @@ final class PriceProduct implements Ability {
 		if ( $own instanceof WP_Error ) {
 			return $own;
 		}
-		if ( ! $pricing->rule_with( $own )->is_set() ) {
+		$variations = self::variation_parts( $input['variation_rules'] ?? null, $product );
+		if ( $variations instanceof WP_Error ) {
+			return $variations;
+		}
+		if ( ! $pricing->rule_set_for( $product, $own, $variations ) ) {
 			return ProductPrices::no_rule();
 		}
 		$named = self::named( $input['variation_ids'] ?? null, $product );
@@ -154,12 +175,18 @@ final class PriceProduct implements Ability {
 		$ids = self::chosen( $before, $named, $unpriced );
 		try {
 			if ( $dry_run ) {
-				$rows = $pricing->preview( $product, $ids, $release, $own );
+				$rows = $pricing->preview( $product, $ids, $release, $own, $variations );
 			} else {
 				// Every price is set from what the printshop charges now. Read first: a read that fails stores no rule.
 				$pricing->read_costs( $product );
 				if ( isset( $input['rule'] ) ) {
 					$pricing->save_own_parts( self::reread( $product ), $own );
+				}
+				foreach ( $variations as $id => $parts ) {
+					$variation = wc_get_product( $id );
+					if ( $variation instanceof WC_Product ) {
+						$pricing->save_own_parts( $variation, $parts );
+					}
 				}
 				$pricing->apply( self::reread( $product ), $ids, $release );
 				// The prices not chosen are only flagged: none of them is set, whatever the store changes by itself.
@@ -207,6 +234,31 @@ final class PriceProduct implements Ability {
 			$own[ $part ] = PriceRule::part( $written );
 		}
 		return $own;
+	}
+
+	/**
+	 * The parts of the rule the call gives variations, by variation id,
+	 * when each is one of the product's.
+	 *
+	 * @param mixed      $rules   The call's `variation_rules`.
+	 * @param WC_Product $product The product.
+	 * @return array<int, array<string, string>>|WP_Error
+	 */
+	private static function variation_parts( mixed $rules, WC_Product $product ): array|WP_Error {
+		$parts = array();
+		foreach ( is_array( $rules ) ? $rules : array() as $entry ) {
+			$id = is_array( $entry ) ? (int) ( $entry['variation_id'] ?? 0 ) : 0;
+			if ( ! $product->is_type( 'variable' ) || ! in_array( $id, $product->get_children(), true ) ) {
+				/* translators: %s: one or more ids, e.g. 12, 15. */
+				return new WP_Error( 'pixonaut_wc_ability_unknown_variation', sprintf( __( 'The product has no variation with this id: %s.', 'pixonaut-for-woocommerce' ), (string) $id ), array( 'status' => self::UNPROCESSABLE ) );
+			}
+			$own = self::own_parts( is_array( $entry ) ? ( $entry['rule'] ?? array() ) : array(), $product );
+			if ( $own instanceof WP_Error ) {
+				return $own;
+			}
+			$parts[ $id ] = $own;
+		}
+		return $parts;
 	}
 
 	/**

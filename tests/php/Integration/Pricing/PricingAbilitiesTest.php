@@ -98,6 +98,7 @@ final class PricingAbilitiesTest extends PricingTestCase {
 				Settings::DELIVERY_TIME_HANDLING_DAYS => 0,
 				'currency'                            => get_woocommerce_currency(),
 				'prices_include_tax'                  => false,
+				'attribute_rules'                     => array(),
 			),
 			$read
 		);

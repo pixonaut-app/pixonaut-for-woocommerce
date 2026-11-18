@@ -82,6 +82,12 @@ final class PriceState {
 	public const FLAG_SALE = 'sale';
 
 	/**
+	 * A level of the rule changed, and the rule's price is another now.
+	 * Kept until the price is the rule's, whatever the tolerance says.
+	 */
+	public const FLAG_RULE = 'rule';
+
+	/**
 	 * @param VariantCost|null $cost       The cost last read; null while Pixonaut listed none for its variant.
 	 * @param bool             $follows    Whether the rule was applied to it.
 	 * @param int|null         $rule_price The price the rule last set, in thousandths; null when it set none.

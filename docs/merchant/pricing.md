@@ -43,6 +43,35 @@ section: an empty field there follows the store's, shown in grey. It can
 also say whether its own prices change by themselves: see
 [One product at a time](#one-product-at-a-time).
 
+### Per attribute value and per variation
+
+A product whose variations cost very different amounts, or that should step
+in price by size, can be priced part by part at two more levels:
+
+- **An attribute value, for the whole store.** Open **Products >
+  Attributes**, **Configure terms** of a global attribute, and edit a value:
+  **Pricing rule for this value** changes parts of the rule for every
+  variation with that value, in every product. A poster size can add a fixed
+  amount (Posterstorlek 70×100 cm: fixed amount 400), a framing can set its
+  own margin (Inramning Ram: target margin 30 %).
+- **A variation, for itself.** In the product's **Variations** tab, each
+  variation has an **Own price rule** section, closed until it sets a part.
+  Its fields show in grey what each part follows without it, and from where.
+
+Each part is looked up on its own, the most specific level first: the
+variation, then the product, then its attribute values, then the store. An
+empty field follows the level after it. When two values of a variation set
+the same part (a size and a framing both setting the fixed amount), the
+value whose attribute comes first in the store's attribute order, as
+**Products > Attributes** lists them, wins. The value's edit screen warns
+about it, and so does each row of the **Prices** table it reaches.
+
+Changing a part at any level reaches the prices that follow the rule: they
+are set to the rule's new price when their prices change automatically, and
+otherwise flagged on the products list with the price the rule suggests,
+until you apply it. A change of the store's rule or of an attribute value
+is worked through in the background, a page of products at a time.
+
 ## Pricing a product
 
 Open the product, its **Pixonaut** tab, and **Prices**. The section lists
@@ -52,8 +81,12 @@ each variation (a simple product has one row) with:
   shipping to your shop's country, added up, with both parts under it.
 - **Price**: its regular price now.
 - **Margin**: the share of that price, excluding VAT, left after the cost.
-- **Pricing rule**: the price the rule suggests when it is another, and how
-  the price stands to the rule.
+- **Contribution**: the amount that price leaves after the cost, excluding VAT.
+- **Pricing rule**: the price the rule suggests when it is another, how the
+  price stands to the rule, and **Rule from**: the levels its rule comes
+  from (Store, an attribute value such as *Ram (Inramning)*, Product or
+  Variation). When the parts come from several levels, hover it to see
+  where each part comes from.
 
 **Refresh costs** reads the costs from Pixonaut again. **Apply to all
 prices** stores the rule's fields as you typed them, reads the costs, and
