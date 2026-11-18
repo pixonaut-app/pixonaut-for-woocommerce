@@ -190,7 +190,8 @@ final class VariationGenerator {
 	 * The setup a variation on a blank gets: null to follow the product's,
 	 * on its blank; a variation's own setup already on the blank; else the
 	 * product's with the blank changed, each side at its placement's whole
-	 * area, checked with Pixonaut.
+	 * area and following the product's form arrangement, checked with
+	 * Pixonaut.
 	 *
 	 * @param WC_Product $product  The variable product.
 	 * @param string     $blank_id The blank.
@@ -211,10 +212,12 @@ final class VariationGenerator {
 		$unsaved = new WC_Product_Variation();
 		$unsaved->set_parent_id( $product->get_id() );
 		// A size picked for the product's blank names an area of that blank: on another, each side is sold at its placement's whole area, as each of its variants has it.
+		// Arranged as nothing of its own, a side's form follows the product's arrangement, now and after any later change to it.
 		$sides  = array_map(
 			static fn ( array $side ): array => array(
 				'print_sizes' => array(),
 				'start_size'  => 0,
+				'form_groups' => null,
 			) + $side,
 			SetupFields::sides_of( $own )
 		);
