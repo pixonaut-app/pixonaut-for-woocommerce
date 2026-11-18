@@ -192,6 +192,11 @@ export const NO_SPEC = [
 	'assets/src/admin/variation-pictures.ts',
 	// Reads kept warm through a quiet hour by a timed job: the PHP suites.
 	'src/Storefront/ServerReadsWarmUp.php',
+	// The pricing rule per attribute value and per variation: the PHP suites.
+	'src/Admin/AttributePriceRuleFields.php',
+	'src/Admin/VariationPriceRuleField.php',
+	'templates/admin/term-price-rule.php',
+	'templates/admin/variation-price-rule.php',
 ];
 
 /**
