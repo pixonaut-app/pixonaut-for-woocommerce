@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.23.0...v1.24.0) (2026-11-18)
+
+
+### Features
+
+* **storefront:** link a global attribute to a blank option for swatches and variants ([#334](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/334)) ([cc48a6a](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/cc48a6a0fb2974e0438cfa59158c66bbbc4e59df))
+
 ## [1.23.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.7...v1.23.0) (2026-11-18)
 
 
