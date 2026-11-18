@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.27.2...v1.28.0) (2026-11-18)
+
+
+### Features
+
+* **catalogue:** generate a product's variations from its blank options ([#344](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/344)) ([994d556](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/994d556ec8b0815553ad9a7d5cb101b7cd46edeb))
+
 ## [1.27.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.27.1...v1.27.2) (2026-11-18)
 
 
