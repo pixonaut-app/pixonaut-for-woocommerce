@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.27.1...v1.27.2) (2026-11-18)
+
+
+### Bug Fixes
+
+* **storefront:** the page editing a cart line prices it as a normal visit does ([#349](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/349)) ([7941f96](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/7941f964f9b69bbe5f3a35bb1ab9f027200ceca5))
+
 ## [1.27.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.27.0...v1.27.1) (2026-11-18)
 
 
