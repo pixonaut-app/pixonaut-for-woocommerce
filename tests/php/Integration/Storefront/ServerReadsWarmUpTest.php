@@ -98,6 +98,13 @@ final class ServerReadsWarmUpTest extends WP_UnitTestCase {
 		$this->assertIsInt( $due );
 		$this->assertGreaterThan( $this->now, $due );
 		$this->assertLessThan( $this->now + CatalogueCache::KEPT_SECONDS, $due, 'before the copies run out' );
+		$queued = as_get_scheduled_actions(
+			array(
+				'hook'   => ServerReadsWarmUp::HOOK,
+				'status' => \ActionScheduler_Store::STATUS_PENDING,
+			)
+		);
+		$this->assertSame( ServerReadsWarmUp::PRIORITY, reset( $queued )->get_priority(), 'ahead of a backlog of picture jobs' );
 		$this->recorder->requests = array();
 
 		$this->now = $due - 1;

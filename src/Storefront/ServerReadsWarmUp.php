@@ -88,6 +88,13 @@ final class ServerReadsWarmUp {
 	private const RUN_SECONDS = 30;
 
 	/**
+	 * Before the queue's default 10: Action Scheduler runs a shop's jobs
+	 * oldest first, and a backlog of picture jobs would hold the reads
+	 * past the copies they are to replace.
+	 */
+	public const PRIORITY = 5;
+
+	/**
 	 * How soon a run that left answers due runs again.
 	 */
 	private const NEXT_RUN_SECONDS = self::MINUTE;
@@ -220,7 +227,7 @@ final class ServerReadsWarmUp {
 		if ( null !== $pending ) {
 			as_unschedule_action( self::HOOK, array(), Schema::ACTION_GROUP );
 		}
-		as_schedule_single_action( $next, self::HOOK, array(), Schema::ACTION_GROUP );
+		as_schedule_single_action( $next, self::HOOK, array(), Schema::ACTION_GROUP, false, self::PRIORITY );
 	}
 
 	/**
