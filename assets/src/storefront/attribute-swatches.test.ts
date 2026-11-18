@@ -358,6 +358,29 @@ describe('drawAttributeSwatches with prices', () => {
 		expect(priceOf('Oak')).toBe('+50 kr');
 	});
 
+	it('keeps the price when the swatch picture fails to load', () => {
+		const form = framedForm();
+		drawAttributeSwatches(
+			form,
+			{
+				attribute_frame: {
+					names: true,
+					looks: {
+						oak: { kind: 'image', url: 'https://cdn.example.test/oak.png' },
+					},
+				},
+			},
+			FRAMED_PRICES,
+		);
+
+		swatches()
+			.find((one) => one.dataset.value === 'oak')
+			?.querySelector('img')
+			?.dispatchEvent(new Event('error'));
+
+		expect(priceOf('Oak')).toBe('+50 kr');
+	});
+
 	it('shows no price for an attribute that shows none', () => {
 		const form = framedForm();
 

@@ -26,7 +26,7 @@ use WC_Product_Variable;
  * @phpstan-import-type PricedVariation from ChoicePriceTable
  * @phpstan-import-type Amount from ChoicePriceTable
  * @phpstan-type Format array{pattern: string, symbol: string, decimalSeparator: string, thousandSeparator: string}
- * @phpstan-type Data array{fields: list<string>, roles: array<string, string>, decimals: int, variations: list<PricedVariation>, format: Format, words: array<string, string>}
+ * @phpstan-type Data array{fields: list<string>, roles: array<string, string>, decimals: int, variations: list<PricedVariation>, options: array<string, list<string>>, format: Format, words: array<string, string>}
  */
 final class ProductChoicePrices {
 
@@ -37,6 +37,14 @@ final class ProductChoicePrices {
 	 * @phpstan-var array<int, Data|null>
 	 */
 	private array $data = array();
+
+	/**
+	 * The amounts worked out so far, by product id and choice.
+	 *
+	 * @var array<string, array<string, array<string, array<string, mixed>>>>
+	 * @phpstan-var array<string, array<string, array<string, Amount>>>
+	 */
+	private array $amounts = array();
 
 	/**
 	 * What the page prints for the product; null when none of its attributes
@@ -68,8 +76,13 @@ final class ProductChoicePrices {
 		if ( null === $data || ! isset( $data['roles'][ $field ] ) ) {
 			return array();
 		}
+		// Every attribute's field of the page reads the same choice's table.
+		$key = $product->get_id() . ':' . wp_json_encode( $chosen );
+		if ( ! array_key_exists( $key, $this->amounts ) ) {
+			$this->amounts[ $key ] = ChoicePriceTable::amounts( $data['fields'], $data['roles'], $data['variations'], $chosen, $data['decimals'], $data['options'] );
+		}
 		$texts = array();
-		foreach ( ChoicePriceTable::amounts( $data['fields'], $data['roles'], $data['variations'], $chosen, $data['decimals'] )[ $field ] ?? array() as $value => $amount ) {
+		foreach ( $this->amounts[ $key ][ $field ] ?? array() as $value => $amount ) {
 			$texts[ (string) $value ] = self::text( $amount, $data );
 		}
 		return $texts;
@@ -118,6 +131,7 @@ final class ProductChoicePrices {
 			'roles'      => $roles,
 			'decimals'   => wc_get_price_decimals(),
 			'variations' => ProductPageCache::remember( $product, 'choice_prices', '', static fn (): array => self::variations( $product ) ),
+			'options'    => self::options( $product ),
 			'format'     => array(
 				'pattern'           => self::decoded( get_woocommerce_price_format() ),
 				'symbol'            => self::decoded( get_woocommerce_currency_symbol() ),
@@ -154,6 +168,21 @@ final class ProductChoicePrices {
 			);
 		}
 		return array_values( array_unique( $variations, SORT_REGULAR ) );
+	}
+
+	/**
+	 * The values the product offers for each attribute, by field, in its
+	 * order: what a variation leaving the attribute unset is sold in.
+	 *
+	 * @param WC_Product_Variable $product The product.
+	 * @return array<string, list<string>>
+	 */
+	private static function options( WC_Product_Variable $product ): array {
+		$options = array();
+		foreach ( $product->get_variation_attributes() as $name => $values ) {
+			$options[ 'attribute_' . sanitize_title( (string) $name ) ] = array_values( array_map( 'strval', $values ) );
+		}
+		return $options;
 	}
 
 	/**

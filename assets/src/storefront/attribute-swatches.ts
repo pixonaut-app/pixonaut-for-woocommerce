@@ -142,7 +142,7 @@ function swatchesFor(
 			return {};
 		}
 		const amounts =
-			choiceAmounts(prices, formChoice(form ?? group, prices.fields))[
+			sharedAmounts(prices, formChoice(form ?? group, prices.fields))[
 				field.name
 			] ?? {};
 		return Object.fromEntries(
@@ -289,17 +289,18 @@ function drawSwatches(
 		swatch.setAttribute('role', 'radio');
 		swatch.setAttribute('aria-checked', String(choice.chosen));
 		swatch.dataset.value = choice.value;
+		const price = Object.hasOwn(prices, choice.value)
+			? prices[choice.value]
+			: undefined;
+		const priced = () => drawPrice(swatch, choice.label, price);
 		drawSwatchFace(
 			swatch,
 			choice.label,
 			lookOf(looks, choice.value),
 			looks?.names ?? true,
+			priced,
 		);
-		drawPrice(
-			swatch,
-			choice.label,
-			Object.hasOwn(prices, choice.value) ? prices[choice.value] : undefined,
-		);
+		priced();
 		if (choice.available) {
 			swatch.removeAttribute('aria-disabled');
 		} else {
@@ -318,6 +319,28 @@ function drawSwatches(
 			group.insertBefore(swatch, there);
 		}
 	});
+}
+
+/** The last amounts worked out for each product's prices, by the choice
+ *  they are for: every priced attribute redraws on one change, and each
+ *  takes its own from the same table. */
+const lastAmounts = new WeakMap<
+	ChoicePrices,
+	{ key: string; amounts: ReturnType<typeof choiceAmounts> }
+>();
+
+function sharedAmounts(
+	prices: ChoicePrices,
+	chosen: Record<string, string>,
+): ReturnType<typeof choiceAmounts> {
+	const key = JSON.stringify(prices.fields.map((field) => chosen[field] ?? ''));
+	const last = lastAmounts.get(prices);
+	if (last?.key === key) {
+		return last.amounts;
+	}
+	const amounts = choiceAmounts(prices, chosen);
+	lastAmounts.set(prices, { key, amounts });
+	return amounts;
 }
 
 /** Puts the price after the swatch's name, as `PrintedSwatches` prints it:

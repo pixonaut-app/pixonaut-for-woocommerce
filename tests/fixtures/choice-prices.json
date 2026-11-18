@@ -157,6 +157,42 @@
 					"price": 19
 				}
 			]
+		},
+		"anyColour": {
+			"about": "A print in two sizes, each sold in any colour: no variation sets the colour, the product offers red and blue, and green only on the large size.",
+			"fields": ["attribute_size", "attribute_colour"],
+			"roles": {
+				"attribute_size": "from",
+				"attribute_colour": "from"
+			},
+			"decimals": 0,
+			"options": {
+				"attribute_size": ["s", "m"],
+				"attribute_colour": ["red", "blue", "green"]
+			},
+			"variations": [
+				{
+					"values": {
+						"attribute_size": "s",
+						"attribute_colour": ""
+					},
+					"price": 100
+				},
+				{
+					"values": {
+						"attribute_size": "m",
+						"attribute_colour": ""
+					},
+					"price": 200
+				},
+				{
+					"values": {
+						"attribute_size": "m",
+						"attribute_colour": "green"
+					},
+					"price": 250
+				}
+			]
 		}
 	},
 	"cases": [
@@ -406,6 +442,72 @@
 					"no": {
 						"kind": "add_on",
 						"amount": 1
+					}
+				}
+			}
+		},
+		{
+			"name": "a variation sold in any value prices each value the product offers",
+			"product": "anyColour",
+			"chosen": {
+				"attribute_size": "s"
+			},
+			"amounts": {
+				"attribute_size": {
+					"s": {
+						"kind": "from",
+						"amount": 100
+					},
+					"m": {
+						"kind": "from",
+						"amount": 200
+					}
+				},
+				"attribute_colour": {
+					"red": {
+						"kind": "from",
+						"amount": 100
+					},
+					"blue": {
+						"kind": "from",
+						"amount": 100
+					},
+					"green": {
+						"kind": "from",
+						"amount": 100
+					}
+				}
+			}
+		},
+		{
+			"name": "a value one variation sets costs what that variation or one in any value costs",
+			"product": "anyColour",
+			"chosen": {
+				"attribute_size": "m"
+			},
+			"amounts": {
+				"attribute_size": {
+					"s": {
+						"kind": "from",
+						"amount": 100
+					},
+					"m": {
+						"kind": "from",
+						"amount": 200
+					}
+				},
+				"attribute_colour": {
+					"red": {
+						"kind": "from",
+						"amount": 200
+					},
+					"blue": {
+						"kind": "from",
+						"amount": 200
+					},
+					"green": {
+						"kind": "from",
+						"amount": 200
 					}
 				}
 			}

@@ -31,6 +31,9 @@ export type ChoicePriceProduct = {
 	/** The decimals prices are shown with. */
 	decimals: number;
 	variations: PricedVariation[];
+	/** The values the product offers for each attribute, by field, in its
+	 *  order; a variation leaving an attribute unset holds each of them. */
+	options?: Record<string, string[]>;
 };
 
 /** How the shop writes a price, as WooCommerce's settings say. */
@@ -54,7 +57,7 @@ export type Amount = { kind: Role; amount: number };
 /** The amounts each field's values show, by field and value; a value that
  *  shows none is left out. */
 export function choiceAmounts(
-	{ fields, roles, decimals, variations }: ChoicePriceProduct,
+	{ fields, roles, decimals, variations, options = {} }: ChoicePriceProduct,
 	chosen: AttributeValues,
 ): Record<string, Record<string, Amount>> {
 	const dependent = dependentAttributes({
@@ -69,6 +72,7 @@ export function choiceAmounts(
 			const lowest = lowestPrices(
 				variations,
 				field,
+				options[field] ?? [],
 				chosenOf(
 					chosen,
 					base.filter((other) => other !== field),
@@ -95,7 +99,13 @@ export function choiceAmounts(
 				.filter((other) => roles[other] === ADD_ON);
 			context = { ...context, ...chosenOf(chosen, before) };
 		}
-		const lowest = lowestPrices(variations, field, context, setOnly);
+		const lowest = lowestPrices(
+			variations,
+			field,
+			options[field] ?? [],
+			context,
+			setOnly,
+		);
 		if (lowest.size === 0) {
 			return;
 		}
@@ -112,14 +122,16 @@ export function choiceAmounts(
 }
 
 /** The lowest price of each value of `field` among the variations holding
- *  `context`, in the order the variations first hold the values. */
+ *  `context`: the values the product offers, in its order, then any other a
+ *  variation holds, in the order the variations first hold them. */
 function lowestPrices(
 	variations: PricedVariation[],
 	field: string,
+	offered: string[],
 	context: AttributeValues,
 	setOnly: boolean,
 ): Map<string, number> {
-	const values = new Set<string>();
+	const values = new Set<string>(offered);
 	for (const variation of variations) {
 		const value = variation.values[field] ?? '';
 		if (value !== '') {

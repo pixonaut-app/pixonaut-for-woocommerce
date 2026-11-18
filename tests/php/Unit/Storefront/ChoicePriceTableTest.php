@@ -48,6 +48,6 @@ final class ChoicePriceTableTest extends TestCase {
 				'price'  => (float) $variation['price'],
 			);
 		}
-		$this->assertEquals( $amounts, ChoicePriceTable::amounts( $product['fields'], $product['roles'], $variations, $chosen, $product['decimals'] ) );
+		$this->assertEquals( $amounts, ChoicePriceTable::amounts( $product['fields'], $product['roles'], $variations, $chosen, $product['decimals'], $product['options'] ?? array() ) );
 	}
 }

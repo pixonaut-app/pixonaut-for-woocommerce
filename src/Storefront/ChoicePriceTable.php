@@ -33,7 +33,9 @@ use Pixonaut\WooCommerce\Catalogue\ApplicableAttributes;
  *   cheapest variation holding it, among those that hold the chosen values of
  *   the other attributes that are not add-ons.
  *
- * A variation that leaves an attribute unset holds any value of it.
+ * A variation that leaves an attribute unset holds any value of it: each of
+ * the values the product offers for the attribute, besides those another
+ * variation holds.
  * `choice-prices.ts` applies the same rule in the browser;
  * `tests/fixtures/choice-prices.json` holds the cases both must answer alike.
  *
@@ -51,11 +53,13 @@ final class ChoicePriceTable {
 	 * @param list<array>           $variations Each variation's values by field and its price.
 	 * @param array<string, string> $chosen     The chosen values by field; empty or missing for none.
 	 * @param int                   $decimals   The decimals prices are shown with.
+	 * @param array<string, array>  $options    The values the product offers for each attribute, by field, in its order.
 	 * @phpstan-param list<string> $fields
+	 * @phpstan-param array<string, list<string>> $options
 	 * @phpstan-param list<PricedVariation> $variations
 	 * @return array<string, array<string, Amount>>
 	 */
-	public static function amounts( array $fields, array $roles, array $variations, array $chosen, int $decimals ): array {
+	public static function amounts( array $fields, array $roles, array $variations, array $chosen, int $decimals, array $options = array() ): array {
 		$values    = array_map( static fn ( array $variation ): array => $variation['values'], $variations );
 		$dependent = ApplicableAttributes::dependent( $fields, $values );
 		$base      = array_values( array_filter( $fields, static fn ( string $field ): bool => ChoicePrices::ADD_ON !== ( $roles[ $field ] ?? '' ) ) );
@@ -63,7 +67,7 @@ final class ChoicePriceTable {
 		foreach ( $fields as $place => $field ) {
 			$role = $roles[ $field ] ?? '';
 			if ( ChoicePrices::FROM === $role ) {
-				$lowest = self::lowest( $variations, $field, self::chosen_of( $chosen, array_diff( $base, array( $field ) ) ), false );
+				$lowest = self::lowest( $variations, $field, $options[ $field ] ?? array(), self::chosen_of( $chosen, array_diff( $base, array( $field ) ) ), false );
 				foreach ( $lowest as $value => $price ) {
 					$amounts[ $field ][ $value ] = array(
 						'kind'   => ChoicePrices::FROM,
@@ -84,7 +88,7 @@ final class ChoicePriceTable {
 				$before  = array_filter( array_slice( $fields, 0, $place ), static fn ( string $other ): bool => ChoicePrices::ADD_ON === ( $roles[ $other ] ?? '' ) );
 				$context = array_merge( $context, self::chosen_of( $chosen, $before ) );
 			}
-			$lowest = self::lowest( $variations, $field, $context, $set_only );
+			$lowest = self::lowest( $variations, $field, $options[ $field ] ?? array(), $context, $set_only );
 			if ( array() === $lowest ) {
 				continue;
 			}
@@ -104,17 +108,19 @@ final class ChoicePriceTable {
 
 	/**
 	 * The lowest price of each value of `$field` among the variations holding
-	 * `$context`, by value, in the order the variations first hold them.
+	 * `$context`, by value: the values the product offers, in its order, then
+	 * any other a variation holds, in the order the variations first hold them.
 	 *
 	 * @param list<array>           $variations The variations and their prices.
 	 * @param string                $field      The attribute's field.
+	 * @param array<string>         $offered    The values the product offers for the attribute.
 	 * @param array<string, string> $context    The chosen values that count.
 	 * @param bool                  $set_only   Whether only variations that set the attribute count; else one leaving it unset holds every value.
 	 * @phpstan-param list<PricedVariation> $variations
 	 * @return array<string, float>
 	 */
-	private static function lowest( array $variations, string $field, array $context, bool $set_only ): array {
-		$values = array();
+	private static function lowest( array $variations, string $field, array $offered, array $context, bool $set_only ): array {
+		$values = array_fill_keys( $offered, true );
 		foreach ( $variations as $variation ) {
 			$value = $variation['values'][ $field ] ?? '';
 			if ( '' !== $value ) {

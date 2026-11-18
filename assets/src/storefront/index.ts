@@ -37,6 +37,8 @@ domReady(() => {
 		if (badges || !numbered) {
 			drawStepNumbers(container, { badges, numbered });
 		}
+		// One read for every part, so their swatches share the amounts.
+		const choicePrices = readChoicePrices(container);
 		new ProductDesigner(container, {
 			loadSdk: () => loadSdk(settings.sdk),
 			label,
@@ -55,7 +57,7 @@ domReady(() => {
 							drawAttributeSwatches(
 								part,
 								readSwatchLooks(container),
-								readChoicePrices(container),
+								choicePrices,
 							),
 					}
 				: {}),

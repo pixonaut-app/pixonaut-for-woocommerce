@@ -101,20 +101,23 @@ export function lookOf(
  * Fills `swatch` with a value's words, and its look when it has one: the
  * look before the name, or the look alone with the name as its accessible
  * name and tooltip. A picture that fails to load gives way to the name, on
- * this redraw and every later one.
+ * this redraw and every later one; `redrawn` then runs, for what the caller
+ * draws after the face, such as a price.
  */
 export function drawSwatchFace(
 	swatch: HTMLElement,
 	label: string,
 	look: SwatchLook | undefined,
 	names: boolean,
+	redrawn?: () => void,
 ): void {
 	const face = look === undefined ? null : lookPart(swatch, look);
 	const image = face?.querySelector('img');
 	if (image != null && look?.kind === 'image') {
 		image.onerror = () => {
 			failedPictures.add(image.src);
-			drawSwatchFace(swatch, label, look, names);
+			drawSwatchFace(swatch, label, look, names, redrawn);
+			redrawn?.();
 		};
 	}
 	const bare = face !== null && !names;
