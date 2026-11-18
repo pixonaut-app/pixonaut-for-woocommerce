@@ -81,6 +81,13 @@ test('the line an option is given stands under its field in the designer', async
 	await expect(help).toHaveText(SIZE_HELP);
 	await expect(help).toBeVisible();
 
+	// It describes the control the customer picks the size with.
+	const helpId = await help.getAttribute('id');
+	expect(helpId).not.toBeNull();
+	await expect(
+		form.locator(`[aria-describedby~="${helpId}"]`).first(),
+	).toBeVisible();
+
 	// It ends the size's own part of the form, under its field.
 	const field = form
 		.locator(

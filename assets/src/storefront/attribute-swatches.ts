@@ -103,6 +103,12 @@ function swatchesFor(field: ThemeField, looks?: AttributeLooks): () => void {
 	if (labelId !== null) {
 		group.setAttribute('aria-labelledby', labelId);
 	}
+	// The line printed under the field (`OptionHelp`) describes the swatches
+	// that stand in for it.
+	const describedBy = field.element.getAttribute('aria-describedby');
+	if (describedBy !== null) {
+		group.setAttribute('aria-describedby', describedBy);
+	}
 	// With the names left out, the chosen one shows beside the attribute's.
 	const nameBeside = looks !== undefined && !looks.names;
 	const label = () =>
