@@ -862,10 +862,12 @@ form:has(.pixonaut-personalise:not([hidden]))
 /* A variable product's price shows once: the script writes the chosen
  * variation's price in the theme's price target, or in the summary price
  * (`price.ts`), so the variation price WooCommerce prints in the form, which
- * the designer draws by its cart row, is left out. A page editing a cart
- * line writes no price and keeps it. */
+ * the designer draws by its cart row, is left out. A page editing a cart or
+ * order line prints its line's variation's price there (`OpeningPrice`),
+ * which its form keeps, and leaves it out too. */
 .variations_form:has(
-		.pixonaut-form[data-pixonaut-variations]:not([data-pixonaut-edit])
+		.pixonaut-form[data-pixonaut-variations],
+		.pixonaut-form[data-pixonaut-edit]
 	)
 	.single_variation
 	.woocommerce-variation-price {

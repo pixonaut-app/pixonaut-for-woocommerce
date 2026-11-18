@@ -22,7 +22,9 @@ use WC_Product_Variation;
  * range comes back on the page, in `data-pixonaut-product-price`,
  * for when the customer clears the choice, with the choice the price is for in
  * `data-pixonaut-opening-choice`. A form that opens on no
- * variation, or on one without a price, keeps the range.
+ * variation, or on one without a price, keeps the range. A page editing a
+ * cart or order line prints that line's variation's price, which it keeps:
+ * its form keeps the line's choices.
  */
 final class OpeningPrice {
 
@@ -171,8 +173,11 @@ final class OpeningPrice {
 		if ( array_key_exists( $id, $this->opening ) ) {
 			return $this->opening[ $id ];
 		}
-		$this->opening[ $id ] = null;
-		$followed             = $this->followed_variations( $product );
+		$this->opening[ $id ] = $this->edited_variation( $product );
+		if ( null !== $this->opening[ $id ] ) {
+			return $this->opening[ $id ];
+		}
+		$followed = $this->followed_variations( $product );
 		if ( array() === $followed ) {
 			return null;
 		}
@@ -193,6 +198,19 @@ final class OpeningPrice {
 			$this->opening_choices[ $id ] = $chosen;
 		}
 		return $this->opening[ $id ];
+	}
+
+	/**
+	 * The variation of the cart or order line the page edits, whose fields
+	 * the form keeps as the line has them; null when the page edits none, or
+	 * a line bought without a variation.
+	 *
+	 * @param WC_Product $product A variable product.
+	 */
+	private function edited_variation( WC_Product $product ): ?WC_Product_Variation {
+		$id        = $this->products->for_product( $product )?->edited_variation_id() ?? 0;
+		$variation = $id > 0 ? wc_get_product( $id ) : null;
+		return $variation instanceof WC_Product_Variation && $variation->get_parent_id() === $product->get_id() ? $variation : null;
 	}
 
 	/**

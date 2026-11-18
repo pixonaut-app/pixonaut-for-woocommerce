@@ -138,3 +138,32 @@ test('a theme’s price target in the add-to-cart form takes the price instead o
 		priceHtml: expect.stringMatching(LARGE_PRICE),
 	});
 });
+
+test('the page editing a cart line shows its size’s price as the product page did', async ({
+	page,
+	request,
+	theme,
+}) => {
+	await page.goto(
+		await createProduct(request, `Priced edit ${theme} ${Date.now()}`),
+	);
+	const price = summaryPrice(page);
+	const variationPrice = page.locator('.woocommerce-variation-price');
+	await chooseSize(page, 'Large');
+	await expect(price).toContainText(LARGE_PRICE);
+	await expect(variationPrice).toBeHidden();
+	const shown = await price.innerText();
+
+	await addToCartButton(page).click();
+
+	await expect(page).toHaveURL(/[?&]pixonaut_edit=[0-9a-f]+/);
+	await expect(
+		page
+			.locator('form.cart, form[data-wp-interactive]')
+			.getByRole('button', { name: 'Update design' }),
+	).toBeVisible();
+	await expect(sizeSelect(page)).toHaveValue('Large');
+	await expect(price).toHaveText(shown);
+	await expect(price).not.toContainText(SMALL_PRICE);
+	await expect(variationPrice).toBeHidden();
+});

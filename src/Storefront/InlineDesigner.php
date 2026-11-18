@@ -74,6 +74,17 @@ final class InlineDesigner {
 		return $this->variant ?? $this->opening_variant;
 	}
 
+	/**
+	 * The variation of the line the page edits, a cart line's or an order
+	 * line's; 0 when it edits none, or a line bought without one.
+	 */
+	public function edited_variation_id(): int {
+		if ( null !== $this->edit ) {
+			return $this->edit->variation_id;
+		}
+		return $this->order_edit?->item->get_variation_id() ?? 0;
+	}
+
 	public function available(): bool {
 		return array() !== $this->mounts;
 	}
