@@ -166,6 +166,21 @@ meta (every product printed on a blank while the store shows
 [blank event](../webhooks/#templates-and-blanks-changed-in-pixonaut).
 Pixonaut sends no event for a changed cost.
 
+`Pricing\MarginFloor` checks prices against the store's lowest margin
+(`price_margin_floor`, empty for none), whatever they follow: on
+`added_post_meta`/`updated_post_meta` of `_pixonaut_price` (a cost read, a
+settled state) and on `woocommerce_update_product(_variation)` (a price
+changed, by the rule or by hand). A price below the floor gets a
+`_pixonaut_margin_low` meta, `new` until the daily
+`pixonaut_wc_margin_floor_report` job emails it (`MarginFloorEmail`) and
+marks it `reported`; the meta is taken away once the margin is back at the
+floor, so a price is emailed once per drop. A floor set or moved checks every
+product on a blank in the background (`pixonaut_wc_margin_floor_sweep`, 50
+products a job); a floor taken away deletes every mark.
+`Admin\MarginFloorList` shows them: an admin notice, a **Below lowest
+margin** view of the products list (`?pixonaut_margin_low=1`) and a line
+under each product's name.
+
 ## Admin
 
 `Admin\PricingPanel` renders the **Prices** section of the Pixonaut tab

@@ -33,6 +33,7 @@ product. The plugin never changes a price you set yourself.
   or above them. Empty for no limit.
 - **Currency buffer (%)**: see [Costs in another currency](#costs-in-another-currency).
 - **Automatic price changes**: see [When a cost changes](#when-a-cost-changes).
+- **Lowest margin (%)**: see [A margin below your lowest](#a-margin-below-your-lowest).
 
 Steps and limits count on the price as you enter prices in WooCommerce,
 including tax or not (**WooCommerce > Settings > Tax**). The margin always
@@ -199,6 +200,32 @@ the whole way and to "Made in", not to the shipping alone.
 
 The first times show within a few minutes of ticking the box, once the
 costs are read. A product out of stock shows none.
+
+## A margin below your lowest
+
+A price the rule does not move can still lose its margin: one pinned by the
+same **Lowest price** and **Highest price**, one you set by hand, one that
+never followed the rule, or one whose margin is still inside the tolerance
+when the printshop charges more. Set **Lowest margin (%)** under
+**WooCommerce > Settings > Pixonaut > Prices** to hear about it.
+
+Each time a cost is read or a price changes, every price on a blank is
+checked against it, whatever it follows. While some are below it:
+
+- a notice on the dashboard and the products screens says how many, with a
+  link to **Below lowest margin**, a view of the products list with only
+  their products;
+- under each such product's name, the list names its prices below the
+  floor with their margin;
+- once a day, an email to your store names each price that fell below since
+  the last one: product, variation, price, cost with shipping, margin, and
+  a link to edit it. A price is named once: again only after its margin was
+  back at your lowest margin and fell below it once more.
+
+The email is **Pixonaut margin below the lowest margin** under
+**WooCommerce > Settings > Emails**, where you can turn it off or send it to
+other addresses than the site's admin address. Empty, the setting warns of
+nothing.
 
 ## A price you edit by hand
 

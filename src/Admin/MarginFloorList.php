@@ -29,6 +29,11 @@ final class MarginFloorList {
 	public const QUERY_ARG = 'pixonaut_margin_low';
 
 	/**
+	 * Who sees the notice: whoever may edit the products it is about.
+	 */
+	private const CAPABILITY = 'edit_products';
+
+	/**
 	 * The screens the notice shows on.
 	 */
 	private const NOTICE_SCREENS = array( 'dashboard', 'edit-product', 'product' );
@@ -83,7 +88,7 @@ final class MarginFloorList {
 	 * Says how many prices are below the floor, to whoever may edit products.
 	 */
 	public function notice(): void {
-		if ( ! in_array( get_current_screen()?->id, self::NOTICE_SCREENS, true ) || ! current_user_can( 'edit_products' ) ) {
+		if ( ! in_array( get_current_screen()?->id, self::NOTICE_SCREENS, true ) || ! current_user_can( self::CAPABILITY ) ) {
 			return;
 		}
 		echo $this->notice_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where it is built.
