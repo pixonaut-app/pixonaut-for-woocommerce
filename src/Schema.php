@@ -359,6 +359,12 @@ final class Schema {
 	const SMALLER_PICTURES_BACKFILL_OPTION = 'pixonaut_wc_smaller_pictures_backfill';
 
 	/**
+	 * Option set while the pictures stopped jobs left unfinished wait to be
+	 * deleted after an upgrade, holding the last one taken up.
+	 */
+	const UNFINISHED_PICTURES_BACKFILL_OPTION = 'pixonaut_wc_unfinished_pictures_backfill';
+
+	/**
 	 * Prefix of the transients caching Pixonaut catalogue answers for the admin.
 	 */
 	const CATALOGUE_CACHE_PREFIX = 'pixonaut_wc_catalogue_';

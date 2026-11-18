@@ -98,6 +98,7 @@ export const NO_SPEC = [
 	'src/Migrations/',
 	'src/Catalogue/StoppedPictureJobs.php', // AS failure hooks; a job is never cut off in e2e
 	'src/Catalogue/SmallerPictures.php', // the upgrade's conversion of PNG pictures; new pictures go through SharedPictures
+	'src/Catalogue/UnfinishedPictures.php', // pictures a stopped job left; a job is never cut off in e2e
 	'src/Updates/',
 	'templates/admin/upgrade-notice.php',
 	'src/Privacy/',
