@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.21.1...v1.21.2) (2026-11-18)
+
+
+### Performance Improvements
+
+* **storefront:** the reads ahead send each answer once, compressed and cacheable ([#297](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/297)) ([ffd9c76](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/ffd9c761f0bc74bb42a7af6c08930815029995b5))
+
 ## [1.21.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.21.0...v1.21.1) (2026-11-17)
 
 
