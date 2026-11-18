@@ -326,6 +326,8 @@ form:has(.pixonaut-form)
 .pixonaut-form__unavailable,
 .pixonaut-form__error {
 	margin: 0 0 1em;
+	/* Room above the message when a refused add to cart scrolls to it. */
+	scroll-margin-top: 1em;
 }
 
 .pixonaut-form__error,

@@ -61,6 +61,7 @@ import { PriceDisplay } from './price';
 import { dropUntouchedInputs, followPrintedInputs } from './printed-inputs';
 import { ProofDialog, type ProofFetch } from './proof-dialog';
 import type { ReadsAhead } from './reads-ahead';
+import { bringRefusalIntoView } from './refusal-in-view';
 import {
 	isPrintSizeRefusal,
 	joinLabels,
@@ -1833,7 +1834,7 @@ export class ProductDesigner {
 			this.editRefused(answer.code, answer.message);
 			return null;
 		}
-		this.showError(this.refusalLabel(''));
+		this.showRefusal(this.refusalLabel(''));
 		return null;
 	}
 
@@ -1849,7 +1850,7 @@ export class ProductDesigner {
 		if (CLOSING_CODES.has(code)) {
 			this.closeEdit(text);
 		} else {
-			this.showError(text);
+			this.showRefusal(text);
 		}
 	}
 
@@ -2025,8 +2026,9 @@ export class ProductDesigner {
 		const reason = unavailableReason(error, this.sdk);
 		if (reason !== null && isLasting(reason)) {
 			this.markUnavailable(side, reason, error);
+			bringRefusalIntoView(this.container, this.unavailableMessage());
 		} else {
-			this.showError(this.refusedFieldsText(side, error));
+			this.showRefusal(this.refusedFieldsText(side, error));
 		}
 	}
 
@@ -2224,10 +2226,19 @@ export class ProductDesigner {
 		}
 	}
 
+	/** Says why an add to cart or a correction was refused, and brings the
+	 *  field to change, or else the message, into the customer's view. */
+	private showRefusal(text: string): void {
+		this.showError(text);
+		bringRefusalIntoView(this.container, this.errorMessage());
+	}
+
+	private errorMessage(): HTMLElement | null {
+		return this.container.querySelector<HTMLElement>('.pixonaut-form__error');
+	}
+
 	private showError(text: string | null): void {
-		const element = this.container.querySelector<HTMLElement>(
-			'.pixonaut-form__error',
-		);
+		const element = this.errorMessage();
 		if (element === null) {
 			return;
 		}
