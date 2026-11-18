@@ -8,7 +8,7 @@
  * Field names are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.25.0
+ * @version 1.26.0
  *
  * @var bool                  $editing     Whether the value's edit screen shows it, table rows; else the add form.
  * @var string                $field       The posted field holding the parts, by part.
