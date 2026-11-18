@@ -1313,17 +1313,22 @@ tax and shown with it.
   the listing, its counts and its cards' links, and the product is noted
   in the option `pixonaut_wc_filter_data_due`, as is one kept for a day,
   and every product a save writes the cards of. Counts kept from before
-  WooCommerce's product data last changed, or an hour old, are noted too.
+  WooCommerce's product data last changed, or an hour old, are noted too,
+  as are the attribute dependencies, both when a save writes a product and
+  when a request finds them kept from before WooCommerce's product data
+  last changed.
   The Action Scheduler job `pixonaut_wc_refresh_filter_data` runs a minute
   after the first note, at priority 5, ahead of the picture jobs: it reads
   each noted product again (one changed in the last two seconds waits for
-  its next run), then works out each noted count again, for up to 30
+  its next run), then the attribute dependencies, then works out each
+  noted count again, for up to 30
   seconds a run, and runs again while some are left. At most 200 counts
   wait at once. A product saved while the job reads it is noted anew and
   read again on the next run; a run whose database query failed leaves its
   notes and what was kept for the next. Counts first worked out from reads
   taken as they were are kept out of date and noted too. The archive index
-  build and the attribute dependencies read each product as it is now. Only
+  build reads each product, and the attribute dependencies, as they are
+  now. Only
   a product with nothing kept, such as one no listing or save has read
   since it was created, is read while a page waits.
 
@@ -1369,8 +1374,11 @@ product's variations by `ApplicableAttributes::parents()`: for each
 attribute some variations set and others leave unset, the attribute every
 variation sets whose value alone decides whether it applies (the nearest
 before it in the product's order when several do), and those values. Only
-global attributes take part; products add up; the answer is cached until a
-product changes (WooCommerce's `product` transient version).
+global attributes take part; products add up. The answer is kept with
+WooCommerce's `product` transient version; once a product changes it is
+served as it was kept until the `pixonaut_wc_refresh_filter_data` job has
+worked it out again (see above), and only a store with nothing kept reads
+it while a page waits.
 
 ```php
 $dependencies = apply_filters( 'pixonaut_wc_storefront_attribute_dependencies', array() );

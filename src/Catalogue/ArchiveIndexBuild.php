@@ -199,7 +199,7 @@ final class ArchiveIndexBuild {
 				}
 			}
 		}
-		$dependencies = AttributeDependencies::store();
+		$dependencies = AttributeDependencies::current();
 		$filters      = array();
 		foreach ( wc_get_attribute_taxonomies() as $attribute ) {
 			$taxonomy = wc_attribute_taxonomy_name( (string) $attribute->attribute_name );

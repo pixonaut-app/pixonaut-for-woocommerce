@@ -10,15 +10,18 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Catalogue;
 
 use Pixonaut\WooCommerce\Schema;
+use Pixonaut\WooCommerce\Storefront\AttributeDependencies;
 use Pixonaut\WooCommerce\Storefront\FilterMatches;
 
 /**
  * An archive's filters read what is kept of each listed product
- * (`FilterIndex`) and the Product Filters block's counts
- * (`FilterMatches::counts()`). When either is out of date, because a
+ * (`FilterIndex`), which attribute applies under which
+ * (`AttributeDependencies`) and the Product Filters block's counts
+ * (`FilterMatches::counts()`). When any is out of date, because a
  * product changed or it is old, a shopper is served it as it was and it is
  * noted here; a job, queued ahead of the picture jobs, reads each noted
- * product and count again, so no shopper waits for it.
+ * product, the dependencies and each noted count again, in that order, so
+ * no shopper waits for it.
  *
  * The notes share one option, each with a token. A change, such as a save,
  * gives its note a new token, and the job takes off only the notes whose
@@ -75,6 +78,13 @@ final class FilterDataRefresh {
 
 	private const COUNTS = 'counts';
 
+	private const DEPENDENCIES = 'dependencies';
+
+	/**
+	 * The one key the dependencies are noted under: they are the store's.
+	 */
+	private const STORE = 'store';
+
 	/**
 	 * Whether the job is running here: it queues its next run once, at its end.
 	 *
@@ -111,6 +121,17 @@ final class FilterDataRefresh {
 	 */
 	public static function products( array $product_ids, bool $changed = false ): void {
 		self::note( self::PRODUCTS, $product_ids, $changed );
+		// What the store's attributes depend on may have changed with them: noted once a request, however many products it saves.
+		if ( $changed && ! isset( self::$noted[ self::DEPENDENCIES ][ self::STORE ] ) ) {
+			self::note( self::DEPENDENCIES, array( self::STORE ), true );
+		}
+	}
+
+	/**
+	 * Notes the store's attribute dependencies to work out again.
+	 */
+	public static function dependencies(): void {
+		self::note( self::DEPENDENCIES, array( self::STORE ), false );
 	}
 
 	/**
@@ -124,16 +145,18 @@ final class FilterDataRefresh {
 	}
 
 	/**
-	 * The job: reads the noted products again, then the noted counts, for
-	 * up to `RUN_SECONDS`, and runs again while some are left. A product
-	 * changed moments ago waits for the next run.
+	 * The job: reads the noted products again, then the dependencies,
+	 * which the products' reads tell, then the noted counts, which the
+	 * dependencies tell, for up to `RUN_SECONDS`, and runs again while some
+	 * are left. A product changed moments ago waits for the next run.
 	 */
 	public static function run(): void {
 		self::$running = true;
 		$started       = microtime( true );
 		$done          = array(
-			self::PRODUCTS => array(),
-			self::COUNTS   => array(),
+			self::PRODUCTS     => array(),
+			self::DEPENDENCIES => array(),
+			self::COUNTS       => array(),
 		);
 		$due           = self::due();
 		try {
@@ -142,6 +165,9 @@ final class FilterDataRefresh {
 					break;
 				}
 				$done[ self::PRODUCTS ] = array_merge( $done[ self::PRODUCTS ], FilterIndex::rebuild( $batch ) );
+			}
+			if ( array() !== $due[ self::DEPENDENCIES ] && microtime( true ) - $started < self::RUN_SECONDS && AttributeDependencies::rebuild() ) {
+				$done[ self::DEPENDENCIES ][] = self::STORE;
 			}
 			foreach ( array_keys( $due[ self::COUNTS ] ) as $transient ) {
 				if ( microtime( true ) - $started >= self::RUN_SECONDS ) {
@@ -167,7 +193,7 @@ final class FilterDataRefresh {
 			);
 			self::$running = false;
 			self::$noted   = null;
-			if ( array() !== $left[ self::PRODUCTS ] || array() !== $left[ self::COUNTS ] ) {
+			if ( array() !== array_filter( $left ) ) {
 				self::schedule();
 			}
 		}
@@ -179,8 +205,8 @@ final class FilterDataRefresh {
 	 * a request makes queues the job if none waits, as for notes left by a
 	 * request that could not queue it.
 	 *
-	 * @param string            $kind    `PRODUCTS` or `COUNTS`.
-	 * @param array<int|string> $keys    Product ids or transients.
+	 * @param string            $kind    `PRODUCTS`, `DEPENDENCIES` or `COUNTS`.
+	 * @param array<int|string> $keys    Product ids, `STORE` or transients.
 	 * @param bool              $changed Whether they changed now.
 	 */
 	private static function note( string $kind, array $keys, bool $changed ): void {
@@ -230,10 +256,10 @@ final class FilterDataRefresh {
 	 * read them, and stores them at once.
 	 *
 	 * @param \Closure $change `fn(array $due): array`.
-	 * @return array{products: array<int|string, string>, counts: array<int|string, string>}
+	 * @return array{products: array<int|string, string>, dependencies: array<int|string, string>, counts: array<int|string, string>}
 	 */
 	private static function change( \Closure $change ): array {
-		/** @var array{products: array<int|string, string>, counts: array<int|string, string>} $due */
+		/** @var array{products: array<int|string, string>, dependencies: array<int|string, string>, counts: array<int|string, string>} $due */
 		$due = $change( self::due() );
 		update_option( self::OPTION, $due, false );
 		return $due;
@@ -242,14 +268,15 @@ final class FilterDataRefresh {
 	/**
 	 * The notes as stored now.
 	 *
-	 * @return array{products: array<int|string, string>, counts: array<int|string, string>}
+	 * @return array{products: array<int|string, string>, dependencies: array<int|string, string>, counts: array<int|string, string>}
 	 */
 	private static function due(): array {
 		wp_cache_delete( self::OPTION, 'options' );
 		$stored = get_option( self::OPTION, array() );
 		$due    = array(
-			self::PRODUCTS => array(),
-			self::COUNTS   => array(),
+			self::PRODUCTS     => array(),
+			self::DEPENDENCIES => array(),
+			self::COUNTS       => array(),
 		);
 		foreach ( array_keys( $due ) as $kind ) {
 			$keys = is_array( $stored ) && is_array( $stored[ $kind ] ?? null ) ? $stored[ $kind ] : array();

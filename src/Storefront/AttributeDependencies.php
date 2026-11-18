@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Storefront;
 
 use Pixonaut\WooCommerce\Catalogue\ApplicableAttributes;
+use Pixonaut\WooCommerce\Catalogue\FilterDataRefresh;
 use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use WC_Cache_Helper;
@@ -31,9 +32,15 @@ use WC_Product_Variable;
  * Each dependent attribute's taxonomy maps to the taxonomy of each attribute
  * it applies under, and the slugs of the values it applies under. Only
  * global attributes take part. One product's reading adds to another's.
- * The answer is cached until a product changes. The shop's filters read
- * the same answer (`store()`), so a dependent attribute's filter leaves
- * alone what it does not apply to (`FilterMatches::exempt()`).
+ * The shop's filters read the same answer (`store()`), so a dependent
+ * attribute's filter leaves alone what it does not apply to
+ * (`FilterMatches::exempt()`).
+ *
+ * The answer is kept beside WooCommerce's product cache version. Once a
+ * product changes, a shopper is served it as it was kept, and it is noted
+ * for the job that reads the shop's filter data again
+ * (`FilterDataRefresh`), which works it out anew; only a store with
+ * nothing kept is read while the page waits.
  */
 final class AttributeDependencies {
 
@@ -64,25 +71,80 @@ final class AttributeDependencies {
 	}
 
 	/**
-	 * The store's dependencies, from the cache while no product changed.
+	 * The store's dependencies as kept: after a product changed, as they
+	 * were, until the job has worked them out again.
 	 *
 	 * @return array<string, array<string, list<string>>>
 	 */
 	public static function store(): array {
-		$version = class_exists( WC_Cache_Helper::class ) ? (string) WC_Cache_Helper::get_transient_version( 'product' ) : '';
+		$cached = get_transient( self::TRANSIENT );
+		if ( is_array( $cached ) && is_array( $cached['dependencies'] ?? null ) ) {
+			if ( ( $cached['version'] ?? null ) !== self::version() ) {
+				FilterDataRefresh::dependencies();
+			}
+			return self::shaped( $cached['dependencies'] );
+		}
+		return self::current();
+	}
+
+	/**
+	 * The store's dependencies as its products are now, read again unless
+	 * kept since the last change, and kept: for work that does not keep a
+	 * shopper waiting.
+	 *
+	 * @return array<string, array<string, list<string>>>
+	 */
+	public static function current(): array {
+		$version = self::version();
 		$cached  = get_transient( self::TRANSIENT );
 		if ( is_array( $cached ) && ( $cached['version'] ?? null ) === $version && is_array( $cached['dependencies'] ?? null ) ) {
 			return self::shaped( $cached['dependencies'] );
 		}
+		return self::read_and_keep( $version )['dependencies'];
+	}
+
+	/**
+	 * Reads the store's dependencies again and keeps them, as the job does.
+	 *
+	 * @return bool Whether they were kept: not when a database query failed.
+	 */
+	public static function rebuild(): bool {
+		return self::read_and_keep( self::version() )['kept'];
+	}
+
+	/**
+	 * Reads the store's dependencies and keeps them under the version read
+	 * before them, so a change made meanwhile is read again. Nothing is
+	 * kept when a database query failed, which may have read a product's
+	 * variations as none.
+	 *
+	 * @param string $version WooCommerce's product cache version before the read.
+	 * @return array{dependencies: array<string, array<string, list<string>>>, kept: bool}
+	 */
+	private static function read_and_keep( string $version ): array {
+		$errors       = FilterIndex::database_errors();
 		$dependencies = self::read();
-		set_transient(
-			self::TRANSIENT,
-			array(
-				'version'      => $version,
-				'dependencies' => $dependencies,
-			)
+		$kept         = FilterIndex::database_errors() === $errors;
+		if ( $kept ) {
+			set_transient(
+				self::TRANSIENT,
+				array(
+					'version'      => $version,
+					'dependencies' => $dependencies,
+				)
+			);
+		}
+		return array(
+			'dependencies' => $dependencies,
+			'kept'         => $kept,
 		);
-		return $dependencies;
+	}
+
+	/**
+	 * WooCommerce's product cache version, which moves whenever a product changes.
+	 */
+	private static function version(): string {
+		return class_exists( WC_Cache_Helper::class ) ? (string) WC_Cache_Helper::get_transient_version( 'product' ) : '';
 	}
 
 	/**
