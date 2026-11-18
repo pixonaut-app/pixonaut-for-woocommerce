@@ -11,6 +11,7 @@ use Pixonaut\WooCommerce\Admin\InvalidProductNotice;
 use Pixonaut\WooCommerce\Admin\LowResolutionWarnings;
 use Pixonaut\WooCommerce\Admin\VariantNotice;
 use Pixonaut\WooCommerce\Api\Catalogue;
+use Pixonaut\WooCommerce\Api\CheckSlowdown;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\LowResolutionSize;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
@@ -451,6 +452,25 @@ final class ProductRecheckTest extends PersonalisedCartTestCase {
 		$schedule = $retry->get_schedule();
 		$this->assertInstanceOf( \ActionScheduler_Abstract_Schedule::class, $schedule );
 		$this->assertGreaterThanOrEqual( $queued_at + self::RETRY_AFTER_SECONDS, $schedule->get_date()?->getTimestamp() );
+	}
+
+	public function test_a_check_refused_for_too_many_requests_holds_every_check_until_the_wait_is_over(): void {
+		$this->live_list( array( DesignFixture::TEMPLATE_BASE_ID => DesignFixture::LIVE_VERSION ) );
+		$this->recorder->json( 200, BlankFixture::answer() );
+		$this->slow_down();
+		$queued_at = time();
+		$this->deliver_blank_updated();
+		$this->assertGreaterThanOrEqual( $queued_at + self::RETRY_AFTER_SECONDS, (int) get_option( CheckSlowdown::OPTION ) );
+		$requests = count( $this->recorder->requests );
+
+		// Its turn comes before Pixonaut takes checks again.
+		$retry = array_key_first( $this->pending( ProductRecheck::ACTION, ProductRecheck::GROUP ) );
+		\ActionScheduler::runner()->process_action( (int) $retry );
+
+		$this->assertCount( $requests, $this->recorder->requests, 'Nothing is asked while checks are held.' );
+		$due = ActionSchedulerRunner::due_at( ProductRecheck::ACTION );
+		$this->assertCount( 1, $due );
+		$this->assertGreaterThanOrEqual( (int) get_option( CheckSlowdown::OPTION ), $due[0] );
 	}
 
 	public function test_a_batch_stops_at_the_first_product_refused_for_too_many_requests(): void {

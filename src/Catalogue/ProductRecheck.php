@@ -15,6 +15,7 @@ use Pixonaut\WooCommerce\Admin\InvalidProductNotice;
 use Pixonaut\WooCommerce\Admin\LowResolutionWarnings;
 use Pixonaut\WooCommerce\Admin\TrashedProducts;
 use Pixonaut\WooCommerce\Api\Catalogue;
+use Pixonaut\WooCommerce\Api\CheckSlowdown;
 use Pixonaut\WooCommerce\Api\WcLogger;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Storefront\KeptDesignerLinks;
@@ -42,7 +43,9 @@ use WC_Product;
  * MAX_ATTEMPTS times in all; Pixonaut being away never makes a product
  * unsellable. One Pixonaut refused because the store sent too many requests
  * is not counted as an attempt: the batch stops there, and it and the
- * products after it are checked again once Pixonaut takes requests again. A product the re-check finds unsellable raises its notice, and
+ * products after it are checked again once Pixonaut takes requests again;
+ * a batch whose turn comes while Pixonaut asks the store to hold its
+ * checks (`CheckSlowdown`) waits until then without asking. A product the re-check finds unsellable raises its notice, and
  * one sellable again clears it. The result is written only over the
  * configuration the re-check read: one saved meanwhile is newer, and kept.
  * A re-check also forgets the product's designer links Pixonaut no longer
@@ -313,6 +316,11 @@ final class ProductRecheck {
 		$attempt     = max( 1, (int) $attempt );
 		// Started: a change from now on queues them again.
 		PendingRechecks::forget( $product_ids );
+		if ( null !== CheckSlowdown::until() ) {
+			// Pixonaut would refuse every check until then: their turn comes after it.
+			$this->later( $product_ids, $attempt, null );
+			return;
+		}
 		try {
 			$live = $this->catalogue->live_versions();
 		} catch ( ApiException $e ) {
@@ -411,8 +419,9 @@ final class ProductRecheck {
 
 	/**
 	 * Queues a re-check of products or variations Pixonaut could not check
-	 * as they were saved, a minute on, so their reason clears once it can.
-	 * One already waiting in a re-check is not queued again.
+	 * as they were saved, so their reason clears once it can: once Pixonaut
+	 * takes checks again when it asked the store to hold them, else a
+	 * minute on. One already waiting in a re-check is not queued again.
 	 *
 	 * @param int[] $product_ids Products and variations.
 	 * @phpstan-param list<int> $product_ids
@@ -422,7 +431,7 @@ final class ProductRecheck {
 		if ( ! function_exists( 'as_schedule_single_action' ) ) {
 			return false;
 		}
-		return self::enqueue( $product_ids, 1, self::RETRY_BASE_SECONDS, new WcLogger() );
+		return self::enqueue( $product_ids, 1, self::slowed_delay( null ), new WcLogger() );
 	}
 
 	/**
@@ -448,7 +457,9 @@ final class ProductRecheck {
 
 	/**
 	 * Queues products Pixonaut refused for too many requests again, at the
-	 * same attempt, after the wait it asked for or its window's length.
+	 * same attempt, after the wait it asked for: for this request, or for
+	 * every check (`CheckSlowdown`), whichever is longer; its window's
+	 * length when it named none.
 	 *
 	 * @param int[]    $product_ids Products and variations not checked.
 	 * @param int      $attempt     The attempt they were refused in, which they keep.
@@ -464,8 +475,20 @@ final class ProductRecheck {
 				'retry_after' => $retry_after,
 			)
 		);
-		// Never 0, which would run it at once.
-		$this->queue_batch( $product_ids, $attempt, max( 1, $retry_after ?? self::RETRY_BASE_SECONDS ) );
+		$this->queue_batch( $product_ids, $attempt, self::slowed_delay( $retry_after ) );
+	}
+
+	/**
+	 * Seconds to wait before checking again after Pixonaut refused for too
+	 * many requests: the longer of the wait it named for the request and
+	 * the one every check holds for, else its window's length. Never 0,
+	 * which would run the check at once.
+	 *
+	 * @param int|null $retry_after Seconds Pixonaut asked to wait for the request, when it said.
+	 */
+	private static function slowed_delay( ?int $retry_after ): int {
+		$delay = max( CheckSlowdown::seconds_left(), $retry_after ?? 0 );
+		return $delay > 0 ? $delay : self::RETRY_BASE_SECONDS;
 	}
 
 	/**

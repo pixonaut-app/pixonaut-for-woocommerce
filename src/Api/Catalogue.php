@@ -57,6 +57,11 @@ final class Catalogue {
 	 */
 	private const LANGUAGE = 'lang';
 
+	/**
+	 * The SDK operation judging print sizes.
+	 */
+	private const PRINT_SIZE_CHECK = 'templates.printSize.validate';
+
 	public function __construct( private readonly Sdk $pixonaut ) {
 	}
 
@@ -397,6 +402,9 @@ final class Catalogue {
 	 *
 	 * @return list<PrintSizeVerdict> One verdict per size, in order.
 	 *
+	 * While Pixonaut asks the store to hold its checks (`CheckSlowdown`),
+	 * nothing is sent, and the check is refused as Pixonaut would refuse it.
+	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
 	public function check_print_sizes( string $template_id, array $sizes, ?string $blank_id, ?string $placement_id ): array {
@@ -409,9 +417,12 @@ final class Catalogue {
 			blankId: $on_blank ? $blank_id : null,
 			placementId: $on_blank ? $placement_id : null,
 		);
-		$verdicts = Read::answer( $this->pixonaut->call( 'templates.printSize.validate', array( 'id' => $template_id ), body: $body->toArray() ), PrintSizeVerdicts::from_answer( ... ) )->verdicts;
+		$verdicts = CheckSlowdown::ask(
+			self::PRINT_SIZE_CHECK,
+			fn (): array => Read::answer( $this->pixonaut->call( self::PRINT_SIZE_CHECK, array( 'id' => $template_id ), body: $body->toArray() ), PrintSizeVerdicts::from_answer( ... ) )->verdicts
+		);
 		if ( count( $verdicts ) !== count( $sizes ) ) {
-			throw self::unexpected( 'templates.printSize.validate' );
+			throw self::unexpected( self::PRINT_SIZE_CHECK );
 		}
 		return $verdicts;
 	}

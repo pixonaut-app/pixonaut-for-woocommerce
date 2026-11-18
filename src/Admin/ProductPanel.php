@@ -19,6 +19,7 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductLinker;
 use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
 use Pixonaut\WooCommerce\Catalogue\Side;
+use Pixonaut\WooCommerce\Catalogue\SlowedCheck;
 use Pixonaut\WooCommerce\Catalogue\ValueSizes;
 use Pixonaut\WooCommerce\Catalogue\VariationAttributes;
 use Pixonaut\WooCommerce\Connection\Connection;
@@ -689,20 +690,24 @@ final class ProductPanel {
 	/**
 	 * Saves a configuration `checked()` made on its product or variation and
 	 * raises or clears its notice. One Pixonaut could not check is checked
-	 * again in the background.
+	 * again in the background; one it refused to check for too many
+	 * requests keeps what is stored when nothing new was entered
+	 * (`SlowedCheck`), and is checked again as well.
 	 *
 	 * @param WC_Product    $product The product or variation.
 	 * @param ProductConfig $config  The checked configuration.
 	 * @return ProductConfig The configuration it has now.
 	 */
 	public function store( WC_Product $product, ProductConfig $config ): ProductConfig {
+		$slowed = SlowedCheck::slowed( $config );
+		$config = SlowedCheck::kept( $product, $config );
 		try {
 			$config->save_to( $product );
 		} catch ( LogicException $e ) {
 			// A newer plugin version's configuration is kept as it is; the notice says why.
 			$config = ProductConfig::stored_on( $product );
 		}
-		if ( InvalidReason::CHECK_FAILED === $config->invalid_reason ) {
+		if ( $slowed || InvalidReason::CHECK_FAILED === $config->invalid_reason ) {
 			// Asked again in the background, which clears the notice once Pixonaut answers.
 			ProductRecheck::queue_soon( array( $product->get_id() ) );
 		}

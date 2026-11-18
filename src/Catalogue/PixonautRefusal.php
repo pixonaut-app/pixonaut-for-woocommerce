@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Pixonaut\WooCommerce\Api\CheckSlowdown;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 
 /**
@@ -119,7 +120,7 @@ final class PixonautRefusal {
 			case self::SUSPENDED:
 				return __( 'The Pixonaut workspace is suspended. Contact Pixonaut to lift it, then update the product.', 'pixonaut-for-woocommerce' );
 			case self::RATE:
-				return __( 'Pixonaut was asked too often. Wait a minute, then update the product.', 'pixonaut-for-woocommerce' );
+				return self::slowed();
 			case self::PIXONAUT_FAULT:
 				return __( 'Pixonaut had a problem of its own. Update the product again in a while.', 'pixonaut-for-woocommerce' );
 			case self::GONE:
@@ -159,6 +160,24 @@ final class PixonautRefusal {
 			default:
 				return null;
 		}
+	}
+
+	/**
+	 * Pixonaut refused a check for too many requests: the check is queued
+	 * again (`ProductRecheck::queue_soon()`), for when Pixonaut takes checks
+	 * again (`CheckSlowdown`), at a time the store manager reads in the
+	 * site's own time.
+	 */
+	private static function slowed(): string {
+		$until = CheckSlowdown::until();
+		if ( null === $until ) {
+			return __( 'Pixonaut got more requests from the store than it takes at once. The configuration is checked again by itself in a moment; there is nothing to do.', 'pixonaut-for-woocommerce' );
+		}
+		return sprintf(
+			/* translators: %s: a time of day in the site's time format, e.g. "14:05". */
+			__( 'Pixonaut got more requests from the store than it takes at once. The configuration is checked again by itself at %s; there is nothing to do.', 'pixonaut-for-woocommerce' ),
+			(string) wp_date( (string) get_option( 'time_format' ), $until )
+		);
 	}
 
 	/**
