@@ -119,3 +119,15 @@ input[type="checkbox"].pixonaut-switch:focus-visible {
 .pixonaut-variation-pictures__warning {
 	font-weight: 600;
 }
+
+/* The pricing rule's example under its fields: money lines up on the right. */
+.pixonaut-price-example {
+	max-width: 520px;
+}
+
+.pixonaut-price-example :is(th, td) {
+	padding: 6px 10px;
+	text-align: right;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}

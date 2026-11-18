@@ -29,6 +29,7 @@ final class ReadPricingSettings implements Ability {
 	 */
 	public const KEYS = array(
 		Settings::PRICE_MARGIN,
+		Settings::PRICE_FIXED,
 		Settings::PRICE_TOLERANCE,
 		Settings::PRICE_STEP,
 		Settings::PRICE_ENDING,
@@ -54,7 +55,7 @@ final class ReadPricingSettings implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Read the pricing settings', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Gives the store\'s pricing rule, by which prices follow the printshop\'s costs: the target margin, the tolerance around it, the price step and what prices end in, the lowest and highest price, the currency buffer added to a cost converted from another currency, and whether prices change by themselves when a cost changes. Amounts and percentages are decimal strings, empty for none. Without a target margin the store has no rule. Also the store\'s currency, and whether prices are entered including tax. `delivery_time_show` says whether a product page tells how long the printshop says the chosen variation takes, which Pixonaut reads with its cost, and `delivery_time_handling_days` the days of its own the store adds to that.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Gives the store\'s pricing rule, by which prices follow the printshop\'s costs: the target margin and the fixed amount per item on top of it (price excluding tax = cost ÷ (1 − margin) + fixed amount), the tolerance around the margin the rule\'s own price leaves at a cost, the price step and what prices end in, the lowest and highest price, the currency buffer added to a cost converted from another currency, and whether prices change by themselves when a cost changes. Amounts and percentages are decimal strings, empty for none. Without a target margin the store has no rule. Also the store\'s currency, and whether prices are entered including tax. `delivery_time_show` says whether a product page tells how long the printshop says the chosen variation takes, which Pixonaut reads with its cost, and `delivery_time_handling_days` the days of its own the store adds to that.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(),
@@ -134,7 +135,7 @@ final class ReadPricingSettings implements Ability {
 		);
 		$schema['properties']['prices_include_tax'] = array(
 			'type'        => 'boolean',
-			'description' => __( 'Whether prices are entered including tax. The price step, ending, lowest and highest price count on the price as entered; the margin counts on it excluding tax.', 'pixonaut-for-woocommerce' ),
+			'description' => __( 'Whether prices are entered including tax. The price step, ending, lowest and highest price count on the price as entered; the margin and the fixed amount count on it excluding tax.', 'pixonaut-for-woocommerce' ),
 		);
 		return $schema;
 	}

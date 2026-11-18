@@ -615,6 +615,9 @@ export const REACH = {
 		'src/Admin/PricingList.php',
 		'templates/admin/product-prices.php',
 		'assets/src/admin/pricing.ts',
+		'src/Admin/PriceExample.php',
+		'templates/admin/price-example.php',
+		'assets/src/admin/price-example.ts',
 	],
 	'printed-form.spec.ts': [
 		'src/Storefront/FormControl.php',

@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Pricing;
 
+use Pixonaut\WooCommerce\Admin\PriceExample;
 use Pixonaut\WooCommerce\Admin\PricingList;
 use Pixonaut\WooCommerce\Admin\PricingPanel;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
@@ -69,6 +70,7 @@ final class PricingPanelTest extends PricingTestCase {
 		$this->assertStringContainsString( self::money( '190' ) . ' + ' . self::money( '10' ) . ' shipping', $html );
 		$this->assertStringContainsString( self::money( '250' ), $html );
 		$this->assertStringContainsString( '20.0 %', $html );
+		$this->assertStringContainsString( 'data-label="Contribution">' . self::money( '50' ) . '<', $html );
 		$this->assertStringContainsString( 'Suggested: ' . self::money( '399' ), $html );
 		$this->assertStringContainsString( 'The printshop publishes no price for it, so the rule cannot price it.', $html );
 		$this->assertStringContainsString( 'Rule not applied yet', $html );
@@ -323,7 +325,7 @@ final class PricingPanelTest extends PricingTestCase {
 		$list->column( 'price', $parent_id );
 		$flag = (string) ob_get_clean();
 		$this->assertStringContainsString( 'Margin off target', $flag );
-		$this->assertStringContainsString( 'v_a3: ' . self::money( '399' ) . ' → ' . self::money( '309' ) . ' suggested', $flag );
+		$this->assertStringContainsString( 'v_a3: ' . self::money( '399' ) . ' → ' . self::money( '309' ) . ' suggested (margin 61.2 %, contribution ' . self::money( '244' ) . ')', $flag );
 		$this->assertStringContainsString( 'v_a4: The printshop publishes no price for it', $flag );
 		$this->assertStringContainsString( 'action=' . PricingList::BULK_ACTION, $flag );
 		$this->assertSame( 1, substr_count( $flag, 'pixonaut-price-flag"' ), 'only the name column carries the flag' );
@@ -338,6 +340,40 @@ final class PricingPanelTest extends PricingTestCase {
 		$this->assertStringContainsString( 'Price not set by the pricing rule', $list->flag_html( $this->product( $parent_id ) ) );
 		$this->assertStringNotContainsString( 'action=' . PricingList::BULK_ACTION, $list->flag_html( $this->product( $parent_id ) ), 'nothing to apply' );
 		$this->assertSame( 'http://x.test/', $list->handle_bulk( 'http://x.test/', 'trash', array( $parent_id ) ) );
+	}
+
+	public function test_the_settings_example_prices_four_costs_by_the_stores_rule(): void {
+		$this->store_rule(
+			array(
+				PriceRule::MARGIN => '15',
+				PriceRule::FIXED  => '300',
+			)
+		);
+		$example = new PriceExample( $this->pricing, $this->plugin->templates() );
+
+		$rows = $example->rows( $this->pricing->rule_with( array() ), 25.0 );
+
+		$this->assertSame( PriceExample::COSTS, array_column( $rows, 'amount' ) );
+		// 100 ÷ 0.85 + 300 = 417.65 excluding VAT, 522.06 with it: 519, which is 415.20 excluding VAT.
+		$this->assertSame(
+			array(
+				'amount'       => '100',
+				'cost'         => self::money( '100' ),
+				'price'        => self::money( '519' ),
+				'contribution' => self::money( '315.20' ),
+				'margin'       => '75.9 %',
+			),
+			$rows[0]
+		);
+		$this->assertSame( self::money( '1849' ), $rows[3]['price'], '1000 ÷ 0.85 + 300 = 1476.47, 1845.59 with VAT' );
+		ob_start();
+		$example->render();
+		$html = (string) ob_get_clean();
+		$this->assertStringContainsString( 'data-pixonaut-price-example', $html );
+		$this->assertStringContainsString( '&quot;fixed&quot;:&quot;' . Settings::OPTION . '[' . Settings::PRICE_FIXED . ']&quot;', $html );
+
+		$this->store_rule( array( PriceRule::MARGIN => '' ) );
+		$this->assertSame( array( '', '', '', '' ), array_column( $example->rows( $this->pricing->rule_with( array() ), 0.0 ), 'price' ), 'no margin, no example prices' );
 	}
 
 	public function test_the_products_list_says_how_many_prices_were_set(): void {

@@ -18,6 +18,7 @@ use Pixonaut\WooCommerce\Abilities\ActOnOrderLine;
 use Pixonaut\WooCommerce\Abilities\ChangeDeliveryAddress;
 use Pixonaut\WooCommerce\Abilities\ConnectionAction;
 use Pixonaut\WooCommerce\Abilities\ConnectionStatus;
+use Pixonaut\WooCommerce\Admin\PriceExample;
 use Pixonaut\WooCommerce\Admin\PricingList;
 use Pixonaut\WooCommerce\Admin\PricingPanel;
 use Pixonaut\WooCommerce\Api\VariantCosts;
@@ -553,6 +554,7 @@ final class Plugin {
 		$this->pricing_panel()->register();
 		if ( is_admin() ) {
 			( new PricingList( $this->product_pricing() ) )->register();
+			( new PriceExample( $this->product_pricing(), $this->templates() ) )->register();
 			$product_panel = $this->product_panel();
 			$product_panel->register();
 			( new LayoutAdjustments( $this->sdk(), new StandingRows( $this->catalogue(), $designs, $this->sdk(), new WcLogger() ), new WcLogger() ) )->register();

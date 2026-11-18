@@ -4,6 +4,7 @@
 import './settings.css';
 import { domReady } from '../shared/dom-ready';
 import { setFieldError } from './field-error';
+import { initPriceExample } from './price-example';
 import { initVariationPictures } from './variation-pictures';
 
 /** The row of a hidden dependent setting, as the server renders it too. */
@@ -98,4 +99,5 @@ export function initDependents(root: ParentNode): void {
 domReady(() => {
 	initDependents(document);
 	initVariationPictures(document);
+	initPriceExample(document);
 });

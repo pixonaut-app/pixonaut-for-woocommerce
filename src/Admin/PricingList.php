@@ -17,7 +17,8 @@ use WC_Product;
 /**
  * On the products list, a product with a price that follows the pricing
  * rule and whose margin left the tolerance is flagged under its name, with
- * the price it has, the price the rule suggests and a link that applies it. **Apply suggested
+ * the price it has, the margin and contribution it leaves, the price the
+ * rule suggests and a link that applies it. **Apply suggested
  * prices** is a bulk action too. A price the rule cannot set (its printshop
  * publishes no cost, say) is flagged with the reason, without a link.
  */
@@ -111,6 +112,15 @@ final class PricingList {
 				? ( $texts[ (string) $row->flag ] ?? '' )
 				/* translators: 1: the price now, 2: the price the pricing rule suggests. Under a product's name on the admin products list. */
 				: sprintf( __( '%1$s → %2$s suggested', 'pixonaut-for-woocommerce' ), $shown['price'], $shown['suggested'] );
+			if ( '' !== $shown['margin'] && '' !== $shown['contribution'] ) {
+				$what = sprintf(
+					/* translators: 1: why a price is flagged, or the price now and the one suggested; 2: the margin the price now leaves, such as 32.5 %; 3: the amount of money it leaves over the cost excluding VAT. Under a product's name on the admin products list. */
+					__( '%1$s (margin %2$s, contribution %3$s)', 'pixonaut-for-woocommerce' ),
+					$what,
+					$shown['margin'],
+					$shown['contribution']
+				);
+			}
 			$lines .= sprintf(
 				'<span class="pixonaut-price-flag__line">%s</span>',
 				esc_html( $product->is_type( 'variable' ) ? $row->label . ': ' . $what : $what )

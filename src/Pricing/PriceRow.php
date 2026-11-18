@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Pricing;
 
 /**
- * A product's or variation's cost, price and margin, how its price stands
+ * A product's or variation's cost, price, margin and contribution, how its price stands
  * to the pricing rule, and what the rule would change. Money is in
  * thousandths (`Amount`).
  */
@@ -32,6 +32,7 @@ final class PriceRow {
 	 * @param string           $buffer     The currency buffer added to what was converted, in percent as written; empty when nothing was.
 	 * @param bool             $automatic  Whether its price changes by itself when its cost changes, once it follows the rule.
 	 * @param string           $changes    What it is set to, as `PriceChanges::setting()` says it.
+	 * @param int|null         $contribution What its price leaves over its cost, excluding tax.
 	 */
 	public function __construct(
 		public readonly int $id,
@@ -49,6 +50,7 @@ final class PriceRow {
 		public readonly string $buffer = '',
 		public readonly bool $automatic = false,
 		public readonly string $changes = PriceChanges::STORE,
+		public readonly ?int $contribution = null,
 	) {
 	}
 }

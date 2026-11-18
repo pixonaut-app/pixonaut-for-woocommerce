@@ -30,7 +30,7 @@ use WP_REST_Server;
 /**
  * **Prices**, a section of the Pixonaut tab of a product personalised on a
  * blank: each variation (a simple product has one row) with what the
- * printshop charges for it, its price and its margin, the parts of the
+ * printshop charges for it, its price, its margin and its contribution, the parts of the
  * store's pricing rule the product changes, whether its prices change by
  * themselves, and the buttons that read the
  * costs again, apply the rule, apply one suggested price, and give a price
@@ -351,6 +351,8 @@ final class PricingPanel {
 		return array(
 			/* translators: Label of a field in the Prices section of the product edit page; the value is a percentage. */
 			PriceRule::MARGIN    => __( 'Target margin (%)', 'pixonaut-for-woocommerce' ),
+			/* translators: Label of a field in the Prices section of the product edit page; the value is an amount of money excluding VAT added to the price on top of the target margin. */
+			PriceRule::FIXED     => __( 'Fixed amount per item', 'pixonaut-for-woocommerce' ),
 			/* translators: Label of a field in the Prices section of the product edit page; the value is a number of percentage points either side of the target margin. */
 			PriceRule::TOLERANCE => __( 'Tolerance (points)', 'pixonaut-for-woocommerce' ),
 			/* translators: Label of a field in the Prices section of the product edit page; the value is an amount of money: the distance between two prices the rule may set. */
@@ -369,7 +371,7 @@ final class PricingPanel {
 	 * shows prices.
 	 *
 	 * @param PriceRow $row The row.
-	 * @return array{id: int, label: string, cost: string, cost_parts: string, price: string, margin: string, suggested: string, standing: string, flag: string|null, rule_at: string, changes: string}
+	 * @return array{id: int, label: string, cost: string, cost_parts: string, price: string, margin: string, contribution: string, suggested: string, standing: string, flag: string|null, rule_at: string, changes: string}
 	 */
 	public static function row( PriceRow $row ): array {
 		$cost  = $row->cost;
@@ -394,27 +396,37 @@ final class PricingPanel {
 			);
 		}
 		return array(
-			'id'         => $row->id,
-			'label'      => $row->label,
-			'cost'       => match ( true ) {
+			'id'           => $row->id,
+			'label'        => $row->label,
+			'cost'         => match ( true ) {
 				null === $row->cost_total && null !== $cost && null !== $cost->product => '' === $parts ? self::money( $cost->product, $cost->currency ) : $parts,
 				null === $row->cost_total => '',
 				/* translators: %s: a cost converted to the store's currency, such as 192 kr. In the Prices table of the product edit page: the amount is approximate. */
 				'' !== $row->rate_date => sprintf( __( '≈ %s', 'pixonaut-for-woocommerce' ), self::money( $row->cost_total ) ),
 				default => self::money( $row->cost_total ),
 			},
-			'cost_parts' => null === $row->cost_total ? '' : $parts,
-			'price'      => null === $row->price ? '' : self::money( $row->price ),
-			'margin'     => null === $row->margin ? '' : sprintf(
-				/* translators: %s: a margin as a number, such as 50.2. In the Prices table of the product edit page. */
-				__( '%s %%', 'pixonaut-for-woocommerce' ),
-				number_format_i18n( $row->margin, 1 )
-			),
-			'suggested'  => null === $row->suggested ? '' : self::money( $row->suggested ),
-			'standing'   => $row->standing,
-			'flag'       => $row->flag,
-			'rule_at'    => null === $row->rule_at ? '' : (string) wp_date( (string) get_option( 'date_format' ), $row->rule_at ),
-			'changes'    => $row->changes,
+			'cost_parts'   => null === $row->cost_total ? '' : $parts,
+			'price'        => null === $row->price ? '' : self::money( $row->price ),
+			'margin'       => null === $row->margin ? '' : self::percent( $row->margin ),
+			'contribution' => null === $row->contribution ? '' : self::money( $row->contribution ),
+			'suggested'    => null === $row->suggested ? '' : self::money( $row->suggested ),
+			'standing'     => $row->standing,
+			'flag'         => $row->flag,
+			'rule_at'      => null === $row->rule_at ? '' : (string) wp_date( (string) get_option( 'date_format' ), $row->rule_at ),
+			'changes'      => $row->changes,
+		);
+	}
+
+	/**
+	 * A margin as text, to a tenth: 50.2 %.
+	 *
+	 * @param float $margin A margin, in percent.
+	 */
+	public static function percent( float $margin ): string {
+		return sprintf(
+			/* translators: %s: a margin as a number, such as 50.2. In the Prices table of the product edit page. */
+			__( '%s %%', 'pixonaut-for-woocommerce' ),
+			number_format_i18n( $margin, 1 )
 		);
 	}
 

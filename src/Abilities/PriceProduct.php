@@ -85,7 +85,7 @@ final class PriceProduct implements Ability {
 						'default'     => false,
 						'description' => __( 'Whether a price edited by hand after the rule set it is given back to the rule.', 'pixonaut-for-woocommerce' ),
 					),
-					'rule'          => ProductPrices::parts_schema( __( 'The parts of the rule this product changes, replacing the ones it has: margin and tolerance in percent, step, ending, min and max as amounts. A part left out or empty is left to the store.', 'pixonaut-for-woocommerce' ) ),
+					'rule'          => ProductPrices::parts_schema( __( 'The parts of the rule this product changes, replacing the ones it has: margin and tolerance in percent, fixed (added to the price excluding tax on top of the margin), step, ending, min and max as amounts. A part left out or empty is left to the store.', 'pixonaut-for-woocommerce' ) ),
 					'dry_run'       => array(
 						'type'    => 'boolean',
 						'default' => false,
