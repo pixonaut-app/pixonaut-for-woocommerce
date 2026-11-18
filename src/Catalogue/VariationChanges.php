@@ -14,10 +14,11 @@ namespace Pixonaut\WooCommerce\Catalogue;
  * ones it has, as `VariationCombinations` works it out: what a dry run
  * lists, and what generating does. Attributes are given by attribute name
  * (`pa_frame`) with the value a variation holds (a term's slug, a custom
- * attribute's text), `''` for "Any".
+ * attribute's text), `''` for "Any". A variation to add or change carries
+ * the templates it is sold on once `VariationTemplates` has chosen them.
  *
- * @phpstan-type Added array{attributes: array<string, string>, label: string, entry: int, blank_id: string, ref: string, variant: string}
- * @phpstan-type Changed array{variation_id: int, attributes: array<string, string>, label: string, entry: int, blank_id: string, ref: string, variant: string, why: string}
+ * @phpstan-type Added array{attributes: array<string, string>, label: string, entry: int, blank_id: string, ref: string, variant: string, template?: string, template_from?: int}
+ * @phpstan-type Changed array{variation_id: int, attributes: array<string, string>, label: string, entry: int, blank_id: string, ref: string, variant: string, why: string, template?: string, template_from?: int}
  * @phpstan-type Disabled array{variation_id: int, attributes: array<string, string>, label: string, why: string}
  * @phpstan-type Skipped array{attributes: array<string, string>, label: string, entry: int, blank_id: string, why: string}
  */

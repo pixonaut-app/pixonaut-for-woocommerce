@@ -187,6 +187,7 @@ final class VariationGenerationTest extends PricingTestCase {
 				'blank_id'   => self::POSTER,
 				'ref'        => 'v_poster_s30_vertical',
 				'variant'    => 'Size: 30x40cm, Orientation: Vertical',
+				'template'   => 'Mini poster',
 			),
 			array_map( static fn ( array $row ): array => array( 'attributes' => (array) $row['attributes'] ) + $row, $answer['add'] )
 		);
@@ -289,6 +290,48 @@ final class VariationGenerationTest extends PricingTestCase {
 		$stored->with_sides( array( $stored->sides[0]->with_form_groups( FormGroups::from_array( $moved ) ) ) )->save_to( $this->reread( $product ) );
 
 		$this->assertSame( $moved['groups'], ProductConfig::config_for( $this->reread( $framed ) )->sides[0]->form_groups?->groups, 'a later arrangement of the product reaches it too' );
+	}
+
+	public function test_variations_made_on_another_blank_keep_the_template_their_photo_choice_picks(): void {
+		$product = $this->poster();
+		$this->unframed_variations( $product );
+
+		$preview = $this->generate->execute(
+			array(
+				'product_id' => $product->get_id(),
+				'entries'    => self::PLAN,
+			)
+		);
+		$this->assertIsArray( $preview );
+		$this->assertCount( 8, $preview['add'], 'framed: 2 sizes × 2 colours × 2 photo choices' );
+		foreach ( $preview['add'] as $row ) {
+			$this->assertSame( 'With' === ( (array) $row['attributes'] )['photo'] ? 'Mini poster' : 'Plain poster', $row['template'], 'the preview shows the template each variation is sold on' );
+		}
+
+		$checks = ( new HttpRecorder( Hosts::server_api() ) )->start();
+		self::script_framed_check( $checks );
+		self::script_framed_check( $checks, 'plain-poster' );
+		try {
+			$this->script_costs_twice();
+
+			$answer = $this->generated( $product );
+		} finally {
+			$checks->stop();
+		}
+
+		$this->assertCount( 8, $answer['made'] );
+		$this->assertCount( 8, $checks->requests, 'the framed setup is checked once for each template' );
+		foreach ( $this->reread( $product )->get_children() as $child_id ) {
+			$variation = wc_get_product( $child_id );
+			$this->assertInstanceOf( WC_Product_Variation::class, $variation );
+			$config = ProductConfig::config_for( $variation );
+			$photo  = $variation->get_attributes( 'edit' )['photo'] ?? '';
+			$this->assertSame( 'With' === $photo ? 'mini-poster' : 'plain-poster', $config->sides[0]->template_base_id, 'each variation is sold on the template its photo choice picks' );
+			if ( self::FRAMED === $config->blank_id ) {
+				$this->assertTrue( $config->sides[0]->print_sizes[0]->placement_default, 'at the framed placement\'s whole area' );
+				$this->assertSame( 'publish', $variation->get_status() );
+			}
+		}
 	}
 
 	public function test_a_value_the_blank_gains_is_made_once_the_product_offers_it_keeping_every_variation(): void {
@@ -611,14 +654,15 @@ final class VariationGenerationTest extends PricingTestCase {
 	 * blank, the template on its placement, the verdict and the template's
 	 * status.
 	 *
-	 * @param HttpRecorder $checks The recorder of Pixonaut's server API.
+	 * @param HttpRecorder $checks   The recorder of Pixonaut's server API.
+	 * @param string       $template The template's id.
 	 */
-	private static function script_framed_check( HttpRecorder $checks ): void {
+	private static function script_framed_check( HttpRecorder $checks, string $template = 'mini-poster' ): void {
 		$checks->json( 200, BlankFixture::answer( array( 'front' => 'Front' ) ) );
 		$checks->json(
 			200,
 			array(
-				'templateId'     => 'mini-poster@1',
+				'templateId'     => $template . '@1',
 				'ratio'          => array(
 					'w' => 280,
 					'h' => 360,
@@ -701,6 +745,38 @@ final class VariationGenerationTest extends PricingTestCase {
 		( new ProductConfig( override: true, personalise: true, blank_id: self::FRAMED, sides: array( self::side() ) ) )->save_to( $variation );
 		( new ProductVariant( self::FRAMED, 'v_framed_s30_black', 'v_framed_s30_black', 'Size: 30x40cm, Color: Black' ) )->save_to( $variation );
 		return $variation;
+	}
+
+	/**
+	 * The unframed variations the store manager made by hand, one per size
+	 * and photo choice: those with a photo follow the product, those
+	 * without are on a template without a photo.
+	 *
+	 * @param WC_Product $product The product.
+	 */
+	private function unframed_variations( WC_Product $product ): void {
+		foreach ( array( 's30', 's50' ) as $size ) {
+			foreach ( self::PHOTO as $photo ) {
+				$variation = new WC_Product_Variation();
+				$variation->set_parent_id( $product->get_id() );
+				$variation->set_attributes(
+					array(
+						'pa_size'   => $size,
+						'pa_mount'  => 'none',
+						'pa_colour' => '',
+						'photo'     => $photo,
+					)
+				);
+				$variation->set_regular_price( '300' );
+				$variation->set_status( ProductConfig::PUBLIC_STATUS );
+				$variation->save();
+				if ( 'Without' === $photo ) {
+					( new ProductConfig( override: true, personalise: true, blank_id: self::POSTER, sides: array( new Side( 'front', 'Front', 'front', 'Front', 'plain-poster', 1, null, 'Plain poster' ) ) ) )->save_to( $variation );
+				}
+				$ref = 'v_poster_' . $size . '_vertical';
+				( new ProductVariant( self::POSTER, $ref, $ref, 'Size: ' . ( 's30' === $size ? '30x40cm' : '50x70cm' ) . ', Orientation: Vertical' ) )->save_to( $variation );
+			}
+		}
 	}
 
 	/**
