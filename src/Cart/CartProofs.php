@@ -76,13 +76,14 @@ final class CartProofs {
 			return $thumbnail;
 		}
 		// The first side, in the product's order, stands for the line.
-		$side     = CartLine::of( $cart_item )?->sides[0] ?? null;
+		$line     = CartLine::of( $cart_item );
+		$side     = $line?->sides[0] ?? null;
 		$proof_id = null === $side ? null : self::shown_proof( $side );
-		if ( null === $side || null === $proof_id ) {
+		if ( null === $line || null === $side || null === $proof_id ) {
 			return $thumbnail;
 		}
 		$width   = $this->width( $cart_item );
-		$picture = $this->picture->of( self::product( $cart_item ), $side->key );
+		$picture = $this->picture->of( self::product( $cart_item ), $side->key, $line->variant );
 		return $this->templates->html(
 			'cart/proof-thumbnail.php',
 			array(
@@ -118,7 +119,7 @@ final class CartProofs {
 			if ( null === $proof_id ) {
 				continue;
 			}
-			$picture  = $this->picture->of( $product, $side->key );
+			$picture  = $this->picture->of( $product, $side->key, $line->variant );
 			$proofs[] = (object) array(
 				'id'        => self::NO_ATTACHMENT,
 				'src'       => $this->urls->url( $side->design_id, $proof_id, ProofUrls::LARGEST_WIDTH, $picture ),

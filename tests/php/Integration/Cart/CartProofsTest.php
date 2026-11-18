@@ -123,6 +123,14 @@ final class CartProofsTest extends PersonalisedCartTestCase {
 		$this->assert_proof_url( self::thumbnail_src( $key, $item ), ProofPicture::on_blank( BlankFixture::VIEW_ID, BlankFixture::VARIANT_REF ) );
 	}
 
+	public function test_the_line_shows_the_variant_it_was_added_as(): void {
+		[ $key, $item ] = $this->added();
+		$this->assertIsArray( $item[ CartLine::KEY ] ?? null );
+		$item[ CartLine::KEY ]['variant'] = 'v_added';
+
+		$this->assert_proof_url( self::thumbnail_src( $key, $item ), ProofPicture::on_blank( null, 'v_added' ) );
+	}
+
 	public function test_a_product_on_no_blank_shows_the_flat_proof(): void {
 		[ $key, $item ] = $this->added();
 		$product        = wc_get_product( $this->product_id );

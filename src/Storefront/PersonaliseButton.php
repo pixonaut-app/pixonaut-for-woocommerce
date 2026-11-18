@@ -599,7 +599,7 @@ final class PersonaliseButton {
 				if ( null === $side->proof_id || ProofCache::is_erased( $side->design_id ) ) {
 					continue;
 				}
-				$picture    = $this->picture->of( $bought instanceof WC_Product ? $bought : $product, $side->key );
+				$picture    = $this->picture->of( $bought instanceof WC_Product ? $bought : $product, $side->key, $design['line']->variant );
 				$pictures[] = array(
 					'src'    => $this->proofs->url( $side->design_id, $side->proof_id, ProofUrls::LARGEST_WIDTH, $picture ),
 					'srcset' => implode(

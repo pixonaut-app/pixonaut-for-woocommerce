@@ -187,7 +187,7 @@ final class LinePictures {
 			return null;
 		}
 		$product = $item->get_product();
-		$picture = $this->picture->of( $product instanceof WC_Product ? $product : null, $shown['side'] );
+		$picture = $this->picture->of( $product instanceof WC_Product ? $product : null, $shown['side'], $shown['variant'] );
 		return $this->templates->html(
 			'order/line-picture.php',
 			array(
@@ -205,7 +205,7 @@ final class LinePictures {
 	 *
 	 * @param WC_Order_Item_Product $item The line.
 	 *
-	 * @return array{side: string, design_id: string, proof_id: string}|null
+	 * @return array{side: string, design_id: string, proof_id: string, variant: string|null}|null
 	 */
 	private static function shown_side( WC_Order_Item_Product $item ): ?array {
 		if ( ! LineState::is_tracked( $item ) ) {
@@ -218,10 +218,12 @@ final class LinePictures {
 			if ( ! is_string( $design_id ) || ! is_string( $proof_id ) || $line->is_side_erased( $side ) || ProofCache::is_erased( $design_id ) ) {
 				continue;
 			}
+			$variant = $line->ref( LineState::REF_VARIANT );
 			return array(
 				'side'      => $side,
 				'design_id' => $design_id,
 				'proof_id'  => $proof_id,
+				'variant'   => is_string( $variant ) && '' !== $variant ? $variant : null,
 			);
 		}
 		return null;

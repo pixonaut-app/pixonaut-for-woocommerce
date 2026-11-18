@@ -132,6 +132,16 @@ final class LinePicturesTest extends PersonalisedCartTestCase {
 		$this->assert_picture_url( self::src( $this->page_html() ), ProofPicture::on_blank( BlankFixture::VIEW_ID, BlankFixture::VARIANT_REF ) );
 	}
 
+	public function test_an_order_page_shows_the_variant_the_line_was_sold_as_after_the_product_moved_on(): void {
+		$line = LineState::of( $this->item );
+		$line->set_ref( LineState::REF_VARIANT, 'v_sold' );
+		$this->assertTrue( $line->save() );
+		$this->plugin->settings()->set( Settings::LINE_PICTURE_VIEW, PictureView::FIRST );
+
+		// The product sells another variant now, whose views say nothing of the one sold.
+		$this->assert_picture_url( self::src( $this->page_html() ), ProofPicture::on_blank( null, 'v_sold' ) );
+	}
+
 	public function test_an_email_shows_the_picture_in_place_of_the_product_image_once(): void {
 		$html = wc_get_email_order_items( $this->order, array( 'show_image' => false ) );
 
