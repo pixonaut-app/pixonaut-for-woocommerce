@@ -1426,7 +1426,8 @@ archives work as they always have.
   listed once per card counts once per card there too
   (`Storefront\ArchiveIndexDiscovery`). The count passed in stands for any
   other term, without the theme's support, and until the archive's index
-  is built; asking queues its build, as a visit does.
+  is built. Asking counts as a visit: it queues the build of an index that
+  is missing or a day old, and keeps the index while the count is shown.
 - **A theme's own fields**: `pixonaut_wc_archive_index_card` and
   `pixonaut_wc_archive_index_variation` filter each card and each variation
   row while the index is built, and `pixonaut_wc_archive_index_image_size`

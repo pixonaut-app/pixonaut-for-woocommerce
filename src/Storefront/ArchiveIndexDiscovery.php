@@ -59,9 +59,11 @@ final class ArchiveIndexDiscovery {
 	 * How many cards a category's or tag's archive lists unfiltered, as its
 	 * index counts them: a product listed once per card counts once per
 	 * card. The count given stands for any other term, without the theme's
-	 * support, and until the index is built, which asking queues as a
-	 * visit to the archive does: an index is built in the background, never
-	 * on the request asking.
+	 * support, and until the index is built. Asking counts as a visit to the
+	 * archive: it queues the build of an index that is missing or a day old,
+	 * and keeps the archive's index while its count is shown, though nobody
+	 * opens the archive. An index is built in the background, never on the
+	 * request asking.
 	 *
 	 * @param mixed $count The count the theme would print otherwise, such as WooCommerce's.
 	 * @param mixed $term  The category or tag.
@@ -72,12 +74,9 @@ final class ArchiveIndexDiscovery {
 		if ( null === $archive ) {
 			return $count;
 		}
+		ArchiveIndexes::visited( $archive );
 		$current = ArchiveIndexes::current( $archive );
-		if ( null === $current ) {
-			ArchiveIndexes::visited( $archive );
-			return $count;
-		}
-		return $current['count'];
+		return null === $current ? $count : $current['count'];
 	}
 
 	/**

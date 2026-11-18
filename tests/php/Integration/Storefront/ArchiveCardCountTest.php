@@ -68,6 +68,25 @@ final class ArchiveCardCountTest extends WP_UnitTestCase {
 		$this->assertSame( $this->listed(), $this->card_count(), 'as many as the archive lists' );
 	}
 
+	public function test_asking_keeps_an_archive_nobody_opens_and_rebuilds_an_old_index(): void {
+		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
+		$this->poster();
+		$this->card_count();
+		ActionSchedulerRunner::run_pending( ArchiveIndexes::ACTION );
+		$archive = 'product_cat-' . $this->category;
+		$long    = time() - ArchiveIndexes::UNUSED_SECONDS;
+		update_option( Schema::ARCHIVE_INDEX_VISITS_OPTION, array( $archive => $long ) );
+		$state                                = get_option( Schema::ARCHIVE_INDEXES_OPTION );
+		$state['built'][ $archive ]['built'] -= ArchiveIndexes::STALE_SECONDS + 1;
+		update_option( Schema::ARCHIVE_INDEXES_OPTION, $state );
+
+		$this->assertSame( 2, $this->card_count(), 'the old index answers meanwhile' );
+
+		$visits = get_option( Schema::ARCHIVE_INDEX_VISITS_OPTION );
+		$this->assertGreaterThan( $long, $visits[ $archive ] ?? 0, 'kept as visited, so a build does not drop it' );
+		$this->assertTrue( as_has_scheduled_action( ArchiveIndexes::ACTION ), 'the old index is built again' );
+	}
+
 	public function test_without_the_themes_support_the_count_given_stands(): void {
 		remove_theme_support( ArchiveIndexes::THEME_SUPPORT );
 		SplitListing::set_attribute_mode( $this->attributes[ self::PICTURE ], SplitListing::ON );
