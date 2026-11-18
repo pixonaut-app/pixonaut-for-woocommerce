@@ -139,7 +139,7 @@ final class ProductChoicePrices {
 			'format'     => array(
 				'pattern'           => self::decoded( get_woocommerce_price_format() ),
 				'symbol'            => self::decoded( get_woocommerce_currency_symbol() ),
-				'decimalSeparator'  => wc_get_price_decimal_separator(),
+				'decimalSeparator'  => self::decoded( wc_get_price_decimal_separator() ),
 				'thousandSeparator' => self::decoded( wc_get_price_thousand_separator() ),
 				'trimZeros'         => self::trims_zeros(),
 			),
@@ -197,7 +197,7 @@ final class ProductChoicePrices {
 	 */
 	private static function trims_zeros(): bool {
 		$decimals = wc_get_price_decimals();
-		return $decimals > 0 && ! str_contains( self::decoded( wp_strip_all_tags( wc_price( 1 ) ) ), wc_get_price_decimal_separator() . str_repeat( '0', $decimals ) );
+		return $decimals > 0 && ! str_contains( self::decoded( wp_strip_all_tags( wc_price( 1 ) ) ), self::decoded( wc_get_price_decimal_separator() ) . str_repeat( '0', $decimals ) );
 	}
 
 	/**
