@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.26.0...v1.27.0) (2026-11-18)
+
+
+### Features
+
+* **pricing:** a price rule per attribute value and per variation ([#340](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/340)) ([5c4e1d1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/5c4e1d1a2b00f70dc5513d6a501a6210656ebbd5))
+
 ## [1.26.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.25.0...v1.26.0) (2026-11-18)
 
 
