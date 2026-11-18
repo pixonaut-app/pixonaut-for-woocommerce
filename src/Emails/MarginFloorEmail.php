@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Emails;
 
+use Pixonaut\WooCommerce\Admin\MarginFloorList;
 use Pixonaut\WooCommerce\Admin\PricingPanel;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
 use WC_Product;
@@ -17,7 +18,8 @@ use WC_Product;
  * Sent to the store at most once a day by `MarginFloor`, naming each price
  * whose margin fell below the lowest margin the store accepts since the
  * last one: its product, variation, price, cost and margin, and a link to
- * edit it.
+ * edit it. Past the most one email names, it says how many more there are,
+ * with a link to the products list.
  */
 final class MarginFloorEmail extends StoreEmail {
 
@@ -36,6 +38,13 @@ final class MarginFloorEmail extends StoreEmail {
 	 * @var string
 	 */
 	public string $floor = '';
+
+	/**
+	 * How many more prices are newly below the floor than the email names.
+	 *
+	 * @var int
+	 */
+	public int $more = 0;
 
 	public function __construct() {
 		$this->id = self::ID;
@@ -63,10 +72,11 @@ final class MarginFloorEmail extends StoreEmail {
 	 *
 	 * @param array[] $rows  Each price: `item` (the product or variation), `product`, and its `price`, `cost` and `margin` as `ProductPricing::margin_now()` gives them.
 	 * @param float   $floor The lowest margin, in percent.
+	 * @param int     $more  How many more prices are newly below the floor, named in a later email.
 	 * @phpstan-param list<array{item: WC_Product, product: WC_Product, price: int, cost: int, margin: float}> $rows
 	 * @return bool Whether it was sent.
 	 */
-	public function trigger( array $rows, float $floor ): bool {
+	public function trigger( array $rows, float $floor, int $more = 0 ): bool {
 		$this->setup_locale();
 		$this->rows  = array_map(
 			static fn ( array $row ): array => array(
@@ -80,6 +90,7 @@ final class MarginFloorEmail extends StoreEmail {
 			$rows
 		);
 		$this->floor = PricingPanel::percent( $floor );
+		$this->more  = $more;
 		$sent        = false;
 		if ( $this->is_enabled() && '' !== $this->get_recipient() ) {
 			$sent = (bool) $this->send( $this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments() );
@@ -93,8 +104,10 @@ final class MarginFloorEmail extends StoreEmail {
 	 */
 	protected function template_args(): array {
 		return array(
-			'rows'  => $this->rows,
-			'floor' => $this->floor,
+			'rows'     => $this->rows,
+			'floor'    => $this->floor,
+			'more'     => $this->more,
+			'list_url' => MarginFloorList::url(),
 		);
 	}
 }

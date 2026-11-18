@@ -9,6 +9,8 @@
  *
  * @var array[] $rows               Each price: `product`, `variation` (empty for a simple product), `price`, `cost`, `margin` and `edit_url`, as text.
  * @var string  $floor              The lowest margin, such as 25.0 %.
+ * @var int     $more               How many more prices fell below the lowest margin than the email names; they are named in a later one.
+ * @var string  $list_url           The products list, filtered to the products with a price below the lowest margin.
  * @var string  $email_heading      The heading.
  * @var string  $additional_content Text the store added in the email's settings.
  */
@@ -33,6 +35,15 @@ foreach ( $rows as $pixonaut_row ) {
 		esc_html( $pixonaut_row['margin'] )
 	);
 	echo "\n" . esc_url_raw( $pixonaut_row['edit_url'] ) . "\n\n";
+}
+if ( $more > 0 ) {
+	echo esc_html(
+		sprintf(
+			/* translators: %d: how many more prices. Plain text email to the merchant about prices below the lowest margin, after the prices it names. */
+			_n( '%d more price fell below your lowest margin and will be named in a later email.', '%d more prices fell below your lowest margin and will be named in later emails.', $more, 'pixonaut-for-woocommerce' ),
+			$more
+		)
+	) . "\n" . esc_url_raw( $list_url ) . "\n\n";
 }
 echo esc_html__( 'Each price is named once, until its margin is back at your lowest margin and falls below it again.', 'pixonaut-for-woocommerce' ) . "\n\n";
 

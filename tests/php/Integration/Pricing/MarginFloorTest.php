@@ -8,9 +8,12 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Pricing;
 
 use Pixonaut\WooCommerce\Admin\MarginFloorList;
+use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Pricing\ExchangeRates;
 use Pixonaut\WooCommerce\Pricing\MarginFloor;
 use Pixonaut\WooCommerce\Pricing\PriceRule;
 use Pixonaut\WooCommerce\Settings\Settings;
+use Pixonaut\WooCommerce\Tests\Support\FreshRequest;
 use Pixonaut\WooCommerce\Tests\Support\SentMail;
 
 /**
@@ -29,6 +32,7 @@ final class MarginFloorTest extends PricingTestCase {
 		// WooCommerce's mailer hooks its emails' triggers once a request, when it is built.
 		WC()->mailer()->init();
 		reset_phpmailer_instance();
+		FreshRequest::begin( $this->plugin );
 		$this->floor = $this->plugin->margin_floor();
 	}
 
@@ -151,6 +155,87 @@ final class MarginFloorTest extends PricingTestCase {
 		$this->plugin->settings()->set( Settings::PRICE_MARGIN_FLOOR, '' );
 
 		$this->assertSame( array(), $this->floor->low() );
+	}
+
+	public function test_a_cost_without_an_exchange_rate_keeps_the_mark_until_it_is_known_again(): void {
+		update_option( 'woocommerce_currency', 'SEK' );
+		// One euro is 11.50 kronor.
+		$this->rates = array( 'SEK' => '11.50' );
+		$this->plugin->settings()->set( Settings::PRICE_CURRENCY_BUFFER, '0' );
+		$this->plugin->settings()->set( Settings::PRICE_MARGIN_FLOOR, '30' );
+		$id = $this->simple_product( 'v_a3', '250' );
+		$this->script_costs( array( 'v_a3' => '20' ), null, 'EUR' );
+
+		// 230 SEK against 250: 8 %.
+		$this->pricing->refresh( $this->product( $id ) );
+		$this->assertSame( array( $id => $id ), $this->floor->low( MarginFloor::NEW ) );
+
+		// The rates are gone: the cost cannot be told in kronor, which is no recovery.
+		delete_option( ExchangeRates::OPTION );
+		$this->floor->check( $id );
+
+		$this->assertSame( array( $id => $id ), $this->floor->low( MarginFloor::NEW ) );
+		$this->floor->report();
+		$this->assertSame( array(), $this->floor_mails(), 'a price whose margin is not known is not named' );
+		$this->assertSame( array( $id => $id ), $this->floor->low( MarginFloor::NEW ) );
+	}
+
+	public function test_the_daily_job_checks_every_price_first_and_names_one_whose_margin_fell_with_no_hook(): void {
+		$this->plugin->settings()->set( Settings::PRICE_MARGIN_FLOOR, '30' );
+		$id = $this->simple_product( 'v_a3', '500' );
+		$this->script_costs( array( 'v_a3' => '200' ) );
+		$this->pricing->refresh( $this->product( $id ) );
+		$this->assertSame( array(), $this->floor->low() );
+
+		// Written past WooCommerce, as an import or another plugin may: no hook sees it.
+		update_metadata( 'post', $id, '_regular_price', '250' );
+		$this->floor->report();
+
+		$this->assertSame( array( $id => $id ), $this->floor->low( MarginFloor::REPORTED ) );
+		$this->assertCount( 1, $this->floor_mails() );
+	}
+
+	public function test_variations_of_a_product_taken_off_its_blank_lose_their_marks(): void {
+		$this->plugin->settings()->set( Settings::PRICE_MARGIN_FLOOR, '30' );
+		$ids = $this->variable_product(
+			array(
+				'v_a3' => '250',
+				'v_a4' => '250',
+			)
+		);
+		$this->pricing->refresh( $this->script_and( $this->parent_of( $ids['v_a3'] ), '200' ) );
+		$this->assertSame( array( $ids['v_a3'] ), array_keys( $this->floor->low() ) );
+
+		delete_post_meta( $this->parent_of( $ids['v_a3'] )->get_id(), ProductConfig::META_KEY );
+
+		$this->assertSame( array(), $this->floor->low() );
+	}
+
+	public function test_one_email_names_at_most_its_limit_and_the_rest_the_next_day(): void {
+		$this->plugin->settings()->set( Settings::PRICE_MARGIN_FLOOR, '30' );
+		$floor = new MarginFloor( $this->pricing, $this->plugin->settings(), 1 );
+		$ids   = $this->variable_product(
+			array(
+				'v_a3' => '250',
+				'v_a4' => '120',
+			)
+		);
+		$this->pricing->refresh( $this->script_and( $this->parent_of( $ids['v_a3'] ), '200' ) );
+		$this->assertCount( 2, $this->floor->low( MarginFloor::NEW ) );
+
+		$floor->report();
+
+		$mails = $this->floor_mails();
+		$this->assertCount( 1, $mails );
+		$this->assertStringContainsString( '1 more price fell below your lowest margin and will be named in a later email.', $mails[0]['body'] );
+		$this->assertStringContainsString( MarginFloorList::QUERY_ARG, $mails[0]['body'] );
+		$this->assertCount( 1, $floor->low( MarginFloor::NEW ) );
+
+		$floor->report();
+
+		$this->assertCount( 2, $this->floor_mails() );
+		$this->assertStringNotContainsString( 'more price', $this->floor_mails()[1]['body'] );
+		$this->assertSame( array(), $floor->low( MarginFloor::NEW ) );
 	}
 
 	/**

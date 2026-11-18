@@ -180,7 +180,7 @@ final class MarginFloorList {
 	 */
 	public function column_html( int $product_id ): string {
 		$floor = $this->floor->floor();
-		$ids   = array_keys( array_filter( $this->floor->low(), static fn ( int $product ): bool => $product === $product_id ) );
+		$ids   = $this->floor->low_of_product( $product_id );
 		if ( null === $floor || array() === $ids ) {
 			return '';
 		}

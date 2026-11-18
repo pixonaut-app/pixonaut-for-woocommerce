@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T23:43:36+00:00\n"
+"POT-Creation-Date: 2026-11-18T23:55:57+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -5317,7 +5317,7 @@ msgstr ""
 "%4$s dpi, und kann daher unscharf wirken."
 
 #. translators: 1: number of prices, 2: the lowest margin the store accepts, such as 25.0 %. Admin notice.
-#: src/Admin/MarginFloorList.php:106
+#: src/Admin/MarginFloorList.php:111
 #, php-format
 msgid "%1$d price has a margin below your lowest margin of %2$s."
 msgid_plural "%1$d prices have a margin below your lowest margin of %2$s."
@@ -5325,23 +5325,24 @@ msgstr[0] "%1$d Preis hat eine Marge unter Ihrer Mindestmarge von %2$s."
 msgstr[1] "%1$d Preise haben eine Marge unter Ihrer Mindestmarge von %2$s."
 
 #. translators: Link in an admin notice to the products list, filtered to the products with a price below the lowest margin.
-#: src/Admin/MarginFloorList.php:113
+#. translators: Link in the email to the merchant to the products list, filtered to the products with a price below the lowest margin.
+#: src/Admin/MarginFloorList.php:118 templates/emails/margin-floor.php:69
 msgid "Show the products"
 msgstr "Produkte anzeigen"
 
 #. translators: A view of the admin products list: the products with a price whose margin is below the lowest margin the store accepts.
-#: src/Admin/MarginFloorList.php:135
+#: src/Admin/MarginFloorList.php:140
 msgid "Below lowest margin"
 msgstr "Unter Mindestmarge"
 
 #. translators: 1: a variation's attribute values or a product's name, 2: the price, 3: the margin it leaves, such as 22.4 %. Under a product's name on the admin products list.
-#: src/Admin/MarginFloorList.php:191
+#: src/Admin/MarginFloorList.php:196
 #, php-format
 msgid "%1$s: %2$s (margin %3$s)"
 msgstr "%1$s: %2$s (Marge %3$s)"
 
 #. translators: %d: how many more prices. Under a product's name on the admin products list.
-#: src/Admin/MarginFloorList.php:200 src/Admin/PricingList.php:141
+#: src/Admin/MarginFloorList.php:205 src/Admin/PricingList.php:141
 #, php-format
 msgid "and %d more"
 msgid_plural "and %d more"
@@ -5349,7 +5350,7 @@ msgstr[0] "und %d weiterer"
 msgstr[1] "und %d weitere"
 
 #. translators: %s: the lowest margin the store accepts, such as 25.0 %. Under a product's name on the admin products list.
-#: src/Admin/MarginFloorList.php:207
+#: src/Admin/MarginFloorList.php:212
 #, php-format
 msgid "Below lowest margin of %s"
 msgstr "Unter Mindestmarge von %s"
@@ -6500,7 +6501,7 @@ msgstr "Die erste Ansicht der Druckposition"
 #. translators: Column heading in the email to the merchant about prices below the lowest margin.
 #: src/Catalogue/ArchiveIndexBuild.php:245 templates/admin/price-example.php:26
 #: templates/admin/product-prices.php:97 templates/admin/product-prices.php:114
-#: templates/emails/margin-floor.php:35
+#: templates/emails/margin-floor.php:37
 msgid "Price"
 msgstr "Preis"
 
@@ -7490,11 +7491,11 @@ msgid "Design approved"
 msgstr "Design freigegeben"
 
 #. translators: Name of an email to the merchant, shown in WooCommerce > Settings > Emails.
-#: src/Emails/MarginFloorEmail.php:43
+#: src/Emails/MarginFloorEmail.php:52
 msgid "Pixonaut margin below the lowest margin"
 msgstr "Pixonaut: Marge unter der Mindestmarge"
 
-#: src/Emails/MarginFloorEmail.php:44
+#: src/Emails/MarginFloorEmail.php:53
 msgid ""
 "Sent to the store once a day when the margin of a price, against what the "
 "printshop charges for it and its shipping, fell below the lowest margin set "
@@ -7506,12 +7507,12 @@ msgstr ""
 "gefallen ist."
 
 #. translators: Default subject of the email to the merchant. {site_title} is filled in by WooCommerce; keep it as written.
-#: src/Emails/MarginFloorEmail.php:53
+#: src/Emails/MarginFloorEmail.php:62
 msgid "[{site_title}]: Prices below your lowest margin"
 msgstr "[{site_title}]: Preise unter Ihrer Mindestmarge"
 
 #. translators: Default heading at the top of the email to the merchant.
-#: src/Emails/MarginFloorEmail.php:58
+#: src/Emails/MarginFloorEmail.php:67
 msgid "Prices below your lowest margin"
 msgstr "Preise unter Ihrer Mindestmarge"
 
@@ -9403,7 +9404,7 @@ msgstr "Bestellnummer"
 #. translators: Label of a row in the personal data export the customer receives; the value is the product name.
 #. translators: Column heading in the email to the merchant about prices below the lowest margin.
 #: src/Privacy/PersonalDataExporter.php:100
-#: templates/admin/product-prices.php:95 templates/emails/margin-floor.php:34
+#: templates/admin/product-prices.php:95 templates/emails/margin-floor.php:36
 msgid "Product"
 msgstr "Produkt"
 
@@ -12071,7 +12072,7 @@ msgstr "Beispiel"
 #. translators: Column of the Prices table of the product edit page: what the printshop charges for the product and its shipping.
 #. translators: Column heading in the email to the merchant about prices below the lowest margin: what the printshop charges, with shipping.
 #: templates/admin/price-example.php:25 templates/admin/product-prices.php:96
-#: templates/admin/product-prices.php:108 templates/emails/margin-floor.php:36
+#: templates/admin/product-prices.php:108 templates/emails/margin-floor.php:38
 msgid "Cost"
 msgstr "Kosten"
 
@@ -12086,7 +12087,7 @@ msgstr "Deckungsbeitrag"
 #. translators: Column of the Prices table of the product edit page: the share of the price left after the cost.
 #. translators: Column heading in the email to the merchant about prices below the lowest margin.
 #: templates/admin/price-example.php:28 templates/admin/product-prices.php:98
-#: templates/admin/product-prices.php:115 templates/emails/margin-floor.php:37
+#: templates/admin/product-prices.php:115 templates/emails/margin-floor.php:39
 msgid "Margin"
 msgstr "Marge"
 
@@ -13738,8 +13739,8 @@ msgstr ""
 
 #. translators: %s: the lowest margin the store accepts, such as 25.0 %. Email to the merchant.
 #. translators: %s: the lowest margin the store accepts, such as 25.0 %. Plain text email to the merchant.
-#: templates/emails/margin-floor.php:26
-#: templates/emails/plain/margin-floor.php:22
+#: templates/emails/margin-floor.php:28
+#: templates/emails/plain/margin-floor.php:24
 #, php-format
 msgid ""
 "The margin of these prices fell below your lowest margin of %s, against what "
@@ -13749,8 +13750,22 @@ msgstr ""
 "gemessen an dem, was die Druckerei für das Produkt und seinen Versand "
 "berechnet, ohne MwSt.:"
 
-#: templates/emails/margin-floor.php:56
-#: templates/emails/plain/margin-floor.php:37
+#. translators: %d: how many more prices. Email to the merchant about prices below the lowest margin, after the table of those it names.
+#. translators: %d: how many more prices. Plain text email to the merchant about prices below the lowest margin, after the prices it names.
+#: templates/emails/margin-floor.php:64
+#: templates/emails/plain/margin-floor.php:43
+#, php-format
+msgid ""
+"%d more price fell below your lowest margin and will be named in a later "
+"email."
+msgid_plural ""
+"%d more prices fell below your lowest margin and will be named in later "
+"emails."
+msgstr[0] "%d weiterer Preis ist unter Ihre Mindestmarge gefallen und wird in einer späteren E-Mail genannt."
+msgstr[1] "%d weitere Preise sind unter Ihre Mindestmarge gefallen und werden in späteren E-Mails genannt."
+
+#: templates/emails/margin-floor.php:72
+#: templates/emails/plain/margin-floor.php:48
 msgid ""
 "Each price is named once, until its margin is back at your lowest margin and "
 "falls below it again."
@@ -13786,7 +13801,7 @@ msgstr ""
 "Öffnen Sie die Bestellung; in den Bestellhinweisen steht, was passiert ist."
 
 #. translators: 1: the price, 2: what the printshop charges for the product and its shipping, 3: the margin, such as 22.4 %. Plain text email to the merchant.
-#: templates/emails/plain/margin-floor.php:30
+#: templates/emails/plain/margin-floor.php:32
 #, php-format
 msgid "Price %1$s, cost %2$s, margin %3$s"
 msgstr "Preis %1$s, Kosten %2$s, Marge %3$s"

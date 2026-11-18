@@ -330,6 +330,18 @@ final class ProductPricing {
 	}
 
 	/**
+	 * Whether a product's or variation's cost is known but cannot be told in
+	 * the store's currency for now: there is no exchange rate for its
+	 * currency, or the rates are over a week old.
+	 *
+	 * @param WC_Product $item The product or variation.
+	 */
+	public function awaits_rate( WC_Product $item ): bool {
+		$flag = $this->converter->in_store( self::known_cost( $item, PriceState::stored_on( $item ) ) )->flag;
+		return PriceState::FLAG_CURRENCY === $flag || PriceState::FLAG_RATE_STALE === $flag;
+	}
+
+	/**
 	 * Reads a product's costs from Pixonaut again, and settles its prices
 	 * that follow the rule: kept, changed or flagged. Every cost is read
 	 * before any is stored, so a read that fails stores nothing.
