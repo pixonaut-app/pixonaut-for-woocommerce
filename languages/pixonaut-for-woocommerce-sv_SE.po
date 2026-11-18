@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:02:24+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:06:30+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: sv_SE\n"
@@ -302,6 +302,29 @@ msgid ""
 msgstr ""
 "Dess slug utan `pa_`, det namn det har utan ett eget, så länge det är ledigt."
 
+#: src/Abilities/BlankOptionRows.php:70
+msgid ""
+"The blank option the attribute stands for, as Pixonaut writes it; null when "
+"it is not linked."
+msgstr "Grundproduktens alternativ som attributet står för, som Pixonaut skriver det; null när det inte är kopplat."
+
+#: src/Abilities/BlankOptionRows.php:82
+msgid "The option value the value was linked to; null when it was given none."
+msgstr "Alternativets värde som värdet kopplades till; null när det inte fått något."
+
+#: src/Abilities/BlankOptionRows.php:86
+msgid ""
+"The option value it stands for: the one it was linked to, else the option's "
+"value of its name; null when it is not linked, and then shows as text."
+msgstr "Alternativets värde som det står för: det som det kopplades till, annars alternativets värde med samma namn; null när det inte är kopplat och då visas som text."
+
+#: src/Abilities/BlankOptionRows.php:93
+msgid ""
+"The options the attribute can be linked to, each with its values: those of "
+"the blanks the products with this attribute use, themselves or through their "
+"variations."
+msgstr "Alternativen som attributet kan kopplas till, vart och ett med sina värden: de från grundprodukterna som produkterna med detta attribut använder, själva eller genom sina varianter."
+
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
 msgstr "Landets tvåbokstaviga ISO-kod, t.ex. `SE`."
@@ -554,6 +577,27 @@ msgstr ""
 "redigerbar text (null så länge den följer arbetsytans) samt `prints_with` "
 "den typ och tolerans som butikens tryckfiler får. Null medan anslutningen är "
 "pausad eller Pixonaut inte gick att nå."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetAttributeBlankOptions.php:36
+msgid "Read the blank options attributes stand for"
+msgstr "Läs vilka grundproduktalternativ attributen står för"
+
+#: src/Abilities/GetAttributeBlankOptions.php:37
+msgid ""
+"Reads, for every global attribute or the one given, the option of the "
+"Pixonaut blank it stands for (a frame colour attribute for the blank's "
+"Color), the option value each of its values stands for, and `options`: the "
+"options it can be linked to, each with its values, from the blanks its "
+"products use. A linked attribute's values pick the blank's variant and show "
+"in the designer as the option values' colour or picture swatches; a value "
+"whose `stands_for` is null is not linked and shows as text. Link one with "
+"`set-attribute-blank-option`."
+msgstr "Läser, för varje globalt attribut eller det angivna, vilket alternativ i Pixonaut-grundprodukten det står för (ett attribut för ramfärg står för grundproduktens Color), vilket av alternativets värden varje värde står för, och `options`: alternativen det kan kopplas till, vart och ett med sina värden, från grundprodukterna som dess produkter använder. Ett kopplat attributs värden väljer grundproduktvariant och visas i designverktyget som alternativvärdenas färg- eller bildknappar; ett värde vars `stands_for` är null är inte kopplat och visas som text. Koppla ett med `set-attribute-blank-option`."
+
+#: src/Abilities/GetAttributeBlankOptions.php:44
+msgid "Only this global attribute, by id."
+msgstr "Bara detta globala attribut, angivet med id."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetAttributeQueryNames.php:26
@@ -838,7 +882,10 @@ msgid ""
 "The rule the product is priced by: margin and tolerance in percent, fixed "
 "(added to the price excluding tax on top of the margin), step, ending, min "
 "and max as amounts; empty for none."
-msgstr "Regeln som produkten prissätts efter: marginal och tolerans i procent, fast belopp (läggs på priset exklusive moms utöver marginalen), steg, slut, lägsta och högsta pris som belopp; tom när det inte finns någon."
+msgstr ""
+"Regeln som produkten prissätts efter: marginal och tolerans i procent, fast "
+"belopp (läggs på priset exklusive moms utöver marginalen), steg, slut, "
+"lägsta och högsta pris som belopp; tom när det inte finns någon."
 
 #: src/Abilities/GetProductPrices.php:141
 msgid ""
@@ -1648,7 +1695,11 @@ msgid ""
 "margin and tolerance in percent, fixed (added to the price excluding tax on "
 "top of the margin), step, ending, min and max as amounts. A part left out or "
 "empty is left to the store."
-msgstr "De delar av regeln som den här produkten ändrar, i stället för dem den har: marginal och tolerans i procent, fast belopp (läggs på priset exklusive moms utöver marginalen), steg, slut, lägsta och högsta pris som belopp. En del som utelämnas eller är tom överlåts till butiken."
+msgstr ""
+"De delar av regeln som den här produkten ändrar, i stället för dem den har: "
+"marginal och tolerans i procent, fast belopp (läggs på priset exklusive moms "
+"utöver marginalen), steg, slut, lägsta och högsta pris som belopp. En del "
+"som utelämnas eller är tom överlåts till butiken."
 
 #: src/Abilities/PriceProduct.php:103
 msgid "How many prices changed, or would."
@@ -2081,7 +2132,19 @@ msgid ""
 "printshop says the chosen variation takes, which Pixonaut reads with its "
 "cost, and `delivery_time_handling_days` the days of its own the store adds "
 "to that."
-msgstr "Ger butikens prisregel, enligt vilken priserna följer tryckeriets kostnader: målmarginalen och det fasta beloppet per artikel utöver den (pris exklusive moms = kostnad ÷ (1 − marginal) + fast belopp), toleransen kring den marginal som regelns eget pris ger vid en kostnad, prissteget och vad priser slutar på, lägsta och högsta pris, valutabufferten som läggs på en kostnad som räknats om från en annan valuta, och om priser ändras av sig själva när en kostnad ändras. Belopp och procentsatser är decimalsträngar, tomma när det inte finns något. Utan målmarginal har butiken ingen regel. Även butikens valuta, och om priser anges inklusive moms. `delivery_time_show` anger om en produktsida visar hur lång tid tryckeriet säger att den valda varianten tar, vilket Pixonaut läser in tillsammans med kostnaden, och `delivery_time_handling_days` de egna dagar som butiken lägger till."
+msgstr ""
+"Ger butikens prisregel, enligt vilken priserna följer tryckeriets kostnader: "
+"målmarginalen och det fasta beloppet per artikel utöver den (pris exklusive "
+"moms = kostnad ÷ (1 − marginal) + fast belopp), toleransen kring den "
+"marginal som regelns eget pris ger vid en kostnad, prissteget och vad priser "
+"slutar på, lägsta och högsta pris, valutabufferten som läggs på en kostnad "
+"som räknats om från en annan valuta, och om priser ändras av sig själva när "
+"en kostnad ändras. Belopp och procentsatser är decimalsträngar, tomma när "
+"det inte finns något. Utan målmarginal har butiken ingen regel. Även "
+"butikens valuta, och om priser anges inklusive moms. `delivery_time_show` "
+"anger om en produktsida visar hur lång tid tryckeriet säger att den valda "
+"varianten tar, vilket Pixonaut läser in tillsammans med kostnaden, och "
+"`delivery_time_handling_days` de egna dagar som butiken lägger till."
 
 #: src/Abilities/ReadPricingSettings.php:134
 msgid "The currency prices are in, as its code."
@@ -2092,7 +2155,10 @@ msgid ""
 "Whether prices are entered including tax. The price step, ending, lowest and "
 "highest price count on the price as entered; the margin and the fixed amount "
 "count on it excluding tax."
-msgstr "Om priser anges inklusive moms. Prissteget, slutet samt lägsta och högsta pris räknas på priset så som det anges; marginalen och det fasta beloppet räknas på priset exklusive moms."
+msgstr ""
+"Om priser anges inklusive moms. Prissteget, slutet samt lägsta och högsta "
+"pris räknas på priset så som det anges; marginalen och det fasta beloppet "
+"räknas på priset exklusive moms."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/RecheckProducts.php:45
@@ -2210,6 +2276,71 @@ msgstr ""
 "Pixonaut kunde inte återställa alternativets layout. Försök igen om en stund."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetAttributeBlankOption.php:40
+msgid "Link an attribute to a blank option"
+msgstr "Koppla ett attribut till ett grundproduktalternativ"
+
+#: src/Abilities/SetAttributeBlankOption.php:41
+msgid ""
+"Links a global attribute to an option of the Pixonaut blanks its products "
+"use, and its values to the option's values, as its edit screen's \"Blank "
+"option\" does: a frame colour attribute to the blank's Color, its value "
+"Svart to Black. Its values then pick the blank's variant and show in the "
+"designer as the option values' colour or picture swatches. `option` and each "
+"value are named as `get-attribute-blank-options` lists them in `options`. A "
+"value given an empty `value`, or not linked yet, stands for the option's "
+"value of its name; values not given keep their link while the option stays "
+"the same, and lose it when it changes. An empty `option` unlinks the "
+"attribute. Products with the attribute are re-checked in the background. The "
+"answer is the attribute's row; a `503` when the re-check could not be "
+"queued, the link being saved."
+msgstr "Kopplar ett globalt attribut till ett alternativ i Pixonaut-grundprodukterna som dess produkter använder, och dess värden till alternativets värden, som fältet ”Grundproduktens alternativ” på attributets redigeringssida gör: ett attribut för ramfärg till grundproduktens Color, dess värde Svart till Black. Dess värden väljer då grundproduktvariant och visas i designverktyget som alternativvärdenas färg- eller bildknappar. `option` och varje värde anges som `get-attribute-blank-options` listar dem i `options`. Ett värde som får ett tomt `value`, eller som inte är kopplat än, står för alternativets värde med samma namn; värden som inte anges behåller sin koppling så länge alternativet är detsamma och förlorar den när det byts. Ett tomt `option` tar bort attributets koppling. Produkterna med attributet kontrolleras på nytt i bakgrunden. Svaret är attributets rad; en `503` när den nya kontrollen inte kunde köas, men kopplingen är sparad."
+
+#: src/Abilities/SetAttributeBlankOption.php:48
+#: src/Abilities/SetAttributeQueryName.php:38
+#: src/Abilities/SetAttributeSplitListing.php:44
+msgid "A global attribute, by id."
+msgstr "Ett globalt attribut, angivet med id."
+
+#: src/Abilities/SetAttributeBlankOption.php:62
+msgid "One of the attribute's values, by term id; or name it by `slug`."
+msgstr "Ett av attributets värden, angivet med term-id; eller ange det med `slug`."
+
+#: src/Abilities/SetAttributeBlankOption.php:98
+#: src/Abilities/SetAttributeQueryName.php:69
+#: src/Abilities/SetAttributeSplitListing.php:92
+msgid "No global attribute has this id."
+msgstr "Inget globalt attribut har detta id."
+
+#. translators: 1: the blank option asked for. 2: the options there are, comma-separated. Error an AI assistant or an MCP client reads.
+#: src/Abilities/SetAttributeBlankOption.php:109
+#, php-format
+msgid ""
+"No blank the products with this attribute use has the option \"%1$s\". "
+"Options: %2$s."
+msgstr "Ingen grundprodukt som produkterna med detta attribut använder har alternativet ”%1$s”. Alternativ: %2$s."
+
+#: src/Abilities/SetAttributeBlankOption.php:117
+msgid ""
+"A value given is not one of the attribute's values: name each by its "
+"`term_id` or `slug`."
+msgstr "Ett angivet värde är inte ett av attributets värden: ange vart och ett med dess `term_id` eller `slug`."
+
+#. translators: 1: the option value asked for. 2: the blank option. 3: its values, comma-separated. Error an AI assistant or an MCP client reads.
+#: src/Abilities/SetAttributeBlankOption.php:123
+#, php-format
+msgid "\"%1$s\" is not a value of the option \"%2$s\". Values: %3$s."
+msgstr "”%1$s” är inte ett värde i alternativet ”%2$s”. Värden: %3$s."
+
+#. translators: Error an AI assistant or an MCP client reads. `recheck-products` is the name of another ability; keep it as it is.
+#: src/Abilities/SetAttributeBlankOption.php:147
+msgid ""
+"The link is saved, but the products with this attribute could not be queued "
+"for a re-check, so they keep the blank variants they had. Run `recheck-"
+"products` to re-check them."
+msgstr "Kopplingen är sparad, men produkterna med detta attribut kunde inte köas för en ny kontroll, så de behåller de grundproduktvarianter de hade. Kör `recheck-products` för att kontrollera dem på nytt."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
 msgid "Set the name an attribute goes by in the shop's addresses"
 msgstr "Ange namnet som ett attribut har i butikens webbadresser"
@@ -2232,16 +2363,6 @@ msgstr ""
 "läser från en webbadress, eller som ett annat attribut redan har, nekas. "
 "Länkar som delats med det gamla namnet väljer inte längre värdet. Svaret är "
 "attributets namn nu."
-
-#: src/Abilities/SetAttributeQueryName.php:38
-#: src/Abilities/SetAttributeSplitListing.php:44
-msgid "A global attribute, by id."
-msgstr "Ett globalt attribut, angivet med id."
-
-#: src/Abilities/SetAttributeQueryName.php:69
-#: src/Abilities/SetAttributeSplitListing.php:92
-msgid "No global attribute has this id."
-msgstr "Inget globalt attribut har detta id."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeSplitListing.php:36
@@ -5059,7 +5180,7 @@ msgctxt "value names beside swatches"
 msgid "Hide"
 msgstr "Dölj"
 
-#: src/Admin/VariantField.php:84
+#: src/Admin/VariantField.php:85
 msgid ""
 "Pixonaut could not be reached to list the blank’s variants. Try again later."
 msgstr ""
@@ -5067,11 +5188,11 @@ msgstr ""
 "Försök igen senare."
 
 #. translators: Option in the blank variant picker on the product edit page, shown to the merchant: find the variant from the product's own attributes.
-#: src/Admin/VariantField.php:109 src/Admin/VariantPairing.php:204
+#: src/Admin/VariantField.php:110 src/Admin/VariantPairing.php:205
 msgid "Find automatically"
 msgstr "Hitta automatiskt"
 
-#: src/Admin/VariantField.php:114
+#: src/Admin/VariantField.php:115
 msgid ""
 "Found from this variation’s attributes; it does not fall back to the "
 "product’s."
@@ -5079,41 +5200,41 @@ msgstr ""
 "Hittas utifrån den här variantens attribut; produktens attribut används inte "
 "i stället."
 
-#: src/Admin/VariantField.php:115
+#: src/Admin/VariantField.php:116
 msgid "Found from this product’s attributes."
 msgstr "Hittas utifrån den här produktens attribut."
 
 #. translators: %s: the variant's options, e.g. "Color: Red, Size: M". Option in the blank variant picker on the product edit page: the variant found from the product's attributes.
-#: src/Admin/VariantField.php:130
+#: src/Admin/VariantField.php:131
 #, php-format
 msgid "Blank variant: %s (found automatically)"
 msgstr "Grundproduktvariant: %s (hittades automatiskt)"
 
 #. translators: 1: a print partner, such as Gelato, whose product the blank is; 2: the variant's options, e.g. "28x40\" / 70x100cm". Option in the blank variant picker on the product edit page: the variant found from the product's attributes.
-#: src/Admin/VariantField.php:132
+#: src/Admin/VariantField.php:133
 #, php-format
 msgid "%1$s variant: %2$s (found automatically)"
 msgstr "%1$s-variant: %2$s (hittades automatiskt)"
 
 #. translators: %s: the variant's options, e.g. "Color: Red, Size: M".
-#: src/Admin/VariantField.php:213 src/Admin/VariantPairing.php:91
+#: src/Admin/VariantField.php:214 src/Admin/VariantPairing.php:92
 #, php-format
 msgid "%s (retired)"
 msgstr "%s (utgången)"
 
-#: src/Admin/VariantField.php:229
+#: src/Admin/VariantField.php:230
 msgid "No blank variant found: pick one."
 msgstr "Ingen grundproduktvariant hittades: välj en."
 
 #. translators: %s: a print partner, such as Gelato, whose product the blank is. Shown under the blank variant picker on the product edit page.
 #. translators: %s: a printshop, such as Gelato, or "Blank". Under a variation's variant in the pairing table of the product edit page.
-#: src/Admin/VariantField.php:231
+#: src/Admin/VariantField.php:232
 #: templates/admin/product-variant-pairing.php:65
 #, php-format
 msgid "No %s variant found: pick one."
 msgstr "Ingen %s-variant hittades: välj en."
 
-#: src/Admin/VariantField.php:235
+#: src/Admin/VariantField.php:236
 msgid ""
 "This variant is retired, so customers cannot buy this. Pick another variant."
 msgstr ""
@@ -5121,7 +5242,7 @@ msgstr ""
 "Välj en annan variant."
 
 #. translators: %l: the sides with no photo, e.g. "Front and Back".
-#: src/Admin/VariantField.php:244
+#: src/Admin/VariantField.php:245
 msgid ""
 "No view the product is shown in has a photo of this variant on %l, so "
 "customers cannot design it."
@@ -5161,19 +5282,19 @@ msgstr ""
 "Kunder kan inte köpa alla varianter av %1$s: %2$s. Välj varianten i dess "
 "Pixonaut-fält."
 
-#: src/Admin/VariantPairing.php:124
+#: src/Admin/VariantPairing.php:125
 msgid "Blank"
 msgstr "Grundprodukt"
 
 #. translators: %s: the variant found from the variation's attributes, such as "28x40\" / 70x100cm". Option in the variant pairing table of the product edit page.
-#: src/Admin/VariantPairing.php:203
+#: src/Admin/VariantPairing.php:204
 #, php-format
 msgid "%s (found automatically)"
 msgstr "%s (hittades automatiskt)"
 
 #. translators: 1: a print area's width in mm; 2: its height in mm.
 #. translators: 1: width, 2: height, both in millimetres.
-#: src/Admin/VariantPairing.php:210 src/Catalogue/PrintSize.php:88
+#: src/Admin/VariantPairing.php:211 src/Catalogue/PrintSize.php:88
 #, php-format
 msgid "%1$s × %2$s mm"
 msgstr "%1$s × %2$s mm"
@@ -8786,7 +8907,11 @@ msgid ""
 "item costs you whatever its price, such as ads, support, payment and "
 "reprints. Cheap items then get a high margin and expensive ones a lower one. "
 "Empty adds nothing."
-msgstr "Läggs på varje pris, exklusive moms, utöver målmarginalen: vad varje artikel kostar dig oavsett pris, till exempel annonser, support, betalning och omtryck. Billiga artiklar får då hög marginal och dyra en lägre. Tomt lägger inte till något."
+msgstr ""
+"Läggs på varje pris, exklusive moms, utöver målmarginalen: vad varje artikel "
+"kostar dig oavsett pris, till exempel annonser, support, betalning och "
+"omtryck. Billiga artiklar får då hög marginal och dyra en lägre. Tomt lägger "
+"inte till något."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of percentage points either side of the target margin.
 #: src/Settings/Settings.php:525
@@ -8799,7 +8924,11 @@ msgid ""
 "leaves at that cost before the price moves. With a target of 50, no fixed "
 "amount and a tolerance of 10, a price is kept while its margin is between 40 "
 "and 60."
-msgstr "Hur långt en marginal får avvika, åt endera hållet, från den marginal som regelns eget pris ger vid den kostnaden innan priset ändras. Med målet 50, inget fast belopp och toleransen 10 behålls ett pris så länge marginalen ligger mellan 40 och 60."
+msgstr ""
+"Hur långt en marginal får avvika, åt endera hållet, från den marginal som "
+"regelns eget pris ger vid den kostnaden innan priset ändras. Med målet 50, "
+"inget fast belopp och toleransen 10 behålls ett pris så länge marginalen "
+"ligger mellan 40 och 60."
 
 #: src/Settings/Settings.php:537
 msgid ""
@@ -9481,6 +9610,63 @@ msgstr ""
 #, php-format
 msgid "The attribute was saved without this name in addresses: %s"
 msgstr "Attributet sparades utan det här namnet i webbadresser: %s"
+
+#. translators: Label of a select on the screen that edits a product attribute: the option of the Pixonaut blank (product base) the attribute stands for, such as a frame's Color.
+#: templates/admin/blank-option-field.php:22
+msgid "Blank option"
+msgstr "Grundproduktens alternativ"
+
+#. translators: Option of the "Blank option" select on the screen that edits a product attribute: the attribute stands for no option of the blank.
+#: templates/admin/blank-option-field.php:24
+msgctxt "blank option of an attribute"
+msgid "Not linked"
+msgstr "Inte kopplat"
+
+#. translators: Help under the "Blank option" select on the screen that edits a product attribute.
+#: templates/admin/blank-option-field.php:26
+msgid ""
+"The option of the Pixonaut blank this attribute stands for, such as a "
+"frame's colour. Its values then pick the blank's variant and show in the "
+"designer as the option's colour or picture swatches. The options listed are "
+"those of the blanks the products with this attribute use."
+msgstr "Alternativet i Pixonaut-grundprodukten som detta attribut står för, till exempel en rams färg. Dess värden väljer då grundproduktvariant och visas i designverktyget som alternativets färg- eller bildknappar. Alternativen som listas kommer från grundprodukterna som produkterna med detta attribut använder."
+
+#. translators: Column heading in the table of an attribute's values on the screen that edits a product attribute.
+#: templates/admin/blank-option-field.php:28
+msgctxt "attribute value"
+msgid "Value"
+msgstr "Värde"
+
+#. translators: Column heading in the table of an attribute's values: the value of the blank's option each one stands for.
+#: templates/admin/blank-option-field.php:30
+msgid "Blank option value"
+msgstr "Värde i grundproduktens alternativ"
+
+#. translators: Option of a value's "Blank option value" select: the value stands for no value of the blank's option.
+#: templates/admin/blank-option-field.php:32
+msgctxt "blank option value of an attribute value"
+msgid "Not linked"
+msgstr "Inte kopplat"
+
+#. translators: %s: the blank option's value of the same name as the attribute value. Option of a value's "Blank option value" select: the value stands for the option value of its name.
+#: templates/admin/blank-option-field.php:34
+#, php-format
+msgid "Same name: %s"
+msgstr "Samma namn: %s"
+
+#. translators: Help under the table of an attribute's values on the screen that edits a product attribute.
+#: templates/admin/blank-option-field.php:36
+msgid ""
+"A value that is not linked shows as text and picks no variant by this "
+"option. Save after choosing another option to list its values."
+msgstr "Ett värde som inte är kopplat visas som text och väljer ingen variant genom detta alternativ. Spara efter att du valt ett annat alternativ för att lista dess värden."
+
+#. translators: Shown under the "Blank option" select on the screen that edits a product attribute, while the attribute stands for no option.
+#: templates/admin/blank-option-field.php:40
+msgid ""
+"Not linked: its values show as text, and pick the blank's variant only where "
+"they have the names of an option and its values."
+msgstr "Inte kopplat: värdena visas som text och väljer grundproduktvariant bara där de har namnen på ett alternativ och dess värden."
 
 #: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."
@@ -10726,11 +10912,15 @@ msgstr "Marginal"
 msgid ""
 "What the rule prices these costs at, as you change the fields above. Prices "
 "include %s %% VAT; contribution and margin are worked out without it."
-msgstr "Vad regeln sätter för pris på de här kostnaderna medan du ändrar fälten ovan. Priserna inkluderar %s %% moms; täckningsbidrag och marginal räknas utan den."
+msgstr ""
+"Vad regeln sätter för pris på de här kostnaderna medan du ändrar fälten "
+"ovan. Priserna inkluderar %s %% moms; täckningsbidrag och marginal räknas "
+"utan den."
 
 #: templates/admin/price-example.php:48
 msgid "What the rule prices these costs at, as you change the fields above."
-msgstr "Vad regeln sätter för pris på de här kostnaderna medan du ändrar fälten ovan."
+msgstr ""
+"Vad regeln sätter för pris på de här kostnaderna medan du ändrar fälten ovan."
 
 #. translators: Label of the printshop that makes the product's orders. Admin product page.
 #: templates/admin/product-blank.php:25 templates/admin/product-fields.php:144
@@ -10997,13 +11187,19 @@ msgid ""
 "and contribution each price leaves. Apply sets every price to the step "
 "nearest the target margin plus the fixed amount; from then on the prices "
 "follow the rule."
-msgstr "Vad tryckeriet tar betalt för produkten och frakten, och vilken marginal och vilket täckningsbidrag varje pris ger. Tillämpa sätter varje pris till det steg som ligger närmast målmarginalen plus det fasta beloppet; därefter följer priserna regeln."
+msgstr ""
+"Vad tryckeriet tar betalt för produkten och frakten, och vilken marginal och "
+"vilket täckningsbidrag varje pris ger. Tillämpa sätter varje pris till det "
+"steg som ligger närmast målmarginalen plus det fasta beloppet; därefter "
+"följer priserna regeln."
 
 #: templates/admin/product-prices.php:57
 msgid ""
 "Margins, contributions and the fixed amount are worked out on the price "
 "excluding VAT."
-msgstr "Marginaler, täckningsbidrag och det fasta beloppet räknas på priset exklusive moms."
+msgstr ""
+"Marginaler, täckningsbidrag och det fasta beloppet räknas på priset "
+"exklusive moms."
 
 #: templates/admin/product-prices.php:61
 msgid "Pricing rule for this product"

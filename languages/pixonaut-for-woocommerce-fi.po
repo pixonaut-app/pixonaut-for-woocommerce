@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:02:24+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:06:30+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: fi\n"
@@ -303,6 +303,29 @@ msgstr ""
 "Sen slug ilman `pa_`-etuliitettä: nimi, jota se käyttää ilman omaa nimeä, "
 "kun se on vapaana."
 
+#: src/Abilities/BlankOptionRows.php:70
+msgid ""
+"The blank option the attribute stands for, as Pixonaut writes it; null when "
+"it is not linked."
+msgstr "Pohjatuotteen vaihtoehto, jota ominaisuus vastaa, Pixonautin kirjoittamana; null, kun sitä ei ole linkitetty."
+
+#: src/Abilities/BlankOptionRows.php:82
+msgid "The option value the value was linked to; null when it was given none."
+msgstr "Vaihtoehdon arvo, johon arvo linkitettiin; null, kun sille ei annettu arvoa."
+
+#: src/Abilities/BlankOptionRows.php:86
+msgid ""
+"The option value it stands for: the one it was linked to, else the option's "
+"value of its name; null when it is not linked, and then shows as text."
+msgstr "Vaihtoehdon arvo, jota se vastaa: se, johon se linkitettiin, muuten vaihtoehdon samanniminen arvo; null, kun sitä ei ole linkitetty, ja se näkyy silloin tekstinä."
+
+#: src/Abilities/BlankOptionRows.php:93
+msgid ""
+"The options the attribute can be linked to, each with its values: those of "
+"the blanks the products with this attribute use, themselves or through their "
+"variations."
+msgstr "Vaihtoehdot, joihin ominaisuuden voi linkittää, kukin arvoineen: niiden pohjatuotteiden vaihtoehdot, joita tämän ominaisuuden tuotteet käyttävät itse tai muunnelmiensa kautta."
+
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
 msgstr "Maan kaksikirjaiminen ISO-koodi, esim. `SE`."
@@ -554,6 +577,27 @@ msgstr ""
 "tekstin toleranssi (null, kun kauppa noudattaa työtilan asetuksia), sekä "
 "`prints_with`, muoto ja toleranssi, joilla kaupan painotiedostot tehdään. "
 "Null, kun yhteys on keskeytetty tai Pixonautiin ei saatu yhteyttä."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetAttributeBlankOptions.php:36
+msgid "Read the blank options attributes stand for"
+msgstr "Lue, mitä pohjatuotteen vaihtoehtoja ominaisuudet vastaavat"
+
+#: src/Abilities/GetAttributeBlankOptions.php:37
+msgid ""
+"Reads, for every global attribute or the one given, the option of the "
+"Pixonaut blank it stands for (a frame colour attribute for the blank's "
+"Color), the option value each of its values stands for, and `options`: the "
+"options it can be linked to, each with its values, from the blanks its "
+"products use. A linked attribute's values pick the blank's variant and show "
+"in the designer as the option values' colour or picture swatches; a value "
+"whose `stands_for` is null is not linked and shows as text. Link one with "
+"`set-attribute-blank-option`."
+msgstr "Lukee jokaisesta yleisestä ominaisuudesta tai annetusta ominaisuudesta, mitä Pixonaut-pohjatuotteen vaihtoehtoa se vastaa (kehyksen väri -ominaisuus pohjatuotteen Color-vaihtoehtoa), mitä vaihtoehdon arvoa kukin sen arvoista vastaa, ja `options`: vaihtoehdot, joihin sen voi linkittää, kukin arvoineen, sen tuotteiden käyttämistä pohjatuotteista. Linkitetyn ominaisuuden arvot valitsevat pohjatuotteen version ja näkyvät suunnittelutyökalussa vaihtoehdon arvojen väri- tai kuvapainikkeina; arvo, jonka `stands_for` on null, ei ole linkitetty ja näkyy tekstinä. Linkitä ominaisuus työkalulla `set-attribute-blank-option`."
+
+#: src/Abilities/GetAttributeBlankOptions.php:44
+msgid "Only this global attribute, by id."
+msgstr "Vain tämä yleinen ominaisuus id:n mukaan."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetAttributeQueryNames.php:26
@@ -837,7 +881,10 @@ msgid ""
 "The rule the product is priced by: margin and tolerance in percent, fixed "
 "(added to the price excluding tax on top of the margin), step, ending, min "
 "and max as amounts; empty for none."
-msgstr "Sääntö, jolla tuote hinnoitellaan: kate ja toleranssi prosentteina, kiinteä summa (lisätään verottomaan hintaan katteen päälle), askel, pääte, alin ja ylin hinta summina; tyhjä, kun sellaista ei ole."
+msgstr ""
+"Sääntö, jolla tuote hinnoitellaan: kate ja toleranssi prosentteina, kiinteä "
+"summa (lisätään verottomaan hintaan katteen päälle), askel, pääte, alin ja "
+"ylin hinta summina; tyhjä, kun sellaista ei ole."
 
 #: src/Abilities/GetProductPrices.php:141
 msgid ""
@@ -1661,7 +1708,11 @@ msgid ""
 "margin and tolerance in percent, fixed (added to the price excluding tax on "
 "top of the margin), step, ending, min and max as amounts. A part left out or "
 "empty is left to the store."
-msgstr "Säännön osat, joita tämä tuote muuttaa; ne korvaavat tuotteen nykyiset: kate ja toleranssi prosentteina, kiinteä summa (lisätään verottomaan hintaan katteen päälle), askel, pääte, alin ja ylin hinta summina. Pois jätetty tai tyhjä osa jätetään kaupalle."
+msgstr ""
+"Säännön osat, joita tämä tuote muuttaa; ne korvaavat tuotteen nykyiset: kate "
+"ja toleranssi prosentteina, kiinteä summa (lisätään verottomaan hintaan "
+"katteen päälle), askel, pääte, alin ja ylin hinta summina. Pois jätetty tai "
+"tyhjä osa jätetään kaupalle."
 
 #: src/Abilities/PriceProduct.php:103
 msgid "How many prices changed, or would."
@@ -2099,7 +2150,20 @@ msgid ""
 "printshop says the chosen variation takes, which Pixonaut reads with its "
 "cost, and `delivery_time_handling_days` the days of its own the store adds "
 "to that."
-msgstr "Antaa kaupan hinnoittelusäännön, jolla hinnat seuraavat painotalon kustannuksia: tavoitekate ja sen päälle tuleva kiinteä summa tuotetta kohden (veroton hinta = kustannus ÷ (1 − kate) + kiinteä summa), toleranssi sen katteen ympärillä, jonka säännön oma hinta jättää tietyllä kustannuksella, hinta-askel ja hintojen pääte, alin ja ylin hinta, valuuttapuskuri, joka lisätään toisesta valuutasta muunnettuun kustannukseen, ja muuttuvatko hinnat itsestään, kun kustannus muuttuu. Summat ja prosentit ovat desimaalimerkkijonoja, tyhjiä, kun arvoa ei ole. Ilman tavoitekatetta kaupalla ei ole sääntöä. Lisäksi kaupan valuutta ja se, syötetäänkö hinnat veroineen. `delivery_time_show` kertoo, näyttääkö tuotesivu, kuinka kauan valittu muunnelma painotalon mukaan kestää, minkä Pixonaut lukee kustannuksen yhteydessä, ja `delivery_time_handling_days` kaupan siihen lisäämät omat päivät."
+msgstr ""
+"Antaa kaupan hinnoittelusäännön, jolla hinnat seuraavat painotalon "
+"kustannuksia: tavoitekate ja sen päälle tuleva kiinteä summa tuotetta kohden "
+"(veroton hinta = kustannus ÷ (1 − kate) + kiinteä summa), toleranssi sen "
+"katteen ympärillä, jonka säännön oma hinta jättää tietyllä kustannuksella, "
+"hinta-askel ja hintojen pääte, alin ja ylin hinta, valuuttapuskuri, joka "
+"lisätään toisesta valuutasta muunnettuun kustannukseen, ja muuttuvatko "
+"hinnat itsestään, kun kustannus muuttuu. Summat ja prosentit ovat "
+"desimaalimerkkijonoja, tyhjiä, kun arvoa ei ole. Ilman tavoitekatetta "
+"kaupalla ei ole sääntöä. Lisäksi kaupan valuutta ja se, syötetäänkö hinnat "
+"veroineen. `delivery_time_show` kertoo, näyttääkö tuotesivu, kuinka kauan "
+"valittu muunnelma painotalon mukaan kestää, minkä Pixonaut lukee "
+"kustannuksen yhteydessä, ja `delivery_time_handling_days` kaupan siihen "
+"lisäämät omat päivät."
 
 #: src/Abilities/ReadPricingSettings.php:134
 msgid "The currency prices are in, as its code."
@@ -2110,7 +2174,10 @@ msgid ""
 "Whether prices are entered including tax. The price step, ending, lowest and "
 "highest price count on the price as entered; the margin and the fixed amount "
 "count on it excluding tax."
-msgstr "Syötetäänkö hinnat veroineen. Hinta-askel, pääte sekä alin ja ylin hinta koskevat hintaa sellaisena kuin se syötetään; kate ja kiinteä summa lasketaan verottomasta hinnasta."
+msgstr ""
+"Syötetäänkö hinnat veroineen. Hinta-askel, pääte sekä alin ja ylin hinta "
+"koskevat hintaa sellaisena kuin se syötetään; kate ja kiinteä summa "
+"lasketaan verottomasta hinnasta."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/RecheckProducts.php:45
@@ -2234,6 +2301,71 @@ msgstr ""
 "uudelleen."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetAttributeBlankOption.php:40
+msgid "Link an attribute to a blank option"
+msgstr "Linkitä ominaisuus pohjatuotteen vaihtoehtoon"
+
+#: src/Abilities/SetAttributeBlankOption.php:41
+msgid ""
+"Links a global attribute to an option of the Pixonaut blanks its products "
+"use, and its values to the option's values, as its edit screen's \"Blank "
+"option\" does: a frame colour attribute to the blank's Color, its value "
+"Svart to Black. Its values then pick the blank's variant and show in the "
+"designer as the option values' colour or picture swatches. `option` and each "
+"value are named as `get-attribute-blank-options` lists them in `options`. A "
+"value given an empty `value`, or not linked yet, stands for the option's "
+"value of its name; values not given keep their link while the option stays "
+"the same, and lose it when it changes. An empty `option` unlinks the "
+"attribute. Products with the attribute are re-checked in the background. The "
+"answer is the attribute's row; a `503` when the re-check could not be "
+"queued, the link being saved."
+msgstr "Linkittää yleisen ominaisuuden sen tuotteiden käyttämien Pixonaut-pohjatuotteiden vaihtoehtoon ja sen arvot vaihtoehdon arvoihin, kuten ominaisuuden muokkaussivun kenttä ”Pohjatuotteen vaihtoehto” tekee: kehyksen väri -ominaisuuden pohjatuotteen Color-vaihtoehtoon ja sen arvon Svart arvoon Black. Sen arvot valitsevat silloin pohjatuotteen version ja näkyvät suunnittelutyökalussa vaihtoehdon arvojen väri- tai kuvapainikkeina. `option` ja kukin arvo nimetään niin kuin `get-attribute-blank-options` ne luettelee kohdassa `options`. Arvo, jonka `value` on tyhjä tai jota ei ole vielä linkitetty, vastaa vaihtoehdon samannimistä arvoa; antamatta jätetyt arvot säilyttävät linkityksensä niin kauan kuin vaihtoehto pysyy samana ja menettävät sen, kun se vaihtuu. Tyhjä `option` poistaa ominaisuuden linkityksen. Ominaisuuden tuotteet tarkistetaan uudelleen taustalla. Vastaus on ominaisuuden rivi; `503`, kun uudelleentarkistusta ei voitu ajastaa, mutta linkitys on tallennettu."
+
+#: src/Abilities/SetAttributeBlankOption.php:48
+#: src/Abilities/SetAttributeQueryName.php:38
+#: src/Abilities/SetAttributeSplitListing.php:44
+msgid "A global attribute, by id."
+msgstr "Yleinen ominaisuus id:n mukaan."
+
+#: src/Abilities/SetAttributeBlankOption.php:62
+msgid "One of the attribute's values, by term id; or name it by `slug`."
+msgstr "Yksi ominaisuuden arvoista termin id:n mukaan; tai nimeä se `slug`-kentällä."
+
+#: src/Abilities/SetAttributeBlankOption.php:98
+#: src/Abilities/SetAttributeQueryName.php:69
+#: src/Abilities/SetAttributeSplitListing.php:92
+msgid "No global attribute has this id."
+msgstr "Millään yleisellä ominaisuudella ei ole tätä id:tä."
+
+#. translators: 1: the blank option asked for. 2: the options there are, comma-separated. Error an AI assistant or an MCP client reads.
+#: src/Abilities/SetAttributeBlankOption.php:109
+#, php-format
+msgid ""
+"No blank the products with this attribute use has the option \"%1$s\". "
+"Options: %2$s."
+msgstr "Millään pohjatuotteella, jota tämän ominaisuuden tuotteet käyttävät, ei ole vaihtoehtoa ”%1$s”. Vaihtoehdot: %2$s."
+
+#: src/Abilities/SetAttributeBlankOption.php:117
+msgid ""
+"A value given is not one of the attribute's values: name each by its "
+"`term_id` or `slug`."
+msgstr "Annettu arvo ei ole ominaisuuden arvo: nimeä kukin sen `term_id`- tai `slug`-kentällä."
+
+#. translators: 1: the option value asked for. 2: the blank option. 3: its values, comma-separated. Error an AI assistant or an MCP client reads.
+#: src/Abilities/SetAttributeBlankOption.php:123
+#, php-format
+msgid "\"%1$s\" is not a value of the option \"%2$s\". Values: %3$s."
+msgstr "”%1$s” ei ole vaihtoehdon ”%2$s” arvo. Arvot: %3$s."
+
+#. translators: Error an AI assistant or an MCP client reads. `recheck-products` is the name of another ability; keep it as it is.
+#: src/Abilities/SetAttributeBlankOption.php:147
+msgid ""
+"The link is saved, but the products with this attribute could not be queued "
+"for a re-check, so they keep the blank variants they had. Run `recheck-"
+"products` to re-check them."
+msgstr "Linkitys on tallennettu, mutta tämän ominaisuuden tuotteita ei voitu ajastaa uudelleentarkistukseen, joten ne säilyttävät aiemmat pohjatuotteen versionsa. Tarkista ne uudelleen ajamalla `recheck-products`."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
 msgid "Set the name an attribute goes by in the shop's addresses"
 msgstr "Aseta ominaisuuden nimi kaupan verkko-osoitteissa"
@@ -2256,16 +2388,6 @@ msgstr ""
 "verkko-osoitteesta tai joka on jo toisen ominaisuuden käytössä, hylätään. "
 "Vanhalla nimellä jaetut linkit eivät enää valitse arvoa. Vastaus on "
 "ominaisuuden nykyinen nimi."
-
-#: src/Abilities/SetAttributeQueryName.php:38
-#: src/Abilities/SetAttributeSplitListing.php:44
-msgid "A global attribute, by id."
-msgstr "Yleinen ominaisuus id:n mukaan."
-
-#: src/Abilities/SetAttributeQueryName.php:69
-#: src/Abilities/SetAttributeSplitListing.php:92
-msgid "No global attribute has this id."
-msgstr "Millään yleisellä ominaisuudella ei ole tätä id:tä."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeSplitListing.php:36
@@ -5101,7 +5223,7 @@ msgctxt "value names beside swatches"
 msgid "Hide"
 msgstr "Piilota"
 
-#: src/Admin/VariantField.php:84
+#: src/Admin/VariantField.php:85
 msgid ""
 "Pixonaut could not be reached to list the blank’s variants. Try again later."
 msgstr ""
@@ -5109,11 +5231,11 @@ msgstr ""
 "myöhemmin uudelleen."
 
 #. translators: Option in the blank variant picker on the product edit page, shown to the merchant: find the variant from the product's own attributes.
-#: src/Admin/VariantField.php:109 src/Admin/VariantPairing.php:204
+#: src/Admin/VariantField.php:110 src/Admin/VariantPairing.php:205
 msgid "Find automatically"
 msgstr "Etsi automaattisesti"
 
-#: src/Admin/VariantField.php:114
+#: src/Admin/VariantField.php:115
 msgid ""
 "Found from this variation’s attributes; it does not fall back to the "
 "product’s."
@@ -5121,41 +5243,41 @@ msgstr ""
 "Löydetään tämän muunnelman ominaisuuksista; tuotteen ominaisuuksia ei "
 "käytetä niiden sijaan."
 
-#: src/Admin/VariantField.php:115
+#: src/Admin/VariantField.php:116
 msgid "Found from this product’s attributes."
 msgstr "Löydetään tuotteen ominaisuuksista."
 
 #. translators: %s: the variant's options, e.g. "Color: Red, Size: M". Option in the blank variant picker on the product edit page: the variant found from the product's attributes.
-#: src/Admin/VariantField.php:130
+#: src/Admin/VariantField.php:131
 #, php-format
 msgid "Blank variant: %s (found automatically)"
 msgstr "Pohjatuotteen versio: %s (löydetty automaattisesti)"
 
 #. translators: 1: a print partner, such as Gelato, whose product the blank is; 2: the variant's options, e.g. "28x40\" / 70x100cm". Option in the blank variant picker on the product edit page: the variant found from the product's attributes.
-#: src/Admin/VariantField.php:132
+#: src/Admin/VariantField.php:133
 #, php-format
 msgid "%1$s variant: %2$s (found automatically)"
 msgstr "%1$s-versio: %2$s (löydetty automaattisesti)"
 
 #. translators: %s: the variant's options, e.g. "Color: Red, Size: M".
-#: src/Admin/VariantField.php:213 src/Admin/VariantPairing.php:91
+#: src/Admin/VariantField.php:214 src/Admin/VariantPairing.php:92
 #, php-format
 msgid "%s (retired)"
 msgstr "%s (poistettu käytöstä)"
 
-#: src/Admin/VariantField.php:229
+#: src/Admin/VariantField.php:230
 msgid "No blank variant found: pick one."
 msgstr "Pohjatuotteen versiota ei löytynyt: valitse versio."
 
 #. translators: %s: a print partner, such as Gelato, whose product the blank is. Shown under the blank variant picker on the product edit page.
 #. translators: %s: a printshop, such as Gelato, or "Blank". Under a variation's variant in the pairing table of the product edit page.
-#: src/Admin/VariantField.php:231
+#: src/Admin/VariantField.php:232
 #: templates/admin/product-variant-pairing.php:65
 #, php-format
 msgid "No %s variant found: pick one."
 msgstr "%s-versiota ei löytynyt: valitse versio."
 
-#: src/Admin/VariantField.php:235
+#: src/Admin/VariantField.php:236
 msgid ""
 "This variant is retired, so customers cannot buy this. Pick another variant."
 msgstr ""
@@ -5163,7 +5285,7 @@ msgstr ""
 "Valitse toinen versio."
 
 #. translators: %l: the sides with no photo, e.g. "Front and Back".
-#: src/Admin/VariantField.php:244
+#: src/Admin/VariantField.php:245
 msgid ""
 "No view the product is shown in has a photo of this variant on %l, so "
 "customers cannot design it."
@@ -5203,19 +5325,19 @@ msgstr ""
 "Asiakkaat eivät voi ostaa kaikkia tuotteen %1$s muunnelmia: %2$s. Valitse "
 "versio sen Pixonaut-kentissä."
 
-#: src/Admin/VariantPairing.php:124
+#: src/Admin/VariantPairing.php:125
 msgid "Blank"
 msgstr "Pohjatuote"
 
 #. translators: %s: the variant found from the variation's attributes, such as "28x40\" / 70x100cm". Option in the variant pairing table of the product edit page.
-#: src/Admin/VariantPairing.php:203
+#: src/Admin/VariantPairing.php:204
 #, php-format
 msgid "%s (found automatically)"
 msgstr "%s (löydetty automaattisesti)"
 
 #. translators: 1: a print area's width in mm; 2: its height in mm.
 #. translators: 1: width, 2: height, both in millimetres.
-#: src/Admin/VariantPairing.php:210 src/Catalogue/PrintSize.php:88
+#: src/Admin/VariantPairing.php:211 src/Catalogue/PrintSize.php:88
 #, php-format
 msgid "%1$s × %2$s mm"
 msgstr "%1$s × %2$s mm"
@@ -8823,7 +8945,11 @@ msgid ""
 "item costs you whatever its price, such as ads, support, payment and "
 "reprints. Cheap items then get a high margin and expensive ones a lower one. "
 "Empty adds nothing."
-msgstr "Lisätään jokaiseen verottomaan hintaan tavoitekatteen päälle: mitä kukin tuote maksaa sinulle hinnastaan riippumatta, kuten mainonta, asiakastuki, maksut ja uusintapainatukset. Halvat tuotteet saavat näin korkean katteen ja kalliit matalamman. Tyhjä ei lisää mitään."
+msgstr ""
+"Lisätään jokaiseen verottomaan hintaan tavoitekatteen päälle: mitä kukin "
+"tuote maksaa sinulle hinnastaan riippumatta, kuten mainonta, asiakastuki, "
+"maksut ja uusintapainatukset. Halvat tuotteet saavat näin korkean katteen ja "
+"kalliit matalamman. Tyhjä ei lisää mitään."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of percentage points either side of the target margin.
 #: src/Settings/Settings.php:525
@@ -8836,7 +8962,11 @@ msgid ""
 "leaves at that cost before the price moves. With a target of 50, no fixed "
 "amount and a tolerance of 10, a price is kept while its margin is between 40 "
 "and 60."
-msgstr "Kuinka paljon kate saa poiketa kumpaan tahansa suuntaan siitä katteesta, jonka säännön oma hinta jättää kyseisellä kustannuksella, ennen kuin hinta muuttuu. Kun tavoite on 50, kiinteää summaa ei ole ja toleranssi on 10, hinta säilyy niin kauan kuin kate on välillä 40–60."
+msgstr ""
+"Kuinka paljon kate saa poiketa kumpaan tahansa suuntaan siitä katteesta, "
+"jonka säännön oma hinta jättää kyseisellä kustannuksella, ennen kuin hinta "
+"muuttuu. Kun tavoite on 50, kiinteää summaa ei ole ja toleranssi on 10, "
+"hinta säilyy niin kauan kuin kate on välillä 40–60."
 
 #: src/Settings/Settings.php:537
 msgid ""
@@ -9519,6 +9649,63 @@ msgstr ""
 #, php-format
 msgid "The attribute was saved without this name in addresses: %s"
 msgstr "Ominaisuus tallennettiin ilman tätä nimeä verkko-osoitteissa: %s"
+
+#. translators: Label of a select on the screen that edits a product attribute: the option of the Pixonaut blank (product base) the attribute stands for, such as a frame's Color.
+#: templates/admin/blank-option-field.php:22
+msgid "Blank option"
+msgstr "Pohjatuotteen vaihtoehto"
+
+#. translators: Option of the "Blank option" select on the screen that edits a product attribute: the attribute stands for no option of the blank.
+#: templates/admin/blank-option-field.php:24
+msgctxt "blank option of an attribute"
+msgid "Not linked"
+msgstr "Ei linkitetty"
+
+#. translators: Help under the "Blank option" select on the screen that edits a product attribute.
+#: templates/admin/blank-option-field.php:26
+msgid ""
+"The option of the Pixonaut blank this attribute stands for, such as a "
+"frame's colour. Its values then pick the blank's variant and show in the "
+"designer as the option's colour or picture swatches. The options listed are "
+"those of the blanks the products with this attribute use."
+msgstr "Pixonaut-pohjatuotteen vaihtoehto, jota tämä ominaisuus vastaa, esimerkiksi kehyksen väri. Sen arvot valitsevat silloin pohjatuotteen version ja näkyvät suunnittelutyökalussa vaihtoehdon väri- tai kuvapainikkeina. Luettelossa ovat niiden pohjatuotteiden vaihtoehdot, joita tämän ominaisuuden tuotteet käyttävät."
+
+#. translators: Column heading in the table of an attribute's values on the screen that edits a product attribute.
+#: templates/admin/blank-option-field.php:28
+msgctxt "attribute value"
+msgid "Value"
+msgstr "Arvo"
+
+#. translators: Column heading in the table of an attribute's values: the value of the blank's option each one stands for.
+#: templates/admin/blank-option-field.php:30
+msgid "Blank option value"
+msgstr "Pohjatuotteen vaihtoehdon arvo"
+
+#. translators: Option of a value's "Blank option value" select: the value stands for no value of the blank's option.
+#: templates/admin/blank-option-field.php:32
+msgctxt "blank option value of an attribute value"
+msgid "Not linked"
+msgstr "Ei linkitetty"
+
+#. translators: %s: the blank option's value of the same name as the attribute value. Option of a value's "Blank option value" select: the value stands for the option value of its name.
+#: templates/admin/blank-option-field.php:34
+#, php-format
+msgid "Same name: %s"
+msgstr "Sama nimi: %s"
+
+#. translators: Help under the table of an attribute's values on the screen that edits a product attribute.
+#: templates/admin/blank-option-field.php:36
+msgid ""
+"A value that is not linked shows as text and picks no variant by this "
+"option. Save after choosing another option to list its values."
+msgstr "Linkittämätön arvo näkyy tekstinä eikä valitse versiota tämän vaihtoehdon kautta. Tallenna toisen vaihtoehdon valinnan jälkeen nähdäksesi sen arvot."
+
+#. translators: Shown under the "Blank option" select on the screen that edits a product attribute, while the attribute stands for no option.
+#: templates/admin/blank-option-field.php:40
+msgid ""
+"Not linked: its values show as text, and pick the blank's variant only where "
+"they have the names of an option and its values."
+msgstr "Ei linkitetty: sen arvot näkyvät tekstinä ja valitsevat pohjatuotteen version vain, kun niillä on vaihtoehdon ja sen arvojen nimet."
 
 #: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."
@@ -10766,11 +10953,16 @@ msgstr "Kate"
 msgid ""
 "What the rule prices these costs at, as you change the fields above. Prices "
 "include %s %% VAT; contribution and margin are worked out without it."
-msgstr "Hinnat, jotka sääntö asettaa näille kustannuksille, kun muutat yllä olevia kenttiä. Hinnat sisältävät %s %% arvonlisäveroa; katetuotto ja kate lasketaan ilman sitä."
+msgstr ""
+"Hinnat, jotka sääntö asettaa näille kustannuksille, kun muutat yllä olevia "
+"kenttiä. Hinnat sisältävät %s %% arvonlisäveroa; katetuotto ja kate "
+"lasketaan ilman sitä."
 
 #: templates/admin/price-example.php:48
 msgid "What the rule prices these costs at, as you change the fields above."
-msgstr "Hinnat, jotka sääntö asettaa näille kustannuksille, kun muutat yllä olevia kenttiä."
+msgstr ""
+"Hinnat, jotka sääntö asettaa näille kustannuksille, kun muutat yllä olevia "
+"kenttiä."
 
 #. translators: Label of the printshop that makes the product's orders. Admin product page.
 #: templates/admin/product-blank.php:25 templates/admin/product-fields.php:144
@@ -11036,13 +11228,19 @@ msgid ""
 "and contribution each price leaves. Apply sets every price to the step "
 "nearest the target margin plus the fixed amount; from then on the prices "
 "follow the rule."
-msgstr "Mitä painotalo veloittaa tuotteesta ja sen toimituksesta sekä minkä katteen ja katetuoton kukin hinta jättää. Käytä-painike asettaa jokaisen hinnan tavoitekatteen ja kiinteän summan mukaista hintaa lähimpään askeleeseen; siitä lähtien hinnat noudattavat sääntöä."
+msgstr ""
+"Mitä painotalo veloittaa tuotteesta ja sen toimituksesta sekä minkä katteen "
+"ja katetuoton kukin hinta jättää. Käytä-painike asettaa jokaisen hinnan "
+"tavoitekatteen ja kiinteän summan mukaista hintaa lähimpään askeleeseen; "
+"siitä lähtien hinnat noudattavat sääntöä."
 
 #: templates/admin/product-prices.php:57
 msgid ""
 "Margins, contributions and the fixed amount are worked out on the price "
 "excluding VAT."
-msgstr "Katteet, katetuotot ja kiinteä summa lasketaan arvonlisäverottomasta hinnasta."
+msgstr ""
+"Katteet, katetuotot ja kiinteä summa lasketaan arvonlisäverottomasta "
+"hinnasta."
 
 #: templates/admin/product-prices.php:61
 msgid "Pricing rule for this product"

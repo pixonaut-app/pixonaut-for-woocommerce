@@ -238,7 +238,7 @@ final class ProductVariants {
 		$pick = null !== $stored && $stored->blank_id === $config->blank_id ? $stored->pick : null;
 		// A match weighs both names at once: a name in the site's language equal to another variant's name as written is no match, not the other variant.
 		$variants = null === $pick && null !== DesignerLanguage::of_site() ? $this->with_written( $config->blank_id ) : $this->variants( $config->blank_id );
-		$resolved = ProductVariant::resolve( $config->blank_id, $pick, self::attributes( $product ), $variants );
+		$resolved = ProductVariant::resolve( $config->blank_id, $pick, self::attributes( $product ), $variants, BlankOptionLinks::labels( $product ) );
 		// False when a newer document was stored meanwhile: whoever stored it resolves it, so it is kept.
 		$resolved->replace_on( $product, $document );
 	}

@@ -195,6 +195,20 @@ to your store:
   with the mouse or with the arrow keys, and the product's price, picture
   and design follow it as they follow the theme's field.
 
+  A swatch shows its value's colour or picture when the blank's option
+  has one for it, such as a frame colour or wood. An attribute named as
+  the blank names its option (Color, with values White and Black) matches
+  by itself. Otherwise link it once, on the attribute's edit screen under
+  **Products → Attributes**: **Blank option** picks the blank's option it
+  stands for (Ramfärg for Color), and once saved, each of its values picks
+  the option's value it stands for (Svart for Black). A value named like
+  one of the option's values needs no choice; the others say **Not
+  linked** until you give them one, and show as text. The options listed
+  are those of the blanks your products with the attribute use, the
+  variations' blanks included. A linked value also picks the blank's
+  variant for a variation you have not paired by hand, so the designer and
+  the product's pictures show the frame chosen.
+
 With a block theme that names its accent, border and error colours, fonts
 and corner radius, such as the Pixonaut Shop theme, the side tabs, the
 approval box and the error messages around the designer take them, and

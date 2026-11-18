@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T16:02:24+00:00\n"
+"POT-Creation-Date: 2026-11-18T16:06:30+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -303,6 +303,29 @@ msgstr ""
 "Haar slug zonder `pa_`, de naam die ze zonder eigen naam heeft zolang die "
 "vrij is."
 
+#: src/Abilities/BlankOptionRows.php:70
+msgid ""
+"The blank option the attribute stands for, as Pixonaut writes it; null when "
+"it is not linked."
+msgstr "De optie van het blanco product waar het attribuut voor staat, zoals Pixonaut die schrijft; null als het niet gekoppeld is."
+
+#: src/Abilities/BlankOptionRows.php:82
+msgid "The option value the value was linked to; null when it was given none."
+msgstr "De optiewaarde waaraan de waarde is gekoppeld; null als ze er geen heeft gekregen."
+
+#: src/Abilities/BlankOptionRows.php:86
+msgid ""
+"The option value it stands for: the one it was linked to, else the option's "
+"value of its name; null when it is not linked, and then shows as text."
+msgstr "De optiewaarde waar ze voor staat: die waaraan ze is gekoppeld, anders de waarde van de optie met dezelfde naam; null als ze niet gekoppeld is en dan als tekst wordt getoond."
+
+#: src/Abilities/BlankOptionRows.php:93
+msgid ""
+"The options the attribute can be linked to, each with its values: those of "
+"the blanks the products with this attribute use, themselves or through their "
+"variations."
+msgstr "De opties waaraan het attribuut kan worden gekoppeld, elk met hun waarden: die van de blanco producten die de producten met dit attribuut gebruiken, zelf of via hun variaties."
+
 #: src/Abilities/ChangeDeliveryAddress.php:63
 msgid "The country's two-letter ISO code, e.g. `SE`."
 msgstr "De tweeletterige ISO-code van het land, bijv. `SE`."
@@ -561,6 +584,27 @@ msgstr ""
 "zolang die de werkruimte volgt), en `prints_with` de vorm en tolerantie "
 "waarmee de drukbestanden van de winkel worden gemaakt. Null zolang de "
 "koppeling gepauzeerd is of Pixonaut niet bereikbaar was."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/GetAttributeBlankOptions.php:36
+msgid "Read the blank options attributes stand for"
+msgstr "Lezen voor welke opties van het blanco product attributen staan"
+
+#: src/Abilities/GetAttributeBlankOptions.php:37
+msgid ""
+"Reads, for every global attribute or the one given, the option of the "
+"Pixonaut blank it stands for (a frame colour attribute for the blank's "
+"Color), the option value each of its values stands for, and `options`: the "
+"options it can be linked to, each with its values, from the blanks its "
+"products use. A linked attribute's values pick the blank's variant and show "
+"in the designer as the option values' colour or picture swatches; a value "
+"whose `stands_for` is null is not linked and shows as text. Link one with "
+"`set-attribute-blank-option`."
+msgstr "Leest voor elk globaal attribuut of het opgegeven attribuut voor welke optie van het blanco Pixonaut-product het staat (een lijstkleurattribuut voor de optie Color van het blanco product), voor welke optiewaarde elk van zijn waarden staat, en `options`: de opties waaraan het kan worden gekoppeld, elk met hun waarden, uit de blanco producten die zijn producten gebruiken. De waarden van een gekoppeld attribuut kiezen de variant van het blanco product en worden in de ontwerptool getoond als kleur- of afbeeldingsknoppen van de optiewaarden; een waarde waarvan `stands_for` null is, is niet gekoppeld en wordt als tekst getoond. Koppel er een met `set-attribute-blank-option`."
+
+#: src/Abilities/GetAttributeBlankOptions.php:44
+msgid "Only this global attribute, by id."
+msgstr "Alleen dit globale attribuut, op ID."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/GetAttributeQueryNames.php:26
@@ -861,7 +905,11 @@ msgid ""
 "The rule the product is priced by: margin and tolerance in percent, fixed "
 "(added to the price excluding tax on top of the margin), step, ending, min "
 "and max as amounts; empty for none."
-msgstr "De regel waarmee de prijs van het product wordt bepaald: marge en tolerantie in procenten, vast bedrag (bovenop de marge opgeteld bij de prijs exclusief btw), stap, einde, laagste en hoogste prijs als bedragen; leeg als er geen is."
+msgstr ""
+"De regel waarmee de prijs van het product wordt bepaald: marge en tolerantie "
+"in procenten, vast bedrag (bovenop de marge opgeteld bij de prijs exclusief "
+"btw), stap, einde, laagste en hoogste prijs als bedragen; leeg als er geen "
+"is."
 
 #: src/Abilities/GetProductPrices.php:141
 msgid ""
@@ -1702,7 +1750,12 @@ msgid ""
 "margin and tolerance in percent, fixed (added to the price excluding tax on "
 "top of the margin), step, ending, min and max as amounts. A part left out or "
 "empty is left to the store."
-msgstr "De onderdelen van de regel die dit product wijzigt, ter vervanging van de huidige: marge en tolerantie in procenten, vast bedrag (bovenop de marge opgeteld bij de prijs exclusief btw), stap, einde, laagste en hoogste prijs als bedragen. Een weggelaten of leeg onderdeel wordt aan de winkel overgelaten."
+msgstr ""
+"De onderdelen van de regel die dit product wijzigt, ter vervanging van de "
+"huidige: marge en tolerantie in procenten, vast bedrag (bovenop de marge "
+"opgeteld bij de prijs exclusief btw), stap, einde, laagste en hoogste prijs "
+"als bedragen. Een weggelaten of leeg onderdeel wordt aan de winkel "
+"overgelaten."
 
 #: src/Abilities/PriceProduct.php:103
 msgid "How many prices changed, or would."
@@ -1845,7 +1898,9 @@ msgstr ""
 #: src/Abilities/ProductPrices.php:176
 msgid ""
 "What the price leaves over the cost, excluding tax, in the store's currency."
-msgstr "Wat de prijs boven de kosten overlaat, exclusief btw, in de valuta van de winkel."
+msgstr ""
+"Wat de prijs boven de kosten overlaat, exclusief btw, in de valuta van de "
+"winkel."
 
 #: src/Abilities/ProductPrices.php:177
 msgid "The price the rule would set, when it is another than the price it has."
@@ -2155,7 +2210,20 @@ msgid ""
 "printshop says the chosen variation takes, which Pixonaut reads with its "
 "cost, and `delivery_time_handling_days` the days of its own the store adds "
 "to that."
-msgstr "Geeft de prijsregel van de winkel, waarmee prijzen de kosten van de drukkerij volgen: de doelmarge en het vaste bedrag per artikel daarbovenop (prijs exclusief btw = kosten ÷ (1 − marge) + vast bedrag), de tolerantie rond de marge die de eigen prijs van de regel bij bepaalde kosten overlaat, de prijsstap en waar prijzen op eindigen, de laagste en hoogste prijs, de valutabuffer die wordt opgeteld bij kosten die uit een andere valuta zijn omgerekend, en of prijzen vanzelf veranderen wanneer de kosten veranderen. Bedragen en percentages zijn decimale strings, leeg als er geen is. Zonder doelmarge heeft de winkel geen regel. Ook de valuta van de winkel, en of prijzen inclusief btw worden ingevoerd. `delivery_time_show` geeft aan of een productpagina vermeldt hoe lang de gekozen variatie volgens de drukkerij duurt, wat Pixonaut samen met de kosten ophaalt, en `delivery_time_handling_days` de eigen dagen die de winkel daarbij optelt."
+msgstr ""
+"Geeft de prijsregel van de winkel, waarmee prijzen de kosten van de "
+"drukkerij volgen: de doelmarge en het vaste bedrag per artikel daarbovenop "
+"(prijs exclusief btw = kosten ÷ (1 − marge) + vast bedrag), de tolerantie "
+"rond de marge die de eigen prijs van de regel bij bepaalde kosten overlaat, "
+"de prijsstap en waar prijzen op eindigen, de laagste en hoogste prijs, de "
+"valutabuffer die wordt opgeteld bij kosten die uit een andere valuta zijn "
+"omgerekend, en of prijzen vanzelf veranderen wanneer de kosten veranderen. "
+"Bedragen en percentages zijn decimale strings, leeg als er geen is. Zonder "
+"doelmarge heeft de winkel geen regel. Ook de valuta van de winkel, en of "
+"prijzen inclusief btw worden ingevoerd. `delivery_time_show` geeft aan of "
+"een productpagina vermeldt hoe lang de gekozen variatie volgens de drukkerij "
+"duurt, wat Pixonaut samen met de kosten ophaalt, en "
+"`delivery_time_handling_days` de eigen dagen die de winkel daarbij optelt."
 
 #: src/Abilities/ReadPricingSettings.php:134
 msgid "The currency prices are in, as its code."
@@ -2166,7 +2234,10 @@ msgid ""
 "Whether prices are entered including tax. The price step, ending, lowest and "
 "highest price count on the price as entered; the margin and the fixed amount "
 "count on it excluding tax."
-msgstr "Of prijzen inclusief btw worden ingevoerd. De prijsstap, het einde en de laagste en hoogste prijs gelden voor de prijs zoals ingevoerd; de marge en het vaste bedrag gelden voor de prijs exclusief btw."
+msgstr ""
+"Of prijzen inclusief btw worden ingevoerd. De prijsstap, het einde en de "
+"laagste en hoogste prijs gelden voor de prijs zoals ingevoerd; de marge en "
+"het vaste bedrag gelden voor de prijs exclusief btw."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/RecheckProducts.php:45
@@ -2290,6 +2361,71 @@ msgstr ""
 "opnieuw."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
+#: src/Abilities/SetAttributeBlankOption.php:40
+msgid "Link an attribute to a blank option"
+msgstr "Een attribuut koppelen aan een optie van het blanco product"
+
+#: src/Abilities/SetAttributeBlankOption.php:41
+msgid ""
+"Links a global attribute to an option of the Pixonaut blanks its products "
+"use, and its values to the option's values, as its edit screen's \"Blank "
+"option\" does: a frame colour attribute to the blank's Color, its value "
+"Svart to Black. Its values then pick the blank's variant and show in the "
+"designer as the option values' colour or picture swatches. `option` and each "
+"value are named as `get-attribute-blank-options` lists them in `options`. A "
+"value given an empty `value`, or not linked yet, stands for the option's "
+"value of its name; values not given keep their link while the option stays "
+"the same, and lose it when it changes. An empty `option` unlinks the "
+"attribute. Products with the attribute are re-checked in the background. The "
+"answer is the attribute's row; a `503` when the re-check could not be "
+"queued, the link being saved."
+msgstr "Koppelt een globaal attribuut aan een optie van de blanco Pixonaut-producten die zijn producten gebruiken, en zijn waarden aan de waarden van de optie, zoals het veld ‘Optie van het blanco product’ op de bewerkpagina van het attribuut doet: een lijstkleurattribuut aan de optie Color van het blanco product, zijn waarde Svart aan Black. Zijn waarden kiezen dan de variant van het blanco product en worden in de ontwerptool getoond als kleur- of afbeeldingsknoppen van de optiewaarden. `option` en elke waarde worden benoemd zoals `get-attribute-blank-options` ze in `options` opsomt. Een waarde met een lege `value`, of die nog niet gekoppeld is, staat voor de waarde van de optie met dezelfde naam; niet opgegeven waarden behouden hun koppeling zolang de optie dezelfde blijft, en verliezen die als ze verandert. Een lege `option` ontkoppelt het attribuut. De producten met het attribuut worden op de achtergrond opnieuw gecontroleerd. Het antwoord is de rij van het attribuut; een `503` als de nieuwe controle niet kon worden ingepland, terwijl de koppeling wel is opgeslagen."
+
+#: src/Abilities/SetAttributeBlankOption.php:48
+#: src/Abilities/SetAttributeQueryName.php:38
+#: src/Abilities/SetAttributeSplitListing.php:44
+msgid "A global attribute, by id."
+msgstr "Een globale eigenschap, op ID."
+
+#: src/Abilities/SetAttributeBlankOption.php:62
+msgid "One of the attribute's values, by term id; or name it by `slug`."
+msgstr "Een van de waarden van het attribuut, op term-ID; of benoem die met `slug`."
+
+#: src/Abilities/SetAttributeBlankOption.php:98
+#: src/Abilities/SetAttributeQueryName.php:69
+#: src/Abilities/SetAttributeSplitListing.php:92
+msgid "No global attribute has this id."
+msgstr "Er is geen globale eigenschap met deze ID."
+
+#. translators: 1: the blank option asked for. 2: the options there are, comma-separated. Error an AI assistant or an MCP client reads.
+#: src/Abilities/SetAttributeBlankOption.php:109
+#, php-format
+msgid ""
+"No blank the products with this attribute use has the option \"%1$s\". "
+"Options: %2$s."
+msgstr "Geen enkel blanco product dat de producten met dit attribuut gebruiken heeft de optie ‘%1$s’. Opties: %2$s."
+
+#: src/Abilities/SetAttributeBlankOption.php:117
+msgid ""
+"A value given is not one of the attribute's values: name each by its "
+"`term_id` or `slug`."
+msgstr "Een opgegeven waarde is geen van de waarden van het attribuut: benoem elke waarde met haar `term_id` of `slug`."
+
+#. translators: 1: the option value asked for. 2: the blank option. 3: its values, comma-separated. Error an AI assistant or an MCP client reads.
+#: src/Abilities/SetAttributeBlankOption.php:123
+#, php-format
+msgid "\"%1$s\" is not a value of the option \"%2$s\". Values: %3$s."
+msgstr "‘%1$s’ is geen waarde van de optie ‘%2$s’. Waarden: %3$s."
+
+#. translators: Error an AI assistant or an MCP client reads. `recheck-products` is the name of another ability; keep it as it is.
+#: src/Abilities/SetAttributeBlankOption.php:147
+msgid ""
+"The link is saved, but the products with this attribute could not be queued "
+"for a re-check, so they keep the blank variants they had. Run `recheck-"
+"products` to re-check them."
+msgstr "De koppeling is opgeslagen, maar de producten met dit attribuut konden niet worden ingepland voor een nieuwe controle, dus houden ze de varianten van het blanco product die ze hadden. Voer `recheck-products` uit om ze opnieuw te controleren."
+
+#. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeQueryName.php:30
 msgid "Set the name an attribute goes by in the shop's addresses"
 msgstr "Naam van een eigenschap in de webadressen van de winkel instellen"
@@ -2313,16 +2449,6 @@ msgstr ""
 "een andere eigenschap al heeft, wordt geweigerd. Links die met de oude naam "
 "zijn gedeeld, kiezen de waarde niet meer. Het antwoord is de huidige naam "
 "van de eigenschap."
-
-#: src/Abilities/SetAttributeQueryName.php:38
-#: src/Abilities/SetAttributeSplitListing.php:44
-msgid "A global attribute, by id."
-msgstr "Een globale eigenschap, op ID."
-
-#: src/Abilities/SetAttributeQueryName.php:69
-#: src/Abilities/SetAttributeSplitListing.php:92
-msgid "No global attribute has this id."
-msgstr "Er is geen globale eigenschap met deze ID."
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
 #: src/Abilities/SetAttributeSplitListing.php:36
@@ -5198,7 +5324,7 @@ msgctxt "value names beside swatches"
 msgid "Hide"
 msgstr "Verbergen"
 
-#: src/Admin/VariantField.php:84
+#: src/Admin/VariantField.php:85
 msgid ""
 "Pixonaut could not be reached to list the blank’s variants. Try again later."
 msgstr ""
@@ -5206,11 +5332,11 @@ msgstr ""
 "halen. Probeer het later opnieuw."
 
 #. translators: Option in the blank variant picker on the product edit page, shown to the merchant: find the variant from the product's own attributes.
-#: src/Admin/VariantField.php:109 src/Admin/VariantPairing.php:204
+#: src/Admin/VariantField.php:110 src/Admin/VariantPairing.php:205
 msgid "Find automatically"
 msgstr "Automatisch zoeken"
 
-#: src/Admin/VariantField.php:114
+#: src/Admin/VariantField.php:115
 msgid ""
 "Found from this variation’s attributes; it does not fall back to the "
 "product’s."
@@ -5218,41 +5344,41 @@ msgstr ""
 "Gevonden op basis van de eigenschappen van deze variatie; die van het "
 "product worden niet gebruikt."
 
-#: src/Admin/VariantField.php:115
+#: src/Admin/VariantField.php:116
 msgid "Found from this product’s attributes."
 msgstr "Gevonden op basis van de eigenschappen van dit product."
 
 #. translators: %s: the variant's options, e.g. "Color: Red, Size: M". Option in the blank variant picker on the product edit page: the variant found from the product's attributes.
-#: src/Admin/VariantField.php:130
+#: src/Admin/VariantField.php:131
 #, php-format
 msgid "Blank variant: %s (found automatically)"
 msgstr "Variant van het blanco product: %s (automatisch gevonden)"
 
 #. translators: 1: a print partner, such as Gelato, whose product the blank is; 2: the variant's options, e.g. "28x40\" / 70x100cm". Option in the blank variant picker on the product edit page: the variant found from the product's attributes.
-#: src/Admin/VariantField.php:132
+#: src/Admin/VariantField.php:133
 #, php-format
 msgid "%1$s variant: %2$s (found automatically)"
 msgstr "%1$s-variant: %2$s (automatisch gevonden)"
 
 #. translators: %s: the variant's options, e.g. "Color: Red, Size: M".
-#: src/Admin/VariantField.php:213 src/Admin/VariantPairing.php:91
+#: src/Admin/VariantField.php:214 src/Admin/VariantPairing.php:92
 #, php-format
 msgid "%s (retired)"
 msgstr "%s (niet meer leverbaar)"
 
-#: src/Admin/VariantField.php:229
+#: src/Admin/VariantField.php:230
 msgid "No blank variant found: pick one."
 msgstr "Geen variant van het blanco product gevonden: kies er een."
 
 #. translators: %s: a print partner, such as Gelato, whose product the blank is. Shown under the blank variant picker on the product edit page.
 #. translators: %s: a printshop, such as Gelato, or "Blank". Under a variation's variant in the pairing table of the product edit page.
-#: src/Admin/VariantField.php:231
+#: src/Admin/VariantField.php:232
 #: templates/admin/product-variant-pairing.php:65
 #, php-format
 msgid "No %s variant found: pick one."
 msgstr "Geen %s-variant gevonden: kies er een."
 
-#: src/Admin/VariantField.php:235
+#: src/Admin/VariantField.php:236
 msgid ""
 "This variant is retired, so customers cannot buy this. Pick another variant."
 msgstr ""
@@ -5260,7 +5386,7 @@ msgstr ""
 "een andere variant."
 
 #. translators: %l: the sides with no photo, e.g. "Front and Back".
-#: src/Admin/VariantField.php:244
+#: src/Admin/VariantField.php:245
 msgid ""
 "No view the product is shown in has a photo of this variant on %l, so "
 "customers cannot design it."
@@ -5301,19 +5427,19 @@ msgstr ""
 "Klanten kunnen niet alles van %1$s kopen: %2$s. Kies de variant in de "
 "Pixonaut-velden."
 
-#: src/Admin/VariantPairing.php:124
+#: src/Admin/VariantPairing.php:125
 msgid "Blank"
 msgstr "Blanco product"
 
 #. translators: %s: the variant found from the variation's attributes, such as "28x40\" / 70x100cm". Option in the variant pairing table of the product edit page.
-#: src/Admin/VariantPairing.php:203
+#: src/Admin/VariantPairing.php:204
 #, php-format
 msgid "%s (found automatically)"
 msgstr "%s (automatisch gevonden)"
 
 #. translators: 1: a print area's width in mm; 2: its height in mm.
 #. translators: 1: width, 2: height, both in millimetres.
-#: src/Admin/VariantPairing.php:210 src/Catalogue/PrintSize.php:88
+#: src/Admin/VariantPairing.php:211 src/Catalogue/PrintSize.php:88
 #, php-format
 msgid "%1$s × %2$s mm"
 msgstr "%1$s × %2$s mm"
@@ -9004,7 +9130,11 @@ msgid ""
 "item costs you whatever its price, such as ads, support, payment and "
 "reprints. Cheap items then get a high margin and expensive ones a lower one. "
 "Empty adds nothing."
-msgstr "Wordt bovenop de doelmarge bij elke prijs exclusief btw opgeteld: wat elk artikel je kost, ongeacht de prijs, zoals advertenties, support, betalingen en herdrukken. Goedkope artikelen krijgen zo een hoge marge en dure een lagere. Leeg telt niets op."
+msgstr ""
+"Wordt bovenop de doelmarge bij elke prijs exclusief btw opgeteld: wat elk "
+"artikel je kost, ongeacht de prijs, zoals advertenties, support, betalingen "
+"en herdrukken. Goedkope artikelen krijgen zo een hoge marge en dure een "
+"lagere. Leeg telt niets op."
 
 #. translators: Title of a setting on the settings page, shown to the merchant; the value is a number of percentage points either side of the target margin.
 #: src/Settings/Settings.php:525
@@ -9017,7 +9147,11 @@ msgid ""
 "leaves at that cost before the price moves. With a target of 50, no fixed "
 "amount and a tolerance of 10, a price is kept while its margin is between 40 "
 "and 60."
-msgstr "Hoe ver een marge mag afwijken, naar boven of naar beneden, van de marge die de eigen prijs van de regel bij die kosten overlaat, voordat de prijs verandert. Bij een doel van 50, geen vast bedrag en een tolerantie van 10 blijft een prijs behouden zolang de marge tussen 40 en 60 ligt."
+msgstr ""
+"Hoe ver een marge mag afwijken, naar boven of naar beneden, van de marge die "
+"de eigen prijs van de regel bij die kosten overlaat, voordat de prijs "
+"verandert. Bij een doel van 50, geen vast bedrag en een tolerantie van 10 "
+"blijft een prijs behouden zolang de marge tussen 40 en 60 ligt."
 
 #: src/Settings/Settings.php:537
 msgid ""
@@ -9713,6 +9847,63 @@ msgstr ""
 #, php-format
 msgid "The attribute was saved without this name in addresses: %s"
 msgstr "De eigenschap is opgeslagen zonder deze naam in webadressen: %s"
+
+#. translators: Label of a select on the screen that edits a product attribute: the option of the Pixonaut blank (product base) the attribute stands for, such as a frame's Color.
+#: templates/admin/blank-option-field.php:22
+msgid "Blank option"
+msgstr "Optie van het blanco product"
+
+#. translators: Option of the "Blank option" select on the screen that edits a product attribute: the attribute stands for no option of the blank.
+#: templates/admin/blank-option-field.php:24
+msgctxt "blank option of an attribute"
+msgid "Not linked"
+msgstr "Niet gekoppeld"
+
+#. translators: Help under the "Blank option" select on the screen that edits a product attribute.
+#: templates/admin/blank-option-field.php:26
+msgid ""
+"The option of the Pixonaut blank this attribute stands for, such as a "
+"frame's colour. Its values then pick the blank's variant and show in the "
+"designer as the option's colour or picture swatches. The options listed are "
+"those of the blanks the products with this attribute use."
+msgstr "De optie van het blanco Pixonaut-product waar dit attribuut voor staat, zoals de kleur van een lijst. Zijn waarden kiezen dan de variant van het blanco product en worden in de ontwerptool getoond als kleur- of afbeeldingsknoppen van de optie. De vermelde opties zijn die van de blanco producten die de producten met dit attribuut gebruiken."
+
+#. translators: Column heading in the table of an attribute's values on the screen that edits a product attribute.
+#: templates/admin/blank-option-field.php:28
+msgctxt "attribute value"
+msgid "Value"
+msgstr "Waarde"
+
+#. translators: Column heading in the table of an attribute's values: the value of the blank's option each one stands for.
+#: templates/admin/blank-option-field.php:30
+msgid "Blank option value"
+msgstr "Waarde van de optie van het blanco product"
+
+#. translators: Option of a value's "Blank option value" select: the value stands for no value of the blank's option.
+#: templates/admin/blank-option-field.php:32
+msgctxt "blank option value of an attribute value"
+msgid "Not linked"
+msgstr "Niet gekoppeld"
+
+#. translators: %s: the blank option's value of the same name as the attribute value. Option of a value's "Blank option value" select: the value stands for the option value of its name.
+#: templates/admin/blank-option-field.php:34
+#, php-format
+msgid "Same name: %s"
+msgstr "Zelfde naam: %s"
+
+#. translators: Help under the table of an attribute's values on the screen that edits a product attribute.
+#: templates/admin/blank-option-field.php:36
+msgid ""
+"A value that is not linked shows as text and picks no variant by this "
+"option. Save after choosing another option to list its values."
+msgstr "Een niet-gekoppelde waarde wordt als tekst getoond en kiest via deze optie geen variant. Sla op na het kiezen van een andere optie om de waarden ervan te zien."
+
+#. translators: Shown under the "Blank option" select on the screen that edits a product attribute, while the attribute stands for no option.
+#: templates/admin/blank-option-field.php:40
+msgid ""
+"Not linked: its values show as text, and pick the blank's variant only where "
+"they have the names of an option and its values."
+msgstr "Niet gekoppeld: de waarden worden als tekst getoond en kiezen de variant van het blanco product alleen waar ze de namen van een optie en haar waarden hebben."
 
 #: templates/admin/connection-card.php:46
 msgid "The store is connected to Pixonaut."
@@ -10975,11 +11166,16 @@ msgstr "Marge"
 msgid ""
 "What the rule prices these costs at, as you change the fields above. Prices "
 "include %s %% VAT; contribution and margin are worked out without it."
-msgstr "Wat de regel voor deze kosten als prijs zet, terwijl je de velden hierboven wijzigt. Prijzen zijn inclusief %s %% btw; dekkingsbijdrage en marge worden zonder btw berekend."
+msgstr ""
+"Wat de regel voor deze kosten als prijs zet, terwijl je de velden hierboven "
+"wijzigt. Prijzen zijn inclusief %s %% btw; dekkingsbijdrage en marge worden "
+"zonder btw berekend."
 
 #: templates/admin/price-example.php:48
 msgid "What the rule prices these costs at, as you change the fields above."
-msgstr "Wat de regel voor deze kosten als prijs zet, terwijl je de velden hierboven wijzigt."
+msgstr ""
+"Wat de regel voor deze kosten als prijs zet, terwijl je de velden hierboven "
+"wijzigt."
 
 #. translators: Label of the printshop that makes the product's orders. Admin product page.
 #: templates/admin/product-blank.php:25 templates/admin/product-fields.php:144
@@ -11248,13 +11444,19 @@ msgid ""
 "and contribution each price leaves. Apply sets every price to the step "
 "nearest the target margin plus the fixed amount; from then on the prices "
 "follow the rule."
-msgstr "Wat de drukkerij rekent voor het product en de verzending, en de marge en dekkingsbijdrage die elke prijs overlaat. Toepassen zet elke prijs op de stap die het dichtst bij de doelmarge plus het vaste bedrag ligt; vanaf dan volgen de prijzen de regel."
+msgstr ""
+"Wat de drukkerij rekent voor het product en de verzending, en de marge en "
+"dekkingsbijdrage die elke prijs overlaat. Toepassen zet elke prijs op de "
+"stap die het dichtst bij de doelmarge plus het vaste bedrag ligt; vanaf dan "
+"volgen de prijzen de regel."
 
 #: templates/admin/product-prices.php:57
 msgid ""
 "Margins, contributions and the fixed amount are worked out on the price "
 "excluding VAT."
-msgstr "Marges, dekkingsbijdragen en het vaste bedrag worden berekend over de prijs exclusief btw."
+msgstr ""
+"Marges, dekkingsbijdragen en het vaste bedrag worden berekend over de prijs "
+"exclusief btw."
 
 #: templates/admin/product-prices.php:61
 msgid "Pricing rule for this product"

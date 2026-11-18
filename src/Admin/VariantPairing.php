@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Admin;
 
+use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
 use Pixonaut\WooCommerce\Catalogue\BlankVariant;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
@@ -176,7 +177,7 @@ final class VariantPairing {
 		$stored = ProductVariant::stored_on( $variation );
 		return null !== $stored && $stored->blank_id === $blank_id && $stored->is_current( $variation )
 			? $stored
-			: ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $variation ), $named );
+			: ProductVariant::resolve( $blank_id, null, ProductVariants::attributes( $variation ), $named, BlankOptionLinks::labels( $variation ) );
 	}
 
 	/**

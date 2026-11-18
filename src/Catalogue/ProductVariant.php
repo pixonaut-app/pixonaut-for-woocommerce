@@ -100,9 +100,10 @@ final class ProductVariant {
 	 * @param string|null           $pick       The store manager's pick.
 	 * @param array<string, string> $attributes Its attribute labels by attribute name, `Color => Red`.
 	 * @param BlankVariant[]        $variants   The blank's variants, retired ones included.
+	 * @param array<string, string> $linked     The options its linked attributes stand for, `BlankOptionLinks::labels()`: matched in place of an attribute of the same name, and not kept with the match.
 	 * @phpstan-param list<BlankVariant> $variants
 	 */
-	public static function resolve( string $blank_id, ?string $pick, array $attributes, array $variants ): self {
+	public static function resolve( string $blank_id, ?string $pick, array $attributes, array $variants, array $linked = array() ): self {
 		$found      = null;
 		$matched_on = null === $pick ? $attributes : null;
 		if ( null !== $pick ) {
@@ -112,10 +113,11 @@ final class ProductVariant {
 				}
 			}
 		} else {
-			$matches = array_values( array_filter( $variants, static fn ( BlankVariant $variant ): bool => self::matches( $variant, $attributes ) ) );
-			$on_sale = array_values( array_filter( $matches, static fn ( BlankVariant $variant ): bool => null === $variant->retired ) );
-			$matches = array() === $on_sale ? $matches : $on_sale;
-			$found   = 1 === count( $matches ) ? $matches[0] : null;
+			$matching = array_merge( self::normalised( $attributes ), self::normalised( $linked ) );
+			$matches  = array_values( array_filter( $variants, static fn ( BlankVariant $variant ): bool => self::matches( $variant, $matching ) ) );
+			$on_sale  = array_values( array_filter( $matches, static fn ( BlankVariant $variant ): bool => null === $variant->retired ) );
+			$matches  = array() === $on_sale ? $matches : $on_sale;
+			$found    = 1 === count( $matches ) ? $matches[0] : null;
 		}
 		return null === $found
 			? new self( $blank_id, $pick, matched_on: $matched_on )
@@ -433,10 +435,9 @@ final class ProductVariant {
 	 * language still match. A variant without options matches every product.
 	 *
 	 * @param BlankVariant          $variant    A variant.
-	 * @param array<string, string> $attributes Attribute labels by attribute name.
+	 * @param array<string, string> $normalised Attribute labels by attribute name, `normalised()`.
 	 */
-	private static function matches( BlankVariant $variant, array $attributes ): bool {
-		$normalised = self::normalised( $attributes );
+	private static function matches( BlankVariant $variant, array $normalised ): bool {
 		return self::all_in( $variant->options, $normalised )
 			|| ( array() !== $variant->written && self::all_in( $variant->written, $normalised ) );
 	}
