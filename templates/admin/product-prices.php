@@ -10,7 +10,7 @@
  * Field names, classes and the `data-` attributes are what the plugin reads; keep them.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.24.0
+ * @version 1.25.0
  *
  * @var string                $url        The product's prices route, which the buttons post to.
  * @var string                $field      The posted field holding the parts of the rule the product changes.
