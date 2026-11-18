@@ -13,6 +13,7 @@ use Pixonaut\WooCommerce\Catalogue\ApplicableAttributes;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variable;
+use WC_Product_Variation;
 
 /**
  * For a variable product with an attribute whose choices show a price
@@ -21,12 +22,14 @@ use WC_Product_Variable;
  * each variation's values and its price as the shop shows it (taxes
  * included or not, as the store's setting says), and how the shop writes a
  * price. The swatches the page prints for the choice it opens on carry the
- * same amounts, written the same way (`text()`).
+ * same amounts, written the same way (`text()`), and so do the options of a
+ * select shown in their place (`label()`). Only a variation in stock counts:
+ * a price the shopper cannot buy at shows nowhere.
  *
  * @phpstan-import-type PricedVariation from ChoicePriceTable
  * @phpstan-import-type Amount from ChoicePriceTable
  * @phpstan-type Format array{pattern: string, symbol: string, decimalSeparator: string, thousandSeparator: string, trimZeros: bool}
- * @phpstan-type Data array{fields: list<string>, roles: array<string, string>, decimals: int, variations: list<PricedVariation>, options: array<string, list<string>>, format: Format, words: array<string, string>}
+ * @phpstan-type Data array{fields: list<string>, roles: array<string, string>, decimals: int, variations: list<PricedVariation>, options: array<string, list<string>>, format: Format, words: array<string, string>, label: string}
  */
 final class ProductChoicePrices {
 
@@ -109,6 +112,19 @@ final class ProductChoicePrices {
 	}
 
 	/**
+	 * An option's name followed by its amount's text, as `choice-prices.ts`'s
+	 * `optionLabel()` writes it in the theme's own field.
+	 *
+	 * @param string               $name  The option's name, "50×70".
+	 * @param string               $price The amount's text, "599 kr".
+	 * @param array<string, mixed> $data  The product's data, with the label's words.
+	 * @phpstan-param Data $data
+	 */
+	public static function label( string $name, string $price, array $data ): string {
+		return str_replace( array( '%1$s', '%2$s' ), array( $name, $price ), $data['label'] );
+	}
+
+	/**
 	 * @param WC_Product $product A product.
 	 * @return array<string, mixed>|null
 	 * @phpstan-return Data|null
@@ -148,13 +164,17 @@ final class ProductChoicePrices {
 				ChoicePrices::ADD_ON => __( '+%s', 'pixonaut-for-woocommerce' ),
 				/* translators: %s: a price, such as "469 kr". Beside an option of a product, such as a size, on its page: the lowest price the product has with it. The customer reads it. */
 				ChoicePrices::FROM   => __( 'from %s', 'pixonaut-for-woocommerce' ),
+				// The price alone.
+				ChoicePrices::PRICE  => '%s',
 			),
+			/* translators: 1: an option of a product, such as "50×70"; 2: what it shows as its price, such as "599 kr", "+180 kr" or "from 469 kr". An option in a product page's dropdown. The customer reads it. */
+			'label'      => __( '%1$s · %2$s', 'pixonaut-for-woocommerce' ),
 		);
 	}
 
 	/**
-	 * Each variation the form offers, with its values and its price as the
-	 * shop shows it; variations alike in both printed once.
+	 * Each variation the form offers in stock, with its values and its price
+	 * as the shop shows it; variations alike in both printed once.
 	 *
 	 * @param WC_Product_Variable $product The product.
 	 * @return list<array<string, mixed>>
@@ -164,7 +184,8 @@ final class ProductChoicePrices {
 		$prices     = $product->get_variation_prices( true )['price'] ?? array();
 		$variations = array();
 		foreach ( $prices as $id => $price ) {
-			if ( ! is_numeric( $price ) ) {
+			$variation = wc_get_product( (int) $id );
+			if ( ! is_numeric( $price ) || ! $variation instanceof WC_Product_Variation || ! $variation->is_in_stock() || ! $variation->is_purchasable() ) {
 				continue;
 			}
 			$variations[] = array(

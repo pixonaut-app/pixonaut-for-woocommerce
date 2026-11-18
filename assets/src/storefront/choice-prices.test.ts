@@ -43,7 +43,8 @@ const SWEDISH = {
 		decimalSeparator: ',',
 		thousandSeparator: ' ',
 	},
-	words: { add_on: '+%s', from: 'från %s' },
+	words: { add_on: '+%s', from: 'från %s', price: '%s' },
+	label: '%1$s · %2$s',
 	decimals: 0,
 };
 
@@ -71,7 +72,7 @@ describe('amountText', () => {
 						decimalSeparator: '.',
 						thousandSeparator: ',',
 					},
-					words: { add_on: '+%s', from: 'from %s' },
+					words: { add_on: '+%s', from: 'from %s', price: '%s' },
 					decimals: 2,
 				},
 			),

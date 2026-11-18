@@ -13,8 +13,9 @@ use Pixonaut\WooCommerce\Schema;
 
 /**
  * A global attribute's swatches can show a price beside each value: what an
- * add-on adds to the base product ("+N"), or a base choice's lowest price
- * ("from N"). The merchant chooses per attribute, on its edit screen or with
+ * add-on adds to the base product ("+N"), a base choice's lowest price
+ * ("from N"), or each choice's own price with the shopper's other choices
+ * ("N"). The merchant chooses per attribute, on its edit screen or with
  * the `set-attribute-choice-price` ability; an attribute shows none until
  * then, and so does a product's custom attribute. `ChoicePriceTable` works
  * the amounts out.
@@ -35,6 +36,11 @@ final class ChoicePrices {
 	 * Each value shows its lowest price.
 	 */
 	public const FROM = 'from';
+
+	/**
+	 * Each value shows its price with the shopper's other choices.
+	 */
+	public const PRICE = 'price';
 
 	/**
 	 * Each global attribute's choice other than None, by attribute id.
@@ -59,7 +65,7 @@ final class ChoicePrices {
 	 * @return list<string> Every choice an attribute has, None first.
 	 */
 	public static function available(): array {
-		return array( self::NONE, self::ADD_ON, self::FROM );
+		return array( self::NONE, self::ADD_ON, self::FROM, self::PRICE );
 	}
 
 	/**
@@ -74,7 +80,7 @@ final class ChoicePrices {
 	}
 
 	/**
-	 * Stores a global attribute's choice; anything but Add-on or From stores None.
+	 * Stores a global attribute's choice; anything not available stores None.
 	 *
 	 * @param int    $attribute_id A global attribute's id.
 	 * @param string $choice       One of `available()`.
@@ -82,7 +88,7 @@ final class ChoicePrices {
 	public static function set_choice( int $attribute_id, string $choice ): void {
 		$choices = self::stored();
 		unset( $choices[ $attribute_id ] );
-		if ( self::ADD_ON === $choice || self::FROM === $choice ) {
+		if ( self::NONE !== $choice && in_array( $choice, self::available(), true ) ) {
 			$choices[ $attribute_id ] = $choice;
 			ksort( $choices );
 		}

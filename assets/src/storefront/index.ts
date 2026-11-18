@@ -4,6 +4,7 @@ import { drawAttributeSwatches } from './attribute-swatches';
 import { CartEdit } from './cart-edit';
 import { readChoicePrices } from './choice-prices';
 import { ProductDesigner } from './designer';
+import { drawOptionPrices } from './option-prices';
 import { PersonaliseButton } from './personalise-button';
 import { fitPreviews } from './preview-fit';
 import { ReadsAhead } from './reads-ahead';
@@ -39,6 +40,11 @@ domReady(() => {
 		}
 		// One read for every part, so their swatches share the amounts.
 		const choicePrices = readChoicePrices(container);
+		const form = container.closest('form');
+		// Without swatches, the prices go in the theme's own fields.
+		if (!settings.attributeSwatches && choicePrices !== null && form !== null) {
+			drawOptionPrices(form, choicePrices);
+		}
 		new ProductDesigner(container, {
 			loadSdk: () => loadSdk(settings.sdk),
 			label,

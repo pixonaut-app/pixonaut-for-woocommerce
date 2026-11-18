@@ -247,6 +247,7 @@ use Pixonaut\WooCommerce\Storefront\DesignerSummary;
 use Pixonaut\WooCommerce\Storefront\OpeningDefaults;
 use Pixonaut\WooCommerce\Storefront\OpeningPrice;
 use Pixonaut\WooCommerce\Storefront\OptionHelp;
+use Pixonaut\WooCommerce\Storefront\PrintedOptionPrices;
 use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
 use Pixonaut\WooCommerce\Storefront\ProductChoicePrices;
 use Pixonaut\WooCommerce\Storefront\ServerReads;
@@ -610,6 +611,7 @@ final class Plugin {
 		( new DeliveryRows( $this->inline_products(), new DeliveryTime( $this->settings() ), new VariationSlots( $this->file ) ) )->register();
 		( new DesignerSummary( $this->inline_products() ) )->register();
 		( new PrintedSwatches( $this->inline_products(), $this->settings(), $this->swatch_looks(), $this->choice_prices() ) )->register();
+		( new PrintedOptionPrices( $this->inline_products(), $this->settings(), $this->choice_prices() ) )->register();
 		( new OptionHelp( $this->inline_products() ) )->register();
 		$this->personalise_button()->register();
 		$this->personalised_designs()->register();

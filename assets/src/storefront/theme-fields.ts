@@ -14,11 +14,17 @@ export type AttributeChoice = {
 	chosen: boolean;
 };
 
+/** The element holding the words of one option of a field. */
+export type OptionText = { value: string; element: HTMLElement };
+
 /** The theme's field of one attribute. */
 export type ThemeField = {
 	/** The element the swatches replace on screen. */
 	element: HTMLElement;
 	choices: () => AttributeChoice[];
+	/** The element holding each option's words, by its value: a select's
+	 *  option, a chip's text. */
+	texts: () => OptionText[];
 	pick: (value: string) => void;
 	/** Leaves the attribute unchosen. */
 	clear: () => void;
@@ -36,6 +42,9 @@ export const BLOCK_ATTRIBUTE_SELECTOR =
 /** The block form's chips of one attribute, and one chip in them. */
 const BLOCK_CHIPS_SELECTOR = '[role="radiogroup"]';
 const BLOCK_CHIP_SELECTOR = 'button[role="radio"]';
+
+/** The words of one of the block form's chips, beside its swatch. */
+const BLOCK_CHIP_TEXT_SELECTOR = '.wc-block-product-filter-chips__text';
 
 /** The block form's name of one attribute, which labels its chips. */
 const BLOCK_NAME_SELECTOR =
@@ -123,6 +132,8 @@ function selectField(
 				};
 			});
 		},
+		texts: () =>
+			offered().map((option) => ({ value: option.value, element: option })),
 		pick: (value) => choose(value),
 		clear: () => choose(''),
 		labelId,
@@ -151,6 +162,12 @@ function chipsField(
 					chip.value,
 				available: !chip.disabled && !chip.hidden,
 				chosen: chip.getAttribute('aria-checked') === 'true',
+			})),
+		texts: () =>
+			each().map((chip) => ({
+				value: chip.value,
+				element:
+					chip.querySelector<HTMLElement>(BLOCK_CHIP_TEXT_SELECTOR) ?? chip,
 			})),
 		pick: (value) => {
 			const chip = each().find((one) => one.value === value);

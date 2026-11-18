@@ -308,7 +308,7 @@ final class Storefront {
 				'look'            => ThemeLook::presets(),
 				'group_numbers'   => GroupNumbers::shown( $designer->config, $this->settings ),
 				'swatches'        => array() === $mounts || null === $this->swatch_looks || ! AttributeOptions::swatches( $this->settings ) ? array() : $this->swatch_looks->of( $designer ),
-				'choice_prices'   => array() === $mounts || null === $this->choice_prices || ! AttributeOptions::swatches( $this->settings ) ? array() : ( $this->choice_prices->of( $product ) ?? array() ),
+				'choice_prices'   => array() === $mounts || null === $this->choice_prices ? array() : ( $this->choice_prices->of( $product ) ?? array() ),
 			)
 		);
 	}

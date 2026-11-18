@@ -32,6 +32,11 @@ use Pixonaut\WooCommerce\Catalogue\ApplicableAttributes;
  * - A base attribute (the size) shows each value's lowest price: the
  *   cheapest variation holding it, among those that hold the chosen values of
  *   the other attributes that are not add-ons.
+ * - An attribute that shows its own price (the size again) shows each
+ *   value's price with every other attribute's chosen value: the price of
+ *   the variations holding them all. While the choices still open leave
+ *   such variations at more than one price, the value shows none, and so
+ *   does a value no such variation holds.
  *
  * A variation that leaves an attribute unset holds any value of it: each of
  * the values the product offers for the attribute, besides those another
@@ -49,7 +54,7 @@ final class ChoicePriceTable {
 	 * that shows none is left out.
 	 *
 	 * @param string[]              $fields     The product's `attribute_*` fields, in its order of attributes.
-	 * @param array<string, string> $roles      `ChoicePrices::ADD_ON` or `ChoicePrices::FROM`, by field; a field left out shows no price.
+	 * @param array<string, string> $roles      `ChoicePrices::ADD_ON`, `ChoicePrices::FROM` or `ChoicePrices::PRICE`, by field; a field left out shows no price.
 	 * @param list<array>           $variations Each variation's values by field and its price.
 	 * @param array<string, string> $chosen     The chosen values by field; empty or missing for none.
 	 * @param int                   $decimals   The decimals prices are shown with.
@@ -73,6 +78,20 @@ final class ChoicePriceTable {
 						'kind'   => ChoicePrices::FROM,
 						'amount' => round( $price, $decimals ),
 					);
+				}
+				continue;
+			}
+			if ( ChoicePrices::PRICE === $role ) {
+				$held = self::prices( $variations, $field, $options[ $field ] ?? array(), self::chosen_of( $chosen, array_diff( $fields, array( $field ) ) ), false );
+				foreach ( $held as $value => $prices ) {
+					$lowest = round( min( $prices ), $decimals );
+					// Choices still open that change the price leave the value's price unknown.
+					if ( round( max( $prices ), $decimals ) === $lowest ) {
+						$amounts[ $field ][ $value ] = array(
+							'kind'   => ChoicePrices::PRICE,
+							'amount' => $lowest,
+						);
+					}
 				}
 				continue;
 			}
@@ -108,8 +127,7 @@ final class ChoicePriceTable {
 
 	/**
 	 * The lowest price of each value of `$field` among the variations holding
-	 * `$context`, by value: the values the product offers, in its order, then
-	 * any other a variation holds, in the order the variations first hold them.
+	 * `$context`, by value, in the order of `prices()`.
 	 *
 	 * @param list<array>           $variations The variations and their prices.
 	 * @param string                $field      The attribute's field.
@@ -120,6 +138,24 @@ final class ChoicePriceTable {
 	 * @return array<string, float>
 	 */
 	private static function lowest( array $variations, string $field, array $offered, array $context, bool $set_only ): array {
+		return array_map( static fn ( array $prices ): float => min( $prices ), self::prices( $variations, $field, $offered, $context, $set_only ) );
+	}
+
+	/**
+	 * The prices of the variations holding `$context` and each value of
+	 * `$field`, by value: the values the product offers, in its order, then
+	 * any other a variation holds, in the order the variations first hold
+	 * them. A value no such variation holds is left out.
+	 *
+	 * @param list<array>           $variations The variations and their prices.
+	 * @param string                $field      The attribute's field.
+	 * @param array<string>         $offered    The values the product offers for the attribute.
+	 * @param array<string, string> $context    The chosen values that count.
+	 * @param bool                  $set_only   Whether only variations that set the attribute count; else one leaving it unset holds every value.
+	 * @phpstan-param list<PricedVariation> $variations
+	 * @return array<string, non-empty-list<float>>
+	 */
+	private static function prices( array $variations, string $field, array $offered, array $context, bool $set_only ): array {
 		$values = array_fill_keys( $offered, true );
 		foreach ( $variations as $variation ) {
 			$value = $variation['values'][ $field ] ?? '';
@@ -127,7 +163,7 @@ final class ChoicePriceTable {
 				$values[ $value ] = true;
 			}
 		}
-		$lowest = array();
+		$prices = array();
 		foreach ( $variations as $variation ) {
 			if ( ! ApplicableAttributes::matches( $variation['values'], $context ) ) {
 				continue;
@@ -137,15 +173,14 @@ final class ChoicePriceTable {
 				continue;
 			}
 			foreach ( '' === $held ? array_keys( $values ) : array( $held ) as $value ) {
-				$value            = (string) $value;
-				$lowest[ $value ] = min( $lowest[ $value ] ?? INF, $variation['price'] );
+				$prices[ (string) $value ][] = $variation['price'];
 			}
 		}
 		// In the order the variations first hold the values.
 		$ordered = array();
 		foreach ( array_keys( $values ) as $value ) {
-			if ( isset( $lowest[ (string) $value ] ) ) {
-				$ordered[ (string) $value ] = $lowest[ (string) $value ];
+			if ( isset( $prices[ (string) $value ] ) ) {
+				$ordered[ (string) $value ] = $prices[ (string) $value ];
 			}
 		}
 		return $ordered;
