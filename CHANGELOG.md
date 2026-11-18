@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.2](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.1...v1.22.2) (2026-11-18)
+
+
+### Bug Fixes
+
+* **catalogue:** delete the picture a job left unfinished when it stopped ([#306](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/306)) ([b930046](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/b930046fd128aea0e08e0a663f8b8d53d6146649))
+
 ## [1.22.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.0...v1.22.1) (2026-11-18)
 
 
