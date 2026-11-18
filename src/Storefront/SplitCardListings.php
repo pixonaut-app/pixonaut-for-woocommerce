@@ -349,8 +349,8 @@ final class SplitCardListings {
 				$keys[ $post->ID ][]  = (string) $key;
 			}
 		}
-		// Each card's link reads its product's variations.
-		FilterIndex::look_up( $carded );
+		// Each card's link reads its product's variations, as kept until the job reads a changed one again.
+		FilterIndex::look_up( $carded, true );
 		// Each card's picture reads one of them.
 		CardPages::prime( $keys );
 		return $posts;

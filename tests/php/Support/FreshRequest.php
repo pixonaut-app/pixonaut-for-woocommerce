@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Support;
 
+use Pixonaut\WooCommerce\Catalogue\FilterDataRefresh;
 use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\FilterOffers;
 use Pixonaut\WooCommerce\Catalogue\ProductVariants;
@@ -56,6 +57,7 @@ final class FreshRequest {
 		( new ReflectionProperty( FilterIndex::class, 'looked_up' ) )->setValue( null, array() );
 		( new ReflectionProperty( FilterIndex::class, 'switched' ) )->setValue( null, false );
 		( new ReflectionProperty( FilterIndex::class, 'errors' ) )->setValue( null, null );
+		( new ReflectionProperty( FilterDataRefresh::class, 'noted' ) )->setValue( null, null );
 		RequestCache::forget();
 	}
 

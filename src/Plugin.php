@@ -125,6 +125,7 @@ use Pixonaut\WooCommerce\Catalogue\VariationPictureCost;
 use Pixonaut\WooCommerce\Catalogue\PictureRunner;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
+use Pixonaut\WooCommerce\Catalogue\FilterDataRefresh;
 use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\ArchiveIndexes;
 use Pixonaut\WooCommerce\Catalogue\NotLiveProducts;
@@ -520,6 +521,7 @@ final class Plugin {
 		SmallerPictures::register();
 		UnfinishedPictures::register();
 		FilterIndex::register();
+		FilterDataRefresh::register();
 		ProductPageCache::register();
 		ArchiveIndexes::register();
 		SplitCardImageCopies::register();
