@@ -398,7 +398,7 @@ describe('uploading a picture', () => {
 	});
 
 	/** Declares an upload of `bytes` as `mime` and puts them. */
-	async function uploadAs(mime: string, bytes: Uint8Array) {
+	async function uploadAs(mime: string, bytes: Uint8Array<ArrayBuffer>) {
 		const declared = await send(fake, '/v1/assets', {
 			method: 'POST',
 			headers: storefront(),
