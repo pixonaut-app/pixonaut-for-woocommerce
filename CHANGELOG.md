@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.23.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.7...v1.23.0) (2026-11-18)
+
+
+### Features
+
+* **abilities:** read and set the store's shipping zones' methods ([#330](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/330)) ([56e5ee8](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/56e5ee875898b84be1c9a8990045a7733ce0b392))
+* **storefront:** an option placed in the designer's form can carry a line under its field ([#332](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/332)) ([3667f99](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/3667f9920ebc36f17300a6e26c5822fa267d8267))
+
 ## [1.22.7](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.22.6...v1.22.7) (2026-11-18)
 
 
