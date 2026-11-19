@@ -146,6 +146,33 @@ final class NotLiveProductsTest extends PersonalisedCartTestCase {
 		$this->assertStringContainsString( 'Shoppers do not see this product', $html );
 	}
 
+	public function test_a_block_themes_summary_hooks_leave_the_message_to_the_add_to_cart_form_block(): void {
+		$this->set_config( $this->product_id, self::config()->with_validity( false, InvalidReason::TEMPLATE_NOT_LIVE ) );
+		$page = $this->page();
+		$page->register();
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- The post the page's form block reads, as the page's loop sets it.
+		$GLOBALS['post']    = get_post( $this->product_id );
+		$GLOBALS['product'] = $this->reload( $this->product_id );
+
+		// WooCommerce runs the summary hooks while it filters a Product
+		// Summary block's HTML, and that output may never reach the page.
+		$summary = static function ( string $content ): string {
+			ob_start();
+			do_action( 'woocommerce_single_product_summary' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WooCommerce's own hook.
+			ob_end_clean();
+			return $content;
+		};
+		add_filter( 'render_block', $summary );
+		try {
+			do_blocks( '<!-- wp:paragraph --><p>Summary</p><!-- /wp:paragraph -->' );
+		} finally {
+			remove_filter( 'render_block', $summary );
+		}
+		$form = (string) apply_filters( 'render_block_woocommerce/add-to-cart-form', '', array(), null ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound, WordPress.NamingConventions.ValidHookName.UseUnderscores -- WordPress's own hook, by the block's name.
+
+		$this->assertStringContainsString( 'This product is not available right now.', $form );
+	}
+
 	public function test_a_sellable_product_page_says_nothing(): void {
 		$this->assertSame( '', $this->page()->html( $this->reload( $this->product_id ) ) );
 	}

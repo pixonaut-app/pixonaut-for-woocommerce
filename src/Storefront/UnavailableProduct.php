@@ -61,6 +61,12 @@ final class UnavailableProduct {
 
 	public function render_classic(): void {
 		global $product;
+		// A block theme's product page runs the summary hooks while
+		// WooCommerce filters a Product Summary block's HTML, which need not
+		// reach the page: there the add-to-cart form block says it.
+		if ( doing_filter( 'render_block' ) ) {
+			return;
+		}
 		if ( $product instanceof WC_Product ) {
 			echo $this->html( $product ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in html().
 		}
