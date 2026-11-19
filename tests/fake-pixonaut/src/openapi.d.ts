@@ -463,7 +463,7 @@ export interface paths {
         };
         /**
          * List assets
-         * @description The tenant's finished assets of every kind, newest first (or with `sort=most-used`, the ones the most of the tenant's drafts use first, then by name), a page at a time. An empty filter is the same as leaving it out. `role=picture` lists the pictures and `role=blank-photo` the blank photos; absent, both. `category=none` lists the assets in no category. `q` matches a name anywhere, or the start of an asset or session id. `retention=retained` lists what nothing will delete, and `auto-delete` everything else. `ids=a,b` narrows to the named assets; an id this tenant does not hold is left out. Each asset says what it was upscaled from; `upscaleSources=hide` lists an upscale in place of the picture it was made from, when the upscale is listed too.
+         * @description The tenant's finished assets of every kind, newest first (or with `sort=most-used`, the ones the most of the tenant's drafts use first, then by name), a page at a time. An empty filter is the same as leaving it out. `role=picture` lists the pictures and `role=blank-photo` the blank photos; absent, both. `category=none` lists the assets in no category. `q` matches a name anywhere, or the start of an asset or session id. `retention=retained` lists what nothing will delete, and `auto-delete` everything else. An archived asset (one only earlier template versions use, deleted from the library) is listed only by `ids`. `ids=a,b` narrows to the named assets; an id this tenant does not hold is left out. Each asset says what it was upscaled from; `upscaleSources=hide` lists an upscale in place of the picture it was made from, when the upscale is listed too.
          */
         get: operations["assets.list"];
         put?: never;
@@ -489,7 +489,7 @@ export interface paths {
         put?: never;
         /**
          * Retain or delete assets in bulk
-         * @description Answers every id on its own, in `results`, so one refusal does not fail the rest. `retain` keeps design uploads from being deleted when the tenant's retention runs out; any other id answers `not_found`. `delete` deletes assets of either kind, refusing each one as `DELETE /v1/assets/{id}` would, and a design upload an order holds as `order_referenced`.
+         * @description Answers every id on its own, in `results`, so one refusal does not fail the rest. `retain` keeps design uploads from being deleted when the tenant's retention runs out; any other id answers `not_found`. `delete` deletes assets of either kind, refusing or archiving each one as `DELETE /v1/assets/{id}` would (an archived one answers `archived: true`), and a design upload an order holds as `order_referenced`.
          */
         post: operations["assets.bulkUpdate"];
         delete?: never;
@@ -534,7 +534,7 @@ export interface paths {
         post?: never;
         /**
          * Delete a library asset
-         * @description Refused while something still names the asset: a template version or draft (`template_referenced`, with where), a blank's photo (`blank_referenced`), or the tenant's logo (`logo_referenced`, chosen in its settings; choose another first). `delete_failed` means another write held the tenant's assets for too long; nothing changed, and the request can be sent again. A design upload is deleted through `POST /v1/assets/bulk`.
+         * @description Refused while something still names the asset: a template's draft or latest version (`template_referenced`, with where), a design, an ordered one included (`design_referenced`; the usage read names them), a blank's photo (`blank_referenced`), or the tenant's logo (`logo_referenced`, chosen in its settings; choose another first). An asset only earlier versions of templates name is archived instead of deleted: it leaves the library's list, search and counts, and is kept stored so those versions still render (200, `keptFor` names them); a template revision that names it again brings it back. `delete_failed` means another write held the tenant's assets for too long; nothing changed, and the request can be sent again. A design upload is deleted through `POST /v1/assets/bulk`.
          */
         delete: operations["assets.delete"];
         options?: never;
@@ -610,6 +610,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/assets/{id}/low-resolution-acceptance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Accept a library picture's resolution
+         * @description Accepts the picture's resolution as it is, or takes the acceptance back: the same as `lowResolutionAccepted` on `PATCH /v1/assets/{id}`, and nothing else of the picture changes. A secret key, a connected store's integration key, or a member holding `assets:update`. Accepting settles what asked to fix the picture.
+         */
+        put: operations["assets.lowResolutionAcceptance.update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/assets/{id}/original": {
         parameters: {
             query?: never;
@@ -670,6 +690,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/assets/{id}/upscale": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upscale a library picture into a new one
+         * @description Upscales the picture to `widthPx` wide with a faithful model, which adds no detail of its own, into a new library picture; the source is left as it was. It runs in the background: the answer comes at once, with the upscale and its job, and the new picture appears in the library once the job ends; `GET /v1/upscales/{id}` says how it ended. Its credits are reserved when it is accepted and charged only when it delivers: a refused or failed upscale costs nothing. With `replaceUses`, the upscale then takes the picture's place in the templates using it. A member holding `assets:create` (and `templates:update` for `replaceUses`, `publications:create` to publish), or a connected store's integration key, which may ask `replaceUses` too: the picture's place in templates is all it changes. A store's upscale is the merchant's: the storefront's daily ceiling on its customers' spending does not count it.
+         */
+        post: operations["assets.upscale.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assets/{id}/upscale-quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Quote an upscale of a library picture
+         * @description What an upscale of this picture to `widthPx` wide would make and cost, and what the tenant's credits could spend now, or the refusal the upscale would answer. Nothing is reserved or charged. A member holding `assets:create`, or a connected store's integration key.
+         */
+        get: operations["assets.upscaleQuote.get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/assets/{id}/usage": {
         parameters: {
             query?: never;
@@ -679,7 +739,7 @@ export interface paths {
         };
         /**
          * Where an asset is used
-         * @description Every use of a finished asset, grouped, and not paged: the templates, blank photos and workspace logo a delete is refused over, and the orders and committed designs that keep a customer's picture. A member sees the orders only with `orders:read` and the designs only with `designs:read`; `withheld` counts what was left out. A delete still answers its own 409 when a use lands after this read.
+         * @description Every use of a finished asset, grouped, and not paged: the templates, blank photos and workspace logo a delete is refused over, the earlier template versions an archived asset is kept for, and the orders and committed designs that keep a customer's picture. A member sees the orders only with `orders:read` and the designs only with `designs:read`; `withheld` counts what was left out. A delete still answers its own 409 when a use lands after this read.
          */
         get: operations["assets.usage.get"];
         put?: never;
@@ -1208,7 +1268,7 @@ export interface paths {
         };
         /**
          * Read this store's connection
-         * @description Called with the store's own integration key. Answers where the store is connected as it is now: its name after a rename in the studio, the workspace and its environment, its webhook endpoint and its publishable key's origins. Answers the brand the store's hosted pages are drawn in, its own or else the workspace's default, and the workspace's brands it may choose from with `PATCH /v1/connect`. Also answers, read only, the workspace settings that change what the store's customers and merchant get, as the studio's settings show them now: whether a proof carries a watermark, the saved address new orders ship to, the print defaults and how long a customer upload is kept. A store connected to a sandbox reads the sandbox's. A member changes them in the studio.
+         * @description Called with the store's own integration key. Answers where the store is connected as it is now: its name after a rename in the studio, the workspace and its environment, its webhook endpoint and its publishable key's origins. Answers the brand the store's hosted pages are drawn in, its own or else the workspace's default, and the workspace's brands it may choose from with `PATCH /v1/connect`. Also answers, read only, the workspace settings that change what the store's customers and merchant get, as the studio's settings show them now: whether a proof carries a watermark, the saved address new orders ship to, the print defaults (with what a picture printing too soft does) and how long a customer upload is kept. A store connected to a sandbox reads the sandbox's. A member changes them in the studio.
          */
         get: operations["connectedStore.get"];
         put?: never;
@@ -1823,7 +1883,7 @@ export interface paths {
         put?: never;
         /**
          * Place one order for the prints of one item
-         * @description A secret key, an integration key, or a studio member holding `orders:create`. Places ONE order for every print in `prints`: the prints of one physical item, a front and a back of one shirt, made by one printshop as one item. The prints must be prints of designs committed on the same blank, each in a placement of its own, or all on no blank, completed or still rendering. An order of prints still rendering is written `awaiting_prints` and answered 201 at once; it goes to its printshop on its own once every print is complete, checked then against what needs the files (`technique_not_offered`, the sizes, the printshop's required keys), and a refusal then leaves it `failed` with `failureKind` naming it. A print of it that fails fails it `print_failed`, and prints not complete within three hours of placing fail it `prints_timed_out`. A print that failed is refused `409 print_not_completed`. `designs` names approved designs in place of their prints: the order makes a new print of each, as `POST /v1/prints` would, and waits for them, except that a standing design's order reuses the print of its current revision, completed or still rendering, and makes one only when there is none or it failed; an unknown design is `404 design_not_found`, one not approved `409 design_not_approved`, and nothing is written. Naming both `prints` and `designs`, or neither, is `400`. Every check that needs no files runs at placement: `422 print_without_placement` names a print committed before its placement was recorded, `422 mixed_blanks` answers prints on different blanks or some on a blank and some on none, and `422 duplicate_placement` two in one placement. Prints on a blank go to their blank's printshop, set when the blank was created; every print is checked against that printshop. `printshopId` naming another printshop is refused `422 printshop_differs_from_blank`, and naming the blank's own as an unknown field. Prints on no blank, such as a sign's front and back, go to the printshop the first print's design was committed with, else `printshopId`, else the workspace default, else are refused `409 print_needs_printshop`, except in a sandbox, where the order is placed with no printshop (`printshopConnectionId` null, `adapter` `none`); a print whose design was committed with another printshop is refused `422 print_committed_elsewhere`, naming it. A printshop that cannot make several prints as one item answers `422 printshop_cannot_combine`, and prints whose designs disagree on what the printshop makes one item from answer `422 prints_disagree` naming the key: nothing is written either way. One print places exactly the order `POST /v1/prints/{id}/orders` would. `quantity`, `externalRef`, `recipient`, `shippingAddress` and the `Idempotency-Key` header are as there; the first print's design's captured delivery is the one the order takes when the body names neither a recipient nor an address. A partner refusing the order is still a 201: the order is recorded as `failed`. A printshop the merchant paused takes no order: one going there is refused `409 printshop_paused`, naming it, and nothing is written. A print made by a method its printshop does not print with, where the printshop states what it prints with, is refused `422 technique_not_offered`, naming the placement, the method and the printshop's, and nothing is written. A placement its blank says an order must print, left without a print, is refused `422 placement_unfilled`, naming it, and nothing is written. A design has one live order, in any status but `failed` and `cancelled`, whoever placed it: an order of prints of a design that has one, or naming such a design, is refused `409 design_already_ordered`, naming the design and its newest live order, and nothing is written; two sent at once place one. `reorder: true` orders it again on purpose. A standing design is never refused `design_already_ordered`: it is ordered on every sale. A repeat with the first request's `Idempotency-Key` is answered with the first order before this is asked.
+         * @description A secret key, an integration key, or a studio member holding `orders:create`. Places ONE order for every print in `prints`: the prints of one physical item, a front and a back of one shirt, made by one printshop as one item. The prints must be prints of designs committed on the same blank, each in a placement of its own, or all on no blank, completed or still rendering. An order of prints still rendering is written `awaiting_prints` and answered 201 at once; it goes to its printshop on its own once every print is complete, checked then against what needs the files (`technique_not_offered`, the sizes, the printshop's required keys), and a refusal then leaves it `failed` with `failureKind` naming it. A print of it that fails fails it `print_failed`, and prints not complete within three hours of placing fail it `prints_timed_out`. A print that failed is refused `409 print_not_completed`. `designs` names approved designs in place of their prints: the order makes a new print of each, as `POST /v1/prints` would, and waits for them, except that a standing design's order reuses the print of its current revision, completed or still rendering, and makes one only when there is none or it failed; an unknown design is `404 design_not_found`, one not approved `409 design_not_approved`, and nothing is written. Naming both `prints` and `designs`, or neither, is `400`. Every check that needs no files runs at placement: `422 print_without_placement` names a print committed before its placement was recorded, `422 mixed_blanks` answers prints on different blanks or some on a blank and some on none, and `422 duplicate_placement` two in one placement. Prints on a blank go to their blank's printshop, set when the blank was created; every print is checked against that printshop. `printshopId` naming another printshop is refused `422 printshop_differs_from_blank`, and naming the blank's own as an unknown field. Prints on no blank, such as a sign's front and back, go to the printshop the first print's design was committed with, else `printshopId`, else the workspace default, else are refused `409 print_needs_printshop`, except in a sandbox, where the order is placed with no printshop (`printshopConnectionId` null, `adapter` `none`); a print whose design was committed with another printshop is refused `422 print_committed_elsewhere`, naming it. A printshop that cannot make several prints as one item answers `422 printshop_cannot_combine`, and prints whose designs disagree on what the printshop makes one item from answer `422 prints_disagree` naming the key: nothing is written either way. One print places exactly the order `POST /v1/prints/{id}/orders` would. `quantity`, `externalRef`, `recipient`, `shippingAddress` and the `Idempotency-Key` header are as there; the first print's design's captured delivery is the one the order takes when the body names neither a recipient nor an address. A partner refusing the order is still a 201: the order is recorded as `failed`. A printshop the merchant paused takes no order: one going there is refused `409 printshop_paused`, naming it, and nothing is written. A print made by a method its printshop does not print with, where the printshop states what it prints with, is refused `422 technique_not_offered`, naming the placement, the method and the printshop's, and nothing is written. A placement its blank says an order must print, left without a print, is refused `422 placement_unfilled`, naming it, and nothing is written. A design has one live order, in any status but `failed` and `cancelled`, whoever placed it: an order of prints of a design that has one, or naming such a design, is refused `409 design_already_ordered`, naming the design and its newest live order, and nothing is written; two sent at once place one. `reorder: true` orders it again on purpose. A standing design is never refused `design_already_ordered`: it is ordered on every sale. A repeat with the first request's `Idempotency-Key` is answered with the first order before this is asked. `storeOrder` names the store order the item was sold in and how many items of it the store sends: the items bound for one printshop that takes several items in one order are sent to it together as one of its orders, so this order waits `awaiting_prints` for the others bound there, its prints done or not, and goes with them once every item has been placed and theirs are ready, or two hours after the first.
          */
         post: operations["orders.create"];
         delete?: never;
@@ -2736,6 +2796,26 @@ export interface paths {
          * @description Judges `widthMm` × `heightMm` against the template's declared ratio and, when the body names a `blankId` and `placementId` (both or neither), against that placement's print area. On a blank whose print areas change with an option, `variant` or `variantRow` names the size the print is for, and each size is judged against that row's area; naming neither, a size on a placement printed across its whole area is legal when it is the area of a size the blank sells, and on any other placement it is judged against the blank's reference size, else the largest. A row the placement has no area for, and such a placement on a blank that sells none of its sizes, is refused with `unknown_placement`. An illegal size is still a 200: the verdict says which check it failed. Every verdict carries `lowResolution`, the images the workspace put in the template that print below their recommended resolution at the size; show it to the merchant, and to the shopper where the size is theirs to choose. When the workspace refuses such sizes, a size with any is illegal with `low_resolution`. A body with `sizes` (up to 50) in place of one size judges each against the same placement, answering `verdicts` in the order asked. A named placement that does not resolve is refused with `unknown_placement` rather than judged without its bounds.
          */
         post: operations["templates.printSize.validate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/upscales/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read an upscale
+         * @description How an upscale asked for with `POST /v1/assets/{id}/upscale` stands: running, done with its new picture, or failed with why. A member holding `assets:read`, or a connected store's integration key, for an upscale that key asked for; any other is not found.
+         */
+        get: operations["upscales.get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -22581,6 +22661,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "image/jpeg": string;
                     "image/png": string;
                     "image/webp": string;
                 };
@@ -24718,6 +24799,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         results: ({
+                            /** @enum {boolean} */
+                            archived?: true;
                             id: string;
                             /** @enum {boolean} */
                             ok: true;
@@ -25110,6 +25193,23 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description The asset was archived: only the earlier template versions in `keptFor` name it */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {boolean} */
+                        archived: true;
+                        keptFor: {
+                            baseId: string;
+                            version: number | null;
+                        }[];
+                    };
+                };
+            };
             /** @description The asset was deleted */
             204: {
                 headers: {
@@ -25156,7 +25256,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: template_referenced, blank_referenced, logo_referenced, order_referenced, delete_failed */
+            /** @description Refused: template_referenced, design_referenced, blank_referenced, logo_referenced, order_referenced, delete_failed */
             409: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -26034,6 +26134,149 @@ export interface operations {
             };
         };
     };
+    "assets.lowResolutionAcceptance.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description true accepts the picture's resolution as it is: a print-size check no longer names it in `lowResolution`, and a workspace that refuses soft pictures no longer refuses a size over it. false takes the acceptance back. */
+                    accepted: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description The picture */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        categoryId: string | null;
+                        createdAt: number;
+                        heightPx: number | null;
+                        id: string;
+                        /** @description Its name per customer-facing language, by code; a language left out shows its own name. */
+                        localizedNames: {
+                            [key: string]: string;
+                        };
+                        /** @description Whether its resolution is accepted as it is: a template holding it is never warned about for printing it too soft. */
+                        lowResolutionAccepted: boolean;
+                        mime: string;
+                        name: string | null;
+                        /** @description `picture`, or `blank-photo` for a blank's product photo, which is in no category and counted in no category or tag. */
+                        role: string;
+                        sizeBytes: number;
+                        tags: string[];
+                        /** @description When the asset's name, visibility, category or tags last changed: what a PATCH's `expectedUpdatedAt` names. */
+                        updatedAt: number;
+                        visibility: string;
+                        widthPx: number | null;
+                    };
+                };
+            };
+            /** @description Refused: invalid_body */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `invalid_body`. */
+                        fields?: string[];
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: lock_timeout */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
     "assets.original.get": {
         parameters: {
             query?: never;
@@ -26567,6 +26810,361 @@ export interface operations {
             };
         };
     };
+    "assets.upscale.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Once the upscale is done, point every template using the picture at the upscale instead, as `POST /v1/assets/{id}/replace-uses` does, with no request open then. Needs `templates:update`, which a connected store's integration key does not. An upscale that fails replaces nothing; the upscale's read answers what the replacement changed. */
+                    replaceUses?: {
+                        /** @description Publish each changed template again, when it held no other unpublished change. Needs `publications:create`, which a connected store's integration key does not. */
+                        publish: boolean;
+                        /** @description Only these templates, by base id, as `GET /v1/assets/{id}/replace-uses` named them; every template using the picture when the upscale is done when left out. */
+                        templates?: string[];
+                    };
+                    /** @description The new picture's width in pixels. Its height follows the source's ratio. At most 4 times the source's width and 12000 px on either edge. */
+                    widthPx: number;
+                };
+            };
+        };
+        responses: {
+            /** @description The upscale accepted, and the job running it */
+            202: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description The upscale's id. */
+                        id: string;
+                        job: {
+                            /** @description How many times it was taken to run, the current or last run included; a wait gives its run back. For a schedule, the runs that failed since the last that succeeded. */
+                            attempts: number;
+                            createdAt: number;
+                            finishedAt: number | null;
+                            id: string;
+                            /** @description What the job does, such as `print.render`. */
+                            kind: string;
+                            /** @description What it last failed with, as a code. */
+                            lastError: string | null;
+                            lastRunAt: number | null;
+                            /** @description Why a queued job waits: `continue`, it has more to do; `rate_limited`, the partner it asks refused it over its limit. */
+                            parkReason: string | null;
+                            /** @description When a queued job runs next (epoch ms). */
+                            runAt: number | null;
+                            state: string;
+                            /** @description The id of what the job works on, such as the print it renders. */
+                            subjectId: string | null;
+                        };
+                        sourceAssetId: string;
+                        /** @description `running` until its job ends; then `done`, with the new picture's `assetId`, or `failed`, with why in `failure`. */
+                        status: string;
+                        upscale: {
+                            /** @description What the upscale costs, in credits. */
+                            credits: number;
+                            heightPx: number;
+                            outputPixels: number;
+                            widthPx: number;
+                        };
+                    };
+                };
+            };
+            /** @description Refused: invalid_body */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `invalid_body`. */
+                        fields?: string[];
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: insufficient_credits. The tenant's credits cannot cover this action, its spending cap has no room left for it, it is on the Free plan and Free workspaces together have reached the platform's daily ceiling on credit spending (it resets at midnight UTC), a storefront's customer asked and the tenant's daily storefront ceiling has no room left, or the account that created the tenant has not confirmed its email address yet, so none of it was done. `reason` says which: `balance`, `spending_cap`, `free_plan_ceiling`, `storefront_ceiling` or `email_unverified`. `requiredCredits`, `availableCredits` and `reason` are left out for a publishable key. */
+            402: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Always sent with `insufficient_credits`. */
+                        availableCredits?: number;
+                        error: string;
+                        /** @description Always sent with `insufficient_credits`. */
+                        reason?: string;
+                        /** @description Always sent with `insufficient_credits`. */
+                        requiredCredits?: number;
+                    };
+                };
+            };
+            /** @description Refused: forbidden, publish_forbidden, origin_forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: not_a_picture, upscale_not_larger, upscale_factor_exceeded, upscale_edge_exceeded, upscale_pixels_exceeded, payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Sent with `payload_too_large`. */
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                        /** @description Always sent with `upscale_edge_exceeded`. */
+                        maxEdgePx?: number;
+                        /** @description Always sent with `upscale_factor_exceeded`. */
+                        maxFactor?: number;
+                        /** @description Always sent with `upscale_pixels_exceeded`. */
+                        maxPixels?: number;
+                        /** @description Always sent with `upscale_factor_exceeded`, `upscale_edge_exceeded`, `upscale_pixels_exceeded`. */
+                        maxWidthPx?: number;
+                        /** @description Always sent with `upscale_not_larger`. */
+                        sourceWidthPx?: number;
+                    };
+                };
+            };
+            /** @description Refused: rate_limited */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: upscale_unavailable, lock_timeout */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: storage_quota_exceeded. The tenant's storage quota would be exceeded. `usedBytes` and `quotaBytes` are left out for a publishable key. */
+            507: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `storage_quota_exceeded`. */
+                        quotaBytes?: number;
+                        /** @description Always sent with `storage_quota_exceeded`. */
+                        usedBytes?: number;
+                    };
+                };
+            };
+        };
+    };
+    "assets.upscaleQuote.get": {
+        parameters: {
+            query: {
+                widthPx: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The upscale this would be */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        availableCredits: number;
+                        /** @description Why the price is past `availableCredits`, as the upscale's `insufficient_credits` would say: `balance`, `spending_cap` or `email_unverified`. Null when it fits. */
+                        shortfallReason: string | null;
+                        sourceHeightPx: number;
+                        sourceWidthPx: number;
+                        upscale: {
+                            /** @description What the upscale costs, in credits. */
+                            credits: number;
+                            heightPx: number;
+                            outputPixels: number;
+                            widthPx: number;
+                        };
+                    };
+                };
+            };
+            /** @description Refused: invalid_body */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `invalid_body`. */
+                        fields?: string[];
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, feature_disabled, forbidden, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: not_a_picture, upscale_not_larger, upscale_factor_exceeded, upscale_edge_exceeded, upscale_pixels_exceeded */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `upscale_edge_exceeded`. */
+                        maxEdgePx?: number;
+                        /** @description Always sent with `upscale_factor_exceeded`. */
+                        maxFactor?: number;
+                        /** @description Always sent with `upscale_pixels_exceeded`. */
+                        maxPixels?: number;
+                        /** @description Always sent with `upscale_factor_exceeded`, `upscale_edge_exceeded`, `upscale_pixels_exceeded`. */
+                        maxWidthPx?: number;
+                        /** @description Always sent with `upscale_not_larger`. */
+                        sourceWidthPx?: number;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: upscale_unavailable */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
     "assets.usage.get": {
         parameters: {
             query?: never;
@@ -26601,6 +27199,13 @@ export interface operations {
                             externalRef: string | null;
                             status: string;
                         }[];
+                        /** @description Every earlier published version that names the asset. They keep it stored, but do not refuse a delete: an asset only these name is archived out of the library instead. */
+                        keptFor: {
+                            baseId: string;
+                            deleted: boolean;
+                            name: string;
+                            version: number | null;
+                        }[];
                         /** @description Whether the asset is the workspace logo. */
                         logo: boolean;
                         /** @description Every order of a print of a design that names the asset. */
@@ -26609,7 +27214,7 @@ export interface operations {
                             orderId: string;
                             status: string;
                         }[];
-                        /** @description Every template whose draft (`version: null`) or a published version names the asset. */
+                        /** @description Every template whose draft (`version: null`) or latest published version names the asset: a delete is refused over these. */
                         templates: {
                             baseId: string;
                             deleted: boolean;
@@ -26822,7 +27427,11 @@ export interface operations {
                             spendLimit: number;
                             /** @description Where it stands: `enabled` or `disabled`; `failing` while its latest firing failed; `broken` while it cannot fire at all, because its author lacks a grant it needs. `reason` says why, in words. */
                             standing: {
-                                state: string;
+                                /** @enum {string} */
+                                state: "enabled";
+                            } | {
+                                /** @enum {string} */
+                                state: "disabled";
                             } | {
                                 reason: string;
                                 /** @enum {string} */
@@ -27143,7 +27752,11 @@ export interface operations {
                         spendLimit: number;
                         /** @description Where it stands: `enabled` or `disabled`; `failing` while its latest firing failed; `broken` while it cannot fire at all, because its author lacks a grant it needs. `reason` says why, in words. */
                         standing: {
-                            state: string;
+                            /** @enum {string} */
+                            state: "enabled";
+                        } | {
+                            /** @enum {string} */
+                            state: "disabled";
                         } | {
                             reason: string;
                             /** @enum {string} */
@@ -28183,7 +28796,11 @@ export interface operations {
                         spendLimit: number;
                         /** @description Where it stands: `enabled` or `disabled`; `failing` while its latest firing failed; `broken` while it cannot fire at all, because its author lacks a grant it needs. `reason` says why, in words. */
                         standing: {
-                            state: string;
+                            /** @enum {string} */
+                            state: "enabled";
+                        } | {
+                            /** @enum {string} */
+                            state: "disabled";
                         } | {
                             reason: string;
                             /** @enum {string} */
@@ -28499,7 +29116,11 @@ export interface operations {
                         spendLimit: number;
                         /** @description Where it stands: `enabled` or `disabled`; `failing` while its latest firing failed; `broken` while it cannot fire at all, because its author lacks a grant it needs. `reason` says why, in words. */
                         standing: {
-                            state: string;
+                            /** @enum {string} */
+                            state: "enabled";
+                        } | {
+                            /** @enum {string} */
+                            state: "disabled";
                         } | {
                             reason: string;
                             /** @enum {string} */
@@ -28865,7 +29486,11 @@ export interface operations {
                             spendLimit: number;
                             /** @description Where it stands: `enabled` or `disabled`; `failing` while its latest firing failed; `broken` while it cannot fire at all, because its author lacks a grant it needs. `reason` says why, in words. */
                             standing: {
-                                state: string;
+                                /** @enum {string} */
+                                state: "enabled";
+                            } | {
+                                /** @enum {string} */
+                                state: "disabled";
                             } | {
                                 reason: string;
                                 /** @enum {string} */
@@ -29085,7 +29710,11 @@ export interface operations {
                         spendLimit: number;
                         /** @description Where it stands: `enabled` or `disabled`; `failing` while its latest firing failed; `broken` while it cannot fire at all, because its author lacks a grant it needs. `reason` says why, in words. */
                         standing: {
-                            state: string;
+                            /** @enum {string} */
+                            state: "enabled";
+                        } | {
+                            /** @enum {string} */
+                            state: "disabled";
                         } | {
                             reason: string;
                             /** @enum {string} */
@@ -29309,7 +29938,11 @@ export interface operations {
                         spendLimit: number;
                         /** @description Where it stands: `enabled` or `disabled`; `failing` while its latest firing failed; `broken` while it cannot fire at all, because its author lacks a grant it needs. `reason` says why, in words. */
                         standing: {
-                            state: string;
+                            /** @enum {string} */
+                            state: "enabled";
+                        } | {
+                            /** @enum {string} */
+                            state: "disabled";
                         } | {
                             reason: string;
                             /** @enum {string} */
@@ -34232,6 +34865,8 @@ export interface operations {
                             defaultBleedMm: number;
                             /** @description The safe area inside the trim, in millimetres, on the same terms as defaultBleedMm. */
                             defaultSafeAreaMm: number;
+                            /** @description What happens when an image the workspace put in a template prints below its recommended resolution at a size: `warn` lets the size through and names the image in `lowResolution`, `refuse` makes the size illegal (`low_resolution`), `off` says nothing. An image accepted with `PUT /v1/assets/{id}/low-resolution-acceptance` is never named. */
+                            lowResolutionAction: string;
                             /** @description The minimum print resolution, in dots per inch, a design's pictures are judged against when their template sets none. */
                             minPrintDpi: number;
                             /** @description The form of print files of designs this store sends: its own choice, else the workspace's. A template's own choice outranks it. */
@@ -34516,6 +35151,8 @@ export interface operations {
                             defaultBleedMm: number;
                             /** @description The safe area inside the trim, in millimetres, on the same terms as defaultBleedMm. */
                             defaultSafeAreaMm: number;
+                            /** @description What happens when an image the workspace put in a template prints below its recommended resolution at a size: `warn` lets the size through and names the image in `lowResolution`, `refuse` makes the size illegal (`low_resolution`), `off` says nothing. An image accepted with `PUT /v1/assets/{id}/low-resolution-acceptance` is never named. */
+                            lowResolutionAction: string;
                             /** @description The minimum print resolution, in dots per inch, a design's pictures are judged against when their template sets none. */
                             minPrintDpi: number;
                             /** @description The form of print files of designs this store sends: its own choice, else the workspace's. A template's own choice outranks it. */
@@ -40247,6 +40884,13 @@ export interface operations {
                         /** @description The state, province or county, where the country uses one. */
                         region?: string;
                     };
+                    /** @description The store order this item was sold in, for a store that sells several items in one order. The items of one store order bound for one printshop are sent to it as one of its orders, where it takes several items in one, so they ship together: this order waits, `awaiting_prints`, until every item of the store order has been placed and the prints of those bound for its printshop are done, or until two hours from its first item, then goes with the ones ready. Each item stays an order of its own, with its own status, tracking and retry. A retry or replacement of one goes on its own. */
+                    storeOrder?: {
+                        /** @description How many items of that store order the store sends as orders, each item one order, this one included. */
+                        items: number;
+                        /** @description The store's own reference for the order the item was sold in, the same for every item of it, such as its order id. Opaque: only compared with the other items'. */
+                        ref: string;
+                    };
                     /** @description The variant of the print's blank the order is for, by ref (`v_…`). Left out, a blank with exactly one variant orders that one, and one with several is refused `variant_required`. A ref of another blank is refused `variant_not_of_blank`, and a retired one `variant_retired`. The order keeps a copy of the variant as it was: its options and the printshop fields it was sent. */
                     variant?: string;
                 };
@@ -44673,6 +45317,14 @@ export interface operations {
                                     tool: string;
                                     upscaleId?: string;
                                     upscaleIds?: string[];
+                                    variations?: {
+                                        added: number;
+                                        changed: number;
+                                        disabled: number;
+                                        kept: number;
+                                        remaining: number;
+                                        skipped: number;
+                                    };
                                 };
                             };
                             contentKeys: {
@@ -44940,6 +45592,14 @@ export interface operations {
                                     tool: string;
                                     upscaleId?: string;
                                     upscaleIds?: string[];
+                                    variations?: {
+                                        added: number;
+                                        changed: number;
+                                        disabled: number;
+                                        kept: number;
+                                        remaining: number;
+                                        skipped: number;
+                                    };
                                 };
                             };
                             contentKeys: {
@@ -45171,6 +45831,14 @@ export interface operations {
                                     tool: string;
                                     upscaleId?: string;
                                     upscaleIds?: string[];
+                                    variations?: {
+                                        added: number;
+                                        changed: number;
+                                        disabled: number;
+                                        kept: number;
+                                        remaining: number;
+                                        skipped: number;
+                                    };
                                 };
                             };
                             contentKeys: {
@@ -45461,6 +46129,14 @@ export interface operations {
                                     tool: string;
                                     upscaleId?: string;
                                     upscaleIds?: string[];
+                                    variations?: {
+                                        added: number;
+                                        changed: number;
+                                        disabled: number;
+                                        kept: number;
+                                        remaining: number;
+                                        skipped: number;
+                                    };
                                 };
                             };
                             contentKeys: {
@@ -45919,6 +46595,14 @@ export interface operations {
                                     tool: string;
                                     upscaleId?: string;
                                     upscaleIds?: string[];
+                                    variations?: {
+                                        added: number;
+                                        changed: number;
+                                        disabled: number;
+                                        kept: number;
+                                        remaining: number;
+                                        skipped: number;
+                                    };
                                 };
                             };
                             contentKeys: {
@@ -50268,6 +50952,8 @@ export interface operations {
                             createdAt: number;
                             /** @description Whether its printshop refused to renew its credentials: it needs its merchant to connect it again through the printshop's consent. */
                             credentialsLapsed: boolean;
+                            /** @description Whether the printshop keeps an order sent as a draft, so `sendsDrafts` may be turned on: false for one that has no drafts. */
+                            draftOrders: boolean;
                             id: string;
                             isDefault: boolean;
                             name: string;
@@ -50276,6 +50962,8 @@ export interface operations {
                             printMethods: string[];
                             printMethodsFixed: boolean;
                             secretNames: string[] | null;
+                            /** @description Whether the printshop is sent each order as a draft, which it keeps and makes nothing of until its merchant confirms it in the printshop's own dashboard. The order reads as a draft waiting to be confirmed there until then; once confirmed, its status, shipment and tracking come back as any order's do. Off by default. */
+                            sendsDrafts: boolean;
                             updatedAt: number;
                         }[];
                     } | {
@@ -50288,9 +50976,13 @@ export interface operations {
                             billingCurrencyFrom: string | null;
                             /** @description Whether its printshop has a catalogue to browse and import from (GET /v1/printshop-catalogue-products). */
                             catalogue: boolean;
+                            /** @description Whether the printshop keeps an order sent as a draft, so `sendsDrafts` may be turned on: false for one that has no drafts. */
+                            draftOrders: boolean;
                             id: string;
                             isDefault: boolean;
                             name: string;
+                            /** @description Whether the printshop is sent each order as a draft, which it keeps and makes nothing of until its merchant confirms it in the printshop's own dashboard. The order reads as a draft waiting to be confirmed there until then; once confirmed, its status, shipment and tracking come back as any order's do. Off by default. */
+                            sendsDrafts: boolean;
                         }[];
                     };
                 };
@@ -54077,6 +54769,26 @@ export interface operations {
                             coverage: string;
                             defaultHeightMm: number;
                             defaultWidthMm: number;
+                            /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box: each part's place on the sheet in millimetres, which parts are printed, and which way is up on each once folded. A live preview draws the folds between the parts and names each printed panel, turned the way it reads once folded. Absent when it is printed as it lies. */
+                            flatLayout?: {
+                                /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
+                                parts: {
+                                    /** @description The part's height, in mm. */
+                                    heightMm: number;
+                                    /** @description The part's name: `Lid`, `Front`, `Glue tab`. */
+                                    name: string;
+                                    /** @description True for a panel, named for the face of the folded product it becomes; false for a glue tab, hidden once folded. The print covers glue tabs too. */
+                                    printed: boolean;
+                                    /** @description Which way is up on the part once folded, in quarter turns clockwise from the sheet's up: 2 for a flap that lies upside down on the sheet. */
+                                    up: 0 | 1 | 2 | 3;
+                                    /** @description The part's width, in mm. */
+                                    widthMm: number;
+                                    /** @description The part's left edge, in mm from the sheet's left. */
+                                    xMm: number;
+                                    /** @description The part's top edge, in mm from the sheet's top. */
+                                    yMm: number;
+                                }[];
+                            };
                             /** @description How far in from the print's edge the product folds on every side, in millimetres, on a placement that folds, such as a canvas round its frame: a live preview draws the fold lines there, the product's front inside them. Absent when it does not fold. */
                             foldMm?: number;
                             maxHeightMm: number;
@@ -55125,6 +55837,173 @@ export interface operations {
             };
             /** @description Refused: rate_limited */
             429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
+    "upscales.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The upscale */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description The new picture, once it is done. */
+                        assetId: string | null;
+                        createdAt: number;
+                        endedAt: number | null;
+                        /** @description Why it failed, as a code: `upscale_failed`, `storage_quota_exceeded`, `upscale_timed_out`... */
+                        failure: string | null;
+                        heightPx: number;
+                        id: string;
+                        /** @description The replacement asked with `replaceUses`, null when none was: `pending` until the upscale is done and the replacement has run; `not_run` once the upscale failed, which replaces nothing; `done` with what changed and what was left, as `POST /v1/assets/{id}/replace-uses` answers it; `refused` when the picture or its upscale left the library first (`not_found`, `replacement_not_found`) or who asked may no longer make it (`requester_not_permitted`); `failed`, with the templates it had changed, when it failed in a way of ours. */
+                        replaceUses: {
+                            publish: boolean;
+                            /** @enum {string} */
+                            status: "pending";
+                        } | {
+                            publish: boolean;
+                            /** @enum {string} */
+                            status: "not_run";
+                        } | {
+                            /** @description Whether more templates may still name the picture: one request changes at most 25, and the same request again goes on with the rest. */
+                            more: boolean;
+                            publish: boolean;
+                            /** @description Every template naming the picture that was left as it was. */
+                            skipped: {
+                                baseId: string;
+                                /** @description `draft_changed` when its draft moved while this ran, `draft_invalid` for a stored draft the draft rules refuse, `failed` when its write failed in a way of ours and nothing of it changed. */
+                                reason: string;
+                            }[];
+                            /** @enum {string} */
+                            status: "done";
+                            /** @description Every template whose draft now names the upscale. */
+                            templates: {
+                                baseId: string;
+                                publish: {
+                                    /** @description True when the template's draft held other unpublished changes: its live version was published with the upscale in the picture's place and none of the draft's changes, and the draft keeps those changes, now with the upscale, unpublished. */
+                                    draftKept?: boolean;
+                                    /** @enum {string} */
+                                    outcome: "published";
+                                    version: number;
+                                } | {
+                                    /** @enum {string} */
+                                    outcome: "kept_as_draft";
+                                    /** @description `not_asked` when no publish was asked for, `unpublished_changes` when only the draft, which holds other changes not published unasked, uses the picture and its live version does not, and `never_published` for a template with no version yet. */
+                                    reason: string;
+                                } | {
+                                    /** @description The single publish's refusal code. */
+                                    error: string;
+                                    /** @enum {string} */
+                                    outcome: "refused";
+                                    status: number;
+                                };
+                                /** @description The draft revision that now names the upscale. */
+                                revision: number;
+                            }[];
+                        } | {
+                            error: string;
+                            publish: boolean;
+                            /** @enum {string} */
+                            status: "refused";
+                        } | {
+                            error: string;
+                            publish: boolean;
+                            /** @enum {string} */
+                            status: "failed";
+                            /** @description Every template whose draft now names the upscale. */
+                            templates: {
+                                baseId: string;
+                                publish: {
+                                    /** @description True when the template's draft held other unpublished changes: its live version was published with the upscale in the picture's place and none of the draft's changes, and the draft keeps those changes, now with the upscale, unpublished. */
+                                    draftKept?: boolean;
+                                    /** @enum {string} */
+                                    outcome: "published";
+                                    version: number;
+                                } | {
+                                    /** @enum {string} */
+                                    outcome: "kept_as_draft";
+                                    /** @description `not_asked` when no publish was asked for, `unpublished_changes` when only the draft, which holds other changes not published unasked, uses the picture and its live version does not, and `never_published` for a template with no version yet. */
+                                    reason: string;
+                                } | {
+                                    /** @description The single publish's refusal code. */
+                                    error: string;
+                                    /** @enum {string} */
+                                    outcome: "refused";
+                                    status: number;
+                                };
+                                /** @description The draft revision that now names the upscale. */
+                                revision: number;
+                            }[];
+                        } | null;
+                        sourceAssetId: string;
+                        /** @description `running` until its job ends; then `done`, with the new picture's `assetId`, or `failed`, with why in `failure`. */
+                        status: string;
+                        widthPx: number;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, feature_disabled, forbidden, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: not_found */
+            404: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
                     [name: string]: unknown;

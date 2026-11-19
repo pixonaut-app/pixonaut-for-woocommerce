@@ -55,8 +55,8 @@ final class FulfilmentTest extends FulfilmentTestCase {
 		// The order names the store order it was sold in, and how many Pixonaut lines it has.
 		$this->assertSame(
 			array(
-				'ref'   => 'wc:' . self::SITE . ':order:' . $this->order->get_id(),
 				'items' => 1,
+				'ref'   => 'wc:' . self::SITE . ':order:' . $this->order->get_id(),
 			),
 			$order_body['storeOrder'] ?? null
 		);

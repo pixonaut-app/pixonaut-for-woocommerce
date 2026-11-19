@@ -725,6 +725,9 @@ export const listPrintshopConnections: Handler = (context) => {
 			// The fake's printshops name no billing currency, and no test sets one.
 			billingCurrency: null,
 			billingCurrencyFrom: null,
+			// No fake printshop keeps drafts, so none is sent its orders as drafts.
+			sendsDrafts: false,
+			draftOrders: false,
 			// A print partner's integration has a catalogue; the merchant's own printshop has none.
 			catalogue: p.adapter !== CUSTOM_ADAPTER,
 			asksOfDesigns: {
