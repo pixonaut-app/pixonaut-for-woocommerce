@@ -208,6 +208,11 @@ const PRINT_FILE_FORM: PrintFileForm = 'flat';
  *  workspaces. */
 const PRINT_FILE_TEXT_TOLERANCE: TextTolerance = { unit: 'px', value: 1 };
 
+/** What the fake's workspaces do with a template image printed below its
+ *  recommended resolution: Pixonaut's default, which names it and lets the
+ *  size through. */
+const LOW_RESOLUTION_ACTION = 'warn';
+
 /** The connection as `GET /v1/connect` answers it. */
 function connectionOf(store: Store, state: State): HandlerResult {
 	const tenant = state.tenants.get(store.tenantId);
@@ -262,6 +267,7 @@ function connectionOf(store: Store, state: State): HandlerResult {
 				printFileForm: store.printFileForm ?? PRINT_FILE_FORM,
 				printFileTextTolerance:
 					store.printFileTextTolerance ?? PRINT_FILE_TEXT_TOLERANCE,
+				lowResolutionAction: LOW_RESOLUTION_ACTION,
 			},
 			assetTtlHours: ASSET_TTL_HOURS,
 		},

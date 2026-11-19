@@ -52,6 +52,14 @@ final class FulfilmentTest extends FulfilmentTestCase {
 		$order_body = json_decode( (string) $sent( '/v1/orders' )['body'], true );
 		$this->assertArrayHasKey( 'shipToAddressId', $order_body );
 		$this->assertNull( $order_body['shipToAddressId'] );
+		// The order names the store order it was sold in, and how many Pixonaut lines it has.
+		$this->assertSame(
+			array(
+				'items' => 1,
+				'ref'   => 'wc:' . self::SITE . ':order:' . $this->order->get_id(),
+			),
+			$order_body['storeOrder'] ?? null
+		);
 		// The line knows the address it was placed with, so only a change of it is sent later.
 		$this->assertSame( OrderAddress::fingerprint( $order_body ), DeliveryChange::of( $line )[ DeliveryChange::FIELD_ADDRESS ] ?? null );
 		$this->assertSame( array(), ActionSchedulerRunner::pending( DeliveryChange::ACTION ) );

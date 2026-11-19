@@ -73,6 +73,9 @@ final class BlankFixture {
 			// No printshop of the fixture names a billing currency.
 			'billingCurrency'     => null,
 			'billingCurrencyFrom' => null,
+			// No printshop of the fixture keeps drafts.
+			'sendsDrafts'         => false,
+			'draftOrders'         => false,
 			'catalogue'           => 'custom' !== $adapter,
 			'asksOfDesigns'       => array(
 				'commitKeys' => array(),

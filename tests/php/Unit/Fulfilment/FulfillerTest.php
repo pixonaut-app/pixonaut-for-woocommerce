@@ -166,6 +166,7 @@ final class FulfillerTest extends TestCase {
 		$order->allows( 'get_address' )->with( 'shipping' )->andReturn( self::SHIPPING );
 		$order->allows( 'get_billing_email' )->andReturn( 'ada@example.org' );
 		$order->allows( 'get_billing_phone' )->andReturn( '+46 70 123 45 67' );
+		$order->allows( 'get_items' )->andReturnUsing( fn (): array => array( $this->item() ) );
 		$order->allows( 'add_order_note' )->andReturnUsing(
 			function ( string $note ): int {
 				$this->notes[] = $note;
@@ -220,6 +221,11 @@ final class FulfillerTest extends TestCase {
 					'postalCode' => '111 22',
 					'city'       => 'Stockholm',
 					'country'    => 'SE',
+				),
+				// The order's one Pixonaut line names the store order it was sold in.
+				'storeOrder'      => array(
+					'ref'   => 'wc:' . self::SITE . ':order:' . self::ORDER_ID,
+					'items' => 1,
 				),
 			),
 			$this->body( 3 )

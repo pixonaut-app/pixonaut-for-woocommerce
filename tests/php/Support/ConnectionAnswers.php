@@ -68,6 +68,7 @@ final class ConnectionAnswers {
 				'unit'  => 'px',
 				'value' => 1,
 			),
+			'lowResolutionAction'    => 'warn',
 		),
 		'assetTtlHours'          => 168,
 	);
