@@ -12,13 +12,14 @@ const PICTURE_HOOK = 'pixonaut_wc_catalogue_picture';
 const VARIATIONS_HOOK = 'pixonaut_wc_catalogue_pictures_variations';
 
 /**
- * A product's picture is saved as `pixonaut-<product id>-<key>.png`, under
- * the id of whichever of a product and its variations drew it first: they
- * share a picture drawn from the same.
+ * A product's picture is saved as `pixonaut-<product id>-<key>.webp`, or
+ * `.png` where the site's image editor cannot write WebP, under the id of
+ * whichever of a product and its variations drew it first: they share a
+ * picture drawn from the same.
  */
 function pictureOf(...ids: number[]): RegExp {
 	return new RegExp(
-		`/pixonaut-(${ids.join('|')})-[0-9a-f]+(-\\d+x\\d+)?\\.png`,
+		`/pixonaut-(${ids.join('|')})-[0-9a-f]+(-\\d+x\\d+)?\\.(webp|png)`,
 	);
 }
 
