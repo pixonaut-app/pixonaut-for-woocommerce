@@ -156,6 +156,21 @@ describe('drawOptionPrices on the classic form', () => {
 
 		expect(texts(form, 'attribute_size')).toEqual(['30×40', '50×70']);
 	});
+	it("keeps the theme's own words in the printed name, such as a block template's", () => {
+		const form = classicForm();
+		choose(form, 'attribute_frame', 'none');
+		const option = form.querySelector(
+			'select[name="attribute_size"] option[value="s"]',
+		) as HTMLOptionElement;
+		// Printed as "30x40 · 499 kr", the text texturized to "30×40".
+		option.setAttribute('data-pixonaut-name', '30x40');
+		option.setAttribute('data-pixonaut-shown', '30x40 · 499 kr');
+		option.textContent = '30\u00d740 · 499 kr';
+
+		drawOptionPrices(form, POSTER);
+
+		expect(texts(form, 'attribute_size')[0]).toBe('30\u00d740 · 499 kr');
+	});
 });
 
 describe('drawOptionPrices on the block form', () => {
@@ -180,6 +195,22 @@ describe('drawOptionPrices on the block form', () => {
 			'30×40 · 499 kr',
 			'50×70 · 1 599 kr',
 		]);
+	});
+
+	it('follows a chip picked in an attribute that shows no price', async () => {
+		const form = blockForm();
+		drawOptionPrices(form, { ...POSTER, roles: { attribute_size: 'price' } });
+		const frame = form.querySelector(
+			'input[name="attribute_frame"]',
+		) as HTMLInputElement;
+
+		frame.value = 'oak';
+		form
+			.querySelector('button[value="oak"]')
+			?.setAttribute('aria-checked', 'true');
+		await observed();
+
+		expect(texts(form, 'attribute_size')).toEqual(['30×40 · 698 kr', '50×70']);
 	});
 
 	it("takes words the block writes in a chip as the option's name", async () => {

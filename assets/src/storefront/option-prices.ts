@@ -40,7 +40,8 @@ export function drawOptionPrices(
 	form: HTMLFormElement,
 	prices: ChoicePrices,
 ): () => void {
-	const fields = themeFields(form).filter(
+	const all = themeFields(form);
+	const fields = all.filter(
 		(field) => field.name !== null && prices.roles[field.name] !== undefined,
 	);
 	const draw = () => {
@@ -60,10 +61,11 @@ export function drawOptionPrices(
 	draw();
 	// A classic select's choice, and the block form's dropdown.
 	form.addEventListener('change', draw);
-	// The block form's chips, and the options its own script or the classic
-	// form's writes again, tell no event the form hears.
+	// The block form's chips of every attribute, and the options its own
+	// script or the classic form's writes again, tell no event the form
+	// hears.
 	const observer = new MutationObserver(draw);
-	for (const field of fields) {
+	for (const field of all) {
 		observer.observe(field.element, {
 			subtree: true,
 			childList: true,
@@ -88,22 +90,46 @@ export function drawOptionPrices(
 }
 
 /** Writes an option's name followed by `price`, or its name alone for
- *  null. Words someone else wrote since, such as WooCommerce writing the
- *  name again, are the option's name now. */
+ *  null. The name is the option's words without the price written last
+ *  (`SHOWN_ATTRIBUTE` around `NAME_ATTRIBUTE`), so words the theme changed
+ *  in the name, such as a block template's "30×40" for "30x40", stay, and
+ *  words someone else wrote since, such as WooCommerce writing the name
+ *  again, are the name. */
 function writeOption(
 	element: HTMLElement,
 	price: string | null,
 	prices: Pick<ChoicePrices, 'label'>,
 ): void {
 	const current = (element.textContent ?? '').trim();
-	const name =
-		element.getAttribute(SHOWN_ATTRIBUTE) === current
-			? (element.getAttribute(NAME_ATTRIBUTE) ?? current)
-			: current;
+	const name = nameIn(
+		current,
+		element.getAttribute(NAME_ATTRIBUTE),
+		element.getAttribute(SHOWN_ATTRIBUTE),
+	);
 	const text = price === null ? name : optionLabel(name, price, prices);
 	element.setAttribute(NAME_ATTRIBUTE, name);
 	element.setAttribute(SHOWN_ATTRIBUTE, text);
 	if (current !== text) {
 		element.textContent = text;
 	}
+}
+
+/** The name in an option's words `current`: without what `shown` wrote
+ *  around `name`, when `current` still has it; else all of `current`. */
+function nameIn(
+	current: string,
+	name: string | null,
+	shown: string | null,
+): string {
+	const at = name === null || shown === null ? -1 : shown.indexOf(name);
+	if (name === null || shown === null || at < 0 || shown === name) {
+		return current;
+	}
+	const before = shown.slice(0, at);
+	const after = shown.slice(at + name.length);
+	return current.length > before.length + after.length &&
+		current.startsWith(before) &&
+		current.endsWith(after)
+		? current.slice(before.length, current.length - after.length)
+		: current;
 }
