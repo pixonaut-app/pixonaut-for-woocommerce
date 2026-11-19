@@ -36,6 +36,7 @@
 		"price_max",
 		"price_currency_buffer",
 		"price_automatic",
+		"price_margin_floor",
 		"delivery_time_show",
 		"delivery_time_handling_days",
 		"update_channel"
@@ -50,6 +51,7 @@
 		"price_max",
 		"price_currency_buffer",
 		"price_automatic",
+		"price_margin_floor",
 		"delivery_time_show",
 		"delivery_time_handling_days"
 	]

@@ -1118,6 +1118,11 @@ add_action(
 							$plugin->product_pricing()->read_costs( $poster );
 						}
 
+						// The shop's filters serve the attribute dependencies kept
+						// before this poster until the filter data job reads them
+						// again; read them now, so its listings follow its own.
+						\Pixonaut\WooCommerce\Storefront\AttributeDependencies::rebuild();
+
 						return new WP_REST_Response(
 							array(
 								'id'         => $poster instanceof WC_Product ? $poster->get_id() : 0,

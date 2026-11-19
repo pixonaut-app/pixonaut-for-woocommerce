@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-19T00:59:32+00:00\n"
+"POT-Creation-Date: 2026-11-19T02:11:44+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -6904,7 +6904,7 @@ msgstr ""
 msgid "The attribute %2$s already goes by “%1$s” in the shop's addresses. Choose another name."
 msgstr ""
 
-#: src/Storefront/UnavailableProduct.php:95
+#: src/Storefront/UnavailableProduct.php:101
 msgid "Shoppers do not see this product in the shop, search or related products, and cannot buy it: its template is paused or not published in Pixonaut. Make the template live in the Pixonaut studio to sell it again."
 msgstr ""
 
