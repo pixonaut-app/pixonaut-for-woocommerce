@@ -35,7 +35,7 @@ client signs in as, and checks that user's capability itself.
 | `pixonaut-for-woocommerce/set-attribute-split-listing` | Sets a global attribute's "Cards in the shop" setting, which the products on Auto follow | `manage_product_terms` |
 | `pixonaut-for-woocommerce/get-attribute-query-names` | The name each global attribute goes by in the shop's addresses (`?size=50x70-cm`) | `manage_product_terms` |
 | `pixonaut-for-woocommerce/set-attribute-query-name` | Sets a global attribute's "Name in addresses", refusing one WordPress or WooCommerce reads or another attribute goes by | `manage_product_terms` |
-| `pixonaut-for-woocommerce/get-attribute-choice-prices` | The price each global attribute's options show beside their swatches: none, what an add-on adds, or a base choice's lowest price | `manage_product_terms` |
+| `pixonaut-for-woocommerce/get-attribute-choice-prices` | The price each global attribute's options show: none, what an add-on adds, a base choice's lowest price, or its price with the other choices | `manage_product_terms` |
 | `pixonaut-for-woocommerce/set-attribute-choice-price` | Sets a global attribute's "Price beside each choice" | `manage_product_terms` |
 | `pixonaut-for-woocommerce/get-shipping` | Every shipping zone with its locations and methods: a flat rate's cost excluding and including tax, free shipping's minimum order amount | `manage_woocommerce` |
 | `pixonaut-for-woocommerce/set-shipping-method` | Changes a zone's shipping method, or adds a flat rate or free shipping; a cost can be given including tax | `manage_woocommerce` |
@@ -493,15 +493,18 @@ or another attribute goes by it.
 
 `get-attribute-choice-prices` answers `attributes`, one per global attribute
 in the store's order: its `attribute_id`, `name`, `slug` (without `pa_`) and
-`choice_price`: `none`, `add_on` or `from`. `set-attribute-choice-price`
+`choice_price`: `none`, `add_on`, `from` or `price`. `set-attribute-choice-price`
 takes an `attribute_id` and a `choice_price` and answers the same row; an
 unknown attribute answers `404`. An `add_on` attribute's swatches show what
 each value adds to the product without add-ons for the shopper's other
 choices (a hanger `+180 kr`, a frame `+1 350 kr`), the cheapest value
 showing nothing; a `from` attribute's swatches show each value's lowest
-price (`from 469 kr`). The amounts come from the variations' prices as the
-shop shows them, and show only where the store draws product options as
-swatches.
+price (`from 469 kr`); a `price` attribute's swatches show each value's
+price with the shopper's other choices (`599 kr`), and none while those
+choices leave the value more than one price. The amounts come from the
+prices of the variations in stock, as the shop shows them. Where the store
+does not draw product options as swatches, they follow each option's name
+in the theme's own field (`50×70 · 599 kr`).
 
 `get-shipping` answers the store's `currency`, `prices_include_tax` and
 `zones`: each zone in the order WooCommerce matches an address against them,
