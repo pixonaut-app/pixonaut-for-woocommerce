@@ -128,6 +128,9 @@ export async function watchSwitch(page: Page, side: string): Promise<void> {
 	await page.evaluate(
 		([side, PRICE_SELECTOR]) => {
 			const frames: SwitchFrame[] = [];
+			// The thumbnails' pictures seen with pixels in a frame: drawn
+			// again, one keeps showing them until its next has loaded.
+			const painted = new WeakSet<HTMLImageElement>();
 			(window as unknown as { switchFrames: typeof frames }).switchFrames =
 				frames;
 			const shows = (element: Element | null): boolean =>
@@ -183,14 +186,17 @@ export async function watchSwitch(page: Page, side: string): Promise<void> {
 					thumbnails: thumbnails.map((view) => view.dataset.viewId ?? ''),
 					blankThumbnails: thumbnails
 						.filter((view) => {
-							// One drawn again keeps showing its last picture until
-							// the next has loaded, though it measures none.
 							const picture = view.querySelector('img');
-							return (
-								picture === null ||
-								picture.getAttribute('src') === null ||
-								(picture.complete && picture.naturalWidth === 0)
-							);
+							if (picture === null || picture.getAttribute('src') === null) {
+								return true;
+							}
+							if (picture.naturalWidth > 0) {
+								painted.add(picture);
+								return false;
+							}
+							// Loading, it shows what it showed last: nothing, unless
+							// it was seen with pixels before. Loaded, it failed.
+							return picture.complete || !painted.has(picture);
 						})
 						.map((view) => view.dataset.viewId ?? ''),
 					cart: cart.length > 0,
