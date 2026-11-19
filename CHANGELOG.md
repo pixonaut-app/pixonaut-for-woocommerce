@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.29.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.28.1...v1.29.0) (2026-11-19)
+
+
+### Features
+
+* **abilities:** Pixonaut can draw products' pictures again as a shop tool ([#359](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/359)) ([1e5df87](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/1e5df87c7fd9c47844d771ef936212bf6236e4ba))
+* **pricing:** warn when a variation's margin falls below a set floor ([#361](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/361)) ([b5ee162](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/b5ee1620832ef0d54d1562873c89ef8020d7369c))
+* **storefront:** size choices show each size's price with the current choices ([#364](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/364)) ([334c2b7](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/334c2b7758508b07784b958dbb58ae0c770b9e22))
+
+
+### Bug Fixes
+
+* **catalogue:** a check refused for too many requests waits Pixonaut's retry-after and checks again ([#363](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/363)) ([f66a372](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/f66a37276c43e9435dfdfdcfa203f665011ae861))
+* **catalogue:** variations generated on another blank keep the template their other values pick ([#360](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/360)) ([908ce65](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/908ce65ccc29bea08d713b9653e74483b31af72c))
+* **storefront:** a paused template's product page says it is unavailable on block themes ([#367](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/367)) ([e6a09ca](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/e6a09ca11a0edd62044b803ec7c2d6805e333633))
+* **storefront:** switching to a blank that shows the same scenes keeps the view thumbnails ([#362](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/362)) ([69890ab](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/69890ab500cab64f106d789dbf45806a3450253f))
+* **tests:** keep WooCommerce's visibility terms valid across test classes and accept WebP pictures ([#366](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/366)) ([f0732f0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/f0732f0d74c68b45eaa85e5431bb151f2d1e03a7))
+
 ## [1.28.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.28.0...v1.28.1) (2026-11-18)
 
 
