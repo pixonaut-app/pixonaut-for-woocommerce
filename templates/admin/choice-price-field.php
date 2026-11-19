@@ -1,7 +1,7 @@
 <?php
 /**
  * The setting on a global attribute's add and edit screens that chooses the
- * price its options show beside their swatches.
+ * price its options show on a product page.
  *
  * Override by copying to yourtheme/woocommerce/pixonaut/admin/choice-price-field.php.
  *
