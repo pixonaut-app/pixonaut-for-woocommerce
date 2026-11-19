@@ -16,6 +16,7 @@ use Pixonaut\WooCommerce\Settings\Settings;
 use Pixonaut\WooCommerce\Tests\Support\ArchiveIndexClient;
 use Pixonaut\WooCommerce\Tests\Support\FreshRequest;
 use Pixonaut\WooCommerce\Tests\Support\SplitPosters;
+use WC_Install;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Grouped;
@@ -101,6 +102,8 @@ final class ArchiveIndexTest extends WP_UnitTestCase {
 
 	public function set_up(): void {
 		parent::set_up();
+		// The suite deletes every term after each class, WooCommerce's stock and visibility terms among them.
+		WC_Install::create_terms();
 		$this->attribute( self::PICTURE, array( 'Ingen', 'Ram', 'Hängare' ) );
 		$this->attribute( self::SIZE, array( '30x40', '50x70' ) );
 		$this->attribute( self::COLOUR, array( 'Ek', 'Svart' ) );

@@ -7,8 +7,6 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
-use Automattic\WooCommerce\Internal\ProductFilters\FilterDataProvider;
-use Automattic\WooCommerce\Internal\ProductFilters\QueryClauses;
 use Pixonaut\WooCommerce\Catalogue\FilterDataRefresh;
 use Pixonaut\WooCommerce\Catalogue\FilterIndex;
 use Pixonaut\WooCommerce\Catalogue\FilterOffers;
@@ -53,6 +51,16 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	private const PRICE_LOW = '299';
 
 	private const PRICE_HIGH = '391';
+
+	/**
+	 * WooCommerce's reader of the Product Filters block's data, which it keeps internal.
+	 */
+	private const FILTER_DATA_PROVIDER = 'Automattic\\WooCommerce\\Internal\\ProductFilters\\FilterDataProvider';
+
+	/**
+	 * WooCommerce's clauses for the Product Filters block's filters, which it keeps internal.
+	 */
+	private const QUERY_CLAUSES = 'Automattic\\WooCommerce\\Internal\\ProductFilters\\QueryClauses';
 
 	/**
 	 * Hanger or bare, in oak.
@@ -332,8 +340,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		$query_vars = array_merge( $wp_query->query_vars, array( 'post_status' => 'publish' ) );
 		unset( $query_vars['nopaging'] );
 		// The price filter's read runs the same query with no results, and WordPress keeps that answer for it.
-		$container = wc_get_container();
-		$container->get( FilterDataProvider::class )->with( $container->get( QueryClauses::class ) )->get_filtered_price( $query_vars );
+		$this->read_filtered_price( $query_vars );
 
 		$counts = apply_filters( 'woocommerce_pre_product_filter_data', null, 'attribute', $query_vars, array( 'taxonomy' => 'pa_storlek' ) );
 		$this->assertIsArray( $counts );
@@ -1123,6 +1130,25 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 			'dependencies' => is_array( $due ) && is_array( $due['dependencies'] ?? null ) ? $due['dependencies'] : array(),
 			'counts'       => is_array( $due ) && is_array( $due['counts'] ?? null ) ? $due['counts'] : array(),
 		);
+	}
+
+	/**
+	 * Reads the price filter's data the way the Product Filters block does.
+	 *
+	 * @param array<string, mixed> $query_vars The listing's query.
+	 */
+	private function read_filtered_price( array $query_vars ): void {
+		$container = wc_get_container();
+		/** @var class-string<object> $provider_class */
+		$provider_class = self::FILTER_DATA_PROVIDER;
+		/** @var class-string<object> $clauses_class */
+		$clauses_class = self::QUERY_CLAUSES;
+		$provider      = $container->get( $provider_class );
+		$this->assertTrue( method_exists( $provider, 'with' ), 'WooCommerce reads the filters\' data' );
+		$reader = $provider->with( $container->get( $clauses_class ) );
+		$this->assertIsObject( $reader );
+		$this->assertTrue( method_exists( $reader, 'get_filtered_price' ) );
+		$reader->get_filtered_price( $query_vars );
 	}
 
 	/**

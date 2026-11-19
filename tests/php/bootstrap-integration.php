@@ -66,6 +66,13 @@ tests_add_filter(
 	}
 );
 
+/*
+ * The suite deletes every term after each test class, WooCommerce's
+ * product_visibility terms among them, so their ids change. WooCommerce keeps
+ * those ids for the whole process unless this class exists, as in its own suite.
+ */
+class_alias( stdClass::class, 'WC_Unit_Tests_Bootstrap' );
+
 // Every hook of the plugin's that fires, for the hook inventory test.
 tests_add_filter( 'all', array( \Pixonaut\WooCommerce\Tests\Support\Hooks\HookRecorder::class, 'record' ) );
 
