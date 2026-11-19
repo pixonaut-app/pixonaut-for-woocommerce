@@ -651,6 +651,10 @@ add_action(
 					'prices'            => array(
 						'type' => 'object',
 					),
+					// What each `finishes` value adds to its size's price, for a variation per size and finish rather than one selling any finish.
+					'finish_prices'     => array(
+						'type' => 'object',
+					),
 					// The blank variant the product, or each variation, sells; by default its blank's first one on sale.
 					'variant'           => array(
 						'type' => 'string',
@@ -697,16 +701,26 @@ add_action(
 					$overrides     = is_array( $request['overrides'] ) ? $request['overrides'] : array();
 					$prices        = is_array( $request['prices'] ) ? $request['prices'] : array();
 					$variation_ids = array();
+					$all_ids       = array();
+					$finish_prices = is_array( $request['finish_prices'] ) ? $request['finish_prices'] : array();
 					foreach ( $sizes as $size ) {
-						$variation = new WC_Product_Variation();
-						$variation->set_parent_id( $product->get_id() );
-						$variation->set_attributes( array( 'size' => $size ) );
-						$variation->set_regular_price( (string) ( $prices[ $size ] ?? $request['regular_price'] ) );
-						$variation->save();
-						if ( is_array( $overrides[ $size ] ?? null ) ) {
-							\Pixonaut\WooCommerce\Catalogue\ProductConfig::from_json( (string) wp_json_encode( $overrides[ $size ] ) )->with_override( true )->save_to( $variation );
+						foreach ( array() === $finish_prices ? array( '' => 0 ) : $finish_prices as $finish => $added ) {
+							$variation = new WC_Product_Variation();
+							$variation->set_parent_id( $product->get_id() );
+							$variation->set_attributes(
+								'' === $finish ? array( 'size' => $size ) : array(
+									'size'   => $size,
+									'finish' => (string) $finish,
+								)
+							);
+							$variation->set_regular_price( (string) ( (float) ( $prices[ $size ] ?? $request['regular_price'] ) + (float) $added ) );
+							$variation->save();
+							if ( is_array( $overrides[ $size ] ?? null ) ) {
+								\Pixonaut\WooCommerce\Catalogue\ProductConfig::from_json( (string) wp_json_encode( $overrides[ $size ] ) )->with_override( true )->save_to( $variation );
+							}
+							$all_ids[]              = array( $size, $variation->get_id() );
+							$variation_ids[ $size ] = $variation->get_id();
 						}
-						$variation_ids[ $size ] = $variation->get_id();
 					}
 					if ( array() !== $sizes ) {
 						WC_Product_Variable::sync( $product->get_id() );
@@ -719,7 +733,7 @@ add_action(
 						pixonaut_e2e_pick_variant( $product, $variant );
 					}
 					$by_size = is_array( $request['variants'] ) ? $request['variants'] : array();
-					foreach ( $variation_ids as $size => $variation_id ) {
+					foreach ( $all_ids as [ $size, $variation_id ] ) {
 						$variation = wc_get_product( $variation_id );
 						if ( $variation instanceof WC_Product ) {
 							pixonaut_e2e_pick_variant( $variation, is_string( $by_size[ $size ] ?? null ) ? $by_size[ $size ] : $variant );
