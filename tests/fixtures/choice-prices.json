@@ -120,6 +120,126 @@
 				}
 			]
 		},
+		"posterPriced": {
+			"about": "The poster, its size showing each size's own price with the other choices made.",
+			"fields": [
+				"attribute_pa_storlek",
+				"attribute_pa_inramning",
+				"attribute_pa_ramfarg"
+			],
+			"roles": {
+				"attribute_pa_storlek": "price",
+				"attribute_pa_inramning": "add_on",
+				"attribute_pa_ramfarg": "add_on"
+			},
+			"decimals": 0,
+			"variations": [
+				{
+					"values": {
+						"attribute_pa_storlek": "s",
+						"attribute_pa_inramning": "ingen",
+						"attribute_pa_ramfarg": ""
+					},
+					"price": 389
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "m",
+						"attribute_pa_inramning": "ingen",
+						"attribute_pa_ramfarg": ""
+					},
+					"price": 469
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "l",
+						"attribute_pa_inramning": "ingen",
+						"attribute_pa_ramfarg": ""
+					},
+					"price": 519
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "s",
+						"attribute_pa_inramning": "hangare",
+						"attribute_pa_ramfarg": "svart"
+					},
+					"price": 559
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "s",
+						"attribute_pa_inramning": "hangare",
+						"attribute_pa_ramfarg": "ek"
+					},
+					"price": 579
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "m",
+						"attribute_pa_inramning": "hangare",
+						"attribute_pa_ramfarg": "svart"
+					},
+					"price": 649
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "m",
+						"attribute_pa_inramning": "hangare",
+						"attribute_pa_ramfarg": "ek"
+					},
+					"price": 669
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "s",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "svart"
+					},
+					"price": 939
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "s",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "ek"
+					},
+					"price": 989
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "m",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "svart"
+					},
+					"price": 1819
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "m",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "ek"
+					},
+					"price": 1939
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "l",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "svart"
+					},
+					"price": 2879
+				},
+				{
+					"values": {
+						"attribute_pa_storlek": "l",
+						"attribute_pa_inramning": "ram",
+						"attribute_pa_ramfarg": "ek"
+					},
+					"price": 3099
+				}
+			]
+		},
 		"cents": {
 			"about": "A price with cents, shown with two decimals.",
 			"fields": ["attribute_size", "attribute_gift-wrap"],
@@ -511,6 +631,125 @@
 					}
 				}
 			}
+		},
+		{
+			"name": "each size shows its price framed in the chosen finish",
+			"product": "posterPriced",
+			"chosen": {
+				"attribute_pa_storlek": "m",
+				"attribute_pa_inramning": "ram",
+				"attribute_pa_ramfarg": "svart"
+			},
+			"amounts": {
+				"attribute_pa_storlek": {
+					"s": {
+						"kind": "price",
+						"amount": 939
+					},
+					"m": {
+						"kind": "price",
+						"amount": 1819
+					},
+					"l": {
+						"kind": "price",
+						"amount": 2879
+					}
+				},
+				"attribute_pa_inramning": {
+					"hangare": {
+						"kind": "add_on",
+						"amount": 180
+					},
+					"ram": {
+						"kind": "add_on",
+						"amount": 1350
+					}
+				},
+				"attribute_pa_ramfarg": {
+					"ek": {
+						"kind": "add_on",
+						"amount": 120
+					}
+				}
+			}
+		},
+		{
+			"name": "a size the chosen framing lacks shows no price",
+			"product": "posterPriced",
+			"chosen": {
+				"attribute_pa_storlek": "s",
+				"attribute_pa_inramning": "hangare",
+				"attribute_pa_ramfarg": "ek"
+			},
+			"amounts": {
+				"attribute_pa_storlek": {
+					"s": {
+						"kind": "price",
+						"amount": 579
+					},
+					"m": {
+						"kind": "price",
+						"amount": 669
+					}
+				},
+				"attribute_pa_inramning": {
+					"hangare": {
+						"kind": "add_on",
+						"amount": 170
+					},
+					"ram": {
+						"kind": "add_on",
+						"amount": 550
+					}
+				},
+				"attribute_pa_ramfarg": {
+					"ek": {
+						"kind": "add_on",
+						"amount": 20
+					}
+				}
+			}
+		},
+		{
+			"name": "each size shows its bare price with no framing",
+			"product": "posterPriced",
+			"chosen": {
+				"attribute_pa_storlek": "l",
+				"attribute_pa_inramning": "ingen",
+				"attribute_pa_ramfarg": ""
+			},
+			"amounts": {
+				"attribute_pa_storlek": {
+					"s": {
+						"kind": "price",
+						"amount": 389
+					},
+					"m": {
+						"kind": "price",
+						"amount": 469
+					},
+					"l": {
+						"kind": "price",
+						"amount": 519
+					}
+				},
+				"attribute_pa_inramning": {
+					"ram": {
+						"kind": "add_on",
+						"amount": 2360
+					}
+				}
+			}
+		},
+		{
+			"name": "no size shows a price while the framing leaves several",
+			"product": "posterPriced",
+			"chosen": {
+				"attribute_pa_storlek": "",
+				"attribute_pa_inramning": "",
+				"attribute_pa_ramfarg": ""
+			},
+			"amounts": {}
 		}
 	]
 }

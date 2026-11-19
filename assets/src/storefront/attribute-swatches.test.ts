@@ -311,7 +311,8 @@ const FRAMED_PRICES: ChoicePrices = {
 		decimalSeparator: ',',
 		thousandSeparator: ' ',
 	},
-	words: { add_on: '+%s', from: 'from %s' },
+	words: { add_on: '+%s', from: 'from %s', price: '%s' },
+	label: '%1$s · %2$s',
 };
 
 function priceOf(name: string): string | null {

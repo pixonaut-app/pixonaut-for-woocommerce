@@ -605,6 +605,15 @@ export const REACH = {
 		'src/Storefront/OptionHelp.php',
 		'assets/src/storefront/attribute-rows.css',
 	],
+	'option-prices.spec.ts': [
+		'src/Storefront/ChoicePrices.php',
+		'src/Storefront/ChoicePriceTable.php',
+		'src/Storefront/ProductChoicePrices.php',
+		'src/Storefront/PrintedOptionPrices.php',
+		'assets/src/storefront/choice-prices.ts',
+		'assets/src/storefront/option-prices.ts',
+		'assets/src/storefront/theme-fields.ts',
+	],
 	'order-box.spec.ts': [
 		'src/Admin/OrderBox.php',
 		'templates/admin/order-box.php',

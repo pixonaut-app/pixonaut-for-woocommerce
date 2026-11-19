@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-19T00:42:17+00:00\n"
+"POT-Creation-Date: 2026-11-19T00:59:32+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -425,7 +425,7 @@ msgid "Read the price each attribute's choices show"
 msgstr ""
 
 #: src/Abilities/GetAttributeChoicePrices.php:29
-msgid "Reads, for every global attribute, the price its options show beside their swatches on a product page: `none`, `add_on` (what each option adds to the product without add-ons in the chosen size and personalisation, such as \"+180 kr\" for a frame; the cheapest option shows nothing) or `from` (each option's lowest price, such as \"from 469 kr\" for a size). Set one with `set-attribute-choice-price`."
+msgid "Reads, for every global attribute, the price its options show on a product page: `none`, `add_on` (what each option adds to the product without add-ons in the chosen size and personalisation, such as \"+180 kr\" for a frame; the cheapest option shows nothing), `from` (each option's lowest price, such as \"from 469 kr\" for a size) or `price` (each option's price with the shopper's other choices, such as \"599 kr\" for a size). Set one with `set-attribute-choice-price`."
 msgstr ""
 
 #: src/Abilities/GetAttributeChoicePrices.php:96
@@ -1513,11 +1513,11 @@ msgid "Set the price an attribute's choices show"
 msgstr ""
 
 #: src/Abilities/SetAttributeChoicePrice.php:30
-msgid "Sets the price a global attribute's options show beside their swatches on a product page, as its edit screen's \"Price beside each choice\" field does. `add_on` for an add-on such as a hanger, a frame or a frame's finish: each option shows what it adds to the product without add-ons in the chosen size and personalisation (\"+180 kr\"), worked out from the variations' prices; the cheapest option shows nothing, and a finish shows its difference to the cheapest finish under the chosen framing. `from` for a base choice such as a size: each option shows its lowest price (\"from 469 kr\"). `none` shows no price. Prices show only where the store draws product options as swatches. The answer is the attribute's choice now."
+msgid "Sets the price a global attribute's options show on a product page, as its edit screen's \"Price beside each choice\" field does. `add_on` for an add-on such as a hanger, a frame or a frame's finish: each option shows what it adds to the product without add-ons in the chosen size and personalisation (\"+180 kr\"), worked out from the variations' prices; the cheapest option shows nothing, and a finish shows its difference to the cheapest finish under the chosen framing. `from` for a base choice such as a size: each option shows its lowest price (\"from 469 kr\"). `price` for a base choice such as a size: each option shows the price the product has with it and the shopper's other choices (\"599 kr\"), and none while those choices leave more than one price. `none` shows no price. Prices count only variations in stock, and show beside the swatches or in the theme's own option field. The answer is the attribute's choice now."
 msgstr ""
 
 #: src/Abilities/SetAttributeChoicePrice.php:70
-msgid "The price must be none, add_on or from."
+msgid "The price must be none, add_on, from or price."
 msgstr ""
 
 #. translators: Name of an ability an AI assistant or an MCP client can use on the store.
@@ -2836,6 +2836,12 @@ msgstr ""
 #: src/Admin/ChoicePriceField.php:94
 msgctxt "price beside each choice"
 msgid "Its lowest price (\"from 469 kr\")"
+msgstr ""
+
+#. translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: each option, such as a size, shows the price the product has with it and the customer's other choices, like "599 kr".
+#: src/Admin/ChoicePriceField.php:96
+msgctxt "price beside each choice"
+msgid "Its price with the other choices (\"599 kr\")"
 msgstr ""
 
 #: src/Admin/ConnectionScreen.php:497
@@ -6863,15 +6869,21 @@ msgid "Off: load each one when it is shown"
 msgstr ""
 
 #. translators: %s: a price, such as "180 kr". Beside an option of a product, such as a frame, on its page: what choosing it adds to the product's price. The customer reads it.
-#: src/Storefront/ProductChoicePrices.php:148
+#: src/Storefront/ProductChoicePrices.php:164
 #, php-format
 msgid "+%s"
 msgstr ""
 
 #. translators: %s: a price, such as "469 kr". Beside an option of a product, such as a size, on its page: the lowest price the product has with it. The customer reads it.
-#: src/Storefront/ProductChoicePrices.php:150
+#: src/Storefront/ProductChoicePrices.php:166
 #, php-format
 msgid "from %s"
+msgstr ""
+
+#. translators: 1: an option of a product, such as "50×70"; 2: what it shows as its price, such as "599 kr", "+180 kr" or "from 469 kr". An option in a product page's dropdown. The customer reads it.
+#: src/Storefront/ProductChoicePrices.php:171
+#, php-format
+msgid "%1$s · %2$s"
 msgstr ""
 
 #. translators: %d: The longest name, in characters. Refusal of the name an attribute goes by in the shop's addresses.
@@ -7017,7 +7029,7 @@ msgstr ""
 
 #. translators: Help under the "Price beside each choice" select on the screen that adds or edits a product attribute.
 #: templates/admin/choice-price-field.php:23
-msgid "For product options shown as swatches in the designer. An add-on, such as a hanger or a frame, shows what it adds to the product without add-ons in the chosen size; the cheapest option shows nothing. A base choice, such as a size, shows the lowest price the product has with it. Prices come from the variations, as the shop shows them."
+msgid "For product options in the designer, as swatches or in the theme's own field. An add-on, such as a hanger or a frame, shows what it adds to the product without add-ons in the chosen size; the cheapest option shows nothing. A base choice, such as a size, shows the lowest price the product has with it, or its price with the customer's other choices, which follows each choice they make. Prices come from the variations in stock, as the shop shows them."
 msgstr ""
 
 #: templates/admin/connection-card.php:46

@@ -9,6 +9,7 @@ namespace Pixonaut\WooCommerce\Tests\Integration\Storefront;
 
 use Pixonaut\WooCommerce\Admin\ChoicePriceField;
 use Pixonaut\WooCommerce\Storefront\ChoicePrices;
+use Pixonaut\WooCommerce\Storefront\PrintedOptionPrices;
 use Pixonaut\WooCommerce\Storefront\PrintedSwatches;
 use Pixonaut\WooCommerce\Storefront\ProductChoicePrices;
 use Pixonaut\WooCommerce\Storefront\ProductPageCache;
@@ -169,6 +170,101 @@ final class ChoicePricesTest extends WP_UnitTestCase {
 				array( 'oak' => '+50 kr' )
 			)
 		);
+	}
+
+	public function test_each_size_shows_its_price_with_the_other_choices(): void {
+		ChoicePrices::set_choice( $this->attributes[ self::SIZE ], ChoicePrices::PRICE );
+		update_option( 'woocommerce_currency', 'SEK' );
+		update_option( 'woocommerce_currency_pos', 'right_space' );
+		update_option( 'woocommerce_price_thousand_sep', ' ' );
+		update_option( 'woocommerce_price_num_decimals', '0' );
+		$prices  = new ProductChoicePrices();
+		$product = $this->poster();
+
+		$this->assertSame(
+			array(
+				's' => "150\u{a0}kr",
+				'm' => "1 280\u{a0}kr",
+			),
+			$prices->texts( $product, 'attribute_pa_size', array( 'attribute_pa_frame' => 'oak' ) )
+		);
+		$this->assertSame( array(), $prices->texts( $product, 'attribute_pa_size', array( 'attribute_pa_frame' => '' ) ), 'an open frame leaves each size more than one price' );
+	}
+
+	public function test_a_variation_out_of_stock_counts_for_no_price(): void {
+		ChoicePrices::set_choice( $this->attributes[ self::SIZE ], ChoicePrices::PRICE );
+		ChoicePrices::set_choice( $this->attributes[ self::FRAME ], ChoicePrices::ADD_ON );
+		update_option( 'woocommerce_currency', 'SEK' );
+		update_option( 'woocommerce_currency_pos', 'right_space' );
+		update_option( 'woocommerce_price_num_decimals', '0' );
+		$product = $this->poster();
+		foreach ( $product->get_children() as $id ) {
+			$variation = wc_get_product( $id );
+			if ( $variation instanceof WC_Product_Variation && array(
+				'pa_size'  => 'm',
+				'pa_frame' => 'oak',
+			) === $variation->get_attributes() ) {
+				$variation->set_stock_status( 'outofstock' );
+				$variation->save();
+			}
+		}
+		$product = wc_get_product( $product->get_id() );
+		$this->assertInstanceOf( WC_Product_Variable::class, $product );
+		$prices = new ProductChoicePrices();
+
+		$this->assertCount( 3, $prices->of( $product )['variations'] ?? array() );
+		$this->assertSame( array( 's' => "150\u{a0}kr" ), $prices->texts( $product, 'attribute_pa_size', array( 'attribute_pa_frame' => 'oak' ) ) );
+		$this->assertSame( array(), $prices->texts( $product, 'attribute_pa_frame', array( 'attribute_pa_size' => 'm' ) ), 'the frame adds nothing one can buy in M' );
+	}
+
+	public function test_a_variation_the_form_disables_counts_for_no_price(): void {
+		ChoicePrices::set_choice( $this->attributes[ self::SIZE ], ChoicePrices::PRICE );
+		update_option( 'woocommerce_currency', 'SEK' );
+		update_option( 'woocommerce_currency_pos', 'right_space' );
+		update_option( 'woocommerce_price_num_decimals', '0' );
+		$inactive = static fn ( bool $active, WC_Product_Variation $variation ): bool => $active && array(
+			'pa_size'  => 's',
+			'pa_frame' => 'oak',
+		) !== $variation->get_attributes();
+		add_filter( 'woocommerce_variation_is_active', $inactive, 10, 2 ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WooCommerce's own filter.
+
+		$texts = ( new ProductChoicePrices() )->texts( $this->poster(), 'attribute_pa_size', array( 'attribute_pa_frame' => 'oak' ) );
+		remove_filter( 'woocommerce_variation_is_active', $inactive );
+
+		$this->assertSame( array( 'm' => "1,280\u{a0}kr" ), $texts );
+	}
+
+	public function test_a_printed_option_carries_its_price_after_its_name_and_both_apart(): void {
+		$labelled = new ReflectionMethod( PrintedOptionPrices::class, 'labelled' );
+		$labelled->setAccessible( true );
+		$data = ( new ProductChoicePrices() )->of( $this->with_size_priced() );
+		$this->assertNotNull( $data );
+
+		$this->assertSame(
+			'<select name="attribute_pa_size"><option value="">Choose an option</option>'
+				. '<option value="s" class="attached enabled" data-pixonaut-name="S &amp; small" data-pixonaut-shown="S &amp; small · 150 kr">S &amp; small · 150 kr</option>'
+				. '<option value="m">M</option></select>',
+			$labelled->invoke(
+				null,
+				'<select name="attribute_pa_size"><option value="">Choose an option</option><option value="s" class="attached enabled">S &amp; small</option><option value="m">M</option></select>',
+				array( 's' => '150 kr' ),
+				$data
+			)
+		);
+	}
+
+	public function test_the_price_choice_is_stored(): void {
+		ChoicePrices::set_choice( $this->attributes[ self::SIZE ], ChoicePrices::PRICE );
+
+		$this->assertSame( ChoicePrices::PRICE, ChoicePrices::choice( $this->attributes[ self::SIZE ] ) );
+	}
+
+	/**
+	 * The poster, its size set to show its own price.
+	 */
+	private function with_size_priced(): WC_Product_Variable {
+		ChoicePrices::set_choice( $this->attributes[ self::SIZE ], ChoicePrices::PRICE );
+		return $this->poster();
 	}
 
 	public function test_the_attribute_screens_save_its_choice_and_a_deleted_attribute_forgets_it(): void {

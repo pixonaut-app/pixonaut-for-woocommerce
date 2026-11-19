@@ -26,7 +26,7 @@ final class GetAttributeChoicePrices implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Read the price each attribute\'s choices show', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Reads, for every global attribute, the price its options show beside their swatches on a product page: `none`, `add_on` (what each option adds to the product without add-ons in the chosen size and personalisation, such as "+180 kr" for a frame; the cheapest option shows nothing) or `from` (each option\'s lowest price, such as "from 469 kr" for a size). Set one with `set-attribute-choice-price`.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Reads, for every global attribute, the price its options show on a product page: `none`, `add_on` (what each option adds to the product without add-ons in the chosen size and personalisation, such as "+180 kr" for a frame; the cheapest option shows nothing), `from` (each option\'s lowest price, such as "from 469 kr" for a size) or `price` (each option\'s price with the shopper\'s other choices, such as "599 kr" for a size). Set one with `set-attribute-choice-price`.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(),

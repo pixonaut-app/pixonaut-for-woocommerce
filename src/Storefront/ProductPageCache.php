@@ -146,6 +146,7 @@ final class ProductPageCache {
 		'woocommerce_variation_is_visible',
 		'woocommerce_variation_is_active',
 		'woocommerce_variation_is_purchasable',
+		'woocommerce_product_is_in_stock',
 		'woocommerce_is_purchasable',
 		'woocommerce_get_price_html',
 		'woocommerce_variation_prices',

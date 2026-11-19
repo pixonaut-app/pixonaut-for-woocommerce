@@ -27,7 +27,7 @@ final class SetAttributeChoicePrice implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Set the price an attribute\'s choices show', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Sets the price a global attribute\'s options show beside their swatches on a product page, as its edit screen\'s "Price beside each choice" field does. `add_on` for an add-on such as a hanger, a frame or a frame\'s finish: each option shows what it adds to the product without add-ons in the chosen size and personalisation ("+180 kr"), worked out from the variations\' prices; the cheapest option shows nothing, and a finish shows its difference to the cheapest finish under the chosen framing. `from` for a base choice such as a size: each option shows its lowest price ("from 469 kr"). `none` shows no price. Prices show only where the store draws product options as swatches. The answer is the attribute\'s choice now.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Sets the price a global attribute\'s options show on a product page, as its edit screen\'s "Price beside each choice" field does. `add_on` for an add-on such as a hanger, a frame or a frame\'s finish: each option shows what it adds to the product without add-ons in the chosen size and personalisation ("+180 kr"), worked out from the variations\' prices; the cheapest option shows nothing, and a finish shows its difference to the cheapest finish under the chosen framing. `from` for a base choice such as a size: each option shows its lowest price ("from 469 kr"). `price` for a base choice such as a size: each option shows the price the product has with it and the shopper\'s other choices ("599 kr"), and none while those choices leave more than one price. `none` shows no price. Prices count only variations in stock, and show beside the swatches or in the theme\'s own option field. The answer is the attribute\'s choice now.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -67,7 +67,7 @@ final class SetAttributeChoicePrice implements Ability {
 			return new WP_Error( 'pixonaut_wc_ability_unknown_attribute', __( 'No global attribute has this id.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::NOT_FOUND ) );
 		}
 		if ( ! in_array( $choice, ChoicePrices::available(), true ) ) {
-			return new WP_Error( 'pixonaut_wc_ability_invalid_choice_price', __( 'The price must be none, add_on or from.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::BAD_REQUEST ) );
+			return new WP_Error( 'pixonaut_wc_ability_invalid_choice_price', __( 'The price must be none, add_on, from or price.', 'pixonaut-for-woocommerce' ), array( 'status' => WP_Http::BAD_REQUEST ) );
 		}
 		ChoicePrices::set_choice( $attribute_id, $choice );
 		return GetAttributeChoicePrices::row( $attribute_id, (string) $attribute->name, (string) preg_replace( '/^pa_/', '', (string) $attribute->slug ) );

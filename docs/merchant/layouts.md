@@ -219,10 +219,16 @@ to your store:
   cheapest finish under the framing chosen. The amounts stay the same
   whatever add-on is chosen, and follow the size when it changes.
   **Its lowest price** suits a base choice such as a size: each value
-  shows the lowest price the product has with it (`from 469 kr`). The
-  prices come from your variations' prices, shown with or without tax as
+  shows the lowest price the product has with it (`from 469 kr`).
+  **Its price with the other choices** suits a size too: each value shows
+  the price the shopper pays for it with the frame, colour and other
+  choices already made (`599 kr`), and follows each choice they make; a
+  value shows none while a choice still open changes its price. The
+  prices come from your variations in stock, shown with or without tax as
   your shop shows prices; an option the chosen size has no variation for
-  shows none.
+  shows none. Where your store shows product options in the theme's own
+  field rather than as swatches, the price follows each option's name
+  there (`50×70 · 599 kr`).
 
 With a block theme that names its accent, border and error colours, fonts
 and corner radius, such as the Pixonaut Shop theme, the side tabs, the

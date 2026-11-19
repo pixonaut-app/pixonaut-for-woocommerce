@@ -14,8 +14,8 @@ use Pixonaut\WooCommerce\Templates;
 
 /**
  * A select on a global attribute's add and edit screens: its swatches show
- * no price, what each value adds to the base product, or each value's
- * lowest price (`ChoicePrices`).
+ * no price, what each value adds to the base product, each value's lowest
+ * price, or each value's price with the other choices (`ChoicePrices`).
  */
 final class ChoicePriceField {
 
@@ -92,6 +92,8 @@ final class ChoicePriceField {
 			ChoicePrices::ADD_ON => _x( 'What it adds, as an add-on ("+180 kr")', 'price beside each choice', 'pixonaut-for-woocommerce' ),
 			/* translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: each option, such as a size, shows the lowest price the product has with it, like "from 469 kr". */
 			ChoicePrices::FROM   => _x( 'Its lowest price ("from 469 kr")', 'price beside each choice', 'pixonaut-for-woocommerce' ),
+			/* translators: Option of "Price beside each choice" on the screen that adds or edits a product attribute: each option, such as a size, shows the price the product has with it and the customer's other choices, like "599 kr". */
+			ChoicePrices::PRICE  => _x( 'Its price with the other choices ("599 kr")', 'price beside each choice', 'pixonaut-for-woocommerce' ),
 		);
 	}
 }

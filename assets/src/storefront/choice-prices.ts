@@ -1,7 +1,8 @@
 /**
  * The price beside each swatch of an attribute the merchant has it shown for
  * (`attribute-swatches.ts`): what an add-on adds to the base product
- * ("+180 kr"), or a base choice's lowest price ("from 469 kr"), worked out
+ * ("+180 kr"), a base choice's lowest price ("from 469 kr"), or a choice's
+ * own price with the shopper's other choices ("599 kr"), worked out
  * from the variations' prices for the shopper's choices. The server prints
  * what the rule reads on the form in `data-pixonaut-choice-prices`
  * (`ProductChoicePrices`), and the swatches the page opens with with their
@@ -17,8 +18,9 @@ import {
 
 export const ADD_ON = 'add_on';
 export const FROM = 'from';
+export const PRICE = 'price';
 
-type Role = typeof ADD_ON | typeof FROM;
+type Role = typeof ADD_ON | typeof FROM | typeof PRICE;
 
 export type PricedVariation = { values: AttributeValues; price: number };
 
@@ -53,6 +55,9 @@ export type PriceFormat = {
 export type ChoicePrices = ChoicePriceProduct & {
 	format: PriceFormat;
 	words: Record<Role, string>;
+	/** An option's words with its price in the theme's own field: `%1$s`
+	 *  the option's name, `%2$s` the amount's text. */
+	label: string;
 };
 
 export type Amount = { kind: Role; amount: number };
@@ -85,6 +90,28 @@ export function choiceAmounts(
 			for (const [value, price] of lowest) {
 				amounts[field] ??= {};
 				amounts[field][value] = { kind: FROM, amount: round(price, decimals) };
+			}
+			return;
+		}
+		if (role === PRICE) {
+			const held = heldPrices(
+				variations,
+				field,
+				options[field] ?? [],
+				chosenOf(
+					chosen,
+					fields.filter((other) => other !== field),
+				),
+				false,
+			);
+			for (const [value, prices] of held) {
+				const lowest = round(Math.min(...prices), decimals);
+				// Choices still open that change the price leave the value's
+				// price unknown.
+				if (round(Math.max(...prices), decimals) === lowest) {
+					amounts[field] ??= {};
+					amounts[field][value] = { kind: PRICE, amount: lowest };
+				}
 			}
 			return;
 		}
@@ -125,8 +152,7 @@ export function choiceAmounts(
 }
 
 /** The lowest price of each value of `field` among the variations holding
- *  `context`: the values the product offers, in its order, then any other a
- *  variation holds, in the order the variations first hold them. */
+ *  `context`, in the order of `heldPrices()`. */
 function lowestPrices(
 	variations: PricedVariation[],
 	field: string,
@@ -134,6 +160,24 @@ function lowestPrices(
 	context: AttributeValues,
 	setOnly: boolean,
 ): Map<string, number> {
+	return new Map(
+		[...heldPrices(variations, field, offered, context, setOnly)].map(
+			([value, prices]) => [value, Math.min(...prices)],
+		),
+	);
+}
+
+/** The prices of the variations holding `context` and each value of
+ *  `field`: the values the product offers, in its order, then any other a
+ *  variation holds, in the order the variations first hold them. A value no
+ *  such variation holds is left out. */
+function heldPrices(
+	variations: PricedVariation[],
+	field: string,
+	offered: string[],
+	context: AttributeValues,
+	setOnly: boolean,
+): Map<string, number[]> {
 	const values = new Set<string>(offered);
 	for (const variation of variations) {
 		const value = variation.values[field] ?? '';
@@ -141,7 +185,7 @@ function lowestPrices(
 			values.add(value);
 		}
 	}
-	const lowest = new Map<string, number>();
+	const prices = new Map<string, number[]>();
 	for (const variation of variations) {
 		if (!matches(variation.values, context)) {
 			continue;
@@ -151,19 +195,19 @@ function lowestPrices(
 			continue;
 		}
 		for (const value of held === '' ? values : [held]) {
-			lowest.set(
-				value,
-				Math.min(
-					lowest.get(value) ?? Number.POSITIVE_INFINITY,
-					variation.price,
-				),
-			);
+			const list = prices.get(value);
+			if (list === undefined) {
+				prices.set(value, [variation.price]);
+			} else {
+				list.push(variation.price);
+			}
 		}
 	}
 	return new Map(
-		[...values]
-			.filter((value) => lowest.has(value))
-			.map((value) => [value, lowest.get(value) as number]),
+		[...values].flatMap((value) => {
+			const held = prices.get(value);
+			return held === undefined ? [] : [[value, held] as const];
+		}),
 	);
 }
 
@@ -221,9 +265,20 @@ export function amountText(
 			? grouped
 			: grouped + format.decimalSeparator + fraction;
 	const price = format.pattern
-		.replace('%1$s', format.symbol)
-		.replace('%2$s', number);
-	return words[kind].replace('%s', price);
+		.replace('%1$s', () => format.symbol)
+		.replace('%2$s', () => number);
+	return words[kind].replace('%s', () => price);
+}
+
+/** An option's name followed by its amount's text, as
+ *  `ProductChoicePrices::label()` writes it. */
+export function optionLabel(
+	name: string,
+	price: string,
+	{ label }: Pick<ChoicePrices, 'label'>,
+): string {
+	// Functions, so a `$` in the name or the price is not a replacement pattern.
+	return label.replace('%1$s', () => name).replace('%2$s', () => price);
 }
 
 /** What the form printed; null for none, or for JSON the page mangled. */
@@ -239,7 +294,8 @@ export function readChoicePrices(container: HTMLElement): ChoicePrices | null {
 			Array.isArray(parsed.variations) &&
 			typeof parsed.roles === 'object' &&
 			typeof parsed.format === 'object' &&
-			typeof parsed.words === 'object'
+			typeof parsed.words === 'object' &&
+			typeof parsed.label === 'string'
 			? (parsed as ChoicePrices)
 			: null;
 	} catch {

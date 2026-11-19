@@ -61,7 +61,7 @@
  * `data-pixonaut-swatches` holds how the values of the product's attributes
  * look as swatches (`SwatchLooks`), by field name: whether the attribute's
  * swatches show their names, and each value's colours or picture.
- * `data-pixonaut-choice-prices` holds what the prices beside the swatches
+ * `data-pixonaut-choice-prices` holds what the prices of the options
  * are worked out from (`ProductChoicePrices`): the attributes that show
  * one, each variation's values and price, and how the shop writes a price.
  *

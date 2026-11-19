@@ -101,7 +101,7 @@ export default defineConfig<E2eOptions>({
 				checkout: 'block',
 			},
 			testMatch:
-				/(inline-personaliser|attribute-swatches|server-layout|dependent-attributes|form-start|option-help)\.spec\.ts$/,
+				/(inline-personaliser|attribute-swatches|server-layout|dependent-attributes|form-start|option-help|option-prices)\.spec\.ts$/,
 		},
 		// Another classic theme with its own rules on inputs, buttons and
 		// labels: only how the designer is laid out under it.

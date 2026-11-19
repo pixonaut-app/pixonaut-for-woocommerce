@@ -8,6 +8,7 @@ import {
 	type ChoicePriceProduct,
 	choiceAmounts,
 	formChoice,
+	optionLabel,
 	readChoicePrices,
 } from './choice-prices';
 
@@ -43,7 +44,8 @@ const SWEDISH = {
 		decimalSeparator: ',',
 		thousandSeparator: ' ',
 	},
-	words: { add_on: '+%s', from: 'från %s' },
+	words: { add_on: '+%s', from: 'från %s', price: '%s' },
+	label: '%1$s · %2$s',
 	decimals: 0,
 };
 
@@ -71,7 +73,7 @@ describe('amountText', () => {
 						decimalSeparator: '.',
 						thousandSeparator: ',',
 					},
-					words: { add_on: '+%s', from: 'from %s' },
+					words: { add_on: '+%s', from: 'from %s', price: '%s' },
 					decimals: 2,
 				},
 			),
@@ -96,6 +98,12 @@ describe('amountText with zeros trimmed', () => {
 		expect(amountText({ kind: 'add_on', amount: 2.5 }, trimmed)).toBe(
 			'+2,50\u00a0kr',
 		);
+	});
+});
+
+describe('optionLabel', () => {
+	it('writes a name and a price holding `$` as they are', () => {
+		expect(optionLabel('A $& B', "$' 5", SWEDISH)).toBe("A $& B · $' 5");
 	});
 });
 

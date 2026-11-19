@@ -56,7 +56,7 @@ section is part of the system report that **Get system report** copies.
 |---|---|---|---|
 | `admin/attribute-query-name-field.php` | 1.12.0 | `woocommerce/pixonaut/admin/attribute-query-name-field.php` | The setting on a global attribute's add and edit screens naming the attribute in the shop's addresses, as in `?size=50x70-cm`. |
 | `admin/blank-option-field.php` | 1.23.0 | `woocommerce/pixonaut/admin/blank-option-field.php` | The blank option a global attribute stands for, and the option value each of its values stands for, on the attribute's edit screen. |
-| `admin/choice-price-field.php` | 1.26.0 | `woocommerce/pixonaut/admin/choice-price-field.php` | The setting on a global attribute's add and edit screens that chooses the price its options show beside their swatches. |
+| `admin/choice-price-field.php` | 1.29.0 | `woocommerce/pixonaut/admin/choice-price-field.php` | The setting on a global attribute's add and edit screens that chooses the price its options show on a product page. |
 | `admin/connection-card.php` | 0.1.0 | `woocommerce/pixonaut/admin/connection-card.php` | The Pixonaut connection card on the settings page's Connection tab. |
 | `admin/developer-tools.php` | 0.1.0 | `woocommerce/pixonaut/admin/developer-tools.php` | The hidden developer tools on the settings page's Connection tab. |
 | `admin/low-resolution-warnings.php` | 1.4.0 | `woocommerce/pixonaut/admin/low-resolution-warnings.php` | Images of a product side's template that print below their recommended resolution at one of its print sizes, each with what the store manager can do about it. |
