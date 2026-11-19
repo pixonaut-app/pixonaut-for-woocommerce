@@ -89,9 +89,10 @@ final class ArchiveIndexes {
 
 	/**
 	 * Where a build stands in Action Scheduler's queue: ahead of the jobs
-	 * queued at its default of 10, as each picture's redraw is. A store may
-	 * hold hundreds of those, a minute each, while the index names
-	 * pictures they replace and delete.
+	 * queued at its default of 10 and of the pictures' redraws
+	 * (`Schema::CATALOGUE_JOB_PRIORITY`). A store may hold hundreds of
+	 * those, a minute each, while the index names pictures they replace
+	 * and delete.
 	 */
 	public const PRIORITY = 5;
 

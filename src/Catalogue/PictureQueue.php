@@ -13,6 +13,7 @@ use ActionScheduler_Action;
 use ActionScheduler_Store;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
+use RuntimeException;
 use WC_Cache_Helper;
 use WC_Product;
 
@@ -62,6 +63,12 @@ final class PictureQueue {
 	 * products' drawings queued meanwhile run first.
 	 */
 	public const VARIATIONS_PAGE_SECONDS = 60;
+
+	/**
+	 * Arguments of the queueing job: where it starts, and the blank whose
+	 * products it pages through when it is for one.
+	 */
+	private const QUEUE_ARGS = 2;
 
 	/**
 	 * Arguments of the variations job: the product, and where it starts.
@@ -124,7 +131,7 @@ final class PictureQueue {
 
 	public function register(): void {
 		add_action( ProductPictures::ACTION, array( $this, 'running' ), self::BEFORE_JOB_PRIORITY );
-		add_action( self::QUEUE_ACTION, array( $this, 'queue_page' ) );
+		add_action( self::QUEUE_ACTION, array( $this, 'queue_page' ), 10, self::QUEUE_ARGS );
 		add_action( self::VARIATIONS_ACTION, array( $this, 'queue_variations' ), 10, self::VARIATIONS_ARGS );
 		add_action( ProductPictures::RETRY_ACTION, array( $this, 'queue' ) );
 		add_action( 'delete_attachment', array( $this, 'deleting_attachment' ) );
@@ -188,7 +195,7 @@ final class PictureQueue {
 			$this->parents[ $product->get_parent_id() ] = true;
 		}
 		if ( $product->is_type( 'variable' ) && null !== ProductConfig::document_on( $product ) && did_action( 'action_scheduler_init' ) && ! self::waiting( self::VARIATIONS_ACTION, $post_id ) ) {
-			as_enqueue_async_action( self::VARIATIONS_ACTION, array( $post_id ), ProductPictures::GROUP );
+			as_enqueue_async_action( self::VARIATIONS_ACTION, array( $post_id ), ProductPictures::GROUP, false, ProductPictures::PRIORITY );
 		}
 	}
 
@@ -227,7 +234,7 @@ final class PictureQueue {
 		$first    = max( 0, (int) $from );
 		for ( $index = $first; $index < $count; ++$index ) {
 			if ( self::VARIATIONS_PAGE === $queued || self::VARIATIONS_EXAMINED === $index - $first ) {
-				as_schedule_single_action( $this->now() + self::VARIATIONS_PAGE_SECONDS, self::VARIATIONS_ACTION, array( (int) $product_id, $index ), ProductPictures::GROUP );
+				as_schedule_single_action( $this->now() + self::VARIATIONS_PAGE_SECONDS, self::VARIATIONS_ACTION, array( (int) $product_id, $index ), ProductPictures::GROUP, false, ProductPictures::PRIORITY );
 				return;
 			}
 			$child = wc_get_product( $children[ $index ] );
@@ -280,9 +287,9 @@ final class PictureQueue {
 			return;
 		}
 		if ( 0 === $at ) {
-			as_enqueue_async_action( ProductPictures::ACTION, array( $product_id ), ProductPictures::GROUP );
+			as_enqueue_async_action( ProductPictures::ACTION, array( $product_id ), ProductPictures::GROUP, false, ProductPictures::PRIORITY );
 		} else {
-			as_schedule_single_action( $at, ProductPictures::ACTION, array( $product_id ), ProductPictures::GROUP );
+			as_schedule_single_action( $at, ProductPictures::ACTION, array( $product_id ), ProductPictures::GROUP, false, ProductPictures::PRIORITY );
 		}
 	}
 
@@ -377,7 +384,24 @@ final class PictureQueue {
 			update_option( self::BACKFILL_OPTION, self::BACKFILL_PENDING, false );
 			return false;
 		}
-		return self::waiting( self::QUEUE_ACTION, 0 ) || 0 !== as_enqueue_async_action( self::QUEUE_ACTION, array( 0 ), ProductPictures::GROUP );
+		return self::waiting( self::QUEUE_ACTION, 0 ) || 0 !== as_enqueue_async_action( self::QUEUE_ACTION, array( 0 ), ProductPictures::GROUP, false, ProductPictures::PRIORITY );
+	}
+
+	/**
+	 * Queues the job checking the products and variations using a blank,
+	 * and the products of those variations, unless one waits to start.
+	 *
+	 * @param string $blank_id The blank.
+	 * @return bool False when it could not be queued.
+	 */
+	public static function queue_blank( string $blank_id ): bool {
+		if ( ! did_action( 'action_scheduler_init' ) ) {
+			// Before Action Scheduler is set up, every product is checked once it is.
+			self::queue_all();
+			return true;
+		}
+		return array() !== self::waiting_jobs( self::QUEUE_ACTION, array( 0, $blank_id ) )
+			|| 0 !== as_enqueue_async_action( self::QUEUE_ACTION, array( 0, $blank_id ), ProductPictures::GROUP, false, ProductPictures::PRIORITY );
 	}
 
 	/**
@@ -429,33 +453,51 @@ final class PictureQueue {
 	 * @param int    $id   Its one argument.
 	 */
 	private static function waiting( string $hook, int $id ): bool {
-		$ids = as_get_scheduled_actions(
+		return array() !== self::waiting_jobs( $hook, array( $id ) );
+	}
+
+	/**
+	 * The job of the hook with the arguments that waits to start, if any.
+	 *
+	 * @param string       $hook An Action Scheduler hook of the plugin's.
+	 * @param array<mixed> $args Its arguments.
+	 * @return array<int|string, mixed>
+	 */
+	private static function waiting_jobs( string $hook, array $args ): array {
+		return as_get_scheduled_actions(
 			array(
 				'hook'     => $hook,
-				'args'     => array( $id ),
+				'args'     => $args,
 				'group'    => ProductPictures::GROUP,
 				'status'   => ActionScheduler_Store::STATUS_PENDING,
 				'per_page' => 1,
 			),
 			'ids'
 		);
-		return array() !== $ids;
 	}
 
 	/**
 	 * The queueing job: queues each product of a page of configured
-	 * products, and a variable product's variations, whose picture is due;
-	 * then the job for the page after when this one was full.
+	 * products, or of the products and variations using a blank, and a
+	 * variable product's variations, whose picture is due; then the job for
+	 * the page after when this one was full.
 	 *
-	 * @param int|string $after The product id the page starts after; 0 for the first.
+	 * @param int|string $after    The product id the page starts after; 0 for the first.
+	 * @param string     $blank_id Only the products and variations using this blank; '' for every configured product.
+	 * @throws RuntimeException When the page after could not be queued, so Action Scheduler records the job as failed.
 	 */
-	public function queue_page( int|string $after = 0 ): void {
-		$ids = ProductIndex::configured( (int) $after, self::QUEUE_PAGE );
+	public function queue_page( int|string $after = 0, string $blank_id = '' ): void {
+		$ids = '' === $blank_id ? ProductIndex::configured( (int) $after, self::QUEUE_PAGE ) : ProductIndex::using_blank( $blank_id, (int) $after, self::QUEUE_PAGE );
 		foreach ( $ids as $product_id ) {
 			$this->changed( $product_id );
 		}
+		// A variation's product is checked after it (`parents_changed()`), once per page.
+		$this->parents_changed();
 		if ( self::QUEUE_PAGE === count( $ids ) ) {
-			as_enqueue_async_action( self::QUEUE_ACTION, array( $ids[ self::QUEUE_PAGE - 1 ] ), ProductPictures::GROUP );
+			$next = '' === $blank_id ? array( $ids[ self::QUEUE_PAGE - 1 ] ) : array( $ids[ self::QUEUE_PAGE - 1 ], $blank_id );
+			if ( 0 === as_enqueue_async_action( self::QUEUE_ACTION, $next, ProductPictures::GROUP, false, ProductPictures::PRIORITY ) ) {
+				throw new RuntimeException( esc_html( sprintf( 'The check of the next page of products could not be queued after product %d.', $ids[ self::QUEUE_PAGE - 1 ] ) ) );
+			}
 		}
 	}
 

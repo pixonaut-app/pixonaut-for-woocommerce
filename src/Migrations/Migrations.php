@@ -38,6 +38,7 @@ final class Migrations {
 			new WriteSmallerPictures(),
 			new DeleteUnfinishedPictures(),
 			new RecheckSlowedProducts(),
+			new MoveCatalogueJobsBack(),
 		);
 	}
 }

@@ -41,10 +41,10 @@ final class FilterDataRefresh {
 	public const OPTION = Schema::FILTER_DATA_DUE_OPTION;
 
 	/**
-	 * Before the queue's default 10: Action Scheduler runs a shop's jobs
-	 * oldest first, and a backlog of picture jobs, which save products as
-	 * they go, would hold the job back while the data it reads keeps
-	 * changing.
+	 * Before the queue's default 10, and the picture jobs behind it: jobs
+	 * of one priority run oldest first, and a backlog of jobs saving
+	 * products as they go would hold the job back while the data it reads
+	 * keeps changing.
 	 */
 	public const PRIORITY = 5;
 

@@ -57,6 +57,12 @@ final class ProductPictures {
 
 	public const GROUP = Schema::ACTION_GROUP;
 
+	/**
+	 * Where the drawing jobs, and the jobs queueing them, stand in Action
+	 * Scheduler's queue: behind orders, webhook events and fulfilment.
+	 */
+	public const PRIORITY = Schema::CATALOGUE_JOB_PRIORITY;
+
 	public const META_KEY = Schema::PRODUCT_PICTURE_META;
 
 	public const PICTURE_OF_META = Schema::PICTURE_OF_META;
@@ -187,12 +193,24 @@ final class ProductPictures {
 	}
 
 	/**
-	 * Draws every picture again: a blank's photo or print area can change
-	 * under the same ids.
+	 * Draws every picture again.
 	 */
 	public static function redraw_all(): void {
 		update_option( self::GENERATION_OPTION, self::generation() + 1, false );
 		PictureQueue::queue_all();
+	}
+
+	/**
+	 * Draws again the pictures of the products using a blank, whose photos
+	 * or print areas can change under the same ids; the store's other
+	 * pictures stay.
+	 *
+	 * @param string $blank_id The blank.
+	 * @return bool False when the check of its products could not be queued.
+	 */
+	public static function redraw_blank( string $blank_id ): bool {
+		BlankPictureGenerations::move( $blank_id );
+		return PictureQueue::queue_blank( $blank_id );
 	}
 
 	/**
@@ -390,7 +408,7 @@ final class ProductPictures {
 		$wanted   = array();
 		foreach ( $sources as $index => $source ) {
 			$showcase = $source['showcase'] ?? null;
-			$key      = md5( (string) wp_json_encode( self::drawn_under( $product, array( $source, self::generation() ) ) ) );
+			$key      = md5( (string) wp_json_encode( self::drawn_under( $product, self::on_blank( $source, array( $source, self::generation() ) ) ) ) );
 			$earlier  = $recorded[ $index ] ?? array(
 				'source'     => null,
 				'attachment' => 0,
@@ -601,7 +619,7 @@ final class ProductPictures {
 	private function retry_later( WC_Product $product ): void {
 		// One retry per product: a hook of its own, so it never holds back the drawing a change queues.
 		if ( ! as_has_scheduled_action( self::RETRY_ACTION, array( $product->get_id() ), self::GROUP ) ) {
-			as_schedule_single_action( $this->now() + self::RETRY_SECONDS, self::RETRY_ACTION, array( $product->get_id() ), self::GROUP );
+			as_schedule_single_action( $this->now() + self::RETRY_SECONDS, self::RETRY_ACTION, array( $product->get_id() ), self::GROUP, false, self::PRIORITY );
 		}
 	}
 
@@ -686,7 +704,8 @@ final class ProductPictures {
 	 * any, the view and photo chosen when there is one, the variation a
 	 * variable product is drawn as, the template of a variation set up on
 	 * another than its product's while sets are chosen, the generation
-	 * `redraw_all()` moves, and the product's own that `regenerate()` moves.
+	 * `redraw_all()` moves, the numbers of its blanks `redraw_blank()`
+	 * moves, and the product's own that `regenerate()` moves.
 	 * Null when neither is configured.
 	 *
 	 * @param WC_Product $product A product or variation.
@@ -698,7 +717,12 @@ final class ProductPictures {
 		if ( null === $own && null === $shared ) {
 			return null;
 		}
-		$parts    = array( $own, $shared, ProductVariant::document_on( $product ), self::generation() );
+		$parts  = array( $own, $shared, ProductVariant::document_on( $product ), self::generation() );
+		$blanks = BlankPictureGenerations::of_product( $product );
+		if ( array() !== $blanks ) {
+			// Only once one of its blanks moved, so a product never redrawn for its blank keeps the pictures it has.
+			$parts[] = array( 'blank_generations' => $blanks );
+		}
 		$showcase = ShowcaseImages::document_on( $product );
 		if ( null !== $showcase ) {
 			// Only when set, so a product without showcase sets depends on what it did before them.
@@ -807,6 +831,24 @@ final class ProductPictures {
 	public static function product_generation( WC_Product $product ): int {
 		$owner = $product->is_type( 'variation' ) ? wc_get_product( $product->get_parent_id() ) : $product;
 		return $owner instanceof WC_Product ? (int) $owner->get_meta( self::PRODUCT_GENERATION_META ) : 0;
+	}
+
+	/**
+	 * Parts of what a picture is drawn from, with the number of the blank
+	 * it is drawn on once that moved: only then, so a picture never redrawn
+	 * for its blank keeps its key.
+	 *
+	 * @param array{template: string, blank?: string} $source What the picture is drawn from.
+	 * @param array<mixed>                            $parts  What the picture is drawn from.
+	 *
+	 * @return array<mixed>
+	 */
+	private static function on_blank( array $source, array $parts ): array {
+		$generation = isset( $source['blank'] ) ? BlankPictureGenerations::of( $source['blank'] ) : 0;
+		if ( 0 !== $generation ) {
+			$parts[] = array( 'blank_generation' => $generation );
+		}
+		return $parts;
 	}
 
 	/**

@@ -88,8 +88,8 @@ final class ServerReadsWarmUp {
 	private const RUN_SECONDS = 30;
 
 	/**
-	 * Before the queue's default 10: Action Scheduler runs a shop's jobs
-	 * oldest first, and a backlog of picture jobs would hold the reads
+	 * Before the queue's default 10: Action Scheduler runs jobs of one
+	 * priority oldest first, and a backlog of them would hold the reads
 	 * past the copies they are to replace.
 	 */
 	public const PRIORITY = 5;

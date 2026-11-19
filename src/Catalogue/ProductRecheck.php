@@ -82,6 +82,12 @@ final class ProductRecheck {
 	public const GROUP = Schema::ACTION_GROUP;
 
 	/**
+	 * Where the re-checks, and the jobs queueing them, stand in Action
+	 * Scheduler's queue: behind orders, webhook events and fulfilment.
+	 */
+	public const PRIORITY = Schema::CATALOGUE_JOB_PRIORITY;
+
+	/**
 	 * Products using a template.
 	 */
 	public const BY_TEMPLATE = 'template';
@@ -227,7 +233,10 @@ final class ProductRecheck {
 		$blank_id = Payload::string( $event, 'blankId' );
 		// A blank's photos and print areas can change under the same ids.
 		if ( null !== $blank_id && in_array( $event->type, array( self::BLANK_UPDATED, self::BLANK_RESTORED ), true ) ) {
-			ProductPictures::redraw_all();
+			if ( ! ProductPictures::redraw_blank( $blank_id ) ) {
+				// Handled again, the blank moves once more: its pictures are drawn again either way.
+				throw new RuntimeException( 'The redraw of the pictures on a blank could not be queued.' );
+			}
 		}
 		if ( null !== $blank_id ) {
 			$this->queue_first( self::BY_BLANK, $blank_id );
@@ -525,8 +534,8 @@ final class ProductRecheck {
 			'attempt'     => $attempt,
 		);
 		$queued = 0 === $delay
-			? as_enqueue_async_action( self::ACTION, $args, self::GROUP )
-			: as_schedule_single_action( time() + $delay, self::ACTION, $args, self::GROUP );
+			? as_enqueue_async_action( self::ACTION, $args, self::GROUP, false, self::PRIORITY )
+			: as_schedule_single_action( time() + $delay, self::ACTION, $args, self::GROUP, false, self::PRIORITY );
 		if ( 0 === $queued ) {
 			$logger->error( 'The re-check of products could not be queued.', array( 'products' => $product_ids ) );
 			return false;
@@ -565,7 +574,7 @@ final class ProductRecheck {
 		if ( WaitingJob::exists( self::QUEUE_ACTION, $args, self::GROUP ) ) {
 			return true;
 		}
-		if ( 0 === as_enqueue_async_action( self::QUEUE_ACTION, $args, self::GROUP ) ) {
+		if ( 0 === as_enqueue_async_action( self::QUEUE_ACTION, $args, self::GROUP, false, self::PRIORITY ) ) {
 			$this->logger->error( 'The re-check of products could not be queued.', $args );
 			return false;
 		}
