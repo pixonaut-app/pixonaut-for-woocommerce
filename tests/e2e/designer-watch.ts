@@ -98,6 +98,10 @@ const PRICE_SELECTOR =
  *  shows, and the variation's price shown. */
 export type SwitchFrame = {
 	broken: string[];
+	/** The views whose thumbnail the strip shows, and of those the ones it
+	 *  shows without a picture: none given yet, or one that failed. */
+	thumbnails: string[];
+	blankThumbnails: string[];
 	cart: boolean;
 	price: string;
 	/** Whether the preview still shows the last designer's picture. */
@@ -124,6 +128,9 @@ export async function watchSwitch(page: Page, side: string): Promise<void> {
 	await page.evaluate(
 		([side, PRICE_SELECTOR]) => {
 			const frames: SwitchFrame[] = [];
+			// The thumbnails' pictures seen with pixels in a frame: drawn
+			// again, one keeps showing them until its next has loaded.
+			const painted = new WeakSet<HTMLImageElement>();
 			(window as unknown as { switchFrames: typeof frames }).switchFrames =
 				frames;
 			const shows = (element: Element | null): boolean =>
@@ -137,6 +144,11 @@ export async function watchSwitch(page: Page, side: string): Promise<void> {
 					),
 				];
 				const preview = document.getElementById(`pixonaut-preview-${side}`);
+				const thumbnails = [
+					...document.querySelectorAll<HTMLElement>(
+						`#pixonaut-views-${side} [data-view-id]`,
+					),
+				].filter(shows);
 				const cart = [
 					...document.querySelectorAll('.single_add_to_cart_button'),
 				].filter(shows);
@@ -171,6 +183,22 @@ export async function watchSwitch(page: Page, side: string): Promise<void> {
 								shows(img),
 						)
 						.map((img) => img.getAttribute('src') ?? ''),
+					thumbnails: thumbnails.map((view) => view.dataset.viewId ?? ''),
+					blankThumbnails: thumbnails
+						.filter((view) => {
+							const picture = view.querySelector('img');
+							if (picture === null || picture.getAttribute('src') === null) {
+								return true;
+							}
+							if (picture.naturalWidth > 0) {
+								painted.add(picture);
+								return false;
+							}
+							// Loading, it shows what it showed last: nothing, unless
+							// it was seen with pixels before. Loaded, it failed.
+							return picture.complete || !painted.has(picture);
+						})
+						.map((view) => view.dataset.viewId ?? ''),
 					cart: cart.length > 0,
 					price:
 						[...document.querySelectorAll(PRICE_SELECTOR)]

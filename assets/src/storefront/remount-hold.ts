@@ -1,3 +1,5 @@
+import { lendThumbnails } from './held-thumbnails';
+
 /** Attributes a still copy of the designer drops, so it names nothing the
  *  page or the form reads: no duplicate id, nothing submitted, no printed
  *  field the SDK would take as the customer's. */
@@ -21,8 +23,9 @@ export type RemountHold = {
 	 *  them. */
 	place(): void;
 	/** Lets go, once: the parts show again, the boxes size to what they
-	 *  hold, and a copy the next designer did not replace (its mount failed)
-	 *  goes. */
+	 *  hold, a copy the next designer did not replace (its mount failed)
+	 *  goes, and the next designer's view strip shows the held thumbnail of
+	 *  each view it has not drawn yet (`lendThumbnails`). */
 	release(): void;
 	/** The form's parts hidden now: given back, and not taken by the next
 	 *  designer yet. */
@@ -71,6 +74,8 @@ export function holdShown(
 	]);
 	const displays = new Map<HTMLElement, string>();
 	const placed: Node[] = [];
+	/** The designer's own pictures the copy shows. */
+	const kept: HTMLImageElement[] = [];
 	let released = false;
 	let slow: ReturnType<typeof setTimeout> | undefined;
 	const showTaken = (): void => {
@@ -81,17 +86,28 @@ export function holdShown(
 			}
 		}
 	};
+	// The next designer's view strip shows the held thumbnails from the
+	// moment it is drawn, out of sight, so each has decoded by the time the
+	// strip shows.
+	const lend = (): void => {
+		for (const target of targets) {
+			lendThumbnails(kept, target);
+		}
+	};
 	// The next designer draws its form ahead of its preview: a part it took
 	// shows there at once, never hidden in the form while the preview waits.
 	const taking =
 		typeof MutationObserver === 'undefined'
 			? null
-			: new MutationObserver(showTaken);
+			: new MutationObserver(() => {
+					showTaken();
+					lend();
+				});
 	return {
 		place() {
 			for (const [target, copy] of copies) {
 				target.replaceChildren(...copy.nodes);
-				copy.keepPictures();
+				kept.push(...copy.keepPictures());
 				placed.push(...target.childNodes);
 			}
 			for (const [element, height] of heights) {
@@ -127,6 +143,8 @@ export function holdShown(
 			for (const [element] of heights) {
 				element.style.removeProperty('min-height');
 			}
+			lend();
+			kept.length = 0;
 			for (const node of placed.splice(0)) {
 				node.parentNode?.removeChild(node);
 			}
@@ -138,10 +156,10 @@ export function holdShown(
 }
 
 /** A target's copy: its nodes, and how to put the designer's own pictures
- *  in place of theirs, once the designer is gone. The pictures in the form's
- *  parts are the page's, which the next designer draws again: the copy
- *  keeps its own of those. */
-type Copy = { nodes: Node[]; keepPictures(): void };
+ *  in place of theirs, once the designer is gone, which gives the pictures
+ *  it put. The pictures in the form's parts are the page's, which the next
+ *  designer draws again: the copy keeps its own of those. */
+type Copy = { nodes: Node[]; keepPictures(): HTMLImageElement[] };
 
 /** Inert copies of the target's content, its canvases drawn in and the
  *  pictures of the designer, not in one of the form's `parts`, kept. */
@@ -195,11 +213,13 @@ function copyOf(target: HTMLElement, parts: readonly HTMLElement[]): Copy {
 	return {
 		nodes: copies,
 		keepPictures() {
+			const put: HTMLImageElement[] = [];
 			pictures.forEach((picture, index) => {
 				const copy = pictureCopies[index];
 				if (copy === undefined || lent.has(picture)) {
 					return;
 				}
+				put.push(picture);
 				unname(picture);
 				// One at the copy's top is inert as each node there is.
 				if (copy.inert) {
@@ -209,6 +229,7 @@ function copyOf(target: HTMLElement, parts: readonly HTMLElement[]): Copy {
 				}
 				copy.replaceWith(picture);
 			});
+			return put;
 		},
 	};
 }

@@ -948,6 +948,7 @@ export const REACH = {
 		'assets/src/storefront/variation-slots-index.ts',
 		'assets/src/storefront/applicable-form.ts',
 		'assets/src/storefront/remount-hold.ts',
+		'assets/src/storefront/held-thumbnails.ts',
 		'assets/src/storefront/price.ts',
 		'src/Storefront/ReadsAhead.php',
 		'assets/src/storefront/reads-ahead.ts',
