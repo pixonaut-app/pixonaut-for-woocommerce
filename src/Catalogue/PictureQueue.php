@@ -13,6 +13,7 @@ use ActionScheduler_Action;
 use ActionScheduler_Store;
 use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Settings\Settings;
+use RuntimeException;
 use WC_Cache_Helper;
 use WC_Product;
 
@@ -391,16 +392,16 @@ final class PictureQueue {
 	 * and the products of those variations, unless one waits to start.
 	 *
 	 * @param string $blank_id The blank.
+	 * @return bool False when it could not be queued.
 	 */
-	public static function queue_blank( string $blank_id ): void {
+	public static function queue_blank( string $blank_id ): bool {
 		if ( ! did_action( 'action_scheduler_init' ) ) {
 			// Before Action Scheduler is set up, every product is checked once it is.
 			self::queue_all();
-			return;
+			return true;
 		}
-		if ( array() === self::waiting_jobs( self::QUEUE_ACTION, array( 0, $blank_id ) ) ) {
-			as_enqueue_async_action( self::QUEUE_ACTION, array( 0, $blank_id ), ProductPictures::GROUP, false, ProductPictures::PRIORITY );
-		}
+		return array() !== self::waiting_jobs( self::QUEUE_ACTION, array( 0, $blank_id ) )
+			|| 0 !== as_enqueue_async_action( self::QUEUE_ACTION, array( 0, $blank_id ), ProductPictures::GROUP, false, ProductPictures::PRIORITY );
 	}
 
 	/**
@@ -483,6 +484,7 @@ final class PictureQueue {
 	 *
 	 * @param int|string $after    The product id the page starts after; 0 for the first.
 	 * @param string     $blank_id Only the products and variations using this blank; '' for every configured product.
+	 * @throws RuntimeException When the page after could not be queued, so Action Scheduler records the job as failed.
 	 */
 	public function queue_page( int|string $after = 0, string $blank_id = '' ): void {
 		$ids = '' === $blank_id ? ProductIndex::configured( (int) $after, self::QUEUE_PAGE ) : ProductIndex::using_blank( $blank_id, (int) $after, self::QUEUE_PAGE );
@@ -493,7 +495,9 @@ final class PictureQueue {
 		$this->parents_changed();
 		if ( self::QUEUE_PAGE === count( $ids ) ) {
 			$next = '' === $blank_id ? array( $ids[ self::QUEUE_PAGE - 1 ] ) : array( $ids[ self::QUEUE_PAGE - 1 ], $blank_id );
-			as_enqueue_async_action( self::QUEUE_ACTION, $next, ProductPictures::GROUP, false, ProductPictures::PRIORITY );
+			if ( 0 === as_enqueue_async_action( self::QUEUE_ACTION, $next, ProductPictures::GROUP, false, ProductPictures::PRIORITY ) ) {
+				throw new RuntimeException( esc_html( sprintf( 'The check of the next page of products could not be queued after product %d.', $ids[ self::QUEUE_PAGE - 1 ] ) ) );
+			}
 		}
 	}
 

@@ -291,6 +291,21 @@ final class ProductPicturesTest extends WP_UnitTestCase {
 		$this->assertFalse( $this->plugin->picture_queue()->is_due( $this->reload( $picture['product'] ) ) );
 	}
 
+	public function test_a_blank_update_whose_redraw_cannot_be_queued_is_handled_again(): void {
+		$this->drawn( $this->product( self::config() ) );
+		$refuse = static fn ( $pre, string $hook ): ?int => PictureQueue::QUEUE_ACTION === $hook ? 0 : $pre;
+		add_filter( 'pre_as_enqueue_async_action', $refuse, 10, 2 );
+
+		try {
+			$this->plugin->product_recheck()->handle( Payload::event( 'evt_1', ProductRecheck::BLANK_UPDATED, 0, array( 'blankId' => DesignFixture::BLANK_ID ) ) );
+			$this->fail( 'The event was taken as handled.' );
+		} catch ( \RuntimeException $e ) {
+			$this->assertStringContainsString( 'could not be queued', $e->getMessage() );
+		} finally {
+			remove_filter( 'pre_as_enqueue_async_action', $refuse );
+		}
+	}
+
 	public function test_picture_jobs_wait_behind_the_store_s_other_jobs(): void {
 		$this->product( self::config() );
 		$webhook = as_enqueue_async_action( Processor::PROCESS_HOOK, array( 'evt_1' ), Processor::GROUP );

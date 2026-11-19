@@ -233,7 +233,10 @@ final class ProductRecheck {
 		$blank_id = Payload::string( $event, 'blankId' );
 		// A blank's photos and print areas can change under the same ids.
 		if ( null !== $blank_id && in_array( $event->type, array( self::BLANK_UPDATED, self::BLANK_RESTORED ), true ) ) {
-			ProductPictures::redraw_blank( $blank_id );
+			if ( ! ProductPictures::redraw_blank( $blank_id ) ) {
+				// Handled again, the blank moves once more: its pictures are drawn again either way.
+				throw new RuntimeException( 'The redraw of the pictures on a blank could not be queued.' );
+			}
 		}
 		if ( null !== $blank_id ) {
 			$this->queue_first( self::BY_BLANK, $blank_id );

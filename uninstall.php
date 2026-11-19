@@ -72,7 +72,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_option( \Pixonaut\WooCommerce\Schema::REQUEST_LOG_OPTION );
 		delete_transient( \Pixonaut\WooCommerce\Schema::NOT_LIVE_CANDIDATES_TRANSIENT );
 		delete_option( \Pixonaut\WooCommerce\Schema::PICTURE_GENERATION_OPTION );
-		delete_option( \Pixonaut\WooCommerce\Schema::BLANK_PICTURE_GENERATIONS_OPTION );
+		delete_option( \Pixonaut\WooCommerce\Schema::BLANK_PICTURE_GENERATIONS_MOVED_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::PICTURES_BACKFILL_OPTION );
 		delete_option( \Pixonaut\WooCommerce\Schema::EXCHANGE_RATES_OPTION );
 		// Cached catalogue answers, proof images and filter indexes expire on their own; this removes the ones still waiting to.
@@ -209,6 +209,8 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Schema::DESIGNER_LINK_LOCK_OPTION_PREFIX ) . '%' ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- options by prefix, once at uninstall.
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Schema::PICTURE_LOCK_OPTION_PREFIX ) . '%' ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- options by prefix, once at uninstall.
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Schema::BLANK_PICTURE_GENERATION_OPTION_PREFIX ) . '%' ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- options by prefix, once at uninstall.
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( \Pixonaut\WooCommerce\Schema::PICTURE_RUNNER_OPTION_PREFIX ) . '%' ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- options by prefix, once at uninstall.

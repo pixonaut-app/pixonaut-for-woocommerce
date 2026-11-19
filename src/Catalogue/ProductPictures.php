@@ -206,10 +206,11 @@ final class ProductPictures {
 	 * pictures stay.
 	 *
 	 * @param string $blank_id The blank.
+	 * @return bool False when the check of its products could not be queued.
 	 */
-	public static function redraw_blank( string $blank_id ): void {
+	public static function redraw_blank( string $blank_id ): bool {
 		BlankPictureGenerations::move( $blank_id );
-		PictureQueue::queue_blank( $blank_id );
+		return PictureQueue::queue_blank( $blank_id );
 	}
 
 	/**
@@ -716,8 +717,8 @@ final class ProductPictures {
 		if ( null === $own && null === $shared ) {
 			return null;
 		}
-		$parts    = array( $own, $shared, ProductVariant::document_on( $product ), self::generation() );
-		$blanks   = BlankPictureGenerations::of_product( $product );
+		$parts  = array( $own, $shared, ProductVariant::document_on( $product ), self::generation() );
+		$blanks = BlankPictureGenerations::of_product( $product );
 		if ( array() !== $blanks ) {
 			// Only once one of its blanks moved, so a product never redrawn for its blank keeps the pictures it has.
 			$parts[] = array( 'blank_generations' => $blanks );

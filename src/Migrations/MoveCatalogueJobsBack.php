@@ -45,21 +45,36 @@ final class MoveCatalogueJobsBack implements Migration {
 		return 19;
 	}
 
+	/**
+	 * @throws MigrationPostponed When the database refused a query; the jobs stay where they are until the next try.
+	 */
 	public function up(): void {
 		global $wpdb;
-		$table = $wpdb->prefix . 'actionscheduler_actions';
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Action Scheduler has no call changing a job's priority; one update of its own table, a placeholder per hook.
-		if ( $table !== $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) ) ) {
+		$found = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $wpdb->prefix . 'actionscheduler_actions' ) ) );
+		self::check( $wpdb->last_error );
+		if ( null === $found ) {
 			// Jobs kept as posts, by an Action Scheduler older than its own tables: they stay where they are.
 			return;
 		}
 		$hooks = implode( ', ', array_fill( 0, count( self::HOOKS ), '%s' ) );
 		$wpdb->query(
 			$wpdb->prepare(
-				"UPDATE {$table} SET priority = %d WHERE status = %s AND priority = %d AND hook IN ( {$hooks} )",
+				"UPDATE {$wpdb->prefix}actionscheduler_actions SET priority = %d WHERE status = %s AND priority = %d AND hook IN ( {$hooks} )",
 				array_merge( array( Schema::CATALOGUE_JOB_PRIORITY, ActionScheduler_Store::STATUS_PENDING, self::DEFAULT_PRIORITY ), self::HOOKS )
 			)
 		);
 		// phpcs:enable
+		self::check( $wpdb->last_error );
+	}
+
+	/**
+	 * @param string $error The database's last error; empty for none.
+	 * @throws MigrationPostponed When there is one.
+	 */
+	private static function check( string $error ): void {
+		if ( '' !== $error ) {
+			throw new MigrationPostponed( esc_html( 'Catalogue jobs could not be moved behind the store\'s other jobs: ' . $error ) );
+		}
 	}
 }
