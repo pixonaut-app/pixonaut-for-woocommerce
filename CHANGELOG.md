@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.30.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.29.0...v1.30.0) (2026-11-19)
+
+
+### Features
+
+* **fulfilment:** an order's lines name the store order they were sold in ([#365](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/365)) ([e16941d](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/e16941dbe8178deeb08f4b34a23b09aa486d1809))
+
+
+### Bug Fixes
+
+* **contracts:** pin Pixonaut SDK 0.45.0 ([#369](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/369)) ([5e2d05c](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/5e2d05c3c4692ba20596fa866489a52b3e9d6b9f))
+
 ## [1.29.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.28.1...v1.29.0) (2026-11-19)
 
 
