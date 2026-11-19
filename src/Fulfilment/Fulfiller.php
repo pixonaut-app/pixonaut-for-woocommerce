@@ -130,7 +130,7 @@ final class Fulfiller {
 		}
 		// A line an earlier version printed holds its prints, and orders them.
 		if ( in_array( $line->state(), array( LineState::APPROVED, LineState::PRINTED ), true ) ) {
-			$this->place_order( $line, $order );
+			$this->place_order( $line, $order, $connection->site );
 		}
 	}
 
@@ -280,10 +280,11 @@ final class Fulfiller {
 	 *
 	 * @param LineState $line  An `approved` line, or a `printed` one.
 	 * @param WC_Order  $order The order.
+	 * @param string    $site  The connection's `<site>`.
 	 *
 	 * @throws ApiException When Pixonaut refused the order or could not be reached; `409 design_already_ordered` when a design has a live order the line did not place.
 	 */
-	private function place_order( LineState $line, WC_Order $order ): void {
+	private function place_order( LineState $line, WC_Order $order, string $site ): void {
 		$external_ref = (string) $line->ref( LineState::REF_EXTERNAL_REF );
 		$sent         = null;
 		$answer       = OrderList::under( $this->pixonaut, $external_ref )->orders[0] ?? null;
@@ -298,7 +299,7 @@ final class Fulfiller {
 			if ( is_array( $stored ) ) {
 				$request = StoredRequest::restore( $stored );
 			} else {
-				$request = $this->pixonaut->orders()->prepareCreate( OrdersCreateRequest::fromArray( $this->order_body( $line, $order, $external_ref ) ), (string) $line->ref( LineState::REF_ORDER_KEY ) );
+				$request = $this->pixonaut->orders()->prepareCreate( OrdersCreateRequest::fromArray( $this->order_body( $line, $order, $external_ref, $site ) ), (string) $line->ref( LineState::REF_ORDER_KEY ) );
 				$line->set_ref( LineState::REF_ORDER_REQUEST, $request->toArray() );
 				if ( ! $line->save() ) {
 					return;
@@ -486,10 +487,11 @@ final class Fulfiller {
 	 * @param LineState $line         An `approved` or `printed` line.
 	 * @param WC_Order  $order        The order.
 	 * @param string    $external_ref The line's ref.
+	 * @param string    $site         The connection's `<site>`.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function order_body( LineState $line, WC_Order $order, string $external_ref ): array {
+	private function order_body( LineState $line, WC_Order $order, string $external_ref, string $site ): array {
 		$printed = LineState::PRINTED === $line->state();
 		$sides   = array();
 		if ( $printed ) {
@@ -510,10 +512,32 @@ final class Fulfiller {
 			'externalRef'                   => $external_ref,
 			// Null is the customer's address; left out, the workspace's setting decides.
 			'shipToAddressId'               => null,
+			// The order's Pixonaut lines bound for one printshop go to it as one order, and ship together.
+			'storeOrder'                    => array(
+				'ref'   => Refs::store_order_ref( $site, $order->get_id() ),
+				'items' => self::pixonaut_lines( $order ),
+			),
 		) + ( is_string( $variant ) && '' !== $variant ? array( 'variant' => $variant ) : array() )
 			+ ( is_string( $printshop ) && '' !== $printshop ? array( 'printshopId' => $printshop ) : array() )
 			+ ( true === $line->ref( LineState::REF_REORDER ) && array() !== $line->sides() ? array( 'reorder' => true ) : array() )
 			+ OrderAddress::of( $order, $line->item() );
+	}
+
+	/**
+	 * How many of the order's lines Pixonaut makes, each sent as an order of
+	 * its own: what Pixonaut waits for before it sends those bound for one
+	 * printshop together.
+	 *
+	 * @param WC_Order $order The order.
+	 */
+	private static function pixonaut_lines( WC_Order $order ): int {
+		$lines = 0;
+		foreach ( $order->get_items() as $item ) {
+			if ( $item instanceof WC_Order_Item_Product && LineState::is_tracked( $item ) ) {
+				++$lines;
+			}
+		}
+		return max( 1, $lines );
 	}
 
 	/**

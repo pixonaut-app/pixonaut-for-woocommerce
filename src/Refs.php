@@ -100,6 +100,18 @@ final class Refs {
 	}
 
 	/**
+	 * Reference of the order a line was sold in, which every Pixonaut line of
+	 * it sends as its store order: Pixonaut sends the lines bound for one
+	 * printshop to it together.
+	 *
+	 * @param string $site     The connection's `<site>`.
+	 * @param int    $order_id Order id.
+	 */
+	public static function store_order_ref( string $site, int $order_id ): string {
+		return self::join( $site, 'order', (string) $order_id );
+	}
+
+	/**
 	 * `externalRef` of a design once its line is in an order.
 	 *
 	 * @param string $site     The connection's `<site>`.
