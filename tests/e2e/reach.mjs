@@ -197,6 +197,11 @@ export const NO_SPEC = [
 	'src/Admin/VariationPriceRuleField.php',
 	'templates/admin/term-price-rule.php',
 	'templates/admin/variation-price-rule.php',
+	// The lowest margin warning: its email, notice and products list view: the PHP suites.
+	'src/Admin/MarginFloorList.php',
+	'src/Emails/MarginFloorEmail.php',
+	'templates/emails/margin-floor.php',
+	'templates/emails/plain/margin-floor.php',
 ];
 
 /**
