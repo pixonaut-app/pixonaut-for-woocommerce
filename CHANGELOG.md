@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.30.1](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.30.0...v1.30.1) (2026-11-19)
+
+
+### Bug Fixes
+
+* **catalogue:** a blank change redraws only its products' pictures, and catalogue jobs wait behind orders ([#372](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/372)) ([5e6fc0a](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/5e6fc0a90079f6aeb9d63d2bf566a7bc74b791f8))
+* **contracts:** pin Pixonaut API 12.1.1 ([#373](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/373)) ([493695b](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/493695b7a46b10a5cda1bac116e7f7686677a178))
+
 ## [1.30.0](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.29.0...v1.30.0) (2026-11-19)
 
 
