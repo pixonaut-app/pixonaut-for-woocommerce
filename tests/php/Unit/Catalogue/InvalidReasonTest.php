@@ -8,14 +8,23 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Unit\Catalogue;
 
 use Brain\Monkey\Functions;
+use Pixonaut\WooCommerce\Api\CheckSlowdown;
 use Pixonaut\WooCommerce\Catalogue\InvalidDetail;
 use Pixonaut\WooCommerce\Catalogue\InvalidReason;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
+use Pixonaut\WooCommerce\Tests\Unit\FakeOptions;
 use Pixonaut\WooCommerce\Tests\Unit\TestCase;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use ReflectionClass;
 
 final class InvalidReasonTest extends TestCase {
+
+	use FakeOptions;
+
+	/**
+	 * How long checks are held in the test of a refusal for too many requests.
+	 */
+	private const HELD_SECONDS = 30;
 
 	private const SPEC = __DIR__ . '/../../../../contracts/pixonaut/openapi.json';
 
@@ -43,6 +52,22 @@ final class InvalidReasonTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		Functions\when( '__' )->returnArg();
+		$this->fake_options();
+		$this->options['time_format'] = 'H:i';
+		Functions\when( 'wp_date' )->alias( static fn ( string $format, int $time ): string => gmdate( $format, $time ) );
+	}
+
+	public function test_a_check_refused_for_too_many_requests_says_when_it_is_checked_again(): void {
+		$until                                  = time() + self::HELD_SECONDS;
+		$this->options[ CheckSlowdown::OPTION ] = $until;
+
+		$held = InvalidReason::message( InvalidReason::CHECK_FAILED, new InvalidDetail( code: 'rate_limited' ) );
+		unset( $this->options[ CheckSlowdown::OPTION ] );
+		$over = InvalidReason::message( InvalidReason::CHECK_FAILED, new InvalidDetail( code: 'rate_limited' ) );
+
+		$this->assertStringContainsString( 'checked again by itself at ' . gmdate( 'H:i', $until ), $held );
+		$this->assertStringContainsString( 'checked again by itself in a moment', $over );
+		$this->assertStringNotContainsString( 'update the product', $held . $over );
 	}
 
 	public function test_every_verdict_pixonaut_can_give_on_a_print_size_has_a_message(): void {
@@ -91,10 +116,10 @@ final class InvalidReasonTest extends TestCase {
 	}
 
 	public function test_a_refused_standing_design_says_what_pixonaut_answered(): void {
-		$text = InvalidReason::message( InvalidReason::STANDING_REFUSED, new InvalidDetail( code: 'rate_limited' ) );
+		$text = InvalidReason::message( InvalidReason::STANDING_REFUSED, new InvalidDetail( code: 'db_error' ) );
 
 		$this->assertStringStartsWith( 'Pixonaut would not make the design of a fixed-design side. ', $text );
-		$this->assertStringContainsString( 'Wait a minute', $text );
+		$this->assertStringContainsString( 'Pixonaut had a problem of its own.', $text );
 	}
 
 	public function test_a_detail_naming_nothing_is_none_and_survives_storing(): void {

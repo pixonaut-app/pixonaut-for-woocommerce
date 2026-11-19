@@ -79,6 +79,7 @@ export const NO_SPEC = [
 	'src/Api/Answers/',
 	'src/Api/BatchClient.php',
 	'src/Api/Catalogue.php',
+	'src/Api/CheckSlowdown.php', // every print size check passes through it
 	'src/Api/Deprecations.php',
 	'src/Api/Designs.php',
 	'src/Api/HookListener.php',
@@ -99,6 +100,7 @@ export const NO_SPEC = [
 	'src/Catalogue/StoppedPictureJobs.php', // AS failure hooks; a job is never cut off in e2e
 	'src/Catalogue/SmallerPictures.php', // the upgrade's conversion of PNG pictures; new pictures go through SharedPictures
 	'src/Catalogue/UnfinishedPictures.php', // pictures a stopped job left; a job is never cut off in e2e
+	'src/Catalogue/SlowedCheck.php', // a check refused for too many requests; the fake never refuses one
 	'src/Updates/',
 	'templates/admin/upgrade-notice.php',
 	'src/Privacy/',

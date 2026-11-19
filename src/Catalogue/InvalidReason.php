@@ -436,7 +436,7 @@ final class InvalidReason {
 	private static function refused( string $reason, string $code, bool $variation ): string {
 		$message = PixonautRefusal::message( $code, $variation ) ?? self::unknown( $code );
 		return self::STANDING_REFUSED !== $reason ? $message : sprintf(
-			/* translators: %s: why, and what to do, e.g. "Pixonaut was asked too often. Wait a minute, then update the product." */
+			/* translators: %s: why, and what to do, e.g. "Pixonaut had a problem of its own. Update the product again in a while." */
 			__( 'Pixonaut would not make the design of a fixed-design side. %s', 'pixonaut-for-woocommerce' ),
 			$message
 		);

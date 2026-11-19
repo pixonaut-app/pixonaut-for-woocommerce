@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-18T23:59:16+00:00\n"
+"POT-Creation-Date: 2026-11-19T00:42:17+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -48,7 +48,7 @@ msgstr ""
 #. translators: The plugin's item in the admin menu, shown to the merchant; the product name, keep it as it is.
 #. translators: Heading of the Pixonaut fields on a variation of a variable product, shown to the merchant; the product name, keep it as it is.
 #: pixonaut-for-woocommerce.php src/Abilities/Abilities.php:63
-#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:223
+#: src/Admin/OrderBox.php:118 src/Admin/ProductPanel.php:224
 #: src/Settings/SettingsPage.php:277 templates/admin/product-variation.php:42
 msgid "Pixonaut"
 msgstr "Pixonaut"
@@ -4977,7 +4977,7 @@ msgstr ""
 "produits personnalisés. <a href=\"%2$s\" target=\"_blank\" rel=\"noopener "
 "noreferrer\">Comment fonctionne la connexion</a>"
 
-#: src/Admin/ConnectNotice.php:97 src/Admin/Notices.php:137
+#: src/Admin/ConnectNotice.php:97 src/Admin/Notices.php:163
 msgid "You are not allowed to dismiss this notice."
 msgstr "Vous n'avez pas l'autorisation de masquer cette notification."
 
@@ -5220,13 +5220,13 @@ msgid "Field"
 msgstr "Champ"
 
 #. translators: 1: product edit link, 2: why it cannot be bought.
-#: src/Admin/InvalidProductNotice.php:109
+#: src/Admin/InvalidProductNotice.php:120
 #, php-format
 msgid "Customers cannot buy %1$s: %2$s"
 msgstr "Les clients ne peuvent pas acheter %1$s : %2$s"
 
 #. translators: 1: the product's name, 2: the variation's attributes, e.g. "Size: M, Color: Red", or its id, e.g. "#123".
-#: src/Admin/InvalidProductNotice.php:145
+#: src/Admin/InvalidProductNotice.php:153
 #, php-format
 msgid "%1$s, variation %2$s"
 msgstr "%1$s, variation %2$s"
@@ -5266,17 +5266,17 @@ msgstr ""
 
 #. translators: Shown to the merchant on the product edit page as the printshop of a blank: the default printshop of the Pixonaut workspace.
 #. translators: Choice of the printshop dropdown on the product edit page: send the product's orders to the default printshop of the Pixonaut workspace.
-#: src/Admin/LinkedBlank.php:343 src/Admin/ProductPanel.php:851
+#: src/Admin/LinkedBlank.php:343 src/Admin/ProductPanel.php:856
 msgid "Workspace default"
 msgstr "Valeur par défaut de l'espace de travail"
 
 #. translators: %s: the workspace's default printshop.
-#: src/Admin/LinkedBlank.php:345 src/Admin/ProductPanel.php:854
+#: src/Admin/LinkedBlank.php:345 src/Admin/ProductPanel.php:859
 #, php-format
 msgid "Workspace default (%s)"
 msgstr "Valeur par défaut de l'espace de travail (%s)"
 
-#: src/Admin/LinkedBlank.php:348 src/Admin/ProductPanel.php:866
+#: src/Admin/LinkedBlank.php:348 src/Admin/ProductPanel.php:871
 msgid "A printshop no longer connected to the workspace"
 msgstr "Un imprimeur qui n'est plus connecté à l'espace de travail"
 
@@ -5797,59 +5797,59 @@ msgstr ""
 msgid "%s %%"
 msgstr "%s %%"
 
-#: src/Admin/ProductPanel.php:443
+#: src/Admin/ProductPanel.php:444
 msgid ""
 "This variation cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Cette variation ne peut pas être achetée tant que sa configuration Pixonaut "
 "n'est pas corrigée :"
 
-#: src/Admin/ProductPanel.php:444
+#: src/Admin/ProductPanel.php:445
 msgid ""
 "This product cannot be bought until its Pixonaut configuration is fixed:"
 msgstr ""
 "Ce produit ne peut pas être acheté tant que sa configuration Pixonaut n'est "
 "pas corrigée :"
 
-#: src/Admin/ProductPanel.php:449
+#: src/Admin/ProductPanel.php:450
 msgid "Customers design this variation with a Pixonaut template."
 msgstr "Les clients personnalisent cette variation avec un modèle Pixonaut."
 
-#: src/Admin/ProductPanel.php:450
+#: src/Admin/ProductPanel.php:451
 msgid "Customers design this product with a Pixonaut template."
 msgstr "Les clients personnalisent ce produit avec un modèle Pixonaut."
 
 #. translators: Option of a product side's Canvas shape dropdown: the side draws its canvas as the product's Canvas shape setting says. Admin product page.
 #. translators: Option of a variation's Layout dropdown: the variation uses the layout of its product. Admin product page.
-#: src/Admin/ProductPanel.php:491 src/Admin/ProductPanel.php:767
+#: src/Admin/ProductPanel.php:492 src/Admin/ProductPanel.php:772
 msgid "As the product says"
 msgstr "Selon le produit"
 
 #. translators: Option of the product's Canvas shape dropdown: the designer draws the canvas as the template's own setting says. Admin product page.
-#: src/Admin/ProductPanel.php:493
+#: src/Admin/ProductPanel.php:494
 msgid "As the template says"
 msgstr "Selon le modèle"
 
 #. translators: %s: the store's default choice, e.g. a layout or an approval mode.
-#: src/Admin/ProductPanel.php:784
+#: src/Admin/ProductPanel.php:789
 #, php-format
 msgid "Store setting: %s"
 msgstr "Réglage de la boutique : %s"
 
 #. translators: %s: the workspace's default printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank. Admin product page.
-#: src/Admin/ProductPanel.php:858
+#: src/Admin/ProductPanel.php:863
 #, php-format
 msgid "Workspace default (%s): prints only on a blank"
 msgstr ""
 "Valeur par défaut de l'espace de travail (%s) : imprime uniquement sur un "
 "produit vierge"
 
-#: src/Admin/ProductPanel.php:863
+#: src/Admin/ProductPanel.php:868
 msgid "The printshop chosen before"
 msgstr "L'imprimeur choisi auparavant"
 
 #. translators: %s: a printshop, such as Gelato, that prints only on a blank. Choice of the printshop dropdown of a product without a blank, kept because it was chosen before. Admin product page.
-#: src/Admin/ProductPanel.php:865
+#: src/Admin/ProductPanel.php:870
 #, php-format
 msgid "%s (prints only on a blank)"
 msgstr "%s (imprime uniquement sur un produit vierge)"
@@ -6948,7 +6948,7 @@ msgstr ""
 "La configuration a été enregistrée par une version plus récente de Pixonaut "
 "for WooCommerce. Mettez à jour l'extension."
 
-#. translators: %s: why, and what to do, e.g. "Pixonaut was asked too often. Wait a minute, then update the product."
+#. translators: %s: why, and what to do, e.g. "Pixonaut had a problem of its own. Update the product again in a while."
 #: src/Catalogue/InvalidReason.php:440
 #, php-format
 msgid "Pixonaut would not make the design of a fixed-design side. %s"
@@ -6981,7 +6981,7 @@ msgstr ""
 "imprimé dans ces tailles. Choisissez un modèle qui convient à toutes les "
 "tailles, ou cessez de vendre ces tailles."
 
-#: src/Catalogue/PixonautRefusal.php:106
+#: src/Catalogue/PixonautRefusal.php:107
 msgid ""
 "The store is not connected to Pixonaut. Connect it on the Pixonaut settings "
 "page, then update the product."
@@ -6990,7 +6990,7 @@ msgstr ""
 "réglages de Pixonaut, puis mettez à jour le produit."
 
 #
-#: src/Catalogue/PixonautRefusal.php:108
+#: src/Catalogue/PixonautRefusal.php:109
 msgid ""
 "Pixonaut could not be reached to check the configuration. It is checked "
 "again in a while; if this stays, check the connection on the Pixonaut "
@@ -7001,7 +7001,7 @@ msgstr ""
 "connexion sur la page des réglages de Pixonaut, puis mettez à jour le "
 "produit."
 
-#: src/Catalogue/PixonautRefusal.php:110
+#: src/Catalogue/PixonautRefusal.php:111
 msgid ""
 "Pixonaut answered in a way this version of Pixonaut for WooCommerce does not "
 "understand. Update the plugin, then update the product."
@@ -7010,7 +7010,7 @@ msgstr ""
 "WooCommerce ne comprend pas. Mettez à jour l'extension, puis mettez à jour "
 "le produit."
 
-#: src/Catalogue/PixonautRefusal.php:112
+#: src/Catalogue/PixonautRefusal.php:113
 msgid ""
 "Pixonaut no longer accepts the store’s connection. Connect the store again "
 "on the Pixonaut settings page, then update the product."
@@ -7018,7 +7018,7 @@ msgstr ""
 "Pixonaut n'accepte plus la connexion de la boutique. Connectez à nouveau la "
 "boutique sur la page des réglages de Pixonaut, puis mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:114
+#: src/Catalogue/PixonautRefusal.php:115
 msgid ""
 "The store’s connection may not do this in Pixonaut. Check the connection’s "
 "permissions in the Pixonaut studio, then update the product."
@@ -7027,7 +7027,7 @@ msgstr ""
 "Vérifiez les autorisations de la connexion dans le studio Pixonaut, puis "
 "mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:116
+#: src/Catalogue/PixonautRefusal.php:117
 msgid ""
 "Pixonaut refused the store’s web address. If the store moved to another "
 "address, connect it again on the Pixonaut settings page, then update the "
@@ -7037,7 +7037,7 @@ msgstr ""
 "d'adresse, connectez-la à nouveau sur la page des réglages de Pixonaut, puis "
 "mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:118
+#: src/Catalogue/PixonautRefusal.php:119
 msgid ""
 "The Pixonaut workspace does not include the API. Check its plan in the "
 "Pixonaut studio, then update the product."
@@ -7045,7 +7045,7 @@ msgstr ""
 "L'espace de travail Pixonaut n'inclut pas l'API. Vérifiez son offre dans le "
 "studio Pixonaut, puis mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:120
+#: src/Catalogue/PixonautRefusal.php:121
 msgid ""
 "The Pixonaut workspace is suspended. Contact Pixonaut to lift it, then "
 "update the product."
@@ -7053,20 +7053,14 @@ msgstr ""
 "L'espace de travail Pixonaut est suspendu. Contactez Pixonaut pour lever la "
 "suspension, puis mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:122
-msgid "Pixonaut was asked too often. Wait a minute, then update the product."
-msgstr ""
-"Pixonaut a reçu trop de requêtes. Attendez une minute, puis mettez à jour le "
-"produit."
-
-#: src/Catalogue/PixonautRefusal.php:124
+#: src/Catalogue/PixonautRefusal.php:125
 msgid "Pixonaut had a problem of its own. Update the product again in a while."
 msgstr ""
 "Pixonaut a rencontré un problème de son côté. Mettez à jour le produit à "
 "nouveau dans quelques instants."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/PixonautRefusal.php:128
+#: src/Catalogue/PixonautRefusal.php:129
 #, php-format
 msgid ""
 "The template, blank or print position no longer exists in Pixonaut. Choose "
@@ -7075,7 +7069,7 @@ msgstr ""
 "Le modèle, le produit vierge ou l'emplacement d'impression n'existe plus "
 "dans Pixonaut. Choisissez-en un autre dans %s."
 
-#: src/Catalogue/PixonautRefusal.php:132
+#: src/Catalogue/PixonautRefusal.php:133
 msgid ""
 "Pixonaut could not read what the store sent. Update Pixonaut for "
 "WooCommerce, then update the product."
@@ -7084,7 +7078,7 @@ msgstr ""
 "for WooCommerce, puis mettez à jour le produit."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/PixonautRefusal.php:136
+#: src/Catalogue/PixonautRefusal.php:137
 #, php-format
 msgid ""
 "The template’s own design breaks one of its rules at this print size. Fix "
@@ -7096,7 +7090,7 @@ msgstr ""
 "autre taille ou un autre modèle dans %s."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/PixonautRefusal.php:142
+#: src/Catalogue/PixonautRefusal.php:143
 #, php-format
 msgid ""
 "The template cannot be made with the blank’s print technique, such as "
@@ -7106,7 +7100,7 @@ msgstr ""
 "vierge, comme la broderie ou les tons directs. Choisissez un modèle conçu "
 "pour celle-ci dans %s."
 
-#: src/Catalogue/PixonautRefusal.php:146
+#: src/Catalogue/PixonautRefusal.php:147
 msgid ""
 "Pixonaut could not read the template’s design. Publish the template again in "
 "the Pixonaut studio, then update the product."
@@ -7114,7 +7108,7 @@ msgstr ""
 "Pixonaut n'a pas pu lire le contenu du modèle. Publiez à nouveau le modèle "
 "dans le studio Pixonaut, puis mettez à jour le produit."
 
-#: src/Catalogue/PixonautRefusal.php:148
+#: src/Catalogue/PixonautRefusal.php:149
 msgid ""
 "Pixonaut could not use an earlier proof of the design. Update the product "
 "again."
@@ -7122,7 +7116,7 @@ msgstr ""
 "Pixonaut n'a pas pu utiliser une épreuve antérieure de la création. Mettez à "
 "jour le produit à nouveau."
 
-#: src/Catalogue/PixonautRefusal.php:152
+#: src/Catalogue/PixonautRefusal.php:153
 msgid ""
 "The blank needs a variant for this print position, or the variant chosen is "
 "not one of the blank’s. Pick the variant in the variation’s Pixonaut fields."
@@ -7132,7 +7126,7 @@ msgstr ""
 "variante dans les champs Pixonaut de la variation."
 
 #. translators: %s: where the settings are, e.g. "the product's Pixonaut tab".
-#: src/Catalogue/PixonautRefusal.php:156
+#: src/Catalogue/PixonautRefusal.php:157
 #, php-format
 msgid ""
 "The printshop is unknown, disconnected, unavailable, or not the one the "
@@ -7142,6 +7136,26 @@ msgstr ""
 "L'imprimeur est inconnu, déconnecté, indisponible, ou n'est pas celui chez "
 "qui le produit vierge est imprimé. Choisissez un autre imprimeur dans %s, ou "
 "connectez-le à nouveau dans le studio Pixonaut."
+
+#: src/Catalogue/PixonautRefusal.php:174
+msgid ""
+"Pixonaut got more requests from the store than it takes at once. The "
+"configuration is checked again by itself in a moment; there is nothing to do."
+msgstr ""
+"Pixonaut a reçu plus de requêtes de la boutique qu'il n'en accepte à la "
+"fois. La configuration sera vérifiée à nouveau automatiquement dans un "
+"instant ; vous n'avez rien à faire."
+
+#. translators: %s: a time of day in the site's time format, e.g. "14:05".
+#: src/Catalogue/PixonautRefusal.php:178
+#, php-format
+msgid ""
+"Pixonaut got more requests from the store than it takes at once. The "
+"configuration is checked again by itself at %s; there is nothing to do."
+msgstr ""
+"Pixonaut a reçu plus de requêtes de la boutique qu'il n'en accepte à la "
+"fois. La configuration sera vérifiée à nouveau automatiquement à %s ; vous "
+"n'avez rien à faire."
 
 #: src/Catalogue/SplitCardImageCopies.php:302
 msgid "The card's image could not be copied from its URL."
@@ -14086,6 +14100,12 @@ msgid "%s view"
 msgid_plural "%s views"
 msgstr[0] "%s vue"
 msgstr[1] "%s vues"
+
+#~ msgid ""
+#~ "Pixonaut was asked too often. Wait a minute, then update the product."
+#~ msgstr ""
+#~ "Pixonaut a reçu trop de requêtes. Attendez une minute, puis mettez à jour "
+#~ "le produit."
 
 #~ msgid ""
 #~ "Gives the store's pricing rule, by which prices follow the printshop's "

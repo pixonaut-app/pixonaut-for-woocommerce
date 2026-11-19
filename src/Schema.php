@@ -373,6 +373,12 @@ final class Schema {
 	const VARIANTS_BACKFILL_OPTION = 'pixonaut_wc_variants_backfill';
 
 	/**
+	 * Option holding when Pixonaut takes the store's print size checks
+	 * again, as Unix time, after it refused one for too many requests.
+	 */
+	const CHECKS_SLOWED_UNTIL_OPTION = 'pixonaut_wc_checks_slowed_until';
+
+	/**
 	 * Option set while every variable product's split cards wait to be
 	 * written after an upgrade, until the job doing it is queued.
 	 */

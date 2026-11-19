@@ -37,6 +37,7 @@ final class Migrations {
 			new DrawStoppedPictures(),
 			new WriteSmallerPictures(),
 			new DeleteUnfinishedPictures(),
+			new RecheckSlowedProducts(),
 		);
 	}
 }
