@@ -344,6 +344,13 @@ final class Schema {
 	const PRODUCT_PICTURE_GENERATION_META = '_pixonaut_picture_generation';
 
 	/**
+	 * A number per blank, by blank id, the pictures drawn on it are drawn
+	 * under; moving one draws again only the pictures of the products using
+	 * that blank. A blank absent from it is at 0.
+	 */
+	const BLANK_PICTURE_GENERATIONS_OPTION = 'pixonaut_wc_blank_picture_generations';
+
+	/**
 	 * Prefix of the option a job holds while it draws a product's picture,
 	 * followed by the product's id.
 	 */
@@ -635,6 +642,16 @@ final class Schema {
 	 * Action Scheduler group of the plugin's jobs.
 	 */
 	const ACTION_GROUP = 'pixonaut-for-woocommerce';
+
+	/**
+	 * Where the catalogue's bulk jobs (drawing pictures, re-checking
+	 * products, and the jobs queueing them) stand in Action Scheduler's
+	 * queue: behind every job at its default of 10, such as an order's,
+	 * a webhook event's or a fulfilment job, which Action Scheduler claims
+	 * first whatever their dates. A change in Pixonaut can queue thousands
+	 * of them at once.
+	 */
+	const CATALOGUE_JOB_PRIORITY = 20;
 
 	/**
 	 * Prefix of the options that throttle reports from product pages whose

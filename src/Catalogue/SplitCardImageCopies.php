@@ -52,9 +52,9 @@ final class SplitCardImageCopies {
 
 	/**
 	 * Where a copy's job stands in the queue: ahead of the plugin's other
-	 * jobs, queued at Action Scheduler's default of 10. A store manager
-	 * waits for a card's image, and the queue may hold its products'
-	 * pictures to draw by the hundred, a minute each.
+	 * jobs, queued at Action Scheduler's default of 10 or, as the pictures
+	 * to draw by the hundred, behind it. A store manager waits for a
+	 * card's image.
 	 */
 	private const PRIORITY = 5;
 

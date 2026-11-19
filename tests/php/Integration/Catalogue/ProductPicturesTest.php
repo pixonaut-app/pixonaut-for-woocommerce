@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
+use ActionScheduler;
 use Pixonaut\WooCommerce\Api\Hosts;
 use Pixonaut\WooCommerce\Catalogue\PictureImage;
 use Pixonaut\WooCommerce\Catalogue\PictureQueue;
@@ -14,11 +15,13 @@ use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductPictures;
 use Pixonaut\WooCommerce\Catalogue\ProductRecheck;
 use Pixonaut\WooCommerce\Connection\Connection;
+use Pixonaut\WooCommerce\Schema;
 use Pixonaut\WooCommerce\Tests\Support\ActionSchedulerRunner;
 use Pixonaut\WooCommerce\Tests\Support\BlankFixture;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Webhooks\Event;
 use Pixonaut\WooCommerce\Webhooks\Payload;
+use Pixonaut\WooCommerce\Webhooks\Processor;
 use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Simple;
@@ -265,13 +268,38 @@ final class ProductPicturesTest extends WP_UnitTestCase {
 		$this->assertNull( get_post( $picture['id'] ) );
 	}
 
-	public function test_a_blank_update_redraws_every_picture(): void {
+	public function test_a_blank_update_draws_the_pictures_on_that_blank_again(): void {
 		$picture = $this->drawn( $this->product( self::config() ) );
 
 		$this->plugin->product_recheck()->handle( Payload::event( 'evt_1', ProductRecheck::BLANK_UPDATED, 0, array( 'blankId' => DesignFixture::BLANK_ID ) ) );
-
 		ActionSchedulerRunner::run_pending( PictureQueue::QUEUE_ACTION );
-		$this->assertCount( 1, ActionSchedulerRunner::pending( ProductPictures::ACTION ) );
+		$this->recorder->requests = array();
+		$this->recorder->raw( 200, self::png(), 'image/png' );
+		ActionSchedulerRunner::run_pending( ProductPictures::ACTION );
+
+		$this->assertCount( 1, $this->recorder->requests );
+		$this->assertNotSame( $picture['id'], (int) $this->reload( $picture['product'] )->get_image_id() );
+	}
+
+	public function test_a_blank_update_leaves_the_pictures_on_other_blanks(): void {
+		$picture = $this->drawn( $this->product( self::config() ) );
+
+		$this->plugin->product_recheck()->handle( Payload::event( 'evt_1', ProductRecheck::BLANK_UPDATED, 0, array( 'blankId' => 'blank_unused' ) ) );
+		ActionSchedulerRunner::run_pending( PictureQueue::QUEUE_ACTION );
+
+		$this->assertSame( array(), ActionSchedulerRunner::pending( ProductPictures::ACTION ) );
+		$this->assertFalse( $this->plugin->picture_queue()->is_due( $this->reload( $picture['product'] ) ) );
+	}
+
+	public function test_picture_jobs_wait_behind_the_store_s_other_jobs(): void {
+		$this->product( self::config() );
+		$webhook = as_enqueue_async_action( Processor::PROCESS_HOOK, array( 'evt_1' ), Processor::GROUP );
+
+		$jobs = ActionSchedulerRunner::pending( ProductPictures::ACTION );
+
+		$this->assertCount( 1, $jobs );
+		$this->assertSame( Schema::CATALOGUE_JOB_PRIORITY, ActionScheduler::store()->fetch_action( (string) $jobs[0] )->get_priority() );
+		$this->assertLessThan( Schema::CATALOGUE_JOB_PRIORITY, ActionScheduler::store()->fetch_action( (string) $webhook )->get_priority() );
 	}
 
 	public function test_a_product_another_job_is_drawing_is_drawn_after_it(): void {

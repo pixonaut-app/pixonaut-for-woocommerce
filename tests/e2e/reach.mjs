@@ -690,6 +690,7 @@ export const REACH = {
 		'src/Admin/RegeneratePictures.php',
 		'src/Admin/ShowcaseField.php',
 		'src/Api/Pictures.php',
+		'src/Catalogue/BlankPictureGenerations.php',
 		'src/Catalogue/PictureGallery.php',
 		'src/Catalogue/PictureImage.php',
 		'src/Catalogue/PictureQueue.php',

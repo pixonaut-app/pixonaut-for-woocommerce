@@ -40,9 +40,22 @@ final class ArchiveIndexBuild {
 	private const DEFAULT_SORT = 'menu_order';
 
 	/**
-	 * How many products are read at a time.
+	 * How many products are read at a time, at most.
 	 */
 	private const BATCH = 50;
+
+	/**
+	 * How many variations a batch reads, at most, unless one product alone
+	 * has more: what a batch reads stays in memory until it is done, about
+	 * 8 MB a hundred variations, and a store whose products have a hundred
+	 * variations each would pass a 256 MB limit in a batch of 30.
+	 */
+	public const BATCH_VARIATIONS = 200;
+
+	/**
+	 * How many products' variations one query counts.
+	 */
+	private const COUNTED = 500;
 
 	/**
 	 * The price filter's key.
@@ -95,7 +108,7 @@ final class ArchiveIndexBuild {
 			$ordered[ $sort ] = $ids;
 		}
 		$cards = array();
-		foreach ( array_chunk( $ordered[ $default ], self::BATCH ) as $batch ) {
+		foreach ( self::batches( $ordered[ $default ], self::variation_counts( $ordered[ $default ] ) ) as $batch ) {
 			// What was kept of the products' variations since they last changed; the rest read in a few queries a batch.
 			FilterIndex::look_up( $batch );
 			_prime_post_caches( $batch, true, true );
@@ -129,6 +142,67 @@ final class ArchiveIndexBuild {
 			),
 			'count' => $count,
 		);
+	}
+
+	/**
+	 * Products in batches of `BATCH` at most, and of `BATCH_VARIATIONS`
+	 * variations at most unless a product alone has more, in their order.
+	 *
+	 * @param int[]           $product_ids Products.
+	 * @param array<int, int> $variations  How many variations each has, by product id; none when absent.
+	 * @phpstan-param list<int> $product_ids
+	 * @return list<list<int>>
+	 */
+	public static function batches( array $product_ids, array $variations ): array {
+		$batches = array();
+		$batch   = array();
+		$counted = 0;
+		foreach ( $product_ids as $product_id ) {
+			$count = $variations[ $product_id ] ?? 0;
+			if ( array() !== $batch && ( self::BATCH === count( $batch ) || $counted + $count > self::BATCH_VARIATIONS ) ) {
+				$batches[] = $batch;
+				$batch     = array();
+				$counted   = 0;
+			}
+			$batch[]  = $product_id;
+			$counted += $count;
+		}
+		if ( array() !== $batch ) {
+			$batches[] = $batch;
+		}
+		return $batches;
+	}
+
+	/**
+	 * How many variations each product has, of any status, by product id;
+	 * a product without any is left out.
+	 *
+	 * @param int[] $product_ids Products.
+	 * @phpstan-param list<int> $product_ids
+	 * @return array<int, int>
+	 */
+	private static function variation_counts( array $product_ids ): array {
+		global $wpdb;
+		if ( array() === $product_ids ) {
+			return array();
+		}
+		$counts = array();
+		foreach ( array_chunk( $product_ids, self::COUNTED ) as $chunk ) {
+			$placeholders = implode( ', ', array_fill( 0, count( $chunk ), '%d' ) );
+			// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- one indexed count per chunk of the archive's products, a placeholder per id.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT post_parent, COUNT(*) AS variations FROM {$wpdb->posts} WHERE post_type = 'product_variation' AND post_parent IN ( {$placeholders} ) GROUP BY post_parent",
+					$chunk
+				),
+				ARRAY_A
+			);
+			// phpcs:enable
+			foreach ( is_array( $rows ) ? $rows : array() as $row ) {
+				$counts[ (int) $row['post_parent'] ] = (int) $row['variations'];
+			}
+		}
+		return $counts;
 	}
 
 	/**
