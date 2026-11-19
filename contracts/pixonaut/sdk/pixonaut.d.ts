@@ -693,6 +693,26 @@ export declare interface FillProperty {
     fallback: string;
 }
 
+/** A product's flat layout: its parts on the sheet. */
+declare interface FlatLayout {
+    parts: FlatLayoutPart[];
+}
+
+/** One part of a flat layout, in mm on the sheet from its top-left. */
+declare interface FlatLayoutPart {
+    name: string;
+    xMm: number;
+    yMm: number;
+    widthMm: number;
+    heightMm: number;
+    /** Whether it is a panel: false for a glue tab, hidden once folded. The
+     *  sheet's print still runs over a glue tab; nothing masks it. */
+    printed: boolean;
+    /** Which way is up on the part, in quarter turns clockwise from the
+     *  sheet's up: a lid flap folded over lies upside down on the sheet. */
+    up: QuarterTurns;
+}
+
 /** A print area printed edge to edge on a product that folds, such as a
  *  canvas round its frame: its size, and how far in from each edge the
  *  product folds. What lies inside the fold is seen from the front. */
@@ -1682,6 +1702,10 @@ declare function operations({ json, raw }: Reads): {
             /** Find the round shapes in a picture */
             get: (id: string, query?: QueryOf<"/v1/assets/{id}/round-shapes">) => Promise<AnswerOf<"/v1/assets/{id}/round-shapes">>;
         };
+        upscaleQuote: {
+            /** Quote an upscale of a library picture */
+            get: (id: string, query?: QueryOf<"/v1/assets/{id}/upscale-quote">) => Promise<AnswerOf<"/v1/assets/{id}/upscale-quote">>;
+        };
         usage: {
             /** Where an asset is used */
             get: (id: string) => Promise<AnswerOf<"/v1/assets/{id}/usage">>;
@@ -1870,6 +1894,10 @@ declare function operations({ json, raw }: Reads): {
         get: (id: string, query?: QueryOf<"/v1/templates/{id}">) => Promise<AnswerOf<"/v1/templates/{id}">>;
         /** List the tenant's templates */
         list: (query?: QueryOf<"/v1/templates">) => Promise<AnswerOf<"/v1/templates">>;
+    };
+    upscales: {
+        /** Read an upscale */
+        get: (id: string) => Promise<AnswerOf<"/v1/upscales/{id}">>;
     };
     webhookEndpoints: {
         deliveries: {
@@ -2489,6 +2517,9 @@ declare interface PlacementBox extends PrintMargins {
     /** How far in from the print's edge the product folds, on one that folds
      *  (a canvas round its frame): drawn over the preview as a guide. */
     foldMm?: number;
+    /** How the product is printed flat on one sheet and folded, such as a
+     *  folding box: its folds and panels are drawn over the preview. */
+    flatLayout?: FlatLayout;
     /** The blank's sizes the template can't be printed at on the pair, by
      *  option value (`"XL"`): a size whose panel is another shape. Absent
      *  for none, and from an api that names none. */
@@ -2809,6 +2840,8 @@ declare interface ProfileTables {
     estimate: CmykEstimateTableFile;
     preview: CmykPreviewTableFile;
 }
+
+declare type QuarterTurns = 0 | 1 | 2 | 3;
 
 /** The query `P`'s `GET` takes. */
 export declare type QueryOf<P extends ReadPath> = ReadOf<P> extends {
