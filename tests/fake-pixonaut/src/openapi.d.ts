@@ -233,7 +233,7 @@ export interface paths {
         };
         /**
          * Render a template on a product photo
-         * @description The published template `id` (`baseId@version`) drawn into the print area a blank placement's mockup photo marks, as a PNG a storefront shows. A draft, an unknown blank, placement or mockup, and a mockup whose photo is gone are all 404, so the route says nothing about which of them is missing. `size` caps the long edge in pixels. `showcase` draws one of the template's showcases in place of its defaults, cached as the defaults are; an id the template holds no showcase under is 404 `showcase_not_found`. Naming neither `mockupId` nor `viewId` draws on the placement's first view, or with a `variant` its first view showing that variant: on a blank shown in a setting, the variant's own picture there. A studio member reads it with their session, in the workspace the `x-tenant-id` header names, holding `templates:read`.
+         * @description The published template `id` (`baseId@version`) drawn into the print area a blank placement's mockup photo marks, as a PNG a storefront shows. A draft, an unknown blank, placement or mockup, and a mockup whose photo is gone are all 404, so the route says nothing about which of them is missing; a placement none of whose views holds a photo is 422 `no_photos`, as there is nothing to draw on. `size` caps the long edge in pixels. `showcase` draws one of the template's showcases in place of its defaults, cached as the defaults are; an id the template holds no showcase under is 404 `showcase_not_found`. Naming neither `mockupId` nor `viewId` draws on the placement's first view, or with a `variant` its first view showing that variant: on a blank shown in a setting, the variant's own picture there. A studio member reads it with their session, in the workspace the `x-tenant-id` header names, holding `templates:read`.
          */
         get: operations["templates.mockup.get"];
         put?: never;
@@ -1657,7 +1657,7 @@ export interface paths {
         };
         /**
          * Render a design on a product photo
-         * @description The design drawn into the print area of its blank's photo and blended with its shading, exactly as `GET /t/{id}/mockup.png` draws a template: what a store shows in its cart, order pages and emails once the customer has committed. The artwork is the design's newest revision with a proof, as the customer was shown it. Left out, `placementId` is the design's own placement, `viewId` the view its proof was previewed in, else the placement's first view, and `variant` the variant its proof was previewed on, else the view's default photo; `mockupId` names a photo instead. `size` caps the long edge in pixels. `v`, the design's `proofId`, names the picture in the URL, so the answer is cached `immutable`; a `v` naming any other proof is refused `proof_changed`. An unknown design, placement, view, photo or variant, and a photo that is gone, are all `not_found`. A scene that takes no dye shows only the variants of its colour. With `viewId` left out, a variant the proof's scene cannot show is drawn on the placement's first view that can; a scene named by `viewId`, or a variant no view shows, refuses it, named or the proof's, with `variant_has_no_photo`. A design with no proof, or whose personal data was erased, is `proof_not_found`, as its proof is. A design whose document the current model cannot read is refused `design_doc_unreadable`. A studio member reads it with their session, in the workspace the `x-tenant-id` header names.
+         * @description The design drawn into the print area of its blank's photo and blended with its shading, exactly as `GET /t/{id}/mockup.png` draws a template: what a store shows in its cart, order pages and emails once the customer has committed. The artwork is the design's newest revision with a proof, as the customer was shown it; a design with no proof is drawn from its current revision. Left out, `placementId` is the design's own placement, `viewId` the view its proof was previewed in, else the placement's first view, and `variant` the variant its proof was previewed on, else the view's default photo; `mockupId` names a photo instead. `size` caps the long edge in pixels. `v`, the design's `proofId`, names the picture in the URL, so the answer is cached `immutable`; a `v` naming any other proof, or given for a design with no proof, is refused `proof_changed`. An unknown design, placement, view, photo or variant, and a photo that is gone, are all `not_found`. A scene that takes no dye shows only the variants of its colour. With `viewId` left out, a variant the proof's scene cannot show is drawn on the placement's first view that can; a scene named by `viewId`, or a variant no view shows, refuses it, named or the proof's, with `variant_has_no_photo`. A design whose personal data was erased is `proof_not_found`, as its proof is. A design whose document the current model cannot read is refused `design_doc_unreadable`. A studio member reads it with their session, in the workspace the `x-tenant-id` header names.
          */
         get: operations["designs.mockup.get"];
         put?: never;
@@ -22230,7 +22230,7 @@ export interface operations {
                     "text/plain": string;
                 };
             };
-            /** @description Refused: asset_map_too_large, design_doc_unreadable, mockup_rect_unusable, mockup_rect_outside_photo, mockup_placed_box_empty, photo_decode_failed, mockup_mesh_unusable, mockup_cut_unusable, mockup_mask_decode_failed, mockup_uv_decode_failed, mockup_uv_pass_mismatch, unknown_variant, variant_retired, variant_has_no_photo, mockup_mask_unreadable, mockup_uv_unreadable */
+            /** @description Refused: asset_map_too_large, design_doc_unreadable, mockup_rect_unusable, mockup_rect_outside_photo, mockup_placed_box_empty, photo_decode_failed, mockup_mesh_unusable, mockup_cut_unusable, mockup_mask_decode_failed, mockup_uv_decode_failed, mockup_uv_pass_mismatch, unknown_variant, variant_retired, variant_has_no_photo, no_photos, mockup_mask_unreadable, mockup_uv_unreadable */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -22243,7 +22243,9 @@ export interface operations {
                         error: string;
                         /** @description Always sent with `asset_map_too_large`. */
                         maxBytes?: number;
-                        /** @description Always sent with `unknown_variant`, `variant_retired`, `variant_has_no_photo`. */
+                        /** @description The placement with no photo. Always sent with `no_photos`. */
+                        placementId?: string;
+                        /** @description Always sent with `unknown_variant`, `variant_retired`, `variant_has_no_photo`, `no_photos`. */
                         reason?: string;
                         /** @description Always sent with `unknown_variant`. */
                         ref?: string;
@@ -22358,7 +22360,7 @@ export interface operations {
                     "text/plain": string;
                 };
             };
-            /** @description Refused: asset_map_too_large, design_doc_unreadable, mockup_rect_unusable, mockup_rect_outside_photo, mockup_placed_box_empty, photo_decode_failed, mockup_mesh_unusable, mockup_cut_unusable, mockup_mask_decode_failed, mockup_uv_decode_failed, mockup_uv_pass_mismatch, unknown_variant, variant_retired, variant_has_no_photo, mockup_mask_unreadable, mockup_uv_unreadable */
+            /** @description Refused: asset_map_too_large, design_doc_unreadable, mockup_rect_unusable, mockup_rect_outside_photo, mockup_placed_box_empty, photo_decode_failed, mockup_mesh_unusable, mockup_cut_unusable, mockup_mask_decode_failed, mockup_uv_decode_failed, mockup_uv_pass_mismatch, unknown_variant, variant_retired, variant_has_no_photo, no_photos, mockup_mask_unreadable, mockup_uv_unreadable */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -22371,7 +22373,9 @@ export interface operations {
                         error: string;
                         /** @description Always sent with `asset_map_too_large`. */
                         maxBytes?: number;
-                        /** @description Always sent with `unknown_variant`, `variant_retired`, `variant_has_no_photo`. */
+                        /** @description The placement with no photo. Always sent with `no_photos`. */
+                        placementId?: string;
+                        /** @description Always sent with `unknown_variant`, `variant_retired`, `variant_has_no_photo`, `no_photos`. */
                         reason?: string;
                         /** @description Always sent with `unknown_variant`. */
                         ref?: string;
@@ -22929,7 +22933,7 @@ export interface operations {
                     "text/plain": string;
                 };
             };
-            /** @description Refused: mockup_rect_unusable, mockup_rect_outside_photo, mockup_placed_box_empty, photo_decode_failed, mockup_mesh_unusable, mockup_cut_unusable, mockup_mask_decode_failed, mockup_uv_decode_failed, mockup_uv_pass_mismatch, unknown_variant, variant_retired, variant_has_no_photo, mockup_mask_unreadable, mockup_uv_unreadable, asset_map_too_large, invalid_query */
+            /** @description Refused: mockup_rect_unusable, mockup_rect_outside_photo, mockup_placed_box_empty, photo_decode_failed, mockup_mesh_unusable, mockup_cut_unusable, mockup_mask_decode_failed, mockup_uv_decode_failed, mockup_uv_pass_mismatch, unknown_variant, variant_retired, variant_has_no_photo, no_photos, mockup_mask_unreadable, mockup_uv_unreadable, asset_map_too_large, invalid_query */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -22942,7 +22946,9 @@ export interface operations {
                         error: string;
                         /** @description Always sent with `asset_map_too_large`. */
                         maxBytes?: number;
-                        /** @description Always sent with `unknown_variant`, `variant_retired`, `variant_has_no_photo`. */
+                        /** @description The placement with no photo. Always sent with `no_photos`. */
+                        placementId?: string;
+                        /** @description Always sent with `unknown_variant`, `variant_retired`, `variant_has_no_photo`, `no_photos`. */
                         reason?: string;
                         /** @description Always sent with `unknown_variant`. */
                         ref?: string;
