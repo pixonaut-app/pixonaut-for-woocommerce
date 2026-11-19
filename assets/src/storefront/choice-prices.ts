@@ -195,7 +195,12 @@ function heldPrices(
 			continue;
 		}
 		for (const value of held === '' ? values : [held]) {
-			prices.set(value, [...(prices.get(value) ?? []), variation.price]);
+			const list = prices.get(value);
+			if (list === undefined) {
+				prices.set(value, [variation.price]);
+			} else {
+				list.push(variation.price);
+			}
 		}
 	}
 	return new Map(
@@ -260,9 +265,9 @@ export function amountText(
 			? grouped
 			: grouped + format.decimalSeparator + fraction;
 	const price = format.pattern
-		.replace('%1$s', format.symbol)
-		.replace('%2$s', number);
-	return words[kind].replace('%s', price);
+		.replace('%1$s', () => format.symbol)
+		.replace('%2$s', () => number);
+	return words[kind].replace('%s', () => price);
 }
 
 /** An option's name followed by its amount's text, as
@@ -272,7 +277,8 @@ export function optionLabel(
 	price: string,
 	{ label }: Pick<ChoicePrices, 'label'>,
 ): string {
-	return label.replace('%1$s', name).replace('%2$s', price);
+	// Functions, so a `$` in the name or the price is not a replacement pattern.
+	return label.replace('%1$s', () => name).replace('%2$s', () => price);
 }
 
 /** What the form printed; null for none, or for JSON the page mangled. */

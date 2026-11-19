@@ -8,6 +8,7 @@ import {
 	type ChoicePriceProduct,
 	choiceAmounts,
 	formChoice,
+	optionLabel,
 	readChoicePrices,
 } from './choice-prices';
 
@@ -97,6 +98,12 @@ describe('amountText with zeros trimmed', () => {
 		expect(amountText({ kind: 'add_on', amount: 2.5 }, trimmed)).toBe(
 			'+2,50\u00a0kr',
 		);
+	});
+});
+
+describe('optionLabel', () => {
+	it('writes a name and a price holding `$` as they are', () => {
+		expect(optionLabel('A $& B', "$' 5", SWEDISH)).toBe("A $& B · $' 5");
 	});
 });
 

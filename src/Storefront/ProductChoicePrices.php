@@ -173,8 +173,9 @@ final class ProductChoicePrices {
 	}
 
 	/**
-	 * Each variation the form offers in stock, with its values and its price
-	 * as the shop shows it; variations alike in both printed once.
+	 * Each variation the form offers and sells, active, in stock and
+	 * purchasable, with its values and its price as the shop shows it;
+	 * variations alike in both printed once.
 	 *
 	 * @param WC_Product_Variable $product The product.
 	 * @return list<array<string, mixed>>
@@ -185,7 +186,7 @@ final class ProductChoicePrices {
 		$variations = array();
 		foreach ( $prices as $id => $price ) {
 			$variation = wc_get_product( (int) $id );
-			if ( ! is_numeric( $price ) || ! $variation instanceof WC_Product_Variation || ! $variation->is_in_stock() || ! $variation->is_purchasable() ) {
+			if ( ! is_numeric( $price ) || ! $variation instanceof WC_Product_Variation || ! $variation->variation_is_active() || ! $variation->is_in_stock() || ! $variation->is_purchasable() ) {
 				continue;
 			}
 			$variations[] = array(

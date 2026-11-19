@@ -217,6 +217,23 @@ final class ChoicePricesTest extends WP_UnitTestCase {
 		$this->assertSame( array(), $prices->texts( $product, 'attribute_pa_frame', array( 'attribute_pa_size' => 'm' ) ), 'the frame adds nothing one can buy in M' );
 	}
 
+	public function test_a_variation_the_form_disables_counts_for_no_price(): void {
+		ChoicePrices::set_choice( $this->attributes[ self::SIZE ], ChoicePrices::PRICE );
+		update_option( 'woocommerce_currency', 'SEK' );
+		update_option( 'woocommerce_currency_pos', 'right_space' );
+		update_option( 'woocommerce_price_num_decimals', '0' );
+		$inactive = static fn ( bool $active, WC_Product_Variation $variation ): bool => $active && array(
+			'pa_size'  => 's',
+			'pa_frame' => 'oak',
+		) !== $variation->get_attributes();
+		add_filter( 'woocommerce_variation_is_active', $inactive, 10, 2 ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WooCommerce's own filter.
+
+		$texts = ( new ProductChoicePrices() )->texts( $this->poster(), 'attribute_pa_size', array( 'attribute_pa_frame' => 'oak' ) );
+		remove_filter( 'woocommerce_variation_is_active', $inactive );
+
+		$this->assertSame( array( 'm' => "1,280\u{a0}kr" ), $texts );
+	}
+
 	public function test_a_printed_option_carries_its_price_after_its_name_and_both_apart(): void {
 		$labelled = new ReflectionMethod( PrintedOptionPrices::class, 'labelled' );
 		$labelled->setAccessible( true );
