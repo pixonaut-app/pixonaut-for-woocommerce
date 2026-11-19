@@ -465,6 +465,7 @@ final class ProductRecheck {
 	 * @param int      $attempt     The attempt they were refused in, which they keep.
 	 * @param int|null $retry_after Seconds Pixonaut asked the store to wait, when it said.
 	 * @phpstan-param list<int> $product_ids
+	 * @throws RuntimeException When they could not be queued: the job fails, so it is not taken as done.
 	 */
 	private function later( array $product_ids, int $attempt, ?int $retry_after ): void {
 		$this->logger->warning(
@@ -475,7 +476,9 @@ final class ProductRecheck {
 				'retry_after' => $retry_after,
 			)
 		);
-		$this->queue_batch( $product_ids, $attempt, self::slowed_delay( $retry_after ) );
+		if ( ! $this->queue_batch( $product_ids, $attempt, self::slowed_delay( $retry_after ) ) ) {
+			throw new RuntimeException( 'The re-check of products refused for too many requests could not be queued again.' );
+		}
 	}
 
 	/**

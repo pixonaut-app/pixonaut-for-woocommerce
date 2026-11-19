@@ -74,6 +74,32 @@ final class Notices {
 	}
 
 	/**
+	 * Replaces the messages of notices already held, and removes some, in
+	 * one write: for a caller going over many notices at once. A key not
+	 * held is left out.
+	 *
+	 * @param array<string, string|null> $messages Each notice's new message by key; null removes it.
+	 */
+	public function revise( array $messages ): void {
+		$notices = $this->all();
+		$changed = false;
+		foreach ( $messages as $key => $message ) {
+			if ( ! isset( $notices[ $key ] ) || $notices[ $key ]['message'] === $message ) {
+				continue;
+			}
+			$changed = true;
+			if ( null === $message ) {
+				unset( $notices[ $key ] );
+				continue;
+			}
+			$notices[ $key ]['message'] = $message;
+		}
+		if ( $changed ) {
+			update_option( self::OPTION, $notices, false );
+		}
+	}
+
+	/**
 	 * @param string $key The notice's key.
 	 */
 	public function remove( string $key ): void {

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Pixonaut for WooCommerce 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/pixonaut-app/pixonaut-for-"
 "woocommerce/issues\n"
-"POT-Creation-Date: 2026-11-19T00:35:05+00:00\n"
+"POT-Creation-Date: 2026-11-19T00:42:17+00:00\n"
 "PO-Revision-Date: 2026-10-21 00:00+0000\n"
 "Last-Translator: Pixonaut\n"
 "Language-Team: nb_NO\n"
@@ -4777,7 +4777,7 @@ msgstr ""
 "href=\"%2$s\" target=\"_blank\" rel=\"noopener noreferrer\">Slik fungerer "
 "tilkoblingen</a>"
 
-#: src/Admin/ConnectNotice.php:97 src/Admin/Notices.php:137
+#: src/Admin/ConnectNotice.php:97 src/Admin/Notices.php:163
 msgid "You are not allowed to dismiss this notice."
 msgstr "Du har ikke tillatelse til å lukke dette varselet."
 
@@ -5014,13 +5014,13 @@ msgid "Field"
 msgstr "Felt"
 
 #. translators: 1: product edit link, 2: why it cannot be bought.
-#: src/Admin/InvalidProductNotice.php:109
+#: src/Admin/InvalidProductNotice.php:120
 #, php-format
 msgid "Customers cannot buy %1$s: %2$s"
 msgstr "Kunder kan ikke kjøpe %1$s: %2$s"
 
 #. translators: 1: the product's name, 2: the variation's attributes, e.g. "Size: M, Color: Red", or its id, e.g. "#123".
-#: src/Admin/InvalidProductNotice.php:145
+#: src/Admin/InvalidProductNotice.php:153
 #, php-format
 msgid "%1$s, variation %2$s"
 msgstr "%1$s, varianten %2$s"
@@ -6886,7 +6886,10 @@ msgstr ""
 msgid ""
 "Pixonaut got more requests from the store than it takes at once. The "
 "configuration is checked again by itself in a moment; there is nothing to do."
-msgstr "Pixonaut har fått flere forespørsler fra butikken enn den tar imot på én gang. Konfigurasjonen kontrolleres på nytt automatisk om et øyeblikk; du trenger ikke gjøre noe."
+msgstr ""
+"Pixonaut har fått flere forespørsler fra butikken enn den tar imot på én "
+"gang. Konfigurasjonen kontrolleres på nytt automatisk om et øyeblikk; du "
+"trenger ikke gjøre noe."
 
 #. translators: %s: a time of day in the site's time format, e.g. "14:05".
 #: src/Catalogue/PixonautRefusal.php:178
@@ -6894,7 +6897,10 @@ msgstr "Pixonaut har fått flere forespørsler fra butikken enn den tar imot på
 msgid ""
 "Pixonaut got more requests from the store than it takes at once. The "
 "configuration is checked again by itself at %s; there is nothing to do."
-msgstr "Pixonaut har fått flere forespørsler fra butikken enn den tar imot på én gang. Konfigurasjonen kontrolleres på nytt automatisk kl. %s; du trenger ikke gjøre noe."
+msgstr ""
+"Pixonaut har fått flere forespørsler fra butikken enn den tar imot på én "
+"gang. Konfigurasjonen kontrolleres på nytt automatisk kl. %s; du trenger "
+"ikke gjøre noe."
 
 #: src/Catalogue/SplitCardImageCopies.php:302
 msgid "The card's image could not be copied from its URL."

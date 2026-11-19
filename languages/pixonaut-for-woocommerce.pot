@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-19T00:35:05+00:00\n"
+"POT-Creation-Date: 2026-11-19T00:42:17+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pixonaut-for-woocommerce\n"
@@ -2849,7 +2849,7 @@ msgid "Pixonaut for WooCommerce is not connected yet. <a href=\"%1$s\">Connect y
 msgstr ""
 
 #: src/Admin/ConnectNotice.php:97
-#: src/Admin/Notices.php:137
+#: src/Admin/Notices.php:163
 msgid "You are not allowed to dismiss this notice."
 msgstr ""
 
@@ -3068,13 +3068,13 @@ msgid "Field"
 msgstr ""
 
 #. translators: 1: product edit link, 2: why it cannot be bought.
-#: src/Admin/InvalidProductNotice.php:109
+#: src/Admin/InvalidProductNotice.php:120
 #, php-format
 msgid "Customers cannot buy %1$s: %2$s"
 msgstr ""
 
 #. translators: 1: the product's name, 2: the variation's attributes, e.g. "Size: M, Color: Red", or its id, e.g. "#123".
-#: src/Admin/InvalidProductNotice.php:145
+#: src/Admin/InvalidProductNotice.php:153
 #, php-format
 msgid "%1$s, variation %2$s"
 msgstr ""

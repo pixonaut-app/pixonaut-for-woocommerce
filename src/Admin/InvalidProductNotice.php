@@ -65,18 +65,21 @@ final class InvalidProductNotice {
 
 	/**
 	 * Clears each product's or variation's notice its stored configuration
-	 * no longer warrants.
+	 * no longer warrants, and says again why the rest cannot be bought: a
+	 * reason can read differently by now, such as when a check refused for
+	 * too many requests runs again.
 	 */
 	public function reconcile(): void {
+		$messages = array();
 		foreach ( array_keys( $this->notices->all() ) as $key ) {
 			if ( 1 !== preg_match( self::KEY_PATTERN, $key, $matches ) ) {
 				continue;
 			}
-			$product = wc_get_product( (int) $matches[1] );
-			if ( ! $product instanceof WC_Product || null === self::text( $product, ProductConfig::stored_on( $product ) ) ) {
-				$this->notices->remove( $key );
-			}
+			$product          = wc_get_product( (int) $matches[1] );
+			$text             = $product instanceof WC_Product ? self::text( $product, ProductConfig::stored_on( $product ) ) : null;
+			$messages[ $key ] = $product instanceof WC_Product && null !== $text ? self::message( $product, $text ) : null;
 		}
+		$this->notices->revise( $messages );
 	}
 
 	/**
@@ -92,6 +95,16 @@ final class InvalidProductNotice {
 			$this->notices->remove( $key );
 			return;
 		}
+		$this->notices->add( $key, self::message( $product, $text ), 'error', false );
+	}
+
+	/**
+	 * The notice's text: which product or variation, linked to its screen, and why customers cannot buy it.
+	 *
+	 * @param WC_Product $product The product or variation.
+	 * @param string     $text    Why it cannot be bought.
+	 */
+	private static function message( WC_Product $product, string $text ): string {
 		$variation = $product->is_type( 'variation' );
 		// A variation is edited on its product's screen, in its Variations panel. Built without
 		// get_edit_post_link(), which is empty in a background job with no user.
@@ -102,16 +115,11 @@ final class InvalidProductNotice {
 			),
 			admin_url( 'post.php' )
 		) . ( $variation ? '#' . self::VARIATIONS_PANEL : '' );
-		$this->notices->add(
-			$key,
-			sprintf(
+		return sprintf(
 				/* translators: 1: product edit link, 2: why it cannot be bought. */
-				__( 'Customers cannot buy %1$s: %2$s', 'pixonaut-for-woocommerce' ),
-				sprintf( '<a href="%s">%s</a>', esc_url( $link ), esc_html( $variation ? self::variation_name( $product ) : $product->get_name() ) ),
-				esc_html( $text )
-			),
-			'error',
-			false
+			__( 'Customers cannot buy %1$s: %2$s', 'pixonaut-for-woocommerce' ),
+			sprintf( '<a href="%s">%s</a>', esc_url( $link ), esc_html( $variation ? self::variation_name( $product ) : $product->get_name() ) ),
+			esc_html( $text )
 		);
 	}
 

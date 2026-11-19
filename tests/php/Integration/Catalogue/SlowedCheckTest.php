@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
+use Pixonaut\WooCommerce\Admin\InvalidProductNotice;
 use Pixonaut\WooCommerce\Admin\PanelFields;
 use Pixonaut\WooCommerce\Admin\ProductPanel;
 use Pixonaut\WooCommerce\Admin\VariationPanel;
@@ -22,6 +23,7 @@ use WC_Product;
 use WC_Product_Attribute;
 use WC_Product_Variable;
 use WC_Product_Variation;
+use RuntimeException;
 
 /**
  * Saves Pixonaut refuses to check because the store sent too many
@@ -70,6 +72,45 @@ final class SlowedCheckTest extends ProductPanelTestCase {
 		$notice = $this->plugin->notices()->all()[ ProductPanel::notice_key( $product->get_id() ) ]['message'] ?? '';
 		$this->assertStringContainsString( (string) wp_date( (string) get_option( 'time_format' ), (int) get_option( CheckSlowdown::OPTION ) ), $notice, 'The notice names when it is checked again.' );
 		$this->assertStringNotContainsString( 'update the product', $notice );
+	}
+
+	public function test_the_notice_says_again_when_it_is_checked_once_the_wait_is_over(): void {
+		$product = $this->linked_product();
+		$this->script_blank( $this->blank() );
+		$this->slow_down();
+		$this->save( $product->get_id(), array(), $this->a4_side() );
+		$key = ProductPanel::notice_key( $product->get_id() );
+
+		update_option( CheckSlowdown::OPTION, time() - 1, false );
+		( new InvalidProductNotice( $this->plugin->notices() ) )->reconcile();
+
+		$this->assertStringContainsString( 'checked again by itself in a moment', $this->plugin->notices()->all()[ $key ]['message'] ?? '' );
+	}
+
+	public function test_a_shorter_wait_noted_later_does_not_shorten_the_hold(): void {
+		CheckSlowdown::note( self::RETRY_AFTER_SECONDS );
+		$until = (int) get_option( CheckSlowdown::OPTION );
+
+		CheckSlowdown::note( 1 );
+
+		$this->assertSame( $until, (int) get_option( CheckSlowdown::OPTION ) );
+		$this->assertGreaterThan( self::RETRY_AFTER_SECONDS - 1, CheckSlowdown::seconds_left() );
+	}
+
+	public function test_a_re_check_that_cannot_be_queued_again_fails_its_job_rather_than_ending(): void {
+		$product = $this->linked_product();
+		update_option( CheckSlowdown::OPTION, time() + self::RETRY_AFTER_SECONDS, false );
+		$refuse = static fn (): int => 0;
+		add_filter( 'pre_as_schedule_single_action', $refuse );
+
+		try {
+			$this->plugin->product_recheck()->recheck( array( $product->get_id() ) );
+			$this->fail( 'The job ends as if its products were checked.' );
+		} catch ( RuntimeException $e ) {
+			$this->assertStringContainsString( 'could not be queued again', $e->getMessage() );
+		} finally {
+			remove_filter( 'pre_as_schedule_single_action', $refuse );
+		}
 	}
 
 	public function test_an_unchanged_setup_refused_for_too_many_requests_stays_sellable(): void {

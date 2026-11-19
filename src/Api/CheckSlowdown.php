@@ -56,15 +56,30 @@ final class CheckSlowdown {
 	/**
 	 * Holds checks back after Pixonaut refused one for too many requests,
 	 * for as long as it asked, or `BACKOFF_SECONDS` when it did not say. A
-	 * longer wait already noted stands.
+	 * longer wait already noted stands, whichever request notes it first.
 	 *
 	 * @param int|null $retry_after Seconds Pixonaut asked the store to wait; null when it did not say.
 	 */
 	public static function note( ?int $retry_after ): void {
 		$until = time() + max( 1, $retry_after ?? self::BACKOFF_SECONDS );
-		if ( $until > (int) get_option( self::OPTION, 0 ) ) {
-			update_option( self::OPTION, $until, false );
+		// Written in one statement that keeps the later time, as several requests can be refused at once.
+		if ( 0 === self::extend( $until ) && ! add_option( self::OPTION, $until, '', false ) ) {
+			// Another request added it meanwhile.
+			self::extend( $until );
 		}
+		wp_cache_delete( self::OPTION, 'options' );
+	}
+
+	/**
+	 * Moves the stored time on to a later one, leaving a later one as it is.
+	 *
+	 * @param int $until The time, as Unix time.
+	 * @return int Rows changed: 0 when the option is missing or already holds as late a time.
+	 */
+	private static function extend( int $until ): int {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- the option API cannot compare and write in one statement; the cache is cleared by the caller.
+		return (int) $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND CAST( option_value AS UNSIGNED ) < %d", (string) $until, self::OPTION, $until ) );
 	}
 
 	/**
