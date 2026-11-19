@@ -307,6 +307,41 @@ final class ProductPricing {
 	}
 
 	/**
+	 * What one price leaves now, from what is stored, whatever it follows:
+	 * its regular price, its cost in the store's currency with shipping,
+	 * and the margin the price leaves excluding tax. Null when it has no
+	 * price, or no cost is known for what it sells now.
+	 *
+	 * @param WC_Product $item A simple product, or a variation.
+	 * @return array{price: int, cost: int, margin: float}|null
+	 */
+	public function margin_now( WC_Product $item ): ?array {
+		$price = Amount::parse( $item->get_regular_price( 'edit' ) );
+		$cost  = $this->converter->in_store( self::known_cost( $item, PriceState::stored_on( $item ) ) )->total;
+		if ( null === $price || null === $cost ) {
+			return null;
+		}
+		$margin = PriceRule::margin_of( $price, $cost, PriceTax::of( $item ) );
+		return null === $margin ? null : array(
+			'price'  => $price,
+			'cost'   => $cost,
+			'margin' => $margin,
+		);
+	}
+
+	/**
+	 * Whether a product's or variation's cost is known but cannot be told in
+	 * the store's currency for now: there is no exchange rate for its
+	 * currency, or the rates are over a week old.
+	 *
+	 * @param WC_Product $item The product or variation.
+	 */
+	public function awaits_rate( WC_Product $item ): bool {
+		$flag = $this->converter->in_store( self::known_cost( $item, PriceState::stored_on( $item ) ) )->flag;
+		return PriceState::FLAG_CURRENCY === $flag || PriceState::FLAG_RATE_STALE === $flag;
+	}
+
+	/**
 	 * Reads a product's costs from Pixonaut again, and settles its prices
 	 * that follow the rule: kept, changed or flagged. Every cost is read
 	 * before any is stored, so a read that fails stores nothing.
@@ -733,7 +768,7 @@ final class ProductPricing {
 	 *
 	 * @param int $id The product or variation.
 	 */
-	private static function fresh( int $id ): ?WC_Product {
+	public static function fresh( int $id ): ?WC_Product {
 		wp_cache_delete( (string) $id, 'post_meta' );
 		clean_post_cache( $id );
 		WC_Cache_Helper::invalidate_cache_group( 'object_' . $id );
@@ -819,7 +854,7 @@ final class ProductPricing {
 	 *
 	 * @param WC_Product $item The product or variation.
 	 */
-	private static function label( WC_Product $item ): string {
+	public static function label( WC_Product $item ): string {
 		$label = $item instanceof WC_Product_Variation ? wc_get_formatted_variation( $item, true, false, false ) : $item->get_name();
 		return '' === $label ? '#' . $item->get_id() : $label;
 	}

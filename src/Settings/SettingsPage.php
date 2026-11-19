@@ -174,6 +174,7 @@ final class SettingsPage {
 				Settings::PRICE_MAX,
 				Settings::PRICE_CURRENCY_BUFFER,
 				Settings::PRICE_AUTOMATIC,
+				Settings::PRICE_MARGIN_FLOOR,
 			),
 			'pixonaut_wc_delivery_time' => array(
 				Settings::DELIVERY_TIME_SHOW,

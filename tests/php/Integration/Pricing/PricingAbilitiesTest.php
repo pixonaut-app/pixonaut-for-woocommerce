@@ -94,6 +94,7 @@ final class PricingAbilitiesTest extends PricingTestCase {
 				Settings::PRICE_MAX                   => '',
 				Settings::PRICE_CURRENCY_BUFFER       => Settings::DEFAULT_CURRENCY_BUFFER,
 				Settings::PRICE_AUTOMATIC             => false,
+				Settings::PRICE_MARGIN_FLOOR          => '',
 				Settings::DELIVERY_TIME_SHOW          => false,
 				Settings::DELIVERY_TIME_HANDLING_DAYS => 0,
 				'currency'                            => get_woocommerce_currency(),
@@ -121,6 +122,20 @@ final class PricingAbilitiesTest extends PricingTestCase {
 		$this->assertWPError( $refused );
 		$this->plugin->settings()->set( Settings::DELIVERY_TIME_SHOW, false );
 		$this->plugin->settings()->set( Settings::DELIVERY_TIME_HANDLING_DAYS, 0 );
+	}
+
+	public function test_the_pricing_settings_set_and_clear_the_lowest_margin(): void {
+		$set = $this->update_settings->execute( array( Settings::PRICE_MARGIN_FLOOR => '27,5' ) );
+
+		$this->assertIsArray( $set );
+		$this->assertSame( '27.5', $set[ Settings::PRICE_MARGIN_FLOOR ] );
+		$this->assertSame( 27.5, $this->plugin->margin_floor()->floor() );
+
+		$cleared = $this->update_settings->execute( array( Settings::PRICE_MARGIN_FLOOR => '' ) );
+
+		$this->assertIsArray( $cleared );
+		$this->assertSame( '', $cleared[ Settings::PRICE_MARGIN_FLOOR ] );
+		$this->assertNull( $this->plugin->margin_floor()->floor() );
 	}
 
 	public function test_changing_pricing_settings_keeps_the_ones_not_named(): void {

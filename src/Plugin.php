@@ -20,6 +20,7 @@ use Pixonaut\WooCommerce\Abilities\ConnectionAction;
 use Pixonaut\WooCommerce\Abilities\ConnectionStatus;
 use Pixonaut\WooCommerce\Admin\PriceExample;
 use Pixonaut\WooCommerce\Admin\AttributePriceRuleFields;
+use Pixonaut\WooCommerce\Admin\MarginFloorList;
 use Pixonaut\WooCommerce\Admin\PricingList;
 use Pixonaut\WooCommerce\Admin\PricingPanel;
 use Pixonaut\WooCommerce\Admin\VariationPlanPanel;
@@ -211,6 +212,7 @@ use Pixonaut\WooCommerce\Migrations\Migrations;
 use Pixonaut\WooCommerce\Pricing\CostConverter;
 use Pixonaut\WooCommerce\Pricing\CostRefresh;
 use Pixonaut\WooCommerce\Pricing\ExchangeRates;
+use Pixonaut\WooCommerce\Pricing\MarginFloor;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
 use Pixonaut\WooCommerce\Pricing\RuleChange;
 use Pixonaut\WooCommerce\Privacy\LineErasure;
@@ -355,6 +357,8 @@ final class Plugin {
 	private ?ProductPricing $product_pricing = null;
 
 	private ?CostRefresh $cost_refresh = null;
+
+	private ?MarginFloor $margin_floor = null;
 
 	private ?TemplateRename $template_rename = null;
 
@@ -573,12 +577,14 @@ final class Plugin {
 		$this->variation_pictures_field()->register();
 		$this->regenerate_now()->register();
 		$this->cost_refresh()->register();
+		$this->margin_floor()->register();
 		( new RuleChange( $this->product_pricing() ) )->register();
 		$this->pricing_panel()->register();
 		$this->variation_plan_panel()->register();
 		GeneratedVariation::register();
 		if ( is_admin() ) {
 			( new PricingList( $this->product_pricing() ) )->register();
+			( new MarginFloorList( $this->margin_floor(), $this->product_pricing() ) )->register();
 			( new AttributePriceRuleFields( $this->product_pricing(), $this->templates() ) )->register();
 			( new VariationPriceRuleField( $this->product_pricing(), $this->templates() ) )->register();
 			( new PriceExample( $this->product_pricing(), $this->templates() ) )->register();
@@ -955,6 +961,14 @@ final class Plugin {
 		$connection           = $this->active_connection();
 		$this->cost_refresh ??= new CostRefresh( $this->product_pricing(), static fn (): bool => null !== $connection(), new WcLogger(), null, fn (): bool => true === $this->settings()->get( Settings::DELIVERY_TIME_SHOW ) );
 		return $this->cost_refresh;
+	}
+
+	/**
+	 * Watches for prices whose margin falls below the store's lowest margin.
+	 */
+	public function margin_floor(): MarginFloor {
+		$this->margin_floor ??= new MarginFloor( $this->product_pricing(), $this->settings() );
+		return $this->margin_floor;
 	}
 
 	/**

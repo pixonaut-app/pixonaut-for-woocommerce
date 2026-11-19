@@ -17,6 +17,7 @@ use Pixonaut\WooCommerce\Catalogue\RequestCache;
 use Pixonaut\WooCommerce\Catalogue\SplitCards;
 use Pixonaut\WooCommerce\Catalogue\VariationSizes;
 use Pixonaut\WooCommerce\Plugin;
+use Pixonaut\WooCommerce\Pricing\MarginFloor;
 use Pixonaut\WooCommerce\Storefront\FilteredOpening;
 use Pixonaut\WooCommerce\Storefront\OpeningDefaults;
 use Pixonaut\WooCommerce\Storefront\ProductPageCache;
@@ -28,7 +29,9 @@ use ReflectionProperty;
  * read, and Pixonaut's verdicts on variation sizes for the rest of the
  * request. WordPress rolls back the database after each test but not these,
  * so a test that read a blank's variants would answer a later test's reads
- * of the same blank. A test that resolves variants through the plugin starts
+ * of the same blank. Its `margin_floor()` keeps the prices below the lowest
+ * margin as it read them, which a later test would read as its own. A test
+ * that resolves variants or reads those prices through the plugin starts
  * here.
  */
 final class FreshRequest {
@@ -40,6 +43,9 @@ final class FreshRequest {
 		$sizes = ( new ReflectionProperty( ProductVariants::class, 'sizes' ) )->getValue( $variants );
 		if ( $sizes instanceof VariationSizes ) {
 			$sizes->forget();
+		}
+		foreach ( array( 'low', 'low_by_product' ) as $memo ) {
+			( new ReflectionProperty( MarginFloor::class, $memo ) )->setValue( $plugin->margin_floor(), null );
 		}
 	}
 

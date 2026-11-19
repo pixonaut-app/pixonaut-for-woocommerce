@@ -193,6 +193,7 @@ if ( ! function_exists( 'pixonaut_wc_uninstall_site' ) ) {
 		delete_metadata( 'term', 0, \Pixonaut\WooCommerce\Schema::PRICE_RULE_META, '', true );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRICE_AUTOMATIC_META );
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::PRICE_WATCH_META );
+		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::MARGIN_LOW_META );
 		// Pixonaut withdrew the links when the store disconnected, or does when it is removed in the studio.
 		delete_post_meta_by_key( \Pixonaut\WooCommerce\Schema::DESIGNER_LINKS_META );
 

@@ -815,7 +815,7 @@ either refusal answers `422 invalid_input`.
 `get-pricing-settings` gives the settings of the Prices tab by their keys
 (`price_margin`, `price_tolerance`, `price_step`, `price_ending`,
 `price_min`, `price_max`, `price_currency_buffer`, `price_automatic`,
-`delivery_time_show`, `delivery_time_handling_days`), with
+`price_margin_floor`, `delivery_time_show`, `delivery_time_handling_days`), with
 the store's `currency` and `prices_include_tax`, and `attribute_rules`: each
 value of a global attribute that changes parts of the rule (`attribute_id`,
 `term_id`, `slug`, `name`, `rule`), in the store's attribute order, with
@@ -827,6 +827,8 @@ entries of `attribute_id`, `term_id` or `slug`, and `rule`, each replacing
 that value's parts. `price_automatic` is the switch
 for automatic price changes. A change of the store's rule or of a value's
 settles the prices that follow the rule in the background (`Pricing\RuleChange`).
+`price_margin_floor` is the lowest margin the store accepts, in percent,
+empty for none ([Lowest margin](../pricing/)).
 `delivery_time_show` has product pages say how long the printshop says the
 chosen variation takes ([Delivery times](../pricing/#delivery-times)), and
 `delivery_time_handling_days` adds the store's own days to it.

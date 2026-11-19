@@ -77,6 +77,7 @@ section is part of the system report that **Get system report** copies.
 | `admin/product-variant-pairing.php` | 1.4.0 | `woocommerce/pixonaut/admin/product-variant-pairing.php` | Which blank variant each variation of a variable product is, in the product's Pixonaut tab: one row per variation, unpaired ones first. |
 | `admin/product-variant.php` | 1.4.0 | `woocommerce/pixonaut/admin/product-variant.php` | The blank variant field of a product or variation personalised on a blank. |
 | `admin/product-variation-pictures.php` | 1.15.0 | `woocommerce/pixonaut/admin/product-variation-pictures.php` | The Picture for every variation choice in a variable product's Pixonaut tab, under Product images: as the store-wide setting, on or off. When it changes, the plugin's script asks the cost route what the change does to the shop's storage and shows it under the choice; past the warning, it shows the confirmation box, which must be ticked to save it on. |
+| `admin/product-variation-plan.php` | 1.27.1 | `woocommerce/pixonaut/admin/product-variation-plan.php` | Variations from the blank, above a variable product's variations: the blanks its variations are printed on, the attribute value that picks each, the options of each no attribute offers, and Preview and Generate, with what they found or did. |
 | `admin/product-variation.php` | 1.9.4 | `woocommerce/pixonaut/admin/product-variation.php` | A variation's Pixonaut panel, below its attributes in the Variations tab. |
 | `admin/product-views.php` | 1.4.0 | `woocommerce/pixonaut/admin/product-views.php` | The views a product is shown in on its page, each a tile with its photo, and the one the designer opens on, as a closed section of the Pixonaut tab. The panel draws it again when another blank is picked, before the product is updated. |
 | `admin/regenerate-now.php` | 0.1.0 | `woocommerce/pixonaut/admin/regenerate-now.php` | Regenerate now's dialog, on the products list and the product screen: the confirmation before the pictures are drawn, then each product's progress while they are. |
@@ -95,12 +96,14 @@ section is part of the system report that **Get system report** copies.
 | `emails/changes-requested.php` | 0.1.0 | `woocommerce/pixonaut/emails/changes-requested.php` | Email to the store about a customer who asked for changes to a proof. |
 | `emails/deadline-passed.php` | 0.1.0 | `woocommerce/pixonaut/emails/deadline-passed.php` | Email to the store about a proof whose deadline passed without the customer's answer. |
 | `emails/design-approved.php` | 0.1.0 | `woocommerce/pixonaut/emails/design-approved.php` | The "design approved" email. |
+| `emails/margin-floor.php` | 1.29.0 | `woocommerce/pixonaut/emails/margin-floor.php` | Email to the store naming prices whose margin fell below its lowest margin. |
 | `emails/needs-attention.php` | 0.1.0 | `woocommerce/pixonaut/emails/needs-attention.php` | Email to the store about a personalised item that needs attention. |
 | `emails/part-shipped.php` | 0.1.0 | `woocommerce/pixonaut/emails/part-shipped.php` | Email to the customer about a personalised item that shipped before the rest of the order. |
 | `emails/plain/changes-link.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/changes-link.php` | The "edit your design" email, as plain text. |
 | `emails/plain/changes-requested.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/changes-requested.php` | Plain text email to the store about a customer who asked for changes to a proof. |
 | `emails/plain/deadline-passed.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/deadline-passed.php` | Plain text email to the store about a proof whose deadline passed without the customer's answer. |
 | `emails/plain/design-approved.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/design-approved.php` | The "design approved" email, as plain text. |
+| `emails/plain/margin-floor.php` | 1.29.0 | `woocommerce/pixonaut/emails/plain/margin-floor.php` | Plain text email to the store naming prices whose margin fell below its lowest margin. |
 | `emails/plain/needs-attention.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/needs-attention.php` | Plain text email to the store about a personalised item that needs attention. |
 | `emails/plain/part-shipped.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/part-shipped.php` | Plain text email to the customer about a personalised item that shipped before the rest of the order. |
 | `emails/plain/proof-expired.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/proof-expired.php` | The "cancelled after deadline" email, as plain text. |
