@@ -267,6 +267,10 @@ export function orderBody(state: State, order: Order): Record<string, unknown> {
 		delivery: order.delivery === null ? null : { ...order.delivery },
 		// The fake ships every order to the customer's address.
 		shipTo: null,
+		// The fake places every order alone, never as one item of a store
+		// order, so none goes with others or waits for them.
+		orderedWith: [],
+		storeOrderWait: null,
 	};
 }
 
