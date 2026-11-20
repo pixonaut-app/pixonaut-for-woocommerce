@@ -73,7 +73,7 @@
 		"ajv-formats": "3.0.1",
 		"esbuild": "0.28.2",
 		"fflate": "0.8.2",
-		"hono": "4.13.12",
+		"hono": "4.13.16",
 		"jsdom": "30.1.1",
 		"openapi-typescript": "7.13.0",
 		"typescript": "^5.9.0",
