@@ -36188,6 +36188,23 @@ export interface operations {
                         }[];
                         /** @description The minimum print resolution the design's pictures were judged against: the template's own, else the tenant's. */
                         printFloorDpi: number;
+                        /** @description Present when the design's print is smaller than its placement's print area and its printshop does not place a smaller print: a warning, nothing is refused yet. Make the design at the whole area: give the template the area's ratio and print it at the area's size (the placement's usual size, or the size the design names), leaving the part its artwork does not cover transparent. */
+                        smallerThanArea?: {
+                            /** @description The whole print area of the placement it is printed in. */
+                            areaMm: {
+                                heightMm: number;
+                                widthMm: number;
+                            };
+                            /** @description What that printshop does with a print smaller than its area: `refused`, an order of it is refused; `enlarged`, it is scaled up to fill the area and what runs past the area is cropped. */
+                            handling: string;
+                            /** @description The design's print size. */
+                            printMm: {
+                                heightMm: number;
+                                widthMm: number;
+                            };
+                            /** @description The name of the printshop the design is sent to. */
+                            printshop: string;
+                        };
                     };
                 };
             };
@@ -37584,6 +37601,23 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @description Present when the design's print is smaller than its placement's print area and its printshop does not place a smaller print: a warning, the approval stands. Never through a proof page link. */
+                        smallerThanArea?: {
+                            /** @description The whole print area of the placement it is printed in. */
+                            areaMm: {
+                                heightMm: number;
+                                widthMm: number;
+                            };
+                            /** @description What that printshop does with a print smaller than its area: `refused`, an order of it is refused; `enlarged`, it is scaled up to fill the area and what runs past the area is cropped. */
+                            handling: string;
+                            /** @description The design's print size. */
+                            printMm: {
+                                heightMm: number;
+                                widthMm: number;
+                            };
+                            /** @description The name of the printshop the design is sent to. */
+                            printshop: string;
+                        };
                         status: string;
                     };
                 };
