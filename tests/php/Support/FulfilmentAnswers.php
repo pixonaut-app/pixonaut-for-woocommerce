@@ -115,6 +115,8 @@ final class FulfilmentAnswers {
 			'printshopAsPlaced'     => null,
 			'delivery'              => null,
 			'shipTo'                => null,
+			'orderedWith'           => array(),
+			'storeOrderWait'        => null,
 		);
 	}
 
