@@ -205,6 +205,16 @@ async function expectSameBox(
 	}
 }
 
+/** Deletes the stage posters the site keeps, so a page shows its spinner
+ *  until the designer draws: a kept poster of the fixture template, left by
+ *  an earlier test on this site, stands in for it as soon as it loads. */
+async function forgetStagePosters(request: APIRequestContext): Promise<void> {
+	const deleted = await request.delete(
+		restUrl('/pixonaut-e2e/v1/stage-posters'),
+	);
+	expect(deleted.ok()).toBe(true);
+}
+
 /** The statuses the fake answered an operation with, in order. */
 async function statuses(
 	fake: FakePixonaut,
@@ -225,6 +235,7 @@ test('the page prints the designer at its final layout before the SDK runs', asy
 		`Server layout ${theme} ${Date.now()}`,
 		PERSONALISED,
 	);
+	await forgetStagePosters(request);
 	const release = await holdSdk(page);
 	// The held SDK would hold the load event once the designer is in view.
 	await page.goto(permalink, { waitUntil: 'domcontentloaded' });
@@ -316,6 +327,7 @@ for (const viewport of [DESKTOP, PHONE]) {
 			`Server form first ${theme} ${viewport.width} ${Date.now()}`,
 			PERSONALISED,
 		);
+		await forgetStagePosters(request);
 		const releaseSdk = await holdSdk(page);
 		// Registered last, so it handles the wasm before the SDK's hold does.
 		const releasePreview = await holdPreview(page);
@@ -551,7 +563,7 @@ test("the preview shows a picture of the designer's first drawing from the first
 		PERSONALISED,
 	);
 	const poster = page.locator(`${FRONT_FRAME} .pixonaut-preview__poster`);
-	await request.delete(restUrl('/pixonaut-e2e/v1/stage-posters'));
+	await forgetStagePosters(request);
 	// The first view of the page queues the picture, which a job draws.
 	await page.goto(permalink, { waitUntil: 'domcontentloaded' });
 	await expect(poster).toHaveCount(0);

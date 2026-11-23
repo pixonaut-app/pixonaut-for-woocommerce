@@ -53,7 +53,8 @@ async function choose(page: Page, field: string, value: string): Promise<void> {
 }
 
 test("each size shows its price with the chosen frame, in the theme's own field and beside its swatch", async ({
-	connectedStore: page,
+	connectedStore: admin,
+	customer: page,
 	request,
 	baseURL,
 }) => {
@@ -70,11 +71,12 @@ test("each size shows its price with the chosen frame, in the theme's own field 
 	expect(created.status()).toBe(201);
 	const { id } = (await created.json()) as { id: number };
 	// The cart's form posts to the product's address, which the tests site
-	// serves only as a plain one.
+	// serves only as a plain one. The guest shops: a line left in the
+	// administrator's cart outlives the test and is dropped in a later one.
 	await usePlainPermalinks(page, baseURL);
 	const permalink = `/?post_type=product&p=${id}`;
 
-	const mcp = await mcpSession(page);
+	const mcp = await mcpSession(admin);
 	const clock = String(Date.now()).slice(-SLUG_CLOCK_DIGITS);
 	const made: number[] = [];
 	const globalAttribute = async (
