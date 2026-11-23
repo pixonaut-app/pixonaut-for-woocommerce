@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.30.4](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.30.3...v1.30.4) (2026-11-23)
+
+
+### Bug Fixes
+
+* **e2e:** serve the pinned SDK from a copy fetched once per worker ([#383](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/383)) ([4eee7a8](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/4eee7a8adaffbb6737355c88925112d11bed2065))
+* Nightly green on WC 10.6 and WP 7.0, steady strip thumbnails, release PR checks ([#382](https://github.com/pixonaut-app/pixonaut-for-woocommerce/issues/382)) ([1fa41c8](https://github.com/pixonaut-app/pixonaut-for-woocommerce/commit/1fa41c8ca009a5b7c3e7f41cf89238fb3b963cd1))
+
 ## [1.30.3](https://github.com/pixonaut-app/pixonaut-for-woocommerce/compare/v1.30.2...v1.30.3) (2026-11-20)
 
 
