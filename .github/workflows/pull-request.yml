@@ -3,18 +3,14 @@ name: Pull request
 # Lint and unit tests on every pull request, a fork's included: GitHub-hosted
 # runners, read-only contents and no secrets. Integration, e2e, Plugin Check
 # and the release zip stay in ci:local.
-#
-# Dispatched too: the Release workflow starts it on its release pull
-# request's branch, whose own `pull_request` events start nothing.
 on:
   pull_request:
-  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: pull-request-${{ github.event.pull_request.number || github.ref }}
+  group: pull-request-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
