@@ -7,6 +7,7 @@ import {
 	expect,
 	type Page,
 } from '@playwright/test';
+import { fulfilFromSdkCopy } from './sdk-copy';
 
 /** Read by the e2e support mu-plugin: the theme for this browser context. */
 const THEME_COOKIE = 'pixonaut_e2e_theme';
@@ -188,7 +189,8 @@ export async function connect(
 }
 
 /** Lets a browser context reach only the tests site, the fake and the pinned
- *  SDK, and gives it the project's theme, blocks and checkout. */
+ *  SDK, served from a copy fetched once per worker, and gives it the
+ *  project's theme, blocks and checkout. */
 async function prepareContext(
 	context: BrowserContext,
 	options: E2eOptions & { baseURL: string },
@@ -199,12 +201,14 @@ async function prepareContext(
 	const fakeOrigin = new URL(fakeBaseURL).origin;
 	await context.route('**/*', (route) => {
 		const url = route.request().url();
+		if (url.startsWith(SDK_BASE_URL)) {
+			return fulfilFromSdkCopy(route);
+		}
 		const allowed =
 			url.startsWith('data:') ||
 			url.startsWith('blob:') ||
 			new URL(url).origin === siteOrigin ||
-			new URL(url).origin === fakeOrigin ||
-			url.startsWith(SDK_BASE_URL);
+			new URL(url).origin === fakeOrigin;
 		return allowed ? route.fallback() : route.abort('blockedbyclient');
 	});
 	await context.addCookies([

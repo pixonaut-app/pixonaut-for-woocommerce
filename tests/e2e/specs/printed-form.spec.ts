@@ -77,7 +77,7 @@ async function holdSdk(page: Page): Promise<() => void> {
 	});
 	await page.route(/\/pixonaut\.iife\.js/, async (route) => {
 		await held;
-		await route.continue();
+		await route.fallback();
 	});
 	return release;
 }

@@ -90,7 +90,7 @@ test('a template-only product shows its template’s shape and joins the cart at
 	});
 	await page.route('https://cdn.pixonaut.app/**', async (route) => {
 		await held;
-		await route.continue();
+		await route.fallback();
 	});
 	// The held SDK would hold the load event once the designer is in view.
 	await page.goto(permalink, { waitUntil: 'domcontentloaded' });

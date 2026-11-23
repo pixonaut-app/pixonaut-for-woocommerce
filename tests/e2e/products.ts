@@ -1,7 +1,10 @@
 import type { Page } from '@playwright/test';
 import { FIXTURE } from '../fake-pixonaut/src/fixture-ids';
-import { usePlainPermalinks } from './fixtures';
+import { expect, usePlainPermalinks } from './fixtures';
 import { createProduct } from './personalised';
+
+/** How long a clicked selectWoo field gets to show its dropdown. */
+const DROPDOWN_OPENS_MS = 2000;
 
 /** Picks `option` in a selectWoo field after typing `search` into it. */
 export async function pick(
@@ -10,10 +13,16 @@ export async function pick(
 	search: string,
 	option: string,
 ): Promise<void> {
-	await page.locator(`#${field} + .select2-container`).click();
-	await page
-		.locator(`.select2-search__field[aria-owns="select2-${field}-results"]`)
-		.fill(search);
+	const searchBox = page.locator(
+		`.select2-search__field[aria-owns="select2-${field}-results"]`,
+	);
+	// A click while the panel around the field is still settling can miss
+	// the selection, leaving the dropdown shut: click again until it opens.
+	await expect(async () => {
+		await page.locator(`#${field} + .select2-container`).click();
+		await expect(searchBox).toBeVisible({ timeout: DROPDOWN_OPENS_MS });
+	}).toPass();
+	await searchBox.fill(search);
 	await page
 		.locator(`#select2-${field}-results .select2-results__option`, {
 			hasText: option,

@@ -119,7 +119,7 @@ async function holdBack(
 	});
 	await page.route(url, async (route) => {
 		await held;
-		await route.continue();
+		await route.fallback();
 	});
 	return release;
 }
