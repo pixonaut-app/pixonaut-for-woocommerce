@@ -60,11 +60,38 @@ final class VariationSlots {
 	private const UNCHOSEN_STYLE = ';visibility:hidden';
 
 	/**
+	 * The properties the styles above set. `wp_kses_post` keeps `display`
+	 * only from WordPress 7.0 and `visibility` only from 7.1.
+	 */
+	private const STYLE_PROPERTIES = array( 'display', 'grid-row', 'grid-column', 'margin', 'visibility' );
+
+	/**
 	 * @param string $plugin_file The plugin's main file.
 	 */
 	public function __construct(
 		private readonly string $plugin_file,
 	) {
+	}
+
+	/** Hooks into WordPress. */
+	public function register(): void {
+		add_filter( 'safe_style_css', array( $this, 'keep_styles' ) );
+	}
+
+	/**
+	 * Lets `wp_kses_post` keep the properties a place's style sets, as it
+	 * does itself from WordPress 7.1. Before that it drops `display` or
+	 * `visibility`, and every variation's text in a place shows at once,
+	 * one under another, until the script hides them.
+	 *
+	 * @param mixed $properties The CSS properties a style attribute may set.
+	 * @return mixed
+	 */
+	public function keep_styles( mixed $properties ): mixed {
+		if ( ! is_array( $properties ) ) {
+			return $properties;
+		}
+		return array_values( array_unique( array_merge( $properties, self::STYLE_PROPERTIES ) ) );
 	}
 
 	/**
