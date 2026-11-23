@@ -8,14 +8,22 @@ name: Release
 # attaches both zips (the GitHub one and the wordpress.org one) and their
 # SHA-256 checksums, and the wporg job publishes the release to wordpress.org
 # when the repository has its SVN secrets (wporg.yml).
+#
+# Given a tag (`gh workflow run Release --ref main -f tag=v1.1.0`), it skips
+# release-please and builds, attaches and publishes the zips of that existing
+# release again, for a release left without them.
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: An existing release's tag, e.g. v1.1.0, to build and publish its zips again. Empty runs release-please.
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
   pull-requests: write
-  # To start the release pull request's checks (see below).
-  actions: write
 
 concurrency:
   group: release
@@ -23,6 +31,7 @@ concurrency:
 
 jobs:
   release-please:
+    if: inputs.tag == ''
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
@@ -38,25 +47,21 @@ jobs:
           token: ${{ env.RELEASE_PLEASE_TOKEN || github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-      # A pull request opened or updated with the workflow's own token starts
-      # no `pull_request` workflow (GitHub lists a run that fails at once), so
-      # its checks are started here, on its head, where they count as its own.
-      - name: Run the release pull request's checks
-        if: steps.release.outputs.pr && env.RELEASE_PLEASE_TOKEN == ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
-        run: gh workflow run pull-request.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
 
   zip:
     needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    # Runs on a given tag too, when release-please is skipped.
+    if: ${{ !cancelled() && (inputs.tag != '' || needs.release-please.outputs.release_created == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      tag: ${{ env.TAG }}
+    env:
+      TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ env.TAG }}
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -77,17 +82,16 @@ jobs:
       - name: Attach the zips and their checksums
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ needs.release-please.outputs.tag_name }}
         run: gh release upload "$TAG" dist/*.zip dist/*.zip.sha256 --clobber
 
   wporg:
-    needs: [release-please, zip]
-    if: needs.release-please.outputs.release_created == 'true'
+    needs: zip
+    if: ${{ !cancelled() && needs.zip.result == 'success' }}
     permissions:
       contents: read
     uses: ./.github/workflows/wporg.yml
     with:
-      tag: ${{ needs.release-please.outputs.tag_name }}
+      tag: ${{ needs.zip.outputs.tag }}
     secrets:
       WPORG_SVN_USERNAME: ${{ secrets.WPORG_SVN_USERNAME }}
       WPORG_SVN_PASSWORD: ${{ secrets.WPORG_SVN_PASSWORD }}

@@ -37,18 +37,17 @@ to create and approve pull requests**. Without it the run fails with "GitHub
 Actions is not permitted to create or approve pull requests".
 
 A pull request opened or updated with `GITHUB_TOKEN` starts no `pull_request`
-workflow: GitHub lists a **Pull request** run for it that fails at once ("This
-run likely failed because of a workflow file issue") with no jobs. The
-`Release` workflow therefore starts the **Pull request** workflow itself, on
-the release branch, and its checks land on the pull request's head commit as
-the required checks.
+workflow: GitHub lists a **Pull request** run for it that fails at once with no
+jobs, and the pull request waits for its required checks. Close and reopen it
+(`gh pr close <n> && gh pr reopen <n>`) to start them. Starting the **Pull
+request** workflow on the release branch by hand runs the same checks on the
+same commit, but they do not count toward the branch's rules.
 
 To have release-please open the pull request as someone else, so its own
-events start the checks and no failed run is listed, add a repository secret
+events start the checks, add a repository secret
 `RELEASE_PLEASE_TOKEN`: a fine-grained personal access token, or a GitHub App
 installation token, for this repository with **Contents** and **Pull
-requests** read and write. The `Release` workflow uses it when it is set, and
-then starts no checks of its own.
+requests** read and write. The `Release` workflow uses it when it is set.
 
 Merge the release pull request, then run the workflow again: that run tags
 the version (`v1.1.0`) and creates the GitHub Release, checks that no
@@ -59,6 +58,13 @@ the [wordpress.org flavor](#flavors) `pixonaut-for-woocommerce-<version>-wporg.z
 and a `.sha256` file for each to the Release. Last, it
 [publishes the release to wordpress.org](#wordpressorg) when the repository
 has the SVN secrets.
+
+A release left without its zips, because the run failed after tagging, gets
+them from a run given its tag, which skips release-please:
+
+```sh
+gh workflow run Release --ref main -f tag=v1.1.0
+```
 
 ## Following an SDK release
 
