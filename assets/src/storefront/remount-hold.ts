@@ -1,4 +1,4 @@
-import { lendThumbnails } from './held-thumbnails';
+import { type ThumbnailLender, thumbnailLender } from './held-thumbnails';
 
 /** Attributes a still copy of the designer drops, so it names nothing the
  *  page or the form reads: no duplicate id, nothing submitted, no printed
@@ -25,7 +25,7 @@ export type RemountHold = {
 	/** Lets go, once: the parts show again, the boxes size to what they
 	 *  hold, a copy the next designer did not replace (its mount failed)
 	 *  goes, and the next designer's view strip shows the held thumbnail of
-	 *  each view it has not drawn yet (`lendThumbnails`). */
+	 *  each view it has not drawn yet (`thumbnailLender`). */
 	release(): void;
 	/** The form's parts hidden now: given back, and not taken by the next
 	 *  designer yet. */
@@ -74,8 +74,8 @@ export function holdShown(
 	]);
 	const displays = new Map<HTMLElement, string>();
 	const placed: Node[] = [];
-	/** The designer's own pictures the copy shows. */
-	const kept: HTMLImageElement[] = [];
+	/** Lends the designer's own pictures the copy shows, once it shows them. */
+	let lender: ThumbnailLender | null = null;
 	let released = false;
 	let slow: ReturnType<typeof setTimeout> | undefined;
 	const showTaken = (): void => {
@@ -91,7 +91,7 @@ export function holdShown(
 	// strip shows.
 	const lend = (): void => {
 		for (const target of targets) {
-			lendThumbnails(kept, target);
+			lender?.lend(target);
 		}
 	};
 	// The next designer draws its form ahead of its preview: a part it took
@@ -105,11 +105,13 @@ export function holdShown(
 				});
 	return {
 		place() {
+			const kept: HTMLImageElement[] = [];
 			for (const [target, copy] of copies) {
 				target.replaceChildren(...copy.nodes);
 				kept.push(...copy.keepPictures());
 				placed.push(...target.childNodes);
 			}
+			lender = thumbnailLender(kept);
 			for (const [element, height] of heights) {
 				element.style.minHeight = `${height}px`;
 			}
@@ -144,7 +146,7 @@ export function holdShown(
 				element.style.removeProperty('min-height');
 			}
 			lend();
-			kept.length = 0;
+			lender = null;
 			for (const node of placed.splice(0)) {
 				node.parentNode?.removeChild(node);
 			}

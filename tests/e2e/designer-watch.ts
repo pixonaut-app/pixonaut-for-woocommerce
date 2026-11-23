@@ -143,6 +143,16 @@ export async function watchSwitch(page: Page, side: string): Promise<void> {
 						`#pixonaut-preview-${side} img, #pixonaut-views-${side} img`,
 					),
 				];
+				// A thumbnail given pixels out of sight, as the next designer's
+				// strip under a hold is, shows them once it shows, until its
+				// next picture has loaded.
+				for (const picture of document.querySelectorAll<HTMLImageElement>(
+					`#pixonaut-views-${side} [data-view-id] img`,
+				)) {
+					if (picture.naturalWidth > 0) {
+						painted.add(picture);
+					}
+				}
 				const preview = document.getElementById(`pixonaut-preview-${side}`);
 				const thumbnails = [
 					...document.querySelectorAll<HTMLElement>(
