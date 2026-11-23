@@ -40,7 +40,11 @@ final class BlankOptionRows {
 				'slug'       => $term->slug,
 				'name'       => $term->name,
 				'value'      => $value,
-				'stands_for' => null === $link ? null : $value ?? BlankOptionLinks::same_name( $term->name, $offered ),
+				'stands_for' => match ( true ) {
+					null === $link => null,
+					BlankOptionLinks::PAGE_COUNT === $link['option'] => self::count_text( $value ?? $term->name ),
+					default => $value ?? BlankOptionLinks::same_name( $term->name, $offered ),
+				},
 			);
 		}
 		return array(
@@ -51,6 +55,16 @@ final class BlankOptionRows {
 			'values'       => $values,
 			'options'      => $choices,
 		);
+	}
+
+	/**
+	 * The page count a value stands for, as text; null for none.
+	 *
+	 * @param string $value What it was linked to, else its name.
+	 */
+	private static function count_text( string $value ): ?string {
+		$count = BlankOptionLinks::count_in( $value );
+		return null === $count ? null : (string) $count;
 	}
 
 	/**
@@ -67,7 +81,7 @@ final class BlankOptionRows {
 				'taxonomy'     => array( 'type' => 'string' ),
 				'option'       => array(
 					'type'        => array( 'string', 'null' ),
-					'description' => __( 'The blank option the attribute stands for, as Pixonaut writes it; null when it is not linked.', 'pixonaut-for-woocommerce' ),
+					'description' => __( 'The blank option the attribute stands for, as Pixonaut writes it, or @pages when its values are a book\'s page count; null when it is not linked.', 'pixonaut-for-woocommerce' ),
 				),
 				'values'       => array(
 					'type'  => 'array',
@@ -83,14 +97,14 @@ final class BlankOptionRows {
 							),
 							'stands_for' => array(
 								'type'        => array( 'string', 'null' ),
-								'description' => __( 'The option value it stands for: the one it was linked to, else the option\'s value of its name; null when it is not linked, and then shows as text.', 'pixonaut-for-woocommerce' ),
+								'description' => __( 'The option value it stands for: the one it was linked to, else the option\'s value of its name; for @pages, the page count, the first number in the value it was linked to or else in its name. Null when it is not linked, and then shows as text.', 'pixonaut-for-woocommerce' ),
 							),
 						),
 					),
 				),
 				'options'      => array(
 					'type'                 => 'object',
-					'description'          => __( 'The options the attribute can be linked to, each with its values: those of the blanks the products with this attribute use, themselves or through their variations.', 'pixonaut-for-woocommerce' ),
+					'description'          => __( 'The options the attribute can be linked to, each with its values: those of the blanks the products with this attribute use, themselves or through their variations, and @pages, a book\'s page count, with no values.', 'pixonaut-for-woocommerce' ),
 					'additionalProperties' => array(
 						'type'  => 'array',
 						'items' => array( 'type' => 'string' ),

@@ -6,13 +6,14 @@
  * Override by copying to yourtheme/woocommerce/pixonaut/admin/blank-option-field.php.
  *
  * @package Pixonaut\WooCommerce
- * @version 1.23.0
+ * @version 1.31.0
  *
  * @var string       $option_field The option select's name and id.
  * @var string       $values_field The value selects' name, by term id.
  * @var string       $option       The option the attribute stands for; empty when it is not linked.
  * @var list<string> $options      The options it can stand for.
  * @var list<array{term_id: int, name: string, value: string, values: list<string>, same: string|null}> $values Each of its values: its term, its linked option value (empty for none), the option values it can stand for, and the one of its name.
+ * @var string       $page_count   What `$option` is when the attribute's values are a book's page count; each value's `same` is then the count in its name.
  * @var string       $nonce_field  The setting's nonce field.
  */
 
@@ -34,6 +35,12 @@ $pixonaut_value_unlinked = _x( 'Not linked', 'blank option value of an attribute
 $pixonaut_same_name = __( 'Same name: %s', 'pixonaut-for-woocommerce' );
 /* translators: Help under the table of an attribute's values on the screen that edits a product attribute. */
 $pixonaut_values_description = __( 'A value that is not linked shows as text and picks no variant by this option. Save after choosing another option to list its values.', 'pixonaut-for-woocommerce' );
+/* translators: Option of the "Blank option" select on the screen that edits a product attribute: the attribute's values are the page counts a book (a notebook, a photo book) is sold at. */
+$pixonaut_page_count_label = __( 'Page count (books)', 'pixonaut-for-woocommerce' );
+/* translators: Column heading in the table of an attribute's values, when they are a book's page counts: the number of inner pages each one stands for. */
+$pixonaut_pages_heading = __( 'Inner pages', 'pixonaut-for-woocommerce' );
+/* translators: Help under the table of an attribute's values, when they are a book's page counts. */
+$pixonaut_pages_description = __( 'Each value sells the book at a count of inner pages (covers not counted), priced by what the printshop charges at that count; a count it gives no price for cannot be bought. A value left empty stands for the first number in its name.', 'pixonaut-for-woocommerce' );
 // The attribute screen's `.form-table th, .form-table td` rules would give the table's cells a row's width and padding.
 $pixonaut_cell_style = 'width: auto; padding: 8px 10px;';
 /* translators: Shown under the "Blank option" select on the screen that edits a product attribute, while the attribute stands for no option. */
@@ -47,12 +54,33 @@ $pixonaut_not_linked_description = __( 'Not linked: its values show as text, and
 		<select name="<?php echo esc_attr( $option_field ); ?>" id="<?php echo esc_attr( $option_field ); ?>">
 			<option value=""<?php selected( $option, '' ); ?>><?php echo esc_html( $pixonaut_unlinked ); ?></option>
 			<?php foreach ( $options as $pixonaut_option ) : ?>
-				<option value="<?php echo esc_attr( $pixonaut_option ); ?>"<?php selected( $option, $pixonaut_option ); ?>><?php echo esc_html( $pixonaut_option ); ?></option>
+				<option value="<?php echo esc_attr( $pixonaut_option ); ?>"<?php selected( $option, $pixonaut_option ); ?>><?php echo esc_html( $page_count === $pixonaut_option ? $pixonaut_page_count_label : $pixonaut_option ); ?></option>
 			<?php endforeach; ?>
 		</select>
 		<?php echo $nonce_field; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_nonce_field() output. ?>
 		<p class="description"><?php echo esc_html( $pixonaut_description ); ?></p>
-		<?php if ( '' !== $option && array() !== $values ) : ?>
+		<?php if ( $page_count === $option && array() !== $values ) : ?>
+			<table class="widefat striped pixonaut-blank-option-values" style="max-width: 40em;">
+				<thead>
+					<tr>
+						<th scope="col" style="<?php echo esc_attr( $pixonaut_cell_style ); ?>"><?php echo esc_html( $pixonaut_value_heading ); ?></th>
+						<th scope="col" style="<?php echo esc_attr( $pixonaut_cell_style ); ?>"><?php echo esc_html( $pixonaut_pages_heading ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $values as $pixonaut_value ) : ?>
+						<?php $pixonaut_id = $values_field . '-' . $pixonaut_value['term_id']; ?>
+						<tr>
+							<td style="<?php echo esc_attr( $pixonaut_cell_style ); ?>"><label for="<?php echo esc_attr( $pixonaut_id ); ?>"><?php echo esc_html( $pixonaut_value['name'] ); ?></label></td>
+							<td style="<?php echo esc_attr( $pixonaut_cell_style ); ?>">
+								<input type="number" min="1" step="1" style="width: 8em;" name="<?php echo esc_attr( $values_field . '[' . $pixonaut_value['term_id'] . ']' ); ?>" id="<?php echo esc_attr( $pixonaut_id ); ?>" value="<?php echo esc_attr( $pixonaut_value['value'] ); ?>" placeholder="<?php echo esc_attr( (string) $pixonaut_value['same'] ); ?>" />
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<p class="description"><?php echo esc_html( $pixonaut_pages_description ); ?></p>
+		<?php elseif ( '' !== $option && array() !== $values ) : ?>
 			<table class="widefat striped pixonaut-blank-option-values" style="max-width: 40em;">
 				<thead>
 					<tr>

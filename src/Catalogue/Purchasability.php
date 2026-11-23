@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Catalogue;
 
+use Pixonaut\WooCommerce\Pricing\ProductPricing;
 use Pixonaut\WooCommerce\Storefront\ProductPageCache;
 use WC_Product;
 
@@ -20,7 +21,8 @@ use WC_Product;
  * a variable product can be bought while one of its variations can. A
  * standing side printed from a design per row of its blank's print areas
  * sells only the variants of a row it has a design for: a size its template
- * cannot be printed at has none.
+ * cannot be printed at has none. A book sold at a page count its printshop
+ * gives no price for, as its cost was last read, cannot be bought either.
  */
 final class Purchasability {
 
@@ -46,7 +48,7 @@ final class Purchasability {
 		if ( ! $product->is_type( 'variable' ) || array() === $product->get_children() ) {
 			$config = ProductConfig::config_for( $product );
 			// A product sells one of its blank's variants: without one, or with a retired one, Pixonaut refuses its order.
-			return self::sellable( $config ) && ProductVariant::sellable( $product, $config ) && self::printed( $product, $config );
+			return self::sellable( $config ) && ProductVariant::sellable( $product, $config ) && self::printed( $product, $config ) && ! ProductPricing::unpriced_pages( $product );
 		}
 		if ( 0 === $product->get_id() ) {
 			return self::any_variation( $product );

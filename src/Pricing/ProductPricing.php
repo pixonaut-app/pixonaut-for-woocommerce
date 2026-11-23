@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Pricing;
 
 use Closure;
 use Pixonaut\WooCommerce\Api\VariantCosts;
+use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Schema;
@@ -371,17 +372,17 @@ final class ProductPricing {
 		$read       = array();
 		$converts   = array();
 		foreach ( self::items( $product ) as $item ) {
-			list( $blank_id, $ref )  = self::sold( $item );
-			$listed                  = null === $blank_id || null === $ref ? null : ( $this->of_blank( $blank_id, $region )[ $ref ] ?? null );
-			$read[ $item->get_id() ] = array( $blank_id, $ref, $listed );
+			list( $blank_id, $ref, $pages ) = self::sold( $item );
+			$listed                         = $this->listed( $blank_id, $ref, $pages, $region );
+			$read[ $item->get_id() ]        = array( $blank_id, $ref, $pages, $listed );
 			// A cost kept from an earlier read is converted again too.
-			$converts[] = $listed ?? PriceState::stored_on( $item )->cost_of( $blank_id, $ref, $region );
+			$converts[] = $listed ?? PriceState::stored_on( $item )->cost_of( $blank_id, $ref, $region, $pages );
 		}
 		// A cost in another currency is converted at the day's rate, read only when one is.
 		$this->converter->refresh_for( $converts );
 		$now     = ( $this->clock )();
 		$changed = array();
-		foreach ( $read as $id => list( $blank_id, $ref, $listed ) ) {
+		foreach ( $read as $id => list( $blank_id, $ref, $pages, $listed ) ) {
 			// Read again: the store manager may have priced it while Pixonaut was asked.
 			$item = self::fresh( $id );
 			if ( null === $item ) {
@@ -389,7 +390,7 @@ final class ProductPricing {
 			}
 			$state = PriceState::stored_on( $item );
 			// A variant Pixonaut has not read yet, or no longer lists, keeps the cost last read for it.
-			$cost  = $listed ?? $state->cost_of( $blank_id, $ref, $region );
+			$cost  = $listed ?? $state->cost_of( $blank_id, $ref, $region, $pages );
 			$total = $this->converter->in_store( $cost )->total;
 			// Another cost in the store's currency: the printshop's price moved, or the exchange rate did.
 			if ( null !== $total && $total !== $state->total ) {
@@ -451,10 +452,9 @@ final class ProductPricing {
 		$automatic  = $this->automatic_for( $product );
 		$costs      = array();
 		foreach ( $items as $item ) {
-			list( $blank_id, $ref ) = self::sold( $item );
-			$listed                 = null === $blank_id || null === $ref ? null : ( $this->of_blank( $blank_id, $region )[ $ref ] ?? null );
+			list( $blank_id, $ref, $pages ) = self::sold( $item );
 			// A variant Pixonaut does not list keeps the cost last read for it, as a refresh keeps it.
-			$costs[ $item->get_id() ] = $listed ?? PriceState::stored_on( $item )->cost_of( $blank_id, $ref, $region );
+			$costs[ $item->get_id() ] = $this->listed( $blank_id, $ref, $pages, $region ) ?? PriceState::stored_on( $item )->cost_of( $blank_id, $ref, $region, $pages );
 		}
 		$this->converter->refresh_for( array_values( $costs ) );
 		return array_map(
@@ -701,15 +701,31 @@ final class ProductPricing {
 	}
 
 	/**
-	 * The blank and the blank variant a product or variation sells now;
-	 * nulls when it sells none.
+	 * The blank and the blank variant a product or variation sells now,
+	 * nulls when it sells none, and the page count it sells a book at, null
+	 * for none (`BlankOptionLinks::page_count()`).
 	 *
 	 * @param WC_Product $item The product or variation.
-	 * @return array{0: string|null, 1: string|null}
+	 * @return array{0: string|null, 1: string|null, 2: int|null}
 	 */
 	private static function sold( WC_Product $item ): array {
 		$variant = ProductVariant::sold_on( $item, ProductConfig::config_for( $item ) );
-		return null === $variant ? array( null, null ) : array( $variant->blank_id, $variant->ref );
+		return null === $variant ? array( null, null, null ) : array( $variant->blank_id, $variant->ref, BlankOptionLinks::page_count( $item ) );
+	}
+
+	/**
+	 * Whether a product or variation sells a book at a page count its
+	 * printshop gives no price for, as last read: nothing is sold at one.
+	 *
+	 * @param WC_Product $item The product or variation.
+	 */
+	public static function unpriced_pages( WC_Product $item ): bool {
+		// Read for every product a page shows: only a book sold at a count reads its stored cost.
+		if ( null === BlankOptionLinks::page_count( $item ) ) {
+			return false;
+		}
+		$cost = self::known_cost( $item, PriceState::stored_on( $item ) );
+		return null !== $cost && null !== $cost->pages && null === $cost->product;
 	}
 
 	/**
@@ -751,8 +767,8 @@ final class ProductPricing {
 		if ( null === $state->cost ) {
 			return null;
 		}
-		list( $blank_id, $ref ) = self::sold( $item );
-		return $state->cost_of( $blank_id, $ref, self::region() );
+		list( $blank_id, $ref, $pages ) = self::sold( $item );
+		return $state->cost_of( $blank_id, $ref, self::region(), $pages );
 	}
 
 	/**
@@ -812,6 +828,21 @@ final class ProductPricing {
 			$fresh->update_meta_data( self::WATCH_META_KEY, $json );
 		}
 		$fresh->save_meta_data();
+	}
+
+	/**
+	 * What Pixonaut lists for a blank variant at a page count; null for a
+	 * variant it does not list, or for nothing sold.
+	 *
+	 * @param string|null $blank_id The blank.
+	 * @param string|null $ref      The blank variant.
+	 * @param int|null    $pages    The page count a book is sold at; null for none.
+	 * @param string      $region   The country shipping is priced to.
+	 * @throws ApiException When Pixonaut could not be asked.
+	 */
+	private function listed( ?string $blank_id, ?string $ref, ?int $pages, string $region ): ?VariantCost {
+		$listed = null === $blank_id || null === $ref ? null : ( $this->of_blank( $blank_id, $region )[ $ref ] ?? null );
+		return $listed?->at_pages( $pages );
 	}
 
 	/**

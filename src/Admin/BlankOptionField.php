@@ -65,8 +65,14 @@ final class BlankOptionField {
 		$offered = null === $link ? array() : $choices[ $link['option'] ];
 		$values  = array();
 		foreach ( BlankOptionLinks::terms( $taxonomy ) as $term ) {
-			$linked   = null === $link ? null : $link['values'][ $term->term_id ] ?? null;
-			$same     = null === $link ? null : BlankOptionLinks::same_name( $term->name, $offered );
+			$linked = null === $link ? null : $link['values'][ $term->term_id ] ?? null;
+			$count  = BlankOptionLinks::count_in( $term->name );
+			$same   = match ( true ) {
+				null === $link => null,
+				// A value standing for a page count reads it from its name unless it was given one.
+				BlankOptionLinks::PAGE_COUNT === $link['option'] => null === $count ? null : (string) $count,
+				default => BlankOptionLinks::same_name( $term->name, $offered ),
+			};
 			$listed   = null !== $linked && ! in_array( $linked, $offered, true ) ? array_merge( $offered, array( $linked ) ) : $offered;
 			$values[] = array(
 				'term_id' => $term->term_id,
@@ -82,6 +88,7 @@ final class BlankOptionField {
 				'option_field' => self::OPTION_FIELD,
 				'values_field' => self::VALUES_FIELD,
 				'option'       => $link['option'] ?? '',
+				'page_count'   => BlankOptionLinks::PAGE_COUNT,
 				'options'      => array_keys( $choices ),
 				'values'       => $values,
 				'nonce_field'  => wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD, false, false ),

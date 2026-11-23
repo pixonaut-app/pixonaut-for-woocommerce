@@ -283,7 +283,13 @@ final class BlankOptionLinksTest extends WP_UnitTestCase {
 		$read = ( new GetAttributeBlankOptions( $choices ) )->execute( array( 'attribute_id' => $this->attribute ) );
 		$this->assertCount( 1, $read['attributes'] );
 		$this->assertNull( $read['attributes'][0]['option'] );
-		$this->assertSame( array( 'Color' => array( 'White', 'Black', 'Natural Wood', 'Dark Wood' ) ), $read['attributes'][0]['options'] );
+		$this->assertSame(
+			array(
+				'Color'                      => array( 'White', 'Black', 'Natural Wood', 'Dark Wood' ),
+				BlankOptionLinks::PAGE_COUNT => array(),
+			),
+			$read['attributes'][0]['options']
+		);
 
 		$refused = $set->execute(
 			array(
@@ -378,6 +384,89 @@ final class BlankOptionLinksTest extends WP_UnitTestCase {
 					'option'       => 'Color',
 				)
 			)
+		);
+	}
+
+	public function test_an_attribute_standing_for_a_page_count_names_no_option_and_reads_each_count(): void {
+		$counts = array();
+		foreach ( array( '20 sidor', '44 pages', 'Tjock' ) as $name ) {
+			$term = wp_insert_term( $name, self::TAXONOMY );
+			$this->assertIsArray( $term );
+			$counts[ $name ] = (int) $term['term_id'];
+		}
+		$set = new SetAttributeBlankOption( $this->choices() );
+
+		$refused = $set->execute(
+			array(
+				'attribute_id' => $this->attribute,
+				'option'       => BlankOptionLinks::PAGE_COUNT,
+				'values'       => array(
+					array(
+						'term_id' => $counts['Tjock'],
+						'value'   => 'many',
+					),
+				),
+			)
+		);
+		$this->assertInstanceOf( WP_Error::class, $refused );
+		$row = $set->execute(
+			array(
+				'attribute_id' => $this->attribute,
+				'option'       => BlankOptionLinks::PAGE_COUNT,
+				'values'       => array(
+					array(
+						'term_id' => $counts['Tjock'],
+						'value'   => '120 pages',
+					),
+				),
+			)
+		);
+		$this->assertIsArray( $row );
+		$by_id = array_column( $row['values'], null, 'term_id' );
+		$this->assertSame( '20', $by_id[ $counts['20 sidor'] ]['stands_for'] );
+		$this->assertSame( '44', $by_id[ $counts['44 pages'] ]['stands_for'] );
+		$this->assertSame( '120', $by_id[ $counts['Tjock'] ]['stands_for'] );
+		$this->assertNull( $by_id[ $this->terms['vit'] ]['stands_for'], 'a value with no number stands for no count' );
+
+		$thick = get_term( $counts['Tjock'], self::TAXONOMY );
+		$this->assertInstanceOf( WP_Term::class, $thick );
+		$variation = $this->poster()['svart'];
+		$variation->set_attributes( array( self::TAXONOMY => $thick->slug ) );
+		$variation->save();
+		$this->assertSame( 120, BlankOptionLinks::page_count( $variation ) );
+		$this->assertSame( array(), BlankOptionLinks::labels( $variation ), 'a page count picks no variant' );
+		$product = wc_get_product( $variation->get_parent_id() );
+		$this->assertInstanceOf( WC_Product_Variable::class, $product );
+		$this->assertSame( array(), BlankOptionLinks::linked_in( $product ), 'a page count has no swatch looks' );
+	}
+
+	public function test_the_attribute_screen_offers_a_page_count_and_saves_each_count(): void {
+		$field = new BlankOptionField( Templates::for_plugin( dirname( __DIR__, 4 ) . '/pixonaut-for-woocommerce.php' ), $this->choices() );
+		$field->register();
+		$_GET['edit'] = (string) $this->attribute;
+		BlankOptionLinks::set( $this->attribute, BlankOptionLinks::PAGE_COUNT, array() );
+
+		ob_start();
+		$field->render_edit();
+		$screen = (string) ob_get_clean();
+		$this->assertStringContainsString( '<option value="@pages" selected=\'selected\'>Page count (books)</option>', $screen );
+		$this->assertStringContainsString( 'type="number"', $screen );
+
+		$_POST = array(
+			BlankOptionField::OPTION_FIELD => BlankOptionLinks::PAGE_COUNT,
+			BlankOptionField::VALUES_FIELD => array(
+				$this->terms['vit']   => '44',
+				$this->terms['svart'] => '',
+			),
+			BlankOptionField::NONCE_FIELD  => wp_create_nonce( BlankOptionField::NONCE_ACTION ),
+		);
+		wc_update_attribute( $this->attribute, array( 'name' => self::ATTRIBUTE ) );
+		$this->assertSame(
+			array(
+				'option' => BlankOptionLinks::PAGE_COUNT,
+				'values' => array( $this->terms['vit'] => '44' ),
+			),
+			BlankOptionLinks::of( $this->attribute )
 		);
 	}
 

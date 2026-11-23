@@ -53,6 +53,50 @@ final class VariantCostTest extends TestCase {
 		$this->assertNull( $costs['v_odd']->product );
 	}
 
+	public function test_a_book_is_read_with_its_cost_at_each_page_count(): void {
+		$row  = self::row( 'v_a5', '9.53', '7.45' ) + array(
+			'pages' => array(
+				array(
+					'pages'    => 60,
+					'product'  => array(
+						'amount'   => '15.10',
+						'currency' => 'SEK',
+					),
+					'shipping' => array(
+						'amount'   => '8.10',
+						'currency' => 'SEK',
+					),
+				),
+				array(
+					'pages'    => 20,
+					'product'  => null,
+					'shipping' => null,
+				),
+				array( 'pages' => 'many' ),
+			),
+		);
+		$cost = VariantCost::list_from( array( $row ) )['v_a5'];
+
+		$this->assertSame( array( 20, 60 ), array_keys( $cost->by_pages ), 'fewest first, a count that is not a number left out' );
+		$this->assertNull( $cost->pages );
+		$at = $cost->at_pages( 60 );
+		$this->assertSame( array( 60, 15100, 8100, 'SE' ), array( $at->pages, $at->product, $at->shipping, $at->region ) );
+		$this->assertNull( $cost->at_pages( 20 )->product, 'no price at a count the printshop prices none at' );
+		$this->assertSame( array( 44, null ), array( $cost->at_pages( 44 )->pages, $cost->at_pages( 44 )->product ), 'no price at a count the placement does not offer' );
+		$this->assertSame( $cost, $cost->at_pages( null ) );
+
+		$stored = VariantCost::from_array( $at->to_array() );
+		$this->assertNotNull( $stored );
+		$this->assertSame( array( 60, 15100 ), array( $stored->pages, $stored->product ) );
+	}
+
+	public function test_a_variant_printed_as_no_pages_is_its_own_cost_at_any_count(): void {
+		$cost = VariantCost::list_from( array( self::row( 'v_a3', '167.10', '65.50' ) + array( 'pages' => array() ) ) )['v_a3'];
+
+		$this->assertSame( $cost, $cost->at_pages( 44 ) );
+		$this->assertArrayNotHasKey( 'pages', $cost->to_array() );
+	}
+
 	public function test_a_cost_is_stored_and_read_back(): void {
 		$cost = VariantCost::list_from( array( self::row( 'v_a3', '16.71', '6.55', 'eur' ) ) )['v_a3'];
 		$read = VariantCost::from_array( $cost->to_array() );

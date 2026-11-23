@@ -38,7 +38,7 @@ final class SetAttributeBlankOption implements Ability {
 		return array(
 			/* translators: Name of an ability an AI assistant or an MCP client can use on the store. */
 			'label'               => __( 'Link an attribute to a blank option', 'pixonaut-for-woocommerce' ),
-			'description'         => __( 'Links a global attribute to an option of the Pixonaut blanks its products use, and its values to the option\'s values, as its edit screen\'s "Blank option" does: a frame colour attribute to the blank\'s Color, its value Svart to Black. Its values then pick the blank\'s variant and show in the designer as the option values\' colour or picture swatches. `option` and each value are named as `get-attribute-blank-options` lists them in `options`. A value given an empty `value`, or not linked yet, stands for the option\'s value of its name; values not given keep their link while the option stays the same, and lose it when it changes. An empty `option` unlinks the attribute. Products with the attribute are re-checked in the background. The answer is the attribute\'s row; a `503` when the re-check could not be queued, the link being saved.', 'pixonaut-for-woocommerce' ),
+			'description'         => __( 'Links a global attribute to an option of the Pixonaut blanks its products use, and its values to the option\'s values, as its edit screen\'s "Blank option" does: a frame colour attribute to the blank\'s Color, its value Svart to Black. Its values then pick the blank\'s variant and show in the designer as the option values\' colour or picture swatches. `option` and each value are named as `get-attribute-blank-options` lists them in `options`. A value given an empty `value`, or not linked yet, stands for the option\'s value of its name; values not given keep their link while the option stays the same, and lose it when it changes. `option` @pages links it to a book\'s page count instead: each value then stands for a count of inner pages, the number given as its `value`, else the first number in its name, and a variation sells its book at that count, priced by the printshop\'s cost at it. An empty `option` unlinks the attribute. Products with the attribute are re-checked in the background. The answer is the attribute\'s row; a `503` when the re-check could not be queued, the link being saved.', 'pixonaut-for-woocommerce' ),
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
@@ -117,7 +117,13 @@ final class SetAttributeBlankOption implements Ability {
 				return self::refused( __( 'A value given is not one of the attribute\'s values: name each by its `term_id` or `slug`.', 'pixonaut-for-woocommerce' ) );
 			}
 			$value = is_array( $given ) && is_string( $given['value'] ?? null ) ? trim( $given['value'] ) : '';
-			if ( '' !== $value && ! in_array( $value, $choices[ $option ], true ) ) {
+			if ( BlankOptionLinks::PAGE_COUNT === $option && '' !== $value && null === BlankOptionLinks::count_in( $value ) ) {
+				return self::refused(
+					/* translators: %s: the value asked for. Error an AI assistant or an MCP client reads. */
+					sprintf( __( '"%s" is not a page count: give a whole number of inner pages, such as 44.', 'pixonaut-for-woocommerce' ), $value )
+				);
+			}
+			if ( BlankOptionLinks::PAGE_COUNT !== $option && '' !== $value && ! in_array( $value, $choices[ $option ], true ) ) {
 				return self::refused(
 					/* translators: 1: the option value asked for. 2: the blank option. 3: its values, comma-separated. Error an AI assistant or an MCP client reads. */
 					sprintf( __( '"%1$s" is not a value of the option "%2$s". Values: %3$s.', 'pixonaut-for-woocommerce' ), $value, $option, self::listed( $choices[ $option ] ) )

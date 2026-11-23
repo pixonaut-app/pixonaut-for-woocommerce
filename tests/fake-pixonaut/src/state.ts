@@ -379,6 +379,17 @@ export type VariantCost = {
 	/** The days from the order to the door the printshop tells, null for
 	 *  none; absent for the fixture's span. */
 	delivery?: DeliveryDays | null;
+	/** A book's cost at each page count of its paged placement, fewest
+	 *  first; absent for a variant printed as no pages. */
+	pages?: PageCost[];
+};
+
+/** A book's cost at one page count: `product` null where the printshop
+ *  gives no price at it. */
+export type PageCost = {
+	pages: number;
+	product: string | null;
+	shipping: string | null;
 };
 
 /** A span of days as Pixonaut writes one. */

@@ -113,6 +113,7 @@ final class ProductPrices {
 				'shipping'          => self::money( $cost->shipping ),
 				'shipping_currency' => $cost->shipping_currency,
 				'read_at'           => $cost->read_at,
+				'pages'             => $cost->pages,
 			),
 			'cost_total'      => self::money( $row->cost_total ),
 			'rate_date'       => '' === $row->rate_date ? null : $row->rate_date,
@@ -219,6 +220,10 @@ final class ProductPrices {
 						'shipping'          => $money( __( 'The cheapest shipping to the shop\'s country; null when none is known.', 'pixonaut-for-woocommerce' ) ),
 						'shipping_currency' => array( 'type' => 'string' ),
 						'read_at'           => array( 'type' => array( 'string', 'null' ) ),
+						'pages'             => array(
+							'type'        => array( 'integer', 'null' ),
+							'description' => __( 'The page count a book is priced at, inner pages only, by the attribute standing for its page count; null for anything else. A book at a count its printshop gives no price for has no product price, and cannot be bought.', 'pixonaut-for-woocommerce' ),
+						),
 					),
 				),
 				'cost_total'      => $money( __( 'The product and its shipping in the store\'s currency, converted with the currency buffer added when charged in another; null when they price nothing.', 'pixonaut-for-woocommerce' ) ),
