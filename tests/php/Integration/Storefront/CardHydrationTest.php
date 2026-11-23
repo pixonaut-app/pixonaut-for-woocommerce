@@ -39,6 +39,21 @@ final class CardHydrationTest extends WP_UnitTestCase {
 	 */
 	private const BUTTON_CARD = self::SHOP_CARD . '<!-- wp:woocommerce/product-button {"isDescendentOfQueryLoop":true} /-->';
 
+	/**
+	 * The first WooCommerce whose Product Template loads each card's product
+	 * into the store; before it a card loads nothing, and there is nothing
+	 * to lighten.
+	 */
+	private const FIRST_LOADING_WOOCOMMERCE = '11.0';
+
+	public function set_up(): void {
+		parent::set_up();
+		$version = WC()->version;
+		if ( version_compare( $version, self::FIRST_LOADING_WOOCOMMERCE, '<' ) ) {
+			$this->markTestSkipped( "WooCommerce {$version}'s Product Template loads no product into the store." );
+		}
+	}
+
 	public function tear_down(): void {
 		unset( $GLOBALS['product'] );
 		parent::tear_down();

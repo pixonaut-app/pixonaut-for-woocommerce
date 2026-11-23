@@ -14,6 +14,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # To start the release pull request's checks (see below).
+  actions: write
 
 concurrency:
   group: release
@@ -25,12 +27,26 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+    env:
+      # Optional: a token that is not the workflow's own, which release-please
+      # then opens the pull request with (docs/developer/releasing.md).
+      RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
     steps:
       - id: release
         uses: googleapis/release-please-action@v5
         with:
+          token: ${{ env.RELEASE_PLEASE_TOKEN || github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+      # A pull request opened or updated with the workflow's own token starts
+      # no `pull_request` workflow (GitHub lists a run that fails at once), so
+      # its checks are started here, on its head, where they count as its own.
+      - name: Run the release pull request's checks
+        if: steps.release.outputs.pr && env.RELEASE_PLEASE_TOKEN == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+        run: gh workflow run pull-request.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
 
   zip:
     needs: release-please

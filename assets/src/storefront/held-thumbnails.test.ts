@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { lendThumbnails } from './held-thumbnails';
+import { thumbnailLender } from './held-thumbnails';
 
 /** What the stand-in canvas gives for a held picture's pixels. */
 const PIXELS = 'data:image/png;base64,held';
@@ -45,7 +45,7 @@ function held(viewIds: string[]): HTMLImageElement[] {
 const pictureOf = (root: HTMLElement, viewId: string) =>
 	root.querySelector<HTMLImageElement>(`[data-view-id="${viewId}"] img`);
 
-describe('lendThumbnails', () => {
+describe('thumbnailLender', () => {
 	const drawImage = vi.fn();
 
 	beforeEach(() => {
@@ -57,14 +57,15 @@ describe('lendThumbnails', () => {
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		drawImage.mockClear();
+		drawImage.mockReset();
+		Reflect.deleteProperty(HTMLImageElement.prototype, 'decode');
 	});
 
 	it('shows the held picture of each view the next strip has not drawn yet', () => {
 		const target = strip({ studio: null, nursery: null });
 		const pictures = held(['studio', 'nursery']);
 
-		lendThumbnails(pictures, target);
+		thumbnailLender(pictures).lend(target);
 
 		expect(pictureOf(target, 'studio')?.getAttribute('src')).toBe(PIXELS);
 		expect(pictureOf(target, 'nursery')?.getAttribute('src')).toBe(PIXELS);
@@ -75,13 +76,12 @@ describe('lendThumbnails', () => {
 	it('leaves a thumbnail the SDK has drawn or is loading, and a view the last blank did not show', () => {
 		const target = strip({ studio: 'blob:new-studio', hall: null });
 
-		lendThumbnails(held(['studio', 'nursery']), target);
+		thumbnailLender(held(['studio', 'nursery'])).lend(target);
 
 		expect(pictureOf(target, 'studio')?.getAttribute('src')).toBe(
 			'blob:new-studio',
 		);
 		expect(pictureOf(target, 'hall')?.hasAttribute('src')).toBe(false);
-		expect(drawImage).not.toHaveBeenCalled();
 	});
 
 	it('lends nothing from a held picture without pixels', () => {
@@ -89,7 +89,7 @@ describe('lendThumbnails', () => {
 		const [picture] = held(['studio']);
 		Object.defineProperty(picture, 'naturalWidth', { value: 0 });
 
-		lendThumbnails(picture === undefined ? [] : [picture], target);
+		thumbnailLender(picture === undefined ? [] : [picture]).lend(target);
 
 		expect(pictureOf(target, 'studio')?.hasAttribute('src')).toBe(false);
 	});
@@ -100,7 +100,80 @@ describe('lendThumbnails', () => {
 		});
 		const target = strip({ studio: null });
 
-		lendThumbnails(held(['studio']), target);
+		thumbnailLender(held(['studio'])).lend(target);
+
+		expect(pictureOf(target, 'studio')?.hasAttribute('src')).toBe(false);
+	});
+
+	it('copies each held picture once, ahead of the strip it lends to', () => {
+		const pictures = held(['studio', 'nursery']);
+
+		const lender = thumbnailLender(pictures);
+
+		expect(drawImage).toHaveBeenCalledTimes(pictures.length);
+		const first = strip({ studio: null });
+		const second = strip({ studio: null, nursery: null });
+		lender.lend(first);
+		lender.lend(second);
+		expect(drawImage).toHaveBeenCalledTimes(pictures.length);
+		expect(pictureOf(second, 'nursery')?.getAttribute('src')).toBe(PIXELS);
+	});
+
+	/** A held picture the SDK was drawing again: no pixels until `load()`. */
+	function loading(): { picture: HTMLImageElement; load(): void } {
+		const picture = pictureOf(strip({ studio: 'blob:redrawn' }), 'studio');
+		if (picture === null) {
+			throw new Error('No held picture.');
+		}
+		let loaded = false;
+		Object.defineProperties(picture, {
+			complete: { get: () => loaded },
+			naturalWidth: { get: () => (loaded ? DECODED_PX : 0) },
+			naturalHeight: { get: () => (loaded ? DECODED_PX : 0) },
+		});
+		return {
+			picture,
+			load() {
+				loaded = true;
+				picture.dispatchEvent(new Event('load'));
+			},
+		};
+	}
+
+	/** Gives pictures `decode()`, which jsdom lacks, decoding at once. */
+	function decodes(): void {
+		Object.defineProperty(HTMLImageElement.prototype, 'decode', {
+			value: () => Promise.resolve(),
+			configurable: true,
+		});
+	}
+
+	/** Lets the copies' decoding settle. */
+	const decodedCopies = () => new Promise((resolve) => setTimeout(resolve));
+
+	it('lends a held picture the SDK was drawing again once it has loaded and its copy decoded', async () => {
+		decodes();
+		const { picture, load } = loading();
+		const target = strip({ studio: null });
+		thumbnailLender([picture]).lend(target);
+		expect(pictureOf(target, 'studio')?.hasAttribute('src')).toBe(false);
+
+		load();
+		await decodedCopies();
+
+		expect(pictureOf(target, 'studio')?.getAttribute('src')).toBe(PIXELS);
+	});
+
+	it('lends nothing that loads after it is disposed of', async () => {
+		decodes();
+		const { picture, load } = loading();
+		const target = strip({ studio: null });
+		const lender = thumbnailLender([picture]);
+		lender.lend(target);
+
+		lender.dispose();
+		load();
+		await decodedCopies();
 
 		expect(pictureOf(target, 'studio')?.hasAttribute('src')).toBe(false);
 	});

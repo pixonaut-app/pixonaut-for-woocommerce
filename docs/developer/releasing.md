@@ -34,8 +34,21 @@ records the last released version.
 release-please opens that pull request with the workflow's `GITHUB_TOKEN`,
 so the repository needs **Settings → Actions → General → Allow GitHub Actions
 to create and approve pull requests**. Without it the run fails with "GitHub
-Actions is not permitted to create or approve pull requests"; the alternative
-is a personal access token passed to the action as its `token`.
+Actions is not permitted to create or approve pull requests".
+
+A pull request opened or updated with `GITHUB_TOKEN` starts no `pull_request`
+workflow: GitHub lists a **Pull request** run for it that fails at once ("This
+run likely failed because of a workflow file issue") with no jobs. The
+`Release` workflow therefore starts the **Pull request** workflow itself, on
+the release branch, and its checks land on the pull request's head commit as
+the required checks.
+
+To have release-please open the pull request as someone else, so its own
+events start the checks and no failed run is listed, add a repository secret
+`RELEASE_PLEASE_TOKEN`: a fine-grained personal access token, or a GitHub App
+installation token, for this repository with **Contents** and **Pull
+requests** read and write. The `Release` workflow uses it when it is set, and
+then starts no checks of its own.
 
 Merge the release pull request, then run the workflow again: that run tags
 the version (`v1.1.0`) and creates the GitHub Release, checks that no

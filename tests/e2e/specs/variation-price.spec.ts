@@ -105,17 +105,15 @@ test('a theme’s price target in the add-to-cart form takes the price instead o
 			'<div class="pixonaut-shop-price" data-pixonaut-price>Price</div>',
 		);
 	});
-	// Listening before the size is chosen, so the event cannot fire first.
+	// Listening before the size is chosen, so its event cannot fire first.
+	// The page's opening variation tells its own price too, possibly after
+	// this: every event is kept, and the chosen variation's is read.
 	await page.locator('.pixonaut-form').evaluate((form) => {
-		form.addEventListener(
-			'pixonaut:price',
-			(event) => {
-				(window as unknown as { priceDetail: unknown }).priceDetail = (
-					event as CustomEvent
-				).detail;
-			},
-			{ once: true },
-		);
+		const details: unknown[] = [];
+		(window as unknown as { priceDetails: unknown[] }).priceDetails = details;
+		form.addEventListener('pixonaut:price', (event) => {
+			details.push((event as CustomEvent).detail);
+		});
 	});
 
 	await chooseSize(page, 'Large');
@@ -128,7 +126,13 @@ test('a theme’s price target in the add-to-cart form takes the price instead o
 		await page.locator('input[name="variation_id"]').inputValue(),
 	);
 	const detail = await page.waitForFunction(
-		() => (window as unknown as { priceDetail?: unknown }).priceDetail,
+		(chosen) =>
+			(
+				window as unknown as {
+					priceDetails: { variationId?: number }[];
+				}
+			).priceDetails.find((each) => each.variationId === chosen),
+		variationId,
 	);
 	expect(await detail.jsonValue()).toMatchObject({
 		side: 'front',

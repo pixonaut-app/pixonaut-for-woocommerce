@@ -608,7 +608,9 @@ final class Plugin {
 		$this->opening_price()->register();
 		( new OpeningDefaults() )->register();
 		( new VariationsUpFront( $this->inline_products() ) )->register();
-		( new DeliveryRows( $this->inline_products(), new DeliveryTime( $this->settings() ), new VariationSlots( $this->file ) ) )->register();
+		$slots = new VariationSlots( $this->file );
+		$slots->register();
+		( new DeliveryRows( $this->inline_products(), new DeliveryTime( $this->settings() ), $slots ) )->register();
 		( new DesignerSummary( $this->inline_products() ) )->register();
 		( new PrintedSwatches( $this->inline_products(), $this->settings(), $this->swatch_looks(), $this->choice_prices() ) )->register();
 		( new PrintedOptionPrices( $this->inline_products(), $this->settings(), $this->choice_prices() ) )->register();
