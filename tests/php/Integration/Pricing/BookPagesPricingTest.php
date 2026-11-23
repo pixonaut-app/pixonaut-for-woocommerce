@@ -13,6 +13,7 @@ use Pixonaut\WooCommerce\Catalogue\BlankOptionLinks;
 use Pixonaut\WooCommerce\Catalogue\ProductConfig;
 use Pixonaut\WooCommerce\Catalogue\ProductVariant;
 use Pixonaut\WooCommerce\Pricing\PriceState;
+use Pixonaut\WooCommerce\Pricing\PriceTax;
 use Pixonaut\WooCommerce\Pricing\ProductPricing;
 use WC_Product_Attribute;
 use WC_Product_Variable;
@@ -104,7 +105,7 @@ final class BookPagesPricingTest extends PricingTestCase {
 			'60-sidor' => 60,
 		) as $slug => $pages ) {
 			$cost = self::amount( (string) self::COSTS_BY_PAGES[ $pages ] ) + self::amount( self::SHIPPING );
-			$this->assertSame( $rule->price_for( $cost ), self::amount( $this->price( $ids[ $slug ] ) ), $slug . ' is priced at its own count' );
+			$this->assertSame( $rule->price_for( $cost, PriceTax::of( $this->product( $ids[ $slug ] ) ) ), self::amount( $this->price( $ids[ $slug ] ) ), $slug . ' is priced at its own count' );
 			$stored = PriceState::stored_on( $this->product( $ids[ $slug ] ) )->cost;
 			$this->assertNotNull( $stored );
 			$this->assertSame( $pages, $stored->pages );
