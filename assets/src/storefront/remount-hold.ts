@@ -146,6 +146,7 @@ export function holdShown(
 				element.style.removeProperty('min-height');
 			}
 			lend();
+			lender?.dispose();
 			lender = null;
 			for (const node of placed.splice(0)) {
 				node.parentNode?.removeChild(node);

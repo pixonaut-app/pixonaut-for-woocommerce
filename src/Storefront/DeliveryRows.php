@@ -161,7 +161,7 @@ final class DeliveryRows {
 				'<tr class="wp-block-product-specifications-item wp-block-product-specifications-item-%1$s"><th scope="row" class="wp-block-product-specifications-item__label">%2$s</th><td class="wp-block-product-specifications-item__value">%3$s</td></tr>',
 				esc_attr( $key ),
 				esc_html( $row['label'] ),
-				wp_kses_post( $row['value'] )
+				$this->slots->kses( $row['value'] )
 			);
 		}
 		if ( '' === $html ) {

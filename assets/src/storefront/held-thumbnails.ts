@@ -7,6 +7,9 @@ export type ThumbnailLender = {
 	/** Shows, in each thumbnail of the strip in `target` the SDK has not
 	 *  drawn yet, the held picture of the same view. */
 	lend(target: HTMLElement): void;
+	/** Lends no more: a picture that loads later is not lent, and the
+	 *  strips and copies are let go of. */
+	dispose(): void;
 };
 
 /**
@@ -31,6 +34,7 @@ export function thumbnailLender(
 	// Kept while the lender is, so the browser keeps each copy decoded.
 	const decoded: HTMLImageElement[] = [];
 	const targets = new Set<HTMLElement>();
+	const disposed = new AbortController();
 	const lendTo = (target: HTMLElement): void => {
 		for (const thumbnail of target.querySelectorAll<HTMLElement>(
 			`[${VIEW_ID_ATTRIBUTE}]`,
@@ -48,15 +52,19 @@ export function thumbnailLender(
 			}
 		}
 	};
-	const keep = (viewId: string, picture: HTMLImageElement): void => {
+	const keep = (
+		viewId: string,
+		picture: HTMLImageElement,
+	): HTMLImageElement | null => {
 		const standIn = pixelsOf(picture);
 		if (standIn === null || byView.has(viewId)) {
-			return;
+			return null;
 		}
 		byView.set(viewId, standIn);
 		const copy = document.createElement('img');
 		copy.src = standIn;
 		decoded.push(copy);
+		return copy;
 	};
 	const seen = new Set<string>();
 	for (const picture of held) {
@@ -72,22 +80,45 @@ export function thumbnailLender(
 			continue;
 		}
 		// Drawn again just before the hold, the SDK's next picture of the
-		// view still loading: it lends that one once it has loaded.
+		// view still loading: it lends that one once it has loaded, and its
+		// copy decoded, so the strip shows it in the frame it is given it.
 		picture.addEventListener(
 			'load',
 			() => {
-				keep(viewId, picture);
-				for (const target of targets) {
-					lendTo(target);
+				const copy = keep(viewId, picture);
+				if (copy === null) {
+					return;
 				}
+				copy.decode().then(
+					() => {
+						if (disposed.signal.aborted) {
+							return;
+						}
+						for (const target of targets) {
+							lendTo(target);
+						}
+					},
+					() => {
+						// A copy that does not decode is not lent.
+					},
+				);
 			},
-			{ once: true },
+			{ once: true, signal: disposed.signal },
 		);
 	}
 	return {
 		lend(target) {
+			if (disposed.signal.aborted) {
+				return;
+			}
 			targets.add(target);
 			lendTo(target);
+		},
+		dispose() {
+			disposed.abort();
+			targets.clear();
+			byView.clear();
+			decoded.length = 0;
 		},
 	};
 }

@@ -66,6 +66,12 @@ final class VariationSlots {
 	private const STYLE_PROPERTIES = array( 'display', 'grid-row', 'grid-column', 'margin', 'visibility' );
 
 	/**
+	 * WooCommerce's template of a product's attributes table, which passes
+	 * each row's value through `wp_kses_post`.
+	 */
+	private const ATTRIBUTES_TEMPLATE = 'single-product/product-attributes.php';
+
+	/**
 	 * @param string $plugin_file The plugin's main file.
 	 */
 	public function __construct(
@@ -75,14 +81,53 @@ final class VariationSlots {
 
 	/** Hooks into WordPress. */
 	public function register(): void {
+		add_action( 'woocommerce_before_template_part', array( $this, 'enter_template' ) );
+		add_action( 'woocommerce_after_template_part', array( $this, 'leave_template' ) );
+	}
+
+	/**
+	 * Lets `wp_kses_post` keep a place's style while WooCommerce prints the
+	 * attributes table.
+	 *
+	 * @param mixed $template_name The template WooCommerce prints.
+	 */
+	public function enter_template( mixed $template_name ): void {
+		if ( self::ATTRIBUTES_TEMPLATE === $template_name ) {
+			add_filter( 'safe_style_css', array( $this, 'keep_styles' ) );
+		}
+	}
+
+	/**
+	 * Puts `wp_kses_post` back as it was once the attributes table is printed.
+	 *
+	 * @param mixed $template_name The template WooCommerce printed.
+	 */
+	public function leave_template( mixed $template_name ): void {
+		if ( self::ATTRIBUTES_TEMPLATE === $template_name ) {
+			remove_filter( 'safe_style_css', array( $this, 'keep_styles' ) );
+		}
+	}
+
+	/**
+	 * `wp_kses_post` of HTML that may hold a place, keeping its style.
+	 *
+	 * @param string $html The HTML.
+	 */
+	public function kses( string $html ): string {
 		add_filter( 'safe_style_css', array( $this, 'keep_styles' ) );
+		try {
+			return wp_kses_post( $html );
+		} finally {
+			remove_filter( 'safe_style_css', array( $this, 'keep_styles' ) );
+		}
 	}
 
 	/**
 	 * Lets `wp_kses_post` keep the properties a place's style sets, as it
 	 * does itself from WordPress 7.1. Before that it drops `display` or
 	 * `visibility`, and every variation's text in a place shows at once,
-	 * one under another, until the script hides them.
+	 * one under another, until the script hides them. Only while a place is
+	 * sanitised: `enter_template()` and `kses()`.
 	 *
 	 * @param mixed $properties The CSS properties a style attribute may set.
 	 * @return mixed

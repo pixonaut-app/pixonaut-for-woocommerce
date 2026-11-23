@@ -58,6 +58,7 @@ describe('thumbnailLender', () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
 		drawImage.mockReset();
+		Reflect.deleteProperty(HTMLImageElement.prototype, 'decode');
 	});
 
 	it('shows the held picture of each view the next strip has not drawn yet', () => {
@@ -118,7 +119,8 @@ describe('thumbnailLender', () => {
 		expect(pictureOf(second, 'nursery')?.getAttribute('src')).toBe(PIXELS);
 	});
 
-	it('lends a held picture the SDK was drawing again once it has loaded', () => {
+	/** A held picture the SDK was drawing again: no pixels until `load()`. */
+	function loading(): { picture: HTMLImageElement; load(): void } {
 		const picture = pictureOf(strip({ studio: 'blob:redrawn' }), 'studio');
 		if (picture === null) {
 			throw new Error('No held picture.');
@@ -129,14 +131,50 @@ describe('thumbnailLender', () => {
 			naturalWidth: { get: () => (loaded ? DECODED_PX : 0) },
 			naturalHeight: { get: () => (loaded ? DECODED_PX : 0) },
 		});
+		return {
+			picture,
+			load() {
+				loaded = true;
+				picture.dispatchEvent(new Event('load'));
+			},
+		};
+	}
+
+	/** Gives pictures `decode()`, which jsdom lacks, decoding at once. */
+	function decodes(): void {
+		Object.defineProperty(HTMLImageElement.prototype, 'decode', {
+			value: () => Promise.resolve(),
+			configurable: true,
+		});
+	}
+
+	/** Lets the copies' decoding settle. */
+	const decodedCopies = () => new Promise((resolve) => setTimeout(resolve));
+
+	it('lends a held picture the SDK was drawing again once it has loaded and its copy decoded', async () => {
+		decodes();
+		const { picture, load } = loading();
+		const target = strip({ studio: null });
+		thumbnailLender([picture]).lend(target);
+		expect(pictureOf(target, 'studio')?.hasAttribute('src')).toBe(false);
+
+		load();
+		await decodedCopies();
+
+		expect(pictureOf(target, 'studio')?.getAttribute('src')).toBe(PIXELS);
+	});
+
+	it('lends nothing that loads after it is disposed of', async () => {
+		decodes();
+		const { picture, load } = loading();
 		const target = strip({ studio: null });
 		const lender = thumbnailLender([picture]);
 		lender.lend(target);
+
+		lender.dispose();
+		load();
+		await decodedCopies();
+
 		expect(pictureOf(target, 'studio')?.hasAttribute('src')).toBe(false);
-
-		loaded = true;
-		picture.dispatchEvent(new Event('load'));
-
-		expect(pictureOf(target, 'studio')?.getAttribute('src')).toBe(PIXELS);
 	});
 });
