@@ -26,7 +26,7 @@ final class CardStructuredDataTest extends WP_UnitTestCase {
 	}
 
 	public function tear_down(): void {
-		unset( $GLOBALS['product'] );
+		unset( $GLOBALS['product'], $GLOBALS['post'] );
 		self::forget_described();
 		parent::tear_down();
 	}
@@ -79,13 +79,15 @@ final class CardStructuredDataTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Runs the summary hooks with a product as the global one, as a Product
-	 * Summary block does.
+	 * Runs the summary hooks with a product as the global one, and its post
+	 * as the loop's, as a Product Summary block in a product list does.
+	 * WooCommerce before 11.0 reads the brand from the global post.
 	 *
 	 * @param WC_Product $product The product.
 	 */
 	private function summary_of( WC_Product $product ): void {
 		$GLOBALS['product'] = $product;
+		$GLOBALS['post']    = get_post( $product->get_id() ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- the post the list's loop sets.
 		ob_start();
 		do_action( 'woocommerce_single_product_summary' );
 		ob_end_clean();

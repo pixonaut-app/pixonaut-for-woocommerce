@@ -37,7 +37,12 @@ final class QueryNameFieldTest extends WP_UnitTestCase {
 		remove_action( 'woocommerce_attribute_added', array( $this->field, 'save_attribute' ) );
 		remove_action( 'woocommerce_attribute_updated', array( $this->field, 'save_attribute' ) );
 		foreach ( $this->attributes as $id ) {
+			$attribute = wc_get_attribute( $id );
 			wc_delete_attribute( $id );
+			// WooCommerce before 11.2 leaves a deleted attribute's taxonomy registered, and refuses its slug to the next test.
+			if ( null !== $attribute ) {
+				unregister_taxonomy( $attribute->slug );
+			}
 		}
 		delete_transient( 'wc_attribute_taxonomies' );
 		delete_option( QueryNames::OPTION );

@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace Pixonaut\WooCommerce\Tests\Integration\Catalogue;
 
 use Pixonaut\WooCommerce\Catalogue\ProductMeta;
+use WC_Data;
 use WC_Product;
 use WC_Product_Simple;
 use WP_UnitTestCase;
@@ -17,6 +18,9 @@ use WP_UnitTestCase;
  * WordPress's reads of it, with no query of their own.
  */
 final class ProductMetaTest extends WP_UnitTestCase {
+
+	/** The object cache group WooCommerce keeps a product's meta rows in. */
+	private const WC_CACHE_GROUP = 'products';
 
 	public function test_primed_products_read_their_meta_without_a_query(): void {
 		$ids = array();
@@ -104,7 +108,8 @@ final class ProductMetaTest extends WP_UnitTestCase {
 	 */
 	private function forget( array $ids ): void {
 		foreach ( $ids as $id ) {
-			$this->product( $id )->delete_meta_cache();
+			// What WC_Data::delete_meta_cache() does, which WooCommerce has only from 11.0.
+			wp_cache_delete( WC_Data::generate_meta_cache_key( $id, self::WC_CACHE_GROUP ), self::WC_CACHE_GROUP );
 			wp_cache_delete( (string) $id, 'post_meta' );
 		}
 	}

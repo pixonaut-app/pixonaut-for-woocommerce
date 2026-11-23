@@ -52,6 +52,9 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 
 	private const PRICE_HIGH = '391';
 
+	/** Where WooCommerce keeps its product version. */
+	private const PRODUCT_VERSION_TRANSIENT = 'product-transient-version';
+
 	/**
 	 * WooCommerce's reader of the Product Filters block's data, which it keeps internal.
 	 */
@@ -670,7 +673,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		}
 		$this->assertArrayHasKey( 'store', $this->due()['dependencies'], 'noted with the change' );
 		// WooCommerce moves its product version once the request that changed a product ends.
-		\WC_Cache_Helper::get_transient_version( 'product', true );
+		self::move_product_version();
 		FreshRequest::forget_filter_reads();
 		as_unschedule_all_actions( FilterDataRefresh::HOOK );
 
@@ -693,7 +696,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		FreshRequest::forget_filter_reads();
 		update_option( Schema::FILTER_DATA_DUE_OPTION, array(), false );
 		// As after a change WooCommerce sees, a sale's stock among them, that the plugin does not.
-		\WC_Cache_Helper::get_transient_version( 'product', true );
+		self::move_product_version();
 
 		$this->assertSame( array( 'pa_ramfarg' => array( 'pa_inramning' => array( 'ram', 'hangare' ) ) ), AttributeDependencies::store() );
 		$this->assertArrayHasKey( 'store', $this->due()['dependencies'] );
@@ -703,7 +706,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	public function test_a_save_notes_the_dependencies_anew_after_the_request_found_them_out_of_date(): void {
 		AttributeDependencies::store();
 		FreshRequest::forget_filter_reads();
-		\WC_Cache_Helper::get_transient_version( 'product', true );
+		self::move_product_version();
 		AttributeDependencies::store();
 		$found = $this->due()['dependencies']['store'] ?? null;
 		$this->assertNotNull( $found );
@@ -718,7 +721,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		$this->settle();
 		AttributeDependencies::store();
 		FreshRequest::forget_filter_reads();
-		\WC_Cache_Helper::get_transient_version( 'product', true );
+		self::move_product_version();
 		update_option( Schema::FILTER_DATA_DUE_OPTION, array(), false );
 
 		$this->counts( 'pa_ramfarg', array( 'filter_inramning' => 'hangare' ) );
@@ -957,6 +960,7 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 		$gone = wc_get_product( $this->variations_in( $this->skog, '50x70' )[0] );
 		$this->assertInstanceOf( WC_Product_Variation::class, $gone );
 		$gone->delete( true );
+		self::move_product_version();
 		FreshRequest::forget_filter_reads();
 
 		$this->assertSame( $before, $this->counts( 'pa_storlek', array() ), 'served as kept while the job works them out again' );
@@ -1442,5 +1446,18 @@ final class FilterMatchesTest extends WP_UnitTestCase {
 	 */
 	private function forget_chosen_filters(): void {
 		( new \ReflectionProperty( WC_Query::class, 'chosen_attributes' ) )->setValue( null, null );
+	}
+
+	/**
+	 * Moves WooCommerce's product version, as the end of a request that
+	 * changed a product does. WooCommerce before 11.2 counts it in whole
+	 * seconds, so a change in the second a read was kept would leave it as
+	 * it was.
+	 */
+	private static function move_product_version(): void {
+		$before = (string) \WC_Cache_Helper::get_transient_version( 'product' );
+		if ( (string) \WC_Cache_Helper::get_transient_version( 'product', true ) === $before ) {
+			set_transient( self::PRODUCT_VERSION_TRANSIENT, (string) ( (int) $before + 1 ) );
+		}
 	}
 }

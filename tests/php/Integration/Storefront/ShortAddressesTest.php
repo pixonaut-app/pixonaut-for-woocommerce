@@ -227,7 +227,18 @@ final class ShortAddressesTest extends WP_UnitTestCase {
 		$html = html_entity_decode( $html, ENT_QUOTES );
 		$this->assertStringContainsString( '"params":{"filter_bild":"utan-bild","query_type_bild":"or"}', $html, 'the block reads the filter' );
 		$this->assertStringContainsString( '"value":"utan-bild","selected":true', $html, 'and shows the value chosen' );
-		$this->assertStringContainsString( '"value":"med-bild","selected":false,"type":"attribute\/bild","attributeQueryType":"or","count":1', $html, 'and counts each value with the filters on' );
+		// Its keys in either order: WooCommerce 10.6 puts the count before the type.
+		$this->assertSame( 1, preg_match( '/\{[^{}]*"value":"med-bild"[^{}]*\}/', $html, $item ), 'and lists each value' );
+		$expected = array(
+			'attributeQueryType' => 'or',
+			'count'              => 1,
+			'selected'           => false,
+			'type'               => 'attribute/bild',
+			'value'              => 'med-bild',
+		);
+		$listed   = array_intersect_key( (array) json_decode( $item[0] ?? '', true ), $expected );
+		ksort( $listed );
+		$this->assertSame( $expected, $listed, 'and counts each value with the filters on' );
 		$this->assertTrue( wp_script_is( ShortAddresses::SCRIPT_HANDLE, 'enqueued' ), 'with the script shortening the address it goes to' );
 	}
 

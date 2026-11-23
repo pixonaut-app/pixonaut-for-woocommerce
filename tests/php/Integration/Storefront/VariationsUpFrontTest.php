@@ -56,8 +56,9 @@ final class VariationsUpFrontTest extends WP_UnitTestCase {
 		$this->go_to( (string) get_permalink( $poster->get_id() ) );
 		$form = $this->form( $poster );
 
+		// WordPress 6.9 wraps an inline script in a type and a CDATA section, unless the theme declares HTML5 scripts.
 		$this->assertSame( -1, $this->threshold( $poster ), 'WooCommerce reads none of them for the form' );
-		$this->assertSame( 1, preg_match( '/<form[^>]*data-product_variations="false">\s*<script>(.*?)<\/script>/s', $form, $script ), 'the script is the first thing in the form' );
+		$this->assertSame( 1, preg_match( '/<form[^>]*data-product_variations="false">\s*<script[^>]*>\s*(?:\/\* <!\[CDATA\[ \*\/)?(.*?)(?:\/\* \]\]> \*\/)?\s*<\/script>/s', $form, $script ), 'the script is the first thing in the form' );
 		$this->assertStringNotContainsString( '<', $script[1] ?? '' );
 		$this->assertSame( 1, preg_match( '/setAttribute\("data-product_variations",(".*?")\);/', $script[1] ?? '', $handed ) );
 		$this->assertSame( json_decode( (string) wp_json_encode( $poster->get_available_variations() ), true ), json_decode( (string) json_decode( $handed[1] ?? '' ), true ) );

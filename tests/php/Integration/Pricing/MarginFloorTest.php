@@ -159,8 +159,9 @@ final class MarginFloorTest extends PricingTestCase {
 
 	public function test_a_cost_without_an_exchange_rate_keeps_the_mark_until_it_is_known_again(): void {
 		update_option( 'woocommerce_currency', 'SEK' );
-		// One euro is 11.50 kronor.
-		$this->rates = array( 'SEK' => '11.50' );
+		// One euro is 11.50 kronor, as of today: the plugin's own floor tells whether rates are a week old by the clock.
+		$this->rates      = array( 'SEK' => '11.50' );
+		$this->rates_date = gmdate( 'Y-m-d' );
 		$this->plugin->settings()->set( Settings::PRICE_CURRENCY_BUFFER, '0' );
 		$this->plugin->settings()->set( Settings::PRICE_MARGIN_FLOOR, '30' );
 		$id = $this->simple_product( 'v_a3', '250' );

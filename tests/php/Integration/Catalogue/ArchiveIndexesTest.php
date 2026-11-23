@@ -428,7 +428,8 @@ final class ArchiveIndexesTest extends WP_UnitTestCase {
 	 */
 	private function named(): array {
 		$head = $this->head();
-		$this->assertSame( 1, preg_match( '#<script id="pixonaut-archive-index" type="application/json">(.*?)</script>#s', $head, $found ), $head );
+		// Its attributes in either order: WordPress 6.9 prints the type first.
+		$this->assertSame( 1, preg_match( '#<script(?=[^>]*\sid="pixonaut-archive-index")(?=[^>]*\stype="application/json")[^>]*>(.*?)</script>#s', $head, $found ), $head );
 		$named = json_decode( $found[1] ?? '', true );
 		$this->assertIsArray( $named );
 		$this->assertIsString( $named['url'] ?? null );
