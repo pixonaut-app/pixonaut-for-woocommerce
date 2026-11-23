@@ -12,6 +12,7 @@ namespace Pixonaut\WooCommerce\Catalogue;
 use Pixonaut\WooCommerce\Schema;
 use WC_Product;
 use WC_Product_Attribute;
+use WC_Product_Variation;
 use WP_Term;
 
 /**
@@ -46,6 +47,12 @@ final class BlankOptionLinks {
 	 * place of an option; no option Pixonaut writes starts with `@`.
 	 */
 	public const PAGE_COUNT = '@pages';
+
+	/**
+	 * The page count of a product with an attribute standing for one that
+	 * names no count: no printshop prices a book at it.
+	 */
+	public const UNRESOLVED_PAGES = 0;
 
 	/**
 	 * Longest option or value name kept; Pixonaut's are far shorter.
@@ -161,9 +168,9 @@ final class BlankOptionLinks {
 			);
 			foreach ( $values as $term_id => $value ) {
 				$value = self::clean( $value );
-				// A page count is kept as its number alone.
+				// A page count is kept as its number alone, and a value naming none as no value.
 				$value = self::PAGE_COUNT === $option ? (string) self::count_in( $value ) : $value;
-				if ( $term_id > 0 && '' !== $value && '0' !== $value ) {
+				if ( $term_id > 0 && '' !== $value ) {
 					$link['values'][ $term_id ] = $value;
 				}
 			}
@@ -208,19 +215,30 @@ final class BlankOptionLinks {
 
 	/**
 	 * The page count a variation, or a product with one value of it, is
-	 * sold at by an attribute standing for it; null for none.
+	 * sold at by an attribute standing for it: the variation's value, else
+	 * its product's one value of an attribute it does not vary by. Null when
+	 * it has no such attribute; `UNRESOLVED_PAGES` when it has one but no
+	 * count can be read from it: a variation for any value, a product with
+	 * several, or a value with no number in it.
 	 *
 	 * @param WC_Product $product A product or variation.
 	 */
 	public static function page_count( WC_Product $product ): ?int {
-		if ( array() === self::stored() ) {
+		if ( ! in_array( self::PAGE_COUNT, array_column( self::stored(), 'option' ), true ) ) {
 			return null;
 		}
-		foreach ( $product->get_attributes() as $name => $value ) {
-			$term = is_string( $name ) && self::PAGE_COUNT === self::option_of( $name ) ? self::term( $name, $value ) : null;
-			if ( null !== $term ) {
-				return self::count_in( self::stands_for( $name, $term ) );
+		$attributes = $product->get_attributes();
+		if ( $product instanceof WC_Product_Variation ) {
+			$parent = wc_get_product( $product->get_parent_id() );
+			// Its own values first: a variation names only the attributes it varies by.
+			$attributes += $parent instanceof WC_Product ? $parent->get_attributes() : array();
+		}
+		foreach ( $attributes as $name => $value ) {
+			if ( ! is_string( $name ) || self::PAGE_COUNT !== self::option_of( $name ) ) {
+				continue;
 			}
+			$term = self::term( $name, $value );
+			return null === $term ? self::UNRESOLVED_PAGES : ( self::count_in( self::stands_for( $name, $term ) ) ?? self::UNRESOLVED_PAGES );
 		}
 		return null;
 	}

@@ -172,7 +172,7 @@ final class BookPagesPricingTest extends PricingTestCase {
 
 		$stored = PriceState::stored_on( $this->product( $ids['44-sidor'] ) )->cost;
 		$this->assertNotNull( $stored );
-		$this->assertNull( $stored->pages );
+		$this->assertSame( 44, $stored->pages );
 		$this->assertSame( self::amount( self::FEWEST_PRICED ), $stored->product );
 		$this->assertFalse( ProductPricing::unpriced_pages( $this->product( $ids['44-sidor'] ) ) );
 	}
@@ -187,6 +187,56 @@ final class BookPagesPricingTest extends PricingTestCase {
 		$variation->save();
 
 		$this->assertSame( array(), array_filter( array_map( static fn ( $row ) => $row->cost, $this->pricing->rows( $this->parent_of( $ids['44-sidor'] ) ) ) ) );
+	}
+
+	public function test_a_count_sold_before_its_cost_is_read_cannot_be_bought(): void {
+		$ids = $this->notebook( array( '44-sidor' ) );
+		$this->assertFalse( $this->product( $ids['44-sidor'] )->is_purchasable(), 'never read' );
+
+		// A cost read before the attribute stood for a page count is no count's.
+		$this->script_costs( array( self::NOTEBOOK => self::FEWEST_PRICED ), self::SHIPPING );
+		BlankOptionLinks::set( $this->attribute, '', array() );
+		$this->pricing->refresh( $this->parent_of( $ids['44-sidor'] ) );
+		$this->assertTrue( $this->product( $ids['44-sidor'] )->is_purchasable() );
+		BlankOptionLinks::set( $this->attribute, BlankOptionLinks::PAGE_COUNT, array() );
+
+		$this->assertFalse( $this->product( $ids['44-sidor'] )->is_purchasable() );
+		$this->assertSame( array(), array_filter( array_map( static fn ( $row ) => $row->cost, $this->pricing->rows( $this->parent_of( $ids['44-sidor'] ) ) ) ) );
+	}
+
+	public function test_a_variation_for_any_count_cannot_be_bought(): void {
+		$ids       = $this->notebook( array( '44-sidor' ) );
+		$variation = $this->product( $ids['44-sidor'] );
+		$variation->set_attributes( array( self::TAXONOMY => '' ) );
+		$variation->save();
+		$this->script_book_costs();
+
+		$this->pricing->refresh( $this->parent_of( $ids['44-sidor'] ) );
+
+		$this->assertSame( BlankOptionLinks::UNRESOLVED_PAGES, BlankOptionLinks::page_count( $this->product( $ids['44-sidor'] ) ) );
+		$this->assertFalse( $this->product( $ids['44-sidor'] )->is_purchasable() );
+	}
+
+	public function test_a_count_the_variations_do_not_vary_by_is_the_products_one_value(): void {
+		$ids     = $this->notebook( array( '60-sidor' ) );
+		$product = $this->parent_of( $ids['60-sidor'] );
+		$pages   = $product->get_attributes()[ self::TAXONOMY ];
+		$pages->set_variation( false );
+		$size = new WC_Product_Attribute();
+		$size->set_name( self::AXIS );
+		$size->set_options( array( 'A5' ) );
+		$size->set_variation( true );
+		$product->set_attributes( array( $pages, $size ) );
+		$product->save();
+		$variation = $this->product( $ids['60-sidor'] );
+		$variation->set_attributes( array( sanitize_title( self::AXIS ) => 'A5' ) );
+		$variation->save();
+		$this->script_book_costs();
+
+		$this->pricing->refresh( $this->parent_of( $ids['60-sidor'] ) );
+
+		$this->assertSame( 60, BlankOptionLinks::page_count( $this->product( $ids['60-sidor'] ) ) );
+		$this->assertSame( self::amount( '15.10' ), PriceState::stored_on( $this->product( $ids['60-sidor'] ) )->cost?->product );
 	}
 
 	/**

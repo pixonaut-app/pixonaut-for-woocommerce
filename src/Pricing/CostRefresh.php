@@ -169,13 +169,15 @@ final class CostRefresh {
 
 	/**
 	 * Reads the costs of a product that was just checked again with
-	 * Pixonaut, when one of its prices follows the rule.
+	 * Pixonaut, when one of its prices follows the rule or it sells a book
+	 * at a page count.
 	 *
 	 * @param WC_Product $product The product, or one of its variations.
 	 */
 	public function rechecked( WC_Product $product ): void {
 		$owner = $product->is_type( 'variation' ) ? wc_get_product( $product->get_parent_id() ) : $product;
-		if ( $owner instanceof WC_Product && ( ( $this->every )() || '' !== $owner->get_meta( ProductPricing::WATCH_META_KEY, true ) ) ) {
+		// A book sold at a page count is bought only once its cost at that count is read.
+		if ( $owner instanceof WC_Product && ( ( $this->every )() || '' !== $owner->get_meta( ProductPricing::WATCH_META_KEY, true ) || ProductPricing::sells_pages( $owner ) ) ) {
 			$this->refresh( $owner );
 		}
 	}

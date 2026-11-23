@@ -714,8 +714,11 @@ final class ProductPricing {
 	}
 
 	/**
-	 * Whether a product or variation sells a book at a page count its
-	 * printshop gives no price for, as last read: nothing is sold at one.
+	 * Whether a product or variation sells a book at a page count with no
+	 * price known at it: one its printshop gives no price for, one no count
+	 * can be read from, or one whose cost was not read since it was sold at
+	 * that count. Nothing is sold at one, so a price set for another count
+	 * is never charged for it.
 	 *
 	 * @param WC_Product $item The product or variation.
 	 */
@@ -725,7 +728,21 @@ final class ProductPricing {
 			return false;
 		}
 		$cost = self::known_cost( $item, PriceState::stored_on( $item ) );
-		return null !== $cost && null !== $cost->pages && null === $cost->product;
+		return null === $cost || null === $cost->product;
+	}
+
+	/**
+	 * Whether a product, or one of its variations, sells a book at a page count.
+	 *
+	 * @param WC_Product $product A simple or variable product.
+	 */
+	public static function sells_pages( WC_Product $product ): bool {
+		foreach ( self::items( $product ) as $item ) {
+			if ( null !== BlankOptionLinks::page_count( $item ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

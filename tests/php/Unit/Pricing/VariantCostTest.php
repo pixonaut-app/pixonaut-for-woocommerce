@@ -93,7 +93,8 @@ final class VariantCostTest extends TestCase {
 	public function test_a_variant_printed_as_no_pages_is_its_own_cost_at_any_count(): void {
 		$cost = VariantCost::list_from( array( self::row( 'v_a3', '167.10', '65.50' ) + array( 'pages' => array() ) ) )['v_a3'];
 
-		$this->assertSame( $cost, $cost->at_pages( 44 ) );
+		$at = $cost->at_pages( 44 );
+		$this->assertSame( array( 44, 167100, 65500 ), array( $at->pages, $at->product, $at->shipping ), 'its own cost, said to be at the count' );
 		$this->assertArrayNotHasKey( 'pages', $cost->to_array() );
 	}
 

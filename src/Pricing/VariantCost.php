@@ -49,15 +49,20 @@ final class VariantCost {
 	}
 
 	/**
-	 * The cost at a page count: the variant's own for no count, or for a
-	 * variant printed as no pages; at a count its placement does not offer,
-	 * one without a price, which nothing is sold at.
+	 * The cost at a page count: the variant's own for no count; for a
+	 * variant printed as no pages, its own at every count; at a count its
+	 * placement does not offer, one without a price, which nothing is sold
+	 * at. A cost at a count says so (`pages`), so a cost stored without one
+	 * is never taken for a count's.
 	 *
 	 * @param int|null $pages The page count, inner pages only; null for none.
 	 */
 	public function at_pages( ?int $pages ): self {
-		if ( null === $pages || array() === $this->by_pages ) {
+		if ( null === $pages ) {
 			return $this;
+		}
+		if ( array() === $this->by_pages ) {
+			return new self( $this->product, $this->currency, $this->shipping, $this->shipping_currency, $this->region, $this->read_at, $this->times, $pages );
 		}
 		return $this->by_pages[ $pages ] ?? new self( null, region: $this->region, read_at: $this->read_at, pages: $pages );
 	}
