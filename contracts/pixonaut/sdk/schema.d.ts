@@ -14,7 +14,7 @@ export interface paths {
         };
         /**
          * Fetch a print's artwork
-         * @description The link a printshop is handed with an order, or the `fileUrl` a read of a completed print answers with. The token in the path is signed by the api and expires; no key is needed. It may end in the file's type (`.pdf`, `.png` or `.tiff`), which some printshops read before fetching a file, and is read without it. Opening a read's link is a get of the print's files by its reader: the first counts as an order, and is refused as the print's own file route refuses one (`plan_limit_reached`, `order_balance_empty`, or `forbidden` for a reader without `orders:create`).
+         * @description The link a printshop is handed with an order, or the `fileUrl` a read of a completed print answers with. The token in the path is signed by the api and expires; no key is needed. It may end in the file's type (`.pdf`, `.png` or `.tiff`), which some printshops read before fetching a file, and is read without it. Opening a read's link is a get of the print's files by its reader: the first counts as an item, and is refused as the print's own file route refuses one (`plan_limit_reached`, `order_balance_empty`, or `forbidden` for a reader without `orders:create`).
          */
         get: operations["prints.artwork.get"];
         put?: never;
@@ -1883,30 +1883,10 @@ export interface paths {
         get: operations["orders.list"];
         put?: never;
         /**
-         * Place one order for the prints of one item
-         * @description A secret key, an integration key, or a studio member holding `orders:create`. Places ONE order for every print in `prints`: the prints of one physical item, a front and a back of one shirt, made by one printshop as one item. The prints must be prints of designs committed on the same blank, each in a placement of its own, or all on no blank, completed or still rendering. An order of prints still rendering is written `awaiting_prints` and answered 201 at once; it goes to its printshop on its own once every print is complete, checked then against what needs the files (`technique_not_offered`, the sizes, the printshop's required keys), and a refusal then leaves it `failed` with `failureKind` naming it. A print of it that fails fails it `print_failed`, and prints not complete within three hours of placing fail it `prints_timed_out`. A print that failed is refused `409 print_not_completed`. `designs` names approved designs in place of their prints: the order makes a new print of each, as `POST /v1/prints` would, and waits for them, except that a standing design's order reuses the print of its current revision, completed or still rendering, and makes one only when there is none or it failed; an unknown design is `404 design_not_found`, one not approved `409 design_not_approved`, and nothing is written. Naming both `prints` and `designs`, or neither, is `400`. Every check that needs no files runs at placement: `422 print_without_placement` names a print committed before its placement was recorded, `422 mixed_blanks` answers prints on different blanks or some on a blank and some on none, and `422 duplicate_placement` two in one placement. Prints on a blank go to their blank's printshop, set when the blank was created; every print is checked against that printshop. `printshopId` naming another printshop is refused `422 printshop_differs_from_blank`, and naming the blank's own as an unknown field. Prints on no blank, such as a sign's front and back, go to the printshop the first print's design was committed with, else `printshopId`, else the workspace default, else are refused `409 print_needs_printshop`, except in a sandbox, where the order is placed with no printshop (`printshopConnectionId` null, `adapter` `none`); a print whose design was committed with another printshop is refused `422 print_committed_elsewhere`, naming it. A printshop that cannot make several prints as one item answers `422 printshop_cannot_combine`, and prints whose designs disagree on what the printshop makes one item from answer `422 prints_disagree` naming the key: nothing is written either way. One print places exactly the order `POST /v1/prints/{id}/orders` would. `quantity`, `externalRef`, `recipient`, `shippingAddress` and the `Idempotency-Key` header are as there; the first print's design's captured delivery is the one the order takes when the body names neither a recipient nor an address. A partner refusing the order is still a 201: the order is recorded as `failed`. A printshop the merchant paused takes no order: one going there is refused `409 printshop_paused`, naming it, and nothing is written. A print made by a method its printshop does not print with, where the printshop states what it prints with, is refused `422 technique_not_offered`, naming the placement, the method and the printshop's, and nothing is written. A placement its blank says an order must print, left without a print, is refused `422 placement_unfilled`, naming it, and nothing is written. A design has one live order, in any status but `failed` and `cancelled`, whoever placed it: an order of prints of a design that has one, or naming such a design, is refused `409 design_already_ordered`, naming the design and its newest live order, and nothing is written; two sent at once place one. `reorder: true` orders it again on purpose. A standing design is never refused `design_already_ordered`: it is ordered on every sale. A repeat with the first request's `Idempotency-Key` is answered with the first order before this is asked. `storeOrder` names the store order the item was sold in and how many items of it the store sends: the items bound for one printshop that takes several items in one order are sent to it together as one of its orders, so this order waits `awaiting_prints` for the others bound there, its prints done or not, and goes with them once every item has been placed and theirs are ready, or two hours after the first.
+         * Place an order of one or more items
+         * @description A secret key, an integration key, or a studio member holding `orders:create`. Places ONE order of the items in `items`, each the prints of one physical item (`prints`), or the approved designs they are made of (`designs`), with its `variant` and `quantity`; `recipient`, `shippingAddress` and `shipToAddressId` hold for the whole order, `externalRef` is your reference for the order and `items[].externalRef` for each item. Every item is checked as it is placed, and a refusal of any item refuses the order, answered with the refusal and `itemIndex`, the item's place in `items`. Each item goes to its blank's printshop, or for prints on no blank to the printshop its design was committed with, else its own `printshopId`, else the order's, else the workspace default. On a placement its blank prints as a range of pages, such as a notebook's inner pages, an item holds one print a page, each naming its `page`, and its printshop is handed them in the order one file holds them, by their placements' order on the blank and then by page; a printshop that makes no item of pages is refused `422 printshop_takes_no_pages`; `422 duplicate_page` and `422 page_missing` name a page named twice or left out, `422 page_count_out_of_range` a count off the placement's range or its steps, naming both, `422 page_on_unpaged_placement` a page on a placement of one page, and `422 page_not_as_proofed` a design proofed as one page of a count (`POST /v1/proofs` with `page` and `pageCount`) held as another page or at another count, naming both, and `422 page_ordered_alone` such a design held on no placement printed as pages. A placement whose area changes with the item's page count, such as a photo book's cover, is printed at the area of the item's count, and a print there whose design was made at a count its area is another size at (`POST /v1/proofs` with `pageCount` alone), at no count, or on an item with no pages, is refused `422 cover_not_at_page_count`, naming the item's count and the design's. An item whose prints are still rendering waits `awaiting_prints`; the items of an order of several wait until every item has been placed, and the items bound for one printshop that takes several items in one order go to it together as one printshop order once their prints are done. A partner refusing an item is still a 201: the item is recorded as `failed`. A design has one live item, in any status but `failed` and `cancelled`, whoever ordered it: an item of a design that has one is refused `409 design_already_ordered`, naming the design, its live item and that item's order; `reorder: true` orders it again on purpose. The answer is the order, as `GET /v1/orders/{id}` reads it, its items in the order `items` named them. A repeat with the first request's `Idempotency-Key` is answered with the first order.
          */
         post: operations["orders.create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/orders/batch": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Place an order of several items
-         * @description A secret key, or a studio member holding `orders:create`; a connected store's integration key places each item it sold through `POST /v1/orders`, naming its store order. Places an order of several items, each item an order of its own with its own status, tracking and retry, placed as `POST /v1/orders` places one: `items` names each item's `prints` or `designs`, its `variant` and its `quantity`; `recipient` and `shippingAddress` are required and, with `shipToAddressId`, `externalRef`, `printshopId` and `reorder`, hold for every item. Two or more items are each written `awaiting_prints`, whatever their printshop, and none goes until every item has been placed and the prints of those bound for its printshop are done; then the items bound for one printshop that takes several items in one order go to it as one of its orders, shipped together, and the items of a printshop that takes one item an order go to it one by one. A connection that sends drafts makes one draft of its items. An item refused refuses the order, answered as `POST /v1/orders` refuses one: the items placed before it are cancelled, and none is sent. An order whose placing was interrupted before every item was placed is never sent: two hours after its first item, its items fail `batch_incomplete`. One item places exactly the order `POST /v1/orders` would. `GET /v1/orders/{id}` names each order's other items in `orderedWith`, in the order the request named them. A repeat with the first request's `Idempotency-Key` is answered with the first request's orders.
-         */
-        post: operations["orders.createBatch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1920,24 +1900,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Read one order, with its history */
+        /** Read one order, with its items and parcels */
         get: operations["orders.get"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /**
-         * Set an order's status by hand
-         * @description A secret key moves an order forward by hand, for a printshop with no API of its own such as the local one: printed, shipped (optionally with `tracking`) or failed (optionally with a `reason`). An order moves forward only, never out of shipped, failed or cancelled, and never to cancelled, which only `POST /v1/orders/{id}/cancel` reaches by asking its printshop.
-         *
-         *     An order whose submission's answer was lost is `outcome_unknown`. Once you have asked its printshop, settle it: `failed` when the printshop does not have it, after which `POST /v1/orders/{id}/retry` submits it again, or `submitted` when it does, optionally with `externalOrderRef`, the printshop's own reference for it, so its status is followed from then on. A connected store's integration key and a studio member holding `orders:update` may make these two moves and no other. Settling needs a `reason`, kept in the audit log with who settled it; refused `422 order_status_reason_required` without one. A reference another order holds, or one other than the order's own, is refused `409 order_reference_taken`.
-         *
-         *     In a sandbox, whose orders reach no printshop, an integration key and a member move an order as a secret key does, so a store can rehearse an order shipping or failing.
-         *
-         *     A `reason` with any status but `failed` is kept in the audit log only. Any other move is refused `409 order_status_not_allowed`.
-         */
-        patch: operations["orders.update"];
+        patch?: never;
         trace?: never;
     };
     "/v1/orders/{id}/cancel": {
@@ -2021,7 +1991,131 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/orders/{id}/job": {
+    "/v1/orders/{id}/items/{itemId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel one item of an order before it is made
+         * @description A secret key, or a connected store's integration key or a studio member holding `orders:update`. Cancels the item as `POST /v1/orders/{id}/cancel` cancels an order: at once while it is held or waits for its prints, else by asking its printshop: one that cancels a line of its order (Printify) stops the item alone, while another item sent with it is still to be made; any other stops its printshop order, and every item sent in it: `cancelledItemIds` names each item taken with it. Refused as that route refuses; `404 item_not_found` for an item the order does not hold.
+         */
+        post: operations["orders.items.cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orders/{id}/items/{itemId}/reroute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a failed item to another blank
+         * @description Submits a failed item of the order again on another blank, at that blank's printshop, as a new submission of the same item; the failed one's printshop is not called and no blank moves. Refused as `POST /v1/orders/{id}/items/{itemId}/retry` is, and 422 when that blank is unknown or the item's own, when a print is left without a placement or two share one, when a print goes elsewhere than the placement of its own name, and when a print does not fit its placement (`print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`). `GET /v1/orders/{id}/items/{itemId}/reroute-targets` lists the blanks it fits. Answers the order.
+         */
+        post: operations["orders.items.reroute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orders/{id}/items/{itemId}/reroute-targets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the blanks a failed order could be sent to
+         * @description A secret key, or a connected store's integration key or a studio member holding `orders:create`. Every blank of the workspace but the order's own, at any printshop, for `POST /v1/orders/{id}/items/{itemId}/reroute`: those the item's prints fit first, then the rest, each half by name, 50 to a page with the total. A print fits a placement whose largest print holds its trim size, width against width and height against height, and is that size where the placement is printed across its whole area, and whose print method is the one it was made by; it goes to the placement of its own placement's name when the blank has one. A fitting blank lists each print's placements; another says why, per print (`print_exceeds_placement` with both sizes, `print_short_of_area` with the print's size and the area of a placement printed across its whole area, `technique_differs` with both methods, `technique_unknown`, `no_placement_fits`), or `too_few_placements` when they cannot take one print each. Refused 409 as a retry is when the order cannot be submitted again.
+         */
+        get: operations["orders.items.rerouteTargets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orders/{id}/items/{itemId}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit a failed item again
+         * @description Submits a failed item of the order again, back to the printshop its latest submission went to, as a new submission of the same item in a new printshop order; the item keeps its id. Refused `409 retry_refused` unless the item's latest submission failed with no printshop reference: never from `outcome_unknown`, which is settled first with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`. A print of it that failed is rendered again in place, and the item is `awaiting_prints` until its prints complete. Refused 422, writing nothing, when its printshop cannot take it now, 409 `printshop_paused` when that printshop is paused. Answers the order.
+         */
+        post: operations["orders.items.retry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orders/{id}/parcels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record a parcel of a printshop order
+         * @description A secret key, or a studio member holding `orders:update` in a sandbox. Records one shipment of a printshop order of the order: its status, tracking and the items it holds with how many copies of each. Without `items` it holds whatever of the printshop order is in no parcel yet, refused `422 parcel_nothing_left` when nothing is. A parcel never takes an item past its quantity: `422 parcel_exceeds_quantity` names the item and how many of it are left. An item of another printshop order is `422 parcel_item_not_found`. An item whose copies are all in parcels that left reads `shipped`, and a parcel reaching `shipped` appends `parcel.shipped`. Answers the order.
+         */
+        post: operations["orders.parcels.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orders/{id}/printshop-orders/{printshopOrderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set a printshop order's status by hand
+         * @description Moves every item sent in one printshop order of the order, by hand. A secret key moves it forward for a printshop with no API of its own: printed, shipped or failed (optionally with a `reason`); how it ships is its parcels', given with `POST /v1/orders/{id}/parcels`. It moves forward only, never out of shipped, failed or cancelled, and never to cancelled, which only cancelling reaches by asking its printshop.
+         *
+         *     A printshop order whose submission's answer was lost is `outcome_unknown`. Once you have asked its printshop, settle it: `failed` when the printshop does not have it, after which `POST /v1/orders/{id}/items/{itemId}/retry` submits each item again, or `submitted` when it does, optionally with `externalOrderRef`, the printshop's own reference for it. A connected store's integration key and a studio member holding `orders:update` may make these two moves and no other. Settling needs a `reason`, kept in the audit log; refused `422 order_status_reason_required` without one. A reference another order holds is refused `409 order_reference_taken`.
+         *
+         *     In a sandbox an integration key and a member move it as a secret key does. Any other move is refused `409 order_status_not_allowed`. Answers the order.
+         */
+        patch: operations["orders.printshopOrders.update"];
+        trace?: never;
+    };
+    "/v1/orders/{id}/printshop-orders/{printshopOrderId}/job": {
         parameters: {
             query?: never;
             header?: never;
@@ -2030,9 +2124,9 @@ export interface paths {
         };
         /**
          * Read an order as its printshop makes it
-         * @description Where the order stands, how it ships once shipped, and the job ticket to make it by: the print's ticket with the order's copies, recipient and address. `ticket` is the lead print's, for `machineProfile` when it is asked; `prints` holds every print of the order, the lead first, each with its ticket for its own machine. A failed or cancelled order has no ticket.
+         * @description The job of one printshop order: every item sent in it (`items`), each with its tickets, where the job stands (its least advanced item still made in it), how it ships once shipped, and the tickets to make it by: each print's ticket with the item's copies, recipient and address. `ticket` and `prints` are those of its first item still made in it; `ticket` is for `machineProfile` when it is asked. A failed or cancelled item, listed `struck` while the job goes on, has no ticket.
          */
-        get: operations["orders.job.get"];
+        get: operations["orders.printshopOrders.job.get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2040,14 +2134,14 @@ export interface paths {
         head?: never;
         /**
          * Report how an order's job stands
-         * @description The order marked printed, shipped (optionally with tracking) or failed (optionally with a reason), by the same rules as `PATCH /v1/orders/{id}`, and answered as its job. A printshop link gives a reason with failed only; a secret key may give one with any status, and must to settle an order whose outcome is unknown. A printshop link sending shipped with tracking for an order already shipped corrects its tracking: the order stays shipped, and `order.tracking_changed` (`order.tracking_added` for an order shipped without any) tells the store.
+         * @description Every item still made in the printshop order (neither failed nor cancelled) marked printed, shipped (optionally with tracking) or failed (optionally with a reason), each by the same rules as `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`, and answered as its job; refused as the first item was only when no item moved. A printshop link gives a reason with failed only; a secret key may give one with any status, and must to settle an order whose outcome is unknown. A printshop link sending shipped with tracking for an order already shipped corrects its tracking: the order stays shipped, and its parcel's `parcel.tracking_changed` (with `previousTracking` null for an order shipped without any) tells the store.
          *
-         *     A member holding `orders:update` reports for a printshop a person works, one that takes its orders as delivery steps, as its link does: printed, shipped or failed, a reason with failed only, never out of an unknown outcome. The move is audited as theirs. An order to a printshop whose API reports on it is refused `409 order_status_not_allowed`; in a sandbox a member moves an order as `PATCH /v1/orders/{id}` lets them. An MCP key is answered the job without its tickets, which carry who the order is for and where it ships.
+         *     A member holding `orders:update` reports for a printshop a person works, one that takes its orders as delivery steps, as its link does: printed, shipped or failed, a reason with failed only, never out of an unknown outcome. The move is audited as theirs. An order to a printshop whose API reports on it is refused `409 order_status_not_allowed`; in a sandbox a member moves an order as `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}` lets them. An MCP key is answered the job without its tickets, which carry who the order is for and where it ships.
          */
-        patch: operations["orders.job.update"];
+        patch: operations["orders.printshopOrders.job.update"];
         trace?: never;
     };
-    "/v1/orders/{id}/job/bundle": {
+    "/v1/orders/{id}/printshop-orders/{printshopOrderId}/job/bundle": {
         parameters: {
             query?: never;
             header?: never;
@@ -2058,7 +2152,7 @@ export interface paths {
          * Fetch every file of an order's print as one zip
          * @description Every file one of the order's prints (`printId`, required for an order of several) can be handed out as, for the order's machine profile, or `machineProfile`, another of its printshop's, or `settings`, output settings for this download only: each part of the process file and, where the print has one, the separated file, as the list of its files names them, in one zip, in a folder named for the machine (`as-ordered` for the order's own), with the job ticket drawn for that machine as `job-ticket.json`. For each set `add` names, the same print for another machine profile of the order's printshop, or with output settings for this download only, in a folder of its own. A file the order's file door would refuse with `spot_plate_required` is left out. Not for a failed or cancelled order.
          */
-        get: operations["orders.job.files.bundle"];
+        get: operations["orders.printshopOrders.job.files.bundle"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2067,7 +2161,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/orders/{id}/job/file": {
+    "/v1/orders/{id}/printshop-orders/{printshopOrderId}/job/file": {
         parameters: {
             query?: never;
             header?: never;
@@ -2078,7 +2172,7 @@ export interface paths {
          * Fetch the print file of an order
          * @description A file the printshop prints the order from, of one of its prints (`printId`, required for an order of several): by default its machine profile's default part of the file it was sent, as its delivery links hand it out. `machineProfile` names another of its printshop's profiles, or `settings` output settings for this one download (as the list of its files takes them); `part` another part (`combined`, `print` or `cut`), and `file` the `process` or `separated` file. The parts share the trim and bleed boxes, and the artwork is the same bytes in `combined` and `print`. With no machine, or one that names no cut name, the default part is `print`, the stored file; `combined` then carries a `CutContour` path, and a rectangular die is drawn as a cut path too. Not for a failed or cancelled order.
          */
-        get: operations["orders.job.files.get"];
+        get: operations["orders.printshopOrders.job.files.get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2087,7 +2181,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/orders/{id}/job/files": {
+    "/v1/orders/{id}/printshop-orders/{printshopOrderId}/job/files": {
         parameters: {
             query?: never;
             header?: never;
@@ -2098,7 +2192,7 @@ export interface paths {
          * List the files an order can be fetched as
          * @description Every file one of the order's prints can be handed out as (`printId`, required for an order of several), for the order's machine profile, or `machineProfile`, another of its printshop's, or `settings`, output settings asked for one download (a JSON object of a machine profile's cut name, marks, crop marks, mark offset, mirror, bleed trim, white and varnish): each part of it (`combined`, the print with its cut path on a layer that never prints; `print`, the print alone; `cut`, the cut path alone, on a page of its own) of the process file and, where the print has one, the separated file. All three parts share the trim and bleed boxes. A machine that names no cut name is handed the print alone, and the other parts are drawn under `CutContour`. Each file says whether the printshop is handed it, which is the default, and the address it is fetched from; `settings` answers the settings the files are drawn with, null when none are drawn. A file the order's file door would refuse with `spot_plate_required` is left out, and the list is refused so only when it would leave out every file. A failed or cancelled order lists none.
          */
-        get: operations["orders.job.files.list"];
+        get: operations["orders.printshopOrders.job.files.list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2116,51 +2210,11 @@ export interface paths {
         };
         /**
          * Read an order as its customer follows it
-         * @description Where the order has got to, how it ships once shipped, when it was placed, and the steps it took. A failed order that was sent again answers as the order that took its place (one that names it as replaced, or a later order of the same print, quantity, reference and variant), under this order's id. Never the printshop, its reference, why an order failed, the recipient or the fulfilment payload.
+         * @description Where the order has got to, how it ships once shipped, when it was placed, the steps it took, its items and its parcels. A failed order that was sent again answers as the order that took its place (one that names it as replaced, or a later order of the same print, quantity, reference and variant), under this order's id. Never the printshop, its reference, why an order failed, the recipient or the fulfilment payload.
          */
         get: operations["orders.progress.get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/orders/{id}/reroute-targets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List the blanks a failed order could be sent to
-         * @description A secret key, or a connected store's integration key or a studio member holding `orders:create`. Every blank of the workspace but the order's own, at any printshop, for `POST /v1/orders/{id}/retry` with `reroute`: those the order's prints fit first, then the rest, each half by name, 50 to a page with the total. A print fits a placement whose largest print holds its trim size, width against width and height against height, and is that size where the placement is printed across its whole area, and whose print method is the one it was made by; it goes to the placement of its own placement's name when the blank has one. A fitting blank lists each print's placements; another says why, per print (`print_exceeds_placement` with both sizes, `print_short_of_area` with the print's size and the area of a placement printed across its whole area, `technique_differs` with both methods, `technique_unknown`, `no_placement_fits`), or `too_few_placements` when they cannot take one print each. Refused 409 as a retry is when the order cannot be submitted again.
-         */
-        get: operations["orders.rerouteTargets"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/orders/{id}/retry": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Submit a failed order again
-         * @description Places a new order for the same print as a failed one, recording which order it replaces. A print of it that failed is rendered again in place, under the same id and from the design revision it was made from, and the new order is `awaiting_prints` until its prints complete, then goes to its printshop on its own; a render that fails again fails it `print_failed`, and it may be retried again. A print of it still rendering is waited for in the same way. It goes to the printshop the failed order went to, which is its blank's: a blank's printshop is set when the blank is created. A body naming a printshop is refused as unknown. With `reroute`, the order goes to another blank and its printshop instead, the failed order's printshop is not called, and no blank moves; it is refused 422 when that blank is unknown or the failed order's, when a print is left without a placement or two share one, when a print goes elsewhere than the placement of its own name, and when a print does not fit its placement (`print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`). A print on no blank was made by no method and takes its placement's, unless that placement is embroidered. Refused when the order is not `failed`, reached the printshop, or has already been submitted again; A failed order with `failureKind` `missing_fulfilment_keys` or `blank_needed`, of prints on no blank, goes where it would go now rather than back. Refused 422, writing nothing, when the printshop it would go to cannot take it or the design lacks a key that printshop requires, 409 `printshop_paused` when that printshop is paused, and 422 `technique_not_offered` when it does not print with the print's method, and 422 `placement_unfilled` when a placement the blank must print has no print.
-         */
-        post: operations["orders.retry"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2177,8 +2231,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Send a store order's ready items now
-         * @description A secret key, or a connected store's integration key or a studio member holding `orders:update`. For an order waiting for the other items of its store order (`storeOrderWait` on its read), its own prints done: the items of the store order bound for its printshop that are ready go to it within seconds, as one of its orders, rather than when every item is there or two hours have passed. Those not ready go on their own once they are. Answers `202` with the order and what it still waits on, `storeOrderWait.sendNowAt` set; asked again, it is answered the same and nothing more is sent. An order that waits for no store order, or is not waiting, is refused `409 store_order_not_waiting` with `cause` `not_waiting`; one whose own prints are not done or approved yet, `cause` `prints_not_ready`.
+         * Send an order's ready items now
+         * @description A secret key, or a connected store's integration key or a studio member holding `orders:update`. The items of an order of several items bound for one printshop wait, `awaiting_prints`, until all of their prints are done, then go to it together, as one printshop order where it takes several items in one. Asked for an order with such an item whose own prints are done, the items bound for its printshop that are ready go to it within seconds, as one printshop order, without waiting for the rest; those not ready go on their own once they are. Answers `202` with the order; asked again, it is answered the same and nothing more is sent. An order with no item waiting for others is refused `409 store_order_not_waiting` with `cause` `not_waiting`; one whose waiting items' own prints are not done or approved yet, `cause` `prints_not_ready`; one whose placing stopped short of its items, which never goes, `cause` `batch_incomplete`.
          */
         post: operations["orders.sendNow"];
         delete?: never;
@@ -2360,7 +2414,7 @@ export interface paths {
         };
         /**
          * Fetch every file of a print as one zip
-         * @description Every file the print can be handed out as stored, each part and file, in one zip, in the folder `as-stored`; and for each set `add` names, the same print drawn for a machine profile of the tenant's printshops (a studio member needs `printshops:read` to name one) or with output settings for this download only, in a folder of its own. A file a machine makes none of is left out. Getting a print's files without an order counts as an order the first time, unless an order of the print was placed that is not held or cancelled; getting them again is free. Past the month's orders, free's get is refused (`plan_limit_reached`, `limit: "orders"`); a paid plan's draws one from the order balance, and is refused while it is empty (`order_balance_empty`). Since it counts as an order, the first get takes `orders:create` (`forbidden` without it); a print counted already is read with `prints:read`. A studio session's first get must come from the studio (`session_origin_forbidden` from a page elsewhere).
+         * @description Every file the print can be handed out as stored, each part and file, in one zip, in the folder `as-stored`; and for each set `add` names, the same print drawn for a machine profile of the tenant's printshops (a studio member needs `printshops:read` to name one) or with output settings for this download only, in a folder of its own. A file a machine makes none of is left out. Getting a print's files without an order counts as an item the first time, unless an order of the print was placed that is not held or cancelled; getting them again is free. Past the month's items, free's get is refused (`plan_limit_reached`, `limit: "orders"`); a paid plan's draws one from the order balance, and is refused while it is empty (`order_balance_empty`). Since it counts as an item, the first get takes `orders:create` (`forbidden` without it); a print counted already is read with `prints:read`. A studio session's first get must come from the studio (`session_origin_forbidden` from a page elsewhere).
          */
         get: operations["prints.files.bundle"];
         put?: never;
@@ -2380,7 +2434,7 @@ export interface paths {
         };
         /**
          * Fetch a print's file
-         * @description The print's file as stored, or drawn for `machineProfile`, any machine profile of the tenant's printshops (a studio member needs `printshops:read` to name one), or for `settings`, output settings for this one download; `part` names the part (`combined`, `print` or `cut`), the print alone by default, and `file` the `process` or `separated` file. With no machine, or one that names no cut name, the default part is `print`, the stored file; `combined` then carries a `CutContour` path, and a rectangular die is drawn as a cut path too. `form` asks the print's file `flat`, `layered` or `layered_live_text`, its own form by default: another form is made from the print's document on its first get and kept, charged as a get of the print's file is, a form that keeps layers and cannot be made is refused with `print_not_layered` and why, never served as another in its place, and one whose making failed this time answers `print_form_failed`, to ask again. The response's `x-print-file-form` header names the form served. Getting a print's files without an order counts as an order the first time, unless an order of the print was placed that is not held or cancelled; getting them again is free. Past the month's orders, free's get is refused (`plan_limit_reached`, `limit: "orders"`); a paid plan's draws one from the order balance, and is refused while it is empty (`order_balance_empty`). Since it counts as an order, the first get takes `orders:create` (`forbidden` without it); a print counted already is read with `prints:read`. A studio session's first get must come from the studio (`session_origin_forbidden` from a page elsewhere).
+         * @description The print's file as stored, or drawn for `machineProfile`, any machine profile of the tenant's printshops (a studio member needs `printshops:read` to name one), or for `settings`, output settings for this one download; `part` names the part (`combined`, `print` or `cut`), the print alone by default, and `file` the `process` or `separated` file. With no machine, or one that names no cut name, the default part is `print`, the stored file; `combined` then carries a `CutContour` path, and a rectangular die is drawn as a cut path too. `form` asks the print's file `flat`, `layered` or `layered_live_text`, its own form by default: another form is made from the print's document on its first get and kept, charged as a get of the print's file is, a form that keeps layers and cannot be made is refused with `print_not_layered` and why, never served as another in its place, and one whose making failed this time answers `print_form_failed`, to ask again. The response's `x-print-file-form` header names the form served. Getting a print's files without an order counts as an item the first time, unless an order of the print was placed that is not held or cancelled; getting them again is free. Past the month's items, free's get is refused (`plan_limit_reached`, `limit: "orders"`); a paid plan's draws one from the order balance, and is refused while it is empty (`order_balance_empty`). Since it counts as an item, the first get takes `orders:create` (`forbidden` without it); a print counted already is read with `prints:read`. A studio session's first get must come from the studio (`session_origin_forbidden` from a page elsewhere).
          */
         get: operations["prints.files.get"];
         put?: never;
@@ -2422,7 +2476,7 @@ export interface paths {
         put?: never;
         /**
          * Submit a print to its printshop
-         * @description A secret key, or a connected store's integration key or a studio member holding `orders:create`. Places an order for a print with its blank's printshop, set when the blank was created. A print still rendering is waited for: the order is written `awaiting_prints` and goes to its printshop on its own once the print is complete, as `POST /v1/orders` describes; a print that failed is refused `409 print_not_completed`. A print with no blank goes to the printshop its design was committed with, else the one `printshopId` names, else the tenant's default, and is refused `409 print_needs_printshop` with none; in a sandbox it is placed with no printshop instead (`printshopConnectionId` null, `adapter` `none`). The order records which. For a print on a blank, `printshopId` naming another printshop is refused `422 printshop_differs_from_blank`, and naming the blank's own as an unknown field. A printshop named here that cannot take the order (unknown, disconnected, or unavailable because its integration is no longer registered) is a 422 and no order is written, as is a design whose fulfilment payload lacks a key that printshop requires. A connected store's integration key is answered 201 instead of that key's refusal, and of a design on no blank at a printshop that needs a blank: its customer has paid, so the order is written `failed`, with `failureKind` `missing_fulfilment_keys` or `blank_needed`, for a member to send to a blank. `quantity` is how many copies this order wants, 1 when the body leaves it out; the same print can be ordered again with another, with `reorder: true`. A design has one live order, in any status but `failed` and `cancelled`, whoever placed it: an order of a print of a design that has one is refused `409 design_already_ordered`, naming the design and its newest live order, and nothing is written; two sent at once place one. A standing design is never refused `design_already_ordered`: its print is ordered on every sale. A repeat with the first request's `Idempotency-Key` is answered with the first order before this is asked, and a replacement of a failed order needs no `reorder`. `externalRef` is your own reference for the order (your order or line id; not unique, and `GET /v1/orders?externalRef=` finds it), and `recipient` and `shippingAddress` say who it is for and where it ships; all three are optional, reach the printshop on the job ticket, and are never written to logs. The design's first order takes the recipient and address its customer gave on its address capture page (`PUT /v1/designs/{id}/delivery`) when this body names neither; a body naming either is used alone, and the customer's answer is dropped. A partner refusing the order, or a printshop that has been disconnected, is still a 201: the order is recorded as `failed`, naming it and why (`printshop_disconnected`). A printshop the merchant paused takes no order: one going there is refused `409 printshop_paused`, naming it, and nothing is written. A print made by a method its printshop does not print with, where the printshop states what it prints with, is refused `422 technique_not_offered`, naming the placement, the method and the printshop's, and nothing is written. A placement its blank says an order must print, left without a print, is refused `422 placement_unfilled`, naming it, and nothing is written. With `replacesOrderId`, the order replaces a failed order of this print, as `POST /v1/orders/{id}/retry` would but with what this body asks for, and is refused as a retry is.
+         * @description A secret key, or a connected store's integration key or a studio member holding `orders:create`. Places an order for a print with its blank's printshop, set when the blank was created. A print still rendering is waited for: the order is written `awaiting_prints` and goes to its printshop on its own once the print is complete, as `POST /v1/orders` describes; a print that failed is refused `409 print_not_completed`. A print with no blank goes to the printshop its design was committed with, else the one `printshopId` names, else the tenant's default, and is refused `409 print_needs_printshop` with none; in a sandbox it is placed with no printshop instead (`printshopConnectionId` null, `adapter` `none`). The order records which. For a print on a blank, `printshopId` naming another printshop is refused `422 printshop_differs_from_blank`, and naming the blank's own as an unknown field. A printshop named here that cannot take the order (unknown, disconnected, or unavailable because its integration is no longer registered) is a 422 and no order is written, as is a design whose fulfilment payload lacks a key that printshop requires. A connected store's integration key is answered 201 instead of that key's refusal, and of a design on no blank at a printshop that needs a blank: its customer has paid, so the order is written `failed`, with `failureKind` `missing_fulfilment_keys` or `blank_needed`, for a member to send to a blank. `quantity` is how many copies this order wants, 1 when the body leaves it out; the same print can be ordered again with another, with `reorder: true`. A design has one live order, in any status but `failed` and `cancelled`, whoever placed it: an order of a print of a design that has one is refused `409 design_already_ordered`, naming the design and its newest live order, and nothing is written; two sent at once place one. A standing design is never refused `design_already_ordered`: its print is ordered on every sale. A repeat with the first request's `Idempotency-Key` is answered with the first order before this is asked, and a replacement of a failed order needs no `reorder`. `externalRef` is your own reference for the order (your order or line id; not unique, and `GET /v1/orders?externalRef=` finds it), and `recipient` and `shippingAddress` say who it is for and where it ships; all three are optional, reach the printshop on the job ticket, and are never written to logs. The design's first order takes the recipient and address its customer gave on its address capture page (`PUT /v1/designs/{id}/delivery`) when this body names neither; a body naming either is used alone, and the customer's answer is dropped. A partner refusing the order, or a printshop that has been disconnected, is still a 201: the order is recorded as `failed`, naming it and why (`printshop_disconnected`). A printshop the merchant paused takes no order: one going there is refused `409 printshop_paused`, naming it, and nothing is written. A print made by a method its printshop does not print with, where the printshop states what it prints with, is refused `422 technique_not_offered`, naming the placement, the method and the printshop's, and nothing is written. A placement its blank says an order must print, left without a print, is refused `422 placement_unfilled`, naming it, and nothing is written. With `replacesOrderId`, the order replaces a failed order of this print, as `POST /v1/orders/{id}/items/{itemId}/retry` would but with what this body asks for, and is refused as a retry is.
          */
         post: operations["prints.orders.create"];
         delete?: never;
@@ -2483,6 +2537,46 @@ export interface paths {
          * @description Each connection's id, name, adapter, whether it is active, whether it is the tenant's default printshop and whether its printshop has a catalogue, active first; a member is also answered its `counts`: the blanks it makes, its open orders and all its orders, `blanks` null without `blanks:read` and the order counts null without `orders:read`. `q` keeps the connections whose name holds it, case aside.
          */
         get: operations["printshopConnections.list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/proof-sets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make a set of approved proofs
+         * @description Holds the proofs one approval made under one short reference, each with its side's key and its page, for a store's return address: a book proofed a page at a time hands back one reference however many pages it has. Every proof token must be this workspace's and live; the set expires with the first of them.
+         */
+        post: operations["proofSets.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/proof-sets/{proofSet}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a set of approved proofs
+         * @description Every proof of a set the hosted designer handed back to the store, each with its side's key and its page, by side as the link lists them and each side's pages from 1. Each `proofToken` commits its design as any proof token does. Refused `proof_set_expired` once the set has expired or a proof of it is gone.
+         */
+        get: operations["proofSets.get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4083,6 +4177,307 @@ export interface webhooks {
         patch?: never;
         trace?: never;
     };
+    "item.cancelled": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** item.cancelled */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ItemCancelledEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "item.failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** item.failed */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ItemFailedEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "item.held": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** item.held */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ItemHeldEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "item.released": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** item.released */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ItemReleasedEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "item.rerouted": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** item.rerouted */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ItemReroutedEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "item.status_changed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** item.status_changed */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ItemStatusChangedEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "item.submitted": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** item.submitted */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ItemSubmittedEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "order.cancelled": {
         parameters: {
             query?: never;
@@ -4212,49 +4607,6 @@ export interface webhooks {
         patch?: never;
         trace?: never;
     };
-    "order.failed": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** order.failed */
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    /** @description When this attempt was sent, in Unix seconds. */
-                    "x-pixonaut-timestamp": string;
-                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
-                    "x-pixonaut-signature": string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["OrderFailedEvent"];
-                };
-            };
-            responses: {
-                /** @description Any 2xx acknowledges the delivery. */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "order.held": {
         parameters: {
             query?: never;
@@ -4341,49 +4693,6 @@ export interface webhooks {
         patch?: never;
         trace?: never;
     };
-    "order.rerouted": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** order.rerouted */
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    /** @description When this attempt was sent, in Unix seconds. */
-                    "x-pixonaut-timestamp": string;
-                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
-                    "x-pixonaut-signature": string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["OrderReroutedEvent"];
-                };
-            };
-            responses: {
-                /** @description Any 2xx acknowledges the delivery. */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "order.status_changed": {
         parameters: {
             query?: never;
@@ -4409,135 +4718,6 @@ export interface webhooks {
             requestBody?: {
                 content: {
                     "application/json": components["schemas"]["OrderStatusChangedEvent"];
-                };
-            };
-            responses: {
-                /** @description Any 2xx acknowledges the delivery. */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "order.submitted": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** order.submitted */
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    /** @description When this attempt was sent, in Unix seconds. */
-                    "x-pixonaut-timestamp": string;
-                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
-                    "x-pixonaut-signature": string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["OrderSubmittedEvent"];
-                };
-            };
-            responses: {
-                /** @description Any 2xx acknowledges the delivery. */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "order.tracking_added": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** order.tracking_added */
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    /** @description When this attempt was sent, in Unix seconds. */
-                    "x-pixonaut-timestamp": string;
-                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
-                    "x-pixonaut-signature": string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["OrderTrackingAddedEvent"];
-                };
-            };
-            responses: {
-                /** @description Any 2xx acknowledges the delivery. */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "order.tracking_changed": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** order.tracking_changed */
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    /** @description When this attempt was sent, in Unix seconds. */
-                    "x-pixonaut-timestamp": string;
-                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
-                    "x-pixonaut-signature": string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["OrderTrackingChangedEvent"];
                 };
             };
             responses: {
@@ -4710,6 +4890,135 @@ export interface webhooks {
             requestBody?: {
                 content: {
                     "application/json": components["schemas"]["PaletteUpdatedEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "parcel.delivered": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** parcel.delivered */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ParcelDeliveredEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "parcel.shipped": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** parcel.shipped */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ParcelShippedEvent"];
+                };
+            };
+            responses: {
+                /** @description Any 2xx acknowledges the delivery. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "parcel.tracking_changed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** parcel.tracking_changed */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description When this attempt was sent, in Unix seconds. */
+                    "x-pixonaut-timestamp": string;
+                    /** @description `v1=` followed by the hex HMAC-SHA256, keyed with the endpoint's signing secret, of the `x-pixonaut-timestamp` value, a `.`, and the raw request body. */
+                    "x-pixonaut-signature": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ParcelTrackingChangedEvent"];
                 };
             };
             responses: {
@@ -6194,6 +6503,29 @@ export interface components {
             id: string;
             payload: {
                 blankId: string;
+                pages?: {
+                    pages: number;
+                    product: {
+                        from: {
+                            amount: string;
+                            currency: string;
+                        } | null;
+                        to: {
+                            amount: string;
+                            currency: string;
+                        } | null;
+                    };
+                    shipping: {
+                        from: {
+                            amount: string;
+                            currency: string;
+                        } | null;
+                        to: {
+                            amount: string;
+                            currency: string;
+                        } | null;
+                    };
+                }[];
                 product: {
                     from: {
                         amount: string;
@@ -6652,6 +6984,258 @@ export interface components {
              */
             via?: "automation";
         };
+        ItemCancelledEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                automation?: {
+                    id: string;
+                    name: string;
+                };
+                externalRef: string | null;
+                itemExternalRef: string | null;
+                itemId: string;
+                orderId: string;
+                printIds: string[];
+                submissionId: string;
+                via?: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "item.cancelled";
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
+        };
+        ItemFailedEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                automation?: {
+                    id: string;
+                    name: string;
+                };
+                externalRef: string | null;
+                itemExternalRef: string | null;
+                itemId: string;
+                kind?: string;
+                orderId: string;
+                printIds: string[];
+                reason: string;
+                submissionId: string;
+                via?: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "item.failed";
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
+        };
+        ItemHeldEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                externalRef: string | null;
+                itemExternalRef: string | null;
+                itemId: string;
+                orderId: string;
+                printIds: string[];
+                reason: string;
+                submissionId: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "item.held";
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
+        };
+        ItemReleasedEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                externalRef: string | null;
+                itemExternalRef: string | null;
+                itemId: string;
+                orderId: string;
+                printIds: string[];
+                reason: string;
+                submissionId: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "item.released";
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
+        };
+        ItemReroutedEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                externalRef: string | null;
+                from: {
+                    blankId: string | null;
+                    printshopConnectionId: string | null;
+                    variantRef: string | null;
+                };
+                itemExternalRef: string | null;
+                itemId: string;
+                orderId: string;
+                printIds: string[];
+                replacedSubmissionId: string;
+                submissionId: string;
+                to: {
+                    blankId: string | null;
+                    printshopConnectionId: string | null;
+                    variantRef: string | null;
+                };
+                via: string | null;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "item.rerouted";
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
+        };
+        ItemStatusChangedEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                automation?: {
+                    id: string;
+                    name: string;
+                };
+                externalRef: string | null;
+                itemExternalRef: string | null;
+                itemId: string;
+                orderId: string;
+                previousStatus: string;
+                printIds: string[];
+                status: string;
+                submissionId: string;
+                via?: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "item.status_changed";
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
+        };
+        ItemSubmittedEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                externalOrderRef: string | null;
+                externalRef: string | null;
+                itemExternalRef: string | null;
+                itemId: string;
+                orderId: string;
+                printIds: string[];
+                printshopOrderId: string | null;
+                submissionId: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "item.submitted";
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
+        };
         OrderBalanceEmptyEvent: {
             /** @description The automation that caused the event, beside `via`. */
             automation?: {
@@ -6697,10 +7281,8 @@ export interface components {
                     id: string;
                     name: string;
                 };
-                externalRef?: string | null;
+                externalRef: string | null;
                 orderId: string;
-                printId: string;
-                printIds?: string[];
                 via?: string;
             };
             /**
@@ -6727,13 +7309,9 @@ export interface components {
             /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
             id: string;
             payload: {
-                adapter: string;
                 externalRef: string | null;
+                itemIds: string[];
                 orderId: string;
-                printId: string;
-                printIds: string[];
-                quantity: number;
-                replacesOrderId: string | null;
                 status: string;
             };
             /**
@@ -6762,11 +7340,10 @@ export interface components {
             payload: {
                 added: boolean;
                 by: string;
-                externalRef?: string | null;
+                externalRef: string | null;
                 orderId: string;
                 outcome: string;
-                printId: string;
-                printIds?: string[];
+                printshopOrderId?: string | null;
                 words: string | null;
             };
             /**
@@ -6774,42 +7351,6 @@ export interface components {
              * @enum {string}
              */
             type: "order.delivery_changed";
-            /**
-             * @description `automation` when one of your automations caused the event; absent otherwise.
-             * @enum {string}
-             */
-            via?: "automation";
-        };
-        OrderFailedEvent: {
-            /** @description The automation that caused the event, beside `via`. */
-            automation?: {
-                /** @description The automation's id. */
-                id: string;
-                /** @description What the automation was called when it acted. */
-                name: string;
-            };
-            /** @description When the event happened, in milliseconds since the Unix epoch. */
-            createdAt: number;
-            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
-            id: string;
-            payload: {
-                automation?: {
-                    id: string;
-                    name: string;
-                };
-                externalRef?: string | null;
-                kind?: string;
-                orderId: string;
-                printId: string;
-                printIds?: string[];
-                reason: string;
-                via?: string;
-            };
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "order.failed";
             /**
              * @description `automation` when one of your automations caused the event; absent otherwise.
              * @enum {string}
@@ -6829,12 +7370,10 @@ export interface components {
             /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
             id: string;
             payload: {
-                externalRef?: string | null;
+                externalRef: string | null;
                 limit: number;
                 orderId: string;
                 periodEnd: string;
-                printId: string;
-                printIds?: string[];
                 reason: string;
             };
             /**
@@ -6861,10 +7400,8 @@ export interface components {
             /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
             id: string;
             payload: {
-                externalRef?: string | null;
+                externalRef: string | null;
                 orderId: string;
-                printId: string;
-                printIds?: string[];
                 releasedBy: string;
                 status: string;
             };
@@ -6873,47 +7410,6 @@ export interface components {
              * @enum {string}
              */
             type: "order.released";
-            /**
-             * @description `automation` when one of your automations caused the event; absent otherwise.
-             * @enum {string}
-             */
-            via?: "automation";
-        };
-        OrderReroutedEvent: {
-            /** @description The automation that caused the event, beside `via`. */
-            automation?: {
-                /** @description The automation's id. */
-                id: string;
-                /** @description What the automation was called when it acted. */
-                name: string;
-            };
-            /** @description When the event happened, in milliseconds since the Unix epoch. */
-            createdAt: number;
-            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
-            id: string;
-            payload: {
-                externalRef?: string | null;
-                from: {
-                    blankId: string | null;
-                    printshopConnectionId: string | null;
-                    variantRef: string | null;
-                };
-                orderId: string;
-                printId: string;
-                printIds?: string[];
-                replacedOrderId: string;
-                to: {
-                    blankId: string | null;
-                    printshopConnectionId: string | null;
-                    variantRef: string | null;
-                };
-                via: string | null;
-            };
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "order.rerouted";
             /**
              * @description `automation` when one of your automations caused the event; absent otherwise.
              * @enum {string}
@@ -6937,23 +7433,10 @@ export interface components {
                     id: string;
                     name: string;
                 };
-                externalRef?: string | null;
+                externalRef: string | null;
                 orderId: string;
                 previousStatus: string;
-                printId: string;
-                printIds?: string[];
                 status: string;
-                tracking?: {
-                    /** @description Who carries it, such as `DHL`. */
-                    carrier?: string;
-                    /** @description The shipment's tracking number. */
-                    number: string;
-                    /**
-                     * Format: uri
-                     * @description Where the shipment is followed: an https address.
-                     */
-                    url?: string;
-                };
                 via?: string;
             };
             /**
@@ -6961,132 +7444,6 @@ export interface components {
              * @enum {string}
              */
             type: "order.status_changed";
-            /**
-             * @description `automation` when one of your automations caused the event; absent otherwise.
-             * @enum {string}
-             */
-            via?: "automation";
-        };
-        OrderSubmittedEvent: {
-            /** @description The automation that caused the event, beside `via`. */
-            automation?: {
-                /** @description The automation's id. */
-                id: string;
-                /** @description What the automation was called when it acted. */
-                name: string;
-            };
-            /** @description When the event happened, in milliseconds since the Unix epoch. */
-            createdAt: number;
-            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
-            id: string;
-            payload: {
-                adapter: string;
-                externalOrderRef: string | null;
-                externalRef?: string | null;
-                orderId: string;
-                printId: string;
-                printIds?: string[];
-                quantity?: number;
-                replacesOrderId?: string | null;
-            };
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "order.submitted";
-            /**
-             * @description `automation` when one of your automations caused the event; absent otherwise.
-             * @enum {string}
-             */
-            via?: "automation";
-        };
-        OrderTrackingAddedEvent: {
-            /** @description The automation that caused the event, beside `via`. */
-            automation?: {
-                /** @description The automation's id. */
-                id: string;
-                /** @description What the automation was called when it acted. */
-                name: string;
-            };
-            /** @description When the event happened, in milliseconds since the Unix epoch. */
-            createdAt: number;
-            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
-            id: string;
-            payload: {
-                externalRef: string | null;
-                orderId: string;
-                printId: string;
-                printIds: string[];
-                tracking: {
-                    /** @description Who carries it, such as `DHL`. */
-                    carrier?: string;
-                    /** @description The shipment's tracking number. */
-                    number: string;
-                    /**
-                     * Format: uri
-                     * @description Where the shipment is followed: an https address.
-                     */
-                    url?: string;
-                };
-                via: string;
-            };
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "order.tracking_added";
-            /**
-             * @description `automation` when one of your automations caused the event; absent otherwise.
-             * @enum {string}
-             */
-            via?: "automation";
-        };
-        OrderTrackingChangedEvent: {
-            /** @description The automation that caused the event, beside `via`. */
-            automation?: {
-                /** @description The automation's id. */
-                id: string;
-                /** @description What the automation was called when it acted. */
-                name: string;
-            };
-            /** @description When the event happened, in milliseconds since the Unix epoch. */
-            createdAt: number;
-            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
-            id: string;
-            payload: {
-                externalRef: string | null;
-                orderId: string;
-                previousTracking: {
-                    /** @description Who carries it, such as `DHL`. */
-                    carrier?: string;
-                    /** @description The shipment's tracking number. */
-                    number: string;
-                    /**
-                     * Format: uri
-                     * @description Where the shipment is followed: an https address.
-                     */
-                    url?: string;
-                };
-                printId: string;
-                printIds: string[];
-                tracking: {
-                    /** @description Who carries it, such as `DHL`. */
-                    carrier?: string;
-                    /** @description The shipment's tracking number. */
-                    number: string;
-                    /**
-                     * Format: uri
-                     * @description Where the shipment is followed: an https address.
-                     */
-                    url?: string;
-                };
-                via: string;
-            };
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "order.tracking_changed";
             /**
              * @description `automation` when one of your automations caused the event; absent otherwise.
              * @enum {string}
@@ -7170,6 +7527,177 @@ export interface components {
              * @enum {string}
              */
             type: "palette.updated";
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
+        };
+        ParcelDeliveredEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                externalRef: string | null;
+                orderId: string;
+                parcel: {
+                    deliveredAt: string | null;
+                    id: string;
+                    items: {
+                        externalRef: string | null;
+                        itemId: string;
+                        ofQuantity: number;
+                        quantity: number | null;
+                        whole: boolean;
+                    }[];
+                    printshopOrderId: string;
+                    shippedAt: string | null;
+                    status: string;
+                    tracking: {
+                        /** @description Who carries it, such as `DHL`. */
+                        carrier?: string;
+                        /** @description The shipment's tracking number. */
+                        number: string;
+                        /**
+                         * Format: uri
+                         * @description Where the shipment is followed: an https address.
+                         */
+                        url?: string;
+                    } | null;
+                };
+                via: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "parcel.delivered";
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
+        };
+        ParcelShippedEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                externalRef: string | null;
+                orderId: string;
+                orderStatus: string;
+                parcel: {
+                    deliveredAt: string | null;
+                    id: string;
+                    items: {
+                        externalRef: string | null;
+                        itemId: string;
+                        ofQuantity: number;
+                        quantity: number | null;
+                        whole: boolean;
+                    }[];
+                    printshopOrderId: string;
+                    shippedAt: string | null;
+                    status: string;
+                    tracking: {
+                        /** @description Who carries it, such as `DHL`. */
+                        carrier?: string;
+                        /** @description The shipment's tracking number. */
+                        number: string;
+                        /**
+                         * Format: uri
+                         * @description Where the shipment is followed: an https address.
+                         */
+                        url?: string;
+                    } | null;
+                };
+                via: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "parcel.shipped";
+            /**
+             * @description `automation` when one of your automations caused the event; absent otherwise.
+             * @enum {string}
+             */
+            via?: "automation";
+        };
+        ParcelTrackingChangedEvent: {
+            /** @description The automation that caused the event, beside `via`. */
+            automation?: {
+                /** @description The automation's id. */
+                id: string;
+                /** @description What the automation was called when it acted. */
+                name: string;
+            };
+            /** @description When the event happened, in milliseconds since the Unix epoch. */
+            createdAt: number;
+            /** @description The event's id. A retry or a redelivery carries the same id, so a receiver can drop one it has already handled. */
+            id: string;
+            payload: {
+                externalRef: string | null;
+                orderId: string;
+                parcel: {
+                    deliveredAt: string | null;
+                    id: string;
+                    items: {
+                        externalRef: string | null;
+                        itemId: string;
+                        ofQuantity: number;
+                        quantity: number | null;
+                        whole: boolean;
+                    }[];
+                    printshopOrderId: string;
+                    shippedAt: string | null;
+                    status: string;
+                    tracking: {
+                        /** @description Who carries it, such as `DHL`. */
+                        carrier?: string;
+                        /** @description The shipment's tracking number. */
+                        number: string;
+                        /**
+                         * Format: uri
+                         * @description Where the shipment is followed: an https address.
+                         */
+                        url?: string;
+                    } | null;
+                };
+                previousTracking: {
+                    /** @description Who carries it, such as `DHL`. */
+                    carrier?: string;
+                    /** @description The shipment's tracking number. */
+                    number: string;
+                    /**
+                     * Format: uri
+                     * @description Where the shipment is followed: an https address.
+                     */
+                    url?: string;
+                } | null;
+                via: string;
+            };
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "parcel.tracking_changed";
             /**
              * @description `automation` when one of your automations caused the event; absent otherwise.
              * @enum {string}
@@ -22042,7 +22570,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         error: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -23587,7 +24115,7 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -27340,7 +27868,7 @@ export interface operations {
                 /** @description Only the automations whose name or trigger holds this text, case aside. */
                 q?: string;
                 /** @description Only the automations that fire on this event. */
-                trigger?: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution";
+                trigger?: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "item.submitted" | "item.status_changed" | "item.failed" | "item.cancelled" | "order.status_changed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution";
                 /** @description Only the automations that act at this printshop, by its id: a step names it, or a step orders at the blank's printshop and one of your blanks prints there. Each row then says which of its steps act there. */
                 printshop?: string;
             };
@@ -27678,7 +28206,7 @@ export interface operations {
                      * @default null
                      * @enum {string|null}
                      */
-                    trigger?: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
+                    trigger?: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "item.submitted" | "item.status_changed" | "item.failed" | "item.cancelled" | "order.status_changed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
                 };
             };
         };
@@ -27987,7 +28515,7 @@ export interface operations {
                      * @description The event it fires on; null for none yet, which fires on nothing. One with none cannot be enabled.
                      * @enum {string|null}
                      */
-                    trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
+                    trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "item.submitted" | "item.status_changed" | "item.failed" | "item.cancelled" | "order.status_changed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
                 };
             };
         };
@@ -28309,7 +28837,7 @@ export interface operations {
                          * @description The event it fires on; null for none yet, which fires on nothing. One with none cannot be enabled.
                          * @enum {string|null}
                          */
-                        trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
+                        trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "item.submitted" | "item.status_changed" | "item.failed" | "item.cancelled" | "order.status_changed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
                     };
                     /** @description The past event to test on, as the events found name it. */
                     eventId: string;
@@ -28604,7 +29132,7 @@ export interface operations {
                          * @description The event it fires on; null for none yet, which fires on nothing. One with none cannot be enabled.
                          * @enum {string|null}
                          */
-                        trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
+                        trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "item.submitted" | "item.status_changed" | "item.failed" | "item.cancelled" | "order.status_changed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
                     };
                     /** @description One event by its id, among older ones than the newest 20. */
                     eventId?: string;
@@ -29042,7 +29570,7 @@ export interface operations {
                      * @description The event it fires on; null for none yet, which fires on nothing. One with none cannot be enabled.
                      * @enum {string|null}
                      */
-                    trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "order.submitted" | "order.status_changed" | "order.failed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
+                    trigger: "design.committed" | "design.approved" | "design.changes_requested" | "design.delivery_captured" | "design.unapproved" | "print.completed" | "print.failed" | "item.submitted" | "item.status_changed" | "item.failed" | "item.cancelled" | "order.status_changed" | "order.cancelled" | "order.delivery_changed" | "template.low_resolution" | null;
                 };
             };
         };
@@ -31846,7 +32374,7 @@ export interface operations {
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
-                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, and a dyeable stock photo takes the first option with colours. */
+                            /** @description The option dyed photos are painted in, such as Colour: a dyeable stock photo or 3D-rendered view shows each variant in its value's colour. null: own photos as photographed; a dyeable stock photo takes the first option with colours. */
                             paintBy: string | null;
                             partnerLocked: boolean;
                             /** @description How much of the blank is photographed. Answered in a list. */
@@ -31870,6 +32398,13 @@ export interface operations {
                                     foldMm?: number;
                                     /** @description The tallest print the row takes, in millimetres. */
                                     heightMm: number;
+                                    /** @description Item page counts it holds at (a book's cover); omitted, all. */
+                                    pages?: {
+                                        /** @description Most pages. */
+                                        max: number;
+                                        /** @description Fewest pages. */
+                                        min: number;
+                                    };
                                     /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
                                     row: {
                                         [key: string]: string;
@@ -31892,7 +32427,7 @@ export interface operations {
                                 }[];
                                 /** @description Bleed past the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 bleedMm?: number;
-                                /** @description How a print covers the placement: `within`, any size up to the maximum, placed inside it, or `full`, the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's size is its area; a smaller one is refused `print_size_not_area`. */
+                                /** @description `within` (omitted): a print of any size up to the maximum, placed inside it; `full`: the whole area, such as an all-over panel, a smaller print refused `print_size_not_area`. */
                                 coverage?: string;
                                 /** @description The height a print gets when none is chosen, in millimetres, at most maxHeightMm. */
                                 defaultHeightMm: number;
@@ -31902,7 +32437,7 @@ export interface operations {
                                 dpi?: number;
                                 /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                                 fillColour?: string | null;
-                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box: its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, it is printed as it lies. */
+                                /** @description A product printed flat on one sheet and folded, such as a folding box: its print area is the sheet, `coverage` `full`, one size. Null or omitted: printed as it lies. */
                                 flatLayout?: {
                                     /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
                                     parts: {
@@ -31924,7 +32459,7 @@ export interface operations {
                                 } | null;
                                 /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                                 foldMm?: number;
-                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene item with no record draws none of it. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
+                                /** @description Where the placement sits on each stock item the blank's scenes show: per item, a garment area of it and the print's top left and width on it in mm. Refused `placement_garment_area_unknown` (unknown item or area), `placement_garment_outside_area` (past the area). */
                                 garments?: {
                                     /** @description The key of a garment area of the record's stock item. */
                                     area: string;
@@ -31939,7 +32474,7 @@ export interface operations {
                                 }[];
                                 /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                                 id: string;
-                                /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none, as when the linked one leaves the blank. */
+                                /** @description The placement linked by default, such as a right sleeve with the left: one design drives both unless a link, mount or design says otherwise. Null or omitted: none. */
                                 linkWith?: {
                                     /** @description Whether this placement's print is mirrored left to right when the two are linked. */
                                     mirror: boolean;
@@ -31952,9 +32487,18 @@ export interface operations {
                                 maxWidthMm: number;
                                 /** @description What it is called, such as Front or Back. */
                                 name: string;
+                                /** @description Printed as many pages, each this print area (a notebook's inner pages); an order holds one print a page. One a blank at most. Omitted: one page. */
+                                pages?: {
+                                    /** @description Most pages. */
+                                    max: number;
+                                    /** @description Fewest pages. */
+                                    min: number;
+                                    /** @description Pages added at a time, from `min`. */
+                                    step: number;
+                                } | null;
                                 /** @description How this placement is printed, such as dtg or screen. Omitted, its category's. */
                                 printMethod?: string;
-                                /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a printshop-bound blank takes it from the printshop. */
+                                /** @description Whether an order on the blank must print it, refused `placement_unfilled` without. Omitted: false; a printshop-bound blank takes it from the printshop. */
                                 required?: boolean;
                                 /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 safeAreaMm?: number;
@@ -31969,7 +32513,7 @@ export interface operations {
                                 shopName?: string | null;
                                 /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
                                 views: {
-                                    /** @description True on a view a printshop-bound blank took from its printshop (import, Add colours, model photos): its photo size and print area are the printshop's, not changed by hand. Absent on a view the workspace added; sending it is ignored. */
+                                    /** @description True on a view a printshop-bound blank took from its printshop: its photo size and print area are the printshop's, not changed by hand. Absent on the workspace's own; sending it is ignored. */
                                     fromPrintshop?: boolean;
                                     /** @description Unique within the blank. */
                                     id: string;
@@ -32375,7 +32919,7 @@ export interface operations {
                                     [key: string]: string;
                                 };
                             }[];
-                            /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
+                            /** @description The row a design naming none is made at, such as {"Size": "M"}; null: each placement reads its own area. Required once areas change with an option on a blank with designs or designer links. */
                             referenceRow: {
                                 [key: string]: string;
                             } | null;
@@ -32777,7 +33321,7 @@ export interface operations {
                         })[];
                         /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                         orderCount?: number;
-                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, and a dyeable stock photo takes the first option with colours. */
+                        /** @description The option dyed photos are painted in, such as Colour: a dyeable stock photo or 3D-rendered view shows each variant in its value's colour. null: own photos as photographed; a dyeable stock photo takes the first option with colours. */
                         paintBy: string | null;
                         partnerLocked: boolean;
                         /** @description How much of the blank is photographed. Answered in a list. */
@@ -32801,6 +33345,13 @@ export interface operations {
                                 foldMm?: number;
                                 /** @description The tallest print the row takes, in millimetres. */
                                 heightMm: number;
+                                /** @description Item page counts it holds at (a book's cover); omitted, all. */
+                                pages?: {
+                                    /** @description Most pages. */
+                                    max: number;
+                                    /** @description Fewest pages. */
+                                    min: number;
+                                };
                                 /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
                                 row: {
                                     [key: string]: string;
@@ -32823,7 +33374,7 @@ export interface operations {
                             }[];
                             /** @description Bleed past the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                             bleedMm?: number;
-                            /** @description How a print covers the placement: `within`, any size up to the maximum, placed inside it, or `full`, the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's size is its area; a smaller one is refused `print_size_not_area`. */
+                            /** @description `within` (omitted): a print of any size up to the maximum, placed inside it; `full`: the whole area, such as an all-over panel, a smaller print refused `print_size_not_area`. */
                             coverage?: string;
                             /** @description The height a print gets when none is chosen, in millimetres, at most maxHeightMm. */
                             defaultHeightMm: number;
@@ -32833,7 +33384,7 @@ export interface operations {
                             dpi?: number;
                             /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                             fillColour?: string | null;
-                            /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box: its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, it is printed as it lies. */
+                            /** @description A product printed flat on one sheet and folded, such as a folding box: its print area is the sheet, `coverage` `full`, one size. Null or omitted: printed as it lies. */
                             flatLayout?: {
                                 /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
                                 parts: {
@@ -32855,7 +33406,7 @@ export interface operations {
                             } | null;
                             /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                             foldMm?: number;
-                            /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene item with no record draws none of it. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
+                            /** @description Where the placement sits on each stock item the blank's scenes show: per item, a garment area of it and the print's top left and width on it in mm. Refused `placement_garment_area_unknown` (unknown item or area), `placement_garment_outside_area` (past the area). */
                             garments?: {
                                 /** @description The key of a garment area of the record's stock item. */
                                 area: string;
@@ -32870,7 +33421,7 @@ export interface operations {
                             }[];
                             /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                             id: string;
-                            /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none, as when the linked one leaves the blank. */
+                            /** @description The placement linked by default, such as a right sleeve with the left: one design drives both unless a link, mount or design says otherwise. Null or omitted: none. */
                             linkWith?: {
                                 /** @description Whether this placement's print is mirrored left to right when the two are linked. */
                                 mirror: boolean;
@@ -32883,9 +33434,18 @@ export interface operations {
                             maxWidthMm: number;
                             /** @description What it is called, such as Front or Back. */
                             name: string;
+                            /** @description Printed as many pages, each this print area (a notebook's inner pages); an order holds one print a page. One a blank at most. Omitted: one page. */
+                            pages?: {
+                                /** @description Most pages. */
+                                max: number;
+                                /** @description Fewest pages. */
+                                min: number;
+                                /** @description Pages added at a time, from `min`. */
+                                step: number;
+                            } | null;
                             /** @description How this placement is printed, such as dtg or screen. Omitted, its category's. */
                             printMethod?: string;
-                            /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a printshop-bound blank takes it from the printshop. */
+                            /** @description Whether an order on the blank must print it, refused `placement_unfilled` without. Omitted: false; a printshop-bound blank takes it from the printshop. */
                             required?: boolean;
                             /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                             safeAreaMm?: number;
@@ -32900,7 +33460,7 @@ export interface operations {
                             shopName?: string | null;
                             /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
                             views: {
-                                /** @description True on a view a printshop-bound blank took from its printshop (import, Add colours, model photos): its photo size and print area are the printshop's, not changed by hand. Absent on a view the workspace added; sending it is ignored. */
+                                /** @description True on a view a printshop-bound blank took from its printshop: its photo size and print area are the printshop's, not changed by hand. Absent on the workspace's own; sending it is ignored. */
                                 fromPrintshop?: boolean;
                                 /** @description Unique within the blank. */
                                 id: string;
@@ -33306,7 +33866,7 @@ export interface operations {
                                 [key: string]: string;
                             };
                         }[];
-                        /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
+                        /** @description The row a design naming none is made at, such as {"Size": "M"}; null: each placement reads its own area. Required once areas change with an option on a blank with designs or designer links. */
                         referenceRow: {
                             [key: string]: string;
                         } | null;
@@ -33523,6 +34083,13 @@ export interface operations {
                                 /** @description How far in from the print's edge the product folds on the row, where that is the row's own, as a canvas on a thicker frame folds further in; 0 for a row that does not fold on a placement that does. Absent, the placement's. */
                                 foldMm?: number;
                                 heightMm: number;
+                                /** @description The item page counts this area holds at, such as a photo book's cover from 28 to 58 pages, whose spine grows with its pages. Absent, every count. */
+                                pages?: {
+                                    /** @description Most pages. */
+                                    max: number;
+                                    /** @description Fewest pages. */
+                                    min: number;
+                                };
                                 row: {
                                     [key: string]: string;
                                 };
@@ -33557,6 +34124,15 @@ export interface operations {
                             maxHeightMm: number;
                             maxWidthMm: number;
                             name: string;
+                            /** @description The page counts it is printed at, each page this placement's print area, such as a notebook's inner pages: a designer designs each page. Absent on a placement of one page. */
+                            pages?: {
+                                /** @description Most pages. */
+                                max: number;
+                                /** @description Fewest pages. */
+                                min: number;
+                                /** @description Pages added at a time, from `min`. */
+                                step: number;
+                            };
                             /** @description How the placement is printed: its own, else its blank category's. Absent when neither names one. */
                             printMethod?: string;
                             safeAreaMm: number;
@@ -34466,7 +35042,7 @@ export interface operations {
                             };
                             values: string[];
                         }[];
-                        /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, and a dyeable stock photo takes the first option with colours. */
+                        /** @description The option dyed photos are painted in, such as Colour: a dyeable stock photo or 3D-rendered view shows each variant in its value's colour. null: own photos as photographed; a dyeable stock photo takes the first option with colours. */
                         paintBy: string | null;
                         variants: {
                             /** @description How the frame of its product looks, from the frame part of its row's product model. Absent on a product with no frame part. */
@@ -34603,6 +35179,49 @@ export interface operations {
                         costs: {
                             /** @description When the cost was last told as changed, as an ISO 8601 time: a read found a product or shipping amount more than 2 % from the one last told, or one that appeared, went or changed currency. null while the first read still stands. An amount that moves less, as one billed in another currency than it is priced in does with the exchange rate, is held as read without being told. */
                             changedAt: string | null;
+                            /** @description For a variant of a blank with a placement printed as pages, such as a notebook's, its cost at each page count the placement offers, fewest first: a printshop prices such a product only at a page count, and not in even steps. `product`, `shipping` and `times` above are then the ones at its fewest pages with a price. Empty for any other variant. */
+                            pages: {
+                                /** @description How many pages of the blank's placement printed as pages an item holds, as an order counts them: its inner pages, not its covers. */
+                                pages: number;
+                                /** @description What the printshop charges for the variant at this page count, printed with the blank's default print. null when the printshop prices none at this count: it is not sold at it. */
+                                product: {
+                                    /** @description The amount as a decimal string with the currency's own decimals, such as `167.10`. */
+                                    amount: string;
+                                    /** @description The amount's currency, as its ISO 4217 code, such as `SEK`. */
+                                    currency: string;
+                                } | null;
+                                /** @description The cheapest way the printshop ships one at this page count to the region. null when the printshop publishes none. */
+                                shipping: {
+                                    /** @description The amount as a decimal string with the currency's own decimals, such as `167.10`. */
+                                    amount: string;
+                                    /** @description The amount's currency, as its ISO 4217 code, such as `SEK`. */
+                                    currency: string;
+                                } | null;
+                                /** @description How long the printshop says the variant takes to the region by the shipping `shipping` is the amount of, in calendar days, each span as the printshop answers it and never estimated. Printshops answer different spans: Gelato the whole way from order to door, Printful the days in the post and the whole way, Printify the days in the post, Prodigi the days of making it. All three are null for a variant no time was read for: one with no cost, one of a printshop that answers none, and one last read before times were. */
+                                times: {
+                                    /** @description From the order to the door, making it and the post together, where the printshop answers that itself. null when it answers none: it is never added up from the other two. */
+                                    delivery: {
+                                        /** @description The longest, in whole days: never under `minDays`. */
+                                        maxDays: number;
+                                        /** @description The shortest, in whole days. */
+                                        minDays: number;
+                                    } | null;
+                                    /** @description Making it: from the order to its dispatch. null when the printshop answers none. */
+                                    production: {
+                                        /** @description The longest, in whole days: never under `minDays`. */
+                                        maxDays: number;
+                                        /** @description The shortest, in whole days. */
+                                        minDays: number;
+                                    } | null;
+                                    /** @description In the post: from its dispatch to the door. null when the printshop answers none. */
+                                    shipping: {
+                                        /** @description The longest, in whole days: never under `minDays`. */
+                                        maxDays: number;
+                                        /** @description The shortest, in whole days. */
+                                        minDays: number;
+                                    } | null;
+                                };
+                            }[];
                             /** @description What the printshop charges for the variant, printed with the blank's default print: its main side, by one print method. Further print areas and other print methods are not included. null when the printshop publishes no price for it. */
                             product: {
                                 /** @description The amount as a decimal string with the currency's own decimals, such as `167.10`. */
@@ -35863,7 +36482,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         error: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -36162,6 +36781,9 @@ export interface operations {
                         /** @description The tile's width in percent of the print area's width, above 0 and at most 100; the tile keeps the template's shape. A tile that would print under 10 mm on a side is drawn at 10 mm. */
                         size: number;
                     } | null;
+                } & {
+                    /** @description On a blank with a placement printed as pages, the item's page count this design, of another placement, is made at, such as a photo book's cover, whose area grows with the pages: one that placement is printed at. Kept with the design; an order is held to it. */
+                    pageCount?: number;
                 });
             };
         };
@@ -36189,6 +36811,23 @@ export interface operations {
                         }[];
                         /** @description The minimum print resolution the design's pictures were judged against: the template's own, else the tenant's. */
                         printFloorDpi: number;
+                        /** @description Present when the design's print is smaller than its placement's print area and its printshop does not place a smaller print: a warning, nothing is refused yet. Make the design at the whole area: give the template the area's ratio and print it at the area's size (the placement's usual size, or the size the design names), leaving the part its artwork does not cover transparent. */
+                        smallerThanArea?: {
+                            /** @description The whole print area of the placement it is printed in. */
+                            areaMm: {
+                                heightMm: number;
+                                widthMm: number;
+                            };
+                            /** @description What that printshop does with a print smaller than its area: `refused`, an order of it is refused; `enlarged`, it is scaled up to fill the area and what runs past the area is cropped. */
+                            handling: string;
+                            /** @description The design's print size. */
+                            printMm: {
+                                heightMm: number;
+                                widthMm: number;
+                            };
+                            /** @description The name of the printshop the design is sent to. */
+                            printshop: string;
+                        };
                     };
                 };
             };
@@ -36270,7 +36909,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: idempotency_key_reused, invalid_idempotency_key, invalid_doc, invalid_fulfilment_payload, payload_too_large, missing_fulfilment_keys, spot_plate_required, design_not_stitchable, design_unreadable, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, asset_map_too_large */
+            /** @description Refused: idempotency_key_reused, invalid_idempotency_key, invalid_doc, invalid_fulfilment_payload, payload_too_large, missing_fulfilment_keys, spot_plate_required, design_not_stitchable, design_unreadable, unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, variant_required, page_on_unpaged_placement, page_required, page_count_out_of_range, asset_map_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -36284,6 +36923,8 @@ export interface operations {
                         bytes?: number;
                         /** @description Always sent with `spot_plate_required`. */
                         cause?: string;
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        count?: number;
                         /** @description Always sent with `invalid_doc`. */
                         detail?: unknown;
                         error: string;
@@ -36305,14 +36946,22 @@ export interface operations {
                         }[];
                         /** @description The embroidery machine the design goes to. Always sent with `design_not_stitchable`, `design_unreadable`. */
                         machine?: string;
+                        /** @description Most pages. Always sent with `page_count_out_of_range`. */
+                        max?: number;
                         /** @description Always sent with `payload_too_large`, `asset_map_too_large`. */
                         maxBytes?: number;
+                        /** @description Fewest pages. Always sent with `page_count_out_of_range`. */
+                        min?: number;
                         /** @description Always sent with `missing_fulfilment_keys`. */
                         missing?: string[];
+                        /** @description Always sent with `page_on_unpaged_placement`, `page_required`, `page_count_out_of_range`. */
+                        placementId?: string;
                         /** @description Always sent with `design_not_stitchable`, `design_unreadable`, `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `variant_not_of_blank`, `variant_row_invalid`, `variant_required`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
                         references?: string[];
+                        /** @description Pages added at a time, from `min`. Always sent with `page_count_out_of_range`. */
+                        step?: number;
                         /** @description Always sent with `variant_not_of_blank`. */
                         variant?: string;
                         /** @description Always sent with `constraint_violation`. */
@@ -37120,6 +37769,10 @@ export interface operations {
                             /** @description `link`: a designer link's page made it. `studio`: a member made it, in the studio or through an MCP key. `secret_key` and `publishable_key`: committed with one of your keys. `store`: committed by a connected store, with any key its site was given. */
                             kind: string;
                         };
+                        /** @description On a placement printed as pages, the page the design's proof was of (`page` on `POST /v1/proofs`); an order holds it as that page. Null for a design proofed as no page. */
+                        page: number | null;
+                        /** @description On a placement printed as pages, how many pages the shopper picked when the design was proofed (`pageCount` on `POST /v1/proofs`); an order holds it to that count. Null for a design proofed as no page. */
+                        pageCount: number | null;
                         /** @description When the design's own personal data was erased (`POST /v1/designs/{id}/erase-personal-data`), or null. An erased design's document holds none of the text or pictures its customer put in, and nothing more is printed, ordered or corrected from it. */
                         personalDataErasedAt: number | null;
                         /** @description The colours the shopper picked, by option name, `#rrggbb` each, such as `{"Colour": "#1b2a4a"}`, as the design was committed: a value of its blank that takes any colour is made in its pick. Null when none was picked. */
@@ -37585,6 +38238,23 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @description Present when the design's print is smaller than its placement's print area and its printshop does not place a smaller print: a warning, the approval stands. Never through a proof page link. */
+                        smallerThanArea?: {
+                            /** @description The whole print area of the placement it is printed in. */
+                            areaMm: {
+                                heightMm: number;
+                                widthMm: number;
+                            };
+                            /** @description What that printshop does with a print smaller than its area: `refused`, an order of it is refused; `enlarged`, it is scaled up to fill the area and what runs past the area is cropped. */
+                            handling: string;
+                            /** @description The design's print size. */
+                            printMm: {
+                                heightMm: number;
+                                widthMm: number;
+                            };
+                            /** @description The name of the printshop the design is sent to. */
+                            printshop: string;
+                        };
                         status: string;
                     };
                 };
@@ -37779,7 +38449,7 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -38896,6 +39566,10 @@ export interface operations {
                             /** @description `link`: a designer link's page made it. `studio`: a member made it, in the studio or through an MCP key. `secret_key` and `publishable_key`: committed with one of your keys. `store`: committed by a connected store, with any key its site was given. */
                             kind: string;
                         };
+                        /** @description On a placement printed as pages, the page the design's proof was of (`page` on `POST /v1/proofs`); an order holds it as that page. Null for a design proofed as no page. */
+                        page: number | null;
+                        /** @description On a placement printed as pages, how many pages the shopper picked when the design was proofed (`pageCount` on `POST /v1/proofs`); an order holds it to that count. Null for a design proofed as no page. */
+                        pageCount: number | null;
                         /** @description When the design's own personal data was erased (`POST /v1/designs/{id}/erase-personal-data`), or null. An erased design's document holds none of the text or pictures its customer put in, and nothing more is printed, ordered or corrected from it. */
                         personalDataErasedAt: number | null;
                         /** @description The colours the shopper picked, by option name, `#rrggbb` each, such as `{"Colour": "#1b2a4a"}`, as the design was committed: a value of its blank that takes any colour is made in its pick. Null when none was picked. */
@@ -40373,7 +41047,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** @description The events, in the order they were recorded, each in the envelope its type's webhook delivery carries, with the payload that type sends. */
-                        events: (components["schemas"]["StoreAccessOffEvent"] | components["schemas"]["StoreAccessRequestedEvent"] | components["schemas"]["DesignCommittedEvent"] | components["schemas"]["DesignApprovalScheduledEvent"] | components["schemas"]["DesignApprovedEvent"] | components["schemas"]["DesignRejectedEvent"] | components["schemas"]["DesignDeletedEvent"] | components["schemas"]["DesignPersonalDataErasedEvent"] | components["schemas"]["DesignChangesRequestedEvent"] | components["schemas"]["DesignDeliveryCapturedEvent"] | components["schemas"]["DesignEditedEvent"] | components["schemas"]["DesignDuplicatedEvent"] | components["schemas"]["PrintCreatedEvent"] | components["schemas"]["PrintCompletedEvent"] | components["schemas"]["PrintFailedEvent"] | components["schemas"]["TemplatePublishedEvent"] | components["schemas"]["TemplateLiveChangedEvent"] | components["schemas"]["TemplateDeletedEvent"] | components["schemas"]["TemplateRenamedEvent"] | components["schemas"]["OrderCreatedEvent"] | components["schemas"]["OrderSubmittedEvent"] | components["schemas"]["OrderStatusChangedEvent"] | components["schemas"]["OrderFailedEvent"] | components["schemas"]["OrderCancelledEvent"] | components["schemas"]["OrderReroutedEvent"] | components["schemas"]["OrderDeliveryChangedEvent"] | components["schemas"]["OrderHeldEvent"] | components["schemas"]["OrderReleasedEvent"] | components["schemas"]["OrderTrackingAddedEvent"] | components["schemas"]["OrderTrackingChangedEvent"] | components["schemas"]["BlankDriftedEvent"] | components["schemas"]["BlankCreatedEvent"] | components["schemas"]["BlankUpdatedEvent"] | components["schemas"]["BlankDeletedEvent"] | components["schemas"]["BlankRestoredEvent"] | components["schemas"]["BlankVariantCostChangedEvent"] | components["schemas"]["InkCreatedEvent"] | components["schemas"]["InkUpdatedEvent"] | components["schemas"]["InkDeletedEvent"] | components["schemas"]["PaletteCreatedEvent"] | components["schemas"]["PaletteUpdatedEvent"] | components["schemas"]["PaletteDeletedEvent"] | components["schemas"]["ShapeCreatedEvent"] | components["schemas"]["ShapeUpdatedEvent"] | components["schemas"]["ShapeDeletedEvent"] | components["schemas"]["AssetCreatedEvent"] | components["schemas"]["AssetUpdatedEvent"] | components["schemas"]["AssetDeletedEvent"] | components["schemas"]["PrintshopConnectedEvent"] | components["schemas"]["PrintshopDisconnectedEvent"] | components["schemas"]["PrintshopUpdatedEvent"] | components["schemas"]["PrintshopReconnectedEvent"] | components["schemas"]["PrintshopDeletedEvent"] | components["schemas"]["PrintshopRestoredEvent"] | components["schemas"]["RunStartedEvent"] | components["schemas"]["RunCompletedEvent"] | components["schemas"]["RunFailedEvent"] | components["schemas"]["RunExhaustedEvent"] | components["schemas"]["RunCancelledEvent"] | components["schemas"]["CreditsLowEvent"] | components["schemas"]["TextMessagesLowEvent"] | components["schemas"]["OrderBalanceEmptyEvent"] | components["schemas"]["ShareLinkRevokedEvent"] | components["schemas"]["ShareLinkRegeneratedEvent"])[];
+                        events: (components["schemas"]["StoreAccessOffEvent"] | components["schemas"]["StoreAccessRequestedEvent"] | components["schemas"]["DesignCommittedEvent"] | components["schemas"]["DesignApprovalScheduledEvent"] | components["schemas"]["DesignApprovedEvent"] | components["schemas"]["DesignRejectedEvent"] | components["schemas"]["DesignDeletedEvent"] | components["schemas"]["DesignPersonalDataErasedEvent"] | components["schemas"]["DesignChangesRequestedEvent"] | components["schemas"]["DesignDeliveryCapturedEvent"] | components["schemas"]["DesignEditedEvent"] | components["schemas"]["DesignDuplicatedEvent"] | components["schemas"]["PrintCreatedEvent"] | components["schemas"]["PrintCompletedEvent"] | components["schemas"]["PrintFailedEvent"] | components["schemas"]["TemplatePublishedEvent"] | components["schemas"]["TemplateLiveChangedEvent"] | components["schemas"]["TemplateDeletedEvent"] | components["schemas"]["TemplateRenamedEvent"] | components["schemas"]["OrderCreatedEvent"] | components["schemas"]["OrderStatusChangedEvent"] | components["schemas"]["OrderCancelledEvent"] | components["schemas"]["OrderDeliveryChangedEvent"] | components["schemas"]["OrderHeldEvent"] | components["schemas"]["OrderReleasedEvent"] | components["schemas"]["ItemHeldEvent"] | components["schemas"]["ItemReleasedEvent"] | components["schemas"]["ItemSubmittedEvent"] | components["schemas"]["ItemStatusChangedEvent"] | components["schemas"]["ItemFailedEvent"] | components["schemas"]["ItemCancelledEvent"] | components["schemas"]["ItemReroutedEvent"] | components["schemas"]["ParcelShippedEvent"] | components["schemas"]["ParcelTrackingChangedEvent"] | components["schemas"]["ParcelDeliveredEvent"] | components["schemas"]["BlankDriftedEvent"] | components["schemas"]["BlankCreatedEvent"] | components["schemas"]["BlankUpdatedEvent"] | components["schemas"]["BlankDeletedEvent"] | components["schemas"]["BlankRestoredEvent"] | components["schemas"]["BlankVariantCostChangedEvent"] | components["schemas"]["InkCreatedEvent"] | components["schemas"]["InkUpdatedEvent"] | components["schemas"]["InkDeletedEvent"] | components["schemas"]["PaletteCreatedEvent"] | components["schemas"]["PaletteUpdatedEvent"] | components["schemas"]["PaletteDeletedEvent"] | components["schemas"]["ShapeCreatedEvent"] | components["schemas"]["ShapeUpdatedEvent"] | components["schemas"]["ShapeDeletedEvent"] | components["schemas"]["AssetCreatedEvent"] | components["schemas"]["AssetUpdatedEvent"] | components["schemas"]["AssetDeletedEvent"] | components["schemas"]["PrintshopConnectedEvent"] | components["schemas"]["PrintshopDisconnectedEvent"] | components["schemas"]["PrintshopUpdatedEvent"] | components["schemas"]["PrintshopReconnectedEvent"] | components["schemas"]["PrintshopDeletedEvent"] | components["schemas"]["PrintshopRestoredEvent"] | components["schemas"]["RunStartedEvent"] | components["schemas"]["RunCompletedEvent"] | components["schemas"]["RunFailedEvent"] | components["schemas"]["RunExhaustedEvent"] | components["schemas"]["RunCancelledEvent"] | components["schemas"]["CreditsLowEvent"] | components["schemas"]["TextMessagesLowEvent"] | components["schemas"]["OrderBalanceEmptyEvent"] | components["schemas"]["ShareLinkRevokedEvent"] | components["schemas"]["ShareLinkRegeneratedEvent"])[];
                         /** @description Pass it as `after` for the next page. Null when nothing more is available yet: continue from the last event's id later. A pull looks through at most 1000 events, so with `types` a page can be short, or empty, with a cursor that still moves on. */
                         nextCursor: string | null;
                     };
@@ -40589,7 +41263,7 @@ export interface operations {
                 externalRef?: string;
                 /** @description Only the orders sent to this printshop connection: its id, as list_printshops returns it. */
                 printshop?: string;
-                /** @description Only the orders in any of these statuses: repeat it, or separate them with commas (`failed,outcome_unknown`). */
+                /** @description Only the orders in any of these statuses: repeat it, or separate them with commas (`needs_attention,held`). */
                 status?: string | string[];
                 /** @description Only the orders of this blank, whichever variant. */
                 blankId?: string;
@@ -40622,44 +41296,21 @@ export interface operations {
                     "application/json": {
                         /** @description How many orders each status holds under every filter but `status`, every status named. */
                         counts: {
-                            awaiting_prints?: number;
                             cancelled?: number;
-                            failed?: number;
+                            done?: number;
                             held?: number;
-                            outcome_unknown?: number;
-                            printed?: number;
-                            queued?: number;
+                            needs_attention?: number;
+                            open?: number;
+                            partly_shipped?: number;
                             shipped?: number;
-                            submitted?: number;
                         };
                         orders: {
-                            adapter: string;
-                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
-                            blank: {
-                                name: string;
-                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
-                                optionAxes: string[];
-                                /** @description How many variants it has, retired ones included. */
-                                variants: number;
-                            } | null;
-                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
-                            blankId: string | null;
-                            /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after the order was sent; `null` for an order whose address never changed. */
-                            delivery: {
-                                /** @description When the change was made. */
-                                at: number;
-                                /** @description What the printshop made of the change: `sending` while it is being told, `accepted`, `refused` (the order keeps the address the printshop has), or `carried` when what the printshop had not been sent yet carries the new address, so nothing extra was sent. */
-                                state: string;
-                                /** @description The printshop's own answer to a refused change; `null` otherwise. */
-                                words: string | null;
-                            } | null;
-                            /** @description The design the lead print was made from. */
-                            designId: string;
-                            externalOrderRef: string | null;
+                            /** @description Copies the order wants: its items' quantities summed. */
+                            copies: number;
+                            createdAt: number;
+                            /** @description The caller's own reference for the order, such as the store's order id. */
                             externalRef: string | null;
-                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
-                            failureKind: string | null;
-                            /** @description Why the order is `held`, while it is; `null` for an order not held. A held order is accepted and not handed to its printshop until the month resets with room for it or the workspace upgrades. */
+                            /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
                             hold: {
                                 /** @description The plan's monthly order limit the order met. */
                                 limit: number;
@@ -40669,64 +41320,85 @@ export interface operations {
                                 reason: string;
                             } | null;
                             id: string;
-                            lastCheckedAt: number | null;
-                            lastError: string | null;
-                            personalDataErasedAt: number | null;
-                            /** @description The order's lead print: the first of `printIds`, and the only one of an order of one print. */
-                            printId: string;
-                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
-                            printIds: string[];
-                            /** @description `printIds` with each print's design, placement and file. */
-                            prints: ({
+                            itemCount: number;
+                            items: {
+                                /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                                blank: {
+                                    name: string;
+                                    /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                    optionAxes: string[];
+                                    /** @description How many variants it has, retired ones included. */
+                                    variants: number;
+                                } | null;
+                                /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                                blankId: string | null;
+                                /** @description The design the lead print was made from. */
                                 designId: string;
-                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
-                                designRevision: number;
-                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                                placementFields: {
-                                    name: string;
-                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                    source: string;
-                                    value: string;
-                                }[] | null;
-                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                                placementId: string | null;
-                                printId: string;
-                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                                printedAs: string | null;
-                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                                spotOutput: string | null;
-                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                /** @description The caller's own reference for the item, such as its line in the store's order. */
+                                externalRef: string | null;
+                                /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                                failureKind: string | null;
+                                /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                                id: string;
+                                lastError: string | null;
+                                /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                                printIds: string[];
+                                printshopConnectionId: string | null;
+                                printshopName: string | null;
+                                quantity: number;
+                                /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                                shippedQuantity: number | null;
+                                /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
                                 status: string;
-                            } | {
-                                /** @description A fill print is made from no design. */
-                                designId: null;
-                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
-                                fillColour: string;
-                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                                placementFields: {
-                                    name: string;
-                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                    source: string;
-                                    value: string;
-                                }[] | null;
-                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                                placementId: string | null;
-                                printId: string;
-                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                                printedAs: string | null;
-                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                                spotOutput: string | null;
-                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                                variant: {
+                                    /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                    colours?: {
+                                        [key: string]: {
+                                            /** @description The colour to make the value in, `#rrggbb`. */
+                                            colour: string;
+                                            /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                            from: string;
+                                        };
+                                    };
+                                    /** @description Each declared field, in the printshop's order, as it was sent. */
+                                    fields: {
+                                        name: string;
+                                        /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                        source: string;
+                                        value: string;
+                                    }[];
+                                    options: {
+                                        [key: string]: string;
+                                    };
+                                    ref: string;
+                                    /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                    unusedPicks?: {
+                                        [key: string]: string;
+                                    };
+                                } | null;
+                                /** @description The variant the order names; `null` as `blankId` is. */
+                                variantRef: string | null;
+                            }[];
+                            /** @description The order's first three items, in the order they were placed. */
+                            itemsPreview: {
+                                designId: string | null;
+                                itemId: string;
+                                /** @description The item's lead print, whose thumbnail stands for it. */
+                                printId: string | null;
+                                quantity: number;
                                 status: string;
-                            })[];
-                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
-                            printshopAsPlaced: {
-                                adapter: string;
-                                name: string;
-                            } | null;
-                            printshopConnectionId: string | null;
-                            printshopName: string | null;
-                            quantity: number;
+                            }[];
+                            parcelCount: number;
+                            /** @description How many of the order's parcels are in each status; they add up to `parcelCount`. */
+                            parcels: {
+                                delivered: number;
+                                preparing: number;
+                                shipped: number;
+                            };
+                            personalDataErasedAt: number | null;
+                            /** @description The printshops the order's printshop orders went to, each once, the first sent first. Empty while none has been sent. */
+                            printshopNames: string[];
                             /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
                             recipient: {
                                 /**
@@ -40739,10 +41411,6 @@ export interface operations {
                                 /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
                                 phone?: string;
                             } | null;
-                            /** @description The order submitted to replace this one, which names it as `replacesOrderId`; `null` for none. */
-                            replacedByOrderId: string | null;
-                            /** @description The failed order this one was submitted to replace; `null` for an order that replaces none. */
-                            replacesOrderId: string | null;
                             /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
                             shipTo: {
                                 address: {
@@ -40783,51 +41451,10 @@ export interface operations {
                                 /** @description The state, province or county, where the country uses one. */
                                 region?: string;
                             } | null;
-                            spotOutput: string | null;
+                            /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
                             status: string;
-                            submittedAt: number;
                             tenantId: string;
-                            tracking: {
-                                /** @description Who carries it, such as `DHL`. */
-                                carrier?: string;
-                                /** @description The shipment's tracking number. */
-                                number: string;
-                                /**
-                                 * Format: uri
-                                 * @description Where the shipment is followed: an https address.
-                                 */
-                                url?: string;
-                            } | null;
                             updatedAt: number;
-                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
-                            variant: {
-                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
-                                colours?: {
-                                    [key: string]: {
-                                        /** @description The colour to make the value in, `#rrggbb`. */
-                                        colour: string;
-                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
-                                        from: string;
-                                    };
-                                };
-                                /** @description Each declared field, in the printshop's order, as it was sent. */
-                                fields: {
-                                    name: string;
-                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                    source: string;
-                                    value: string;
-                                }[];
-                                options: {
-                                    [key: string]: string;
-                                };
-                                ref: string;
-                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
-                                unusedPicks?: {
-                                    [key: string]: string;
-                                };
-                            } | null;
-                            /** @description The variant the order names; `null` as `blankId` is. */
-                            variantRef: string | null;
                         }[];
                         page: number;
                         pageSize: number;
@@ -40901,25 +41528,40 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description The designs of one item in place of its prints, each an approved design of one side, committed on the same blank in a placement of its own; the first is the order's lead. The order makes a new print of each, as `POST /v1/prints` would, and waits for them; a standing design's order reuses the print of its current revision, completed or still rendering, and makes one only when there is none or it failed. Name `prints` or `designs`, not both. */
-                    designs?: {
-                        /** @description One approved design of the item, by the id `GET /v1/designs` answers. */
-                        designId: string;
-                    }[];
-                    /** @description The caller's own reference for this order, such as its order id in the shop. Kept exactly as sent and handed to the printshop. */
+                    /** @description Your own reference for the order, such as its id in your store. Kept exactly as sent; `GET /v1/orders?externalRef=` finds it. */
                     externalRef?: string;
-                    /** @description The prints of one item, each a print of a design committed on the same blank in a placement of its own, completed or still rendering; the first is the order's lead, which `printId` names on the order. One print places the order `POST /v1/prints/{id}/orders` would. Name `prints` or `designs`, not both. */
-                    prints?: {
-                        /** @description One print of the item, by the id `GET /v1/prints` answers. */
-                        printId: string;
+                    /** @description The order's items, in the order the answer lists them. The items bound for one printshop that takes several items in one order go to it as one of its orders. */
+                    items: {
+                        /** @description The approved designs of the item in place of its prints, one per side, committed on the same blank in a placement of its own each. The order makes a new print of each, as `POST /v1/prints` would, and waits for them; a standing design's order reuses the print of its current revision. Name `prints` or `designs`, not both. */
+                        designs?: {
+                            /** @description One approved design of the item, by the id `GET /v1/designs` answers. */
+                            designId: string;
+                            /** @description Its page, from 1, on a placement its blank prints as a range of pages, such as a notebook's inner pages: the item holds one on every page from 1 to its last, a count within the placement's range on its steps. Left out on a placement of one page. */
+                            page?: number;
+                        }[];
+                        /** @description Your own reference for the item, such as its line in your store's order. Kept exactly as sent; a store maps an item back to its line by it or by its place in `items`. */
+                        externalRef?: string;
+                        /** @description The prints of the item, each a print of a design committed on the same blank in a placement of its own, completed or still rendering; the first is its lead. Name `prints` or `designs`, not both. */
+                        prints?: {
+                            /** @description Its page, from 1, on a placement its blank prints as a range of pages, such as a notebook's inner pages: the item holds one on every page from 1 to its last, a count within the placement's range on its steps. Left out on a placement of one page. */
+                            page?: number;
+                            /** @description One print of the item, by the id `GET /v1/prints` answers. */
+                            printId: string;
+                        }[];
+                        /** @description The printshop to make the item with, for prints on no blank; the order's `printshopId` when left out. */
+                        printshopId?: string | null;
+                        /**
+                         * @description How many copies to order. A whole number of 1 or more; 1 when left out.
+                         * @default 1
+                         */
+                        quantity?: number;
+                        /** @description Order the design again on purpose. A design has one live order (in any status but `failed` and `cancelled`): absent or false, an order of a design that has one is refused `409 design_already_ordered`, naming the design and its newest live order, and nothing is written. True places the order whatever orders the design has. */
+                        reorder?: boolean;
+                        /** @description The variant of the print's blank the order is for, by ref (`v_…`). Left out, a blank with exactly one variant orders that one, and one with several is refused `variant_required`. A ref of another blank is refused `variant_not_of_blank`, and a retired one `variant_retired`. The order keeps a copy of the variant as it was: its options and the printshop fields it was sent. */
+                        variant?: string;
                     }[];
-                    /** @description The printshop to make this order, for a print with no blank whose design named none when it was committed. A print on a blank is made by the blank's printshop: naming another is refused with `printshop_differs_from_blank`, and naming the blank's own as an unknown field. Absent or `null`, a print with no blank goes to the printshop its design was committed with, else the tenant's default. */
+                    /** @description The printshop to make every item with that names none, for prints on no blank. */
                     printshopId?: string | null;
-                    /**
-                     * @description How many copies to order. A whole number of 1 or more; 1 when left out.
-                     * @default 1
-                     */
-                    quantity?: number;
                     /** @description Who the order is for. Left out, the first order of a design takes what its customer gave. */
                     recipient?: {
                         /**
@@ -40932,8 +41574,6 @@ export interface operations {
                         /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
                         phone?: string;
                     };
-                    /** @description Order the design again on purpose. A design has one live order (in any status but `failed` and `cancelled`): absent or false, an order of a design that has one is refused `409 design_already_ordered`, naming the design and its newest live order, and nothing is written. True places the order whatever orders the design has. */
-                    reorder?: boolean;
                     /** @description A saved address to ship to; the customer stays the recipient. null: the customer's. Left out: the workspace's setting. */
                     shipToAddressId?: string | null;
                     /** @description Where the order ships. Left out, the first order of a design takes what its customer gave. */
@@ -40953,15 +41593,6 @@ export interface operations {
                         /** @description The state, province or county, where the country uses one. */
                         region?: string;
                     };
-                    /** @description The store order this item was sold in, for a store that sells several items in one order. The items of one store order bound for one printshop are sent to it as one of its orders, where it takes several items in one, so they ship together: this order waits, `awaiting_prints`, until every item of the store order has been placed and the prints of those bound for its printshop are done, or until two hours from its first item, then goes with the ones ready. Each item stays an order of its own, with its own status, tracking and retry. A retry or replacement of one goes on its own. */
-                    storeOrder?: {
-                        /** @description How many items of that store order the store sends as orders, each item one order, this one included. */
-                        items: number;
-                        /** @description The store's own reference for the order the item was sold in, the same for every item of it, such as its order id. Opaque: only compared with the other items'. */
-                        ref: string;
-                    };
-                    /** @description The variant of the print's blank the order is for, by ref (`v_…`). Left out, a blank with exactly one variant orders that one, and one with several is refused `variant_required`. A ref of another blank is refused `variant_not_of_blank`, and a retired one `variant_retired`. The order keeps a copy of the variant as it was: its options and the printshop fields it was sent. */
-                    variant?: string;
                 };
             };
         };
@@ -40974,33 +41605,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        adapter: string;
-                        /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
-                        blank: {
-                            name: string;
-                            /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
-                            optionAxes: string[];
-                            /** @description How many variants it has, retired ones included. */
-                            variants: number;
-                        } | null;
-                        /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
-                        blankId: string | null;
-                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after the order was sent; `null` for an order whose address never changed. */
+                        canErase: boolean;
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
                         delivery: {
-                            /** @description When the change was made. */
                             at: number;
-                            /** @description What the printshop made of the change: `sending` while it is being told, `accepted`, `refused` (the order keeps the address the printshop has), or `carried` when what the printshop had not been sent yet carries the new address, so nothing extra was sent. */
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
                             state: string;
-                            /** @description The printshop's own answer to a refused change; `null` otherwise. */
                             words: string | null;
                         } | null;
-                        /** @description The design the lead print was made from. */
-                        designId: string;
-                        externalOrderRef: string | null;
+                        /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
+                        deliveryChangeRefusal: {
+                            /** @enum {string} */
+                            code: "address_change_not_accepted";
+                        } | {
+                            /** @enum {string} */
+                            code: "order_past_address_change";
+                            status: string;
+                            /** @description Its submission has not been answered yet: its printshop has given it no reference. */
+                            unanswered: boolean;
+                        } | null;
+                        /** @description The order's address changes, oldest first, each as its `order.delivery_changed` event recorded it. Never the address. */
+                        deliveryChanges: {
+                            /** @description The order had no address before: one was added. */
+                            added: boolean;
+                            /** @description When the change was made, or answered. */
+                            at: number;
+                            /** @description Who made it: a studio `member`, the `customer` on the design's address capture page, a connected store's integration key (`store_key`), or a `secret_key`. */
+                            by: string;
+                            /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
+                            outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
+                            /** @description The printshop's own answer to a refused change. */
+                            words: string | null;
+                        }[];
+                        erasable: boolean;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
                         externalRef: string | null;
-                        /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
-                        failureKind: string | null;
-                        /** @description Why the order is `held`, while it is; `null` for an order not held. A held order is accepted and not handed to its printshop until the month resets with room for it or the workspace upgrades. */
+                        history: {
+                            at: number;
+                            /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
+                            automation: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
+                            reason: string | null;
+                            /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
+                            releasedBy: string | null;
+                            seq: number;
+                            status: string;
+                            type: string;
+                            via: string | null;
+                        }[];
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
                         hold: {
                             /** @description The plan's monthly order limit the order met. */
                             limit: number;
@@ -41010,64 +41670,235 @@ export interface operations {
                             reason: string;
                         } | null;
                         id: string;
-                        lastCheckedAt: number | null;
-                        lastError: string | null;
-                        personalDataErasedAt: number | null;
-                        /** @description The order's lead print: the first of `printIds`, and the only one of an order of one print. */
-                        printId: string;
-                        /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
-                        printIds: string[];
-                        /** @description `printIds` with each print's design, placement and file. */
-                        prints: ({
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
                             designId: string;
-                            /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
-                            designRevision: number;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                            id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
+                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                            printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
                                 name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
                             spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
                             status: string;
-                        } | {
-                            /** @description A fill print is made from no design. */
-                            designId: null;
-                            /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
-                            fillColour: string;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
+                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                            variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
+                                /** @description Each declared field, in the printshop's order, as it was sent. */
+                                fields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[];
+                                options: {
+                                    [key: string]: string;
+                                };
+                                ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
+                            } | null;
+                            /** @description The variant the order names; `null` as `blankId` is. */
+                            variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
                             status: string;
-                        })[];
-                        /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
-                        printshopAsPlaced: {
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
+                        personalDataErasedAt: number | null;
+                        printshopOrders: {
                             adapter: string;
-                            name: string;
-                        } | null;
-                        printshopConnectionId: string | null;
-                        printshopName: string | null;
-                        quantity: number;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
                         /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
                         recipient: {
                             /**
@@ -41080,10 +41911,8 @@ export interface operations {
                             /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
                             phone?: string;
                         } | null;
-                        /** @description The order submitted to replace this one, which names it as `replacesOrderId`; `null` for none. */
-                        replacedByOrderId: string | null;
-                        /** @description The failed order this one was submitted to replace; `null` for an order that replaces none. */
-                        replacesOrderId: string | null;
+                        /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
+                        recipientEmailBounced: boolean;
                         /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
                         shipTo: {
                             address: {
@@ -41124,51 +41953,10 @@ export interface operations {
                             /** @description The state, province or county, where the country uses one. */
                             region?: string;
                         } | null;
-                        spotOutput: string | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
                         status: string;
-                        submittedAt: number;
                         tenantId: string;
-                        tracking: {
-                            /** @description Who carries it, such as `DHL`. */
-                            carrier?: string;
-                            /** @description The shipment's tracking number. */
-                            number: string;
-                            /**
-                             * Format: uri
-                             * @description Where the shipment is followed: an https address.
-                             */
-                            url?: string;
-                        } | null;
                         updatedAt: number;
-                        /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
-                        variant: {
-                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
-                            colours?: {
-                                [key: string]: {
-                                    /** @description The colour to make the value in, `#rrggbb`. */
-                                    colour: string;
-                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
-                                    from: string;
-                                };
-                            };
-                            /** @description Each declared field, in the printshop's order, as it was sent. */
-                            fields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[];
-                            options: {
-                                [key: string]: string;
-                            };
-                            ref: string;
-                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
-                            unusedPicks?: {
-                                [key: string]: string;
-                            };
-                        } | null;
-                        /** @description The variant the order names; `null` as `blankId` is. */
-                        variantRef: string | null;
                     };
                 };
             };
@@ -41207,7 +41995,9 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The refused item's place in `items`, the first 0. Sent with `plan_limit_reached`. */
+                        itemIndex?: number;
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -41225,6 +42015,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         error: string;
+                        /** @description The refused item's place in `items`, the first 0. Sent with `print_not_found`, `design_not_found`. */
+                        itemIndex?: number;
                     };
                 };
             };
@@ -41243,6 +42035,10 @@ export interface operations {
                         /** @description Always sent with `print_ticket_stale`. */
                         detail?: string;
                         error: string;
+                        /** @description The design's newest live item. Always sent with `design_already_ordered`. */
+                        itemId?: string;
+                        /** @description The refused item's place in `items`, the first 0. Sent with `print_not_completed`, `print_needs_printshop`, `print_ticket_stale`, `print_superseded`, `print_files_deleted`, `design_erased`, `stale_update`, `design_already_ordered`, `printshop_paused`, `design_not_approved`, `low_resolution`. */
+                        itemIndex?: number;
                         /** @description The images the workspace put in the design's template that this print prints below their recommended resolution, as it was made. Empty when none did, when the image was accepted as it is, or when the workspace turned these warnings off. Always sent with `low_resolution`. */
                         lowResolution?: {
                             assetId: string;
@@ -41255,7 +42051,7 @@ export interface operations {
                             /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
                             recommendedDpi: number;
                         }[];
-                        /** @description Always sent with `design_already_ordered`. */
+                        /** @description The order holding the design's live item. Always sent with `design_already_ordered`. */
                         orderId?: string;
                         /** @description Always sent with `printshop_paused`. */
                         reason?: string;
@@ -41264,7 +42060,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, page_not_as_proofed, page_ordered_alone, cover_not_at_page_count, printshop_takes_no_pages, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -41276,8 +42072,12 @@ export interface operations {
                         bytes?: number;
                         /** @description Always sent with `spot_plate_required`. */
                         cause?: string;
+                        /** @description Always sent with `page_count_out_of_range`, `page_not_as_proofed`. */
+                        count?: number;
                         /** @description Always sent with `variant_not_of_design_row`. */
                         designId?: string;
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        designedAt?: number | null;
                         /** @description Always sent with `print_profile_unavailable`. */
                         detail?: string;
                         error: string;
@@ -41303,6 +42103,10 @@ export interface operations {
                                 name: string;
                             };
                         }[];
+                        /** @description The refused item's place in `items`, the first 0. Sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `missing_fulfilment_keys`, `postal_code_required`, `saved_address_not_found`, `spot_plate_required`, `print_profile_unavailable`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `print_without_placement`, `mixed_blanks`, `duplicate_placement`, `print_committed_elsewhere`, `printshop_cannot_combine`, `prints_disagree`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `page_not_as_proofed`, `page_ordered_alone`, `cover_not_at_page_count`, `printshop_takes_no_pages`. */
+                        itemIndex?: number;
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        itemPageCount?: number | null;
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`. */
@@ -41312,511 +42116,8 @@ export interface operations {
                         };
                         /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         machine?: string;
-                        /** @description Always sent with `payload_too_large`. */
-                        maxBytes?: number;
-                        /** @description Always sent with `print_exceeds_machine`. */
-                        mediaMm?: {
-                            heightMm: number;
-                            widthMm: number;
-                        };
-                        /** @description Always sent with `technique_not_offered`. */
-                        method?: string;
-                        /** @description Always sent with `missing_fulfilment_keys`. */
-                        missing?: string[];
-                        /** @description Always sent with `print_profile_unavailable`. */
-                        outputProfile?: string;
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
-                        placement?: string;
-                        /** @description Always sent with `duplicate_placement`. */
-                        placementId?: string;
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, and may be sent with `field_value_missing`. */
-                        position?: string;
-                        /** @description Always sent with `print_profile_unavailable`, `print_without_placement`, `print_committed_elsewhere`. */
-                        printId?: string;
-                        /** @description Always sent with `technique_not_offered`. */
-                        printMethods?: string[];
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`. */
-                        printMm?: {
-                            heightMm: number;
-                            widthMm: number;
-                        };
-                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
-                        printshop?: string;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
-                        reason?: string;
-                        /** @description Always sent with `spot_plate_required`. */
-                        references?: string[];
-                        /** @description Always sent with `variant_not_of_design_row`. */
-                        row?: {
-                            [key: string]: string;
-                        };
-                        /** @description Always sent with `print_not_position_size`. */
-                        sizeMm?: {
-                            heightMm: number;
-                            widthMm: number;
-                        };
-                        /** @description Always sent with `print_raster_too_large`. */
-                        sizePx?: {
-                            heightPx: number;
-                            widthPx: number;
-                        };
-                        /** @description Always sent with `variant_not_of_blank`, `variant_retired`, `variant_not_of_design_row`. */
-                        variant?: string;
-                        /** @description Always sent with `variant_required`. */
-                        variants?: number;
-                    };
-                };
-            };
-            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
-            500: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                    "text/plain": "Internal Server Error";
-                };
-            };
-            /** @description Refused: lock_timeout */
-            503: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-        };
-    };
-    "orders.createBatch": {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Your own key for this request. A repeat with the same key and body within 24 hours is answered with what the first one made, marked `Idempotent-Replayed: true`, and makes nothing; the same key with another body is refused `idempotency_key_reused`, and a repeat while the first is still being answered `idempotency_key_in_use`. A request that is refused makes nothing, so its key may be sent again. */
-                "idempotency-key"?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The caller's own reference for this order, such as its order id in the shop. Kept exactly as sent and handed to the printshop. */
-                    externalRef?: string;
-                    /** @description The items of the order, each placed as an order of its own; the items bound for one printshop go to it as one of its orders. */
-                    items: {
-                        /** @description The designs of one item in place of its prints, each an approved design of one side, committed on the same blank in a placement of its own; the first is the order's lead. The order makes a new print of each, as `POST /v1/prints` would, and waits for them; a standing design's order reuses the print of its current revision, completed or still rendering, and makes one only when there is none or it failed. Name `prints` or `designs`, not both. */
-                        designs?: {
-                            /** @description One approved design of the item, by the id `GET /v1/designs` answers. */
-                            designId: string;
-                        }[];
-                        /** @description The prints of one item, each a print of a design committed on the same blank in a placement of its own, completed or still rendering; the first is the order's lead, which `printId` names on the order. One print places the order `POST /v1/prints/{id}/orders` would. Name `prints` or `designs`, not both. */
-                        prints?: {
-                            /** @description One print of the item, by the id `GET /v1/prints` answers. */
-                            printId: string;
-                        }[];
-                        /**
-                         * @description How many copies to order. A whole number of 1 or more; 1 when left out.
-                         * @default 1
-                         */
-                        quantity?: number;
-                        /** @description The variant of the print's blank the order is for, by ref (`v_…`). Left out, a blank with exactly one variant orders that one, and one with several is refused `variant_required`. A ref of another blank is refused `variant_not_of_blank`, and a retired one `variant_retired`. The order keeps a copy of the variant as it was: its options and the printshop fields it was sent. */
-                        variant?: string;
-                    }[];
-                    /** @description The printshop to make this order, for a print with no blank whose design named none when it was committed. A print on a blank is made by the blank's printshop: naming another is refused with `printshop_differs_from_blank`, and naming the blank's own as an unknown field. Absent or `null`, a print with no blank goes to the printshop its design was committed with, else the tenant's default. */
-                    printshopId?: string | null;
-                    /** @description Who every item of the order is for. */
-                    recipient: {
-                        /**
-                         * Format: email
-                         * @description The recipient's email address, for the carrier's notices.
-                         */
-                        email?: string;
-                        /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
-                        name: string;
-                        /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
-                        phone?: string;
-                    };
-                    /** @description Order the design again on purpose. A design has one live order (in any status but `failed` and `cancelled`): absent or false, an order of a design that has one is refused `409 design_already_ordered`, naming the design and its newest live order, and nothing is written. True places the order whatever orders the design has. */
-                    reorder?: boolean;
-                    /** @description A saved address to ship to; the customer stays the recipient. null: the customer's. Left out: the workspace's setting. */
-                    shipToAddressId?: string | null;
-                    /** @description Where every item of the order ships. */
-                    shippingAddress: {
-                        /** @description The city or town. */
-                        city: string;
-                        /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
-                        company?: string;
-                        /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
-                        country: string;
-                        /** @description The first line of the street address: street and number. */
-                        line1: string;
-                        /** @description The second line of the address: an apartment, floor or c/o. */
-                        line2?: string;
-                        /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
-                        postalCode?: string;
-                        /** @description The state, province or county, where the country uses one. */
-                        region?: string;
-                    };
-                };
-            };
-        };
-        responses: {
-            /** @description Each item's order */
-            201: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Each item's order, in the order the request named the items. */
-                        orders: {
-                            adapter: string;
-                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
-                            blank: {
-                                name: string;
-                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
-                                optionAxes: string[];
-                                /** @description How many variants it has, retired ones included. */
-                                variants: number;
-                            } | null;
-                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
-                            blankId: string | null;
-                            /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after the order was sent; `null` for an order whose address never changed. */
-                            delivery: {
-                                /** @description When the change was made. */
-                                at: number;
-                                /** @description What the printshop made of the change: `sending` while it is being told, `accepted`, `refused` (the order keeps the address the printshop has), or `carried` when what the printshop had not been sent yet carries the new address, so nothing extra was sent. */
-                                state: string;
-                                /** @description The printshop's own answer to a refused change; `null` otherwise. */
-                                words: string | null;
-                            } | null;
-                            /** @description The design the lead print was made from. */
-                            designId: string;
-                            externalOrderRef: string | null;
-                            externalRef: string | null;
-                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
-                            failureKind: string | null;
-                            /** @description Why the order is `held`, while it is; `null` for an order not held. A held order is accepted and not handed to its printshop until the month resets with room for it or the workspace upgrades. */
-                            hold: {
-                                /** @description The plan's monthly order limit the order met. */
-                                limit: number;
-                                /** @description When the month resets (ISO 8601, UTC): the latest the order is released, if the new month has room for it. */
-                                periodEnd: string;
-                                /** @description Why it is held: `monthly_order_limit`, the workspace has placed the orders its plan includes this month. Show a reason you do not know as held without one, never as a failure. */
-                                reason: string;
-                            } | null;
-                            id: string;
-                            lastCheckedAt: number | null;
-                            lastError: string | null;
-                            personalDataErasedAt: number | null;
-                            /** @description The order's lead print: the first of `printIds`, and the only one of an order of one print. */
-                            printId: string;
-                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
-                            printIds: string[];
-                            /** @description `printIds` with each print's design, placement and file. */
-                            prints: ({
-                                designId: string;
-                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
-                                designRevision: number;
-                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                                placementFields: {
-                                    name: string;
-                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                    source: string;
-                                    value: string;
-                                }[] | null;
-                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                                placementId: string | null;
-                                printId: string;
-                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                                printedAs: string | null;
-                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                                spotOutput: string | null;
-                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
-                                status: string;
-                            } | {
-                                /** @description A fill print is made from no design. */
-                                designId: null;
-                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
-                                fillColour: string;
-                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                                placementFields: {
-                                    name: string;
-                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                    source: string;
-                                    value: string;
-                                }[] | null;
-                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                                placementId: string | null;
-                                printId: string;
-                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                                printedAs: string | null;
-                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                                spotOutput: string | null;
-                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
-                                status: string;
-                            })[];
-                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
-                            printshopAsPlaced: {
-                                adapter: string;
-                                name: string;
-                            } | null;
-                            printshopConnectionId: string | null;
-                            printshopName: string | null;
-                            quantity: number;
-                            /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
-                            recipient: {
-                                /**
-                                 * Format: email
-                                 * @description The recipient's email address, for the carrier's notices.
-                                 */
-                                email?: string;
-                                /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
-                                name: string;
-                                /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
-                                phone?: string;
-                            } | null;
-                            /** @description The order submitted to replace this one, which names it as `replacesOrderId`; `null` for none. */
-                            replacedByOrderId: string | null;
-                            /** @description The failed order this one was submitted to replace; `null` for an order that replaces none. */
-                            replacesOrderId: string | null;
-                            /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
-                            shipTo: {
-                                address: {
-                                    /** @description The city or town. */
-                                    city: string;
-                                    /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
-                                    company?: string;
-                                    /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
-                                    country: string;
-                                    /** @description The first line of the street address: street and number. */
-                                    line1: string;
-                                    /** @description The second line of the address: an apartment, floor or c/o. */
-                                    line2?: string;
-                                    /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
-                                    postalCode?: string;
-                                    /** @description The state, province or county, where the country uses one. */
-                                    region?: string;
-                                };
-                                /** @description What the address is called in the workspace, such as `Warehouse`: unique there, case aside, and the name a parcel sent there is addressed to. Up to 200 characters. */
-                                name: string;
-                                /** @description The saved address the order ships to, by id. It may have been changed or removed since; `name` and `address` are what the order was placed with. */
-                                savedAddressId: string;
-                            } | null;
-                            /** @description The customer's address. Where the order ships, unless `shipTo` is set. */
-                            shippingAddress: {
-                                /** @description The city or town. */
-                                city: string;
-                                /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
-                                company?: string;
-                                /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
-                                country: string;
-                                /** @description The first line of the street address: street and number. */
-                                line1: string;
-                                /** @description The second line of the address: an apartment, floor or c/o. */
-                                line2?: string;
-                                /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
-                                postalCode?: string;
-                                /** @description The state, province or county, where the country uses one. */
-                                region?: string;
-                            } | null;
-                            spotOutput: string | null;
-                            status: string;
-                            submittedAt: number;
-                            tenantId: string;
-                            tracking: {
-                                /** @description Who carries it, such as `DHL`. */
-                                carrier?: string;
-                                /** @description The shipment's tracking number. */
-                                number: string;
-                                /**
-                                 * Format: uri
-                                 * @description Where the shipment is followed: an https address.
-                                 */
-                                url?: string;
-                            } | null;
-                            updatedAt: number;
-                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
-                            variant: {
-                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
-                                colours?: {
-                                    [key: string]: {
-                                        /** @description The colour to make the value in, `#rrggbb`. */
-                                        colour: string;
-                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
-                                        from: string;
-                                    };
-                                };
-                                /** @description Each declared field, in the printshop's order, as it was sent. */
-                                fields: {
-                                    name: string;
-                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                    source: string;
-                                    value: string;
-                                }[];
-                                options: {
-                                    [key: string]: string;
-                                };
-                                ref: string;
-                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
-                                unusedPicks?: {
-                                    [key: string]: string;
-                                };
-                            } | null;
-                            /** @description The variant the order names; `null` as `blankId` is. */
-                            variantRef: string | null;
-                        }[];
-                    };
-                };
-            };
-            /** @description Refused: bad_request */
-            400: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: unauthorized */
-            401: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: plan_limit_reached, origin_forbidden, forbidden, feature_disabled, workspace_suspended */
-            403: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
-                        feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
-                        limit?: string;
-                        /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
+                        /** @description Always sent with `page_count_out_of_range`. */
                         max?: number;
-                        /** @description The plan whose limit it is. Always sent with `plan_limit_reached`. */
-                        plan?: string;
-                    };
-                };
-            };
-            /** @description Refused: print_not_found, design_not_found */
-            404: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: print_not_completed, print_needs_printshop, print_ticket_stale, print_superseded, print_files_deleted, design_erased, stale_update, design_already_ordered, printshop_paused, design_not_approved, low_resolution, idempotency_key_in_use */
-            409: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Always sent with `stale_update`. */
-                        current?: number;
-                        /** @description Always sent with `design_already_ordered`. */
-                        designId?: string;
-                        /** @description Always sent with `print_ticket_stale`. */
-                        detail?: string;
-                        error: string;
-                        /** @description The images the workspace put in the design's template that this print prints below their recommended resolution, as it was made. Empty when none did, when the image was accepted as it is, or when the workspace turned these warnings off. Always sent with `low_resolution`. */
-                        lowResolution?: {
-                            assetId: string;
-                            /** @description Pixels per inch along the edge that decides, at the size. */
-                            effectiveDpi: number;
-                            /** @description What the merchant knows the image by, as the template's own judgement answers it. Absent on a print made before prints recorded it. */
-                            label?: string;
-                            /** @description The layer the image fills, or the artwork's own key for its image background. */
-                            layerId: string;
-                            /** @description The resolution it is judged against: the template's minimum, else the workspace's. */
-                            recommendedDpi: number;
-                        }[];
-                        /** @description Always sent with `design_already_ordered`. */
-                        orderId?: string;
-                        /** @description Always sent with `printshop_paused`. */
-                        reason?: string;
-                        /** @description Always sent with `print_not_completed`. */
-                        status?: string;
-                    };
-                };
-            };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
-            422: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Sent with `payload_too_large`. */
-                        bytes?: number;
-                        /** @description Always sent with `spot_plate_required`. */
-                        cause?: string;
-                        /** @description Always sent with `variant_not_of_design_row`. */
-                        designId?: string;
-                        /** @description Always sent with `print_profile_unavailable`. */
-                        detail?: string;
-                        error: string;
-                        /** @description The workspace feature that is off, where the printshop prints with the method but the workspace does not offer it. Sent with `technique_not_offered`. */
-                        feature?: string;
-                        /** @description Always sent with `field_value_missing`. */
-                        field?: string;
-                        /** @description Always sent with `field_value_missing`. */
-                        fieldKind?: string;
-                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
-                        findings?: {
-                            allowed: unknown;
-                            given: unknown;
-                            layerId: string;
-                            prop: string;
-                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
-                            reason?: string;
-                            rule: string;
-                            /** @description The nearest thread, for a colour off the machine's list. */
-                            thread?: {
-                                hex: string;
-                                id: string;
-                                name: string;
-                            };
-                        }[];
-                        /** @description Always sent with `prints_disagree`. */
-                        key?: string;
-                        /** @description Always sent with `print_exceeds_position`. */
-                        largestMm?: {
-                            heightMm: number;
-                            widthMm: number;
-                        };
-                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
-                        machine?: string;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
                         /** @description Always sent with `print_exceeds_machine`. */
@@ -41826,13 +42127,17 @@ export interface operations {
                         };
                         /** @description Always sent with `technique_not_offered`. */
                         method?: string;
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        min?: number;
                         /** @description Always sent with `missing_fulfilment_keys`. */
                         missing?: string[];
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
+                        /** @description Always sent with `duplicate_page`, `page_missing`, `page_not_as_proofed`. */
+                        page?: number;
                         /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
-                        /** @description Always sent with `duplicate_placement`. */
+                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `page_not_as_proofed`, `cover_not_at_page_count`. */
                         placementId?: string;
                         /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, and may be sent with `field_value_missing`. */
                         position?: string;
@@ -41847,6 +42152,10 @@ export interface operations {
                         };
                         /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedCount?: number;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedPage?: number;
                         /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
@@ -41865,6 +42174,8 @@ export interface operations {
                             heightPx: number;
                             widthPx: number;
                         };
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        step?: number;
                         /** @description Always sent with `variant_not_of_blank`, `variant_retired`, `variant_not_of_design_row`. */
                         variant?: string;
                         /** @description Always sent with `variant_required`. */
@@ -41910,7 +42221,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The order, its history, and whether it can be submitted again */
+            /** @description The order, its items, printshop orders and parcels */
             200: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -41918,33 +42229,13 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        adapter: string;
-                        /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
-                        approvalHold: {
-                            /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
-                            dueAt: number;
-                            /** @description The printshop's own page for the order, to approve it on. */
-                            url: string;
-                        } | null;
-                        /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
-                        blank: {
-                            name: string;
-                            /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
-                            optionAxes: string[];
-                            /** @description How many variants it has, retired ones included. */
-                            variants: number;
-                        } | null;
-                        /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
-                        blankId: string | null;
                         canErase: boolean;
-                        canRetry: boolean;
-                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after the order was sent; `null` for an order whose address never changed. */
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
                         delivery: {
-                            /** @description When the change was made. */
                             at: number;
-                            /** @description What the printshop made of the change: `sending` while it is being told, `accepted`, `refused` (the order keeps the address the printshop has), or `carried` when what the printshop had not been sent yet carries the new address, so nothing extra was sent. */
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
                             state: string;
-                            /** @description The printshop's own answer to a refused change; `null` otherwise. */
                             words: string | null;
                         } | null;
                         /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
@@ -41968,24 +42259,14 @@ export interface operations {
                             by: string;
                             /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
                             outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
                             /** @description The printshop's own answer to a refused change. */
                             words: string | null;
                         }[];
-                        /** @description The design the lead print was made from. */
-                        designId: string;
-                        /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
-                        embroideryFee: {
-                            /** @description The fee in the currency's minor units. */
-                            amountMinor: number;
-                            /** @description The currency's ISO 4217 code. */
-                            currency: string;
-                        } | null;
                         erasable: boolean;
-                        externalOrderRef: string | null;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
                         externalRef: string | null;
-                        /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
-                        failureKind: string | null;
-                        fallbackSpots: string[];
                         history: {
                             at: number;
                             /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
@@ -41993,6 +42274,8 @@ export interface operations {
                                 id: string;
                                 name: string;
                             } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
                             reason: string | null;
                             /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
                             releasedBy: string | null;
@@ -42001,7 +42284,7 @@ export interface operations {
                             type: string;
                             via: string | null;
                         }[];
-                        /** @description Why the order is `held`, while it is; `null` for an order not held. A held order is accepted and not handed to its printshop until the month resets with room for it or the workspace upgrades. */
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
                         hold: {
                             /** @description The plan's monthly order limit the order met. */
                             limit: number;
@@ -42011,14 +42294,162 @@ export interface operations {
                             reason: string;
                         } | null;
                         id: string;
-                        lastCheckedAt: number | null;
-                        lastError: string | null;
-                        /** @description The other items of the order this one was placed in, oldest first, each an order of its own with its prints and variant: the other items of its store order (`storeOrder`), or of a member's order of several items (`POST /v1/orders/batch`). Empty for an order placed alone, and for a replacement, which goes on its own. */
-                        orderedWith: {
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
+                            designId: string;
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
                             id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
                             /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
                             printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
+                                name: string;
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
+                            spotOutput: string | null;
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
                             status: string;
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
                             /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
                             variant: {
                                 /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
@@ -42048,63 +42479,50 @@ export interface operations {
                             } | null;
                             /** @description The variant the order names; `null` as `blankId` is. */
                             variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
+                            status: string;
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
                         }[];
                         personalDataErasedAt: number | null;
-                        /** @description The order's lead print: the first of `printIds`, and the only one of an order of one print. */
-                        printId: string;
-                        /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
-                        printIds: string[];
-                        /** @description `printIds` with each print's design, placement and file. */
-                        prints: ({
-                            designId: string;
-                            /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
-                            designRevision: number;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
-                            status: string;
-                        } | {
-                            /** @description A fill print is made from no design. */
-                            designId: null;
-                            /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
-                            fillColour: string;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
-                            status: string;
-                        })[];
-                        /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
-                        printshopAsPlaced: {
+                        printshopOrders: {
                             adapter: string;
-                            name: string;
-                        } | null;
-                        printshopConnectionId: string | null;
-                        printshopName: string | null;
-                        quantity: number;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
                         /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
                         recipient: {
                             /**
@@ -42119,40 +42537,6 @@ export interface operations {
                         } | null;
                         /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
                         recipientEmailBounced: boolean;
-                        /** @description The order submitted to replace this one, which names it as `replacesOrderId`; `null` for none. */
-                        replacedByOrderId: string | null;
-                        /** @description The failed order this one was submitted to replace; `null` for an order that replaces none. */
-                        replacesOrderId: string | null;
-                        /** @description The reroutes this order took part in, by `POST /v1/orders/{id}/retry` with `reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their orders were placed. Empty for an order not rerouted. */
-                        reroutes: {
-                            at: number;
-                            from: {
-                                blankId: string | null;
-                                blankName: string | null;
-                                /** @description The blank's option axes, in order: how `variantOptions` read. */
-                                optionAxes: string[];
-                                printshopName: string | null;
-                                variantOptions: {
-                                    [key: string]: string;
-                                } | null;
-                                variantRef: string | null;
-                            };
-                            otherOrderId: string;
-                            side: string;
-                            to: {
-                                blankId: string | null;
-                                blankName: string | null;
-                                /** @description The blank's option axes, in order: how `variantOptions` read. */
-                                optionAxes: string[];
-                                printshopName: string | null;
-                                variantOptions: {
-                                    [key: string]: string;
-                                } | null;
-                                variantRef: string | null;
-                            };
-                            via: string | null;
-                        }[];
-                        retryable: boolean;
                         /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
                         shipTo: {
                             address: {
@@ -42193,71 +42577,10 @@ export interface operations {
                             /** @description The state, province or county, where the country uses one. */
                             region?: string;
                         } | null;
-                        spotOutput: string | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
                         status: string;
-                        /** @description The statuses this caller may set the order to now with `PATCH /v1/orders/{id}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
-                        statusMoves: string[];
-                        /** @description Why the order, `awaiting_prints` with its own prints done, still waits: it goes to its printshop with the other items of its store order, as one of the printshop's orders. `null` for any other order, one whose prints are still rendering included. `POST /v1/orders/{id}/send-now` sends the ready ones now. */
-                        storeOrderWait: {
-                            /** @description How many items the store said the store order has. */
-                            itemsExpected: number;
-                            /** @description How many items of the store order have been placed so far. */
-                            itemsPlaced: number;
-                            /** @description How many items of the store order bound for this order's printshop are not ready to go yet: their prints still rendering, a design awaiting approval, or held. */
-                            notReady: number;
-                            /** @description How many items of the store order bound for this order's printshop are ready to go, this one included: what a send now sends. */
-                            ready: number;
-                            /** @description The store order it was sold in, as `storeOrder.ref` named it; for an item of a member's order of several items, the reference minted for that order. */
-                            ref: string;
-                            /** @description The latest the order goes to its printshop, with the items ready then (ISO 8601, UTC): two hours from the store order's first item. `null` for an item of a member's order of several items, which waits for all of them. */
-                            sendBy: string | null;
-                            /** @description When `POST /v1/orders/{id}/send-now` was asked for the store order's items bound for this printshop: they go within seconds. `null` when it was not. */
-                            sendNowAt: number | null;
-                        } | null;
-                        submittedAt: number;
                         tenantId: string;
-                        tracking: {
-                            /** @description Who carries it, such as `DHL`. */
-                            carrier?: string;
-                            /** @description The shipment's tracking number. */
-                            number: string;
-                            /**
-                             * Format: uri
-                             * @description Where the shipment is followed: an https address.
-                             */
-                            url?: string;
-                        } | null;
                         updatedAt: number;
-                        /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
-                        variant: {
-                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
-                            colours?: {
-                                [key: string]: {
-                                    /** @description The colour to make the value in, `#rrggbb`. */
-                                    colour: string;
-                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
-                                    from: string;
-                                };
-                            };
-                            /** @description Each declared field, in the printshop's order, as it was sent. */
-                            fields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[];
-                            options: {
-                                [key: string]: string;
-                            };
-                            ref: string;
-                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
-                            unusedPicks?: {
-                                [key: string]: string;
-                            };
-                        } | null;
-                        /** @description The variant the order names; `null` as `blankId` is. */
-                        variantRef: string | null;
-                        varnishLeftOut: boolean;
                     };
                 };
             };
@@ -42296,348 +42619,6 @@ export interface operations {
                 content: {
                     "application/json": {
                         error: string;
-                    };
-                };
-            };
-            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
-            500: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                    "text/plain": "Internal Server Error";
-                };
-            };
-        };
-    };
-    "orders.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The printshop's own reference for the order, settling an unknown outcome as `submitted`. */
-                    externalOrderRef?: string;
-                    /** @description Why: with `failed`, the order's failure note. */
-                    reason?: string;
-                    /**
-                     * @description The order's new status.
-                     * @enum {string}
-                     */
-                    status: "held" | "awaiting_prints" | "submitted" | "queued" | "printed" | "shipped" | "failed" | "outcome_unknown" | "cancelled";
-                    /** @description How a shipped order can be followed, with `shipped` only. */
-                    tracking?: {
-                        /** @description Who carries it, such as `DHL`. */
-                        carrier?: string;
-                        /** @description The shipment's tracking number. */
-                        number: string;
-                        /**
-                         * Format: uri
-                         * @description Where the shipment is followed: an https address.
-                         */
-                        url?: string;
-                    };
-                };
-            };
-        };
-        responses: {
-            /** @description The order, with its new status */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        adapter: string;
-                        /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
-                        blank: {
-                            name: string;
-                            /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
-                            optionAxes: string[];
-                            /** @description How many variants it has, retired ones included. */
-                            variants: number;
-                        } | null;
-                        /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
-                        blankId: string | null;
-                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after the order was sent; `null` for an order whose address never changed. */
-                        delivery: {
-                            /** @description When the change was made. */
-                            at: number;
-                            /** @description What the printshop made of the change: `sending` while it is being told, `accepted`, `refused` (the order keeps the address the printshop has), or `carried` when what the printshop had not been sent yet carries the new address, so nothing extra was sent. */
-                            state: string;
-                            /** @description The printshop's own answer to a refused change; `null` otherwise. */
-                            words: string | null;
-                        } | null;
-                        /** @description The design the lead print was made from. */
-                        designId: string;
-                        externalOrderRef: string | null;
-                        externalRef: string | null;
-                        /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
-                        failureKind: string | null;
-                        /** @description Why the order is `held`, while it is; `null` for an order not held. A held order is accepted and not handed to its printshop until the month resets with room for it or the workspace upgrades. */
-                        hold: {
-                            /** @description The plan's monthly order limit the order met. */
-                            limit: number;
-                            /** @description When the month resets (ISO 8601, UTC): the latest the order is released, if the new month has room for it. */
-                            periodEnd: string;
-                            /** @description Why it is held: `monthly_order_limit`, the workspace has placed the orders its plan includes this month. Show a reason you do not know as held without one, never as a failure. */
-                            reason: string;
-                        } | null;
-                        id: string;
-                        lastCheckedAt: number | null;
-                        lastError: string | null;
-                        personalDataErasedAt: number | null;
-                        /** @description The order's lead print: the first of `printIds`, and the only one of an order of one print. */
-                        printId: string;
-                        /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
-                        printIds: string[];
-                        /** @description `printIds` with each print's design, placement and file. */
-                        prints: ({
-                            designId: string;
-                            /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
-                            designRevision: number;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
-                            status: string;
-                        } | {
-                            /** @description A fill print is made from no design. */
-                            designId: null;
-                            /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
-                            fillColour: string;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
-                            status: string;
-                        })[];
-                        /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
-                        printshopAsPlaced: {
-                            adapter: string;
-                            name: string;
-                        } | null;
-                        printshopConnectionId: string | null;
-                        printshopName: string | null;
-                        quantity: number;
-                        /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
-                        recipient: {
-                            /**
-                             * Format: email
-                             * @description The recipient's email address, for the carrier's notices.
-                             */
-                            email?: string;
-                            /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
-                            name: string;
-                            /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
-                            phone?: string;
-                        } | null;
-                        /** @description The order submitted to replace this one, which names it as `replacesOrderId`; `null` for none. */
-                        replacedByOrderId: string | null;
-                        /** @description The failed order this one was submitted to replace; `null` for an order that replaces none. */
-                        replacesOrderId: string | null;
-                        /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
-                        shipTo: {
-                            address: {
-                                /** @description The city or town. */
-                                city: string;
-                                /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
-                                company?: string;
-                                /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
-                                country: string;
-                                /** @description The first line of the street address: street and number. */
-                                line1: string;
-                                /** @description The second line of the address: an apartment, floor or c/o. */
-                                line2?: string;
-                                /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
-                                postalCode?: string;
-                                /** @description The state, province or county, where the country uses one. */
-                                region?: string;
-                            };
-                            /** @description What the address is called in the workspace, such as `Warehouse`: unique there, case aside, and the name a parcel sent there is addressed to. Up to 200 characters. */
-                            name: string;
-                            /** @description The saved address the order ships to, by id. It may have been changed or removed since; `name` and `address` are what the order was placed with. */
-                            savedAddressId: string;
-                        } | null;
-                        /** @description The customer's address. Where the order ships, unless `shipTo` is set. */
-                        shippingAddress: {
-                            /** @description The city or town. */
-                            city: string;
-                            /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
-                            company?: string;
-                            /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
-                            country: string;
-                            /** @description The first line of the street address: street and number. */
-                            line1: string;
-                            /** @description The second line of the address: an apartment, floor or c/o. */
-                            line2?: string;
-                            /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
-                            postalCode?: string;
-                            /** @description The state, province or county, where the country uses one. */
-                            region?: string;
-                        } | null;
-                        spotOutput: string | null;
-                        status: string;
-                        submittedAt: number;
-                        tenantId: string;
-                        tracking: {
-                            /** @description Who carries it, such as `DHL`. */
-                            carrier?: string;
-                            /** @description The shipment's tracking number. */
-                            number: string;
-                            /**
-                             * Format: uri
-                             * @description Where the shipment is followed: an https address.
-                             */
-                            url?: string;
-                        } | null;
-                        updatedAt: number;
-                        /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
-                        variant: {
-                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
-                            colours?: {
-                                [key: string]: {
-                                    /** @description The colour to make the value in, `#rrggbb`. */
-                                    colour: string;
-                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
-                                    from: string;
-                                };
-                            };
-                            /** @description Each declared field, in the printshop's order, as it was sent. */
-                            fields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[];
-                            options: {
-                                [key: string]: string;
-                            };
-                            ref: string;
-                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
-                            unusedPicks?: {
-                                [key: string]: string;
-                            };
-                        } | null;
-                        /** @description The variant the order names; `null` as `blankId` is. */
-                        variantRef: string | null;
-                    };
-                };
-            };
-            /** @description Refused: bad_request */
-            400: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: unauthorized */
-            401: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended */
-            403: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
-                        feature?: string;
-                    };
-                };
-            };
-            /** @description Refused: order_not_found, not_found */
-            404: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: order_status_not_allowed, order_reference_taken */
-            409: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                        /** @description Always sent with `order_status_not_allowed`. */
-                        from?: string;
-                        /** @description Always sent with `order_status_not_allowed`. */
-                        to?: string;
-                    };
-                };
-            };
-            /** @description Refused: order_status_reason_required, payload_too_large */
-            422: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Sent with `payload_too_large`. */
-                        bytes?: number;
-                        error: string;
-                        /** @description Always sent with `order_status_reason_required`. */
-                        from?: string;
-                        /** @description Always sent with `payload_too_large`. */
-                        maxBytes?: number;
                     };
                 };
             };
@@ -42675,33 +42656,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        adapter: string;
-                        /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
-                        blank: {
-                            name: string;
-                            /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
-                            optionAxes: string[];
-                            /** @description How many variants it has, retired ones included. */
-                            variants: number;
-                        } | null;
-                        /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
-                        blankId: string | null;
-                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after the order was sent; `null` for an order whose address never changed. */
+                        canErase: boolean;
+                        /** @description The items this cancel moved to `cancelled`: the one asked for and every item of its printshop order the printshop stopped with it. */
+                        cancelledItemIds: string[];
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
                         delivery: {
-                            /** @description When the change was made. */
                             at: number;
-                            /** @description What the printshop made of the change: `sending` while it is being told, `accepted`, `refused` (the order keeps the address the printshop has), or `carried` when what the printshop had not been sent yet carries the new address, so nothing extra was sent. */
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
                             state: string;
-                            /** @description The printshop's own answer to a refused change; `null` otherwise. */
                             words: string | null;
                         } | null;
-                        /** @description The design the lead print was made from. */
-                        designId: string;
-                        externalOrderRef: string | null;
+                        /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
+                        deliveryChangeRefusal: {
+                            /** @enum {string} */
+                            code: "address_change_not_accepted";
+                        } | {
+                            /** @enum {string} */
+                            code: "order_past_address_change";
+                            status: string;
+                            /** @description Its submission has not been answered yet: its printshop has given it no reference. */
+                            unanswered: boolean;
+                        } | null;
+                        /** @description The order's address changes, oldest first, each as its `order.delivery_changed` event recorded it. Never the address. */
+                        deliveryChanges: {
+                            /** @description The order had no address before: one was added. */
+                            added: boolean;
+                            /** @description When the change was made, or answered. */
+                            at: number;
+                            /** @description Who made it: a studio `member`, the `customer` on the design's address capture page, a connected store's integration key (`store_key`), or a `secret_key`. */
+                            by: string;
+                            /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
+                            outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
+                            /** @description The printshop's own answer to a refused change. */
+                            words: string | null;
+                        }[];
+                        erasable: boolean;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
                         externalRef: string | null;
-                        /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
-                        failureKind: string | null;
-                        /** @description Why the order is `held`, while it is; `null` for an order not held. A held order is accepted and not handed to its printshop until the month resets with room for it or the workspace upgrades. */
+                        history: {
+                            at: number;
+                            /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
+                            automation: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
+                            reason: string | null;
+                            /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
+                            releasedBy: string | null;
+                            seq: number;
+                            status: string;
+                            type: string;
+                            via: string | null;
+                        }[];
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
                         hold: {
                             /** @description The plan's monthly order limit the order met. */
                             limit: number;
@@ -42711,64 +42723,235 @@ export interface operations {
                             reason: string;
                         } | null;
                         id: string;
-                        lastCheckedAt: number | null;
-                        lastError: string | null;
-                        personalDataErasedAt: number | null;
-                        /** @description The order's lead print: the first of `printIds`, and the only one of an order of one print. */
-                        printId: string;
-                        /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
-                        printIds: string[];
-                        /** @description `printIds` with each print's design, placement and file. */
-                        prints: ({
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
                             designId: string;
-                            /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
-                            designRevision: number;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                            id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
+                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                            printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
                                 name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
                             spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
                             status: string;
-                        } | {
-                            /** @description A fill print is made from no design. */
-                            designId: null;
-                            /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
-                            fillColour: string;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
+                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                            variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
+                                /** @description Each declared field, in the printshop's order, as it was sent. */
+                                fields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[];
+                                options: {
+                                    [key: string]: string;
+                                };
+                                ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
+                            } | null;
+                            /** @description The variant the order names; `null` as `blankId` is. */
+                            variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
                             status: string;
-                        })[];
-                        /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
-                        printshopAsPlaced: {
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
+                        personalDataErasedAt: number | null;
+                        printshopOrders: {
                             adapter: string;
-                            name: string;
-                        } | null;
-                        printshopConnectionId: string | null;
-                        printshopName: string | null;
-                        quantity: number;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
                         /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
                         recipient: {
                             /**
@@ -42781,10 +42964,8 @@ export interface operations {
                             /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
                             phone?: string;
                         } | null;
-                        /** @description The order submitted to replace this one, which names it as `replacesOrderId`; `null` for none. */
-                        replacedByOrderId: string | null;
-                        /** @description The failed order this one was submitted to replace; `null` for an order that replaces none. */
-                        replacesOrderId: string | null;
+                        /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
+                        recipientEmailBounced: boolean;
                         /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
                         shipTo: {
                             address: {
@@ -42825,51 +43006,10 @@ export interface operations {
                             /** @description The state, province or county, where the country uses one. */
                             region?: string;
                         } | null;
-                        spotOutput: string | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
                         status: string;
-                        submittedAt: number;
                         tenantId: string;
-                        tracking: {
-                            /** @description Who carries it, such as `DHL`. */
-                            carrier?: string;
-                            /** @description The shipment's tracking number. */
-                            number: string;
-                            /**
-                             * Format: uri
-                             * @description Where the shipment is followed: an https address.
-                             */
-                            url?: string;
-                        } | null;
                         updatedAt: number;
-                        /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
-                        variant: {
-                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
-                            colours?: {
-                                [key: string]: {
-                                    /** @description The colour to make the value in, `#rrggbb`. */
-                                    colour: string;
-                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
-                                    from: string;
-                                };
-                            };
-                            /** @description Each declared field, in the printshop's order, as it was sent. */
-                            fields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[];
-                            options: {
-                                [key: string]: string;
-                            };
-                            ref: string;
-                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
-                            unusedPicks?: {
-                                [key: string]: string;
-                            };
-                        } | null;
-                        /** @description The variant the order names; `null` as `blankId` is. */
-                        variantRef: string | null;
                     };
                 };
             };
@@ -42899,7 +43039,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: order_not_found, not_found */
+            /** @description Refused: order_not_found, item_not_found, not_found */
             404: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -43136,33 +43276,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        adapter: string;
-                        /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
-                        blank: {
-                            name: string;
-                            /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
-                            optionAxes: string[];
-                            /** @description How many variants it has, retired ones included. */
-                            variants: number;
-                        } | null;
-                        /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
-                        blankId: string | null;
-                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after the order was sent; `null` for an order whose address never changed. */
+                        canErase: boolean;
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
                         delivery: {
-                            /** @description When the change was made. */
                             at: number;
-                            /** @description What the printshop made of the change: `sending` while it is being told, `accepted`, `refused` (the order keeps the address the printshop has), or `carried` when what the printshop had not been sent yet carries the new address, so nothing extra was sent. */
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
                             state: string;
-                            /** @description The printshop's own answer to a refused change; `null` otherwise. */
                             words: string | null;
                         } | null;
-                        /** @description The design the lead print was made from. */
-                        designId: string;
-                        externalOrderRef: string | null;
+                        /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
+                        deliveryChangeRefusal: {
+                            /** @enum {string} */
+                            code: "address_change_not_accepted";
+                        } | {
+                            /** @enum {string} */
+                            code: "order_past_address_change";
+                            status: string;
+                            /** @description Its submission has not been answered yet: its printshop has given it no reference. */
+                            unanswered: boolean;
+                        } | null;
+                        /** @description The order's address changes, oldest first, each as its `order.delivery_changed` event recorded it. Never the address. */
+                        deliveryChanges: {
+                            /** @description The order had no address before: one was added. */
+                            added: boolean;
+                            /** @description When the change was made, or answered. */
+                            at: number;
+                            /** @description Who made it: a studio `member`, the `customer` on the design's address capture page, a connected store's integration key (`store_key`), or a `secret_key`. */
+                            by: string;
+                            /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
+                            outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
+                            /** @description The printshop's own answer to a refused change. */
+                            words: string | null;
+                        }[];
+                        erasable: boolean;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
                         externalRef: string | null;
-                        /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
-                        failureKind: string | null;
-                        /** @description Why the order is `held`, while it is; `null` for an order not held. A held order is accepted and not handed to its printshop until the month resets with room for it or the workspace upgrades. */
+                        history: {
+                            at: number;
+                            /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
+                            automation: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
+                            reason: string | null;
+                            /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
+                            releasedBy: string | null;
+                            seq: number;
+                            status: string;
+                            type: string;
+                            via: string | null;
+                        }[];
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
                         hold: {
                             /** @description The plan's monthly order limit the order met. */
                             limit: number;
@@ -43172,64 +43341,235 @@ export interface operations {
                             reason: string;
                         } | null;
                         id: string;
-                        lastCheckedAt: number | null;
-                        lastError: string | null;
-                        personalDataErasedAt: number | null;
-                        /** @description The order's lead print: the first of `printIds`, and the only one of an order of one print. */
-                        printId: string;
-                        /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
-                        printIds: string[];
-                        /** @description `printIds` with each print's design, placement and file. */
-                        prints: ({
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
                             designId: string;
-                            /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
-                            designRevision: number;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                            id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
+                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                            printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
                                 name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
                             spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
                             status: string;
-                        } | {
-                            /** @description A fill print is made from no design. */
-                            designId: null;
-                            /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
-                            fillColour: string;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
+                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                            variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
+                                /** @description Each declared field, in the printshop's order, as it was sent. */
+                                fields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[];
+                                options: {
+                                    [key: string]: string;
+                                };
+                                ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
+                            } | null;
+                            /** @description The variant the order names; `null` as `blankId` is. */
+                            variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
                             status: string;
-                        })[];
-                        /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
-                        printshopAsPlaced: {
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
+                        personalDataErasedAt: number | null;
+                        printshopOrders: {
                             adapter: string;
-                            name: string;
-                        } | null;
-                        printshopConnectionId: string | null;
-                        printshopName: string | null;
-                        quantity: number;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
                         /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
                         recipient: {
                             /**
@@ -43242,10 +43582,8 @@ export interface operations {
                             /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
                             phone?: string;
                         } | null;
-                        /** @description The order submitted to replace this one, which names it as `replacesOrderId`; `null` for none. */
-                        replacedByOrderId: string | null;
-                        /** @description The failed order this one was submitted to replace; `null` for an order that replaces none. */
-                        replacesOrderId: string | null;
+                        /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
+                        recipientEmailBounced: boolean;
                         /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
                         shipTo: {
                             address: {
@@ -43286,51 +43624,10 @@ export interface operations {
                             /** @description The state, province or county, where the country uses one. */
                             region?: string;
                         } | null;
-                        spotOutput: string | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
                         status: string;
-                        submittedAt: number;
                         tenantId: string;
-                        tracking: {
-                            /** @description Who carries it, such as `DHL`. */
-                            carrier?: string;
-                            /** @description The shipment's tracking number. */
-                            number: string;
-                            /**
-                             * Format: uri
-                             * @description Where the shipment is followed: an https address.
-                             */
-                            url?: string;
-                        } | null;
                         updatedAt: number;
-                        /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
-                        variant: {
-                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
-                            colours?: {
-                                [key: string]: {
-                                    /** @description The colour to make the value in, `#rrggbb`. */
-                                    colour: string;
-                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
-                                    from: string;
-                                };
-                            };
-                            /** @description Each declared field, in the printshop's order, as it was sent. */
-                            fields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[];
-                            options: {
-                                [key: string]: string;
-                            };
-                            ref: string;
-                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
-                            unusedPicks?: {
-                                [key: string]: string;
-                            };
-                        } | null;
-                        /** @description The variant the order names; `null` as `blankId` is. */
-                        variantRef: string | null;
                     };
                 };
             };
@@ -43468,33 +43765,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        adapter: string;
-                        /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
-                        blank: {
-                            name: string;
-                            /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
-                            optionAxes: string[];
-                            /** @description How many variants it has, retired ones included. */
-                            variants: number;
-                        } | null;
-                        /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
-                        blankId: string | null;
-                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after the order was sent; `null` for an order whose address never changed. */
+                        canErase: boolean;
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
                         delivery: {
-                            /** @description When the change was made. */
                             at: number;
-                            /** @description What the printshop made of the change: `sending` while it is being told, `accepted`, `refused` (the order keeps the address the printshop has), or `carried` when what the printshop had not been sent yet carries the new address, so nothing extra was sent. */
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
                             state: string;
-                            /** @description The printshop's own answer to a refused change; `null` otherwise. */
                             words: string | null;
                         } | null;
-                        /** @description The design the lead print was made from. */
-                        designId: string;
-                        externalOrderRef: string | null;
+                        /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
+                        deliveryChangeRefusal: {
+                            /** @enum {string} */
+                            code: "address_change_not_accepted";
+                        } | {
+                            /** @enum {string} */
+                            code: "order_past_address_change";
+                            status: string;
+                            /** @description Its submission has not been answered yet: its printshop has given it no reference. */
+                            unanswered: boolean;
+                        } | null;
+                        /** @description The order's address changes, oldest first, each as its `order.delivery_changed` event recorded it. Never the address. */
+                        deliveryChanges: {
+                            /** @description The order had no address before: one was added. */
+                            added: boolean;
+                            /** @description When the change was made, or answered. */
+                            at: number;
+                            /** @description Who made it: a studio `member`, the `customer` on the design's address capture page, a connected store's integration key (`store_key`), or a `secret_key`. */
+                            by: string;
+                            /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
+                            outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
+                            /** @description The printshop's own answer to a refused change. */
+                            words: string | null;
+                        }[];
+                        erasable: boolean;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
                         externalRef: string | null;
-                        /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
-                        failureKind: string | null;
-                        /** @description Why the order is `held`, while it is; `null` for an order not held. A held order is accepted and not handed to its printshop until the month resets with room for it or the workspace upgrades. */
+                        history: {
+                            at: number;
+                            /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
+                            automation: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
+                            reason: string | null;
+                            /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
+                            releasedBy: string | null;
+                            seq: number;
+                            status: string;
+                            type: string;
+                            via: string | null;
+                        }[];
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
                         hold: {
                             /** @description The plan's monthly order limit the order met. */
                             limit: number;
@@ -43504,64 +43830,235 @@ export interface operations {
                             reason: string;
                         } | null;
                         id: string;
-                        lastCheckedAt: number | null;
-                        lastError: string | null;
-                        personalDataErasedAt: number | null;
-                        /** @description The order's lead print: the first of `printIds`, and the only one of an order of one print. */
-                        printId: string;
-                        /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
-                        printIds: string[];
-                        /** @description `printIds` with each print's design, placement and file. */
-                        prints: ({
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
                             designId: string;
-                            /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
-                            designRevision: number;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                            id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
+                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                            printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
                                 name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
                             spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
                             status: string;
-                        } | {
-                            /** @description A fill print is made from no design. */
-                            designId: null;
-                            /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
-                            fillColour: string;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
+                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                            variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
+                                /** @description Each declared field, in the printshop's order, as it was sent. */
+                                fields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[];
+                                options: {
+                                    [key: string]: string;
+                                };
+                                ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
+                            } | null;
+                            /** @description The variant the order names; `null` as `blankId` is. */
+                            variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
                             status: string;
-                        })[];
-                        /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
-                        printshopAsPlaced: {
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
+                        personalDataErasedAt: number | null;
+                        printshopOrders: {
                             adapter: string;
-                            name: string;
-                        } | null;
-                        printshopConnectionId: string | null;
-                        printshopName: string | null;
-                        quantity: number;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
                         /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
                         recipient: {
                             /**
@@ -43574,10 +44071,8 @@ export interface operations {
                             /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
                             phone?: string;
                         } | null;
-                        /** @description The order submitted to replace this one, which names it as `replacesOrderId`; `null` for none. */
-                        replacedByOrderId: string | null;
-                        /** @description The failed order this one was submitted to replace; `null` for an order that replaces none. */
-                        replacesOrderId: string | null;
+                        /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
+                        recipientEmailBounced: boolean;
                         /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
                         shipTo: {
                             address: {
@@ -43618,51 +44113,10 @@ export interface operations {
                             /** @description The state, province or county, where the country uses one. */
                             region?: string;
                         } | null;
-                        spotOutput: string | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
                         status: string;
-                        submittedAt: number;
                         tenantId: string;
-                        tracking: {
-                            /** @description Who carries it, such as `DHL`. */
-                            carrier?: string;
-                            /** @description The shipment's tracking number. */
-                            number: string;
-                            /**
-                             * Format: uri
-                             * @description Where the shipment is followed: an https address.
-                             */
-                            url?: string;
-                        } | null;
                         updatedAt: number;
-                        /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
-                        variant: {
-                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
-                            colours?: {
-                                [key: string]: {
-                                    /** @description The colour to make the value in, `#rrggbb`. */
-                                    colour: string;
-                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
-                                    from: string;
-                                };
-                            };
-                            /** @description Each declared field, in the printshop's order, as it was sent. */
-                            fields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[];
-                            options: {
-                                [key: string]: string;
-                            };
-                            ref: string;
-                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
-                            unusedPicks?: {
-                                [key: string]: string;
-                            };
-                        } | null;
-                        /** @description The variant the order names; `null` as `blankId` is. */
-                        variantRef: string | null;
                     };
                 };
             };
@@ -43760,7 +44214,2932 @@ export interface operations {
             };
         };
     };
-    "orders.job.get": {
+    "orders.items.cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The order, the item cancelled */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        canErase: boolean;
+                        /** @description The items this cancel moved to `cancelled`: the one asked for and every item of its printshop order the printshop stopped with it. */
+                        cancelledItemIds: string[];
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
+                        delivery: {
+                            at: number;
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
+                            state: string;
+                            words: string | null;
+                        } | null;
+                        /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
+                        deliveryChangeRefusal: {
+                            /** @enum {string} */
+                            code: "address_change_not_accepted";
+                        } | {
+                            /** @enum {string} */
+                            code: "order_past_address_change";
+                            status: string;
+                            /** @description Its submission has not been answered yet: its printshop has given it no reference. */
+                            unanswered: boolean;
+                        } | null;
+                        /** @description The order's address changes, oldest first, each as its `order.delivery_changed` event recorded it. Never the address. */
+                        deliveryChanges: {
+                            /** @description The order had no address before: one was added. */
+                            added: boolean;
+                            /** @description When the change was made, or answered. */
+                            at: number;
+                            /** @description Who made it: a studio `member`, the `customer` on the design's address capture page, a connected store's integration key (`store_key`), or a `secret_key`. */
+                            by: string;
+                            /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
+                            outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
+                            /** @description The printshop's own answer to a refused change. */
+                            words: string | null;
+                        }[];
+                        erasable: boolean;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
+                        externalRef: string | null;
+                        history: {
+                            at: number;
+                            /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
+                            automation: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
+                            reason: string | null;
+                            /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
+                            releasedBy: string | null;
+                            seq: number;
+                            status: string;
+                            type: string;
+                            via: string | null;
+                        }[];
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
+                        hold: {
+                            /** @description The plan's monthly order limit the order met. */
+                            limit: number;
+                            /** @description When the month resets (ISO 8601, UTC): the latest the order is released, if the new month has room for it. */
+                            periodEnd: string;
+                            /** @description Why it is held: `monthly_order_limit`, the workspace has placed the orders its plan includes this month. Show a reason you do not know as held without one, never as a failure. */
+                            reason: string;
+                        } | null;
+                        id: string;
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
+                            designId: string;
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                            id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
+                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                            printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
+                                name: string;
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
+                            spotOutput: string | null;
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
+                            status: string;
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
+                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                            variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
+                                /** @description Each declared field, in the printshop's order, as it was sent. */
+                                fields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[];
+                                options: {
+                                    [key: string]: string;
+                                };
+                                ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
+                            } | null;
+                            /** @description The variant the order names; `null` as `blankId` is. */
+                            variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
+                            status: string;
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
+                        personalDataErasedAt: number | null;
+                        printshopOrders: {
+                            adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
+                        /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
+                        recipient: {
+                            /**
+                             * Format: email
+                             * @description The recipient's email address, for the carrier's notices.
+                             */
+                            email?: string;
+                            /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
+                            name: string;
+                            /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
+                            phone?: string;
+                        } | null;
+                        /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
+                        recipientEmailBounced: boolean;
+                        /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
+                        shipTo: {
+                            address: {
+                                /** @description The city or town. */
+                                city: string;
+                                /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                                company?: string;
+                                /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                                country: string;
+                                /** @description The first line of the street address: street and number. */
+                                line1: string;
+                                /** @description The second line of the address: an apartment, floor or c/o. */
+                                line2?: string;
+                                /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                                postalCode?: string;
+                                /** @description The state, province or county, where the country uses one. */
+                                region?: string;
+                            };
+                            /** @description What the address is called in the workspace, such as `Warehouse`: unique there, case aside, and the name a parcel sent there is addressed to. Up to 200 characters. */
+                            name: string;
+                            /** @description The saved address the order ships to, by id. It may have been changed or removed since; `name` and `address` are what the order was placed with. */
+                            savedAddressId: string;
+                        } | null;
+                        /** @description The customer's address. Where the order ships, unless `shipTo` is set. */
+                        shippingAddress: {
+                            /** @description The city or town. */
+                            city: string;
+                            /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                            company?: string;
+                            /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                            country: string;
+                            /** @description The first line of the street address: street and number. */
+                            line1: string;
+                            /** @description The second line of the address: an apartment, floor or c/o. */
+                            line2?: string;
+                            /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                            postalCode?: string;
+                            /** @description The state, province or county, where the country uses one. */
+                            region?: string;
+                        } | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
+                        status: string;
+                        tenantId: string;
+                        updatedAt: number;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: order_not_found, item_not_found, not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: order_at_printshop, order_in_flight, order_status_not_allowed */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Always sent with `order_at_printshop`. */
+                        cause?: string;
+                        /** @description Always sent with `order_in_flight`. */
+                        detail?: string;
+                        error: string;
+                        /** @description Always sent with `order_status_not_allowed`. */
+                        from?: string;
+                        /** @description Always sent with `order_status_not_allowed`. */
+                        to?: string;
+                    };
+                };
+            };
+            /** @description Refused: payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: cancel_unavailable */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `cancel_unavailable`. */
+                        reason?: string;
+                        /** @description Always sent with `cancel_unavailable`. */
+                        retryable?: boolean;
+                    };
+                };
+            };
+        };
+    };
+    "orders.items.reroute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The blank to send the order to: any other blank of the workspace. The order goes to its printshop. */
+                    blankId: string;
+                    /** @description Where each print of the order goes on the blank, one placement each. A print goes to the placement of its own placement's name when the blank has one, matched without regard to case. */
+                    placements: {
+                        /** @description The placement on the blank the print goes to. */
+                        placementId: string;
+                        printId: string;
+                    }[];
+                    /** @description The variant of that blank the order is for, by ref. May be left out for a blank with one variant. */
+                    variant?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The order, the item sent to another blank */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        canErase: boolean;
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
+                        delivery: {
+                            at: number;
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
+                            state: string;
+                            words: string | null;
+                        } | null;
+                        /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
+                        deliveryChangeRefusal: {
+                            /** @enum {string} */
+                            code: "address_change_not_accepted";
+                        } | {
+                            /** @enum {string} */
+                            code: "order_past_address_change";
+                            status: string;
+                            /** @description Its submission has not been answered yet: its printshop has given it no reference. */
+                            unanswered: boolean;
+                        } | null;
+                        /** @description The order's address changes, oldest first, each as its `order.delivery_changed` event recorded it. Never the address. */
+                        deliveryChanges: {
+                            /** @description The order had no address before: one was added. */
+                            added: boolean;
+                            /** @description When the change was made, or answered. */
+                            at: number;
+                            /** @description Who made it: a studio `member`, the `customer` on the design's address capture page, a connected store's integration key (`store_key`), or a `secret_key`. */
+                            by: string;
+                            /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
+                            outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
+                            /** @description The printshop's own answer to a refused change. */
+                            words: string | null;
+                        }[];
+                        erasable: boolean;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
+                        externalRef: string | null;
+                        history: {
+                            at: number;
+                            /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
+                            automation: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
+                            reason: string | null;
+                            /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
+                            releasedBy: string | null;
+                            seq: number;
+                            status: string;
+                            type: string;
+                            via: string | null;
+                        }[];
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
+                        hold: {
+                            /** @description The plan's monthly order limit the order met. */
+                            limit: number;
+                            /** @description When the month resets (ISO 8601, UTC): the latest the order is released, if the new month has room for it. */
+                            periodEnd: string;
+                            /** @description Why it is held: `monthly_order_limit`, the workspace has placed the orders its plan includes this month. Show a reason you do not know as held without one, never as a failure. */
+                            reason: string;
+                        } | null;
+                        id: string;
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
+                            designId: string;
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                            id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
+                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                            printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
+                                name: string;
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
+                            spotOutput: string | null;
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
+                            status: string;
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
+                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                            variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
+                                /** @description Each declared field, in the printshop's order, as it was sent. */
+                                fields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[];
+                                options: {
+                                    [key: string]: string;
+                                };
+                                ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
+                            } | null;
+                            /** @description The variant the order names; `null` as `blankId` is. */
+                            variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
+                            status: string;
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
+                        personalDataErasedAt: number | null;
+                        printshopOrders: {
+                            adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
+                        /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
+                        recipient: {
+                            /**
+                             * Format: email
+                             * @description The recipient's email address, for the carrier's notices.
+                             */
+                            email?: string;
+                            /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
+                            name: string;
+                            /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
+                            phone?: string;
+                        } | null;
+                        /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
+                        recipientEmailBounced: boolean;
+                        /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
+                        shipTo: {
+                            address: {
+                                /** @description The city or town. */
+                                city: string;
+                                /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                                company?: string;
+                                /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                                country: string;
+                                /** @description The first line of the street address: street and number. */
+                                line1: string;
+                                /** @description The second line of the address: an apartment, floor or c/o. */
+                                line2?: string;
+                                /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                                postalCode?: string;
+                                /** @description The state, province or county, where the country uses one. */
+                                region?: string;
+                            };
+                            /** @description What the address is called in the workspace, such as `Warehouse`: unique there, case aside, and the name a parcel sent there is addressed to. Up to 200 characters. */
+                            name: string;
+                            /** @description The saved address the order ships to, by id. It may have been changed or removed since; `name` and `address` are what the order was placed with. */
+                            savedAddressId: string;
+                        } | null;
+                        /** @description The customer's address. Where the order ships, unless `shipTo` is set. */
+                        shippingAddress: {
+                            /** @description The city or town. */
+                            city: string;
+                            /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                            company?: string;
+                            /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                            country: string;
+                            /** @description The first line of the street address: street and number. */
+                            line1: string;
+                            /** @description The second line of the address: an apartment, floor or c/o. */
+                            line2?: string;
+                            /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                            postalCode?: string;
+                            /** @description The state, province or county, where the country uses one. */
+                            region?: string;
+                        } | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
+                        status: string;
+                        tenantId: string;
+                        updatedAt: number;
+                    };
+                };
+            };
+            /** @description Refused: bad_request */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: plan_limit_reached, origin_forbidden, forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        limit?: string;
+                        /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
+                        max?: number;
+                        /** @description The plan whose limit it is. Always sent with `plan_limit_reached`. */
+                        plan?: string;
+                    };
+                };
+            };
+            /** @description Refused: print_not_found, order_not_found, item_not_found, not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: print_not_completed, print_needs_printshop, print_ticket_stale, print_superseded, print_files_deleted, design_erased, stale_update, design_already_ordered, printshop_paused, order_not_retryable, order_at_printshop, order_superseded, retry_refused */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Its latest submission has its printshop's reference. Always sent with `retry_refused`. */
+                        atPrintshop?: boolean;
+                        /** @description Always sent with `stale_update`. */
+                        current?: number;
+                        /** @description Always sent with `design_already_ordered`. */
+                        designId?: string;
+                        /** @description Always sent with `print_ticket_stale`. */
+                        detail?: string;
+                        error: string;
+                        /** @description The design's newest live item. Always sent with `design_already_ordered`. */
+                        itemId?: string;
+                        /** @description Always sent with `order_superseded`. */
+                        newerOrderId?: string;
+                        /** @description The order holding the design's live item. Always sent with `design_already_ordered`. */
+                        orderId?: string;
+                        /** @description Always sent with `printshop_paused`. */
+                        reason?: string;
+                        /** @description With `retry_refused`: The item's status now. Always sent with `print_not_completed`, `order_not_retryable`, `retry_refused`. With `order_not_retryable`: one of `held`, `awaiting_prints`, `submitted`, `queued`, `printed`, `shipped`, `failed`, `outcome_unknown`, `cancelled`. With `retry_refused`: one of `held`, `awaiting_prints`, `submitted`, `queued`, `printed`, `shipped`, `failed`, `outcome_unknown`, `cancelled`. */
+                        status?: string;
+                    };
+                };
+            };
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, page_not_as_proofed, page_ordered_alone, cover_not_at_page_count, printshop_takes_no_pages, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Always sent with `print_short_of_area`. */
+                        areaMm?: {
+                            heightMm: number;
+                            widthMm: number;
+                        };
+                        /** @description Sent with `payload_too_large`. */
+                        bytes?: number;
+                        /** @description Always sent with `spot_plate_required`. */
+                        cause?: string;
+                        /** @description Always sent with `page_count_out_of_range`, `page_not_as_proofed`. */
+                        count?: number;
+                        /** @description Always sent with `variant_not_of_design_row`. */
+                        designId?: string;
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        designedAt?: number | null;
+                        /** @description Always sent with `print_profile_unavailable`. */
+                        detail?: string;
+                        error: string;
+                        /** @description The workspace feature that is off, where the printshop prints with the method but the workspace does not offer it. Sent with `technique_not_offered`. */
+                        feature?: string;
+                        /** @description Always sent with `field_value_missing`. */
+                        field?: string;
+                        /** @description Always sent with `field_value_missing`. */
+                        fieldKind?: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        itemPageCount?: number | null;
+                        /** @description Always sent with `prints_disagree`. */
+                        key?: string;
+                        /** @description Always sent with `print_exceeds_position`, `print_exceeds_placement`. */
+                        largestMm?: {
+                            heightMm: number;
+                            widthMm: number;
+                        };
+                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
+                        machine?: string;
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        max?: number;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                        /** @description Always sent with `print_exceeds_machine`. */
+                        mediaMm?: {
+                            heightMm: number;
+                            widthMm: number;
+                        };
+                        /** @description Always sent with `technique_not_offered`. */
+                        method?: string;
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        min?: number;
+                        /** @description Always sent with `missing_fulfilment_keys`. */
+                        missing?: string[];
+                        /** @description Always sent with `placement_name_differs`. */
+                        named?: string;
+                        /** @description Always sent with `print_profile_unavailable`. */
+                        outputProfile?: string;
+                        /** @description Always sent with `duplicate_page`, `page_missing`, `page_not_as_proofed`. */
+                        page?: number;
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
+                        placement?: string;
+                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `page_not_as_proofed`, `cover_not_at_page_count`, `placement_not_of_blank`. */
+                        placementId?: string;
+                        /** @description Always sent with `technique_differs`, `technique_unknown`. */
+                        placementMethod?: string | null;
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, and may be sent with `field_value_missing`. */
+                        position?: string;
+                        /** @description Always sent with `print_profile_unavailable`, `print_without_placement`, `print_committed_elsewhere`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
+                        printId?: string;
+                        /** @description Always sent with `placement_taken`. */
+                        printIds?: string[];
+                        /** @description Always sent with `technique_differs`, `technique_unknown`. */
+                        printMethod?: string | null;
+                        /** @description Always sent with `technique_not_offered`. */
+                        printMethods?: string[];
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `print_exceeds_placement`, `print_short_of_area`. */
+                        printMm?: {
+                            heightMm: number;
+                            widthMm: number;
+                        };
+                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
+                        printshop?: string;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedCount?: number;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedPage?: number;
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `reroute_blank_not_found`, `reroute_same_blank`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_not_of_blank`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
+                        reason?: string;
+                        /** @description Always sent with `spot_plate_required`. */
+                        references?: string[];
+                        /** @description Always sent with `variant_not_of_design_row`. */
+                        row?: {
+                            [key: string]: string;
+                        };
+                        /** @description Always sent with `print_not_position_size`. */
+                        sizeMm?: {
+                            heightMm: number;
+                            widthMm: number;
+                        };
+                        /** @description Always sent with `print_raster_too_large`. */
+                        sizePx?: {
+                            heightPx: number;
+                            widthPx: number;
+                        };
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        step?: number;
+                        /** @description Always sent with `variant_not_of_blank`, `variant_retired`, `variant_not_of_design_row`. */
+                        variant?: string;
+                        /** @description Always sent with `variant_required`. */
+                        variants?: number;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: lock_timeout */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    "orders.items.rerouteTargets": {
+        parameters: {
+            query?: {
+                /** @description The page to read, from 1; the first when left out. */
+                page?: number;
+                /** @description Only the blanks whose name, or whose printshop's name, holds this text, case aside. */
+                q?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of blanks */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description How many of the `total` blanks the order fits. */
+                        fitting: number;
+                        page: number;
+                        pageSize: number;
+                        targets: {
+                            blankId: string;
+                            /** @description For a blank the order fits, each print and the placements it may go to; empty otherwise. */
+                            candidates: {
+                                placements: {
+                                    id: string;
+                                    /** @description The largest print it takes. */
+                                    largestMm: {
+                                        heightMm: number;
+                                        widthMm: number;
+                                    };
+                                    name: string;
+                                    /** @description It has the print's own placement's name, so the print goes there and nowhere else. */
+                                    sameName: boolean;
+                                }[];
+                                printId: string;
+                            }[];
+                            fits: boolean;
+                            /** @description For a blank the order does not fit, why; empty otherwise. */
+                            misfits: ({
+                                /** @enum {string} */
+                                kind: "print_exceeds_placement";
+                                largestMm: {
+                                    heightMm: number;
+                                    widthMm: number;
+                                };
+                                placement: string;
+                                printId: string;
+                                printMm: {
+                                    heightMm: number;
+                                    widthMm: number;
+                                };
+                            } | {
+                                /** @description The placement's area: it is printed across all of it, so a print must be that size. */
+                                areaMm: {
+                                    heightMm: number;
+                                    widthMm: number;
+                                };
+                                /** @enum {string} */
+                                kind: "print_short_of_area";
+                                placement: string;
+                                printId: string;
+                                printMm: {
+                                    heightMm: number;
+                                    widthMm: number;
+                                };
+                            } | {
+                                /** @enum {string} */
+                                kind: "technique_differs";
+                                placement: string;
+                                placementMethod: string;
+                                printId: string;
+                                printMethod: string;
+                            } | {
+                                /** @enum {string} */
+                                kind: "technique_unknown";
+                                placement: string;
+                                placementMethod: string | null;
+                                printId: string;
+                                printMethod: string | null;
+                            } | {
+                                /** @enum {string} */
+                                kind: "no_placement_fits";
+                                /** @description The print's own placement's name; `null` for none. */
+                                placement: string | null;
+                                printId: string;
+                            } | {
+                                /** @enum {string} */
+                                kind: "too_few_placements";
+                            })[];
+                            name: string;
+                            /** @description The names of the blank's placements, in its order. */
+                            placements: string[];
+                            /** @description The printshop the blank is made at, which the order would go to. */
+                            printshop: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description How many variants the blank has, retired ones included. */
+                            variants: number;
+                        }[];
+                        total: number;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: order_not_found, item_not_found, not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: order_not_retryable, order_at_printshop, order_superseded, print_ticket_stale */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Always sent with `print_ticket_stale`. */
+                        detail?: string;
+                        error: string;
+                        /** @description Always sent with `order_superseded`. */
+                        newerOrderId?: string;
+                        /** @description Always sent with `order_not_retryable`. */
+                        status?: string;
+                    };
+                };
+            };
+            /** @description Refused: invalid_query */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
+    "orders.items.retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The order, the item submitted again */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        canErase: boolean;
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
+                        delivery: {
+                            at: number;
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
+                            state: string;
+                            words: string | null;
+                        } | null;
+                        /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
+                        deliveryChangeRefusal: {
+                            /** @enum {string} */
+                            code: "address_change_not_accepted";
+                        } | {
+                            /** @enum {string} */
+                            code: "order_past_address_change";
+                            status: string;
+                            /** @description Its submission has not been answered yet: its printshop has given it no reference. */
+                            unanswered: boolean;
+                        } | null;
+                        /** @description The order's address changes, oldest first, each as its `order.delivery_changed` event recorded it. Never the address. */
+                        deliveryChanges: {
+                            /** @description The order had no address before: one was added. */
+                            added: boolean;
+                            /** @description When the change was made, or answered. */
+                            at: number;
+                            /** @description Who made it: a studio `member`, the `customer` on the design's address capture page, a connected store's integration key (`store_key`), or a `secret_key`. */
+                            by: string;
+                            /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
+                            outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
+                            /** @description The printshop's own answer to a refused change. */
+                            words: string | null;
+                        }[];
+                        erasable: boolean;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
+                        externalRef: string | null;
+                        history: {
+                            at: number;
+                            /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
+                            automation: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
+                            reason: string | null;
+                            /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
+                            releasedBy: string | null;
+                            seq: number;
+                            status: string;
+                            type: string;
+                            via: string | null;
+                        }[];
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
+                        hold: {
+                            /** @description The plan's monthly order limit the order met. */
+                            limit: number;
+                            /** @description When the month resets (ISO 8601, UTC): the latest the order is released, if the new month has room for it. */
+                            periodEnd: string;
+                            /** @description Why it is held: `monthly_order_limit`, the workspace has placed the orders its plan includes this month. Show a reason you do not know as held without one, never as a failure. */
+                            reason: string;
+                        } | null;
+                        id: string;
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
+                            designId: string;
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                            id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
+                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                            printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
+                                name: string;
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
+                            spotOutput: string | null;
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
+                            status: string;
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
+                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                            variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
+                                /** @description Each declared field, in the printshop's order, as it was sent. */
+                                fields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[];
+                                options: {
+                                    [key: string]: string;
+                                };
+                                ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
+                            } | null;
+                            /** @description The variant the order names; `null` as `blankId` is. */
+                            variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
+                            status: string;
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
+                        personalDataErasedAt: number | null;
+                        printshopOrders: {
+                            adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
+                        /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
+                        recipient: {
+                            /**
+                             * Format: email
+                             * @description The recipient's email address, for the carrier's notices.
+                             */
+                            email?: string;
+                            /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
+                            name: string;
+                            /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
+                            phone?: string;
+                        } | null;
+                        /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
+                        recipientEmailBounced: boolean;
+                        /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
+                        shipTo: {
+                            address: {
+                                /** @description The city or town. */
+                                city: string;
+                                /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                                company?: string;
+                                /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                                country: string;
+                                /** @description The first line of the street address: street and number. */
+                                line1: string;
+                                /** @description The second line of the address: an apartment, floor or c/o. */
+                                line2?: string;
+                                /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                                postalCode?: string;
+                                /** @description The state, province or county, where the country uses one. */
+                                region?: string;
+                            };
+                            /** @description What the address is called in the workspace, such as `Warehouse`: unique there, case aside, and the name a parcel sent there is addressed to. Up to 200 characters. */
+                            name: string;
+                            /** @description The saved address the order ships to, by id. It may have been changed or removed since; `name` and `address` are what the order was placed with. */
+                            savedAddressId: string;
+                        } | null;
+                        /** @description The customer's address. Where the order ships, unless `shipTo` is set. */
+                        shippingAddress: {
+                            /** @description The city or town. */
+                            city: string;
+                            /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                            company?: string;
+                            /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                            country: string;
+                            /** @description The first line of the street address: street and number. */
+                            line1: string;
+                            /** @description The second line of the address: an apartment, floor or c/o. */
+                            line2?: string;
+                            /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                            postalCode?: string;
+                            /** @description The state, province or county, where the country uses one. */
+                            region?: string;
+                        } | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
+                        status: string;
+                        tenantId: string;
+                        updatedAt: number;
+                    };
+                };
+            };
+            /** @description Refused: bad_request */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: plan_limit_reached, origin_forbidden, forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        limit?: string;
+                        /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
+                        max?: number;
+                        /** @description The plan whose limit it is. Always sent with `plan_limit_reached`. */
+                        plan?: string;
+                    };
+                };
+            };
+            /** @description Refused: print_not_found, order_not_found, item_not_found, not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: print_not_completed, print_needs_printshop, print_ticket_stale, print_superseded, print_files_deleted, design_erased, stale_update, design_already_ordered, printshop_paused, order_not_retryable, order_at_printshop, order_superseded, retry_refused */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Its latest submission has its printshop's reference. Always sent with `retry_refused`. */
+                        atPrintshop?: boolean;
+                        /** @description Always sent with `stale_update`. */
+                        current?: number;
+                        /** @description Always sent with `design_already_ordered`. */
+                        designId?: string;
+                        /** @description Always sent with `print_ticket_stale`. */
+                        detail?: string;
+                        error: string;
+                        /** @description The design's newest live item. Always sent with `design_already_ordered`. */
+                        itemId?: string;
+                        /** @description Always sent with `order_superseded`. */
+                        newerOrderId?: string;
+                        /** @description The order holding the design's live item. Always sent with `design_already_ordered`. */
+                        orderId?: string;
+                        /** @description Always sent with `printshop_paused`. */
+                        reason?: string;
+                        /** @description With `retry_refused`: The item's status now. Always sent with `print_not_completed`, `order_not_retryable`, `retry_refused`. With `order_not_retryable`: one of `held`, `awaiting_prints`, `submitted`, `queued`, `printed`, `shipped`, `failed`, `outcome_unknown`, `cancelled`. With `retry_refused`: one of `held`, `awaiting_prints`, `submitted`, `queued`, `printed`, `shipped`, `failed`, `outcome_unknown`, `cancelled`. */
+                        status?: string;
+                    };
+                };
+            };
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, page_not_as_proofed, page_ordered_alone, cover_not_at_page_count, printshop_takes_no_pages, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Always sent with `print_short_of_area`. */
+                        areaMm?: {
+                            heightMm: number;
+                            widthMm: number;
+                        };
+                        /** @description Sent with `payload_too_large`. */
+                        bytes?: number;
+                        /** @description Always sent with `spot_plate_required`. */
+                        cause?: string;
+                        /** @description Always sent with `page_count_out_of_range`, `page_not_as_proofed`. */
+                        count?: number;
+                        /** @description Always sent with `variant_not_of_design_row`. */
+                        designId?: string;
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        designedAt?: number | null;
+                        /** @description Always sent with `print_profile_unavailable`. */
+                        detail?: string;
+                        error: string;
+                        /** @description The workspace feature that is off, where the printshop prints with the method but the workspace does not offer it. Sent with `technique_not_offered`. */
+                        feature?: string;
+                        /** @description Always sent with `field_value_missing`. */
+                        field?: string;
+                        /** @description Always sent with `field_value_missing`. */
+                        fieldKind?: string;
+                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
+                        findings?: {
+                            allowed: unknown;
+                            given: unknown;
+                            layerId: string;
+                            prop: string;
+                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
+                            reason?: string;
+                            rule: string;
+                            /** @description The nearest thread, for a colour off the machine's list. */
+                            thread?: {
+                                hex: string;
+                                id: string;
+                                name: string;
+                            };
+                        }[];
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        itemPageCount?: number | null;
+                        /** @description Always sent with `prints_disagree`. */
+                        key?: string;
+                        /** @description Always sent with `print_exceeds_position`, `print_exceeds_placement`. */
+                        largestMm?: {
+                            heightMm: number;
+                            widthMm: number;
+                        };
+                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
+                        machine?: string;
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        max?: number;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                        /** @description Always sent with `print_exceeds_machine`. */
+                        mediaMm?: {
+                            heightMm: number;
+                            widthMm: number;
+                        };
+                        /** @description Always sent with `technique_not_offered`. */
+                        method?: string;
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        min?: number;
+                        /** @description Always sent with `missing_fulfilment_keys`. */
+                        missing?: string[];
+                        /** @description Always sent with `placement_name_differs`. */
+                        named?: string;
+                        /** @description Always sent with `print_profile_unavailable`. */
+                        outputProfile?: string;
+                        /** @description Always sent with `duplicate_page`, `page_missing`, `page_not_as_proofed`. */
+                        page?: number;
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
+                        placement?: string;
+                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `page_not_as_proofed`, `cover_not_at_page_count`, `placement_not_of_blank`. */
+                        placementId?: string;
+                        /** @description Always sent with `technique_differs`, `technique_unknown`. */
+                        placementMethod?: string | null;
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, and may be sent with `field_value_missing`. */
+                        position?: string;
+                        /** @description Always sent with `print_profile_unavailable`, `print_without_placement`, `print_committed_elsewhere`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
+                        printId?: string;
+                        /** @description Always sent with `placement_taken`. */
+                        printIds?: string[];
+                        /** @description Always sent with `technique_differs`, `technique_unknown`. */
+                        printMethod?: string | null;
+                        /** @description Always sent with `technique_not_offered`. */
+                        printMethods?: string[];
+                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `print_exceeds_placement`, `print_short_of_area`. */
+                        printMm?: {
+                            heightMm: number;
+                            widthMm: number;
+                        };
+                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
+                        printshop?: string;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedCount?: number;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedPage?: number;
+                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `reroute_blank_not_found`, `reroute_same_blank`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_not_of_blank`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
+                        reason?: string;
+                        /** @description Always sent with `spot_plate_required`. */
+                        references?: string[];
+                        /** @description Always sent with `variant_not_of_design_row`. */
+                        row?: {
+                            [key: string]: string;
+                        };
+                        /** @description Always sent with `print_not_position_size`. */
+                        sizeMm?: {
+                            heightMm: number;
+                            widthMm: number;
+                        };
+                        /** @description Always sent with `print_raster_too_large`. */
+                        sizePx?: {
+                            heightPx: number;
+                            widthPx: number;
+                        };
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        step?: number;
+                        /** @description Always sent with `variant_not_of_blank`, `variant_retired`, `variant_not_of_design_row`. */
+                        variant?: string;
+                        /** @description Always sent with `variant_required`. */
+                        variants?: number;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+            /** @description Refused: lock_timeout */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    "orders.parcels.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The items it holds and how many copies of each. Left out, it holds whatever of the printshop order is in no parcel yet. */
+                    items?: {
+                        itemId: string;
+                        quantity: number;
+                    }[];
+                    /** @description The printshop order the parcel is a shipment of. */
+                    printshopOrderId: string;
+                    /**
+                     * @description `preparing` once its label is made, `shipped` once the carrier has it, `delivered` once it arrived.
+                     * @enum {string}
+                     */
+                    status: "preparing" | "shipped" | "delivered";
+                    /** @description How it ships: its tracking number, and the carrier and link where known. */
+                    tracking?: {
+                        /** @description Who carries it, such as `DHL`. */
+                        carrier?: string;
+                        /** @description The shipment's tracking number. */
+                        number: string;
+                        /**
+                         * Format: uri
+                         * @description Where the shipment is followed: an https address.
+                         */
+                        url?: string;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description The order, with the parcel */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        canErase: boolean;
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
+                        delivery: {
+                            at: number;
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
+                            state: string;
+                            words: string | null;
+                        } | null;
+                        /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
+                        deliveryChangeRefusal: {
+                            /** @enum {string} */
+                            code: "address_change_not_accepted";
+                        } | {
+                            /** @enum {string} */
+                            code: "order_past_address_change";
+                            status: string;
+                            /** @description Its submission has not been answered yet: its printshop has given it no reference. */
+                            unanswered: boolean;
+                        } | null;
+                        /** @description The order's address changes, oldest first, each as its `order.delivery_changed` event recorded it. Never the address. */
+                        deliveryChanges: {
+                            /** @description The order had no address before: one was added. */
+                            added: boolean;
+                            /** @description When the change was made, or answered. */
+                            at: number;
+                            /** @description Who made it: a studio `member`, the `customer` on the design's address capture page, a connected store's integration key (`store_key`), or a `secret_key`. */
+                            by: string;
+                            /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
+                            outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
+                            /** @description The printshop's own answer to a refused change. */
+                            words: string | null;
+                        }[];
+                        erasable: boolean;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
+                        externalRef: string | null;
+                        history: {
+                            at: number;
+                            /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
+                            automation: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
+                            reason: string | null;
+                            /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
+                            releasedBy: string | null;
+                            seq: number;
+                            status: string;
+                            type: string;
+                            via: string | null;
+                        }[];
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
+                        hold: {
+                            /** @description The plan's monthly order limit the order met. */
+                            limit: number;
+                            /** @description When the month resets (ISO 8601, UTC): the latest the order is released, if the new month has room for it. */
+                            periodEnd: string;
+                            /** @description Why it is held: `monthly_order_limit`, the workspace has placed the orders its plan includes this month. Show a reason you do not know as held without one, never as a failure. */
+                            reason: string;
+                        } | null;
+                        id: string;
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
+                            designId: string;
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                            id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
+                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                            printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
+                                name: string;
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
+                            spotOutput: string | null;
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
+                            status: string;
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
+                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                            variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
+                                /** @description Each declared field, in the printshop's order, as it was sent. */
+                                fields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[];
+                                options: {
+                                    [key: string]: string;
+                                };
+                                ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
+                            } | null;
+                            /** @description The variant the order names; `null` as `blankId` is. */
+                            variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
+                            status: string;
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
+                        personalDataErasedAt: number | null;
+                        printshopOrders: {
+                            adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
+                        /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
+                        recipient: {
+                            /**
+                             * Format: email
+                             * @description The recipient's email address, for the carrier's notices.
+                             */
+                            email?: string;
+                            /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
+                            name: string;
+                            /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
+                            phone?: string;
+                        } | null;
+                        /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
+                        recipientEmailBounced: boolean;
+                        /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
+                        shipTo: {
+                            address: {
+                                /** @description The city or town. */
+                                city: string;
+                                /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                                company?: string;
+                                /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                                country: string;
+                                /** @description The first line of the street address: street and number. */
+                                line1: string;
+                                /** @description The second line of the address: an apartment, floor or c/o. */
+                                line2?: string;
+                                /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                                postalCode?: string;
+                                /** @description The state, province or county, where the country uses one. */
+                                region?: string;
+                            };
+                            /** @description What the address is called in the workspace, such as `Warehouse`: unique there, case aside, and the name a parcel sent there is addressed to. Up to 200 characters. */
+                            name: string;
+                            /** @description The saved address the order ships to, by id. It may have been changed or removed since; `name` and `address` are what the order was placed with. */
+                            savedAddressId: string;
+                        } | null;
+                        /** @description The customer's address. Where the order ships, unless `shipTo` is set. */
+                        shippingAddress: {
+                            /** @description The city or town. */
+                            city: string;
+                            /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                            company?: string;
+                            /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                            country: string;
+                            /** @description The first line of the street address: street and number. */
+                            line1: string;
+                            /** @description The second line of the address: an apartment, floor or c/o. */
+                            line2?: string;
+                            /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                            postalCode?: string;
+                            /** @description The state, province or county, where the country uses one. */
+                            region?: string;
+                        } | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
+                        status: string;
+                        tenantId: string;
+                        updatedAt: number;
+                    };
+                };
+            };
+            /** @description Refused: bad_request */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: order_not_found, printshop_order_not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: parcels_by_printshop */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: parcel_item_not_found, parcel_quantity_invalid, parcel_exceeds_quantity, parcel_nothing_left, payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Sent with `payload_too_large`. */
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `parcel_item_not_found`, `parcel_quantity_invalid`, `parcel_exceeds_quantity`. */
+                        itemId?: string;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                        /** @description Always sent with `parcel_exceeds_quantity`. */
+                        quantityLeft?: number;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
+    "orders.printshopOrders.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                printshopOrderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The printshop's own reference for it, settling an unknown outcome as `submitted`. */
+                    externalOrderRef?: string;
+                    /** @description Why: with `failed`, its items' failure note; with any other status, the audit log's record of why. */
+                    reason?: string;
+                    /**
+                     * @description The new status of every item sent in the printshop order.
+                     * @enum {string}
+                     */
+                    status: "held" | "awaiting_prints" | "submitted" | "queued" | "printed" | "shipped" | "failed" | "outcome_unknown" | "cancelled";
+                };
+            };
+        };
+        responses: {
+            /** @description The order, the printshop order moved */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        canErase: boolean;
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
+                        delivery: {
+                            at: number;
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
+                            state: string;
+                            words: string | null;
+                        } | null;
+                        /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
+                        deliveryChangeRefusal: {
+                            /** @enum {string} */
+                            code: "address_change_not_accepted";
+                        } | {
+                            /** @enum {string} */
+                            code: "order_past_address_change";
+                            status: string;
+                            /** @description Its submission has not been answered yet: its printshop has given it no reference. */
+                            unanswered: boolean;
+                        } | null;
+                        /** @description The order's address changes, oldest first, each as its `order.delivery_changed` event recorded it. Never the address. */
+                        deliveryChanges: {
+                            /** @description The order had no address before: one was added. */
+                            added: boolean;
+                            /** @description When the change was made, or answered. */
+                            at: number;
+                            /** @description Who made it: a studio `member`, the `customer` on the design's address capture page, a connected store's integration key (`store_key`), or a `secret_key`. */
+                            by: string;
+                            /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
+                            outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
+                            /** @description The printshop's own answer to a refused change. */
+                            words: string | null;
+                        }[];
+                        erasable: boolean;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
+                        externalRef: string | null;
+                        history: {
+                            at: number;
+                            /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
+                            automation: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
+                            reason: string | null;
+                            /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
+                            releasedBy: string | null;
+                            seq: number;
+                            status: string;
+                            type: string;
+                            via: string | null;
+                        }[];
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
+                        hold: {
+                            /** @description The plan's monthly order limit the order met. */
+                            limit: number;
+                            /** @description When the month resets (ISO 8601, UTC): the latest the order is released, if the new month has room for it. */
+                            periodEnd: string;
+                            /** @description Why it is held: `monthly_order_limit`, the workspace has placed the orders its plan includes this month. Show a reason you do not know as held without one, never as a failure. */
+                            reason: string;
+                        } | null;
+                        id: string;
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
+                            designId: string;
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                            id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
+                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                            printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
+                                name: string;
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
+                            spotOutput: string | null;
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
+                            status: string;
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
+                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                            variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
+                                /** @description Each declared field, in the printshop's order, as it was sent. */
+                                fields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[];
+                                options: {
+                                    [key: string]: string;
+                                };
+                                ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
+                            } | null;
+                            /** @description The variant the order names; `null` as `blankId` is. */
+                            variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
+                            status: string;
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
+                        personalDataErasedAt: number | null;
+                        printshopOrders: {
+                            adapter: string;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
+                        /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
+                        recipient: {
+                            /**
+                             * Format: email
+                             * @description The recipient's email address, for the carrier's notices.
+                             */
+                            email?: string;
+                            /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
+                            name: string;
+                            /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
+                            phone?: string;
+                        } | null;
+                        /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
+                        recipientEmailBounced: boolean;
+                        /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
+                        shipTo: {
+                            address: {
+                                /** @description The city or town. */
+                                city: string;
+                                /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                                company?: string;
+                                /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                                country: string;
+                                /** @description The first line of the street address: street and number. */
+                                line1: string;
+                                /** @description The second line of the address: an apartment, floor or c/o. */
+                                line2?: string;
+                                /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                                postalCode?: string;
+                                /** @description The state, province or county, where the country uses one. */
+                                region?: string;
+                            };
+                            /** @description What the address is called in the workspace, such as `Warehouse`: unique there, case aside, and the name a parcel sent there is addressed to. Up to 200 characters. */
+                            name: string;
+                            /** @description The saved address the order ships to, by id. It may have been changed or removed since; `name` and `address` are what the order was placed with. */
+                            savedAddressId: string;
+                        } | null;
+                        /** @description The customer's address. Where the order ships, unless `shipTo` is set. */
+                        shippingAddress: {
+                            /** @description The city or town. */
+                            city: string;
+                            /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                            company?: string;
+                            /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                            country: string;
+                            /** @description The first line of the street address: street and number. */
+                            line1: string;
+                            /** @description The second line of the address: an apartment, floor or c/o. */
+                            line2?: string;
+                            /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                            postalCode?: string;
+                            /** @description The state, province or county, where the country uses one. */
+                            region?: string;
+                        } | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
+                        status: string;
+                        tenantId: string;
+                        updatedAt: number;
+                    };
+                };
+            };
+            /** @description Refused: bad_request */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: order_not_found, not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: order_status_not_allowed, order_reference_taken */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description Always sent with `order_status_not_allowed`. */
+                        from?: string;
+                        /** @description Always sent with `order_status_not_allowed`. */
+                        to?: string;
+                    };
+                };
+            };
+            /** @description Refused: order_status_reason_required, payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Sent with `payload_too_large`. */
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `order_status_reason_required`. */
+                        from?: string;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
+    "orders.printshopOrders.job.get": {
         parameters: {
             query?: {
                 machineProfile?: string;
@@ -43768,6 +47147,7 @@ export interface operations {
             header?: never;
             path: {
                 id: string;
+                printshopOrderId: string;
             };
             cookie?: never;
         };
@@ -43791,18 +47171,160 @@ export interface operations {
                             savedCount: number;
                         };
                         id: string;
-                        machineProfileAskedId: string | null;
-                        machineProfileId: string | null;
-                        machineProfiles: {
-                            id: string;
-                            name: string;
-                        }[];
-                        prints: {
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description This print's ticket for its own machine: `machineProfile` applies to the order's `ticket` alone. */
+                        /** @description Every item sent in the printshop order, in the order they were placed, each with its tickets: the printshop makes them all as one job. */
+                        items: {
+                            itemId: string;
+                            prints: {
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description This print's ticket for its own machine: `machineProfile` applies to the item's `ticket` alone. */
+                                ticket: {
+                                    artifact: {
+                                        colorSpace: string;
+                                        cut?: {
+                                            bleedMm: number;
+                                            cropMarks: boolean;
+                                            cutLine: boolean;
+                                            cutName: string | null;
+                                            markOffsetMm: number;
+                                            mirrored: boolean;
+                                            part: string;
+                                            profile: string;
+                                            registrationMarks: string;
+                                            underbase: {
+                                                chokeMm: number;
+                                                coverage: string;
+                                                spotName: string;
+                                            } | null;
+                                            varnish: {
+                                                coverage: string;
+                                                spotName: string;
+                                            } | null;
+                                        };
+                                        effectiveDpi: number;
+                                        file: string;
+                                        format: string;
+                                        iccProfile: string;
+                                        includesBleed: boolean;
+                                        spotColors: string[];
+                                        spotOutput: string;
+                                        trimMarks: boolean;
+                                    };
+                                    artwork: {
+                                        name?: string;
+                                        templateId: string;
+                                    } | {
+                                        fillColour: string;
+                                        name: string;
+                                    };
+                                    externalRef: string | null;
+                                    fulfilmentPayload?: unknown;
+                                    manifest: {
+                                        docHash: string;
+                                        fontSetHash: string;
+                                        iccProfile: string;
+                                        renderedAt: string;
+                                        rendererVersion: string;
+                                        templateVersion?: string;
+                                    };
+                                    printArea: {
+                                        anchor?: {
+                                            /** @description How the print aligns to the reference: `top-left`, `top-center`, `top-right`, `center-left`, `center`, `center-right`, `bottom-left`, `bottom-center` or `bottom-right`. Anything else is read as `center`. */
+                                            align: string;
+                                            /** @description How far the print is moved from the reference, in millimetres. y grows downward. */
+                                            offsetMm: {
+                                                /** @description Horizontal offset in millimetres; positive moves right. */
+                                                x: number;
+                                                /** @description Vertical offset in millimetres; positive moves down. */
+                                                y: number;
+                                            };
+                                            /** @description The physical reference the print is positioned against on the product. */
+                                            reference: string;
+                                        };
+                                        bleedMm?: number;
+                                        cutShape: {
+                                            d: string;
+                                            type: string;
+                                        };
+                                        heightMm: number;
+                                        /** @description The linked group the design is one placement of: one design drives every placement it names. Absent for a design on one placement alone. */
+                                        linked?: {
+                                            /** @description Whether this placement's print is mirrored left to right. */
+                                            mirrored: boolean;
+                                            /** @description The group's placements, by id. */
+                                            placements: string[];
+                                            /** @description The width of the group's widest print area, in mm: what a repeat across the group is sized against, so it prints at one physical scale on every placement. */
+                                            referenceWidthMm: number;
+                                        };
+                                        placementMm?: {
+                                            heightMm: number;
+                                            widthMm: number;
+                                        };
+                                        printMethod?: string;
+                                        printedAs?: string;
+                                        /** @description The repeat the print was drawn as: the design's mode, size and seed, and the printed size of the tile laid across the print. Absent for a print that does not repeat. */
+                                        repeat?: {
+                                            /** @description How the tiles are laid: `grid` lines them up, `brick` moves every other row along by half a tile, `halfDrop` moves every other column down by half a tile, and `scatter` strews them at random places, turns and sizes, arranged by `seed`. */
+                                            mode: string;
+                                            /** @description Which arrangement a `scatter` draws: another seed is another arrangement of the same tile. Read by `scatter` only. */
+                                            seed: number;
+                                            /** @description The tile's width in percent of the print area's width, above 0 and at most 100; the tile keeps the template's shape. A tile that would print under 10 mm on a side is drawn at 10 mm. */
+                                            size: number;
+                                            /** @description The tile's printed height in millimetres. */
+                                            unitHeightMm: number;
+                                            /** @description The tile's printed width in millimetres. */
+                                            unitWidthMm: number;
+                                        };
+                                        safeAreaMm?: number;
+                                        shape?: {
+                                            /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                            cutByPrintShop?: boolean;
+                                            /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
+                                            dFrac: string;
+                                        };
+                                        widthMm: number;
+                                    };
+                                    product: {
+                                        sku: string;
+                                        tenantId: string;
+                                    };
+                                    quantity: number;
+                                    recipient?: {
+                                        /**
+                                         * Format: email
+                                         * @description The recipient's email address, for the carrier's notices.
+                                         */
+                                        email?: string;
+                                        /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
+                                        name: string;
+                                        /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
+                                        phone?: string;
+                                    };
+                                    shippingAddress?: {
+                                        /** @description The city or town. */
+                                        city: string;
+                                        /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                                        company?: string;
+                                        /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                                        country: string;
+                                        /** @description The first line of the street address: street and number. */
+                                        line1: string;
+                                        /** @description The second line of the address: an apartment, floor or c/o. */
+                                        line2?: string;
+                                        /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                                        postalCode?: string;
+                                        /** @description The state, province or county, where the country uses one. */
+                                        region?: string;
+                                    };
+                                } | null;
+                            }[];
+                            status: string;
+                            /** @description Failed or cancelled while the job goes on: listed, with no ticket, and moved by no report of the job. */
+                            struck: boolean;
+                            submissionId: string;
+                            /** @description The item's lead print's ticket, for `machineProfile` when it is asked; null for an item failed or cancelled. */
                             ticket: {
                                 artifact: {
                                     colorSpace: string;
@@ -43943,6 +47465,159 @@ export interface operations {
                                 };
                             } | null;
                         }[];
+                        machineProfileAskedId: string | null;
+                        machineProfileId: string | null;
+                        machineProfiles: {
+                            id: string;
+                            name: string;
+                        }[];
+                        prints: {
+                            placementId: string | null;
+                            printId: string;
+                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                            printedAs: string | null;
+                            /** @description This print's ticket for its own machine: `machineProfile` applies to the item's `ticket` alone. */
+                            ticket: {
+                                artifact: {
+                                    colorSpace: string;
+                                    cut?: {
+                                        bleedMm: number;
+                                        cropMarks: boolean;
+                                        cutLine: boolean;
+                                        cutName: string | null;
+                                        markOffsetMm: number;
+                                        mirrored: boolean;
+                                        part: string;
+                                        profile: string;
+                                        registrationMarks: string;
+                                        underbase: {
+                                            chokeMm: number;
+                                            coverage: string;
+                                            spotName: string;
+                                        } | null;
+                                        varnish: {
+                                            coverage: string;
+                                            spotName: string;
+                                        } | null;
+                                    };
+                                    effectiveDpi: number;
+                                    file: string;
+                                    format: string;
+                                    iccProfile: string;
+                                    includesBleed: boolean;
+                                    spotColors: string[];
+                                    spotOutput: string;
+                                    trimMarks: boolean;
+                                };
+                                artwork: {
+                                    name?: string;
+                                    templateId: string;
+                                } | {
+                                    fillColour: string;
+                                    name: string;
+                                };
+                                externalRef: string | null;
+                                fulfilmentPayload?: unknown;
+                                manifest: {
+                                    docHash: string;
+                                    fontSetHash: string;
+                                    iccProfile: string;
+                                    renderedAt: string;
+                                    rendererVersion: string;
+                                    templateVersion?: string;
+                                };
+                                printArea: {
+                                    anchor?: {
+                                        /** @description How the print aligns to the reference: `top-left`, `top-center`, `top-right`, `center-left`, `center`, `center-right`, `bottom-left`, `bottom-center` or `bottom-right`. Anything else is read as `center`. */
+                                        align: string;
+                                        /** @description How far the print is moved from the reference, in millimetres. y grows downward. */
+                                        offsetMm: {
+                                            /** @description Horizontal offset in millimetres; positive moves right. */
+                                            x: number;
+                                            /** @description Vertical offset in millimetres; positive moves down. */
+                                            y: number;
+                                        };
+                                        /** @description The physical reference the print is positioned against on the product. */
+                                        reference: string;
+                                    };
+                                    bleedMm?: number;
+                                    cutShape: {
+                                        d: string;
+                                        type: string;
+                                    };
+                                    heightMm: number;
+                                    /** @description The linked group the design is one placement of: one design drives every placement it names. Absent for a design on one placement alone. */
+                                    linked?: {
+                                        /** @description Whether this placement's print is mirrored left to right. */
+                                        mirrored: boolean;
+                                        /** @description The group's placements, by id. */
+                                        placements: string[];
+                                        /** @description The width of the group's widest print area, in mm: what a repeat across the group is sized against, so it prints at one physical scale on every placement. */
+                                        referenceWidthMm: number;
+                                    };
+                                    placementMm?: {
+                                        heightMm: number;
+                                        widthMm: number;
+                                    };
+                                    printMethod?: string;
+                                    printedAs?: string;
+                                    /** @description The repeat the print was drawn as: the design's mode, size and seed, and the printed size of the tile laid across the print. Absent for a print that does not repeat. */
+                                    repeat?: {
+                                        /** @description How the tiles are laid: `grid` lines them up, `brick` moves every other row along by half a tile, `halfDrop` moves every other column down by half a tile, and `scatter` strews them at random places, turns and sizes, arranged by `seed`. */
+                                        mode: string;
+                                        /** @description Which arrangement a `scatter` draws: another seed is another arrangement of the same tile. Read by `scatter` only. */
+                                        seed: number;
+                                        /** @description The tile's width in percent of the print area's width, above 0 and at most 100; the tile keeps the template's shape. A tile that would print under 10 mm on a side is drawn at 10 mm. */
+                                        size: number;
+                                        /** @description The tile's printed height in millimetres. */
+                                        unitHeightMm: number;
+                                        /** @description The tile's printed width in millimetres. */
+                                        unitWidthMm: number;
+                                    };
+                                    safeAreaMm?: number;
+                                    shape?: {
+                                        /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                        cutByPrintShop?: boolean;
+                                        /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
+                                        dFrac: string;
+                                    };
+                                    widthMm: number;
+                                };
+                                product: {
+                                    sku: string;
+                                    tenantId: string;
+                                };
+                                quantity: number;
+                                recipient?: {
+                                    /**
+                                     * Format: email
+                                     * @description The recipient's email address, for the carrier's notices.
+                                     */
+                                    email?: string;
+                                    /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
+                                    name: string;
+                                    /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
+                                    phone?: string;
+                                };
+                                shippingAddress?: {
+                                    /** @description The city or town. */
+                                    city: string;
+                                    /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                                    company?: string;
+                                    /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                                    country: string;
+                                    /** @description The first line of the street address: street and number. */
+                                    line1: string;
+                                    /** @description The second line of the address: an apartment, floor or c/o. */
+                                    line2?: string;
+                                    /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                                    postalCode?: string;
+                                    /** @description The state, province or county, where the country uses one. */
+                                    region?: string;
+                                };
+                            } | null;
+                        }[];
+                        /** @description Where the job stands: its least advanced item still made in it, or, with none, its first item's status. */
                         status: string;
                         submittedAt: number;
                         ticket: {
@@ -44199,12 +47874,13 @@ export interface operations {
             };
         };
     };
-    "orders.job.update": {
+    "orders.printshopOrders.job.update": {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 id: string;
+                printshopOrderId: string;
             };
             cookie?: never;
         };
@@ -44252,18 +47928,160 @@ export interface operations {
                             savedCount: number;
                         };
                         id: string;
-                        machineProfileAskedId: string | null;
-                        machineProfileId: string | null;
-                        machineProfiles: {
-                            id: string;
-                            name: string;
-                        }[];
-                        prints: {
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description This print's ticket for its own machine: `machineProfile` applies to the order's `ticket` alone. */
+                        /** @description Every item sent in the printshop order, in the order they were placed, each with its tickets: the printshop makes them all as one job. */
+                        items: {
+                            itemId: string;
+                            prints: {
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description This print's ticket for its own machine: `machineProfile` applies to the item's `ticket` alone. */
+                                ticket: {
+                                    artifact: {
+                                        colorSpace: string;
+                                        cut?: {
+                                            bleedMm: number;
+                                            cropMarks: boolean;
+                                            cutLine: boolean;
+                                            cutName: string | null;
+                                            markOffsetMm: number;
+                                            mirrored: boolean;
+                                            part: string;
+                                            profile: string;
+                                            registrationMarks: string;
+                                            underbase: {
+                                                chokeMm: number;
+                                                coverage: string;
+                                                spotName: string;
+                                            } | null;
+                                            varnish: {
+                                                coverage: string;
+                                                spotName: string;
+                                            } | null;
+                                        };
+                                        effectiveDpi: number;
+                                        file: string;
+                                        format: string;
+                                        iccProfile: string;
+                                        includesBleed: boolean;
+                                        spotColors: string[];
+                                        spotOutput: string;
+                                        trimMarks: boolean;
+                                    };
+                                    artwork: {
+                                        name?: string;
+                                        templateId: string;
+                                    } | {
+                                        fillColour: string;
+                                        name: string;
+                                    };
+                                    externalRef: string | null;
+                                    fulfilmentPayload?: unknown;
+                                    manifest: {
+                                        docHash: string;
+                                        fontSetHash: string;
+                                        iccProfile: string;
+                                        renderedAt: string;
+                                        rendererVersion: string;
+                                        templateVersion?: string;
+                                    };
+                                    printArea: {
+                                        anchor?: {
+                                            /** @description How the print aligns to the reference: `top-left`, `top-center`, `top-right`, `center-left`, `center`, `center-right`, `bottom-left`, `bottom-center` or `bottom-right`. Anything else is read as `center`. */
+                                            align: string;
+                                            /** @description How far the print is moved from the reference, in millimetres. y grows downward. */
+                                            offsetMm: {
+                                                /** @description Horizontal offset in millimetres; positive moves right. */
+                                                x: number;
+                                                /** @description Vertical offset in millimetres; positive moves down. */
+                                                y: number;
+                                            };
+                                            /** @description The physical reference the print is positioned against on the product. */
+                                            reference: string;
+                                        };
+                                        bleedMm?: number;
+                                        cutShape: {
+                                            d: string;
+                                            type: string;
+                                        };
+                                        heightMm: number;
+                                        /** @description The linked group the design is one placement of: one design drives every placement it names. Absent for a design on one placement alone. */
+                                        linked?: {
+                                            /** @description Whether this placement's print is mirrored left to right. */
+                                            mirrored: boolean;
+                                            /** @description The group's placements, by id. */
+                                            placements: string[];
+                                            /** @description The width of the group's widest print area, in mm: what a repeat across the group is sized against, so it prints at one physical scale on every placement. */
+                                            referenceWidthMm: number;
+                                        };
+                                        placementMm?: {
+                                            heightMm: number;
+                                            widthMm: number;
+                                        };
+                                        printMethod?: string;
+                                        printedAs?: string;
+                                        /** @description The repeat the print was drawn as: the design's mode, size and seed, and the printed size of the tile laid across the print. Absent for a print that does not repeat. */
+                                        repeat?: {
+                                            /** @description How the tiles are laid: `grid` lines them up, `brick` moves every other row along by half a tile, `halfDrop` moves every other column down by half a tile, and `scatter` strews them at random places, turns and sizes, arranged by `seed`. */
+                                            mode: string;
+                                            /** @description Which arrangement a `scatter` draws: another seed is another arrangement of the same tile. Read by `scatter` only. */
+                                            seed: number;
+                                            /** @description The tile's width in percent of the print area's width, above 0 and at most 100; the tile keeps the template's shape. A tile that would print under 10 mm on a side is drawn at 10 mm. */
+                                            size: number;
+                                            /** @description The tile's printed height in millimetres. */
+                                            unitHeightMm: number;
+                                            /** @description The tile's printed width in millimetres. */
+                                            unitWidthMm: number;
+                                        };
+                                        safeAreaMm?: number;
+                                        shape?: {
+                                            /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                            cutByPrintShop?: boolean;
+                                            /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
+                                            dFrac: string;
+                                        };
+                                        widthMm: number;
+                                    };
+                                    product: {
+                                        sku: string;
+                                        tenantId: string;
+                                    };
+                                    quantity: number;
+                                    recipient?: {
+                                        /**
+                                         * Format: email
+                                         * @description The recipient's email address, for the carrier's notices.
+                                         */
+                                        email?: string;
+                                        /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
+                                        name: string;
+                                        /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
+                                        phone?: string;
+                                    };
+                                    shippingAddress?: {
+                                        /** @description The city or town. */
+                                        city: string;
+                                        /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                                        company?: string;
+                                        /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                                        country: string;
+                                        /** @description The first line of the street address: street and number. */
+                                        line1: string;
+                                        /** @description The second line of the address: an apartment, floor or c/o. */
+                                        line2?: string;
+                                        /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                                        postalCode?: string;
+                                        /** @description The state, province or county, where the country uses one. */
+                                        region?: string;
+                                    };
+                                } | null;
+                            }[];
+                            status: string;
+                            /** @description Failed or cancelled while the job goes on: listed, with no ticket, and moved by no report of the job. */
+                            struck: boolean;
+                            submissionId: string;
+                            /** @description The item's lead print's ticket, for `machineProfile` when it is asked; null for an item failed or cancelled. */
                             ticket: {
                                 artifact: {
                                     colorSpace: string;
@@ -44404,6 +48222,159 @@ export interface operations {
                                 };
                             } | null;
                         }[];
+                        machineProfileAskedId: string | null;
+                        machineProfileId: string | null;
+                        machineProfiles: {
+                            id: string;
+                            name: string;
+                        }[];
+                        prints: {
+                            placementId: string | null;
+                            printId: string;
+                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                            printedAs: string | null;
+                            /** @description This print's ticket for its own machine: `machineProfile` applies to the item's `ticket` alone. */
+                            ticket: {
+                                artifact: {
+                                    colorSpace: string;
+                                    cut?: {
+                                        bleedMm: number;
+                                        cropMarks: boolean;
+                                        cutLine: boolean;
+                                        cutName: string | null;
+                                        markOffsetMm: number;
+                                        mirrored: boolean;
+                                        part: string;
+                                        profile: string;
+                                        registrationMarks: string;
+                                        underbase: {
+                                            chokeMm: number;
+                                            coverage: string;
+                                            spotName: string;
+                                        } | null;
+                                        varnish: {
+                                            coverage: string;
+                                            spotName: string;
+                                        } | null;
+                                    };
+                                    effectiveDpi: number;
+                                    file: string;
+                                    format: string;
+                                    iccProfile: string;
+                                    includesBleed: boolean;
+                                    spotColors: string[];
+                                    spotOutput: string;
+                                    trimMarks: boolean;
+                                };
+                                artwork: {
+                                    name?: string;
+                                    templateId: string;
+                                } | {
+                                    fillColour: string;
+                                    name: string;
+                                };
+                                externalRef: string | null;
+                                fulfilmentPayload?: unknown;
+                                manifest: {
+                                    docHash: string;
+                                    fontSetHash: string;
+                                    iccProfile: string;
+                                    renderedAt: string;
+                                    rendererVersion: string;
+                                    templateVersion?: string;
+                                };
+                                printArea: {
+                                    anchor?: {
+                                        /** @description How the print aligns to the reference: `top-left`, `top-center`, `top-right`, `center-left`, `center`, `center-right`, `bottom-left`, `bottom-center` or `bottom-right`. Anything else is read as `center`. */
+                                        align: string;
+                                        /** @description How far the print is moved from the reference, in millimetres. y grows downward. */
+                                        offsetMm: {
+                                            /** @description Horizontal offset in millimetres; positive moves right. */
+                                            x: number;
+                                            /** @description Vertical offset in millimetres; positive moves down. */
+                                            y: number;
+                                        };
+                                        /** @description The physical reference the print is positioned against on the product. */
+                                        reference: string;
+                                    };
+                                    bleedMm?: number;
+                                    cutShape: {
+                                        d: string;
+                                        type: string;
+                                    };
+                                    heightMm: number;
+                                    /** @description The linked group the design is one placement of: one design drives every placement it names. Absent for a design on one placement alone. */
+                                    linked?: {
+                                        /** @description Whether this placement's print is mirrored left to right. */
+                                        mirrored: boolean;
+                                        /** @description The group's placements, by id. */
+                                        placements: string[];
+                                        /** @description The width of the group's widest print area, in mm: what a repeat across the group is sized against, so it prints at one physical scale on every placement. */
+                                        referenceWidthMm: number;
+                                    };
+                                    placementMm?: {
+                                        heightMm: number;
+                                        widthMm: number;
+                                    };
+                                    printMethod?: string;
+                                    printedAs?: string;
+                                    /** @description The repeat the print was drawn as: the design's mode, size and seed, and the printed size of the tile laid across the print. Absent for a print that does not repeat. */
+                                    repeat?: {
+                                        /** @description How the tiles are laid: `grid` lines them up, `brick` moves every other row along by half a tile, `halfDrop` moves every other column down by half a tile, and `scatter` strews them at random places, turns and sizes, arranged by `seed`. */
+                                        mode: string;
+                                        /** @description Which arrangement a `scatter` draws: another seed is another arrangement of the same tile. Read by `scatter` only. */
+                                        seed: number;
+                                        /** @description The tile's width in percent of the print area's width, above 0 and at most 100; the tile keeps the template's shape. A tile that would print under 10 mm on a side is drawn at 10 mm. */
+                                        size: number;
+                                        /** @description The tile's printed height in millimetres. */
+                                        unitHeightMm: number;
+                                        /** @description The tile's printed width in millimetres. */
+                                        unitWidthMm: number;
+                                    };
+                                    safeAreaMm?: number;
+                                    shape?: {
+                                        /** @description True when the print shop cuts the product to this shape: outline and cut-outs go into the print file as its cut line. Omitted, the product already has the shape. */
+                                        cutByPrintShop?: boolean;
+                                        /** @description The shape as SVG path data in fractions of the print area, 0 to 1 across and down (curves, no arcs): its first subpath the outline, every further one a cut-out, filled even-odd, each subpath closed. */
+                                        dFrac: string;
+                                    };
+                                    widthMm: number;
+                                };
+                                product: {
+                                    sku: string;
+                                    tenantId: string;
+                                };
+                                quantity: number;
+                                recipient?: {
+                                    /**
+                                     * Format: email
+                                     * @description The recipient's email address, for the carrier's notices.
+                                     */
+                                    email?: string;
+                                    /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
+                                    name: string;
+                                    /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
+                                    phone?: string;
+                                };
+                                shippingAddress?: {
+                                    /** @description The city or town. */
+                                    city: string;
+                                    /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
+                                    company?: string;
+                                    /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
+                                    country: string;
+                                    /** @description The first line of the street address: street and number. */
+                                    line1: string;
+                                    /** @description The second line of the address: an apartment, floor or c/o. */
+                                    line2?: string;
+                                    /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
+                                    postalCode?: string;
+                                    /** @description The state, province or county, where the country uses one. */
+                                    region?: string;
+                                };
+                            } | null;
+                        }[];
+                        /** @description Where the job stands: its least advanced item still made in it, or, with none, its first item's status. */
                         status: string;
                         submittedAt: number;
                         ticket: {
@@ -44690,7 +48661,7 @@ export interface operations {
             };
         };
     };
-    "orders.job.files.bundle": {
+    "orders.printshopOrders.job.files.bundle": {
         parameters: {
             query?: {
                 machineProfile?: string;
@@ -44703,6 +48674,7 @@ export interface operations {
             header?: never;
             path: {
                 id: string;
+                printshopOrderId: string;
             };
             cookie?: never;
         };
@@ -44799,7 +48771,7 @@ export interface operations {
             };
         };
     };
-    "orders.job.files.get": {
+    "orders.printshopOrders.job.files.get": {
         parameters: {
             query?: {
                 machineProfile?: string;
@@ -44812,6 +48784,7 @@ export interface operations {
             header?: never;
             path: {
                 id: string;
+                printshopOrderId: string;
             };
             cookie?: never;
         };
@@ -44914,7 +48887,7 @@ export interface operations {
             };
         };
     };
-    "orders.job.files.list": {
+    "orders.printshopOrders.job.files.list": {
         parameters: {
             query?: {
                 machineProfile?: string;
@@ -44925,6 +48898,7 @@ export interface operations {
             header?: never;
             path: {
                 id: string;
+                printshopOrderId: string;
             };
             cookie?: never;
         };
@@ -45088,8 +49062,48 @@ export interface operations {
                 content: {
                     "application/json": {
                         id: string;
+                        /** @description The order's items, the first placed first: what each is, how many were ordered and where it has got to. Which of them a parcel holds, and how many, is in `parcels`. */
+                        items: {
+                            /** @description The design the item was made from. Its proof, `GET /v1/designs/{id}/proof`, is the item's picture, and the order's order-status link reads it. */
+                            designId: string;
+                            id: string;
+                            /** @description The blank the item is made on; `null` for prints on no blank. */
+                            name: string | null;
+                            /** @description The copies ordered. */
+                            quantity: number;
+                            /** @description Where the item has got to: its latest submission's status. */
+                            status: string;
+                            /** @description The variant's option values in the blank's order, such as `White · M`; `null` without a variant. */
+                            variant: string | null;
+                        }[];
+                        /** @description The order's parcels, the first made first: a section each, with how it ships and the items it holds. The order status page gives each its own section, `#parcel-<id>`, so a link to the page with that fragment opens at the parcel, as `parcel.shipped` names it. */
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
+                            status: string;
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
                         status: string;
-                        /** @description Each status the order reached, oldest first, and when. A failed order that was sent again shows the steps of the order that took its place. */
+                        /** @description Each status the order reached, oldest first, and when. A failed item that was sent again shows the steps of its latest submission. */
                         steps: {
                             at: number;
                             status: string;
@@ -45186,662 +49200,6 @@ export interface operations {
             };
         };
     };
-    "orders.rerouteTargets": {
-        parameters: {
-            query?: {
-                /** @description The page to read, from 1; the first when left out. */
-                page?: number;
-                /** @description Only the blanks whose name, or whose printshop's name, holds this text, case aside. */
-                q?: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description A page of blanks */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description How many of the `total` blanks the order fits. */
-                        fitting: number;
-                        page: number;
-                        pageSize: number;
-                        targets: {
-                            blankId: string;
-                            /** @description For a blank the order fits, each print and the placements it may go to; empty otherwise. */
-                            candidates: {
-                                placements: {
-                                    id: string;
-                                    /** @description The largest print it takes. */
-                                    largestMm: {
-                                        heightMm: number;
-                                        widthMm: number;
-                                    };
-                                    name: string;
-                                    /** @description It has the print's own placement's name, so the print goes there and nowhere else. */
-                                    sameName: boolean;
-                                }[];
-                                printId: string;
-                            }[];
-                            fits: boolean;
-                            /** @description For a blank the order does not fit, why; empty otherwise. */
-                            misfits: ({
-                                /** @enum {string} */
-                                kind: "print_exceeds_placement";
-                                largestMm: {
-                                    heightMm: number;
-                                    widthMm: number;
-                                };
-                                placement: string;
-                                printId: string;
-                                printMm: {
-                                    heightMm: number;
-                                    widthMm: number;
-                                };
-                            } | {
-                                /** @description The placement's area: it is printed across all of it, so a print must be that size. */
-                                areaMm: {
-                                    heightMm: number;
-                                    widthMm: number;
-                                };
-                                /** @enum {string} */
-                                kind: "print_short_of_area";
-                                placement: string;
-                                printId: string;
-                                printMm: {
-                                    heightMm: number;
-                                    widthMm: number;
-                                };
-                            } | {
-                                /** @enum {string} */
-                                kind: "technique_differs";
-                                placement: string;
-                                placementMethod: string;
-                                printId: string;
-                                printMethod: string;
-                            } | {
-                                /** @enum {string} */
-                                kind: "technique_unknown";
-                                placement: string;
-                                placementMethod: string | null;
-                                printId: string;
-                                printMethod: string | null;
-                            } | {
-                                /** @enum {string} */
-                                kind: "no_placement_fits";
-                                /** @description The print's own placement's name; `null` for none. */
-                                placement: string | null;
-                                printId: string;
-                            } | {
-                                /** @enum {string} */
-                                kind: "too_few_placements";
-                            })[];
-                            name: string;
-                            /** @description The names of the blank's placements, in its order. */
-                            placements: string[];
-                            /** @description The printshop the blank is made at, which the order would go to. */
-                            printshop: {
-                                id: string;
-                                name: string;
-                            } | null;
-                            /** @description How many variants the blank has, retired ones included. */
-                            variants: number;
-                        }[];
-                        total: number;
-                    };
-                };
-            };
-            /** @description Refused: unauthorized */
-            401: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: origin_forbidden, forbidden, feature_disabled, workspace_suspended */
-            403: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
-                        feature?: string;
-                    };
-                };
-            };
-            /** @description Refused: order_not_found, not_found */
-            404: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: order_not_retryable, order_at_printshop, order_superseded, print_ticket_stale */
-            409: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Always sent with `print_ticket_stale`. */
-                        detail?: string;
-                        error: string;
-                        /** @description Always sent with `order_superseded`. */
-                        newerOrderId?: string;
-                        /** @description Always sent with `order_not_retryable`. */
-                        status?: string;
-                    };
-                };
-            };
-            /** @description Refused: invalid_query */
-            422: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
-            500: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                    "text/plain": "Internal Server Error";
-                };
-            };
-        };
-    };
-    "orders.retry": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    /** @description Sends the order to another blank rather than back to its own: the same prints, copies, reference and address, at that blank's printshop. The prints are not made again, so each must fit the placement it goes to: its trim size within the placement's largest print, never turned, and made by the placement's print method. `GET /v1/orders/{id}/reroute-targets` lists the blanks it fits. */
-                    reroute?: {
-                        /** @description The blank to send the order to: any other blank of the workspace. The order goes to its printshop. */
-                        blankId: string;
-                        /** @description Where each print of the order goes on the blank, one placement each. A print goes to the placement of its own placement's name when the blank has one, matched without regard to case. */
-                        placements: {
-                            /** @description The placement on the blank the print goes to. */
-                            placementId: string;
-                            printId: string;
-                        }[];
-                        /** @description The variant of that blank the order is for, by ref. May be left out for a blank with one variant. */
-                        variant?: string;
-                    };
-                } | null;
-            };
-        };
-        responses: {
-            /** @description The new order */
-            201: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        adapter: string;
-                        /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
-                        blank: {
-                            name: string;
-                            /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
-                            optionAxes: string[];
-                            /** @description How many variants it has, retired ones included. */
-                            variants: number;
-                        } | null;
-                        /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
-                        blankId: string | null;
-                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after the order was sent; `null` for an order whose address never changed. */
-                        delivery: {
-                            /** @description When the change was made. */
-                            at: number;
-                            /** @description What the printshop made of the change: `sending` while it is being told, `accepted`, `refused` (the order keeps the address the printshop has), or `carried` when what the printshop had not been sent yet carries the new address, so nothing extra was sent. */
-                            state: string;
-                            /** @description The printshop's own answer to a refused change; `null` otherwise. */
-                            words: string | null;
-                        } | null;
-                        /** @description The design the lead print was made from. */
-                        designId: string;
-                        externalOrderRef: string | null;
-                        externalRef: string | null;
-                        /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
-                        failureKind: string | null;
-                        /** @description Why the order is `held`, while it is; `null` for an order not held. A held order is accepted and not handed to its printshop until the month resets with room for it or the workspace upgrades. */
-                        hold: {
-                            /** @description The plan's monthly order limit the order met. */
-                            limit: number;
-                            /** @description When the month resets (ISO 8601, UTC): the latest the order is released, if the new month has room for it. */
-                            periodEnd: string;
-                            /** @description Why it is held: `monthly_order_limit`, the workspace has placed the orders its plan includes this month. Show a reason you do not know as held without one, never as a failure. */
-                            reason: string;
-                        } | null;
-                        id: string;
-                        lastCheckedAt: number | null;
-                        lastError: string | null;
-                        personalDataErasedAt: number | null;
-                        /** @description The order's lead print: the first of `printIds`, and the only one of an order of one print. */
-                        printId: string;
-                        /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
-                        printIds: string[];
-                        /** @description `printIds` with each print's design, placement and file. */
-                        prints: ({
-                            designId: string;
-                            /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
-                            designRevision: number;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
-                            status: string;
-                        } | {
-                            /** @description A fill print is made from no design. */
-                            designId: null;
-                            /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
-                            fillColour: string;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
-                            status: string;
-                        })[];
-                        /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
-                        printshopAsPlaced: {
-                            adapter: string;
-                            name: string;
-                        } | null;
-                        printshopConnectionId: string | null;
-                        printshopName: string | null;
-                        quantity: number;
-                        /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
-                        recipient: {
-                            /**
-                             * Format: email
-                             * @description The recipient's email address, for the carrier's notices.
-                             */
-                            email?: string;
-                            /** @description The recipient's name as a parcel label carries it, a person's or a company's. Up to 200 characters. */
-                            name: string;
-                            /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
-                            phone?: string;
-                        } | null;
-                        /** @description The order submitted to replace this one, which names it as `replacesOrderId`; `null` for none. */
-                        replacedByOrderId: string | null;
-                        /** @description The failed order this one was submitted to replace; `null` for an order that replaces none. */
-                        replacesOrderId: string | null;
-                        /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
-                        shipTo: {
-                            address: {
-                                /** @description The city or town. */
-                                city: string;
-                                /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
-                                company?: string;
-                                /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
-                                country: string;
-                                /** @description The first line of the street address: street and number. */
-                                line1: string;
-                                /** @description The second line of the address: an apartment, floor or c/o. */
-                                line2?: string;
-                                /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
-                                postalCode?: string;
-                                /** @description The state, province or county, where the country uses one. */
-                                region?: string;
-                            };
-                            /** @description What the address is called in the workspace, such as `Warehouse`: unique there, case aside, and the name a parcel sent there is addressed to. Up to 200 characters. */
-                            name: string;
-                            /** @description The saved address the order ships to, by id. It may have been changed or removed since; `name` and `address` are what the order was placed with. */
-                            savedAddressId: string;
-                        } | null;
-                        /** @description The customer's address. Where the order ships, unless `shipTo` is set. */
-                        shippingAddress: {
-                            /** @description The city or town. */
-                            city: string;
-                            /** @description The company of a business address, which the parcel goes to; the recipient is who receives it. */
-                            company?: string;
-                            /** @description The country as a two-letter ISO 3166-1 code in capitals, such as `SE` or `US`. */
-                            country: string;
-                            /** @description The first line of the street address: street and number. */
-                            line1: string;
-                            /** @description The second line of the address: an apartment, floor or c/o. */
-                            line2?: string;
-                            /** @description The postal code as the country writes it, such as `111 22` or `SW1A 1AA`. Left out where the country has none; a printshop that needs one refuses the order `postal_code_required`. */
-                            postalCode?: string;
-                            /** @description The state, province or county, where the country uses one. */
-                            region?: string;
-                        } | null;
-                        spotOutput: string | null;
-                        status: string;
-                        submittedAt: number;
-                        tenantId: string;
-                        tracking: {
-                            /** @description Who carries it, such as `DHL`. */
-                            carrier?: string;
-                            /** @description The shipment's tracking number. */
-                            number: string;
-                            /**
-                             * Format: uri
-                             * @description Where the shipment is followed: an https address.
-                             */
-                            url?: string;
-                        } | null;
-                        updatedAt: number;
-                        /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
-                        variant: {
-                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
-                            colours?: {
-                                [key: string]: {
-                                    /** @description The colour to make the value in, `#rrggbb`. */
-                                    colour: string;
-                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
-                                    from: string;
-                                };
-                            };
-                            /** @description Each declared field, in the printshop's order, as it was sent. */
-                            fields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[];
-                            options: {
-                                [key: string]: string;
-                            };
-                            ref: string;
-                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
-                            unusedPicks?: {
-                                [key: string]: string;
-                            };
-                        } | null;
-                        /** @description The variant the order names; `null` as `blankId` is. */
-                        variantRef: string | null;
-                    };
-                };
-            };
-            /** @description Refused: bad_request */
-            400: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: unauthorized */
-            401: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: plan_limit_reached, origin_forbidden, forbidden, feature_disabled, workspace_suspended */
-            403: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
-                        feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
-                        limit?: string;
-                        /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
-                        max?: number;
-                        /** @description The plan whose limit it is. Always sent with `plan_limit_reached`. */
-                        plan?: string;
-                    };
-                };
-            };
-            /** @description Refused: print_not_found, order_not_found, not_found */
-            404: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-            /** @description Refused: print_not_completed, print_needs_printshop, print_ticket_stale, print_superseded, print_files_deleted, design_erased, stale_update, design_already_ordered, printshop_paused, order_not_retryable, order_at_printshop, order_superseded */
-            409: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Always sent with `stale_update`. */
-                        current?: number;
-                        /** @description Always sent with `design_already_ordered`. */
-                        designId?: string;
-                        /** @description Always sent with `print_ticket_stale`. */
-                        detail?: string;
-                        error: string;
-                        /** @description Always sent with `order_superseded`. */
-                        newerOrderId?: string;
-                        /** @description Always sent with `design_already_ordered`. */
-                        orderId?: string;
-                        /** @description Always sent with `printshop_paused`. */
-                        reason?: string;
-                        /** @description Always sent with `print_not_completed`, `order_not_retryable`. With `order_not_retryable`: one of `held`, `awaiting_prints`, `submitted`, `queued`, `printed`, `shipped`, `failed`, `outcome_unknown`, `cancelled`. */
-                        status?: string;
-                    };
-                };
-            };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, reroute_blank_not_found, reroute_same_blank, print_not_of_order, print_not_mapped, print_mapped_twice, placement_not_of_blank, placement_taken, placement_name_differs, print_exceeds_placement, print_short_of_area, technique_differs, technique_unknown, payload_too_large */
-            422: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Always sent with `print_short_of_area`. */
-                        areaMm?: {
-                            heightMm: number;
-                            widthMm: number;
-                        };
-                        /** @description Sent with `payload_too_large`. */
-                        bytes?: number;
-                        /** @description Always sent with `spot_plate_required`. */
-                        cause?: string;
-                        /** @description Always sent with `variant_not_of_design_row`. */
-                        designId?: string;
-                        /** @description Always sent with `print_profile_unavailable`. */
-                        detail?: string;
-                        error: string;
-                        /** @description The workspace feature that is off, where the printshop prints with the method but the workspace does not offer it. Sent with `technique_not_offered`. */
-                        feature?: string;
-                        /** @description Always sent with `field_value_missing`. */
-                        field?: string;
-                        /** @description Always sent with `field_value_missing`. */
-                        fieldKind?: string;
-                        /** @description Each part of the design the machine cannot stitch. Always sent with `design_not_stitchable`. */
-                        findings?: {
-                            allowed: unknown;
-                            given: unknown;
-                            layerId: string;
-                            prop: string;
-                            /** @description Why a picture cannot be stitched, for `stitch_picture`. */
-                            reason?: string;
-                            rule: string;
-                            /** @description The nearest thread, for a colour off the machine's list. */
-                            thread?: {
-                                hex: string;
-                                id: string;
-                                name: string;
-                            };
-                        }[];
-                        /** @description Always sent with `prints_disagree`. */
-                        key?: string;
-                        /** @description Always sent with `print_exceeds_position`, `print_exceeds_placement`. */
-                        largestMm?: {
-                            heightMm: number;
-                            widthMm: number;
-                        };
-                        /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
-                        machine?: string;
-                        /** @description Always sent with `payload_too_large`. */
-                        maxBytes?: number;
-                        /** @description Always sent with `print_exceeds_machine`. */
-                        mediaMm?: {
-                            heightMm: number;
-                            widthMm: number;
-                        };
-                        /** @description Always sent with `technique_not_offered`. */
-                        method?: string;
-                        /** @description Always sent with `missing_fulfilment_keys`. */
-                        missing?: string[];
-                        /** @description Always sent with `placement_name_differs`. */
-                        named?: string;
-                        /** @description Always sent with `print_profile_unavailable`. */
-                        outputProfile?: string;
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
-                        placement?: string;
-                        /** @description Always sent with `duplicate_placement`, `placement_not_of_blank`. */
-                        placementId?: string;
-                        /** @description Always sent with `technique_differs`, `technique_unknown`. */
-                        placementMethod?: string | null;
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, and may be sent with `field_value_missing`. */
-                        position?: string;
-                        /** @description Always sent with `print_profile_unavailable`, `print_without_placement`, `print_committed_elsewhere`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
-                        printId?: string;
-                        /** @description Always sent with `placement_taken`. */
-                        printIds?: string[];
-                        /** @description Always sent with `technique_differs`, `technique_unknown`. */
-                        printMethod?: string | null;
-                        /** @description Always sent with `technique_not_offered`. */
-                        printMethods?: string[];
-                        /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `print_exceeds_placement`, `print_short_of_area`. */
-                        printMm?: {
-                            heightMm: number;
-                            widthMm: number;
-                        };
-                        /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
-                        printshop?: string;
-                        /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`, `reroute_blank_not_found`, `reroute_same_blank`, `print_not_of_order`, `print_not_mapped`, `print_mapped_twice`, `placement_not_of_blank`, `placement_taken`, `placement_name_differs`, `print_exceeds_placement`, `print_short_of_area`, `technique_differs`, `technique_unknown`. */
-                        reason?: string;
-                        /** @description Always sent with `spot_plate_required`. */
-                        references?: string[];
-                        /** @description Always sent with `variant_not_of_design_row`. */
-                        row?: {
-                            [key: string]: string;
-                        };
-                        /** @description Always sent with `print_not_position_size`. */
-                        sizeMm?: {
-                            heightMm: number;
-                            widthMm: number;
-                        };
-                        /** @description Always sent with `print_raster_too_large`. */
-                        sizePx?: {
-                            heightPx: number;
-                            widthPx: number;
-                        };
-                        /** @description Always sent with `variant_not_of_blank`, `variant_retired`, `variant_not_of_design_row`. */
-                        variant?: string;
-                        /** @description Always sent with `variant_required`. */
-                        variants?: number;
-                    };
-                };
-            };
-            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
-            500: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                    "text/plain": "Internal Server Error";
-                };
-            };
-            /** @description Refused: lock_timeout */
-            503: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-        };
-    };
     "orders.sendNow": {
         parameters: {
             query?: never;
@@ -45853,7 +49211,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The order, its store order's ready items asked to go now */
+            /** @description The order, its ready items asked to go now */
             202: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -45861,33 +49219,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        adapter: string;
-                        /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
-                        blank: {
-                            name: string;
-                            /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
-                            optionAxes: string[];
-                            /** @description How many variants it has, retired ones included. */
-                            variants: number;
-                        } | null;
-                        /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
-                        blankId: string | null;
-                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after the order was sent; `null` for an order whose address never changed. */
+                        canErase: boolean;
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
                         delivery: {
-                            /** @description When the change was made. */
                             at: number;
-                            /** @description What the printshop made of the change: `sending` while it is being told, `accepted`, `refused` (the order keeps the address the printshop has), or `carried` when what the printshop had not been sent yet carries the new address, so nothing extra was sent. */
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
                             state: string;
-                            /** @description The printshop's own answer to a refused change; `null` otherwise. */
                             words: string | null;
                         } | null;
-                        /** @description The design the lead print was made from. */
-                        designId: string;
-                        externalOrderRef: string | null;
+                        /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
+                        deliveryChangeRefusal: {
+                            /** @enum {string} */
+                            code: "address_change_not_accepted";
+                        } | {
+                            /** @enum {string} */
+                            code: "order_past_address_change";
+                            status: string;
+                            /** @description Its submission has not been answered yet: its printshop has given it no reference. */
+                            unanswered: boolean;
+                        } | null;
+                        /** @description The order's address changes, oldest first, each as its `order.delivery_changed` event recorded it. Never the address. */
+                        deliveryChanges: {
+                            /** @description The order had no address before: one was added. */
+                            added: boolean;
+                            /** @description When the change was made, or answered. */
+                            at: number;
+                            /** @description Who made it: a studio `member`, the `customer` on the design's address capture page, a connected store's integration key (`store_key`), or a `secret_key`. */
+                            by: string;
+                            /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
+                            outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
+                            /** @description The printshop's own answer to a refused change. */
+                            words: string | null;
+                        }[];
+                        erasable: boolean;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
                         externalRef: string | null;
-                        /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
-                        failureKind: string | null;
-                        /** @description Why the order is `held`, while it is; `null` for an order not held. A held order is accepted and not handed to its printshop until the month resets with room for it or the workspace upgrades. */
+                        history: {
+                            at: number;
+                            /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
+                            automation: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
+                            reason: string | null;
+                            /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
+                            releasedBy: string | null;
+                            seq: number;
+                            status: string;
+                            type: string;
+                            via: string | null;
+                        }[];
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
                         hold: {
                             /** @description The plan's monthly order limit the order met. */
                             limit: number;
@@ -45897,64 +49284,235 @@ export interface operations {
                             reason: string;
                         } | null;
                         id: string;
-                        lastCheckedAt: number | null;
-                        lastError: string | null;
-                        personalDataErasedAt: number | null;
-                        /** @description The order's lead print: the first of `printIds`, and the only one of an order of one print. */
-                        printId: string;
-                        /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
-                        printIds: string[];
-                        /** @description `printIds` with each print's design, placement and file. */
-                        prints: ({
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
                             designId: string;
-                            /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
-                            designRevision: number;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                            id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
+                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                            printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
                                 name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
                             spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
                             status: string;
-                        } | {
-                            /** @description A fill print is made from no design. */
-                            designId: null;
-                            /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
-                            fillColour: string;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
+                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                            variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
+                                /** @description Each declared field, in the printshop's order, as it was sent. */
+                                fields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[];
+                                options: {
+                                    [key: string]: string;
+                                };
+                                ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
+                            } | null;
+                            /** @description The variant the order names; `null` as `blankId` is. */
+                            variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
                             status: string;
-                        })[];
-                        /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
-                        printshopAsPlaced: {
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
+                        personalDataErasedAt: number | null;
+                        printshopOrders: {
                             adapter: string;
-                            name: string;
-                        } | null;
-                        printshopConnectionId: string | null;
-                        printshopName: string | null;
-                        quantity: number;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
                         /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
                         recipient: {
                             /**
@@ -45967,10 +49525,8 @@ export interface operations {
                             /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
                             phone?: string;
                         } | null;
-                        /** @description The order submitted to replace this one, which names it as `replacesOrderId`; `null` for none. */
-                        replacedByOrderId: string | null;
-                        /** @description The failed order this one was submitted to replace; `null` for an order that replaces none. */
-                        replacesOrderId: string | null;
+                        /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
+                        recipientEmailBounced: boolean;
                         /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
                         shipTo: {
                             address: {
@@ -46011,68 +49567,10 @@ export interface operations {
                             /** @description The state, province or county, where the country uses one. */
                             region?: string;
                         } | null;
-                        spotOutput: string | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
                         status: string;
-                        /** @description Why the order, `awaiting_prints` with its own prints done, still waits: it goes to its printshop with the other items of its store order, as one of the printshop's orders. `null` for any other order, one whose prints are still rendering included. `POST /v1/orders/{id}/send-now` sends the ready ones now. */
-                        storeOrderWait: {
-                            /** @description How many items the store said the store order has. */
-                            itemsExpected: number;
-                            /** @description How many items of the store order have been placed so far. */
-                            itemsPlaced: number;
-                            /** @description How many items of the store order bound for this order's printshop are not ready to go yet: their prints still rendering, a design awaiting approval, or held. */
-                            notReady: number;
-                            /** @description How many items of the store order bound for this order's printshop are ready to go, this one included: what a send now sends. */
-                            ready: number;
-                            /** @description The store order it was sold in, as `storeOrder.ref` named it; for an item of a member's order of several items, the reference minted for that order. */
-                            ref: string;
-                            /** @description The latest the order goes to its printshop, with the items ready then (ISO 8601, UTC): two hours from the store order's first item. `null` for an item of a member's order of several items, which waits for all of them. */
-                            sendBy: string | null;
-                            /** @description When `POST /v1/orders/{id}/send-now` was asked for the store order's items bound for this printshop: they go within seconds. `null` when it was not. */
-                            sendNowAt: number | null;
-                        } | null;
-                        submittedAt: number;
                         tenantId: string;
-                        tracking: {
-                            /** @description Who carries it, such as `DHL`. */
-                            carrier?: string;
-                            /** @description The shipment's tracking number. */
-                            number: string;
-                            /**
-                             * Format: uri
-                             * @description Where the shipment is followed: an https address.
-                             */
-                            url?: string;
-                        } | null;
                         updatedAt: number;
-                        /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
-                        variant: {
-                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
-                            colours?: {
-                                [key: string]: {
-                                    /** @description The colour to make the value in, `#rrggbb`. */
-                                    colour: string;
-                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
-                                    from: string;
-                                };
-                            };
-                            /** @description Each declared field, in the printshop's order, as it was sent. */
-                            fields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[];
-                            options: {
-                                [key: string]: string;
-                            };
-                            ref: string;
-                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
-                            unusedPicks?: {
-                                [key: string]: string;
-                            };
-                        } | null;
-                        /** @description The variant the order names; `null` as `blankId` is. */
-                        variantRef: string | null;
                     };
                 };
             };
@@ -48461,7 +51959,7 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -48904,7 +52402,7 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -49007,7 +52505,7 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -49093,7 +52591,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        /** @description How the print was counted as an order: its files got without one (`files`, when and by whom), or an order of it (`order`, when it was placed). Null when neither: the first get of its files counts as an order. Getting them again is free. */
+                        /** @description How the print was counted as an item: its files got without an order (`files`, when and by whom), or an order of it (`order`, when it was placed). Null when neither: the first get of its files counts as an item. Getting them again is free. */
                         counted: {
                             at: number;
                             by: {
@@ -49271,7 +52769,7 @@ export interface operations {
                     };
                     /** @description Order the design again on purpose. A design has one live order (in any status but `failed` and `cancelled`): absent or false, an order of a design that has one is refused `409 design_already_ordered`, naming the design and its newest live order, and nothing is written. True places the order whatever orders the design has. */
                     reorder?: boolean;
-                    /** @description The id of a failed order of this print that this order replaces, changing what it wants: another number of copies, reference, recipient, address or, for a print with no blank, printshop. Allowed under the rules `POST /v1/orders/{id}/retry` has, and refused as it refuses; the new order records which order it replaces. */
+                    /** @description The id of a failed order of this print that this order replaces, changing what it wants: another number of copies, reference, recipient, address or, for a print with no blank, printshop. Allowed under the rules `POST /v1/orders/{id}/items/{itemId}/retry` has, and refused as it refuses; the new order records which order it replaces. */
                     replacesOrderId?: string;
                     /** @description A saved address to ship to; the customer stays the recipient. null: the customer's. Left out: the workspace's setting. */
                     shipToAddressId?: string | null;
@@ -49298,7 +52796,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description The submitted order */
+            /** @description The order placed: an order of one item */
             201: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -49306,33 +52804,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        adapter: string;
-                        /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
-                        blank: {
-                            name: string;
-                            /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
-                            optionAxes: string[];
-                            /** @description How many variants it has, retired ones included. */
-                            variants: number;
-                        } | null;
-                        /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
-                        blankId: string | null;
-                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after the order was sent; `null` for an order whose address never changed. */
+                        canErase: boolean;
+                        createdAt: number;
+                        /** @description The order's latest address change, made with `PATCH /v1/orders/{id}/delivery` after it was sent; `null` for an order whose address never changed. */
                         delivery: {
-                            /** @description When the change was made. */
                             at: number;
-                            /** @description What the printshop made of the change: `sending` while it is being told, `accepted`, `refused` (the order keeps the address the printshop has), or `carried` when what the printshop had not been sent yet carries the new address, so nothing extra was sent. */
+                            /** @description What its printshops made of the change: one `state` they share, or `partial` when some took it and some refused. */
                             state: string;
-                            /** @description The printshop's own answer to a refused change; `null` otherwise. */
                             words: string | null;
                         } | null;
-                        /** @description The design the lead print was made from. */
-                        designId: string;
-                        externalOrderRef: string | null;
+                        /** @description Why `PATCH /v1/orders/{id}/delivery` would refuse a change now, by its error code, or `null` when it would take one. A printshop that is already making the order may still refuse it as `order_past_address_change`: that is known only by asking it. */
+                        deliveryChangeRefusal: {
+                            /** @enum {string} */
+                            code: "address_change_not_accepted";
+                        } | {
+                            /** @enum {string} */
+                            code: "order_past_address_change";
+                            status: string;
+                            /** @description Its submission has not been answered yet: its printshop has given it no reference. */
+                            unanswered: boolean;
+                        } | null;
+                        /** @description The order's address changes, oldest first, each as its `order.delivery_changed` event recorded it. Never the address. */
+                        deliveryChanges: {
+                            /** @description The order had no address before: one was added. */
+                            added: boolean;
+                            /** @description When the change was made, or answered. */
+                            at: number;
+                            /** @description Who made it: a studio `member`, the `customer` on the design's address capture page, a connected store's integration key (`store_key`), or a `secret_key`. */
+                            by: string;
+                            /** @description What the printshop made of it at `at`: a change `sending` is listed again once it is answered. */
+                            outcome: string;
+                            /** @description The printshop order whose printshop gave this outcome: an order sent to several printshops lists each one's answer. Null where no printshop order held the item yet. */
+                            printshopOrderId: string | null;
+                            /** @description The printshop's own answer to a refused change. */
+                            words: string | null;
+                        }[];
+                        erasable: boolean;
+                        /** @description The caller's own reference for the order, such as the store's order id. */
                         externalRef: string | null;
-                        /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
-                        failureKind: string | null;
-                        /** @description Why the order is `held`, while it is; `null` for an order not held. A held order is accepted and not handed to its printshop until the month resets with room for it or the workspace upgrades. */
+                        history: {
+                            at: number;
+                            /** @description The automation that moved it, by the name it had then; null unless `via` is `automation`. */
+                            automation: {
+                                id: string;
+                                name: string;
+                            } | null;
+                            /** @description The item the step was of. */
+                            itemId: string;
+                            reason: string | null;
+                            /** @description What released a held order, on `order.released`: the workspace's `upgrade` or the `month_reset`; null otherwise. */
+                            releasedBy: string | null;
+                            seq: number;
+                            status: string;
+                            type: string;
+                            via: string | null;
+                        }[];
+                        /** @description Why the whole order is `held`, while it is: the plan's month has no room for it. `null` otherwise. */
                         hold: {
                             /** @description The plan's monthly order limit the order met. */
                             limit: number;
@@ -49342,64 +52869,235 @@ export interface operations {
                             reason: string;
                         } | null;
                         id: string;
-                        lastCheckedAt: number | null;
-                        lastError: string | null;
-                        personalDataErasedAt: number | null;
-                        /** @description The order's lead print: the first of `printIds`, and the only one of an order of one print. */
-                        printId: string;
-                        /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
-                        printIds: string[];
-                        /** @description `printIds` with each print's design, placement and file. */
-                        prints: ({
+                        /** @description The order's items, in the order they were placed. */
+                        items: {
+                            /** @description The order's printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched; `null` when it does not. */
+                            approvalHold: {
+                                /** @description When the printshop rejects the order unapproved. It cannot be cancelled meanwhile. */
+                                dueAt: number;
+                                /** @description The printshop's own page for the order, to approve it on. */
+                                url: string;
+                            } | null;
+                            /** @description The blank `blankId` names, as it reads now; `null` as `blankId` is. */
+                            blank: {
+                                name: string;
+                                /** @description Its option axes, in order: how a variant's `options` read, such as Color then Size. */
+                                optionAxes: string[];
+                                /** @description How many variants it has, retired ones included. */
+                                variants: number;
+                            } | null;
+                            /** @description The blank the order's prints are on; `null` for prints on no blank, or an order placed before it was recorded. */
+                            blankId: string | null;
+                            canRetry: boolean;
+                            /** @description The design the lead print was made from. */
                             designId: string;
-                            /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
-                            designRevision: number;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
+                            /** @description What the order's printshop charged to set its embroidery up, as the printshop reported it; `null` when it reported none. */
+                            embroideryFee: {
+                                /** @description The fee in the currency's minor units. */
+                                amountMinor: number;
+                                /** @description The currency's ISO 4217 code. */
+                                currency: string;
+                            } | null;
+                            /** @description The caller's own reference for the item, such as its line in the store's order. */
+                            externalRef: string | null;
+                            /** @description Why Pixonaut failed the order rather than its printshop, as a refusal code: `print_failed` (a print of it could not be made; `lastError` names it), `prints_timed_out` (its prints were not finished within three hours of placing it), the refusal an order waiting for its prints met when it was handed on, such as `technique_not_offered`, or what a connected store's order lacked for its printshop: `blank_needed` (its design is on no blank, and the printshop needs one) or `missing_fulfilment_keys`. `null` for an order its printshop refused, or one not failed. */
+                            failureKind: string | null;
+                            fallbackSpots: string[];
+                            /** @description The item's own hold, while it is held; `null` otherwise. The plan's limit holds the whole order (`hold` on the order). */
+                            hold: {
+                                dueAt: number;
+                                /** @description `approval`: its printshop holds it until its merchant approves a change to it, such as how its embroidery is stitched. */
+                                reason: string;
+                                url: string;
+                            } | null;
+                            /** @description The item's id: stable through every retry and reroute of it, so a store line keeps it. */
+                            id: string;
+                            lastError: string | null;
+                            /** @description The parcels holding its copies: several when they are split. */
+                            parcels: {
+                                parcelId: string;
+                                /** @description Its copies in that parcel; `null` where the printshop does not say. */
+                                quantity: number | null;
+                            }[];
+                            /** @description Every print the order holds, the lead first: the prints of one item, each in its own placement on its blank. */
+                            printIds: string[];
+                            /** @description `printIds` with each print's design, placement and file. */
+                            prints: ({
+                                designId: string;
+                                /** @description The revision of the design the print was made from: `GET /v1/designs/{id}/revisions/{revision}/image` draws it. */
+                                designRevision: number;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            } | {
+                                /** @description A fill print is made from no design. */
+                                designId: null;
+                                /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
+                                fillColour: string;
+                                /** @description Its page, from 1, on a placement printed as pages, such as a notebook's inner pages; absent on a placement of one page. */
+                                page?: number;
+                                /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
+                                placementFields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[] | null;
+                                /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
+                                placementId: string | null;
+                                printId: string;
+                                /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
+                                printedAs: string | null;
+                                /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                                spotOutput: string | null;
+                                /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                                status: string;
+                            })[];
+                            /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
+                            printshopAsPlaced: {
+                                adapter: string;
                                 name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
+                            } | null;
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            quantity: number;
+                            /** @description The reroutes this item's latest submission took part in, by `POST /v1/orders/{id}/items/{itemId}/reroute`, oldest first: the one that sent it here (`target`), then the one that sent it on to another blank (`original`), each naming both blanks, variants and printshops as their submissions were placed, and `otherOrderId` the other submission. Empty for an item not rerouted. */
+                            reroutes: {
+                                at: number;
+                                from: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                otherOrderId: string;
+                                side: string;
+                                to: {
+                                    blankId: string | null;
+                                    blankName: string | null;
+                                    /** @description The blank's option axes, in order: how `variantOptions` read. */
+                                    optionAxes: string[];
+                                    printshopName: string | null;
+                                    variantOptions: {
+                                        [key: string]: string;
+                                    } | null;
+                                    variantRef: string | null;
+                                };
+                                via: string | null;
+                            }[];
+                            retryable: boolean;
+                            /** @description How many of its copies are in parcels that have left; `null` when a parcel naming it does not say how many it holds. */
+                            shippedQuantity: number | null;
                             spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description Its latest submission's status: `held` or `awaiting_prints` before it is sent, then where its printshop has it. */
                             status: string;
-                        } | {
-                            /** @description A fill print is made from no design. */
-                            designId: null;
-                            /** @description A fill print: an optional placement of the blank the order left undesigned, printed flat in this colour (`#rrggbb`), its fill colour, at the placement's whole area. */
-                            fillColour: string;
-                            /** @description The placement fields the printshop was sent for this print, from its position there; `null` for an order placed before they were recorded. */
-                            placementFields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[] | null;
-                            /** @description The placement on its blank the print's design was committed for; `null` for a design with no blank, or one committed before placements were recorded. */
-                            placementId: string | null;
-                            printId: string;
-                            /** @description Where on the item the print goes, by the name the order's printshop knows it by (its Printed as), recorded when the order was placed; `null` for a print on no blank, or an order placed before it was recorded. */
-                            printedAs: string | null;
-                            /** @description Which of this print's files the printshop was sent; `null` while the order waits for its prints (`awaiting_prints`). */
-                            spotOutput: string | null;
-                            /** @description Where the print has got to: `created` while it renders, which an order in `awaiting_prints` waits for, then `completed`, or `failed`. */
+                            /** @description The statuses this caller may set the item to now with `PATCH /v1/orders/{id}/printshop-orders/{printshopOrderId}`: for an integration key or a studio member on live, `submitted` and `failed` while its outcome is unknown and nothing otherwise; in a sandbox, every move a secret key may make. Empty for a caller without `orders:update`. */
+                            statusMoves: string[];
+                            /** @description Every submission of it, the first first. */
+                            submissions: {
+                                /** @description The printshop's own reference for this line, where it gives one; `null` otherwise. */
+                                externalLineRef: string | null;
+                                id: string;
+                                /** @description The printshop order it was sent in; `null` until it is sent, and for one never sent. */
+                                printshopOrderId: string | null;
+                                status: string;
+                                /** @description Struck from its printshop order: failed or cancelled there while the printshop order goes on. A struck submission stays listed. */
+                                struck: boolean;
+                                submittedAt: number;
+                            }[];
+                            /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
+                            variant: {
+                                /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
+                                colours?: {
+                                    [key: string]: {
+                                        /** @description The colour to make the value in, `#rrggbb`. */
+                                        colour: string;
+                                        /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
+                                        from: string;
+                                    };
+                                };
+                                /** @description Each declared field, in the printshop's order, as it was sent. */
+                                fields: {
+                                    name: string;
+                                    /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
+                                    source: string;
+                                    value: string;
+                                }[];
+                                options: {
+                                    [key: string]: string;
+                                };
+                                ref: string;
+                                /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
+                                unusedPicks?: {
+                                    [key: string]: string;
+                                };
+                            } | null;
+                            /** @description The variant the order names; `null` as `blankId` is. */
+                            variantRef: string | null;
+                            varnishLeftOut: boolean;
+                        }[];
+                        parcels: {
+                            deliveredAt: string | null;
+                            id: string;
+                            items: {
+                                externalRef: string | null;
+                                itemId: string;
+                                ofQuantity: number;
+                                quantity: number | null;
+                                whole: boolean;
+                            }[];
+                            printshopOrderId: string;
+                            shippedAt: string | null;
                             status: string;
-                        })[];
-                        /** @description The printshop as it was when the order was placed: its name and kind (`adapter`). `null` for an order placed before it was recorded. */
-                        printshopAsPlaced: {
+                            tracking: {
+                                /** @description Who carries it, such as `DHL`. */
+                                carrier?: string;
+                                /** @description The shipment's tracking number. */
+                                number: string;
+                                /**
+                                 * Format: uri
+                                 * @description Where the shipment is followed: an https address.
+                                 */
+                                url?: string;
+                            } | null;
+                        }[];
+                        personalDataErasedAt: number | null;
+                        printshopOrders: {
                             adapter: string;
-                            name: string;
-                        } | null;
-                        printshopConnectionId: string | null;
-                        printshopName: string | null;
-                        quantity: number;
+                            /** @description Whether its printshop cancels one item of it alone (Printify); `false` where a cancel stops the whole printshop order and every item in it. */
+                            cancelsItems: boolean;
+                            /** @description The printshop's reference for it; `null` until the printshop answered with one. */
+                            externalOrderRef: string | null;
+                            id: string;
+                            /** @description The items sent in it. */
+                            itemIds: string[];
+                            lastCheckedAt: number | null;
+                            /** @description The orders the printshop split it into where it is made in more than one place (Gelato's connected orders); empty otherwise. */
+                            parts: string[];
+                            printshopConnectionId: string | null;
+                            printshopName: string | null;
+                            submittedAt: number;
+                        }[];
                         /** @description Who the order is for: its customer. When `shipTo` is set, the order ships there and the customer is who it is finally for. */
                         recipient: {
                             /**
@@ -49412,10 +53110,8 @@ export interface operations {
                             /** @description The recipient's phone number as the customer gave it, with the country code when it has one. */
                             phone?: string;
                         } | null;
-                        /** @description The order submitted to replace this one, which names it as `replacesOrderId`; `null` for none. */
-                        replacedByOrderId: string | null;
-                        /** @description The failed order this one was submitted to replace; `null` for an order that replaces none. */
-                        replacesOrderId: string | null;
+                        /** @description Whether mail to the recipient's `email` bounced, so none is sent to it until the address changes; `false` for a recipient with no email, or none. */
+                        recipientEmailBounced: boolean;
                         /** @description The workspace's saved address the order ships to, as it was when the order was placed; `null` for an order that ships to its customer's address. Its printshop is handed this address, and erasing the order's personal data leaves it. */
                         shipTo: {
                             address: {
@@ -49456,51 +53152,10 @@ export interface operations {
                             /** @description The state, province or county, where the country uses one. */
                             region?: string;
                         } | null;
-                        spotOutput: string | null;
+                        /** @description The order's status, read from its items': `held` while the plan's month has no room for it, `open`, `partly_shipped` once a parcel has left, `shipped` when every item has, `needs_attention` when an item failed or its outcome is unknown, `cancelled` when every item is, `done` when every item has shipped or been cancelled. */
                         status: string;
-                        submittedAt: number;
                         tenantId: string;
-                        tracking: {
-                            /** @description Who carries it, such as `DHL`. */
-                            carrier?: string;
-                            /** @description The shipment's tracking number. */
-                            number: string;
-                            /**
-                             * Format: uri
-                             * @description Where the shipment is followed: an https address.
-                             */
-                            url?: string;
-                        } | null;
                         updatedAt: number;
-                        /** @description The variant as it was when the order was placed: its options and the variant fields its printshop was sent. A later edit of the variant does not change it. */
-                        variant: {
-                            /** @description The colour each option of the variant is made in whose value lets the shopper pick any colour, by option name: the shopper's pick, else the value's own colour. Absent when no value of the variant takes any colour. */
-                            colours?: {
-                                [key: string]: {
-                                    /** @description The colour to make the value in, `#rrggbb`. */
-                                    colour: string;
-                                    /** @description design: the shopper picked it; default: none was picked, and it is the value's own colour. */
-                                    from: string;
-                                };
-                            };
-                            /** @description Each declared field, in the printshop's order, as it was sent. */
-                            fields: {
-                                name: string;
-                                /** @description Where the value came from: the variant's (or position's) own, the field's default, or nothing, sent empty. */
-                                source: string;
-                                value: string;
-                            }[];
-                            options: {
-                                [key: string]: string;
-                            };
-                            ref: string;
-                            /** @description Colours the shopper picked, by option name, that the order is not made in: the variant's value of that option takes no colour, as when it was set to a fixed one since. Absent when every pick is used. */
-                            unusedPicks?: {
-                                [key: string]: string;
-                            };
-                        } | null;
-                        /** @description The variant the order names; `null` as `blankId` is. */
-                        variantRef: string | null;
                     };
                 };
             };
@@ -49539,7 +53194,7 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -49575,9 +53230,11 @@ export interface operations {
                         /** @description Always sent with `print_ticket_stale`. */
                         detail?: string;
                         error: string;
+                        /** @description The design's newest live item. Always sent with `design_already_ordered`. */
+                        itemId?: string;
                         /** @description Always sent with `order_superseded`. */
                         newerOrderId?: string;
-                        /** @description Always sent with `design_already_ordered`. */
+                        /** @description The order holding the design's live item. Always sent with `design_already_ordered`. */
                         orderId?: string;
                         /** @description Always sent with `printshop_paused`. */
                         reason?: string;
@@ -49586,7 +53243,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
+            /** @description Refused: unknown_printshop, printshop_disconnected, printshop_unavailable, printshop_differs_from_blank, missing_fulfilment_keys, postal_code_required, saved_address_not_found, spot_plate_required, print_profile_unavailable, print_exceeds_position, print_not_position_size, print_exceeds_machine, design_not_stitchable, design_unreadable, embroidery_fee_unacknowledged, print_raster_too_large, technique_not_offered, placement_unfilled, variant_not_of_blank, variant_retired, variant_required, field_value_missing, variant_not_of_design_row, print_without_placement, mixed_blanks, duplicate_placement, print_committed_elsewhere, printshop_cannot_combine, prints_disagree, duplicate_page, page_missing, page_count_out_of_range, page_on_unpaged_placement, page_not_as_proofed, page_ordered_alone, cover_not_at_page_count, printshop_takes_no_pages, idempotency_key_reused, invalid_idempotency_key, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -49598,8 +53255,12 @@ export interface operations {
                         bytes?: number;
                         /** @description Always sent with `spot_plate_required`. */
                         cause?: string;
+                        /** @description Always sent with `page_count_out_of_range`, `page_not_as_proofed`. */
+                        count?: number;
                         /** @description Always sent with `variant_not_of_design_row`. */
                         designId?: string;
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        designedAt?: number | null;
                         /** @description Always sent with `print_profile_unavailable`. */
                         detail?: string;
                         error: string;
@@ -49625,6 +53286,8 @@ export interface operations {
                                 name: string;
                             };
                         }[];
+                        /** @description Always sent with `cover_not_at_page_count`. */
+                        itemPageCount?: number | null;
                         /** @description Always sent with `prints_disagree`. */
                         key?: string;
                         /** @description Always sent with `print_exceeds_position`. */
@@ -49634,6 +53297,8 @@ export interface operations {
                         };
                         /** @description With `design_not_stitchable`: The embroidery machine the design goes to. Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         machine?: string;
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        max?: number;
                         /** @description Always sent with `payload_too_large`. */
                         maxBytes?: number;
                         /** @description Always sent with `print_exceeds_machine`. */
@@ -49643,13 +53308,17 @@ export interface operations {
                         };
                         /** @description Always sent with `technique_not_offered`. */
                         method?: string;
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        min?: number;
                         /** @description Always sent with `missing_fulfilment_keys`. */
                         missing?: string[];
                         /** @description Always sent with `print_profile_unavailable`. */
                         outputProfile?: string;
+                        /** @description Always sent with `duplicate_page`, `page_missing`, `page_not_as_proofed`. */
+                        page?: number;
                         /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, `technique_not_offered`, `placement_unfilled`, and may be sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `print_raster_too_large`. */
                         placement?: string;
-                        /** @description Always sent with `duplicate_placement`. */
+                        /** @description Always sent with `duplicate_placement`, `duplicate_page`, `page_missing`, `page_count_out_of_range`, `page_on_unpaged_placement`, `page_not_as_proofed`, `cover_not_at_page_count`. */
                         placementId?: string;
                         /** @description Always sent with `print_exceeds_position`, `print_not_position_size`, and may be sent with `field_value_missing`. */
                         position?: string;
@@ -49664,6 +53333,10 @@ export interface operations {
                         };
                         /** @description Always sent with `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`. */
                         printshop?: string;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedCount?: number;
+                        /** @description Always sent with `page_not_as_proofed`, `page_ordered_alone`. */
+                        proofedPage?: number;
                         /** @description Always sent with `unknown_printshop`, `printshop_disconnected`, `printshop_unavailable`, `printshop_differs_from_blank`, `print_exceeds_position`, `print_not_position_size`, `print_exceeds_machine`, `design_not_stitchable`, `design_unreadable`, `embroidery_fee_unacknowledged`, `print_raster_too_large`, `technique_not_offered`, `placement_unfilled`, `variant_not_of_blank`, `variant_retired`, `variant_required`, `field_value_missing`, `variant_not_of_design_row`. */
                         reason?: string;
                         /** @description Always sent with `spot_plate_required`. */
@@ -49682,6 +53355,8 @@ export interface operations {
                             heightPx: number;
                             widthPx: number;
                         };
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        step?: number;
                         /** @description Always sent with `variant_not_of_blank`, `variant_retired`, `variant_not_of_design_row`. */
                         variant?: string;
                         /** @description Always sent with `variant_required`. */
@@ -49726,6 +53401,8 @@ export interface operations {
                 categoryId?: string;
                 /** @description Only the products whose name holds this, ignoring case; blank is no search. `total` then counts the matches. */
                 search?: string;
+                /** @description Only the products made in the European Union (`EU`) or in one country (its ISO 3166-1 alpha-2 code, such as `DE`). A printshop that does not say where it makes a product answers none. */
+                madeIn?: "EU" | ("AD" | "AE" | "AF" | "AG" | "AI" | "AL" | "AM" | "AO" | "AR" | "AS" | "AT" | "AU" | "AW" | "AX" | "AZ" | "BA" | "BB" | "BD" | "BE" | "BF" | "BG" | "BH" | "BI" | "BJ" | "BL" | "BM" | "BN" | "BO" | "BQ" | "BR" | "BS" | "BT" | "BV" | "BW" | "BY" | "BZ" | "CA" | "CC" | "CD" | "CF" | "CG" | "CH" | "CI" | "CK" | "CL" | "CM" | "CN" | "CO" | "CR" | "CU" | "CV" | "CW" | "CX" | "CY" | "CZ" | "DE" | "DJ" | "DK" | "DM" | "DO" | "DZ" | "EC" | "EE" | "EG" | "EH" | "ER" | "ES" | "ET" | "FI" | "FJ" | "FK" | "FM" | "FO" | "FR" | "GA" | "GB" | "GD" | "GE" | "GF" | "GG" | "GH" | "GI" | "GL" | "GM" | "GN" | "GP" | "GQ" | "GR" | "GS" | "GT" | "GU" | "GW" | "GY" | "HK" | "HM" | "HN" | "HR" | "HT" | "HU" | "ID" | "IE" | "IL" | "IM" | "IN" | "IO" | "IQ" | "IR" | "IS" | "IT" | "JE" | "JM" | "JO" | "JP" | "KE" | "KG" | "KH" | "KI" | "KM" | "KN" | "KP" | "KR" | "KW" | "KY" | "KZ" | "LA" | "LB" | "LC" | "LI" | "LK" | "LR" | "LS" | "LT" | "LU" | "LV" | "LY" | "MA" | "MC" | "MD" | "ME" | "MF" | "MG" | "MH" | "MK" | "ML" | "MM" | "MN" | "MO" | "MP" | "MQ" | "MR" | "MS" | "MT" | "MU" | "MV" | "MW" | "MX" | "MY" | "MZ" | "NA" | "NC" | "NE" | "NF" | "NG" | "NI" | "NL" | "NO" | "NP" | "NR" | "NU" | "NZ" | "OM" | "PA" | "PE" | "PF" | "PG" | "PH" | "PK" | "PL" | "PM" | "PN" | "PR" | "PS" | "PT" | "PW" | "PY" | "QA" | "RE" | "RO" | "RS" | "RU" | "RW" | "SA" | "SB" | "SC" | "SD" | "SE" | "SG" | "SH" | "SI" | "SJ" | "SK" | "SL" | "SM" | "SN" | "SO" | "SR" | "SS" | "ST" | "SV" | "SX" | "SY" | "SZ" | "TC" | "TD" | "TF" | "TG" | "TH" | "TJ" | "TK" | "TL" | "TM" | "TN" | "TO" | "TR" | "TT" | "TV" | "TW" | "TZ" | "UA" | "UG" | "UM" | "US" | "UY" | "UZ" | "VA" | "VC" | "VE" | "VG" | "VI" | "VN" | "VU" | "WF" | "WS" | "YE" | "YT" | "ZA" | "ZM" | "ZW");
             };
             header?: never;
             path?: never;
@@ -49757,6 +53434,13 @@ export interface operations {
                             imageUrl: string | null;
                             /** @description The blank it was imported as through this connection, the latest when there are several; null when it has not been. */
                             importedBlankId: string | null;
+                            /** @description Where the printshop makes the product; null when the printshop does not say, which no made-in filter answers. */
+                            madeIn: {
+                                /** @description The country it is made in as the printshop reports it, an ISO 3166-1 alpha-2 code: Printify's print provider's country. Null when the printshop names a region only. */
+                                country: string | null;
+                                /** @description Whether the country is in the European Union; with no country, whether the printshop lists it in its European region (Printful's `europe` selling region, which says where it is sold and fulfilled from, not one factory). */
+                                inEu: boolean;
+                            } | null;
                             name: string;
                             productId: string;
                             /** @description What kind of product the printshop's data says it is, as the product's options answer it; null where the data does not say, and an import then takes the merchant's own word for a garment as `garmentCut`. */
@@ -50125,7 +53809,7 @@ export interface operations {
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
-                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, and a dyeable stock photo takes the first option with colours. */
+                            /** @description The option dyed photos are painted in, such as Colour: a dyeable stock photo or 3D-rendered view shows each variant in its value's colour. null: own photos as photographed; a dyeable stock photo takes the first option with colours. */
                             paintBy: string | null;
                             partnerLocked: boolean;
                             /** @description How much of the blank is photographed. Answered in a list. */
@@ -50149,6 +53833,13 @@ export interface operations {
                                     foldMm?: number;
                                     /** @description The tallest print the row takes, in millimetres. */
                                     heightMm: number;
+                                    /** @description Item page counts it holds at (a book's cover); omitted, all. */
+                                    pages?: {
+                                        /** @description Most pages. */
+                                        max: number;
+                                        /** @description Fewest pages. */
+                                        min: number;
+                                    };
                                     /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
                                     row: {
                                         [key: string]: string;
@@ -50171,7 +53862,7 @@ export interface operations {
                                 }[];
                                 /** @description Bleed past the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 bleedMm?: number;
-                                /** @description How a print covers the placement: `within`, any size up to the maximum, placed inside it, or `full`, the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's size is its area; a smaller one is refused `print_size_not_area`. */
+                                /** @description `within` (omitted): a print of any size up to the maximum, placed inside it; `full`: the whole area, such as an all-over panel, a smaller print refused `print_size_not_area`. */
                                 coverage?: string;
                                 /** @description The height a print gets when none is chosen, in millimetres, at most maxHeightMm. */
                                 defaultHeightMm: number;
@@ -50181,7 +53872,7 @@ export interface operations {
                                 dpi?: number;
                                 /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                                 fillColour?: string | null;
-                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box: its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, it is printed as it lies. */
+                                /** @description A product printed flat on one sheet and folded, such as a folding box: its print area is the sheet, `coverage` `full`, one size. Null or omitted: printed as it lies. */
                                 flatLayout?: {
                                     /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
                                     parts: {
@@ -50203,7 +53894,7 @@ export interface operations {
                                 } | null;
                                 /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                                 foldMm?: number;
-                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene item with no record draws none of it. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
+                                /** @description Where the placement sits on each stock item the blank's scenes show: per item, a garment area of it and the print's top left and width on it in mm. Refused `placement_garment_area_unknown` (unknown item or area), `placement_garment_outside_area` (past the area). */
                                 garments?: {
                                     /** @description The key of a garment area of the record's stock item. */
                                     area: string;
@@ -50218,7 +53909,7 @@ export interface operations {
                                 }[];
                                 /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                                 id: string;
-                                /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none, as when the linked one leaves the blank. */
+                                /** @description The placement linked by default, such as a right sleeve with the left: one design drives both unless a link, mount or design says otherwise. Null or omitted: none. */
                                 linkWith?: {
                                     /** @description Whether this placement's print is mirrored left to right when the two are linked. */
                                     mirror: boolean;
@@ -50231,9 +53922,18 @@ export interface operations {
                                 maxWidthMm: number;
                                 /** @description What it is called, such as Front or Back. */
                                 name: string;
+                                /** @description Printed as many pages, each this print area (a notebook's inner pages); an order holds one print a page. One a blank at most. Omitted: one page. */
+                                pages?: {
+                                    /** @description Most pages. */
+                                    max: number;
+                                    /** @description Fewest pages. */
+                                    min: number;
+                                    /** @description Pages added at a time, from `min`. */
+                                    step: number;
+                                } | null;
                                 /** @description How this placement is printed, such as dtg or screen. Omitted, its category's. */
                                 printMethod?: string;
-                                /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a printshop-bound blank takes it from the printshop. */
+                                /** @description Whether an order on the blank must print it, refused `placement_unfilled` without. Omitted: false; a printshop-bound blank takes it from the printshop. */
                                 required?: boolean;
                                 /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 safeAreaMm?: number;
@@ -50248,7 +53948,7 @@ export interface operations {
                                 shopName?: string | null;
                                 /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
                                 views: {
-                                    /** @description True on a view a printshop-bound blank took from its printshop (import, Add colours, model photos): its photo size and print area are the printshop's, not changed by hand. Absent on a view the workspace added; sending it is ignored. */
+                                    /** @description True on a view a printshop-bound blank took from its printshop: its photo size and print area are the printshop's, not changed by hand. Absent on the workspace's own; sending it is ignored. */
                                     fromPrintshop?: boolean;
                                     /** @description Unique within the blank. */
                                     id: string;
@@ -50654,7 +54354,7 @@ export interface operations {
                                     [key: string]: string;
                                 };
                             }[];
-                            /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
+                            /** @description The row a design naming none is made at, such as {"Size": "M"}; null: each placement reads its own area. Required once areas change with an option on a blank with designs or designer links. */
                             referenceRow: {
                                 [key: string]: string;
                             } | null;
@@ -51008,7 +54708,7 @@ export interface operations {
                             })[];
                             /** @description How many orders name the blank, past ones included. Answered in a list, never for one blank, and only to a caller with `orders:read`. */
                             orderCount?: number;
-                            /** @description The option the blank's dyed photos are painted in, such as Colour: a stock photo that takes a dye, or a view drawn from a 3D render, shows each variant in its value's colour. null: the merchant's own photos show as photographed, and a dyeable stock photo takes the first option with colours. */
+                            /** @description The option dyed photos are painted in, such as Colour: a dyeable stock photo or 3D-rendered view shows each variant in its value's colour. null: own photos as photographed; a dyeable stock photo takes the first option with colours. */
                             paintBy: string | null;
                             partnerLocked: boolean;
                             /** @description How much of the blank is photographed. Answered in a list. */
@@ -51032,6 +54732,13 @@ export interface operations {
                                     foldMm?: number;
                                     /** @description The tallest print the row takes, in millimetres. */
                                     heightMm: number;
+                                    /** @description Item page counts it holds at (a book's cover); omitted, all. */
+                                    pages?: {
+                                        /** @description Most pages. */
+                                        max: number;
+                                        /** @description Fewest pages. */
+                                        min: number;
+                                    };
                                     /** @description The row: a value for each `areasVaryBy` option, by option name. One area per row per placement. */
                                     row: {
                                         [key: string]: string;
@@ -51054,7 +54761,7 @@ export interface operations {
                                 }[];
                                 /** @description Bleed past the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 bleedMm?: number;
-                                /** @description How a print covers the placement: `within`, any size up to the maximum, placed inside it, or `full`, the whole area, such as an all-over-print panel. Omitted, `within`. A `full` placement's size is its area; a smaller one is refused `print_size_not_area`. */
+                                /** @description `within` (omitted): a print of any size up to the maximum, placed inside it; `full`: the whole area, such as an all-over panel, a smaller print refused `print_size_not_area`. */
                                 coverage?: string;
                                 /** @description The height a print gets when none is chosen, in millimetres, at most maxHeightMm. */
                                 defaultHeightMm: number;
@@ -51064,7 +54771,7 @@ export interface operations {
                                 dpi?: number;
                                 /** @description The `#rrggbb` colour an optional placement left undesigned is printed or delivered as. Null or omitted for none. */
                                 fillColour?: string | null;
-                                /** @description How the product is printed flat on one sheet and folded into shape, such as a folding box: its print area is the sheet, printed edge to edge (`coverage` `full`) at one size. Null or omitted, it is printed as it lies. */
+                                /** @description A product printed flat on one sheet and folded, such as a folding box: its print area is the sheet, `coverage` `full`, one size. Null or omitted: printed as it lies. */
                                 flatLayout?: {
                                     /** @description The sheet's parts, each a rectangle in mm from the sheet's top-left. The sheet is their span; a fold is where two parts share an edge, and the cut line is every other edge. */
                                     parts: {
@@ -51086,7 +54793,7 @@ export interface operations {
                                 } | null;
                                 /** @description How far in from the trim the product folds on every side, in millimetres, such as a canvas's wrap round its frame; the designer draws fold lines there. Omitted, no fold. */
                                 foldMm?: number;
-                                /** @description Where the placement sits on each stock item the blank's scenes show, one record per item: the item, a garment area of it, and the print's top left and width on it in millimetres. A scene item with no record draws none of it. Refused `placement_garment_area_unknown` for an unknown item or area, `placement_garment_outside_area` past the area. */
+                                /** @description Where the placement sits on each stock item the blank's scenes show: per item, a garment area of it and the print's top left and width on it in mm. Refused `placement_garment_area_unknown` (unknown item or area), `placement_garment_outside_area` (past the area). */
                                 garments?: {
                                     /** @description The key of a garment area of the record's stock item. */
                                     area: string;
@@ -51101,7 +54808,7 @@ export interface operations {
                                 }[];
                                 /** @description Unique within the blank; a short stable one such as `front`, which a template refers to it by. */
                                 id: string;
-                                /** @description The placement it is linked with by default, such as a right sleeve with the left one: one design drives both unless a designer link, an SDK mount or a design says otherwise. Null or omitted for none, as when the linked one leaves the blank. */
+                                /** @description The placement linked by default, such as a right sleeve with the left: one design drives both unless a link, mount or design says otherwise. Null or omitted: none. */
                                 linkWith?: {
                                     /** @description Whether this placement's print is mirrored left to right when the two are linked. */
                                     mirror: boolean;
@@ -51114,9 +54821,18 @@ export interface operations {
                                 maxWidthMm: number;
                                 /** @description What it is called, such as Front or Back. */
                                 name: string;
+                                /** @description Printed as many pages, each this print area (a notebook's inner pages); an order holds one print a page. One a blank at most. Omitted: one page. */
+                                pages?: {
+                                    /** @description Most pages. */
+                                    max: number;
+                                    /** @description Fewest pages. */
+                                    min: number;
+                                    /** @description Pages added at a time, from `min`. */
+                                    step: number;
+                                } | null;
                                 /** @description How this placement is printed, such as dtg or screen. Omitted, its category's. */
                                 printMethod?: string;
-                                /** @description Whether an order on the blank must print it: one without a print for it is refused `placement_unfilled`. Omitted is false; a printshop-bound blank takes it from the printshop. */
+                                /** @description Whether an order on the blank must print it, refused `placement_unfilled` without. Omitted: false; a printshop-bound blank takes it from the printshop. */
                                 required?: boolean;
                                 /** @description Safe area inside the trim on each side, in millimetres, 0 to 50. Omitted, its category's, else the workspace's. */
                                 safeAreaMm?: number;
@@ -51131,7 +54847,7 @@ export interface operations {
                                 shopName?: string | null;
                                 /** @description The ways the placement is photographed, such as Flat or On model. Every photo of one view shares its pixel size and its print area. */
                                 views: {
-                                    /** @description True on a view a printshop-bound blank took from its printshop (import, Add colours, model photos): its photo size and print area are the printshop's, not changed by hand. Absent on a view the workspace added; sending it is ignored. */
+                                    /** @description True on a view a printshop-bound blank took from its printshop: its photo size and print area are the printshop's, not changed by hand. Absent on the workspace's own; sending it is ignored. */
                                     fromPrintshop?: boolean;
                                     /** @description Unique within the blank. */
                                     id: string;
@@ -51537,7 +55253,7 @@ export interface operations {
                                     [key: string]: string;
                                 };
                             }[];
-                            /** @description The row a design that names none is made at, such as {"Size": "M"}; null for none, each placement then reading its own print area. Required once print areas change with an option on a blank with designs or designer links, which keep their size at it. */
+                            /** @description The row a design naming none is made at, such as {"Size": "M"}; null: each placement reads its own area. Required once areas change with an option on a blank with designs or designer links. */
                             referenceRow: {
                                 [key: string]: string;
                             } | null;
@@ -52009,6 +55725,248 @@ export interface operations {
             };
         };
     };
+    "proofSets.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Every proof the shopper approved, in the order the store reads them: by side as the link lists them, each side's pages from 1. */
+                    proofs: {
+                        /** @description The side's key on a link of several sides; null on one side. */
+                        key: string | null;
+                        /** @description The page, from 1, on a side printed as pages; null otherwise. */
+                        page: number | null;
+                        proofToken: string;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description The set's reference */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description When the set expires: with the first of its proofs to expire, in milliseconds since the Unix epoch. */
+                        expiresAt: number;
+                        /** @description The set's reference, for the store's return address: `GET /v1/proof-sets/{proofSet}` reads it with the store's key. */
+                        proofSet: string;
+                    };
+                };
+            };
+            /** @description Refused: bad_request */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, feature_disabled */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: unknown_proof, not_found */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: proof_expired */
+            410: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: payload_too_large */
+            422: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        bytes?: number;
+                        error: string;
+                        /** @description Always sent with `payload_too_large`. */
+                        maxBytes?: number;
+                    };
+                };
+            };
+            /** @description Refused: rate_limited */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
+    "proofSets.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The set's reference. */
+                proofSet: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The set's proofs */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description When the set expires: with the first of its proofs to expire. */
+                        expiresAt: number;
+                        proofs: {
+                            /** @description When the proof and its token expire, in milliseconds since the Unix epoch. */
+                            expiresAt: number;
+                            /** @description The side's key; null on a link of one side. */
+                            key: string | null;
+                            /** @description The page, from 1, on a side printed as pages; else null. */
+                            page: number | null;
+                            /** @description Commits the design of this side or page: `POST /v1/designs` with it. */
+                            proofToken: string;
+                            proofUrl: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Refused: unauthorized */
+            401: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: origin_forbidden, secret_key_required, feature_disabled, forbidden */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
+                        feature?: string;
+                    };
+                };
+            };
+            /** @description Refused: unknown_proof_set */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: proof_set_expired */
+            410: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+            /** @description Refused: db_error. A request that failed unexpectedly answers as text instead. */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                    "text/plain": "Internal Server Error";
+                };
+            };
+        };
+    };
     "proofs.create": {
         parameters: {
             query?: {
@@ -52079,6 +56037,11 @@ export interface operations {
                         /** @description The tile's width in percent of the print area's width, above 0 and at most 100; the tile keeps the template's shape. A tile that would print under 10 mm on a side is drawn at 10 mm. */
                         size: number;
                     } | null;
+                } & {
+                    /** @description On a placement printed as pages, the page this proof is of, from 1. Given with `pageCount`. */
+                    page?: number;
+                    /** @description How many pages the shopper picked: one the blank's placement printed as pages is printed at, and through a designer link one its side offers. With `page`, the count that page is one of; alone, on another placement of the blank, the count the item is made at, such as a photo book's cover, whose area grows with its pages. */
+                    pageCount?: number;
                 } & {
                     /** @description The view of the blank's placement the customer previewed the proof in, by id. Kept with the proof and read with the design's proof as `proofViewId`, for display only. */
                     viewId?: string;
@@ -52168,7 +56131,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, asset_map_too_large, payload_too_large */
+            /** @description Refused: constraint_violation, unknown_placement, variant_not_of_blank, variant_row_invalid, asset_map_too_large, page_on_unpaged_placement, page_required, page_count_out_of_range, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -52178,11 +56141,21 @@ export interface operations {
                     "application/json": {
                         /** @description Always sent with `asset_map_too_large`, and may be sent with `payload_too_large`. */
                         bytes?: number;
+                        /** @description Always sent with `page_count_out_of_range`. */
+                        count?: number;
                         error: string;
+                        /** @description Most pages. Always sent with `page_count_out_of_range`. */
+                        max?: number;
                         /** @description Always sent with `asset_map_too_large`, `payload_too_large`. */
                         maxBytes?: number;
+                        /** @description Fewest pages. Always sent with `page_count_out_of_range`. */
+                        min?: number;
+                        /** @description Always sent with `page_on_unpaged_placement`, `page_required`, `page_count_out_of_range`. */
+                        placementId?: string;
                         /** @description Always sent with `variant_not_of_blank`, `variant_row_invalid`. */
                         reason?: string;
+                        /** @description Pages added at a time, from `min`. Always sent with `page_count_out_of_range`. */
+                        step?: number;
                         /** @description Always sent with `variant_not_of_blank`. */
                         variant?: string;
                         /** @description Always sent with `constraint_violation`. */
@@ -53519,7 +57492,7 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -53953,6 +57926,13 @@ export interface operations {
                     }[];
                     /** @description The link's new name; null removes it. Unique among the workspace's working links, case aside. */
                     name?: string | null;
+                    /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
+                    pages?: {
+                        /** @description Most pages the shopper may pick; equal to `min` for a fixed count. */
+                        max: number;
+                        /** @description Fewest pages the shopper may pick. */
+                        min: number;
+                    };
                     /** @description The name of a panel layout of the link's `blankId`, in place of `placementId`: the page draws one design across the layout's canvas, and each placement it lays out gets its print cut from it, so art runs across the seams. Not with `sides` or `printSizes`. */
                     panelLayout?: string;
                     /** @description Whether the link's page draws the placement frame, the ring and corner handles around the shopper's picture, at rest, as the SDK's `showPlacementFrame` does. Absent, the frame shows only while the picture is dragged or sized on the preview. */
@@ -54091,6 +58071,13 @@ export interface operations {
                                 kind: "cylinder";
                             } | null;
                         }[];
+                        /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
+                        pages?: {
+                            /** @description Most pages the shopper may pick; equal to `min` for a fixed count. */
+                            max: number;
+                            /** @description Fewest pages the shopper may pick. */
+                            min: number;
+                        };
                         /** @description The blank's placement it is printed in; with blankId. */
                         placementId?: string;
                         /** @description The sizes the shopper picks from, for a print within its area. */
@@ -54316,7 +58303,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: share_link_name_too_long, unknown_placement, print_size_illegal, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, payload_too_large */
+            /** @description Refused: share_link_name_too_long, unknown_placement, print_size_illegal, link_pages_off_range, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -54347,7 +58334,7 @@ export interface operations {
                         maxLength?: number;
                         /** @description Always sent with `placement_unfilled`. */
                         placement?: string;
-                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. `low_resolution`: an image the workspace put in the template prints below its recommended resolution at it, and the workspace refuses such sizes. Always sent with `print_size_illegal`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`, `low_resolution`. */
+                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. `low_resolution`: an image the workspace put in the template prints below its recommended resolution at it, and the workspace refuses such sizes. Always sent with `print_size_illegal`, `link_pages_off_range`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`, `low_resolution`. */
                         reason?: string;
                         /** @description The side's key; null on a link with one side. Always sent with `print_size_illegal`. */
                         side?: string | null;
@@ -54527,6 +58514,13 @@ export interface operations {
                         }[];
                         /** @description The workspace's name for the link. */
                         name: string | null;
+                        /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
+                        pages?: {
+                            /** @description Most pages the shopper may pick; equal to `min` for a fixed count. */
+                            max: number;
+                            /** @description Fewest pages the shopper may pick. */
+                            min: number;
+                        };
                         /** @description The name of a panel layout of the link's `blankId`, in place of `placementId`: the page draws one design across the layout's canvas, and each placement it lays out gets its print cut from it, so art runs across the seams. Not with `sides` or `printSizes`. */
                         panelLayout?: string;
                         /** @description Whether a designer link's page draws the placement frame around the shopper's picture at rest; false for every other link. */
@@ -54659,6 +58653,13 @@ export interface operations {
                                     kind: string;
                                 } | null;
                             }[];
+                            /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
+                            pages?: {
+                                /** @description Most pages the shopper may pick; equal to `min` for a fixed count. */
+                                max: number;
+                                /** @description Fewest pages the shopper may pick. */
+                                min: number;
+                            };
                             /** @description The blank's placement it is printed in; with blankId. */
                             placementId?: string;
                             /** @description The sizes the shopper picks from, for a print within its area. */
@@ -55429,7 +59430,7 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -55718,6 +59719,8 @@ export interface operations {
             query?: {
                 blankId?: string;
                 placementId?: string;
+                /** @description The item's page count, on a blank with a placement printed as pages: a placement whose area changes with it, such as a photo book's cover, is answered at that count. */
+                pageCount?: number;
             };
             header?: never;
             path: {
@@ -56066,6 +60069,13 @@ export interface operations {
                     }[];
                     /** @description The workspace's own name for the link (`Spring market stand`), at most 80 characters, never shown on its page. Trimmed, inner spaces made one; empty is no name. Unique among the workspace's working links, case aside: one another holds is refused `share_link_name_taken` naming the holder, a longer one `share_link_name_too_long`. A withdrawn or expired link frees its name. */
                     name?: string;
+                    /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
+                    pages?: {
+                        /** @description Most pages the shopper may pick; equal to `min` for a fixed count. */
+                        max: number;
+                        /** @description Fewest pages the shopper may pick. */
+                        min: number;
+                    };
                     /** @description The name of a panel layout of the link's `blankId`, in place of `placementId`: the page draws one design across the layout's canvas, and each placement it lays out gets its print cut from it, so art runs across the seams. Not with `sides` or `printSizes`. */
                     panelLayout?: string;
                     /** @description Whether the link's page draws the placement frame, the ring and corner handles around the shopper's picture, at rest, as the SDK's `showPlacementFrame` does. Absent, the frame shows only while the picture is dragged or sized on the preview. */
@@ -56204,6 +60214,13 @@ export interface operations {
                                 kind: "cylinder";
                             } | null;
                         }[];
+                        /** @description On a placement printed as pages, the page counts the shopper picks from, on its own steps: a narrower range, or one count. Absent, the placement's whole range. */
+                        pages?: {
+                            /** @description Most pages the shopper may pick; equal to `min` for a fixed count. */
+                            max: number;
+                            /** @description Fewest pages the shopper may pick. */
+                            min: number;
+                        };
                         /** @description The blank's placement it is printed in; with blankId. */
                         placementId?: string;
                         /** @description The sizes the shopper picks from, for a print within its area. */
@@ -56356,7 +60373,7 @@ export interface operations {
                         error: string;
                         /** @description The feature the tenant does not have. Always sent with `feature_disabled`. */
                         feature?: string;
-                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's orders, which getting a print's files without an order counts as), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
+                        /** @description The limit the tenant is at: `templates`, `connectedStores`, `apiKeys`, `shareLinks`, `customDomains`, `printsMadePerMonth` (prints made without an order this month), `members`, `orders` (this month's items: an item is a product Pixonaut sends to print, its copies not counted; getting a print's files without an order counts as one), or a sandbox's own caps: `sandboxPrintsPerDay`, `sandboxPrintsPerMonth`, `sandboxOrdersPerMonth`. A sandbox shares every other limit with its live workspace. Always sent with `plan_limit_reached`. */
                         limit?: string;
                         /** @description How many the plan allows. Always sent with `plan_limit_reached`. */
                         max?: number;
@@ -56393,7 +60410,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refused: unknown_placement, print_size_illegal, design_not_stitchable, design_unreadable, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, share_link_name_too_long, payload_too_large */
+            /** @description Refused: unknown_placement, print_size_illegal, link_pages_off_range, design_not_stitchable, design_unreadable, placement_unfilled, variant_row_invalid, unknown_layout, layout_wrong_ratio, linked_templates_differ, share_link_name_too_long, payload_too_large */
             422: {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
@@ -56444,7 +60461,7 @@ export interface operations {
                         placement?: string;
                         /** @description The size's place in the side's menu; null where it offers none. Always sent with `design_not_stitchable`, `design_unreadable`. */
                         printSizeIndex?: number | null;
-                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. `low_resolution`: an image the workspace put in the template prints below its recommended resolution at it, and the workspace refuses such sizes. Always sent with `print_size_illegal`, `design_not_stitchable`, `design_unreadable`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`, `low_resolution`. */
+                        /** @description With `print_size_illegal`: `too_large`: larger than the placement takes. `print_size_not_area`: smaller than a placement printed across its whole area. `wrong_ratio`: further from the template's shape than its tolerance allows. `low_resolution`: an image the workspace put in the template prints below its recommended resolution at it, and the workspace refuses such sizes. Always sent with `print_size_illegal`, `link_pages_off_range`, `design_not_stitchable`, `design_unreadable`, `placement_unfilled`, `variant_row_invalid`, `layout_wrong_ratio`. With `print_size_illegal`: one of `too_large`, `print_size_not_area`, `wrong_ratio`, `low_resolution`. */
                         reason?: string;
                         /** @description With `print_size_illegal`: The side's key; null on a link with one side. With `design_not_stitchable`: The side, by key; null for a link of one. With `design_unreadable`: The side, by key; null for a link of one. Always sent with `print_size_illegal`, `design_not_stitchable`, `design_unreadable`. */
                         side?: string | null;

@@ -76,6 +76,7 @@ final class Pixonaut {
 		// A repeat answers the blank imported before, so it takes no key.
 		'printshopCatalogueProducts.importBlank',
 		'designs.commit',
+		'proofSets.get',
 		// One design per store, version, blank, placement and size: a repeat answers it again, so it takes no key.
 		'designs.findOrCreateStanding',
 		'designs.get',

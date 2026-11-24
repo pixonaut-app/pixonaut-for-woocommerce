@@ -305,6 +305,9 @@ export declare interface DesignerEvents {
     repeat: {
         repeat: RepeatState | null;
     };
+    /** The pages of the side printed as pages changed: their count
+     *  (`setPageCount()`), the page shown (`setPage()`), or the side shown. */
+    pages: PagesState;
     /** A placement of a linked side was taken out of its group, put back,
      *  or mirrored (`setSideLink()`). */
     link: SideLinkEvent;
@@ -503,6 +506,32 @@ export declare class DesignerProduct {
     disableRepeat(): void;
     /** The repeat offered and chosen; null while none is offered. */
     getRepeat(): RepeatState | null;
+    /** The side of the item printed as pages (#4120), such as a notebook's
+     *  inner pages: its placement, how many pages the item has, the page
+     *  shown, the counts offered, the designed pages the count leaves out,
+     *  and whether it is the side shown. Null for an item with none. */
+    getPages(): PagesState | null;
+    /** How many pages the item has: one of the counts offered, else a
+     *  `TypeError`. A lower count keeps the pages past it, which `approve()`
+     *  and `commit()` then leave out, and a higher one brings them back; the
+     *  side shown on a page past it shows the last page. `on("pages")`
+     *  reports it. A cover whose area changes with the count, such as a
+     *  photo book's, is drawn at the new count's, and after `commit()` every
+     *  side is committed again when it changed. */
+    setPageCount(count: number): void;
+    /** The item's page count, on a designer of a side of an item whose pages
+     *  another designer designs (a hosted page mounts each side apart): a
+     *  cover whose area changes with the count, such as a photo book's, is
+     *  drawn and proofed at it, and after `commit()` committed again when its
+     *  area changed. Ignored on a designer of the side printed as pages,
+     *  which counts its own (`setPageCount()`). */
+    setItemPageCount(count: number): void;
+    /** Show page `page`, from 1 to the count, of the side printed as pages
+     *  while it is the side shown, else a `TypeError`. Each page keeps its
+     *  own values on the side's one template: the page left keeps its, and a
+     *  page never shown starts from the template's own. `on("pages")`
+     *  reports it. */
+    setPage(page: number): void;
     /** Choose the repeat's layout (`null`: not repeated, where the shopper
      *  may turn it off), size or arrangement; `on("repeat")` reports it. A
      *  `TypeError` with none offered and for a choice outside the offer. */
@@ -1665,6 +1694,13 @@ declare type MountPlacement = {
 /** An element, or a CSS selector naming one. */
 export declare type MountTarget = string | HTMLElement;
 
+/** The page counts a side printed as pages offers: `min` to `max`, on its
+ *  placement's steps. */
+export declare interface OfferedPages {
+    min: number;
+    max: number;
+}
+
 /** A method for every published `GET` operation, named from its
  *  operationId, over `json` (an answer read as JSON) and `raw` (an answer
  *  handed over as it came: a picture or a PDF). */
@@ -1814,28 +1850,32 @@ declare function operations({ json, raw }: Reads): {
             /** Read an order's step delivery log */
             list: (id: string) => Promise<AnswerOf<"/v1/orders/{id}/deliveries">>;
         };
-        /** Read one order, with its history */
+        /** Read one order, with its items and parcels */
         get: (id: string) => Promise<AnswerOf<"/v1/orders/{id}">>;
-        job: {
-            files: {
-                /** Fetch every file of an order's print as one zip */
-                bundle: (id: string, query?: QueryOf<"/v1/orders/{id}/job/bundle">) => Promise<Response>;
-                /** Fetch the print file of an order */
-                get: (id: string, query?: QueryOf<"/v1/orders/{id}/job/file">) => Promise<Response>;
-                /** List the files an order can be fetched as */
-                list: (id: string, query?: QueryOf<"/v1/orders/{id}/job/files">) => Promise<AnswerOf<"/v1/orders/{id}/job/files">>;
-            };
-            /** Read an order as its printshop makes it */
-            get: (id: string, query?: QueryOf<"/v1/orders/{id}/job">) => Promise<AnswerOf<"/v1/orders/{id}/job">>;
+        items: {
+            /** List the blanks a failed order could be sent to */
+            rerouteTargets: (id: string, itemId: string, query?: QueryOf<"/v1/orders/{id}/items/{itemId}/reroute-targets">) => Promise<AnswerOf<"/v1/orders/{id}/items/{itemId}/reroute-targets">>;
         };
         /** List the tenant's orders, newest first */
         list: (query?: QueryOf<"/v1/orders">) => Promise<AnswerOf<"/v1/orders">>;
+        printshopOrders: {
+            job: {
+                files: {
+                    /** Fetch every file of an order's print as one zip */
+                    bundle: (id: string, printshopOrderId: string, query?: QueryOf<"/v1/orders/{id}/printshop-orders/{printshopOrderId}/job/bundle">) => Promise<Response>;
+                    /** Fetch the print file of an order */
+                    get: (id: string, printshopOrderId: string, query?: QueryOf<"/v1/orders/{id}/printshop-orders/{printshopOrderId}/job/file">) => Promise<Response>;
+                    /** List the files an order can be fetched as */
+                    list: (id: string, printshopOrderId: string, query?: QueryOf<"/v1/orders/{id}/printshop-orders/{printshopOrderId}/job/files">) => Promise<AnswerOf<"/v1/orders/{id}/printshop-orders/{printshopOrderId}/job/files">>;
+                };
+                /** Read an order as its printshop makes it */
+                get: (id: string, printshopOrderId: string, query?: QueryOf<"/v1/orders/{id}/printshop-orders/{printshopOrderId}/job">) => Promise<AnswerOf<"/v1/orders/{id}/printshop-orders/{printshopOrderId}/job">>;
+            };
+        };
         progress: {
             /** Read an order as its customer follows it */
             get: (id: string) => Promise<AnswerOf<"/v1/orders/{id}/progress">>;
         };
-        /** List the blanks a failed order could be sent to */
-        rerouteTargets: (id: string, query?: QueryOf<"/v1/orders/{id}/reroute-targets">) => Promise<AnswerOf<"/v1/orders/{id}/reroute-targets">>;
     };
     pixelConversation: {
         /** Read the author's open Pixel conversation */
@@ -1862,6 +1902,10 @@ declare function operations({ json, raw }: Reads): {
     printshopConnections: {
         /** List the tenant's printshop connections */
         list: (query?: QueryOf<"/v1/printshop-connections">) => Promise<AnswerOf<"/v1/printshop-connections">>;
+    };
+    proofSets: {
+        /** Read a set of approved proofs */
+        get: (proofSet: string) => Promise<AnswerOf<"/v1/proof-sets/{proofSet}">>;
     };
     scenes: {
         /** List the library's scenes */
@@ -1962,6 +2006,57 @@ export declare type OptionValueAppearance =
     url: string;
 };
 
+/** The page words `SdkMessages` carries. */
+declare interface PageMessages {
+    /** The page count's name, before the count: "Pages · 40". */
+    "pages.legend": string;
+    /** The counts offered, under the name. */
+    "pages.range": string;
+    /** The stepper's buttons, by the pages each adds or takes. */
+    "pages.fewer": string;
+    "pages.more": string;
+    /** Designed pages the count leaves out, kept until it reaches them. */
+    "pages.left-out-one": string;
+    "pages.left-out": string;
+    /** The page picker's name, and each page in it. */
+    "pages.page": string;
+    "pages.page-of": string;
+    "pages.previous": string;
+    "pages.next": string;
+    /** Under the picker: how a page is designed and printed. */
+    "pages.note": string;
+}
+
+/** What `approve()` and `commit()` reject with when `setPageCount()`
+ *  changed the count while their requests ran: they were made for the
+ *  pages before it, not the item the customer would now get. */
+export declare class PagesChangedError extends Error {
+    constructor(message?: string);
+}
+
+/** The side printed as pages, as `getPages()` answers and `on("pages")`
+ *  reports it. */
+export declare interface PagesState {
+    /** The placement printed as pages. */
+    placementId: string;
+    /** The pages the item has. */
+    count: number;
+    /** The page the side shows, from 1. */
+    page: number;
+    /** The fewest pages offered. */
+    min: number;
+    /** The most pages offered; `min` for a fixed count. */
+    max: number;
+    /** Pages added or taken at a time. */
+    step: number;
+    /** The pages past `count` the shopper designed: kept, and sent again once
+     *  the count reaches them. */
+    leftOut: number;
+    /** Whether the side shown is this one: `setPage()` takes a page only
+     *  then. */
+    shown: boolean;
+}
+
 /** A named color entry within a palette, as the resolved document carries
  *  it. */
 declare interface PaletteEntry {
@@ -2039,6 +2134,9 @@ export declare interface PickerVisibility {
     /** the blank's options, which `getOptions()`, `getVariants()` and
      *  `setVariant()` replace */
     variant?: boolean;
+    /** the page count and the page picker of a side printed as pages, which
+     *  `getPages()`, `setPageCount()` and `setPage()` replace */
+    pages?: boolean;
 }
 
 /** The words, spelled once in TypeScript so the type is a closed union. The
@@ -2149,6 +2247,7 @@ export declare class PixelUnavailableError extends Error {
 declare const Pixonaut: {
     mount: typeof mount;
     version: string;
+    PagesChangedError: typeof PagesChangedError;
     PixelUnavailableError: typeof PixelUnavailableError;
     PlacementChangedError: typeof PlacementChangedError;
     TemplateChangedError: typeof TemplateChangedError;
@@ -2183,6 +2282,9 @@ export declare class PixonautApiError extends Error {
     /** The side refused, when `approve()` or `commit()` made a design of
      *  several (#1364): its placement. */
     placementId?: string;
+    /** The page refused, when the side refused is printed as pages (#4120):
+     *  from 1, whether or not it is the page shown. */
+    page?: number;
     /** On a refused `commit()` of several sides (#2190): the sides committed
      *  before it, which the next `commit()` answers with rather than commits
      *  again while their design is unchanged. */
@@ -2201,6 +2303,10 @@ export declare class PixonautApiError extends Error {
      *  embroidery machine cannot stitch, an off-list colour with the nearest
      *  thread by name. */
     readonly stitchFindings?: StitchFinding[];
+    /** On a refusal whose response says when to ask again (`Retry-After`),
+     *  such as a throttled visitor's 429: how long to wait, in
+     *  milliseconds. */
+    readonly retryAfterMs?: number;
     constructor(message: string, status: number, detail?: {
         code?: string;
         violations?: RemoteViolation[];
@@ -2208,6 +2314,7 @@ export declare class PixonautApiError extends Error {
         reopensAt?: number | null;
         minimumSdkVersion?: string | null;
         stitchFindings?: StitchFinding[];
+        retryAfterMs?: number;
     });
 }
 
@@ -2263,8 +2370,12 @@ export declare class PixonautDesigner extends DesignerProduct {
     private templates;
     /** Template reads, each template and pair read once. */
     private reads;
+    /** A cover's box and designs follow the page count (#4117). */
+    private covers;
     /** The item's other sides, each with its template and values (#1364). */
     private sides;
+    /** A side printed as pages (#4120): a page is drawn as a template is. */
+    private pages;
     /** The design's repeat, when the host offers one (#2148). */
     private repeat;
     /** What is loaded ahead of a switch (#1430). */
@@ -2455,10 +2566,11 @@ export declare class PixonautDesigner extends DesignerProduct {
     /** Server-side proof of every enabled side (#1364); resolves the lead
      *  side's proof, the first enabled in `placements`, with every side's
      *  under `sides`. Rejects with a `PixonautApiError` (its `violations`, or
-     *  `status` and `code`; its `placementId` names the side refused), or a
-     *  `PlacementChangedError` when the side shown switched while the proofs
-     *  were being made, or a `TemplateChangedError` when `setTemplate()`
-     *  switched the template. */
+     *  `status` and `code`; its `placementId` and `page` name the side refused),
+     *  a `PlacementChangedError` when the side shown switched while the proofs
+     *  were being made, a `TemplateChangedError` when `setTemplate()` switched
+     *  the template, or a `PagesChangedError` when `setPageCount()` changed
+     *  the count. */
     approve(): Promise<Approved>;
     /** Switch to another published template without remounting (#1363): a
      *  value on a keyed field follows its key into it, and the rest is kept
@@ -2656,6 +2768,14 @@ declare interface PrintBoxSpec {
     [key: string]: unknown;
 }
 
+/** Where a proof or a design is printed: its placement, null for a mount
+ *  naming none, and on a placement printed as pages its page, from 1
+ *  (#4120); absent on any other. */
+export declare interface PrintedOn {
+    placementId: string | null;
+    page?: number;
+}
+
 /** How far a print runs past its trim, and how far inside it important
  *  artwork stays, in millimetres. */
 declare interface PrintMargins {
@@ -2747,6 +2867,15 @@ export declare interface ProductPlacement {
      *  has not chosen, such as the back of a print sold single-sided.
      *  Omitted, true. */
     enabled?: boolean;
+    /** On a placement printed as pages (a notebook's inner pages, #4120):
+     *  the page counts the shopper may pick, from `min` to `max` on the
+     *  placement's own steps, one count when the two are equal. Omitted, the
+     *  placement's whole range. A range off its steps, or on a placement of
+     *  one page, is a `TypeError`. */
+    pages?: OfferedPages;
+    /** On a placement printed as pages: the count the item starts at, one of
+     *  those offered. Omitted, the fewest offered. */
+    pageCount?: number;
 }
 
 /** One variant the product offers, as `getVariants()` lists it. */
@@ -3008,7 +3137,7 @@ declare type ScreenProfile = {
     tables: ProfileTables;
 };
 
-export declare interface SdkMessages extends OptionMessages, ViewMessages, PixelMessages, AddedLayerMessages, DeletedLayerMessages {
+export declare interface SdkMessages extends OptionMessages, ViewMessages, PixelMessages, AddedLayerMessages, DeletedLayerMessages, PageMessages {
     /** An integrator's word for ONE offered shape on this embed — a die or a
      *  shape layer's outline (ADR 187); the family keeps its `die` name so
      *  existing keys still apply — keyed by its shape id, as
@@ -3242,11 +3371,8 @@ declare type ShapeGeometryValue = {
  *  snapshot (a published version), as one argument type. */
 declare type ShapeSource = Readonly<Record<string, ShapeGeometryValue>>;
 
-/** One side's committed design: its placement, null for a mount naming
- *  none. */
-export declare type SideCommit = CommitResult & {
-    placementId: string | null;
-};
+/** One side's committed design, or one page's. */
+export declare type SideCommit = CommitResult & PrintedOn;
 
 /** What `setSideLink()` changes of a placement. */
 export declare interface SideLinkChange {
@@ -3297,6 +3423,11 @@ export declare interface SideMountOptions {
      *  never shows the design placed once first. Omitted, none until
      *  `enableRepeat()`. */
     repeat?: RepeatOptions;
+    /** A one-placement mount's `pages` (`ProductPlacement.pages`); with
+     *  `placements`, each entry names its own. */
+    pages?: OfferedPages;
+    /** A one-placement mount's `pageCount` (`ProductPlacement.pageCount`). */
+    pageCount?: number;
 }
 
 /** A side's print as it is drawn into a region: unshaded, at its print box. */
@@ -3326,10 +3457,8 @@ export declare interface SidePrintOptions {
     repeat?: DesignRepeat | null;
 }
 
-/** One side's proof: its placement, null for a mount naming none. */
-export declare type SideProof = ApproveResult & {
-    placementId: string | null;
-};
+/** One side's proof, or one page's. */
+export declare type SideProof = ApproveResult & PrintedOn;
 
 /** The template fields the ratio check reads. Structural, so a mounted
  *  `TemplateDoc`, a parsed template and a test fixture all satisfy it. */

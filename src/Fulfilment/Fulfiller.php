@@ -54,6 +54,11 @@ final class Fulfiller {
 	private const DESIGN_APPROVED = 'approved';
 
 	/**
+	 * The first page of a side printed as pages, which starts its designs.
+	 */
+	private const FIRST_PAGE = 1;
+
+	/**
 	 * Tries to record a placed order when another request wrote the line meanwhile.
 	 */
 	private const MAX_ATTEMPTS = 3;
@@ -891,13 +896,21 @@ final class Fulfiller {
 		$sides   = array();
 		if ( $printed ) {
 			foreach ( $line->sides() as $side ) {
-				$sides[] = array( 'printId' => (string) $line->side_ref( $side, LineState::SIDE_PRINT_ID ) );
+				$sides[] = array( 'printId' => (string) $line->side_ref( $side, LineState::SIDE_PRINT_ID ) ) + self::page_of( $line, $side );
 			}
 		} else {
-			$committed = array_map( static fn ( string $side ): string => (string) $line->side_ref( $side, LineState::SIDE_DESIGN_ID ), $line->sides() );
-			foreach ( StandingSide::in_side_order( $committed, $line->standing() ) as $design_id ) {
-				$sides[] = array( 'designId' => $design_id );
+			// Each side's designs, a side printed as pages holding one per page, so a standing side's position counts sides, not pages.
+			$by_side = array();
+			foreach ( $line->sides() as $side ) {
+				$page   = self::page_of( $line, $side );
+				$design = array( 'designId' => (string) $line->side_ref( $side, LineState::SIDE_DESIGN_ID ) ) + $page;
+				if ( array() === $page || self::FIRST_PAGE === $page['page'] || array() === $by_side ) {
+					$by_side[] = array( $design );
+				} else {
+					$by_side[ count( $by_side ) - 1 ][] = $design;
+				}
 			}
+			$sides = array_merge( ...StandingSide::in_side_order( $by_side, $line->standing(), static fn ( string $design_id ): array => array( array( 'designId' => $design_id ) ) ) );
 		}
 		$variant   = $line->ref( LineState::REF_VARIANT );
 		$printshop = $line->ref( LineState::REF_PRINTSHOP );
@@ -908,6 +921,20 @@ final class Fulfiller {
 		) + ( is_string( $variant ) && '' !== $variant ? array( 'variant' => $variant ) : array() )
 			+ ( is_string( $printshop ) && '' !== $printshop ? array( 'printshopId' => $printshop ) : array() )
 			+ ( true === $line->ref( LineState::REF_REORDER ) && array() !== $line->sides() ? array( 'reorder' => true ) : array() );
+	}
+
+	/**
+	 * The `page` an order item names a design or print by: its page on a
+	 * side printed as pages; none on any other side.
+	 *
+	 * @param LineState $line The line.
+	 * @param string    $side A side's slot.
+	 *
+	 * @return array{page?: int}
+	 */
+	private static function page_of( LineState $line, string $side ): array {
+		$page = $line->side_ref( $side, LineState::SIDE_PAGE );
+		return is_int( $page ) ? array( 'page' => $page ) : array();
 	}
 
 	/**

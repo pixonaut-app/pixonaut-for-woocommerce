@@ -48,6 +48,9 @@ export function refusePrints(
 ): HandlerResult | null {
 	const placed: { blankId: string; placementId: string }[] = [];
 	for (const print of prints) {
+		const paged =
+			findDesign(context.state, print.designId, storeId)?.proof.page !==
+			undefined;
 		if (print.status === 'failed') {
 			return {
 				status: CONFLICT_STATUS,
@@ -77,7 +80,10 @@ export function refusePrints(
 				body: { error: 'print_without_placement', printId: print.id },
 			};
 		}
-		placed.push({ blankId, placementId });
+		// Every page of a book is printed in its placement of pages.
+		if (!paged) {
+			placed.push({ blankId, placementId });
+		}
 	}
 	if (new Set(placed.map((p) => p.blankId)).size > 1) {
 		return refusal(UNPROCESSABLE_STATUS, 'mixed_blanks');
@@ -91,6 +97,67 @@ export function refusePrints(
 			};
 		}
 		seen.add(placementId);
+	}
+	return null;
+}
+
+/** Why the pages an item names do not match the pages its designs were
+ *  proofed as, as the reference refuses them; null when they do. A design
+ *  of a side printed as pages is named with the page it was proofed as, and
+ *  every page of its book from 1 is named once, each book in its own
+ *  placement; a design of no pages names none. `pages` holds each print's
+ *  `page`, in the order of `prints`. */
+export function refusePages(
+	context: HandlerContext,
+	storeId: string,
+	prints: Print[],
+	pages: (number | undefined)[],
+): HandlerResult | null {
+	/** Each book's pages named, and its page count, by placement. */
+	const books = new Map<string, { named: Set<number>; pageCount: number }>();
+	const refused = (error: string, details: Record<string, unknown>) => ({
+		status: UNPROCESSABLE_STATUS,
+		body: { error, ...details },
+	});
+	for (const [index, print] of prints.entries()) {
+		const proof = findDesign(context.state, print.designId, storeId)?.proof;
+		const proofed = proof?.page;
+		const page = pages[index];
+		const placementId = proof?.placementId ?? '';
+		if (proofed === undefined) {
+			if (page !== undefined) {
+				return refused('page_on_unpaged_placement', { placementId });
+			}
+			continue;
+		}
+		if (page === undefined) {
+			return refused('page_missing', { placementId, page: proofed.page });
+		}
+		const book = books.get(placementId) ?? {
+			named: new Set<number>(),
+			pageCount: proofed.pageCount,
+		};
+		// Pages of one placement proofed at other counts are not one book.
+		if (page !== proofed.page || book.pageCount !== proofed.pageCount) {
+			return refused('page_not_as_proofed', {
+				placementId,
+				page,
+				proofedPage: proofed.page,
+				proofedCount: proofed.pageCount,
+			});
+		}
+		if (book.named.has(page)) {
+			return refused('duplicate_page', { placementId, page });
+		}
+		book.named.add(page);
+		books.set(placementId, book);
+	}
+	for (const [placementId, book] of books) {
+		for (let page = 1; page <= book.pageCount; page++) {
+			if (!book.named.has(page)) {
+				return refused('page_missing', { placementId, page });
+			}
+		}
 	}
 	return null;
 }

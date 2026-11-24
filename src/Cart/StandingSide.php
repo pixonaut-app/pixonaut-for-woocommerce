@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Cart;
 
+use Closure;
+
 /**
  * A side printed from the store's standing design rather than one the
  * customer committed: the line names the design, which no cart or order
@@ -51,19 +53,23 @@ final class StandingSide {
 	}
 
 	/**
-	 * The design ids of a line's sides in the product's side order: its
-	 * committed ones, in their order, with each standing one at its position.
+	 * A line's sides in the product's side order: its committed ones, in
+	 * their order, with each standing one at its position.
 	 *
-	 * @param string[]       $committed The committed sides' design ids, in order.
+	 * @template T
+	 *
+	 * @param array          $committed The committed sides, in order, as `$as_side` makes a standing one.
 	 * @param StandingSide[] $standing  The standing sides.
-	 * @phpstan-param list<string> $committed
+	 * @param Closure        $as_side   `fn( string $design_id ): T`, a standing side as the committed ones are given.
+	 * @phpstan-param list<T> $committed
 	 * @phpstan-param list<StandingSide> $standing
-	 * @return list<string>
+	 * @phpstan-param Closure(string): T $as_side
+	 * @return list<T>
 	 */
-	public static function in_side_order( array $committed, array $standing ): array {
+	public static function in_side_order( array $committed, array $standing, Closure $as_side ): array {
 		usort( $standing, static fn ( self $a, self $b ): int => $a->position <=> $b->position );
 		foreach ( $standing as $side ) {
-			array_splice( $committed, min( $side->position, count( $committed ) ), 0, array( $side->design_id ) );
+			array_splice( $committed, min( $side->position, count( $committed ) ), 0, array( $as_side( $side->design_id ) ) );
 		}
 		return $committed;
 	}

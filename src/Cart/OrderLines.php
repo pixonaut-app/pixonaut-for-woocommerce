@@ -67,7 +67,7 @@ final class OrderLines {
 			return;
 		}
 
-		$state = LineState::start( $item, array_map( static fn ( CommittedSide $side ): string => $side->key, $line->sides ) );
+		$state = LineState::start( $item, array_map( static fn ( CommittedSide $side ): string => $side->slot_of(), $line->sides ) );
 		$state->set_ref( LineState::REF_TENANT_ID, $line->tenant_id );
 		$state->set_ref( LineState::REF_APPROVAL_MODE, $line->approval_mode );
 		$state->set_ref( LineState::REF_CONSENT, $line->consent );
@@ -77,13 +77,15 @@ final class OrderLines {
 		$state->set_ref( LineState::REF_LOCALE, determine_locale() );
 		$state->set_ref( LineState::REF_STANDING, array() === $line->standing ? null : array_map( static fn ( StandingSide $side ): array => $side->to_array(), $line->standing ) );
 		foreach ( $line->sides as $side ) {
-			$state->set_side_ref( $side->key, LineState::SIDE_DESIGN_ID, $side->design_id );
-			$state->set_side_ref( $side->key, LineState::SIDE_REVISION, $side->revision );
-			$state->set_side_ref( $side->key, LineState::SIDE_TEMPLATE_BASE_ID, $side->template_base_id );
-			$state->set_side_ref( $side->key, LineState::SIDE_TEMPLATE_VERSION, $side->template_version );
-			$state->set_side_ref( $side->key, LineState::SIDE_COMMIT_KEY, $side->commit_key );
-			$state->set_side_ref( $side->key, LineState::SIDE_PROOF_ID, $side->proof_id );
-			$state->set_side_ref( $side->key, LineState::SIDE_FIELDS, array() === $side->fields ? null : FieldValue::list_to_array( $side->fields ) );
+			$slot = $side->slot_of();
+			$state->set_side_ref( $slot, LineState::SIDE_DESIGN_ID, $side->design_id );
+			$state->set_side_ref( $slot, LineState::SIDE_REVISION, $side->revision );
+			$state->set_side_ref( $slot, LineState::SIDE_TEMPLATE_BASE_ID, $side->template_base_id );
+			$state->set_side_ref( $slot, LineState::SIDE_TEMPLATE_VERSION, $side->template_version );
+			$state->set_side_ref( $slot, LineState::SIDE_COMMIT_KEY, $side->commit_key );
+			$state->set_side_ref( $slot, LineState::SIDE_PROOF_ID, $side->proof_id );
+			$state->set_side_ref( $slot, LineState::SIDE_FIELDS, array() === $side->fields ? null : FieldValue::list_to_array( $side->fields ) );
+			$state->set_side_ref( $slot, LineState::SIDE_PAGE, $side->page );
 		}
 		$state->save();
 	}

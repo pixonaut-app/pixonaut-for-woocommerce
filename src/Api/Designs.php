@@ -11,6 +11,7 @@ namespace Pixonaut\WooCommerce\Api;
 
 // phpcs:disable WordPress.Security.EscapeOutput.ExceptionNotEscaped -- exception messages here are reasons and log text, never printed as they are: whoever shows one escapes it.
 
+use Closure;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
@@ -44,13 +45,38 @@ final class Designs {
 
 	private const PNG = 'image/png';
 
-	public function __construct( private readonly Sdk $pixonaut ) {
+	/**
+	 * The longest one customer request's commits wait, in all, for
+	 * Pixonaut's commit budget (`429 rate_limited`) before giving up: the
+	 * customer waits on them (`RateLimitBudget`).
+	 */
+	public const RATE_LIMIT_BUDGET_SECONDS = 20;
+
+	/**
+	 * The shortest wait before a commit is sent again, so a `Retry-After: 0`
+	 * still spends the budget.
+	 */
+	private const MIN_RATE_LIMIT_WAIT_SECONDS = 1;
+
+	private readonly Closure $sleep;
+
+	/**
+	 * @param Sdk          $pixonaut The SDK.
+	 * @param Closure|null $sleep    `fn( int $seconds ): void`, the wait before a commit is sent again; `sleep()` when null.
+	 */
+	public function __construct( private readonly Sdk $pixonaut, ?Closure $sleep = null ) {
+		$this->sleep = $sleep ?? static function ( int $seconds ): void {
+			sleep( $seconds );
+		};
 	}
 
 	/**
 	 * `POST /v1/designs`: commits the proof a customer approved. A proof
 	 * committed before (`409 proof_already_committed`) is adopted: its
-	 * design's id is answered as if this call had made it. The fulfilment
+	 * design's id is answered as if this call had made it. A commit refused
+	 * for the store's commit budget (`429 rate_limited`) is sent again after
+	 * the answer's `Retry-After`, while the wait fits in what `$budget` has
+	 * left; a long book's commits may meet it. The fulfilment
 	 * payload carries the printshop keys known at commit; those only an
 	 * order can carry (a recipient) are checked when the order is submitted.
 	 *
@@ -59,28 +85,36 @@ final class Designs {
 	 * @param string               $idempotency_key    Key for the commit; the same token always gets the same key.
 	 * @param array<string, mixed> $fulfilment_payload Fulfilment keys known at commit, such as `placement`; none is sent when empty.
 	 * @param bool|null            $preview_opened     Whether the customer opened the preview before ticking the approval box; null, and left out, where no box asked.
+	 * @param RateLimitBudget|null $budget             The waits this commit shares with the request's others; one of its own when null.
 	 *
 	 * @return string The design's id.
 	 *
 	 * @throws ApiException When Pixonaut refused or could not be reached.
 	 */
-	public function commit( string $proof_token, string $external_ref, string $idempotency_key, array $fulfilment_payload = array(), ?bool $preview_opened = null ): string {
-		$body = new DesignsCommitRequestOption1(
+	public function commit( string $proof_token, string $external_ref, string $idempotency_key, array $fulfilment_payload = array(), ?bool $preview_opened = null, ?RateLimitBudget $budget = null ): string {
+		$body     = new DesignsCommitRequestOption1(
 			proofToken: $proof_token,
 			fulfilmentPayload: array() === $fulfilment_payload ? Omitted::Field : $fulfilment_payload,
 			externalRef: $external_ref,
 			previewOpened: $preview_opened,
 		);
-		try {
-			$id = $this->pixonaut->designs()->commit( $body, idempotencyKey: $idempotency_key )->designId;
-		} catch ( ApiException $error ) {
-			$adopted = $error->details['designId'] ?? null;
-			if ( ErrorCode::PROOF_ALREADY_COMMITTED === $error->errorCode && is_string( $adopted ) && '' !== $adopted ) {
-				return $adopted;
+		$budget ??= new RateLimitBudget();
+		while ( true ) {
+			try {
+				$id = $this->pixonaut->designs()->commit( $body, idempotencyKey: $idempotency_key )->designId;
+				return self::id( 'designs.commit', $id );
+			} catch ( ApiException $error ) {
+				$adopted = $error->details['designId'] ?? null;
+				if ( ErrorCode::PROOF_ALREADY_COMMITTED === $error->errorCode && is_string( $adopted ) && '' !== $adopted ) {
+					return $adopted;
+				}
+				$wait = ErrorCode::RATE_LIMITED === $error->errorCode && null !== $error->retryAfter ? max( self::MIN_RATE_LIMIT_WAIT_SECONDS, $error->retryAfter ) : null;
+				if ( null === $wait || ! $budget->spend( $wait ) ) {
+					throw $error;
+				}
+				( $this->sleep )( $wait );
 			}
-			throw $error;
 		}
-		return self::id( 'designs.commit', $id );
 	}
 
 	/**

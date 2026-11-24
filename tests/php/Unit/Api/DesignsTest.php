@@ -10,6 +10,7 @@ namespace Pixonaut\WooCommerce\Tests\Unit\Api;
 use Brain\Monkey\Functions;
 use Pixonaut\WooCommerce\Api\Deprecations;
 use Pixonaut\WooCommerce\Api\Designs;
+use Pixonaut\WooCommerce\Api\RateLimitBudget;
 use Pixonaut\WooCommerce\Catalogue\PrintSize;
 use Pixonaut\WooCommerce\Tests\Support\DesignFixture;
 use Pixonaut\WooCommerce\Tests\Support\RecordingLogger;
@@ -108,6 +109,86 @@ final class DesignsTest extends TestCase {
 		} catch ( ApiException $error ) {
 			$this->assertSame( ErrorCode::PROOF_EXPIRED, $error->errorCode );
 		}
+	}
+
+	public function test_commit_sends_again_after_the_wait_a_spent_commit_budget_asks_for(): void {
+		$waits         = array();
+		$this->designs = new Designs(
+			$this->transport->sdk( ScriptedClient::credentials(), new RecordingLogger() ),
+			static function ( int $seconds ) use ( &$waits ): void {
+				$waits[] = $seconds;
+			}
+		);
+		$this->transport->json( 429, array( 'error' => ErrorCode::RATE_LIMITED ), array( 'Retry-After' => '3' ) );
+		$this->transport->json( 429, array( 'error' => ErrorCode::RATE_LIMITED ), array( 'Retry-After' => '0' ) );
+		$this->transport->json(
+			201,
+			array(
+				'designId'      => DesignFixture::ID,
+				'printFloorDpi' => 150,
+				'lowResolution' => array(),
+			)
+		);
+
+		$this->assertSame( DesignFixture::ID, $this->designs->commit( self::TOKEN, self::CART_REF, self::COMMIT_KEY ) );
+
+		$this->assertSame( array( 3, 1 ), $waits );
+		$this->assertCount( 3, $this->transport->sent );
+		$this->assertSame( array( self::COMMIT_KEY ), array_unique( array_map( static fn ( array $sent ): string => $sent['headers']['Idempotency-Key'], $this->transport->sent ) ) );
+	}
+
+	public function test_commits_sharing_a_budget_give_up_once_their_waits_together_pass_it(): void {
+		$waits         = array();
+		$this->designs = new Designs(
+			$this->transport->sdk( ScriptedClient::credentials(), new RecordingLogger() ),
+			static function ( int $seconds ) use ( &$waits ): void {
+				$waits[] = $seconds;
+			}
+		);
+		$wait          = intdiv( Designs::RATE_LIMIT_BUDGET_SECONDS, 2 ) + 1;
+		$this->transport
+			->json( 429, array( 'error' => ErrorCode::RATE_LIMITED ), array( 'Retry-After' => (string) $wait ) )
+			->json(
+				201,
+				array(
+					'designId'      => DesignFixture::ID,
+					'printFloorDpi' => 150,
+					'lowResolution' => array(),
+				)
+			)
+			->json( 429, array( 'error' => ErrorCode::RATE_LIMITED ), array( 'Retry-After' => (string) $wait ) );
+		$budget = new RateLimitBudget();
+
+		$this->assertSame( DesignFixture::ID, $this->designs->commit( self::TOKEN, self::CART_REF, self::COMMIT_KEY, array(), null, $budget ) );
+		try {
+			$this->designs->commit( 'eyJhdWQiOiJwcm9vZiJ9.cGFnZTI', self::CART_REF, 'wc:site-1:commit:4567', array(), null, $budget );
+			$this->fail( 'The second page waited past what the first left.' );
+		} catch ( ApiException $error ) {
+			$this->assertSame( ErrorCode::RATE_LIMITED, $error->errorCode );
+		}
+		$this->assertSame( array( $wait ), $waits );
+	}
+
+	public function test_commit_gives_up_on_a_wait_past_its_budget_or_without_retry_after(): void {
+		$waits         = array();
+		$this->designs = new Designs(
+			$this->transport->sdk( ScriptedClient::credentials(), new RecordingLogger() ),
+			static function ( int $seconds ) use ( &$waits ): void {
+				$waits[] = $seconds;
+			}
+		);
+		$this->transport->json( 429, array( 'error' => ErrorCode::RATE_LIMITED ), array( 'Retry-After' => (string) ( Designs::RATE_LIMIT_BUDGET_SECONDS + 1 ) ) );
+		$this->transport->json( 429, array( 'error' => ErrorCode::RATE_LIMITED ) );
+
+		foreach ( array( 'past the budget', 'without Retry-After' ) as $case ) {
+			try {
+				$this->designs->commit( self::TOKEN, self::CART_REF, self::COMMIT_KEY );
+				$this->fail( "A commit refused {$case} must not be sent again." );
+			} catch ( ApiException $error ) {
+				$this->assertSame( ErrorCode::RATE_LIMITED, $error->errorCode );
+			}
+		}
+		$this->assertSame( array(), $waits );
 	}
 
 	public function test_standing_finds_or_creates_the_approved_design_for_the_side(): void {

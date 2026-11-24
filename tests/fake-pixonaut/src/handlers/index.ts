@@ -72,6 +72,7 @@ import {
 	importCatalogueBlank,
 	listCatalogueProducts,
 } from './printshop-catalogue';
+import { readProofSet } from './proof-sets';
 import { createProof, readProofImage } from './proofs';
 import { deleteSession } from './sessions';
 import { createShareLink } from './share-links';
@@ -128,6 +129,7 @@ export const HANDLERS: Partial<Record<OperationKey, Handler>> = {
 	'POST /v1/printshop-catalogue-products/{productId}/blank':
 		importCatalogueBlank,
 	'POST /v1/designs': commitDesign,
+	'GET /v1/proof-sets/{proofSet}': readProofSet,
 	'POST /v1/designs/standing': findOrCreateStandingDesign,
 	'GET /v1/designs/{id}': readDesign,
 	'GET /v1/designs/{id}/proof': readDesignProof,

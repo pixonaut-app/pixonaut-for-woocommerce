@@ -94,6 +94,9 @@ function designBody(
 		blankId: proof.blankId,
 		placementId: proof.placementId,
 		printSize: proof.printSize,
+		// A page of a side printed as pages carries its page and its book's count.
+		page: proof.page?.page ?? null,
+		pageCount: proof.page?.pageCount ?? null,
 		// Only a standing design names its row; the fake sizes no other by one.
 		variantRow: design.variantRow ?? null,
 		rejectionReason: design.rejectionReason,

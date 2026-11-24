@@ -14,6 +14,7 @@ namespace Pixonaut\WooCommerce\Fulfilment;
 use LogicException;
 use Pixonaut\WooCommerce\Api\Answers\Order;
 use Pixonaut\WooCommerce\Api\Answers\OrderItem;
+use Pixonaut\WooCommerce\Cart\CommittedSide;
 use Pixonaut\WooCommerce\Cart\FieldValue;
 use Pixonaut\WooCommerce\Cart\StandingSide;
 use Pixonaut\WooCommerce\Refs;
@@ -225,6 +226,8 @@ final class LineState {
 	public const SIDE_EDIT_BASE = 'editBase';
 	// The design's field values as the customer chose them, FieldValue::to_array() entries; absent on a line that kept none, and once the design's personal data was erased.
 	public const SIDE_FIELDS = 'fields';
+	// The page the design is, from 1, on a side printed as pages; absent on any other side. Such a design's entry is keyed by `CommittedSide::slot()`.
+	public const SIDE_PAGE = 'page';
 
 	public const SIDE_REFS = array(
 		self::SIDE_DESIGN_ID,
@@ -243,6 +246,7 @@ final class LineState {
 		self::SIDE_APPROVED,
 		self::SIDE_EDIT_BASE,
 		self::SIDE_FIELDS,
+		self::SIDE_PAGE,
 	);
 
 	/**
@@ -747,6 +751,30 @@ final class LineState {
 			$keys[] = $side['key'];
 		}
 		return $keys;
+	}
+
+	/**
+	 * The slots holding a side's designs: the side's own key, or for a side
+	 * printed as pages, each page's slot by page from 1.
+	 *
+	 * @param string $key A side's key in the product configuration.
+	 *
+	 * @return array<int, string> Slot by page, or `array( 0 => $key )` for a side of one design; empty when the line holds none.
+	 */
+	public function slots_of( string $key ): array {
+		$sides = $this->sides();
+		if ( in_array( $key, $sides, true ) ) {
+			return array( $key );
+		}
+		$slots = array();
+		foreach ( $sides as $slot ) {
+			$page = $this->side_ref( $slot, self::SIDE_PAGE );
+			if ( is_int( $page ) && CommittedSide::slot( $key, $page ) === $slot ) {
+				$slots[ $page ] = $slot;
+			}
+		}
+		ksort( $slots );
+		return $slots;
 	}
 
 	/**

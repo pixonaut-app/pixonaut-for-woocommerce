@@ -128,6 +128,7 @@ final class FulfilmentAnswers {
 					'printshopConnectionId' => $item['printshopConnectionId'],
 					'printshopName'         => $item['printshopName'],
 					'adapter'               => 'fake',
+					'cancelsItems'          => false,
 					'externalOrderRef'      => null,
 					'parts'                 => array(),
 					'itemIds'               => array_merge( $printshop_orders[ $submission['printshopOrderId'] ]['itemIds'] ?? array(), array( $item['id'] ) ),

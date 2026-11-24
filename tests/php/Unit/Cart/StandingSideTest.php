@@ -15,9 +15,9 @@ final class StandingSideTest extends TestCase {
 	public function test_each_standing_design_goes_to_its_place_among_the_committed_ones(): void {
 		$standing = array( new StandingSide( 'sleeve', 'des_sleeve', 2 ), new StandingSide( 'front', 'des_front', 0 ) );
 
-		$this->assertSame( array( 'des_front', 'd_back', 'des_sleeve' ), StandingSide::in_side_order( array( 'd_back' ), $standing ) );
-		$this->assertSame( array( 'des_front', 'des_sleeve' ), StandingSide::in_side_order( array(), $standing ) );
-		$this->assertSame( array( 'd_front', 'd_back' ), StandingSide::in_side_order( array( 'd_front', 'd_back' ), array() ) );
+		$this->assertSame( array( 'des_front', 'd_back', 'des_sleeve' ), StandingSide::in_side_order( array( 'd_back' ), $standing, self::id( ... ) ) );
+		$this->assertSame( array( 'des_front', 'des_sleeve' ), StandingSide::in_side_order( array(), $standing, self::id( ... ) ) );
+		$this->assertSame( array( 'd_front', 'd_back' ), StandingSide::in_side_order( array( 'd_front', 'd_back' ), array(), self::id( ... ) ) );
 	}
 
 	public function test_round_trips_and_refuses_a_side_without_its_design(): void {
@@ -41,5 +41,14 @@ final class StandingSideTest extends TestCase {
 				)
 			)
 		);
+	}
+
+	/**
+	 * A standing side as its design id, as committed sides are given here.
+	 *
+	 * @param string $design_id The design's id.
+	 */
+	private static function id( string $design_id ): string {
+		return $design_id;
 	}
 }

@@ -8,6 +8,11 @@
 // and returned in place of the link's, unchecked and unstored; one outside the
 // allowed form, or given more than once, is ignored. Each side says the variant it starts on, by its
 // options, and the views it is shown in.
+//
+// A test approves a side as a book of pages by adding `pages=<count>` (the
+// only side of a link of one side) or `pages[<key>]=<count>` to the approve
+// address. The approval then makes a proof per page, keeps every proof of the
+// approval as a proof set, and returns `proofSet` in place of tokens.
 import type { Context, Hono } from 'hono';
 import type { Fake } from './app';
 import {
@@ -15,8 +20,9 @@ import {
 	DESIGNER_PATH,
 	type DesignerLink,
 } from './handlers/designer-links';
+import { mintProofSet } from './handlers/proof-sets';
 import { escapeHtml } from './proof-pages';
-import { mintProof } from './proofs';
+import { mintProof, type Proof } from './proofs';
 import { allOwned, pageLanguage, type State } from './state';
 
 /** The link `token` names while it works, or undefined. */
@@ -112,6 +118,14 @@ const APPROVE_TEXT: Record<DesignerLink['afterApprove'], string> = {
 	add_to_cart: 'Approve and add to cart',
 };
 
+/** The page count a test asked a side to be approved at, or undefined for a
+ *  side of no pages. */
+function pagesAsked(c: Context, key: string | null): number | undefined {
+	const asked = c.req.query(key === null ? 'pages' : `pages[${key}]`);
+	const count = asked === undefined ? Number.NaN : Number(asked);
+	return Number.isInteger(count) && count > 0 ? count : undefined;
+}
+
 export function registerHostedDesigner(app: Hono, fake: Fake): void {
 	const gone = (c: Context) =>
 		c.text('This designer link no longer works.', 410);
@@ -146,21 +160,41 @@ export function registerHostedDesigner(app: Hono, fake: Fake): void {
 			return c.text('Approved.');
 		}
 		const url = back(link, tripState(c));
+		const made: { key: string | null; proof: Proof }[] = [];
 		for (const side of link.sides) {
-			const proof = mintProof(fake.state, fake.clock, {
-				storeId: link.storeId,
-				templateId: side.templateId,
-				blankId: side.blankId,
-				placementId: side.placementId,
-				printSize: side.printSize,
-			});
-			if (typeof proof === 'string') {
-				throw new Error(`The designer link's side was refused: ${proof}`);
+			const pageCount = pagesAsked(c, side.key);
+			const pages =
+				pageCount === undefined
+					? [undefined]
+					: Array.from({ length: pageCount }, (_, index) => ({
+							page: index + 1,
+							pageCount,
+						}));
+			for (const page of pages) {
+				const proof = mintProof(fake.state, fake.clock, {
+					storeId: link.storeId,
+					templateId: side.templateId,
+					blankId: side.blankId,
+					placementId: side.placementId,
+					printSize: side.printSize,
+					...(page === undefined ? {} : { page }),
+				});
+				if (typeof proof === 'string') {
+					throw new Error(`The designer link's side was refused: ${proof}`);
+				}
+				made.push({ key: side.key, proof });
 			}
-			url.searchParams.set(
-				side.key === null ? 'proofToken' : `proofToken[${side.key}]`,
-				proof.token,
-			);
+		}
+		if (made.some(({ proof }) => proof.page !== undefined)) {
+			const set = mintProofSet(fake.state, link.storeId, made);
+			url.searchParams.set('proofSet', set.ref);
+		} else {
+			for (const { key, proof } of made) {
+				url.searchParams.set(
+					key === null ? 'proofToken' : `proofToken[${key}]`,
+					proof.token,
+				);
+			}
 		}
 		return c.redirect(url.toString(), 302);
 	});

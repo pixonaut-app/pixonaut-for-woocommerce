@@ -19,6 +19,7 @@ use Pixonaut\WooCommerce\Api\Answers\OrderList;
 use Pixonaut\WooCommerce\Api\Answers\OrderListRow;
 use Pixonaut\WooCommerce\Api\Answers\OrderParcel;
 use Pixonaut\WooCommerce\Api\Answers\PrintSizeVerdicts;
+use Pixonaut\WooCommerce\Api\Answers\ProofSet;
 use Pixonaut\WooCommerce\Api\Answers\ShareLinkPage;
 use Pixonaut\WooCommerce\Api\Answers\WebhookEndpoint;
 use Pixonaut\WooCommerce\Api\Answers\WebhookPing;
@@ -38,6 +39,7 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersItemsCancelRe
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersItemsRetryResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersListResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersPrintshopOrdersUpdateResponse;
+use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ProofSetsGetResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\ShareLinksListResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesDesignerLinksCreateResponse;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\TemplatesPrintSizeValidateResponseOption3;
@@ -81,6 +83,7 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 		WebhookPing::class            => array( array( WebhookEndpointsPingResponseTrue::class, WebhookEndpointsPingResponseFalse::class ) ),
 		EventsPage::class             => array( array( EventsListResponse::class ) ),
 		DesignerLink::class           => array( array( TemplatesDesignerLinksCreateResponse::class ) ),
+		ProofSet::class               => array( array( ProofSetsGetResponse::class ) ),
 		ShareLinkPage::class          => array( array( ShareLinksListResponse::class ) ),
 		PrintSizeVerdicts::class      => array( array( TemplatesPrintSizeValidateResponseOption3::class ) ),
 		// OrderDetail holds these fields of orders.get as its $order, so Order is matched with that answer too.
