@@ -41,7 +41,7 @@ final class NoShippingTest extends PricingTestCase {
 		$row = $this->row( $id );
 		$this->assertSame( PriceState::FLAG_NO_SHIPPING, $row->flag );
 		$this->assertNull( $row->cost_total );
-		$this->assertStringContainsString( 'no shipping', PricingPanel::flag_texts()[ PriceState::FLAG_NO_SHIPPING ] );
+		$this->assertStringContainsString( 'no shipping cost', PricingPanel::flag_texts()[ PriceState::FLAG_NO_SHIPPING ] );
 	}
 
 	private function row( int $id ): PriceRow {

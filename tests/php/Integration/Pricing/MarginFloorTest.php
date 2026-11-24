@@ -181,6 +181,20 @@ final class MarginFloorTest extends PricingTestCase {
 		$this->assertSame( array( $id => $id ), $this->floor->low( MarginFloor::NEW ) );
 	}
 
+	public function test_a_cost_whose_shipping_is_gone_keeps_the_mark_until_it_is_known_again(): void {
+		$this->plugin->settings()->set( Settings::PRICE_MARGIN_FLOOR, '30' );
+		$id = $this->simple_product( 'v_a3', '250' );
+		$this->script_costs( array( 'v_a3' => '230' ) );
+		$this->pricing->refresh( $this->product( $id ) );
+		$this->assertSame( array( $id => $id ), $this->floor->low( MarginFloor::NEW ) );
+
+		// The printshop gives no shipping now: the margin is not known, which is no recovery.
+		$this->script_costs( array( 'v_a3' => '230' ), null );
+		$this->pricing->refresh( $this->product( $id ) );
+
+		$this->assertSame( array( $id => $id ), $this->floor->low( MarginFloor::NEW ) );
+	}
+
 	public function test_the_daily_job_checks_every_price_first_and_names_one_whose_margin_fell_with_no_hook(): void {
 		$this->plugin->settings()->set( Settings::PRICE_MARGIN_FLOOR, '30' );
 		$id = $this->simple_product( 'v_a3', '500' );

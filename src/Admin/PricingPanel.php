@@ -319,7 +319,7 @@ final class PricingPanel {
 		return array(
 			PriceState::FLAG_MARGIN      => __( 'The margin left the tolerance.', 'pixonaut-for-woocommerce' ),
 			PriceState::FLAG_NO_COST     => __( 'The printshop publishes no price for it, so the rule cannot price it.', 'pixonaut-for-woocommerce' ),
-			PriceState::FLAG_NO_SHIPPING => __( 'The printshop gives no shipping for it to your store’s country, so the rule does not price it: without shipping, its price would leave out what the printshop charges to send it.', 'pixonaut-for-woocommerce' ),
+			PriceState::FLAG_NO_SHIPPING => __( 'The printshop has given no shipping cost for it to your store’s country, so the rule does not price it: without one, its price would leave out what the printshop charges to send it.', 'pixonaut-for-woocommerce' ),
 			PriceState::FLAG_UNREAD      => __( 'No cost is read for it yet. Refresh the costs in a moment; if it stays so, pair it with a blank variant.', 'pixonaut-for-woocommerce' ),
 			PriceState::FLAG_CURRENCY    => __( 'The cost is in a currency with no exchange rate to your store’s, so the rule cannot price it.', 'pixonaut-for-woocommerce' ),
 			PriceState::FLAG_RATE_STALE  => __( 'The exchange rate is over a week old and could not be updated, so the rule does not price it.', 'pixonaut-for-woocommerce' ),
