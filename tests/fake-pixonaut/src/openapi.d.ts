@@ -32530,6 +32530,8 @@ export interface operations {
                                         nl?: string;
                                         sv?: string;
                                     };
+                                    /** @description On a scene's view, whether its picture marks a frame round the print, which a variant's frame paints. A view that marks none is painted in the variant's colour, whatever frame it has. Absent, a variant's frame is painted as it always was. */
+                                    marksFrame?: boolean;
                                     /** @description A library asset of the view's photo size: where it is light the print shows, where it is dark the print is hidden, as behind a sleeve or a fold. Absent hides nothing. */
                                     maskAssetId?: string;
                                     /** @description Control points the print is laid through or, marked cut, cut to: rows from its top edge, points from its left, as [x, y] in the photo's original pixels; 2 to 33 along each side. Absent, the print is laid in the rect. */
@@ -33477,6 +33479,8 @@ export interface operations {
                                     nl?: string;
                                     sv?: string;
                                 };
+                                /** @description On a scene's view, whether its picture marks a frame round the print, which a variant's frame paints. A view that marks none is painted in the variant's colour, whatever frame it has. Absent, a variant's frame is painted as it always was. */
+                                marksFrame?: boolean;
                                 /** @description A library asset of the view's photo size: where it is light the print shows, where it is dark the print is hidden, as behind a sleeve or a fold. Absent hides nothing. */
                                 maskAssetId?: string;
                                 /** @description Control points the print is laid through or, marked cut, cut to: rows from its top edge, points from its left, as [x, y] in the photo's original pixels; 2 to 33 along each side. Absent, the print is laid in the rect. */
@@ -34166,6 +34170,8 @@ export interface operations {
                                 };
                                 id: string;
                                 label: string;
+                                /** @description On a scene's view, whether its picture marks a frame round the print, which a variant's frame paints. A view that marks none is painted in the variant's colour, whatever frame it has. Absent, a variant's frame is painted as it always was. */
+                                marksFrame?: boolean;
                                 /** @description The region's mask, the view's photo size, opened with no key: where it is light the print shows, where it is dark the print is hidden. Absent hides nothing. Valid as long as a photo's `url`. */
                                 maskUrl?: string;
                                 /** @description Control points the print is laid through or, marked cut, cut to: rows from its top edge, points from its left, as [x, y] in the photo's original pixels; 2 to 33 along each side. Absent, the print is laid in the rect. */
@@ -34417,6 +34423,8 @@ export interface operations {
                             /** @description The view's id, unique within the blank. */
                             id: string;
                             label: string;
+                            /** @description On a scene's view, whether its picture marks a frame round the print, which a variant's frame paints. A view that marks none is painted in the variant's colour, whatever frame it has. Absent, a variant's frame is painted as it always was. */
+                            marksFrame?: boolean;
                             /** @description The pixel size every photo of the view has; null while it has none. */
                             photoSizePx: {
                                 /** @description The photo's height, in pixels. */
@@ -53965,6 +53973,8 @@ export interface operations {
                                         nl?: string;
                                         sv?: string;
                                     };
+                                    /** @description On a scene's view, whether its picture marks a frame round the print, which a variant's frame paints. A view that marks none is painted in the variant's colour, whatever frame it has. Absent, a variant's frame is painted as it always was. */
+                                    marksFrame?: boolean;
                                     /** @description A library asset of the view's photo size: where it is light the print shows, where it is dark the print is hidden, as behind a sleeve or a fold. Absent hides nothing. */
                                     maskAssetId?: string;
                                     /** @description Control points the print is laid through or, marked cut, cut to: rows from its top edge, points from its left, as [x, y] in the photo's original pixels; 2 to 33 along each side. Absent, the print is laid in the rect. */
@@ -54864,6 +54874,8 @@ export interface operations {
                                         nl?: string;
                                         sv?: string;
                                     };
+                                    /** @description On a scene's view, whether its picture marks a frame round the print, which a variant's frame paints. A view that marks none is painted in the variant's colour, whatever frame it has. Absent, a variant's frame is painted as it always was. */
+                                    marksFrame?: boolean;
                                     /** @description A library asset of the view's photo size: where it is light the print shows, where it is dark the print is hidden, as behind a sleeve or a fold. Absent hides nothing. */
                                     maskAssetId?: string;
                                     /** @description Control points the print is laid through or, marked cut, cut to: rows from its top edge, points from its left, as [x, y] in the photo's original pixels; 2 to 33 along each side. Absent, the print is laid in the rect. */
