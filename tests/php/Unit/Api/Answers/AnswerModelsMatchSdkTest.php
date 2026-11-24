@@ -104,11 +104,11 @@ final class AnswerModelsMatchSdkTest extends TestCase {
 	 */
 	private const NOT_FIELDS = array(
 		// Stored as Pixonaut sent them, to be read later as the SDK's webhook event; the SDK types the list as a union of every event.
-		EventsPage::class  => array( 'events' ),
+		EventsPage::class   => array( 'events' ),
 		// The order as Pixonaut sent it, which the public line actions filter hands on.
-		Order::class       => array( 'as_sent' ),
+		Order::class        => array( 'as_sent' ),
 		// The fields every answer about an order has, matched as Order.
-		OrderDetail::class => array( 'order' ),
+		OrderDetail::class  => array( 'order' ),
 		// Its items' `itemId`, read from `items`.
 		OrderParcel::class  => array( 'item_ids' ),
 		// Its items' `externalRef` by `id`, read from `items`.

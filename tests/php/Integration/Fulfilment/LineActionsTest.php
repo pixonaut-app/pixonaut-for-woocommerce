@@ -895,7 +895,7 @@ final class LineActionsTest extends FulfilmentTestCase {
 	 * @return array<string, mixed>
 	 */
 	private function newer_order( string $via, int $quantity ): array {
-		$order              = FulfilmentAnswers::read_order( self::NEWER_ORDER_ID, $this->external_ref(), array( 'quantity' => $quantity ) );
+		$order                          = FulfilmentAnswers::read_order( self::NEWER_ORDER_ID, $this->external_ref(), array( 'quantity' => $quantity ) );
 		$order['items'][0]['prints'][0] = array(
 			'designId'       => self::DESIGN,
 			'designRevision' => self::REVISION,

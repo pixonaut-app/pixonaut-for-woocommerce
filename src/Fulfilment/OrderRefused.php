@@ -21,9 +21,10 @@ use WC_Order_Item_Product;
 final class OrderRefused extends RuntimeException {
 
 	/**
-	 * @param ApiException                $error The refusal.
-	 * @param list<WC_Order_Item_Product> $lines The lines it is about.
-	 * @param bool                        $whole Whether it refused the order as a whole rather than one item of it.
+	 * @param ApiException            $error The refusal.
+	 * @param WC_Order_Item_Product[] $lines The lines it is about.
+	 * @param bool                    $whole Whether it refused the order as a whole rather than one item of it.
+	 * @phpstan-param list<WC_Order_Item_Product> $lines
 	 */
 	public function __construct(
 		public readonly ApiException $error,

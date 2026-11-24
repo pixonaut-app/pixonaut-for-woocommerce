@@ -157,8 +157,9 @@ final class Refs {
 	 * placed together. Another set of lines is another request, under a key
 	 * of its own.
 	 *
-	 * @param string    $site     The connection's `<site>`.
-	 * @param list<int> $item_ids The order lines, in the order they are sent.
+	 * @param string $site     The connection's `<site>`.
+	 * @param int[]  $item_ids The order lines, in the order they are sent.
+	 * @phpstan-param list<int> $item_ids
 	 */
 	public static function order_lines_key( string $site, array $item_ids ): string {
 		$key = self::join( $site, 'items', implode( self::ITEM_SEPARATOR, array_map( 'strval', $item_ids ) ) );

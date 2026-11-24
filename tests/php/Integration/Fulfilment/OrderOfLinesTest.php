@@ -150,6 +150,139 @@ final class OrderOfLinesTest extends FulfilmentTestCase {
 		$this->assertSame( LineState::ORDERED, $this->line()->state() );
 	}
 
+	public function test_a_request_one_line_kept_is_sent_for_every_line_it_names(): void {
+		// The request was kept on the first line; saving it on the second lost a race.
+		$this->keep_request( $this->item, array( $this->first_ref(), $this->second_ref() ), 'wc:' . self::SITE . ':items:kept' );
+		$this->approve_lines();
+		$this->recorder
+			->json( 200, FulfilmentAnswers::orders( array() ) )
+			->json( 200, FulfilmentAnswers::design_approved( self::DESIGN, self::REVISION ) )
+			->json( 200, FulfilmentAnswers::design_approved( self::SECOND_DESIGN, self::REVISION ) )
+			->json( 201, $this->both_placed() );
+
+		do_action( FulfilmentJobs::ACTION, $this->second->get_id() );
+
+		$this->assertSame( 1, $this->count_sent( 'POST', '/v1/orders' ) );
+		$placed = $this->placed();
+		$this->assertSame( 'wc:' . self::SITE . ':items:kept', $placed['headers']['Idempotency-Key'] ?? $placed['headers']['idempotency-key'] ?? null );
+		$this->assertSame( array( LineState::ORDERED, LineState::ORDERED ), array( $this->line()->state(), $this->second_line()->state() ) );
+	}
+
+	public function test_a_request_naming_a_line_no_longer_placed_is_dropped_and_the_rest_placed_anew(): void {
+		$this->keep_request( $this->item, array( $this->first_ref(), $this->second_ref() ), 'wc:' . self::SITE . ':items:kept' );
+		$this->approve_lines();
+		$this->assertTrue( $this->second_line()->transition( LineState::CANCELLED ) );
+		$this->recorder
+			->json( 200, FulfilmentAnswers::orders( array() ) )
+			->json( 200, FulfilmentAnswers::orders( array() ) )
+			->json( 200, FulfilmentAnswers::design_approved( self::DESIGN, self::REVISION ) )
+			->json( 201, FulfilmentAnswers::order( 'o_1', array( 'p_front' ), $this->first_ref(), array( 'externalRef' => $this->store_ref() ) ) );
+
+		do_action( FulfilmentJobs::ACTION, $this->item->get_id() );
+
+		$body = json_decode( (string) $this->placed()['body'], true );
+		$this->assertSame( array( $this->first_ref() ), array_column( $body['items'], 'externalRef' ) );
+		$this->assertSame( LineState::ORDERED, $this->line()->state() );
+	}
+
+	public function test_a_line_a_plugin_holds_back_is_left_out_of_the_order(): void {
+		$held = $this->second->get_id();
+		add_filter( 'pixonaut_wc_fulfilment_can_fulfil', static fn ( bool $can, WC_Order_Item_Product $item ): bool => $item->get_id() === $held ? false : $can, 10, 2 );
+		$this->approve_lines();
+		$this->recorder
+			->json( 200, FulfilmentAnswers::orders( array() ) )
+			->json( 200, FulfilmentAnswers::design_approved( self::DESIGN, self::REVISION ) )
+			->json( 201, FulfilmentAnswers::order( 'o_1', array( 'p_front' ), $this->first_ref(), array( 'externalRef' => $this->store_ref() ) ) );
+
+		do_action( FulfilmentJobs::ACTION, $this->item->get_id() );
+
+		$body = json_decode( (string) $this->placed()['body'], true );
+		$this->assertSame( array( $this->first_ref() ), array_column( $body['items'], 'externalRef' ) );
+		$this->assertSame( LineState::APPROVED, $this->second_line()->state() );
+	}
+
+	public function test_a_request_an_earlier_version_kept_that_placed_nothing_is_placed_in_the_same_run(): void {
+		$line = $this->line();
+		$line->set_ref(
+			LineState::REF_ORDER_REQUEST,
+			array(
+				'operation'      => 'orders.create',
+				'target'         => '/v1/orders',
+				'body'           => (string) wp_json_encode( array( 'externalRef' => $this->first_ref() ) ),
+				'idempotencyKey' => 'wc:' . self::SITE . ':item:' . $this->item->get_id(),
+			)
+		);
+		$this->assertTrue( $line->save() );
+		$this->approve_lines();
+		$this->recorder
+			->json( 200, FulfilmentAnswers::orders( array() ) )
+			->json( 200, FulfilmentAnswers::orders( array() ) )
+			->json( 200, FulfilmentAnswers::design_approved( self::DESIGN, self::REVISION ) )
+			->json( 200, FulfilmentAnswers::design_approved( self::SECOND_DESIGN, self::REVISION ) )
+			->json( 201, $this->both_placed() );
+
+		do_action( FulfilmentJobs::ACTION, $this->item->get_id() );
+
+		$this->assertSame( 1, $this->count_sent( 'POST', '/v1/orders' ) );
+		$this->assertSame( array( LineState::ORDERED, LineState::ORDERED ), array( $this->line()->state(), $this->second_line()->state() ) );
+	}
+
+	/**
+	 * Moves both lines on to `approved`, as their own runs would.
+	 */
+	private function approve_lines(): void {
+		foreach ( array( $this->item, $this->second ) as $item ) {
+			$this->assertTrue( LineState::of( new WC_Order_Item_Product( $item->get_id() ) )->transition( LineState::APPROVED ) );
+		}
+	}
+
+	/**
+	 * Keeps a request of the order naming $refs on one line, as a run that stopped after saving it there.
+	 *
+	 * @param WC_Order_Item_Product $item The line keeping it.
+	 * @param string[]              $refs The lines it names.
+	 * @param string                $key  Its idempotency key.
+	 * @phpstan-param list<string> $refs
+	 */
+	private function keep_request( WC_Order_Item_Product $item, array $refs, string $key ): void {
+		$line = LineState::of( new WC_Order_Item_Product( $item->get_id() ) );
+		$line->set_ref(
+			LineState::REF_ORDER_REQUEST,
+			array(
+				'operation'      => 'orders.create',
+				'target'         => '/v1/orders',
+				'body'           => (string) wp_json_encode(
+					array(
+						'externalRef' => $this->store_ref(),
+						'items'       => array_map( static fn ( string $ref ): array => array( 'externalRef' => $ref ), $refs ),
+					)
+				),
+				'idempotencyKey' => $key,
+			)
+		);
+		$this->assertTrue( $line->save() );
+	}
+
+	/**
+	 * `201` of `POST /v1/orders` placing both lines.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function both_placed(): array {
+		return FulfilmentAnswers::order_of_items(
+			'o_1',
+			$this->store_ref(),
+			array(
+				FulfilmentAnswers::item( 'oi_first', array( 'p_front' ), $this->first_ref() ),
+				FulfilmentAnswers::item( 'oi_second', array( 'p_second' ), $this->second_ref() ),
+			)
+		);
+	}
+
+	private function second_line(): LineState {
+		return LineState::of( new WC_Order_Item_Product( $this->second->get_id() ) );
+	}
+
 	private function store_ref(): string {
 		return Refs::store_order_ref( self::SITE, $this->order->get_id() );
 	}

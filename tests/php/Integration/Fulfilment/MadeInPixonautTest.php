@@ -156,7 +156,7 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 		$line = $this->line();
 		$line->set_ref( LineState::REF_PRINTSHOP, 'ps_signs' );
 		$line->save();
-		$order                                     = $this->automation_order( 'submitted' );
+		$order                                      = $this->automation_order( 'submitted' );
 		$order['items'][0]['printshopConnectionId'] = 'ps_signs';
 		$this->answer_up_to_the_refusal()->json( 200, $order );
 
@@ -183,7 +183,7 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 
 	public function test_an_automation_order_of_every_side_standing_ones_included_is_taken_on(): void {
 		$this->stand_back();
-		$order             = $this->automation_order( 'submitted' );
+		$order                         = $this->automation_order( 'submitted' );
 		$order['items'][0]['prints'][] = array(
 			'designId'       => self::STANDING_BACK,
 			'designRevision' => self::STANDING_REVISION,
@@ -199,7 +199,7 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 	}
 
 	public function test_an_automation_order_with_a_fill_print_is_taken_on(): void {
-		$order             = $this->automation_order( 'submitted' );
+		$order                         = $this->automation_order( 'submitted' );
 		$order['items'][0]['prints'][] = array(
 			'printId'         => 'prt_fill',
 			'placementId'     => 'sleeve',
@@ -257,7 +257,7 @@ final class MadeInPixonautTest extends FulfilmentTestCase {
 	 * @return array<string, mixed>
 	 */
 	private function automation_order( string $status ): array {
-		$order              = OrderAddress::of( $this->order, $this->item ) + FulfilmentAnswers::read_order(
+		$order                          = OrderAddress::of( $this->order, $this->item ) + FulfilmentAnswers::read_order(
 			self::AUTOMATION_ORDER,
 			self::AUTOMATION_REF,
 			array(

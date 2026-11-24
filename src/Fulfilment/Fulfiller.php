@@ -28,6 +28,7 @@ use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Exception\ApiException;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\ErrorCode;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Generated\Model\OrdersCreateRequest;
 use Pixonaut\WooCommerce\Vendor\Pixonaut\Sdk\Pixonaut as Sdk;
+use RuntimeException;
 use WC_Order;
 use WC_Order_Item_Product;
 
@@ -51,6 +52,11 @@ final class Fulfiller {
 	 * A design's `status` once it is approved.
 	 */
 	private const DESIGN_APPROVED = 'approved';
+
+	/**
+	 * Tries to record a placed order when another request wrote the line meanwhile.
+	 */
+	private const MAX_ATTEMPTS = 3;
 
 	/**
 	 * The states of a line that is placed in the order's next printshop order.
@@ -97,26 +103,7 @@ final class Fulfiller {
 			return;
 		}
 
-		/**
-		 * Filters whether the plugin takes a paid line on towards the
-		 * printshop: approving its designs and placing its printshop order.
-		 * Return false to take that over or hold the line back: the order
-		 * gets a note saying so, and the line stays in its state until
-		 * `FulfilmentJobs::schedule( $item_id )` runs its job again.
-		 *
-		 * @since 0.1.0
-		 *
-		 * @param bool                  $can_fulfil Whether the plugin fulfils the line; true.
-		 * @param WC_Order_Item_Product $item       The order line.
-		 * @param LineState             $line       The line's state, refs and designs.
-		 * @param WC_Order              $order      The order.
-		 *
-		 * @example
-		 * add_filter( 'pixonaut_wc_fulfilment_can_fulfil', function ( $can_fulfil, $item, $line, $order ) {
-		 *     return 'yes' === $order->get_meta( '_hold_for_review' ) ? false : $can_fulfil;
-		 * }, 10, 4 );
-		 */
-		if ( ! (bool) apply_filters( 'pixonaut_wc_fulfilment_can_fulfil', true, $item, $line, $order ) ) {
+		if ( ! self::can_fulfil( $item, $line, $order ) ) {
 			$this->note(
 				$order,
 				/* translators: %s: product name of the order line. */
@@ -145,6 +132,40 @@ final class Fulfiller {
 		if ( in_array( $line->state(), array( LineState::APPROVED, LineState::PRINTED ), true ) ) {
 			$this->place_order( $line, $order, $connection->site );
 		}
+	}
+
+	/**
+	 * Whether the plugin takes the line on towards the printshop.
+	 *
+	 * @param WC_Order_Item_Product $item  The order line.
+	 * @param LineState             $line  The line's state.
+	 * @param WC_Order              $order The order.
+	 */
+	private static function can_fulfil( WC_Order_Item_Product $item, LineState $line, WC_Order $order ): bool {
+		/**
+		 * Filters whether the plugin takes a paid line on towards the
+		 * printshop: approving its designs and placing its printshop order.
+		 * Return false to take that over or hold the line back: the order
+		 * gets a note saying so, and the line stays in its state until
+		 * `FulfilmentJobs::schedule( $item_id )` runs its job again.
+		 *
+		 * @since 0.1.0
+		 *
+		 * @param bool                  $can_fulfil Whether the plugin fulfils the line; true.
+		 * @param WC_Order_Item_Product $item       The order line.
+		 * @param LineState             $line       The line's state, refs and designs.
+		 * @param WC_Order              $order      The order.
+		 *
+		 * Asked too for each other line of the order when its lines are placed
+		 * together: a line held back is left out of the order, and placed once
+		 * its own job runs again.
+		 *
+		 * @example
+		 * add_filter( 'pixonaut_wc_fulfilment_can_fulfil', function ( $can_fulfil, $item, $line, $order ) {
+		 *     return 'yes' === $order->get_meta( '_hold_for_review' ) ? false : $can_fulfil;
+		 * }, 10, 4 );
+		 */
+		return (bool) apply_filters( 'pixonaut_wc_fulfilment_can_fulfil', true, $item, $line, $order );
 	}
 
 	/**
@@ -301,18 +322,18 @@ final class Fulfiller {
 	 * @throws OrderRefused When Pixonaut refused the order: one of its items, or the whole order.
 	 */
 	private function place_order( LineState $line, WC_Order $order, string $site ): void {
-		if ( self::legacy_request( $line ) ) {
-			$this->settle_legacy_request( $line, $order );
+		if ( self::legacy_request( $line ) && $this->settle_legacy_request( $line, $order ) ) {
 			return;
 		}
 		// Each pass places the lines left, or settles one line refused among them; every pass takes one line off.
-		for ( $pass = 0; $pass <= count( $order->get_items() ); $pass++ ) {
+		$passes = count( $order->get_items() );
+		for ( $pass = 0; $pass <= $passes; $pass++ ) {
 			$line  = LineState::of( $line->item() );
-			$batch = $this->batch( $line, $order );
-			if ( null === $batch || array() === $batch || ! in_array( $line->state(), self::READY, true ) ) {
+			$found = $this->batch( $line, $order );
+			if ( null === $found || array() === $found[0] || ! in_array( $line->state(), self::READY, true ) ) {
 				return;
 			}
-			if ( $this->place( $batch, $order, $site ) ) {
+			if ( $this->place( $found[0], $found[1], $order, $site ) ) {
 				return;
 			}
 		}
@@ -321,47 +342,51 @@ final class Fulfiller {
 	/**
 	 * Places one printshop order of $batch.
 	 *
-	 * @param list<LineState> $batch The lines, in the order of the order's items.
-	 * @param WC_Order        $order The order.
-	 * @param string          $site  The connection's `<site>`.
+	 * @param LineState[]       $batch     The lines, in the order of the order's items.
+	 * @param list<string>|null $requested The refs a request on its way names; null to make a new request.
+	 * @param WC_Order          $order     The order.
+	 * @param string            $site      The connection's `<site>`.
+	 * @phpstan-param list<LineState> $batch
 	 *
-	 * @return bool False when a line was taken off the batch, so the rest are to be placed again.
+	 * @return bool False when the lines are to be found again: a line was taken off, or changed meanwhile.
 	 *
 	 * @throws ApiException When Pixonaut could not be reached, or refused the order.
 	 * @throws OrderRefused When Pixonaut refused the order: one of its items, or the whole order.
 	 */
-	private function place( array $batch, WC_Order $order, string $site ): bool {
+	private function place( array $batch, ?array $requested, WC_Order $order, string $site ): bool {
+		$keeper = null;
+		foreach ( $batch as $line ) {
+			$keeper ??= null === self::requested_refs( $line ) ? null : $line;
+		}
 		// A request kept from before a reconnect is looked for under the ref it was sent with.
-		$requested = self::stored_body( $batch[0] )['externalRef'] ?? null;
-		$store_ref = is_string( $requested ) && '' !== $requested ? $requested : Refs::store_order_ref( $site, $order->get_id() );
-		$placed    = $this->placed_under( $store_ref, $batch );
+		$sent_under = null === $keeper ? null : ( self::stored_body( $keeper )['externalRef'] ?? null );
+		$store_ref  = is_string( $sent_under ) && '' !== $sent_under ? $sent_under : Refs::store_order_ref( $site, $order->get_id() );
+		$placed     = $this->placed_under( $store_ref, $batch );
 		if ( null !== $placed ) {
-			$this->record( $batch, $placed, $order, self::sent_address( $batch[0], $order ) );
+			$this->record( $batch, $placed, $order, self::sent_address( $keeper ?? $batch[0], $order ) );
 			return true;
+		}
+		if ( null !== $requested && count( $requested ) !== count( $batch ) ) {
+			// A line the request names is no longer to be placed, and the request placed nothing: the lines left are placed anew.
+			return self::drop_requests( $batch );
 		}
 		foreach ( $batch as $line ) {
 			if ( LineState::APPROVED === $line->state() && ! $this->still_approved( $line, $order ) ) {
 				// The other lines are placed without it, in a request of their own.
-				foreach ( $batch as $other ) {
-					if ( $other !== $line && null !== $other->ref( LineState::REF_ORDER_REQUEST ) ) {
-						$other->set_ref( LineState::REF_ORDER_REQUEST, null );
-						$other->save();
-					}
-				}
-				return false;
+				return self::drop_requests( $batch );
 			}
 		}
-		$stored = $batch[0]->ref( LineState::REF_ORDER_REQUEST );
-		if ( is_array( $stored ) ) {
-			$request = StoredRequest::restore( $stored );
-		} else {
-			$request = $this->pixonaut->orders()->prepareCreate( OrdersCreateRequest::fromArray( $this->order_body( $batch, $order, $store_ref ) ), self::key( $batch, $site ) );
-			foreach ( $batch as $line ) {
-				$line->set_ref( LineState::REF_ORDER_REQUEST, $request->toArray() );
-				if ( ! $line->save() ) {
-					// Another run changed a line meanwhile, and goes on from there; a line kept with this request is placed with it.
-					return true;
-				}
+		$request = null === $keeper
+			? $this->pixonaut->orders()->prepareCreate( OrdersCreateRequest::fromArray( $this->order_body( $batch, $order, $store_ref ) ), self::key( $batch, $site ) )
+			: StoredRequest::restore( (array) $keeper->ref( LineState::REF_ORDER_REQUEST ) );
+		foreach ( $batch as $line ) {
+			if ( $line->ref( LineState::REF_ORDER_REQUEST ) === $request->toArray() ) {
+				continue;
+			}
+			// Every line the request names keeps it before it is sent, so whichever runs next sends the same request.
+			$line->set_ref( LineState::REF_ORDER_REQUEST, $request->toArray() );
+			if ( ! $line->save() ) {
+				return false;
 			}
 		}
 		try {
@@ -375,19 +400,38 @@ final class Fulfiller {
 	}
 
 	/**
+	 * Drops the requests the lines keep, which placed nothing.
+	 *
+	 * @param LineState[] $batch The lines.
+	 * @phpstan-param list<LineState> $batch
+	 *
+	 * @return false So the lines are found again.
+	 */
+	private static function drop_requests( array $batch ): bool {
+		foreach ( $batch as $line ) {
+			if ( null !== $line->ref( LineState::REF_ORDER_REQUEST ) ) {
+				$line->set_ref( LineState::REF_ORDER_REQUEST, null );
+				$line->save();
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * What a refusal of the order comes to. A refusal of one item takes its
 	 * line off the order, which is placed again without it: the line adopts
 	 * the order an automation placed for its design, or needs the merchant.
 	 * Nothing was written, so the next attempt is a new request.
 	 *
-	 * @param list<LineState> $batch The lines the order was placed for.
-	 * @param WC_Order        $order The order.
-	 * @param ApiException    $error The refusal.
+	 * @param LineState[]  $batch The lines the order was placed for.
+	 * @param WC_Order     $order The order.
+	 * @param ApiException $error The refusal.
+	 * @phpstan-param list<LineState> $batch
 	 *
 	 * @return bool False when the refused line was adopted, so the rest are to be placed again.
 	 *
-	 * @throws ApiException When Pixonaut could not be reached, or refused the order and every line keeps its request.
 	 * @throws OrderRefused When Pixonaut refused the order: one of its items, or the whole order.
+	 * @phpstan-throws ApiException|OrderRefused ApiException when Pixonaut could not be reached, or refused an order of one line, which keeps its request.
 	 */
 	private function refused( array $batch, WC_Order $order, ApiException $error ): bool {
 		$alone   = 1 === count( $batch );
@@ -428,8 +472,9 @@ final class Fulfiller {
 	 * The order an earlier attempt placed under the order's ref for one of
 	 * the lines, whose answer was lost.
 	 *
-	 * @param string          $store_ref The order's ref.
-	 * @param list<LineState> $batch     The lines.
+	 * @param string      $store_ref The order's ref.
+	 * @param LineState[] $batch     The lines.
+	 * @phpstan-param list<LineState> $batch
 	 *
 	 * @throws ApiException When Pixonaut could not be reached, or listed an order without an id.
 	 */
@@ -451,17 +496,20 @@ final class Fulfiller {
 	/**
 	 * The lines of the order to place together with $line: those approved
 	 * or printed that have no printshop order yet, are not being cancelled
-	 * and are in no request on its way. A line with a stored request is
-	 * placed with the lines that request names, and no other.
+	 * or held back, and are named by no request on its way. A request on its
+	 * way, which any of the lines it names may keep, is placed with exactly
+	 * the lines it names.
 	 *
 	 * @param LineState $line  An `approved` or `printed` line.
 	 * @param WC_Order  $order Its order.
 	 *
-	 * @return list<LineState>|null Null while another line of the order waits to be approved: the last one approved places them all.
+	 * @return array{0: list<LineState>, 1: list<string>|null}|null The lines, and the refs the request on its way names (null for a new request); null while another line of the order waits to be approved: the last one approved places them all.
 	 */
 	private function batch( LineState $line, WC_Order $order ): ?array {
-		$stored = $line->ref( LineState::REF_ORDER_REQUEST );
-		$batch  = array();
+		$own        = (string) $line->ref( LineState::REF_EXTERNAL_REF );
+		$candidates = array();
+		$requested  = null;
+		$in_flight  = array();
 		foreach ( $order->get_items() as $item ) {
 			if ( ! $item instanceof WC_Order_Item_Product || ! LineState::is_tracked( $item ) ) {
 				continue;
@@ -470,28 +518,64 @@ final class Fulfiller {
 			if ( null !== $other->ref( LineState::REF_ORDER_ID ) || null !== $other->ref( LineState::REF_CANCEL ) ) {
 				continue;
 			}
-			if ( is_array( $stored ) ) {
-				if ( $other->ref( LineState::REF_ORDER_REQUEST ) === $stored && in_array( $other->state(), self::READY, true ) ) {
-					$batch[] = $other;
+			if ( $other !== $line && ( $other->ref( LineState::REF_TENANT_ID ) !== $line->ref( LineState::REF_TENANT_ID ) || ! self::can_fulfil( $item, $other, $order ) ) ) {
+				continue;
+			}
+			$names = self::requested_refs( $other );
+			if ( null !== $names ) {
+				$in_flight = array_merge( $in_flight, $names );
+				if ( null === $requested && in_array( $own, $names, true ) ) {
+					$requested = $names;
 				}
+			}
+			$candidates[ (string) $other->ref( LineState::REF_EXTERNAL_REF ) ] = $other;
+		}
+		if ( null !== $requested ) {
+			$batch = array();
+			foreach ( $requested as $ref ) {
+				if ( isset( $candidates[ $ref ] ) && in_array( $candidates[ $ref ]->state(), self::READY, true ) ) {
+					$batch[] = $candidates[ $ref ];
+				}
+			}
+			return array( $batch, $requested );
+		}
+		$batch = array();
+		foreach ( $candidates as $ref => $other ) {
+			if ( in_array( $ref, $in_flight, true ) ) {
 				continue;
 			}
 			if ( in_array( $other->state(), self::WAITING, true ) || ( in_array( $other->state(), self::READY, true ) && ! OrderLineRef::moved( $other ) ) ) {
 				return null;
 			}
-			if ( in_array( $other->state(), self::READY, true ) && null === $other->ref( LineState::REF_ORDER_REQUEST ) ) {
+			if ( in_array( $other->state(), self::READY, true ) ) {
 				$batch[] = $other;
 			}
 		}
-		return $batch;
+		return array( $batch, null );
+	}
+
+	/**
+	 * The refs of the lines the request the line keeps names.
+	 *
+	 * @param LineState $line A line.
+	 *
+	 * @return list<string>|null Null when it keeps no request of an order of items.
+	 */
+	private static function requested_refs( LineState $line ): ?array {
+		$items = self::stored_body( $line )['items'] ?? null;
+		if ( ! is_array( $items ) ) {
+			return null;
+		}
+		return array_values( array_filter( array_map( static fn ( mixed $item ): mixed => is_array( $item ) ? ( $item['externalRef'] ?? null ) : null, $items ), 'is_string' ) );
 	}
 
 	/**
 	 * The `Idempotency-Key` of the order of $batch: a line's own key when it
 	 * is placed alone, one for the set of lines otherwise.
 	 *
-	 * @param list<LineState> $batch The lines.
-	 * @param string          $site  The connection's `<site>`.
+	 * @param LineState[] $batch The lines.
+	 * @param string      $site  The connection's `<site>`.
+	 * @phpstan-param list<LineState> $batch
 	 */
 	private static function key( array $batch, string $site ): string {
 		if ( 1 === count( $batch ) ) {
@@ -503,10 +587,11 @@ final class Fulfiller {
 	/**
 	 * Gives each line of $batch its item of the placed order.
 	 *
-	 * @param list<LineState> $batch  The lines.
-	 * @param Order           $placed The order.
-	 * @param WC_Order        $order  The WooCommerce order.
-	 * @param string          $sent   The fingerprint of the address it was placed with.
+	 * @param LineState[] $batch  The lines.
+	 * @param Order       $placed The order.
+	 * @param WC_Order    $order  The WooCommerce order.
+	 * @param string      $sent   The fingerprint of the address it was placed with.
+	 * @phpstan-param list<LineState> $batch
 	 *
 	 * @throws ApiException When the order holds no item of a line.
 	 */
@@ -525,15 +610,45 @@ final class Fulfiller {
 	}
 
 	/**
-	 * Makes a placed order's item the line's, and applies its status.
+	 * Makes a placed order's item the line's, and applies its status. A line
+	 * changed meanwhile is read again and tried again: once the order is
+	 * placed, nothing else records it.
 	 *
 	 * @param LineState $line   The line.
 	 * @param Order     $placed The order.
 	 * @param OrderItem $item   The line's item in it.
 	 * @param WC_Order  $order  The WooCommerce order.
 	 * @param string    $sent   The fingerprint of the address it was placed with.
+	 *
+	 * @throws RuntimeException When the line kept changing; the job fails, and is run again.
 	 */
 	private function record_line( LineState $line, Order $placed, OrderItem $item, WC_Order $order, string $sent ): void {
+		for ( $attempt = 0; $attempt < self::MAX_ATTEMPTS; $attempt++ ) {
+			if ( $attempt > 0 ) {
+				$line = LineState::of( $line->item() );
+				if ( null !== $line->ref( LineState::REF_ORDER_ID ) ) {
+					return;
+				}
+			}
+			if ( $this->try_record_line( $line, $placed, $item, $order, $sent ) ) {
+				return;
+			}
+		}
+		throw new RuntimeException( sprintf( 'Placed order %s not recorded on order item %d: the line kept changing.', $placed->id, (int) $line->item()->get_id() ) );
+	}
+
+	/**
+	 * One attempt of record_line().
+	 *
+	 * @param LineState $line   The line.
+	 * @param Order     $placed The order.
+	 * @param OrderItem $item   The line's item in it.
+	 * @param WC_Order  $order  The WooCommerce order.
+	 * @param string    $sent   The fingerprint of the address it was placed with.
+	 *
+	 * @return bool False when the line changed meanwhile.
+	 */
+	private function try_record_line( LineState $line, Order $placed, OrderItem $item, WC_Order $order, string $sent ): bool {
 		$status = $item->status;
 		$line->set_ref( LineState::REF_ORDER_ID, $placed->id );
 		$line->set_ref( LineState::REF_ORDER_ITEM_ID, $item->id );
@@ -552,22 +667,24 @@ final class Fulfiller {
 		if ( ! isset( OrderStatus::LINE_STATES[ $status ] ) ) {
 			$line->set_ref( LineState::REF_ORDER_STATUS, $status );
 			$this->order_not_placed( $line, $order, $status, $item );
-			return;
+			return true;
 		}
-		if ( $line->save() ) {
-			if ( $line->transition( LineState::ORDERED ) && $held ) {
-				OrderHold::note( $line );
-			}
-			if ( LineState::ORDERED !== OrderStatus::LINE_STATES[ $status ] ) {
-				// An adopted order further along has no event left to say so: a read of it applies its status.
-				LineReader::queue( $line->item()->get_id() );
-			}
-			// The address changed after the order request was made, perhaps in another request while it was on its way: read the order as it is saved now.
-			$saved = wc_get_order( $order->get_id() );
-			if ( $saved instanceof WC_Order && OrderAddress::fingerprint( OrderAddress::of( $saved, $line->item() ) ) !== $sent ) {
-				DeliveryChange::schedule( $line->item()->get_id() );
-			}
+		if ( ! $line->save() ) {
+			return false;
 		}
+		if ( $line->transition( LineState::ORDERED ) && $held ) {
+			OrderHold::note( $line );
+		}
+		if ( LineState::ORDERED !== OrderStatus::LINE_STATES[ $status ] ) {
+			// An adopted order further along has no event left to say so: a read of it applies its status.
+			LineReader::queue( $line->item()->get_id() );
+		}
+		// The address changed after the order request was made, perhaps in another request while it was on its way: read the order as it is saved now.
+		$saved = wc_get_order( $order->get_id() );
+		if ( $saved instanceof WC_Order && OrderAddress::fingerprint( OrderAddress::of( $saved, $line->item() ) ) !== $sent ) {
+			DeliveryChange::schedule( $line->item()->get_id() );
+		}
+		return true;
 	}
 
 	/**
@@ -602,17 +719,17 @@ final class Fulfiller {
 	 * @param LineState $line  The line.
 	 * @param WC_Order  $order Its order.
 	 *
+	 * @return bool False when the line is still to be placed.
+	 *
 	 * @throws ApiException When Pixonaut could not be reached.
 	 */
-	private function settle_legacy_request( LineState $line, WC_Order $order ): void {
+	private function settle_legacy_request( LineState $line, WC_Order $order ): bool {
 		$sent = self::sent_address( $line, $order );
 		$row  = OrderList::under( $this->pixonaut, (string) $line->ref( LineState::REF_EXTERNAL_REF ) )->orders[0] ?? null;
 		if ( null === $row ) {
 			$line->set_ref( LineState::REF_ORDER_REQUEST, null );
-			if ( $line->save() ) {
-				FulfilmentJobs::schedule( $line->item()->get_id() );
-			}
-			return;
+			// A line changed meanwhile is taken from where it is now.
+			return ! $line->save();
 		}
 		$placed = OrderDetail::get( $this->pixonaut, $row->id )->order;
 		$item   = $placed->item( null, (string) $line->ref( LineState::REF_EXTERNAL_REF ) );
@@ -620,6 +737,7 @@ final class Fulfiller {
 			throw new ApiException( 'orders.get', 0, ApiException::UNEXPECTED_RESPONSE, false, null, null, array( 'missing' => 'items' ) );
 		}
 		$this->record_line( $line, $placed, $item, $order, $sent );
+		return true;
 	}
 
 	/**
@@ -745,9 +863,10 @@ final class Fulfiller {
 	 * order the customer's designs that have a live order again: a standing
 	 * design is ordered any number of times.
 	 *
-	 * @param list<LineState> $batch     `approved` or `printed` lines of the order.
-	 * @param WC_Order        $order     The order.
-	 * @param string          $store_ref The order's ref.
+	 * @param LineState[] $batch     `approved` or `printed` lines of the order.
+	 * @param WC_Order    $order     The order.
+	 * @param string      $store_ref The order's ref.
+	 * @phpstan-param list<LineState> $batch
 	 *
 	 * @return array<string, mixed>
 	 */

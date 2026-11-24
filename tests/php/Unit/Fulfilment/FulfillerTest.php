@@ -329,7 +329,13 @@ final class FulfillerTest extends TestCase {
 			order_request: array(
 				'operation'       => 'orders.create',
 				'target'          => '/v1/orders',
-				'body'            => (string) json_encode( array( 'externalRef' => self::STORE_REF, 'items' => array( array( 'externalRef' => self::EXTERNAL_REF ) ) ) ), // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- no WordPress in a unit test.
+				'body'            => (string) json_encode(
+					array(
+						'externalRef' => self::STORE_REF,
+						'items'       => array( array( 'externalRef' => self::EXTERNAL_REF ) ),
+					)
+				),
 				'idempotency_key' => 'wc:' . self::SITE . ':item:42',
 			)
 		);

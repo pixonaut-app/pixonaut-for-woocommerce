@@ -426,8 +426,8 @@ final class LineActions {
 	 * @return list<string>
 	 */
 	private function order_actions( LineState $line, ?OrderDetail $read ): array {
-		$item    = null === $read ? null : $line->item_of( $read->order );
-		$status  = $item->status ?? '';
+		$item   = null === $read ? null : $line->item_of( $read->order );
+		$status = $item->status ?? '';
 		// Moves and settles are of the printshop order the item was sent in; one not sent yet has none.
 		$moves   = null === $item?->printshop_order_id() ? array() : $item->status_moves;
 		$actions = array();
@@ -657,7 +657,8 @@ final class LineActions {
 	 * @throws ApiException When Pixonaut refused or could not be reached; a refused retry leaves the item failed, to retry.
 	 */
 	private function settle_failed( LineState $line, string $order_id, string $printshop_order_id, string $item_id, string $reason ): LineActionResult {
-		Order::update_printshop_order( $this->pixonaut, $order_id, $printshop_order_id, new OrdersPrintshopOrdersUpdateRequest( status: OrderStatus::FAILED, reason: $reason ) );
+		$moved = Order::update_printshop_order( $this->pixonaut, $order_id, $printshop_order_id, new OrdersPrintshopOrdersUpdateRequest( status: OrderStatus::FAILED, reason: $reason ) );
+		$this->fail_moved_with( $line, $order_id, $printshop_order_id, $moved, $reason );
 		$line->set_ref( LineState::REF_ORDER_STATUS, OrderStatus::FAILED );
 		if ( ! $line->save() ) {
 			return new LineActionResult( self::LINE_CHANGED );
@@ -712,11 +713,35 @@ final class LineActions {
 		$moved = Order::update_printshop_order( $this->pixonaut, $order_id, $printshop_order_id, new OrdersPrintshopOrdersUpdateRequest( status: $to ) );
 		if ( OrderStatus::FAILED === $to ) {
 			/* translators: Reason in an order note when a merchant rehearses a failed printshop order in the Pixonaut sandbox. */
-			$this->failed->apply_to( $line, __( 'Rehearsed in the Pixonaut sandbox.', 'pixonaut-for-woocommerce' ) );
+			$reason = __( 'Rehearsed in the Pixonaut sandbox.', 'pixonaut-for-woocommerce' );
+			$this->failed->apply_to( $line, $reason );
+			$this->fail_moved_with( $line, $order_id, $printshop_order_id, $moved, $reason );
 		} else {
 			$this->apply_move( $line, $order_id, $from, $moved );
 		}
 		return new LineActionResult( self::DONE );
+	}
+
+	/**
+	 * Fails the order's other lines whose items a failure the store reported
+	 * moved with the line's: the whole printshop order failed, and their
+	 * events of it come `via: store_key`, which the handlers skip.
+	 *
+	 * @param LineState $line               The line the merchant acted on.
+	 * @param string    $order_id           Its order.
+	 * @param string    $printshop_order_id The printshop order that failed.
+	 * @param Order     $moved              Pixonaut's answer: the order as it is now.
+	 * @param string    $reason             Why it failed.
+	 *
+	 * @throws RuntimeException When a line kept changing.
+	 */
+	private function fail_moved_with( LineState $line, string $order_id, string $printshop_order_id, Order $moved, string $reason ): void {
+		foreach ( LineState::for_order_id( $order_id ) as $other ) {
+			$item = $other->item()->get_id() === $line->item()->get_id() ? null : $other->item_of( $moved );
+			if ( null !== $item && OrderStatus::FAILED === $item->status && $printshop_order_id === $item->printshop_order_id() ) {
+				$this->failed->apply_to( $other, $reason );
+			}
+		}
 	}
 
 	/**

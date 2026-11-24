@@ -410,7 +410,7 @@ Filters whether the plugin takes a paid line on towards the printshop: approving
 | `$can_fulfil` | `bool` | Whether the plugin fulfils the line; true. |
 | `$item` | `WC_Order_Item_Product` | The order line. |
 | `$line` | `Pixonaut\WooCommerce\Fulfilment\LineState` | The line's state, refs and designs. |
-| `$order` | `WC_Order` | The order. |
+| `$order` | `WC_Order` | The order.  Asked too for each other line of the order when its lines are placed together: a line held back is left out of the order, and placed once its own job runs again. |
 
 Since 0.1.0. Fired in `src/Fulfilment/Fulfiller.php`.
 
@@ -704,7 +704,7 @@ Since 0.1.0. Fired in `src/Webhooks/Processor.php`.
 
 ```php
 add_filter( 'pixonaut_wc_webhook_handle', function ( $handle, $event ) {
-    return 'order.status_changed' === $event->type ? false : $handle;
+    return 'item.status_changed' === $event->type ? false : $handle;
 }, 10, 2 );
 ```
 

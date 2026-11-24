@@ -123,8 +123,8 @@ final class LineState {
 	public const REF_ORDER_ID           = 'orderId';
 	// The id of the line's item in the order `orderId`; absent for an order placed for the line alone before orders held items, whose single item is the line's.
 	public const REF_ORDER_ITEM_ID = 'orderItemId';
-	public const REF_ORDER_KEY          = 'orderKey';
-	public const REF_ORDER_REQUEST      = 'orderRequest';
+	public const REF_ORDER_KEY     = 'orderKey';
+	public const REF_ORDER_REQUEST = 'orderRequest';
 	// True once the merchant asked to order the line's designs although they have a live order (`reorder`).
 	public const REF_REORDER  = 'reorder';
 	public const REF_TRACKING = 'tracking';
