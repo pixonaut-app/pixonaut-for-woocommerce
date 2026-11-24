@@ -3,8 +3,8 @@
 // item, as Pixonaut does when the printshop reports progress, then
 // `order.status_changed` whenever the order's own status changes with a step.
 // For an order the fake placed, the items move in its state too, and the step
-// to `shipped` puts them in a parcel with the tracking (no parcel event is
-// sent). `itemId`, `itemExternalRef`, `printId`, or an `externalRef` that is
+// to `shipped` puts them in a parcel with the tracking and first emits its
+// `parcel.shipped`. `itemId`, `itemExternalRef`, `printId`, or an `externalRef` that is
 // an item's, picks the items; without one every item not cancelled moves. An
 // order the fake did not place is moved as one item, named by `itemId` or
 // `printId`.
@@ -20,6 +20,7 @@ import {
 	refused,
 } from '../control';
 import { FIXTURE } from '../fixture-ids';
+import { parcelBody } from '../handlers/order-body';
 import {
 	CANCELLED,
 	FORWARD_STATUSES,
@@ -27,6 +28,7 @@ import {
 	latestSubmission,
 	ORDERS as ORDER_RECORDS,
 	orderStatus,
+	type Parcel,
 	type Order as PlacedOrder,
 	printshopOrderOf,
 	record,
@@ -43,6 +45,7 @@ import {
 	type EventOrder,
 	itemStatusChanged,
 	orderStatusChanged,
+	parcelShipped,
 } from './order-events';
 
 /** An item's statuses on the way to the customer, in the order Pixonaut
@@ -230,13 +233,14 @@ function namedEvents(move: Move, item: EventItem): EmitEvent[] {
 	});
 }
 
-/** Puts the items that just shipped in one parcel per printshop order. */
+/** Puts the items that just shipped in one parcel per printshop order, and
+ *  answers those parcels. */
 function shipParcels(
 	order: PlacedOrder,
 	items: Item[],
 	tracking: Tracking,
 	now: number,
-): void {
+): Parcel[] {
 	for (const item of items) {
 		const printshopOrderId = printshopOrderOf(order, item)?.id;
 		if (printshopOrderId === undefined) {
@@ -259,9 +263,11 @@ function shipParcels(
 			items: [entry],
 		});
 	}
-	for (const parcel of order.parcels) {
-		parcel.shippedAt ??= new Date(now).toISOString();
+	const shipped = order.parcels.filter((p) => p.shippedAt === null);
+	for (const parcel of shipped) {
+		parcel.shippedAt = new Date(now).toISOString();
 	}
+	return shipped;
 }
 
 /** Moves the placed order's items in its state, step by step, and answers
@@ -281,6 +287,7 @@ function placedEvents(
 	let previous = move.from;
 	const events: EmitEvent[] = [];
 	for (const status of stepsOf(move)) {
+		const itemEvents: EmitEvent[] = [];
 		for (const item of items) {
 			setItemStatus(item, status);
 			record(placed, now, {
@@ -294,14 +301,18 @@ function placedEvents(
 				submissionId: latestSubmission(item).id,
 				printIds: item.printIds,
 			};
-			events.push(
+			itemEvents.push(
 				itemStatusChanged(order, named, previous, status, VIA_INTEGRATION),
 			);
 		}
-		if (status === SHIPPED) {
-			shipParcels(placed, items, move.tracking, now);
-		}
+		const parcels =
+			status === SHIPPED ? shipParcels(placed, items, move.tracking, now) : [];
 		const orderIs = orderStatus(placed);
+		for (const parcel of parcels) {
+			const body = parcelBody(placed, parcel);
+			events.push(parcelShipped(order, body, orderIs, VIA_INTEGRATION));
+		}
+		events.push(...itemEvents);
 		if (orderIs !== orderWas) {
 			events.push(
 				orderStatusChanged(order, orderWas, orderIs, VIA_INTEGRATION),

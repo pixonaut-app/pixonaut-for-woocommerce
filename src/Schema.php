@@ -489,6 +489,18 @@ final class Schema {
 	const PROOF_LOCK_OPTION_PREFIX = 'pixonaut_wc_proof_lock_';
 
 	/**
+	 * Prefix of the options that let one request at a time handle the parcels
+	 * of a WooCommerce order; the order's id follows.
+	 */
+	const PARCEL_LOCK_OPTION_PREFIX = 'pixonaut_wc_parcel_lock_';
+
+	/**
+	 * Prefix of the WooCommerce order meta keeping what the store did about
+	 * one parcel of the order; the parcel's id follows.
+	 */
+	const PARCEL_META_PREFIX = '_pixonaut_parcel_';
+
+	/**
 	 * Prefix of the options that let one request at a time mint a product's
 	 * designer link.
 	 */

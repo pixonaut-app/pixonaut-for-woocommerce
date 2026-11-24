@@ -1,18 +1,18 @@
 <?php
 /**
- * Email to the customer about a personalised item that shipped before the rest of the order.
+ * Email to the customer about a parcel of personalised items that shipped before the rest of the order.
  *
  * Override by copying to yourtheme/woocommerce/pixonaut/emails/part-shipped.php.
  *
  * @package Pixonaut\WooCommerce
- * @version 0.1.0
+ * @version 1.31.0
  *
- * @var WC_Order|null              $order              The order.
- * @var WC_Order_Item_Product|null $item               The item that shipped.
- * @var string                     $intro              The text above the item.
- * @var string                     $email_heading      The heading.
- * @var string                     $additional_content Text the store added in the email's settings.
- * @var WC_Email                   $email              The email.
+ * @var WC_Order|null             $order              The order.
+ * @var array<string, mixed>|null $parcel             What `emails/parcel.php` shows of the parcel that shipped.
+ * @var string                    $intro              The text above the parcel.
+ * @var string                    $email_heading      The heading.
+ * @var string                    $additional_content Text the store added in the email's settings.
+ * @var WC_Email                  $email              The email.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -22,13 +22,11 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); // phpcs:ignore
 
 <p><?php echo esc_html( $intro ); ?></p>
 
-<?php if ( null !== $item ) : ?>
-	<p>
-		<strong><?php echo esc_html( $item->get_name() ); ?></strong>
-		<?php echo esc_html( '× ' . $item->get_quantity() ); ?>
-	</p>
-	<?php wc_display_item_meta( $item ); ?>
-<?php endif; ?>
+<?php
+if ( null !== $parcel ) {
+	wc_get_template( 'emails/parcel.php', $parcel, 'woocommerce/pixonaut/', $email->template_base );
+}
+?>
 
 <?php
 if ( '' !== $additional_content ) {

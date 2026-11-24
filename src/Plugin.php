@@ -205,6 +205,9 @@ use Pixonaut\WooCommerce\Fulfilment\OrderHeld;
 use Pixonaut\WooCommerce\Fulfilment\OrderReleased;
 use Pixonaut\WooCommerce\Fulfilment\OrderStatusChanged;
 use Pixonaut\WooCommerce\Fulfilment\OrderSubmitted;
+use Pixonaut\WooCommerce\Fulfilment\ParcelDelivered;
+use Pixonaut\WooCommerce\Fulfilment\ParcelShipped;
+use Pixonaut\WooCommerce\Fulfilment\ParcelTrackingChanged;
 use Pixonaut\WooCommerce\Fulfilment\Shipments;
 use Pixonaut\WooCommerce\Migrations\MigrationRunner;
 use Pixonaut\WooCommerce\Migrations\Migrations;
@@ -1097,20 +1100,23 @@ final class Plugin {
 		$this->webhook_processor ??= new Processor(
 			new EventStore(),
 			array(
-				OrderStatusChanged::TYPE   => array( $this->order_status_changed(), 'handle' ),
-				OrderFailed::TYPE          => array( new OrderFailed( $this->order_event_lines() ), 'handle' ),
-				OrderHeld::TYPE            => array( new OrderHeld( $this->order_event_lines() ), 'handle' ),
-				OrderReleased::TYPE        => array( new OrderReleased( $this->order_event_lines(), $cancelled ), 'handle' ),
-				OrderCancelled::TYPE       => array( $cancelled, 'handle' ),
-				OrderCancelled::ITEM_TYPE  => array( $cancelled, 'handle' ),
-				OrderSubmitted::TYPE       => array( new OrderSubmitted( $this->order_event_lines(), $this->line_actions() ), 'handle' ),
-				OrderDeliveryChanged::TYPE => array( new OrderDeliveryChanged( $this->order_event_lines() ), 'handle' ),
-				DesignChanged::EDITED      => array( $this->design_changed(), 'handle' ),
-				DesignChanged::DELETED     => array( $this->design_changed(), 'handle' ),
-				DesignChanged::ERASED      => array( $this->design_changed(), 'handle' ),
-				DesignApproved::TYPE       => array( new DesignApproved( $this->connection(), $this->sdk(), new WcLogger() ), 'handle' ),
-				ChangesRequested::TYPE     => array( new ChangesRequested( $this->connection(), $this->proof_state() ), 'handle' ),
-				DesignRejected::TYPE       => array( new DesignRejected( $this->connection(), $this->sdk(), $this->proof_denial(), new WcLogger() ), 'handle' ),
+				OrderStatusChanged::TYPE    => array( $this->order_status_changed(), 'handle' ),
+				OrderFailed::TYPE           => array( new OrderFailed( $this->order_event_lines() ), 'handle' ),
+				OrderHeld::TYPE             => array( new OrderHeld( $this->order_event_lines() ), 'handle' ),
+				OrderReleased::TYPE         => array( new OrderReleased( $this->order_event_lines(), $cancelled ), 'handle' ),
+				OrderCancelled::TYPE        => array( $cancelled, 'handle' ),
+				OrderCancelled::ITEM_TYPE   => array( $cancelled, 'handle' ),
+				OrderSubmitted::TYPE        => array( new OrderSubmitted( $this->order_event_lines(), $this->line_actions() ), 'handle' ),
+				OrderDeliveryChanged::TYPE  => array( new OrderDeliveryChanged( $this->order_event_lines() ), 'handle' ),
+				ParcelShipped::TYPE         => array( new ParcelShipped( $this->order_event_lines(), $this->order_status_changed() ), 'handle' ),
+				ParcelTrackingChanged::TYPE => array( new ParcelTrackingChanged( $this->order_event_lines() ), 'handle' ),
+				ParcelDelivered::TYPE       => array( new ParcelDelivered( $this->order_event_lines() ), 'handle' ),
+				DesignChanged::EDITED       => array( $this->design_changed(), 'handle' ),
+				DesignChanged::DELETED      => array( $this->design_changed(), 'handle' ),
+				DesignChanged::ERASED       => array( $this->design_changed(), 'handle' ),
+				DesignApproved::TYPE        => array( new DesignApproved( $this->connection(), $this->sdk(), new WcLogger() ), 'handle' ),
+				ChangesRequested::TYPE      => array( new ChangesRequested( $this->connection(), $this->proof_state() ), 'handle' ),
+				DesignRejected::TYPE        => array( new DesignRejected( $this->connection(), $this->sdk(), $this->proof_denial(), new WcLogger() ), 'handle' ),
 			) + $this->product_recheck()->handlers()
 				+ ( new DesignerLinkChanges( $this->designer_links(), new DesignerLinks( $this->sdk(), new WcLogger() ), new WcLogger() ) )->handlers()
 				+ $this->store_access()->handlers()

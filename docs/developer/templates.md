@@ -98,22 +98,24 @@ section is part of the system report that **Get system report** copies.
 | `emails/design-approved.php` | 0.1.0 | `woocommerce/pixonaut/emails/design-approved.php` | The "design approved" email. |
 | `emails/margin-floor.php` | 1.29.0 | `woocommerce/pixonaut/emails/margin-floor.php` | Email to the store naming prices whose margin fell below its lowest margin. |
 | `emails/needs-attention.php` | 0.1.0 | `woocommerce/pixonaut/emails/needs-attention.php` | Email to the store about a personalised item that needs attention. |
-| `emails/part-shipped.php` | 0.1.0 | `woocommerce/pixonaut/emails/part-shipped.php` | Email to the customer about a personalised item that shipped before the rest of the order. |
+| `emails/parcel.php` | 1.31.0 | `woocommerce/pixonaut/emails/parcel.php` | A parcel in an email to the customer: its items, how many of each, and its tracking. |
+| `emails/part-shipped.php` | 1.31.0 | `woocommerce/pixonaut/emails/part-shipped.php` | Email to the customer about a parcel of personalised items that shipped before the rest of the order. |
 | `emails/plain/changes-link.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/changes-link.php` | The "edit your design" email, as plain text. |
 | `emails/plain/changes-requested.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/changes-requested.php` | Plain text email to the store about a customer who asked for changes to a proof. |
 | `emails/plain/deadline-passed.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/deadline-passed.php` | Plain text email to the store about a proof whose deadline passed without the customer's answer. |
 | `emails/plain/design-approved.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/design-approved.php` | The "design approved" email, as plain text. |
 | `emails/plain/margin-floor.php` | 1.29.0 | `woocommerce/pixonaut/emails/plain/margin-floor.php` | Plain text email to the store naming prices whose margin fell below its lowest margin. |
 | `emails/plain/needs-attention.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/needs-attention.php` | Plain text email to the store about a personalised item that needs attention. |
-| `emails/plain/part-shipped.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/part-shipped.php` | Plain text email to the customer about a personalised item that shipped before the rest of the order. |
+| `emails/plain/parcel.php` | 1.31.0 | `woocommerce/pixonaut/emails/plain/parcel.php` | A parcel in a plain text email to the customer: its items, how many of each, and its tracking. |
+| `emails/plain/part-shipped.php` | 1.31.0 | `woocommerce/pixonaut/emails/plain/part-shipped.php` | Plain text email to the customer about a parcel of personalised items that shipped before the rest of the order. |
 | `emails/plain/proof-expired.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/proof-expired.php` | The "cancelled after deadline" email, as plain text. |
 | `emails/plain/proof-ready.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/proof-ready.php` | The "proof ready" email, as plain text. |
 | `emails/plain/proof-reminder.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/proof-reminder.php` | The proof reminder email, as plain text. |
-| `emails/plain/tracking-changed.php` | 0.1.0 | `woocommerce/pixonaut/emails/plain/tracking-changed.php` | Plain text email to the customer about tracking added or corrected after personalised items shipped. |
+| `emails/plain/tracking-changed.php` | 1.31.0 | `woocommerce/pixonaut/emails/plain/tracking-changed.php` | Plain text email to the customer about tracking added or corrected after personalised items shipped. |
 | `emails/proof-expired.php` | 0.1.0 | `woocommerce/pixonaut/emails/proof-expired.php` | The "cancelled after deadline" email: a line whose proof the customer did not approve by the deadline was cancelled. |
 | `emails/proof-ready.php` | 0.1.0 | `woocommerce/pixonaut/emails/proof-ready.php` | The "proof ready" email: links to the proof pages of a line's designs. |
 | `emails/proof-reminder.php` | 0.1.0 | `woocommerce/pixonaut/emails/proof-reminder.php` | The proof reminder email: links to the proof pages of a line's designs again, and on the last reminder, what happens at the deadline. |
-| `emails/tracking-changed.php` | 0.1.0 | `woocommerce/pixonaut/emails/tracking-changed.php` | Email to the customer about tracking added or corrected after personalised items shipped. |
+| `emails/tracking-changed.php` | 1.31.0 | `woocommerce/pixonaut/emails/tracking-changed.php` | Email to the customer about tracking added or corrected after personalised items shipped. |
 | `order/line-picture.php` | 0.1.0 | `woocommerce/pixonaut/order/line-picture.php` | A personalised order line's picture: the customer's design on the product, on the order received page, in My Account and in order emails. |
 | `order/proof-links.php` | 0.1.0 | `woocommerce/pixonaut/order/proof-links.php` | Under a personalised order line waiting for the customer's approval, on the order received page and in My Account: a link to each of its proof pages, where the customer approves the design, rejects it or asks for changes. |
 | `storefront/button.php` | 0.1.0 | `woocommerce/pixonaut/storefront/button.php` | The Personalise button, in a personalised product's add-to-cart form, directly before WooCommerce's add-to-cart button and in its classes, in its place. |

@@ -7,14 +7,12 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Tests\Integration\Webhooks;
 
-use Pixonaut\WooCommerce\Emails\PartShippedEmail;
 use Pixonaut\WooCommerce\Fulfilment\LineDisplay;
 use Pixonaut\WooCommerce\Fulfilment\LineState;
 use Pixonaut\WooCommerce\Labels;
 use Pixonaut\WooCommerce\Tests\Support\AdminItemMeta;
 use Pixonaut\WooCommerce\Tests\Support\SentMail;
 use RuntimeException;
-use WC_Email;
 use WC_Order;
 use WC_Order_Item_Product;
 
@@ -72,65 +70,27 @@ final class ShipmentsTest extends OrderEventsTestCase {
 		$this->assertSame( 'processing', $this->order_of( $first )->get_status() );
 	}
 
-	public function test_each_shipped_line_of_a_mixed_order_emails_the_customer_with_its_tracking(): void {
+	public function test_a_shipped_line_leaves_telling_the_customer_to_its_parcel(): void {
 		$item = $this->pixonaut_line();
 		$this->add_plain_line( $this->order_of( $item ) );
 
 		$this->ship( self::TRACKING );
 
-		$mails = $this->part_shipped_mails();
-		$this->assertCount( 1, $mails );
-		$this->assertSame( 'ada@example.com', $mails[0]['to'] );
-		$this->assertStringContainsString( 'Personalised T-shirt', $mails[0]['body'] );
-		$this->assertStringContainsString( 'PostNord PN123456789SE', $mails[0]['body'] );
-		$this->assertStringContainsString( 'https://tracking.example/PN123456789SE', $mails[0]['body'] );
-	}
-
-	public function test_a_filter_adds_to_the_part_shipped_email(): void {
-		$item = $this->pixonaut_line();
-		$this->add_plain_line( $this->order_of( $item ) );
-		add_filter(
-			'pixonaut_wc_emails_template_args',
-			static function ( array $args, WC_Email $email, bool $plain_text ): array {
-				if ( PartShippedEmail::ID === $email->id ) {
-					$args['additional_content'] = $plain_text ? 'Plain thanks' : 'Thanks for your order';
-				}
-				return $args;
-			},
-			10,
-			3
-		);
-
-		$this->ship( self::TRACKING );
-
-		$mails = $this->part_shipped_mails();
-		$this->assertCount( 1, $mails );
-		$this->assertStringContainsString( 'Thanks for your order', $mails[0]['body'] );
-	}
-
-	public function test_a_single_line_order_gets_no_part_shipped_email(): void {
-		$item = $this->pixonaut_line( array( 'quantity' => 3 ) );
-		add_filter( 'pixonaut_wc_fulfilment_complete_order', '__return_false' );
-
-		$this->ship( self::TRACKING );
-
+		$this->assertSame( LineState::SHIPPED, LineState::of( $item )->state() );
 		$this->assertSame( array(), $this->part_shipped_mails() );
-		$this->assertSame( 'processing', $this->order_of( $item )->get_status() );
 	}
 
-	public function test_lines_shipped_at_different_times_email_until_the_last_completes_the_order(): void {
+	public function test_lines_shipped_at_different_times_complete_the_order_with_the_last(): void {
 		$first  = $this->pixonaut_line();
 		$second = $this->second_line( $this->order_of( $first ) );
 
 		$this->ship( self::TRACKING );
 		$this->assertSame( 'processing', $this->order_of( $first )->get_status() );
-		$this->assertCount( 1, $this->part_shipped_mails() );
 
 		$this->ship_second();
 
 		$this->assertSame( LineState::SHIPPED, LineState::of( $second )->state() );
 		$this->assertSame( 'completed', $this->order_of( $first )->get_status() );
-		$this->assertCount( 1, $this->part_shipped_mails() );
 		$this->assertStringNotContainsString( self::MIXED_NOTE, $this->notes( $first ) );
 	}
 
@@ -146,7 +106,7 @@ final class ShipmentsTest extends OrderEventsTestCase {
 		$this->assertStringNotContainsString( 'Shipped', $completed[0]['body'] );
 	}
 
-	public function test_a_shipped_event_delivered_again_emails_once(): void {
+	public function test_a_shipped_event_delivered_again_notes_once(): void {
 		$item = $this->pixonaut_line();
 		$this->add_plain_line( $this->order_of( $item ) );
 		$this->parcel_shipped( $item, self::TRACKING );
@@ -157,11 +117,10 @@ final class ShipmentsTest extends OrderEventsTestCase {
 		$this->deliver( $event );
 		$this->run_jobs();
 
-		$this->assertCount( 1, $this->part_shipped_mails() );
 		$this->assertSame( 1, substr_count( $this->notes( $item ), self::MIXED_NOTE ) );
 	}
 
-	public function test_a_shipped_event_tried_again_notes_and_emails_once(): void {
+	public function test_a_shipped_event_tried_again_notes_once(): void {
 		$item = $this->pixonaut_line();
 		$this->add_plain_line( $this->order_of( $item ) );
 		$failures = 1;
@@ -177,23 +136,20 @@ final class ShipmentsTest extends OrderEventsTestCase {
 
 		$this->ship( self::TRACKING );
 		$this->assertStringNotContainsString( self::MIXED_NOTE, $this->notes( $item ) );
-		$this->assertSame( array(), $this->part_shipped_mails() );
 
 		$this->run_jobs();
 
 		$this->assertSame( 1, substr_count( $this->notes( $item ), self::MIXED_NOTE ) );
-		$this->assertCount( 1, $this->part_shipped_mails() );
 		$this->assertTrue( LineState::of( $item )->ref( LineState::REF_SHIPMENT_HANDLED ) );
 	}
 
-	public function test_a_shipped_line_reported_shipped_again_emails_once(): void {
+	public function test_a_shipped_line_reported_shipped_again_notes_once(): void {
 		$item = $this->pixonaut_line();
 		$this->add_plain_line( $this->order_of( $item ) );
 
 		$this->ship( self::TRACKING );
 		$this->ship( self::TRACKING );
 
-		$this->assertCount( 1, $this->part_shipped_mails() );
 		$this->assertSame( 1, substr_count( $this->notes( $item ), self::MIXED_NOTE ) );
 	}
 
@@ -217,17 +173,6 @@ final class ShipmentsTest extends OrderEventsTestCase {
 		$this->assertSame( LineState::SHIPPED, LineState::of( $item )->state() );
 		$this->assertSame( array(), $this->part_shipped_mails() );
 		$this->assertStringNotContainsString( self::MIXED_NOTE, $this->notes( $item ) );
-	}
-
-	public function test_the_part_shipped_email_can_be_turned_off(): void {
-		update_option( 'woocommerce_' . PartShippedEmail::ID . '_settings', array( 'enabled' => 'no' ) );
-		WC()->mailer()->init();
-		$item = $this->pixonaut_line();
-		$this->add_plain_line( $this->order_of( $item ) );
-
-		$this->ship( self::TRACKING );
-
-		$this->assertSame( array(), $this->part_shipped_mails() );
 	}
 
 	public function test_a_line_shows_the_customer_its_tracking_once_shipped_and_no_state(): void {

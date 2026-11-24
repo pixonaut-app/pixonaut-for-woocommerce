@@ -28,7 +28,7 @@ use WC_Order_Item_Product;
  * applied never moves a line back. When every line of the WooCommerce order is
  * a shipped Pixonaut line, the order is completed; a `shipped` change handled
  * again finishes what a run that stopped left undone: completing the order,
- * or the note and email of a shipment that left it open. `outcome_unknown`
+ * or the note of a shipment that left it open. `outcome_unknown`
  * moves the line to `needs_attention`.
  */
 final class OrderStatusChanged {
@@ -53,7 +53,7 @@ final class OrderStatusChanged {
 
 	/**
 	 * @param OrderEventLines $lines     Finds the lines an event is about.
-	 * @param Shipments       $shipments Completes the order, or tells the customer, once a line ships.
+	 * @param Shipments       $shipments Completes the order once its lines ship.
 	 */
 	public function __construct(
 		private readonly OrderEventLines $lines,
@@ -205,7 +205,6 @@ final class OrderStatusChanged {
 			if ( ! OrderStatus::moves_on( self::applied( $line ), $previous, $status ) ) {
 				// Applied already, perhaps by a run that stopped before the order was taken on.
 				if ( OrderStatus::SHIPPED === $status && LineState::SHIPPED === $line->state() ) {
-					$this->keep_parcel_tracking( $line, $tracking, $event );
 					$this->shipped_again( $line );
 				}
 				return;
@@ -308,27 +307,6 @@ final class OrderStatusChanged {
 		}
 		$this->note( $item, self::shipped_note( $item, $tracking ) );
 		$this->shipments->shipped( $line );
-		if ( null === $tracking ) {
-			// An item's event carries no tracking: its parcel does, which a read of the order finds.
-			LineReader::queue( $item->get_id() );
-		}
-	}
-
-	/**
-	 * Keeps the tracking of the parcel a shipped line left in, as a read of
-	 * its order found it, when the line shipped without any.
-	 *
-	 * @param LineState                                                  $line     A shipped line.
-	 * @param array{carrier?: string, number: string, url?: string}|null $tracking The parcel's tracking, when the read found one.
-	 * @param Event|null                                                 $event    The event; null for a read of the order.
-	 */
-	private function keep_parcel_tracking( LineState $line, ?array $tracking, ?Event $event ): void {
-		if ( null !== $event || null === $tracking || null !== $line->ref( LineState::REF_TRACKING ) ) {
-			return;
-		}
-		$line->set_ref( LineState::REF_TRACKING, $tracking );
-		// A line changed meanwhile is read again with its order.
-		$line->save();
 	}
 
 	/**

@@ -124,8 +124,7 @@ entries in the order's `history` giving the status before, and a shipped
 line takes the tracking of the parcel its item left in; the design's
 revision, a `404` and `personalDataErasedAt` as `design.edited`,
 `design.deleted` and `design.personal_data_erased` would. The same job reads
-a line whose item shipped without tracking, and every line of an order
-`order.released` names.
+every line of an order `order.released` names.
 
 A read that fails (Pixonaut cannot be reached, answers an error, or the line
 keeps changing while a change is applied) is logged with the order item id
@@ -168,6 +167,9 @@ ones included.
 | `order.held` | `Fulfilment\OrderHeld` |
 | `order.released` | `Fulfilment\OrderReleased` |
 | `order.delivery_changed` | `Fulfilment\OrderDeliveryChanged` |
+| `parcel.shipped` | `Fulfilment\ParcelShipped` |
+| `parcel.tracking_changed` | `Fulfilment\ParcelTrackingChanged` |
+| `parcel.delivered` | `Fulfilment\ParcelDelivered` |
 | `design.edited`, `design.deleted`, `design.personal_data_erased` | `Fulfilment\DesignChanged` |
 | `design.approved` | `Approval\DesignApproved` |
 | `design.changes_requested` | `Approval\ChangesRequested` |
@@ -229,18 +231,19 @@ A line state never moves backwards, whatever the map says
 (`Fulfilment\LineState`). When a line ships and every line of a `processing`
 order is a shipped Pixonaut line, the order is completed; an order with a line
 the plugin does not fulfil never is. A shipment that leaves the order
-`processing` sends the part-shipped email and, once every Pixonaut line of a
-mixed order has shipped, adds the order note (`Fulfilment\Shipments`); an
-order no longer `processing` gets neither. The line's `shipmentHandled` ref
+`processing` adds, once every Pixonaut line of a mixed order has shipped, the
+order note (`Fulfilment\Shipments`); an order no longer `processing` gets
+none. The customer hears of a shipment once per parcel, from `parcel.shipped`,
+never once per line. The line's `shipmentHandled` ref
 is set once this is done. A `shipped` change handled again for a shipped line
 without that ref does it then, so a run that stopped part way is finished;
 for a line with it, the order is only checked for completion again. The
 line's own shipped note is not repeated.
 
-Tracking belongs to the order's parcels, not to the item's event. A line
-that ships without tracking queues a read of its order
-([Reading open lines](#reading-open-lines)), which keeps the tracking of the
-parcel its item left in on the line's `tracking` ref, without another note.
+Tracking belongs to the order's parcels, not to the item's event. Pixonaut
+sends `parcel.shipped` first, which ships the line with its parcel's
+tracking; an item's event handled before it ships the line without any, and
+the parcel's event then gives it ([`parcel.shipped`](#parcelshipped)).
 A read that ships the line itself keeps the parcel's tracking with the
 parcel's `shippedAt` in `trackingAt`.
 
@@ -334,6 +337,68 @@ compare with, so only a later change of it in WooCommerce is sent. An event
 about a line whose order's personal data was erased is left out. The event
 never carries the address. See
 [Changing the delivery address](../#changing-the-delivery-address).
+
+### `parcel.shipped`
+
+Pixonaut sends `parcel.shipped` once a printshop ships a parcel, with the
+order's status after it (`orderStatus`). Its `parcel` holds the parcel's
+`id`, `tracking` (null when it shipped without any) and `items`, each with
+its `itemId`, the copies in the parcel (`quantity`, null when the
+printshop did not say), the copies ordered (`ofQuantity`) and whether the
+parcel holds them all (`whole`).
+
+- A line is found among those holding the event's `orderId` by the item's
+  `itemId`, which the line keeps. A line keeping no item id, its order placed
+  for it alone, is the order's one item. A line of another workspace, or
+  whose order's `externalRef` is not the event's, is left alone.
+- A line all of whose copies have now shipped moves to `shipped` as an
+  `item.status_changed` to `shipped` would move it, with the parcel's
+  tracking, and completes the order once every line has. Its copies have all
+  shipped when the item is `whole`, when the counted copies of the order's
+  shipped parcels add up to `ofQuantity`, or when `orderStatus` is `shipped`
+  or `done`. A line with copies still to come stays where it is; the order
+  gets a note of how many of its copies shipped, or that part of it did.
+- While the order stays `processing`, the customer gets one
+  `pixonaut_part_shipped` email for the parcel: each of its lines with how
+  many copies are in it, a line split over parcels with a note that the rest
+  come separately (or, in the parcel holding its last copies, went before),
+  and the parcel's tracking once. An order of a single line
+  that ships whole gets none, nor does the parcel that completes the order:
+  WooCommerce's completed email lists every line with its tracking.
+- An `item.status_changed` handled before the parcel's event ships its line
+  without tracking. The parcel's event then keeps the tracking on the line
+  and notes it on the order. A `processing` order's customer gets it with the
+  part-shipped email; when the order is no longer `processing`, they get the
+  `pixonaut_tracking_changed` email.
+- What was done is kept per parcel in the WooCommerce order's meta
+  (`_pixonaut_parcel_<id>`): whether it was handled, the copies of each line
+  it held and its tracking. The parcel reported again, by a redelivery or by
+  the events pull, emails no one twice.
+- One request at a time handles the parcel events of a WooCommerce order
+  (`Fulfilment\ParcelLock`, the option `pixonaut_wc_parcel_lock_<order id>`,
+  taken over after 60 seconds). An event that finds the lock held fails and
+  is handled again later, so two parcels of a split line never each miss the
+  other's copies.
+
+### `parcel.tracking_changed`
+
+Sent when tracking reaches a parcel that shipped without any, or its printshop
+corrects it, with the `parcel` as for `parcel.shipped`. The parcel's lines take
+the tracking in their `tracking` ref, the order gets a note naming them with
+the tracking (and, for a correction, the tracking it had), and the customer
+one `pixonaut_tracking_changed` email for the parcel, listed as in the
+part-shipped email. An event created before the one that set the parcel's
+tracking changes nothing; a newer one bringing the tracking it has tells no
+one and only moves the time it was set on, so an older event delivered after
+it cannot bring back what came between. Tracking that arrives before the
+parcel's `parcel.shipped` is kept silently, and the part-shipped email then
+gives it.
+
+### `parcel.delivered`
+
+Sent where the printshop reports that a parcel reached the customer. The
+order gets a note naming the parcel's lines, once per parcel; nothing else
+changes.
 
 ### Designs changed in Pixonaut
 

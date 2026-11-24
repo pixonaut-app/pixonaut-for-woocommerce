@@ -1,7 +1,7 @@
 // The order and item events Pixonaut sends as an order's items move, built
 // from what the fake keeps of the order. Every payload names the order and
 // its external reference; an item event names the item, its own reference,
-// its latest submission and its prints.
+// its latest submission and its prints; a parcel event holds the parcel.
 import type { EmitEvent } from './deliveries';
 
 /** The order as an event names it. */
@@ -59,6 +59,26 @@ export function orderStatusChanged(
 			externalRef: order.externalRef,
 			previousStatus,
 			status,
+			via,
+		},
+	};
+}
+
+/** `parcel.shipped`, sent once a parcel left, before the events of the items
+ *  it ships. `orderStatus` is the order's status after it. */
+export function parcelShipped(
+	order: EventOrder,
+	parcel: Record<string, unknown>,
+	orderStatus: string,
+	via: string,
+): EmitEvent {
+	return {
+		type: 'parcel.shipped',
+		payload: {
+			orderId: order.id,
+			externalRef: order.externalRef,
+			orderStatus,
+			parcel,
 			via,
 		},
 	};

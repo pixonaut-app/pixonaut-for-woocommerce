@@ -128,6 +128,30 @@ final class Labels {
 
 	public const TRACKING_CHANGED_INTRO = 'tracking_changed_intro';
 
+	/**
+	 * Under a line in an email about a parcel holding only some of its
+	 * copies, with `%1$d` for the copies in the parcel and `%2$d` for those
+	 * ordered.
+	 */
+	public const PARCEL_SPLIT = 'parcel_split';
+
+	/**
+	 * Under a line in an email about a parcel holding some of its copies,
+	 * when the printshop did not say how many.
+	 */
+	public const PARCEL_PART = 'parcel_part';
+
+	/**
+	 * As `parcel_split`, for the parcel that holds the last of a line's
+	 * copies.
+	 */
+	public const PARCEL_SPLIT_LAST = 'parcel_split_last';
+
+	/**
+	 * As `parcel_part`, for the parcel that holds the last of a line's copies.
+	 */
+	public const PARCEL_PART_LAST = 'parcel_part_last';
+
 	public const UPDATE_DESIGN = 'update_design';
 
 	/**
@@ -467,11 +491,31 @@ final class Labels {
 			),
 			self::PART_SHIPPED_INTRO          => array(
 				'text'  => __( 'Part of your order is on its way. The rest follows as soon as it ships.', 'pixonaut-for-woocommerce' ),
-				'shown' => 'The email a customer gets when a personalised item of an order with other items ships',
+				'shown' => 'The email a customer gets when a parcel of personalised items ships and the rest of the order follows',
 			),
 			self::TRACKING_CHANGED_INTRO      => array(
 				'text'  => __( 'There is new tracking for your order. Follow your parcel with the details below.', 'pixonaut-for-woocommerce' ),
 				'shown' => 'The email a customer gets when tracking is added to, or corrected for, a personalised item that has shipped',
+			),
+			self::PARCEL_SPLIT                => array(
+				/* translators: Under an item in the customer's email about a parcel that holds only some of the item's copies. 1: copies in this parcel, 2: copies ordered. */
+				'text'  => __( '%1$d of %2$d in this parcel. The rest come in a separate parcel.', 'pixonaut-for-woocommerce' ),
+				'shown' => 'Under an item in the part shipped and tracking updated emails, when the parcel holds only some of its copies. Keep %1$d, the copies in the parcel, and %2$d, the copies ordered',
+			),
+			self::PARCEL_PART                 => array(
+				/* translators: Under an item in the customer's email about a parcel that holds some of the item's copies, when the printshop did not say how many. */
+				'text'  => __( 'Part of this item is in this parcel. The rest come in a separate parcel.', 'pixonaut-for-woocommerce' ),
+				'shown' => 'Under an item in the part shipped and tracking updated emails, when the parcel holds some of its copies and the printshop did not say how many',
+			),
+			self::PARCEL_SPLIT_LAST           => array(
+				/* translators: Under an item in the customer's email about the parcel that holds the last of the item's copies, the others having shipped before. 1: copies in this parcel, 2: copies ordered. */
+				'text'  => __( '%1$d of %2$d in this parcel. The rest were sent in a separate parcel.', 'pixonaut-for-woocommerce' ),
+				'shown' => 'As parcel_split, when the parcel holds the last of the item\'s copies. Keep %1$d, the copies in the parcel, and %2$d, the copies ordered',
+			),
+			self::PARCEL_PART_LAST            => array(
+				/* translators: Under an item in the customer's email about the parcel that holds the last of the item's copies, when the printshop did not say how many. */
+				'text'  => __( 'Part of this item is in this parcel. The rest were sent in a separate parcel.', 'pixonaut-for-woocommerce' ),
+				'shown' => 'As parcel_part, when the parcel holds the last of the item\'s copies',
 			),
 			self::SIDES                       => array(
 				/* translators: Accessible name of the tabs that switch between a product's sides, such as front and back, on the product page, read by screen readers. */

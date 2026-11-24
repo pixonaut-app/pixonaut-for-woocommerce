@@ -5,10 +5,11 @@
  * Override by copying to yourtheme/woocommerce/pixonaut/emails/tracking-changed.php.
  *
  * @package Pixonaut\WooCommerce
- * @version 0.1.0
+ * @version 1.31.0
  *
  * @var WC_Order|null               $order              The order.
  * @var list<WC_Order_Item_Product> $items              The items whose tracking changed, each showing its tracking.
+ * @var array<string, mixed>|null   $parcel             When the email is about a parcel: what `emails/parcel.php` shows of it, in place of the items.
  * @var string                      $intro              The text above the items.
  * @var string                      $email_heading      The heading.
  * @var string                      $additional_content Text the store added in the email's settings.
@@ -22,13 +23,11 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); // phpcs:ignore
 
 <p><?php echo esc_html( $intro ); ?></p>
 
-<?php foreach ( $items as $pixonaut_item ) : ?>
-	<p>
-		<strong><?php echo esc_html( $pixonaut_item->get_name() ); ?></strong>
-		<?php echo esc_html( '× ' . $pixonaut_item->get_quantity() ); ?>
-	</p>
-	<?php wc_display_item_meta( $pixonaut_item ); ?>
-<?php endforeach; ?>
+<?php
+if ( null !== $parcel ) {
+	wc_get_template( 'emails/parcel.php', $parcel, 'woocommerce/pixonaut/', $email->template_base );
+}
+?>
 
 <?php
 if ( '' !== $additional_content ) {

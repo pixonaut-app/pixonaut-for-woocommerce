@@ -206,9 +206,20 @@ describe('move order of an order the fake placed', () => {
 		expect(received.map((event) => event.type)).toEqual([
 			'item.status_changed',
 			'item.status_changed',
+			'parcel.shipped',
 			'item.status_changed',
 			'order.status_changed',
 		]);
+		expect(received[2]?.payload).toMatchObject({
+			orderId: order.id,
+			externalRef: 'wc-42',
+			orderStatus: 'partly_shipped',
+			parcel: {
+				status: 'shipped',
+				tracking: DEFAULT_TRACKING,
+				items: [{ itemId: first?.id, quantity: 1, ofQuantity: 1, whole: true }],
+			},
+		});
 		expect(received[0]?.payload).toMatchObject({
 			orderId: order.id,
 			externalRef: 'wc-42',
@@ -216,7 +227,7 @@ describe('move order of an order the fake placed', () => {
 			itemExternalRef: 'wc-42-1',
 			submissionId: first?.submissions[0]?.id,
 		});
-		expect(received[3]?.payload).toMatchObject({
+		expect(received[4]?.payload).toMatchObject({
 			previousStatus: 'open',
 			status: 'partly_shipped',
 		});

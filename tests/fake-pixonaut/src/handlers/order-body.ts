@@ -109,7 +109,11 @@ function itemBody(
 	};
 }
 
-function parcelBody(order: Order, parcel: Parcel): Record<string, unknown> {
+/** The parcel as the order's answer and the parcel events carry it. */
+export function parcelBody(
+	order: Order,
+	parcel: Parcel,
+): Record<string, unknown> {
 	return {
 		id: parcel.id,
 		printshopOrderId: parcel.printshopOrderId,

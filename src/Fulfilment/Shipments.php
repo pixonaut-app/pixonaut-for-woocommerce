@@ -9,19 +9,18 @@ declare(strict_types=1);
 
 namespace Pixonaut\WooCommerce\Fulfilment;
 
-use Pixonaut\WooCommerce\Emails\PartShippedEmail;
 use RuntimeException;
 use WC_Order;
 use WC_Order_Item_Product;
 
 /**
  * Completes an order once every line is a Pixonaut line and shipped; the
- * plugin never completes an order with a line it does not fulfil. When the
- * shipment leaves the order `processing`, the customer gets the "Part of your
- * order has shipped" email, unless the order has a single line; and when every
+ * plugin never completes an order with a line it does not fulfil. When every
  * Pixonaut line of an order with other lines has shipped, an order note says
  * so, for the store to ship the rest. The line's `shipmentHandled` ref records
- * that this was done, so a run that stopped before it is finished again.
+ * that this was done, so a run that stopped before it is finished again. The
+ * customer hears of a shipment that leaves the order open once per parcel,
+ * from ParcelShipped, not once per line.
  */
 final class Shipments {
 
@@ -36,7 +35,7 @@ final class Shipments {
 		$item  = $line->item();
 		$order = wc_get_order( $item->get_order_id() );
 		if ( $order instanceof WC_Order && ! $this->complete_if_shipped( $order ) && $order->has_status( 'processing' ) ) {
-			$this->tell( $order, $item );
+			self::note_mixed( $order );
 		}
 		self::mark_handled( $line );
 	}
@@ -91,21 +90,15 @@ final class Shipments {
 	}
 
 	/**
-	 * Tells the store and the customer about a shipment that left the order
-	 * open: a note once every Pixonaut line of a mixed order has shipped, and
-	 * the "Part of your order has shipped" email unless the order has a single
-	 * line.
+	 * Tells the store, once every Pixonaut line of an order with other lines
+	 * has shipped, that the rest is theirs to ship.
 	 *
-	 * @param WC_Order              $order The order, still `processing`.
-	 * @param WC_Order_Item_Product $item  The line that shipped.
+	 * @param WC_Order $order The order, still `processing`.
 	 */
-	private function tell( WC_Order $order, WC_Order_Item_Product $item ): void {
+	private static function note_mixed( WC_Order $order ): void {
 		$lines = $order->get_items();
 		if ( self::every_pixonaut_line_shipped( $lines ) && ! self::every_line_from_pixonaut( $lines ) ) {
 			$order->add_order_note( __( 'Pixonaut: All personalised items shipped. The order\'s other items are yours to ship.', 'pixonaut-for-woocommerce' ) );
-		}
-		if ( count( $lines ) > 1 ) {
-			$this->email( $item );
 		}
 	}
 
@@ -125,19 +118,6 @@ final class Shipments {
 			$line = LineState::of( $line->item() );
 		}
 		throw new RuntimeException( sprintf( 'Order item %d not marked as handled after shipping: the line kept changing.', (int) $line->item()->get_id() ) );
-	}
-
-	/**
-	 * Sends the customer the "Part of your order has shipped" email, at once:
-	 * WooCommerce's deferred emails would carry the line through a JSON job.
-	 *
-	 * @param WC_Order_Item_Product $item The line that shipped.
-	 */
-	private function email( WC_Order_Item_Product $item ): void {
-		$email = WC()->mailer()->get_emails()[ PartShippedEmail::class ] ?? null;
-		if ( $email instanceof PartShippedEmail ) {
-			$email->trigger( $item );
-		}
 	}
 
 	/**
